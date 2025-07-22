@@ -1,7 +1,10 @@
 {
-  "name": "astrsk_ai",
+  "name": "electron",
   "version": "2.0.0",
   "main": "./out/main/index.js",
+  "build": {
+    "productName": "astrsk_ai"
+  },
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
