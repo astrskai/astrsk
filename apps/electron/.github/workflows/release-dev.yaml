@@ -1,0 +1,56 @@
+name: Release Development
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  release-win:
+    timeout-minutes: 30
+    runs-on: windows-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js and NPM
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: npm install
+        run: |
+          npm install
+
+      - name: Package and publish
+        env:
+          GITHUB_RELEASE_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
+          MAIN_VITE_PWA_URL: https://devapp.astrsk.ai/
+        run: |
+          npm run build:win -- --publish=always --config=./electron-builder-dev.yml
+        shell: bash
+
+  release-mac:
+    timeout-minutes: 30
+    runs-on: macos-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js and NPM
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: npm install
+        run: |
+          npm install
+
+      - name: Package and publish
+        env:
+          GITHUB_RELEASE_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
+          MAIN_VITE_PWA_URL: https://devapp.astrsk.ai/
+        run: |
+          npm run build:mac -- --publish=always --config=./electron-builder-dev.yml

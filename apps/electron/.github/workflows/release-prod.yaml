@@ -1,0 +1,95 @@
+name: Release Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release-win:
+    timeout-minutes: 30
+    runs-on: windows-latest
+    env:
+      SM_HOST: https://clientauth.one.digicert.com
+      SM_CLIENT_CERT_FILE: D:\Certificate_pkcs12.p12
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js and NPM
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: npm install
+        run: |
+          npm install
+
+      - name: Install DigiCert Client tools
+        uses: digicert/ssm-code-signing@v1.0.1
+
+      - name: Setup DigiCert user certificate
+        run: |
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
+          smctl credentials save ${{ secrets.SM_API_KEY }} ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          smctl healthcheck
+        shell: bash
+
+      - name: Package and publish
+        env:
+          GITHUB_RELEASE_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
+        run: |
+          npm run build:win -- --publish=always
+        shell: bash
+
+  release-mac:
+    timeout-minutes: 30
+    runs-on: macos-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js and NPM
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: npm install
+        run: |
+          npm install
+
+      - name: Package and publish
+        env:
+          GITHUB_RELEASE_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: |
+          npm run build:mac -- --publish=always
+
+  release-linux:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js and NPM
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: npm install
+        run: |
+          npm install
+
+      - name: Package and publish
+        env:
+          GITHUB_RELEASE_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
+        run: |
+          npm run build:linux -- --publish=always
