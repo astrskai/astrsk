@@ -1,0 +1,54 @@
+appId: com.astrsk.ai-app
+productName: astrsk
+copyright: Copyright © 2025 astrsk.ai
+directories:
+  buildResources: build
+files:
+  - "!**/.vscode/*"
+  - "!src/*"
+  - "!electron.vite.config.{js,ts,mjs,cjs}"
+  - "!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}"
+  - "!{.env,.env.*,.npmrc,pnpm-lock.yaml}"
+  - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
+asarUnpack:
+  - resources/**
+
+win:
+  icon: build/icon.ico
+  target:
+    - { target: nsis, arch: [x64, ia32] }
+  artifactName: "${productName}-${version}-${arch}.${ext}"
+  verifyUpdateCodeSignature: false
+  requestedExecutionLevel: asInvoker
+  compression: maximum
+  publish:
+    provider: github
+    owner: harpychat
+    repo: astrsk-ai-app-electron-pwa
+    releaseType: draft
+
+mac:
+  # Enable hardened runtime for notarization and security
+  hardenedRuntime: true
+  # Main process entitlements
+  entitlements: build/entitlements.mac.plist
+  # Renderer/child process entitlements
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    - NSCameraUsageDescription: Application requests access to the device's camera.
+    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
+    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+  # Default build targets
+  target:
+    - { target: dmg, arch: universal }
+    - { target: zip, arch: universal }
+  icon: build/icon.icns
+  defaultArch: universal
+  publish:
+    provider: github
+    owner: harpychat
+    repo: astrsk-ai-app-electron-pwa
+    releaseType: draft
+dmg:
+  artifactName: ${productName}-${version}.${ext}
