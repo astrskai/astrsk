@@ -1,5 +1,5 @@
 {
-  "name": "astrsk-ai-docs",
+  "name": "docs",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -20,6 +20,7 @@
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
     "docusaurus-lunr-search": "^3.6.0",
+    "lunr": "^2.3.9",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -43,6 +44,8 @@
     ]
   },
   "engines": {
-    "node": ">=18.0"
-  }
+    "node": ">=22.16.0",
+    "pnpm": ">=10.13.1"
+  },
+  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad"
 }
