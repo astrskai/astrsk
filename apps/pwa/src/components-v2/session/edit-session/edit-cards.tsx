@@ -208,7 +208,7 @@ const EditCards = ({
         } else {
           setValue("userCharacterCardId", cardId);
           newValues.userCharacterCardId = cardId;
-          if (aiCharacterCardIds.includes(cardId)) {
+          if (aiCharacterCardIds?.includes(cardId)) {
             const newAiCardIds = aiCharacterCardIds.filter((id) => id !== cardId);
             setValue("aiCharacterCardIds", newAiCardIds);
             newValues.aiCharacterCardIds = newAiCardIds;
@@ -216,12 +216,12 @@ const EditCards = ({
         }
         break;
       case "ai":
-        if (aiCharacterCardIds.includes(cardId)) {
+        if (aiCharacterCardIds?.includes(cardId)) {
           const newAiCardIds = aiCharacterCardIds.filter((id) => id !== cardId);
           setValue("aiCharacterCardIds", newAiCardIds);
           newValues.aiCharacterCardIds = newAiCardIds;
         } else {
-          const newAiCardIds = [...aiCharacterCardIds, cardId];
+          const newAiCardIds = [...(aiCharacterCardIds ?? []), cardId];
           setValue("aiCharacterCardIds", newAiCardIds);
           newValues.aiCharacterCardIds = newAiCardIds;
           if (userCharacterCardId === cardId) {

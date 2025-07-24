@@ -463,11 +463,11 @@ export const PlotForm = ({
                 setValue("tags", newTags, { shouldDirty: true });
               }}
               helpText={
-                tagsValue.length >= 5
+                tagsValue && tagsValue.length >= 5
                   ? "You can only add up to 5 tags."
                   : undefined
               }
-              warning={tagsValue.length >= 5}
+              warning={tagsValue && tagsValue.length >= 5}
               maxBadgeCount={5}
               onBadgeClick={(value, index) => {}}
               error={!!errors.tags}

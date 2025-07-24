@@ -12,7 +12,7 @@ import {
 
 export interface FloatingLabelInputsProps
   extends Omit<FloatingLabelInputProps, "value" | "onChange"> {
-  values: string[];
+  values?: string[];
   onValuesChange: (newValues: string[]) => void;
   onBadgeClick?: (value: string, index: number) => void; // For editing
   inputPlaceholder?: string; // Optional different placeholder for the input itself
@@ -31,7 +31,7 @@ const FloatingLabelInputs = React.forwardRef<
       label,
       error,
       helpText,
-      values,
+      values = [],
       onValuesChange,
       onBadgeClick,
       inputPlaceholder,

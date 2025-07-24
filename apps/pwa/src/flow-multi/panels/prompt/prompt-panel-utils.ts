@@ -49,10 +49,8 @@ export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): P
     } else if (msg instanceof HistoryPromptMessage) {
       // For history messages, extract content similarly
       const userBlocks = msg.userPromptBlocks || [];
-      const assistantBlocks = msg.assistantPromptBlocks || [];
-      const allBlocks = [...userBlocks, ...assistantBlocks];
       
-      const content = allBlocks
+      const content = userBlocks
         .map(block => {
           // Check if this is a PlainBlock with template property
           if ('template' in block && block.template) {
@@ -127,7 +125,14 @@ export function convertItemsToPromptMessages(items: PromptItem[]): PromptMessage
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }],
-        assistantPromptBlocks: [],
+        assistantPromptBlocks: [{
+          id: new UniqueEntityID().toString(),
+          type: PromptBlockType.Plain,
+          name: item.label,
+          template: item.content,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }],
       };
     } else {
       // Regular message
