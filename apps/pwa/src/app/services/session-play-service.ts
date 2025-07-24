@@ -208,7 +208,8 @@ const makeContext = async ({
     // Set {{user}} and {{char}}
     if (characterCard.id.equals(characterCardId)) {
       context.char = character;
-    } else if (characterCard.id.equals(session.userCharacterCardId)) {
+    }
+    if (characterCard.id.equals(session.userCharacterCardId)) {
       context.user = character;
     }
   }
