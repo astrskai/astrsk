@@ -1,0 +1,1 @@
+ALTER TABLE "agents" ADD COLUMN "output_streaming" boolean DEFAULT true;

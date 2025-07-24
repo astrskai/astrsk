@@ -1,0 +1,13 @@
+﻿<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'>
+  <rect width='10' height='10' fill='#777'>
+    <animate
+      attributeName='opacity'
+      values='0;0.5;0;'
+      dur='2s'
+      calcMode='spline'
+      keyTimes='0;0.5;1'
+      keySplines='0.4 0 0.6 1;0.4 0 0.6 1'
+      repeatCount='indefinite'
+    />
+  </rect>
+</svg>
