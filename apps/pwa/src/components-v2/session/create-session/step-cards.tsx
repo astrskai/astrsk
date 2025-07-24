@@ -81,7 +81,7 @@ type CardTab = "user" | "ai" | "plot";
 const StepCards = () => {
   const { watch, setValue, trigger } = useFormContext<StepCardsSchemaType>();
   const userCharacterCardId = watch("userCharacterCardId");
-  const aiCharacterCardIds = watch("aiCharacterCardIds");
+  const aiCharacterCardIds = watch("aiCharacterCardIds") ?? [];
   const plotCardId = watch("plotCardId");
 
   // Card pool
