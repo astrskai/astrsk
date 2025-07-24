@@ -80,7 +80,7 @@ export default function CreateSessionPage({
   });
 
   // Validate step flow and agents
-  const flowId = watch("flowId");
+  const flowId = watch("flowId") ?? "";
   const { invalids } = useValidationStore();
   useEffect(() => {
     // Parse step flow and agents
@@ -187,7 +187,7 @@ export default function CreateSessionPage({
               content: (
                 <StepChatStyling
                   characterCardId={
-                    aiCharacterCardIds.length > 0
+                    aiCharacterCardIds && aiCharacterCardIds.length > 0
                       ? new UniqueEntityID(aiCharacterCardIds[0])
                       : undefined
                   }

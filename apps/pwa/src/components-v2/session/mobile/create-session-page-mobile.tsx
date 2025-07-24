@@ -111,7 +111,7 @@ export default function CreateSessionPageMobile({
   }, [aiCharacterCardIds]);
 
   // Validate step flow and agents (Step 3)
-  const flowId = watch("flowId");
+  const flowId = watch("flowId") ?? "";
   const { invalids } = useValidationStore();
   useEffect(() => {
     const parsed = StepFlowAndAgentsSchema.safeParse({
