@@ -2,5 +2,9 @@ packages:
   - apps/*
 
 onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
   - electron
   - esbuild
+  - msw
+  - sharp
+  - unrs-resolver
