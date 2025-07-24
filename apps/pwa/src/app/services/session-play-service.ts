@@ -208,7 +208,8 @@ const makeContext = async ({
     // Set {{user}} and {{char}}
     if (characterCard.id.equals(characterCardId)) {
       context.char = character;
-    } else if (characterCard.id.equals(session.userCharacterCardId)) {
+    }
+    if (characterCard.id.equals(session.userCharacterCardId)) {
       context.user = character;
     }
   }
@@ -230,21 +231,27 @@ const makeContext = async ({
   }
 
   // Render variables in characters
-  for (const char of allCharacters) {
-    try {
-      char.description = TemplateRenderer.render(
-        char.description || "",
-        context,
-      );
-      char.example_dialog = TemplateRenderer.render(
-        char.example_dialog || "",
-        context,
-      );
-    } catch (error) {
-      logger.error(
-        `Failed to render variables of character ${char.name}`,
-        error,
-      );
+  for (let i = 0; i <= 1; i++) {
+    for (const char of allCharacters) {
+      try {
+        char.name = TemplateRenderer.render(
+          char.name || "",
+          context,
+        );
+        char.description = TemplateRenderer.render(
+          char.description || "",
+          context,
+        );
+        char.example_dialog = TemplateRenderer.render(
+          char.example_dialog || "",
+          context,
+        );
+      } catch (error) {
+        logger.error(
+          `Failed to render variables of character ${char.name}`,
+          error,
+        );
+      }
     }
   }
 
@@ -256,7 +263,10 @@ const makeContext = async ({
         .scanHistory(historyContent)
         .throwOnFailure()
         .getValue()
-        .map((entry) => entry.content);
+        .map((entry) => TemplateRenderer.render(
+          entry.content || "",
+          context,
+        ));
       entries.push(...activatedEntries);
       context.session.plot_entries = activatedEntries;
     } catch (error) {
@@ -265,8 +275,12 @@ const makeContext = async ({
   }
 
   // Set `{{session.entries}}`, `{{session.char_entries}}`
-  context.session.entries = entries;
-  context.session.char_entries = all_char_entries;
+  context.session.entries = entries.map((entry) =>
+    TemplateRenderer.render(entry || "", context),
+  );
+  context.session.char_entries = all_char_entries.map((entry) =>
+    TemplateRenderer.render(entry || "", context),
+  );
 
   return Result.ok(context);
 };
