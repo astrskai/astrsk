@@ -25,6 +25,7 @@ import { useAsset } from "@/app/hooks/use-asset";
 import { useCard } from "@/app/hooks/use-card";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { turnQueries } from "@/app/queries/turn-queries";
+import { CardService } from "@/app/services";
 import {
   addMessage,
   executeFlow,
@@ -1029,10 +1030,16 @@ const SessionMessagesAndUserInputs = ({
           }
           streamingMessage = messageOrError.getValue();
         } else {
+          // Get character name
+          const character = (await CardService.getCard.execute(characterCardId))
+            .throwOnFailure()
+            .getValue() as CharacterCard;
+
           // Create new empty message
           const messageOrError = Turn.create({
             sessionId: session.id,
             characterCardId: characterCardId,
+            characterName: character.props.name,
             options: [],
           });
           if (messageOrError.isFailure) {
