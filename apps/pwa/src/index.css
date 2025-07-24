@@ -1,0 +1,654 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Pragati+Narrow:wght@400;700&display=swap");
+
+/* Dockview core styles */
+@import "dockview-core/dist/styles/dockview.css";
+
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@theme {
+  --font-plus-jakarta-sans: "Plus Jakarta Sans";
+  --font-inter: "Inter";
+  --font-pragati-narrow: "Pragati Narrow";
+}
+
+:root {
+  --background: hsl(0 0% 3.9%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(0 0% 3.9%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(0 0% 3.9%);
+  --popover-foreground: hsl(0 0% 98%);
+  --primary: hsl(0 0% 98%);
+  --primary-foreground: hsl(0 0% 9%);
+  --secondary: hsl(0 0% 14.9%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(0 0% 14.9%);
+  --muted-foreground: hsl(0 0% 63.9%);
+  --accent: hsl(0 0% 14.9%);
+  --accent-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(0 0% 14.9%);
+  --input: hsl(0 0% 14.9%);
+  --ring: hsl(0 0% 83.1%);
+  --chart-1: hsl(220 70% 50%);
+  --chart-2: hsl(160 60% 45%);
+  --chart-3: hsl(30 80% 55%);
+  --chart-4: hsl(280 65% 60%);
+  --chart-5: hsl(340 75% 55%);
+  --sidebar-background: hsl(240 5.9% 10%);
+  --sidebar-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-primary: hsl(224.3 76.3% 48%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 3.7% 15.9%);
+  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-border: hsl(240 3.7% 15.9%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+  /* astrsk 2.0 colors */
+  --color-basic-darksurface: #1b1b1b;
+
+  --color-blue-50: #e9f6fe;
+  --color-blue-200: #98d7f9;
+  --color-blue-300: #68c5f6;
+  --color-blue-500: #1ea9f2;
+  --color-blue-700: #1578ac;
+  --color-blue-800: #115d85;
+  --color-blue-900: #0d4766;
+
+  --color-purple-200: #b59eff;
+  --color-purple-900: #27136b;
+
+  --color-slate-50: #f3f3f3;
+  --color-slate-100: #cccccc;
+  --color-slate-200: #bababa;
+  --color-slate-300: #9d9d9d;
+  --color-slate-400: #8b8b8b;
+  --color-slate-500: #757575;
+  --color-slate-600: #676767;
+  --color-slate-700: #414141;
+  --color-slate-800: #313131;
+  --color-slate-900: #272727;
+
+  --color-grey-50: #f1f1f1;
+  --color-grey-200: #bfbfbf;
+  --color-grey-300: #a1a1a1;
+  --color-grey-600: #696969;
+  --color-grey-800: #3f3f3f;
+
+  --color-destructive-light: #dc2626;
+  --color-destructive-dark: #7f1d1d;
+  --color-red-950: #450a0a;
+
+  --color-turquoise-200: #a1ece7;
+  --color-turquoise-600: #2ec2b9;
+
+  --color-yellow-700: #a16207;
+  --color-yellow-800: #854d0e;
+
+  /* Existing background colors */
+  --background-card: #37404c;
+  --background-container: #2a313a;
+  --background-dialog: #64748b;
+  --background-input: #475263;
+  --background-screen: #111111;
+  --background-screen2: #1b1b1b;
+  --background-tooltip: #0d4766;
+  --background-user-message: #e9f6fe;
+
+  /* New background colors */
+  --background-surface-0: #111111;
+  --background-surface-1: #1b1b1b;
+  --background-surface-2: #272727;
+  --background-surface-3: #313131;
+  --background-surface-4: #414141;
+  --background-surface-5: #757575;
+  --background-surface-10: #1b1b1b;
+  --background-surface-light: #e9f6fe;
+
+  /* Existing border colors */
+  --border-container: #64748b;
+  --border-divider: #37404c;
+
+  /* New border colors */
+  --border-light: #757575;
+  --border-dark: #313131;
+  --border-normal: #525252;
+  --border-black: #1b1b1b;
+  --border-selected-primary: #98d7f9;
+  --border-selected-secondary: #1ea9f2;
+  --border-selected-inverse: #f1f1f1;
+
+  /* Existing button colors */
+  --button-background-primary: #98d7f9;
+  --button-foreground-primary: #0d4766;
+  --button-background-disabled: #414141;
+  --button-foreground-disabled: #757575;
+  --button-background-secondary: #b59eff;
+  --button-foreground-secondary: #27136b;
+
+  /* New button colors */
+  --button-background-floating: #313131;
+  --button-chips: #414141;
+
+  /* Existing text colors */
+  --text-info: #696969;
+  --text-input-subtitle: #97a2b1;
+  --text-muted-title: #d4d4d4;
+  --text-primary: #f1f1f1;
+  --text-placeholder: #a1a1a1;
+  --text-secondary: #bfbfbf;
+  --text-user-message: #3f3f3f;
+
+  /* New text colors */
+  --text-body: #bfbfbf;
+  --text-subtle: #9d9d9d;
+  --text-contrast-text: #3f3f3f;
+
+  /* Existing primary colors */
+  --primary-heavy: #1ea9f2;
+  --primary-normal: #98d7f9;
+  --primary-strong: #68c5f6;
+  --primary-dark: #115d85;
+  --primary-semi-dark: #1578ac;
+
+  /* Existing secondary colors */
+  --secondary-heavy: #27136b;
+  --secondary-normal: #b59eff;
+
+  /* Existing status colors */
+  --status-destructive: #7f1d1d;
+  --status-destructive-dark: #450a0a;
+  --status-destructive-light: #dc2626;
+  --status-destructive-primary: #dc2626;
+  --status-warning: #a16207;
+  --status-optional: #a1ece7;
+  --status-required: #b59eff;
+
+  /* New status colors */
+  --status-warning-light: #a16207;
+  --status-warning-dark: #854d0e;
+  --status-syncing: #1ea9f2;
+  --status-succeed: #2ec2b9;
+
+  /* iOS Safe Area Variables */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* Block landscape mode with message */
+/* @media screen and (orientation: landscape) and (max-width: 990px) {
+  #root {
+    display: none;
+  }
+  
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-screen);
+    z-index: 9999;
+  }
+  
+  body::after {
+    content: "Landscape mode is not supported";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-primary);
+    font-size: 18px;
+    font-family: var(--font-inter);
+    text-align: center;
+    z-index: 10000;
+    padding: 28px;
+    background-color: var(--background-container);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 80%;
+    line-height: 1.5;
+  }
+} */
+
+.dark {
+  --background: hsl(0 0% 3.9%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(0 0% 3.9%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(0 0% 3.9%);
+  --popover-foreground: hsl(0 0% 98%);
+  --primary: hsl(0 0% 98%);
+  --primary-foreground: hsl(0 0% 9%);
+  --secondary: hsl(0 0% 14.9%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(0 0% 14.9%);
+  --muted-foreground: hsl(0 0% 63.9%);
+  --accent: hsl(0 0% 14.9%);
+  --accent-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(0 0% 14.9%);
+  --input: hsl(0 0% 14.9%);
+  --ring: hsl(0 0% 83.1%);
+  --chart-1: hsl(220 70% 50%);
+  --chart-2: hsl(160 60% 45%);
+  --chart-3: hsl(30 80% 55%);
+  --chart-4: hsl(280 65% 60%);
+  --chart-5: hsl(340 75% 55%);
+  --sidebar-background: hsl(240 5.9% 10%);
+  --sidebar-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-primary: hsl(224.3 76.3% 48%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 3.7% 15.9%);
+  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-border: hsl(240 3.7% 15.9%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+  /* Existing background colors */
+  --background-card: #37404c;
+  --background-container: #2a313a;
+  --background-dialog: #64748b;
+  --background-input: #475263;
+  --background-screen: #111111;
+  --background-screen2: #1b1b1b;
+  --background-tooltip: #0d4766;
+  --background-user-message: #e9f6fe;
+
+  /* New background colors */
+  --background-surface-0: #111111;
+  --background-surface-1: #1b1b1b;
+  --background-surface-2: #272727;
+  --background-surface-3: #313131;
+  --background-surface-4: #414141;
+  --background-surface-5: #757575;
+  --background-surface-10: #1b1b1b;
+  --background-surface-light: #e9f6fe;
+
+  /* Existing border colors */
+  --border-container: #64748b;
+  --border-divider: #37404c;
+
+  /* New border colors */
+  --border-light: #757575;
+  --border-dark: #313131;
+  --border-normal: #525252;
+  --border-black: #1b1b1b;
+  --border-selected-primary: #98d7f9;
+  --border-selected-secondary: #1ea9f2;
+  --border-selected-inverse: #f1f1f1;
+
+  /* Existing button colors */
+  --button-background-primary: #98d7f9;
+  --button-foreground-primary: #0d4766;
+  --button-background-disabled: #414141;
+  --button-foreground-disabled: #757575;
+  --button-background-secondary: #b59eff;
+  --button-foreground-secondary: #27136b;
+
+  /* New button colors */
+  --button-background-floating: #313131;
+  --button-chips: #414141;
+
+  /* Existing text colors */
+  --text-info: #696969;
+  --text-input-subtitle: #97a2b1;
+  --text-muted-title: #d4d4d4;
+  --text-primary: #f1f1f1;
+  --text-placeholder: #a1a1a1;
+  --text-secondary: #bfbfbf;
+  --text-user-message: #3f3f3f;
+
+  /* New text colors */
+  --text-body: #bfbfbf;
+  --text-subtle: #9d9d9d;
+  --text-contrast-text: #3f3f3f;
+
+  /* Existing primary colors */
+  --primary-heavy: #1ea9f2;
+  --primary-normal: #98d7f9;
+  --primary-strong: #68c5f6;
+  --primary-dark: #115d85;
+  --primary-semi-dark: #1578ac;
+
+  /* Existing secondary colors */
+  --secondary-heavy: #27136b;
+  --secondary-normal: #b59eff;
+
+  /* Existing status colors */
+  --status-destructive: #7f1d1d;
+  --status-destructive-dark: #450a0a;
+  --status-destructive-light: #dc2626;
+  --status-destructive-primary: #dc2626;
+  --status-warning: #a16207;
+  --status-optional: #a1ece7;
+  --status-required: #b59eff;
+
+  /* New status colors */
+  --status-warning-light: #a16207;
+  --status-warning-dark: #854d0e;
+  --status-syncing: #1ea9f2;
+  --status-succeed: #2ec2b9;
+
+  /* Agent colors */
+  --indigo-300: #a5b4fc;
+  --indigo-800: #3730a3;
+  --orange-300: #fdba74;
+  --orange-800: #9a3412;
+  --lime-300: #bef264;
+  --lime-800: #3f6212;
+  --red-300: #fca5a5;
+  --red-800: #991b1b;
+  --blue-300: #93c5fd;
+  --blue-800: #1e40af;
+  --amber-300: #fcd34d;
+  --amber-800: #92400e;
+  --cyan-300: #67e8f9;
+  --cyan-800: #155e75;
+  --fuchsia-300: #f0abfc;
+  --fuchsia-800: #86198f;
+  --yellow-300: #fde047;
+  --yellow-800: #854d0e;
+  --violet-300: #c4b5fd;
+  --violet-800: #5b21b6;
+  --green-300: #86efac;
+  --green-800: #166534;
+  --rose-300: #fda4af;
+  --rose-800: #9f1239;
+  --sky-300: #7dd3fc;
+  --sky-800: #075985;
+  --pink-300: #f9a8d4;
+  --pink-800: #9d174d;
+  --emerald-300: #6ee7b7;
+  --emerald-800: #065f46;
+  --purple-300: #d8b4fe;
+  --purple-800: #6b21a8;
+  --teal-300: #5eead4;
+  --teal-800: #115e59;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+  body {
+    @apply text-foreground;
+    background-color: var(--background-surface-2);
+  }
+
+  /* Remove textarea resizer */
+  textarea.no-resizer::-webkit-resizer {
+    display: none;
+  }
+
+  textarea {
+    scrollbar-color: var(--background-input) transparent;
+    resize: none;
+  }
+
+  /* Default message styling */
+  .ai-chat-style {
+    .chat-style-text {
+      font-size: 16px;
+      color: var(--text-muted-title);
+      overflow-x: hidden;
+      p + p {
+        margin-top: 1em;
+      }
+    }
+    .chat-style-chat-bubble {
+      background-color: var(--background-card);
+    }
+    .message-buttons,
+    textarea {
+      font-size: 16px;
+      color: var(--text-muted-title);
+    }
+  }
+  .user-chat-style {
+    .chat-style-text {
+      font-size: 16px;
+      color: var(--text-user-message);
+      overflow-x: hidden;
+      p + p {
+        margin-top: 1em;
+      }
+    }
+    .chat-style-chat-bubble {
+      background-color: var(--background-user-message);
+    }
+    .message-buttons,
+    textarea {
+      font-size: 16px;
+      color: var(--text-user-message);
+    }
+  }
+
+  .electron-drag-region {
+    -webkit-app-region: drag;
+    app-region: drag;
+  }
+
+  /* Make sure interactive elements inside drag region are not draggable */
+  .electron-drag-region button,
+  .electron-drag-region a,
+  .electron-drag-region input,
+  .electron-drag-region [role="button"] {
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+
+  /* iOS Safe Area Utilities */
+  .safe-area-top {
+    padding-top: var(--safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: var(--safe-area-inset-bottom);
+  }
+
+  .safe-area-left {
+    padding-left: var(--safe-area-inset-left);
+  }
+
+  .safe-area-right {
+    padding-right: var(--safe-area-inset-right);
+  }
+
+  .safe-area-x {
+    padding-left: var(--safe-area-inset-left);
+    padding-right: var(--safe-area-inset-right);
+  }
+
+  .safe-area-y {
+    padding-top: var(--safe-area-inset-top);
+    padding-bottom: var(--safe-area-inset-bottom);
+  }
+
+  .safe-area-all {
+    padding-top: var(--safe-area-inset-top);
+    padding-right: var(--safe-area-inset-right);
+    padding-bottom: var(--safe-area-inset-bottom);
+    padding-left: var(--safe-area-inset-left);
+  }
+
+  /* iOS Status Bar Background - extends navigation color into safe area */
+  .ios-status-bar-bg {
+    background: linear-gradient(
+      to bottom,
+      var(--background-card) var(--safe-area-inset-top),
+      transparent var(--safe-area-inset-top)
+    );
+  }
+
+  /* Disable iOS context menu on images */
+  img {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: auto;
+  }
+
+  /* Disable iOS context menu on all elements by default */
+  * {
+    -webkit-touch-callout: none;
+  }
+
+  /* Re-enable context menu for interactive elements where it might be needed */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="url"],
+  textarea {
+    -webkit-touch-callout: default;
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+
+  /* Consolidated Dockview styles */
+  .dockview-theme-abyss {
+    --dv-separator-border: var(--background-surface-0, #1b1b1b) !important;
+    --dv-sash-color: var(
+      --background-surface-0,
+      #1b1b1b
+    ) !important; /* visible sash color */
+    --dv-active-sash-color: var(
+      --background-surface-0,
+      #1b1b1b
+    ) !important; /* hover/active color (abyss accent) */
+  }
+
+  /* Tab containers */
+  .dockview-theme-abyss .dv-tab {
+    padding: 0 !important;
+  }
+
+  /* Tab Coloring */
+  /* Maximum specificity override for tab backgrounds and borders */
+  .dockview-theme-abyss .dv-groupview .dv-tabs-container .dv-tab {
+    background-color: var(--background-surface-1) !important;
+  }
+
+  .dockview-theme-abyss .dv-groupview .dv-tabs-container .dv-tab.dv-active-tab {
+    background-color: var(--background-surface-2) !important;
+  }
+
+  /* Void container and backgrounds */
+  .dockview-theme-abyss .dv-void-container {
+    background-color: var(--background-surface-0) !important;
+  }
+
+  /* Prevent Dockview from growing beyond screen size */
+  .dv-grid-view.dv-dockview {
+    max-height: 100vh !important;
+    max-width: 100vw !important;
+    overflow: hidden !important;
+  }
+
+  /* Prevent variable panels from getting focus */
+  [data-panel-id*="variable"] .dv-tab,
+  [data-panel-id*="variable"] .dv-tab-content {
+    pointer-events: none !important;
+  }
+
+  /* Remove Monaco Editor focus border */
+  .monaco-editor .monaco-editor-background,
+  .monaco-editor .inputarea.ime-input,
+  .monaco-editor .margin,
+  .monaco-editor {
+    outline: none !important;
+  }
+
+  /* Remove focus outline from the editor container */
+  .monaco-editor-container:focus {
+    outline: none !important;
+  }
+
+  /* Remove focus outline from textarea elements within Monaco */
+  .monaco-editor textarea:focus {
+    outline: none !important;
+  }
+
+  /* Remove all focus outlines in Monaco Editor */
+  .monaco-editor *:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Specific targeting for input areas */
+  .monaco-editor .inputarea:focus,
+  .monaco-editor .monaco-scrollable-element:focus {
+    outline: none !important;
+  }
+
+  /* Force editor content to use full width */
+  .monaco-editor .overflow-guard {
+    width: 100% !important;
+  }
+
+  /* Ensure the editor view lines use full width */
+  .monaco-editor .view-lines {
+    width: 100% !important;
+  }
+
+  /* Make sure the editor content expands */
+  .monaco-editor .monaco-scrollable-element.editor-scrollable {
+    width: 100% !important;
+  }
+
+  /* Target the editor's main content area */
+  .monaco-editor .monaco-editor-background {
+    width: 100% !important;
+  }
+
+  /* If you have a specific container class */
+  .monaco-editor-container .monaco-editor {
+    width: 100% !important;
+  }
+
+  /* Remove any right margin that might be reserved for minimap */
+  .monaco-editor
+    .overflow-guard
+    > .monaco-scrollable-element
+    > .monaco-editor-background
+    > .margin {
+    width: 100% !important;
+  }
+
+  /* Embla carousel */
+  .embla {
+    overflow: hidden;
+  }
+  .embla__container {
+    display: flex;
+  }
+  .embla__slide {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+
+  /* Onboarding screen carausel */
+  .embla-onboarding .embla__slide {
+    flex: 0 0 304px;
+    min-width: 0;
+    min-height: 171px;
+  }
+}

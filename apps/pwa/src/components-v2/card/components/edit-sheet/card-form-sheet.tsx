@@ -1,0 +1,676 @@
+"use client";
+
+import { useQueryClient } from "@tanstack/react-query";
+import { isUndefined, omitBy } from "lodash-es";
+import { ChevronLeft, Save } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { UseFormGetValues, UseFormTrigger } from "react-hook-form";
+import { toast } from "sonner";
+
+import { cn, downloadFile, logger } from "@/shared/utils";
+
+import { CardService } from "@/app/services";
+import { AssetService } from "@/app/services/asset-service";
+import { SessionService } from "@/app/services/session-service";
+import { Page, useAppStore } from "@/app/stores/app-store";
+import { useCardsStore } from "@/app/stores/cards-store";
+import { useEditSessionDialogStore } from "@/app/stores/edit-session-dialog-store";
+import { CharacterForm } from "@/components-v2/card/components/edit-sheet/character-form-v2";
+import { PlotForm } from "@/components-v2/card/components/edit-sheet/plot-form-v2";
+import { DeleteConfirm, UnsavedChangesConfirm } from "@/components-v2/confirm";
+import { useBackGesture } from "@/components-v2/hooks/use-back-gesture";
+import { TopNavigation } from "@/components-v2/top-navigation";
+import { Button } from "@/components-v2/ui/button";
+import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import {
+  Sheet,
+  SheetBody,
+  SheetClose,
+  SheetContent,
+  SheetFooter,
+} from "@/components-v2/ui/sheet";
+import { TableName } from "@/db/schema/table-name";
+import {
+  Card,
+  CardType,
+  CharacterCard,
+  Entry,
+  Lorebook,
+  PlotCard,
+} from "@/modules/card/domain";
+import { Session } from "@/modules/session/domain/session";
+import * as amplitude from "@amplitude/analytics-browser";
+import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+
+export const ActiveTabType = {
+  BasicInfo: "basic-info",
+  AdditionalInfo: "additional-info",
+} as const;
+
+export type ActiveTabType = (typeof ActiveTabType)[keyof typeof ActiveTabType];
+
+export type CardFormValues = {
+  // Metadata
+  title: string;
+  newIcon?: FileList;
+  iconAssetId?: string;
+  tags: string[];
+
+  // Creator
+  creator?: string;
+  cardSummary?: string;
+  version?: string;
+  conceptualOrigin?: string;
+
+  // For Character
+  name?: string;
+  exampleDialogue?: string;
+
+  // For Plot
+  scenarios?: { name: string; description: string }[];
+
+  // For Character and Plot
+  description?: string;
+
+  // For Character, Plot
+  entries?: Entry[];
+};
+
+export interface CardStore {
+  // States
+  isOpenEditCardDialog: () => boolean;
+  selectedCard: () => Card | null;
+  getFormValues: () => UseFormGetValues<CardFormValues> | null;
+  isFormDirty: () => boolean;
+  onSave: () => (() => Promise<boolean>) | null;
+  tokenCount: () => number;
+  trigger: () => UseFormTrigger<CardFormValues> | null;
+  invalidItemIds: () => string[];
+
+  // Actions
+  setIsOpenEditCardDialog: () => (isOpen: boolean) => void;
+  selectCard: () => (card: Card | null) => void;
+  setGetFormValues: () => (
+    getValues: UseFormGetValues<CardFormValues> | null,
+  ) => void;
+  setIsFormDirty: () => (isDirty: boolean) => void;
+  setOnSave: () => (onSave: (() => Promise<boolean>) | null) => void;
+  setTokenCount: () => (tokenCount: number) => void;
+  setTrigger: () => (trigger: UseFormTrigger<CardFormValues> | null) => void;
+  setInvalidItemIds: () => (invalidItemIds: string[]) => void;
+  tryedValidation: () => boolean;
+  setTryedValidation: () => (tryedValidation: boolean) => void;
+}
+
+interface CardFormSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  cardType: CardType;
+  selectedCard: Card | null;
+  source?: "library" | "session";
+}
+
+const CardFormSheet: React.FC<CardFormSheetProps> = ({
+  open,
+  onOpenChange,
+  cardType,
+  selectedCard,
+  source = "library",
+}) => {
+  // State for confirmation dialog
+  const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
+
+  const isMobile = useIsMobile();
+  const { setActivePage, cardEditOpen, setCardEditOpen } = useAppStore();
+  // Use the appropriate store based on source
+  const store = (
+    source === "library" ? useCardsStore.use : useEditSessionDialogStore.use
+  ) as CardStore;
+
+  const cardService = CardService;
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Access store values through selector functions
+  const tokenCount = store.tokenCount();
+  const selectCard = store.selectCard();
+  const getFormValues = store.getFormValues();
+  const trigger = store.trigger();
+  const setInvalidItemIds = store.setInvalidItemIds();
+  const isFormDirty = store.isFormDirty();
+  const setIsFormDirty = store.setIsFormDirty();
+  const tryedValidation = store.tryedValidation();
+  const setTryedValidation = store.setTryedValidation();
+  const isNewCard = selectedCard?.props.title.trim().length === 0;
+
+  const [activeTab, setActiveTab] = useState<ActiveTabType>(
+    ActiveTabType.BasicInfo,
+  );
+  // Set basic info tab as default on first open
+  useEffect(() => {
+    if (open) {
+      setActiveTab(ActiveTabType.BasicInfo);
+    }
+  }, [open]);
+
+  const queryClient = useQueryClient();
+  const invalidateCards = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: [TableName.Cards],
+    });
+  }, [queryClient]);
+
+  const onSave = useCallback(async () => {
+    setTryedValidation(true);
+    // Validate form
+    if (!trigger) {
+      setActiveTab(ActiveTabType.BasicInfo);
+      console.log("No trigger function available");
+      return false;
+    }
+    const isValid = await trigger(undefined, { shouldFocus: true });
+    if (!isValid) {
+      setActiveTab(ActiveTabType.BasicInfo);
+      console.log("Form validation failed");
+      return false;
+    }
+
+    // Get form values
+    if (!getFormValues) {
+      console.log("No getFormValues function available");
+      return false;
+    }
+    const formValues = getFormValues();
+
+    // Check selected card
+    if (!selectedCard) {
+      console.log("No card selected");
+      return false;
+    }
+
+    // Validate entries or roles
+    if (selectedCard.props.type === CardType.Character) {
+      // Validate entries props
+      const invalidEntries = formValues.entries?.filter((entry) => {
+        return (
+          entry.name.length === 0 ||
+          isNaN(entry.recallRange) ||
+          entry.recallRange < 0 ||
+          entry.keys.length === 0 ||
+          (entry.keys.length === 1 && entry.keys[0].trim().length === 0) ||
+          entry.content.length === 0
+        );
+      });
+      if (invalidEntries && invalidEntries.length > 0) {
+        document.getElementById(invalidEntries[0].id.toString())?.focus();
+        setInvalidItemIds(invalidEntries.map((entry) => entry.id.toString()));
+        return false;
+      }
+    } else if (selectedCard.props.type === CardType.Plot) {
+      // Validate entries props
+      const invalidEntries = formValues.entries?.filter((entry) => {
+        return (
+          entry.name.length === 0 ||
+          isNaN(entry.recallRange) ||
+          entry.recallRange < 0 ||
+          entry.keys.length === 0 ||
+          (entry.keys.length === 1 && entry.keys[0].trim().length === 0) ||
+          entry.content.length === 0
+        );
+      });
+      if (invalidEntries && invalidEntries.length > 0) {
+        document.getElementById(invalidEntries[0].id.toString())?.focus();
+        setInvalidItemIds(invalidEntries.map((entry) => entry.id.toString()));
+        return false;
+      }
+    }
+
+    // Save new icon to assets
+    if (formValues.newIcon && formValues.newIcon.length > 0) {
+      const newIconFile = formValues.newIcon[0];
+      const assetOrError = await AssetService.saveFileToAsset.execute({
+        file: newIconFile,
+      });
+      if (assetOrError.isFailure) {
+        console.log("Failed to save icon:", assetOrError.getError());
+        logger.error(assetOrError.getError());
+        return false;
+      }
+      formValues.iconAssetId = assetOrError.getValue().id.toString();
+    }
+    // Update selected card
+    const updateResult = selectedCard.update(
+      omitBy(
+        {
+          ...formValues,
+          scenarios: formValues.scenarios,
+          lorebook: formValues.entries
+            ? Lorebook.create({ entries: formValues.entries }).isSuccess
+              ? Lorebook.create({ entries: formValues.entries }).getValue()
+              : undefined
+            : undefined,
+        },
+        isUndefined,
+      ),
+    );
+    if (updateResult.isFailure) {
+      logger.error(updateResult.getError());
+      return false;
+    }
+
+    // Save updated card
+    const savedCardOrError = await cardService.saveCard.execute(selectedCard);
+    if (savedCardOrError.isFailure) {
+      logger.error(savedCardOrError.getError());
+      return false;
+    }
+
+    // Refresh card list
+    invalidateCards();
+
+    if (open) {
+      onOpenChange(false);
+    }
+
+    // Toast
+    toast("Saved!");
+
+    // Track event
+    if (isNewCard && source === "library") {
+      console.log("Tracking new card creation");
+      amplitude.track("create_card_complete", {
+        card_type: selectedCard.props.type,
+        card_token_count: tokenCount,
+      });
+    }
+
+    return true;
+  }, [
+    cardService.saveCard,
+    getFormValues,
+    invalidateCards,
+    selectCard,
+    selectedCard,
+    setInvalidItemIds,
+    setIsFormDirty,
+    setTryedValidation,
+    onOpenChange,
+    source,
+    toast,
+    tokenCount,
+    trigger,
+    isNewCard,
+    open,
+  ]);
+
+  const onClone = useCallback(async () => {
+    // Clone selected card
+    if (!selectedCard) {
+      return;
+    }
+    const cloneResult = await cardService.cloneCard.execute({
+      cardId: selectedCard.id,
+    });
+    if (cloneResult.isFailure) {
+      logger.error(cloneResult.getError());
+      return;
+    }
+
+    // Refresh card list
+    invalidateCards();
+
+    if (open) {
+      onOpenChange(false);
+    }
+  }, [
+    cardService.cloneCard,
+    invalidateCards,
+    selectedCard,
+    open,
+    onOpenChange,
+  ]);
+
+  const onExport = useCallback(
+    async (type: "png" | "json") => {
+      if (!selectedCard) {
+        return;
+      }
+
+      const fileOrError = await cardService.exportCardToFile.execute({
+        cardId: selectedCard.id,
+        options: { format: type },
+      });
+
+      if (fileOrError.isFailure) {
+        logger.error(fileOrError.getError());
+        toast.error("Failed to export card", {
+          description: fileOrError.getError(),
+        });
+        return;
+      }
+
+      const file = fileOrError.getValue();
+      downloadFile(file);
+    },
+    [cardService.exportCardToFile, selectedCard, toast],
+  );
+
+  // Delete confirm
+  const [isOpenDeleteConfirm, setIsOpenDeleteConfirm] = useState(false);
+  const [usedSessions, setUsedSessions] = useState<Session[]>([]);
+  const getUsedSessions = useCallback(async () => {
+    if (!selectedCard) {
+      return;
+    }
+    const sessionsOrError = await SessionService.listSessionByCard.execute({
+      cardId: selectedCard.id,
+    });
+    if (sessionsOrError.isFailure) {
+      return;
+    }
+    setUsedSessions(sessionsOrError.getValue());
+  }, [selectedCard]);
+
+  const onDelete = useCallback(async () => {
+    // Check selected card
+    if (!selectedCard) {
+      return;
+    }
+
+    // Track event
+    if (source === "library") {
+      amplitude.track("delete_card", {
+        card_type: selectedCard.props.type,
+        card_token_count: tokenCount,
+      });
+    }
+
+    // Delete selected card
+    const deleteResult = await cardService.deleteCard.execute(selectedCard.id);
+    if (deleteResult.isFailure) {
+      logger.error(deleteResult.getError());
+      return;
+    }
+
+    // Refresh card list
+    invalidateCards();
+
+    // Invalidate used sessions validation
+    for (const usedSession of usedSessions) {
+      queryClient.invalidateQueries({
+        queryKey: [TableName.Sessions, usedSession.id.toString(), "validation"],
+      });
+    }
+
+    if (open) {
+      onOpenChange(false);
+    }
+  }, [
+    selectedCard,
+    source,
+    cardService.deleteCard,
+    invalidateCards,
+    open,
+    tokenCount,
+    usedSessions,
+    queryClient,
+    onOpenChange,
+  ]);
+
+  // Custom handler for sheet close
+  const handleSheetOpenChange = (newOpenState: boolean) => {
+    // If trying to close and form is dirty, show confirmation instead
+    if (!newOpenState && isFormDirty) {
+      setShowCloseConfirmation(true);
+      return;
+    }
+    if (cardEditOpen) {
+      console.log("Tracking card edit close");
+
+      setActivePage(Page.Sessions);
+      setCardEditOpen(null);
+    }
+    // Otherwise, pass through to parent handler
+    onOpenChange(newOpenState);
+  };
+
+  // Handle Android back gesture
+  const handleBackGesture = () => {
+    if (isFormDirty) {
+      setShowCloseConfirmation(true);
+    } else {
+      handleSheetOpenChange(false);
+    }
+  };
+
+  // useBackGesture({ enabled: isMobile && open, onBack: handleBackGesture });
+
+  // Handler for discarding changes
+  const handleDiscardChanges = () => {
+    setShowCloseConfirmation(false);
+    // Reset form dirty state to prevent recursive dialog trigger
+    setIsFormDirty(false);
+    // Close the sheet
+    onOpenChange(false);
+    // setCardEditOpen(null);
+    if (cardEditOpen) {
+      console.log("Tracking card edit close");
+      setActivePage(Page.Sessions);
+      setCardEditOpen(null);
+    }
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
+      <SheetContent
+        side="right"
+        className={cn(
+          "w-full sm:max-w-xl md:max-w-3xl h-full flex flex-col bg-background-card border-l border-secondary p-0",
+          isMobile ? "bg-background-surface-2" : "pt-4",
+        )}
+        hideClose
+      >
+        {/* Mobile Top Bar */}
+        {isMobile && (
+          <TopNavigation
+            title={`${isNewCard ? "Create" : "Edit"} ${cardType === CardType.Character ? "Character" : "Plot"}`}
+            leftAction={
+              <Button
+                variant="ghost_white"
+                size="icon"
+                className="h-[40px] w-[40px] p-[8px]"
+                onClick={() => {
+                  if (isFormDirty) {
+                    setShowCloseConfirmation(true);
+                  } else {
+                    handleSheetOpenChange(false);
+                  }
+                }}
+              >
+                <ChevronLeft className="min-h-6 min-w-6" />
+              </Button>
+            }
+            rightAction={
+              <Button
+                size="lg"
+                onClick={() => {
+                  setIsLoading(true);
+                  try {
+                    onSave()
+                      .then((success) => {
+                        setIsLoading(false);
+                      })
+                      .catch((err) => {
+                        setIsLoading(false);
+                        toast.error("Failed to save card", {
+                          description: err.message,
+                        });
+                      });
+                    if (cardEditOpen) {
+                      setActivePage(Page.Sessions);
+                      setCardEditOpen(null);
+                    }
+                  } catch (error) {
+                    setIsLoading(false);
+                    toast.error("Failed to save card", {
+                      description: (error as Error).message,
+                    });
+                    if (cardEditOpen) {
+                      setActivePage(Page.Sessions);
+                      setCardEditOpen(null);
+                    }
+                  }
+                }}
+                disabled={isLoading || !isFormDirty}
+                variant="ghost"
+                className="h-[40px]"
+              >
+                {isNewCard ? "Create" : "Save"} {isLoading ? "..." : ""}
+              </Button>
+            }
+          />
+        )}
+
+        <ScrollArea className="grow min-h-0 h-full">
+          <SheetBody className="px-5 text-foreground dark:text-foreground">
+            {selectedCard && cardType === CardType.Character && (
+              <CharacterForm
+                store={store}
+                card={selectedCard as CharacterCard}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                setIsFormDirty={setIsFormDirty}
+                tryedValidation={tryedValidation}
+                isNewCard={isNewCard}
+                isMobile={isMobile}
+              />
+            )}
+            {selectedCard && cardType === CardType.Plot && (
+              <PlotForm
+                store={store}
+                card={selectedCard as PlotCard}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                setIsFormDirty={setIsFormDirty}
+                tryedValidation={tryedValidation}
+                isNewCard={isNewCard}
+                isMobile={isMobile}
+              />
+            )}
+          </SheetBody>
+        </ScrollArea>
+
+        {/* Desktop Footer */}
+        {!isMobile && (
+          <SheetFooter
+            variant="edit"
+            className="flex justify-between w-full border-t border-border-container pt-4 bg-background-container"
+          >
+            <div className="flex justify-between w-full">
+              <SheetClose asChild>
+                <Button variant="ghost" size="sm">
+                  Cancel
+                </Button>
+              </SheetClose>
+
+              <div className="flex items-center gap-2">
+                {!isNewCard && (
+                  <div>
+                    <DeleteConfirm
+                      open={isOpenDeleteConfirm}
+                      onOpenChange={async (open) => {
+                        if (open) {
+                          await getUsedSessions();
+                        }
+                        setIsOpenDeleteConfirm(open);
+                      }}
+                      description={
+                        <>
+                          This card is used in{" "}
+                          <span className="text-secondary-normal">
+                            {usedSessions.length} sessions
+                          </span>
+                          .
+                          <br />
+                          Deleting it might corrupt or disable these sessions.
+                        </>
+                      }
+                      onDelete={() => {
+                        onDelete();
+                        onOpenChange(false);
+                      }}
+                    >
+                      <Button variant="ghost" size="sm">
+                        Delete
+                      </Button>
+                    </DeleteConfirm>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={onClone}
+                    >
+                      Copy
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onExport("png")}
+                    >
+                      Export
+                    </Button>
+                  </div>
+                )}
+
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setIsLoading(true);
+                    try {
+                      onSave()
+                        .then((success) => {
+                          setIsLoading(false);
+                        })
+                        .catch((err) => {
+                          setIsLoading(false);
+                          toast.error("Failed to save card", {
+                            description: err.message,
+                          });
+                        });
+                      if (cardEditOpen) {
+                        setActivePage(Page.Sessions);
+                        setCardEditOpen(null);
+                      }
+                    } catch (error) {
+                      setIsLoading(false);
+                      toast.error("Failed to save card", {
+                        description: (error as Error).message,
+                      });
+                      if (cardEditOpen) {
+                        setActivePage(Page.Sessions);
+                        setCardEditOpen(null);
+                      }
+                    }
+                  }}
+                  disabled={isLoading || !isFormDirty}
+                  size="sm"
+                >
+                  <Save className="h-4 w-4 mr-1" />
+                  {isNewCard ? "Create" : "Save"} {isLoading ? "..." : ""}
+                </Button>
+              </div>
+            </div>
+          </SheetFooter>
+        )}
+      </SheetContent>
+
+      {/* Unsaved Changes Confirmation Dialog */}
+      <UnsavedChangesConfirm
+        open={showCloseConfirmation}
+        onOpenChange={setShowCloseConfirmation}
+        onCloseWithoutSaving={handleDiscardChanges}
+      />
+    </Sheet>
+  );
+};
+
+export default CardFormSheet;

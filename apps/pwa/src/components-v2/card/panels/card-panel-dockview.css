@@ -1,0 +1,45 @@
+/* Card panel specific dockview styles */
+
+/* Hide tabs for the locked group (card panel group) */
+.dv-groupview.dv-locked-groupview .dv-tabs-and-actions-container {
+  display: none !important;
+  height: 0 !important;
+}
+
+/* Ensure content takes full height when tabs are hidden */
+.dv-groupview.dv-locked-groupview .dv-content-container {
+  height: 100% !important;
+  top: 0 !important;
+}
+
+/* Minimum width for locked group (card panel) */
+.dv-groupview.dv-locked-groupview {
+  min-width: 384px !important;
+}
+
+/* Hide individual tabs in the locked group */
+.dv-groupview.dv-locked-groupview .dv-tab {
+  display: none !important;
+}
+
+/* Remove any padding/margins that might create space */
+.dv-groupview.dv-locked-groupview > * {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Prevent card panel from receiving focus */
+.dv-groupview.dv-locked-groupview {
+  pointer-events: none !important;
+}
+
+/* But allow interaction with the content inside */
+.dv-groupview.dv-locked-groupview .dv-content-container {
+  pointer-events: auto !important;
+}
+
+/* Prevent the card panel from being the active/focused panel */
+.dv-groupview.dv-locked-groupview.dv-group-active {
+  outline: none !important;
+  box-shadow: none !important;
+}

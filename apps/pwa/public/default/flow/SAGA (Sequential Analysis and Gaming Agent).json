@@ -1,0 +1,686 @@
+{
+  "name": "SAGA (Sequential Analysis and Gaming Agent)",
+  "description": "",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "position": {
+        "x": 1769.459749926241,
+        "y": -52.70270234917497
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "0197e2a1-ef50-7bb2-8bc3-18264534ac60",
+      "type": "agent",
+      "position": {
+        "x": 239.1258941344778,
+        "y": -190
+      },
+      "data": {}
+    },
+    {
+      "id": "0197e2a1-ef59-7bb2-8bc3-222a7cc3049e",
+      "type": "agent",
+      "position": {
+        "x": 625.5296852646637,
+        "y": -189.55185979971387
+      },
+      "data": {}
+    },
+    {
+      "id": "0197e2a1-ef61-7bb2-8bc3-2974dd7c1464",
+      "type": "agent",
+      "position": {
+        "x": 1008.1904172286897,
+        "y": -185.36995355610676
+      },
+      "data": {}
+    },
+    {
+      "id": "0197e2a1-ef68-7bb2-8bc3-30bf1f933d6d",
+      "type": "agent",
+      "position": {
+        "x": 1381.6397422350215,
+        "y": -183.10938130394322
+      },
+      "data": {}
+    }
+  ],
+  "edges": [
+    {
+      "id": "start-agent",
+      "source": "start",
+      "target": "0197e2a1-ef50-7bb2-8bc3-18264534ac60"
+    },
+    {
+      "id": "0197b1f6-f333-7ffb-9c87-46e53827e97d-0197b1f7-f188-7ffb-9c87-52f37c32f0bb",
+      "source": "0197e2a1-ef50-7bb2-8bc3-18264534ac60",
+      "target": "0197e2a1-ef59-7bb2-8bc3-222a7cc3049e"
+    },
+    {
+      "id": "0197b1f7-f188-7ffb-9c87-52f37c32f0bb-0197b1f8-2b6b-7ffb-9c87-5d3fa9a86b28",
+      "source": "0197e2a1-ef59-7bb2-8bc3-222a7cc3049e",
+      "target": "0197e2a1-ef61-7bb2-8bc3-2974dd7c1464"
+    },
+    {
+      "id": "0197b1f8-2b6b-7ffb-9c87-5d3fa9a86b28-0197bf09-4c26-7ff7-8fda-56dece64a1f9",
+      "source": "0197e2a1-ef61-7bb2-8bc3-2974dd7c1464",
+      "target": "0197e2a1-ef68-7bb2-8bc3-30bf1f933d6d"
+    },
+    {
+      "id": "xy-edge__0197bf09-4c26-7ff7-8fda-56dece64a1f9-end",
+      "source": "0197e2a1-ef68-7bb2-8bc3-30bf1f933d6d",
+      "target": "end"
+    }
+  ],
+  "agents": {
+    "0197e2a1-ef50-7bb2-8bc3-18264534ac60": {
+      "name": "Analyzer",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "gemini-2.5-flash-preview-05-20",
+      "modelName": "gemini-2.5-flash-preview-05-20",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the Analyzer Agent in a TRPG GM workflow system. Your role is to analyze the current game situation, validate player actions, and determine outcomes through a three-step process.\n\n**CORE RESPONSIBILITIES:**\n1. Situation Analysis: Understand the current game context\n2. Action Validation: Assess the feasibility and appropriateness of player actions\n3. Outcome Determination: Calculate specific results based on game rules and dice rolls\n\n**INPUT FORMAT:**\nYou will receive:\n- Player action description\n- Current game state (location, NPCs present, ongoing plots)\n- Dice roll results (if applicable)",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:41:10.973Z",
+              "updatedAt": "2025-06-30T04:41:10.973Z",
+              "id": "0197bf23-9a3d-7cce-a4ff-d30fdc4d1707"
+            }
+          ],
+          "createdAt": "2025-06-30T04:41:10.973Z",
+          "id": "0197bf23-9a3d-7cce-a4ff-d91b8e818f26"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Character Information",
+              "template": "**CHARACTER INFORMATION:**\n\n**PLAYER CHARACTER:**\n- Name: {{cast.active.name}}\n- Description: {{cast.active.description}}\n\n**NPCS IN SCENE:**\nThe following is a list of NPCs.\n{% for npc in cast.inactive %}\n- Name: {{npc.name}}\n- Description: {{npc.description}}\n\n{% endfor %}\n\n**CONVERSATION HISTORY:**",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:41:10.973Z",
+              "updatedAt": "2025-06-30T04:41:10.973Z",
+              "id": "0197bf23-9a3d-7cce-a4ff-e20d0bf7628f"
+            }
+          ],
+          "createdAt": "2025-06-30T04:41:10.973Z",
+          "id": "0197bf23-9a3d-7cce-a4ff-ecc82f7d7d5c"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 3,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History",
+              "template": "{%- if turn.variables -%}\n{{turn.variables.formatter.response}}\n{%- else -%}\n{{turn.content}}\n{%- endif -%}",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:41:10.973Z",
+              "updatedAt": "2025-06-30T04:41:10.973Z",
+              "id": "0197bf23-9a3d-7cce-a4ff-f66c025cbb6b"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History",
+              "template": "{%- if turn.variables -%}\n{{turn.variables.formatter.response}}\n{%- else -%}\n{{turn.content}}\n{%- endif -%}",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:41:10.973Z",
+              "updatedAt": "2025-06-30T04:41:10.973Z",
+              "id": "0197bf23-9a3d-7cce-a4ff-f66c025cbb6b"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-06-30T04:41:10.973Z",
+          "id": "0197bf23-9a3d-7cce-a4ff-fb3534e81087"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Guidelines",
+              "template": "**PROCESSING STEPS:**\n\n**Step 1: Situation Analysis**\n- Analyze current location, time, environment, and atmosphere\n- Identify all NPCs present and their relationships/emotional states\n- Review ongoing main/sub quests and unresolved conflicts\n- Note hidden elements or plot threads players are unaware of\n\n**Step 2: Action Validation**\n- Physical feasibility: Can this action realistically be performed in this situation?\n- Rule compliance: Does this action conform to game system rules and mechanics?\n- Character consistency: Is this action in line with the character's personality, background, and motivations?\n- Situational appropriateness: Does this action make sense given the current context and atmosphere?\n\n**Step 3: Outcome Determination**\n- Process dice results and difficulty modifiers to determine success level\n- Calculate degrees of success: critical success/success/partial success/failure/critical failure\n- Identify unintended side effects or chain reactions\n- Determine new information revealed through the action\n- Calculate any stat/resource changes\n\n**IMPORTANT GUIDELINES:**\n- Always prioritize game fun and narrative flow over strict rule adherence\n- If a player action seems inappropriate, suggest alternatives rather than outright rejection\n- Consider the emotional impact on all players when determining outcomes\n- Maintain consistency with established world rules and character relationships\n- Balance challenge with player agency - don't make everything too easy or too hard\n- When in doubt about rules, interpret them in favor of creating interesting story moments",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:41:10.973Z",
+              "updatedAt": "2025-06-30T04:41:10.973Z",
+              "id": "0197bf23-9a3d-7cce-a500-051092faebce"
+            }
+          ],
+          "createdAt": "2025-06-30T04:41:10.973Z",
+          "id": "0197bf23-9a3d-7cce-a500-0b13d7ea6c02"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaDescription": "",
+      "schemaFields": [
+        {
+          "name": "location",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Describe the current scene location with enough detail to inform player action possibilities. Include:\n\n**Physical Space**: Size, layout, exits, furniture, obstacles, lighting\n**Social Context**: Formality level, who belongs here, social expectations  \n**Sensory Details**: Sounds, smells, temperature, visual atmosphere\n**Tactical Elements**: Cover, high ground, bottlenecks, hiding spots\n**Interaction Opportunities**: Private areas, public spaces, eavesdropping possibilities\n\n**Format**: Write as a single comprehensive sentence or short paragraph that captures both the literal location and its current mood/energy.\n\n**Examples**:\n- \"Cramped blacksmith's workshop - forge blazing hot, hammering echoes, apprentice watching nervously\"\n- \"Elegant noble's study - quiet candlelight, expensive books, servant hovering nearby\"\n- \"Busy marketplace at noon - vendors shouting, crowds jostling, easy to blend in or get lost\""
+        },
+        {
+          "name": "npcs_present",
+          "type": "string",
+          "array": true,
+          "required": true,
+          "description": "List all NPCs in current scene with sufficient detail to assess their potential impact on player actions, including situational awareness and relationship dynamics.\n\n**ESSENTIAL INFORMATION:**\n\n**Basic Identity:**\n- Name and role/occupation in community\n- Social status, authority level, or influence\n- Current physical location within scene\n\n**Current State:**\n- What they're currently doing (conversation, work, observation)\n- Level of attention paid to players and surroundings\n- Emotional state (mood, stress level, alertness)\n- Physical condition (health, intoxication, fatigue)\n\n**Relationship to Players:**\n- Recognition level (knows players, heard of them, strangers)\n- Relationship history and previous interactions\n- Current attitude (friendly, neutral, suspicious, hostile)\n\n**Impact Factors:**\n- Accessibility for conversation or approach\n- Potential as witnesses to player actions\n- Likelihood of intervention or reaction to events\n- Influence over other NPCs or situation outcomes\n\n**FORMAT OPTIONS:**\n- **Simple**: [\"NPC Name (Role/Current Activity)\"]\n- **Detailed**: [\"NPC Name (Role) - current activity, attention level, relationship to players\"]\n\n**SITUATIONAL CONSIDERATIONS:**\n- **Covert Actions**: Who might notice unusual behavior or report suspicious activities?\n- **Social Interactions**: Who holds influence, authority, or could mediate/escalate conflicts?\n- **Combat/Danger**: Who might assist, interfere, or become collateral damage?\n\n**QUALITY STANDARDS:**\n- **Effective**: \"Tavern keeper Baldur - wiping mugs behind bar, watching players with merchant's interest\"\n- **Avoid**: \"Some people are around\" / \"Everyone loves the players\" / Overwhelming lists without context\n\n**WRITING GUIDELINES:**\n- Include 2-6 NPCs typically (avoid overwhelming complexity)\n- Mix different attention levels and relationship types\n- Focus on NPCs who will impact the scene rather than pure atmosphere\n- Consider both helpful and hindering presences\n- Account for background NPCs when they matter to privacy/witnesses\n\n**BALANCE PRINCIPLES:**\nAdjust detail based on scene importance - major story moments deserve more detailed descriptions, but always include enough information for players to assess social/tactical implications of their actions."
+        },
+        {
+          "enum": [
+            "possible",
+            "difficult",
+            "impossible"
+          ],
+          "name": "action_feasibility",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "When evaluating \"action_feasibility\", consider these four key factors in order:\n\n1. **Physical/Logical Constraints**: Can this action physically happen in the game world?\n2. **Game System Rules**: Is this action supported by the game mechanics and rules?\n3. **Character Capabilities**: Does this character have the ability to attempt this action?\n4. **Situational Context**: Is this action appropriate given the current circumstances?\n\n**FEASIBILITY LEVELS:**\n\n**\"possible\"** - Standard actions with reasonable success chances:\n- Action aligns with character abilities and current situation\n- Standard dice roll determines success/failure\n- No extreme constraints or unusual risks\n- Examples: Combat with appropriate-level enemies, skill checks within character expertise, social interactions in normal circumstances\n\n**\"difficult\"** - Technically possible but with significant constraints:\n- Action pushes character limits or faces major obstacles\n- High difficulty penalties or harsh failure consequences\n- Requires exceptional luck or creativity to succeed\n- Examples: Attempting actions far above character level, performing complex tasks while injured, social interactions with hostile or suspicious NPCs\n\n**\"impossible\"** - Actions that cannot be performed:\n- Violates physical laws or game world logic\n- Exceeds character abilities by an unreasonable margin\n- Contradicts established game rules or character limitations\n- Examples: Non-magical characters casting spells, interacting with absent NPCs, performing actions requiring abilities the character doesn't possess\n\n**DECISION PROCESS:**\n1. First check if the action violates any absolute constraints (impossible)\n2. Then assess if major obstacles exist but success is theoretically possible (difficult)  \n3. If neither applies, default to possible with appropriate dice checks\n\n**IMPORTANT:** Always explain your reasoning briefly. If marking as \"difficult\" or \"impossible\", the alternative_suggestion field should offer a modified approach that could work."
+        },
+        {
+          "enum": [
+            "appropriate",
+            "questionable",
+            "inappropriate"
+          ],
+          "name": "action_appropriateness",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Evaluate how well player's action fits current social, cultural, and situational context. Focus on \"Is this the right thing to do in this situation?\" separate from physical feasibility.\n\n**ASSESSMENT CRITERIA:**\n\n**Social Context:**\n- Formality level (official ceremony vs casual gathering)\n- Hierarchy and power dynamics (speaking to superiors vs peers)\n- Public vs private setting (open square vs private room)\n- Social expectations and etiquette for this situation type\n\n**Cultural Background:**\n- Religious customs and taboos\n- Regional traditions and local customs\n- Class consciousness and social stratification\n- Gender roles and cultural expectations\n\n**Relational Context:**\n- Intimacy level with other characters (stranger vs close friend)\n- Trust and reputation between parties\n- History of past interactions and current emotional state\n\n**Situational Timing:**\n- Is this the right moment? (interrupting vs appropriate pause)\n- Does current mood support this action?\n- Is there urgency justifying unusual behavior?\n- Are there competing priorities making this poorly timed?\n\n**Character Consistency:**\n- Does this match character's established personality and values?\n- Would this character realistically choose this approach?\n\n**APPROPRIATENESS LEVELS:**\n\n**\"appropriate\"** - Natural fit for situation:\n- Aligns with social expectations and context\n- Matches character personality and background\n- Likely to achieve desired outcome without negative side effects\n\n**\"questionable\"** - Awkward but not completely wrong:\n- Might achieve goal but will raise eyebrows\n- Creates minor social friction or misunderstandings\n- Shows poor situation reading but understandable motivation\n\n**\"inappropriate\"** - Seriously mismatched to situation:\n- Violates clear social norms or expectations\n- Creates significant offense, suspicion, or hostility\n- Contradicts character's established personality or values\n\n**DECISION FRAMEWORK:**\n1. Consider social \"temperature\" (formal/informal, tense/relaxed)\n2. Assess power dynamics and relationship status\n3. Check character personality and values alignment\n4. Evaluate timing and contextual appropriateness\n5. Consider potential consequences and reactions\n\n**NOTE:** Even \"inappropriate\" actions can be justified by extreme circumstances. Always consider full context."
+        },
+        {
+          "enum": [
+            "critical_success",
+            "success",
+            "partial_success",
+            "failure",
+            "critical_failure"
+          ],
+          "name": "success_level",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Determine degree of success using 5-tier system that goes beyond simple pass/fail. Consider dice results, character abilities, difficulty, and situational modifiers.\n\n**SUCCESS LEVELS:**\n\n**\"critical_success\"** - Exceptional achievement beyond expectations:\n- **Triggers**: Natural 20 rolls, very easy tasks with high abilities, extremely favorable circumstances\n- **Effects**: Original goal achieved perfectly + unexpected bonus benefits\n- **Example**: Information request → Desired info + secret intel + NPC becomes ally\n\n**\"success\"** - Clean achievement of intended goal:\n- **Triggers**: Dice roll clearly beats target, balanced difficulty vs ability, neutral/favorable conditions\n- **Effects**: Original objective accomplished as planned without complications\n- **Example**: Information request → Exact information obtained as expected\n\n**\"partial_success\"** - Goal partially achieved with limitations:\n- **Triggers**: Dice roll barely meets target, difficulty slightly exceeds ability, minor obstacles\n- **Effects**: Some but not all objectives met, incomplete or conditional results\n- **Example**: Information request → Some information gained, NPC wants additional payment for rest\n\n**\"failure\"** - Goal not achieved without severe consequences:\n- **Triggers**: Dice roll misses target, difficulty significantly exceeds ability, unfavorable conditions\n- **Effects**: Original goal not accomplished, minor negative consequences\n- **Example**: Information request → No information gained, NPC becomes suspicious\n\n**\"critical_failure\"** - Catastrophic failure with serious complications:\n- **Triggers**: Natural 1 rolls, extremely difficult tasks with low abilities, severely adverse circumstances\n- **Effects**: Goal fails completely + unexpected serious problems created\n- **Example**: Information request → No information + exposed as spy + guards called\n\n**ASSESSMENT FACTORS:**\n- **Dice Results**: Natural 20/1 are critical candidates; 15-19 success; 10-14 partial; 2-9 failure\n- **Character Expertise**: Upgrade success in specialization areas, downgrade in unfamiliar areas\n- **Difficulty Scaling**: Easy tasks upgrade results, very hard tasks downgrade results\n- **Situational Modifiers**: Favorable conditions upgrade, adverse conditions downgrade\n\n**IMPORTANT CONSIDERATIONS:**\n- Success level affects immediate results and future opportunities/relationships\n- Critical results should have lasting campaign impact\n- Partial success often creates more interesting story complications than clean success\n- Balance dramatic moments - don't overuse critical results"
+        },
+        {
+          "name": "primary_result",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Define the most direct and immediate consequence of player's action. Answers \"What did the player achieve?\" or \"What happened as direct result of their action?\"\n\n**CORE CHARACTERISTICS:**\n- **Directness**: Immediate, first-order consequence directly relating to player's intended goal\n- **Specificity**: Concrete, measurable results with clear \"what,\" \"how much,\" and \"how\"\n- **Centrality**: Single most important outcome, distinguished from side effects or secondary consequences\n\n**SUCCESS LEVEL VARIATIONS:**\n- **Critical Success**: Original goal achieved perfectly + significant bonus benefits exceeding expectations\n- **Success**: Original intended goal achieved exactly as planned with complete, satisfactory outcome\n- **Partial Success**: Only portion of goal achieved with limitations, incomplete or conditional outcomes\n- **Failure**: Goal not achieved, desired outcome not obtained, resources/time spent without gain\n- **Critical Failure**: Goal fails completely + situation becomes significantly worse, creates larger problems\n\n**RESULT EXAMPLES BY CATEGORY:**\n- **Information Gathering**: \"Discovered exact artifact location\" vs \"Found partial clues\" vs \"No relevant information located\"\n- **Social Interaction**: \"Secured full 1000 gold sponsorship\" vs \"Conditional 500 gold promise\" vs \"Request rejected\"\n- **Combat**: \"Dealt 8 damage, severely wounding orc\" vs \"3 damage, orc remains threatening\" vs \"Attack missed\"\n- **Skill Usage**: \"Successfully picked lock, door opens\" vs \"Lock loosened, one more attempt needed\" vs \"Pick attempt failed\"\n\n**WRITING GUIDELINES:**\n- **DO**: Include specific numbers/quantities, focus on immediately verifiable outcomes, use clear language, provide information for planning next actions\n- **DON'T**: Use vague descriptions, mention only future possibilities, mix primary results with side effects, write overly complex explanations\n\n**PRIMARY RESULT vs SIDE EFFECTS:**\n- **Primary Result**: Direct consequence of intended goal, immediate certain change, core action purpose\n- **Side Effects**: Unintended additional results, indirect impacts, unexpected outcomes\n- **Example**: \"Restored 15 HP, returned to full health\" (primary) vs \"Magical fatigue, attracts monsters\" (side effects)\n\n**PRACTICAL APPLICATION:**\n1. Write from player perspective: \"What did I achieve?\"\n2. Make it measurable: specific numbers, items, information\n3. Focus on immediate effects: what happens right now\n4. Single outcome: choose most important result"
+        },
+        {
+          "name": "side_effects",
+          "type": "string",
+          "array": true,
+          "required": true,
+          "description": "Define unintended additional consequences that result from player's action. These are secondary outcomes occurring alongside primary result but were not the player's main objective.\n\n**CORE CHARACTERISTICS:**\n- **Unintended Nature**: Results player did not plan for, occurring as byproducts of main action\n- **Indirect Consequences**: Second or third-order effects stemming from primary result or method used\n- **Complexity Addition**: Elements that add new variables or influence future decision-making\n\n**SUCCESS LEVEL VARIATIONS:**\n- **Critical Success**: Mostly positive additional benefits, unexpected opportunities, reputation improvements\n- **Success**: Generally neutral or mildly beneficial consequences, predictable secondary effects\n- **Partial Success**: Mixed consequences (positive and negative), constraints or complications from incomplete success\n- **Failure**: Primarily negative but not severe consequences, relationship deterioration, resource waste\n- **Critical Failure**: Serious long-term negative consequences, difficult-to-repair damage, cascading disasters\n\n**SIDE EFFECT CATEGORIES:**\n- **Social**: Reputation changes, relationship shifts, social status alterations\n- **Economic**: Unexpected costs/income, market influence, new business opportunities\n- **Tactical/Strategic**: Information revelation, position exposure, resource state changes\n- **Environmental**: Physical changes to space/structures, ecosystem impacts, weather alterations\n- **Psychological**: Trauma/fear, confidence changes, motivation shifts\n\n**WRITING GUIDELINES:**\n- **Include 3-5 diverse side effects** from different categories\n- **Make effects logically connected** to the action with believable cause-and-effect\n- **Balance positive, negative, and neutral effects** appropriately for success level\n- **Consider both immediate and delayed consequences**\n\n**PRIMARY RESULT vs SIDE EFFECTS DISTINCTION:**\n- **Primary Result**: \"What did player achieve with intended goal?\"\n- **Side Effects**: \"What else happened as result of this action?\"\n\n**Example:**\nAction: \"Cast explosive spell to destroy boulder\"\nPrimary Result: \"Boulder completely destroyed, path now clear\"\nSide Effects: [\"Explosion noise attracts monsters\", \"Rock debris makes terrain treacherous\", \"Magical energy severely depleted\"]\n\n**AVOID:**\n- Mixing primary results with side effects\n- Effects unrelated to original action\n- Consequences too severe for action level\n- Only negative effects (unless critical failure)"
+        },
+        {
+          "name": "new_information",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Define knowledge, facts, or intelligence that player discovers as result of their action. Represents previously unknown information that becomes available to inform future decisions and story progression.\n\n**CORE CHARACTERISTICS:**\n- **Novelty**: Information player did not know before, filling knowledge gaps or correcting assumptions\n- **Relevance**: Directly connected to current situation, goals, or ongoing story elements\n- **Actionability**: Concrete, usable intelligence that can inform future actions rather than abstract knowledge\n\n**SUCCESS LEVEL VARIATIONS:**\n- **Critical Success**: Comprehensive detailed intelligence exceeding expectations, hidden secrets revealed, game-changing information\n- **Success**: Clear, accurate information at requested level, practical reliable knowledge suitable for planning\n- **Partial Success**: Incomplete or fragmentary intelligence, clues requiring additional investigation, uncertain information\n- **Failure**: Usually no new information gained, discovery that existing information was incorrect\n- **Critical Failure**: Unwanted intelligence creating disadvantages, information benefiting enemies or opposition\n\n**INFORMATION CATEGORIES:**\n- **Geographic**: Locations, routes, terrain features, hidden passages\n- **Character**: NPC backgrounds, motivations, relationships, hidden identities\n- **Organizational**: Power structures, political relationships, faction plans\n- **Historical/Cultural**: Past events, legends with basis in fact, cultural customs\n- **Technical/Magical**: How magic/technology functions, special materials, activation methods\n- **Economic/Resource**: Valuable resource locations, trade routes, market opportunities\n- **Tactical/Strategic**: Enemy plans, weaknesses, security systems, timing information\n\n**WRITING GUIDELINES:**\n- **Specificity**: Include concrete details (numbers, names, locations, timeframes), answer \"when, where, who, what, how\"\n- **Practical Utility**: Information should be usable for planning future actions and influence decision-making\n- **Appropriate Scope**: Match information depth to success level, balance revelation with maintaining mystery\n- **World Consistency**: Align with established setting, maintain logical connections to existing story elements\n\n**QUALITY EXAMPLES:**\n- **Excellent**: \"Village underground contains 100-year-old tunnel network with entrance in blacksmith's well, connects to castle but contains traps requiring thief skills\"\n- **Needs Improvement**: \"Something important seems hidden somewhere\" / \"You learn everything about everyone\"\n\n**AVOID:**\n- Information contradicting established facts\n- Knowledge that trivializes upcoming challenges\n- Details so minor they don't affect gameplay\n- Intelligence serving only exposition without utility"
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#A5B4FC",
+      "createdAt": "2025-07-07T02:05:52.853Z",
+      "updatedAt": "2025-07-07T02:05:52.853Z"
+    },
+    "0197e2a1-ef59-7bb2-8bc3-222a7cc3049e": {
+      "name": "Planner",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "gemini-2.5-flash-preview-05-20",
+      "modelName": "gemini-2.5-flash-preview-05-20",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the Planner Agent in a TRPG GM workflow system. Your role is to design NPC reactions, prepare narrative output, and craft engaging narration based on the Analyzer Agent's assessment.\n\n**CORE RESPONSIBILITIES:**\n1. Reaction Design: Plan how NPCs and the environment respond to player actions\n2. Output Preparation: Structure information for narration and dialogue\n3. Narration Creation: Write compelling scene descriptions and transitions\n\n**INPUT FORMAT:**\nYou will receive the complete JSON output from the Analyzer Agent, containing:\n- Situation context and current game state\n- Action validation results\n- Determined outcomes and consequences",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-07-07T02:06:43.989Z",
+              "updatedAt": "2025-07-07T02:06:43.989Z",
+              "id": "0197e2a2-b715-7bb2-8bc3-ad9aa2722617"
+            }
+          ],
+          "createdAt": "2025-07-07T02:06:43.989Z",
+          "id": "0197e2a2-b715-7bb2-8bc3-b1d0d144322f"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Character Information",
+              "template": "**CHARACTER INFORMATION:**\n\n**PLAYER CHARACTER:**\n- Name: {{cast.active.name}}\n- Description: {{cast.active.description}}\n\n**NPCS IN SCENE:**\nThe following is a list of NPCs.\n{% for npc in cast.inactive %}\n- Name: {{npc.name}}\n- Description: {{npc.description}}\n\n{% endfor %}\n\n**CONVERSATION HISTORY:**",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-07-07T02:06:43.989Z",
+              "updatedAt": "2025-07-07T02:06:43.989Z",
+              "id": "0197e2a2-b715-7bb2-8bc3-b8c9aab172cf"
+            }
+          ],
+          "createdAt": "2025-07-07T02:06:43.989Z",
+          "id": "0197e2a2-b715-7bb2-8bc3-c33cf7e80da6"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 3,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History",
+              "template": "{%- if turn.variables -%}\n{{turn.variables.formatter.response}}\n{%- else -%}\n{{turn.content}}\n{%- endif -%}",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-07-07T02:06:43.989Z",
+              "updatedAt": "2025-07-07T02:06:43.989Z",
+              "id": "0197e2a2-b715-7bb2-8bc3-c8bd1dee59b0"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History",
+              "template": "{%- if turn.variables -%}\n{{turn.variables.formatter.response}}\n{%- else -%}\n{{turn.content}}\n{%- endif -%}",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-07-07T02:06:43.989Z",
+              "updatedAt": "2025-07-07T02:06:43.989Z",
+              "id": "0197e2a2-b715-7bb2-8bc3-c8bd1dee59b0"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-07-07T02:06:43.989Z",
+          "id": "0197e2a2-b715-7bb2-8bc3-d0e9d48d799f"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Guidelines",
+              "template": "**ANALYZER OUTPUT:**\n```json\n{{analyzer}}\n```\n\n**PROCESSING STEPS:**\n\n**Step 1: Reaction Design**\n- Design individual NPC responses based on their personalities, relationships, and motivations\n- Plan group dynamics when multiple NPCs are present\n- Determine environmental and atmospheric changes\n- Create new opportunities and choices for players\n- Consider both immediate and delayed reactions\n\n**Step 2: Output Preparation**\n- Separate information into narration elements (GM description) and dialogue elements (NPC speech/actions)\n- Organize system information (rule results, stat changes)\n- Identify any secret information for individual players\n- Structure the flow of information revelation\n\n**Step 3: Narration Creation**\n- Write vivid scene descriptions with sensory details\n- Craft smooth transitions between game moments\n- Set appropriate tone and pacing for the situation\n- Hint at available options without being overly directive\n- Create hooks for future story development\n\n**NARRATIVE STYLE GUIDELINES:**\n- Use vivid, immersive language that engages multiple senses\n- Show rather than tell - let actions and details convey information\n- Maintain appropriate tone for the game's genre and current situation\n- Create natural pauses and breathing room for player responses\n- Balance description with action to maintain engagement\n- Use specific details to make the world feel real and lived-in\n\n**IMPORTANT PRINCIPLES:**\n- Every NPC should feel like a real person with their own agenda\n- Reactions should feel natural and consistent with established personalities\n- Always provide meaningful choices without railroading players\n- Create consequences that feel logical and fair\n- Build tension gradually rather than jumping between extremes\n- Leave room for player creativity and unexpected solutions\n- Remember that silence and subtle reactions can be as powerful as dramatic ones",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-07-07T02:06:43.989Z",
+              "updatedAt": "2025-07-07T02:06:43.989Z",
+              "id": "0197e2a2-b715-7bb2-8bc3-d9735d7894ea"
+            }
+          ],
+          "createdAt": "2025-07-07T02:06:43.989Z",
+          "id": "0197e2a2-b715-7bb2-8bc3-e4eb19577051"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaDescription": "",
+      "schemaFields": [
+        {
+          "name": "scene_description",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Create complete GM narration that conveys player action results, establishes current situation, and sets up NPC interactions with vivid detail.\n\n**CORE CHARACTERISTICS:**\n- **Completeness**: Full situation picture from action results to current circumstances\n- **Immersion**: Sensory details and atmospheric elements for player engagement\n- **Sequential Flow**: Logical chronological order with clear cause-and-effect\n\n**ESSENTIAL COMPONENTS:**\n1. **Action Result Description**: Direct consequences and visualization of success/failure\n2. **Environmental Changes**: Atmospheric shifts and sensory details\n3. **NPC Reaction Setup**: Current NPC states and positioning for Character Actor Agent\n4. **Choice Framework**: Subtle hints about available next actions\n\n**SUCCESS LEVEL VARIATIONS:**\n- **Critical Success**: Overwhelming, impressive results with new opportunities\n- **Success**: Clean, satisfying outcomes proceeding as expected\n- **Partial Success**: Incomplete results with visible limitations\n- **Failure**: Disappointing results requiring different approaches\n- **Critical Failure**: Dramatic deterioration with serious complications\n\n**WRITING TECHNIQUES:**\n- **Sensory Immersion**: Visual, auditory, tactile, olfactory details\n- **Show Don't Tell**: \"Hands tremble while wiping mug\" not \"innkeeper is nervous\"\n- **Player Perspective**: Use \"you/your\", focus on observable experiences\n- **Active Voice**: Present tense, dynamic descriptions\n\n**LENGTH GUIDELINES:**\n- **Standard scenes**: 4-6 sentences with atmospheric detail\n- **Short scenes**: 2-3 sentences for immediate results\n- **Climactic scenes**: 6-8 sentences with heightened drama\n\n**QUALITY EXAMPLE:**\n\"Your gold coins chime against the wooden table as firelight catches their surface, casting reflections in the innkeeper's widening eyes. He sets down his cleaning rag, glances toward private rooms, then leans forward until his face is inches from yours. 'Now we're speaking the same language,' he murmurs above the tavern's ambient chatter.\"\n\n**AVOID:**\n- Overwhelming detail that slows pacing\n- Contradicting established facts\n- Making assumptions about player thoughts\n- Modern references breaking immersion\n- Repetitive sentence structures\n\n**FINAL CHECK:**\n1. Conveys what happened from player action\n2. Establishes current situation for decisions\n3. Creates appropriate mood and atmosphere\n4. Sets up natural NPC dialogue entry points\n5. Maintains immersion and forward momentum"
+        },
+        {
+          "name": "atmosphere_change",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Define how the collective emotional climate and psychological tension shifts as a result of player action. Focus on scene-wide mood changes rather than individual reactions or physical alterations.\n\n**CORE CHARACTERISTICS:**\n- **Emotional Dimension**: Changes in collective psychological state affecting everyone present\n- **Collective Impact**: Scene-wide atmosphere, not individual NPC reactions\n- **Persistence**: Lasting background conditions influencing subsequent interactions\n\n**DISTINCTION FROM OTHER ELEMENTS:**\n- **Scene Description**: \"What happened and how it looks\"\n- **Atmosphere Change**: \"How the emotional climate shifted\"\n- **Environmental Changes**: Physical alterations vs psychological alterations\n- **NPC Reactions**: Individual responses vs overall mood current\n\n**TYPES OF ATMOSPHERE CHANGES:**\n- **Tension Shifts**: \"Relaxed atmosphere sharpens into alert wariness\" / \"Taut silence melts into warm chatter\"\n- **Trust Changes**: \"Initial skepticism transforms into respectful attention\" / \"Warm reception cools into guarded caution\"\n- **Power Dynamics**: \"Perception shifts from 'ordinary visitor' to 'important figure'\" / \"Respectful attention dissolves into dismissive indifference\"\n- **Social Inclusion**: \"Outsider status evaporates as group embraces you\" / \"Welcoming atmosphere turns exclusionary\"\n\n**SUCCESS LEVEL VARIATIONS:**\n- **Critical Success**: Dramatic transformations with universal impact\n- **Success**: Clear, positive improvements with stable new climate\n- **Partial Success**: Mixed elements with incomplete shifts\n- **Failure**: Deterioration or lack of desired improvement\n- **Critical Failure**: Dramatic deterioration into hostility or danger\n\n**WRITING GUIDELINES:**\n- **Specify Concrete Emotions**: \"Trust transforms into suspicion\" not \"atmosphere changes\"\n- **Express Directional Change**: Use \"from → to\" format showing transformation\n- **Emphasize Collective Impact**: \"Everyone feels\", \"entire space becomes\", \"universal shift\"\n- **Indicate Scope**: Whether changes are temporary or lasting\n\n**QUALITY EXAMPLES:**\n- **Effective**: \"Cautious business atmosphere evolves into enthusiastic partnership energy as mutual excitement replaces initial wariness\"\n- **Needs Improvement**: \"Things feel different now\" / \"Everyone becomes happy\"\n\n**AVOID:**\n- Mixing individual NPC reactions with collective atmosphere\n- Describing physical environmental changes instead of emotional climate\n- Creating changes disconnected from the triggering action\n- Writing changes too extreme for the action's scope"
+        },
+        {
+          "name": "npc_reactions",
+          "type": "string",
+          "array": true,
+          "required": true,
+          "description": "Define how each individual NPC responds to player action, providing specific emotional states and behavioral intentions for Character Actor Agent performance.\n\n**CORE CHARACTERISTICS:**\n- **Individuality**: Each NPC responds according to unique personality, background, and motivations\n- **Specificity**: Include emotional states and concrete actions/intentions for convincing performance\n- **Relationality**: Reflect individual relationships with players and social position/power dynamics\n\n**DISTINCTION FROM OTHER ELEMENTS:**\n- **Atmosphere Change**: \"Overall tension increases\"\n- **NPC Reactions**: \"Innkeeper shows interest, guard becomes wary, patrons whisper\"\n\n**INFORMATION TO INCLUDE:**\n- **Emotional State**: Current feelings, intensity level, emotional shift\n- **Immediate Response**: Physical reactions, behavioral intentions, readiness state\n- **Motivation**: Why they're reacting this way, what they want to do next\n\n**SUCCESS LEVEL VARIATIONS:**\n- **Critical Success**: Overwhelmingly positive, impressed responses with active cooperation offers\n- **Success**: Expected positive responses, cooperative or neutral attitudes\n- **Partial Success**: Mixed responses with conditional cooperation or limited support\n- **Failure**: Indifferent or mildly negative responses, refusal to cooperate\n- **Critical Failure**: Strong negative reactions, active opposition or intervention attempts\n\n**FORMAT STRUCTURE:**\nString array where each element follows: \"NPC Name - emotional state and behavioral intention with specific details\"\n\n**QUALITY EXAMPLES:**\n**Effective:**\n[\n\"Tavern keeper Baldur - eyes light up with greedy interest, glances around then leans forward conspiratorially for secretive deal\",\n\"Farmer patrons - witness money exchange and whisper among themselves, perceiving you as wealthy outsider with mixed curiosity\",\n\"Drunk miner - too intoxicated to fully grasp situation but shows bleary interest at coin sounds\"\n]\n\n**Needs Improvement:**\n[\n\"Innkeeper - likes it\", ← Too simplistic\n\"Everyone - all react similarly\", ← No individuality\n\"Guard - has bad feelings\" ← Lacks specificity\n]\n\n**WRITING GUIDELINES:**\n- **Ensure Individuality**: Different reactions reflecting personality, background, relationships\n- **Maintain Specificity**: Use \"emotion + action\" format with concrete descriptions\n- **Preserve Logic**: Reactions must align with established character settings and situation context\n- **Include 2-6 reactions** focusing on most relevant NPCs rather than every present character\n\n**AVOID:**\n- Identical reactions from different NPCs\n- Vague emotional descriptions without behavioral components\n- Reactions inconsistent with established character traits\n- Missing NPC names in descriptions"
+        },
+        {
+          "name": "environmental_changes",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "**ENVIRONMENTAL CHANGES DESCRIPTION GUIDE:**\n\nDefine specific physical and sensory alterations to the environment caused by player actions. Focus on measurable, observable changes to physical space rather than emotional atmosphere shifts.\n\n**CORE CHARACTERISTICS:**\n- **Physical Reality**: Measurable changes perceived through five senses, independent of character emotions\n- **Spatial Impact**: Physical condition changes affecting movement, visibility, accessibility, and gameplay mechanics\n- **Persistence**: Changes that last for certain duration and modify conditions for subsequent actions\n\n**DISTINCTION FROM OTHER ELEMENTS:**\n- **Environmental Changes**: \"Lighting dims, noise decreases\" (physical)\n- **Atmosphere Change**: \"Tension increases, trust builds\" (psychological)\n- **Scene Description**: Complete scene portrayal including environmental changes\n- **Side Effects**: Secondary consequences from environmental changes\n\n**MAJOR CATEGORIES:**\n- **Lighting Changes**: Brightness, direction, magical illumination\n- **Acoustic Changes**: Noise level, sound quality, audio masking\n- **Temperature/Air**: Temperature shifts, air quality, air movement\n- **Spatial Structure**: Physical obstacles, accessibility, space division\n- **Visibility**: Sight range, concealment conditions, visual clarity\n- **Sensory Environment**: Olfactory, tactile, combined sensory effects\n\n**SUCCESS LEVEL VARIATIONS:**\n- **Critical Success**: Dramatic transformations with ideal conditions created\n- **Success**: Expected positive improvements, stable sustainable alterations\n- **Partial Success**: Incomplete improvements with some constraints remaining\n- **Failure**: No change or results contrary to intention\n- **Critical Failure**: Serious deterioration with dangerous conditions created\n\n**WRITING GUIDELINES:**\n- **Specificity**: Clearly express \"how\" and \"how much\" with concrete descriptions\n- **Gameplay Relevance**: Changes should influence player's next actions and create new opportunities/constraints\n- **Sensory Richness**: Include multiple sensory elements for immersion\n- **Logic**: Changes must comply with physical laws and maintain cause-and-effect relationships\n\n**QUALITY EXAMPLES:**\n- **Effective**: \"Magic explosion splits central table in half, window glass vibrates, blue sparks float for 30 seconds. Scattered debris makes quiet movement difficult\"\n- **Needs Improvement**: \"Something changed\" / \"Everything transformed\" / \"Mood feels different\"\n\n**FORMAT:**\nWrite as single descriptive statement focusing on most significant physical alterations affecting subsequent gameplay and decision-making.\n\n**AVOID:**\n- Mixing emotional/psychological changes with physical alterations\n- Creating changes unrelated to triggering action\n- Making alterations too extreme for action's scope\n- Focusing only on visual changes while ignoring other senses"
+        },
+        {
+          "name": "tension_level",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Measure dramatic intensity and urgency of current scene to control game pacing and manage player engagement levels. This determines psychological pressure players feel and stakes of their decisions.\n\n**CORE CHARACTERISTICS:**\n- **Dramatic Intensity**: Current position in story's dramatic arc and level of psychological pressure\n- **Pacing Control**: Management of game rhythm, balance between tension and relaxation\n- **Player Experience**: Control of immersion and stress levels, adjustment of emotional intensity\n\n**FOUR TENSION LEVELS:**\n\n**\"low\" - Relaxed Atmosphere:**\n- Comfortable situations with no immediate danger or pressure\n- Time available for careful thought and planning\n- Social, everyday interactions without significant stakes\n- Example: \"Sitting comfortably by inn's fireplace, leisurely discussing travel plans\"\n\n**\"building\" - Rising Tension:**\n- Something significant about to happen with growing unease\n- Unclear dangers or opportunities developing\n- Situations requiring careful observation and preparation\n- Example: \"Noticing suspicious figures whispering in tavern corner\"\n\n**\"high\" - Elevated Tension:**\n- Clear danger or conflict requiring immediate attention\n- Situations where mistakes carry significant consequences\n- Moments demanding concentration and quick judgment\n- Example: \"Guards approaching with suspicious looks while your hand moves toward weapon\"\n\n**\"climactic\" - Peak Tension:**\n- Do-or-die moments or ultimate crisis situations\n- Everything-at-stake decisive moments\n- Irreversible, monumentally important choices\n- Example: \"Dragon's breath approaches as ally's life hangs in balance of your next action\"\n\n**DETERMINING FACTORS:**\n- **Risk Degree**: Life threats, goal threats, relationship threats\n- **Time Pressure**: Immediate response required, limited time for action\n- **Information Uncertainty**: Unknown dangers, incomplete information\n- **Stakes Size**: Personal importance, social impact, story significance\n\n**SUCCESS LEVEL IMPACT:**\n- **Critical Success**: Can dramatically reduce tension (Climactic → Low)\n- **Critical Failure**: Can dramatically increase tension (Low → High, Building → Climactic)\n- **Gradual Changes**: Success/Partial Success/Failure create moderate shifts\n\n**WRITING GUIDELINES:**\n- **Balance Maintenance**: Avoid prolonged high tension (fatigue) or extended low tension (boredom)\n- **Logical Transitions**: Sudden changes require clear justification; gradual changes feel more natural\n- **Context Consideration**: Current story stage, player state, previous scene tension levels\n\n**AVOID:**\n- Maintaining climactic tension too long\n- Random tension changes without story justification\n- Ignoring player emotional state when setting tension"
+        },
+        {
+          "name": "pacing_tempo",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Manage speed and rhythm of game progression to optimize player experience and storytelling effectiveness. Controls \"how quickly events unfold\" while tension_level measures \"how urgent and important.\"\n\n**CORE CHARACTERISTICS:**\n- **Speed and Rhythm**: Frequency of event occurrence, speed of information delivery, cycle of actions and reactions\n- **Player Experience**: Amount of thinking time provided, type of immersion, participation style and concentration level\n- **Storytelling Tool**: Method of dramatic effect creation, timing of information revelation\n\n**DISTINCTION FROM TENSION LEVEL:**\n- **Tension Level**: \"How dangerous and important is this?\" (stakes/urgency)  \n- **Pacing Tempo**: \"How quickly are things happening?\" (speed/rhythm)\n\n**THREE PACING TEMPOS:**\n\n**\"fast\" - Rapid Tempo:**\n- Quick succession of events requiring immediate responses\n- Large amounts of information in short timeframes\n- Dynamic, energetic progression\n- Example: Chase scenes, emergency situations, rapid social dynamics\n\n**\"moderate\" - Balanced Tempo:**\n- Even-paced progression with adequate thinking time\n- Steady information flow allowing for planning\n- Natural conversation and interaction rhythms\n- Example: Standard exploration, typical negotiations, balanced combat\n\n**\"slow\" - Deliberate Tempo:**\n- Leisurely, careful progression with focus on details\n- Time for deep thought and thorough analysis\n- Atmosphere and emotion immersion emphasis\n- Example: Critical decisions, complex puzzles, emotional conversations, detailed investigation\n\n**COMBINATION EXAMPLES:**\n- High Tension + Fast Tempo: \"Life-or-death chase sequence\"\n- High Tension + Slow Tempo: \"Bomb defusal requiring careful precision\"\n- Low Tension + Fast Tempo: \"Enjoyable party with energetic atmosphere\"\n- Low Tension + Slow Tempo: \"Peaceful inn with comfortable leisure\"\n\n**SUCCESS LEVEL IMPACT:**\n- **Critical Success**: Fast tempo creates cascading momentum; slow tempo savors success meaning\n- **Critical Failure**: Fast tempo creates urgent crisis; slow tempo absorbs failure impact\n\n**WRITING GUIDELINES:**\n- **Situational Appropriateness**: Match tempo to scene nature, player state, and story flow\n- **Balance and Variation**: Avoid monotonous tempo; pursue natural transitions\n- **Purpose Consciousness**: Understand why this tempo is needed for intended player experience\n\n**AVOID:**\n- Maintaining same tempo throughout entire session\n- Changing tempo without narrative justification\n- Ignoring player energy and attention levels\n- Using inappropriate tempo for situation type"
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#FDBA74",
+      "createdAt": "2025-07-07T02:05:52.861Z",
+      "updatedAt": "2025-07-07T02:06:43.990Z"
+    },
+    "0197e2a1-ef61-7bb2-8bc3-2974dd7c1464": {
+      "name": "Actor",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "gemini-2.5-flash-preview-05-20",
+      "modelName": "gemini-2.5-flash-preview-05-20",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the Character Actor Agent in a TRPG GM workflow system. Your role is to deliver the scene narration and perform one main NPC character in detail, while other NPCs are described indirectly through narration.\n\n**CORE RESPONSIBILITIES:**\n1. Deliver engaging scene narration that sets the stage and describes other NPC reactions\n2. Perform one main NPC with detailed dialogue, personality, and mannerisms\n3. Integrate the main character's performance seamlessly with the narration\n4. Maintain consistency with established personalities and relationships\n\n**INPUT FORMAT:**\nYou will receive the complete JSON output from the Planner Agent, including:\n- Scene description and environmental setup\n- NPC reaction plans with emotional states and intended actions\n- Atmosphere changes and tension levels\n- Player options and story direction",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:41:20.637Z",
+              "updatedAt": "2025-06-30T04:41:20.637Z",
+              "id": "0197bf23-bffd-7cce-a500-5450c7166f09"
+            }
+          ],
+          "createdAt": "2025-06-30T04:41:20.637Z",
+          "id": "0197bf23-bffd-7cce-a500-5f9a075486dd"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Character Information",
+              "template": "**CHARACTER INFORMATION:**\n\n**MAIN CHARACTER:**\n- Name: {{cast.active.name}}\n- Description: {{cast.active.description}}\n\n**NPCS IN SCENE:**\nThe following is a list of NPCs.\n{% for npc in cast.inactive %}\n- Name: {{npc.name}}\n- Description: {{npc.description}}\n\n{% endfor %}\n\n**CONVERSATION HISTORY:**",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:41:20.637Z",
+              "updatedAt": "2025-06-30T04:41:20.637Z",
+              "id": "0197bf23-bffd-7cce-a500-645127af84a9"
+            }
+          ],
+          "createdAt": "2025-06-30T04:41:20.637Z",
+          "id": "0197bf23-bffd-7cce-a500-696cd9eb8a86"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 8,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History",
+              "template": "{%- if turn.variables -%}\n{{turn.variables.formatter.response}}\n{%- else -%}\n{{turn.content}}\n{%- endif -%}",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:41:20.637Z",
+              "updatedAt": "2025-06-30T04:41:20.637Z",
+              "id": "0197bf23-bffd-7cce-a500-71f2e0cc0214"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History",
+              "template": "{%- if turn.variables -%}\n{{turn.variables.formatter.response}}\n{%- else -%}\n{{turn.content}}\n{%- endif -%}",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:41:20.637Z",
+              "updatedAt": "2025-06-30T04:41:20.637Z",
+              "id": "0197bf23-bffd-7cce-a500-71f2e0cc0214"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-06-30T04:41:20.637Z",
+          "id": "0197bf23-bffd-7cce-a500-7cd114b28c40"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Guidelines",
+              "template": "**PLANNER OUTPUT:**\n```json\n{{planner}}\n```\n\n**PROCESSING STEPS:**\n\n**Step 1: Scene and Character Analysis**\n- Review the complete scene setup and NPC reaction plans from Planner Agent\n- Identify which NPC should be the main speaking character for this scene\n- Understand the emotional states and planned reactions of all NPCs\n- Assess the overall scene flow and narrative requirements\n\n**Step 2: Narration and Performance Planning**\n- Plan narration that incorporates other NPCs' reactions indirectly\n- Design detailed dialogue and mannerisms for the main character\n- Ensure the main character's performance drives the scene forward\n- Balance narration and character performance for optimal flow\n\n**Step 3: Integrated Delivery**\n- Deliver scene narration that describes the setting and other NPC reactions\n- Perform the main character with full dialogue, emotions, and physical actions\n- Create seamless transitions between narration and character performance\n- Maintain scene momentum and player engagement\n\n**PERFORMANCE GUIDELINES:**\n\n**Narration Style:**\n- Set the scene with vivid, immersive descriptions\n- Describe other NPCs' reactions and behaviors indirectly\n- Create atmosphere and mood through environmental details\n- Provide context for the main character's entrance or response\n\n**Main Character Performance:**\n- Give the main NPC distinct speech patterns, vocabulary, and emotional expression\n- Include detailed physical actions, gestures, and mannerisms\n- Show personality through dialogue choices and behavioral quirks\n- React authentically based on character background and current situation\n\n**Integration Techniques:**\n- Use narration to set up the main character's dialogue naturally\n- Describe other NPCs' reactions in response to the main character\n- Create conversational flow that feels organic and engaging\n- Balance description with direct character interaction\n\n**Character Selection Priority:**\n- Choose the NPC most relevant to current player action\n- Prioritize characters with important information or strong reactions\n- Select NPCs that can drive the scene forward most effectively\n- Consider which character would create the most engaging interaction\n\n**AVOID:**\n- Lengthy narration that overshadows character performance\n- Main character performance that ignores other NPCs entirely\n- Inconsistent tone between narration and character voice\n-Choosing minor characters when major ones should respond\n\n---\n\nGenerate narration and main character, {{cast.active}}'s direct dialogue and physical actions.",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:41:20.637Z",
+              "updatedAt": "2025-06-30T04:41:20.637Z",
+              "id": "0197bf23-bffd-7cce-a500-860fa7b9f416"
+            }
+          ],
+          "createdAt": "2025-06-30T04:41:20.637Z",
+          "id": "0197bf23-bffd-7cce-a500-8c9089be5866"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaDescription": "",
+      "schemaFields": [
+        {
+          "name": "scene_focus",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Define the core purpose or function that the current scene accomplishes from both story and gameplay perspectives. This provides overall direction and purpose when Character Actor Agent integrates narration with main character performance.\n\n**CORE CHARACTERISTICS:**\n\n**Purpose Orientation**: Answers \"Why does this scene exist?\" and \"What does it provide to players?\" and \"What role does it serve in story progression?\"\n\n**Performance Direction**: Determines Character Actor Agent's acting style, sets narration tone and focus points, clarifies main character's behavioral objectives.\n\n**Player Experience Design**: Defines what experience players should gain from this scene, prepares state for next actions, provides emotional and informational satisfaction.\n\n**SCENE FOCUS TYPES:**\n\n**Information Exchange:**\n- Core purpose: Knowledge or news transmission\n- Example: \"gathering intelligence about northern forest dangers\"\n\n**Relationship Building:**\n- Core purpose: Mutual trust and bond formation\n- Example: \"establishing trust with local merchants guild\"\n\n**Conflict Resolution:**\n- Core purpose: Mediating opposing interests\n- Example: \"mediating dispute between farmers and merchants\"\n\n**Crisis Response:**\n- Core purpose: Immediate danger response\n- Example: \"urgent warning about approaching danger\"\n\n**Strategic Planning:**\n- Core purpose: Future action strategic design\n- Example: \"coordinating heist plan with thieves guild\"\n\n**Emotional Support:**\n- Core purpose: Psychological comfort and recovery\n- Example: \"comforting traumatized ally after battle\"\n\n**Power Struggle:**\n- Core purpose: Influence and dominance competition\n- Example: \"political maneuvering for city council influence\"\n\n**Secret Revelation:**\n- Core purpose: Hidden truth disclosure\n- Example: \"revealing hidden truth about family curse\"\n\n**WRITING GUIDELINES:**\n\n**Clarity:**\n- Specify concrete purposes and outcomes\n- Use unambiguous expressions\n- Present measurable achievements\n\n**Player-Centricity:**\n- What value does this provide to players?\n- How does this contribute to game progression?\n- What impact does this have on next actions?\n\n**Story Connectivity:**\n- Position and role within overall story\n- Connection to previous scenes\n- Influence on future developments\n\n**Achievability:**\n- Scope achievable within one scene\n- Level expressible by Character Actor Agent\n- Clarity understandable to players\n\n**QUALITY EXAMPLES:**\n\n**Effective Scene Focus:**\n- \"establishing merchant contact for future equipment supplies\"\n- \"gathering evidence of mayor's corruption\"\n- \"negotiating safe passage through bandit territory\"\n- \"revealing character's hidden magical abilities\"\n- \"securing temporary shelter during storm\"\n- \"learning ancient ritual requirements\"\n\n**Needs Improvement:**\n- \"having a conversation\" ← Too general\n- \"talking about stuff\" ← Vague\n- \"advancing the plot\" ← Abstract\n- \"being in the tavern\" ← No purpose\n\n**AVOID:**\n- Vague purposes that don't guide performance\n- Overly complex focuses that try to accomplish too much\n- Focuses that ignore player agency or interest\n- Generic descriptions that could apply to any scene"
+        },
+        {
+          "name": "emotional_tone",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Define the overall emotional atmosphere and affective coloring that Character Actor Agent delivers throughout the entire scene. This provides guidelines for creating consistent emotional experience when integrating narration with main character performance.\n\n**CORE CHARACTERISTICS:**\n\n**Unified Emotional Atmosphere**: Emotion that permeates both narration and character performance, overall feeling players receive, ensures emotional consistency of scene.\n\n**Performance Style Guide**: Determines Character Actor Agent's delivery method, sets voice tone/pace/emphasis, creates emotional harmony between narration and dialogue.\n\n**Player Immersion Tool**: Induces desired emotional responses, facilitates emotional immersion into game world, conveys emotional weight of story.\n\n**DISTINCTION FROM OTHER ELEMENTS:**\n\n**Scene Focus vs Emotional Tone:**\n- Scene Focus: \"What does this accomplish?\" (purpose)\n- Emotional Tone: \"What feeling conveys this?\" (atmosphere)\n\n**Main Character vs Emotional Tone:**\n- Main Character: Who performs the main acting\n- Emotional Tone: What emotion delivers that performance and narration\n\n**EMOTIONAL TONE TYPES:**\n\n**Urgency and Danger:**\n- \"urgent alarm with growing dread\"\n- \"desperate determination against overwhelming odds\"\n- \"calm professionalism masking inner tension\"\n\n**Trust and Cooperation:**\n- \"cautious optimism building mutual respect\"\n- \"warm camaraderie with shared purpose\"\n- \"professional courtesy with growing trust\"\n\n**Suspicion and Wariness:**\n- \"careful scrutiny with hidden agendas\"\n- \"polite hostility beneath formal courtesy\"\n- \"paranoid tension with unspoken threats\"\n\n**Grief and Comfort:**\n- \"gentle compassion embracing deep sorrow\"\n- \"quiet strength supporting broken spirits\"\n- \"healing warmth dissolving painful memories\"\n\n**Power and Dominance:**\n- \"calculated intimidation with velvet gloves\"\n- \"regal authority expecting absolute compliance\"\n- \"subtle manipulation through charm and threat\"\n\n**Mystery and Awe:**\n- \"mystical reverence touching ancient secrets\"\n- \"otherworldly wonder beyond mortal comprehension\"\n- \"sacred solemnity in presence of divine power\"\n\n**WRITING GUIDELINES:**\n\n**Specificity and Nuance:**\n- Express complex emotions rather than simple ones\n- Utilize contradictory or complicated emotional combinations\n- Capture subtle differences and gradations\n\n**Situational Appropriateness:**\n- Logical connection with Scene Focus\n- Reflect character relationships and backgrounds\n- Consider current story circumstances\n\n**Performance Feasibility:**\n- Level expressible by Character Actor Agent\n- Emotions deliverable through narration and dialogue\n- Appropriate intensity without excess\n\n**Player Experience Consideration:**\n- Create desired immersion\n- Match game tone and genre\n- Prevent emotional fatigue or overload\n\n**QUALITY EXAMPLES:**\n\n**Effective Emotional Tones:**\n- \"cautious optimism building mutual respect\"\n- \"professional competence with hidden vulnerability\"\n- \"sacred solemnity touching ancient mysteries\"\n- \"bitter determination fueled by righteous anger\"\n- \"playful banter masking serious underlying concerns\"\n- \"respectful formality concealing mutual attraction\"\n- \"weary resignation accepting inevitable sacrifice\"\n\n**Needs Improvement:**\n- \"happy\" ← Too simplistic\n- \"sad and angry\" ← Lacks complexity\n- \"normal feeling\" ← No specificity\n- \"very emotional\" ← No direction\n- \"good mood\" ← Too vague\n- \"bad vibes\" ← Unprofessional\n\n**ADVANCED TECHNIQUES:**\n\n**Layered Emotions:**\n- \"surface confidence masking deep insecurity\"\n- \"forced cheerfulness hiding desperate fear\"\n\n**Evolving Emotions:**\n- \"initial hostility melting into grudging respect\"\n- \"growing trust despite lingering suspicion\"\n\n**Contradictory Emotions:**\n- \"bitter satisfaction with pyrrhic victory\"\n- \"loving cruelty for necessary lessons\"\n\n**AVOID:**\n- Single, flat emotions without complexity\n- Emotional tones that contradict scene purpose\n- Overly dramatic expressions inappropriate to situation\n- Generic descriptions that could apply to any scene\n- Emotional inconsistency within the same scene"
+        },
+        {
+          "name": "narration",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Provide 2-3 sentences of contextual framework that sets up the main character's performance without repeating information from scene_description.\n\n**CORE PURPOSE:**\n- Bridge player action to main character response\n- Describe immediate NPC reactions and environmental changes\n- Set natural context for main character's entrance\n\n**CONTENT FOCUS:**\n- **Immediate Reactions**: How NPCs and environment respond right now\n- **Sensory Details**: Brief atmospheric elements (sounds, lighting, movement)\n- **Character Setup**: One sentence preparing for main character's response\n\n**WRITING GUIDELINES:**\n\n**Length**: Maximum 2-3 sentences before main character performance\n\n**Focus Areas**:\n- Environmental response to player action\n- Other NPCs' collective reactions (no direct dialogue)\n- Main character's readiness to respond\n\n**Quality Example:**\n\"Your gold coins catch the firelight as conversations pause and several patrons glance your way. The innkeeper sets down his cleaning cloth, evaluating you with experienced merchant's eyes.\"\n\n**CRITICAL REQUIREMENTS:**\n- **NO repetition** of scene_description content\n- **NO direct dialogue** from other NPCs  \n- **NO lengthy descriptions** that overshadow main character\n- Focus on **fresh details** and **immediate developments**\n\n**AVOID:**\n- Restating what already happened in scene_description\n- Over-describing atmosphere or environment\n- Including other NPCs' specific dialogue\n- Writing more than 3 sentences"
+        },
+        {
+          "name": "main_character",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "The main character's direct dialogue and physical actions form the core of NPC performance, providing players with vivid and memorable character experiences through authentic voice and mannerisms.\n\n**DIRECT DIALOGUE IN CHARACTER'S UNIQUE VOICE:**\n\n**Social Status-Based Language:**\n- Noble: \"I shall give your proposal careful consideration.\"\n- Merchant: \"Alright, I'll think it over.\"\n- Rough Mercenary: \"Hmm, not bad.\"\n- Scholar/Mage: \"Fascinating hypothesis. Theoretically speaking...\"\n\n**Education Level and Intellectual Background:**\n- Highly Educated: \"This matter requires multifaceted examination.\"\n- General Education: \"I need to look into this more.\"\n- Limited Education: \"This is... complicated stuff.\"\n- Uneducated: \"Don't really understand what you're saying.\"\n\n**Personality-Based Conversation Style:**\n- Cautious: \"Um... before that, there are a few things I'd like to confirm...\"\n- Direct: \"Good, let's get straight to the point.\"\n- Sociable: \"Oh, what an interesting story! Tell me more!\"\n- Introverted: \"Well... that's... how should I put it...\"\n\n**Emotional State Speech Patterns:**\n- Nervous/Fearful: \"That... well... um... I don't know how to say this...\"\n- Interested/Excited: \"Oh! I know something about that!\"\n- Suspicious/Wary: \"Hmm... why do you want to know such things?\"\n\n**Speech Habits and Quirks:**\n- Skeptical: \"Well, supposing that's true...\" \n- Cautious: \"To be perfectly clear...\"\n- Impatient: \"Anyway, the point is...\"\n- Humble: \"Well, in my opinion...\"\n\n**PHYSICAL ACTIONS AND DETAILED MANNERISMS:**\n\n**Basic Body Language:**\n- *Leans forward to show interest*\n- *Steps back to display wariness*\n- *Straightens shoulders to demonstrate authority*\n- *Hunches shoulders showing anxiety*\n\n**Hand and Arm Movements:**\n- *Palms up showing openness*\n- *Crosses arms defensively*\n- *Taps table with fingers while thinking*\n- *Chin resting on hand in serious consideration*\n\n**Emotional Physical Expression:**\n- Tension/Anxiety: *Clears throat to buy time* / *Scratches back of neck nervously*\n- Interest/Curiosity: *Eyes brighten while leaning forward* / *Tilts head wanting to know more*\n- Suspicion/Wariness: *Narrows eyes to observe closely* / *Takes a step back with crossed arms*\n\n**Character-Specific Habitual Actions:**\n- Merchant: *Fidgets with coins while calculating value*\n- Scholar: *Adjusts glasses while deep in thought*\n- Warrior: *Hand instinctively moves to weapon hilt*\n- Rogue: *Automatically checks exits and hiding spots*\n\n**Environmental Interaction:**\n- *Adjusts candlelight for more secretive atmosphere*\n- *Points to map on wall while explaining*\n- *Retrieves item from shelf as evidence*\n- *Checks outside through window for safety*\n\n**HARMONIOUS INTEGRATION OF DIALOGUE AND ACTION:**\n\n**Matching Emotional Expression:**\n\"That kind of information... well, it'll cost you.\"\nGently slides coins with finger to gauge their value\n\n**Contrasting Emotions for Complexity:**\n\"Of course, I'll be happy to help you.\"\nSmiles while coldly tapping fingers on table\n\n**Gradual Emotional Change:**\n\"You... experienced that incident?\"\nInitially keeps distance, then gradually leans forward with empathy\n\n**QUALITY EXAMPLES:**\n\n**Information Trading:**\n\"That information... there's a lot of dangerous stuff mixed in.\"\nPulls hood deeper while quickly scanning surroundings, secretly produces paper from under table\n\"But if it's you... you might be able to handle it.\"\nSlides paper forward while visually confirming sufficient payment\n\n**Emotional Comfort:**\n\"Child... I know how deep that pain runs.\"\nGently places weathered hand on shoulder with warm eyes holding centuries of experience\n\"But all wounds can heal with time and proper care.\"\nDraws small crystal from chest, making it glow softly as symbol of hope\n\n**Power Game:**\n\"Interesting proposal. However...\"\nLeans back comfortably in leather chair while rhythmically drumming fingers on desk\n\"Whether it benefits our guild... we'll need more solid guarantees.\"\nSmiles but eyes coldly assess opponent while organizing papers to display power\n\n**WRITING GUIDELINES:**\n\n**DO:**\n- Maintain consistent expression matching character background and personality\n- Create natural harmony between emotion and action\n- Use specific, visual action descriptions\n- Match tone and content appropriate to dialogue purpose and situation\n\n**DON'T:**\n- Overly complex or distracting action descriptions\n- Speech or actions contradicting character settings\n- Modern expressions or inappropriate language\n- Mechanical dialogue or actions without emotion\n\n**EFFECTIVE TECHNIQUES:**\n- **\"Show, Don't Tell\"** - Express emotions through actions rather than direct explanation\n- **Economic Expression** - Choose only the most important and characteristic actions\n- **Timing Consideration** - Consider sequence and timing of dialogue and actions\n- **Personality Enhancement** - Highlight unique traits specific to this character\n\n**BALANCE PRINCIPLES:**\n- Dialogue should feel natural while advancing story and revealing character\n- Physical actions should support and enhance verbal communication\n- Maintain character consistency while allowing for emotional growth\n- Create memorable moments that strengthen player connection to NPCs"
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#BEF264",
+      "createdAt": "2025-07-07T02:05:52.866Z",
+      "updatedAt": "2025-07-07T02:05:52.866Z"
+    },
+    "0197e2a1-ef68-7bb2-8bc3-30bf1f933d6d": {
+      "name": "Formatter",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "gemini-2.5-flash-preview-05-20",
+      "modelName": "gemini-2.5-flash-preview-05-20",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are an expert text formatter specializing in converting single character roleplay turns into clean, well-organized markdown. Your task is to analyze the given roleplay turn and format it using simple markdown syntax.\n\n## Instructions:\n\n### 1. Simple Formatting Rules\n\n- **Actions**: Wrap all character actions and descriptions with *italic formatting*\n- **Dialogue**: Wrap all spoken words with \"quotation marks\"\n- **Emphasis**: Use **bold formatting** for important words, sound effects, or key terms that need emphasis\n- **Mixed content**: When actions, dialogue, and emphasis are combined, format each part according to its type\n- **No backticks**: Do not use backticks (`) for any formatting\n\n### 2. Formatting Guidelines\n\n#### What to Italicize (*text*)\n- Physical actions (walking, fighting, gesturing)\n- Facial expressions and body language\n- Environmental interactions\n- Character thoughts or internal reactions\n- Descriptive actions\n\n#### What to Quote (\"text\")\n- All spoken dialogue\n- Whispered words\n- Shouted exclamations\n- Any vocalized communication\n\n#### What to Bold (**text**)\n- Sound effects (CRASH, BANG, whoosh)\n- Important or dramatic words\n- Key terms or abilities\n- Onomatopoeia\n- Words that need special emphasis\n\n#### General Rules\n- Keep the original flow and order of the text\n- Don't add or remove content, only format it\n- Use single spaces between formatted elements\n- Maintain the natural reading rhythm\n- **Never use backticks (`) for any purpose**\n\n### 3. Output Requirements\n\nProvide clean markdown that:\n- Uses *italics* for actions, \"quotes\" for dialogue, and **bold** for emphasis\n- Preserves the original meaning and sequence\n- Enhances readability without changing content\n- Maintains natural sentence flow\n\n## Example Input/Output:\n\n**Input:**\n```\nElena approaches the ancient door slowly, her staff glowing softly in her hand. She whispers to herself, I hope this works, then places her palm against the cold stone surface. The door begins to glow with mystical energy as she channels her magic into it.\n```\n\n**Output:**\n```markdown\n*Elena approaches the ancient door slowly, her staff glowing softly in her hand.* \"I hope this works,\" *she whispers to herself, then places her palm against the cold stone surface. The door begins to glow with mystical energy as she channels her magic into it.*\n```\n\n**Input:**\n```\nMarcus draws his sword and shouts You shall not pass! as he blocks the narrow corridor with his body, ready to defend his companions.\n```\n\n**Output:**\n```markdown\n*Marcus draws his sword and shouts* \"You shall not pass!\" *as he blocks the narrow corridor with his body, ready to defend his companions.*\n```\n\n**Input:**\n```\nThe wizard raises her staff high and casts Fireball with a loud WHOOSH! The magical energy crackles through the air before exploding with a tremendous BOOM against the enemy ranks.\n```\n\n**Output:**\n```markdown\n*The wizard raises her staff high and casts* **Fireball** *with a loud* **WHOOSH!** *The magical energy crackles through the air before exploding with a tremendous* **BOOM** *against the enemy ranks.*\n```\n\nNow, please provide the roleplay turn you'd like me to format into markdown.",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:29:34.520Z",
+              "updatedAt": "2025-06-30T04:29:34.520Z",
+              "id": "0197bf18-f9b8-7dd3-84ce-4155df3c29f3"
+            }
+          ],
+          "createdAt": "2025-06-30T04:29:34.520Z",
+          "id": "0197bf18-f9b9-7dd3-84ce-4e43b93b31b0"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Input",
+              "template": "{{actor.narration}}\n\n{{actor.main_character}}",
+              "isDeleteUnnecessaryCharacters": false,
+              "type": "plain",
+              "createdAt": "2025-06-30T04:29:34.521Z",
+              "updatedAt": "2025-06-30T04:29:34.521Z",
+              "id": "0197bf18-f9b9-7dd3-84ce-52b9e5905c82"
+            }
+          ],
+          "createdAt": "2025-06-30T04:29:34.521Z",
+          "id": "0197bf18-f9b9-7dd3-84ce-5cccc60f7930"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#FCA5A5",
+      "createdAt": "2025-07-07T02:05:52.873Z",
+      "updatedAt": "2025-07-07T02:05:52.873Z"
+    }
+  },
+  "responseTemplate": "<details>\n<summary>Flow Details</summary>\n\n**Analyzer:** analyze the current game situation, validate player actions, and determine outcomes\n\n```json\n{{analyzer | tojson(indent=2)}}\n```\n\n**Planner:** design NPC reactions, prepare narrative output, and craft engaging narration\n\n```json\n{{planner | tojson(indent=2)}}\n```\n\n**Actor:** deliver the scene narration and perform one main NPC character in detail\n\n```json\n{{actor | tojson(indent=2)}}\n```\n\n</details>\n\n{% if formatter %}\n{{formatter.response}}\n{% else %}\n*Thinking...*\n{% endif %}\n",
+  "createdAt": "2025-07-07T02:07:17.513Z",
+  "updatedAt": "2025-07-07T02:07:17.513Z",
+  "panelStructure": {
+    "panels": [],
+    "version": 2,
+    "activePanel": "flow",
+    "panelMetadata": {
+      "flow": {
+        "title": "Flow Editor",
+        "params": {},
+        "component": "flow",
+        "idPattern": "agent"
+      }
+    },
+    "serializedLayout": {
+      "grid": {
+        "root": {
+          "data": [
+            {
+              "data": {
+                "id": "1",
+                "views": [
+                  "flow"
+                ],
+                "locked": "no-drop-target",
+                "activeView": "flow",
+                "hideHeader": true
+              },
+              "size": 1408,
+              "type": "leaf"
+            }
+          ],
+          "size": 952,
+          "type": "branch"
+        },
+        "width": 1408,
+        "height": 952,
+        "orientation": "HORIZONTAL"
+      },
+      "panels": {
+        "flow": {
+          "id": "flow",
+          "title": "Flow Editor",
+          "contentComponent": "flow"
+        }
+      },
+      "activeGroup": "1"
+    }
+  },
+  "viewport": {
+    "x": 117,
+    "y": 473.1517200499003,
+    "zoom": 0.5869192994959094
+  }
+}
