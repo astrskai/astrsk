@@ -447,7 +447,7 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
     }
   }, []);
   const handleImport = useCallback(
-    async (file: File) => {
+    async (file: File, overrides?: Map<string, { apiSource: string; modelId: string; modelName: string }>) => {
       try {
         setIsImporting(true);
 
@@ -461,11 +461,15 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
           return;
         }
 
+        // Use passed overrides or fall back to state
+        const modelOverrides = overrides || agentModelOverrides;
+
+
         // Import flow from file
         const importedFlowOrError = await FlowService.importFlowFromFile.execute({
           file,
           agentModelOverrides:
-            agentModelOverrides.size > 0 ? agentModelOverrides : undefined,
+            modelOverrides.size > 0 ? modelOverrides : undefined,
         });
         if (importedFlowOrError.isFailure) {
           toast.error(
@@ -476,7 +480,7 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
         const importedFlow = importedFlowOrError.getValue();
         toast.success("Flow Imported!");
 
-        // Invalidate flowss
+        // Invalidate flows
         await queryClient.invalidateQueries({
           queryKey: flowQueries.lists(),
         });
@@ -502,7 +506,7 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
         setIsImporting(false);
       }
     },
-    [agentModelOverrides, selectFlowId, setActivePage],
+    [selectFlowId, setActivePage],
   );
 
   return (
@@ -604,7 +608,8 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
             }}
             onImport={async (file, overrides) => {
               setAgentModelOverrides(overrides || new Map());
-              await handleImport(file);
+              // Pass the overrides directly instead of relying on state
+              await handleImport(file, overrides);
             }}
           />
         </div>

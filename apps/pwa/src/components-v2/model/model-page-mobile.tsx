@@ -73,7 +73,7 @@ const showBaseUrl = new Map<ApiSource, boolean>([
   [ApiSource.OpenAICompatible, true],
 ]);
 
-const showModelUrl = new Map<ApiSource, boolean>([[ApiSource.Wllama, true]]);
+const showModelUrl = new Map<ApiSource, boolean>([[ApiSource.OpenAICompatible, true]]);
 
 const showApiKey = new Map<ApiSource, boolean>([
   [ApiSource.OpenAI, true],
@@ -190,18 +190,7 @@ const descriptionBySource = new Map<ApiSource, React.ReactNode>([
   [
     ApiSource.OpenAICompatible,
     <>
-      Please note that you can only connect to endpoints that provide both
-      inference and model list APIs.
-      <br />
-      <br />
-      <ul className="list-disc ml-4">
-        <li>
-          Inference API: <code>/v1/chat/completions</code>
-        </li>
-        <li>
-          Model list API: <code>/v1/models</code>
-        </li>
-      </ul>
+      Please note that you can only connect to endpoints that provide inference API (<code>/v1/chat/completions</code>).
     </>,
   ],
 ]);
@@ -231,6 +220,12 @@ const renderProviderListItem = ({
   // Get details by source
   const details: ProviderListItemDetail[] = [];
   if (apiConnection) {
+    if (showModelUrl.get(source)) {
+      details.push({
+        label: "Model ID",
+        value: apiConnection.modelUrls?.join(", ") ?? "",
+      });
+    }
     if (showBaseUrl.get(source)) {
       details.push({
         label: "Base URL",
@@ -247,13 +242,7 @@ const renderProviderListItem = ({
           ) ?? "",
       });
     }
-    if (showModelUrl.get(source)) {
-      details.push({
-        label: "Model URL",
-        value: apiConnection.modelUrls?.join(", ") ?? "",
-      });
-    }
-    if (showApiKey.get(source)) {
+    if (showApiKey.get(source) && source !== ApiSource.OpenAICompatible) {
       details.push({
         label: "API key",
         value: maskApiKey(apiConnection.apiKey),
@@ -503,6 +492,7 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
         case ApiSource.OpenAICompatible:
           setApiKey(connection.apiKey ?? "");
           setBaseUrl(connection.baseUrl ?? "");
+          setModelUrl(connection.modelUrls?.join(", ") ?? "");
           break;
       }
 
@@ -808,6 +798,22 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
                         onChange={(e) => setBaseUrl(e.target.value)}
                       />
                     )}
+                  {editingApiConnection.source === ApiSource.OpenAICompatible && (
+                    <div
+                      className={cn(
+                        "flex flex-row gap-[4px] items-start",
+                        "font-[400] text-[14px] leading-[17px] text-text-secondary",
+                        "[&>a]:text-secondary-normal [&>a]:underline",
+                      )}
+                    >
+                      <div className="pt-[1px]">
+                        <Info size={16} />
+                      </div>
+                      <div>
+                        If the Base URL with <code>/v1</code> doesn't work, try without <code>/v1</code>, or vice versa.
+                      </div>
+                    </div>
+                  )}
                   {editingApiConnection.source &&
                     showApiKey.get(editingApiConnection.source) && (
                       <FloatingLabelInput
@@ -819,7 +825,7 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
                   {editingApiConnection.source &&
                     showModelUrl.get(editingApiConnection.source) && (
                       <FloatingLabelInput
-                        label="Model URL"
+                        label="Model ID"
                         value={modelUrl}
                         onChange={(e) => setModelUrl(e.target.value)}
                       />

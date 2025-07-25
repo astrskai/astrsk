@@ -50,6 +50,9 @@ import { toast } from "sonner";
 import { ListEditDialog } from "@/components-v2/list-edit-dialog";
 import { TopNavigation } from "@/components-v2/top-navigation";
 import { StepName } from "@/components-v2/session/create-session/step-name";
+import { flowQueries } from "@/app/queries/flow-queries";
+import { sessionQueries } from "@/app/queries/session-queries";
+import { cardQueries } from "@/app/queries/card-queries";
 
 export function humanizeBytes(bytes: number): string {
   const units = ["Bytes", "KB", "MB", "GB", "TB"];
@@ -356,6 +359,7 @@ const SessionListMobile = ({
     try {
       setIsImporting(true);
 
+
       // Import session from file
       const importedSessionOrError =
         await SessionService.importSessionFromFile.execute({
@@ -369,31 +373,15 @@ const SessionListMobile = ({
       }
       const importedSession = importedSessionOrError.getValue();
 
-      const newFlowId = importedSession.props.flowId;
-
-      if (!newFlowId) {
-        toast("Failed to import session", {
-          description: "Flow ID is missing",
-        });
-        return;
-      }
-
-      // Invalidate query
-      await queryClient.invalidateQueries({
-        queryKey: [TableName.Sessions],
+      // Invalidate quries
+      queryClient.invalidateQueries({
+        queryKey: sessionQueries.lists(),
       });
-      await queryClient.invalidateQueries({
-        queryKey: [TableName.Flows],
+      queryClient.invalidateQueries({
+        queryKey: flowQueries.lists(),
       });
-      await queryClient.invalidateQueries({
-        queryKey: [TableName.Cards],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: [TableName.Backgrounds],
-      });
-      await fetchBackgrounds();
-      await queryClient.invalidateQueries({
-        queryKey: [TableName.Turns],
+      queryClient.invalidateQueries({
+        queryKey: cardQueries.lists(),
       });
 
       // Select imported session

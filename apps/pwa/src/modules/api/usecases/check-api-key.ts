@@ -39,7 +39,7 @@ export class CheckApiKey implements UseCase<ApiConnection, Result<boolean>> {
     );
     this.strategies.set(
       ApiSource.OpenAICompatible,
-      new ListOpenaiCompatibleModelStrategy(this.httpClient),
+      new ListOpenaiCompatibleModelStrategy(),
     );
     this.strategies.set(ApiSource.Wllama, new ListWllamaModelStrategy());
     this.strategies.set(

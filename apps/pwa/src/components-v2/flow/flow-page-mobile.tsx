@@ -411,94 +411,46 @@ export default function FlowPageMobile({
 
   const onImportFlowFromFile = useCallback(
     async (file: File) => {
-      setIsImporting(true);
       try {
-        const importResult = await FlowService.importFlowFromFile.execute({
+        setIsImporting(true);
+
+        // Check if service is initialized
+        if (
+          !FlowService.importFlowFromFile ||
+          typeof FlowService.importFlowFromFile.execute !== "function"
+        ) {
+          console.error("FlowService.importFlowFromFile not initialized");
+          toast.error("Import service not initialized yet. Please try again.");
+          return;
+        }
+
+
+        const importedFlowOrError = await FlowService.importFlowFromFile.execute({
           file,
           agentModelOverrides:
             agentModelOverrides.size > 0 ? agentModelOverrides : undefined,
         });
-        if (importResult.isFailure) {
-          toast.error(`Failed to import flow: ${importResult.getError()}`);
-          return;
-        }
-
-        const newFlow = importResult.getValue();
-        const newAgents = new Map();
-        const oldToNewAgentIdMap = new Map<string, string>();
-
-        try {
-          const agentNodes = newFlow.props.nodes.filter(node => node.type === 'agent');
-          for (const node of agentNodes) {
-            const oldAgentId = node.id;
-            
-            // Create new agent from imported data
-            const agentOrError = await AgentService.getAgent.execute(new UniqueEntityID(oldAgentId));
-            if (agentOrError.isFailure) {
-              toast.error(`Failed to import agent: ${agentOrError.getError()}`);
-              continue;
-            }
-            let agent = agentOrError.getValue();
-
-            // Apply model override if provided
-            const modelOverride = agentModelOverrides.get(oldAgentId);
-            if (modelOverride) {
-              const updatedAgent = agent.update({
-                modelId: modelOverride.modelId,
-                modelName: modelOverride.modelName,
-                apiSource: modelOverride.apiSource as any,
-              });
-
-              if (updatedAgent.isSuccess) {
-                agent = updatedAgent.getValue();
-              }
-            }
-
-            const agentSaved = await AgentService.saveAgent.execute(agent);
-            if (agentSaved.isFailure) {
-              toast.error(
-                `Failed to save agent ${agent.props.name}: ${agentSaved.getError()}`,
-              );
-              continue;
-            }
-
-            const savedAgent = agentSaved.getValue();
-
-            // Map old agent ID to new agent ID
-            oldToNewAgentIdMap.set(oldAgentId, savedAgent.id.toString());
-
-            // Use the NEW agent ID as the key
-            newAgents.set(savedAgent.id.toString(), savedAgent);
-          }
-        } catch (error) {
+        if (importedFlowOrError.isFailure) {
           toast.error(
-            "Failed to import agents" +
-              (error instanceof Error ? `: ${error.message}` : ""),
+            `Failed to import flow from file: ${importedFlowOrError.getError()}`,
           );
           return;
         }
+        const importedFlow = importedFlowOrError.getValue();
 
-        // Update flow nodes with new agent IDs
-        const updatedNodes = newFlow.props.nodes.map(node => {
-          if (node.type === 'agent') {
-            const newAgentId = oldToNewAgentIdMap.get(node.id);
-            if (newAgentId) {
-              return { ...node, id: newAgentId };
-            }
-          }
-          return node;
+        // Invalidate flows
+        await queryClient.invalidateQueries({
+          queryKey: flowQueries.lists(),
         });
-
-        newFlow.update({ nodes: updatedNodes });
-        await FlowService.saveFlow.execute(newFlow);
+        
+        await FlowService.saveFlow.execute(importedFlow);
 
         toast.success("Flow imported successfully!");
 
-        // Refresh flows
-        invalidate();
-
         // Close popup
         setIsOpenImportFlowPopup(false);
+        setAgentModels([]);
+        setAgentModelOverrides(new Map());
       } catch (error) {
         if (error instanceof Error) {
           toast.error("Failed to import flow", {
@@ -510,7 +462,7 @@ export default function FlowPageMobile({
         setIsImporting(false);
       }
     },
-    [invalidate, agentModelOverrides],
+    [agentModelOverrides],
   );
 
   // Create flow handlers

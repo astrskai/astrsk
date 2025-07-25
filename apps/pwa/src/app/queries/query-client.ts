@@ -145,11 +145,11 @@ broadcastQueryClient({
 });
 
 // Invalidate by live query
-Pglite.getInstance().then((instance) => {
-  const pg = instance as PGliteWithLive;
+export async function invalidateByLiveQuery() {
+  const db = (await Pglite.getInstance()) as PGliteWithLive;
 
   // Common
-  pg.live.changes<{ id: string }>(
+  db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Assets}`,
     [],
     "id",
@@ -163,7 +163,7 @@ Pglite.getInstance().then((instance) => {
   );
 
   // API
-  pg.live.changes<{ id: string }>(
+  db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.ApiConnections}`,
     [],
     "id",
@@ -181,7 +181,7 @@ Pglite.getInstance().then((instance) => {
   );
 
   // Flow
-  pg.live.changes<{ id: string }>(
+  db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Flows}`,
     [],
     "id",
@@ -193,7 +193,7 @@ Pglite.getInstance().then((instance) => {
       });
     },
   );
-  pg.live.changes<{ id: string }>(
+  db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Agents}`,
     [],
     "id",
@@ -207,7 +207,7 @@ Pglite.getInstance().then((instance) => {
   );
 
   // Card
-  pg.live.changes<{ id: string }>(
+  db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Cards}`,
     [],
     "id",
@@ -219,7 +219,7 @@ Pglite.getInstance().then((instance) => {
       });
     },
   );
-  pg.live.changes<{ id: string }>(
+  db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.CharacterCards}`,
     [],
     "id",
@@ -231,7 +231,7 @@ Pglite.getInstance().then((instance) => {
       });
     },
   );
-  pg.live.changes<{ id: string }>(
+  db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.PlotCards}`,
     [],
     "id",
@@ -245,7 +245,7 @@ Pglite.getInstance().then((instance) => {
   );
 
   // Session
-  pg.live.changes<{ id: string }>(
+  db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Sessions}`,
     [],
     "id",
@@ -258,7 +258,7 @@ Pglite.getInstance().then((instance) => {
       });
     },
   );
-  pg.live.changes<{ id: string }>(
+  db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Turns}`,
     [],
     "id",
@@ -270,4 +270,4 @@ Pglite.getInstance().then((instance) => {
       });
     },
   );
-});
+}
