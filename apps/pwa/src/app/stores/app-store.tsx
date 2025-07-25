@@ -231,6 +231,8 @@ const useAppStoreBase = create<AppState>()(
               break;
             case Page.Settings:
               state.activeMenu = Menu.Settings;
+              // Reset to main settings page when navigating to settings
+              state.settingPageLevel = SettingPageLevel.main;
               break;
           }
           state.activePage = activePage;
