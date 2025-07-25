@@ -437,9 +437,8 @@ export default function FlowPageMobile({
           return;
         }
         const importedFlow = importedFlowOrError.getValue();
-        toast.success("Flow Imported!");
 
-        // Invalidate flowss
+        // Invalidate flows
         await queryClient.invalidateQueries({
           queryKey: flowQueries.lists(),
         });
