@@ -206,16 +206,24 @@ export class ImportFlowFromFile implements UseCase<Command, Result<Flow>> {
         if (agentOrError.isFailure) {
           throw new Error(agentOrError.getError());
         }
-        const agent = agentOrError.getValue();
+        let agent = agentOrError.getValue();
 
         // Override model
         if (agentModelOverrides && agentModelOverrides.has(oldId)) {
           const modelOverride = agentModelOverrides.get(oldId);
-          agent.update({
+          
+          const updateResult = agent.update({
             apiSource: modelOverride?.apiSource as ApiSource,
             modelId: modelOverride?.modelId,
             modelName: modelOverride?.modelName,
           });
+          
+          if (updateResult.isFailure) {
+            throw new Error(`Failed to update agent model: ${updateResult.getError()}`);
+          }
+          
+          // Update the agent reference to use the updated version
+          agent = updateResult.getValue();
         }
 
         // Save agent
