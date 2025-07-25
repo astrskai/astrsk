@@ -11,6 +11,7 @@ type CustomTabParameters = {
 const CustomDockviewTab = React.memo((props: IDockviewPanelHeaderProps<CustomTabParameters>) => {
   const { api, containerApi, params } = props;
   const [isActive, setIsActive] = useState(api.isActive);
+  const [isVisible, setIsVisible] = useState(api.isVisible);
   const [showFocusAnimation, setShowFocusAnimation] = useState(false);
   const [currentParams, setCurrentParams] = useState(params);
 
@@ -31,7 +32,7 @@ const CustomDockviewTab = React.memo((props: IDockviewPanelHeaderProps<CustomTab
     };
   }, [api, params]);
 
-  // Listen for active state changes
+  // Listen for active state and visibility changes
   useEffect(() => {
     const updateActiveState = () => {
       const wasActive = isActive;
@@ -48,14 +49,20 @@ const CustomDockviewTab = React.memo((props: IDockviewPanelHeaderProps<CustomTab
       }
     };
 
+    const updateVisibilityState = (event?: { isVisible: boolean }) => {
+      setIsVisible(event?.isVisible ?? api.isVisible);
+    };
+
     // Set initial state
     updateActiveState();
+    updateVisibilityState();
 
-    // Listen for panel focus changes
+    // Listen for panel focus and visibility changes
     const disposables = [
       api.onDidActiveChange(updateActiveState),
       containerApi.onDidActiveGroupChange(updateActiveState),
-    ];
+      api.onDidVisibilityChange?.(updateVisibilityState),
+    ].filter(Boolean);
 
     return () => {
       disposables.forEach(d => d?.dispose?.());
@@ -86,15 +93,15 @@ const CustomDockviewTab = React.memo((props: IDockviewPanelHeaderProps<CustomTab
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
   
-  // Determine background color based on active state and agent color
+  // Determine background color based on visibility, active state and agent color
   const getBackgroundColor = () => {
     if (customBgColor) return customBgColor;
     if (agentColor) {
-      if (isActive) {
-        // Active state: use full color if agent is active, or 70% if agent is inactive
+      if (isActive || isVisible) {
+        // Active or visible state: use full color if agent is active, or 70% if agent is inactive
         return agentInactive ? hexToRgba(agentColor, 0.7) : agentColor;
       } else {
-        // Inactive tab state: use 70% if agent is active, or 50% if agent is inactive
+        // Not visible: use 70% if agent is active, or 50% if agent is inactive
         return agentInactive ? hexToRgba(agentColor, 0.5) : hexToRgba(agentColor, 0.7);
       }
     }
@@ -106,9 +113,9 @@ const CustomDockviewTab = React.memo((props: IDockviewPanelHeaderProps<CustomTab
       className={`relative flex items-center justify-between px-3 py-2 border-b border-border-default cursor-pointer transition-colors ${
         agentColor 
           ? '' // Don't apply CSS classes when agent color is available
-          : isActive 
-            ? 'bg-background-surface-2'
-            : 'bg-background-surface-1'
+          : (isActive || isVisible)
+            ? 'bg-background-surface-2' // Active or visible
+            : 'bg-background-surface-1'  // Not visible
       }`}
       onClick={() => api.setActive()}
       style={{
