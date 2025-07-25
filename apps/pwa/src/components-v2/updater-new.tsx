@@ -146,7 +146,7 @@ const UpdaterNew = () => {
               />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={1} className="z-[100]">
+          <TooltipContent side="top" variant="button" sideOffset={14} className="z-[100]">
             <div className="flex flex-col px-2 py-2">
               <TypoTiny className="p-0 leading-tight">
                 Restart to update!

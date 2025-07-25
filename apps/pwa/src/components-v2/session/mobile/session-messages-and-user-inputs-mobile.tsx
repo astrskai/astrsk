@@ -734,10 +734,14 @@ const UserInputCharacterButton = ({
 const UserInputAutoReplyButton = ({
   autoReply,
   setAutoReply,
+  characterCount,
 }: {
   autoReply: AutoReply;
   setAutoReply: (autoReply: AutoReply) => void;
+  characterCount: number;
 }) => {
+  const hasMultipleCharacters = characterCount > 1;
+  
   return (
     <div
       className="group relative flex flex-col gap-[4px] items-center cursor-pointer"
@@ -747,7 +751,8 @@ const UserInputAutoReplyButton = ({
             setAutoReply(AutoReply.Random);
             break;
           case AutoReply.Random:
-            setAutoReply(AutoReply.Rotate);
+            // Skip Rotate option if only one character
+            setAutoReply(hasMultipleCharacters ? AutoReply.Rotate : AutoReply.Off);
             break;
           case AutoReply.Rotate:
             setAutoReply(AutoReply.Off);
@@ -933,7 +938,11 @@ const UserInputsMobile = ({
                     />
                   </div>
                   <div className="shrink-0">
-                    <UserInputAutoReplyButton autoReply={autoReply} setAutoReply={setAutoReply} />
+                    <UserInputAutoReplyButton 
+                      autoReply={autoReply} 
+                      setAutoReply={setAutoReply} 
+                      characterCount={aiCharacterCardIds?.length || 0} 
+                    />
                   </div>
                 </div>
               </TooltipTrigger>
