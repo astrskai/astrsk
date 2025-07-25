@@ -1,7 +1,7 @@
 ![astrsk](./imgs/header.png)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/SDuck4/readme-test/refs/heads/main/imgs/icon.png" alt="astrsk logo" width="200"/>
+  <img src="https://github.com/astrskai/astrsk/raw/refs/heads/develop/imgs/icon.png" alt="astrsk logo" width="200"/>
 </p>
 
 <p align="center">
@@ -16,7 +16,7 @@
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=_zL7AEhqivA">
-    <img src="https://github.com/SDuck4/readme-test/raw/refs/heads/main/imgs/video-thumb.png" alt="astrsk preview - Click to watch demo video" width="800"/>
+    <img src="https://github.com/astrskai/astrsk/raw/refs/heads/develop/imgs/video-thumb.png" alt="astrsk preview - Click to watch demo video" width="800"/>
   </a>
   <br/>
   <em>▶️ Click the image above to watch the demo video</em>
@@ -134,6 +134,18 @@ $ pnpm dev:pwa
 
 # Build PWA application
 $ pnpm build:pwa
+
+# Run electron dev application
+$ pnpm dev:electron
+
+# Build electron application
+$ pnpm build:electron
+
+# Run docs dev server
+$ pnpm dev:docs
+
+# Build docs
+$ pnpm build:docs
 ```
 
 ## 🤝 Contributing
