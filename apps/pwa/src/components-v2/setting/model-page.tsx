@@ -67,7 +67,9 @@ const showBaseUrl = new Map<ApiSource, boolean>([
   [ApiSource.OpenAICompatible, true],
 ]);
 
-const showModelUrl = new Map<ApiSource, boolean>([[ApiSource.OpenAICompatible, true]]);
+const showModelUrl = new Map<ApiSource, boolean>([
+  [ApiSource.OpenAICompatible, true],
+]);
 
 const showApiKey = new Map<ApiSource, boolean>([
   [ApiSource.OpenAI, true],
@@ -184,7 +186,8 @@ const descriptionBySource = new Map<ApiSource, React.ReactNode>([
   [
     ApiSource.OpenAICompatible,
     <>
-      Please note that you can only connect to endpoints that provide inference API (<code>/v1/chat/completions</code>).
+      Please note that you can only connect to endpoints that provide inference
+      API (<code>/v1/chat/completions</code>).
     </>,
   ],
 ]);
@@ -537,25 +540,37 @@ export default function ModelPage({ className }: { className?: string }) {
         )}
       >
         <div className="flex flex-wrap justify-start p-[32px] pr-0 pb-[16px]">
-          {apiConnections?.map((apiConnection) =>
-            renderProviderListItem({
-              apiConnection: apiConnection,
-              onOpenEdit: () => {
-                if (apiConnection.source === ApiSource.AstrskAi) {
-                  return;
-                }
-                handleOnOpenEdit({
-                  apiConnection: apiConnection,
-                });
-              },
-              onDisconnect: (usedResourceIds) => {
-                if (apiConnection.source === ApiSource.AstrskAi) {
-                  return;
-                }
-                handleOnDisconnect(apiConnection, usedResourceIds);
-              },
-            }),
-          )}
+          {apiConnections
+            ?.filter((apiConnection, index, array) => {
+              // For AstrskAi connections, only keep the first occurrence
+              if (apiConnection.source === ApiSource.AstrskAi) {
+                return (
+                  array.findIndex(
+                    (conn) => conn.source === ApiSource.AstrskAi,
+                  ) === index
+                );
+              }
+              return true;
+            })
+            ?.map((apiConnection) =>
+              renderProviderListItem({
+                apiConnection: apiConnection,
+                onOpenEdit: () => {
+                  if (apiConnection.source === ApiSource.AstrskAi) {
+                    return;
+                  }
+                  handleOnOpenEdit({
+                    apiConnection: apiConnection,
+                  });
+                },
+                onDisconnect: (usedResourceIds) => {
+                  if (apiConnection.source === ApiSource.AstrskAi) {
+                    return;
+                  }
+                  handleOnDisconnect(apiConnection, usedResourceIds);
+                },
+              }),
+            )}
           {providerOrder.map((apiSource) => {
             // Get api connection by provider
             const apiConnection = getApiConnectionByApiSource({
@@ -639,7 +654,8 @@ export default function ModelPage({ className }: { className?: string }) {
                 <Info size={16} />
               </div>
               <div>
-                If the Base URL with <code>/v1</code> doesn't work, try without <code>/v1</code>, or vice versa.
+                If the Base URL with <code>/v1</code> doesn't work, try without{" "}
+                <code>/v1</code>, or vice versa.
               </div>
             </div>
           )}
@@ -714,7 +730,9 @@ export default function ModelPage({ className }: { className?: string }) {
           )}
           <DialogFooter>
             <DialogClose asChild>
-              <Button size="lg" variant="ghost">Cancel</Button>
+              <Button size="lg" variant="ghost">
+                Cancel
+              </Button>
             </DialogClose>
             <Button
               size="lg"
