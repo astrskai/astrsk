@@ -1,3 +1,4 @@
+import { invalidateByLiveQuery } from "@/app/queries/query-client.ts";
 import { initServices } from "@/app/services/init-services.ts";
 import { initStores } from "@/app/stores/init-stores.ts";
 import { Loading } from "@/components-v2/loading.tsx";
@@ -35,6 +36,9 @@ async function initializeApp() {
 
   // Migrate database
   await migrate();
+
+  // Invalidate by live query
+  await invalidateByLiveQuery();
 
   // Init services
   await initServices();

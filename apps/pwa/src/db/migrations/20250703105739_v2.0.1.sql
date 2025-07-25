@@ -1,1 +1,1 @@
-ALTER TABLE "agents" ADD COLUMN "output_streaming" boolean DEFAULT true;
+ALTER TABLE "agents" ADD COLUMN IF NOT EXISTS "output_streaming" boolean DEFAULT true;
