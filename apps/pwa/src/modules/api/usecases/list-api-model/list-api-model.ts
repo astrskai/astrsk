@@ -56,7 +56,7 @@ export class ListApiModel
     );
     this.strategies.set(
       ApiSource.OpenAICompatible,
-      new ListOpenaiCompatibleModelStrategy(this.httpClient),
+      new ListOpenaiCompatibleModelStrategy(),
     );
     this.strategies.set(ApiSource.Wllama, new ListWllamaModelStrategy());
     this.strategies.set(
