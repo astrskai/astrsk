@@ -1,4 +1,4 @@
-CREATE TABLE "agents" (
+CREATE TABLE IF NOT EXISTS "agents" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"name" varchar NOT NULL,
 	"description" text NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE "agents" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "api_connections" (
+CREATE TABLE IF NOT EXISTS "api_connections" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"title" varchar NOT NULL,
 	"source" varchar NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE "api_connections" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "assets" (
+CREATE TABLE IF NOT EXISTS "assets" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"hash" varchar NOT NULL,
 	"name" varchar NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE "assets" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "backgrounds" (
+CREATE TABLE IF NOT EXISTS "backgrounds" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"name" varchar NOT NULL,
 	"asset_id" uuid NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE "backgrounds" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "cards" (
+CREATE TABLE IF NOT EXISTS "cards" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"title" varchar NOT NULL,
 	"icon_asset_id" uuid,
@@ -63,7 +63,7 @@ CREATE TABLE "cards" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "character_cards" (
+CREATE TABLE IF NOT EXISTS "character_cards" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"name" varchar NOT NULL,
 	"description" text,
@@ -73,14 +73,14 @@ CREATE TABLE "character_cards" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "configs" (
+CREATE TABLE IF NOT EXISTS "configs" (
 	"key" varchar PRIMARY KEY NOT NULL,
 	"value" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "flows" (
+CREATE TABLE IF NOT EXISTS "flows" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"name" varchar NOT NULL,
 	"description" text NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE "flows" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "plot_cards" (
+CREATE TABLE IF NOT EXISTS "plot_cards" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"description" text,
 	"scenarios" jsonb,
@@ -101,7 +101,7 @@ CREATE TABLE "plot_cards" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "sessions" (
+CREATE TABLE IF NOT EXISTS "sessions" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"title" varchar NOT NULL,
 	"all_cards" jsonb NOT NULL,
@@ -115,7 +115,7 @@ CREATE TABLE "sessions" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "turns" (
+CREATE TABLE IF NOT EXISTS "turns" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"session_id" uuid NOT NULL,
 	"character_card_id" uuid,
