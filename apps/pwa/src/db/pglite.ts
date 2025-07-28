@@ -1,10 +1,10 @@
+import { FileStorageService } from "@/app/services/storage/file-storage-service";
 import Worker from "@/db/pglite-worker.ts?worker";
 import { logger } from "@/shared/utils/logger";
 import { PGliteInterface } from "@electric-sql/pglite";
 import { live } from "@electric-sql/pglite/live";
 import { PGliteWorker } from "@electric-sql/pglite/worker";
 import { Base64 } from "js-base64";
-import { FileStorageService } from "@/app/services/storage/file-storage-service";
 
 const PGLITE_DUMP_PATH = "/pglite/dump.txt";
 const PGLITE_INDEXEDDB_NAME = "/pglite/astrsk";
@@ -42,8 +42,14 @@ async function restoreDumpFiles() {
       continue;
     }
     const buffer = Base64.toUint8Array(assetDump);
-    const assetFile = new File([buffer], assetPath, { type: "application/octet-stream" });
-    await FileStorageService.getInstance().write(normalizedAssetPath, assetFile);
+    const fileName = assetPath.split("/").pop() || "asset";
+    const assetFile = new File([buffer], fileName, {
+      type: "application/octet-stream",
+    });
+    await FileStorageService.getInstance().write(
+      normalizedAssetPath,
+      assetFile,
+    );
   }
 
   // Delete dump
@@ -77,7 +83,8 @@ export class Pglite {
       await restoreDumpFiles();
 
       // Get dump
-      const dump = await FileStorageService.getInstance().read(PGLITE_DUMP_PATH);
+      const dump =
+        await FileStorageService.getInstance().read(PGLITE_DUMP_PATH);
 
       // When dump exists
       if (dump) {
@@ -119,7 +126,10 @@ export class Pglite {
         sleep(100);
         waitCount += 1;
         await Pglite._instance.query(`SELECT 1;`);
-        logger.debug(`Check PGLite is ready (${waitCount}):`, Pglite._instance.ready);
+        logger.debug(
+          `Check PGLite is ready (${waitCount}):`,
+          Pglite._instance.ready,
+        );
         if (Pglite._instance.ready) {
           break;
         }

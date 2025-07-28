@@ -15,6 +15,10 @@ class FileStorageService implements FileStorage {
 
   private constructor() {}
 
+  private static extractFileName(path: string): string {
+    return path.split("/").pop() || "file";
+  }
+
   public static getInstance(): FileStorageService {
     if (!FileStorageService._instance) {
       FileStorageService._instance = new FileStorageService();
@@ -70,7 +74,13 @@ class FileStorageService implements FileStorage {
 
   async write(path: string, file: File): Promise<void> {
     const storage = await this.getStorage();
-    return storage.write(path, file);
+    // Extract filename from original file name to avoid storing full path
+    const cleanFileName = FileStorageService.extractFileName(file.name);
+    const fileWithCleanName = new File([file], cleanFileName, {
+      type: file.type,
+      lastModified: file.lastModified,
+    });
+    return storage.write(path, fileWithCleanName);
   }
 
   async read(path: string): Promise<File | null> {
