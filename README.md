@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=_zL7AEhqivA">
+  <a href="https://www.youtube.com/watch?v=ZGccjdOPqpw">
     <img src="https://github.com/astrskai/astrsk/raw/refs/heads/develop/imgs/video-thumb.png" alt="astrsk preview - Click to watch demo video" width="800"/>
   </a>
   <br/>
