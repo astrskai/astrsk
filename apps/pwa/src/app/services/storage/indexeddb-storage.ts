@@ -154,6 +154,7 @@ export class IndexedDbStorage implements FileStorage {
       });
     } catch (error) {
       logger.error(`Failed to delete file from IndexedDB: ${path}`, error);
+      throw error;
     }
   }
 }

@@ -27,6 +27,7 @@ export class OpfsStorage implements FileStorage {
       await file(path).remove();
     } catch (error) {
       logger.error(`Failed to delete file from OPFS: ${path}`, error);
+      throw error;
     }
   }
 }
