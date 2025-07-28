@@ -1,15 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
-import { file } from "opfs-tools";
 import { useEffect, useState } from "react";
 
 import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/utils/logger";
 
 import { assetQueries } from "@/app/queries/asset-queries";
+import { FileStorageService } from "@/app/services/storage/file-storage-service";
 
 const SKELETON_PATH = "/img/skeleton.svg";
 
-const useOpfsFile = (filePath?: string | null) => {
+// Get singleton instance
+const storageService = FileStorageService.getInstance();
+
+const useStorageFile = (filePath?: string | null) => {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,16 +25,16 @@ const useOpfsFile = (filePath?: string | null) => {
 
     const loadFile = async () => {
       try {
-        // Get OPFS file
-        const opfsFile = await file(filePath).getOriginFile();
-        if (!opfsFile) {
+        // Get file from storage service
+        const file = await storageService.read(filePath);
+        if (!file) {
           // TODO: get file from cloud or p2p
           if (mounted) setObjectUrl(null);
           return;
         }
 
         // Create object URL
-        const url = URL.createObjectURL(opfsFile);
+        const url = URL.createObjectURL(file);
         if (mounted) setObjectUrl(url);
 
         // Cleanup function will revoke the URL
@@ -39,7 +42,7 @@ const useOpfsFile = (filePath?: string | null) => {
           URL.revokeObjectURL(url);
         };
       } catch (error) {
-        logger.error("Failed to load OPFS file:", error);
+        logger.error("Failed to load file from storage:", error);
         if (mounted) setObjectUrl(null);
       }
     };
@@ -57,14 +60,14 @@ const useOpfsFile = (filePath?: string | null) => {
 
 const useAsset = (assetId?: UniqueEntityID) => {
   // Get asset file path
-  const { data: opfsFilePath, isFetching } = useQuery(
+  const { data: filePath, isFetching } = useQuery(
     assetQueries.detail(assetId),
   );
 
-  // Get OPFS file object URL
-  const { data: opfsFileObjectURL } = useOpfsFile(opfsFilePath);
+  // Get file object URL from storage
+  const { data: fileObjectURL } = useStorageFile(filePath);
 
-  return [isFetching ? SKELETON_PATH : opfsFileObjectURL] as const;
+  return [isFetching ? SKELETON_PATH : fileObjectURL] as const;
 };
 
 export { useAsset };

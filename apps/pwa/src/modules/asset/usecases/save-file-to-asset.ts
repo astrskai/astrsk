@@ -5,6 +5,7 @@ import { getFileHash } from "@/shared/utils/file-utils";
 
 import { Asset } from "@/modules/asset/domain/asset";
 import { SaveAssetRepo } from "@/modules/asset/repos/save-asset-repo";
+import { FileStorageService } from "@/app/services/storage/file-storage-service";
 
 type Command = {
   file: File;
@@ -21,6 +22,7 @@ export class SaveFileToAsset implements UseCase<Command, Result<Asset>> {
       // Create asset from file
       const assetOrError = await Asset.createFromFile({
         file: command.file,
+        storage: FileStorageService.getInstance(),
       });
       if (assetOrError.isFailure) {
         throw new Error(assetOrError.getError());

@@ -4,7 +4,7 @@ import { PGliteInterface } from "@electric-sql/pglite";
 import { live } from "@electric-sql/pglite/live";
 import { PGliteWorker } from "@electric-sql/pglite/worker";
 import { Base64 } from "js-base64";
-import { file, write } from "opfs-tools";
+import { FileStorageService } from "@/app/services/storage/file-storage-service";
 
 const PGLITE_DUMP_PATH = "/pglite/dump.txt";
 const PGLITE_INDEXEDDB_NAME = "/pglite/astrsk";
@@ -31,7 +31,8 @@ async function restoreDumpFiles() {
   if (!databaseDump) {
     return;
   }
-  await write(PGLITE_DUMP_PATH, databaseDump);
+  const dumpFile = new File([databaseDump], "dump.txt", { type: "text/plain" });
+  await FileStorageService.getInstance().write(PGLITE_DUMP_PATH, dumpFile);
 
   // Restore assets
   for (const assetPath of metadata.assets) {
@@ -41,7 +42,8 @@ async function restoreDumpFiles() {
       continue;
     }
     const buffer = Base64.toUint8Array(assetDump);
-    await write(normalizedAssetPath, buffer);
+    const assetFile = new File([buffer], assetPath, { type: "application/octet-stream" });
+    await FileStorageService.getInstance().write(normalizedAssetPath, assetFile);
   }
 
   // Delete dump
@@ -75,7 +77,7 @@ export class Pglite {
       await restoreDumpFiles();
 
       // Get dump
-      const dump = await file(PGLITE_DUMP_PATH).getOriginFile();
+      const dump = await FileStorageService.getInstance().read(PGLITE_DUMP_PATH);
 
       // When dump exists
       if (dump) {
@@ -142,7 +144,7 @@ export class Pglite {
         await Pglite._instance.exec(`SET search_path TO ${initialSearchPath};`);
 
         // Remove dump file
-        await file(PGLITE_DUMP_PATH).remove();
+        await FileStorageService.getInstance().delete(PGLITE_DUMP_PATH);
       }
 
       // Return PGlite instance

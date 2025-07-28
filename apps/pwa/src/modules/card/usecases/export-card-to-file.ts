@@ -6,6 +6,7 @@ import { Asset } from "@/modules/asset/domain/asset";
 import { LoadAssetRepo } from "@/modules/asset/repos/load-asset-repo";
 import { Card, CharacterCard, PlotCard } from "@/modules/card/domain";
 import { LoadCardRepo } from "@/modules/card/repos";
+import { FileStorageService } from "@/app/services/storage/file-storage-service";
 //TODO: replace them with electron path
 import {
   character_card_placeholder,
@@ -79,6 +80,7 @@ export class ExportCardToFile
         // Set icon asset
         const iconAssetOrError = await Asset.createFromFile({
           file: placeholderFile,
+          storage: FileStorageService.getInstance(),
         });
 
         if (iconAssetOrError.isFailure) {

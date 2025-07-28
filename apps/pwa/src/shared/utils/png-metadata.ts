@@ -1,9 +1,8 @@
 // TODO: If this file is ever needed in the production renderer, refactor to use browser APIs or IPC, not Node.js Buffer/require.
 // WARNING: This file uses Node.js Buffer and require. Only safe if not bundled in production renderer. Refactor for browser/IPC if needed in renderer.
 
-import { file } from "opfs-tools";
-
 import { Asset } from "@/modules/asset/domain/asset";
+import { FileStorageService } from "@/app/services/storage/file-storage-service";
 
 import pngChunksEncode from "png-chunks-encode";
 import pngChunksExtract from "png-chunks-extract";
@@ -109,11 +108,12 @@ export class PNGMetadata {
     metadata: any,
   ): Promise<Blob> {
     try {
-      // Get asset file from OPFS
-      const iconAssetData = await file(iconAsset.filePath).arrayBuffer();
-      if (!iconAssetData) {
-        throw new Error("Failed to get origin file");
+      // Get asset file from storage
+      const iconAssetFile = await FileStorageService.getInstance().read(iconAsset.filePath);
+      if (!iconAssetFile) {
+        throw new Error("Failed to get asset file");
       }
+      const iconAssetData = await iconAssetFile.arrayBuffer();
       const imageDataBuffer = Buffer.from(iconAssetData);
       let imageData = await this.bufferToBase64(imageDataBuffer);
 

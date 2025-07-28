@@ -1,10 +1,11 @@
 import JSZip from "jszip";
 import { pick } from "lodash-es";
-import { file } from "opfs-tools";
 
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
 import { formatFail, sanitizeFileName } from "@/shared/utils";
+
+import { FileStorageService } from "@/app/services/storage/file-storage-service";
 
 import { defaultBackgrounds } from "@/app/stores/background-store";
 import { GetAsset } from "@/modules/asset/usecases/get-asset";
@@ -119,7 +120,7 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
     const asset = assetOrError.getValue();
 
     // Get asset file
-    const assetFile = await file(asset.filePath).getOriginFile();
+    const assetFile = await FileStorageService.getInstance().read(asset.filePath);
     if (!assetFile) {
       throw new Error("Background image file not found");
     }

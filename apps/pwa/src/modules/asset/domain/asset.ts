@@ -1,5 +1,3 @@
-import { write } from "opfs-tools";
-
 import { Result } from "@/shared/core/result";
 import { AggregateRoot } from "@/shared/domain/aggregate-root";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
@@ -7,6 +5,7 @@ import { getFileHash } from "@/shared/utils";
 import { formatFail } from "@/shared/utils/error-utils";
 
 import { TableName } from "@/db/schema/table-name";
+import type { FileStorage } from "@/app/services/storage/file-storage-service";
 
 export type Ref = {
   table: TableName;
@@ -125,6 +124,7 @@ export class Asset extends AggregateRoot<AssetProps> {
   public static async createFromFile(
     props: {
       file: File;
+      storage: FileStorage;
     },
     id?: UniqueEntityID,
   ): Promise<Result<Asset>> {
@@ -135,9 +135,9 @@ export class Asset extends AggregateRoot<AssetProps> {
       // Get hash
       const hash = await getFileHash(webpFile);
 
-      // Save file to OPFS
+      // Save file using storage service
       const filePath = `/assets/${hash}`;
-      await write(filePath, webpFile.stream());
+      await props.storage.write(filePath, webpFile);
 
       // Create asset
       return Asset.create(
