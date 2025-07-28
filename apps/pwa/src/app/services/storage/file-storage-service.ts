@@ -9,8 +9,18 @@ interface FileStorage {
 }
 
 class FileStorageService implements FileStorage {
+  private static _instance: FileStorageService | null = null;
   private storage: FileStorage | null = null;
   private initPromise: Promise<void> | null = null;
+
+  private constructor() {}
+
+  public static getInstance(): FileStorageService {
+    if (!FileStorageService._instance) {
+      FileStorageService._instance = new FileStorageService();
+    }
+    return FileStorageService._instance;
+  }
 
   private async isOpfsAvailable(): Promise<boolean> {
     try {
