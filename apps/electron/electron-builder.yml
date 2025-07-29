@@ -25,8 +25,8 @@ win:
   compression: maximum
   publish:
     provider: github
-    owner: harpychat
-    repo: astrsk-ai-release
+    owner: astrskai
+    repo: astrsk
     releaseType: draft
 
 mac:
@@ -51,8 +51,8 @@ mac:
   defaultArch: universal
   publish:
     provider: github
-    owner: harpychat
-    repo: astrsk-ai-release
+    owner: astrskai
+    repo: astrsk
     releaseType: draft
 dmg:
   artifactName: ${productName}-${version}.${ext}
@@ -63,8 +63,8 @@ linux:
   icon: build/icon.png
   publish:
     provider: github
-    owner: harpychat
-    repo: astrsk-ai-release
+    owner: astrskai
+    repo: astrsk
     releaseType: draft
 appImage:
   artifactName: ${productName}-${version}.${ext}

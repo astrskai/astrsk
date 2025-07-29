@@ -12,7 +12,9 @@
     "dev:electron": "turbo dev --filter electron",
     "dev:docs": "turbo dev --filter docs",
     "build:pwa": "turbo build --filter pwa",
-    "build:electron": "turbo build --filter electron",
+    "build:electron:win": "turbo build:electron:win --filter electron",
+    "build:electron:mac": "turbo build:electron:mac --filter electron",
+    "build:electron:linux": "turbo build:electron:linux --filter electron",
     "build:docs": "turbo build --filter docs"
   },
   "devDependencies": {
