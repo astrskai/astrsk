@@ -31,7 +31,7 @@ jobs:
 
       - name: pnpm install
         run: |
-          pnpm install --filter electron
+          pnpm install
 
       - name: Install DigiCert Client tools
         uses: digicert/ssm-code-signing@v1.0.1
@@ -73,7 +73,7 @@ jobs:
 
       - name: pnpm install
         run: |
-          pnpm install --filter electron
+          pnpm install
 
       - name: Package and publish
         env:
@@ -109,7 +109,7 @@ jobs:
 
       - name: pnpm install
         run: |
-          pnpm install --filter electron
+          pnpm install
 
       - name: Package and publish
         env:
