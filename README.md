@@ -71,9 +71,9 @@
 
 ## 🚀 Installation
 
-- **Download for Windows**: [Latest Release](https://github.com/astrsk/astrsk-ai-release/releases/download/v2.0.0/astrsk-2.0.0.exe)
-- **Download for Mac**: [Latest Release](https://github.com/astrsk/astrsk-ai-release/releases/download/v2.0.0/astrsk-2.0.0.dmg)
-- **Download for Linux**: [Latest Release](https://github.com/astrskai/astrsk-ai-release/releases/download/v2.0.0/astrsk-2.0.0.AppImage)
+- **Download for Windows**: [Latest Release](https://github.com/astrskai/astrsk/releases/download/v2.1.3/astrsk-2.1.3.exe)
+- **Download for Mac**: [Latest Release](https://github.com/astrskai/astrsk/releases/download/v2.1.3/astrsk-2.1.3.dmg)
+- **Download for Linux** (Not tested): [Latest Release](https://github.com/astrskai/astrsk/releases/download/v2.1.3/astrsk-2.1.3.AppImage)
 
 ## 🛠️ Development
 
