@@ -14,8 +14,8 @@ function initUpdater(): void {
   // Configure auto updater
   autoUpdater.setFeedURL({
     provider: "github",
-    owner: "harpychat",
-    repo: "astrsk-ai-release",
+    owner: "astrskai",
+    repo: "astrsk",
     private: false, // Public repo, no authentication needed.
   });
 
