@@ -4,6 +4,21 @@
     "build": {
       "outputs": ["dist/**", "out/**"]
     },
+    "build:electron:win": {
+      "outputs": ["out/**", "dist/**", "build/**"],
+      "env": ["GH_TOKEN", "SM_HOST", "SM_CLIENT_CERT_FILE", "SM_API_KEY", "SM_CLIENT_CERT_PASSWORD", "SM_CLIENT_CERT_FILE_B64"],
+      "dependsOn": ["^build:electron:win"]
+    },
+    "build:electron:mac": {
+      "outputs": ["out/**", "dist/**", "build/**"],
+      "env": ["GH_TOKEN", "APPLE_ID", "APPLE_APP_SPECIFIC_PASSWORD", "APPLE_TEAM_ID", "CSC_LINK", "CSC_KEY_PASSWORD"],
+      "dependsOn": ["^build:electron:mac"]
+    },
+    "build:electron:linux": {
+      "outputs": ["out/**", "dist/**", "build/**"],
+      "env": ["GH_TOKEN"],
+      "dependsOn": ["^build:electron:linux"]
+    },
     "check-types": {
       "dependsOn": ["^check-types"]
     },
