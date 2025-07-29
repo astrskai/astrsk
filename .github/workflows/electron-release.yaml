@@ -1,0 +1,118 @@
+name: Electron Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release-win:
+    timeout-minutes: 30
+    runs-on: windows-latest
+    env:
+      SM_HOST: https://clientauth.one.digicert.com
+      SM_CLIENT_CERT_FILE: D:\Certificate_pkcs12.p12
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: pnpm install
+        run: |
+          pnpm install --filter electron
+
+      - name: Install DigiCert Client tools
+        uses: digicert/ssm-code-signing@v1.0.1
+
+      - name: Setup DigiCert user certificate
+        run: |
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
+          smctl credentials save ${{ secrets.SM_API_KEY }} ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          smctl healthcheck
+        shell: bash
+
+      - name: Package and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pnpm build:electron:win -- --publish=always --config=electron-builder.yml
+        shell: bash
+
+  release-mac:
+    timeout-minutes: 30
+    runs-on: macos-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: pnpm install
+        run: |
+          pnpm install --filter electron
+
+      - name: Package and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: |
+          pnpm build:electron:mac -- --publish=always --config=electron-builder.yml
+
+  release-linux:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: pnpm install
+        run: |
+          pnpm install --filter electron
+
+      - name: Package and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pnpm build:electron:linux -- --publish=always --config=electron-builder.yml
