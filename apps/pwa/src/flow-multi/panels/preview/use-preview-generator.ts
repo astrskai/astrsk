@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { Agent, ApiType, SchemaField } from "@/modules/agent/domain/agent";
 import { Session } from "@/modules/session/domain/session";
+import { Turn } from "@/modules/turn/domain/turn";
 import { RenderContext } from "@/shared/prompt/domain";
 import { logger } from "@/shared/utils/logger";
 import { makeContext } from "@/app/services/session-play-service";
-import { TurnService } from "@/app/services/turn-service";
 
 // Empty context for when no session is available
 const EMPTY_CONTEXT: RenderContext = {
@@ -21,7 +21,7 @@ const EMPTY_CONTEXT: RenderContext = {
 };
 
 // Helper function to create context for preview generation
-const createRenderContext = async (session: Session | null): Promise<RenderContext & Record<string, unknown>> => {
+const createRenderContext = async (session: Session | null, lastTurn: Turn | null = null): Promise<RenderContext & Record<string, unknown>> => {
   if (!session) {
     return { ...EMPTY_CONTEXT };
   }
@@ -49,24 +49,12 @@ const createRenderContext = async (session: Session | null): Promise<RenderConte
     let renderContext = { ...contextResult.getValue() };
 
     // Add variables from the last turn if available
-    try {
-      if (session.turnIds && session.turnIds.length > 0) {
-        const lastTurnId = session.turnIds[session.turnIds.length - 1];
-        logger.debug("[createRenderContext] Getting variables from last turn:", lastTurnId.toString());
-        
-        const lastTurnResult = await TurnService.getTurn.execute(lastTurnId);
-        if (lastTurnResult.isSuccess) {
-          const lastTurn = lastTurnResult.getValue();
-          const variables = lastTurn.variables;
-          
-          if (variables && Object.keys(variables).length > 0) {
-            renderContext = { ...renderContext, ...variables };
-            logger.debug("[createRenderContext] Added variables from last turn:", variables);
-          }
-        }
+    if (lastTurn?.variables) {
+      const variables = lastTurn.variables;
+      if (variables && Object.keys(variables).length > 0) {
+        renderContext = { ...renderContext, ...variables };
+        logger.debug("[createRenderContext] Added variables from last turn:", variables);
       }
-    } catch (error) {
-      logger.warn("[createRenderContext] Error getting last turn variables:", error);
     }
     
     return renderContext;
@@ -153,7 +141,7 @@ const addParametersToRequest = (
   }
 };
 
-export function usePreviewGenerator(agent: Agent | null, session: Session | null) {
+export function usePreviewGenerator(agent: Agent | null, session: Session | null, lastTurn: Turn | null = null) {
   const [preview, setPreview] = useState("");
   
   // Ref to track the current agent to prevent stale updates
@@ -164,11 +152,12 @@ export function usePreviewGenerator(agent: Agent | null, session: Session | null
   const isUpdatingRef = useRef(false);
   
   // Generate preview function
-  const generatePreview = useCallback(async (agent: Agent | null, session: Session | null = null) => {
+  const generatePreview = useCallback(async (agent: Agent | null, session: Session | null = null, lastTurn: Turn | null = null) => {
     logger.debug("[generatePreview] Starting generation", { 
       hasAgent: !!agent, 
       agentId: agent?.id.toString(),
-      hasSession: !!session 
+      hasSession: !!session,
+      hasLastTurn: !!lastTurn
     });
     
     if (!agent) return "";
@@ -182,7 +171,7 @@ export function usePreviewGenerator(agent: Agent | null, session: Session | null
 
     try {
       // Create render context using helper function
-      const renderContext = await createRenderContext(session);
+      const renderContext = await createRenderContext(session, lastTurn);
 
       // Generate simple API request structure
       const requestData: Record<string, unknown> = {};
@@ -259,7 +248,7 @@ export function usePreviewGenerator(agent: Agent | null, session: Session | null
       }
       
       logger.debug("[usePreviewGenerator] Calling generatePreview...");
-      const result = await generatePreview(agent, session);
+      const result = await generatePreview(agent, session, lastTurn);
       logger.debug("[usePreviewGenerator] generatePreview result:", { 
         hasResult: !!result, 
         resultLength: result?.length || 0 
@@ -282,9 +271,11 @@ export function usePreviewGenerator(agent: Agent | null, session: Session | null
   // Track previous values to detect actual changes
   const prevAgentData = useRef<string>("");
   const prevSessionId = useRef<string>("");
+  const prevLastTurnId = useRef<string>("");
+  const prevLastTurnData = useRef<string>("");
   const hasInitialized = useRef(false);
 
-  // Simple effect with change detection and debouncing
+  // Effect with proper dependencies to ensure reactivity
   useEffect(() => {
     // Create a string representation of agent data that we care about
     const promptMessagesHash = agent?.props.promptMessages ? 
@@ -305,31 +296,46 @@ export function usePreviewGenerator(agent: Agent | null, session: Session | null
     
     const currentAgentData = agent ? `${agent.id}_${agent.props.updatedAt}_${agent.props.targetApiType}_${agent.props.textPrompt}_${agent.props.outputFormat}_${promptMessagesHash}_${enabledParamsHash}_${parameterValuesHash}` : "";
     const currentSessionId = session?.id.toString() || "";
+    const currentLastTurnId = session?.turnIds?.[session.turnIds.length - 1]?.toString() || "";
+    
+    // Create a hash of last turn data to detect content changes
+    const currentLastTurnData = lastTurn ? 
+      `${lastTurn.id}_${lastTurn.props.updatedAt}_${JSON.stringify(lastTurn.variables || {})}` : "";
     
     // Check if this is the first time with an agent or if something actually changed
     const agentChanged = prevAgentData.current !== currentAgentData;
     const sessionChanged = prevSessionId.current !== currentSessionId;
+    const lastTurnChanged = prevLastTurnId.current !== currentLastTurnId;
+    const lastTurnDataChanged = prevLastTurnData.current !== currentLastTurnData;
     const isInitialLoad = !hasInitialized.current && agent;
     
-    if (agentChanged || sessionChanged || isInitialLoad) {
+    if (agentChanged || sessionChanged || lastTurnChanged || lastTurnDataChanged || isInitialLoad) {
       logger.debug("[usePreviewGenerator] Updating preview due to changes:", { 
         agentChanged, 
         sessionChanged, 
+        lastTurnChanged,
+        lastTurnDataChanged,
         isInitialLoad,
         prevData: prevAgentData.current,
-        currentData: currentAgentData
+        currentData: currentAgentData,
+        prevLastTurnId: prevLastTurnId.current,
+        currentLastTurnId: currentLastTurnId,
+        prevLastTurnData: prevLastTurnData.current,
+        currentLastTurnData: currentLastTurnData
       });
       
       // Update the tracked values
       prevAgentData.current = currentAgentData;
       prevSessionId.current = currentSessionId;
+      prevLastTurnId.current = currentLastTurnId;
+      prevLastTurnData.current = currentLastTurnData;
       hasInitialized.current = true;
       
       // Call updatePreview immediately instead of debouncing
       logger.debug("[usePreviewGenerator] About to call updatePreview");
       updatePreview();
     }
-  }); // NO dependencies array - run on every render but with change detection
+  }, [agent, session, lastTurn, updatePreview]); // Added dependencies to ensure proper reactivity
 
   return { preview, updatePreview };
 }

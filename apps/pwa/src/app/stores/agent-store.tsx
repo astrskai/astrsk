@@ -4,7 +4,6 @@ import { immer } from "zustand/middleware/immer";
 import { createSelectors } from "@/shared/utils/zustand-utils";
 
 import { Agent } from "@/modules/agent/domain/agent";
-import { Session } from "@/modules/session/domain/session";
 
 type FocusablePanelType = "prompt" | "responseDesign";
 
@@ -70,8 +69,8 @@ interface AgentState {
 
   // TODO: remove unused states and actions
   // Preview
-  previewSession: Session | null;
-  setPreviewSession: (previewSession: Session | null) => void;
+  previewSessionId: string | null;
+  setPreviewSessionId: (previewSessionId: string | null) => void;
 
   // Agent update notifications for preview panel
   agentUpdateTimestamp: number;
@@ -235,10 +234,10 @@ const useAgentStoreBase = create<AgentState>()(
         }
       }),
 
-    previewSession: null,
-    setPreviewSession: (previewSession) =>
+    previewSessionId: null,
+    setPreviewSessionId: (previewSessionId) =>
       set((state) => {
-        state.previewSession = previewSession;
+        state.previewSessionId = previewSessionId;
       }),
 
     // Agent update notifications for preview panel

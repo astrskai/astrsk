@@ -1,4 +1,5 @@
 import { agentQueries } from "@/app/queries/agent-queries";
+import { sessionQueries } from "@/app/queries/session-queries";
 import { makeContext } from "@/app/services/session-play-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAgentStore } from "@/app/stores/agent-store";
@@ -16,13 +17,16 @@ import { getAgentHexColor } from "@/flow-multi/utils/agent-color-assignment";
 import { Agent, OutputFormat, SchemaField, SchemaFieldType } from "@/modules/agent/domain/agent";
 import { Variable, VariableGroupLabel, VariableLibrary } from "@/shared/prompt/domain/variable";
 import { sanitizeFileName } from "@/shared/utils/file-utils";
-import { useQueries } from "@tanstack/react-query";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { Check, ChevronDown, ChevronUp, Database, Target } from "lucide-react";
 import { isObject } from "lodash-es";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { VariablePanelProps } from "./variable-panel-types";
 import { Datetime, logger } from "@/shared/utils";
+import { SessionService } from "@/app/services/session-service";
+import { useTurn } from "@/app/hooks/use-turn";
 
 interface AgentVariable {
   agentId: string;
@@ -32,6 +36,39 @@ interface AgentVariable {
   variablePath: string;
 }
 
+// Helper function to format values
+const formatValue = (value: any): string => {
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  } else if (Datetime.isDuration(value)) {
+    return value.humanize();
+  } else if (typeof value === "object" && value !== null) {
+    return JSON.stringify(value);
+  }
+  return String(value);
+};
+
+// Helper function to recursively flatten nested objects with dot notation
+const flattenObject = (obj: Record<string, any>, prefix = ""): Record<string, string> => {
+  const flattened: Record<string, string> = {};
+  Object.keys(obj).forEach(key => {
+    const value = obj[key];
+    if (value === null || value === undefined) {
+      return;
+    }
+    const newKey = prefix ? `${prefix}.${key}` : key;
+    if (isObject(value) && !Array.isArray(value) && !Datetime.isDuration(value)) {
+      // Store the JSON representation of the object at this path
+      flattened[newKey] = JSON.stringify(value);
+      // Continue flattening nested properties
+      Object.assign(flattened, flattenObject(value, newKey));
+    } else {
+      flattened[newKey] = formatValue(value);
+    }
+  });
+  return flattened;
+};
+
 export function VariablePanel({ flowId }: VariablePanelProps) {
   // Use the flow panel hook
   const { 
@@ -40,11 +77,16 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   } = useFlowPanel({ flowId });
 
   // Get session management from store
-  const previewSession = useAgentStore.use.previewSession();
+  const previewSessionId = useAgentStore.use.previewSessionId();
+  
+  // Query session data using Tanstack Query
+  const { data: previewSession, isLoading: isLoadingSession } = useQuery({
+    ...sessionQueries.detail(previewSessionId ? new UniqueEntityID(previewSessionId) : undefined),
+    enabled: !!previewSessionId,
+  });
 
   // Get last monaco editor and insert function from flow context
   const { lastMonacoEditor, insertVariableAtLastCursor } = useFlowPanelContext();
-  // Removed agentUpdateTimestamp and flowUpdateTimestamp - React Query handles updates
   
   // Local state
   const [activeTab, setActiveTab] = useState(() => {
@@ -187,48 +229,35 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     setAggregatedStructuredVariables(variables);
   }, [flow, areAgentsLoading, agentQueries_, aggregatedStructuredVariables.length]);
 
-  // Helper function to format values
-  const formatValue = (value: any): string => {
-    if (typeof value === "string" || typeof value === "number") {
-      return String(value);
-    } else if (Datetime.isDuration(value)) {
-      return value.humanize();
-    } else if (typeof value === "object" && value !== null) {
-      return JSON.stringify(value);
-    }
-    return String(value);
-  };
 
-  // Helper function to recursively flatten nested objects with dot notation
-  const flattenObject = (obj: Record<string, any>, prefix = ""): Record<string, string> => {
-    const flattened: Record<string, string> = {};
-    Object.keys(obj).forEach(key => {
-      const value = obj[key];
-      if (value === null || value === undefined) {
-        return;
-      }
-      const newKey = prefix ? `${prefix}.${key}` : key;
-      if (isObject(value) && !Array.isArray(value) && !Datetime.isDuration(value)) {
-        // Store the JSON representation of the object at this path
-        flattened[newKey] = JSON.stringify(value);
-        // Continue flattening nested properties
-        Object.assign(flattened, flattenObject(value, newKey));
-      } else {
-        flattened[newKey] = formatValue(value);
-      }
-    });
-    return flattened;
-  };
+  // Extract last turn ID for dependency array
+  const lastTurnId = previewSession?.turnIds?.[previewSession.turnIds.length - 1];
+  const lastTurnIdString = useMemo(() => lastTurnId?.toString(), [lastTurnId]);
+  const [lastTurn] = useTurn(lastTurnId);
+  const lastTurnVariablesJson = useMemo(
+    () => JSON.stringify(lastTurn?.variables),
+    [lastTurn?.variables],
+  );
 
   // Load context values from previewSession
   useEffect(() => {
+    logger.debug({
+      previewSessionId, lastTurnIdString, lastTurnVariablesJson
+    });
     const fetchContextValues = async () => {
-      if (!previewSession) {
-        setContextValues({});
-        return;
-      }
-
       try {
+        // Get preview session
+        if (!previewSessionId) {
+          setContextValues({});
+          return;
+        }
+        const previewSessionOrError = await SessionService.getSession.execute(new UniqueEntityID(previewSessionId))
+        if (previewSessionOrError.isFailure) {
+          setContextValues({});
+          return;
+        }
+        const previewSession = previewSessionOrError.getValue();
+
         // Get characterCardId from the last message, fallback to first enabled character
         let characterCardId;
         let lastTurn;
@@ -289,10 +318,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     };
 
     fetchContextValues();
-  }, [
-    previewSession?.id,
-    previewSession?.turnIds?.[previewSession.turnIds.length - 1]?.toString()
-  ]);
+  }, [previewSessionId, lastTurnIdString, lastTurnVariablesJson]);
 
 
   // Group variables by their group property
@@ -404,7 +430,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   }, []);
 
   // Loading state
-  if (isLoading || areAgentsLoading) {
+  if (isLoading || areAgentsLoading || isLoadingSession) {
     return <FlowPanelLoading message="Loading variables..." />;
   }
 
