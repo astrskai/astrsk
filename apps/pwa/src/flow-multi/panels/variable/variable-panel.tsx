@@ -1,24 +1,28 @@
-import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Target, Check, ChevronDown, ChevronUp } from "lucide-react";
-import { toast } from "sonner";
-import { Variable, VariableLibrary, VariableGroupLabel } from "@/shared/prompt/domain/variable";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { SearchInput } from "@/components-v2/search-input";
-import { 
-  useFlowPanel, 
-  FlowPanelLoading, 
-  FlowPanelError 
-} from "@/flow-multi/hooks/use-flow-panel";
-import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
-import { VariablePanelProps } from "./variable-panel-types";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components-v2/ui/tabs";
-import { Database } from "lucide-react";
-import { SchemaField, OutputFormat, SchemaFieldType, Agent } from "@/modules/agent/domain/agent";
-import { sanitizeFileName } from "@/shared/utils/file-utils";
-import { getAgentHexColor } from "@/flow-multi/utils/agent-color-assignment";
-import { TypoBase, TypoLarge } from "@/components-v2/typo";
-import { useQueries } from "@tanstack/react-query";
 import { agentQueries } from "@/app/queries/agent-queries";
+import { makeContext } from "@/app/services/session-play-service";
+import { TurnService } from "@/app/services/turn-service";
+import { useAgentStore } from "@/app/stores/agent-store";
+import { SearchInput } from "@/components-v2/search-input";
+import { TypoBase, TypoLarge } from "@/components-v2/typo";
+import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components-v2/ui/tabs";
+import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
+import {
+  FlowPanelError,
+  FlowPanelLoading,
+  useFlowPanel
+} from "@/flow-multi/hooks/use-flow-panel";
+import { getAgentHexColor } from "@/flow-multi/utils/agent-color-assignment";
+import { Agent, OutputFormat, SchemaField, SchemaFieldType } from "@/modules/agent/domain/agent";
+import { Variable, VariableGroupLabel, VariableLibrary } from "@/shared/prompt/domain/variable";
+import { sanitizeFileName } from "@/shared/utils/file-utils";
+import { useQueries } from "@tanstack/react-query";
+import { Check, ChevronDown, ChevronUp, Database, Target } from "lucide-react";
+import { isObject } from "lodash-es";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { VariablePanelProps } from "./variable-panel-types";
+import { Datetime, logger } from "@/shared/utils";
 
 interface AgentVariable {
   agentId: string;
@@ -35,6 +39,9 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     isLoading,
   } = useFlowPanel({ flowId });
 
+  // Get session management from store
+  const previewSession = useAgentStore.use.previewSession();
+
   // Get last monaco editor and insert function from flow context
   const { lastMonacoEditor, insertVariableAtLastCursor } = useFlowPanelContext();
   // Removed agentUpdateTimestamp and flowUpdateTimestamp - React Query handles updates
@@ -49,6 +56,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   const [aggregatedStructuredVariables, setAggregatedStructuredVariables] = useState<AgentVariable[]>([]);
   const [clickedVariable, setClickedVariable] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [contextValues, setContextValues] = useState<Record<string, any>>({});
+
   // Check if we have an editor
   const hasEditor = !!lastMonacoEditor?.editor;
 
@@ -160,7 +169,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
       ) {
         // For structured output, add each field
         agent.props.schemaFields.forEach((field) => {
-          const fieldPath = field.array ? `${field.name}[]` : field.name;
+          const fieldPath = field.name;
           const sanitizedAgentName = sanitizeFileName(agentName);
           const variablePath = `${sanitizedAgentName}.${fieldPath}`;
 
@@ -177,6 +186,113 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     
     setAggregatedStructuredVariables(variables);
   }, [flow, areAgentsLoading, agentQueries_, aggregatedStructuredVariables.length]);
+
+  // Helper function to format values
+  const formatValue = (value: any): string => {
+    if (typeof value === "string" || typeof value === "number") {
+      return String(value);
+    } else if (Datetime.isDuration(value)) {
+      return value.humanize();
+    } else if (typeof value === "object" && value !== null) {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
+  // Helper function to recursively flatten nested objects with dot notation
+  const flattenObject = (obj: Record<string, any>, prefix = ""): Record<string, string> => {
+    const flattened: Record<string, string> = {};
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+      if (value === null || value === undefined) {
+        return;
+      }
+      const newKey = prefix ? `${prefix}.${key}` : key;
+      if (isObject(value) && !Array.isArray(value) && !Datetime.isDuration(value)) {
+        // Store the JSON representation of the object at this path
+        flattened[newKey] = JSON.stringify(value);
+        // Continue flattening nested properties
+        Object.assign(flattened, flattenObject(value, newKey));
+      } else {
+        flattened[newKey] = formatValue(value);
+      }
+    });
+    return flattened;
+  };
+
+  // Load context values from previewSession
+  useEffect(() => {
+    const fetchContextValues = async () => {
+      if (!previewSession) {
+        setContextValues({});
+        return;
+      }
+
+      try {
+        // Get characterCardId from the last message, fallback to first enabled character
+        let characterCardId;
+        let lastTurn;
+        if (previewSession.turnIds && previewSession.turnIds.length > 0) {
+          try {
+            const lastTurnId = previewSession.turnIds[previewSession.turnIds.length - 1];
+            const lastTurnResult = await TurnService.getTurn.execute(lastTurnId);
+            if (lastTurnResult.isSuccess) {
+              lastTurn = lastTurnResult.getValue();
+              characterCardId = lastTurn.characterCardId;
+            }
+          } catch (error) {
+            // Fallback to first enabled character if getting last turn fails
+            console.warn('Failed to get last turn, using fallback character:', error);
+          }
+        }
+        
+        // Fallback to first enabled character if no characterCardId from last turn
+        if (!characterCardId) {
+          const firstCharacterCard = previewSession.characterCards?.find((card) => card.enabled);
+          characterCardId = firstCharacterCard?.id;
+        }
+        
+        const contextResult = await makeContext({
+          session: previewSession,
+          characterCardId,
+          includeHistory: true,
+        });
+        
+        if (contextResult.isSuccess) {
+          const renderContext = contextResult.getValue();
+          
+          // Flatten the context for variable lookup using recursive utility
+          const flattenedContext = flattenObject(renderContext);
+          
+          // Add structured variables from last turn if available
+          if (lastTurn?.variables) {
+            Object.keys(lastTurn.variables).forEach(key => {
+              const value = lastTurn.variables![key];
+              if (value !== null && value !== undefined) {
+                // If the value is an object, flatten it with the key as prefix
+                if (isObject(value) && !Array.isArray(value)) {
+                  const flattenedStructuredVars = flattenObject(value, key);
+                  Object.assign(flattenedContext, flattenedStructuredVars);
+                } else {
+                  flattenedContext[key] = formatValue(value);
+                }
+              }
+            });
+          }
+          
+          setContextValues(flattenedContext);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch context values", error);
+        setContextValues({});
+      }
+    };
+
+    fetchContextValues();
+  }, [
+    previewSession?.id,
+    previewSession?.turnIds?.[previewSession.turnIds.length - 1]?.toString()
+  ]);
 
 
   // Group variables by their group property
@@ -406,6 +522,18 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                   </span>
                                 </div>
                               )}
+                              {contextValues[variable.variable] && (
+                                <div className="mt-2 w-full overflow-hidden">
+                                  <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
+                                    <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                      Data from session
+                                    </div>
+                                    <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                      {String(contextValues[variable.variable])}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </button>
                           ))}
@@ -483,7 +611,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                 {`{{${variable.variablePath}}}`}
                               </div>
                               <div className="text-text-body text-xs font-normal">
-                                {variable.field.type}
+                                {variable.field.type}{variable.field.array && "[]"}
                               </div>
                               {variable.field.required && (
                                 <div className="text-red-500 text-xs font-normal">
@@ -500,6 +628,18 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                             {variable.field.description && (
                               <div className="line-clamp-3 text-text-subtle text-xs font-medium leading-none text-left">
                                 {variable.field.description}
+                              </div>
+                            )}
+                            {contextValues[variable.variablePath] && (
+                              <div className="mt-2 w-full overflow-hidden">
+                                <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
+                                  <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                    Data from session
+                                  </div>
+                                  <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                    {String(contextValues[variable.variablePath])}
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
