@@ -11,6 +11,33 @@ export const VariableGroup = {
 
 export type VariableGroup = (typeof VariableGroup)[keyof typeof VariableGroup];
 
+export const VariableGroupLabel = {
+  [VariableGroup.Character]: {
+    displayName: "Character",
+    description: "The character currently being referenced or taking action in a roleplaying sequence."
+  },
+  [VariableGroup.User]: {
+    displayName: "User", 
+    description: "The character controlled by the user in a roleplay."
+  },
+  [VariableGroup.Cast]: {
+    displayName: "Cast",
+    description: "Characters participating in the roleplay."
+  },
+  [VariableGroup.Session]: {
+    displayName: "Session",
+    description: "Variables related to the session."
+  },
+  [VariableGroup.Others]: {
+    displayName: "Others",
+    description: "Etc."
+  },
+  [VariableGroup.Filters]: {
+    displayName: "Filters",
+    description: "Filters to transform variables."
+  }
+} as const;
+
 export interface Variable {
   group: VariableGroup;
   variable: string;

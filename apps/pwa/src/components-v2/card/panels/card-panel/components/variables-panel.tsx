@@ -1,8 +1,8 @@
 import { useCallback, useState, useEffect, useMemo } from "react";
-import { Target, Check } from "lucide-react";
+import { Target, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
-import { Variable, VariableLibrary } from "@/shared/prompt/domain/variable";
+import { Variable, VariableLibrary, VariableGroupLabel } from "@/shared/prompt/domain/variable";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { SearchInput } from "@/components-v2/search-input";
 
@@ -32,6 +32,7 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
   const [availableVariables, setAvailableVariables] = useState<Variable[]>([]);
   const [clickedVariable, setClickedVariable] = useState<string | null>(null);
   const [hasEditor, setHasEditor] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   // Load variables from library
   useEffect(() => {
@@ -64,17 +65,35 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
     };
   }, []);
 
-  // Filter variables based on search query
-  const filteredVariables = useMemo(() => {
-    if (!searchQuery) return availableVariables;
+  // Group variables by their group property
+  const groupedVariables = useMemo(() => {
+    const groups = availableVariables.reduce((acc, variable) => {
+      const group = variable.group;
+      if (!acc[group]) {
+        acc[group] = [];
+      }
+      acc[group].push(variable);
+      return acc;
+    }, {} as Record<string, Variable[]>);
 
-    const query = searchQuery.toLowerCase();
-    return availableVariables.filter(
-      (variable) =>
-        variable.variable.toLowerCase().includes(query) ||
-        variable.description.toLowerCase().includes(query) ||
-        (variable.template && variable.template.toLowerCase().includes(query)),
-    );
+    // Filter by search query if exists
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      Object.keys(groups).forEach(groupKey => {
+        groups[groupKey] = groups[groupKey].filter(
+          (variable) =>
+            variable.variable.toLowerCase().includes(query) ||
+            variable.description.toLowerCase().includes(query) ||
+            (variable.template && variable.template.toLowerCase().includes(query)),
+        );
+        // Remove empty groups after filtering
+        if (groups[groupKey].length === 0) {
+          delete groups[groupKey];
+        }
+      });
+    }
+
+    return groups;
   }, [availableVariables, searchQuery]);
 
   // Insert variable at last cursor position
@@ -167,6 +186,19 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
     event.stopPropagation();
   }, []);
 
+  // Handle group collapse/expand
+  const toggleGroupCollapse = useCallback((group: string) => {
+    setCollapsedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(group)) {
+        newSet.delete(group);
+      } else {
+        newSet.add(group);
+      }
+      return newSet;
+    });
+  }, []);
+
   return (
     <div
       className="h-full w-full p-4 bg-background-surface-2 flex flex-col gap-4 overflow-hidden"
@@ -180,8 +212,8 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
       />
 
       <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-2 pr-2">
-          {filteredVariables.length === 0 ? (
+        <div className="flex flex-col pr-2">
+          {Object.keys(groupedVariables).length === 0 ? (
             <div className="text-center py-8">
               <div className="text-text-subtle text-xs">
                 {searchQuery
@@ -190,54 +222,86 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
               </div>
             </div>
           ) : (
-            filteredVariables.map((variable) => (
-              <button
-                key={variable.variable}
-                className={`w-full p-2 rounded-lg outline outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
-                  clickedVariable === variable.variable
-                    ? "bg-background-surface-3"
-                    : hasEditor
-                      ? "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
-                      : "bg-background-surface-3 opacity-50 cursor-not-allowed"
-                }`}
-                onClick={(e) => handleVariableClick(variable, e)}
-                onMouseDown={handleMouseDown}
-                disabled={!hasEditor}
-                tabIndex={-1}
-              >
-                {clickedVariable === variable.variable && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
-                )}
-                <div className="w-full flex flex-col justify-start items-start gap-1">
-                  <div className="flex justify-start items-center gap-2 w-full">
-                    <div className="text-text-primary text-xs font-normal">
-                      {`{{${variable.variable}}}`}
+            Object.entries(groupedVariables).map(([group, variables]) => (
+              <div key={group} className="flex flex-col">
+                {/* Group Header */}
+                <div className="bg-[#272727] py-2.5">
+                  <div className="flex flex-row gap-4 items-center justify-start w-full">
+                    <div className="basis-0 flex flex-row gap-2 grow items-start justify-start text-xs text-left">
+                      <div className="text-[#bfbfbf] font-medium text-nowrap">
+                        {VariableGroupLabel[group as keyof typeof VariableGroupLabel]?.displayName || group}
+                      </div>
+                      <div className="basis-0 grow min-h-px min-w-px text-[#696969] font-normal">
+                        {VariableGroupLabel[group as keyof typeof VariableGroupLabel]?.description || "Variables in this group"}
+                      </div>
                     </div>
-                    <div className="text-text-body text-xs font-normal">
-                      {variable.dataType}
-                    </div>
-                    {hasEditor &&
-                      (clickedVariable === variable.variable ? (
-                        <Check className="h-3 w-3 ml-auto text-green-500 transition-opacity" />
+                    <button 
+                      className="flex items-center justify-center"
+                      onClick={() => toggleGroupCollapse(group)}
+                    >
+                      {collapsedGroups.has(group) ? (
+                        <ChevronDown className="min-w-6 min-h-6 text-[#bfbfbf]" />
                       ) : (
-                        <Target className="h-3 w-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
-                      ))}
+                        <ChevronUp className="min-w-6 min-h-6 text-[#bfbfbf]" />
+                      )}
+                    </button>
                   </div>
-                  <div className="text-text-subtle text-xs font-medium leading-none text-left">
-                    {variable.description}
-                  </div>
-                  {variable.template && (
-                    <div className="self-stretch justify-start">
-                      <span className="text-text-body text-[10px] font-medium leading-none">
-                        {" "}
-                      </span>
-                      <span className="text-text-primary text-[10px] font-medium leading-none whitespace-pre-wrap">
-                        {variable.template}
-                      </span>
-                    </div>
-                  )}
                 </div>
-              </button>
+                
+                {/* Group Variables */}
+                {!collapsedGroups.has(group) && (
+                  <div className="bg-[#272727] pb-0">
+                    <div className="flex flex-col gap-2">
+                      {variables.map((variable) => (
+                        <button
+                          key={variable.variable}
+                          className={`w-full p-2 rounded-lg bg-[#313131] border border-[#525252] flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
+                            clickedVariable === variable.variable
+                              ? "bg-[#313131]"
+                              : hasEditor
+                                ? "bg-[#313131] hover:bg-[#414141] cursor-pointer"
+                                : "bg-[#313131] opacity-50 cursor-not-allowed"
+                          }`}
+                          onClick={(e) => handleVariableClick(variable, e)}
+                          onMouseDown={handleMouseDown}
+                          disabled={!hasEditor}
+                          tabIndex={-1}
+                        >
+                          {clickedVariable === variable.variable && (
+                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
+                          )}
+                          <div className="w-full flex flex-col justify-start items-start gap-1">
+                            <div className="flex justify-start items-center gap-2 w-full text-xs text-nowrap">
+                              <div className="text-[#f1f1f1] font-medium">
+                                {`{{${variable.variable}}}`}
+                              </div>
+                              <div className="text-[#bfbfbf] font-normal">
+                                {variable.dataType}
+                              </div>
+                              {hasEditor &&
+                                (clickedVariable === variable.variable ? (
+                                  <Check className="min-w-3 min-h-3 ml-auto text-green-500 transition-opacity" />
+                                ) : (
+                                  <Target className="min-w-3 min-h-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
+                                ))}
+                            </div>
+                            <div className="text-[#9d9d9d] text-xs font-normal leading-normal text-left">
+                              {variable.description}
+                            </div>
+                            {variable.template && (
+                              <div className="text-[#bfbfbf] text-[10px] font-medium leading-4 whitespace-pre-wrap">
+                                <span className="text-[#f1f1f1]">
+                                  {variable.template}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             ))
           )}
         </div>
