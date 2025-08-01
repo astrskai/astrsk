@@ -1,6 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Pragati+Narrow:wght@400;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Pragati+Narrow:wght@400;700&display=swap');
 
 /* Dockview core styles */
 @import "dockview-core/dist/styles/dockview.css";
@@ -12,6 +10,7 @@
   --font-plus-jakarta-sans: "Plus Jakarta Sans";
   --font-inter: "Inter";
   --font-pragati-narrow: "Pragati Narrow";
+  --font-fira-code: "Fira Code";
 }
 
 :root {
