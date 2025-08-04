@@ -46,5 +46,13 @@
     "bps": true,
     "folderMillis": 1753330227857,
     "hash": "da44a5d26854274949f91db93dfeb5b81c0cfdbe9d006642c46070d226cbdc63"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"flows\" ADD COLUMN \"ready_state\" varchar DEFAULT 'draft' NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1754306945802,
+    "hash": "8afd6ad50d11399ee5e7de9309e35e108b7a2388c0d4b2dac7cc32e9cf44727c"
   }
 ]

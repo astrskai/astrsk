@@ -163,6 +163,37 @@ const getIntendedModelValue = (
   return undefined;
 };
 
+// Check if a model exists in the available API connections
+export const isModelAvailable = (
+  modelName: string | undefined,
+  apiSource: string | undefined,
+  modelId: string | undefined,
+  apiConnectionsWithModels: ApiConnectionWithModels[],
+): boolean => {
+  if (!modelName || !apiSource || !modelId) {
+    return false;
+  }
+
+  // Extract the actual model ID from composite format (e.g., "deepseek:deepseek-chat" -> "deepseek-chat")
+  const actualModelId = modelId.includes(":")
+    ? modelId.split(":")[1]
+    : modelId;
+
+  for (const apiConnectionWithModels of apiConnectionsWithModels) {
+    const { apiConnection, models } = apiConnectionWithModels;
+    
+    if (apiConnection.source === apiSource) {
+      for (const model of models) {
+        if (model.id === actualModelId && model.name === modelName) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+};
+
 const UIType = {
   Large: "large",
   Simple: "simple",

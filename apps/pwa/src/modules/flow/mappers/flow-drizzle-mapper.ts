@@ -2,7 +2,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/utils/logger";
 
 import { SelectFlow, InsertFlow } from "@/db/schema/flows";
-import { Flow } from "@/modules/flow/domain";
+import { Flow, ReadyState } from "@/modules/flow/domain";
 
 export class FlowDrizzleMapper {
   private constructor() {}
@@ -28,6 +28,7 @@ export class FlowDrizzleMapper {
           responseTemplate: row.response_template,
           panelStructure,
           viewport,
+          readyState: (row.ready_state as ReadyState) || ReadyState.Draft,
         },
         new UniqueEntityID(row.id),
       );
@@ -62,6 +63,7 @@ export class FlowDrizzleMapper {
         response_template: props.responseTemplate,
         panel_structure: props.panelStructure,
         viewport: props.viewport,
+        ready_state: props.readyState,
       };
     } catch (error) {
       logger.error(`Failed to convert flow domain to row: ${error}`);

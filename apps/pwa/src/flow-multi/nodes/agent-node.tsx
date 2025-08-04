@@ -17,6 +17,7 @@ import { useAgentStore } from "@/app/stores/agent-store";
 import { Agent, ApiType, OutputFormat } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
+import { ReadyState } from "@/modules/flow/domain";
 import { AgentModels } from "@/components-v2/title/create-title/step-prompts";
 import { Input } from "@/components-v2/ui/input";
 import { toast } from "sonner";
@@ -584,6 +585,14 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
           notifyAgentUpdate(updatedAgent.id.toString());
         });
         
+        // Reset flow to Draft state when agent changes
+        if (currentFlow.props.readyState !== ReadyState.Draft) {
+          const updateFlowResult = currentFlow.setReadyState(ReadyState.Draft);
+          if (updateFlowResult.isFailure) {
+            console.error('Failed to reset flow to Draft state:', updateFlowResult.getError());
+          }
+        }
+        
         // Save the updated flow
         const savedFlowResult = await FlowService.saveFlow.execute(currentFlow);
         if (savedFlowResult.isFailure) {
@@ -673,6 +682,17 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
         throw new Error("Flow not found");
       }
       const currentFlow = flowResult.getValue();
+      
+      // Reset flow to Draft state when agent changes
+      if (currentFlow.props.readyState !== ReadyState.Draft) {
+        const updateFlowResult = currentFlow.setReadyState(ReadyState.Draft);
+        if (updateFlowResult.isSuccess) {
+          const savedFlowResult = await FlowService.saveFlow.execute(currentFlow);
+          if (savedFlowResult.isFailure) {
+            console.error('Failed to save flow with Draft state:', savedFlowResult.getError());
+          }
+        }
+      }
       
       // Notify that agent was updated for preview panel refresh
       notifyAgentUpdate(agent.id.toString());

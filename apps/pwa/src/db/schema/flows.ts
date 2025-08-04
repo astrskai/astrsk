@@ -7,6 +7,7 @@ import {
   Node,
   PanelStructure,
   FlowViewport,
+  ReadyState,
 } from "@/modules/flow/domain/flow";
 
 export const flows = pgTable(TableName.Flows, {
@@ -18,6 +19,7 @@ export const flows = pgTable(TableName.Flows, {
   response_template: text().notNull(),
   panel_structure: jsonb().$type<PanelStructure>(),
   viewport: jsonb().$type<FlowViewport>(),
+  ready_state: varchar().$type<ReadyState>().notNull().default(ReadyState.Draft),
   ...timestamps,
 });
 

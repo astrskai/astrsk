@@ -10,7 +10,7 @@ import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-q
 import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { BookOpen, Pencil, Check, X, Loader2 } from "lucide-react";
+import { BookOpen, Pencil, Check, X, Loader2, Shield } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
@@ -792,7 +792,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         </div>
       </div>
       
-      {/* Variables button - positioned below header */}
+      {/* Variables and Validation buttons - positioned below header */}
       <div className="flex justify-start items-start gap-2">
         <ButtonPill
           size="default"
@@ -803,6 +803,15 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           title="Open Variables Panel"
         >
           Variables
+        </ButtonPill>
+        <ButtonPill
+          size="default"
+          icon={<Shield />}
+          active={isPanelOpen(PANEL_TYPES.VALIDATION)}
+          onClick={() => openPanel(PANEL_TYPES.VALIDATION)}
+          title="Open Validation Panel"
+        >
+          Validation
         </ButtonPill>
       </div>
     </div>

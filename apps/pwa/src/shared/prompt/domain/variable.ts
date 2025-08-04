@@ -197,7 +197,7 @@ export const variableList: Variable[] = [
     variable: "history",
     description:
       "A list of all the turns in a roleplay session, each detailing the actions and narrative progression.\nA [turn] A single step or action in the roleplay session.",
-    dataType: "Turn[]",
+    dataType: "HistoryItem[]",
     template:
       "\n{% for turn in history %}\n  {{turn.char_name}}: {{turn.content}}\n{% endfor %}\n",
   },
@@ -261,17 +261,39 @@ export const variableList: Variable[] = [
   },
 ];
 
+// Map of known object types and their fields
+const OBJECT_TYPE_FIELDS: Record<string, string[]> = {
+  'Character': ['id', 'name', 'description', 'example_dialog', 'entries'],
+  'HistoryItem': ['char_id', 'char_name', 'content', 'variables'],
+};
+
 export class VariableLibrary {
   private constructor() {}
 
   static variableList: Variable[] = [];
   static variableMap: Map<string, Variable> = new Map();
+  static expandedVariablePaths: Set<string> = new Set();
 
   static setVariableList(macroList: Variable[]): void {
     this.variableList = macroList;
     this.variableMap = new Map(
       macroList.map((macro) => [macro.variable, macro]),
     );
+    
+    // Generate expanded paths for object types
+    this.expandedVariablePaths.clear();
+    macroList.forEach(variable => {
+      this.expandedVariablePaths.add(variable.variable);
+      
+      // Parse dataType to check if it's an object type
+      const baseType = variable.dataType.replace('[]', '');
+      if (OBJECT_TYPE_FIELDS[baseType]) {
+        // Add nested paths for object types
+        OBJECT_TYPE_FIELDS[baseType].forEach(field => {
+          this.expandedVariablePaths.add(`${variable.variable}.${field}`);
+        });
+      }
+    });
   }
 
   static initialize() {
@@ -289,6 +311,34 @@ export class VariableLibrary {
         );
       }),
     );
+  }
+
+  // Check if a variable path is valid (including nested paths)
+  static isValidVariable(variablePath: string): boolean {
+    // Check if it's in our expanded paths set
+    return this.expandedVariablePaths.has(variablePath);
+  }
+
+  // Get all valid variable paths including nested ones
+  static getAllValidPaths(): string[] {
+    return Array.from(this.expandedVariablePaths);
+  }
+
+  // Get the base variable info for a path (e.g., "cast.active" for "cast.active.name")
+  static getBaseVariable(variablePath: string): Variable | undefined {
+    // Try direct match first
+    if (this.variableMap.has(variablePath)) {
+      return this.variableMap.get(variablePath);
+    }
+    
+    // For nested paths, find the base variable
+    const parts = variablePath.split('.');
+    if (parts.length >= 2) {
+      const baseVar = `${parts[0]}.${parts[1]}`;
+      return this.variableMap.get(baseVar);
+    }
+    
+    return undefined;
   }
 }
 VariableLibrary.initialize();
