@@ -65,6 +65,7 @@
 - [✨ Features](#-features)
 - [🚀 Installation](#-installation)
 - [🛠️ Development](#%EF%B8%8F-development)
+- [🏠 Self-hosting](#-self-hosting)
 - [🤝 Contributing](#-contributing)
 - [⚖️ License](#%EF%B8%8F-license)
 - [🌐 References](#-references)
@@ -147,6 +148,50 @@ $ pnpm dev:docs
 # Build docs
 $ pnpm build:docs
 ```
+
+## 🏠 Self-hosting
+PWA apps use technologies like OPFS, PGlite and service worker to store data completely in the browser. These technologies require a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts). If you want to self-host a PWA app and access it through LAN, you need to add SSL settings as follows.
+
+First, add the `@vitejs/plugin-basic-ssl` development dependency.
+```sh
+$ pnpm --filter pwa add -D @vitejs/plugin-basic-ssl
+```
+
+Add the following settings to the Vite configuration file `apps/pwa/vite.config.ts`.
+```ts
+// ... Other imports
+// Import vite basic ssl plugin
+import basicSsl from "@vitejs/plugin-basic-ssl";
+
+export default defineConfig({
+  // ... Other configs
+
+  plugins: [
+    // ... Other plugins
+    // Add vite basic ssl plugin
+    basicSsl(),
+  ],
+
+  // Add server config
+  server: {
+    host: true, // Listen on all LAN and public addresses
+  },
+});
+```
+
+Now when you run the PWA server, additional addresses that can be accessed through the Network will be displayed as follows. The following address is an example, and this address will vary depending on your environment.
+```sh
+$ pnpm dev:pwa
+...
+pwa:dev:   VITE v6.3.5  ready in 500 ms
+pwa:dev: 
+pwa:dev:   ➜  Local:   https://localhost:5173/
+pwa:dev:   ➜  Network: https://172.30.1.34:5173/
+pwa:dev:   ➜  Network: https://169.254.224.249:5173/
+pwa:dev:   ➜  press h + enter to show help
+```
+
+Now try accessing from other devices on the network using the displayed address. Since it's a self-signed certificate, the browser will block access. In Chrome, you can connect by clicking `Advanced > Proceed to xxx.xxx.xxx.xxx (unsafe)`.
 
 ## 🤝 Contributing
 
