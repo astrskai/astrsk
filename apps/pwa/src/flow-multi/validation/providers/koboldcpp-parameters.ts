@@ -602,7 +602,7 @@ export function compareKoboldCppParameterDefinitions(): Record<string, {
   
   // Also check KoboldCPP parameters not in Astrsk
   koboldCppParameterList.forEach(koboldCppParam => {
-    const koboldCppName = koboldCppParam.nameByApiSource.get(ApiSource.KoboldCpp);
+    const koboldCppName = koboldCppParam.nameByApiSource.get(ApiSource.KoboldCPP);
     if (koboldCppName && !results[koboldCppParam.id]) {
       // Check if it's mapped to a different Astrsk ID
       let found = false;
