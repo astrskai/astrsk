@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
 import { Editor } from "@/components-v2/editor";
 import { useAgentStore } from "@/app/stores/agent-store";
@@ -10,6 +10,8 @@ import {
 import { PreviewPanelProps } from "./preview-panel-types";
 import { useQuery } from "@tanstack/react-query";
 import { sessionQueries } from "@/app/queries/session-queries";
+import { turnQueries } from "@/app/queries/turn-queries";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { usePreviewGenerator } from "./use-preview-generator";
 
 export function PreviewPanel({ flowId, agentId }: PreviewPanelProps) {
@@ -21,8 +23,8 @@ export function PreviewPanel({ flowId, agentId }: PreviewPanelProps) {
   } = useFlowPanel({ flowId, agentId });
 
   // Get session management from store
-  const previewSession = useAgentStore.use.previewSession();
-  const setPreviewSession = useAgentStore.use.setPreviewSession();
+  const previewSessionId = useAgentStore.use.previewSessionId();
+  const setPreviewSessionId = useAgentStore.use.setPreviewSessionId();
 
   // Fetch sessions for the current flow
   const { data: sessions = [], isLoading: isLoadingSessions } = useQuery({
@@ -30,26 +32,41 @@ export function PreviewPanel({ flowId, agentId }: PreviewPanelProps) {
     enabled: !!flow,
   });
 
+  // Query preview session data using Tanstack Query
+  const { data: previewSession } = useQuery({
+    ...sessionQueries.detail(previewSessionId ? new UniqueEntityID(previewSessionId) : undefined),
+    enabled: !!previewSessionId,
+  });
+
+  // Get last turn ID from session
+  const lastTurnId = useMemo(() => {
+    if (!previewSession?.turnIds || previewSession.turnIds.length === 0) {
+      return null;
+    }
+    return previewSession.turnIds[previewSession.turnIds.length - 1];
+  }, [previewSession?.turnIds]);
+
+  // Query last turn data using Tanstack Query
+  const { data: lastTurn } = useQuery({
+    ...turnQueries.detail(lastTurnId ?? undefined),
+    enabled: !!lastTurnId,
+  });
+
   // Use the custom hook for preview generation
-  const { preview } = usePreviewGenerator(agent ?? null, previewSession);
+  const { preview } = usePreviewGenerator(agent ?? null, previewSession ?? null, lastTurn ?? null);
 
   // Handle session selection
   const handleSessionChange = useCallback((sessionId: string) => {
     if (sessionId === "none") {
-      setPreviewSession(null);
+      setPreviewSessionId(null);
     } else {
-      const selectedSession = sessions.find(
-        (s) => s.id.toString() === sessionId,
-      );
-      if (selectedSession) {
-        setPreviewSession(selectedSession);
-      }
+      setPreviewSessionId(sessionId);
     }
-  }, [sessions, setPreviewSession]);
+  }, [setPreviewSessionId]);
 
   // Loading state
   if (isLoading) {
-    return <FlowPanelLoading message="Loading preview..." />;
+    return <FlowPanelLoading message="Loading agent..." />;
   }
 
   // Empty state
@@ -67,7 +84,7 @@ export function PreviewPanel({ flowId, agentId }: PreviewPanelProps) {
           </div>
         </div>
         <Select
-          value={previewSession?.id.toString() || "none"}
+          value={previewSessionId || "none"}
           onValueChange={handleSessionChange}
         >
           <SelectTrigger className="w-full min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal">
