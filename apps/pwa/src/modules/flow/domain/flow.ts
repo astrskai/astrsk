@@ -7,6 +7,11 @@ export enum TaskType {
   UserResponse = "user_response",
 }
 
+export enum ReadyState {
+  Draft = "draft",
+  Ready = "ready",
+}
+
 // TODO: change name to `FlowNode`
 export type Node = {
   id: string;
@@ -83,6 +88,9 @@ export interface FlowProps {
   // Flow Viewport State
   viewport?: FlowViewport;
 
+  // Validation State
+  readyState: ReadyState;
+
   // Set by System
   createdAt: Date;
   updatedAt?: Date;
@@ -114,6 +122,7 @@ export class Flow extends AggregateRoot<FlowProps> {
         edges: [],
         responseTemplate: "",
         panelStructure: undefined, // No panels by default
+        readyState: ReadyState.Draft, // Default to draft state
 
         // Spread input props
         ...props,
@@ -131,8 +140,18 @@ export class Flow extends AggregateRoot<FlowProps> {
 
   public update(props: Partial<UpdateFlowProps>): Result<Flow> {
     try {
+      // If any structural changes are made, reset to draft state
+      const shouldResetToDraft = 
+        props.nodes !== undefined || 
+        props.edges !== undefined || 
+        props.responseTemplate !== undefined;
+      
       // Update flow props
-      Object.assign(this.props, { ...props });
+      Object.assign(this.props, { 
+        ...props,
+        // Reset to draft if structural changes
+        readyState: shouldResetToDraft ? ReadyState.Draft : (props.readyState ?? this.props.readyState),
+      });
 
       // Refresh `updatedAt`
       this.props.updatedAt = new Date();
@@ -143,6 +162,10 @@ export class Flow extends AggregateRoot<FlowProps> {
       console.error(error);
       return Result.fail(`Failed to update flow: ${error}`);
     }
+  }
+
+  public setReadyState(readyState: ReadyState): Result<Flow> {
+    return this.update({ readyState });
   }
 
   public toJSON(): any {

@@ -1,6 +1,6 @@
 import React, { useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Flow } from "@/modules/flow/domain";
+import { Flow, ReadyState } from "@/modules/flow/domain";
 import { Agent } from "@/modules/agent/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { FlowService } from "@/app/services/flow-service";
@@ -119,12 +119,20 @@ export function useFlowPanel({
     // Invalidate agent queries to refresh UI
     await invalidateAllAgentQueries();
     
+    // Reset flow to Draft state when agent changes
+    if (flow && flow.props.readyState !== ReadyState.Draft) {
+      const updateFlowResult = flow.setReadyState(ReadyState.Draft);
+      if (updateFlowResult.isSuccess) {
+        await saveFlow(flow);
+      }
+    }
+    
     // IMPORTANT: Also invalidate flow queries including validation
     // Agent changes affect flow validity, so we must refresh validation state
     if (flow) {
       await invalidateSingleFlowQueries(flow.id);
     }
-  }, [flow]);
+  }, [flow, saveFlow]);
 
   return {
     flow,

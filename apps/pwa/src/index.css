@@ -173,6 +173,8 @@
   --status-warning-dark: #854d0e;
   --status-syncing: #1ea9f2;
   --status-succeed: #2ec2b9;
+  --status-ready: #0d9488;
+  --status-ready-dark: #1578AC;
 
   /* iOS Safe Area Variables */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);

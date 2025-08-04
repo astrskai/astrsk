@@ -29,6 +29,13 @@
       "when": 1753330227857,
       "tag": "20250724041027_v2.1.0",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1754306945802,
+      "tag": "20250804112905_ready-state",
+      "breakpoints": true
     }
   ]
 }
