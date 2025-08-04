@@ -19,7 +19,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "prompt",
     label: "Prompt",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "prompt"],
+      [ApiSource.KoboldCPP, "prompt"],
     ]),
     type: "string",
     default: undefined,
@@ -34,7 +34,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "max_context_length",
     label: "Max Context Length",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "max_context_length"],
+      [ApiSource.KoboldCPP, "max_context_length"],
     ]),
     type: "number",
     default: 2048,
@@ -52,7 +52,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "max_length",
     label: "Max Length",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "max_length"],
+      [ApiSource.KoboldCPP, "max_length"],
     ]),
     type: "number",
     default: 100,
@@ -70,9 +70,9 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "temperature",
     label: "Temperature",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "temperature"],
+      [ApiSource.KoboldCPP, "temperature"],
     ]),
-    type: "number",
+    type: "number", 
     default: 0.7,
     min: 0.0,
     max: 2.0,
@@ -90,7 +90,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "top_k",
     label: "Top K",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "top_k"],
+      [ApiSource.KoboldCPP, "top_k"],
     ]),
     type: "number",
     default: 100,
@@ -110,7 +110,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "top_p",
     label: "Top P",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "top_p"],
+      [ApiSource.KoboldCPP, "top_p"],
     ]),
     type: "number",
     default: 0.92,
@@ -130,7 +130,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "top_a",
     label: "Top A",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "top_a"],
+      [ApiSource.KoboldCPP, "top_a"],
     ]),
     type: "number",
     default: 0,
@@ -150,7 +150,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "typical",
     label: "Typical",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "typical"],
+      [ApiSource.KoboldCPP, "typical"],
     ]),
     type: "number",
     default: 1,
@@ -170,7 +170,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "tfs",
     label: "TFS (Tail Free Sampling)",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "tfs"],
+      [ApiSource.KoboldCPP, "tfs"],
     ]),
     type: "number",
     default: 1,
@@ -190,7 +190,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "rep_pen",
     label: "Repetition Penalty",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "rep_pen"],
+      [ApiSource.KoboldCPP, "rep_pen"],
     ]),
     type: "number",
     default: 1.1,
@@ -210,7 +210,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "rep_pen_range",
     label: "Repetition Penalty Range",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "rep_pen_range"],
+      [ApiSource.KoboldCPP, "rep_pen_range"],
     ]),
     type: "number",
     default: 256,
@@ -230,7 +230,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "rep_pen_slope",
     label: "Repetition Penalty Slope",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "rep_pen_slope"],
+      [ApiSource.KoboldCPP, "rep_pen_slope"],
     ]),
     type: "number",
     default: 1,
@@ -250,7 +250,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "mirostat",
     label: "Mirostat",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "mirostat"],
+      [ApiSource.KoboldCPP, "mirostat"],
     ]),
     type: "number",
     default: 0,
@@ -270,7 +270,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "mirostat_tau",
     label: "Mirostat Tau",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "mirostat_tau"],
+      [ApiSource.KoboldCPP, "mirostat_tau"],
     ]),
     type: "number",
     default: undefined,
@@ -290,7 +290,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "mirostat_eta",
     label: "Mirostat Eta",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "mirostat_eta"],
+      [ApiSource.KoboldCPP, "mirostat_eta"],
     ]),
     type: "number",
     default: undefined,
@@ -310,7 +310,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "min_p",
     label: "Min P",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "min_p"],
+      [ApiSource.KoboldCPP, "min_p"],
     ]),
     type: "number",
     default: 0,
@@ -330,7 +330,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "dynatemp",
     label: "Dynamic Temperature",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "dynatemp"],
+      [ApiSource.KoboldCPP, "dynatemp"],
     ]),
     type: "number",
     default: 1.0,
@@ -350,7 +350,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "dynatemp_range",
     label: "Dynamic Temperature Range",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "dynatemp_range"],
+      [ApiSource.KoboldCPP, "dynatemp_range"],
     ]),
     type: "number",
     default: 0,
@@ -370,7 +370,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "dry_multiplier",
     label: "DRY Multiplier",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "dry_multiplier"],
+      [ApiSource.KoboldCPP, "dry_multiplier"],
     ]),
     type: "number",
     default: 0,
@@ -390,7 +390,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "dry_base",
     label: "DRY Base",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "dry_base"],
+      [ApiSource.KoboldCPP, "dry_base"],
     ]),
     type: "number",
     default: 1.75,
@@ -410,7 +410,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "dry_allowed_length",
     label: "DRY Allowed Length",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "dry_allowed_length"],
+      [ApiSource.KoboldCPP, "dry_allowed_length"],
     ]),
     type: "number",
     default: 2,
@@ -430,7 +430,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "dry_penalty_last_n",
     label: "DRY Penalty Last N",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "dry_penalty_last_n"],
+      [ApiSource.KoboldCPP, "dry_penalty_last_n"],
     ]),
     type: "number",
     default: 0,
@@ -450,7 +450,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "dry_sequence_breakers",
     label: "DRY Sequence Breakers",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "dry_sequence_breakers"],
+      [ApiSource.KoboldCPP, "dry_sequence_breakers"],
     ]),
     type: "string",
     default: undefined,
@@ -465,7 +465,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "xtc_threshold",
     label: "XTC Threshold",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "xtc_threshold"],
+      [ApiSource.KoboldCPP, "xtc_threshold"],
     ]),
     type: "number",
     default: 0.15,
@@ -485,7 +485,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "xtc_probability",
     label: "XTC Probability",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "xtc_probability"],
+      [ApiSource.KoboldCPP, "xtc_probability"],
     ]),
     type: "number",
     default: 0,
@@ -505,7 +505,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "sampler_order",
     label: "Sampler Order",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "sampler_order"],
+      [ApiSource.KoboldCPP, "sampler_order"],
     ]),
     type: "string",
     default: "[6,0,1,3,4,2,5]",
@@ -521,7 +521,7 @@ export const koboldCppParameterList: ValidationParameter[] = [
     id: "quiet",
     label: "Quiet Mode",
     nameByApiSource: new Map([
-      [ApiSource.KoboldCpp, "quiet"],
+      [ApiSource.KoboldCPP, "quiet"],
     ]),
     type: "boolean",
     default: false,
@@ -552,7 +552,7 @@ export function compareKoboldCppParameterDefinitions(): Record<string, {
   // Create a map of KoboldCPP parameters by their API name
   const koboldCppParamsByName = new Map<string, ValidationParameter>();
   koboldCppParameterList.forEach(param => {
-    const koboldCppName = param.nameByApiSource.get(ApiSource.KoboldCpp);
+    const koboldCppName = param.nameByApiSource.get(ApiSource.KoboldCPP);
     if (koboldCppName) {
       koboldCppParamsByName.set(koboldCppName, param);
     }
