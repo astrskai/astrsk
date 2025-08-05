@@ -119,8 +119,10 @@ export function useFlowPanel({
     // Invalidate agent queries to refresh UI
     await invalidateAllAgentQueries();
     
-    // Reset flow to Draft state when agent changes
-    if (flow && flow.props.readyState !== ReadyState.Draft) {
+    // Reset flow state when agent changes
+    // If it was in Error state, keep it in Error state
+    // If it was in Ready state, change to Draft
+    if (flow && flow.props.readyState === ReadyState.Ready) {
       const updateFlowResult = flow.setReadyState(ReadyState.Draft);
       if (updateFlowResult.isSuccess) {
         await saveFlow(flow);

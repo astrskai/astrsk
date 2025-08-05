@@ -54,5 +54,13 @@
     "bps": true,
     "folderMillis": 1754306945802,
     "hash": "8afd6ad50d11399ee5e7de9309e35e108b7a2388c0d4b2dac7cc32e9cf44727c"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"flows\" ADD COLUMN \"validation_issues\" jsonb;"
+    ],
+    "bps": true,
+    "folderMillis": 1754365797778,
+    "hash": "ded584de8b0251c78e9c4ff46beadbc92eae366153c5371aac95fdfa75843c10"
   }
 ]

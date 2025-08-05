@@ -1,6 +1,7 @@
 import { Result } from "@/shared/core/result";
 import { AggregateRoot, UniqueEntityID } from "@/shared/domain";
 import { PartialOmit } from "@/shared/utils";
+import type { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
 
 export enum TaskType {
   AiResponse = "ai_response",
@@ -10,6 +11,7 @@ export enum TaskType {
 export enum ReadyState {
   Draft = "draft",
   Ready = "ready",
+  Error = "error",
 }
 
 // TODO: change name to `FlowNode`
@@ -90,6 +92,7 @@ export interface FlowProps {
 
   // Validation State
   readyState: ReadyState;
+  validationIssues?: ValidationIssue[];
 
   // Set by System
   createdAt: Date;
@@ -140,17 +143,28 @@ export class Flow extends AggregateRoot<FlowProps> {
 
   public update(props: Partial<UpdateFlowProps>): Result<Flow> {
     try {
-      // If any structural changes are made, reset to draft state
-      const shouldResetToDraft = 
+      // Determine if structural changes are being made
+      const hasStructuralChanges = 
         props.nodes !== undefined || 
         props.edges !== undefined || 
         props.responseTemplate !== undefined;
       
+      // Determine the new ready state
+      let newReadyState = this.props.readyState;
+      
+      // If readyState is explicitly provided, use it
+      if (props.readyState !== undefined) {
+        newReadyState = props.readyState;
+      } else if (hasStructuralChanges && this.props.readyState === ReadyState.Ready) {
+        // Only reset from Ready to Draft on structural changes
+        // Error state persists through structural changes
+        newReadyState = ReadyState.Draft;
+      }
+      
       // Update flow props
       Object.assign(this.props, { 
         ...props,
-        // Reset to draft if structural changes
-        readyState: shouldResetToDraft ? ReadyState.Draft : (props.readyState ?? this.props.readyState),
+        readyState: newReadyState,
       });
 
       // Refresh `updatedAt`
@@ -197,6 +211,12 @@ export class Flow extends AggregateRoot<FlowProps> {
     }
     if (this.props.viewport) {
       json.viewport = this.props.viewport;
+    }
+    
+    // Add validation state fields
+    json.readyState = this.props.readyState;
+    if (this.props.validationIssues) {
+      json.validationIssues = this.props.validationIssues;
     }
 
     return json;
@@ -246,6 +266,8 @@ export class Flow extends AggregateRoot<FlowProps> {
           panelStructure: props.panelStructure,
           viewport: props.viewport,
           isTemporary: props.isTemporary ?? false,
+          readyState: props.readyState || ReadyState.Draft,
+          validationIssues: props.validationIssues || undefined,
         },
         new UniqueEntityID(id),
       );
