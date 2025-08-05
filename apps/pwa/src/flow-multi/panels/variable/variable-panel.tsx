@@ -308,7 +308,14 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
               }
             });
           }
-          
+
+          // Set history variables
+          if (lastTurn) {
+            flattenedContext["turn.char_id"] = lastTurn.characterCardId?.toString() ?? "";
+            flattenedContext["turn.char_name"] = lastTurn.characterName ?? "";
+            flattenedContext["turn.content"] = lastTurn.content;
+          }
+
           setContextValues(flattenedContext);
         }
       } catch (error) {
