@@ -10,12 +10,19 @@ import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-q
 import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { BookOpen, Pencil, Check, X, Loader2, Shield } from "lucide-react";
+import { BookOpen, Pencil, Check, X, Loader2, Shield, HelpCircle } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
 import { Card } from "@/components-v2/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components-v2/ui/tooltip";
 
 // Import ReactFlow components
 import {
@@ -41,6 +48,8 @@ import {
   type CustomNodeType,
 } from "@/flow-multi/nodes/index";
 import { CustomReactFlowControls } from "@/flow-multi/components/custom-controls";
+import { useAgentStore } from "@/app/stores/agent-store";
+import { sessionQueries } from "@/app/queries/session-queries";
 
 interface FlowPanelProps {
   flowId: string;
@@ -722,6 +731,21 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     }, 0);
   }, [onEdgesChange, edges, nodes, saveFlowChanges]);
 
+  // Preview session
+  const { data: sessions = [], isLoading: isLoadingSessions } = useQuery({
+    ...sessionQueries.list({}), // SearchSessionsQuery doesn't have flowId
+    enabled: !!flow,
+  });
+  const previewSessionId = useAgentStore.use.previewSessionId();
+  const setPreviewSessionId = useAgentStore.use.setPreviewSessionId();
+  const handleSessionChange = useCallback((sessionId: string) => {
+    if (sessionId === "none") {
+      setPreviewSessionId(null);
+    } else {
+      setPreviewSessionId(sessionId);
+    }
+  }, [setPreviewSessionId]);
+
 
   if (!flow) {
     return (
@@ -735,7 +759,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     <div ref={containerRef} className="h-full w-full relative">
       {/* Header section with flow name */}
       <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-4">
-        {/* Flow name header - conditional left margin */}
+        {/* Flow header - conditional left margin */}
         <div className={cn(
           "px-4 py-2 bg-background-surface-3 rounded-lg inline-flex justify-start items-center gap-2 transition-all duration-200",
           {
@@ -789,6 +813,48 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               </button>
             </>
           )}
+        </div>
+
+        {/* Select preview session */}
+        <div className="flex flex-row gap-2 items-center">
+          <TooltipProvider>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-4 h-4 text-text-info cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent variant="button" side="bottom">
+                <p className="max-w-xs text-xs">
+                  Select a session to see how its data appears within the flow. This feature applies to Preview and Variable tabs. Data will be based on the last message of the session.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <Select
+            value={previewSessionId || "none"}
+            onValueChange={handleSessionChange}
+          >
+            <SelectTrigger className="w-[242px] min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal">
+              <SelectValue placeholder="Select session" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {isLoadingSessions ? (
+                <SelectItem value="loading" disabled>
+                  Loading sessions...
+                </SelectItem>
+              ) : (
+                sessions.map((session) => (
+                  <SelectItem
+                    key={session.id.toString()}
+                    value={session.id.toString()}
+                  >
+                    {session.props.title ||
+                      `Session ${session.id.toString().slice(0, 8)}`}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       

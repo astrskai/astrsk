@@ -5,6 +5,7 @@ export const VariableGroup = {
   User: "user",
   Cast: "cast",
   Session: "session",
+  History: "history",
   Others: "others",
   Filters: "filters",
 } as const;
@@ -27,6 +28,10 @@ export const VariableGroupLabel = {
   [VariableGroup.Session]: {
     displayName: "Session",
     description: "Variables related to the session."
+  },
+  [VariableGroup.History]: {
+    displayName: "History",
+    description: "A single step or action in the roleplay session. Only usable in history messages of a prompt."
   },
   [VariableGroup.Others]: {
     displayName: "Others",
@@ -202,21 +207,21 @@ export const variableList: Variable[] = [
       "\n{% for turn in history %}\n  {{turn.char_name}}: {{turn.content}}\n{% endfor %}\n",
   },
   {
-    group: VariableGroup.Session,
+    group: VariableGroup.History,
     variable: "turn.char_id",
     description:
       "ID of the character who sent the message. This variable can only be utilized in history messages.",
     dataType: "string",
   },
   {
-    group: VariableGroup.Session,
+    group: VariableGroup.History,
     variable: "turn.char_name",
     description:
       "The name of the character who performed an action during a specific turn in the roleplaying sequence. This variable can only be utilized in history messages.",
     dataType: "string",
   },
   {
-    group: VariableGroup.Session,
+    group: VariableGroup.History,
     variable: "turn.content",
     description:
       "The actual content or narrative of the action taken during a specific turn in the roleplaying sequence. This variable can only be utilized in history messages.",
