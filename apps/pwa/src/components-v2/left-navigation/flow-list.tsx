@@ -224,7 +224,7 @@ const FlowItem = ({
               ? "text-status-ready-dark" 
               : flow?.props.readyState === ReadyState.Error
               ? "text-status-destructive-light"
-              : "text-text-info"
+              : "text-text-placeholder"
           )}>
             {flow?.props.readyState === ReadyState.Ready 
               ? "Ready" 
