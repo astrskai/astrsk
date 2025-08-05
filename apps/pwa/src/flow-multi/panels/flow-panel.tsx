@@ -822,9 +822,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               <TooltipTrigger asChild>
                 <HelpCircle className="w-4 h-4 text-text-info cursor-help" />
               </TooltipTrigger>
-              <TooltipContent variant="button">
+              <TooltipContent variant="button" side="bottom">
                 <p className="max-w-xs text-xs">
-                  Select a session to see how its data appears within the flow. This feature applies to Preview and Variable tabs.
+                  Select a session to see how its data appears within the flow. This feature applies to Preview and Variable tabs. Data will be based on the last message of the session.
                 </p>
               </TooltipContent>
             </Tooltip>

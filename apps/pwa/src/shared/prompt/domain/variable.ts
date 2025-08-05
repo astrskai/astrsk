@@ -31,7 +31,7 @@ export const VariableGroupLabel = {
   },
   [VariableGroup.History]: {
     displayName: "History",
-    description: "A single step or action in the roleplay session. Available in history messages. The data displayed is based on the last message."
+    description: "A single step or action in the roleplay session. Only usable in history messages of a prompt."
   },
   [VariableGroup.Others]: {
     displayName: "Others",
