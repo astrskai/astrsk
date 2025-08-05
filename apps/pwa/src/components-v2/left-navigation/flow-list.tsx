@@ -222,9 +222,15 @@ const FlowItem = ({
             "px-2 py-0.5 font-[500] text-xs leading-[16px]",
             flow?.props.readyState === ReadyState.Ready 
               ? "text-status-ready-dark" 
-              : "text-text-info"
+              : flow?.props.readyState === ReadyState.Error
+              ? "text-status-destructive-light"
+              : "text-text-placeholder"
           )}>
-            {flow?.props.readyState === ReadyState.Ready ? "Ready" : "Draft"}
+            {flow?.props.readyState === ReadyState.Ready 
+              ? "Ready" 
+              : flow?.props.readyState === ReadyState.Error
+              ? "Error"
+              : "Draft"}
           </div>
         </div>
 

@@ -29,6 +29,7 @@ export class FlowDrizzleMapper {
           panelStructure,
           viewport,
           readyState: (row.ready_state as ReadyState) || ReadyState.Draft,
+          validationIssues: row.validation_issues as any,
         },
         new UniqueEntityID(row.id),
       );
@@ -64,6 +65,7 @@ export class FlowDrizzleMapper {
         panel_structure: props.panelStructure,
         viewport: props.viewport,
         ready_state: props.readyState,
+        validation_issues: props.validationIssues,
       };
     } catch (error) {
       logger.error(`Failed to convert flow domain to row: ${error}`);

@@ -42,6 +42,7 @@ import { useQuery } from "@tanstack/react-query";
 import { agentQueries } from "@/app/queries/agent-queries";
 import { UniqueEntityID } from "@/shared/domain";
 import { flowQueries } from "@/app/queries/flow-queries";
+import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
 
 /**
  * Agent node data type definition
@@ -63,6 +64,9 @@ interface AgentNodeComponentProps {
  * The main component for rendering an agent node in the flow
  */
 function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
+  // Get updateAgent from flow panel hook
+  const { updateAgent } = useFlowPanel({ flowId: flow?.id?.toString() || '' });
+  
   // Get store functions from unified AgentStore
   const notifyAgentUpdate = useAgentStore.use.notifyAgentUpdate();
   const updateAllTabTitles = useAgentStore.use.updateAllTabTitles();
@@ -551,52 +555,50 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
           responseTemplateChanged
         });
 
-        // Save the renamed agent
-        const savedAgent = await AgentService.saveAgent.execute(updatedAgent.getValue());
-        if (savedAgent.isFailure) {
-          throw new Error(savedAgent.getError());
-        }
-
-        const newAgent = savedAgent.getValue();
+        // Save the renamed agent using updateAgent
+        await updateAgent(agentId, { name: trimmedName });
 
         // Save all agents that had their references updated
-        const savedUpdatedAgents: Agent[] = [];
         for (const agentWithUpdatedRefs of agentsWithUpdatedReferences) {
-          const savedUpdatedAgent = await AgentService.saveAgent.execute(agentWithUpdatedRefs);
-          if (savedUpdatedAgent.isSuccess) {
-            savedUpdatedAgents.push(savedUpdatedAgent.getValue());
+          // Extract just the updated properties from the agent
+          const updates: any = {};
+          if (agentWithUpdatedRefs.props.promptMessages) {
+            updates.promptMessages = agentWithUpdatedRefs.props.promptMessages;
           }
+          if (agentWithUpdatedRefs.props.schemaFields) {
+            updates.schemaFields = agentWithUpdatedRefs.props.schemaFields;
+          }
+          if (agentWithUpdatedRefs.props.schemaDescription) {
+            updates.schemaDescription = agentWithUpdatedRefs.props.schemaDescription;
+          }
+          
+          await updateAgent(agentWithUpdatedRefs.id.toString(), updates);
         }
         
         console.log('🔧 Agent saved to database:', {
           agentId,
-          savedName: newAgent.props.name
+          savedName: trimmedName
         });
         
         console.log('🔧 Agents saved:', {
           renamedAgent: agentId,
-          renamedAgentName: newAgent.props.name,
-          updatedReferences: savedUpdatedAgents.length
+          renamedAgentName: trimmedName,
+          updatedReferences: agentsWithUpdatedReferences.length
         });
         
         // Notify that agents were updated for preview panel refresh
         notifyAgentUpdate(agentId);
-        savedUpdatedAgents.forEach(updatedAgent => {
+        agentsWithUpdatedReferences.forEach(updatedAgent => {
           notifyAgentUpdate(updatedAgent.id.toString());
         });
         
-        // Reset flow to Draft state when agent changes
-        if (currentFlow.props.readyState !== ReadyState.Draft) {
-          const updateFlowResult = currentFlow.setReadyState(ReadyState.Draft);
-          if (updateFlowResult.isFailure) {
-            console.error('Failed to reset flow to Draft state:', updateFlowResult.getError());
+        // Flow state update is already handled by updateAgent
+        // Save the updated flow if response template changed
+        if (responseTemplateChanged) {
+          const savedFlowResult = await FlowService.saveFlow.execute(currentFlow);
+          if (savedFlowResult.isFailure) {
+            throw new Error(savedFlowResult.getError());
           }
-        }
-        
-        // Save the updated flow
-        const savedFlowResult = await FlowService.saveFlow.execute(currentFlow);
-        if (savedFlowResult.isFailure) {
-          throw new Error(savedFlowResult.getError());
         }
         
         console.log('🔧 Flow saved with updated agents');
@@ -614,14 +616,14 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
         
         // Invalidate queries for all updated agents
         await invalidateSingleAgentQueries(agentId);
-        for (const updatedAgent of savedUpdatedAgents) {
+        for (const updatedAgent of agentsWithUpdatedReferences) {
           await invalidateSingleAgentQueries(updatedAgent.id.toString());
         }
         
         if (totalReferencesUpdated > 0) {
           const changes = [];
-          if (savedUpdatedAgents.length > 0) {
-            changes.push(`${savedUpdatedAgents.length} agent(s)`);
+          if (agentsWithUpdatedReferences.length > 0) {
+            changes.push(`${agentsWithUpdatedReferences.length} agent(s)`);
           }
           if (responseTemplateChanged) {
             changes.push("response design");
@@ -639,7 +641,7 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
         setIsSaving(false);
       }
     },
-    [flowId, notifyAgentUpdate, updateAllTabTitles, updateAgentReferences, getAllAgentsFromFlow]
+    [flowId, notifyAgentUpdate, updateAllTabTitles, updateAgentReferences, getAllAgentsFromFlow, updateAgent]
   );
 
   // Handle model change - remove dependencies to avoid circular updates
@@ -648,13 +650,6 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
     
     setIsSaving(true);
     try {
-      // Get fresh agent data using AgentService
-      const agentResult = await AgentService.getAgent.execute(new UniqueEntityID(agent.id.toString()));
-      if (agentResult.isFailure) {
-        throw new Error("Agent not found");
-      }
-      const currentAgent = agentResult.getValue();
-
       // Build the update object with all model information
       const updateData: any = {
         apiSource: modelInfo?.apiSource,
@@ -664,44 +659,11 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
 
       console.log('🔧 Updating agent model with:', updateData);
 
-      const updatedAgent = currentAgent.update(updateData);
-      if (updatedAgent.isFailure) {
-        throw new Error(updatedAgent.getError());
-      }
-
-      const savedAgent = await AgentService.saveAgent.execute(updatedAgent.getValue());
-      if (savedAgent.isFailure) {
-        throw new Error(savedAgent.getError());
-      }
-
-      // const newAgent = savedAgent.getValue();
-      
-      // Get fresh flow data for invalidation
-      const flowResult = await FlowService.getFlow.execute(new UniqueEntityID(flowId));
-      if (flowResult.isFailure) {
-        throw new Error("Flow not found");
-      }
-      const currentFlow = flowResult.getValue();
-      
-      // Reset flow to Draft state when agent changes
-      if (currentFlow.props.readyState !== ReadyState.Draft) {
-        const updateFlowResult = currentFlow.setReadyState(ReadyState.Draft);
-        if (updateFlowResult.isSuccess) {
-          const savedFlowResult = await FlowService.saveFlow.execute(currentFlow);
-          if (savedFlowResult.isFailure) {
-            console.error('Failed to save flow with Draft state:', savedFlowResult.getError());
-          }
-        }
-      }
+      // Use updateAgent which handles flow state and invalidation
+      await updateAgent(agent.id.toString(), updateData);
       
       // Notify that agent was updated for preview panel refresh
       notifyAgentUpdate(agent.id.toString());
-      
-      // Invalidate both agent and flow queries to refresh UI with new model info
-      await Promise.all([
-        invalidateSingleAgentQueries(agent.id),
-        invalidateSingleFlowQueries(currentFlow.id)
-      ]);
       
     } catch (error) {
       toast.error("Failed to update model", {
@@ -710,7 +672,7 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
     } finally {
       setIsSaving(false);
     }
-  }, [flowId, notifyAgentUpdate]); // Remove selectFlow from dependencies
+  }, [agent.id, updateAgent, notifyAgentUpdate]);
 
   // Handle name input changes
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

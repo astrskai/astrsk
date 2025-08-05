@@ -39,6 +39,7 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>([]);
   const [apiConnectionsWithModels] = useApiConnectionsWithModels();
+  const [hasLoadedInitialIssues, setHasLoadedInitialIssues] = useState(false);
   
   // Use the flow panel hook
   const { 
@@ -85,6 +86,14 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
   
   // Check if any agents are still loading
   const isLoadingAgents = agentQueriesResults.some(query => query.isLoading);
+  
+  // Load validation issues from flow when it first loads
+  useEffect(() => {
+    if (flow && flow.props.validationIssues && !hasLoadedInitialIssues) {
+      setValidationIssues(flow.props.validationIssues);
+      setHasLoadedInitialIssues(true);
+    }
+  }, [flow, hasLoadedInitialIssues]);
   
   // Validate function
   const runValidation = useCallback(() => {
@@ -152,13 +161,37 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     
     setValidationIssues(allIssues);
     
-    // If validation passes (no errors), set flow to Ready state
+    // Update flow state and validation issues based on validation results
     const hasErrors = allIssues.some(issue => issue.severity === 'error');
-    if (!hasErrors && flow && flow.props.readyState !== ReadyState.Ready) {
-      const updateFlowResult = flow.setReadyState(ReadyState.Ready);
-      if (updateFlowResult.isSuccess) {
-        saveFlow(flow).catch(error => {
-          console.error('Failed to save flow with Ready state:', error);
+    if (flow) {
+      let needsSave = false;
+      let updatedFlow = flow;
+      
+      // Update validation issues
+      const updateIssuesResult = updatedFlow.update({ validationIssues: allIssues });
+      if (updateIssuesResult.isSuccess) {
+        needsSave = true;
+      }
+      
+      // Update ready state
+      if (hasErrors && flow.props.readyState !== ReadyState.Error) {
+        // Set to Error state if there are errors
+        const updateFlowResult = updatedFlow.setReadyState(ReadyState.Error);
+        if (updateFlowResult.isSuccess) {
+          needsSave = true;
+        }
+      } else if (!hasErrors && flow.props.readyState !== ReadyState.Ready) {
+        // Set to Ready state if there are no errors
+        const updateFlowResult = updatedFlow.setReadyState(ReadyState.Ready);
+        if (updateFlowResult.isSuccess) {
+          needsSave = true;
+        }
+      }
+      
+      // Save flow if any changes were made
+      if (needsSave) {
+        saveFlow(updatedFlow).catch(error => {
+          console.error('Failed to save flow with validation results:', error);
         });
       }
     }
@@ -236,24 +269,34 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
               const hasErrors = validationIssues.some(issue => issue.severity === 'error');
               const warnings = validationIssues.filter(issue => issue.severity === 'warning');
               
-              // If no validation has been run yet, show draft message
-              if (validationIssues.length === 0 && flow.props.readyState === ReadyState.Draft) {
-                return (
-                  <IssueItem
-                    variant="draft"
-                    title="Draft"
-                    description='Your flow has been updated. Click "Refresh" to validate'
-                  />
-                );
-              }
-              
-              // If flow is in draft state but we previously had successful validation (with warnings)
-              if (flow.props.readyState === ReadyState.Draft && hadSuccessfulValidation && !hasErrors) {
-                return (
-                  <>
+              // If no validation has been run yet, show appropriate message based on state
+              if (validationIssues.length === 0) {
+                if (flow.props.readyState === ReadyState.Draft) {
+                  return (
                     <IssueItem
                       variant="draft"
                       title="Draft"
+                      description='Your flow has been updated. Click "Refresh" to validate'
+                    />
+                  );
+                } else if (flow.props.readyState === ReadyState.Error) {
+                  return (
+                    <IssueItem
+                      variant="error"
+                      title="Error"
+                      description='Your flow has been updated. Click "Refresh" to validate'
+                    />
+                  );
+                }
+              }
+              
+              // If flow is in draft/error state but we previously had successful validation (with warnings)
+              if ((flow.props.readyState === ReadyState.Draft || flow.props.readyState === ReadyState.Error) && hadSuccessfulValidation && !hasErrors) {
+                return (
+                  <>
+                    <IssueItem
+                      variant={flow.props.readyState === ReadyState.Error ? "error" : "draft"}
+                      title={flow.props.readyState === ReadyState.Error ? "Error" : "Draft"}
                       description='Your flow has been updated. Click "Refresh" to validate'
                     />
                     {/* Keep showing previous warnings */}
