@@ -9,7 +9,7 @@ export interface Parameter {
   min?: number;
   max?: number;
   step?: number;
-  parsingFunction?: (value: string) => any;
+  parsingFunction?: (value: string, apiSource?: ApiSource) => any;
 }
 
 // TODO: parameter groups
@@ -36,6 +36,35 @@ export const parameterList: Parameter[] = [
     min: 1,
     max: Infinity,
     step: 1,
+  },
+  {
+    id: "thinking_budget",
+    label: "Thinking Budget",
+    nameByApiSource: new Map([
+      [ApiSource.GoogleGenerativeAI, "thinkingConfig"],
+      [ApiSource.Anthropic, "thinking"],
+    ]),
+    type: "number",
+    default: 300,
+    min: 0,
+    max: Infinity,
+    step: 1,
+    parsingFunction: (value: string, apiSource?: ApiSource) => {
+      const budget = Number.parseInt(value);
+      switch (apiSource) {
+        case ApiSource.GoogleGenerativeAI:
+          return {
+            thinkingBudget: budget,
+          };
+        case ApiSource.Anthropic:
+          return {
+            type: "enabled",
+            budgetTokens: budget,
+          };
+        default:
+          return {};
+      }
+    },
   },
   {
     id: "temperature",
