@@ -309,7 +309,7 @@ const makeModelSettings = ({
       continue;
     }
     const paramValue = parameter?.parsingFunction
-      ? parameter.parsingFunction(paramValueRaw)
+      ? parameter.parsingFunction(paramValueRaw, apiSource)
       : paramValueRaw;
     if (parameter.nameByApiSource.size === 0) {
       settings[paramId] = paramValue;
@@ -396,7 +396,7 @@ const makeProviderOptions = ({
       continue;
     }
     const paramValue = parameter?.parsingFunction
-      ? parameter.parsingFunction(paramValueRaw)
+      ? parameter.parsingFunction(paramValueRaw, apiSource)
       : paramValueRaw;
     if (parameter.nameByApiSource.size === 0) {
       options[paramId] = paramValue;
@@ -1267,6 +1267,7 @@ async function generateTextOutput({
     parameters: parameters,
     apiSource: apiConnection.source,
   });
+  const modelProvider = model.provider.split(".").at(0);
 
   // Request to LLM endpoint
   if (streaming) {
@@ -1275,9 +1276,9 @@ async function generateTextOutput({
       messages,
       abortSignal: combinedAbortSignal,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && {
+      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
         providerOptions: {
-          [model.provider]: providerOptions,
+          [modelProvider]: providerOptions,
         },
       }),
       experimental_transform: smoothStream({
@@ -1294,9 +1295,9 @@ async function generateTextOutput({
       messages,
       abortSignal: combinedAbortSignal,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && {
+      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
         providerOptions: {
-          [model.provider]: providerOptions,
+          [modelProvider]: providerOptions,
         },
       }),
     });
@@ -1395,6 +1396,7 @@ async function generateStructuredOutput({
     parameters: parameters,
     apiSource: apiConnection.source,
   });
+  const modelProvider = model.provider.split(".").at(0);
 
   let mode = model.defaultObjectGenerationMode;
   if (apiConnection.source === ApiSource.OpenRouter) {
@@ -1411,9 +1413,9 @@ async function generateStructuredOutput({
       schemaName: schema.name,
       schemaDescription: schema.description,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && {
+      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
         providerOptions: {
-          [model.provider]: providerOptions,
+          [modelProvider]: providerOptions,
         },
       }),
       mode,
@@ -1430,9 +1432,9 @@ async function generateStructuredOutput({
       schemaName: schema.name,
       schemaDescription: schema.description,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && {
+      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
         providerOptions: {
-          [model.provider]: providerOptions,
+          [modelProvider]: providerOptions,
         },
       }),
     });
