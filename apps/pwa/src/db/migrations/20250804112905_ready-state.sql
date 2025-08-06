@@ -1,0 +1,1 @@
+ALTER TABLE "flows" ADD COLUMN "ready_state" varchar DEFAULT 'draft' NOT NULL;

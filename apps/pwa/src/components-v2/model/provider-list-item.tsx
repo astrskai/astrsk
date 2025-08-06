@@ -181,6 +181,21 @@ const ProviderListItem = ({
                     <p>Edit</p>
                   </TooltipContent>
                 </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Unlink
+                      size={12}
+                      className="text-text-subtle w-5 h-5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsOpenDeleteConfirm(true);
+                      }}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent variant="button">
+                    <p>Unlink</p>
+                  </TooltipContent>
+                </Tooltip>
                 <DeleteConfirm
                   open={isOpenDeleteConfirm}
                   onOpenChange={async (open) => {
@@ -212,22 +227,7 @@ const ProviderListItem = ({
                       sessionIds: usedSessions.map((session) => session.id),
                     });
                   }}
-                >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Unlink
-                        size={12}
-                        className="text-text-subtle w-5 h-5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent variant="button">
-                      <p>Unlink</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </DeleteConfirm>
+                />
               </>
             )}
           </div>

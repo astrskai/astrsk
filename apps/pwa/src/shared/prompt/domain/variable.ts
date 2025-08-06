@@ -1,6 +1,50 @@
 import { Result } from "@/shared/core";
 
+export const VariableGroup = {
+  Character: "character",
+  User: "user",
+  Cast: "cast",
+  Session: "session",
+  History: "history",
+  Others: "others",
+  Filters: "filters",
+} as const;
+
+export type VariableGroup = (typeof VariableGroup)[keyof typeof VariableGroup];
+
+export const VariableGroupLabel = {
+  [VariableGroup.Character]: {
+    displayName: "Character",
+    description: "The character currently being referenced or taking action in a roleplaying sequence."
+  },
+  [VariableGroup.User]: {
+    displayName: "User", 
+    description: "The character controlled by the user in a roleplay."
+  },
+  [VariableGroup.Cast]: {
+    displayName: "Cast",
+    description: "Characters participating in the roleplay."
+  },
+  [VariableGroup.Session]: {
+    displayName: "Session",
+    description: "Variables related to the session."
+  },
+  [VariableGroup.History]: {
+    displayName: "History",
+    description: "A single step or action in the roleplay session. Only usable in history messages of a prompt."
+  },
+  [VariableGroup.Others]: {
+    displayName: "Others",
+    description: "Etc."
+  },
+  [VariableGroup.Filters]: {
+    displayName: "Filters",
+    description: "Filters to transform variables."
+  }
+} as const;
+
 export interface Variable {
+  group: VariableGroup;
   variable: string;
   description: string;
   dataType: string;
@@ -11,29 +55,35 @@ export interface Variable {
 
 export const variableList: Variable[] = [
   {
+    group: VariableGroup.Character,
     variable: "char.id",
-    description: "The unique ID of the character currently being referenced or taking action in a roleplaying sequence.",
+    description:
+      "The unique ID of the character currently being referenced or taking action in a roleplaying sequence.",
     dataType: "string",
   },
   {
+    group: VariableGroup.Character,
     variable: "char.name",
     description:
       "The name of the character currently being referenced or taking action in a roleplaying sequence.",
     dataType: "string",
   },
   {
+    group: VariableGroup.Character,
     variable: "char.description",
     description:
       "The description of the character currently being referenced or taking action in a roleplaying sequence.",
     dataType: "string",
   },
   {
+    group: VariableGroup.Character,
     variable: "char.example_dialog",
     description:
       "The example dialog of the character currently being referenced or taking action in a roleplaying sequence.",
     dataType: "string",
   },
   {
+    group: VariableGroup.Character,
     variable: "char.entries",
     description:
       "A list of all retrieved character book entries for the character currently being referenced or taking action in a roleplaying sequence.",
@@ -41,30 +91,35 @@ export const variableList: Variable[] = [
     template: "\n{% for entry in char.entries %}\n  {{entry}}\n{% endfor %}\n",
   },
   {
+    group: VariableGroup.User,
     variable: "user.id",
     description:
       "The unique ID of the character controlled by the user in a roleplay.",
     dataType: "string",
   },
   {
+    group: VariableGroup.User,
     variable: "user.name",
     description:
       "The name of the character controlled by the user in a roleplay.",
     dataType: "string",
   },
   {
+    group: VariableGroup.User,
     variable: "user.description",
     description:
       "The description of the character controlled by the user in a roleplay.",
     dataType: "string",
   },
   {
+    group: VariableGroup.User,
     variable: "user.example_dialog",
     description:
       "The example dialog of the character controlled by the user in a roleplay.",
     dataType: "string",
   },
   {
+    group: VariableGroup.User,
     variable: "user.entries",
     description:
       "A list of all retrieved character book entries for the character controlled by the user in a roleplay.",
@@ -72,6 +127,7 @@ export const variableList: Variable[] = [
     template: "\n{% for entry in user.entries %}\n  {{entry}}\n{% endfor %}\n",
   },
   {
+    group: VariableGroup.Cast,
     variable: "cast.all",
     description:
       "A list of all the characters participating in the roleplay. It includes every character currently involved.",
@@ -80,12 +136,14 @@ export const variableList: Variable[] = [
       "\n{% for character in cast.all %}\n  {{character.name}}: {{character.description}}\n{% endfor %}\n",
   },
   {
+    group: VariableGroup.Cast,
     variable: "cast.active",
     description:
       "The character, whether user-controlled or AI-controlled, who is currently being referenced or taking action in a roleplaying sequence.",
     dataType: "Character",
   },
   {
+    group: VariableGroup.Cast,
     variable: "cast.inactive",
     description:
       "The character or characters, whether user-controlled or AI-controlled, who are not currently being referenced or taking action in a roleplaying sequence.",
@@ -94,6 +152,7 @@ export const variableList: Variable[] = [
       "\n{% for character in cast.inactive %}\n  {{character.name}}: {{character.description}}\n{% endfor %}\n",
   },
   {
+    group: VariableGroup.Session,
     variable: "session.char_entries",
     description: "A list of all retrieved character book entries.",
     dataType: "string[]",
@@ -101,6 +160,7 @@ export const variableList: Variable[] = [
       "\n{% for entry in session.char_entries %}\n  {{entry}}\n{% endfor %}\n",
   },
   {
+    group: VariableGroup.Session,
     variable: "session.plot_entries",
     description: "A list of all retrieved plot lorebook entries.",
     dataType: "string[]",
@@ -108,6 +168,7 @@ export const variableList: Variable[] = [
       "\n{% for entry in session.plot_entries %}\n  {{entry}}\n{% endfor %}\n",
   },
   {
+    group: VariableGroup.Session,
     variable: "session.entries",
     description: "A list of all retrieved character and plot entries.",
     dataType: "string[]",
@@ -115,11 +176,13 @@ export const variableList: Variable[] = [
       "\n{% for entry in session.entries %}\n  {{entry}}\n{% endfor %}\n",
   },
   {
+    group: VariableGroup.Session,
     variable: "session.scenario",
     description: "The scenario of the roleplay.",
     dataType: "string",
   },
   {
+    group: VariableGroup.Session,
     variable: "session.duration",
     description:
       "The amount of time that has passed since the roleplay session was created. It updates continuously to track the session's duration in real-time.",
@@ -127,6 +190,7 @@ export const variableList: Variable[] = [
     template: "\n{{session.duration | duration_to_relative}}\n",
   },
   {
+    group: VariableGroup.Session,
     variable: "session.idle_duration",
     description:
       "The amount of time that has passed since the last action or interaction in the roleplay session. It updates continuously to measure periods of inactivity.",
@@ -134,43 +198,50 @@ export const variableList: Variable[] = [
     template: "\n{{session.idle_duration | duration_to_relative}}\n",
   },
   {
+    group: VariableGroup.Session,
     variable: "history",
     description:
       "A list of all the turns in a roleplay session, each detailing the actions and narrative progression.\nA [turn] A single step or action in the roleplay session.",
-    dataType: "Turn[]",
+    dataType: "HistoryItem[]",
     template:
       "\n{% for turn in history %}\n  {{turn.char_name}}: {{turn.content}}\n{% endfor %}\n",
   },
   {
+    group: VariableGroup.History,
     variable: "turn.char_id",
     description:
       "ID of the character who sent the message. This variable can only be utilized in history messages.",
     dataType: "string",
   },
   {
+    group: VariableGroup.History,
     variable: "turn.char_name",
     description:
       "The name of the character who performed an action during a specific turn in the roleplaying sequence. This variable can only be utilized in history messages.",
     dataType: "string",
   },
   {
+    group: VariableGroup.History,
     variable: "turn.content",
     description:
       "The actual content or narrative of the action taken during a specific turn in the roleplaying sequence. This variable can only be utilized in history messages.",
     dataType: "string",
   },
   // {
+  //   group: VariableGroup.Session,
   //   variable: "turn.variables",
   //   description:
   //     "The variables and their values after message generation is complete. This variable can only be utilized in history messages.",
   //   dataType: "Record<string, any>",
   // },
   {
+    group: VariableGroup.Others,
     variable: "now",
     description: "The current date and time as defined by the user's device.",
     dataType: "Datetime",
   },
   {
+    group: VariableGroup.Filters,
     variable: "date_to_relative",
     description:
       'A function that converts a specific date or timestamp into a relative format, such as "2 hours ago" or "3 days ago".',
@@ -178,6 +249,7 @@ export const variableList: Variable[] = [
     template: "\n{{'2025-01-02' | date_to_relative}}\n",
   },
   {
+    group: VariableGroup.Filters,
     variable: "random",
     description:
       "Takes multiple input values and randomly selects one of them as the output.",
@@ -185,6 +257,7 @@ export const variableList: Variable[] = [
     template: "\n{{['apple', 'banana', 'cherry'] | random}}\n",
   },
   {
+    group: VariableGroup.Filters,
     variable: "roll",
     description:
       "A command to perform a dice roll calculation based on standard dice notation. (refer to this URL for more details: https://dice-roller.github.io/documentation/guide/notation/)",
@@ -193,17 +266,39 @@ export const variableList: Variable[] = [
   },
 ];
 
+// Map of known object types and their fields
+const OBJECT_TYPE_FIELDS: Record<string, string[]> = {
+  'Character': ['id', 'name', 'description', 'example_dialog', 'entries'],
+  'HistoryItem': ['char_id', 'char_name', 'content', 'variables'],
+};
+
 export class VariableLibrary {
   private constructor() {}
 
   static variableList: Variable[] = [];
   static variableMap: Map<string, Variable> = new Map();
+  static expandedVariablePaths: Set<string> = new Set();
 
   static setVariableList(macroList: Variable[]): void {
     this.variableList = macroList;
     this.variableMap = new Map(
       macroList.map((macro) => [macro.variable, macro]),
     );
+    
+    // Generate expanded paths for object types
+    this.expandedVariablePaths.clear();
+    macroList.forEach(variable => {
+      this.expandedVariablePaths.add(variable.variable);
+      
+      // Parse dataType to check if it's an object type
+      const baseType = variable.dataType.replace('[]', '');
+      if (OBJECT_TYPE_FIELDS[baseType]) {
+        // Add nested paths for object types
+        OBJECT_TYPE_FIELDS[baseType].forEach(field => {
+          this.expandedVariablePaths.add(`${variable.variable}.${field}`);
+        });
+      }
+    });
   }
 
   static initialize() {
@@ -221,6 +316,34 @@ export class VariableLibrary {
         );
       }),
     );
+  }
+
+  // Check if a variable path is valid (including nested paths)
+  static isValidVariable(variablePath: string): boolean {
+    // Check if it's in our expanded paths set
+    return this.expandedVariablePaths.has(variablePath);
+  }
+
+  // Get all valid variable paths including nested ones
+  static getAllValidPaths(): string[] {
+    return Array.from(this.expandedVariablePaths);
+  }
+
+  // Get the base variable info for a path (e.g., "cast.active" for "cast.active.name")
+  static getBaseVariable(variablePath: string): Variable | undefined {
+    // Try direct match first
+    if (this.variableMap.has(variablePath)) {
+      return this.variableMap.get(variablePath);
+    }
+    
+    // For nested paths, find the base variable
+    const parts = variablePath.split('.');
+    if (parts.length >= 2) {
+      const baseVar = `${parts[0]}.${parts[1]}`;
+      return this.variableMap.get(baseVar);
+    }
+    
+    return undefined;
   }
 }
 VariableLibrary.initialize();

@@ -7,7 +7,9 @@ import {
   Node,
   PanelStructure,
   FlowViewport,
+  ReadyState,
 } from "@/modules/flow/domain/flow";
+import type { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
 
 export const flows = pgTable(TableName.Flows, {
   id: uuid().primaryKey(),
@@ -18,6 +20,8 @@ export const flows = pgTable(TableName.Flows, {
   response_template: text().notNull(),
   panel_structure: jsonb().$type<PanelStructure>(),
   viewport: jsonb().$type<FlowViewport>(),
+  ready_state: varchar().$type<ReadyState>().notNull().default(ReadyState.Draft),
+  validation_issues: jsonb().$type<ValidationIssue[]>(),
   ...timestamps,
 });
 

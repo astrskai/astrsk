@@ -26,7 +26,7 @@ import {
 import { Agent } from "@/modules/agent/domain/agent";
 import { Session } from "@/modules/session/domain/session";
 import { ApiSource } from "@/modules/api/domain";
-import { Flow } from "@/modules/flow/domain/flow";
+import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
 import * as amplitude from "@amplitude/analytics-browser";
@@ -217,8 +217,21 @@ const FlowItem = ({
         <div className="grow line-clamp-1 break-all font-[500] text-[12px] leading-[15px] text-[#F1F1F1]">
           {flow?.props.name}
         </div>
-        <div className="group-hover/item:hidden shrink-0 font-[500] text-[10px] leading-[16px] text-[#9D9D9D]">
-          {flow?.agentIds.length} Agents
+        <div className="group-hover/item:hidden shrink-0">
+          <div className={cn(
+            "px-2 py-0.5 font-[500] text-xs leading-[16px]",
+            flow?.props.readyState === ReadyState.Ready 
+              ? "text-status-ready-dark" 
+              : flow?.props.readyState === ReadyState.Error
+              ? "text-status-destructive-light"
+              : "text-text-placeholder"
+          )}>
+            {flow?.props.readyState === ReadyState.Ready 
+              ? "Ready" 
+              : flow?.props.readyState === ReadyState.Error
+              ? "Error"
+              : "Draft"}
+          </div>
         </div>
 
         {/* Actions */}

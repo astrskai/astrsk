@@ -11,6 +11,7 @@ export const PANEL_TYPES = {
   PREVIEW: 'preview',
   VARIABLE: 'variable',
   RESPONSE_DESIGN: 'responseDesign',
+  VALIDATION: 'validation',
 } as const;
 
 export type PanelType = typeof PANEL_TYPES[keyof typeof PANEL_TYPES];
@@ -33,6 +34,7 @@ export type AgentPanelType = typeof AGENT_PANEL_TYPES[number];
 export const STANDALONE_PANEL_TYPES = [
   PANEL_TYPES.VARIABLE,
   PANEL_TYPES.RESPONSE_DESIGN,
+  PANEL_TYPES.VALIDATION,
 ] as const;
 
 export type StandalonePanelType = typeof STANDALONE_PANEL_TYPES[number];
@@ -71,6 +73,8 @@ export function getPanelTitle(panelType: PanelType, agentName?: string): string 
         return 'Variables';
       case PANEL_TYPES.RESPONSE_DESIGN:
         return 'Response Design';
+      case PANEL_TYPES.VALIDATION:
+        return 'Validation';
       default:
         return 'Unknown Panel';
     }
@@ -94,4 +98,5 @@ export interface FlowPanelVisibility {
   [PANEL_TYPES.PREVIEW]: boolean;
   [PANEL_TYPES.VARIABLE]: boolean;
   [PANEL_TYPES.RESPONSE_DESIGN]: boolean;
+  [PANEL_TYPES.VALIDATION]: boolean;
 }

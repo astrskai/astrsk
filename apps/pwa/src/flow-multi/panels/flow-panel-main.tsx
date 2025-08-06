@@ -21,6 +21,7 @@ import { ParameterPanel } from "@/flow-multi/panels/parameter/parameter-panel";
 import { PreviewPanel } from "@/flow-multi/panels/preview/preview-panel";
 import { VariablePanel } from "@/flow-multi/panels/variable/variable-panel";
 import { ResponseDesignPanel } from "@/flow-multi/panels/response-design/response-design-panel";
+import { ValidationPanel } from "@/flow-multi/panels/validation/validation-panel";
 import { FlowService } from "@/app/services/flow-service";
 import { PanelStructure } from "@/modules/flow/domain";
 import { SvgIcon } from "@/components-v2/svg-icon";
@@ -101,6 +102,7 @@ const StructuredOutputPanelComponent = createFlowPanelComponentOptional(OutputPa
 const PreviewPanelComponent = createFlowPanelComponentOptional(PreviewPanel);
 const VariablePanelComponent = createFlowPanelComponent(VariablePanel);
 const ResponseDesignPanelComponent = createFlowPanelComponentStandalone(ResponseDesignPanel);
+const ValidationPanelComponent = createFlowPanelComponentStandalone(ValidationPanel);
 
 // Panel Components - must be defined outside component to avoid re-creation
 const components = {
@@ -111,6 +113,7 @@ const components = {
   preview: PreviewPanelComponent,
   variable: VariablePanelComponent,
   responseDesign: ResponseDesignPanelComponent,
+  validation: ValidationPanelComponent,
 };
 
 interface FlowPanelMainProps {

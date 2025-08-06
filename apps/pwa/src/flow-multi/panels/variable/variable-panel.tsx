@@ -1,24 +1,32 @@
-import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { Target, Check } from "lucide-react";
-import { toast } from "sonner";
-import { Variable, VariableLibrary } from "@/shared/prompt/domain/variable";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { SearchInput } from "@/components-v2/search-input";
-import { 
-  useFlowPanel, 
-  FlowPanelLoading, 
-  FlowPanelError 
-} from "@/flow-multi/hooks/use-flow-panel";
-import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
-import { VariablePanelProps } from "./variable-panel-types";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components-v2/ui/tabs";
-import { Database } from "lucide-react";
-import { SchemaField, OutputFormat, SchemaFieldType, Agent } from "@/modules/agent/domain/agent";
-import { sanitizeFileName } from "@/shared/utils/file-utils";
-import { getAgentHexColor } from "@/flow-multi/utils/agent-color-assignment";
-import { TypoBase, TypoLarge } from "@/components-v2/typo";
-import { useQueries } from "@tanstack/react-query";
 import { agentQueries } from "@/app/queries/agent-queries";
+import { sessionQueries } from "@/app/queries/session-queries";
+import { makeContext } from "@/app/services/session-play-service";
+import { TurnService } from "@/app/services/turn-service";
+import { useAgentStore } from "@/app/stores/agent-store";
+import { SearchInput } from "@/components-v2/search-input";
+import { TypoBase, TypoLarge } from "@/components-v2/typo";
+import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components-v2/ui/tabs";
+import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
+import {
+  FlowPanelError,
+  FlowPanelLoading,
+  useFlowPanel
+} from "@/flow-multi/hooks/use-flow-panel";
+import { getAgentHexColor } from "@/flow-multi/utils/agent-color-assignment";
+import { Agent, OutputFormat, SchemaField, SchemaFieldType } from "@/modules/agent/domain/agent";
+import { Variable, VariableGroupLabel, VariableLibrary } from "@/shared/prompt/domain/variable";
+import { sanitizeFileName } from "@/shared/utils/file-utils";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { Check, ChevronDown, ChevronUp, Database, Target } from "lucide-react";
+import { isObject } from "lodash-es";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { VariablePanelProps } from "./variable-panel-types";
+import { Datetime, logger } from "@/shared/utils";
+import { SessionService } from "@/app/services/session-service";
+import { useTurn } from "@/app/hooks/use-turn";
 
 interface AgentVariable {
   agentId: string;
@@ -28,6 +36,39 @@ interface AgentVariable {
   variablePath: string;
 }
 
+// Helper function to format values
+const formatValue = (value: any): string => {
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  } else if (Datetime.isDuration(value)) {
+    return value.humanize();
+  } else if (typeof value === "object" && value !== null) {
+    return JSON.stringify(value);
+  }
+  return String(value);
+};
+
+// Helper function to recursively flatten nested objects with dot notation
+const flattenObject = (obj: Record<string, any>, prefix = ""): Record<string, string> => {
+  const flattened: Record<string, string> = {};
+  Object.keys(obj).forEach(key => {
+    const value = obj[key];
+    if (value === null || value === undefined) {
+      return;
+    }
+    const newKey = prefix ? `${prefix}.${key}` : key;
+    if (isObject(value) && !Array.isArray(value) && !Datetime.isDuration(value)) {
+      // Store the JSON representation of the object at this path
+      flattened[newKey] = JSON.stringify(value);
+      // Continue flattening nested properties
+      Object.assign(flattened, flattenObject(value, newKey));
+    } else {
+      flattened[newKey] = formatValue(value);
+    }
+  });
+  return flattened;
+};
+
 export function VariablePanel({ flowId }: VariablePanelProps) {
   // Use the flow panel hook
   const { 
@@ -35,9 +76,17 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     isLoading,
   } = useFlowPanel({ flowId });
 
+  // Get session management from store
+  const previewSessionId = useAgentStore.use.previewSessionId();
+  
+  // Query session data using Tanstack Query
+  const { data: previewSession, isLoading: isLoadingSession } = useQuery({
+    ...sessionQueries.detail(previewSessionId ? new UniqueEntityID(previewSessionId) : undefined),
+    enabled: !!previewSessionId,
+  });
+
   // Get last monaco editor and insert function from flow context
   const { lastMonacoEditor, insertVariableAtLastCursor } = useFlowPanelContext();
-  // Removed agentUpdateTimestamp and flowUpdateTimestamp - React Query handles updates
   
   // Local state
   const [activeTab, setActiveTab] = useState(() => {
@@ -48,6 +97,9 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   const [availableVariables, setAvailableVariables] = useState<Variable[]>([]);
   const [aggregatedStructuredVariables, setAggregatedStructuredVariables] = useState<AgentVariable[]>([]);
   const [clickedVariable, setClickedVariable] = useState<string | null>(null);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [contextValues, setContextValues] = useState<Record<string, any>>({});
+
   // Check if we have an editor
   const hasEditor = !!lastMonacoEditor?.editor;
 
@@ -159,7 +211,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
       ) {
         // For structured output, add each field
         agent.props.schemaFields.forEach((field) => {
-          const fieldPath = field.array ? `${field.name}[]` : field.name;
+          const fieldPath = field.name;
           const sanitizedAgentName = sanitizeFileName(agentName);
           const variablePath = `${sanitizedAgentName}.${fieldPath}`;
 
@@ -178,18 +230,135 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   }, [flow, areAgentsLoading, agentQueries_, aggregatedStructuredVariables.length]);
 
 
-  // Filter variables based on search query
-  const filteredVariables = useMemo(() => {
-    if (!searchQuery) return availableVariables;
+  // Extract last turn ID for dependency array
+  const lastTurnId = previewSession?.turnIds?.[previewSession.turnIds.length - 1];
+  const lastTurnIdString = useMemo(() => lastTurnId?.toString(), [lastTurnId]);
+  const [lastTurn] = useTurn(lastTurnId);
+  const lastTurnVariablesJson = useMemo(
+    () => JSON.stringify(lastTurn?.variables),
+    [lastTurn?.variables],
+  );
 
-    const query = searchQuery.toLowerCase();
-    return availableVariables.filter(
-      (variable) =>
-        variable.variable.toLowerCase().includes(query) ||
-        variable.description.toLowerCase().includes(query) ||
-        (variable.template && variable.template.toLowerCase().includes(query)),
-    );
+  // Load context values from previewSession
+  useEffect(() => {
+    logger.debug({
+      previewSessionId, lastTurnIdString, lastTurnVariablesJson
+    });
+    const fetchContextValues = async () => {
+      try {
+        // Get preview session
+        if (!previewSessionId) {
+          setContextValues({});
+          return;
+        }
+        const previewSessionOrError = await SessionService.getSession.execute(new UniqueEntityID(previewSessionId))
+        if (previewSessionOrError.isFailure) {
+          setContextValues({});
+          return;
+        }
+        const previewSession = previewSessionOrError.getValue();
+
+        // Get characterCardId from the last message, fallback to first enabled character
+        let characterCardId;
+        let lastTurn;
+        if (previewSession.turnIds && previewSession.turnIds.length > 0) {
+          try {
+            const lastTurnId = previewSession.turnIds[previewSession.turnIds.length - 1];
+            const lastTurnResult = await TurnService.getTurn.execute(lastTurnId);
+            if (lastTurnResult.isSuccess) {
+              lastTurn = lastTurnResult.getValue();
+              characterCardId = lastTurn.characterCardId;
+            }
+          } catch (error) {
+            // Fallback to first enabled character if getting last turn fails
+            console.warn('Failed to get last turn, using fallback character:', error);
+          }
+        }
+        
+        // Fallback to first enabled character if no characterCardId from last turn
+        if (!characterCardId) {
+          const firstCharacterCard = previewSession.characterCards?.find((card) => card.enabled);
+          characterCardId = firstCharacterCard?.id;
+        }
+        
+        const contextResult = await makeContext({
+          session: previewSession,
+          characterCardId,
+          includeHistory: true,
+        });
+        
+        if (contextResult.isSuccess) {
+          const renderContext = contextResult.getValue();
+          
+          // Flatten the context for variable lookup using recursive utility
+          const flattenedContext = flattenObject(renderContext);
+          
+          // Add structured variables from last turn if available
+          if (lastTurn?.variables) {
+            Object.keys(lastTurn.variables).forEach(key => {
+              const value = lastTurn.variables![key];
+              if (value !== null && value !== undefined) {
+                // If the value is an object, flatten it with the key as prefix
+                if (isObject(value) && !Array.isArray(value)) {
+                  const flattenedStructuredVars = flattenObject(value, key);
+                  Object.assign(flattenedContext, flattenedStructuredVars);
+                } else {
+                  flattenedContext[key] = formatValue(value);
+                }
+              }
+            });
+          }
+
+          // Set history variables
+          if (lastTurn) {
+            flattenedContext["turn.char_id"] = lastTurn.characterCardId?.toString() ?? "";
+            flattenedContext["turn.char_name"] = lastTurn.characterName ?? "";
+            flattenedContext["turn.content"] = lastTurn.content;
+          }
+
+          setContextValues(flattenedContext);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch context values", error);
+        setContextValues({});
+      }
+    };
+
+    fetchContextValues();
+  }, [previewSessionId, lastTurnIdString, lastTurnVariablesJson]);
+
+
+  // Group variables by their group property
+  const groupedVariables = useMemo(() => {
+    const groups = availableVariables.reduce((acc, variable) => {
+      const group = variable.group;
+      if (!acc[group]) {
+        acc[group] = [];
+      }
+      acc[group].push(variable);
+      return acc;
+    }, {} as Record<string, Variable[]>);
+
+    // Filter by search query if exists
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      Object.keys(groups).forEach(groupKey => {
+        groups[groupKey] = groups[groupKey].filter(
+          (variable) =>
+            variable.variable.toLowerCase().includes(query) ||
+            variable.description.toLowerCase().includes(query) ||
+            (variable.template && variable.template.toLowerCase().includes(query)),
+        );
+        // Remove empty groups after filtering
+        if (groups[groupKey].length === 0) {
+          delete groups[groupKey];
+        }
+      });
+    }
+
+    return groups;
   }, [availableVariables, searchQuery]);
+
 
   // Handle structured variable insertion
   const handleInsertStructuredVariable = useCallback(
@@ -254,8 +423,21 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     event.stopPropagation();
   }, []);
 
+  // Handle group collapse/expand
+  const toggleGroupCollapse = useCallback((group: string) => {
+    setCollapsedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(group)) {
+        newSet.delete(group);
+      } else {
+        newSet.add(group);
+      }
+      return newSet;
+    });
+  }, []);
+
   // Loading state
-  if (isLoading || areAgentsLoading) {
+  if (isLoading || areAgentsLoading || isLoadingSession) {
     return <FlowPanelLoading message="Loading variables..." />;
   }
 
@@ -293,8 +475,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
         <TabsContent value="variables" className="mt-0 flex-1 overflow-hidden h-0">
           <ScrollArea className="h-full pr-2">
-            <div className="flex flex-col gap-2">
-              {filteredVariables.length === 0 ? (
+            <div className="flex flex-col">
+              {Object.keys(groupedVariables).length === 0 ? (
                 <div className="text-center py-8">
                   <TypoBase className="text-[#A3A5A8]">
                     {searchQuery
@@ -303,51 +485,95 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                   </TypoBase>
                 </div>
               ) : (
-                filteredVariables.map((variable) => (
-                  <button
-                    key={variable.variable}
-                    className={`w-full p-2 rounded-lg border border-border-normal flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
-                      clickedVariable === variable.variable
-                        ? "bg-background-surface-3"
-                        : "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
-                    }`}
-                    onClick={(e) => handleVariableClick(variable, e)}
-                    onMouseDown={handleMouseDown}
-                    tabIndex={-1}
-                  >
-                    {clickedVariable === variable.variable && (
-                      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
-                    )}
-                    <div className="w-full flex flex-col justify-start items-start gap-1">
-                      <div className="flex justify-start items-center gap-2 w-full">
-                        <div className="text-text-primary text-xs font-normal">
-                          {`{{${variable.variable}}}`}
+                Object.entries(groupedVariables).map(([group, variables]) => (
+                  <div key={group} className="flex flex-col">
+                    {/* Group Header */}
+                    <div className="bg-[#272727] py-2.5">
+                      <div className="flex flex-row gap-4 items-center justify-start w-full">
+                        <div className="basis-0 flex flex-row gap-2 grow items-start justify-start text-xs text-left">
+                          <div className="text-[#bfbfbf] font-medium text-nowrap">
+                            {VariableGroupLabel[group as keyof typeof VariableGroupLabel]?.displayName || group}
+                          </div>
+                          <div className="basis-0 grow min-h-px min-w-px text-[#696969] font-normal">
+                            {VariableGroupLabel[group as keyof typeof VariableGroupLabel]?.description || "Variables in this group"}
+                          </div>
                         </div>
-                        <div className="text-text-body text-xs font-normal">
-                          {variable.dataType}
-                        </div>
-                        {hasEditor &&
-                          (clickedVariable === variable.variable ? (
-                            <Check className="h-3 w-3 ml-auto text-green-500 transition-opacity" />
+                        <button 
+                          className="flex items-center justify-center"
+                          onClick={() => toggleGroupCollapse(group)}
+                        >
+                          {collapsedGroups.has(group) ? (
+                            <ChevronDown className="min-w-6 min-h-6 text-[#bfbfbf]" />
                           ) : (
-                            <Target className="h-3 w-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
-                          ))}
+                            <ChevronUp className="min-w-6 min-h-6 text-[#bfbfbf]" />
+                          )}
+                        </button>
                       </div>
-                      <div className="text-text-subtle text-xs font-medium leading-none text-left">
-                        {variable.description}
-                      </div>
-                      {variable.template && (
-                        <div className="self-stretch justify-start">
-                          <span className="text-text-body text-[10px] font-medium leading-none">
-                            {" "}
-                          </span>
-                          <span className="text-text-primary text-[10px] font-medium leading-none whitespace-pre-wrap">
-                            {variable.template}
-                          </span>
-                        </div>
-                      )}
                     </div>
-                  </button>
+                    
+                    {/* Group Variables */}
+                    {!collapsedGroups.has(group) && (
+                      <div className="bg-[#272727] pb-0">
+                        <div className="flex flex-col gap-2">
+                          {variables.map((variable) => (
+                          <button
+                            key={variable.variable}
+                            className={`w-full p-2 rounded-lg bg-[#313131] border border-[#525252] flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
+                              clickedVariable === variable.variable
+                                ? "bg-[#313131]"
+                                : "bg-[#313131] hover:bg-[#414141] cursor-pointer"
+                            }`}
+                            onClick={(e) => handleVariableClick(variable, e)}
+                            onMouseDown={handleMouseDown}
+                            tabIndex={-1}
+                          >
+                            {clickedVariable === variable.variable && (
+                              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
+                            )}
+                            <div className="w-full flex flex-col justify-start items-start gap-1">
+                              <div className="flex justify-start items-center gap-2 w-full text-xs text-nowrap">
+                                <div className="text-[#f1f1f1] font-medium">
+                                  {`{{${variable.variable}}}`}
+                                </div>
+                                <div className="text-[#bfbfbf] font-normal">
+                                  {variable.dataType}
+                                </div>
+                                {hasEditor &&
+                                  (clickedVariable === variable.variable ? (
+                                    <Check className="min-w-3 min-h-3 ml-auto text-green-500 transition-opacity" />
+                                  ) : (
+                                    <Target className="min-w-3 min-h-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
+                                  ))}
+                              </div>
+                              <div className="text-[#9d9d9d] text-xs font-normal leading-normal text-left">
+                                {variable.description}
+                              </div>
+                              {variable.template && (
+                                <div className="text-[#bfbfbf] text-[10px] font-medium leading-4 whitespace-pre-wrap">
+                                  <span className="text-[#f1f1f1]">
+                                    {variable.template}
+                                  </span>
+                                </div>
+                              )}
+                              {contextValues[variable.variable] && (
+                                <div className="mt-2 w-full overflow-hidden">
+                                  <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
+                                    <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                      Data from session
+                                    </div>
+                                    <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                      {String(contextValues[variable.variable])}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ))
               )}
             </div>
@@ -418,7 +644,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                 {`{{${variable.variablePath}}}`}
                               </div>
                               <div className="text-text-body text-xs font-normal">
-                                {variable.field.type}
+                                {variable.field.type}{variable.field.array && "[]"}
                               </div>
                               {variable.field.required && (
                                 <div className="text-red-500 text-xs font-normal">
@@ -435,6 +661,18 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                             {variable.field.description && (
                               <div className="line-clamp-3 text-text-subtle text-xs font-medium leading-none text-left">
                                 {variable.field.description}
+                              </div>
+                            )}
+                            {contextValues[variable.variablePath] && (
+                              <div className="mt-2 w-full overflow-hidden">
+                                <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
+                                  <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                    Data from session
+                                  </div>
+                                  <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                    {String(contextValues[variable.variablePath])}
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
