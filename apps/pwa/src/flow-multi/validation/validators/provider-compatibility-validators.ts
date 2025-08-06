@@ -63,30 +63,31 @@ export const validateStructuredOutputSupport: ValidatorFunction = forEachConnect
     ];
     
     if (unverifiableProviders.includes(apiSource)) {
-      // For unverifiable providers, check if we can detect a known model pattern
-      const providerInfo = ModelProviderRegistry.detectModelProvider(modelName);
+      // TODO: implement unverifiable providers
+      // // For unverifiable providers, check if we can detect a known model pattern
+      // const providerInfo = ModelProviderRegistry.detectModelProvider(modelName);
       
-      if (!providerInfo) {
-        // Model is not recognized, show warning about unverified support
-        const message = generateValidationMessage(ValidationIssueCode.UNVERIFIED_MODEL, {
-          agentName: agent.props.name,
-          modelName: modelName,
-          provider: apiSource
-        });
-        issues.push({
-          id: generateIssueId(ValidationIssueCode.UNVERIFIED_MODEL, agentId),
-          code: ValidationIssueCode.UNVERIFIED_MODEL,
-          severity: 'warning',
-          ...message,
-          agentId,
-          agentName: agent.props.name,
-          metadata: {
-            modelName,
-            provider: apiSource,
-            feature: 'structuredOutput',
-          },
-        });
-      }
+      // if (!providerInfo) {
+      //   // Model is not recognized, show warning about unverified support
+      //   const message = generateValidationMessage(ValidationIssueCode.UNVERIFIED_MODEL, {
+      //     agentName: agent.props.name,
+      //     modelName: modelName,
+      //     provider: apiSource
+      //   });
+      //   issues.push({
+      //     id: generateIssueId(ValidationIssueCode.UNVERIFIED_MODEL, agentId),
+      //     code: ValidationIssueCode.UNVERIFIED_MODEL,
+      //     severity: 'warning',
+      //     ...message,
+      //     agentId,
+      //     agentName: agent.props.name,
+      //     metadata: {
+      //       modelName,
+      //       provider: apiSource,
+      //       feature: 'structuredOutput',
+      //     },
+      //   });
+      // }
       // If provider info is found, it means it's a known model, so no warning needed
     } else if (!supportedProviders.includes(apiSource)) {
       // Provider doesn't support structured output at all
@@ -109,33 +110,6 @@ export const validateStructuredOutputSupport: ValidatorFunction = forEachConnect
       });
     }
     // If it's in supportedProviders, no warning needed
-    
-    return issues;
-  }
-);
-
-// Check structured output parameter mismatch
-export const validateStructuredOutputParameters: ValidatorFunction = forEachConnectedAgent(
-  (agentId, agent: Agent) => {
-    const issues: ValidationIssue[] = [];
-    
-    // Check for mismatch between enabledStructuredOutput and outputFormat
-    const hasEnabledSO = agent.props.enabledStructuredOutput;
-    const hasOutputFormat = agent.props.outputFormat === OutputFormat.StructuredOutput;
-    
-    if (hasEnabledSO && !hasOutputFormat) {
-      const message = generateValidationMessage(ValidationIssueCode.SO_PARAMETER_MISMATCH, {
-        agentName: agent.props.name
-      });
-      issues.push({
-        id: generateIssueId(ValidationIssueCode.SO_PARAMETER_MISMATCH, agentId),
-        code: ValidationIssueCode.SO_PARAMETER_MISMATCH,
-        severity: 'warning',
-        ...message,
-        agentId,
-        agentName: agent.props.name,
-      });
-    }
     
     return issues;
   }

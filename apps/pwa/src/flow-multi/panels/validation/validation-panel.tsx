@@ -126,7 +126,6 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     // ✅ validateUnusedOutputVariables - now checks for parent agent usage (e.g., {{analyzer}})
     // ✅ validateTemplateSyntax
     // ✅ validateStructuredOutputSupport - shows "unverified" warning for unknown models on OpenRouter/OpenAI-compatible
-    // ✅ validateStructuredOutputParameters
     // ✅ validateProviderParameters - validates parameter min/max ranges, shows warnings for undefined parameters
     
     // Run each validator and collect issues
