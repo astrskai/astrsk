@@ -8,6 +8,8 @@ import {
   screen,
   shell,
 } from "electron";
+import * as http from "http";
+import { createProxy } from "proxy";
 
 // Set name to consist user data directory
 app.setName("astrsk_ai");
@@ -135,6 +137,12 @@ app.whenReady().then(() => {
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on("browser-window-created", (_, window) => {
     optimizer.watchWindowShortcuts(window);
+  });
+
+  // Start proxy server
+  const proxy = createProxy(http.createServer());
+  proxy.listen(3128, () => {
+    console.log("HTTP(s) proxy server listening on 3128");
   });
 
   // Create main window.
