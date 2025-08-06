@@ -122,6 +122,12 @@ function createMainWindow(): BrowserWindow {
   setUpdaterCallbacks(mainWindow);
   setTopBarCallbacks(mainWindow);
 
+  // Set proxy
+  mainWindow.webContents.session.setProxy({
+    proxyRules: "http://localhost:3128",
+    proxyBypassRules: "<local>",
+  });
+
   return mainWindow;
 }
 
