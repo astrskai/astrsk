@@ -22,6 +22,8 @@ import { PreviewPanel } from "@/flow-multi/panels/preview/preview-panel";
 import { VariablePanel } from "@/flow-multi/panels/variable/variable-panel";
 import { ResponseDesignPanel } from "@/flow-multi/panels/response-design/response-design-panel";
 import { ValidationPanel } from "@/flow-multi/panels/validation/validation-panel";
+import { DataStoreSchemaPanel } from "@/flow-multi/panels/data-store-schema/data-store-schema-panel";
+import { IfNodePanel } from "@/flow-multi/panels/if-node/if-node-panel";
 import { FlowService } from "@/app/services/flow-service";
 import { PanelStructure } from "@/modules/flow/domain";
 import { SvgIcon } from "@/components-v2/svg-icon";
@@ -95,6 +97,20 @@ const createFlowPanelComponentStandalone = (
   });
 };
 
+// Panel component factory for node-specific panels (Data Store, If Node)
+const createNodePanelComponent = (
+  Component: React.FC<{ flowId: string; nodeId: string }>
+): React.FC<IDockviewPanelProps> => {
+  return React.memo((props: IDockviewPanelProps) => {
+    const { flowId, nodeId } = props.params;
+    return (
+      <PanelFocusAnimationWrapper api={props.api} containerApi={props.containerApi}>
+        <Component flowId={flowId} nodeId={nodeId || ''} />
+      </PanelFocusAnimationWrapper>
+    );
+  });
+};
+
 // Panel component registry
 const PromptPanelComponent = createFlowPanelComponent(PromptPanel);
 const ParameterPanelComponent = createFlowPanelComponentOptional(ParameterPanel);
@@ -103,6 +119,8 @@ const PreviewPanelComponent = createFlowPanelComponentOptional(PreviewPanel);
 const VariablePanelComponent = createFlowPanelComponent(VariablePanel);
 const ResponseDesignPanelComponent = createFlowPanelComponentStandalone(ResponseDesignPanel);
 const ValidationPanelComponent = createFlowPanelComponentStandalone(ValidationPanel);
+const DataStoreSchemaPanelComponent = createNodePanelComponent(DataStoreSchemaPanel);
+const IfNodePanelComponent = createNodePanelComponent(IfNodePanel);
 
 // Panel Components - must be defined outside component to avoid re-creation
 const components = {
@@ -114,6 +132,8 @@ const components = {
   variable: VariablePanelComponent,
   responseDesign: ResponseDesignPanelComponent,
   validation: ValidationPanelComponent,
+  dataStoreSchema: DataStoreSchemaPanelComponent,
+  ifNode: IfNodePanelComponent,
 };
 
 interface FlowPanelMainProps {

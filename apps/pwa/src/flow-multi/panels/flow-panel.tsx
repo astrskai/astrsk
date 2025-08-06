@@ -10,7 +10,7 @@ import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-q
 import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { BookOpen, Pencil, Check, X, Loader2, Shield, HelpCircle } from "lucide-react";
+import { BookOpen, Pencil, Check, X, Loader2, Shield, HelpCircle, Database, Plus, GitBranch } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
@@ -23,6 +23,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components-v2/ui/dropdown-menu";
+import { Button } from "@/components-v2/ui/button";
 
 // Import ReactFlow components
 import {
@@ -62,20 +69,29 @@ const proOptions = { hideAttribution: true };
 function filterExistingConnections(
   edges: CustomEdgeType[],
   sourceNode: CustomNodeType | undefined,
-  targetNode: CustomNodeType | undefined,
-  connection: { source?: string | null; target?: string | null }
+  targetNode: CustomNodeType | undefined, // Kept for backwards compatibility but not used
+  connection: { source?: string | null; target?: string | null; sourceHandle?: string | null }
 ): CustomEdgeType[] {
   let filteredEdges = [...edges];
   
   // Remove existing outgoing connections based on source node type
-  if ((sourceNode?.type === 'start' || sourceNode?.type === 'agent') && connection.source) {
-    filteredEdges = filteredEdges.filter(edge => edge.source !== connection.source);
+  // Output handles can only connect to one node (applies to all node types with source handles)
+  if (connection.source && sourceNode) {
+    // For all node types, remove existing edges from the same source handle
+    // This ensures each output can only connect to one input
+    filteredEdges = filteredEdges.filter(edge => {
+      // For If nodes with multiple source handles, check both source and sourceHandle
+      if (sourceNode.type === 'if' && edge.source === connection.source) {
+        // Only remove if it's from the same handle (true/false)
+        return edge.sourceHandle !== connection.sourceHandle;
+      }
+      // For other nodes, remove any edge from the same source
+      return edge.source !== connection.source;
+    });
   }
   
-  // Remove existing incoming connections based on target node type  
-  if ((targetNode?.type === 'agent' || targetNode?.type === 'end') && connection.target) {
-    filteredEdges = filteredEdges.filter(edge => edge.target !== connection.target);
-  }
+  // Input handles can now accept multiple connections - no filtering needed for targets
+  // Previously removed: filtering for agent and end node targets
   
   return filteredEdges;
 }
@@ -431,6 +447,166 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       
     } catch (error) {
       toast.error("Failed to copy agent", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+
+  // Add node functions
+  const addDataStoreNode = useCallback(() => {
+    if (!flow) return;
+
+    // Calculate position for new node (center of viewport or offset from last node)
+    const lastNode = nodes[nodes.length - 1];
+    const newPosition = lastNode 
+      ? { x: lastNode.position.x + 200, y: lastNode.position.y }
+      : { x: 400, y: 300 };
+
+    // Create new Data Store node
+    const newNode: CustomNodeType = {
+      id: `datastore-${Date.now()}`,
+      type: "dataStore",
+      position: newPosition,
+      data: {
+        label: "Data Store",
+        fields: []
+      },
+    };
+
+    // Update nodes
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
+    
+    // Mark as local change and save
+    isLocalChangeRef.current = true;
+    setTimeout(() => {
+      saveFlowChanges(updatedNodes, edges, true);
+    }, 0);
+
+    toast.success("Data Store node added");
+  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+
+  const addIfNode = useCallback(() => {
+    if (!flow) return;
+
+    // Calculate position for new node
+    const lastNode = nodes[nodes.length - 1];
+    const newPosition = lastNode 
+      ? { x: lastNode.position.x + 200, y: lastNode.position.y }
+      : { x: 400, y: 400 };
+
+    // Create new If node
+    const newNode: CustomNodeType = {
+      id: `if-${Date.now()}`,
+      type: "if",
+      position: newPosition,
+      data: {
+        label: "If Condition",
+        logicOperator: 'AND',
+        conditions: []
+      },
+    };
+
+    // Update nodes
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
+    
+    // Mark as local change and save
+    isLocalChangeRef.current = true;
+    setTimeout(() => {
+      saveFlowChanges(updatedNodes, edges, true);
+    }, 0);
+
+    toast.success("If node added");
+  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+
+  const addAgentNode = useCallback(async () => {
+    if (!flow) return;
+
+    try {
+      // Generate unique agent name using existing logic
+      const generateUniqueAgentName = async (baseName: string = "New Agent"): Promise<string> => {
+        const existingNames = new Set<string>();
+        
+        // Collect existing agent names from current flow
+        if (flow?.agentIds) {
+          for (const agentId of flow.agentIds) {
+            const agentOrError = await AgentService.getAgent.execute(agentId);
+            if (agentOrError.isFailure) {
+              throw new Error(agentOrError.getError());
+            }
+            const agent = agentOrError.getValue();
+            if (agent.props.name) {
+              existingNames.add(agent.props.name);
+            }
+          }
+        }
+        
+        // If base name is available, use it
+        if (!existingNames.has(baseName)) {
+          return baseName;
+        }
+        
+        // Otherwise, find the next available number
+        let counter = 1;
+        let candidateName: string;
+        do {
+          candidateName = `${baseName} ${counter}`;
+          counter++;
+        } while (existingNames.has(candidateName));
+        
+        return candidateName;
+      };
+
+      // Create a new agent with unique name and color (using same pattern as drag-to-create)
+      const uniqueName = await generateUniqueAgentName();
+      const nextColor = await getNextAvailableColor(flow);
+      
+      const newAgent = Agent.create({
+        name: uniqueName,
+        targetApiType: ApiType.Chat,
+        color: nextColor,
+      }).getValue();
+
+      // Save the new agent
+      const savedAgentResult = await AgentService.saveAgent.execute(newAgent);
+      if (savedAgentResult.isFailure) {
+        throw new Error(savedAgentResult.getError());
+      }
+      const savedAgent = savedAgentResult.getValue();
+
+      // Calculate position for new agent
+      const lastNode = nodes[nodes.length - 1];
+      const newPosition = lastNode 
+        ? { x: lastNode.position.x + 200, y: lastNode.position.y }
+        : { x: 400, y: 200 };
+
+      // Create new agent node
+      const newAgentNode: CustomNodeType = {
+        id: savedAgent.id.toString(),
+        type: "agent",
+        position: newPosition,
+        data: {
+          agentId: savedAgent.id.toString(),
+        },
+      };
+
+      // Update nodes
+      const updatedNodes = [...nodes, newAgentNode];
+      setNodes(updatedNodes);
+      
+      // Mark as local change and save
+      isLocalChangeRef.current = true;
+      setTimeout(() => {
+        saveFlowChanges(updatedNodes, edges, true);
+      }, 0);
+
+      // Invalidate agent queries for color updates
+      invalidateAllAgentQueries();
+      
+      toast.success("Agent node added");
+    } catch (error) {
+      toast.error("Failed to create agent", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
@@ -861,24 +1037,68 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       {/* Variables and Validation buttons - positioned below header */}
       <div className="flex justify-start items-start gap-2">
         <ButtonPill
-          size="default"
-          icon={<BookOpen />}
-          active={isPanelOpen(PANEL_TYPES.VARIABLE)}
-          onClick={() => openPanel(PANEL_TYPES.VARIABLE)}
-          // onDoubleClick={handleCloseVariablesPanel}
-          title="Open Variables Panel"
-        >
-          Variables
-        </ButtonPill>
+            size="default"
+            icon={<BookOpen />}
+            active={isPanelOpen(PANEL_TYPES.VARIABLE)}
+            onClick={() => openPanel(PANEL_TYPES.VARIABLE)}
+            // onDoubleClick={handleCloseVariablesPanel}
+            title="Open Variables Panel"
+          >
+            Variables
+          </ButtonPill>
+          <ButtonPill
+            size="default"
+            icon={<Shield />}
+            active={isPanelOpen(PANEL_TYPES.VALIDATION)}
+            onClick={() => openPanel(PANEL_TYPES.VALIDATION)}
+            title="Open Validation Panel"
+          >
+            Validation
+          </ButtonPill>
         <ButtonPill
           size="default"
-          icon={<Shield />}
-          active={isPanelOpen(PANEL_TYPES.VALIDATION)}
-          onClick={() => openPanel(PANEL_TYPES.VALIDATION)}
-          title="Open Validation Panel"
+          icon={<Database />}
+          active={isPanelOpen(PANEL_TYPES.DATA_STORE_SCHEMA)}
+          onClick={() => openPanel(PANEL_TYPES.DATA_STORE_SCHEMA)}
+          title="Open Data Store Schema Panel"
         >
-          Validation
+          Data Store Schema
         </ButtonPill>
+        
+        {/* Nodes dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div>
+              <ButtonPill
+                size="default"
+                icon={<Plus />}
+                title="Add Node"
+              >
+                Nodes
+              </ButtonPill>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={addAgentNode}>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-accent-primary" />
+                <span>Agent Node</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={addDataStoreNode}>
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-indigo-400" />
+                <span>Data Store Node</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={addIfNode}>
+              <div className="flex items-center gap-2">
+                <GitBranch className="w-4 h-4 text-purple-400" />
+                <span>If Node</span>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
     
