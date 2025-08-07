@@ -15,7 +15,7 @@ app.setName("astrsk_ai");
 import Store from "electron-store";
 import { join } from "path";
 import icon from "../../resources/icon.png?asset";
-import { TOP_BAR_CHANNEL } from "../shared/ipc-channels";
+import { CONFIG_CHANNEL, TOP_BAR_CHANNEL } from "../shared/ipc-channels";
 import "./debug";
 import "./dump";
 import { setTopBarCallbacks } from "./top-bar";
@@ -44,7 +44,31 @@ function isBoundsInDisplay(bounds: Rectangle): boolean {
   });
 }
 
+interface ElectronLevelConfig {
+  allowInsecureContent: boolean;
+}
+
+const electronLevelConfigStore = new Store<ElectronLevelConfig>({
+  defaults: {
+    allowInsecureContent: false,
+  },
+});
+
+ipcMain.handle(CONFIG_CHANNEL.GET_CONFIG, (_, key: string) => {
+  return electronLevelConfigStore.get(key);
+});
+
+ipcMain.handle(CONFIG_CHANNEL.SET_CONFIG, (_, key: string, value: any) => {
+  electronLevelConfigStore.set(key, value);
+});
+
 function createMainWindow(): BrowserWindow {
+  const allowInsecureContent = electronLevelConfigStore.get("allowInsecureContent");
+  if (allowInsecureContent) {
+    app.commandLine.appendSwitch("disable-web-security");
+    app.commandLine.appendSwitch("disable-features", "BlockInsecurePrivateNetworkRequests");
+  }
+
   // Create browser window options.
   let mainWindowOptions: BrowserWindowConstructorOptions = {
     // Window position and size settings.
@@ -67,6 +91,12 @@ function createMainWindow(): BrowserWindow {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
+
+      // Allow insecure content
+      ...(allowInsecureContent && {
+        webSecurity: false,
+        allowRunningInsecureContent: true,
+      }),
     },
   };
 
@@ -163,7 +193,6 @@ app.on("window-all-closed", () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
-
 ipcMain.handle(TOP_BAR_CHANNEL.NEW_WINDOW, async () => {
   createMainWindow();
 });

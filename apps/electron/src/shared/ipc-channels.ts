@@ -39,4 +39,9 @@ const DEBUG_CHANNEL = {
   OPEN_DEV_TOOLS: "debug/open-dev-tools",
 } as const;
 
-export { DEBUG_CHANNEL, DUMP_CHANNEL, TOP_BAR_CHANNEL, UPDATER_CHANNEL };
+const CONFIG_CHANNEL = {
+  GET_CONFIG: "config/get-config",
+  SET_CONFIG: "config/set-config",
+} as const;
+
+export { DEBUG_CHANNEL, DUMP_CHANNEL, TOP_BAR_CHANNEL, UPDATER_CHANNEL, CONFIG_CHANNEL };

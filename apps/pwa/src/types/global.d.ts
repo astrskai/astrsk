@@ -56,5 +56,9 @@ interface Window {
     debug?: {
       openDevTools: () => Promise<void>;
     };
+    config?: {
+      getConfig: (key: string) => Promise<any>;
+      setConfig: (key: string, value: any) => Promise<void>;
+    };
   };
 }
