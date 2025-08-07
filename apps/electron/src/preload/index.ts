@@ -9,6 +9,7 @@ import {
 } from "electron-updater/out/types";
 import { DumpMetadata } from "../main/dump";
 import {
+  CONFIG_CHANNEL,
   DEBUG_CHANNEL,
   DUMP_CHANNEL,
   TOP_BAR_CHANNEL,
@@ -71,6 +72,11 @@ const api = {
   },
   debug: {
     openDevTools: async (): Promise<void> => ipcRenderer.invoke(DEBUG_CHANNEL.OPEN_DEV_TOOLS),
+  },
+  config: {
+    getConfig: (key: string): Promise<any> => ipcRenderer.invoke(CONFIG_CHANNEL.GET_CONFIG, key),
+    setConfig: (key: string, value: any): Promise<void> =>
+      ipcRenderer.invoke(CONFIG_CHANNEL.SET_CONFIG, key, value),
   },
 };
 
