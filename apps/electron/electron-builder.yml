@@ -41,6 +41,8 @@ mac:
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+    - NSLocalNetworkUsageDescription: Application requests access to local network to connect local LLM provider.
+    - NSAllowsLocalNetworking: true
   # Default build targets
   target:
     - { target: dmg, arch: universal }
