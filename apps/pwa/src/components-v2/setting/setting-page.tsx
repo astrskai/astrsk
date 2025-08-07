@@ -126,7 +126,7 @@ const AdvancedPage = () => {
             Advanced Preferences
           </TypoXLarge>
 
-          <div className="flex i tems-center justify-between">
+          <div className="flex justify-between">
             <div className="flex flex-col gap-[8px]">
               <TypoBase className="font-semibold text-text-body">
                 Allow insecure content
@@ -200,7 +200,7 @@ const MainPage = () => {
             <ChevronRight className="h-5 w-5 text-text-secondary" />
           </div>
 
-          <div className="flex i tems-center justify-between">
+          <div className="flex justify-between">
             <div className="flex flex-col gap-[8px]">
               <TypoBase className="font-semibold text-text-body">
                 Telemetry settings
