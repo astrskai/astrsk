@@ -129,19 +129,16 @@ const AdvancedPage = () => {
           <div className="flex justify-between">
             <div className="flex flex-col gap-[8px]">
               <TypoBase className="font-semibold text-text-body">
-                Allow insecure content
+                Allow HTTP connection
               </TypoBase>
               <div className="font-[400] text-[12px] leading-[15px] text-text-info">
-                <span className="text-status-destructive-light">
-                  This option lowers the security level of the app.
-                </span>
-                <br />
                 Enable this option if you want to connect providers serving on
-                non-local machines via HTTP.
+                non-local devices via HTTP.
                 <br />
+                This option will take effect after the app restarts.
                 <br />
-                <span className="font-bold">
-                  This option will take effect after the app restarts.
+                <span className="text-status-destructive-light">
+                  Allowing HTTP connection lowers the security level of the app.
                 </span>
               </div>
             </div>
