@@ -64,6 +64,10 @@ ipcMain.handle(CONFIG_CHANNEL.SET_CONFIG, (_, key: string, value: any) => {
 
 function createMainWindow(): BrowserWindow {
   const allowInsecureContent = electronLevelConfigStore.get("allowInsecureContent");
+  if (allowInsecureContent) {
+    app.commandLine.appendSwitch("disable-web-security");
+    app.commandLine.appendSwitch("disable-features", "BlockInsecurePrivateNetworkRequests");
+  }
 
   // Create browser window options.
   let mainWindowOptions: BrowserWindowConstructorOptions = {
