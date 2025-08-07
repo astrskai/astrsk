@@ -9,6 +9,7 @@ import {
 import { cn } from "@/components-v2/lib/utils";
 import ContentPolicy from "@/components-v2/setting/content-policy";
 import ModelPage from "@/components-v2/setting/model-page";
+import OssNotice from "@/components-v2/setting/oss-notice";
 import PrivacyPolicy from "@/components-v2/setting/privacy-policy";
 import RefundPolicy from "@/components-v2/setting/refund-policy";
 import TermOfService from "@/components-v2/setting/terms-of-service";
@@ -18,7 +19,7 @@ import { FloatingActionButton } from "@/components-v2/ui/floating-action-button"
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { Separator } from "@/components-v2/ui/separator";
 import { Switch } from "@/components-v2/ui/switch";
-import OssNotice from "@/components-v2/setting/oss-notice";
+import { useEffect, useState } from "react";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -103,6 +104,20 @@ const LegalPage = ({
 };
 
 const AdvancedPage = () => {
+  const [allowInsecureContent, setAllowInsecureContent] = useState(false);
+
+  useEffect(() => {
+    const getConfigs = async () => {
+      if (!window.api?.config) {
+        return;
+      }
+      setAllowInsecureContent(
+        await window.api.config.getConfig("allowInsecureContent"),
+      );
+    };
+    getConfigs();
+  }, []);
+
   return (
     <ScrollArea className="h-full">
       <div className="mx-auto my-6 w-full max-w-[587px] pt-[80px]">
@@ -121,18 +136,23 @@ const AdvancedPage = () => {
                   This option lowers the security level of the app.
                 </span>
                 <br />
-                Enable this option if you want to connect providers serving on non-local machines via HTTP.
+                Enable this option if you want to connect providers serving on
+                non-local machines via HTTP.
                 <br />
                 <br />
                 <span className="font-bold">
-                  Changing this option will restart the app.
+                  This option will take effect after the app restarts.
                 </span>
               </div>
             </div>
             <Switch
-              checked={false}
-              onCheckedChange={() => {
-                // TODO: update allow insecure content config
+              checked={allowInsecureContent}
+              onCheckedChange={(checked) => {
+                setAllowInsecureContent(checked);
+                if (!window.api?.config) {
+                  return;
+                }
+                window.api.config.setConfig("allowInsecureContent", checked);
               }}
             />
           </div>
@@ -288,7 +308,9 @@ const MainPage = () => {
               setSettingSubPage(SettingSubPageType.advanced);
             }}
           >
-            <TypoBase className="font-semibold text-text-body">Advanced Preferences</TypoBase>
+            <TypoBase className="font-semibold text-text-body">
+              Advanced Preferences
+            </TypoBase>
             <ChevronRight className="h-5 w-5 text-text-secondary" />
           </div>
         </div>
