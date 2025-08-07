@@ -9,6 +9,7 @@ import {
 import { cn } from "@/components-v2/lib/utils";
 import ContentPolicy from "@/components-v2/setting/content-policy";
 import ModelPage from "@/components-v2/setting/model-page";
+import OssNotice from "@/components-v2/setting/oss-notice";
 import PrivacyPolicy from "@/components-v2/setting/privacy-policy";
 import RefundPolicy from "@/components-v2/setting/refund-policy";
 import TermOfService from "@/components-v2/setting/terms-of-service";
@@ -18,7 +19,7 @@ import { FloatingActionButton } from "@/components-v2/ui/floating-action-button"
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { Separator } from "@/components-v2/ui/separator";
 import { Switch } from "@/components-v2/ui/switch";
-import OssNotice from "@/components-v2/setting/oss-notice";
+import { useEffect, useState } from "react";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -102,6 +103,66 @@ const LegalPage = ({
   );
 };
 
+const AdvancedPage = () => {
+  const [allowInsecureContent, setAllowInsecureContent] = useState(false);
+
+  useEffect(() => {
+    const getConfigs = async () => {
+      if (!window.api?.config) {
+        return;
+      }
+      setAllowInsecureContent(
+        await window.api.config.getConfig("allowInsecureContent"),
+      );
+    };
+    getConfigs();
+  }, []);
+
+  return (
+    <ScrollArea className="h-full">
+      <div className="mx-auto my-6 w-full max-w-[587px] pt-[80px]">
+        <div className="mb-12 flex flex-col gap-8 text-text-primary">
+          <TypoXLarge className="font-semibold text-text-primary">
+            Advanced Preferences
+          </TypoXLarge>
+
+          <div className="flex justify-between">
+            <div className="flex flex-col gap-[8px]">
+              <TypoBase className="font-semibold text-text-body">
+                Allow insecure content
+              </TypoBase>
+              <div className="font-[400] text-[12px] leading-[15px] text-text-info">
+                <span className="text-status-destructive-light">
+                  This option lowers the security level of the app.
+                </span>
+                <br />
+                Enable this option if you want to connect providers serving on
+                non-local machines via HTTP.
+                <br />
+                <br />
+                <span className="font-bold">
+                  This option will take effect after the app restarts.
+                </span>
+              </div>
+            </div>
+            <Switch
+              checked={allowInsecureContent}
+              onCheckedChange={(checked) => {
+                setAllowInsecureContent(checked);
+                if (!window.api?.config) {
+                  return;
+                }
+                window.api.config.setConfig("allowInsecureContent", checked);
+              }}
+            />
+          </div>
+        </div>
+      </div>
+      <ScrollBar orientation="vertical" className="w-1.5" />
+    </ScrollArea>
+  );
+};
+
 const MainPage = () => {
   // Providers
   const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
@@ -116,7 +177,7 @@ const MainPage = () => {
 
   return (
     <ScrollArea className="h-full">
-      <div className="mx-auto my-6 w-full max-w-[587px] pt-[80px]">
+      <div className="mx-auto my-6 pb-6 w-full max-w-[587px] pt-[80px]">
         <Typo2XLarge className="mb-12 text-text-primary font-semibold">
           Settings
         </Typo2XLarge>
@@ -139,7 +200,7 @@ const MainPage = () => {
             <ChevronRight className="h-5 w-5 text-text-secondary" />
           </div>
 
-          <div className="flex i tems-center justify-between">
+          <div className="flex justify-between">
             <div className="flex flex-col gap-[8px]">
               <TypoBase className="font-semibold text-text-body">
                 Telemetry settings
@@ -239,6 +300,20 @@ const MainPage = () => {
           </div>
         </div>
         <Separator />
+        <div className="my-13 flex flex-col gap-8 text-text-primary">
+          <div
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => {
+              setSettingPageLevel(SettingPageLevel.sub);
+              setSettingSubPage(SettingSubPageType.advanced);
+            }}
+          >
+            <TypoBase className="font-semibold text-text-body">
+              Advanced Preferences
+            </TypoBase>
+            <ChevronRight className="h-5 w-5 text-text-secondary" />
+          </div>
+        </div>
       </div>
       <ScrollBar orientation="vertical" className="w-1.5" />
     </ScrollArea>
@@ -299,6 +374,7 @@ export default function SettingPage({ className }: { className?: string }) {
             setLegalPage={setSettingDetailPage}
           />
         )}
+        {settingSubPage === SettingSubPageType.advanced && <AdvancedPage />}
       </div>
 
       {/* Page Level 3 */}
