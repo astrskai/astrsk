@@ -54,12 +54,23 @@ export async function getNextAvailableColor(flow: Flow): Promise<string> {
     agents.push(agentOrError.getValue());
   }
 
-  // Get all colors currently used by agents in the flow
+  // Get all colors currently used by agents and other nodes in the flow
   const usedColors = new Set<string>();
   
+  // Add agent colors
   agents.forEach(agent => {
     if (agent.props.color) {
       usedColors.add(agent.props.color);
+    }
+  });
+  
+  // Add colors from other nodes (if, dataStore, etc.)
+  flow.props.nodes.forEach(node => {
+    if (node.type !== 'agent' && node.type !== 'start' && node.type !== 'end') {
+      const nodeData = node.data as any;
+      if (nodeData?.color) {
+        usedColors.add(nodeData.color);
+      }
     }
   });
   
@@ -78,6 +89,16 @@ export async function getNextAvailableColor(flow: Flow): Promise<string> {
     const color = agent.props.color;
     if (color && colorCounts.has(color)) {
       colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
+    }
+  });
+  
+  // Count colors from other nodes too
+  flow.props.nodes.forEach(node => {
+    if (node.type !== 'agent' && node.type !== 'start' && node.type !== 'end') {
+      const nodeData = node.data as any;
+      if (nodeData?.color && colorCounts.has(nodeData.color)) {
+        colorCounts.set(nodeData.color, (colorCounts.get(nodeData.color) || 0) + 1);
+      }
     }
   });
   

@@ -18,6 +18,9 @@ export class FlowDrizzleMapper {
       // Parse viewport if exists
       const viewport = row.viewport as any;
 
+      // Parse data store schema if exists
+      const dataStoreSchema = row.data_store_schema as any;
+
       // Create flow entity
       const flowOrError = Flow.create(
         {
@@ -26,6 +29,7 @@ export class FlowDrizzleMapper {
           nodes: row.nodes,
           edges: row.edges as any[],
           responseTemplate: row.response_template,
+          dataStoreSchema,
           panelStructure,
           viewport,
           readyState: (row.ready_state as ReadyState) || ReadyState.Draft,
@@ -62,6 +66,7 @@ export class FlowDrizzleMapper {
         nodes: props.nodes,
         edges: props.edges,
         response_template: props.responseTemplate,
+        data_store_schema: props.dataStoreSchema,
         panel_structure: props.panelStructure,
         viewport: props.viewport,
         ready_state: props.readyState,

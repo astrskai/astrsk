@@ -1,8 +1,8 @@
 // If node component for flow-multi system
 // Provides conditional branching logic in the flow
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
-import { useState, useCallback } from "react";
-import { GitBranch, Copy, Trash2, Plus, SignpostBig } from "lucide-react";
+import { useState, useCallback, useMemo } from "react";
+import { Copy, Trash2, Plus, Pencil } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -11,6 +11,9 @@ import {
 } from "@/components-v2/ui/tooltip";
 import { Input } from "@/components-v2/ui/input";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
+import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
+import { useAgentStore } from "@/app/stores/agent-store";
+import { toast } from "sonner";
 
 /**
  * If node condition definition
@@ -30,6 +33,7 @@ export type IfNodeData = {
   condition?: string;
   logicOperator?: 'AND' | 'OR';
   conditions?: IfCondition[];
+  color?: string; // Hex color for the node
 };
 
 /**
@@ -49,7 +53,68 @@ export default function IfNode({
   const [editingTitle, setEditingTitle] = useState(data.label || "If Condition");
   const [isSaving, setIsSaving] = useState(false);
   
-  const { openPanel } = useFlowPanelContext();
+  const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
+  
+  // Get flow ID from agent store
+  const selectedFlowId = useAgentStore.use.selectedFlowId();
+  
+  // Get flow data and save function
+  const { flow, saveFlow } = useFlowPanel({ flowId: selectedFlowId || "" });
+  
+  // Check if the if-node panel is open
+  const isPanelActive = isPanelOpen('ifNode', id);
+  
+  // Get node color with opacity based on connection state
+  const nodeColor = useMemo(() => {
+    // Use the assigned color from data
+    const baseColor = data.color || '#A5B4FC'; // fallback to indigo-300 if not set
+    return baseColor;
+  }, [data.color]);
+  
+  // Calculate opacity with hex alpha channel
+  const colorWithOpacity = useMemo(() => {
+    const opacity = 1; // Full opacity for now, can check connection state later
+    return opacity < 1 
+      ? `${nodeColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}` 
+      : nodeColor;
+  }, [nodeColor]);
+
+  // Save node name to flow
+  const saveNodeName = useCallback(async (newName: string) => {
+    if (!flow || isSaving) return;
+    
+    setIsSaving(true);
+    try {
+      const node = flow.props.nodes.find(n => n.id === id);
+      if (!node) return;
+      
+      const updatedNode = {
+        ...node,
+        data: {
+          ...node.data,
+          label: newName
+        }
+      };
+      
+      const updatedNodes = flow.props.nodes.map(n => 
+        n.id === id ? updatedNode : n
+      );
+      
+      const updateResult = flow.update({ nodes: updatedNodes });
+      if (updateResult.isSuccess) {
+        await saveFlow(flow);
+        setTitle(newName);
+        
+        // Update panel states to reflect the new name
+        updateNodePanelStates(id, newName);
+        
+        // Show success toast
+        toast.success("Node name updated");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }, [flow, id, saveFlow, isSaving, updateNodePanelStates]);
 
   // Handle title changes
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,13 +125,12 @@ export default function IfNode({
     if (e.key === 'Enter') {
       e.preventDefault();
       if (editingTitle.trim()) {
-        setTitle(editingTitle);
-        // TODO: Save to flow
+        saveNodeName(editingTitle.trim());
       }
     } else if (e.key === 'Escape') {
       setEditingTitle(title);
     }
-  }, [editingTitle, title]);
+  }, [editingTitle, title, saveNodeName]);
 
   // Handle edit button click
   const handleEditClick = useCallback(() => {
@@ -77,15 +141,25 @@ export default function IfNode({
   // Handle copy action
   const handleCopyClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    // TODO: Implement copy functionality
-    console.log("Copy if node:", id);
+    
+    // Use flow panel's copy method if available
+    if ((window as any).flowPanelCopyNode) {
+      (window as any).flowPanelCopyNode(id);
+    } else {
+      console.error("Copy function not available");
+    }
   }, [id]);
 
   // Handle delete action
   const handleDeleteClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    // TODO: Implement delete functionality  
-    console.log("Delete if node:", id);
+    
+    // Use flow panel's delete method if available
+    if ((window as any).flowPanelDeleteNode) {
+      (window as any).flowPanelDeleteNode(id);
+    } else {
+      console.error("Delete function not available");
+    }
   }, [id]);
 
   // Get condition count
@@ -104,8 +178,10 @@ export default function IfNode({
         {/* Node Name Section */}
         <div className="self-stretch flex flex-col justify-start items-start gap-2">
           <div className="self-stretch inline-flex justify-start items-center gap-2">
-            <GitBranch className="min-w-4 min-h-4 text-purple-400" />
-            <div className="justify-start text-text-body text-xs font-medium">If Node</div>
+            <div className="justify-start">
+              <span className="text-text-body text-[10px] font-medium">If node</span>
+              <span className="text-secondary-normal text-[10px] font-medium">*</span>
+            </div>
           </div>
           <Input
             value={editingTitle}
@@ -113,8 +189,7 @@ export default function IfNode({
             onKeyDown={handleKeyDown}
             onBlur={() => {
               if (editingTitle.trim() && editingTitle.trim() !== title) {
-                setTitle(editingTitle);
-                // TODO: Save to flow
+                saveNodeName(editingTitle.trim());
               } else if (!editingTitle.trim()) {
                 setEditingTitle(title);
               }
@@ -133,65 +208,64 @@ export default function IfNode({
             {/* Edit Condition Button */}
             <button 
               onClick={handleEditClick}
-              className={`flex-1 h-20 px-2 pt-1.5 pb-2.5 rounded-lg outline outline-offset-[-1px] transition-all inline-flex flex-col justify-center items-center
-                bg-background-surface-4 outline-border-light hover:bg-background-surface-5
-              `}
+              className={`flex-1 h-20 px-2 rounded-lg outline outline-offset-[-1px] flex flex-col justify-center items-center gap-2 transition-all ${
+                !hasConditions 
+                  ? isPanelActive
+                    ? 'bg-background-surface-light outline-status-destructive-light hover:opacity-70'
+                    : 'bg-background-surface-4 outline-status-destructive-light hover:bg-background-surface-5'
+                  : isPanelActive
+                    ? 'bg-background-surface-light outline-border-light hover:opacity-70'
+                    : 'bg-background-surface-4 outline-border-light hover:bg-background-surface-5'
+              }`}
             >
-              {hasConditions ? (
-                <>
-                  <div className="self-stretch text-center justify-start text-text-primary text-2xl font-medium leading-10">
-                    {conditionCount}
-                  </div>
-                  <div className="self-stretch text-center justify-start text-text-secondary text-xs font-medium">
-                    Condition{conditionCount > 1 ? 's' : ''}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <SignpostBig className="w-8 h-8 text-text-primary mb-1" />
-                  <div className="self-stretch text-center justify-start text-text-secondary text-xs font-medium">
-                    Edit condition
-                  </div>
-                </>
-              )}
+              <Pencil className={`w-5 h-5 ${isPanelActive ? 'text-text-contrast-text' : 'text-text-primary'}`} />
+              <div className={`self-stretch text-center justify-start text-xs font-medium ${
+                isPanelActive ? 'text-text-info' : 'text-text-secondary'
+              }`}>
+                Edit condition
+              </div>
             </button>
+            
           </div>
         </div>
       </div>
 
-      {/* Side Actions - Always visible with purple color indicator */}
-      <div className="self-stretch bg-purple-100 dark:bg-purple-900/20 px-2 py-4 inline-flex flex-col justify-between items-start gap-2 rounded-r-lg">
-        <div className="flex flex-col gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleCopyClick}
-                  className="w-6 h-6 flex items-center justify-center hover:bg-background-surface-4 rounded transition-colors"
-                >
-                  <Copy className="min-w-3.5 min-h-3.5 text-text-subtle" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Copy node</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+      {/* Side Actions - matching agent node style */}
+      <div 
+        className="self-stretch px-2 py-4 rounded-tr-lg rounded-br-lg inline-flex flex-col justify-start items-start gap-3"
+        style={{ backgroundColor: colorWithOpacity }}
+      >
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleCopyClick}
+                className="w-6 h-6 relative overflow-hidden hover:opacity-80 transition-opacity group/copy"
+              >
+                <Copy className="min-w-4 min-h-5 text-text-contrast-text" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" variant="button">
+              <p>Copy</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleDeleteClick}
-                  className="w-6 h-6 flex items-center justify-center hover:bg-background-surface-4 rounded transition-colors"
-                >
-                  <Trash2 className="min-w-3.5 min-h-3.5 text-text-subtle" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Delete node</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        {/* Color indicator bar */}
-        <div className="w-1 flex-1 bg-purple-400 rounded-full" />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleDeleteClick}
+                className="w-6 h-6 relative overflow-hidden hover:opacity-80 transition-opacity group/delete"
+              >
+                <Trash2 className="min-w-4 min-h-5 text-text-contrast-text" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" variant="button">
+              <p>Delete</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {/* Two source handles for true/false branches - matching agent node style */}
@@ -205,13 +279,13 @@ export default function IfNode({
         title="True path"
       />
       {/* True handle visual - small */}
-      <div className="absolute top-[35%] right-0 translate-x-1/2 -translate-y-1/2 w-3 h-3 p-[1.5px] bg-green-500 rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center group-hover/node:hidden pointer-events-none">
+      <div className="absolute top-[35%] right-0 translate-x-1/2 -translate-y-1/2 w-3 h-3 p-[1.5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center group-hover/node:hidden pointer-events-none">
         <div className="w-2 h-2 relative overflow-hidden">
-          <div className="w-1.5 h-1.5 left-[1px] top-[1px] absolute outline-[0.67px] outline-offset-[-0.33px] outline-white"></div>
+          <div className="w-1.5 h-1.5 left-[1px] top-[1px] absolute outline-[0.67px] outline-offset-[-0.33px] outline-text-primary"></div>
         </div>
       </div>
       {/* True handle on hover with plus icon */}
-      <div className="absolute top-[35%] right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-green-500 rounded-xl outline-1 outline-offset-[-1px] outline-green-600 hidden group-hover/node:flex justify-center items-center pointer-events-none">
+      <div className="absolute top-[35%] right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-border-light hidden group-hover/node:flex justify-center items-center pointer-events-none">
         <Plus className="w-4 h-4 text-white" />
       </div>
 
@@ -225,13 +299,13 @@ export default function IfNode({
         title="False path"
       />
       {/* False handle visual - small */}
-      <div className="absolute top-[65%] right-0 translate-x-1/2 -translate-y-1/2 w-3 h-3 p-[1.5px] bg-red-500 rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center group-hover/node:hidden pointer-events-none">
+      <div className="absolute top-[65%] right-0 translate-x-1/2 -translate-y-1/2 w-3 h-3 p-[1.5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center group-hover/node:hidden pointer-events-none">
         <div className="w-2 h-2 relative overflow-hidden">
-          <div className="w-1.5 h-1.5 left-[1px] top-[1px] absolute outline-[0.67px] outline-offset-[-0.33px] outline-white"></div>
+          <div className="w-1.5 h-1.5 left-[1px] top-[1px] absolute outline-[0.67px] outline-offset-[-0.33px] outline-text-primary"></div>
         </div>
       </div>
       {/* False handle on hover with plus icon */}
-      <div className="absolute top-[65%] right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-red-500 rounded-xl outline-1 outline-offset-[-1px] outline-red-600 hidden group-hover/node:flex justify-center items-center pointer-events-none">
+      <div className="absolute top-[65%] right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-border-light hidden group-hover/node:flex justify-center items-center pointer-events-none">
         <Plus className="w-4 h-4 text-white" />
       </div>
       

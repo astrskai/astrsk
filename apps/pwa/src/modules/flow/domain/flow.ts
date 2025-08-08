@@ -72,6 +72,30 @@ export type FlowViewport = {
   zoom: number;
 };
 
+// Data Store Schema types
+export type DataStoreFieldType = 'string' | 'number' | 'boolean' | 'integer';
+
+// Schema definition - defines the structure
+export interface DataStoreSchemaField {
+  id: string; // Will use UniqueEntityID().toString()
+  name: string;
+  type: DataStoreFieldType;
+  initialValue: string; // Store as string, parse based on type
+  description?: string;
+}
+
+// Runtime field - contains actual values and logic
+export interface DataStoreField {
+  schemaFieldId: string; // References DataStoreSchemaField.id
+  value: string; // Current value (stored as string)
+  logic?: string; // Optional logic/formula for computed fields
+}
+
+export interface DataStoreSchema {
+  fields: DataStoreSchemaField[];
+  version?: number; // For future migrations
+}
+
 export interface FlowProps {
   // Metadata
   name: string;
@@ -83,6 +107,9 @@ export interface FlowProps {
 
   // Response Design
   responseTemplate: string;
+
+  // Data Store Schema
+  dataStoreSchema?: DataStoreSchema;
 
   // Panel Layout
   panelStructure?: PanelStructure;

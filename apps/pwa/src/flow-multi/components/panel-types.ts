@@ -14,6 +14,7 @@ export const PANEL_TYPES = {
   VALIDATION: 'validation',
   DATA_STORE_SCHEMA: 'dataStoreSchema',
   IF_NODE: 'ifNode',
+  DATA_STORE: 'dataStore',
 } as const;
 
 export type PanelType = typeof PANEL_TYPES[keyof typeof PANEL_TYPES];
@@ -39,6 +40,7 @@ export const STANDALONE_PANEL_TYPES = [
   PANEL_TYPES.VALIDATION,
   PANEL_TYPES.DATA_STORE_SCHEMA,
   PANEL_TYPES.IF_NODE,
+  PANEL_TYPES.DATA_STORE,
 ] as const;
 
 export type StandalonePanelType = typeof STANDALONE_PANEL_TYPES[number];
@@ -60,7 +62,7 @@ export function isStandalonePanelType(panelType: PanelType): panelType is Standa
 /**
  * Get human-readable panel title
  */
-export function getPanelTitle(panelType: PanelType, agentName?: string): string {
+export function getPanelTitle(panelType: PanelType, nodeName?: string): string {
   const baseTitle = (() => {
     switch (panelType) {
       case PANEL_TYPES.FLOW:
@@ -82,14 +84,24 @@ export function getPanelTitle(panelType: PanelType, agentName?: string): string 
       case PANEL_TYPES.DATA_STORE_SCHEMA:
         return 'Data store schema';
       case PANEL_TYPES.IF_NODE:
-        return 'If Conditions';
+        return 'If node';
+      case PANEL_TYPES.DATA_STORE:
+        return 'Data store';
       default:
         return 'Unknown Panel';
     }
   })();
 
-  if (agentName && isAgentPanelType(panelType)) {
-    return `[${agentName}] ${baseTitle}`;
+  // Add node/agent name prefix for applicable panel types
+  if (nodeName) {
+    // Agent panels
+    if (isAgentPanelType(panelType)) {
+      return `[${nodeName}] ${baseTitle}`;
+    }
+    // Node panels (if-node, data-store)
+    if (panelType === PANEL_TYPES.IF_NODE || panelType === PANEL_TYPES.DATA_STORE || panelType === PANEL_TYPES.DATA_STORE_SCHEMA) {
+      return `[${nodeName}] ${baseTitle}`;
+    }
   }
 
   return baseTitle;
@@ -109,4 +121,5 @@ export interface FlowPanelVisibility {
   [PANEL_TYPES.VALIDATION]: boolean;
   [PANEL_TYPES.DATA_STORE_SCHEMA]: boolean;
   [PANEL_TYPES.IF_NODE]: boolean;
+  [PANEL_TYPES.DATA_STORE]: boolean;
 }

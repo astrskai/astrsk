@@ -776,7 +776,7 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
             {shouldShowValidation && !hasAgentName && (
               <AlertCircle className="min-w-4 min-h-4 text-status-destructive-light" />
             )}
-            <div className="justify-start"><span className="text-text-body text-xs font-medium">Agent</span><span className="text-status-required text-xs font-medium">*</span></div>
+            <div className="justify-start"><span className="text-text-body text-[10px] font-medium">Agent node</span><span className="text-status-required text-[10px] font-medium">*</span></div>
           </div>
           <Input
             value={editingName}
@@ -966,9 +966,9 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="ghost">Cancel</Button>
+              <Button variant="ghost" size="lg">Cancel</Button>
             </DialogClose>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button variant="destructive" size="lg" onClick={handleDelete}>
               Delete
             </Button>
           </DialogFooter>

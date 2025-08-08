@@ -91,7 +91,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   // Local state
   const [activeTab, setActiveTab] = useState(() => {
     const savedTab = sessionStorage.getItem('variablePanel_activeTab');
-    return savedTab === 'structured' ? 'structured' : 'variables';
+    return savedTab === 'structured' || savedTab === 'datastore' ? savedTab : 'variables';
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [availableVariables, setAvailableVariables] = useState<Variable[]>([]);
@@ -471,6 +471,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         <TabsList className="w-full flex-shrink-0">
           <TabsTrigger value="variables">Variables</TabsTrigger>
           <TabsTrigger value="structured">Agent output</TabsTrigger>
+          <TabsTrigger value="datastore">Data store</TabsTrigger>
         </TabsList>
 
         <TabsContent value="variables" className="mt-0 flex-1 overflow-hidden h-0">
@@ -680,6 +681,117 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                       </div>
                     );
                   })
+              )}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="datastore" className="mt-0 flex-1 overflow-hidden h-0">
+          <ScrollArea className="h-full pr-2">
+            <div className="flex flex-col gap-2">
+              {flow?.props.dataStoreSchema?.fields && flow.props.dataStoreSchema.fields.length > 0 ? (
+                flow.props.dataStoreSchema.fields
+                  .filter(field => 
+                    !searchQuery || 
+                    field.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    field.type.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map(field => {
+                    // Generate dummy data based on field type
+                    const getDummyValue = () => {
+                      switch (field.type) {
+                        case 'string':
+                          return field.name === 'location' ? 'cafeteria' : `sample_${field.name}`;
+                        case 'integer':
+                          return field.name === 'affection' ? 50 : Math.floor(Math.random() * 100);
+                        case 'number':
+                          return field.name === 'affection' ? 50 : Math.floor(Math.random() * 100);
+                        case 'boolean':
+                          return field.name === 'infected' ? true : Math.random() > 0.5;
+                        default:
+                          return 'null';
+                      }
+                    };
+                    
+                    const dummyValue = getDummyValue();
+                    const variableName = `{{${field.name}}}`;
+                    
+                    return (
+                      <button
+                        key={field.id}
+                        className={`w-full p-2 bg-background-surface-3 rounded-lg outline outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
+                          clickedVariable === variableName
+                            ? "bg-background-surface-3"
+                            : "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          
+                          // Copy to clipboard
+                          if (navigator.clipboard) {
+                            navigator.clipboard.writeText(variableName);
+                            setClickedVariable(variableName);
+                            setTimeout(() => setClickedVariable(null), 500);
+                            toast.success(`Copied ${variableName} to clipboard`);
+                          }
+                          
+                          // Insert into monaco editor if available
+                          if (lastMonacoEditor?.editor) {
+                            insertVariableAtLastCursor(variableName);
+                            setClickedVariable(variableName);
+                            setTimeout(() => setClickedVariable(null), 500);
+                          }
+                        }}
+                        onMouseDown={(e) => e.preventDefault()}
+                        tabIndex={-1}
+                      >
+                        {clickedVariable === variableName && (
+                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
+                        )}
+                        <div className="self-stretch flex flex-col justify-start items-start gap-4">
+                          <div className="self-stretch flex flex-col justify-start items-start gap-1">
+                            <div className="inline-flex justify-start items-center gap-2">
+                              <div className="justify-start text-text-primary text-xs font-medium">
+                                {variableName}
+                              </div>
+                              <div className="justify-start text-text-body text-xs font-normal">
+                                {field.type}
+                              </div>
+                              {hasEditor &&
+                                (clickedVariable === variableName ? (
+                                  <Check className="min-w-3 min-h-3 ml-auto text-green-500 transition-opacity" />
+                                ) : (
+                                  <Target className="min-w-3 min-h-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
+                                ))}
+                            </div>
+                          </div>
+                          <div className="self-stretch px-2 py-1 bg-background-surface-4 rounded-md flex flex-col justify-start items-start gap-1">
+                            <div className="self-stretch justify-start text-text-subtle text-xs font-medium">
+                              Most recent data from session
+                            </div>
+                            <div className="self-stretch max-h-8 justify-start text-text-subtle text-xs font-mono">
+                              {typeof dummyValue === 'object' ? JSON.stringify(dummyValue) : String(dummyValue)}
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })
+              ) : (
+                <div className="text-center py-8 space-y-2">
+                  <Database className="h-12 w-12 text-muted-foreground mx-auto" />
+                  <TypoLarge className="text-muted-foreground">
+                    {searchQuery
+                      ? "No data store fields found matching your search"
+                      : "No data store fields defined"}
+                  </TypoLarge>
+                  <TypoBase className="text-muted-foreground">
+                    {searchQuery
+                      ? "Try a different search term"
+                      : "Define fields in the Data Store Schema to see them here"}
+                  </TypoBase>
+                </div>
               )}
             </div>
           </ScrollArea>

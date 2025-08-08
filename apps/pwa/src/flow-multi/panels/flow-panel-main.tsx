@@ -24,6 +24,7 @@ import { ResponseDesignPanel } from "@/flow-multi/panels/response-design/respons
 import { ValidationPanel } from "@/flow-multi/panels/validation/validation-panel";
 import { DataStoreSchemaPanel } from "@/flow-multi/panels/data-store-schema/data-store-schema-panel";
 import { IfNodePanel } from "@/flow-multi/panels/if-node/if-node-panel";
+import { DataStorePanel } from "@/flow-multi/panels/data-store/data-store-panel";
 import { FlowService } from "@/app/services/flow-service";
 import { PanelStructure } from "@/modules/flow/domain";
 import { SvgIcon } from "@/components-v2/svg-icon";
@@ -119,8 +120,9 @@ const PreviewPanelComponent = createFlowPanelComponentOptional(PreviewPanel);
 const VariablePanelComponent = createFlowPanelComponent(VariablePanel);
 const ResponseDesignPanelComponent = createFlowPanelComponentStandalone(ResponseDesignPanel);
 const ValidationPanelComponent = createFlowPanelComponentStandalone(ValidationPanel);
-const DataStoreSchemaPanelComponent = createNodePanelComponent(DataStoreSchemaPanel);
+const DataStoreSchemaPanelComponent = createFlowPanelComponentStandalone(DataStoreSchemaPanel);
 const IfNodePanelComponent = createNodePanelComponent(IfNodePanel);
+const DataStorePanelComponent = createNodePanelComponent(DataStorePanel);
 
 // Panel Components - must be defined outside component to avoid re-creation
 const components = {
@@ -134,6 +136,7 @@ const components = {
   validation: ValidationPanelComponent,
   dataStoreSchema: DataStoreSchemaPanelComponent,
   ifNode: IfNodePanelComponent,
+  dataStore: DataStorePanelComponent,
 };
 
 interface FlowPanelMainProps {
@@ -380,10 +383,31 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     }
 
     // Get agent name, color, and inactive state if applicable
-    const agent = agentId ? agents.get(agentId) : null;
-    const title = getPanelTitle(panelType, agent?.props.name);
-    const agentColor = agent ? getAgentHexColor(agent) : undefined;
-    const agentInactive = agent && flow ? getAgentState(agent, flow) : undefined;
+    let agentColor: string | undefined;
+    let title: string;
+    let agentInactive: boolean | undefined;
+    
+    // Check if this is an agent panel
+    if (panelType === 'prompt' || panelType === 'parameter' || panelType === 'structuredOutput' || panelType === 'preview') {
+      const agent = agentId ? agents.get(agentId) : null;
+      title = getPanelTitle(panelType, agent?.props.name);
+      agentColor = agent ? getAgentHexColor(agent) : undefined;
+      agentInactive = agent && flow ? getAgentState(agent, flow) : undefined;
+    } 
+    // Check if this is an if-node or data-store-node panel
+    else if ((panelType === 'ifNode' || panelType === 'dataStore' || panelType === 'dataStoreSchema') && agentId) {
+      // Get node from flow to get its color and name
+      const node = flow.props.nodes.find(n => n.id === agentId);
+      const nodeData = node?.data as any;
+      agentColor = nodeData?.color as string | undefined;
+      // Get node name/label for title
+      const nodeName = nodeData?.label || nodeData?.name || 'Unnamed';
+      title = getPanelTitle(panelType, nodeName);
+    } 
+    // Default case
+    else {
+      title = getPanelTitle(panelType);
+    }
     // Check if there are any panels besides the flow panel
     const panels = dockviewApi.panels;
     const hasOtherPanels = Object.values(panels).some((panel) => panel.id !== FLOW_PANEL_ID);
@@ -406,6 +430,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
             flowId, 
             title,
             ...(agentId && { agentId }),
+            // For node panels, also pass nodeId
+            ...(agentId && (panelType === 'ifNode' || panelType === 'dataStore') && { nodeId: agentId }),
             ...(agentColor && { agentColor }),
             ...(agentInactive !== undefined && { agentInactive })
           },
@@ -428,6 +454,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
             flowId, 
             title,
             ...(agentId && { agentId }),
+            // For node panels, also pass nodeId
+            ...(agentId && (panelType === 'ifNode' || panelType === 'dataStore') && { nodeId: agentId }),
             ...(agentColor && { agentColor }),
             ...(agentInactive !== undefined && { agentInactive })
           },
@@ -452,6 +480,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
           flowId, 
           title,
           ...(agentId && { agentId }),
+          // For node panels, also pass nodeId
+          ...(agentId && (panelType === 'ifNode' || panelType === 'dataStore' || panelType === 'dataStoreSchema') && { nodeId: agentId }),
           ...(agentColor && { agentColor })
         },
         position: {
@@ -616,12 +646,6 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     <FlowPanelProvider
       flowId={flowId || ""}
       api={dockviewApi || null}
-      invalidateFlowQueries={async () => {
-        // Only invalidate when explicitly needed (e.g., agent updates, not layout changes)
-        if (flowId) {
-          await invalidateSingleFlowQueries(new UniqueEntityID(flowId));
-        }
-      }}
       openPanel={openPanel}
     >
       <div className={cn("h-full w-full relative", className)} style={{ height: "calc(100% - 40px)" }}>
