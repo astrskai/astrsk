@@ -62,7 +62,7 @@ const OnboardingDialog = () => {
             <div className="relative w-full h-[349px] rounded-[12px] bg-background-surface-1 overflow-hidden">
               <img
                 className="w-full h-full object-cover"
-                src="/img/onboarding/gpt-5-contest.png"
+                src="/img/onboarding/gpt-5-contest.jpg"
                 alt="GPT-5 Flow Contest"
               />
             </div>
@@ -70,7 +70,9 @@ const OnboardingDialog = () => {
               <Button
                 size="lg"
                 variant="ghost"
-                onClick={() => window.open('https://astrsk.ai/contest', '_blank')}
+                onClick={() =>
+                  window.open("https://www.reddit.com/r/astrsk_ai/comments/1mkt4f3/gpt5_roleplay_flowpreset_contest_create_with_free/", "_blank")
+                }
               >
                 Contest info
               </Button>
@@ -99,7 +101,7 @@ const OnboardingDialog = () => {
               <iframe
                 width="100%"
                 height="100%"
-                src="https://www.youtube.com/embed/vO6JFL6R_mc?start=39&autoplay=1&mute=1"
+                src="https://www.youtube.com/embed/vO6JFL6R_mc?autoplay=1&mute=1&cc_load_policy=1"
                 title="astrsk Tutorial"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
