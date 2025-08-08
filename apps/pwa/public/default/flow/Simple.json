@@ -23,7 +23,7 @@
       "deletable": false
     },
     {
-      "id": "019888b1-9658-7bb0-9ddc-921e0b5ba4db",
+      "id": "01988953-3d85-7eef-8f79-e49524eefbf9",
       "type": "agent",
       "position": {
         "x": 314.1571332554912,
@@ -36,17 +36,17 @@
     {
       "id": "start-agent",
       "source": "start",
-      "target": "019888b1-9658-7bb0-9ddc-921e0b5ba4db"
+      "target": "01988953-3d85-7eef-8f79-e49524eefbf9"
     },
     {
       "id": "xy-edge__019888b1-9658-7bb0-9ddc-921e0b5ba4db-end",
-      "source": "019888b1-9658-7bb0-9ddc-921e0b5ba4db",
+      "source": "01988953-3d85-7eef-8f79-e49524eefbf9",
       "target": "end"
     }
   ],
   "responseTemplate": "{{rp_agent.char_response}}",
-  "createdAt": "2025-08-08T10:54:55.810Z",
-  "updatedAt": "2025-08-08T10:54:55.810Z",
+  "createdAt": "2025-08-08T11:43:33.338Z",
+  "updatedAt": "2025-08-08T11:43:33.338Z",
   "panelStructure": {
     "panels": [],
     "version": 2,
@@ -56,9 +56,19 @@
         "title": "Flow Editor",
         "params": {
           "title": "Flow Editor",
-          "flowId": "019888b1-9658-7bb0-9ddc-9be7d8016c9a"
+          "flowId": "01988953-3d8b-7eef-8f79-e90b7b3c261a"
         },
         "component": "flow"
+      },
+      "structuredOutput-01988953-3d85-7eef-8f79-e49524eefbf9": {
+        "title": "[RP Agent] Output",
+        "params": {
+          "title": "[RP Agent] Output",
+          "flowId": "01988953-3d8b-7eef-8f79-e90b7b3c261a",
+          "agentId": "01988953-3d85-7eef-8f79-e49524eefbf9",
+          "agentColor": "#A5B4FC"
+        },
+        "component": "structuredOutput"
       }
     },
     "serializedLayout": {
@@ -74,7 +84,18 @@
                 "locked": true,
                 "activeView": "flow-panel-main"
               },
-              "size": 2240,
+              "size": 1680,
+              "type": "leaf"
+            },
+            {
+              "data": {
+                "id": "2",
+                "views": [
+                  "structuredOutput-01988953-3d85-7eef-8f79-e49524eefbf9"
+                ],
+                "activeView": "structuredOutput-01988953-3d85-7eef-8f79-e49524eefbf9"
+              },
+              "size": 560,
               "type": "leaf"
             }
           ],
@@ -91,24 +112,36 @@
           "title": "Flow Editor",
           "params": {
             "title": "Flow Editor",
-            "flowId": "019888b1-9658-7bb0-9ddc-9be7d8016c9a"
+            "flowId": "01988953-3d8b-7eef-8f79-e90b7b3c261a"
           },
           "tabComponent": "colored",
           "contentComponent": "flow"
+        },
+        "structuredOutput-01988953-3d85-7eef-8f79-e49524eefbf9": {
+          "id": "structuredOutput-01988953-3d85-7eef-8f79-e49524eefbf9",
+          "title": "[RP Agent] Output",
+          "params": {
+            "title": "[RP Agent] Output",
+            "flowId": "01988953-3d8b-7eef-8f79-e90b7b3c261a",
+            "agentId": "01988953-3d85-7eef-8f79-e49524eefbf9",
+            "agentColor": "#A5B4FC"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "structuredOutput"
         }
       },
       "activeGroup": "1"
     }
   },
   "viewport": {
-    "x": 430.2350017247037,
-    "y": 687.6625469516159,
-    "zoom": 0.9937552627839046
+    "x": 336.48549045907043,
+    "y": 698.5609080091564,
+    "zoom": 1.5
   },
   "readyState": "draft",
   "validationIssues": [],
   "agents": {
-    "019888b1-9658-7bb0-9ddc-921e0b5ba4db": {
+    "01988953-3d85-7eef-8f79-e49524eefbf9": {
       "name": "RP Agent",
       "description": "",
       "targetApiType": "chat",
@@ -179,7 +212,7 @@
       },
       "enabledStructuredOutput": true,
       "outputFormat": "structured_output",
-      "outputStreaming": false,
+      "outputStreaming": true,
       "schemaName": "response",
       "schemaFields": [
         {
@@ -213,8 +246,8 @@
       ],
       "tokenCount": 0,
       "color": "#A5B4FC",
-      "createdAt": "2025-08-08T07:59:56.515Z",
-      "updatedAt": "2025-08-08T09:53:25.804Z"
+      "createdAt": "2025-08-08T10:56:30.601Z",
+      "updatedAt": "2025-08-08T11:43:02.109Z"
     }
   }
 }
