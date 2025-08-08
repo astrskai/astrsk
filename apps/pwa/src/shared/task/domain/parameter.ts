@@ -4,11 +4,18 @@ export interface Parameter {
   id: string;
   label: string;
   nameByApiSource: Map<ApiSource, string>;
-  type: "number" | "boolean" | "string" | "logit_bias" | "safety_settings";
+  type:
+    | "number"
+    | "boolean"
+    | "string"
+    | "enum"
+    | "logit_bias"
+    | "safety_settings";
   default: any;
   min?: number;
   max?: number;
   step?: number;
+  enums?: string[];
   parsingFunction?: (value: string, apiSource?: ApiSource) => any;
 }
 
