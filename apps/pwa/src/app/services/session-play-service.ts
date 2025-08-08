@@ -343,6 +343,11 @@ const makeSettings = ({ parameters }: { parameters: Map<string, any> }) => {
 
   if (parameters.has("temperature")) {
     settings["temperature"] = Number(parameters.get("temperature"));
+  } else {
+    // Prevent AI SDK set temperature to 0
+    // TODO: delete this code after upgrade to AI SDK v5
+    // https://ai-sdk.dev/docs/ai-sdk-core/settings#temperature
+    settings["temperature"] = 1;
   }
 
   if (parameters.has("top_p")) {
@@ -1200,7 +1205,7 @@ async function generateTextOutput({
   if (apiConnection.source === ApiSource.AIHorde) {
     abortSignals.push(new AbortController().signal); // Dummy signal
   } else {
-    abortSignals.push(AbortSignal.timeout(60000)); // Timeout 60 seconds
+    abortSignals.push(AbortSignal.timeout(120000)); // Timeout 120 seconds
   }
   const combinedAbortSignal = AbortSignal.any(abortSignals);
 
@@ -1336,7 +1341,7 @@ async function generateStructuredOutput({
   validateMessages(messages, apiConnection.source);
 
   // Timeout and abort signals
-  const abortSignals = [AbortSignal.timeout(60000)];
+  const abortSignals = [AbortSignal.timeout(120000)];
   if (stopSignalByUser) {
     abortSignals.push(stopSignalByUser);
   }

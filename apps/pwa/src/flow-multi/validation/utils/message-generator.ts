@@ -130,25 +130,25 @@ const messageDefinitions: Record<ValidationIssueCode, {
       // Special handling for Response Design
       if (data.agentName === 'Response Design') {
         if (data.field) {
-          return `Response Design is referencing a field that does not exist in this flow: \{\{"${data.referencedAgent}"."${data.field}"\}\}`;
+          return `Response Design is referencing a an agent output that does not exist in the connected agents: \{\{"${data.referencedAgent}"."${data.field}"\}\}`;
         }
-        return `Response Design is referencing an agent that does not exist in this flow: \{\{"${data.referencedAgent}"\}\}`;
+        return `Response Design is referencing an agent that does not exist in the connected agents: "${data.referencedAgent}"`;
       }
       // Regular agent handling
       const locationPart = data.location ? ` ${data.location}` : '';
       if (data.field) {
-        return `Agent "${data.agentName}"${locationPart} is referencing a field that does not exist in this flow: \{\{"${data.field}"."${data.referencedAgent}"\}\}`;
+        return `Agent "${data.agentName}" -${locationPart} is referencing a agent output that does not exist in the connected agents: \{\{"${data.field}"."${data.referencedAgent}"\}\}`;
       }
-      return `Agent "${data.agentName}"${locationPart} is referencing an agent that does not exist in this flow: "${data.referencedAgent}"`;
+      return `Agent "${data.agentName}" -${locationPart} is referencing an agent that does not exist in the connected agents: "${data.referencedAgent}"`;
     },
     suggestion: (data?: ValidationData) => {
       if (!isVariableValidationData(data) || !data.referencedAgent) {
         return "Check variable references";
       }
       if (data.field) {
-        return `Add field "${data.field}" to "${data.referencedAgent}" structured output or fix the variable reference`;
+        return `Add agent output "${data.field}" to "${data.referencedAgent}" structured output or fix the agent output reference`;
       }
-      return `Check if agent "${data.referencedAgent}" exists in the flow`;
+      return `Check if agent "${data.referencedAgent}" exists in the connected agents`;
     }
   },
   

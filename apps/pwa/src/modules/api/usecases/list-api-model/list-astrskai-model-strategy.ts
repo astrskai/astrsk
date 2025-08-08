@@ -15,6 +15,18 @@ export class ListAstrskaiModelStrategy implements ListApiModelStrategy {
   ): Promise<Result<ApiModel[]>> {
     return Result.ok([
       ApiModel.create({
+        id: "gpt-5",
+        name: "gpt-5",
+      }).getValue(),
+            ApiModel.create({
+        id: "gpt-5-mini",
+        name: "gpt-5-mini",
+      }).getValue(),
+            ApiModel.create({
+        id: "gpt-5-nano",
+        name: "gpt-5-nano",
+      }).getValue(),
+      ApiModel.create({
         id: "gemini-2.5-flash-preview-05-20",
         name: "gemini-2.5-flash-preview-05-20",
       }).getValue(),
