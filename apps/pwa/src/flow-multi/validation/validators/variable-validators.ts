@@ -140,15 +140,18 @@ export const validateUndefinedOutputVariables: ValidatorFunction = (context) => 
       const referencedAgentName = parts[0];
       const fieldParts = parts.slice(1);
       
-      // Find the referenced agent by comparing sanitized names
+      // Find the referenced agent by comparing sanitized names (only among connected agents)
       let referencedAgent: Agent | undefined;
       let originalAgentName: string | undefined;
-      for (const [, a] of context.agents) {
-        const sanitizedName = sanitizeFileName(a.props.name);
-        if (sanitizedName === referencedAgentName) {
-          referencedAgent = a;
-          originalAgentName = a.props.name;
-          break;
+      for (const connectedAgentId of context.connectedAgents) {
+        const a = context.agents.get(connectedAgentId);
+        if (a) {
+          const sanitizedName = sanitizeFileName(a.props.name);
+          if (sanitizedName === referencedAgentName) {
+            referencedAgent = a;
+            originalAgentName = a.props.name;
+            break;
+          }
         }
       }
       

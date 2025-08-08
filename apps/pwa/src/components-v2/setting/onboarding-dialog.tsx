@@ -1,6 +1,5 @@
 import { useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/components-v2/lib/utils";
-import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import {
   Dialog,
@@ -9,10 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components-v2/ui/dialog";
-import AutoScroll from "embla-carousel-auto-scroll";
-import useEmblaCarousel from "embla-carousel-react";
 import { useState } from "react";
-import QRCode from "react-qr-code";
+// import QRCode from "react-qr-code"; // Uncomment if mobile page is re-enabled
 
 const StepIndicator = ({
   totalSteps,
@@ -36,27 +33,10 @@ const StepIndicator = ({
   );
 };
 
-const screenImages = [
-  { src: "/img/onboarding/screen-1.png", alt: "Edit flow" },
-  { src: "/img/onboarding/screen-2.png", alt: "Session play" },
-  { src: "/img/onboarding/screen-3.png", alt: "Session settings" },
-  { src: "/img/onboarding/screen-4.png", alt: "Edit card" },
-];
-
 const OnboardingDialog = () => {
   const isPassedOnboarding = useAppStore.use.isPassedOnboarding();
   const setIsPassedOnboarding = useAppStore.use.setIsPassedOnboarding();
   const [step, setStep] = useState(1);
-
-  // Screen carousel
-  const [emblaRef] = useEmblaCarousel({ loop: true }, [
-    AutoScroll({
-      speed: 0.5,
-      startDelay: 0,
-      stopOnInteraction: false,
-      stopOnMouseEnter: true,
-    }),
-  ]);
 
   // Telemetry
   const setIsTelemetryEnabled = useAppStore.use.setIsTelemetryEnabled();
@@ -69,55 +49,78 @@ const OnboardingDialog = () => {
             <DialogHeader>
               <StepIndicator totalSteps={3} currentStep={step} />
               <DialogTitle>
-                <div className="flex flex-row items-center gap-2">
-
                 <div className="font-[500] text-[24px] leading-[40px] text-[#F1F1F1]">
-                  Welcome to
-                </div>
-                <SvgIcon name="astrsk_logo_full" width={85} height={20} />
+                  GPT-5 Flow Contest + Free Access
                 </div>
               </DialogTitle>
               <DialogDescription>
                 <div className="font-[400] text-[16px] leading-[25.6px] text-[#A1A1A1]">
-                  Design your prompts, bring characters to life, and begin your
-                  AI storytelling journey!
+                  Design epic roleplay flows with free GPT-5 access
                 </div>
               </DialogDescription>
             </DialogHeader>
-            <div
-              className={cn(
-                "relative w-full h-[348px] rounded-[12px] flex flex-col justify-center overflow-hidden",
-                "bg-[url(/img/onboarding/screen-background.jpg)] bg-cover bg-center",
-              )}
-            >
-              <div ref={emblaRef} className="embla embla-onboarding">
-                <div className="embla__container">
-                  {screenImages.map((image, index) => (
-                    <div
-                      key={index}
-                      className="embla__slide mr-6 rounded-[12px] border-[1px] border-[#1B1B1B]"
-                      style={{
-                        backgroundImage: `url(${image.src})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }}
-                    >
-                      <span className="sr-only">{image.alt}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="absolute inset-y-0 left-0 w-[40px] bg-linear-to-r from-[#111111] to-[#11111100] pointer-events-none" />
-              <div className="absolute inset-y-0 right-0 w-[40px] bg-linear-to-l from-[#111111] to-[#11111100] pointer-events-none" />
+            <div className="relative w-full h-[349px] rounded-[12px] bg-background-surface-1 overflow-hidden">
+              <img
+                className="w-full h-full object-cover"
+                src="/img/onboarding/gpt-5-contest.png"
+                alt="GPT-5 Flow Contest"
+              />
             </div>
             <div className="flex flex-row justify-end gap-2">
+              <Button
+                size="lg"
+                variant="ghost"
+                onClick={() => window.open('https://astrsk.ai/contest', '_blank')}
+              >
+                Contest info
+              </Button>
               <Button size="lg" onClick={() => setStep((prev) => prev + 1)}>
-                Process to next
+                Next
               </Button>
             </div>
           </>
         )}
         {step === 2 && (
+          <>
+            <DialogHeader>
+              <StepIndicator totalSteps={3} currentStep={step} />
+              <DialogTitle>
+                <div className="font-[500] text-[24px] leading-[40px] text-[#F1F1F1]">
+                  2 short minutes to understand how astrsk works!
+                </div>
+              </DialogTitle>
+              <DialogDescription>
+                <div className="font-[400] text-[16px] leading-[25.6px] text-[#A1A1A1]">
+                  Get to know the high-level structure of the application
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="w-full h-[349px] rounded-[12px] overflow-hidden">
+              <iframe
+                width="100%"
+                height="100%"
+                src="https://www.youtube.com/embed/vO6JFL6R_mc?start=39&autoplay=1&mute=1"
+                title="astrsk Tutorial"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+            <div className="flex flex-row justify-end gap-2">
+              <Button
+                size="lg"
+                variant="ghost"
+                onClick={() => setStep((prev) => prev - 1)}
+              >
+                Back
+              </Button>
+              <Button size="lg" onClick={() => setStep((prev) => prev + 1)}>
+                Next
+              </Button>
+            </div>
+          </>
+        )}
+        {step === 3 && (
           <>
             <DialogHeader>
               <StepIndicator totalSteps={3} currentStep={step} />
@@ -147,7 +150,7 @@ const OnboardingDialog = () => {
                 variant="ghost"
                 onClick={() => {
                   setIsTelemetryEnabled(false);
-                  setStep((prev) => prev + 1);
+                  setIsPassedOnboarding(true);
                 }}
               >
                 No thanks
@@ -156,7 +159,7 @@ const OnboardingDialog = () => {
                 size="lg"
                 onClick={() => {
                   setIsTelemetryEnabled(true);
-                  setStep((prev) => prev + 1);
+                  setIsPassedOnboarding(true);
                 }}
               >
                 Share anonymously
@@ -164,10 +167,11 @@ const OnboardingDialog = () => {
             </div>
           </>
         )}
-        {step === 3 && (
+        {/* Mobile support page - commented out for now, can be added later
+        {step === 5 && (
           <>
             <DialogHeader>
-              <StepIndicator totalSteps={3} currentStep={step} />
+              <StepIndicator totalSteps={5} currentStep={step} />
               <DialogTitle>
                 <div className="font-[500] text-[24px] leading-[40px] text-[#F1F1F1]">
                   Now on mobile, always with you
@@ -208,6 +212,7 @@ const OnboardingDialog = () => {
             </div>
           </>
         )}
+        */}
       </DialogContent>
     </Dialog>
   );

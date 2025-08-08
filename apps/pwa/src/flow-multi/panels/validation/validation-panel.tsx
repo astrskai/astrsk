@@ -92,6 +92,8 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     if (flow && flow.props.validationIssues && !hasLoadedInitialIssues) {
       setValidationIssues(flow.props.validationIssues);
       setHasLoadedInitialIssues(true);
+      // Mark that validation has been run if we loaded issues from flow
+      setHasRunValidation(true);
     }
   }, [flow, hasLoadedInitialIssues]);
   
@@ -159,6 +161,7 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     });
     
     setValidationIssues(allIssues);
+    setHasRunValidation(true);
     
     // Update flow state and validation issues based on validation results
     const hasErrors = allIssues.some(issue => issue.severity === 'error');
@@ -198,6 +201,8 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
   
   // Track if we had a successful validation (no errors) before
   const [hadSuccessfulValidation, setHadSuccessfulValidation] = useState(false);
+  // Track if validation has been run at least once
+  const [hasRunValidation, setHasRunValidation] = useState(false);
   
   // Track flow readyState changes
   useEffect(() => {
@@ -313,7 +318,8 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
               }
               
               // If validation passed (Ready state or after validation with no errors)
-              if (!hasErrors && validationIssues.length > 0) {
+              // Show ready message when validation has run and there are no errors
+              if (!hasErrors && hasRunValidation) {
                 return (
                   <>
                     <IssueItem
