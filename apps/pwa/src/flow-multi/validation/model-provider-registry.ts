@@ -6,6 +6,7 @@ export class ModelProviderRegistry {
     ['openai', {
       provider: ApiSource.OpenAI,
       modelPatterns: [
+        /^gpt-5/i,
         /^gpt-4/i,
         /^gpt-3\.5/i,
         /^o1/i,
