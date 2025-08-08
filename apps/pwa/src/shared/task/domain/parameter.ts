@@ -4,11 +4,18 @@ export interface Parameter {
   id: string;
   label: string;
   nameByApiSource: Map<ApiSource, string>;
-  type: "number" | "boolean" | "string" | "logit_bias" | "safety_settings";
+  type:
+    | "number"
+    | "boolean"
+    | "string"
+    | "enum"
+    | "logit_bias"
+    | "safety_settings";
   default: any;
   min?: number;
   max?: number;
   step?: number;
+  enums?: string[];
   parsingFunction?: (value: string, apiSource?: ApiSource) => any;
 }
 
@@ -36,6 +43,17 @@ export const parameterList: Parameter[] = [
     min: 1,
     max: Infinity,
     step: 1,
+  },
+  {
+    id: "reasoning_effort",
+    label: "Reasoning Effort",
+    nameByApiSource: new Map([
+      [ApiSource.OpenAI, "reasoningEffort"],
+      [ApiSource.AstrskAi, "reasoningEffort"],
+    ]),
+    type: "enum",
+    default: "medium",
+    enums: ["high", "medium", "low", "minimal"],
   },
   {
     id: "thinking_budget",

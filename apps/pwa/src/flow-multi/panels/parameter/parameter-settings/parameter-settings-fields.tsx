@@ -13,6 +13,13 @@ import { Card, CardContent } from "@/components-v2/ui/card";
 import { Input } from "@/components-v2/ui/input";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { Switch } from "@/components-v2/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components-v2/ui/select";
 
 export type ParameterValue = number | string | boolean;
 
@@ -23,7 +30,11 @@ export interface ParameterFieldsProps {
   className?: string;
   initialEnabledParameters?: Map<string, boolean>;
   initialParameterValues?: Map<string, ParameterValue>;
-  onParameterChange?: (parameterId: string, enabled: boolean, value?: ParameterValue) => void;
+  onParameterChange?: (
+    parameterId: string,
+    enabled: boolean,
+    value?: ParameterValue,
+  ) => void;
 }
 
 const ParameterItem = ({
@@ -35,7 +46,11 @@ const ParameterItem = ({
   parameter: Parameter;
   initialEnabled?: boolean;
   initialValue?: ParameterValue;
-  onParameterChange?: (parameterId: string, enabled: boolean, value?: ParameterValue) => void;
+  onParameterChange?: (
+    parameterId: string,
+    enabled: boolean,
+    value?: ParameterValue,
+  ) => void;
 }) => {
   const [enabled, setEnabled] = useState(initialEnabled ?? false);
   const [value, setValue] = useState(initialValue ?? parameter.default);
@@ -73,7 +88,7 @@ const ParameterItem = ({
 
   // Safety settings
   const [safetySettings, setSafetySettings] = useState<
-    { category: string; threshold: string; }[]
+    { category: string; threshold: string }[]
   >(() => {
     if (parameter.type === "safety_settings" && typeof value === "string") {
       try {
@@ -317,7 +332,8 @@ const ParameterItem = ({
                             const newSafetySettings = [...safetySettings];
                             newSafetySettings[index].category = e.target.value;
                             setSafetySettings(newSafetySettings);
-                            const fieldValue = JSON.stringify(newSafetySettings);
+                            const fieldValue =
+                              JSON.stringify(newSafetySettings);
                             handleValueChange(fieldValue);
                           }}
                           placeholder="Category"
@@ -329,7 +345,8 @@ const ParameterItem = ({
                             const newSafetySettings = [...safetySettings];
                             newSafetySettings[index].threshold = e.target.value;
                             setSafetySettings(newSafetySettings);
-                            const fieldValue = JSON.stringify(newSafetySettings);
+                            const fieldValue =
+                              JSON.stringify(newSafetySettings);
                             handleValueChange(fieldValue);
                           }}
                           placeholder="Threshold"
@@ -340,7 +357,8 @@ const ParameterItem = ({
                             const newSafetySettings = [...safetySettings];
                             newSafetySettings.splice(index, 1);
                             setSafetySettings(newSafetySettings);
-                            const fieldValue = JSON.stringify(newSafetySettings);
+                            const fieldValue =
+                              JSON.stringify(newSafetySettings);
                             handleValueChange(fieldValue);
                           }}
                           className="w-6 h-6 relative rounded-sm flex-shrink-0"
@@ -353,6 +371,23 @@ const ParameterItem = ({
                 </div>
               )}
             </>
+          )}
+          {parameter.type === "enum" && (
+            <Select
+              value={value}
+              onValueChange={(value) => handleValueChange(value)}
+            >
+              <SelectTrigger className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {parameter.enums?.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         </div>
       </div>
@@ -398,7 +433,7 @@ export function ParameterSettingsPage({
   onParameterChange,
 }: ParameterFieldsProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   return (
     <div className="flex flex-col gap-6 w-[719px] h-[calc(100vh-300px)]">
       <div className="flex flex-col gap-2">
