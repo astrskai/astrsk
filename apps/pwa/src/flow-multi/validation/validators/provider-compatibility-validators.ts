@@ -18,6 +18,7 @@ import {
   ollamaParameterList,
   koboldCppParameterList,
   astrskParameterList,
+  getAstrskParameterList,
   openRouterParameterList,
   vertexAIParameterList
 } from "@/flow-multi/validation/providers";
@@ -150,7 +151,12 @@ export const validateProviderParameters: ValidatorFunction = forEachConnectedAge
     if (!apiConnectionWithModels) return issues;
     
     const apiSource = apiConnectionWithModels.apiConnection.source;
-    const providerParams = providerParameterMap[apiSource] || [];
+    
+    // Get the appropriate parameters for the provider
+    // For AstrskAi, use the special function that returns different parameters based on model
+    const providerParams = apiSource === ApiSource.AstrskAi 
+      ? getAstrskParameterList(modelName)
+      : providerParameterMap[apiSource] || [];
     
     // Create a map of provider parameters by ID for quick lookup
     const providerParamMap = new Map<string, ValidationParameter>();
