@@ -45,6 +45,17 @@ export const parameterList: Parameter[] = [
     step: 1,
   },
   {
+    id: "reasoning_effort",
+    label: "Reasoning Effort",
+    nameByApiSource: new Map([
+      [ApiSource.OpenAI, "reasoningEffort"],
+      [ApiSource.AstrskAi, "reasoningEffort"],
+    ]),
+    type: "enum",
+    default: "medium",
+    enums: ["high", "medium", "low", "minimal"],
+  },
+  {
     id: "thinking_budget",
     label: "Thinking Budget",
     nameByApiSource: new Map([
