@@ -1205,7 +1205,7 @@ async function generateTextOutput({
   if (apiConnection.source === ApiSource.AIHorde) {
     abortSignals.push(new AbortController().signal); // Dummy signal
   } else {
-    abortSignals.push(AbortSignal.timeout(60000)); // Timeout 60 seconds
+    abortSignals.push(AbortSignal.timeout(120000)); // Timeout 120 seconds
   }
   const combinedAbortSignal = AbortSignal.any(abortSignals);
 
@@ -1341,7 +1341,7 @@ async function generateStructuredOutput({
   validateMessages(messages, apiConnection.source);
 
   // Timeout and abort signals
-  const abortSignals = [AbortSignal.timeout(60000)];
+  const abortSignals = [AbortSignal.timeout(120000)];
   if (stopSignalByUser) {
     abortSignals.push(stopSignalByUser);
   }
