@@ -63,6 +63,7 @@ export const useDefaultInitialized = () => {
         // Will display in reverse to this order (order by updateAt desc)
         const filePath = [
           "/default/flow/SAGA (Sequential Analysis and Gaming Agent).json",
+          "/default/flow/Simple.json",
         ];
         for (const path of filePath) {
           const response = await fetch(path);

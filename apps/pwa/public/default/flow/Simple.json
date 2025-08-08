@@ -1,0 +1,220 @@
+{
+  "name": "Simple",
+  "description": "",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "position": {
+        "x": 820.6860127212395,
+        "y": -46.574321318829234
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019888b1-9658-7bb0-9ddc-921e0b5ba4db",
+      "type": "agent",
+      "position": {
+        "x": 314.1571332554912,
+        "y": -198.1735560267126
+      },
+      "data": {}
+    }
+  ],
+  "edges": [
+    {
+      "id": "start-agent",
+      "source": "start",
+      "target": "019888b1-9658-7bb0-9ddc-921e0b5ba4db"
+    },
+    {
+      "id": "xy-edge__019888b1-9658-7bb0-9ddc-921e0b5ba4db-end",
+      "source": "019888b1-9658-7bb0-9ddc-921e0b5ba4db",
+      "target": "end"
+    }
+  ],
+  "responseTemplate": "{{rp_agent.char_response}}",
+  "createdAt": "2025-08-08T10:54:55.810Z",
+  "updatedAt": "2025-08-08T10:54:55.810Z",
+  "panelStructure": {
+    "panels": [],
+    "version": 2,
+    "activePanel": "flow-panel-main",
+    "panelMetadata": {
+      "flow-panel-main": {
+        "title": "Flow Editor",
+        "params": {
+          "title": "Flow Editor",
+          "flowId": "019888b1-9658-7bb0-9ddc-9be7d8016c9a"
+        },
+        "component": "flow"
+      }
+    },
+    "serializedLayout": {
+      "grid": {
+        "root": {
+          "data": [
+            {
+              "data": {
+                "id": "1",
+                "views": [
+                  "flow-panel-main"
+                ],
+                "locked": true,
+                "activeView": "flow-panel-main"
+              },
+              "size": 2240,
+              "type": "leaf"
+            }
+          ],
+          "size": 1288,
+          "type": "branch"
+        },
+        "width": 2240,
+        "height": 1288,
+        "orientation": "HORIZONTAL"
+      },
+      "panels": {
+        "flow-panel-main": {
+          "id": "flow-panel-main",
+          "title": "Flow Editor",
+          "params": {
+            "title": "Flow Editor",
+            "flowId": "019888b1-9658-7bb0-9ddc-9be7d8016c9a"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "flow"
+        }
+      },
+      "activeGroup": "1"
+    }
+  },
+  "viewport": {
+    "x": 430.2350017247037,
+    "y": 687.6625469516159,
+    "zoom": 0.9937552627839046
+  },
+  "readyState": "draft",
+  "validationIssues": [],
+  "agents": {
+    "019888b1-9658-7bb0-9ddc-921e0b5ba4db": {
+      "name": "RP Agent",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "gpt-5-mini",
+      "modelName": "gpt-5-mini",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are a professional role player.\nAnalyze the given situation and respond by referring to your character's description.\n\n## Character Description\n\n### {{cast.active.name}} (You)\n{{cast.active.description}}\n\n{% for npc in cast.inactive %}\n### {{npc.name}}\n{{npc.description}}\n\n{% endfor %}\n\n## Additional Information\n{% for entry in session.entries %}{{entry}}\n{% endfor %}\n\n## Previous History",
+              "type": "plain",
+              "createdAt": "2025-08-08T09:52:48.396Z",
+              "updatedAt": "2025-08-08T09:52:48.396Z",
+              "id": "01988918-eb0c-7bb7-b806-98ac1f0fa47e"
+            }
+          ],
+          "createdAt": "2025-08-08T09:52:48.396Z",
+          "id": "message-1754643044921"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 12,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History (last 12 messages)",
+              "template": "{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-08-08T09:52:48.396Z",
+              "updatedAt": "2025-08-08T09:52:48.396Z",
+              "id": "01988918-eb0c-7bb7-b806-a1783a6791b9"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History (last 12 messages)",
+              "template": "{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-08-08T09:52:48.396Z",
+              "updatedAt": "2025-08-08T09:52:48.396Z",
+              "id": "01988918-eb0c-7bb7-b806-afd8cef6e7dc"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-08-08T09:52:48.396Z",
+          "id": "history-1754640010968"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {
+        "context": true,
+        "temperature": false,
+        "reasoning_effort": true
+      },
+      "parameterValues": {
+        "context": 24000,
+        "reasoning_effort": "low"
+      },
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": false,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "analysis",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Analysis of previous roleplay situations."
+        },
+        {
+          "name": "idea",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Ideas to make roleplay situations interesting."
+        },
+        {
+          "name": "char_name",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Name of character you're going to answer this time."
+        },
+        {
+          "name": "char_response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "The actions and lines of the characters made by referring to the ideas.\nWrite the character's line between \"\".\nWrite the character's action or background description in markdown italic.\nWrite the sound effects, onomatopoeia, or words you want to emphasize in markdown bold."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#A5B4FC",
+      "createdAt": "2025-08-08T07:59:56.515Z",
+      "updatedAt": "2025-08-08T09:53:25.804Z"
+    }
+  }
+}
