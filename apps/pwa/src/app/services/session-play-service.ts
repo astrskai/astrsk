@@ -343,6 +343,11 @@ const makeSettings = ({ parameters }: { parameters: Map<string, any> }) => {
 
   if (parameters.has("temperature")) {
     settings["temperature"] = Number(parameters.get("temperature"));
+  } else {
+    // Prevent AI SDK set temperature to 0
+    // TODO: delete this code after upgrade to AI SDK v5
+    // https://ai-sdk.dev/docs/ai-sdk-core/settings#temperature
+    settings["temperature"] = 1;
   }
 
   if (parameters.has("top_p")) {
