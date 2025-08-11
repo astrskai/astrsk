@@ -784,7 +784,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       let newNodeData: any = { ...nodeToCopy.data };
       
       // Only add color to nodes that support it (if and dataStore)
-      if (nodeToCopy.type === 'if' || nodeToCopy.type === 'dataStore') {
+      const nodeType = nodeToCopy.type as string;
+      if (nodeType === 'if' || nodeType === 'dataStore') {
         newNodeData.color = nextColor;
       }
       
@@ -805,7 +806,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         saveFlowChanges(updatedNodes, edges, true);
       }, 0);
 
-      toast.success(`${nodeToCopy.type === 'if' ? 'If' : 'Data Store'} node copied`);
+      toast.success(`${nodeType === 'if' ? 'If' : 'Data Store'} node copied`);
     } catch (error) {
       toast.error("Failed to copy node", {
         description: error instanceof Error ? error.message : "Unknown error",
@@ -851,7 +852,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         saveFlowChanges(updatedNodes, updatedEdges);
       }, 0);
 
-      toast.success(`${nodeToDelete.type === 'if' ? 'If' : 'Data Store'} node deleted`);
+      const deletedNodeType = nodeToDelete.type as string;
+      toast.success(`${deletedNodeType === 'if' ? 'If' : 'Data Store'} node deleted`);
     } catch (error) {
       toast.error("Failed to delete node", {
         description: error instanceof Error ? error.message : "Unknown error",
@@ -901,6 +903,17 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     setShowNodeSelection(true);
   }, [nodes]);
 
+  // Method to update node data directly
+  const updateNodeData = useCallback((nodeId: string, newData: any) => {
+    setNodes((currentNodes) => 
+      currentNodes.map(node => 
+        node.id === nodeId 
+          ? { ...node, data: { ...node.data, ...newData } }
+          : node
+      )
+    );
+  }, [setNodes]);
+
   // Effect 3: Register flow panel methods for all nodes - use ref to avoid re-renders
   const methodsRef = useRef<{
     copyAgent: typeof copyAgent;
@@ -908,6 +921,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     copyNode: typeof copyNode;
     deleteNode: typeof deleteNode;
     handleHandleClick: typeof handleHandleClick;
+    updateNodeData: typeof updateNodeData;
   }>();
   
   methodsRef.current = {
@@ -915,7 +929,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     deleteAgent,
     copyNode,
     deleteNode,
-    handleHandleClick
+    handleHandleClick,
+    updateNodeData
   };
   
   useEffect(() => {
@@ -926,6 +941,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     (window as any).flowPanelDeleteNode = (nodeId: string) => methodsRef.current?.deleteNode(nodeId);
     (window as any).flowPanelHandleClick = (nodeId: string, handleType: string) => 
       methodsRef.current?.handleHandleClick(nodeId, handleType);
+    (window as any).flowPanelUpdateNodeData = (nodeId: string, newData: any) =>
+      methodsRef.current?.updateNodeData(nodeId, newData);
     
     return () => {
       delete (window as any).flowPanelCopyAgent;
@@ -933,6 +950,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       delete (window as any).flowPanelCopyNode;
       delete (window as any).flowPanelDeleteNode;
       delete (window as any).flowPanelHandleClick;
+      delete (window as any).flowPanelUpdateNodeData;
     };
   }, []); // No dependencies - register once
 

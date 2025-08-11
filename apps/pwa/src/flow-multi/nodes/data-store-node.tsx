@@ -172,11 +172,30 @@ export default function DataStoreNode({
   }, [id]);
 
   // Note: Schema is stored in flow.dataStoreSchema
-  // The node stores DataStoreField[] with runtime values and logic
-  // For display purposes, we need to get schema from flow context
-  // TODO: Get fields from flow.dataStoreSchema when available through context
-  const displayFields: Array<{ id: string; name: string }> = [];
-  const hasNoFields = displayFields.length === 0;
+  // Get fields from the node's actual dataStoreFields (runtime values)
+  // These are the fields that have been configured for this specific node
+  const displayFields = useMemo(() => {
+    const fields: Array<{ id: string; name: string }> = [];
+    
+    // Get the node's configured fields
+    if (data.dataStoreFields && data.dataStoreFields.length > 0) {
+      // We need to get the field names from the schema using the schemaFieldId
+      data.dataStoreFields.forEach(field => {
+        // Find the corresponding schema field to get the name
+        const schemaField = flow?.props.dataStoreSchema?.fields.find(
+          sf => sf.id === field.schemaFieldId
+        );
+        if (schemaField) {
+          fields.push({ id: field.schemaFieldId, name: schemaField.name });
+        }
+      });
+    }
+    
+    return fields;
+  }, [data.dataStoreFields, flow?.props.dataStoreSchema?.fields]);
+  
+  // Check if node has configured fields (not schema fields)
+  const hasNoFields = !data.dataStoreFields || data.dataStoreFields.length === 0;
 
   return (
     <div 

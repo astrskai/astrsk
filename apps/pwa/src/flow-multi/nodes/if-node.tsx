@@ -178,9 +178,14 @@ export default function IfNode({
     setIsDeleteDialogOpen(false);
   }, [id]);
 
-  // Get condition count
+  // Get condition count and check if conditions are valid
   const conditionCount = data.conditions?.length || 0;
-  const hasConditions = conditionCount > 0;
+  // A condition is valid if it has at least value1 filled in
+  const hasValidConditions = data.conditions?.some((c: any) => c.value1 && c.value1.trim() !== '') || false;
+  const hasConditions = hasValidConditions;
+  
+  // Display count for badge
+  const displayCount = hasValidConditions ? data.conditions?.filter((c: any) => c.value1 && c.value1.trim() !== '').length || 0 : 0;
 
   return (
     <div 

@@ -26,18 +26,27 @@
 
 ## 3. Node Traversal Enhancement
 **Context:** Node traversal logic needs to include if and data store nodes
-- [ ] Identify current node traversal implementation
-- [ ] Add if node to traversal logic
-- [ ] Add data store node to traversal logic
-- [ ] Ensure proper flow execution with these node types
-- [ ] Test traversal with complex flows containing multiple node types
+- [x] Identify current node traversal implementation
+- [x] Add if node to traversal logic
+- [x] Add data store node to traversal logic
+- [x] Ensure proper flow execution with these node types
+- [x] Test traversal with complex flows containing multiple node types
+**Status:** ✅ COMPLETED
+- Updated flow-traversal.ts to handle 'if' and 'dataStore' nodes alongside 'agent' nodes
+- Renamed interfaces to ProcessNodePosition for clarity
+- Maintained backward compatibility with agentPositions for existing code
+- Fixed TypeScript errors in flow-panel.tsx with proper type assertions
 
 ## 4. Number Error Display Fix
 **Context:** When fields are added in if node and data store node
-- [ ] Fix error display when adding new fields in if node
-- [ ] Fix error display when adding new fields in data store node
-- [ ] Ensure proper error numbering/indexing
-- [ ] Test error display with multiple fields
+- [x] Fix error display when adding new fields in if node
+- [x] Fix error display when adding new fields in data store node
+- [x] Ensure proper error numbering/indexing
+- [x] Test error display with multiple fields
+**Status:** ✅ COMPLETED
+- Fixed if-node to check for valid conditions (must have value1 filled)
+- Fixed data-store-node to check flow's dataStoreSchema for fields
+- Error borders now only show when there are no valid conditions/fields
 
 ## 5. Data Store Node Validation - Initial Value Type Match
 **File:** `apps/pwa/src/flow-multi/panels/data-store/data-store-panel.tsx`

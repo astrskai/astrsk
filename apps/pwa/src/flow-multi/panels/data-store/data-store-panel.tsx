@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
-import { FlowService } from "@/app/services/flow-service";
 import { Button } from "@/components-v2/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
 import {
@@ -40,7 +39,7 @@ interface DataStorePanelProps {
 }
 
 export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
-  const { flow } = useFlowPanel({ flowId });
+  const { flow, saveFlow } = useFlowPanel({ flowId });
   const { openPanel } = useFlowPanelContext();
 
   // Store flow in ref to prevent re-renders from triggering logic reset
@@ -49,13 +48,6 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     flowRef.current = flow;
   }, [flow]);
 
-  // Save flow without invalidation to prevent re-renders
-  const saveFlowWithoutInvalidation = useCallback(async (updatedFlow: Flow) => {
-    const result = await FlowService.saveFlow.execute(updatedFlow);
-    if (result.isFailure) {
-      console.error("Failed to save flow:", result.getError());
-    }
-  }, []);
 
   // Get node data from flow
   const node = flow?.props.nodes.find(n => n.id === nodeId);
@@ -128,9 +120,14 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     
     const updateResult = currentFlow.update({ nodes: updatedNodes });
     if (updateResult.isSuccess) {
-      await saveFlowWithoutInvalidation(updateResult.getValue());
+      await saveFlow(updateResult.getValue());
+      
+      // Update the node data directly in the flow panel to trigger re-render
+      if ((window as any).flowPanelUpdateNodeData) {
+        (window as any).flowPanelUpdateNodeData(nodeId, { dataStoreFields: fields });
+      }
     }
-  }, [nodeId, saveFlowWithoutInvalidation]);
+  }, [nodeId, saveFlow]);
 
   // DnD sensors
   const sensors = useSensors(

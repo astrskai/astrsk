@@ -51,6 +51,14 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
     const updateResult = flow.update({ nodes: updatedNodes });
     if (updateResult.isSuccess) {
       await saveFlow(updateResult.getValue());
+      
+      // Update the node data directly in the flow panel to trigger re-render
+      if ((window as any).flowPanelUpdateNodeData) {
+        (window as any).flowPanelUpdateNodeData(nodeId, { 
+          conditions: newConditions,
+          logicOperator: newOperator 
+        });
+      }
     }
   }, [flow, nodeId, saveFlow]);
 
