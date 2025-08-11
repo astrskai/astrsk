@@ -169,7 +169,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     const newField: DataStoreField = {
       schemaFieldId: selectedSchemaFieldId,
       value: schemaField.initialValue || '',
-      logic: undefined
+      logic: ''  // Initialize with empty string instead of undefined
     };
     
     const updatedFields = [...dataStoreFields, newField];
@@ -184,7 +184,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     if (selectedFieldId) {
       const updatedFields = dataStoreFields.map(f => 
         f.schemaFieldId === selectedFieldId 
-          ? { ...f, logic: value || undefined }
+          ? { ...f, logic: value }  // Save empty string as-is, don't convert to undefined
           : f
       );
       setDataStoreFields(updatedFields);
@@ -370,7 +370,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                         onClick={handleDeleteField}
                         className="w-6 h-6 relative rounded-sm hover:opacity-80 transition-opacity"
                       >
-                        <Trash2 className="w-3.5 h-4 absolute left-[5px] top-[4px] text-text-subtle" />
+                        <Trash2 className="min-w-3.5 min-h-4 absolute left-[5px] top-[4px] text-text-subtle" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent variant="button">

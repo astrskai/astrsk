@@ -33,7 +33,9 @@ export type Edge = {
   id: string;
   source: string;
   target: string;
-  label?: string; // Optional label for visualization
+  sourceHandle?: string | null; // Handle ID on source node (e.g., "true"/"false" for if-nodes)
+  targetHandle?: string | null; // Handle ID on target node
+  label?: string; // Optional label for visualization (e.g., "True"/"False" for if-nodes)
 };
 
 export type PanelLayout = {
@@ -225,6 +227,8 @@ export class Flow extends AggregateRoot<FlowProps> {
         id: edge.id,
         source: edge.source,
         target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
         label: edge.label,
       })),
       responseTemplate: this.props.responseTemplate,
@@ -286,8 +290,11 @@ export class Flow extends AggregateRoot<FlowProps> {
           })(),
           edges:
             props.edges?.map((edge: any) => ({
-              ...edge,
-              condition: edge.condition,
+              id: edge.id,
+              source: edge.source,
+              target: edge.target,
+              sourceHandle: edge.sourceHandle || null,
+              targetHandle: edge.targetHandle || null,
               label: edge.label,
             })) || [],
           panelStructure: props.panelStructure,

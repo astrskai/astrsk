@@ -307,14 +307,14 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                     className="h-7 px-3 py-2 bg-background-surface-4 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-light flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
                   >
                     <Plus className="w-4 h-4 text-text-body" />
-                    <div className="justify-center text-text-primary text-xs font-semibold leading-none">Add Field</div>
+                    <div className="justify-center text-text-primary text-xs font-semibold leading-none">Schema Field(s)</div>
                   </button>
                 </div>
                 
                 {displayFields.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="text-[#A3A5A8] text-xs">
-                      No fields configured. Click "Add Field" to get started.
+                      No fields configured. Click "+ Schema Field(s)" to get started.
                     </div>
                   </div>
                 ) : (

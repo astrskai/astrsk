@@ -1,8 +1,9 @@
 // Data Store node component for flow-multi system
 // Manages data storage and variables within the flow
-import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
+import { type Node, type NodeProps } from "@xyflow/react";
 import { useState, useCallback, useMemo } from "react";
-import { Copy, Trash2, Plus, Pencil } from "lucide-react";
+import { Copy, Trash2, Pencil } from "lucide-react";
+import { CustomHandle } from "@/flow-multi/components/custom-handle";
 import {
   Tooltip,
   TooltipContent,
@@ -10,6 +11,15 @@ import {
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
 import { Input } from "@/components-v2/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components-v2/ui/dialog";
+import { Button } from "@/components-v2/ui/button";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
 import { useAgentStore } from "@/app/stores/agent-store";
@@ -45,6 +55,7 @@ export default function DataStoreNode({
   const [title, setTitle] = useState(data.label || "Data Store");
   const [editingTitle, setEditingTitle] = useState(data.label || "Data Store");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
   
@@ -146,13 +157,18 @@ export default function DataStoreNode({
   // Handle delete action
   const handleDeleteClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    
+    setIsDeleteDialogOpen(true);
+  }, []);
+  
+  // Confirm delete action
+  const handleConfirmDelete = useCallback(() => {
     // Use flow panel's delete method if available
     if ((window as any).flowPanelDeleteNode) {
       (window as any).flowPanelDeleteNode(id);
     } else {
       console.error("Delete function not available");
     }
+    setIsDeleteDialogOpen(false);
   }, [id]);
 
   // Note: Schema is stored in flow.dataStoreSchema
@@ -267,31 +283,35 @@ export default function DataStoreNode({
         </TooltipProvider>
       </div>
 
-      {/* Source handle with custom styling - matching agent node */}
-      <Handle 
-        position={Position.Right} 
-        type="source" 
-        className="!w-3 !h-3 !border-0 !bg-transparent group-hover/node:!w-6 group-hover/node:!h-6 transition-all duration-200"
-        title="Drag to connect to next node"
-      />
-      {/* Default small handle visual */}
-      <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-3 h-3 p-[1.5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center group-hover/node:hidden pointer-events-none">
-        <div className="w-2 h-2 relative overflow-hidden">
-          <div className="w-1.5 h-1.5 left-[1px] top-[1px] absolute outline-[0.67px] outline-offset-[-0.33px] outline-text-primary"></div>
-        </div>
-      </div>
-      {/* Large handle on hover with plus icon */}
-      <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-background-surface-3 rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 hidden group-hover/node:flex justify-center items-center pointer-events-none">
-        <Plus className="w-4 h-4 text-text-primary" />
-      </div>
+      {/* React Flow Handles */}
+      <CustomHandle variant="output" nodeId={id} />
+      <CustomHandle variant="input" nodeId={id} />
       
-      {/* Target handle */}
-      <Handle 
-        position={Position.Left} 
-        type="target" 
-        className="!w-3 !h-3 !bg-white !border-2 !border-gray-300"
-        title="Connect from previous node"
-      />
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent hideClose>
+          <DialogHeader>
+            <DialogTitle>Delete data store</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{title}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

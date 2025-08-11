@@ -6,17 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
 import { FlowPanelLoading } from "@/flow-multi/hooks/use-flow-panel";
 import { debounce } from "lodash-es";
+import { 
+  Condition, 
+  ConditionDataType, 
+  ConditionOperator,
+  getDefaultOperatorForDataType,
+  isUnaryOperator,
+  isValidOperatorForDataType
+} from '@/flow-multi/types/condition-types';
+import { OperatorDropdown } from '@/flow-multi/components/operator-dropdown';
 
 interface IfNodePanelProps {
   flowId: string;
   nodeId: string;
-}
-
-interface Condition {
-  id: string;
-  value1: string;
-  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains';
-  value2: string;
 }
 
 export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
@@ -73,13 +75,32 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       
       // If there are existing conditions, use them
       if (existingConditions.length > 0) {
-        setConditions(existingConditions);
+        // Migrate old conditions that don't have dataType
+        const migratedConditions: Condition[] = existingConditions.map((c: any) => {
+          if (!c.dataType) {
+            // Infer data type from operator for backwards compatibility
+            let dataType: ConditionDataType = 'string';
+            if (c.operator === 'greater_than' || c.operator === 'less_than' || 
+                c.operator === 'greater_than_or_equals' || c.operator === 'less_than_or_equals') {
+              dataType = 'number';
+            }
+            
+            return {
+              ...c,
+              dataType,
+              operator: c.operator || 'equals'
+            };
+          }
+          return c;
+        });
+        setConditions(migratedConditions);
       } else {
         // Only create default condition if none exist
-        const defaultCondition = {
+        const defaultCondition: Condition = {
           id: `cond-${Date.now()}`,
+          dataType: 'string',
           value1: '',
-          operator: 'equals' as const,
+          operator: 'string_equals',
           value2: ''
         };
         setConditions([defaultCondition]);
@@ -93,8 +114,9 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
   const addCondition = useCallback(() => {
     const newCondition: Condition = {
       id: `cond-${Date.now()}`,
+      dataType: 'string',
       value1: '',
-      operator: 'equals',
+      operator: 'string_equals',
       value2: ''
     };
     const newConditions = [...conditions, newCondition];
@@ -112,9 +134,24 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
   }, [conditions, logicOperator, saveConditions]);
 
   const updateCondition = useCallback((id: string, field: keyof Condition, value: string) => {
-    const newConditions = conditions.map(c => 
-      c.id === id ? { ...c, [field]: value } : c
-    );
+    const newConditions = conditions.map(c => {
+      if (c.id !== id) return c;
+      
+      // When data type changes, reset operator to default for that type
+      if (field === 'dataType') {
+        const newDataType = value as ConditionDataType;
+        const currentOperator = c.operator;
+        const isValidForNewType = isValidOperatorForDataType(currentOperator, newDataType);
+        
+        return {
+          ...c,
+          dataType: newDataType,
+          operator: isValidForNewType ? currentOperator : getDefaultOperatorForDataType(newDataType)
+        };
+      }
+      
+      return { ...c, [field]: value };
+    });
     setConditions(newConditions);
     saveConditions(newConditions, logicOperator);
   }, [conditions, logicOperator, saveConditions]);
@@ -123,6 +160,42 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
     setLogicOperator(value);
     saveConditions(conditions, value);
   }, [conditions, saveConditions]);
+
+  // Handle operator change from nested dropdown
+  const handleOperatorChange = useCallback((id: string, dataType: ConditionDataType, operator: ConditionOperator) => {
+    const newConditions = conditions.map(c => {
+      if (c.id !== id) return c;
+      
+      // When operator or data type changes, clear values to avoid invalid data
+      const dataTypeChanged = c.dataType !== dataType;
+      const operatorChanged = c.operator !== operator;
+      
+      // If switching to a unary operator, clear value2
+      // If switching data types or operators, clear both values for safety
+      if (dataTypeChanged) {
+        // Data type changed - clear both values
+        return {
+          ...c,
+          dataType,
+          operator,
+          value1: '',
+          value2: ''
+        };
+      } else if (operatorChanged) {
+        // Only operator changed - keep value1, but clear value2 if switching to unary
+        return {
+          ...c,
+          dataType,
+          operator,
+          value2: isUnaryOperator(operator) ? '' : c.value2
+        };
+      }
+      
+      return { ...c, dataType, operator };
+    });
+    setConditions(newConditions);
+    saveConditions(newConditions, logicOperator);
+  }, [conditions, logicOperator, saveConditions]);
 
   if (isLoading) {
     return <FlowPanelLoading message="Loading if node..." />;
@@ -170,50 +243,39 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                     <div className="flex-1 inline-flex flex-col justify-start items-start gap-3">
                       {/* Value1 and Operator Row */}
                       <div className="self-stretch inline-flex justify-start items-center gap-2">
+                        {/* Value1 Input */}
                         <div className="flex-1 inline-flex flex-col justify-start items-start gap-1">
                           <Input
                             value={condition.value1}
                             onChange={(e) => updateCondition(condition.id, 'value1', e.target.value)}
-                            placeholder="value1"
+                            placeholder="Variable or value"
                             className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                           />
                         </div>
-                        <div className="w-32 inline-flex flex-col justify-start items-start gap-1">
-                          <Select 
-                            value={condition.operator} 
-                            onValueChange={(value) => updateCondition(condition.id, 'operator', value)}
-                          >
-                            <SelectTrigger className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal">
-                              <SelectValue>
-                                {condition.operator === 'equals' && 'is equal to'}
-                                {condition.operator === 'not_equals' && 'not equal to'}
-                                {condition.operator === 'greater_than' && 'greater than'}
-                                {condition.operator === 'less_than' && 'lower than'}
-                                {condition.operator === 'contains' && 'contains'}
-                                {condition.operator === 'not_contains' && 'not contains'}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="equals">is equal to</SelectItem>
-                              <SelectItem value="not_equals">not equal to</SelectItem>
-                              <SelectItem value="greater_than">greater than</SelectItem>
-                              <SelectItem value="less_than">lower than</SelectItem>
-                              <SelectItem value="contains">contains</SelectItem>
-                              <SelectItem value="not_contains">not contains</SelectItem>
-                            </SelectContent>
-                          </Select>
+                        {/* Nested Operator Dropdown */}
+                        <div className="w-52 inline-flex flex-col justify-start items-start gap-1">
+                          <OperatorDropdown
+                            value={{
+                              dataType: condition.dataType,
+                              operator: condition.operator
+                            }}
+                            onChange={(dataType, operator) => handleOperatorChange(condition.id, dataType, operator)}
+                            className="w-full"
+                          />
                         </div>
                       </div>
                       
-                      {/* Value2 Row */}
-                      <div className="self-stretch flex flex-col justify-start items-start gap-1">
-                        <Input
-                          value={condition.value2}
-                          onChange={(e) => updateCondition(condition.id, 'value2', e.target.value)}
-                          placeholder="value2"
-                          className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
-                        />
-                      </div>
+                      {/* Value2 Row - only show if operator requires it */}
+                      {!isUnaryOperator(condition.operator) && (
+                        <div className="self-stretch flex flex-col justify-start items-start gap-1">
+                          <Input
+                            value={condition.value2}
+                            onChange={(e) => updateCondition(condition.id, 'value2', e.target.value)}
+                            placeholder={condition.dataType === 'boolean' ? 'true/false' : 'Compare value'}
+                            className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+                          />
+                        </div>
+                      )}
                     </div>
                     
                     {/* Delete Button - only show if not the first/only condition */}

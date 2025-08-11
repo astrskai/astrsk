@@ -11,6 +11,8 @@ type CustomEdgeType = {
   id: string;
   source: string;
   target: string;
+  sourceHandle?: string | null;
+  type?: string;
 };
 
 // Helper function to generate unique agent name
@@ -128,10 +130,14 @@ export const createNodeWithConnection = async (
     }
 
     // Create edge connecting source to new node
+    // Check if source is an if-node to set edge type
+    const edgeType = sourceNode?.type === 'if' ? 'if-edge' : undefined;
+    
     const newEdge: CustomEdgeType = {
       id: `${sourceNodeId}-${newNode.id}`,
       source: sourceNodeId,
       target: newNode.id,
+      type: edgeType,
     };
 
     // Remove existing connections from source node

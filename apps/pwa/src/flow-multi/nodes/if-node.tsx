@@ -1,8 +1,9 @@
 // If node component for flow-multi system
 // Provides conditional branching logic in the flow
-import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
+import { type Node, type NodeProps } from "@xyflow/react";
 import { useState, useCallback, useMemo } from "react";
-import { Copy, Trash2, Plus, Pencil } from "lucide-react";
+import { Copy, Trash2, Pencil } from "lucide-react";
+import { CustomHandle, CustomIfHandle } from "@/flow-multi/components/custom-handle";
 import {
   Tooltip,
   TooltipContent,
@@ -10,6 +11,15 @@ import {
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
 import { Input } from "@/components-v2/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components-v2/ui/dialog";
+import { Button } from "@/components-v2/ui/button";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
 import { useAgentStore } from "@/app/stores/agent-store";
@@ -52,6 +62,7 @@ export default function IfNode({
   const [title, setTitle] = useState(data.label || "If Condition");
   const [editingTitle, setEditingTitle] = useState(data.label || "If Condition");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
   
@@ -153,13 +164,18 @@ export default function IfNode({
   // Handle delete action
   const handleDeleteClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    
+    setIsDeleteDialogOpen(true);
+  }, []);
+  
+  // Confirm delete action
+  const handleConfirmDelete = useCallback(() => {
     // Use flow panel's delete method if available
     if ((window as any).flowPanelDeleteNode) {
       (window as any).flowPanelDeleteNode(id);
     } else {
       console.error("Delete function not available");
     }
+    setIsDeleteDialogOpen(false);
   }, [id]);
 
   // Get condition count
@@ -268,54 +284,39 @@ export default function IfNode({
         </TooltipProvider>
       </div>
 
-      {/* Two source handles for true/false branches - matching agent node style */}
-      {/* True handle */}
-      <Handle 
-        position={Position.Right} 
-        type="source" 
-        id="true"
-        style={{ top: '35%' }}
-        className="!w-3 !h-3 !border-0 !bg-transparent group-hover/node:!w-6 group-hover/node:!h-6 transition-all duration-200"
-        title="True path"
-      />
-      {/* True handle visual - small */}
-      <div className="absolute top-[35%] right-0 translate-x-1/2 -translate-y-1/2 w-3 h-3 p-[1.5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center group-hover/node:hidden pointer-events-none">
-        <div className="w-2 h-2 relative overflow-hidden">
-          <div className="w-1.5 h-1.5 left-[1px] top-[1px] absolute outline-[0.67px] outline-offset-[-0.33px] outline-text-primary"></div>
-        </div>
-      </div>
-      {/* True handle on hover with plus icon */}
-      <div className="absolute top-[35%] right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-border-light hidden group-hover/node:flex justify-center items-center pointer-events-none">
-        <Plus className="w-4 h-4 text-white" />
-      </div>
-
-      {/* False handle */}
-      <Handle 
-        position={Position.Right} 
-        type="source" 
-        id="false"
-        style={{ top: '65%' }}
-        className="!w-3 !h-3 !border-0 !bg-transparent group-hover/node:!w-6 group-hover/node:!h-6 transition-all duration-200"
-        title="False path"
-      />
-      {/* False handle visual - small */}
-      <div className="absolute top-[65%] right-0 translate-x-1/2 -translate-y-1/2 w-3 h-3 p-[1.5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center group-hover/node:hidden pointer-events-none">
-        <div className="w-2 h-2 relative overflow-hidden">
-          <div className="w-1.5 h-1.5 left-[1px] top-[1px] absolute outline-[0.67px] outline-offset-[-0.33px] outline-text-primary"></div>
-        </div>
-      </div>
-      {/* False handle on hover with plus icon */}
-      <div className="absolute top-[65%] right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-border-light hidden group-hover/node:flex justify-center items-center pointer-events-none">
-        <Plus className="w-4 h-4 text-white" />
-      </div>
+      {/* React Flow Handles */}
+      {/* Two source handles for true/false branches */}
+      <CustomIfHandle nodeId={id} handleId="true" label="True" position="35%" />
+      <CustomIfHandle nodeId={id} handleId="false" label="False" position="65%" />
       
       {/* Target handle */}
-      <Handle 
-        position={Position.Left} 
-        type="target" 
-        className="!w-3 !h-3 !bg-white !border-2 !border-gray-300"
-        title="Connect from previous node"
-      />
+      <CustomHandle variant="input" nodeId={id} />
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent hideClose>
+          <DialogHeader>
+            <DialogTitle>Delete if node</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{title}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

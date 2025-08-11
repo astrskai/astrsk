@@ -165,15 +165,20 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
   const prevFlowIdRef = useRef<string | null>(null);
   
   // Update refs when flow data changes
-  useEffect(() => {
-    flowIdRef.current = flowId;
-    flowRef.current = flow;
-  }, [flowId, flow]);
-  
-  // Update agents ref when agents change
-  useEffect(() => {
-    agentsRef.current = agents;
-  }, [agents]);
+  // Update refs directly without useEffect to avoid re-renders
+  flowIdRef.current = flowId;
+  flowRef.current = flow;
+  agentsRef.current = agents;
+
+  // Track agent node IDs to detect actual changes
+  const agentNodeIds = useMemo(() => {
+    if (!flow) return [];
+    return flow.props.nodes
+      .filter(node => node.type === 'agent')
+      .map(node => node.id)
+      .sort()
+      .join(',');
+  }, [flow]);
 
   // Load agents when flow changes
   useEffect(() => {
@@ -201,7 +206,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     };
 
     loadAgents();
-  }, [flowId, flow?.props.nodes]);
+  }, [agentNodeIds]); // Only reload when agent nodes actually change
 
 
 
@@ -389,7 +394,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     
     // Check if this is an agent panel
     if (panelType === 'prompt' || panelType === 'parameter' || panelType === 'structuredOutput' || panelType === 'preview') {
-      const agent = agentId ? agents.get(agentId) : null;
+      const agent = agentId ? agentsRef.current.get(agentId) : null;
       title = getPanelTitle(panelType, agent?.props.name);
       agentColor = agent ? getAgentHexColor(agent) : undefined;
       agentInactive = agent && flow ? getAgentState(agent, flow) : undefined;
@@ -494,7 +499,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     if (newPanel) {
       debouncedSaveLayout(dockviewApi);
     }
-  }, [dockviewApi, flowId, agents, debouncedSaveLayout]);
+  }, [dockviewApi, flowId, debouncedSaveLayout]); // Removed agents dependency to prevent re-renders
 
   // Initialize dockview when flowId changes (not flow object)
   useEffect(() => {
