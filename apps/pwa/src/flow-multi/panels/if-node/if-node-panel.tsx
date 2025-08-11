@@ -14,7 +14,7 @@ import {
   isUnaryOperator,
   isValidOperatorForDataType
 } from '@/flow-multi/types/condition-types';
-import { OperatorDropdown } from '@/flow-multi/components/operator-dropdown';
+import { OperatorCombobox } from '@/flow-multi/components/operator-combobox';
 
 interface IfNodePanelProps {
   flowId: string;
@@ -203,7 +203,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
   return (
     <div className="h-full flex flex-col bg-background-surface-2">
-      <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-8">
+      <div className="flex-1 p-4 pr-2 inline-flex flex-col justify-start items-start gap-8">
         {/* Header with Logic Operator and Add Button */}
         <div className="self-stretch inline-flex justify-between items-center">
           <div className="w-28 inline-flex flex-col justify-start items-start gap-1">
@@ -227,7 +227,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
         </div>
 
         {/* Conditions List */}
-        <ScrollAreaSimple className="self-stretch flex-1">
+        <ScrollAreaSimple className="self-stretch flex-1" style={{ scrollbarGutter: 'stable' }}>
           <div className="self-stretch flex flex-col justify-start items-start gap-3">
             {conditions.map((condition, index) => (
                 <div key={condition.id} className="self-stretch flex flex-col gap-3">
@@ -252,9 +252,9 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                             className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                           />
                         </div>
-                        {/* Nested Operator Dropdown */}
-                        <div className="w-52 inline-flex flex-col justify-start items-start gap-1">
-                          <OperatorDropdown
+                        {/* Unified Operator Combobox */}
+                        <div className="w-[148px] inline-flex flex-col justify-start items-start gap-1">
+                          <OperatorCombobox
                             value={{
                               dataType: condition.dataType,
                               operator: condition.operator

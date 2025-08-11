@@ -2,17 +2,27 @@
 
 ## 1. Node Selection Menu Update
 **File:** `apps/pwa/src/flow-multi/components/node-selection-menu.tsx`
-- [ ] Update the node selection menu component to improve UI/UX
-- [ ] Apply the updated menu on the + node button in the flow panel
-- [ ] Ensure consistent styling with floating and dropdown variants
-- [ ] Test both variants work correctly with the new design
+- [x] Update the node selection menu component to improve UI/UX
+- [x] Apply the updated menu on the + node button in the flow panel
+- [x] Ensure consistent styling with floating and dropdown variants
+- [x] Test both variants work correctly with the new design
+**Status:** ✅ COMPLETED
+- Implemented unified design for both dropdown and floating variants
+- Set fixed dimensions: width 117px, button height 31px
+- Added slide-in-from-left animation for floating variant
+- Applied to + Nodes button with center alignment
 
 ## 2. Operator Type Selection Component Update
-**File:** `apps/pwa/src/flow-multi/components/operator-dropdown.tsx`
-- [ ] Review and update the operator dropdown component design
-- [ ] Ensure the nested dropdown behavior is smooth
-- [ ] Update styling to match the latest design requirements
-- [ ] Test all data types (String, Number, Integer, Boolean) work correctly
+**File:** `apps/pwa/src/flow-multi/components/operator-combobox.tsx`
+- [x] Create unified operator combobox component combining data type and operator selection
+- [x] Implement proper icons for each data type (CaseUpper for String, Hash for Number, Integer icon, ToggleRight for Boolean)
+- [x] Update styling to match compact design specifications
+- [x] Apply to if-node-panel with appropriate width
+**Status:** ✅ COMPLETED
+- Created new operator-combobox.tsx with unified dropdown design
+- Used proper Lucide React icons for data types
+- Implemented expandable sections for operators under each data type
+- Applied compact styling with text truncation for long operator names
 
 ## 3. Node Traversal Enhancement
 **Context:** Node traversal logic needs to include if and data store nodes
