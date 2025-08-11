@@ -1368,16 +1368,23 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               </ButtonPill>
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={addAgentNode}>
-              <span>Agent node</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={addDataStoreNode}>
-              <span>Data store node</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={addIfNode}>
-              <span>If node</span>
-            </DropdownMenuItem>
+          <DropdownMenuContent align="center" className="min-w-[117px] w-[117px] p-0 rounded-lg overflow-hidden">
+            <NodeSelectionMenuItems
+              onSelectNodeType={(type) => {
+                switch (type) {
+                  case "agent":
+                    addAgentNode();
+                    break;
+                  case "dataStore":
+                    addDataStoreNode();
+                    break;
+                  case "if":
+                    addIfNode();
+                    break;
+                }
+              }}
+              variant="dropdown"
+            />
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
