@@ -8,6 +8,7 @@ import {
   PanelStructure,
   FlowViewport,
   ReadyState,
+  DataStoreSchema,
 } from "@/modules/flow/domain/flow";
 import type { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
 
@@ -18,6 +19,7 @@ export const flows = pgTable(TableName.Flows, {
   nodes: jsonb().$type<Node[]>().notNull(),
   edges: jsonb().$type<Edge[]>().notNull(),
   response_template: text().notNull(),
+  data_store_schema: jsonb().$type<DataStoreSchema>(),
   panel_structure: jsonb().$type<PanelStructure>(),
   viewport: jsonb().$type<FlowViewport>(),
   ready_state: varchar().$type<ReadyState>().notNull().default(ReadyState.Draft),

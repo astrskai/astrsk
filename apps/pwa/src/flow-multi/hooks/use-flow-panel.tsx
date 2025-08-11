@@ -116,8 +116,6 @@ export function useFlowPanel({
       return;
     }
 
-    // Invalidate agent queries to refresh UI
-    await invalidateAllAgentQueries();
     
     // Reset flow state when agent changes
     // If it was in Error state, keep it in Error state

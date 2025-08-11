@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { FlowService } from "@/app/services/flow-service";
 import { AgentService } from "@/app/services/agent-service";
@@ -10,7 +10,7 @@ import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-q
 import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { BookOpen, Pencil, Check, X, Loader2, Shield, HelpCircle } from "lucide-react";
+import { BookOpen, Pencil, Check, X, Loader2, Shield, HelpCircle, Plus } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
@@ -23,6 +23,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components-v2/ui/dropdown-menu";
+import { Button } from "@/components-v2/ui/button";
 
 // Import ReactFlow components
 import {
@@ -39,6 +46,8 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
+import { NodeSelectionMenu, NodeSelectionMenuItems } from "@/flow-multi/components/node-selection-menu";
+import { createNodeWithConnection } from "./flow-panel-connection-handlers";
 import {
   edgeTypes,
   type CustomEdgeType,
@@ -62,20 +71,29 @@ const proOptions = { hideAttribution: true };
 function filterExistingConnections(
   edges: CustomEdgeType[],
   sourceNode: CustomNodeType | undefined,
-  targetNode: CustomNodeType | undefined,
-  connection: { source?: string | null; target?: string | null }
+  targetNode: CustomNodeType | undefined, // Kept for backwards compatibility but not used
+  connection: { source?: string | null; target?: string | null; sourceHandle?: string | null }
 ): CustomEdgeType[] {
   let filteredEdges = [...edges];
   
   // Remove existing outgoing connections based on source node type
-  if ((sourceNode?.type === 'start' || sourceNode?.type === 'agent') && connection.source) {
-    filteredEdges = filteredEdges.filter(edge => edge.source !== connection.source);
+  // Output handles can only connect to one node (applies to all node types with source handles)
+  if (connection.source && sourceNode) {
+    // For all node types, remove existing edges from the same source handle
+    // This ensures each output can only connect to one input
+    filteredEdges = filteredEdges.filter(edge => {
+      // For If nodes with multiple source handles, check both source and sourceHandle
+      if (sourceNode.type === 'if' && edge.source === connection.source) {
+        // Only remove if it's from the same handle (true/false)
+        return edge.sourceHandle !== connection.sourceHandle;
+      }
+      // For other nodes, remove any edge from the same source
+      return edge.source !== connection.source;
+    });
   }
   
-  // Remove existing incoming connections based on target node type  
-  if ((targetNode?.type === 'agent' || targetNode?.type === 'end') && connection.target) {
-    filteredEdges = filteredEdges.filter(edge => edge.target !== connection.target);
-  }
+  // Input handles can now accept multiple connections - no filtering needed for targets
+  // Previously removed: filtering for agent and end node targets
   
   return filteredEdges;
 }
@@ -100,22 +118,32 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // 2. Refs
   const containerRef = useRef<HTMLDivElement>(null);
-  const connectionStartRef = useRef<{ nodeId: string; handleType: string } | null>(null);
+  const connectionStartRef = useRef<{ nodeId: string; handleType: string; startX: number; startY: number } | null>(null);
   const connectionMadeRef = useRef<boolean>(false);
   const viewportSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currentViewportRef = useRef<Viewport>({ x: 0, y: 0, zoom: 1 });
+  
+  // Node selection menu state
+  const [showNodeSelection, setShowNodeSelection] = useState(false);
+  const [nodeSelectionPosition, setNodeSelectionPosition] = useState({ x: 0, y: 0 });
+  const pendingConnectionRef = useRef<{ sourceNodeId: string; sourceHandleId?: string; position: { x: number; y: number } } | null>(null);
   const lastSyncedFlowIdRef = useRef<string | null>(null);
   const isLocalChangeRef = useRef<boolean>(false);
   const lastExternalDataHashRef = useRef<string | null>(null);
   const lastSavedDataHashRef = useRef<string | null>(null);
+  const nodesRef = useRef<CustomNodeType[]>([]);
+  const edgesRef = useRef<CustomEdgeType[]>([]);
+  const skipNextSyncRef = useRef<boolean>(false);
 
   // 3. Context hooks
-  const { openPanel, closePanel, isPanelOpen } = useFlowPanelContext();
+  const { openPanel, closePanel, isPanelOpen, registerFlowActions } = useFlowPanelContext();
   const { isExpanded, isMobile } = useLeftNavigationWidth();
   const queryClient = useQueryClient();
 
   // 4. React Query hooks - using global queryClient settings
+  const flowUniqueId = useMemo(() => flowId ? new UniqueEntityID(flowId) : undefined, [flowId]);
   const { data: flow } = useQuery({
-    ...flowQueries.detail(flowId ? new UniqueEntityID(flowId) : undefined),
+    ...flowQueries.detail(flowUniqueId),
   });
 
   // Handle flow title editing
@@ -185,9 +213,16 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     if (!flow) return;
 
     try {
+      // Filter out invalid edges before saving
+      const nodeIds = new Set(updatedNodes.map(n => n.id));
+      const validEdges = updatedEdges.filter(edge => {
+        return edge.source && edge.target && 
+               nodeIds.has(edge.source) && nodeIds.has(edge.target);
+      });
+      
       const updatedFlow = flow.update({
         nodes: updatedNodes as any,
-        edges: updatedEdges as any,
+        edges: validEdges as any,
       });
 
       if (updatedFlow.isFailure) {
@@ -209,6 +244,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       const savedEdges = (savedFlowResult.getValue().props.edges as CustomEdgeType[]) || [];
       lastSavedDataHashRef.current = createDataHash(savedNodes, savedEdges);
       
+      // Skip the next sync since we just saved and the flow object will update
+      skipNextSyncRef.current = true;
+      
       // Check if our local changes match what we just saved
       const currentLocalHash = createDataHash(updatedNodes, updatedEdges);
       if (currentLocalHash === lastSavedDataHashRef.current) {
@@ -218,22 +256,22 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       
       // Only invalidate queries for structural changes (agent creation/deletion, connections)
       // Don't invalidate for simple position updates to avoid unnecessary re-renders
-      if (isStructuralChange) {
-        // Invalidate the specific flow queries to update agent nodes
-        await queryClient.invalidateQueries({
-          queryKey: flowQueries.detail(savedFlowResult.getValue().id).queryKey
-        });
+      // if (isStructuralChange) {
+      //   // Invalidate the specific flow   queries to update agent nodes
+      //   await queryClient.invalidateQueries({
+      //     queryKey: flowQueries.detail(savedFlowResult.getValue().id).queryKey
+      //   });
         
-        // Also invalidate all flow queries to ensure everything is refreshed
-        await queryClient.invalidateQueries({
-          queryKey: flowQueries.all(),
-          exact: false
-        });
-      }
+      //   // Also invalidate all flow queries to ensure everything is refreshed
+      //   await queryClient.invalidateQueries({
+      //     queryKey: flowQueries.all(),
+      //     exact: false
+      //   });
+      // }
     } catch (error) {
       console.log(error);
     }
-  }, [flow, queryClient]);
+  }, [flowId, queryClient]);
 
   // Save viewport state to flow
   const saveViewportState = useCallback(async (newViewport: Viewport) => {
@@ -268,10 +306,13 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     } catch (error) {
       console.error('Failed to save viewport:', error);
     }
-  }, [flow]);
+  }, [flowId]);
 
   // Handle viewport changes with debouncing
   const onViewportChange = useCallback((newViewport: Viewport) => {
+    // Store current viewport for node positioning
+    currentViewportRef.current = newViewport;
+    
     // Clear existing timeout
     if (viewportSaveTimeoutRef.current) {
       clearTimeout(viewportSaveTimeoutRef.current);
@@ -285,16 +326,59 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
 
   // 6. All useEffects grouped here
+  // Keep refs updated with current nodes and edges - do this directly, no useEffect needed
+  nodesRef.current = nodes;
+  edgesRef.current = edges;
+
+  // Track when flow data changes and trigger sync
+  const [syncTrigger, setSyncTrigger] = useState(0);
+  
+  // Monitor flow changes and trigger sync when needed
+  useEffect(() => {
+    if (!flow) return;
+    
+    const externalNodes = (flow.props.nodes as CustomNodeType[]) || [];
+    const externalEdges = (flow.props.edges as CustomEdgeType[]) || [];
+    const newHash = createDataHash(externalNodes, externalEdges);
+    
+    
+    // Only trigger sync if data actually changed
+    if (newHash !== lastExternalDataHashRef.current && !skipNextSyncRef.current) {
+      setSyncTrigger(prev => prev + 1);
+      lastExternalDataHashRef.current = newHash;
+    }
+  }, [flow]); // Added back flow dependency to detect flow changes
+
   // Effect 1: Smart sync - only sync when there are actual external changes
   useEffect(() => {
     if (!flow) return;
+    
+    // Skip sync if we just saved and are waiting for the query to update
+    if (skipNextSyncRef.current) {
+      skipNextSyncRef.current = false;
+      return;
+    }
     
     const flowIdStr = flow.id.toString();
     const isDifferentFlow = lastSyncedFlowIdRef.current !== flowIdStr;
     
     // Get external data
     const externalNodes = (flow.props.nodes as CustomNodeType[]) || [];
-    const externalEdges = (flow.props.edges as CustomEdgeType[]) || [];
+    // Filter out invalid edges (edges with both source and target must exist in nodes)
+    const rawExternalEdges = (flow.props.edges as CustomEdgeType[]) || [];
+    const nodeIds = new Set(externalNodes.map(n => n.id));
+    
+    const externalEdges = rawExternalEdges.filter(edge => {
+      // Edge must have valid source and target that exist in nodes
+      const isValid = edge.source && edge.target && 
+                     nodeIds.has(edge.source) && nodeIds.has(edge.target);
+      
+      if (!isValid && edge.source && edge.target) {
+        console.warn(`Filtering out orphaned edge: ${edge.source} -> ${edge.target}`);
+      }
+      
+      return isValid;
+    });
     const currentDataHash = createDataHash(externalNodes, externalEdges);
     
     // Check if external data actually changed (ignoring positions)
@@ -310,9 +394,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       isLocalChangeRef.current = false;
       // Initialize saved data hash for new flow
       lastSavedDataHashRef.current = currentDataHash;
-    } else if (isLocalChangeRef.current && nodes.length > 0) {
+    } else if (isLocalChangeRef.current && nodesRef.current.length > 0) {
       // We have local changes - check if they're already saved
-      const currentLocalHash = createDataHash(nodes, edges);
+      const currentLocalHash = createDataHash(nodesRef.current, edgesRef.current);
       
       if (currentLocalHash === lastSavedDataHashRef.current) {
         // Local changes match saved state, we can safely sync
@@ -321,7 +405,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         setEdges(externalEdges);
       } else {
         // We have unsaved local changes - preserve positions
-        const localPositions = new Map(nodes.map(n => [n.id, n.position]));
+        const localPositions = new Map(nodesRef.current.map(n => [n.id, n.position]));
         
         const mergedNodes = externalNodes.map(extNode => {
           const localPos = localPositions.get(extNode.id);
@@ -342,7 +426,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     }
     
     lastExternalDataHashRef.current = currentDataHash;
-  }, [flow, nodes, setNodes, setEdges]);
+  }, [flowId, syncTrigger]); // Added flowId and syncTrigger dependencies
 
 
   // Effect 2: Container ready check
@@ -436,6 +520,194 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     }
   }, [flow, nodes, edges, setNodes, saveFlowChanges]);
 
+  // Add node functions
+  const addDataStoreNode = useCallback(async () => {
+    if (!flow) return;
+
+    // Calculate position at viewport center
+    // Node dimensions (approximate): width 320px, height 140px
+    const nodeWidth = 320;
+    const nodeHeight = 140;
+    
+    const viewport = currentViewportRef.current;
+    const viewportCenter = {
+      x: ((-viewport.x + window.innerWidth / 2) / viewport.zoom) - (nodeWidth / 2),
+      y: ((-viewport.y + window.innerHeight / 2) / viewport.zoom) - (nodeHeight / 2)
+    };
+    
+    const newPosition = viewportCenter;
+
+    // Get next available color
+    const nextColor = await getNextAvailableColor(flow);
+
+    // Create new Data Store node
+    const newNode: CustomNodeType = {
+      id: `datastore-${Date.now()}`,
+      type: "dataStore",
+      position: newPosition,
+      data: {
+        label: "New Data Store",
+        color: nextColor,
+      },
+    };
+
+    // Update nodes
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
+    
+    // Mark as local change and save
+    isLocalChangeRef.current = true;
+    setTimeout(() => {
+      saveFlowChanges(updatedNodes, edges, true);
+    }, 0);
+
+    toast.success("Data Store node added");
+  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+
+  const addIfNode = useCallback(async () => {
+    if (!flow) return;
+
+    // Calculate position at viewport center
+    // Node dimensions (approximate): width 320px, height 140px
+    const nodeWidth = 320;
+    const nodeHeight = 140;
+    
+    const viewport = currentViewportRef.current;
+    const viewportCenter = {
+      x: ((-viewport.x + window.innerWidth / 2) / viewport.zoom) - (nodeWidth / 2),
+      y: ((-viewport.y + window.innerHeight / 2) / viewport.zoom) - (nodeHeight / 2)
+    };
+    
+    const newPosition = viewportCenter;
+
+    // Get next available color
+    const nextColor = await getNextAvailableColor(flow);
+
+    // Create new If node
+    const newNode: CustomNodeType = {
+      id: `if-${Date.now()}`,
+      type: "if",
+      position: newPosition,
+      data: {
+        label: "New If",
+        logicOperator: 'AND',
+        conditions: [],
+        color: nextColor
+      },
+    };
+
+    // Update nodes
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
+    
+    // Mark as local change and save
+    isLocalChangeRef.current = true;
+    setTimeout(() => {
+      saveFlowChanges(updatedNodes, edges, true);
+    }, 0);
+
+    toast.success("If node added");
+  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+
+  const addAgentNode = useCallback(async () => {
+    if (!flow) return;
+
+    try {
+      // Generate unique agent name using existing logic
+      const generateUniqueAgentName = async (baseName: string = "New Agent"): Promise<string> => {
+        const existingNames = new Set<string>();
+        
+        // Collect existing agent names from current flow
+        if (flow?.agentIds) {
+          for (const agentId of flow.agentIds) {
+            const agentOrError = await AgentService.getAgent.execute(agentId);
+            if (agentOrError.isFailure) {
+              throw new Error(agentOrError.getError());
+            }
+            const agent = agentOrError.getValue();
+            if (agent.props.name) {
+              existingNames.add(agent.props.name);
+            }
+          }
+        }
+        
+        // If base name is available, use it
+        if (!existingNames.has(baseName)) {
+          return baseName;
+        }
+        
+        // Otherwise, find the next available number
+        let counter = 1;
+        let candidateName: string;
+        do {
+          candidateName = `${baseName} ${counter}`;
+          counter++;
+        } while (existingNames.has(candidateName));
+        
+        return candidateName;
+      };
+
+      // Create a new agent with unique name and color (using same pattern as drag-to-create)
+      const uniqueName = await generateUniqueAgentName();
+      const nextColor = await getNextAvailableColor(flow);
+      
+      const newAgent = Agent.create({
+        name: uniqueName,
+        targetApiType: ApiType.Chat,
+        color: nextColor,
+      }).getValue();
+
+      // Save the new agent
+      const savedAgentResult = await AgentService.saveAgent.execute(newAgent);
+      if (savedAgentResult.isFailure) {
+        throw new Error(savedAgentResult.getError());
+      }
+      const savedAgent = savedAgentResult.getValue();
+
+      // Calculate position at viewport center
+      // Node dimensions (approximate): width 320px, height 140px
+      const nodeWidth = 320;
+      const nodeHeight = 140;
+      
+      const viewport = currentViewportRef.current;
+      const viewportCenter = {
+        x: ((-viewport.x + window.innerWidth / 2) / viewport.zoom) - (nodeWidth / 2),
+        y: ((-viewport.y + window.innerHeight / 2) / viewport.zoom) - (nodeHeight / 2)
+      };
+      
+      const newPosition = viewportCenter;
+
+      // Create new agent node
+      const newAgentNode: CustomNodeType = {
+        id: savedAgent.id.toString(),
+        type: "agent",
+        position: newPosition,
+        data: {
+          agentId: savedAgent.id.toString(),
+        },
+      };
+
+      // Update nodes
+      const updatedNodes = [...nodes, newAgentNode];
+      setNodes(updatedNodes);
+      
+      // Mark as local change and save
+      isLocalChangeRef.current = true;
+      setTimeout(() => {
+        saveFlowChanges(updatedNodes, edges);
+      }, 0);
+
+      // Invalidate agent queries for color updates
+      invalidateAllAgentQueries();
+      
+      toast.success("Agent node added");
+    } catch (error) {
+      toast.error("Failed to create agent", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+
   // Delete agent handler
   const deleteAgent = useCallback(async (agentId: string) => {
     if (!flow) return;
@@ -471,13 +743,13 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       
       // Save the flow changes
       setTimeout(() => {
-        saveFlowChanges(updatedNodes, updatedEdges, true);
+        saveFlowChanges(updatedNodes, updatedEdges);
       }, 0);
       
       // Invalidate flow queries
-      await queryClient.invalidateQueries({
-        queryKey: flowQueries.detail(flow.id).queryKey
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: flowQueries.detail(flow.id).queryKey
+      // });
       
     } catch (error) {
       toast.error("Failed to delete agent", {
@@ -486,17 +758,191 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     }
   }, [flow, nodes, edges, setNodes, setEdges, saveFlowChanges]);
 
-  // Effect 3: Register flow panel methods for agent nodes
+  // Copy non-agent node handler
+  const copyNode = useCallback(async (nodeId: string) => {
+    if (!flow) return;
+    
+    try {
+      // Find the node to copy
+      const nodeToCopy = nodes.find(n => n.id === nodeId);
+      if (!nodeToCopy) {
+        toast.error("Node not found");
+        return;
+      }
+
+      // Calculate position for copied node (below and to the right of original)
+      const newPosition = {
+        x: nodeToCopy.position.x + 100,
+        y: nodeToCopy.position.y + 200
+      };
+
+      // Get next available color
+      const nextColor = await getNextAvailableColor(flow);
+
+      // Create new node with unique ID, copied data, and new color
+      // Need to handle different node types appropriately
+      let newNodeData: any = { ...nodeToCopy.data };
+      
+      // Only add color to nodes that support it (if and dataStore)
+      if (nodeToCopy.type === 'if' || nodeToCopy.type === 'dataStore') {
+        newNodeData.color = nextColor;
+      }
+      
+      const newNode: CustomNodeType = {
+        ...nodeToCopy,
+        id: `${nodeToCopy.type}-${Date.now()}`,
+        position: newPosition,
+        data: newNodeData
+      };
+
+      // Update nodes
+      const updatedNodes = [...nodes, newNode];
+      setNodes(updatedNodes);
+      
+      // Mark as local change and save
+      isLocalChangeRef.current = true;
+      setTimeout(() => {
+        saveFlowChanges(updatedNodes, edges, true);
+      }, 0);
+
+      toast.success(`${nodeToCopy.type === 'if' ? 'If' : 'Data Store'} node copied`);
+    } catch (error) {
+      toast.error("Failed to copy node", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+
+  // Delete non-agent node handler
+  const deleteNode = useCallback((nodeId: string) => {
+    if (!flow) return;
+    
+    try {
+      // Find the node to delete
+      const nodeToDelete = nodes.find(n => n.id === nodeId);
+      if (!nodeToDelete) {
+        toast.error("Node not found");
+        return;
+      }
+
+      // Don't allow deletion of start or end nodes
+      if (nodeToDelete.type === 'start' || nodeToDelete.type === 'end') {
+        toast.error(`Cannot delete ${nodeToDelete.type} node`);
+        return;
+      }
+
+      // Remove the node from nodes
+      const updatedNodes = nodes.filter(n => n.id !== nodeId);
+      
+      // Remove all edges connected to this node
+      const updatedEdges = edges.filter(e => 
+        e.source !== nodeId && e.target !== nodeId
+      );
+      
+      // Update local state immediately
+      setNodes(updatedNodes);
+      setEdges(updatedEdges);
+      
+      // Mark as local change
+      isLocalChangeRef.current = true;
+      
+      // Save the flow changes
+      setTimeout(() => {
+        saveFlowChanges(updatedNodes, updatedEdges);
+      }, 0);
+
+      toast.success(`${nodeToDelete.type === 'if' ? 'If' : 'Data Store'} node deleted`);
+    } catch (error) {
+      toast.error("Failed to delete node", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, [flow, nodes, edges, setNodes, setEdges, saveFlowChanges]);
+
+  // Handle click on node handle to show node creation menu
+  const handleHandleClick = useCallback((nodeId: string, handleType: string) => {
+    // Only handle source handles
+    if (handleType !== 'source') return;
+    
+    const sourceNode = nodes.find(n => n.id === nodeId);
+    if (!sourceNode) return;
+
+    // Find the node element in the DOM
+    const nodeElement = document.querySelector(`[data-id="${nodeId}"]`);
+    if (!nodeElement) return;
+
+    // Get the bounding rect of the node
+    const nodeRect = nodeElement.getBoundingClientRect();
+    const canvasRect = document.querySelector('.react-flow')?.getBoundingClientRect();
+    
+    if (!canvasRect) return;
+    
+    // Calculate position for menu (to the right of the node)
+    const menuOffset = 10;
+    const menuX = nodeRect.right - canvasRect.left + menuOffset;
+    const menuY = nodeRect.top + (nodeRect.height / 2) - canvasRect.top;
+    
+    // Set menu position
+    setNodeSelectionPosition({
+      x: menuX,
+      y: menuY
+    });
+
+    // Store pending connection info
+    pendingConnectionRef.current = {
+      sourceNodeId: nodeId,
+      position: {
+        x: sourceNode.position.x + 400,
+        y: sourceNode.position.y
+      }
+    };
+
+    // Show the node selection menu
+    setShowNodeSelection(true);
+  }, [nodes]);
+
+  // Effect 3: Register flow panel methods for all nodes - use ref to avoid re-renders
+  const methodsRef = useRef<{
+    copyAgent: typeof copyAgent;
+    deleteAgent: typeof deleteAgent;
+    copyNode: typeof copyNode;
+    deleteNode: typeof deleteNode;
+    handleHandleClick: typeof handleHandleClick;
+  }>();
+  
+  methodsRef.current = {
+    copyAgent,
+    deleteAgent,
+    copyNode,
+    deleteNode,
+    handleHandleClick
+  };
+  
   useEffect(() => {
-    // Register methods so agent nodes can trigger operations
-    (window as any).flowPanelCopyAgent = copyAgent;
-    (window as any).flowPanelDeleteAgent = deleteAgent;
+    // Register methods so nodes can trigger operations
+    (window as any).flowPanelCopyAgent = (agentId: string) => methodsRef.current?.copyAgent(agentId);
+    (window as any).flowPanelDeleteAgent = (agentId: string) => methodsRef.current?.deleteAgent(agentId);
+    (window as any).flowPanelCopyNode = (nodeId: string) => methodsRef.current?.copyNode(nodeId);
+    (window as any).flowPanelDeleteNode = (nodeId: string) => methodsRef.current?.deleteNode(nodeId);
+    (window as any).flowPanelHandleClick = (nodeId: string, handleType: string) => 
+      methodsRef.current?.handleHandleClick(nodeId, handleType);
     
     return () => {
       delete (window as any).flowPanelCopyAgent;
       delete (window as any).flowPanelDeleteAgent;
+      delete (window as any).flowPanelCopyNode;
+      delete (window as any).flowPanelDeleteNode;
+      delete (window as any).flowPanelHandleClick;
     };
-  }, [copyAgent, deleteAgent]);
+  }, []); // No dependencies - register once
+
+  // Effect 4: Register flow actions with context for use in other panels
+  useEffect(() => {
+    registerFlowActions({
+      addDataStoreNode,
+      addIfNode,
+    });
+  }, [registerFlowActions]); // Removed addDataStoreNode and addIfNode - they cause infinite loop
 
   const onConnect: OnConnect = useCallback(
     (connection) => {
@@ -526,145 +972,166 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   );
 
   // Handle connection start
-  const onConnectStart: OnConnectStart = useCallback((_event, { nodeId, handleType }) => {
-    connectionStartRef.current = { nodeId: nodeId || '', handleType: handleType || '' };
+  const onConnectStart: OnConnectStart = useCallback((event, { nodeId, handleType }) => {
+    const mouseEvent = event as MouseEvent;
+    connectionStartRef.current = { 
+      nodeId: nodeId || '', 
+      handleType: handleType || '',
+      startX: mouseEvent.clientX,
+      startY: mouseEvent.clientY
+    };
     connectionMadeRef.current = false; // Reset connection flag
   }, []);
 
-  // Handle connection end - create agent if no connection was made from source handle
-  const onConnectEnd: OnConnectEnd = useCallback(async (event) => {
+  // Create node with specific type
+  const handleNodeTypeSelection = useCallback(async (nodeType: "agent" | "dataStore" | "if") => {
+    if (pendingConnectionRef.current && flow) {
+      const result = await createNodeWithConnection(
+        nodeType,
+        pendingConnectionRef.current.sourceNodeId,
+        pendingConnectionRef.current.position,
+        flow,
+        nodes,
+        edges,
+        filterExistingConnections
+      );
+      
+      if (result) {
+        setNodes(result.updatedNodes);
+        setEdges(result.updatedEdges);
+        isLocalChangeRef.current = true;
+        
+        setTimeout(() => {
+          saveFlowChanges(result.updatedNodes, result.updatedEdges, true);
+        }, 0);
+        
+        toast.success(`${nodeType === "agent" ? "Agent" : nodeType === "dataStore" ? "Data Store" : "If"} node created`);
+      }
+    }
+    setShowNodeSelection(false);
+    pendingConnectionRef.current = null;
+  }, [flow, nodes, edges, setNodes, setEdges, saveFlowChanges, filterExistingConnections]);
+
+  // Handle connection end - show menu for short drags or handle clicks
+  const onConnectEnd: OnConnectEnd = useCallback((event) => {
     const connectionStart = connectionStartRef.current;
+    const mouseEvent = event as MouseEvent;
     
-    // Only create new agents when dragging from source handles, not target/input handles
-    if (connectionStart && connectionStart.handleType === 'source') {
+    // If connectionStart is null, it means onConnectStart was never called (pure click without drag)
+    // In this case, we need to detect if we clicked on a handle
+    if (!connectionStart) {
+      // Check if the click target is a handle (source type)
+      const target = mouseEvent.target as HTMLElement;
+      const handleElement = target.closest('.react-flow__handle-right');
+      
+      if (handleElement) {
+        // Get the node ID from the handle's parent node
+        const nodeElement = handleElement.closest('[data-id]') as HTMLElement;
+        if (nodeElement) {
+          const nodeId = nodeElement.getAttribute('data-id');
+          const sourceNode = nodes.find(n => n.id === nodeId);
+          
+          if (sourceNode && flow) {
+            // This was a click on a source handle without drag
+            const canvasRect = (event.target as HTMLElement).closest('.react-flow')?.getBoundingClientRect();
+            if (canvasRect) {
+              const nodeRect = nodeElement.getBoundingClientRect();
+              
+              // Position menu to the right of the node with small offset
+              const menuOffset = 10;
+              const menuX = nodeRect.right - canvasRect.left + menuOffset;
+              const menuY = nodeRect.top + (nodeRect.height / 2) - canvasRect.top;
+              
+              // Set menu position
+              setNodeSelectionPosition({
+                x: menuX,
+                y: menuY
+              });
+              
+              // Store pending connection info
+              pendingConnectionRef.current = {
+                sourceNodeId: nodeId!,
+                position: {
+                  x: sourceNode.position.x + 400,
+                  y: sourceNode.position.y
+                }
+              };
+              
+              setShowNodeSelection(true);
+            }
+          }
+        }
+      }
+      
+      // Reset and return early
+      connectionStartRef.current = null;
+      return;
+    }
+    
+    // Original logic for when drag was initiated (onConnectStart was called)
+    // Only show menu when dragging from source handles
+    if (connectionStart.handleType === 'source') {
       
       // Wait a moment for ReactFlow to process any connection that might have been made
-      setTimeout(async () => {
+      setTimeout(() => {
         // Check if a connection was actually made using our ref flag
         if (connectionMadeRef.current) {
-          return; // Exit early, don't create agent
+          return; // Exit early, connection was made
         }
         
         // Get the mouse position from the event
-        const mouseEvent = event as MouseEvent;
         const canvasRect = (event.target as HTMLElement).closest('.react-flow')?.getBoundingClientRect();
         
         if (canvasRect && flow) {
-          // Convert screen coordinates to flow coordinates
-          const flowX = mouseEvent.clientX - canvasRect.left;
-          const flowY = mouseEvent.clientY - canvasRect.top;
-          
-          try {
-            // Generate unique agent name
-            const generateUniqueAgentName = async (baseName: string = "New Agent"): Promise<string> => {
-              const existingNames = new Set<string>();
-              
-              // Collect existing agent names from current flow
-              if (flow?.agentIds) {
-                for (const agentId of flow.agentIds) {
-                  const agentOrError = await AgentService.getAgent.execute(agentId);
-                  if (agentOrError.isFailure) {
-                    throw new Error(agentOrError.getError());
-                  }
-                  const agent = agentOrError.getValue();
-                  if (agent.props.name) {
-                    existingNames.add(agent.props.name);
-                  }
-                }
-              }
-              
-              // If base name is available, use it
-              if (!existingNames.has(baseName)) {
-                return baseName;
-              }
-              
-              // Otherwise, find the next available number
-              let counter = 1;
-              let candidateName: string;
-              do {
-                candidateName = `${baseName} ${counter}`;
-                counter++;
-              } while (existingNames.has(candidateName));
-              
-              return candidateName;
-            };
+          // Calculate drag distance
+          const dragDistance = Math.sqrt(
+            Math.pow(mouseEvent.clientX - connectionStart.startX, 2) + 
+            Math.pow(mouseEvent.clientY - connectionStart.startY, 2)
+          );
 
-            // Create a new agent with unique name and color
-            const uniqueName = await generateUniqueAgentName();
-            const nextColor = await getNextAvailableColor(flow);
-            const newAgent = Agent.create({
-              name: uniqueName,
-              targetApiType: ApiType.Chat,
-              color: nextColor,
-            }).getValue();
+          // Define threshold for showing menu
+          const SHORT_DRAG_THRESHOLD = 50;
 
-            // Save the new agent
-            if (!AgentService.saveAgent || typeof AgentService.saveAgent.execute !== 'function') {
-              console.warn('⚠️ AgentService.saveAgent not initialized yet');
-              throw new Error('AgentService not initialized');
-            }
-            const savedAgentResult = await AgentService.saveAgent.execute(newAgent);
-            if (savedAgentResult.isFailure) {
-              throw new Error(savedAgentResult.getError());
-            }
-            const savedAgent = savedAgentResult.getValue();
-
+          // Show menu if it was a click (no drag) or short drag on the handle
+          // A click is when you press and release without moving (distance ~0)
+          if (dragDistance <= SHORT_DRAG_THRESHOLD) {
+            // Get source node
             const sourceNode = nodes.find(n => n.id === connectionStart.nodeId);
-            const sourceNodePosition = sourceNode?.position || { x: flowX, y: flowY };
+            if (!sourceNode) return;
 
-            // Position the new node to the right and slightly below the source node
-            const newNodePosition = {
-              x: sourceNodePosition.x + 400, // 400px to the right
-              y: sourceNodePosition.y + 50,  // 50px down
+            // Find the node element in the DOM
+            const nodeElement = document.querySelector(`[data-id="${connectionStart.nodeId}"]`);
+            if (!nodeElement) return;
+
+            // Get the bounding rect of the node
+            const nodeRect = nodeElement.getBoundingClientRect();
+            const canvasRectAbs = canvasRect;
+            
+            // Position menu to the right of the node with small offset
+            const menuOffset = 10; // Small offset from the node
+            
+            // Calculate menu position relative to the canvas
+            const menuX = nodeRect.right - canvasRectAbs.left + menuOffset;
+            const menuY = nodeRect.top + (nodeRect.height / 2) - canvasRectAbs.top;
+
+            // Set menu position
+            setNodeSelectionPosition({
+              x: menuX,
+              y: menuY
+            });
+            
+            // Store pending connection info
+            pendingConnectionRef.current = {
+              sourceNodeId: connectionStart.nodeId,
+              position: {
+                x: sourceNode.position.x + 400, // Position new node further right
+                y: sourceNode.position.y
+              }
             };
-
-            // Create new agent node
-            const newAgentNode: CustomNodeType = {
-              id: savedAgent.id.toString(),
-              type: "agent",
-              position: newNodePosition,
-              data: {
-                agentId: savedAgent.id.toString(),
-              },
-            };
-
-            // Create edge connecting source agent to new agent
-            const newEdge: CustomEdgeType = {
-              id: `${connectionStart.nodeId}-${savedAgent.id}`,
-              source: connectionStart.nodeId,
-              target: savedAgent.id.toString(),
-            };
-
-            // Remove existing connections from source node (same logic as onConnect)
-            const filteredEdges = filterExistingConnections(
-              edges,
-              sourceNode,
-              undefined, // No target node in this case
-              { source: connectionStart.nodeId }
-            );
-
-            // Update local state immediately
-            const updatedNodes = [...nodes, newAgentNode];
-            const updatedEdges = [...filteredEdges, newEdge];
             
-            setNodes(updatedNodes);
-            setEdges(updatedEdges);
-            
-            // Mark as local change
-            isLocalChangeRef.current = true;
-            
-            // Save using the standard saveFlowChanges pattern
-            setTimeout(() => {
-              // Pass true for isSelectFlow since we're adding a new agent (structural change)
-              saveFlowChanges(updatedNodes, updatedEdges, true);
-            }, 0);
-            
-            // Invalidate agent queries for color updates
-            invalidateAllAgentQueries();
-          } catch (error) {
-            console.error("Error creating agent:", error);
-            toast.error("Failed to create new agent");
+            setShowNodeSelection(true);
           }
+          // If drag was too long, it was an intentional connection attempt, do nothing
         }
       }, 100); // End setTimeout
     }
@@ -861,24 +1328,58 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       {/* Variables and Validation buttons - positioned below header */}
       <div className="flex justify-start items-start gap-2">
         <ButtonPill
-          size="default"
-          icon={<BookOpen />}
-          active={isPanelOpen(PANEL_TYPES.VARIABLE)}
-          onClick={() => openPanel(PANEL_TYPES.VARIABLE)}
-          // onDoubleClick={handleCloseVariablesPanel}
-          title="Open Variables Panel"
-        >
-          Variables
-        </ButtonPill>
+            size="default"
+            icon={<BookOpen />}
+            active={isPanelOpen(PANEL_TYPES.VARIABLE)}
+            onClick={() => openPanel(PANEL_TYPES.VARIABLE)}
+            // onDoubleClick={handleCloseVariablesPanel}
+            title="Open Variables Panel"
+          >
+            Variables
+          </ButtonPill>
+          <ButtonPill
+            size="default"
+            icon={<Shield />}
+            active={isPanelOpen(PANEL_TYPES.VALIDATION)}
+            onClick={() => openPanel(PANEL_TYPES.VALIDATION)}
+            title="Open Validation Panel"
+          >
+            Validation
+          </ButtonPill>
         <ButtonPill
           size="default"
-          icon={<Shield />}
-          active={isPanelOpen(PANEL_TYPES.VALIDATION)}
-          onClick={() => openPanel(PANEL_TYPES.VALIDATION)}
-          title="Open Validation Panel"
+          active={isPanelOpen(PANEL_TYPES.DATA_STORE_SCHEMA)}
+          onClick={() => openPanel(PANEL_TYPES.DATA_STORE_SCHEMA)}
+          title="Open Data Store Schema Panel"
         >
-          Validation
+          Data Store Schema
         </ButtonPill>
+        
+        {/* Nodes dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div>
+              <ButtonPill
+                size="default"
+                icon={<Plus />}
+                title="Add Node"
+              >
+                Nodes
+              </ButtonPill>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={addAgentNode}>
+              <span>Agent node</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={addDataStoreNode}>
+              <span>Data store node</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={addIfNode}>
+              <span>If node</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
     
@@ -925,6 +1426,16 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 <CustomReactFlowControls />
               </ReactFlow>
             </ReactFlowProvider>
+          )}
+          {showNodeSelection && (
+            <NodeSelectionMenu
+              position={nodeSelectionPosition}
+              onSelectNodeType={handleNodeTypeSelection}
+              onClose={() => {
+                setShowNodeSelection(false);
+                pendingConnectionRef.current = null;
+              }}
+            />
           )}
         </div>
       </Card>

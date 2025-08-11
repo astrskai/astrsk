@@ -1,8 +1,9 @@
 // Agent node component for flow-multi system
 // Displays agent information and provides panel access buttons
-import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
+import { type Node, type NodeProps } from "@xyflow/react";
 import { useCallback, useState, useEffect, useRef, useMemo } from "react";
-import { Copy, Trash2, Plus, AlertCircle } from "lucide-react";
+import { Copy, Trash2, AlertCircle } from "lucide-react";
+import { CustomHandle } from "@/flow-multi/components/custom-handle";
 import {
   Tooltip,
   TooltipContent,
@@ -58,12 +59,13 @@ export type AgentNodeData = {
 interface AgentNodeComponentProps {
   agent: Agent;
   flow: any;
+  nodeId: string;
 }
 
 /**
  * The main component for rendering an agent node in the flow
  */
-function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
+function AgentNodeComponent({ agent, flow, nodeId }: AgentNodeComponentProps) {
   // Get updateAgent from flow panel hook
   const { updateAgent } = useFlowPanel({ flowId: flow?.id?.toString() || '' });
   
@@ -776,7 +778,7 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
             {shouldShowValidation && !hasAgentName && (
               <AlertCircle className="min-w-4 min-h-4 text-status-destructive-light" />
             )}
-            <div className="justify-start"><span className="text-text-body text-xs font-medium">Agent</span><span className="text-status-required text-xs font-medium">*</span></div>
+            <div className="justify-start"><span className="text-text-body text-[10px] font-medium">Agent node</span><span className="text-status-required text-[10px] font-medium">*</span></div>
           </div>
           <Input
             value={editingName}
@@ -966,9 +968,9 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="ghost">Cancel</Button>
+              <Button variant="ghost" size="lg">Cancel</Button>
             </DialogClose>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button variant="destructive" size="lg" onClick={handleDelete}>
               Delete
             </Button>
           </DialogFooter>
@@ -976,33 +978,8 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
       </Dialog>
 
       {/* React Flow Handles */}
-      {/* Source handle with plus icon on node hover */}
-      <div className="group/handle">
-        <Handle 
-          position={Position.Right} 
-          type="source" 
-          className="!w-3 !h-3 !border-0 !bg-transparent group-hover/node:!w-6 group-hover/node:!h-6 transition-all duration-200"
-          title="Drag to connect to existing node or to empty space to create new agent"
-        />
-        {/* Default small handle */}
-        <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-3 h-3 p-[1.5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center group-hover/node:hidden pointer-events-none">
-          <div className="w-2 h-2 relative overflow-hidden">
-            <div className="w-1.5 h-1.5 left-[1px] top-[1px] absolute outline-[0.67px] outline-offset-[-0.33px] outline-text-primary"></div>
-          </div>
-        </div>
-        {/* Large handle on node hover with plus icon */}
-        <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-background-surface-3 rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 hidden group-hover/node:flex justify-center items-center pointer-events-none">
-          <Plus className="min-w-4 min-h-4 text-text-primary" />
-        </div>
-      </div>
-      
-      {/* Target handle - simple white handle */}
-      <Handle 
-        position={Position.Left} 
-        type="target" 
-        className="!w-3 !h-3 !bg-white !border-2 !border-gray-300"
-        title="Connect from previous node"
-      />
+      <CustomHandle variant="output" nodeId={nodeId} />
+      <CustomHandle variant="input" nodeId={nodeId} />
     </div>
   );
 }
@@ -1038,5 +1015,5 @@ export default function AgentNode({
   }
 
   // Pass the data prop to the component
-  return <AgentNodeComponent agent={agent} flow={selectedFlow} />;
+  return <AgentNodeComponent agent={agent} flow={selectedFlow} nodeId={id} />;
 }

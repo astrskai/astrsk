@@ -33,7 +33,9 @@ export type Edge = {
   id: string;
   source: string;
   target: string;
-  label?: string; // Optional label for visualization
+  sourceHandle?: string | null; // Handle ID on source node (e.g., "true"/"false" for if-nodes)
+  targetHandle?: string | null; // Handle ID on target node
+  label?: string; // Optional label for visualization (e.g., "True"/"False" for if-nodes)
 };
 
 export type PanelLayout = {
@@ -72,6 +74,30 @@ export type FlowViewport = {
   zoom: number;
 };
 
+// Data Store Schema types
+export type DataStoreFieldType = 'string' | 'number' | 'boolean' | 'integer';
+
+// Schema definition - defines the structure
+export interface DataStoreSchemaField {
+  id: string; // Will use UniqueEntityID().toString()
+  name: string;
+  type: DataStoreFieldType;
+  initialValue: string; // Store as string, parse based on type
+  description?: string;
+}
+
+// Runtime field - contains actual values and logic
+export interface DataStoreField {
+  schemaFieldId: string; // References DataStoreSchemaField.id
+  value: string; // Current value (stored as string)
+  logic?: string; // Optional logic/formula for computed fields
+}
+
+export interface DataStoreSchema {
+  fields: DataStoreSchemaField[];
+  version?: number; // For future migrations
+}
+
 export interface FlowProps {
   // Metadata
   name: string;
@@ -83,6 +109,9 @@ export interface FlowProps {
 
   // Response Design
   responseTemplate: string;
+
+  // Data Store Schema
+  dataStoreSchema?: DataStoreSchema;
 
   // Panel Layout
   panelStructure?: PanelStructure;
@@ -198,6 +227,8 @@ export class Flow extends AggregateRoot<FlowProps> {
         id: edge.id,
         source: edge.source,
         target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
         label: edge.label,
       })),
       responseTemplate: this.props.responseTemplate,
@@ -259,8 +290,11 @@ export class Flow extends AggregateRoot<FlowProps> {
           })(),
           edges:
             props.edges?.map((edge: any) => ({
-              ...edge,
-              condition: edge.condition,
+              id: edge.id,
+              source: edge.source,
+              target: edge.target,
+              sourceHandle: edge.sourceHandle || null,
+              targetHandle: edge.targetHandle || null,
               label: edge.label,
             })) || [],
           panelStructure: props.panelStructure,

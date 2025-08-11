@@ -18,9 +18,16 @@ interface FlowPanelContextType {
   api: DockviewApi | null;
   openPanel: (panelType: PanelType, agentId?: string) => void;
   closePanel: (panelId: string) => void;
-  invalidateFlowQueries: () => Promise<void>;
   isPanelOpen: (panelType: PanelType, agentId?: string) => boolean;
   updateAgentPanelStates: (agentId: string) => void;
+  updateNodePanelStates: (nodeId: string, nodeName: string) => void;
+  // Node creation functions
+  addDataStoreNode: () => void;
+  addIfNode: () => void;
+  registerFlowActions: (actions: {
+    addDataStoreNode: () => void;
+    addIfNode: () => void;
+  }) => void;
   // Monaco editor tracking for variable insertion (single source of truth)
   lastMonacoEditor: {
     agentId: string | null;
@@ -52,7 +59,6 @@ interface FlowPanelProviderProps {
   children: React.ReactNode;
   flowId: string;
   api: DockviewApi | null;
-  invalidateFlowQueries: () => Promise<void>;
   openPanel?: (panelType: PanelType, agentId?: string) => void;
 }
 
@@ -60,12 +66,28 @@ export function FlowPanelProvider({
   children,
   flowId,
   api,
-  invalidateFlowQueries,
   openPanel,
 }: FlowPanelProviderProps) {
   
   // Panel visibility state tracking to trigger re-renders
   const [panelVisibilityTrigger, setPanelVisibilityTrigger] = useState(0);
+  
+  // Store flow actions that will be registered by FlowPanel
+  const [flowActions, setFlowActions] = useState<{
+    addDataStoreNode: () => void;
+    addIfNode: () => void;
+  }>({
+    addDataStoreNode: () => console.warn('addDataStoreNode not yet registered'),
+    addIfNode: () => console.warn('addIfNode not yet registered'),
+  });
+  
+  // Function to register flow actions
+  const registerFlowActions = useCallback((actions: {
+    addDataStoreNode: () => void;
+    addIfNode: () => void;
+  }) => {
+    setFlowActions(actions);
+  }, []);
   
   // Fetch flow data to get agent information
   const { data: flow } = useQuery({
@@ -267,6 +289,52 @@ export function FlowPanelProvider({
     });
   }, [api, flow]);
 
+  // Function to update node panel states when node names change
+  const updateNodePanelStates = useCallback((nodeId: string, nodeName: string) => {
+    if (!api || !flow) return;
+    
+    // Get the node from flow to get its color
+    const node = flow.props.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    
+    const nodeData = node.data as any;
+    const nodeColor = nodeData?.color as string | undefined;
+    
+    // Find all panels for this node (could be ifNode, dataStore, or dataStoreSchema)
+    const allPanels = Object.values(api.panels);
+    const nodePanels = allPanels.filter((panel: IDockviewPanel) => {
+      // Check if panel is for this node
+      // Node panels can have nodeId or agentId as the parameter
+      return panel.params?.nodeId === nodeId || 
+             (panel.params?.agentId === nodeId && 
+              (panel.id.startsWith('ifNode') || 
+               panel.id.startsWith('dataStore')));
+    });
+    
+    // Update each panel's parameters
+    nodePanels.forEach((panel: IDockviewPanel) => {
+      // Get the panel type from the panel ID
+      const panelType = panel.id.split('-')[0] as PanelType;
+      const panelTitle = getPanelTitle(panelType, nodeName);
+      
+      const updatedParams = {
+        ...panel.params,
+        title: panelTitle,
+        ...(nodeColor && { agentColor: nodeColor })
+      };
+      
+      // Update the panel's parameters
+      if (panel.api && panel.api.updateParameters) {
+        panel.api.updateParameters(updatedParams);
+      }
+      
+      // Force a re-render by updating the panel params directly if possible
+      if ((panel as any).params) {
+        Object.assign((panel as any).params, updatedParams);
+      }
+    });
+  }, [api, flow]);
+
   // Provide a default implementation for openPanel when it's not provided as a prop
   const defaultOpenPanel = useCallback((_panelType: PanelType, _agentId?: string) => {
     console.warn('openPanel was called but no implementation was provided');
@@ -277,9 +345,12 @@ export function FlowPanelProvider({
     api,
     openPanel: openPanel || defaultOpenPanel,
     closePanel,
-    invalidateFlowQueries,
     isPanelOpen,
     updateAgentPanelStates,
+    updateNodePanelStates,
+    addDataStoreNode: flowActions.addDataStoreNode,
+    addIfNode: flowActions.addIfNode,
+    registerFlowActions,
     lastMonacoEditor,
     setLastMonacoEditor,
     insertVariableAtLastCursor,

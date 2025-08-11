@@ -62,5 +62,13 @@
     "bps": true,
     "folderMillis": 1754365797778,
     "hash": "ded584de8b0251c78e9c4ff46beadbc92eae366153c5371aac95fdfa75843c10"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"flows\" ADD COLUMN \"data_store_schema\" jsonb;"
+    ],
+    "bps": true,
+    "folderMillis": 1754544735855,
+    "hash": "87275ce7e4304c0401e1ad751f2f61d6e1df9618f76ca93944badfbe81dd9030"
   }
 ]

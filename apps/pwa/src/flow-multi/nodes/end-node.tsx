@@ -1,4 +1,5 @@
-import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
+import { type Node, type NodeProps } from "@xyflow/react";
+import { CustomHandle } from "@/flow-multi/components/custom-handle";
 import { useCallback } from "react";
 import { toast } from "sonner";
 
@@ -13,7 +14,7 @@ export type EndNodeData = {
 
 export type EndNode = Node<EndNodeData>;
 
-export default function EndNode({}: NodeProps<EndNode>) {
+export default function EndNode({ id }: NodeProps<EndNode>) {
   const { openPanel, closePanel, isPanelOpen } = useFlowPanelContext();
   
   const handleOpenResponseDesign = useCallback(() => {
@@ -45,13 +46,8 @@ export default function EndNode({}: NodeProps<EndNode>) {
           <div className="self-stretch justify-start text-text-placeholder text-xs font-normal">Design the exact format and structure of AI responses</div>
         </div>
       </div>
-      {/* Target handle - simple white handle matching agent node style */}
-      <Handle 
-        position={Position.Left} 
-        type="target" 
-        className="!w-3 !h-3 !bg-white !border-2 !border-gray-300"
-        title="Connect from previous node"
-      />
+      {/* React Flow Handle */}
+      <CustomHandle variant="input" nodeId={id} />
     </div>
   );
 }
