@@ -33,6 +33,7 @@ export function traverseFlow(flow: Flow): FlowTraversalResult {
   const startNode = nodes.find(n => n.type === 'start');
   const endNode = nodes.find(n => n.type === 'end');
   const agentNodes = nodes.filter(n => n.type === 'agent');
+  const ifNodes = nodes.filter(n => n.type === 'if');
   
   if (!startNode) {
     return createEmptyResult(agentNodes);
@@ -84,11 +85,22 @@ export function traverseFlow(flow: Flow): FlowTraversalResult {
     });
   });
   
+  // Validate if nodes have proper branching
+  const hasValidIfNodes = validateIfNodes(ifNodes, adjacencyList, nodes);
+  
+  // Validate all paths from start reach end (considering if branches)
+  const allPathsReachEnd = endNode ? validateAllPathsReachEnd(startNode.id, endNode.id, adjacencyList, ifNodes) : true;
+  
   return {
     agentPositions,
     connectedSequence: sortedReachableAgents, // All agents reachable from start
     disconnectedAgents,
-    hasValidFlow: endNode ? sortedReachableAgents.length > 0 && sortedReachableAgents.some(id => canReachEnd.has(id)) : sortedReachableAgents.length > 0
+    hasValidFlow: endNode ? 
+      sortedReachableAgents.length > 0 && 
+      sortedReachableAgents.some(id => canReachEnd.has(id)) && 
+      hasValidIfNodes && 
+      allPathsReachEnd : 
+      sortedReachableAgents.length > 0 && hasValidIfNodes
   };
 }
 
@@ -164,7 +176,7 @@ function findReachableAgents(startNodeId: string, adjacencyList: Map<string, str
       reachableAgents.add(nodeId);
     }
     
-    // Continue DFS to neighbors
+    // Continue DFS to neighbors (including if nodes)
     const neighbors = adjacencyList.get(nodeId) || [];
     neighbors.forEach(neighbor => dfs(neighbor));
   }
@@ -187,7 +199,7 @@ function findAgentsThatCanReachEnd(endNodeId: string, reverseAdjacencyList: Map<
       canReachEnd.add(nodeId);
     }
     
-    // Continue DFS to predecessors
+    // Continue DFS to predecessors (including if nodes)
     const predecessors = reverseAdjacencyList.get(nodeId) || [];
     predecessors.forEach(predecessor => dfs(predecessor));
   }
@@ -210,6 +222,7 @@ function getDepthFromStart(agentId: string, startNodeId: string, adjacencyList: 
       return depth;
     }
     
+    // Continue BFS to all neighbors (including through if nodes)
     const neighbors = adjacencyList.get(nodeId) || [];
     neighbors.forEach(neighbor => {
       if (!visited.has(neighbor)) {
@@ -236,4 +249,89 @@ function sortAgentsByDepth(agentIds: string[], startNodeId: string, adjacencyLis
   });
   
   return agentsWithDepth.map(item => item.agentId);
+}
+
+/**
+ * Validate if nodes have proper branching structure
+ * @param ifNodes - Array of if nodes to validate
+ * @param adjacencyList - Adjacency list for the flow
+ * @param allNodes - All nodes in the flow
+ * @returns true if all if nodes are valid, false otherwise
+ */
+function validateIfNodes(ifNodes: FlowNode[], adjacencyList: Map<string, string[]>, allNodes: FlowNode[]): boolean {
+  // If no if nodes, return true
+  if (ifNodes.length === 0) {
+    return true;
+  }
+  
+  // Check each if node has exactly 2 outgoing edges (true/false branches)
+  for (const ifNode of ifNodes) {
+    const neighbors = adjacencyList.get(ifNode.id) || [];
+    
+    // Each if node should have exactly 2 outgoing connections
+    if (neighbors.length !== 2) {
+      console.warn(`If node ${ifNode.id} has ${neighbors.length} outgoing connections, expected 2`);
+      return false;
+    }
+    
+    // Check that target nodes exist
+    for (const neighborId of neighbors) {
+      const targetNode = allNodes.find(n => n.id === neighborId);
+      if (!targetNode) {
+        console.warn(`If node ${ifNode.id} connects to non-existent node ${neighborId}`);
+        return false;
+      }
+    }
+  }
+  
+  return true;
+}
+
+/**
+ * Validate that all possible paths from start reach the end node
+ * This ensures that every branch of every if node eventually leads to the end
+ * @param startNodeId - ID of the start node
+ * @param endNodeId - ID of the end node  
+ * @param adjacencyList - Adjacency list for the flow
+ * @param ifNodes - Array of if nodes in the flow
+ * @returns true if all paths reach end, false otherwise
+ */
+function validateAllPathsReachEnd(startNodeId: string, endNodeId: string, adjacencyList: Map<string, string[]>, ifNodes: FlowNode[]): boolean {
+  function dfsAllPaths(currentNodeId: string, currentPath: string[]): boolean {
+    // If we reached the end node, this path is valid
+    if (currentNodeId === endNodeId) {
+      return true;
+    }
+    
+    // Prevent infinite loops
+    if (currentPath.includes(currentNodeId)) {
+      console.warn(`Circular reference detected in path: ${currentPath.join(' -> ')} -> ${currentNodeId}`);
+      return false;
+    }
+    
+    const neighbors = adjacencyList.get(currentNodeId) || [];
+    
+    // If no neighbors and not at end, this path is invalid
+    if (neighbors.length === 0) {
+      return false;
+    }
+    
+    // For all neighbors, at least one path must reach the end
+    // If this is an if node, BOTH branches must reach the end
+    const isIfNode = ifNodes.some(node => node.id === currentNodeId);
+    
+    if (isIfNode) {
+      // For if nodes, ALL branches must reach the end
+      return neighbors.every(neighborId => 
+        dfsAllPaths(neighborId, [...currentPath, currentNodeId])
+      );
+    } else {
+      // For regular nodes, at least one path must reach the end
+      return neighbors.some(neighborId => 
+        dfsAllPaths(neighborId, [...currentPath, currentNodeId])
+      );
+    }
+  }
+  
+  return dfsAllPaths(startNodeId, []);
 }
