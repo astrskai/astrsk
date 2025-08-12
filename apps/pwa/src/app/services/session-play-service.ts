@@ -2248,6 +2248,7 @@ export {
   addMessage,
   addOptionToMessage,
   createMessage,
+  evaluateConditionOperator,
   executeFlow,
   makeContext,
   renderMessages,
