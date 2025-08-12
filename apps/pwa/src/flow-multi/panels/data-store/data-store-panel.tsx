@@ -401,7 +401,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
           {selectedField && selectedFieldSchema ? (
             <>
               {/* Delete button */}
-              <div className="self-stretch flex justify-end">
+              <div className="self-stretch flex justify-end mt-2 mr-1">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -409,7 +409,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                         onClick={handleDeleteField}
                         className="w-6 h-6 relative rounded-sm hover:opacity-80 transition-opacity"
                       >
-                        <Trash2 className="min-w-3.5 min-h-4 absolute left-[5px] top-[4px] text-text-subtle" />
+                        <Trash2 className="size-[24px] text-text-subtle" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent variant="button">
