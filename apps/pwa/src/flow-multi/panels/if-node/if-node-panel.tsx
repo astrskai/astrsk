@@ -15,6 +15,7 @@ import {
   isValidOperatorForDataType
 } from '@/flow-multi/types/condition-types';
 import { OperatorCombobox } from '@/flow-multi/components/operator-combobox';
+import { ReadyState } from "@/modules/flow/domain";
 
 interface IfNodePanelProps {
   flowId: string;
@@ -72,7 +73,17 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
       const updateResult = flow.update({ nodes: updatedNodes });
       if (updateResult.isSuccess) {
-        await saveFlow(updateResult.getValue());
+        let flowToSave = updateResult.getValue();
+        
+        // Set flow to Draft state if it was Ready
+        if (flowToSave.props.readyState === ReadyState.Ready) {
+          const stateUpdateResult = flowToSave.setReadyState(ReadyState.Draft);
+          if (stateUpdateResult.isSuccess) {
+            flowToSave = stateUpdateResult.getValue();
+          }
+        }
+        
+        await saveFlow(flowToSave);
       }
     }
   }, [flow, nodeId, saveFlow]);

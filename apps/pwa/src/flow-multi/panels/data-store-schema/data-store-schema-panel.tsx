@@ -39,6 +39,8 @@ import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider
 import { DataStoreSchemaProps, DataStoreSchemaField, DataStoreSchema, DataStoreFieldType } from "./data-store-schema-types";
 import { SortableField } from "./sortable-field";
 import { UniqueEntityID } from "@/shared/domain";
+import { sanitizeFileName } from "@/shared/utils/file-utils";
+import { ReadyState } from "@/modules/flow/domain";
 
 export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   // 1. Use flow panel hook for flow data
@@ -80,8 +82,21 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   // 4. Initialize fields from flow's dataStoreSchema
   // Only update if we don't have unsaved changes to prevent overwriting user edits
   useEffect(() => {
+    console.log('[DATA_STORE_SCHEMA] Initialize effect triggered:', {
+      hasFlow: !!flow,
+      isLoading,
+      hasUnsavedChanges,
+      schemaFieldsCount: flow?.props.dataStoreSchema?.fields?.length || 0,
+      currentFieldsCount: fields.length
+    });
+    
     if (flow && !isLoading && !hasUnsavedChanges) {
       const schema = flow.props.dataStoreSchema;
+      console.log('[DATA_STORE_SCHEMA] Loading schema from flow:', {
+        fieldsCount: schema?.fields?.length || 0,
+        fields: schema?.fields
+      });
+      
       if (schema?.fields && schema.fields.length > 0) {
         setFields(schema.fields);
         
@@ -102,6 +117,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
           }
         });
       } else {
+        console.log('[DATA_STORE_SCHEMA] No fields in schema, clearing local state');
         setFields([]);
         setSelectedFieldId("");
         isFirstLoadRef.current = true; // Reset for next time
@@ -120,11 +136,16 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   // Using useCallback with empty deps and refs to avoid recreation
   const debouncedSaveFields = useMemo(
     () => debounce(async (updatedFields: DataStoreSchemaField[]) => {
+      console.log('[DATA_STORE_SCHEMA] debouncedSaveFields called:', {
+        fieldsCount: updatedFields.length,
+        fields: updatedFields
+      });
+      
       const currentFlow = flowRef.current;
       const currentSaveFlow = saveFlowRef.current;
       
       if (!currentFlow || !currentSaveFlow) {
-        console.error('[DataStoreSchema] Cannot save - flow or saveFlow is null');
+        console.error('[DATA_STORE_SCHEMA] Cannot save - flow or saveFlow is null');
         return;
       }
       
@@ -133,13 +154,28 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
         fields: updatedFields
       };
       
+      console.log('[DATA_STORE_SCHEMA] Updating flow with schema:', updatedSchema);
+      
       const updateResult = currentFlow.update({ dataStoreSchema: updatedSchema });
       if (updateResult.isSuccess) {
-        await currentSaveFlow(updateResult.getValue());
+        let flowToSave = updateResult.getValue();
+        
+        // Set flow to Draft state if it was Ready
+        if (flowToSave.props.readyState === ReadyState.Ready) {
+          console.log('[DATA_STORE_SCHEMA] Setting flow to Draft state');
+          const stateUpdateResult = flowToSave.setReadyState(ReadyState.Draft);
+          if (stateUpdateResult.isSuccess) {
+            flowToSave = stateUpdateResult.getValue();
+          }
+        }
+        
+        console.log('[DATA_STORE_SCHEMA] Saving flow to database...');
+        await currentSaveFlow(flowToSave);
+        console.log('[DATA_STORE_SCHEMA] Flow saved successfully');
         // Clear unsaved changes after successful save
         setHasUnsavedChanges(false);
       } else {
-        console.error("[DataStoreSchema] Failed to update flow:", updateResult.getError());
+        console.error("[DATA_STORE_SCHEMA] Failed to update flow:", updateResult.getError());
       }
     }, 300),
     [] // Empty deps to create debounce only once
@@ -197,6 +233,11 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
 
 
   const updateField = useCallback((fieldId: string, updates: Partial<DataStoreSchemaField>) => {
+    // Sanitize field name if it's being updated  
+    if (updates.name) {
+      updates.name = sanitizeFileName(updates.name);
+    }
+    
     const updatedFields = fields.map(field => {
       if (field.id === fieldId) {
         const updatedField = { ...field, ...updates };

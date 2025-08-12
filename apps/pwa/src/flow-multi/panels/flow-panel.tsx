@@ -149,7 +149,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // Handle flow title editing
   const handleSaveTitle = useCallback(async () => {
-    if (!flow || editedTitle === flow.props.name) {
+    const currentFlow = flowRef.current;
+    if (!currentFlow || editedTitle === currentFlow.props.name) {
       setIsEditingTitle(false);
       return;
     }
@@ -157,7 +158,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     setIsSavingTitle(true);
     try {
       // Use the update method to change the name
-      const updatedFlowResult = flow.update({
+      const updatedFlowResult = currentFlow.update({
         name: editedTitle
       });
       
@@ -180,6 +181,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         return;
       }
       
+      // Update flowRef with the saved flow to keep it in sync
+      flowRef.current = savedFlowResult.getValue();
+      
       // Mark that we have external changes coming
       isLocalChangeRef.current = false; // Title change will come from external
       
@@ -196,7 +200,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     } finally {
       setIsSavingTitle(false);
     }
-  }, [flow, editedTitle]);
+  }, [editedTitle, queryClient]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditingTitle(false);
@@ -219,6 +223,12 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const saveFlowChanges = useCallback(async (updatedNodes: CustomNodeType[], updatedEdges: CustomEdgeType[], isStructuralChange: boolean = false) => {
     const currentFlow = flowRef.current;
     if (!currentFlow) return;
+    
+    console.log('[FLOW_PANEL] saveFlowChanges - Current flow state:', {
+      hasDataStoreSchema: !!currentFlow.props.dataStoreSchema,
+      schemaFieldsCount: currentFlow.props.dataStoreSchema?.fields?.length || 0,
+      isStructuralChange
+    });
 
     try {
       // Filter out invalid edges before saving
@@ -248,6 +258,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       if (savedFlowResult.isFailure) {
         return;
       }
+      
+      console.log('[FLOW_PANEL] Flow saved, checking dataStoreSchema:', {
+        hasDataStoreSchema: !!savedFlowResult.getValue().props.dataStoreSchema,
+        schemaFieldsCount: savedFlowResult.getValue().props.dataStoreSchema?.fields?.length || 0
+      });
+      
+      // Update flowRef with the saved flow to keep it in sync
+      flowRef.current = savedFlowResult.getValue();
 
       // After successful save, update our saved data hash
       const savedNodes = (savedFlowResult.getValue().props.nodes as CustomNodeType[]) || [];
@@ -307,7 +325,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // Save viewport state to flow
   const saveViewportState = useCallback(async (newViewport: Viewport) => {
-    if (!flow) return;
+    // IMPORTANT: Use flowRef.current to get the latest flow state, not the stale flow from props
+    const currentFlow = flowRef.current;
+    if (!currentFlow) return;
 
     try {
       const flowViewport: FlowViewport = {
@@ -316,7 +336,12 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         zoom: newViewport.zoom
       };
 
-      const updatedFlow = flow.update({
+      console.log('[FLOW_PANEL] Saving viewport - Current flow state:', {
+        hasDataStoreSchema: !!currentFlow.props.dataStoreSchema,
+        schemaFieldsCount: currentFlow.props.dataStoreSchema?.fields?.length || 0
+      });
+
+      const updatedFlow = currentFlow.update({
         viewport: flowViewport
       });
 
@@ -333,12 +358,20 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       if (savedFlowResult.isFailure) {
         return;
       }
+      
+      console.log('[FLOW_PANEL] Viewport saved, checking dataStoreSchema:', {
+        hasDataStoreSchema: !!savedFlowResult.getValue().props.dataStoreSchema,
+        schemaFieldsCount: savedFlowResult.getValue().props.dataStoreSchema?.fields?.length || 0
+      });
+
+      // Update flowRef with the saved flow to keep it in sync
+      flowRef.current = savedFlowResult.getValue();
 
       // Update store with new viewport
     } catch (error) {
       console.error('Failed to save viewport:', error);
     }
-  }, [flowId]);
+  }, []);
 
   // Handle viewport changes with debouncing
   const onViewportChange = useCallback((newViewport: Viewport) => {
@@ -490,7 +523,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // Copy agent handler
   const copyAgent = useCallback(async (agentId: string) => {
-    if (!flow) return;
+    const currentFlow = flowRef.current;
+    if (!currentFlow) return;
     
     try {
       // First check if the agent exists
@@ -510,7 +544,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       const clonedAgent = clonedAgentResult.getValue();
       
       // Update the cloned agent with a new color
-      const nextColor = await getNextAvailableColor(flow);
+      const nextColor = await getNextAvailableColor(currentFlow);
       const updatedAgentResult = clonedAgent.update({ color: nextColor });
       if (updatedAgentResult.isFailure) {
         throw new Error(updatedAgentResult.getError());
@@ -670,7 +704,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   }, [setNodes, saveFlowChanges]);
 
   const addAgentNode = useCallback(async () => {
-    if (!flow) return;
+    const currentFlow = flowRef.current;
+    if (!currentFlow) return;
 
     try {
       // Generate unique agent name using existing logic
@@ -678,8 +713,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         const existingNames = new Set<string>();
         
         // Collect existing agent names from current flow
-        if (flow?.agentIds) {
-          for (const agentId of flow.agentIds) {
+        if (currentFlow?.agentIds) {
+          for (const agentId of currentFlow.agentIds) {
             const agentOrError = await AgentService.getAgent.execute(agentId);
             if (agentOrError.isFailure) {
               throw new Error(agentOrError.getError());
@@ -709,7 +744,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
       // Create a new agent with unique name and color (using same pattern as drag-to-create)
       const uniqueName = await generateUniqueAgentName();
-      const nextColor = await getNextAvailableColor(flow);
+      const nextColor = await getNextAvailableColor(currentFlow);
       
       const newAgent = Agent.create({
         name: uniqueName,
@@ -774,7 +809,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // Delete agent handler
   const deleteAgent = useCallback(async (agentId: string) => {
-    if (!flow) return;
+    const currentFlow = flowRef.current;
+    if (!currentFlow) return;
     
     try {
       // Check if this is the only agent node in the flow
@@ -811,7 +847,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       }, 0);
       
       // Invalidate flow and agent queries
-      invalidateSingleFlowQueries(flow.id);
+      invalidateSingleFlowQueries(currentFlow.id);
       invalidateAllAgentQueries();
       
     } catch (error) {
@@ -823,7 +859,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // Copy non-agent node handler
   const copyNode = useCallback(async (nodeId: string) => {
-    if (!flow) return;
+    const currentFlow = flowRef.current;
+    if (!currentFlow) return;
     
     try {
       // Find the node to copy
@@ -840,7 +877,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       };
 
       // Get next available color
-      const nextColor = await getNextAvailableColor(flow);
+      const nextColor = await getNextAvailableColor(currentFlow);
 
       // Create new node with unique ID, copied data, and new color
       // Need to handle different node types appropriately
@@ -879,7 +916,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // Delete non-agent node handler
   const deleteNode = useCallback((nodeId: string) => {
-    if (!flow) return;
+    const currentFlow = flowRef.current;
+    if (!currentFlow) return;
     
     try {
       // Find the node to delete
@@ -1128,13 +1166,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // Create node with specific type
   const handleNodeTypeSelection = useCallback(async (nodeType: "agent" | "dataStore" | "if") => {
-    if (pendingConnectionRef.current && flow) {
+    const currentFlow = flowRef.current;
+    if (pendingConnectionRef.current && currentFlow) {
       const result = await createNodeWithConnection(
         nodeType,
         pendingConnectionRef.current.sourceNodeId,
         pendingConnectionRef.current.sourceHandleId,
         pendingConnectionRef.current.position,
-        flow,
+        currentFlow,
         nodes,
         edges,
         filterExistingConnections
@@ -1175,7 +1214,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           const nodeId = nodeElement.getAttribute('data-id');
           const sourceNode = nodes.find(n => n.id === nodeId);
           
-          if (sourceNode && flow) {
+          if (sourceNode && flowRef.current) {
             // This was a click on a source handle without drag
             const canvasRect = (event.target as HTMLElement).closest('.react-flow')?.getBoundingClientRect();
             if (canvasRect) {
@@ -1227,7 +1266,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         // Get the mouse position from the event
         const canvasRect = (event.target as HTMLElement).closest('.react-flow')?.getBoundingClientRect();
         
-        if (canvasRect && flow) {
+        if (canvasRect && flowRef.current) {
           // Calculate drag distance
           const dragDistance = Math.sqrt(
             Math.pow(mouseEvent.clientX - connectionStart.startX, 2) + 
