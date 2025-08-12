@@ -190,14 +190,6 @@ export class Flow extends AggregateRoot<FlowProps> {
         newReadyState = ReadyState.Draft;
       }
       
-      // Log the update for debugging
-      console.log('[Flow.update] Before update:', {
-        currentSchema: this.props.dataStoreSchema,
-        schemaFieldsCount: this.props.dataStoreSchema?.fields?.length || 0,
-        propsToUpdate: props,
-        hasDataStoreSchema: 'dataStoreSchema' in props
-      });
-      
       // Update flow props - only update properties that are explicitly passed
       // Filter out undefined values to avoid overwriting existing properties
       const filteredProps = Object.entries(props).reduce((acc, [key, value]) => {
@@ -210,11 +202,6 @@ export class Flow extends AggregateRoot<FlowProps> {
       Object.assign(this.props, { 
         ...filteredProps,
         readyState: newReadyState,
-      });
-      
-      console.log('[Flow.update] After update:', {
-        currentSchema: this.props.dataStoreSchema,
-        schemaFieldsCount: this.props.dataStoreSchema?.fields?.length || 0
       });
 
       // Refresh `updatedAt`

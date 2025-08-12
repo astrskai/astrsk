@@ -28,12 +28,6 @@ export class DrizzleFlowRepo
     try {
       // Convert to row
       const row = FlowDrizzleMapper.toPersistence(flow);
-      
-      console.log('[DrizzleFlowRepo] Saving flow to database:', {
-        flowId: row.id,
-        dataStoreSchema: row.data_store_schema,
-        schemaFieldsCount: (row.data_store_schema as any)?.fields?.length || 0
-      });
 
       // Insert or update flow
       const savedRow = await db
@@ -45,12 +39,6 @@ export class DrizzleFlowRepo
         })
         .returning()
         .then(getOneOrThrow);
-      
-      console.log('[DrizzleFlowRepo] Flow saved, returned row:', {
-        flowId: savedRow.id,
-        dataStoreSchema: savedRow.data_store_schema,
-        schemaFieldsCount: (savedRow.data_store_schema as any)?.fields?.length || 0
-      });
 
       // Update local sync metadata
       // await this.updateLocalSyncMetadata.execute({
@@ -82,23 +70,9 @@ export class DrizzleFlowRepo
         .from(flows)
         .where(eq(flows.id, id.toString()))
         .then(getOneOrThrow);
-      
-      console.log('[DrizzleFlowRepo] Loaded flow from database:', {
-        flowId: row.id,
-        dataStoreSchema: row.data_store_schema,
-        schemaFieldsCount: (row.data_store_schema as any)?.fields?.length || 0,
-        schemaFields: (row.data_store_schema as any)?.fields
-      });
 
       // Return flow
       const flow = FlowDrizzleMapper.toDomain(row);
-      
-      console.log('[DrizzleFlowRepo] Mapped to domain:', {
-        flowId: flow.id.toString(),
-        dataStoreSchema: flow.props.dataStoreSchema,
-        schemaFieldsCount: flow.props.dataStoreSchema?.fields?.length || 0
-      });
-      
       return Result.ok(flow);
     } catch (error) {
       return Result.fail<Flow>(

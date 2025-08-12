@@ -220,13 +220,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     const currentFlow = flowRef.current;
     if (!currentFlow) return;
 
-    console.log('[saveFlowChanges] Starting save with:', {
-      nodesCount: updatedNodes.length,
-      edgesCount: updatedEdges.length,
-      currentSchema: currentFlow.props.dataStoreSchema,
-      schemaFieldsCount: currentFlow.props.dataStoreSchema?.fields?.length || 0
-    });
-
     try {
       // Filter out invalid edges before saving
       const nodeIds = new Set(updatedNodes.map(n => n.id));
@@ -242,12 +235,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         edges: validEdges as any,
       });
       
-      console.log('[saveFlowChanges] After update:', {
-        updateSuccess: updatedFlow.isSuccess,
-        schemaPreserved: updatedFlow.isSuccess ? updatedFlow.getValue().props.dataStoreSchema : null,
-        schemaFieldsCount: updatedFlow.isSuccess ? updatedFlow.getValue().props.dataStoreSchema?.fields?.length || 0 : 0
-      });
-
       if (updatedFlow.isFailure) {
         return;
       }
@@ -272,15 +259,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       const savedNodeIds = savedNodes.map(n => n.id);
       const idsChanged = JSON.stringify(originalNodeIds.sort()) !== JSON.stringify(savedNodeIds.sort());
       
-      console.log('[Flow Save] Save completed:', {
-        originalIds: originalNodeIds,
-        savedIds: savedNodeIds,
-        idsChanged,
-        savedNodes: savedNodes.map(n => ({ id: n.id, type: n.type, data: n.data }))
-      });
-      
       if (idsChanged || isStructuralChange) {
-        console.log('[Flow Save] Updating local nodes with saved data');
         
         // Force update the local nodes and edges with the saved versions
         // Use a timeout to ensure React Flow processes the update
@@ -648,7 +627,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     // Get next available color
     const nextColor = await getNextAvailableColor(currentFlow);
     
-    console.log('[Flow Panel Debug] Creating if node with color:', nextColor);
 
     // Create new If node
     const newNode: CustomNodeType = {
@@ -663,7 +641,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       },
     };
     
-    console.log('[Flow Panel Debug] Created if node:', newNode);
 
     // Update nodes - use currentFlow.props.nodes instead of component state to avoid stale data
     const currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];

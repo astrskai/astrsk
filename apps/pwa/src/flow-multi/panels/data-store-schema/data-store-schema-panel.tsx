@@ -77,19 +77,11 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   // Reset initialization when flow data becomes available
   useEffect(() => {
     if (flow && !isLoading) {
-      console.log('[DataStoreSchema] Initializing from flow:', {
-        flowId,
-        dataStoreSchema: flow.props.dataStoreSchema,
-        fieldsCount: flow.props.dataStoreSchema?.fields?.length || 0
-      });
-      
       const schema = flow.props.dataStoreSchema;
       if (schema?.fields && schema.fields.length > 0) {
-        console.log('[DataStoreSchema] Loading fields:', schema.fields);
         setFields(schema.fields);
         setSelectedFieldId(schema.fields[0]?.id || "");
       } else {
-        console.log('[DataStoreSchema] No schema fields found, starting with empty array');
         setFields([]);
         setSelectedFieldId("");
       }
@@ -107,7 +99,6 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   // Using useCallback with empty deps and refs to avoid recreation
   const debouncedSaveFields = useMemo(
     () => debounce(async (updatedFields: DataStoreSchemaField[]) => {
-      console.log('[DataStoreSchema] Saving fields:', updatedFields);
       const currentFlow = flowRef.current;
       const currentSaveFlow = saveFlowRef.current;
       
@@ -123,9 +114,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
       
       const updateResult = currentFlow.update({ dataStoreSchema: updatedSchema });
       if (updateResult.isSuccess) {
-        console.log('[DataStoreSchema] Saving to database...');
         await currentSaveFlow(updateResult.getValue());
-        console.log('[DataStoreSchema] Save complete');
       } else {
         console.error("[DataStoreSchema] Failed to update flow:", updateResult.getError());
       }
