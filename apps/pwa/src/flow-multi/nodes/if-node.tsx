@@ -283,7 +283,7 @@ export default function IfNode({
               <div className={`self-stretch text-center justify-start text-xs font-medium ${
                 isPanelActive ? 'text-text-info' : 'text-text-secondary'
               }`}>
-                {displayCount > 0 ? `Edit conditions (${displayCount})` : 'Edit condition'}
+                Edit condition
               </div>
             </button>
             

@@ -237,31 +237,31 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
   return (
     <div className="h-full flex flex-col bg-background-surface-2">
-      <div className="flex-1 p-4 pr-2 inline-flex flex-col justify-start items-start gap-8">
-        {/* Header with Logic Operator and Add Button */}
-        <div className="self-stretch inline-flex justify-between items-center">
-          <div className="w-28 inline-flex flex-col justify-start items-start gap-1">
-            <Select value={logicOperator} onValueChange={(value) => handleLogicOperatorChange(value as 'AND' | 'OR')}>
-              <SelectTrigger className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="AND">AND</SelectItem>
-                <SelectItem value="OR">OR</SelectItem>
-              </SelectContent>
-            </Select>
+      <ScrollAreaSimple className="flex-1">
+        <div className="p-4 pr-2 inline-flex flex-col justify-start items-start gap-8">
+          {/* Header with Logic Operator and Add Button */}
+          <div className="self-stretch inline-flex justify-between items-center">
+            <div className="w-28 inline-flex flex-col justify-start items-start gap-1">
+              <Select value={logicOperator} onValueChange={(value) => handleLogicOperatorChange(value as 'AND' | 'OR')}>
+                <SelectTrigger className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AND">AND</SelectItem>
+                  <SelectItem value="OR">OR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <button
+              onClick={addCondition}
+              className="h-7 px-3 py-2 bg-background-surface-4 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-light flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
+            >
+              <Plus className="w-4 h-4 text-text-body" />
+              <div className="justify-center text-text-primary text-xs font-semibold leading-none">Add condition</div>
+            </button>
           </div>
-          <button
-            onClick={addCondition}
-            className="h-7 px-3 py-2 bg-background-surface-4 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-light flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
-          >
-            <Plus className="w-4 h-4 text-text-body" />
-            <div className="justify-center text-text-primary text-xs font-semibold leading-none">Add condition</div>
-          </button>
-        </div>
 
-        {/* Conditions List */}
-        <ScrollAreaSimple className="self-stretch flex-1" style={{ scrollbarGutter: 'stable' }}>
+          {/* Conditions List */}
           <div className="self-stretch flex flex-col justify-start items-start gap-3">
             {conditions.map((condition, index) => (
                 <div key={condition.id} className="self-stretch flex flex-col gap-3">
@@ -332,8 +332,8 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                 </div>
               ))}
           </div>
-        </ScrollAreaSimple>
-      </div>
+        </div>
+      </ScrollAreaSimple>
     </div>
   );
 }

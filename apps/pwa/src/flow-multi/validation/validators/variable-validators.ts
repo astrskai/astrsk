@@ -133,55 +133,60 @@ export const validateUndefinedOutputVariables: ValidatorFunction = (context) => 
         continue; // It's a valid system variable, skip validation
       }
       
-      // Check if it's a data store variable (datastore.fieldname format)
-      if (variable.startsWith('datastore.')) {
-        const fieldName = variable.substring('datastore.'.length);
-        const dataStoreSchema = context.flow.props.dataStoreSchema;
-        
-        if (!dataStoreSchema) {
-          // Data store variable used but no schema defined
-          const message = generateValidationMessage(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, {
-            agentName: sourceAgentName,
-            referencedAgent: 'datastore',
-            variable,
-            location
-          });
-          issues.push({
-            id: generateIssueId(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, sourceAgentId),
-            code: ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE,
-            severity: 'error',
-            ...message,
-            agentId: sourceAgentId,
-            agentName: sourceAgentName,
-            metadata: { variable, referencedAgent: 'datastore' },
-          });
-          continue;
+      // Check if it's a data store field that's actually configured in a connected data store node
+      const dataStoreSchema = context.flow.props.dataStoreSchema;
+      if (dataStoreSchema && dataStoreSchema.fields) {
+        // First check if this variable matches a schema field name
+        const schemaField = dataStoreSchema.fields.find(field => field.name === variable);
+        if (schemaField) {
+          // Now check if any connected data store node has this field configured
+          let isFieldConfigured = false;
+          
+          // Check all connected nodes for data store nodes
+          for (const nodeId of context.connectedNodes) {
+            const node = context.flow.props.nodes.find(n => n.id === nodeId);
+            if (node && node.type === 'dataStore') {
+              // Check if this data store node has the field configured
+              const nodeData = node.data as any;
+              if (nodeData?.dataStoreFields) {
+                // Check if this field is imported in this node
+                const hasField = nodeData.dataStoreFields.some((f: any) => 
+                  f.schemaFieldId === schemaField.id
+                );
+                if (hasField) {
+                  isFieldConfigured = true;
+                  break;
+                }
+              }
+            }
+          }
+          
+          if (isFieldConfigured) {
+            continue; // It's a valid configured data store field
+          } else {
+            // Field exists in schema but not configured in any connected data store node
+            const message = generateValidationMessage(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, {
+              agentName: sourceAgentName,
+              referencedAgent: 'datastore',
+              field: variable,
+              variable,
+              location
+            });
+            issues.push({
+              id: generateIssueId(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, sourceAgentId),
+              code: ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE,
+              severity: 'error',
+              ...message,
+              agentId: sourceAgentId,
+              agentName: sourceAgentName,
+              metadata: { variable, referencedAgent: 'datastore', field: variable },
+            });
+            continue;
+          }
         }
-        
-        // Check if the field exists in the schema
-        const fieldExists = dataStoreSchema.fields.some(field => field.name === fieldName);
-        if (!fieldExists) {
-          const message = generateValidationMessage(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, {
-            agentName: sourceAgentName,
-            referencedAgent: 'datastore',
-            field: fieldName,
-            variable,
-            location
-          });
-          issues.push({
-            id: generateIssueId(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, sourceAgentId),
-            code: ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE,
-            severity: 'error',
-            ...message,
-            agentId: sourceAgentId,
-            agentName: sourceAgentName,
-            metadata: { variable, referencedAgent: 'datastore', field: fieldName },
-          });
-        }
-        continue;
       }
       
-      // If not a system variable or data store variable, check if it references an agent's output
+      // If not a system variable or data store field, check if it references an agent's output
       const parts = variable.split('.');
       
       // Handle both agent.field format and single agent references
@@ -537,7 +542,7 @@ export const validateUnusedDataStoreFields: ValidatorFunction = (context) => {
   
   // Check each field for usage
   for (const field of dataStoreFields) {
-    const variable = `datastore.${field.name}`;
+    const variable = field.name; // Use direct field name, not datastore.fieldname
     let isUsed = false;
     
     // Helper function to check if template contains the variable
@@ -608,7 +613,7 @@ export const validateUnusedDataStoreFields: ValidatorFunction = (context) => {
       const message = generateValidationMessage(ValidationIssueCode.UNUSED_OUTPUT_VARIABLE, {
         agentName: 'Data Store',
         field: field.name,
-        variable
+        variable: `{{${variable}}}`
       });
       issues.push({
         id: generateIssueId(ValidationIssueCode.UNUSED_OUTPUT_VARIABLE, 'datastore'),
@@ -617,7 +622,7 @@ export const validateUnusedDataStoreFields: ValidatorFunction = (context) => {
         ...message,
         agentId: 'datastore',
         agentName: 'Data Store',
-        metadata: { variable, field: field.name },
+        metadata: { variable: `{{${variable}}}`, field: field.name },
       });
     }
   }
