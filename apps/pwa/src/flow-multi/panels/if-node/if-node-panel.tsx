@@ -262,7 +262,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
   return (
     <div className="h-full flex flex-col bg-background-surface-2">
       <ScrollAreaSimple className="flex-1">
-        <div className="p-4 pr-2 inline-flex flex-col justify-start items-start gap-8">
+        <div className="p-4 flex flex-col justify-start items-start gap-8 w-full">
           {/* Header with Logic Operator and Add Button */}
           <div className="self-stretch inline-flex justify-between items-center">
             <div className="w-28 inline-flex flex-col justify-start items-start gap-1">
@@ -291,7 +291,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                 <div key={condition.id} className="self-stretch flex flex-col gap-3">
                   {/* Logic Operator Separator */}
                   {index > 0 && (
-                    <div className="w-80 h-3.5 justify-start text-text-subtle text-xs font-normal">
+                    <div className="self-stretch h-3.5 justify-start text-text-subtle text-xs font-normal">
                       {logicOperator}
                     </div>
                   )}
