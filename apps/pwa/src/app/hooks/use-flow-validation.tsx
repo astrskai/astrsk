@@ -95,11 +95,11 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
           const nodeData = node.data as any;
           const conditions = nodeData?.conditions || [];
           const hasValidCondition = conditions.some((c: any) => 
-            c.value1 && c.value1.trim() !== ''
+            c.value1 && c.value1.trim() !== '' && c.operator && c.dataType
           );
           if (!hasValidCondition) {
             invalidIfNodes++;
-            invalidNodeReasons[nodeId] = ['If node must have at least one condition with a value'];
+            invalidNodeReasons[nodeId] = ['If node must have at least one complete condition with value, operator, and data type'];
           }
         }
         

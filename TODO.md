@@ -49,21 +49,35 @@
 - Error borders now only show when there are no valid conditions/fields
 
 ## 5. Data Store Node Validation - Initial Value Type Match
-**File:** `apps/pwa/src/flow-multi/panels/data-store/data-store-panel.tsx`
-- [ ] Create validation to check initial value matches configured data type
-- [ ] Display appropriate error message when types don't match
-- [ ] Prevent saving invalid configurations
-- [ ] Add type coercion where appropriate
+**File:** `apps/pwa/src/app/hooks/use-flow-validation.tsx`
+- [x] Create validation to check initial value matches configured data type
+- [x] Display appropriate error message when types don't match
+- [x] Validate number, integer, boolean, and string types
+- [x] Add comprehensive data store node validation
+**Status:** ✅ COMPLETED
+- Implemented type validation for all data store fields
+- Added validation that at least one field must exist in schema
+- Validates integer vs decimal numbers correctly
 
-## 6. If Node Validation - Value Type Match
+## 6. Data Store Panel Validation
+**File:** `apps/pwa/src/flow-multi/panels/data-store/data-store-panel.tsx`
+- [ ] Add validation in the panel UI to check field values match their data types
+- [ ] Show error indicators on fields with type mismatches
+- [ ] Prevent saving when validation errors exist
+- [ ] Display clear error messages below each field
+- [ ] Support real-time validation as user types
+
+## 7. If Node Panel Validation
 **File:** `apps/pwa/src/flow-multi/panels/if-node/if-node-panel.tsx`
-- [ ] Create validation to check input value matches selected condition's data type
-- [ ] Validate value1 against the selected data type
-- [ ] Validate value2 against the selected data type (when not unary operator)
+- [ ] Add validation in the panel UI for condition values
+- [ ] Validate value1 matches the selected operator's data type
+- [ ] Validate value2 matches the data type (when not unary operator)
+- [ ] Show error indicators on invalid conditions
 - [ ] Display clear error messages for type mismatches
+- [ ] Prevent saving invalid conditions
 - [ ] Consider auto-conversion for compatible types
 
-## 7. Data Store Field Usage Validation
+## 8. Data Store Field Usage Validation
 **Context:** Detect unused fields across the flow
 - [ ] Create validation to detect fields defined but never used in:
   - [ ] Prompt panels
@@ -72,14 +86,16 @@
 - [ ] Display warnings for unused fields
 - [ ] Provide option to clean up unused fields
 
-## 8. Data Store Schema Validation
+## 9. Data Store Schema Validation
 **Context:** Schema fields not present in data store instances
-- [ ] Create validation to detect schema fields not imported to data store nodes
-- [ ] Display warnings for missing schema implementations
-- [ ] Provide quick-fix to import missing fields
-- [ ] Track schema field usage across all data store nodes
+- [x] Create validation to detect schema fields not imported to data store nodes
+- [x] Display warnings for missing schema implementations
+- [x] Track schema field usage across all data store nodes
+**Status:** ✅ COMPLETED
+- Validation checks if data store fields reference valid schema fields
+- Warns when schema fields are not configured in data store
 
-## 9. Replace Window-Based Communication
+## 10. Replace Window-Based Communication
 **Context:** Current node-to-flow-panel communication uses window object (unsafe)
 - [ ] Identify all places using window-based communication
 - [ ] Research alternative communication patterns:
@@ -91,21 +107,49 @@
 - [ ] Migrate all window-based communications
 - [ ] Test communication reliability and performance
 
+## 11. If Node Panel - None State for Conditions
+**File:** `apps/pwa/src/flow-multi/panels/if-node/if-node-panel.tsx`
+- [x] Add support for "none" state in condition operators
+- [x] Show "Select" placeholder text when no operator is selected
+- [x] Update validation to handle none/unselected state
+- [x] Ensure new conditions start with none state
+- [x] Update UI to clearly indicate when selection is required
+**Status:** ✅ COMPLETED
+- Modified operator-combobox to support null dataType and operator values
+- Shows "Select" placeholder when no operator is selected
+- New conditions start with null operator/dataType
+- Validation requires operator and dataType to be set for valid conditions
+
+## 12. Flow Validation and Node Opacity
+**Files:** Multiple node files and validation hooks
+- [x] Implement comprehensive flow validation for all node types
+- [x] Add opacity changes based on connection state
+- [x] Add opacity changes based on flow validity
+- [x] Apply to agent, if, and data store nodes
+**Status:** ✅ COMPLETED
+- All nodes now show 70% opacity when disconnected or flow is invalid
+- Full opacity only when connected AND flow is valid
+- Consistent visual feedback across all node types
+
 ## Implementation Priority
-1. **High Priority (Blocking Issues)**
-   - Task 4: Number error display fix
-   - Task 9: Replace unsafe window communication
+1. **High Priority (UI Validation)**
+   - Task 6: Data Store Panel Validation
+   - Task 7: If Node Panel Validation
+   - Task 11: If Node Panel - None State for Conditions
 
-2. **Medium Priority (Validation & Safety)**
-   - Task 5: Data store initial value validation
-   - Task 6: If node value type validation
-   - Task 3: Node traversal enhancement
+2. **Medium Priority (System Improvements)**
+   - Task 10: Replace unsafe window communication
+   - Task 8: Data Store Field Usage Validation
 
-3. **Lower Priority (Enhancements)**
-   - Task 1: Node selection menu update
-   - Task 2: Operator dropdown update
-   - Task 7: Unused field detection
-   - Task 8: Schema validation
+3. **Completed Tasks**
+   - ✅ Task 1: Node selection menu update
+   - ✅ Task 2: Operator dropdown update
+   - ✅ Task 3: Node traversal enhancement
+   - ✅ Task 4: Number error display fix
+   - ✅ Task 5: Data store initial value validation (in useFlowValidation)
+   - ✅ Task 9: Data Store Schema Validation
+   - ✅ Task 11: If Node Panel - None State for Conditions
+   - ✅ Task 12: Flow Validation and Node Opacity
 
 ## Testing Requirements
 - Unit tests for all validation functions

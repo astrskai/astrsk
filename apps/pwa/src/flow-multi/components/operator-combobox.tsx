@@ -11,14 +11,15 @@ import {
 
 interface OperatorComboboxProps {
   value: {
-    dataType: ConditionDataType;
-    operator: ConditionOperator;
+    dataType: ConditionDataType | null;
+    operator: ConditionOperator | null;
   };
   onChange: (dataType: ConditionDataType, operator: ConditionOperator) => void;
   className?: string;
+  placeholder?: string;
 }
 
-export function OperatorCombobox({ value, onChange, className }: OperatorComboboxProps) {
+export function OperatorCombobox({ value, onChange, className, placeholder = "Select" }: OperatorComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedType, setExpandedType] = useState<ConditionDataType | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -40,8 +41,8 @@ export function OperatorCombobox({ value, onChange, className }: OperatorCombobo
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
-    if (!isOpen) {
-      // When opening, expand the current data type
+    if (!isOpen && value.dataType) {
+      // When opening, expand the current data type if one is selected
       setExpandedType(value.dataType);
     } else {
       setExpandedType(null);
@@ -82,14 +83,22 @@ export function OperatorCombobox({ value, onChange, className }: OperatorCombobo
         className="w-full min-h-8 p-2 bg-background-surface-0 rounded-md outline outline-1 outline-offset-[-1px] outline-border-normal flex justify-between items-center overflow-hidden cursor-pointer hover:outline-border-selected-inverse focus:outline-border-selected-inverse transition-all"
       >
         <div className="flex-1 flex justify-start items-center gap-1">
-          <div className="w-4 h-4 text-text-primary">
-            {getIconForType(value.dataType)}
-          </div>
-          <div className="flex-1 flex justify-start items-center gap-4">
-            <div className="flex-1 justify-start text-text-primary text-xs font-normal truncate">
-              {OPERATOR_LABELS[value.operator]}
+          {value.dataType && value.operator ? (
+            <>
+              <div className="w-4 h-4 text-text-primary">
+                {getIconForType(value.dataType)}
+              </div>
+              <div className="flex-1 flex justify-start items-center gap-4">
+                <div className="flex-1 justify-start text-text-primary text-xs font-normal truncate">
+                  {OPERATOR_LABELS[value.operator]}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 justify-start text-text-placeholder text-xs font-normal">
+              {placeholder}
             </div>
-          </div>
+          )}
         </div>
         <div className="w-4 h-4 relative">
           <ChevronDown className={cn(

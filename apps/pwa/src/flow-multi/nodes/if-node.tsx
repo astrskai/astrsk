@@ -206,12 +206,16 @@ export default function IfNode({
 
   // Get condition count and check if conditions are valid
   const conditionCount = data.conditions?.length || 0;
-  // A condition is valid if it has at least value1 filled in
-  const hasValidConditions = data.conditions?.some((c: any) => c.value1 && c.value1.trim() !== '') || false;
+  // A condition is valid if it has value1, operator, and dataType filled in
+  const hasValidConditions = data.conditions?.some((c: any) => 
+    c.value1 && c.value1.trim() !== '' && c.operator && c.dataType
+  ) || false;
   const hasConditions = hasValidConditions;
   
   // Display count for badge
-  const displayCount = hasValidConditions ? data.conditions?.filter((c: any) => c.value1 && c.value1.trim() !== '').length || 0 : 0;
+  const displayCount = hasValidConditions ? data.conditions?.filter((c: any) => 
+    c.value1 && c.value1.trim() !== '' && c.operator && c.dataType
+  ).length || 0 : 0;
 
   return (
     <div 
