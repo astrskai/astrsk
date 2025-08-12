@@ -159,9 +159,13 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     };
   }, [previewSessionId]);
 
-  // Get last monaco editor and insert function from flow context
-  const { lastMonacoEditor, insertVariableAtLastCursor } =
-    useFlowPanelContext();
+  // Get last monaco editor, input field and insert functions from flow context
+  const { 
+    lastMonacoEditor, 
+    insertVariableAtLastCursor,
+    lastInputField,
+    insertVariableAtInputField
+  } = useFlowPanelContext();
 
   // Local state
   const [activeTab, setActiveTab] = useState(() => {
@@ -180,8 +184,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   );
   const [contextValues, setContextValues] = useState<Record<string, any>>({});
 
-  // Check if we have an editor
-  const hasEditor = !!lastMonacoEditor?.editor;
+  // Check if we have an editor or input field
+  const hasEditor = !!lastMonacoEditor?.editor || !!lastInputField?.element;
 
   // Load variables from library
   useEffect(() => {
@@ -532,20 +536,29 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         lastMonacoEditor.position
       ) {
         insertVariableAtLastCursor(variableValue);
-        toast.success(`Inserted: ${variableValue}`, {
+        toast.success(`Inserted: ${variablePath}`, {
+          duration: 2000,
+        });
+      } else if (lastInputField && lastInputField.element) {
+        insertVariableAtInputField(variableValue);
+        toast.success(`Inserted: ${variablePath}`, {
           duration: 2000,
         });
       } else {
-        toast.warning("No fields are selected to input the variables", {
-          duration: 2000,
-        });
+        // Copy to clipboard when no field is selected
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(variableValue);
+          toast.info(`No field selected. Copied ${variableValue} to clipboard.`, {
+            duration: 2000,
+          });
+        }
       }
 
       setTimeout(() => {
         setClickedVariable(null);
       }, 1000);
     },
-    [lastMonacoEditor, insertVariableAtLastCursor],
+    [lastMonacoEditor, insertVariableAtLastCursor, lastInputField, insertVariableAtInputField],
   );
 
   // Handle variable click for insertion
@@ -563,18 +576,29 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         lastMonacoEditor.position
       ) {
         insertVariableAtLastCursor(variableTemplate);
-        // No toast for regular variables to match original behavior
-      } else {
-        toast.warning("No fields are selected to input the variables", {
+        toast.success(`Inserted: ${variable.variable}`, {
           duration: 2000,
         });
+      } else if (lastInputField && lastInputField.element) {
+        insertVariableAtInputField(variableTemplate);
+        toast.success(`Inserted: ${variable.variable}`, {
+          duration: 2000,
+        });
+      } else {
+        // Copy to clipboard when no field is selected
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(variableTemplate);
+          toast.info(`No field selected. Copied ${variableTemplate} to clipboard.`, {
+            duration: 2000,
+          });
+        }
       }
 
       setTimeout(() => {
         setClickedVariable(null);
       }, 1000);
     },
-    [lastMonacoEditor, insertVariableAtLastCursor],
+    [lastMonacoEditor, insertVariableAtLastCursor, lastInputField, insertVariableAtInputField],
   );
 
   // Prevent focus steal on mouse down
@@ -913,22 +937,30 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                           e.preventDefault();
                           e.stopPropagation();
 
-                          // Copy to clipboard
-                          if (navigator.clipboard) {
-                            navigator.clipboard.writeText(variableName);
-                            setClickedVariable(variableName);
-                            setTimeout(() => setClickedVariable(null), 500);
-                            toast.success(
-                              `Copied ${variableName} to clipboard`,
-                            );
-                          }
+                          setClickedVariable(variableName);
 
-                          // Insert into monaco editor if available
+                          // Insert into monaco editor or input field if available
                           if (lastMonacoEditor?.editor) {
                             insertVariableAtLastCursor(variableName);
-                            setClickedVariable(variableName);
-                            setTimeout(() => setClickedVariable(null), 500);
+                            toast.success(`Inserted: ${field.name}`, {
+                              duration: 2000,
+                            });
+                          } else if (lastInputField?.element) {
+                            insertVariableAtInputField(variableName);
+                            toast.success(`Inserted: ${field.name}`, {
+                              duration: 2000,
+                            });
+                          } else {
+                            // Copy to clipboard when no field is selected
+                            if (navigator.clipboard) {
+                              navigator.clipboard.writeText(variableName);
+                              toast.info(`No field selected. Copied ${variableName} to clipboard.`, {
+                                duration: 2000,
+                              });
+                            }
                           }
+
+                          setTimeout(() => setClickedVariable(null), 1000);
                         }}
                         onMouseDown={(e) => e.preventDefault()}
                         tabIndex={-1}
@@ -938,7 +970,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         )}
                         <div className="self-stretch flex flex-col justify-start items-start gap-4">
                           <div className="self-stretch flex flex-col justify-start items-start gap-1">
-                            <div className="inline-flex justify-start items-center gap-2">
+                            <div className="flex justify-start items-center gap-2 w-full">
                               <div className="justify-start text-text-primary text-xs font-medium">
                                 {variableName}
                               </div>
@@ -953,14 +985,16 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                 ))}
                             </div>
                           </div>
-                          <div className="self-stretch px-2 py-1 bg-background-surface-4 rounded-md flex flex-col justify-start items-start gap-1">
-                            <div className="self-stretch justify-start text-text-subtle text-xs font-medium">
-                              Most recent data from session
-                            </div>
-                            <div className="self-stretch max-h-8 justify-start text-text-subtle text-xs font-mono">
-                              {typeof displayValue === "object"
-                                ? JSON.stringify(displayValue)
-                                : String(displayValue)}
+                          <div className="mt-2 w-full overflow-hidden">
+                            <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
+                              <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                Data from session
+                              </div>
+                              <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                {typeof displayValue === "object"
+                                  ? JSON.stringify(displayValue)
+                                  : String(displayValue)}
+                              </div>
                             </div>
                           </div>
                         </div>

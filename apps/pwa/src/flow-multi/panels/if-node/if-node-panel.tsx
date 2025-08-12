@@ -31,11 +31,13 @@ type EditableCondition = Omit<Condition, 'operator' | 'dataType'> & {
 
 export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
   const { flow, isLoading, saveFlow } = useFlowPanel({ flowId });
+  const { setLastInputField } = useFlowPanelContext();
   const { closePanel } = useFlowPanelContext();
   const [logicOperator, setLogicOperator] = useState<'AND' | 'OR'>('AND');
   const [conditions, setConditions] = useState<EditableCondition[]>([]);
   const lastInitializedNodeId = useRef<string | null>(null);
   const flowLoadedRef = useRef<boolean>(false);
+  const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   // Auto-close panel when connected node is deleted
   useEffect(() => {
@@ -109,6 +111,13 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       flowLoadedRef.current = true;
     }
   }, [flow]);
+
+  // Clean up input field tracking on unmount
+  useEffect(() => {
+    return () => {
+      setLastInputField(null, null, null, undefined);
+    };
+  }, [setLastInputField]);
 
   // Initialize from node data
   useEffect(() => {
@@ -295,8 +304,22 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                         {/* Value1 Input */}
                         <div className="flex-1 inline-flex flex-col justify-start items-start gap-1">
                           <Input
+                            ref={(el) => {
+                              inputRefs.current[`${condition.id}-value1`] = el;
+                            }}
                             value={condition.value1}
                             onChange={(e) => updateCondition(condition.id, 'value1', e.target.value)}
+                            onFocus={(e) => {
+                              setLastInputField(
+                                nodeId, 
+                                `${condition.id}-value1`, 
+                                e.currentTarget,
+                                (value: string) => updateCondition(condition.id, 'value1', value)
+                              );
+                            }}
+                            onBlur={() => {
+                              // Don't clear on blur - let the next focus event handle it
+                            }}
                             placeholder="Variable or value"
                             className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                           />
@@ -319,8 +342,22 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                       {condition.operator && !isUnaryOperator(condition.operator) && (
                         <div className="self-stretch flex flex-col justify-start items-start gap-1">
                           <Input
+                            ref={(el) => {
+                              inputRefs.current[`${condition.id}-value2`] = el;
+                            }}
                             value={condition.value2}
                             onChange={(e) => updateCondition(condition.id, 'value2', e.target.value)}
+                            onFocus={(e) => {
+                              setLastInputField(
+                                nodeId, 
+                                `${condition.id}-value2`, 
+                                e.currentTarget,
+                                (value: string) => updateCondition(condition.id, 'value2', value)
+                              );
+                            }}
+                            onBlur={() => {
+                              // Don't clear on blur - let the next focus event handle it
+                            }}
                             placeholder={condition.dataType === 'boolean' ? 'true/false' : 'Compare value'}
                             className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                           />

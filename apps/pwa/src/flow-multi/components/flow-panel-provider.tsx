@@ -42,6 +42,20 @@ interface FlowPanelContextType {
     position: any,
   ) => void;
   insertVariableAtLastCursor: (variableValue: string) => void;
+  // Regular input field tracking for variable insertion
+  lastInputField: {
+    nodeId: string | null;
+    fieldId: string | null;
+    element: HTMLInputElement | null;
+    onChange?: (value: string) => void;
+  } | null;
+  setLastInputField: (
+    nodeId: string | null,
+    fieldId: string | null,
+    element: HTMLInputElement | null,
+    onChange?: (value: string) => void,
+  ) => void;
+  insertVariableAtInputField: (variableValue: string) => void;
 }
 
 const FlowPanelContext = createContext<FlowPanelContextType | null>(null);
@@ -103,6 +117,14 @@ export function FlowPanelProvider({
     position: any;
   } | null>(null);
 
+  // Regular input field tracking for variable insertion
+  const [lastInputField, setLastInputFieldState] = React.useState<{
+    nodeId: string | null;
+    fieldId: string | null;
+    element: HTMLInputElement | null;
+    onChange?: (value: string) => void;
+  } | null>(null);
+
   // Monaco editor functions
   const setLastMonacoEditor = React.useCallback((
     agentId: string | null,
@@ -116,6 +138,8 @@ export function FlowPanelProvider({
       editor,
       position,
     });
+    // Clear input field when monaco is focused
+    setLastInputFieldState(null);
   }, []);
 
   const insertVariableAtLastCursor = React.useCallback((variableValue: string) => {
@@ -151,6 +175,54 @@ export function FlowPanelProvider({
       }
     }
   }, [lastMonacoEditor]);
+
+  // Regular input field functions
+  const setLastInputField = React.useCallback((
+    nodeId: string | null,
+    fieldId: string | null,
+    element: HTMLInputElement | null,
+    onChange?: (value: string) => void,
+  ) => {
+    setLastInputFieldState({
+      nodeId,
+      fieldId,
+      element,
+      onChange,
+    });
+    // Clear monaco editor when input is focused
+    setLastMonacoEditorState(null);
+  }, []);
+
+  const insertVariableAtInputField = React.useCallback((variableValue: string) => {
+    if (lastInputField && lastInputField.element) {
+      try {
+        const input = lastInputField.element;
+        const start = input.selectionStart || 0;
+        const end = input.selectionEnd || 0;
+        const currentValue = input.value;
+        
+        // Insert the variable at cursor position
+        const newValue = currentValue.slice(0, start) + variableValue + currentValue.slice(end);
+        
+        // Call the onChange handler if provided
+        if (lastInputField.onChange) {
+          lastInputField.onChange(newValue);
+        }
+        
+        // Also update the input value directly for immediate visual feedback
+        input.value = newValue;
+        
+        // Set cursor position after the inserted text
+        const newPosition = start + variableValue.length;
+        input.setSelectionRange(newPosition, newPosition);
+        
+        // Focus the input
+        input.focus();
+      } catch (error) {
+        // Ignore errors silently
+      }
+    }
+  }, [lastInputField]);
 
 
   // Close a panel
@@ -354,6 +426,9 @@ export function FlowPanelProvider({
     lastMonacoEditor,
     setLastMonacoEditor,
     insertVariableAtLastCursor,
+    lastInputField,
+    setLastInputField,
+    insertVariableAtInputField,
   };
 
   return (

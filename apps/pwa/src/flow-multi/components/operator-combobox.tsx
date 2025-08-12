@@ -22,7 +22,9 @@ interface OperatorComboboxProps {
 export function OperatorCombobox({ value, onChange, className, placeholder = "Select" }: OperatorComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedType, setExpandedType] = useState<ConditionDataType | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -36,6 +38,24 @@ export function OperatorCombobox({ value, onChange, className, placeholder = "Se
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+
+  // Calculate dropdown position when opening
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
+      const dropdownHeight = 300; // Estimated max height of dropdown
+
+      // If not enough space below but enough space above, position on top
+      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+        setDropdownPosition('top');
+      } else {
+        setDropdownPosition('bottom');
+      }
     }
   }, [isOpen]);
 
@@ -79,6 +99,7 @@ export function OperatorCombobox({ value, onChange, className, placeholder = "Se
     <div className={cn("relative", className)} ref={dropdownRef}>
       {/* Trigger Button */}
       <div
+        ref={triggerRef}
         onClick={handleToggle}
         className="w-full min-h-8 p-2 bg-background-surface-0 rounded-md outline outline-1 outline-offset-[-1px] outline-border-normal flex justify-between items-center overflow-hidden cursor-pointer hover:outline-border-selected-inverse focus:outline-border-selected-inverse transition-all"
       >
@@ -110,8 +131,11 @@ export function OperatorCombobox({ value, onChange, className, placeholder = "Se
 
       {/* Dropdown Content */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full">
-          <div className="p-1 bg-background-surface-1 rounded-lg shadow-lg inline-flex flex-col justify-start items-start gap-3 w-full">
+        <div className={cn(
+          "absolute z-50 w-full",
+          dropdownPosition === 'bottom' ? "mt-1 top-full" : "mb-1 bottom-full"
+        )}>
+          <div className="p-1 bg-background-surface-1 rounded-lg shadow-lg inline-flex flex-col justify-start items-start gap-3 w-full max-h-[280px] overflow-y-auto">
             {dataTypes.map((dataType) => (
               <div key={dataType.type} className="self-stretch flex flex-col justify-start items-start gap-1">
                 {/* Data Type Header */}
