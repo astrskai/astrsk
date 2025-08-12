@@ -188,7 +188,7 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.Assets}: ${change.__op__} ${change.id}`);
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: assetQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
@@ -206,11 +206,11 @@ async function registerLiveQueries() {
         logger.debug(
           `${TableName.ApiConnections}: ${change.__op__} ${change.id}`,
         );
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: apiConnectionQueries.detail(new UniqueEntityID(change.id))
             .queryKey,
         });
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: apiConnectionQueries.withModels(),
         });
       });
@@ -226,7 +226,7 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.Flows}: ${change.__op__} ${change.id}`);
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: flowQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
@@ -240,7 +240,7 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.Agents}: ${change.__op__} ${change.id}`);
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: agentQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
@@ -256,7 +256,7 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.Cards}: ${change.__op__} ${change.id}`);
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
@@ -272,7 +272,7 @@ async function registerLiveQueries() {
         logger.debug(
           `${TableName.CharacterCards}: ${change.__op__} ${change.id}`,
         );
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
@@ -286,7 +286,7 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.PlotCards}: ${change.__op__} ${change.id}`);
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
@@ -302,7 +302,7 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.Sessions}: ${change.__op__} ${change.id}`);
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: sessionQueries.detail(new UniqueEntityID(change.id))
             .queryKey,
         });
@@ -317,7 +317,7 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.Turns}: ${change.__op__} ${change.id}`);
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: turnQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
