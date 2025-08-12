@@ -367,9 +367,9 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => deleteField(selectedField.id)}
-                      className="w-6 h-6 relative rounded-sm hover:opacity-80 transition-opacity"
+                      className="w-6 h-6 relative rounded-sm hover:opacity-80 transition-opacity mt-2 mr-1"
                     >
-                      <Trash2 className="min-w-3.5 min-h-4 absolute left-[5px] top-[4px] text-text-subtle" />
+                      <Trash2 className="size-[24px] text-text-subtle" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent variant="button">
