@@ -65,21 +65,32 @@ export function useFlowPanel({
 
   // Save flow with invalidation
   const saveFlow = useCallback(async (updatedFlow: Flow) => {
-    if (isSaving) return;
+    if (isSaving) {
+      console.log('[useFlowPanel] Save already in progress, skipping');
+      return;
+    }
+    
+    console.log('[useFlowPanel] Saving flow:', {
+      flowId: updatedFlow.id.toString(),
+      dataStoreSchema: updatedFlow.props.dataStoreSchema,
+      schemaFieldsCount: updatedFlow.props.dataStoreSchema?.fields?.length || 0
+    });
     
     setIsSaving(true);
     try {
       const result = await FlowService.saveFlow.execute(updatedFlow);
       
       if (result.isSuccess) {
+        console.log('[useFlowPanel] Flow saved successfully');
         // Invalidate flow queries to refresh UI
         await invalidateSingleFlowQueries(updatedFlow.id);
+        console.log('[useFlowPanel] Queries invalidated');
       } else {
-        console.error("Failed to save flow:", result.getError());
+        console.error("[useFlowPanel] Failed to save flow:", result.getError());
         throw new Error(result.getError());
       }
     } catch (error) {
-      console.error("Error saving flow:", error);
+      console.error("[useFlowPanel] Error saving flow:", error);
       throw error;
     } finally {
       setIsSaving(false);

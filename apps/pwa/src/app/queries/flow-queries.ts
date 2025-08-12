@@ -53,17 +53,32 @@ export const flowQueries = {
       queryKey: [...flowQueries.details(), id?.toString() ?? ""],
       queryFn: async () => {
         if (!id) return null;
+        console.log('[flowQueries] Fetching flow:', id.toString());
         // No network request if already cached from list query
         const flowOrError = await FlowService.getFlow.execute(id);
-        if (flowOrError.isFailure) return null;
+        if (flowOrError.isFailure) {
+          console.error('[flowQueries] Failed to fetch flow:', flowOrError.getError());
+          return null;
+        }
         const flow = flowOrError.getValue();
+        console.log('[flowQueries] Flow fetched:', {
+          flowId: flow.id.toString(),
+          dataStoreSchema: flow.props.dataStoreSchema,
+          schemaFieldsCount: flow.props.dataStoreSchema?.fields?.length || 0
+        });
         // Transform to persistence format for storage
-        return FlowDrizzleMapper.toPersistence(flow);
+        const persisted = FlowDrizzleMapper.toPersistence(flow);
+        console.log('[flowQueries] Persisted format:', {
+          dataStoreSchema: persisted.data_store_schema,
+          schemaFieldsCount: (persisted.data_store_schema as any)?.fields?.length || 0
+        });
+        return persisted;
       },
       select: (data) => {
         if (!data) return null;
         // Transform back to domain object
-        return FlowDrizzleMapper.toDomain(data as any);
+        const domain = FlowDrizzleMapper.toDomain(data as any);
+        return domain;
       },
       enabled: !!id,
     }),

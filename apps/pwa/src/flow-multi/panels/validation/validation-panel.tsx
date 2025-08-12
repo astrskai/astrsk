@@ -30,6 +30,7 @@ import {
   validateHistoryMessage,
   validateUndefinedOutputVariables,
   validateUnusedOutputVariables,
+  validateUnusedDataStoreFields,
   validateTemplateSyntax,
   validateStructuredOutputSupport,
   validateProviderParameters,
@@ -148,6 +149,7 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     // Variable validators
     allIssues.push(...validateUndefinedOutputVariables(context));
     allIssues.push(...validateUnusedOutputVariables(context));
+    allIssues.push(...validateUnusedDataStoreFields(context));
     allIssues.push(...validateTemplateSyntax(context));
     
     // Provider compatibility validators
