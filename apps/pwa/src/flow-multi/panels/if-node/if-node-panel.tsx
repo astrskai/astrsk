@@ -5,6 +5,7 @@ import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
 import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
 import { FlowPanelLoading } from "@/flow-multi/hooks/use-flow-panel";
+import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { debounce } from "lodash-es";
 import { 
   Condition, 
@@ -30,10 +31,24 @@ type EditableCondition = Omit<Condition, 'operator' | 'dataType'> & {
 
 export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
   const { flow, isLoading, saveFlow } = useFlowPanel({ flowId });
+  const { closePanel } = useFlowPanelContext();
   const [logicOperator, setLogicOperator] = useState<'AND' | 'OR'>('AND');
   const [conditions, setConditions] = useState<EditableCondition[]>([]);
   const lastInitializedNodeId = useRef<string | null>(null);
   const flowLoadedRef = useRef<boolean>(false);
+
+  // Auto-close panel when connected node is deleted
+  useEffect(() => {
+    if (!flow || !nodeId) return;
+    
+    // Check if the node still exists in the flow
+    const nodeExists = flow.props.nodes.some(n => n.id === nodeId);
+    
+    if (!nodeExists) {
+      // Node has been deleted, close the panel
+      closePanel(`ifNode-${nodeId}`);
+    }
+  }, [flow?.props.nodes, nodeId, closePanel]);
 
   // Save conditions to node
   const saveConditions = useCallback(async (newConditions: EditableCondition[], newOperator: 'AND' | 'OR') => {
