@@ -84,6 +84,17 @@ const CustomDockviewTab = React.memo((props: IDockviewPanelHeaderProps<CustomTab
   const agentColor = params?.agentColor || currentParams?.agentColor;
   const agentInactive = params?.agentInactive || currentParams?.agentInactive;
   
+  // Debug logging for color issue
+  if (api.id.includes('ifNode')) {
+    console.log('[Tab Debug] If node tab rendering:', {
+      panelId: api.id,
+      params,
+      currentParams,
+      agentColor,
+      displayTitle
+    });
+  }
+  
   // Helper function to convert hex to rgba with opacity
   const hexToRgba = (hex: string, opacity: number) => {
     const cleanHex = hex.replace('#', '');

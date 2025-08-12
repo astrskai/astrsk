@@ -120,8 +120,12 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     
     const updateResult = currentFlow.update({ nodes: updatedNodes });
     if (updateResult.isSuccess) {
-      await saveFlow(updateResult.getValue());
-      
+      try {  
+        await saveFlow(updateResult.getValue());  
+      } catch (e) {  
+        console.error("Failed to save flow:", e);  
+        return;  
+      }  
       // Update the node data directly in the flow panel to trigger re-render
       if ((window as any).flowPanelUpdateNodeData) {
         (window as any).flowPanelUpdateNodeData(nodeId, { dataStoreFields: fields });
@@ -208,8 +212,8 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
 
   // Handle opening data schema setup
   const handleOpenSchema = useCallback(() => {
-    openPanel('dataStoreSchema', nodeId);
-  }, [openPanel, nodeId]);
+    openPanel('dataStoreSchema'); // No nodeId - schema is global
+  }, [openPanel]);
 
   // Get Monaco editor functions from flow context
   const { setLastMonacoEditor } = useFlowPanelContext();
@@ -256,6 +260,30 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     schemaFields.filter(sf => !dataStoreFields.some(df => df.schemaFieldId === sf.id)),
     [schemaFields, dataStoreFields]
   );
+
+  // Check if there are no schema fields at all
+  const hasNoSchema = schemaFields.length === 0;
+
+  // Show "No schema available" page if no schema fields exist
+  if (hasNoSchema) {
+    return (
+      <div className="flex h-full bg-background-surface-2">
+        <div className="flex-1 flex flex-col justify-center items-center gap-8 p-2">
+          <div className="flex flex-col justify-start items-center gap-2">
+            <div className="text-center text-text-body text-base font-semibold leading-relaxed">No schema fields available</div>
+            <div className="text-center text-background-surface-5 text-xs font-normal">Create a data schema to define the fields used in this node.</div>
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleOpenSchema}
+          >
+            Go to Data schema setup
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-background-surface-2">
