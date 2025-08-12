@@ -6,6 +6,8 @@ import { PANEL_TYPES } from "@/flow-multi/components/panel-types";
 import { Agent, ApiType } from "@/modules/agent/domain/agent";
 import { Node as FlowNode, Edge as FlowEdge, FlowViewport, Flow } from "@/modules/flow/domain/flow";
 import { getNextAvailableColor } from "@/flow-multi/utils/agent-color-assignment";
+import { ensureNodeSafety, ensureNodesSafety } from "@/flow-multi/utils/ensure-node-safety";
+import { ensureEdgeSelectable, ensureEdgesSelectable } from "@/flow-multi/utils/ensure-edge-selectable";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
 import { cn } from "@/shared/utils";
@@ -406,23 +408,25 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     const flowIdStr = flow.id.toString();
     const isDifferentFlow = lastSyncedFlowIdRef.current !== flowIdStr;
     
-    // Get external data
-    const externalNodes = (flow.props.nodes as CustomNodeType[]) || [];
+    // Get external data and ensure nodes are safe from keyboard deletion
+    const externalNodes = ensureNodesSafety((flow.props.nodes as CustomNodeType[]) || []);
     // Filter out invalid edges (edges with both source and target must exist in nodes)
     const rawExternalEdges = (flow.props.edges as CustomEdgeType[]) || [];
     const nodeIds = new Set(externalNodes.map(n => n.id));
     
-    const externalEdges = rawExternalEdges.filter(edge => {
-      // Edge must have valid source and target that exist in nodes
-      const isValid = edge.source && edge.target && 
-                     nodeIds.has(edge.source) && nodeIds.has(edge.target);
-      
-      if (!isValid && edge.source && edge.target) {
-        console.warn(`Filtering out orphaned edge: ${edge.source} -> ${edge.target}`);
-      }
-      
-      return isValid;
-    });
+    const externalEdges = ensureEdgesSelectable(
+      rawExternalEdges.filter(edge => {
+        // Edge must have valid source and target that exist in nodes
+        const isValid = edge.source && edge.target && 
+                       nodeIds.has(edge.source) && nodeIds.has(edge.target);
+        
+        if (!isValid && edge.source && edge.target) {
+          console.warn(`Filtering out orphaned edge: ${edge.source} -> ${edge.target}`);
+        }
+        
+        return isValid;
+      })
+    );
     const currentDataHash = createDataHash(externalNodes, externalEdges);
     
     // Check if external data actually changed (ignoring positions)
@@ -544,14 +548,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         : { x: 400, y: 200 };
 
       // Create new agent node
-      const newAgentNode: CustomNodeType = {
+      const newAgentNode: CustomNodeType = ensureNodeSafety({
         id: savedAgent.id.toString(),
         type: "agent",
         position: newNodePosition,
         data: {
           agentId: savedAgent.id.toString(),
         },
-      };
+      });
 
       // Update local state immediately
       const updatedNodes = [...nodes, newAgentNode];
@@ -603,7 +607,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     const nextColor = await getNextAvailableColor(currentFlow);
 
     // Create new Data Store node
-    const newNode: CustomNodeType = {
+    const newNode: CustomNodeType = ensureNodeSafety({
       id: `datastore-${Date.now()}`,
       type: "dataStore",
       position: newPosition,
@@ -611,7 +615,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         label: "New Data Store",
         color: nextColor,
       },
-    };
+    });
 
     // Update nodes - use currentFlow.props.nodes instead of component state to avoid stale data
     const currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
@@ -654,7 +658,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     
 
     // Create new If node
-    const newNode: CustomNodeType = {
+    const newNode: CustomNodeType = ensureNodeSafety({
       id: `if-${Date.now()}`,
       type: "if",
       position: newPosition,
@@ -664,7 +668,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         conditions: [],
         color: nextColor
       },
-    };
+    });
     
 
     // Update nodes - use currentFlow.props.nodes instead of component state to avoid stale data
@@ -756,14 +760,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       const newPosition = viewportCenter;
 
       // Create new agent node
-      const newAgentNode: CustomNodeType = {
+      const newAgentNode: CustomNodeType = ensureNodeSafety({
         id: savedAgent.id.toString(),
         type: "agent",
         position: newPosition,
         data: {
           agentId: savedAgent.id.toString(),
         },
-      };
+      });
 
       // Update nodes
       const updatedNodes = [...nodes, newAgentNode];
@@ -868,12 +872,12 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         newNodeData.color = nextColor;
       }
       
-      const newNode: CustomNodeType = {
+      const newNode: CustomNodeType = ensureNodeSafety({
         ...nodeToCopy,
         id: `${nodeToCopy.type}-${Date.now()}`,
         position: newPosition,
-        data: newNodeData
-      };
+        data: newNodeData,
+      });
 
       // Update nodes
       const updatedNodes = [...nodes, newNode];
@@ -1090,6 +1094,13 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       
       // Add the new connection with label for if-node edges
       let updatedEdges = addEdge(connection, filteredEdges);
+      
+      // Make the newly added edge selectable
+      updatedEdges = updatedEdges.map(edge => 
+        edge.source === connection.source && edge.target === connection.target
+          ? ensureEdgeSelectable(edge)
+          : edge
+      );
       
       // Add label for if-node edges
       if (sourceNode?.type === 'if' && connection.sourceHandle) {
@@ -1345,22 +1356,25 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const handleEdgesChange = useCallback((changes: any) => {
     onEdgesChange(changes);
     
-    // Save the flow when edges change (e.g., deletion)
-    // Use setTimeout to allow ReactFlow to update the state first
-    setTimeout(() => {
-      const currentEdges = edges.filter(edge => {
-        // Check if edge is being removed
-        const removeChange = changes.find((change: any) => 
-          change.type === 'remove' && change.id === edge.id
-        );
-        return !removeChange;
-      });
-      // Save and invalidate queries for edge changes so agent nodes update
-      isLocalChangeRef.current = true; // Mark as local change
-      // Only invalidate if edges were actually removed (structural change)
-      saveFlowChanges(nodes, currentEdges, true);
-    }, 0);
-  }, [onEdgesChange, edges, nodes, saveFlowChanges]);
+    // Check if any edges were removed
+    const hasRemovals = changes.some((change: any) => change.type === 'remove');
+    
+    if (hasRemovals) {
+      // Save the flow when edges are deleted
+      // Use setTimeout to allow ReactFlow to update the state first
+      setTimeout(() => {
+        // Get the latest edges from the ref which will be updated by onEdgesChange
+        const currentEdges = edgesRef.current;
+        const currentNodes = nodesRef.current;
+        
+        // Mark as local change
+        isLocalChangeRef.current = true;
+        
+        // Save and invalidate queries for edge changes so agent nodes update
+        saveFlowChanges(currentNodes, currentEdges, true);
+      }, 0);
+    }
+  }, [onEdgesChange, saveFlowChanges]);
 
   // Preview session
   const { data: sessions = [], isLoading: isLoadingSessions } = useQuery({
@@ -1577,6 +1591,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                   onViewportChange={onViewportChange}
                   nodeTypes={nodeTypes}
                   edgeTypes={edgeTypes}
+                  deleteKeyCode={["Backspace", "Delete"]}
+                  elementsSelectable={true}
+                  selectNodesOnDrag={false}
                   defaultViewport={flow?.props.viewport ? {
                     x: flow.props.viewport.x,
                     y: flow.props.viewport.y,
