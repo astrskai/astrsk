@@ -1278,12 +1278,13 @@ async function generateTextOutput({
       messages,
       abortSignal: combinedAbortSignal,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 &&
-        modelProvider && {
-          providerOptions: {
-            [modelProvider]: providerOptions,
-          },
-        }),
+      ...(Object.keys(providerOptions).length > 0 && modelProvider
+        ? {
+            providerOptions: {
+              [modelProvider]: providerOptions,
+            },
+          }
+        : {}),
       experimental_transform: smoothStream({
         delayInMs: 20,
         chunking: "word",
@@ -1298,12 +1299,13 @@ async function generateTextOutput({
       messages,
       abortSignal: combinedAbortSignal,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 &&
-        modelProvider && {
-          providerOptions: {
-            [modelProvider]: providerOptions,
-          },
-        }),
+      ...(Object.keys(providerOptions).length > 0 && modelProvider
+        ? {
+            providerOptions: {
+              [modelProvider]: providerOptions,
+            },
+          }
+        : {}),
     });
 
     // Create a generator to return the final text
@@ -1417,12 +1419,13 @@ async function generateStructuredOutput({
       schemaName: schema.name,
       schemaDescription: schema.description,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 &&
-        modelProvider && {
-          providerOptions: {
-            [modelProvider]: providerOptions,
-          },
-        }),
+      ...(Object.keys(providerOptions).length > 0 && modelProvider
+        ? {
+            providerOptions: {
+              [modelProvider]: providerOptions,
+            },
+          }
+        : {}),
       mode,
       onError: (error) => {
         throw error.error;
@@ -1437,12 +1440,13 @@ async function generateStructuredOutput({
       schemaName: schema.name,
       schemaDescription: schema.description,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 &&
-        modelProvider && {
-          providerOptions: {
-            [modelProvider]: providerOptions,
-          },
-        }),
+      ...(Object.keys(providerOptions).length > 0 && modelProvider
+        ? {
+            providerOptions: {
+              [modelProvider]: providerOptions,
+            },
+          }
+        : {}),
     });
 
     // Create a generator to return the final object
@@ -1660,8 +1664,12 @@ async function* executeFlow({
               `Failed to initialize dataStore field "${schemaField.name}": ${error}`,
             );
             // Set default value based on type
-            dataStore[schemaField.name] = schemaField.type === "number" || schemaField.type === "integer" ? 0 : 
-                                         schemaField.type === "boolean" ? false : "";
+            dataStore[schemaField.name] =
+              schemaField.type === "number" || schemaField.type === "integer"
+                ? 0
+                : schemaField.type === "boolean"
+                  ? false
+                  : "";
           }
         }
       }
@@ -1961,12 +1969,14 @@ function convertValueToType(
   switch (dataType) {
     case "string":
       return String(value);
-    case "number":
+    case "number": {
       const numValue = Number(value);
       return isNaN(numValue) ? null : numValue;
-    case "integer":
+    }
+    case "integer": {
       const intValue = parseInt(value, 10);
       return isNaN(intValue) ? null : intValue;
+    }
     case "boolean":
       if (typeof value === "boolean") return value;
       if (typeof value === "string") {
@@ -2195,17 +2205,20 @@ function convertToDataStoreType(value: string, type: DataStoreFieldType): any {
   switch (type) {
     case "string":
       return String(value);
-    case "number":
+    case "number": {
       const num = Number(value);
       return isNaN(num) ? 0 : num;
-    case "boolean":
+    }
+    case "boolean": {
       const lowerValue = value.toLowerCase().trim();
       return (
         lowerValue === "true" || lowerValue === "1" || lowerValue === "yes"
       );
-    case "integer":
+    }
+    case "integer": {
       const int = parseInt(value, 10);
       return isNaN(int) ? 0 : int;
+    }
     default:
       return value;
   }
@@ -2235,6 +2248,7 @@ export {
   addMessage,
   addOptionToMessage,
   createMessage,
+  evaluateConditionOperator,
   executeFlow,
   makeContext,
   renderMessages,
