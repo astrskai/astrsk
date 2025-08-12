@@ -8,8 +8,6 @@ import { Node as FlowNode, Edge as FlowEdge, FlowViewport, Flow } from "@/module
 import { getNextAvailableColor } from "@/flow-multi/utils/agent-color-assignment";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
-import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
-import { validateAllNodes, repairNodeData } from "@/flow-multi/utils/node-data-validation";
 import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
@@ -216,41 +214,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     if (!flow) return;
 
     try {
-      // Validate all nodes before saving
-      const validationResult = validateAllNodes(updatedNodes as any);
-      
-      if (!validationResult.isValid) {
-        console.error('[Flow Save] Node validation failed:', validationResult.errors);
-        toast.error('Cannot save flow: Invalid node data detected', {
-          description: validationResult.errors[0]
-        });
-        
-        // Attempt to repair nodes
-        const repairedNodes = updatedNodes.map(node => {
-          const nodeValidation = validateAllNodes([node as any]);
-          if (!nodeValidation.isValid) {
-            console.warn(`[Flow Save] Attempting to repair node ${node.id}`);
-            return repairNodeData(node as any) as CustomNodeType;
-          }
-          return node;
-        });
-        
-        // Re-validate after repair
-        const revalidationResult = validateAllNodes(repairedNodes as any);
-        if (!revalidationResult.isValid) {
-          console.error('[Flow Save] Node repair failed, aborting save');
-          return;
-        }
-        
-        console.log('[Flow Save] Nodes repaired successfully');
-        updatedNodes = repairedNodes;
-      }
-      
-      // Log warnings if any
-      if (validationResult.warnings.length > 0) {
-        console.warn('[Flow Save] Node validation warnings:', validationResult.warnings);
-      }
-      
       // Filter out invalid edges before saving
       const nodeIds = new Set(updatedNodes.map(n => n.id));
       const validEdges = updatedEdges.filter(edge => {
@@ -940,8 +903,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         saveFlowChanges(updatedNodes, updatedEdges);
       }, 0);
 
-      const deletedNodeType = nodeToDelete.type as string;
-      toast.success(`${deletedNodeType === 'if' ? 'If' : 'Data Store'} node deleted`);
+      toast.success(`${nodeToDelete.type === 'if' ? 'If' : 'Data Store'} node deleted`);
     } catch (error) {
       toast.error("Failed to delete node", {
         description: error instanceof Error ? error.message : "Unknown error",
@@ -1015,22 +977,10 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         if (node.id !== nodeId) return node;
         
         // Create the updated node
-        const updatedNode = { 
+        return { 
           ...node, 
           data: { ...node.data, ...newData } 
         };
-        
-        // Validate the updated node
-        const validation = validateAllNodes([updatedNode as any]);
-        if (!validation.isValid) {
-          console.error(`[updateNodeData] Update would create invalid node:`, validation.errors);
-          toast.error('Cannot update node: Would create invalid data', {
-            description: validation.errors[0]
-          });
-          return node; // Return original node unchanged
-        }
-        
-        return updatedNode;
       });
       
       return updatedNodes;

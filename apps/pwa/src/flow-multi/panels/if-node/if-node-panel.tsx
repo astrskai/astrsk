@@ -41,11 +41,18 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
     const node = flow.props.nodes.find(n => n.id === nodeId);
     if (!node) return;
 
+    // Filter out incomplete conditions (where dataType or operator is null)
+    // Only persist fully-formed conditions to prevent downstream issues
+    const validConditions = newConditions.filter(c => 
+      c.dataType !== null && c.operator !== null
+    );
+
     const updatedNode = {
       ...node,
       data: {
         ...node.data,
-        conditions: newConditions,
+        conditions: validConditions,
+        draftConditions: newConditions, // Store all conditions including drafts
         logicOperator: newOperator
       }
     };
@@ -61,7 +68,8 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       // Update the node data directly in the flow panel to trigger re-render
       if ((window as any).flowPanelUpdateNodeData) {
         (window as any).flowPanelUpdateNodeData(nodeId, { 
-          conditions: newConditions,
+          conditions: validConditions, // Only valid conditions for evaluation
+          draftConditions: newConditions, // All conditions including drafts
           logicOperator: newOperator 
         });
       }
@@ -82,7 +90,8 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       const nodeData = node?.data as any;
       
       // Load existing conditions or create default
-      const existingConditions = nodeData?.conditions || [];
+      // Prefer draftConditions (includes incomplete ones) for UI state
+      const existingConditions = nodeData?.draftConditions || nodeData?.conditions || [];
       const existingOperator = nodeData?.logicOperator || 'AND';
       
       setLogicOperator(existingOperator);
@@ -91,7 +100,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       if (existingConditions.length > 0) {
         // Migrate old conditions that don't have dataType
         const migratedConditions: EditableCondition[] = existingConditions.map((c: any) => {
-          if (!c.dataType) {
+          if (!c.dataType && c.operator) {
             // Infer data type from operator for backwards compatibility
             let dataType: ConditionDataType | null = 'string';
             if (c.operator === 'greater_than' || c.operator === 'less_than' || 
@@ -105,7 +114,12 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
               operator: c.operator || 'equals'
             };
           }
-          return c;
+          // For new conditions with null dataType/operator, keep them as-is
+          return {
+            ...c,
+            dataType: c.dataType ?? null,
+            operator: c.operator ?? null
+          };
         });
         setConditions(migratedConditions);
       } else {

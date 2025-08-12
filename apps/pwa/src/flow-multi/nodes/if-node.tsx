@@ -4,6 +4,7 @@ import { type Node, type NodeProps } from "@xyflow/react";
 import { useState, useCallback, useMemo } from "react";
 import { Copy, Trash2, Pencil } from "lucide-react";
 import { CustomHandle, CustomIfHandle } from "@/flow-multi/components/custom-handle";
+import { ConditionDataType, ConditionOperator } from "@/flow-multi/types/condition-types";
 import {
   Tooltip,
   TooltipContent,
@@ -33,10 +34,18 @@ import { toast } from "sonner";
  */
 export interface IfCondition {
   id: string;
+  dataType: ConditionDataType;
   value1: string;
-  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains';
+  operator: ConditionOperator;
   value2: string;
 }
+
+/**
+ * Centralized predicate to check if a condition is valid
+ */
+const isValidCondition = (c: IfCondition): boolean => {
+  return c.value1?.trim() !== '' && c.operator !== null && c.dataType !== null;
+};
 
 /**
  * If node data type definition
@@ -88,11 +97,10 @@ export default function IfNode({
   // Use flow validation hook
   const { isValid: isFlowValid, invalidNodeReasons } = useFlowValidation(selectedFlowId ? new UniqueEntityID(selectedFlowId) : null);
   
-  // Check if node is connected
+  // Check if node is connected (connectivity should be independent of flow validity)
   const isConnected = useMemo(() => {
     if (!flow) return false;
-    const traversalResult = traverseFlow(flow);
-    return traversalResult.connectedSequence.includes(id) && traversalResult.hasValidFlow;
+    return traverseFlow(flow).connectedSequence.includes(id);
   }, [flow, id]);
   
   // Check if this specific node is invalid (only show if connected)
@@ -210,18 +218,10 @@ export default function IfNode({
     setIsDeleteDialogOpen(false);
   }, [id]);
 
-  // Get condition count and check if conditions are valid
-  const conditionCount = data.conditions?.length || 0;
-  // A condition is valid if it has value1, operator, and dataType filled in
-  const hasValidConditions = data.conditions?.some((c: any) => 
-    c.value1 && c.value1.trim() !== '' && c.operator && c.dataType
-  ) || false;
+  // Use centralized predicate to check valid conditions
+  const hasValidConditions = data.conditions?.some((c: IfCondition) => isValidCondition(c)) ?? false;
+  const displayCount = hasValidConditions ? data.conditions?.filter((c: IfCondition) => isValidCondition(c)).length ?? 0 : 0;
   const hasConditions = hasValidConditions;
-  
-  // Display count for badge
-  const displayCount = hasValidConditions ? data.conditions?.filter((c: any) => 
-    c.value1 && c.value1.trim() !== '' && c.operator && c.dataType
-  ).length || 0 : 0;
 
   return (
     <div 
@@ -281,7 +281,7 @@ export default function IfNode({
               <div className={`self-stretch text-center justify-start text-xs font-medium ${
                 isPanelActive ? 'text-text-info' : 'text-text-secondary'
               }`}>
-                Edit condition
+                {displayCount > 0 ? `Edit conditions (${displayCount})` : 'Edit condition'}
               </div>
             </button>
             

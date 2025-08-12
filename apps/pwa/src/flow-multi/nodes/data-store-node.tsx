@@ -81,11 +81,10 @@ export default function DataStoreNode({
   // Use flow validation hook
   const { isValid: isFlowValid, invalidNodeReasons } = useFlowValidation(selectedFlowId ? new UniqueEntityID(selectedFlowId) : null);
   
-  // Check if node is connected
+  // Check if node is connected (connectivity should be independent of flow validity)
   const isConnected = useMemo(() => {
     if (!flow) return false;
-    const traversalResult = traverseFlow(flow);
-    return traversalResult.connectedSequence.includes(id) && traversalResult.hasValidFlow;
+    return traverseFlow(flow).connectedSequence.includes(id);
   }, [flow, id]);
   
   // Check if this specific node is invalid (only show if connected)
