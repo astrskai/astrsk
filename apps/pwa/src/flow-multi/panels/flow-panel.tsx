@@ -493,6 +493,15 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     if (!flow) return;
     
     try {
+      // First check if the agent exists
+      const agentCheckResult = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
+      if (agentCheckResult.isFailure) {
+        toast.error("Cannot copy agent", {
+          description: "This agent no longer exists. It may have been deleted."
+        });
+        return;
+      }
+      
       // Use the cloneAgent use case for cleaner implementation
       const clonedAgentResult = await AgentService.cloneAgent.execute(new UniqueEntityID(agentId));
       if (clonedAgentResult.isFailure) {
@@ -502,13 +511,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       
       // Update the cloned agent with a new color
       const nextColor = await getNextAvailableColor(flow);
-      const updatedAgent = clonedAgent.update({ color: nextColor });
-      if (updatedAgent.isFailure) {
-        throw new Error(updatedAgent.getError());
+      const updatedAgentResult = clonedAgent.update({ color: nextColor });
+      if (updatedAgentResult.isFailure) {
+        throw new Error(updatedAgentResult.getError());
       }
+      const updatedAgent = updatedAgentResult.getValue();
       
       // Save the updated agent with new color
-      const savedAgentResult = await AgentService.saveAgent.execute(clonedAgent);
+      const savedAgentResult = await AgentService.saveAgent.execute(updatedAgent);
       if (savedAgentResult.isFailure) {
         throw new Error(savedAgentResult.getError());
       }
@@ -544,6 +554,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       
       // Invalidate agent queries for color updates
       invalidateAllAgentQueries();
+      
+      toast.success("Agent copied successfully");
       
     } catch (error) {
       toast.error("Failed to copy agent", {
@@ -798,10 +810,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         saveFlowChanges(updatedNodes, updatedEdges);
       }, 0);
       
-      // Invalidate flow queries
-      // await queryClient.invalidateQueries({
-      //   queryKey: flowQueries.detail(flow.id).queryKey
-      // });
+      // Invalidate flow and agent queries
+      invalidateSingleFlowQueries(flow.id);
+      invalidateAllAgentQueries();
       
     } catch (error) {
       toast.error("Failed to delete agent", {

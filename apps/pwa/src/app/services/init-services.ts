@@ -20,6 +20,7 @@ export async function initServices(): Promise<void> {
   FlowService.init(
     AgentService.agentRepo,
     AgentService.agentRepo,
+    AgentService.agentRepo,
   );
 
   // Card

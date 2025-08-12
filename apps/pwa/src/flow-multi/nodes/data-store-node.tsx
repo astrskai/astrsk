@@ -25,7 +25,7 @@ import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
 import { useAgentStore } from "@/app/stores/agent-store";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { UniqueEntityID } from "@/shared/domain";
-import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
 import { SimpleFieldBadges } from "@/components-v2/ui/field-badges";
 import { toast } from "sonner";
 import type { DataStoreSchemaField, DataStoreField } from "@/modules/flow/domain/flow";
@@ -81,21 +81,23 @@ export default function DataStoreNode({
   // Use flow validation hook
   const { isValid: isFlowValid, invalidNodeReasons } = useFlowValidation(selectedFlowId ? new UniqueEntityID(selectedFlowId) : null);
   
-  // Check if node is connected (connectivity should be independent of flow validity)
-  const isConnected = useMemo(() => {
+  // Check if node is connected from start to end
+  const isFullyConnected = useMemo(() => {
     if (!flow) return false;
-    return traverseFlow(flow).connectedSequence.includes(id);
+    const traversalResult = traverseFlowCached(flow);
+    const nodePosition = traversalResult.processNodePositions.get(id);
+    return nodePosition ? nodePosition.isConnectedToStart && nodePosition.isConnectedToEnd : false;
   }, [flow, id]);
   
-  // Check if this specific node is invalid (only show if connected)
-  const isNodeInvalid = isConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
+  // Check if this specific node is invalid (only show if fully connected from start to end)
+  const isNodeInvalid = isFullyConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
   
   // Calculate opacity based on connection state and flow validity
   const nodeOpacity = useMemo(() => {
     if (!flow) return 1;
     
     // If node is not connected to both start and end, return 70% opacity
-    if (!isConnected) {
+    if (!isFullyConnected) {
       return 0.7;
     }
     // If node is connected but the flow has invalid nodes, return 70% opacity
@@ -105,7 +107,7 @@ export default function DataStoreNode({
     
     // Return full opacity for connected nodes in a valid flow
     return 1;
-  }, [flow, isConnected, isFlowValid]);
+  }, [flow, isFullyConnected, isFlowValid]);
   
   // Calculate opacity with hex alpha channel
   const colorWithOpacity = useMemo(() => {
@@ -270,7 +272,7 @@ export default function DataStoreNode({
         <button 
           onClick={handleEditClick}
           className={`self-stretch h-20 px-2 rounded-lg outline outline-offset-[-1px] flex flex-col justify-center items-center gap-2 transition-all ${
-            hasNoFields 
+            hasNoFields && isFullyConnected 
               ? isPanelActive
                 ? 'bg-background-surface-light outline-status-destructive-light hover:opacity-70'
                 : 'bg-background-surface-4 outline-status-destructive-light hover:bg-background-surface-5'

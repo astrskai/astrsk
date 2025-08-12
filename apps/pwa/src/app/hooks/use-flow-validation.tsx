@@ -40,10 +40,10 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
       const invalidAgents: string[] = [];
 
       // First, get flow traversal to know which agents are connected
-      const { traverseFlow } = await import(
-        "@/flow-multi/utils/flow-traversal"
+      const { traverseFlowCached } = await import(
+        "@/flow-multi/utils/flow-traversal-cache"
       );
-      const traversalResult = traverseFlow(flow);
+      const traversalResult = traverseFlowCached(flow);
 
       for (const agentId of flow.agentIds) {
         try {
@@ -93,19 +93,21 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
         // Validate if nodes - must have at least one valid condition
         if (node.type === 'if') {
           const nodeData = node.data as any;
+          const nodeName = nodeData?.label || nodeId;
           const conditions = nodeData?.conditions || [];
           const hasValidCondition = conditions.some((c: any) => 
             c.value1 && c.value1.trim() !== '' && c.operator && c.dataType
           );
           if (!hasValidCondition) {
             invalidIfNodes++;
-            invalidNodeReasons[nodeId] = ['If node must have at least one complete condition with value, operator, and data type'];
+            invalidNodeReasons[nodeId] = [`If node "${nodeName}" must have at least one complete condition with value, operator, and data type`];
           }
         }
         
         // Validate data store nodes - comprehensive validation
         if (node.type === 'dataStore') {
           const nodeData = node.data as any;
+          const nodeName = nodeData?.label || nodeId;
           const dataStoreFields = nodeData?.dataStoreFields || [];
           const schema = flow.props.dataStoreSchema;
           const reasons: string[] = [];
@@ -116,10 +118,10 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
           // 2. That field exists in the schema
           
           if (dataStoreFields.length === 0) {
-            reasons.push('Data store must have at least one field configured');
+            reasons.push(`Data store "${nodeName}" must have at least one field configured`);
           } else if (!schema) {
             // No schema defined but node exists
-            reasons.push('Data store schema is not defined');
+            reasons.push(`Data store "${nodeName}" schema is not defined`);
           } else {
             // Check if at least one configured field exists in schema
             let hasValidField = false;
