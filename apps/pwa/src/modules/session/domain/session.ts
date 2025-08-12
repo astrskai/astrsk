@@ -36,6 +36,7 @@ export interface SessionProps {
   flowId: UniqueEntityID;
 
   autoReply: AutoReply;
+  dataStore: object;
 
   // Set by system
   createdAt: Date;
@@ -115,6 +116,10 @@ export class Session extends AggregateRoot<SessionProps> {
     return this.props.autoReply;
   }
 
+  get dataStore(): object {
+    return this.props.dataStore;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
@@ -142,6 +147,7 @@ export class Session extends AggregateRoot<SessionProps> {
       chatStyles: props.chatStyles,
       flowId: props.flowId!,
       autoReply: props.autoReply ?? AutoReply.Off,
+      dataStore: props.dataStore || {},
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date(),
     };
