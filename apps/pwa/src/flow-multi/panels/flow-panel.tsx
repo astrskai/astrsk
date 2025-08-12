@@ -828,7 +828,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       setTimeout(() => {
         saveFlowChanges(updatedNodes, updatedEdges);
       }, 0);
-      
+
+      // Close all panels associated with this agent
+      const agentPanelTypes = ['prompt', 'parameter', 'structuredOutput', 'preview'];
+      agentPanelTypes.forEach(panelType => {
+        const panelId = `${panelType}-${agentId}`;
+        closePanel(panelId);
+      });
+
       // Invalidate flow and agent queries
       invalidateSingleFlowQueries(currentFlow.id);
       invalidateAllAgentQueries();
@@ -1488,15 +1495,17 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                   Loading sessions...
                 </SelectItem>
               ) : (
-                sessions.map((session) => (
-                  <SelectItem
-                    key={session.id.toString()}
-                    value={session.id.toString()}
-                  >
-                    {session.props.title ||
-                      `Session ${session.id.toString().slice(0, 8)}`}
-                  </SelectItem>
-                ))
+                sessions
+                  .filter((session) => session.flowId?.equals(flow.id))
+                  .map((session) => (
+                    <SelectItem
+                      key={session.id.toString()}
+                      value={session.id.toString()}
+                    >
+                      {session.props.title ||
+                        `Session ${session.id.toString().slice(0, 8)}`}
+                    </SelectItem>
+                  ))
               )}
             </SelectContent>
           </Select>

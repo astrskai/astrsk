@@ -41,13 +41,26 @@ interface DataStorePanelProps {
 
 export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   const { flow, saveFlow } = useFlowPanel({ flowId });
-  const { openPanel } = useFlowPanelContext();
+  const { openPanel, closePanel } = useFlowPanelContext();
 
   // Store flow in ref to prevent re-renders from triggering logic reset
   const flowRef = useRef(flow);
   useEffect(() => {
     flowRef.current = flow;
   }, [flow]);
+
+  // Auto-close panel when connected node is deleted
+  useEffect(() => {
+    if (!flow || !nodeId) return;
+    
+    // Check if the node still exists in the flow
+    const nodeExists = flow.props.nodes.some(n => n.id === nodeId);
+    
+    if (!nodeExists) {
+      // Node has been deleted, close the panel
+      closePanel(`dataStore-${nodeId}`);
+    }
+  }, [flow?.props.nodes, nodeId, closePanel]);
 
 
   // Get node data from flow

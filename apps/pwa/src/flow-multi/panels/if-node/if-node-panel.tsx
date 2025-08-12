@@ -32,11 +32,25 @@ type EditableCondition = Omit<Condition, 'operator' | 'dataType'> & {
 export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
   const { flow, isLoading, saveFlow } = useFlowPanel({ flowId });
   const { setLastInputField } = useFlowPanelContext();
+  const { closePanel } = useFlowPanelContext();
   const [logicOperator, setLogicOperator] = useState<'AND' | 'OR'>('AND');
   const [conditions, setConditions] = useState<EditableCondition[]>([]);
   const lastInitializedNodeId = useRef<string | null>(null);
   const flowLoadedRef = useRef<boolean>(false);
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
+  // Auto-close panel when connected node is deleted
+  useEffect(() => {
+    if (!flow || !nodeId) return;
+    
+    // Check if the node still exists in the flow
+    const nodeExists = flow.props.nodes.some(n => n.id === nodeId);
+    
+    if (!nodeExists) {
+      // Node has been deleted, close the panel
+      closePanel(`ifNode-${nodeId}`);
+    }
+  }, [flow?.props.nodes, nodeId, closePanel]);
 
   // Save conditions to node
   const saveConditions = useCallback(async (newConditions: EditableCondition[], newOperator: 'AND' | 'OR') => {
