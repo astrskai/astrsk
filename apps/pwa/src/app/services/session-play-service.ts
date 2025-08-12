@@ -45,6 +45,8 @@ import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useWllamaStore } from "@/app/stores/wllama-store";
+import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
+import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
 import { OutputFormat } from "@/modules/agent/domain";
 import { ApiSource } from "@/modules/api/domain";
 import {
@@ -53,6 +55,7 @@ import {
 } from "@/modules/api/domain/api-connection";
 import { PlotCard } from "@/modules/card/domain";
 import { CharacterCard } from "@/modules/card/domain/character-card";
+import { DataStoreFieldType } from "@/modules/flow/domain/flow";
 import { Session } from "@/modules/session/domain/session";
 import { Option } from "@/modules/turn/domain/option";
 import { Turn as MessageEntity } from "@/modules/turn/domain/turn";
@@ -234,10 +237,7 @@ const makeContext = async ({
   for (let i = 0; i <= 1; i++) {
     for (const char of allCharacters) {
       try {
-        char.name = TemplateRenderer.render(
-          char.name || "",
-          context,
-        );
+        char.name = TemplateRenderer.render(char.name || "", context);
         char.description = TemplateRenderer.render(
           char.description || "",
           context,
@@ -263,10 +263,7 @@ const makeContext = async ({
         .scanHistory(historyContent)
         .throwOnFailure()
         .getValue()
-        .map((entry) => TemplateRenderer.render(
-          entry.content || "",
-          context,
-        ));
+        .map((entry) => TemplateRenderer.render(entry.content || "", context));
       entries.push(...activatedEntries);
       context.session.plot_entries = activatedEntries;
     } catch (error) {
@@ -1281,11 +1278,12 @@ async function generateTextOutput({
       messages,
       abortSignal: combinedAbortSignal,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
-        providerOptions: {
-          [modelProvider]: providerOptions,
-        },
-      }),
+      ...(Object.keys(providerOptions).length > 0 &&
+        modelProvider && {
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }),
       experimental_transform: smoothStream({
         delayInMs: 20,
         chunking: "word",
@@ -1300,11 +1298,12 @@ async function generateTextOutput({
       messages,
       abortSignal: combinedAbortSignal,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
-        providerOptions: {
-          [modelProvider]: providerOptions,
-        },
-      }),
+      ...(Object.keys(providerOptions).length > 0 &&
+        modelProvider && {
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }),
     });
 
     // Create a generator to return the final text
@@ -1418,11 +1417,12 @@ async function generateStructuredOutput({
       schemaName: schema.name,
       schemaDescription: schema.description,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
-        providerOptions: {
-          [modelProvider]: providerOptions,
-        },
-      }),
+      ...(Object.keys(providerOptions).length > 0 &&
+        modelProvider && {
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }),
       mode,
       onError: (error) => {
         throw error.error;
@@ -1437,11 +1437,12 @@ async function generateStructuredOutput({
       schemaName: schema.name,
       schemaDescription: schema.description,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
-        providerOptions: {
-          [modelProvider]: providerOptions,
-        },
-      }),
+      ...(Object.keys(providerOptions).length > 0 &&
+        modelProvider && {
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }),
     });
 
     // Create a generator to return the final object
@@ -1462,11 +1463,11 @@ type AgentNodeResult = {
 
 async function* executeAgentNode({
   agentId,
-  contextWithVariables,
+  fullContext,
   stopSignalByUser,
 }: {
   agentId: UniqueEntityID;
-  contextWithVariables: any;
+  fullContext: any;
   stopSignalByUser?: AbortSignal;
 }): AsyncGenerator<AgentNodeResult, AgentNodeResult, void> {
   try {
@@ -1492,7 +1493,7 @@ async function* executeAgentNode({
     // Render messages
     const messages = await renderMessages({
       renderable: agent,
-      context: contextWithVariables,
+      context: fullContext,
       parameters: agent.parameters,
     });
     validateMessages(messages, apiConnection.source);
@@ -1602,7 +1603,13 @@ async function* executeFlow({
       throw new Error("No start node found in flow");
     }
 
-    // Build adjacency list from edges
+    // Validate flow structure using traverseFlow
+    const traversalResult = traverseFlow(flow);
+    if (!traversalResult.hasValidFlow) {
+      throw new Error("Invalid flow structure detected");
+    }
+
+    // Build adjacency list from edges for navigation
     const adjacencyList = new Map<string, string[]>();
     flow.props.nodes.forEach((node) => {
       adjacencyList.set(node.id, []);
@@ -1612,29 +1619,6 @@ async function* executeFlow({
       neighbors.push(edge.target);
       adjacencyList.set(edge.source, neighbors);
     });
-
-    // Find execution order using DFS
-    const visited = new Set<string>();
-    const executionOrder: string[] = [];
-    const dfs = (nodeId: string) => {
-      if (visited.has(nodeId)) {
-        return;
-      }
-      visited.add(nodeId);
-      const node = flow.props.nodes.find((n) => n.id === nodeId);
-      if (node) {
-        if (node.type === "agent") {
-          executionOrder.push(nodeId);
-        }
-        // Continue to next nodes
-        const neighbors = adjacencyList.get(nodeId) || [];
-        neighbors.forEach((neighbor) => dfs(neighbor));
-      }
-    };
-    dfs(startNode.id);
-    if (executionOrder.length === 0) {
-      throw new Error("No agent nodes found in flow execution path");
-    }
 
     // Get session
     const session = (await SessionService.getSession.execute(sessionId))
@@ -1652,44 +1636,148 @@ async function* executeFlow({
       .throwOnFailure()
       .getValue();
 
-    // Execute each node, until end node
-    for (const nodeId of executionOrder) {
-      const node = flow.props.nodes.find((n) => n.id === nodeId);
-      // Check agent node
-      if (!node || node.type !== "agent") {
-        continue;
+    // Initialize or update dataStore from schema
+    let dataStore: Record<string, any> = { ...session.dataStore };
+    if (flow.props.dataStoreSchema) {
+      // Process each schema field
+      for (const schemaField of flow.props.dataStoreSchema.fields) {
+        // Only initialize if field doesn't exist in dataStore
+        if (!(schemaField.name in dataStore)) {
+          try {
+            // Render initial value with current context
+            const renderedValue = TemplateRenderer.render(
+              schemaField.initialValue,
+              createFullContext(context, {}, dataStore), // Include existing dataStore values
+            );
+
+            // Convert to appropriate type
+            dataStore[schemaField.name] = convertToDataStoreType(
+              renderedValue,
+              schemaField.type,
+            );
+          } catch (error) {
+            logger.error(
+              `Failed to initialize dataStore field "${schemaField.name}": ${error}`,
+            );
+            // Set default value based on type
+            dataStore[schemaField.name] = schemaField.type === "number" || schemaField.type === "integer" ? 0 : 
+                                         schemaField.type === "boolean" ? false : "";
+          }
+        }
       }
 
-      // Execute agent
-      const executeAgentNodeResult = executeAgentNode({
-        agentId: new UniqueEntityID(node.id),
-        contextWithVariables: {
-          ...context,
-          ...variables,
-        },
-        stopSignalByUser: stopSignalByUser,
-      });
-      for await (const result of executeAgentNodeResult) {
-        // Accumulate agent output
-        merge(variables, {
-          [result.agentKey ?? ""]: result.output,
+      // DataStore initialization complete (will be saved after successful flow execution)
+    }
+
+    // Execute flow step-by-step, starting from start node
+    let currentNode = startNode;
+    while (currentNode && currentNode.type !== "end") {
+      if (currentNode.type === "agent") {
+        // Execute agent node
+        const executeAgentNodeResult = executeAgentNode({
+          agentId: new UniqueEntityID(currentNode.id),
+          fullContext: createFullContext(context, variables, dataStore),
+          stopSignalByUser: stopSignalByUser,
         });
 
-        // Render content
-        content = TemplateRenderer.render(flow.props.responseTemplate, {
-          ...context,
-          ...variables,
-        });
+        for await (const result of executeAgentNodeResult) {
+          // Accumulate agent output
+          merge(variables, {
+            [result.agentKey ?? ""]: result.output,
+          });
 
-        // Yield response
-        yield {
-          agentName: result.agentName,
-          modelName: result.modelName,
-          content: content,
-          variables: variables,
-        };
+          // Render content
+          content = TemplateRenderer.render(
+            flow.props.responseTemplate,
+            createFullContext(context, variables, dataStore),
+          );
+
+          // Yield response
+          yield {
+            agentName: result.agentName,
+            modelName: result.modelName,
+            content: content,
+            variables: variables,
+          };
+        }
+
+        // Move to next node
+        currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
+      } else if (currentNode.type === "dataStore") {
+        // Execute datastore node
+        const dataStoreFields = (currentNode.data as any).dataStoreFields || [];
+
+        // Process each field sequentially
+        for (const field of dataStoreFields) {
+          // Execute field logic if present
+          if (field.logic) {
+            try {
+              const fullContext = createFullContext(
+                context,
+                variables,
+                dataStore,
+              );
+              const renderedValue = TemplateRenderer.render(
+                field.logic,
+                fullContext,
+              );
+
+              // Find schema field to get type
+              const schemaField = flow.props.dataStoreSchema?.fields.find(
+                (f) => f.id === field.schemaFieldId,
+              );
+
+              if (schemaField) {
+                // Convert and store value
+                dataStore[schemaField.name] = convertToDataStoreType(
+                  renderedValue,
+                  schemaField.type,
+                );
+              } else {
+                logger.warn(
+                  `Schema field not found for dataStore field with ID: ${field.schemaFieldId}`,
+                );
+              }
+            } catch (error) {
+              logger.error(
+                `Failed to execute dataStore field logic for field ID "${field.schemaFieldId}": ${error}`,
+              );
+            }
+          }
+        }
+
+        // Move to next node
+        currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
+      } else if (currentNode.type === "if") {
+        // Handle if node - evaluate condition and choose branch
+        currentNode = await handleIfNode(
+          currentNode,
+          variables,
+          context,
+          dataStore,
+          adjacencyList,
+          flow.props.nodes,
+        );
+      } else {
+        // For start node or other types, just move to next
+        currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
+      }
+
+      // Prevent infinite loops
+      if (!currentNode) {
+        break;
       }
     }
+
+    // Render final content
+    content = TemplateRenderer.render(
+      flow.props.responseTemplate,
+      createFullContext(context, variables, dataStore),
+    );
+    yield {
+      content: content,
+      variables: variables,
+    };
 
     // Translate variables
     const langs: string[] = [];
@@ -1713,10 +1801,7 @@ async function* executeFlow({
         const translatedVariables = await translate(variables, lang);
         const translatedContent = TemplateRenderer.render(
           flow.props.responseTemplate,
-          {
-            ...context,
-            ...translatedVariables,
-          },
+          createFullContext(context, translatedVariables, dataStore),
         );
         translations.set(lang, translatedContent);
       }
@@ -1729,6 +1814,9 @@ async function* executeFlow({
         translations: translations,
       };
     }
+
+    // Flow execution completed successfully - save dataStore changes
+    await updateSessionDataStore(session, dataStore);
   } catch (error) {
     const parsedError = parseAiSdkErrorMessage(error);
     if (parsedError) {
@@ -1746,6 +1834,401 @@ async function* executeFlow({
   };
   logger.debug("[Flow]", result);
   return result;
+}
+
+/**
+ * Get the next node to execute from current node
+ * For regular nodes, returns the first connected node
+ * @param currentNode - Current node
+ * @param adjacencyList - Adjacency list for navigation
+ * @param allNodes - All nodes in the flow
+ * @returns Next node to execute or null if no valid next node
+ */
+function getNextNode(
+  currentNode: any,
+  adjacencyList: Map<string, string[]>,
+  allNodes: any[],
+): any | null {
+  const neighbors = adjacencyList.get(currentNode.id) || [];
+
+  if (neighbors.length === 0) {
+    return null;
+  }
+
+  // For regular nodes, take the first neighbor
+  const nextNodeId = neighbors[0];
+  return allNodes.find((node) => node.id === nextNodeId) || null;
+}
+
+/**
+ * Handle if node - evaluate condition and return next node
+ * @param ifNode - The if node to process
+ * @param variables - Current variables context
+ * @param context - Current execution context
+ * @param adjacencyList - Adjacency list for navigation
+ * @param allNodes - All nodes in the flow
+ * @returns Next node based on condition evaluation
+ */
+async function handleIfNode(
+  ifNode: any,
+  variables: Record<string, any>,
+  context: any,
+  dataStore: Record<string, any>,
+  adjacencyList: Map<string, string[]>,
+  allNodes: any[],
+): Promise<any | null> {
+  // Check neighbors
+  const neighbors = adjacencyList.get(ifNode.id) || [];
+  if (neighbors.length !== 2) {
+    throw new Error(
+      `If node ${ifNode.id} must have exactly 2 outgoing connections`,
+    );
+  }
+
+  // Evaluate condition with full context including dataStore
+  const condition = await evaluateIfCondition(
+    ifNode,
+    variables,
+    context,
+    dataStore,
+  );
+
+  // Choose branch based on condition
+  // Convention: first edge = true branch, second edge = false branch
+  const targetNodeId = condition ? neighbors[0] : neighbors[1];
+
+  return allNodes.find((node) => node.id === targetNodeId) || null;
+}
+
+/**
+ * Evaluate a single condition
+ * @param condition - The condition to evaluate
+ * @param variables - Current variables
+ * @param context - Current context
+ * @returns Boolean result of the condition
+ */
+async function evaluateSingleCondition(
+  condition: Condition,
+  variables: Record<string, any>,
+  context: any,
+  dataStore: Record<string, any>,
+): Promise<boolean> {
+  let value1: string = "";
+  let value2: string = "";
+  try {
+    // Render templates in condition values
+    const fullContext = createFullContext(context, variables, dataStore);
+    value1 = TemplateRenderer.render(condition.value1, fullContext);
+
+    // Convert value1 based on data type
+    const convertedValue1 = convertValueToType(value1, condition.dataType);
+
+    // For unary operators, value2 is not needed
+    let convertedValue2: any = null;
+    if (!isUnaryOperator(condition.operator)) {
+      value2 = TemplateRenderer.render(condition.value2, fullContext);
+      convertedValue2 = convertValueToType(value2, condition.dataType);
+    }
+
+    // Evaluate condition based on operator
+    return evaluateConditionOperator(
+      condition.operator,
+      convertedValue1,
+      convertedValue2,
+    );
+  } catch (error) {
+    const debugInfo = `value1="${value1}"${
+      !isUnaryOperator(condition.operator) ? ` value2="${value2}"` : ""
+    } dataType="${condition.dataType}"`;
+    console.warn(
+      `Failed to evaluate condition ${condition.id} (${condition.operator}): ${debugInfo} - ${error}`,
+    );
+    return false;
+  }
+}
+
+/**
+ * Convert string value to specified type
+ */
+function convertValueToType(
+  value: string,
+  dataType: Condition["dataType"],
+): any {
+  if (value == null) {
+    return value;
+  }
+
+  switch (dataType) {
+    case "string":
+      return String(value);
+    case "number":
+      const numValue = Number(value);
+      return isNaN(numValue) ? null : numValue;
+    case "integer":
+      const intValue = parseInt(value, 10);
+      return isNaN(intValue) ? null : intValue;
+    case "boolean":
+      if (typeof value === "boolean") return value;
+      if (typeof value === "string") {
+        const lowerValue = value.toLowerCase().trim();
+        if (lowerValue === "true" || lowerValue === "1" || lowerValue === "yes")
+          return true;
+        if (lowerValue === "false" || lowerValue === "0" || lowerValue === "no")
+          return false;
+      }
+      return null;
+    default:
+      return value;
+  }
+}
+
+/**
+ * Check if a value is considered empty
+ */
+function isValueEmpty(value: any): boolean {
+  return (
+    value === null ||
+    value === undefined ||
+    value === "" ||
+    (typeof value === "string" && value.trim() === "")
+  );
+}
+
+/**
+ * Evaluate condition operator
+ */
+function evaluateConditionOperator(
+  operator: Condition["operator"],
+  value1: any,
+  value2: any,
+): boolean {
+  // Handle exists/not_exists operators
+  if (operator.endsWith("_exists")) {
+    const isNotExists = operator.endsWith("_not_exists");
+    return isNotExists
+      ? value1 === null || value1 === undefined
+      : value1 !== null && value1 !== undefined;
+  }
+
+  // Handle empty/not_empty operators
+  if (operator.endsWith("_is_empty")) {
+    return isValueEmpty(value1);
+  }
+
+  if (operator.endsWith("_is_not_empty")) {
+    return !isValueEmpty(value1);
+  }
+
+  // Handle string operators
+  if (operator.startsWith("string_")) {
+    const str1 = String(value1 || "");
+    const str2 = String(value2 || "");
+
+    switch (operator) {
+      case "string_equals":
+        return str1 === str2;
+      case "string_not_equals":
+        return str1 !== str2;
+      case "string_contains":
+        return str1.includes(str2);
+      case "string_not_contains":
+        return !str1.includes(str2);
+      case "string_starts_with":
+        return str1.startsWith(str2);
+      case "string_not_starts_with":
+        return !str1.startsWith(str2);
+      case "string_ends_with":
+        return str1.endsWith(str2);
+      case "string_not_ends_with":
+        return !str1.endsWith(str2);
+      case "string_matches_regex":
+        try {
+          const regex = new RegExp(str2);
+          return regex.test(str1);
+        } catch (error) {
+          console.warn(`Invalid regex pattern "${str2}": ${error}`);
+          return false;
+        }
+      case "string_not_matches_regex":
+        try {
+          const regex = new RegExp(str2);
+          return !regex.test(str1);
+        } catch (error) {
+          console.warn(`Invalid regex pattern "${str2}": ${error}`);
+          return true;
+        }
+    }
+  }
+
+  // Handle number operators
+  if (operator.startsWith("number_")) {
+    const num1 = Number(value1);
+    const num2 = Number(value2);
+
+    if (isNaN(num1) || (value2 !== null && isNaN(num2))) return false;
+
+    switch (operator) {
+      case "number_equals":
+        return num1 === num2;
+      case "number_not_equals":
+        return num1 !== num2;
+      case "number_greater_than":
+        return num1 > num2;
+      case "number_less_than":
+        return num1 < num2;
+      case "number_greater_than_or_equals":
+        return num1 >= num2;
+      case "number_less_than_or_equals":
+        return num1 <= num2;
+    }
+  }
+
+  // Handle integer operators
+  if (operator.startsWith("integer_")) {
+    const int1 = parseInt(String(value1), 10);
+    const int2 = parseInt(String(value2), 10);
+
+    if (isNaN(int1) || (value2 !== null && isNaN(int2))) return false;
+
+    switch (operator) {
+      case "integer_equals":
+        return int1 === int2;
+      case "integer_not_equals":
+        return int1 !== int2;
+      case "integer_greater_than":
+        return int1 > int2;
+      case "integer_less_than":
+        return int1 < int2;
+      case "integer_greater_than_or_equals":
+        return int1 >= int2;
+      case "integer_less_than_or_equals":
+        return int1 <= int2;
+    }
+  }
+
+  // Handle boolean operators
+  if (operator.startsWith("boolean_")) {
+    switch (operator) {
+      case "boolean_is_true":
+        return value1 === true;
+      case "boolean_is_false":
+        return value1 === false;
+      case "boolean_equals":
+        return Boolean(value1) === Boolean(value2);
+      case "boolean_not_equals":
+        return Boolean(value1) !== Boolean(value2);
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Evaluate condition for if node
+ * @param ifNode - The if node containing condition data
+ * @param variables - Current variables
+ * @param context - Current context
+ * @returns Boolean result of condition evaluation
+ */
+async function evaluateIfCondition(
+  ifNode: any,
+  variables: Record<string, any>,
+  context: any,
+  dataStore: Record<string, any>,
+): Promise<boolean> {
+  // Get if node data
+  const ifNodeData = ifNode.data as {
+    logicOperator: "AND" | "OR";
+    conditions: Condition[];
+  };
+
+  // No conditions means default to true
+  if (!ifNodeData.conditions || ifNodeData.conditions.length === 0) {
+    return true;
+  }
+
+  // Evaluate conditions
+  try {
+    const conditionResults = await Promise.all(
+      ifNodeData.conditions.map((condition) =>
+        evaluateSingleCondition(condition, variables, context, dataStore),
+      ),
+    );
+
+    // Apply logic operator
+    return ifNodeData.logicOperator === "AND"
+      ? conditionResults.every((result) => result)
+      : conditionResults.some((result) => result);
+  } catch (error) {
+    console.warn(`Failed to evaluate if condition: ${error}`);
+    return false;
+  }
+}
+
+/**
+ * Create full context by merging base context, variables, and dataStore
+ * DataStore fields are spread at top level for direct access via {{fieldName}}
+ * @param context - Base render context
+ * @param variables - Variables from agent execution
+ * @param dataStore - DataStore field values
+ * @returns Merged context object
+ */
+function createFullContext(
+  context: RenderContext,
+  variables: Record<string, any> = {},
+  dataStore: Record<string, any> = {},
+): any {
+  return {
+    ...context,
+    ...variables,
+    ...dataStore,
+  };
+}
+
+/**
+ * Convert a string value to the specified DataStore field type
+ * @param value - The string value to convert
+ * @param type - The target DataStore field type
+ * @returns The converted value
+ */
+function convertToDataStoreType(value: string, type: DataStoreFieldType): any {
+  switch (type) {
+    case "string":
+      return String(value);
+    case "number":
+      const num = Number(value);
+      return isNaN(num) ? 0 : num;
+    case "boolean":
+      const lowerValue = value.toLowerCase().trim();
+      return (
+        lowerValue === "true" || lowerValue === "1" || lowerValue === "yes"
+      );
+    case "integer":
+      const int = parseInt(value, 10);
+      return isNaN(int) ? 0 : int;
+    default:
+      return value;
+  }
+}
+
+/**
+ * Update session's dataStore and save to database
+ * @param session - The session to update
+ * @param dataStore - The new dataStore object
+ */
+async function updateSessionDataStore(
+  session: Session,
+  dataStore: object,
+): Promise<void> {
+  const updateResult = session.update({ dataStore });
+  if (updateResult.isSuccess) {
+    const saveResult = await SessionService.saveSession.execute({ session });
+    if (saveResult.isFailure) {
+      logger.error("Failed to save session with updated dataStore");
+    }
+  } else {
+    logger.error("Failed to update session dataStore");
+  }
 }
 
 export {

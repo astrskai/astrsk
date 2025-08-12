@@ -17,7 +17,7 @@ export enum ReadyState {
 // TODO: change name to `FlowNode`
 export type Node = {
   id: string;
-  type: "start" | "end" | "agent";
+  type: "start" | "end" | "agent" | "if" | "dataStore";
   position: {
     x: number;
     y: number;
