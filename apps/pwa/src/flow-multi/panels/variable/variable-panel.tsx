@@ -316,6 +316,13 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
             flattenedContext["turn.content"] = lastTurn.content;
           }
 
+          // Set data store values
+          if (previewSession.dataStore) {
+            const flattenedDataStore = flattenObject(previewSession.dataStore, "");
+            Object.assign(flattenedContext, flattenedDataStore);
+          }
+          
+
           setContextValues(flattenedContext);
         }
       } catch (error) {
@@ -697,23 +704,10 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                     field.type.toLowerCase().includes(searchQuery.toLowerCase())
                   )
                   .map(field => {
-                    // Generate dummy data based on field type
-                    const getDummyValue = () => {
-                      switch (field.type) {
-                        case 'string':
-                          return field.name === 'location' ? 'cafeteria' : `sample_${field.name}`;
-                        case 'integer':
-                          return field.name === 'affection' ? 50 : Math.floor(Math.random() * 100);
-                        case 'number':
-                          return field.name === 'affection' ? 50 : Math.floor(Math.random() * 100);
-                        case 'boolean':
-                          return field.name === 'infected' ? true : Math.random() > 0.5;
-                        default:
-                          return 'null';
-                      }
-                    };
-                    
-                    const dummyValue = getDummyValue();
+                    // Get actual value from session dataStore or use placeholder
+                    const hasValue = previewSession?.dataStore && field.name in previewSession.dataStore;
+                    const actualValue = hasValue ? (previewSession.dataStore as any)[field.name] : "";
+                    const displayValue = hasValue ? actualValue : "";
                     const variableName = `{{${field.name}}}`;
                     
                     return (
@@ -771,7 +765,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                               Most recent data from session
                             </div>
                             <div className="self-stretch max-h-8 justify-start text-text-subtle text-xs font-mono">
-                              {typeof dummyValue === 'object' ? JSON.stringify(dummyValue) : String(dummyValue)}
+                              {typeof displayValue === 'object' ? JSON.stringify(displayValue) : String(displayValue)}
                             </div>
                           </div>
                         </div>
