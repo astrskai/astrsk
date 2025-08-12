@@ -985,14 +985,16 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                 ))}
                             </div>
                           </div>
-                          <div className="self-stretch px-2 py-1 bg-background-surface-4 rounded-md flex flex-col justify-start items-start gap-1">
-                            <div className="self-stretch justify-start text-text-subtle text-xs font-medium">
-                              Most recent data from session
-                            </div>
-                            <div className="self-stretch max-h-8 justify-start text-text-subtle text-xs font-mono">
-                              {typeof displayValue === "object"
-                                ? JSON.stringify(displayValue)
-                                : String(displayValue)}
+                          <div className="mt-2 w-full overflow-hidden">
+                            <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
+                              <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                Data from session
+                              </div>
+                              <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                {typeof displayValue === "object"
+                                  ? JSON.stringify(displayValue)
+                                  : String(displayValue)}
+                              </div>
                             </div>
                           </div>
                         </div>
