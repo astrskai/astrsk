@@ -8,7 +8,9 @@ import { turnQueries } from "@/app/queries/turn-queries";
 import { Pglite } from "@/db/pglite";
 import { TableName } from "@/db/schema/table-name";
 import { UniqueEntityID } from "@/shared/domain";
+import { logger } from "@/shared/utils/logger";
 import { PGliteWithLive } from "@electric-sql/pglite/live";
+import { PGliteWorker } from "@electric-sql/pglite/worker";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { broadcastQueryClient } from "@tanstack/query-broadcast-client-experimental";
 import { persistQueryClient } from "@tanstack/query-persist-client-core";
@@ -144,31 +146,66 @@ broadcastQueryClient({
   broadcastChannel: "astrsk-query-broadcast",
 });
 
-// Invalidate by live query
-export async function invalidateByLiveQuery() {
-  const db = (await Pglite.getInstance()) as PGliteWithLive;
+// Store current live query cleanup functions
+let liveQueryCleanups: (() => void)[] = [];
+let isCleaningUp = false;
+
+// Clean up existing live queries
+function cleanupLiveQueries() {
+  // Prevent concurrent cleanup operations
+  if (isCleaningUp) return;
+  isCleaningUp = true;
+
+  // Copy current cleanups and clear the array atomically
+  const cleanups = [...liveQueryCleanups];
+  liveQueryCleanups = [];
+
+  // Execute all cleanup functions
+  cleanups.forEach((cleanup) => {
+    try {
+      cleanup();
+    } catch (error) {
+      logger.error("Error during live query cleanup:", error);
+    }
+  });
+
+  isCleaningUp = false;
+}
+
+// Register live queries for the leader tab
+async function registerLiveQueries() {
+  try {
+    const db = (await Pglite.getInstance()) as PGliteWithLive;
+
+    // Clean up any existing live queries first
+    cleanupLiveQueries();
 
   // Common
-  db.live.changes<{ id: string }>(
+  const assetsCleanup = await db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Assets}`,
     [],
     "id",
     (res) => {
       res.forEach((change) => {
+        logger.debug(`${TableName.Assets}: ${change.__op__} ${change.id}`);
         queryClient.invalidateQueries({
           queryKey: assetQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
     },
   );
+  liveQueryCleanups.push(() => assetsCleanup.unsubscribe());
 
   // API
-  db.live.changes<{ id: string }>(
+  const apiConnectionsCleanup = await db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.ApiConnections}`,
     [],
     "id",
     (res) => {
       res.forEach((change) => {
+        logger.debug(
+          `${TableName.ApiConnections}: ${change.__op__} ${change.id}`,
+        );
         queryClient.invalidateQueries({
           queryKey: apiConnectionQueries.detail(new UniqueEntityID(change.id))
             .queryKey,
@@ -179,78 +216,92 @@ export async function invalidateByLiveQuery() {
       });
     },
   );
+  liveQueryCleanups.push(() => apiConnectionsCleanup.unsubscribe());
 
   // Flow
-  db.live.changes<{ id: string }>(
+  const flowsCleanup = await db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Flows}`,
     [],
     "id",
     (res) => {
       res.forEach((change) => {
+        logger.debug(`${TableName.Flows}: ${change.__op__} ${change.id}`);
         queryClient.invalidateQueries({
           queryKey: flowQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
     },
   );
-  db.live.changes<{ id: string }>(
+  liveQueryCleanups.push(() => flowsCleanup.unsubscribe());
+  const agentsCleanup = await db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Agents}`,
     [],
     "id",
     (res) => {
       res.forEach((change) => {
+        logger.debug(`${TableName.Agents}: ${change.__op__} ${change.id}`);
         queryClient.invalidateQueries({
           queryKey: agentQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
     },
   );
+  liveQueryCleanups.push(() => agentsCleanup.unsubscribe());
 
   // Card
-  db.live.changes<{ id: string }>(
+  const cardsCleanup = await db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Cards}`,
     [],
     "id",
     (res) => {
       res.forEach((change) => {
+        logger.debug(`${TableName.Cards}: ${change.__op__} ${change.id}`);
         queryClient.invalidateQueries({
           queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
     },
   );
-  db.live.changes<{ id: string }>(
+  liveQueryCleanups.push(() => cardsCleanup.unsubscribe());
+  const characterCardsCleanup = await db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.CharacterCards}`,
     [],
     "id",
     (res) => {
       res.forEach((change) => {
+        logger.debug(
+          `${TableName.CharacterCards}: ${change.__op__} ${change.id}`,
+        );
         queryClient.invalidateQueries({
           queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
     },
   );
-  db.live.changes<{ id: string }>(
+  liveQueryCleanups.push(() => characterCardsCleanup.unsubscribe());
+  const plotCardsCleanup = await db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.PlotCards}`,
     [],
     "id",
     (res) => {
       res.forEach((change) => {
+        logger.debug(`${TableName.PlotCards}: ${change.__op__} ${change.id}`);
         queryClient.invalidateQueries({
           queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
     },
   );
+  liveQueryCleanups.push(() => plotCardsCleanup.unsubscribe());
 
   // Session
-  db.live.changes<{ id: string }>(
+  const sessionsCleanup = await db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Sessions}`,
     [],
     "id",
     (res) => {
       res.forEach((change) => {
+        logger.debug(`${TableName.Sessions}: ${change.__op__} ${change.id}`);
         queryClient.invalidateQueries({
           queryKey: sessionQueries.detail(new UniqueEntityID(change.id))
             .queryKey,
@@ -258,16 +309,64 @@ export async function invalidateByLiveQuery() {
       });
     },
   );
-  db.live.changes<{ id: string }>(
+  liveQueryCleanups.push(() => sessionsCleanup.unsubscribe());
+  const turnsCleanup = await db.live.changes<{ id: string }>(
     `SELECT * FROM ${TableName.Turns}`,
     [],
     "id",
     (res) => {
       res.forEach((change) => {
+        logger.debug(`${TableName.Turns}: ${change.__op__} ${change.id}`);
         queryClient.invalidateQueries({
           queryKey: turnQueries.detail(new UniqueEntityID(change.id)).queryKey,
         });
       });
     },
   );
+  liveQueryCleanups.push(() => turnsCleanup.unsubscribe());
+  } catch (error) {
+    logger.error("Error registering live queries:", error);
+    // Clean up any partially registered queries
+    cleanupLiveQueries();
+    throw error; // Re-throw to let caller handle it
+  }
+}
+
+// Invalidate by live query
+export async function invalidateByLiveQuery() {
+  try {
+    const db = (await Pglite.getInstance()) as PGliteWithLive & PGliteWorker;
+
+    // Set up leader change handler to restart live queries when leadership changes
+    const handleLeaderChange = async () => {
+      try {
+        if (db.isLeader) {
+          // This tab became the leader, register live queries
+          logger.debug("This tab became the leader");
+          await registerLiveQueries();
+        } else {
+          // This tab is no longer the leader, clean up live queries
+          logger.debug("This tab is no longer leader");
+          cleanupLiveQueries();
+        }
+      } catch (error) {
+        logger.error("Error handling leader change:", error);
+      }
+    };
+
+    // Listen for leader changes
+    db.onLeaderChange(handleLeaderChange);
+
+    // Only register live queries if this tab is the leader
+    if (!db.isLeader) {
+      logger.debug("This tab is not leader");
+      return;
+    }
+
+    // Register live queries for the current leader
+    logger.debug("This tab is leader");
+    await registerLiveQueries();
+  } catch (error) {
+    logger.error("Error initializing live queries:", error);
+  }
 }
