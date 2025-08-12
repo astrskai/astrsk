@@ -103,7 +103,7 @@ const extractVariables = (template: string): string[] => {
 export const validateUndefinedOutputVariables: ValidatorFunction = (context) => {
   const issues: ValidationIssue[] = [];
   
-  // Helper function to validate variables against available agents
+  // Helper function to validate variables against available agents and data store schema
   const validateVariables = (variables: string[], sourceAgentId: string, sourceAgentName: string, location?: string, isHistoryMessage: boolean = false) => {
     for (const variable of variables) {
       // Check if it's a turn variable
@@ -133,7 +133,55 @@ export const validateUndefinedOutputVariables: ValidatorFunction = (context) => 
         continue; // It's a valid system variable, skip validation
       }
       
-      // If not a system variable, check if it references an agent's output
+      // Check if it's a data store variable (datastore.fieldname format)
+      if (variable.startsWith('datastore.')) {
+        const fieldName = variable.substring('datastore.'.length);
+        const dataStoreSchema = context.flow.props.dataStoreSchema;
+        
+        if (!dataStoreSchema) {
+          // Data store variable used but no schema defined
+          const message = generateValidationMessage(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, {
+            agentName: sourceAgentName,
+            referencedAgent: 'datastore',
+            variable,
+            location
+          });
+          issues.push({
+            id: generateIssueId(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, sourceAgentId),
+            code: ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE,
+            severity: 'error',
+            ...message,
+            agentId: sourceAgentId,
+            agentName: sourceAgentName,
+            metadata: { variable, referencedAgent: 'datastore' },
+          });
+          continue;
+        }
+        
+        // Check if the field exists in the schema
+        const fieldExists = dataStoreSchema.fields.some(field => field.name === fieldName);
+        if (!fieldExists) {
+          const message = generateValidationMessage(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, {
+            agentName: sourceAgentName,
+            referencedAgent: 'datastore',
+            field: fieldName,
+            variable,
+            location
+          });
+          issues.push({
+            id: generateIssueId(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, sourceAgentId),
+            code: ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE,
+            severity: 'error',
+            ...message,
+            agentId: sourceAgentId,
+            agentName: sourceAgentName,
+            metadata: { variable, referencedAgent: 'datastore', field: fieldName },
+          });
+        }
+        continue;
+      }
+      
+      // If not a system variable or data store variable, check if it references an agent's output
       const parts = variable.split('.');
       
       // Handle both agent.field format and single agent references
@@ -475,6 +523,107 @@ export const validateUnusedOutputVariables: ValidatorFunction = forEachConnected
     return issues;
   }
 );
+
+// Check for unused data store fields
+export const validateUnusedDataStoreFields: ValidatorFunction = (context) => {
+  const issues: ValidationIssue[] = [];
+  
+  // Only check if data store schema is defined
+  if (!context.flow.props.dataStoreSchema) {
+    return issues;
+  }
+  
+  const dataStoreFields = context.flow.props.dataStoreSchema.fields;
+  
+  // Check each field for usage
+  for (const field of dataStoreFields) {
+    const variable = `datastore.${field.name}`;
+    let isUsed = false;
+    
+    // Helper function to check if template contains the variable
+    const checkTemplate = (template: string | undefined) => {
+      if (!template) return false;
+      return template.includes(`{{${variable}}}`) || 
+             template.includes(`{{ ${variable} }}`);
+    };
+    
+    // Check all connected agents
+    for (const agentId of context.connectedAgents) {
+      const agent = context.agents.get(agentId);
+      if (!agent) continue;
+      
+      // Check prompts
+      agent.props.promptMessages?.forEach(message => {
+        if ('promptBlocks' in message) {
+          message.promptBlocks?.forEach(block => {
+            if (block.type === 'plain' && checkTemplate(block.template)) {
+              isUsed = true;
+            }
+          });
+        }
+        
+        // Check history messages
+        if ('userPromptBlocks' in message) {
+          message.userPromptBlocks?.forEach(block => {
+            if (block.type === 'plain' && checkTemplate(block.template)) {
+              isUsed = true;
+            }
+          });
+        }
+        
+        if ('assistantPromptBlocks' in message) {
+          message.assistantPromptBlocks?.forEach(block => {
+            if (block.type === 'plain' && checkTemplate(block.template)) {
+              isUsed = true;
+            }
+          });
+        }
+      });
+      
+      // Check structured output field descriptions
+      if (agent.props.schemaFields) {
+        agent.props.schemaFields.forEach(schemaField => {
+          if (checkTemplate(schemaField.description)) {
+            isUsed = true;
+          }
+        });
+      }
+      
+      // Check schema description
+      if (checkTemplate(agent.props.schemaDescription)) {
+        isUsed = true;
+      }
+      
+      if (isUsed) break;
+    }
+    
+    // Also check flow's response template
+    if (!isUsed && context.flow.props.responseTemplate) {
+      if (checkTemplate(context.flow.props.responseTemplate)) {
+        isUsed = true;
+      }
+    }
+    
+    if (!isUsed) {
+      const message = generateValidationMessage(ValidationIssueCode.UNUSED_OUTPUT_VARIABLE, {
+        agentName: 'Data Store',
+        field: field.name,
+        variable
+      });
+      issues.push({
+        id: generateIssueId(ValidationIssueCode.UNUSED_OUTPUT_VARIABLE, 'datastore'),
+        code: ValidationIssueCode.UNUSED_OUTPUT_VARIABLE,
+        severity: 'warning',
+        ...message,
+        agentId: 'datastore',
+        agentName: 'Data Store',
+        metadata: { variable, field: field.name },
+      });
+    }
+  }
+  
+  return issues;
+};
 
 // Check for syntax errors in templates
 export const validateTemplateSyntax: ValidatorFunction = (context) => {

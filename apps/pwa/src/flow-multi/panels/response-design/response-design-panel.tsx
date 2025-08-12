@@ -17,6 +17,7 @@ import { flowQueries } from "@/app/queries/flow-queries";
 import { FlowService } from "@/app/services/flow-service";
 import { UniqueEntityID } from "@/shared/domain";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
+import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 
 interface ResponseDesignPanelProps {
   flowId: string;
@@ -82,6 +83,9 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
         if (result.isFailure) {
           throw new Error(result.getError());
         }
+        
+        // Invalidate flow queries so other components see the updated response template
+        await invalidateSingleFlowQueries(flow.id);
         
         // Update original template to reflect the saved state
         setOriginalTemplate(template);

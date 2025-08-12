@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Trash2, Plus, Database, HelpCircle } from "lucide-react";
 import {
   Tooltip,
@@ -55,7 +55,17 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   const [fields, setFields] = useState<DataStoreSchemaField[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string>("");
   const [localInitialValue, setLocalInitialValue] = useState("");
-  const [lastInitializedFlowId, setLastInitializedFlowId] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Use ref to hold current flow for debounced save
+  const flowRef = useRef(flow);
+  const saveFlowRef = useRef(saveFlow);
+  
+  // Update refs when flow or saveFlow changes
+  useEffect(() => {
+    flowRef.current = flow;
+    saveFlowRef.current = saveFlow;
+  }, [flow, saveFlow]);
 
   // 3. Get selected field
   const selectedField = useMemo(() => 
@@ -64,16 +74,19 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   );
 
   // 4. Initialize fields from flow's dataStoreSchema
+  // Reset initialization when flow data becomes available
   useEffect(() => {
-    if (flow && flowId !== lastInitializedFlowId) {
+    if (flow && !isLoading) {
       const schema = flow.props.dataStoreSchema;
-      if (schema?.fields) {
+      if (schema?.fields && schema.fields.length > 0) {
         setFields(schema.fields);
         setSelectedFieldId(schema.fields[0]?.id || "");
+      } else {
+        setFields([]);
+        setSelectedFieldId("");
       }
-      setLastInitializedFlowId(flowId);
     }
-  }, [flow, flowId, lastInitializedFlowId]);
+  }, [flow?.props.dataStoreSchema, isLoading]); // Re-initialize when schema changes or loading completes
 
   // 5. Sync local fields with selected field
   useEffect(() => {
@@ -83,24 +96,38 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   }, [selectedField?.id, selectedField?.initialValue]);
 
   // 6. Debounced save for fields to flow's dataStoreSchema
+  // Using useCallback with empty deps and refs to avoid recreation
   const debouncedSaveFields = useMemo(
     () => debounce(async (updatedFields: DataStoreSchemaField[]) => {
-      if (!flow) return;
+      const currentFlow = flowRef.current;
+      const currentSaveFlow = saveFlowRef.current;
+      
+      if (!currentFlow || !currentSaveFlow) {
+        console.error('[DataStoreSchema] Cannot save - flow or saveFlow is null');
+        return;
+      }
       
       // Update flow's dataStoreSchema
       const updatedSchema: DataStoreSchema = {
         fields: updatedFields
       };
       
-      const updateResult = flow.update({ dataStoreSchema: updatedSchema });
+      const updateResult = currentFlow.update({ dataStoreSchema: updatedSchema });
       if (updateResult.isSuccess) {
-        await saveFlow(updateResult.getValue());
+        await currentSaveFlow(updateResult.getValue());
       } else {
-        console.error("Failed to update flow:", updateResult.getError());
+        console.error("[DataStoreSchema] Failed to update flow:", updateResult.getError());
       }
     }, 300),
-    [flow, saveFlow]
+    [] // Empty deps to create debounce only once
   );
+  
+  // Clean up debounced function on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSaveFields.cancel();
+    };
+  }, [debouncedSaveFields]);
 
   // 7. DnD sensors
   const sensors = useSensors(

@@ -209,9 +209,16 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     closePanel(panelId);
   }, [closePanel]);
 
+  // Use ref to always have the latest flow
+  const flowRef = useRef(flow);
+  useEffect(() => {
+    flowRef.current = flow;
+  }, [flow]);
+
   // Save flow when edges/nodes change
   const saveFlowChanges = useCallback(async (updatedNodes: CustomNodeType[], updatedEdges: CustomEdgeType[], isStructuralChange: boolean = false) => {
-    if (!flow) return;
+    const currentFlow = flowRef.current;
+    if (!currentFlow) return;
 
     try {
       // Filter out invalid edges before saving
@@ -221,11 +228,13 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                nodeIds.has(edge.source) && nodeIds.has(edge.target);
       });
       
-      const updatedFlow = flow.update({
+      // IMPORTANT: Only update nodes and edges, DO NOT pass dataStoreSchema
+      // The update method should preserve existing properties that aren't being updated
+      const updatedFlow = currentFlow.update({
         nodes: updatedNodes as any,
         edges: validEdges as any,
       });
-
+      
       if (updatedFlow.isFailure) {
         return;
       }
@@ -250,15 +259,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       const savedNodeIds = savedNodes.map(n => n.id);
       const idsChanged = JSON.stringify(originalNodeIds.sort()) !== JSON.stringify(savedNodeIds.sort());
       
-      console.log('[Flow Save] Save completed:', {
-        originalIds: originalNodeIds,
-        savedIds: savedNodeIds,
-        idsChanged,
-        savedNodes: savedNodes.map(n => ({ id: n.id, type: n.type, data: n.data }))
-      });
-      
       if (idsChanged || isStructuralChange) {
-        console.log('[Flow Save] Updating local nodes with saved data');
         
         // Force update the local nodes and edges with the saved versions
         // Use a timeout to ensure React Flow processes the update
@@ -549,11 +550,12 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+  }, [nodes, edges, setNodes, saveFlowChanges]);
 
   // Add node functions
   const addDataStoreNode = useCallback(async () => {
-    if (!flow) return;
+    const currentFlow = flowRef.current;
+    if (!currentFlow) return;
 
     // Calculate position at viewport center
     // Node dimensions (approximate): width 320px, height 140px
@@ -573,7 +575,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     const newPosition = viewportCenter;
 
     // Get next available color
-    const nextColor = await getNextAvailableColor(flow);
+    const nextColor = await getNextAvailableColor(currentFlow);
 
     // Create new Data Store node
     const newNode: CustomNodeType = {
@@ -586,9 +588,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       },
     };
 
-    // Update nodes - use flow.props.nodes instead of component state to avoid stale data
-    const currentNodes = (flow.props.nodes as CustomNodeType[]) || [];
-    const currentEdges = (flow.props.edges as CustomEdgeType[]) || [];
+    // Update nodes - use currentFlow.props.nodes instead of component state to avoid stale data
+    const currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
+    const currentEdges = (currentFlow.props.edges as CustomEdgeType[]) || [];
     const updatedNodes = [...currentNodes, newNode];
     setNodes(updatedNodes);
 
@@ -599,10 +601,11 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     }, 0);
 
     toast.success("Data Store node added");
-  }, [flow, setNodes, saveFlowChanges]);
+  }, [setNodes, saveFlowChanges]);
 
   const addIfNode = useCallback(async () => {
-    if (!flow) return;
+    const currentFlow = flowRef.current;
+    if (!currentFlow) return;
 
     // Calculate position at viewport center
     // Node dimensions (approximate): width 320px, height 140px
@@ -622,9 +625,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     const newPosition = viewportCenter;
 
     // Get next available color
-    const nextColor = await getNextAvailableColor(flow);
+    const nextColor = await getNextAvailableColor(currentFlow);
     
-    console.log('[Flow Panel Debug] Creating if node with color:', nextColor);
 
     // Create new If node
     const newNode: CustomNodeType = {
@@ -639,11 +641,10 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       },
     };
     
-    console.log('[Flow Panel Debug] Created if node:', newNode);
 
-    // Update nodes - use flow.props.nodes instead of component state to avoid stale data
-    const currentNodes = (flow.props.nodes as CustomNodeType[]) || [];
-    const currentEdges = (flow.props.edges as CustomEdgeType[]) || [];
+    // Update nodes - use currentFlow.props.nodes instead of component state to avoid stale data
+    const currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
+    const currentEdges = (currentFlow.props.edges as CustomEdgeType[]) || [];
     const updatedNodes = [...currentNodes, newNode];
     setNodes(updatedNodes);
 
@@ -654,7 +655,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     }, 0);
 
     toast.success("If node added");
-  }, [flow, setNodes, saveFlowChanges]);
+  }, [setNodes, saveFlowChanges]);
 
   const addAgentNode = useCallback(async () => {
     if (!flow) return;
@@ -757,7 +758,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+  }, [nodes, edges, setNodes, saveFlowChanges]);
 
   // Delete agent handler
   const deleteAgent = useCallback(async (agentId: string) => {
@@ -807,7 +808,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [flow, nodes, edges, setNodes, setEdges, saveFlowChanges]);
+  }, [nodes, edges, setNodes, setEdges, saveFlowChanges]);
 
   // Copy non-agent node handler
   const copyNode = useCallback(async (nodeId: string) => {
@@ -863,7 +864,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+  }, [nodes, edges, setNodes, saveFlowChanges]);
 
   // Delete non-agent node handler
   const deleteNode = useCallback((nodeId: string) => {
@@ -909,7 +910,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [flow, nodes, edges, setNodes, setEdges, saveFlowChanges]);
+  }, [nodes, edges, setNodes, setEdges, saveFlowChanges]);
 
   // Handle click on node handle to show node creation menu
   const handleHandleClick = useCallback((nodeId: string, handleType: string, handleId?: string) => {
@@ -1272,7 +1273,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     
     // Reset connection start state
     connectionStartRef.current = null;
-  }, [flow, nodes, edges, setNodes, setEdges, saveFlowChanges]);
+  }, [nodes, edges, setNodes, setEdges, saveFlowChanges]);
 
   // Track if we're currently dragging
   const isDraggingRef = useRef(false);

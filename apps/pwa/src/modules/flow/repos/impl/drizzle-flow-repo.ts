@@ -72,7 +72,8 @@ export class DrizzleFlowRepo
         .then(getOneOrThrow);
 
       // Return flow
-      return Result.ok(FlowDrizzleMapper.toDomain(row));
+      const flow = FlowDrizzleMapper.toDomain(row);
+      return Result.ok(flow);
     } catch (error) {
       return Result.fail<Flow>(
         `Failed to get flow: ${
