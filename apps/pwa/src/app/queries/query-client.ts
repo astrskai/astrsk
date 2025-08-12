@@ -148,19 +148,37 @@ broadcastQueryClient({
 
 // Store current live query cleanup functions
 let liveQueryCleanups: (() => void)[] = [];
+let isCleaningUp = false;
 
 // Clean up existing live queries
 function cleanupLiveQueries() {
-  liveQueryCleanups.forEach((cleanup) => cleanup());
+  // Prevent concurrent cleanup operations
+  if (isCleaningUp) return;
+  isCleaningUp = true;
+
+  // Copy current cleanups and clear the array atomically
+  const cleanups = [...liveQueryCleanups];
   liveQueryCleanups = [];
+
+  // Execute all cleanup functions
+  cleanups.forEach((cleanup) => {
+    try {
+      cleanup();
+    } catch (error) {
+      logger.error("Error during live query cleanup:", error);
+    }
+  });
+
+  isCleaningUp = false;
 }
 
 // Register live queries for the leader tab
 async function registerLiveQueries() {
-  const db = (await Pglite.getInstance()) as PGliteWithLive;
+  try {
+    const db = (await Pglite.getInstance()) as PGliteWithLive;
 
-  // Clean up any existing live queries first
-  cleanupLiveQueries();
+    // Clean up any existing live queries first
+    cleanupLiveQueries();
 
   // Common
   const assetsCleanup = await db.live.changes<{ id: string }>(
@@ -306,35 +324,49 @@ async function registerLiveQueries() {
     },
   );
   liveQueryCleanups.push(() => turnsCleanup.unsubscribe());
+  } catch (error) {
+    logger.error("Error registering live queries:", error);
+    // Clean up any partially registered queries
+    cleanupLiveQueries();
+    throw error; // Re-throw to let caller handle it
+  }
 }
 
 // Invalidate by live query
 export async function invalidateByLiveQuery() {
-  const db = (await Pglite.getInstance()) as PGliteWithLive & PGliteWorker;
+  try {
+    const db = (await Pglite.getInstance()) as PGliteWithLive & PGliteWorker;
 
-  // Set up leader change handler to restart live queries when leadership changes
-  const handleLeaderChange = () => {
-    if (db.isLeader) {
-      // This tab became the leader, register live queries
-      logger.debug("This tab became the leader");
-      registerLiveQueries();
-    } else {
-      // This tab is no longer the leader, clean up live queries
-      logger.debug("This tab is no loger leader");
-      cleanupLiveQueries();
+    // Set up leader change handler to restart live queries when leadership changes
+    const handleLeaderChange = async () => {
+      try {
+        if (db.isLeader) {
+          // This tab became the leader, register live queries
+          logger.debug("This tab became the leader");
+          await registerLiveQueries();
+        } else {
+          // This tab is no longer the leader, clean up live queries
+          logger.debug("This tab is no longer leader");
+          cleanupLiveQueries();
+        }
+      } catch (error) {
+        logger.error("Error handling leader change:", error);
+      }
+    };
+
+    // Listen for leader changes
+    db.onLeaderChange(handleLeaderChange);
+
+    // Only register live queries if this tab is the leader
+    if (!db.isLeader) {
+      logger.debug("This tab is not leader");
+      return;
     }
-  };
 
-  // Listen for leader changes
-  db.onLeaderChange(handleLeaderChange);
-
-  // Only register live queries if this tab is the leader
-  if (!db.isLeader) {
-    logger.debug("This tab is not leader");
-    return;
+    // Register live queries for the current leader
+    logger.debug("This tab is leader");
+    await registerLiveQueries();
+  } catch (error) {
+    logger.error("Error initializing live queries:", error);
   }
-
-  // Register live queries for the current leader
-  logger.debug("This tab is leader");
-  await registerLiveQueries();
 }
