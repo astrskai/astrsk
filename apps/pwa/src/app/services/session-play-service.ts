@@ -55,6 +55,7 @@ import {
 } from "@/modules/api/domain/api-connection";
 import { PlotCard } from "@/modules/card/domain";
 import { CharacterCard } from "@/modules/card/domain/character-card";
+import { DataStoreFieldType } from "@/modules/flow/domain/flow";
 import { Session } from "@/modules/session/domain/session";
 import { Option } from "@/modules/turn/domain/option";
 import { Turn as MessageEntity } from "@/modules/turn/domain/turn";
@@ -1462,11 +1463,11 @@ type AgentNodeResult = {
 
 async function* executeAgentNode({
   agentId,
-  contextWithVariables,
+  fullContext,
   stopSignalByUser,
 }: {
   agentId: UniqueEntityID;
-  contextWithVariables: any;
+  fullContext: any;
   stopSignalByUser?: AbortSignal;
 }): AsyncGenerator<AgentNodeResult, AgentNodeResult, void> {
   try {
@@ -1492,7 +1493,7 @@ async function* executeAgentNode({
     // Render messages
     const messages = await renderMessages({
       renderable: agent,
-      context: contextWithVariables,
+      context: fullContext,
       parameters: agent.parameters,
     });
     validateMessages(messages, apiConnection.source);
@@ -1635,6 +1636,39 @@ async function* executeFlow({
       .throwOnFailure()
       .getValue();
 
+    // Initialize or update dataStore from schema
+    let dataStore: Record<string, any> = { ...session.dataStore };
+    if (flow.props.dataStoreSchema) {
+      // Process each schema field
+      for (const schemaField of flow.props.dataStoreSchema.fields) {
+        // Only initialize if field doesn't exist in dataStore
+        if (!(schemaField.name in dataStore)) {
+          try {
+            // Render initial value with current context
+            const renderedValue = TemplateRenderer.render(
+              schemaField.initialValue,
+              createFullContext(context, {}, dataStore), // Include existing dataStore values
+            );
+
+            // Convert to appropriate type
+            dataStore[schemaField.name] = convertToDataStoreType(
+              renderedValue,
+              schemaField.type,
+            );
+          } catch (error) {
+            logger.error(
+              `Failed to initialize dataStore field "${schemaField.name}": ${error}`,
+            );
+            // Set default value based on type
+            dataStore[schemaField.name] = schemaField.type === "number" || schemaField.type === "integer" ? 0 : 
+                                         schemaField.type === "boolean" ? false : "";
+          }
+        }
+      }
+
+      // DataStore initialization complete (will be saved after successful flow execution)
+    }
+
     // Execute flow step-by-step, starting from start node
     let currentNode = startNode;
     while (currentNode && currentNode.type !== "end") {
@@ -1642,10 +1676,7 @@ async function* executeFlow({
         // Execute agent node
         const executeAgentNodeResult = executeAgentNode({
           agentId: new UniqueEntityID(currentNode.id),
-          contextWithVariables: {
-            ...context,
-            ...variables,
-          },
+          fullContext: createFullContext(context, variables, dataStore),
           stopSignalByUser: stopSignalByUser,
         });
 
@@ -1656,10 +1687,10 @@ async function* executeFlow({
           });
 
           // Render content
-          content = TemplateRenderer.render(flow.props.responseTemplate, {
-            ...context,
-            ...variables,
-          });
+          content = TemplateRenderer.render(
+            flow.props.responseTemplate,
+            createFullContext(context, variables, dataStore),
+          );
 
           // Yield response
           yield {
@@ -1672,12 +1703,58 @@ async function* executeFlow({
 
         // Move to next node
         currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
+      } else if (currentNode.type === "dataStore") {
+        // Execute datastore node
+        const dataStoreFields = (currentNode.data as any).dataStoreFields || [];
+
+        // Process each field sequentially
+        for (const field of dataStoreFields) {
+          // Execute field logic if present
+          if (field.logic) {
+            try {
+              const fullContext = createFullContext(
+                context,
+                variables,
+                dataStore,
+              );
+              const renderedValue = TemplateRenderer.render(
+                field.logic,
+                fullContext,
+              );
+
+              // Find schema field to get type
+              const schemaField = flow.props.dataStoreSchema?.fields.find(
+                (f) => f.id === field.schemaFieldId,
+              );
+
+              if (schemaField) {
+                // Convert and store value
+                dataStore[schemaField.name] = convertToDataStoreType(
+                  renderedValue,
+                  schemaField.type,
+                );
+              } else {
+                logger.warn(
+                  `Schema field not found for dataStore field with ID: ${field.schemaFieldId}`,
+                );
+              }
+            } catch (error) {
+              logger.error(
+                `Failed to execute dataStore field logic for field ID "${field.schemaFieldId}": ${error}`,
+              );
+            }
+          }
+        }
+
+        // Move to next node
+        currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
       } else if (currentNode.type === "if") {
         // Handle if node - evaluate condition and choose branch
         currentNode = await handleIfNode(
           currentNode,
           variables,
           context,
+          dataStore,
           adjacencyList,
           flow.props.nodes,
         );
@@ -1691,6 +1768,16 @@ async function* executeFlow({
         break;
       }
     }
+
+    // Render final content
+    content = TemplateRenderer.render(
+      flow.props.responseTemplate,
+      createFullContext(context, variables, dataStore),
+    );
+    yield {
+      content: content,
+      variables: variables,
+    };
 
     // Translate variables
     const langs: string[] = [];
@@ -1714,10 +1801,7 @@ async function* executeFlow({
         const translatedVariables = await translate(variables, lang);
         const translatedContent = TemplateRenderer.render(
           flow.props.responseTemplate,
-          {
-            ...context,
-            ...translatedVariables,
-          },
+          createFullContext(context, translatedVariables, dataStore),
         );
         translations.set(lang, translatedContent);
       }
@@ -1730,6 +1814,9 @@ async function* executeFlow({
         translations: translations,
       };
     }
+
+    // Flow execution completed successfully - save dataStore changes
+    await updateSessionDataStore(session, dataStore);
   } catch (error) {
     const parsedError = parseAiSdkErrorMessage(error);
     if (parsedError) {
@@ -1786,6 +1873,7 @@ async function handleIfNode(
   ifNode: any,
   variables: Record<string, any>,
   context: any,
+  dataStore: Record<string, any>,
   adjacencyList: Map<string, string[]>,
   allNodes: any[],
 ): Promise<any | null> {
@@ -1797,8 +1885,13 @@ async function handleIfNode(
     );
   }
 
-  // Evaluate condition (placeholder - will need to implement condition evaluation)
-  const condition = await evaluateIfCondition(ifNode, variables, context);
+  // Evaluate condition with full context including dataStore
+  const condition = await evaluateIfCondition(
+    ifNode,
+    variables,
+    context,
+    dataStore,
+  );
 
   // Choose branch based on condition
   // Convention: first edge = true branch, second edge = false branch
@@ -1818,13 +1911,14 @@ async function evaluateSingleCondition(
   condition: Condition,
   variables: Record<string, any>,
   context: any,
+  dataStore: Record<string, any>,
 ): Promise<boolean> {
   let value1: string = "";
   let value2: string = "";
   try {
     // Render templates in condition values
-    const renderContext = { ...variables, ...context };
-    value1 = TemplateRenderer.render(condition.value1, renderContext);
+    const fullContext = createFullContext(context, variables, dataStore);
+    value1 = TemplateRenderer.render(condition.value1, fullContext);
 
     // Convert value1 based on data type
     const convertedValue1 = convertValueToType(value1, condition.dataType);
@@ -1832,7 +1926,7 @@ async function evaluateSingleCondition(
     // For unary operators, value2 is not needed
     let convertedValue2: any = null;
     if (!isUnaryOperator(condition.operator)) {
-      value2 = TemplateRenderer.render(condition.value2, renderContext);
+      value2 = TemplateRenderer.render(condition.value2, fullContext);
       convertedValue2 = convertValueToType(value2, condition.dataType);
     }
 
@@ -1877,8 +1971,10 @@ function convertValueToType(
       if (typeof value === "boolean") return value;
       if (typeof value === "string") {
         const lowerValue = value.toLowerCase().trim();
-        if (lowerValue === "true" || lowerValue === "1" || lowerValue === "yes") return true;
-        if (lowerValue === "false" || lowerValue === "0" || lowerValue === "no") return false;
+        if (lowerValue === "true" || lowerValue === "1" || lowerValue === "yes")
+          return true;
+        if (lowerValue === "false" || lowerValue === "0" || lowerValue === "no")
+          return false;
       }
       return null;
     default:
@@ -2038,6 +2134,7 @@ async function evaluateIfCondition(
   ifNode: any,
   variables: Record<string, any>,
   context: any,
+  dataStore: Record<string, any>,
 ): Promise<boolean> {
   // Get if node data
   const ifNodeData = ifNode.data as {
@@ -2054,17 +2151,83 @@ async function evaluateIfCondition(
   try {
     const conditionResults = await Promise.all(
       ifNodeData.conditions.map((condition) =>
-        evaluateSingleCondition(condition, variables, context),
+        evaluateSingleCondition(condition, variables, context, dataStore),
       ),
     );
 
-    // Apply logic operator  
+    // Apply logic operator
     return ifNodeData.logicOperator === "AND"
       ? conditionResults.every((result) => result)
       : conditionResults.some((result) => result);
   } catch (error) {
     console.warn(`Failed to evaluate if condition: ${error}`);
     return false;
+  }
+}
+
+/**
+ * Create full context by merging base context, variables, and dataStore
+ * DataStore fields are spread at top level for direct access via {{fieldName}}
+ * @param context - Base render context
+ * @param variables - Variables from agent execution
+ * @param dataStore - DataStore field values
+ * @returns Merged context object
+ */
+function createFullContext(
+  context: RenderContext,
+  variables: Record<string, any> = {},
+  dataStore: Record<string, any> = {},
+): any {
+  return {
+    ...context,
+    ...variables,
+    ...dataStore,
+  };
+}
+
+/**
+ * Convert a string value to the specified DataStore field type
+ * @param value - The string value to convert
+ * @param type - The target DataStore field type
+ * @returns The converted value
+ */
+function convertToDataStoreType(value: string, type: DataStoreFieldType): any {
+  switch (type) {
+    case "string":
+      return String(value);
+    case "number":
+      const num = Number(value);
+      return isNaN(num) ? 0 : num;
+    case "boolean":
+      const lowerValue = value.toLowerCase().trim();
+      return (
+        lowerValue === "true" || lowerValue === "1" || lowerValue === "yes"
+      );
+    case "integer":
+      const int = parseInt(value, 10);
+      return isNaN(int) ? 0 : int;
+    default:
+      return value;
+  }
+}
+
+/**
+ * Update session's dataStore and save to database
+ * @param session - The session to update
+ * @param dataStore - The new dataStore object
+ */
+async function updateSessionDataStore(
+  session: Session,
+  dataStore: object,
+): Promise<void> {
+  const updateResult = session.update({ dataStore });
+  if (updateResult.isSuccess) {
+    const saveResult = await SessionService.saveSession.execute({ session });
+    if (saveResult.isFailure) {
+      logger.error("Failed to save session with updated dataStore");
+    }
+  } else {
+    logger.error("Failed to update session dataStore");
   }
 }
 
