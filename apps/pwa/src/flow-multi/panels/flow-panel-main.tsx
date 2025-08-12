@@ -402,11 +402,41 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     // Check if this is an if-node or data-store-node panel
     else if ((panelType === 'ifNode' || panelType === 'dataStore' || panelType === 'dataStoreSchema') && agentId) {
       // Get node from flow to get its color and name
-      const node = flow.props.nodes.find(n => n.id === agentId);
-      const nodeData = node?.data as any;
+      let node = flow.props.nodes.find(n => n.id === agentId);
+      let nodeData = node?.data as any;
+      
+      // If node not found in flow, try to get it from the React Flow instance via window
+      if (!node && (window as any).flowPanelGetNode) {
+        const reactFlowNode = (window as any).flowPanelGetNode(agentId);
+        if (reactFlowNode) {
+          node = reactFlowNode;
+          nodeData = reactFlowNode.data;
+          console.log('[Panel Debug] Node not in flow, got from React Flow:', reactFlowNode);
+        }
+      }
+      
       agentColor = nodeData?.color as string | undefined;
-      // Get node name/label for title
-      const nodeName = nodeData?.label || nodeData?.name || 'Unnamed';
+      
+      // Debug logging for color issue
+      console.log('[Panel Debug] Opening panel:', {
+        panelType,
+        nodeId: agentId,
+        nodeFound: !!node,
+        nodeData,
+        color: agentColor,
+        flowNodesCount: flow.props.nodes.length,
+        allNodeIds: flow.props.nodes.map(n => n.id)
+      });
+      
+      // Get node name/label for title with appropriate fallback
+      let nodeName: string;
+      if (panelType === 'dataStore' || panelType === 'dataStoreSchema') {
+        nodeName = nodeData?.label || 'Data Store';
+      } else if (panelType === 'ifNode') {
+        nodeName = nodeData?.label || 'If Condition';
+      } else {
+        nodeName = nodeData?.label || nodeData?.name || 'Unnamed';
+      }
       title = getPanelTitle(panelType, nodeName);
     } 
     // Default case

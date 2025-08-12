@@ -4,6 +4,7 @@ import { type Node, type NodeProps } from "@xyflow/react";
 import { useState, useCallback, useMemo } from "react";
 import { Copy, Trash2, Pencil } from "lucide-react";
 import { CustomHandle, CustomIfHandle } from "@/flow-multi/components/custom-handle";
+import { ConditionDataType, ConditionOperator } from "@/flow-multi/types/condition-types";
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +24,9 @@ import { Button } from "@/components-v2/ui/button";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
 import { useAgentStore } from "@/app/stores/agent-store";
+import { useFlowValidation } from "@/app/hooks/use-flow-validation";
+import { UniqueEntityID } from "@/shared/domain";
+import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
 import { toast } from "sonner";
 
 /**
@@ -30,10 +34,18 @@ import { toast } from "sonner";
  */
 export interface IfCondition {
   id: string;
+  dataType: ConditionDataType;
   value1: string;
-  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains';
+  operator: ConditionOperator;
   value2: string;
 }
+
+/**
+ * Centralized predicate to check if a condition is valid
+ */
+const isValidCondition = (c: IfCondition): boolean => {
+  return c.value1?.trim() !== '' && c.operator !== null && c.dataType !== null;
+};
 
 /**
  * If node data type definition
@@ -82,13 +94,41 @@ export default function IfNode({
     return baseColor;
   }, [data.color]);
   
+  // Use flow validation hook
+  const { isValid: isFlowValid, invalidNodeReasons } = useFlowValidation(selectedFlowId ? new UniqueEntityID(selectedFlowId) : null);
+  
+  // Check if node is connected (connectivity should be independent of flow validity)
+  const isConnected = useMemo(() => {
+    if (!flow) return false;
+    return traverseFlow(flow).connectedSequence.includes(id);
+  }, [flow, id]);
+  
+  // Check if this specific node is invalid (only show if connected)
+  const isNodeInvalid = isConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
+  
+  // Calculate opacity based on connection state and flow validity
+  const nodeOpacity = useMemo(() => {
+    if (!flow) return 1;
+    
+    // If node is not connected to both start and end, return 70% opacity
+    if (!isConnected) {
+      return 0.7;
+    }
+    // If node is connected but the flow has invalid nodes, return 70% opacity
+    else if (!isFlowValid) {
+      return 0.7;
+    }
+    
+    // Return full opacity for connected nodes in a valid flow
+    return 1;
+  }, [flow, isConnected, isFlowValid]);
+  
   // Calculate opacity with hex alpha channel
   const colorWithOpacity = useMemo(() => {
-    const opacity = 1; // Full opacity for now, can check connection state later
-    return opacity < 1 
-      ? `${nodeColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}` 
+    return nodeOpacity < 1 
+      ? `${nodeColor}${Math.round(nodeOpacity * 255).toString(16).padStart(2, '0')}` 
       : nodeColor;
-  }, [nodeColor]);
+  }, [nodeColor, nodeOpacity]);
 
   // Save node name to flow
   const saveNodeName = useCallback(async (newName: string) => {
@@ -178,16 +218,19 @@ export default function IfNode({
     setIsDeleteDialogOpen(false);
   }, [id]);
 
-  // Get condition count
-  const conditionCount = data.conditions?.length || 0;
-  const hasConditions = conditionCount > 0;
+  // Use centralized predicate to check valid conditions
+  const hasValidConditions = data.conditions?.some((c: IfCondition) => isValidCondition(c)) ?? false;
+  const displayCount = hasValidConditions ? data.conditions?.filter((c: IfCondition) => isValidCondition(c)).length ?? 0 : 0;
+  const hasConditions = hasValidConditions;
 
   return (
     <div 
       className={`group/node relative w-80 rounded-lg inline-flex justify-between items-center ${
-        selected 
-          ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
-          : "bg-background-surface-3 outline-1 outline-border-light"
+        isNodeInvalid
+          ? "bg-background-surface-3 outline-2 outline-status-destructive-light"
+          : selected 
+            ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
+            : "bg-background-surface-3 outline-1 outline-border-light"
       }`}
     >
       <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-4">
@@ -238,7 +281,7 @@ export default function IfNode({
               <div className={`self-stretch text-center justify-start text-xs font-medium ${
                 isPanelActive ? 'text-text-info' : 'text-text-secondary'
               }`}>
-                Edit condition
+                {displayCount > 0 ? `Edit conditions (${displayCount})` : 'Edit condition'}
               </div>
             </button>
             

@@ -23,6 +23,9 @@ import { Button } from "@/components-v2/ui/button";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
 import { useAgentStore } from "@/app/stores/agent-store";
+import { useFlowValidation } from "@/app/hooks/use-flow-validation";
+import { UniqueEntityID } from "@/shared/domain";
+import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
 import { SimpleFieldBadges } from "@/components-v2/ui/field-badges";
 import { toast } from "sonner";
 import type { DataStoreSchemaField, DataStoreField } from "@/modules/flow/domain/flow";
@@ -75,13 +78,41 @@ export default function DataStoreNode({
     return baseColor;
   }, [data.color]);
   
+  // Use flow validation hook
+  const { isValid: isFlowValid, invalidNodeReasons } = useFlowValidation(selectedFlowId ? new UniqueEntityID(selectedFlowId) : null);
+  
+  // Check if node is connected (connectivity should be independent of flow validity)
+  const isConnected = useMemo(() => {
+    if (!flow) return false;
+    return traverseFlow(flow).connectedSequence.includes(id);
+  }, [flow, id]);
+  
+  // Check if this specific node is invalid (only show if connected)
+  const isNodeInvalid = isConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
+  
+  // Calculate opacity based on connection state and flow validity
+  const nodeOpacity = useMemo(() => {
+    if (!flow) return 1;
+    
+    // If node is not connected to both start and end, return 70% opacity
+    if (!isConnected) {
+      return 0.7;
+    }
+    // If node is connected but the flow has invalid nodes, return 70% opacity
+    else if (!isFlowValid) {
+      return 0.7;
+    }
+    
+    // Return full opacity for connected nodes in a valid flow
+    return 1;
+  }, [flow, isConnected, isFlowValid]);
+  
   // Calculate opacity with hex alpha channel
   const colorWithOpacity = useMemo(() => {
-    const opacity = 1; // Full opacity for now, can check connection state later
-    return opacity < 1 
-      ? `${nodeColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}` 
+    return nodeOpacity < 1 
+      ? `${nodeColor}${Math.round(nodeOpacity * 255).toString(16).padStart(2, '0')}` 
       : nodeColor;
-  }, [nodeColor]);
+  }, [nodeColor, nodeOpacity]);
 
   // Save node name to flow
   const saveNodeName = useCallback(async (newName: string) => {
@@ -172,18 +203,39 @@ export default function DataStoreNode({
   }, [id]);
 
   // Note: Schema is stored in flow.dataStoreSchema
-  // The node stores DataStoreField[] with runtime values and logic
-  // For display purposes, we need to get schema from flow context
-  // TODO: Get fields from flow.dataStoreSchema when available through context
-  const displayFields: Array<{ id: string; name: string }> = [];
-  const hasNoFields = displayFields.length === 0;
+  // Get fields from the node's actual dataStoreFields (runtime values)
+  // These are the fields that have been configured for this specific node
+  const displayFields = useMemo(() => {
+    const fields: Array<{ id: string; name: string }> = [];
+    
+    // Get the node's configured fields
+    if (data.dataStoreFields && data.dataStoreFields.length > 0) {
+      // We need to get the field names from the schema using the schemaFieldId
+      data.dataStoreFields.forEach(field => {
+        // Find the corresponding schema field to get the name
+        const schemaField = flow?.props.dataStoreSchema?.fields.find(
+          sf => sf.id === field.schemaFieldId
+        );
+        if (schemaField) {
+          fields.push({ id: field.schemaFieldId, name: schemaField.name });
+        }
+      });
+    }
+    
+    return fields;
+  }, [data.dataStoreFields, flow?.props.dataStoreSchema?.fields]);
+  
+  // Check if node has configured fields (not schema fields)
+  const hasNoFields = !data.dataStoreFields || data.dataStoreFields.length === 0;
 
   return (
     <div 
       className={`group/node relative w-80 rounded-lg inline-flex justify-between items-center ${
-        selected 
-          ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
-          : "bg-background-surface-3 outline-1 outline-border-light"
+        isNodeInvalid
+          ? "bg-background-surface-3 outline-2 outline-status-destructive-light"
+          : selected 
+            ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
+            : "bg-background-surface-3 outline-1 outline-border-light"
       }`}
     >
       <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-4">

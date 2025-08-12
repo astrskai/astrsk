@@ -53,6 +53,7 @@ export const generateUniqueAgentName = async (flow: Flow, baseName: string = "Ne
 export const createNodeWithConnection = async (
   nodeType: "agent" | "dataStore" | "if",
   sourceNodeId: string,
+  sourceHandleId: string | undefined,
   position: { x: number; y: number },
   flow: Flow,
   nodes: CustomNodeType[],
@@ -130,22 +131,25 @@ export const createNodeWithConnection = async (
     }
 
     // Create edge connecting source to new node
-    // Check if source is an if-node to set edge type
-    const edgeType = sourceNode?.type === 'if' ? 'if-edge' : undefined;
+    // Add label for if-node edges based on the handle
+    const edgeLabel = sourceNode?.type === 'if' && sourceHandleId ? 
+      (sourceHandleId === 'true' ? 'True' : 'False') : undefined;
     
     const newEdge: CustomEdgeType = {
-      id: `${sourceNodeId}-${newNode.id}`,
+      id: sourceHandleId ? `${sourceNodeId}-${sourceHandleId}-${newNode.id}` : `${sourceNodeId}-${newNode.id}`,
       source: sourceNodeId,
+      sourceHandle: sourceHandleId,
       target: newNode.id,
-      type: edgeType,
-    };
+      type: undefined,
+      label: edgeLabel,
+    } as CustomEdgeType;
 
-    // Remove existing connections from source node
+    // Remove existing connections from the same source handle
     const filteredEdges = filterExistingConnections(
       edges,
       sourceNode,
       undefined,
-      { source: sourceNodeId }
+      { source: sourceNodeId, sourceHandle: sourceHandleId }
     );
 
     // Return updated state

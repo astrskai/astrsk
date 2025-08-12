@@ -52,8 +52,10 @@ export function useAgentColor({
     
     // Get opacity based on connection state and flow validity (unless overridden)
     // If flow is not provided, use default opacity
-    const opacity = overrideOpacity ?? (flow ? getAgentOpacity(agent, flow, isFlowValid) : DEFAULT_AGENT_OPACITY);
+    const calculatedOpacity = flow ? getAgentOpacity(agent, flow, isFlowValid) : DEFAULT_AGENT_OPACITY;
+    const opacity = overrideOpacity ?? calculatedOpacity;
     const isDisconnected = opacity < 1;
+    
 
     // Convert hex to rgba if needed
     let rgbaColor = hexColor;

@@ -14,43 +14,66 @@ import {
   isUnaryOperator,
   isValidOperatorForDataType
 } from '@/flow-multi/types/condition-types';
-import { OperatorDropdown } from '@/flow-multi/components/operator-dropdown';
+import { OperatorCombobox } from '@/flow-multi/components/operator-combobox';
 
 interface IfNodePanelProps {
   flowId: string;
   nodeId: string;
 }
 
+// Extended condition type to allow null operator during creation
+type EditableCondition = Omit<Condition, 'operator' | 'dataType'> & {
+  dataType: ConditionDataType | null;
+  operator: ConditionOperator | null;
+};
+
 export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
   const { flow, isLoading, saveFlow } = useFlowPanel({ flowId });
   const [logicOperator, setLogicOperator] = useState<'AND' | 'OR'>('AND');
-  const [conditions, setConditions] = useState<Condition[]>([]);
+  const [conditions, setConditions] = useState<EditableCondition[]>([]);
   const lastInitializedNodeId = useRef<string | null>(null);
   const flowLoadedRef = useRef<boolean>(false);
 
   // Save conditions to node
-  const saveConditions = useCallback(async (newConditions: Condition[], newOperator: 'AND' | 'OR') => {
-    if (!flow) return;
-    
-    const node = flow.props.nodes.find(n => n.id === nodeId);
-    if (!node) return;
-
-    const updatedNode = {
-      ...node,
-      data: {
-        ...node.data,
-        conditions: newConditions,
-        logicOperator: newOperator
-      }
-    };
-
-    const updatedNodes = flow.props.nodes.map(n => 
-      n.id === nodeId ? updatedNode : n
+  const saveConditions = useCallback(async (newConditions: EditableCondition[], newOperator: 'AND' | 'OR') => {
+    // Filter out incomplete conditions (where dataType or operator is null)
+    // Only persist fully-formed conditions to prevent downstream issues
+    const validConditions = newConditions.filter(c => 
+      c.dataType !== null && c.operator !== null
     );
 
-    const updateResult = flow.update({ nodes: updatedNodes });
-    if (updateResult.isSuccess) {
-      await saveFlow(updateResult.getValue());
+    // Update the node data directly in the flow panel which will handle saving
+    if ((window as any).flowPanelUpdateNodeData) {
+      (window as any).flowPanelUpdateNodeData(nodeId, { 
+        conditions: validConditions, // Only valid conditions for evaluation
+        draftConditions: newConditions, // All conditions including drafts
+        logicOperator: newOperator 
+      });
+    } else {
+      // Fallback if flow panel method is not available
+      if (!flow) return;
+      
+      const node = flow.props.nodes.find(n => n.id === nodeId);
+      if (!node) return;
+
+      const updatedNode = {
+        ...node,
+        data: {
+          ...node.data,
+          conditions: validConditions,
+          draftConditions: newConditions, // Store all conditions including drafts
+          logicOperator: newOperator
+        }
+      };
+
+      const updatedNodes = flow.props.nodes.map(n => 
+        n.id === nodeId ? updatedNode : n
+      );
+
+      const updateResult = flow.update({ nodes: updatedNodes });
+      if (updateResult.isSuccess) {
+        await saveFlow(updateResult.getValue());
+      }
     }
   }, [flow, nodeId, saveFlow]);
 
@@ -68,7 +91,8 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       const nodeData = node?.data as any;
       
       // Load existing conditions or create default
-      const existingConditions = nodeData?.conditions || [];
+      // Prefer draftConditions (includes incomplete ones) for UI state
+      const existingConditions = nodeData?.draftConditions || nodeData?.conditions || [];
       const existingOperator = nodeData?.logicOperator || 'AND';
       
       setLogicOperator(existingOperator);
@@ -76,10 +100,10 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       // If there are existing conditions, use them
       if (existingConditions.length > 0) {
         // Migrate old conditions that don't have dataType
-        const migratedConditions: Condition[] = existingConditions.map((c: any) => {
-          if (!c.dataType) {
+        const migratedConditions: EditableCondition[] = existingConditions.map((c: any) => {
+          if (!c.dataType && c.operator) {
             // Infer data type from operator for backwards compatibility
-            let dataType: ConditionDataType = 'string';
+            let dataType: ConditionDataType | null = 'string';
             if (c.operator === 'greater_than' || c.operator === 'less_than' || 
                 c.operator === 'greater_than_or_equals' || c.operator === 'less_than_or_equals') {
               dataType = 'number';
@@ -91,16 +115,21 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
               operator: c.operator || 'equals'
             };
           }
-          return c;
+          // For new conditions with null dataType/operator, keep them as-is
+          return {
+            ...c,
+            dataType: c.dataType ?? null,
+            operator: c.operator ?? null
+          };
         });
         setConditions(migratedConditions);
       } else {
-        // Only create default condition if none exist
-        const defaultCondition: Condition = {
+        // Only create default condition if none exist - start with no operator selected
+        const defaultCondition: EditableCondition = {
           id: `cond-${Date.now()}`,
-          dataType: 'string',
+          dataType: null,
           value1: '',
-          operator: 'string_equals',
+          operator: null,
           value2: ''
         };
         setConditions([defaultCondition]);
@@ -112,11 +141,11 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
   }, [nodeId, flow]); // Depend on both but use refs to control initialization
 
   const addCondition = useCallback(() => {
-    const newCondition: Condition = {
+    const newCondition: EditableCondition = {
       id: `cond-${Date.now()}`,
-      dataType: 'string',
+      dataType: null,
       value1: '',
-      operator: 'string_equals',
+      operator: null,
       value2: ''
     };
     const newConditions = [...conditions, newCondition];
@@ -133,7 +162,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
     saveConditions(newConditions, logicOperator);
   }, [conditions, logicOperator, saveConditions]);
 
-  const updateCondition = useCallback((id: string, field: keyof Condition, value: string) => {
+  const updateCondition = useCallback((id: string, field: keyof EditableCondition, value: string) => {
     const newConditions = conditions.map(c => {
       if (c.id !== id) return c;
       
@@ -141,7 +170,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       if (field === 'dataType') {
         const newDataType = value as ConditionDataType;
         const currentOperator = c.operator;
-        const isValidForNewType = isValidOperatorForDataType(currentOperator, newDataType);
+        const isValidForNewType = currentOperator ? isValidOperatorForDataType(currentOperator, newDataType) : false;
         
         return {
           ...c,
@@ -166,32 +195,26 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
     const newConditions = conditions.map(c => {
       if (c.id !== id) return c;
       
-      // When operator or data type changes, clear values to avoid invalid data
-      const dataTypeChanged = c.dataType !== dataType;
       const operatorChanged = c.operator !== operator;
       
-      // If switching to a unary operator, clear value2
-      // If switching data types or operators, clear both values for safety
-      if (dataTypeChanged) {
-        // Data type changed - clear both values
+      // Keep existing values when changing data type or operator
+      // Only clear value2 if switching to a unary operator
+      if (operatorChanged && isUnaryOperator(operator)) {
+        // Switching to unary operator - clear value2
         return {
           ...c,
           dataType,
           operator,
-          value1: '',
           value2: ''
-        };
-      } else if (operatorChanged) {
-        // Only operator changed - keep value1, but clear value2 if switching to unary
-        return {
-          ...c,
-          dataType,
-          operator,
-          value2: isUnaryOperator(operator) ? '' : c.value2
         };
       }
       
-      return { ...c, dataType, operator };
+      // Keep all values when just changing data type or switching between binary operators
+      return { 
+        ...c, 
+        dataType, 
+        operator 
+      };
     });
     setConditions(newConditions);
     saveConditions(newConditions, logicOperator);
@@ -203,7 +226,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
   return (
     <div className="h-full flex flex-col bg-background-surface-2">
-      <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-8">
+      <div className="flex-1 p-4 pr-2 inline-flex flex-col justify-start items-start gap-8">
         {/* Header with Logic Operator and Add Button */}
         <div className="self-stretch inline-flex justify-between items-center">
           <div className="w-28 inline-flex flex-col justify-start items-start gap-1">
@@ -227,7 +250,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
         </div>
 
         {/* Conditions List */}
-        <ScrollAreaSimple className="self-stretch flex-1">
+        <ScrollAreaSimple className="self-stretch flex-1" style={{ scrollbarGutter: 'stable' }}>
           <div className="self-stretch flex flex-col justify-start items-start gap-3">
             {conditions.map((condition, index) => (
                 <div key={condition.id} className="self-stretch flex flex-col gap-3">
@@ -252,21 +275,22 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                             className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                           />
                         </div>
-                        {/* Nested Operator Dropdown */}
-                        <div className="w-52 inline-flex flex-col justify-start items-start gap-1">
-                          <OperatorDropdown
+                        {/* Unified Operator Combobox */}
+                        <div className="w-[148px] inline-flex flex-col justify-start items-start gap-1">
+                          <OperatorCombobox
                             value={{
                               dataType: condition.dataType,
                               operator: condition.operator
                             }}
                             onChange={(dataType, operator) => handleOperatorChange(condition.id, dataType, operator)}
                             className="w-full"
+                            placeholder="Select"
                           />
                         </div>
                       </div>
                       
-                      {/* Value2 Row - only show if operator requires it */}
-                      {!isUnaryOperator(condition.operator) && (
+                      {/* Value2 Row - only show if operator exists and requires it */}
+                      {condition.operator && !isUnaryOperator(condition.operator) && (
                         <div className="self-stretch flex flex-col justify-start items-start gap-1">
                           <Input
                             value={condition.value2}

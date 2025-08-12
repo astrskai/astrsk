@@ -16,60 +16,47 @@ export function NodeSelectionMenuItems({
   onSelectNodeType: (type: "agent" | "dataStore" | "if") => void;
   variant?: "floating" | "dropdown";
 }) {
-  const isDropdown = variant === "dropdown";
-  
-  return (
-    <div className={cn(
-      "w-28 rounded-lg inline-flex flex-col justify-start items-start overflow-hidden",
-      !isDropdown && "flex-row gap-2 p-2 w-auto"
-    )}>
+  // The actual buttons content - same for both variants
+  const buttons = (
+    <>
       <button
         onClick={() => onSelectNodeType("agent")}
-        className={cn(
-          isDropdown
-            ? "self-stretch px-3 py-2 bg-background-surface-4 border-b border-border-normal inline-flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
-            : "flex flex-col items-center justify-center gap-2 p-4 min-w-[100px] rounded-md bg-background-surface-4 hover:bg-background-surface-5 border border-border-light hover:border-accent-primary transition-all duration-200 group"
-        )}
+        className="w-full h-[31px] px-3 bg-background-surface-4 border-b border-border-normal inline-flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
       >
-        <div className={cn(
-          "justify-start text-text-primary text-xs font-normal",
-          !isDropdown && "text-text-body group-hover:text-accent-primary transition-colors font-medium"
-        )}>
+        <div className="text-center text-text-primary text-xs font-normal">
           Agent node
         </div>
       </button>
       
       <button
         onClick={() => onSelectNodeType("dataStore")}
-        className={cn(
-          isDropdown
-            ? "self-stretch px-3 py-2 bg-background-surface-4 border-b border-border-normal inline-flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
-            : "flex flex-col items-center justify-center gap-2 p-4 min-w-[100px] rounded-md bg-background-surface-4 hover:bg-background-surface-5 border border-border-light hover:border-accent-primary transition-all duration-200 group"
-        )}
+        className="w-full h-[31px] px-3 bg-background-surface-4 border-b border-border-normal inline-flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
       >
-        <div className={cn(
-          "justify-start text-text-primary text-xs font-normal",
-          !isDropdown && "text-text-body group-hover:text-accent-primary transition-colors font-medium"
-        )}>
+        <div className="text-center text-text-primary text-xs font-normal">
           Data store node
         </div>
       </button>
       
       <button
         onClick={() => onSelectNodeType("if")}
-        className={cn(
-          isDropdown
-            ? "self-stretch px-3 py-2 bg-background-surface-4 inline-flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
-            : "flex flex-col items-center justify-center gap-2 p-4 min-w-[100px] rounded-md bg-background-surface-4 hover:bg-background-surface-5 border border-border-light hover:border-accent-primary transition-all duration-200 group"
-        )}
+        className="w-full h-[31px] px-3 bg-background-surface-4 inline-flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
       >
-        <div className={cn(
-          "justify-start text-text-primary text-xs font-normal",
-          !isDropdown && "text-text-body group-hover:text-accent-primary transition-colors font-medium"
-        )}>
+        <div className="text-center text-text-primary text-xs font-normal">
           If node
         </div>
       </button>
+    </>
+  );
+  
+  // For dropdown, return just the buttons (DropdownMenuContent provides container)
+  if (variant === "dropdown") {
+    return buttons;
+  }
+  
+  // For floating, wrap in a container div
+  return (
+    <div className="min-w-[117px] w-[117px] rounded-lg flex flex-col justify-start items-start overflow-hidden">
+      {buttons}
     </div>
   );
 }
@@ -107,9 +94,6 @@ export function NodeSelectionMenu({
       <div
         className={cn(
           "absolute z-50",
-          "bg-background-surface-3 rounded-lg",
-          "shadow-lg border border-border-light",
-          "animate-in fade-in-0 zoom-in-95 duration-200"
         )}
         style={{
           left: `${position?.x || 0}px`,
