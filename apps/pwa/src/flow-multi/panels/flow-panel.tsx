@@ -1495,15 +1495,17 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                   Loading sessions...
                 </SelectItem>
               ) : (
-                sessions.map((session) => (
-                  <SelectItem
-                    key={session.id.toString()}
-                    value={session.id.toString()}
-                  >
-                    {session.props.title ||
-                      `Session ${session.id.toString().slice(0, 8)}`}
-                  </SelectItem>
-                ))
+                sessions
+                  .filter((session) => session.flowId?.equals(flow.id))
+                  .map((session) => (
+                    <SelectItem
+                      key={session.id.toString()}
+                      value={session.id.toString()}
+                    >
+                      {session.props.title ||
+                        `Session ${session.id.toString().slice(0, 8)}`}
+                    </SelectItem>
+                  ))
               )}
             </SelectContent>
           </Select>
