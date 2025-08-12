@@ -60,12 +60,13 @@ interface AgentNodeComponentProps {
   agent: Agent;
   flow: any;
   nodeId: string;
+  selected?: boolean;
 }
 
 /**
  * The main component for rendering an agent node in the flow
  */
-function AgentNodeComponent({ agent, flow, nodeId }: AgentNodeComponentProps) {
+function AgentNodeComponent({ agent, flow, nodeId, selected }: AgentNodeComponentProps) {
   // Get updateAgent from flow panel hook
   const { updateAgent } = useFlowPanel({ flowId: flow?.id?.toString() || '' });
   
@@ -767,9 +768,11 @@ function AgentNodeComponent({ agent, flow, nodeId }: AgentNodeComponentProps) {
   return (
     <div 
       className={`group/node w-80 rounded-lg inline-flex justify-between items-center ${
-        isCurrentAgentValid
-          ? "bg-background-surface-3 outline-1 outline-border-light" 
-          : "bg-background-surface-2 outline-2 outline-status-destructive-light"
+        !isCurrentAgentValid
+          ? "bg-background-surface-2 outline-2 outline-status-destructive-light"
+          : selected
+            ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg"
+            : "bg-background-surface-3 outline-1 outline-border-light"
       }`}
     >
       <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-4">
@@ -993,6 +996,7 @@ export type AgentNode = Node<AgentNodeData>;
 export default function AgentNode({
   id,
   data,
+  selected,
 }: NodeProps<AgentNode>) {
   // Get the selected flow ID from agent store
   const selectedFlowId = useAgentStore.use.selectedFlowId();
@@ -1016,5 +1020,5 @@ export default function AgentNode({
   }
 
   // Pass the data prop to the component
-  return <AgentNodeComponent agent={agent} flow={selectedFlow} nodeId={id} />;
+  return <AgentNodeComponent agent={agent} flow={selectedFlow} nodeId={id} selected={selected} />;
 }

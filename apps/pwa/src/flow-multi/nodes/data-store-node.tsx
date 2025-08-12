@@ -79,15 +79,21 @@ export default function DataStoreNode({
   }, [data.color]);
   
   // Use flow validation hook
-  const { isValid: isFlowValid } = useFlowValidation(selectedFlowId ? new UniqueEntityID(selectedFlowId) : null);
+  const { isValid: isFlowValid, invalidNodeReasons } = useFlowValidation(selectedFlowId ? new UniqueEntityID(selectedFlowId) : null);
+  
+  // Check if node is connected
+  const isConnected = useMemo(() => {
+    if (!flow) return false;
+    const traversalResult = traverseFlow(flow);
+    return traversalResult.connectedSequence.includes(id) && traversalResult.hasValidFlow;
+  }, [flow, id]);
+  
+  // Check if this specific node is invalid (only show if connected)
+  const isNodeInvalid = isConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
   
   // Calculate opacity based on connection state and flow validity
   const nodeOpacity = useMemo(() => {
     if (!flow) return 1;
-    
-    // Use traverseFlow to check if this node is connected
-    const traversalResult = traverseFlow(flow);
-    const isConnected = traversalResult.connectedSequence.includes(id) && traversalResult.hasValidFlow;
     
     // If node is not connected to both start and end, return 70% opacity
     if (!isConnected) {
@@ -100,7 +106,7 @@ export default function DataStoreNode({
     
     // Return full opacity for connected nodes in a valid flow
     return 1;
-  }, [flow, id, isFlowValid]);
+  }, [flow, isConnected, isFlowValid]);
   
   // Calculate opacity with hex alpha channel
   const colorWithOpacity = useMemo(() => {
@@ -226,9 +232,11 @@ export default function DataStoreNode({
   return (
     <div 
       className={`group/node relative w-80 rounded-lg inline-flex justify-between items-center ${
-        selected 
-          ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
-          : "bg-background-surface-3 outline-1 outline-border-light"
+        isNodeInvalid
+          ? "bg-background-surface-3 outline-2 outline-status-destructive-light"
+          : selected 
+            ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
+            : "bg-background-surface-3 outline-1 outline-border-light"
       }`}
     >
       <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-4">
