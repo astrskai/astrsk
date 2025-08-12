@@ -36,42 +36,43 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
   // Save conditions to node
   const saveConditions = useCallback(async (newConditions: EditableCondition[], newOperator: 'AND' | 'OR') => {
-    if (!flow) return;
-    
-    const node = flow.props.nodes.find(n => n.id === nodeId);
-    if (!node) return;
-
     // Filter out incomplete conditions (where dataType or operator is null)
     // Only persist fully-formed conditions to prevent downstream issues
     const validConditions = newConditions.filter(c => 
       c.dataType !== null && c.operator !== null
     );
 
-    const updatedNode = {
-      ...node,
-      data: {
-        ...node.data,
-        conditions: validConditions,
-        draftConditions: newConditions, // Store all conditions including drafts
-        logicOperator: newOperator
-      }
-    };
-
-    const updatedNodes = flow.props.nodes.map(n => 
-      n.id === nodeId ? updatedNode : n
-    );
-
-    const updateResult = flow.update({ nodes: updatedNodes });
-    if (updateResult.isSuccess) {
-      await saveFlow(updateResult.getValue());
+    // Update the node data directly in the flow panel which will handle saving
+    if ((window as any).flowPanelUpdateNodeData) {
+      (window as any).flowPanelUpdateNodeData(nodeId, { 
+        conditions: validConditions, // Only valid conditions for evaluation
+        draftConditions: newConditions, // All conditions including drafts
+        logicOperator: newOperator 
+      });
+    } else {
+      // Fallback if flow panel method is not available
+      if (!flow) return;
       
-      // Update the node data directly in the flow panel to trigger re-render
-      if ((window as any).flowPanelUpdateNodeData) {
-        (window as any).flowPanelUpdateNodeData(nodeId, { 
-          conditions: validConditions, // Only valid conditions for evaluation
-          draftConditions: newConditions, // All conditions including drafts
-          logicOperator: newOperator 
-        });
+      const node = flow.props.nodes.find(n => n.id === nodeId);
+      if (!node) return;
+
+      const updatedNode = {
+        ...node,
+        data: {
+          ...node.data,
+          conditions: validConditions,
+          draftConditions: newConditions, // Store all conditions including drafts
+          logicOperator: newOperator
+        }
+      };
+
+      const updatedNodes = flow.props.nodes.map(n => 
+        n.id === nodeId ? updatedNode : n
+      );
+
+      const updateResult = flow.update({ nodes: updatedNodes });
+      if (updateResult.isSuccess) {
+        await saveFlow(updateResult.getValue());
       }
     }
   }, [flow, nodeId, saveFlow]);

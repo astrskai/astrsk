@@ -586,26 +586,20 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       },
     };
 
-    // Update nodes using functional state update to avoid stale data
-    setNodes(prevNodes => {
-      const updatedNodes = [...prevNodes, newNode];
-      
-      // Mark as local change and save
-      isLocalChangeRef.current = true;
-      
-      // Get current edges from state
-      setEdges(prevEdges => {
-        setTimeout(() => {
-          saveFlowChanges(updatedNodes, prevEdges, true);
-        }, 0);
-        return prevEdges; // Don't modify edges
-      });
-      
-      return updatedNodes;
-    });
+    // Update nodes - use flow.props.nodes instead of component state to avoid stale data
+    const currentNodes = (flow.props.nodes as CustomNodeType[]) || [];
+    const currentEdges = (flow.props.edges as CustomEdgeType[]) || [];
+    const updatedNodes = [...currentNodes, newNode];
+    setNodes(updatedNodes);
+
+    // Mark as local change and save
+    isLocalChangeRef.current = true;
+    setTimeout(() => {
+      saveFlowChanges(updatedNodes, currentEdges, true);
+    }, 0);
 
     toast.success("Data Store node added");
-  }, [flow, setNodes, setEdges, saveFlowChanges]);
+  }, [flow, setNodes, saveFlowChanges]);
 
   const addIfNode = useCallback(async () => {
     if (!flow) return;
@@ -647,26 +641,20 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     
     console.log('[Flow Panel Debug] Created if node:', newNode);
 
-    // Update nodes using functional state update to avoid stale data
-    setNodes(prevNodes => {
-      const updatedNodes = [...prevNodes, newNode];
-      
-      // Mark as local change and save
-      isLocalChangeRef.current = true;
-      
-      // Get current edges from state
-      setEdges(prevEdges => {
-        setTimeout(() => {
-          saveFlowChanges(updatedNodes, prevEdges, true);
-        }, 0);
-        return prevEdges; // Don't modify edges
-      });
-      
-      return updatedNodes;
-    });
+    // Update nodes - use flow.props.nodes instead of component state to avoid stale data
+    const currentNodes = (flow.props.nodes as CustomNodeType[]) || [];
+    const currentEdges = (flow.props.edges as CustomEdgeType[]) || [];
+    const updatedNodes = [...currentNodes, newNode];
+    setNodes(updatedNodes);
+
+    // Mark as local change and save
+    isLocalChangeRef.current = true;
+    setTimeout(() => {
+      saveFlowChanges(updatedNodes, currentEdges, true);
+    }, 0);
 
     toast.success("If node added");
-  }, [flow, setNodes, setEdges, saveFlowChanges]);
+  }, [flow, setNodes, saveFlowChanges]);
 
   const addAgentNode = useCallback(async () => {
     if (!flow) return;
@@ -750,23 +738,15 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         },
       };
 
-      // Update nodes using functional state update to avoid stale data
-      setNodes(prevNodes => {
-        const updatedNodes = [...prevNodes, newAgentNode];
-        
-        // Mark as local change and save
-        isLocalChangeRef.current = true;
-        
-        // Get current edges from state
-        setEdges(prevEdges => {
-          setTimeout(() => {
-            saveFlowChanges(updatedNodes, prevEdges);
-          }, 0);
-          return prevEdges; // Don't modify edges
-        });
-        
-        return updatedNodes;
-      });
+      // Update nodes
+      const updatedNodes = [...nodes, newAgentNode];
+      setNodes(updatedNodes);
+
+      // Mark as local change and save
+      isLocalChangeRef.current = true;
+      setTimeout(() => {
+        saveFlowChanges(updatedNodes, edges);
+      }, 0);
 
       // Invalidate agent queries for color updates
       invalidateAllAgentQueries();
@@ -777,7 +757,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [flow, setNodes, setEdges, saveFlowChanges]);
+  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
 
   // Delete agent handler
   const deleteAgent = useCallback(async (agentId: string) => {
@@ -1003,9 +983,15 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         };
       });
       
+      // Mark as local change and save after state update
+      isLocalChangeRef.current = true;
+      setTimeout(() => {
+        saveFlowChanges(updatedNodes, edgesRef.current, true);
+      }, 0);
+      
       return updatedNodes;
     });
-  }, [setNodes]);
+  }, [setNodes, saveFlowChanges]);
 
   // Effect 3: Register flow panel methods for all nodes - use ref to avoid re-renders
   const methodsRef = useRef<{

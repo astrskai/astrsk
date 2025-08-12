@@ -100,35 +100,36 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
 
   // Save data store fields to node
   const saveDataStoreFields = useCallback(async (fields: DataStoreField[]) => {
-    const currentFlow = flowRef.current;
-    if (!currentFlow) return;
-    
-    const currentNode = currentFlow.props.nodes.find(n => n.id === nodeId);
-    if (!currentNode) return;
-    
-    const updatedNode = {
-      ...currentNode,
-      data: {
-        ...currentNode.data,
-        dataStoreFields: fields
-      }
-    };
-    
-    const updatedNodes = currentFlow.props.nodes.map(n => 
-      n.id === nodeId ? updatedNode : n
-    );
-    
-    const updateResult = currentFlow.update({ nodes: updatedNodes });
-    if (updateResult.isSuccess) {
-      try {  
-        await saveFlow(updateResult.getValue());  
-      } catch (e) {  
-        console.error("Failed to save flow:", e);  
-        return;  
-      }  
-      // Update the node data directly in the flow panel to trigger re-render
-      if ((window as any).flowPanelUpdateNodeData) {
-        (window as any).flowPanelUpdateNodeData(nodeId, { dataStoreFields: fields });
+    // Update the node data directly in the flow panel which will handle saving
+    if ((window as any).flowPanelUpdateNodeData) {
+      (window as any).flowPanelUpdateNodeData(nodeId, { dataStoreFields: fields });
+    } else {
+      // Fallback if flow panel method is not available
+      const currentFlow = flowRef.current;
+      if (!currentFlow) return;
+      
+      const currentNode = currentFlow.props.nodes.find(n => n.id === nodeId);
+      if (!currentNode) return;
+      
+      const updatedNode = {
+        ...currentNode,
+        data: {
+          ...currentNode.data,
+          dataStoreFields: fields
+        }
+      };
+      
+      const updatedNodes = currentFlow.props.nodes.map(n => 
+        n.id === nodeId ? updatedNode : n
+      );
+      
+      const updateResult = currentFlow.update({ nodes: updatedNodes });
+      if (updateResult.isSuccess) {
+        try {  
+          await saveFlow(updateResult.getValue());  
+        } catch (e) {  
+          console.error("Failed to save flow:", e);  
+        }
       }
     }
   }, [nodeId, saveFlow]);
