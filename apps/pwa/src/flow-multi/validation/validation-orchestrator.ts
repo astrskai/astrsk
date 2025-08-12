@@ -142,10 +142,14 @@ export class ValidationOrchestrator {
       }
     }
     
+    // Build connected nodes set (includes all process nodes: agents, if, dataStore)
+    const connectedNodes = new Set<string>(traversalResult.connectedSequence);
+    
     return {
       flow,
       agents,
       connectedAgents,
+      connectedNodes,
       agentPositions: traversalResult.agentPositions,
       apiConnectionsWithModels,
     };

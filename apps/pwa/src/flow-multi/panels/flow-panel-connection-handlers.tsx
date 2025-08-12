@@ -2,6 +2,8 @@ import { toast } from "sonner";
 import { Agent, ApiType } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { getNextAvailableColor } from "@/flow-multi/utils/agent-color-assignment";
+import { ensureNodeSafety } from "@/flow-multi/utils/ensure-node-safety";
+import { ensureEdgeSelectable } from "@/flow-multi/utils/ensure-edge-selectable";
 import { Flow } from "@/modules/flow/domain/flow";
 import { CustomNodeType } from "@/flow-multi/nodes";
 import { UniqueEntityID } from "@/shared/domain";
@@ -96,17 +98,17 @@ export const createNodeWithConnection = async (
       }
       const savedAgent = savedAgentResult.getValue();
 
-      newNode = {
+      newNode = ensureNodeSafety({
         id: savedAgent.id.toString(),
         type: "agent",
         position: newNodePosition,
         data: {
           agentId: savedAgent.id.toString(),
         },
-      };
+      });
     } else if (nodeType === "dataStore") {
       const nextColor = await getNextAvailableColor(flow);
-      newNode = {
+      newNode = ensureNodeSafety({
         id: `datastore-${Date.now()}`,
         type: "dataStore",
         position: newNodePosition,
@@ -114,10 +116,10 @@ export const createNodeWithConnection = async (
           label: "Data Store",
           color: nextColor,
         },
-      };
+      });
     } else if (nodeType === "if") {
       const nextColor = await getNextAvailableColor(flow);
-      newNode = {
+      newNode = ensureNodeSafety({
         id: `if-${Date.now()}`,
         type: "if",
         position: newNodePosition,
@@ -125,7 +127,7 @@ export const createNodeWithConnection = async (
           label: "If Node",
           color: nextColor,
         },
-      };
+      });
     } else {
       return null;
     }
@@ -135,14 +137,14 @@ export const createNodeWithConnection = async (
     const edgeLabel = sourceNode?.type === 'if' && sourceHandleId ? 
       (sourceHandleId === 'true' ? 'True' : 'False') : undefined;
     
-    const newEdge: CustomEdgeType = {
+    const newEdge: CustomEdgeType = ensureEdgeSelectable({
       id: sourceHandleId ? `${sourceNodeId}-${sourceHandleId}-${newNode.id}` : `${sourceNodeId}-${newNode.id}`,
       source: sourceNodeId,
       sourceHandle: sourceHandleId,
       target: newNode.id,
       type: undefined,
       label: edgeLabel,
-    } as CustomEdgeType;
+    } as CustomEdgeType);
 
     // Remove existing connections from the same source handle
     const filteredEdges = filterExistingConnections(

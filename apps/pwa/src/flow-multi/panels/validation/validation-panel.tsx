@@ -59,20 +59,31 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     })),
   });
   
-  // Get connected agents
-  const connectedAgents = useMemo(() => {
-    if (!flow) return new Set<string>();
+  // Get connected agents, nodes and agent positions from flow traversal
+  const { connectedAgents, connectedNodes, agentPositions } = useMemo(() => {
+    if (!flow) return { 
+      connectedAgents: new Set<string>(), 
+      connectedNodes: new Set<string>(),
+      agentPositions: new Map()
+    };
     
     const traversalResult = traverseFlowCached(flow);
-    const connected = new Set<string>();
+    const agents = new Set<string>();
     
     for (const [agentId, position] of traversalResult.agentPositions) {
       if (position.isConnectedToStart && position.isConnectedToEnd) {
-        connected.add(agentId);
+        agents.add(agentId);
       }
     }
     
-    return connected;
+    // Build connected nodes set (includes all process nodes: agents, if, dataStore)
+    const nodes = new Set<string>(traversalResult.connectedSequence);
+    
+    return {
+      connectedAgents: agents,
+      connectedNodes: nodes,
+      agentPositions: traversalResult.agentPositions
+    };
   }, [flow]);
   
   // Convert agents to Map for validation context
@@ -106,12 +117,12 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     }
     
     // Create validation context
-    const traversalResult = traverseFlowCached(flow);
     const context: ValidationContext = {
       flow,
       agents: agentsMap,
       connectedAgents,
-      agentPositions: traversalResult.agentPositions,
+      connectedNodes,
+      agentPositions,
       apiConnectionsWithModels,
     };
     

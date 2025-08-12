@@ -65,6 +65,7 @@ export interface ValidationContext {
   flow: Flow;
   agents: Map<string, Agent>;
   connectedAgents: Set<string>;
+  connectedNodes: Set<string>; // All connected nodes (agents, if, dataStore, etc.)
   agentPositions: Map<string, { isConnectedToStart: boolean; isConnectedToEnd: boolean }>;
   apiConnectionsWithModels?: ApiConnectionWithModels[];
 }
