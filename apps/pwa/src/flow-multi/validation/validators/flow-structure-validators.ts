@@ -6,20 +6,31 @@ import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
 
 // Check if flow has valid path from start to end
 // Helper function to check if a node can reach the end
-function canNodeReachEnd(nodeId: string, endNodeId: string, edges: any[], visited: Set<string> = new Set()): boolean {
+// This properly handles cycles by doing a reverse traversal from end node
+function canNodeReachEnd(nodeId: string, endNodeId: string, edges: any[]): boolean {
   if (nodeId === endNodeId) return true;
-  if (visited.has(nodeId)) return false;
   
-  visited.add(nodeId);
-  const outgoingEdges = edges.filter(e => e.source === nodeId);
+  // Build a set of all nodes that can reach the end using reverse traversal
+  const nodesCanReachEnd = new Set<string>();
+  const visited = new Set<string>();
   
-  for (const edge of outgoingEdges) {
-    if (canNodeReachEnd(edge.target, endNodeId, edges, visited)) {
-      return true;
+  const reverseTraverse = (currentNodeId: string) => {
+    if (visited.has(currentNodeId)) return;
+    visited.add(currentNodeId);
+    nodesCanReachEnd.add(currentNodeId);
+    
+    // Find all nodes that have edges pointing to this node
+    const incomingEdges = edges.filter(e => e.target === currentNodeId);
+    for (const edge of incomingEdges) {
+      reverseTraverse(edge.source);
     }
-  }
+  };
   
-  return false;
+  // Start reverse traversal from end node
+  reverseTraverse(endNodeId);
+  
+  // Check if the given node is in the set of nodes that can reach end
+  return nodesCanReachEnd.has(nodeId);
 }
 
 export const validateFlowPath: ValidatorFunction = (context) => {

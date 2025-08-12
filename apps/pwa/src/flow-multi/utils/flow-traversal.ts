@@ -341,15 +341,43 @@ function validateIfNodes(ifNodes: FlowNode[], adjacencyList: Map<string, string[
  * @returns true if all paths reach end, false otherwise
  */
 function validateAllPathsReachEnd(startNodeId: string, endNodeId: string, adjacencyList: Map<string, string[]>, ifNodes: FlowNode[]): boolean {
-  function dfsAllPaths(currentNodeId: string, currentPath: string[]): boolean {
+  // Use a more sophisticated approach that handles cycles properly
+  // Track visited nodes globally to detect if end is reachable
+  const globalVisited = new Set<string>();
+  const canReachEndFromNode = new Map<string, boolean>();
+  
+  // First, do a DFS from end node backwards to find all nodes that can reach end
+  const nodesCanReachEnd = new Set<string>();
+  const findNodesCanReachEnd = (nodeId: string, visited: Set<string> = new Set()) => {
+    if (visited.has(nodeId)) return;
+    visited.add(nodeId);
+    nodesCanReachEnd.add(nodeId);
+    
+    // Find all nodes that have edges pointing to this node
+    for (const [sourceId, targets] of adjacencyList.entries()) {
+      if (targets.includes(nodeId)) {
+        findNodesCanReachEnd(sourceId, visited);
+      }
+    }
+  };
+  findNodesCanReachEnd(endNodeId);
+  
+  // Now validate that all paths from start can reach end
+  function validatePath(currentNodeId: string, pathVisited: Set<string>): boolean {
     // If we reached the end node, this path is valid
     if (currentNodeId === endNodeId) {
       return true;
     }
     
-    // Prevent infinite loops
-    if (currentPath.includes(currentNodeId)) {
-      console.warn(`Circular reference detected in path: ${currentPath.join(' -> ')} -> ${currentNodeId}`);
+    // If this node can reach end (pre-computed), the path is valid
+    if (nodesCanReachEnd.has(currentNodeId)) {
+      return true;
+    }
+    
+    // Prevent infinite loops in the current path
+    if (pathVisited.has(currentNodeId)) {
+      // In a loop - check if any node in the loop can reach end
+      // If we're in a loop and no node in the loop can reach end, it's invalid
       return false;
     }
     
@@ -360,22 +388,25 @@ function validateAllPathsReachEnd(startNodeId: string, endNodeId: string, adjace
       return false;
     }
     
-    // For all neighbors, at least one path must reach the end
-    // If this is an if node, BOTH branches must reach the end
+    // Create new visited set for this path
+    const newPathVisited = new Set(pathVisited);
+    newPathVisited.add(currentNodeId);
+    
+    // Check if this is an if node
     const isIfNode = ifNodes.some(node => node.id === currentNodeId);
     
     if (isIfNode) {
       // For if nodes, ALL branches must reach the end
       return neighbors.every(neighborId => 
-        dfsAllPaths(neighborId, [...currentPath, currentNodeId])
+        validatePath(neighborId, newPathVisited)
       );
     } else {
       // For regular nodes, at least one path must reach the end
       return neighbors.some(neighborId => 
-        dfsAllPaths(neighborId, [...currentPath, currentNodeId])
+        validatePath(neighborId, newPathVisited)
       );
     }
   }
   
-  return dfsAllPaths(startNodeId, []);
+  return validatePath(startNodeId, new Set());
 }
