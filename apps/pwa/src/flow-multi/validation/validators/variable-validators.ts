@@ -331,6 +331,60 @@ export const validateUndefinedOutputVariables: ValidatorFunction = (context) => 
     validateVariables(responseVariables, 'response-design', 'Response Design', undefined, false);
   }
   
+  // Check if-node condition fields
+  context.connectedNodes.forEach(nodeId => {
+    const node = context.flow.props.nodes.find(n => n.id === nodeId);
+    if (node && node.type === 'if') {
+      const nodeData = node.data as any;
+      const nodeName = nodeData?.label || `If-node ${nodeId}`;
+      
+      // Check conditions (both conditions and draftConditions)
+      const conditions = nodeData?.conditions || nodeData?.draftConditions || [];
+      conditions.forEach((condition: any, index: number) => {
+        // Check value1 field for variables
+        if (condition.value1 && typeof condition.value1 === 'string') {
+          // Extract variables from value1 (it might contain {{variable}} syntax)
+          const value1Variables = extractVariables(condition.value1);
+          if (value1Variables.length > 0) {
+            validateVariables(value1Variables, nodeId, nodeName, `condition ${index + 1} value1`, false);
+          }
+        }
+        
+        // Check value2 field for variables
+        if (condition.value2 && typeof condition.value2 === 'string') {
+          // Extract variables from value2
+          const value2Variables = extractVariables(condition.value2);
+          if (value2Variables.length > 0) {
+            validateVariables(value2Variables, nodeId, nodeName, `condition ${index + 1} value2`, false);
+          }
+        }
+      });
+    }
+  });
+  
+  // Check data store node logic fields
+  context.connectedNodes.forEach(nodeId => {
+    const node = context.flow.props.nodes.find(n => n.id === nodeId);
+    if (node && node.type === 'dataStore') {
+      const nodeData = node.data as any;
+      const nodeName = nodeData?.label || `DataStore-node ${nodeId}`;
+      
+      // Check each data store field's logic expression
+      if (nodeData?.dataStoreFields && Array.isArray(nodeData.dataStoreFields)) {
+        nodeData.dataStoreFields.forEach((field: any, index: number) => {
+          if (field.logic && typeof field.logic === 'string') {
+            // Extract variables from the logic expression
+            const logicVariables = extractVariables(field.logic);
+            if (logicVariables.length > 0) {
+              const fieldName = field.name || `field ${index + 1}`;
+              validateVariables(logicVariables, nodeId, nodeName, `field "${fieldName}" logic`, false);
+            }
+          }
+        });
+      }
+    }
+  });
+  
   return issues;
 };
 
