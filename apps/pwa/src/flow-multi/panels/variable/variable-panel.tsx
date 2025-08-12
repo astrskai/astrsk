@@ -985,18 +985,20 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                 ))}
                             </div>
                           </div>
-                          <div className="mt-2 w-full overflow-hidden">
-                            <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
-                              <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
-                                Data from session
-                              </div>
-                              <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
-                                {typeof displayValue === "object"
-                                  ? JSON.stringify(displayValue)
-                                  : String(displayValue)}
+                          {hasValue && displayValue !== "" && displayValue !== null && displayValue !== undefined && (
+                            <div className="mt-2 w-full overflow-hidden">
+                              <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
+                                <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                  Most recent data from session
+                                </div>
+                                <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                  {typeof displayValue === "object"
+                                    ? JSON.stringify(displayValue)
+                                    : String(displayValue)}
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </button>
                     );

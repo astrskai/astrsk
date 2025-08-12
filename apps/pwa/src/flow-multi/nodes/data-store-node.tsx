@@ -92,6 +92,7 @@ export default function DataStoreNode({
   // Check if this specific node is invalid (only show if fully connected from start to end)
   const isNodeInvalid = isFullyConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
   
+  
   // Calculate opacity based on connection state and flow validity
   const nodeOpacity = useMemo(() => {
     if (!flow) return 1;
@@ -229,7 +230,7 @@ export default function DataStoreNode({
   
   // Check if node has configured fields (not schema fields)
   const hasNoFields = !data.dataStoreFields || data.dataStoreFields.length === 0;
-
+  
   return (
     <div 
       className={`group/node relative w-80 rounded-lg inline-flex justify-between items-center ${
