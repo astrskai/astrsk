@@ -55,14 +55,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   const nodeData = node?.data as any;
   
   // Get schema fields from flow's dataStoreSchema
-  const schemaFields = useMemo(() => {
-    const fields = flow?.props.dataStoreSchema?.fields || [];
-    console.log('[DATA_STORE] Schema fields from flow:', {
-      fieldsCount: fields.length,
-      fields: fields.map(f => ({ id: f.id, name: f.name }))
-    });
-    return fields;
-  }, [flow?.props.dataStoreSchema?.fields]);
+  const schemaFields = useMemo(() => flow?.props.dataStoreSchema?.fields || [], [flow?.props.dataStoreSchema?.fields]);
 
   // Local state for imported fields and logic
   const [dataStoreFields, setDataStoreFields] = useState<DataStoreField[]>([]);
@@ -75,24 +68,9 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
 
   // Initialize data store fields from node data - only when nodeId changes and no unsaved changes
   useEffect(() => {
-    console.log('[DATA_STORE] Initialize effect triggered:', {
-      hasFlow: !!flow,
-      nodeId,
-      lastNodeId: lastNodeIdRef.current,
-      hasUnsavedChanges,
-      currentFieldsCount: dataStoreFields.length
-    });
-    
     if (flow && nodeId && nodeId !== lastNodeIdRef.current && !hasUnsavedChanges) {
       const currentNode = flow.props.nodes.find(n => n.id === nodeId);
       const currentNodeData = currentNode?.data as any;
-      
-      console.log('[DATA_STORE] Loading node data:', {
-        nodeId,
-        hasDataStoreFields: !!currentNodeData?.dataStoreFields,
-        fieldsCount: currentNodeData?.dataStoreFields?.length || 0,
-        fields: currentNodeData?.dataStoreFields
-      });
       
       if (currentNodeData?.dataStoreFields) {
         setDataStoreFields(currentNodeData.dataStoreFields);
@@ -100,7 +78,6 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
           setSelectedFieldId(currentNodeData.dataStoreFields[0].schemaFieldId);
         }
       } else {
-        console.log('[DATA_STORE] No data store fields in node, clearing local state');
         setDataStoreFields([]);
         setSelectedFieldId("");
       }
@@ -125,30 +102,16 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
 
   // Save data store fields to node
   const saveDataStoreFields = useCallback(async (fields: DataStoreField[]) => {
-    console.log('[DATA_STORE] saveDataStoreFields called:', {
-      nodeId,
-      fieldsCount: fields.length,
-      fields: fields.map(f => ({ schemaFieldId: f.schemaFieldId, hasLogic: !!f.logic }))
-    });
-    
     // Update the node data directly in the flow panel which will handle saving
     if ((window as any).flowPanelUpdateNodeData) {
-      console.log('[DATA_STORE] Using flowPanelUpdateNodeData to save');
       (window as any).flowPanelUpdateNodeData(nodeId, { dataStoreFields: fields });
     } else {
-      console.log('[DATA_STORE] Using fallback save method');
       // Fallback if flow panel method is not available
       const currentFlow = flowRef.current;
-      if (!currentFlow) {
-        console.error('[DATA_STORE] Cannot save - flow is null');
-        return;
-      }
+      if (!currentFlow) return;
       
       const currentNode = currentFlow.props.nodes.find(n => n.id === nodeId);
-      if (!currentNode) {
-        console.error('[DATA_STORE] Cannot save - node not found:', nodeId);
-        return;
-      }
+      if (!currentNode) return;
       
       const updatedNode = {
         ...currentNode,
@@ -162,7 +125,6 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
         n.id === nodeId ? updatedNode : n
       );
       
-      console.log('[DATA_STORE] Updating flow with new node data');
       const updateResult = currentFlow.update({ nodes: updatedNodes });
       if (updateResult.isSuccess) {
         try {
@@ -170,22 +132,17 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
           
           // Set flow to Draft state if it was Ready
           if (flowToSave.props.readyState === ReadyState.Ready) {
-            console.log('[DATA_STORE] Setting flow to Draft state');
             const stateUpdateResult = flowToSave.setReadyState(ReadyState.Draft);
             if (stateUpdateResult.isSuccess) {
               flowToSave = stateUpdateResult.getValue();
             }
           }
           
-          console.log('[DATA_STORE] Saving flow to database...');
           await saveFlow(flowToSave);
-          console.log('[DATA_STORE] Flow saved successfully');
           setHasUnsavedChanges(false); // Clear unsaved changes after successful save
         } catch (e) {  
-          console.error("[DATA_STORE] Failed to save flow:", e);  
+          console.error("Failed to save flow:", e);  
         }
-      } else {
-        console.error('[DATA_STORE] Failed to update flow');
       }
     }
   }, [nodeId, saveFlow]);

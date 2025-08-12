@@ -223,12 +223,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const saveFlowChanges = useCallback(async (updatedNodes: CustomNodeType[], updatedEdges: CustomEdgeType[], isStructuralChange: boolean = false) => {
     const currentFlow = flowRef.current;
     if (!currentFlow) return;
-    
-    console.log('[FLOW_PANEL] saveFlowChanges - Current flow state:', {
-      hasDataStoreSchema: !!currentFlow.props.dataStoreSchema,
-      schemaFieldsCount: currentFlow.props.dataStoreSchema?.fields?.length || 0,
-      isStructuralChange
-    });
 
     try {
       // Filter out invalid edges before saving
@@ -258,11 +252,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       if (savedFlowResult.isFailure) {
         return;
       }
-      
-      console.log('[FLOW_PANEL] Flow saved, checking dataStoreSchema:', {
-        hasDataStoreSchema: !!savedFlowResult.getValue().props.dataStoreSchema,
-        schemaFieldsCount: savedFlowResult.getValue().props.dataStoreSchema?.fields?.length || 0
-      });
       
       // Update flowRef with the saved flow to keep it in sync
       flowRef.current = savedFlowResult.getValue();
@@ -336,11 +325,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         zoom: newViewport.zoom
       };
 
-      console.log('[FLOW_PANEL] Saving viewport - Current flow state:', {
-        hasDataStoreSchema: !!currentFlow.props.dataStoreSchema,
-        schemaFieldsCount: currentFlow.props.dataStoreSchema?.fields?.length || 0
-      });
-
       const updatedFlow = currentFlow.update({
         viewport: flowViewport
       });
@@ -359,11 +343,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         return;
       }
       
-      console.log('[FLOW_PANEL] Viewport saved, checking dataStoreSchema:', {
-        hasDataStoreSchema: !!savedFlowResult.getValue().props.dataStoreSchema,
-        schemaFieldsCount: savedFlowResult.getValue().props.dataStoreSchema?.fields?.length || 0
-      });
-
       // Update flowRef with the saved flow to keep it in sync
       flowRef.current = savedFlowResult.getValue();
 
