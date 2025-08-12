@@ -196,6 +196,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
             size="sm"
             onClick={addDataStoreNode}
           >
+            <Plus />
             Data store node
           </Button>
         </div>

@@ -597,10 +597,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     const nodeWidth = 320;
     const nodeHeight = 140;
     
+    // Get the actual React Flow container dimensions
+    const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
+    const containerHeight = containerRef.current?.clientHeight || window.innerHeight;
+    
     const viewport = currentViewportRef.current;
     const viewportCenter = {
-      x: ((-viewport.x + window.innerWidth / 2) / viewport.zoom) - (nodeWidth / 2),
-      y: ((-viewport.y + window.innerHeight / 2) / viewport.zoom) - (nodeHeight / 2)
+      x: ((-viewport.x + containerWidth / 2) / viewport.zoom) - (nodeWidth / 2),
+      y: ((-viewport.y + containerHeight / 2) / viewport.zoom) - (nodeHeight / 2)
     };
     
     const newPosition = viewportCenter;
@@ -619,18 +623,20 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       },
     };
 
-    // Update nodes
-    const updatedNodes = [...nodes, newNode];
+    // Update nodes - use flow.props.nodes instead of component state to avoid stale data
+    const currentNodes = (flow.props.nodes as CustomNodeType[]) || [];
+    const currentEdges = (flow.props.edges as CustomEdgeType[]) || [];
+    const updatedNodes = [...currentNodes, newNode];
     setNodes(updatedNodes);
     
     // Mark as local change and save
     isLocalChangeRef.current = true;
     setTimeout(() => {
-      saveFlowChanges(updatedNodes, edges, true);
+      saveFlowChanges(updatedNodes, currentEdges, true);
     }, 0);
 
     toast.success("Data Store node added");
-  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+  }, [flow, setNodes, saveFlowChanges]);
 
   const addIfNode = useCallback(async () => {
     if (!flow) return;
@@ -640,10 +646,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     const nodeWidth = 320;
     const nodeHeight = 140;
     
+    // Get the actual React Flow container dimensions
+    const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
+    const containerHeight = containerRef.current?.clientHeight || window.innerHeight;
+    
     const viewport = currentViewportRef.current;
     const viewportCenter = {
-      x: ((-viewport.x + window.innerWidth / 2) / viewport.zoom) - (nodeWidth / 2),
-      y: ((-viewport.y + window.innerHeight / 2) / viewport.zoom) - (nodeHeight / 2)
+      x: ((-viewport.x + containerWidth / 2) / viewport.zoom) - (nodeWidth / 2),
+      y: ((-viewport.y + containerHeight / 2) / viewport.zoom) - (nodeHeight / 2)
     };
     
     const newPosition = viewportCenter;
@@ -668,18 +678,20 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     
     console.log('[Flow Panel Debug] Created if node:', newNode);
 
-    // Update nodes
-    const updatedNodes = [...nodes, newNode];
+    // Update nodes - use flow.props.nodes instead of component state to avoid stale data
+    const currentNodes = (flow.props.nodes as CustomNodeType[]) || [];
+    const currentEdges = (flow.props.edges as CustomEdgeType[]) || [];
+    const updatedNodes = [...currentNodes, newNode];
     setNodes(updatedNodes);
     
     // Mark as local change and save
     isLocalChangeRef.current = true;
     setTimeout(() => {
-      saveFlowChanges(updatedNodes, edges, true);
+      saveFlowChanges(updatedNodes, currentEdges, true);
     }, 0);
 
     toast.success("If node added");
-  }, [flow, nodes, edges, setNodes, saveFlowChanges]);
+  }, [flow, setNodes, saveFlowChanges]);
 
   const addAgentNode = useCallback(async () => {
     if (!flow) return;
@@ -741,10 +753,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       const nodeWidth = 320;
       const nodeHeight = 140;
       
+      // Get the actual React Flow container dimensions
+      const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
+      const containerHeight = containerRef.current?.clientHeight || window.innerHeight;
+      
       const viewport = currentViewportRef.current;
       const viewportCenter = {
-        x: ((-viewport.x + window.innerWidth / 2) / viewport.zoom) - (nodeWidth / 2),
-        y: ((-viewport.y + window.innerHeight / 2) / viewport.zoom) - (nodeHeight / 2)
+        x: ((-viewport.x + containerWidth / 2) / viewport.zoom) - (nodeWidth / 2),
+        y: ((-viewport.y + containerHeight / 2) / viewport.zoom) - (nodeHeight / 2)
       };
       
       const newPosition = viewportCenter;
@@ -1488,7 +1504,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       </div>
       
       {/* Variables and Validation buttons - positioned below header */}
-      <div className="flex justify-start items-start gap-2">
+      <div className="w-full flex flex-wrap justify-start items-start gap-2">
         <ButtonPill
             size="default"
             icon={<BookOpen />}
