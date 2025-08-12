@@ -280,19 +280,19 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
       <div className="flex-1 p-2 bg-background-surface-2 flex gap-2">
         {/* Left panel - Import and fields list */}
         <div className="flex-1 max-w-64 min-w-36 flex flex-col gap-4">
-          {/* Import dropdown section */}
+          {/* Import dropdown section - single row layout */}
           <div className="self-stretch flex flex-col justify-start items-start gap-2">
-            <div className="self-stretch flex flex-col justify-start items-start gap-2">
-              <div className="self-stretch inline-flex justify-start items-center gap-2">
-                <div className="justify-start text-text-body text-[10px] font-medium leading-none">Import data store schema</div>
-              </div>
-              <div className="self-stretch flex flex-col justify-start items-start gap-1">
+            <div className="self-stretch inline-flex justify-start items-center gap-2">
+              <div className="justify-start text-text-body text-[10px] font-medium leading-none">Select data store</div>
+            </div>
+            <div className="self-stretch inline-flex justify-start items-end gap-2">
+              <div className="flex-1 inline-flex flex-col justify-start items-start gap-1">
                 <Select
                   value={selectedSchemaFieldId}
                   onValueChange={setSelectedSchemaFieldId}
                 >
                   <SelectTrigger className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal">
-                    <SelectValue placeholder="Select the data store schema" />
+                    <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableSchemaFields.length === 0 ? (
@@ -307,15 +307,15 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                   </SelectContent>
                 </Select>
               </div>
+              <Button
+                onClick={handleImportField}
+                disabled={!selectedSchemaFieldId}
+                size="sm"
+                variant="secondary"
+              >
+                Add
+              </Button>
             </div>
-            <button
-              onClick={handleImportField}
-              disabled={!selectedSchemaFieldId}
-              className="self-stretch h-7 px-3 py-2 bg-background-surface-4 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Plus className="w-4 h-4 text-text-body" />
-              <div className="justify-center text-text-primary text-xs font-semibold leading-none">Import</div>
-            </button>
           </div>
 
           {/* Fields list */}
