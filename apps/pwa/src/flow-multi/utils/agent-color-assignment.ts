@@ -4,7 +4,7 @@
 import { Flow } from "@/modules/flow/domain/flow";
 import { Agent } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
-import { traverseFlow } from "./flow-traversal";
+import { traverseFlowCached } from "./flow-traversal-cache";
 
 // Define hex colors for agents - active (300) variants
 export const AGENT_HEX_COLORS = [
@@ -126,7 +126,7 @@ export async function getNextAvailableColor(flow: Flow): Promise<string> {
  */
 export function isAgentConnected(agentId: string, flow: Flow): boolean {
   // Use the proper traverseFlow function that handles all node types
-  const traversalResult = traverseFlow(flow);
+  const traversalResult = traverseFlowCached(flow);
   
   // Check if this node is in the connected sequence
   const isInConnectedSequence = traversalResult.connectedSequence.includes(agentId);

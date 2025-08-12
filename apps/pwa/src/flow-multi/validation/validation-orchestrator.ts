@@ -1,6 +1,6 @@
 import { Flow } from "@/modules/flow/domain/flow";
 import { Agent } from "@/modules/agent/domain/agent";
-import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
 import { ValidationContext, ValidationIssue } from "@/flow-multi/validation/types/validation-types";
 import { ValidatorFunction, FunctionalValidator } from "@/flow-multi/validation/types/functional-validation-types";
 import { composeValidators } from "@/flow-multi/validation/utils/validator-utils";
@@ -132,7 +132,7 @@ export class ValidationOrchestrator {
   }
   
   private buildContext(flow: Flow, agents: Map<string, Agent>, apiConnectionsWithModels?: ApiConnectionWithModels[]): ValidationContext {
-    const traversalResult = traverseFlow(flow);
+    const traversalResult = traverseFlowCached(flow);
     
     // Build connected agents set
     const connectedAgents = new Set<string>();

@@ -63,10 +63,11 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   const [localLogic, setLocalLogic] = useState("");
   const lastNodeIdRef = useRef<string>("");
   const isEditingLogicRef = useRef<boolean>(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Initialize data store fields from node data - only when nodeId changes
+  // Initialize data store fields from node data - only when nodeId changes and no unsaved changes
   useEffect(() => {
-    if (flow && nodeId && nodeId !== lastNodeIdRef.current) {
+    if (flow && nodeId && nodeId !== lastNodeIdRef.current && !hasUnsavedChanges) {
       const currentNode = flow.props.nodes.find(n => n.id === nodeId);
       const currentNodeData = currentNode?.data as any;
       
@@ -81,7 +82,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
       }
       lastNodeIdRef.current = nodeId;
     }
-  }, [flow, nodeId]); // Only when nodeId changes
+  }, [flow, nodeId, hasUnsavedChanges]); // Only when nodeId changes and no unsaved changes
 
   // Sync logic with selected field - only when field selection changes or initial load
   useEffect(() => {
@@ -126,7 +127,8 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
       const updateResult = currentFlow.update({ nodes: updatedNodes });
       if (updateResult.isSuccess) {
         try {  
-          await saveFlow(updateResult.getValue());  
+          await saveFlow(updateResult.getValue());
+          setHasUnsavedChanges(false); // Clear unsaved changes after successful save
         } catch (e) {  
           console.error("Failed to save flow:", e);  
         }

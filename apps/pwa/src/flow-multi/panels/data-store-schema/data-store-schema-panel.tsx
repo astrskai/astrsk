@@ -56,6 +56,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   const [selectedFieldId, setSelectedFieldId] = useState<string>("");
   const [localInitialValue, setLocalInitialValue] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   // Use ref to hold current flow for debounced save
   const flowRef = useRef(flow);
@@ -73,20 +74,40 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
     [fields, selectedFieldId]
   );
 
+  // Track if this is the initial load
+  const isFirstLoadRef = useRef(true);
+  
   // 4. Initialize fields from flow's dataStoreSchema
-  // Reset initialization when flow data becomes available
+  // Only update if we don't have unsaved changes to prevent overwriting user edits
   useEffect(() => {
-    if (flow && !isLoading) {
+    if (flow && !isLoading && !hasUnsavedChanges) {
       const schema = flow.props.dataStoreSchema;
       if (schema?.fields && schema.fields.length > 0) {
         setFields(schema.fields);
-        setSelectedFieldId(schema.fields[0]?.id || "");
+        
+        // Only set selection on first load or if current selection doesn't exist
+        setSelectedFieldId(prevSelectedId => {
+          // If this is the first load or no previous selection, select first field
+          if (isFirstLoadRef.current || !prevSelectedId) {
+            isFirstLoadRef.current = false;
+            return schema.fields[0]?.id || "";
+          }
+          
+          // Check if the previously selected field still exists
+          const fieldStillExists = schema.fields.some(f => f.id === prevSelectedId);
+          if (fieldStillExists) {
+            return prevSelectedId; // Keep current selection
+          } else {
+            return schema.fields[0]?.id || ""; // Field was deleted, select first
+          }
+        });
       } else {
         setFields([]);
         setSelectedFieldId("");
+        isFirstLoadRef.current = true; // Reset for next time
       }
     }
-  }, [flow?.props.dataStoreSchema, isLoading]); // Re-initialize when schema changes or loading completes
+  }, [flow?.props.dataStoreSchema, isLoading, hasUnsavedChanges]); // Re-initialize when schema changes or loading completes
 
   // 5. Sync local fields with selected field
   useEffect(() => {
@@ -115,6 +136,8 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
       const updateResult = currentFlow.update({ dataStoreSchema: updatedSchema });
       if (updateResult.isSuccess) {
         await currentSaveFlow(updateResult.getValue());
+        // Clear unsaved changes after successful save
+        setHasUnsavedChanges(false);
       } else {
         console.error("[DataStoreSchema] Failed to update flow:", updateResult.getError());
       }
@@ -156,6 +179,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
     const updatedFields = [...fields, newField];
     setFields(updatedFields);
     setSelectedFieldId(newId);
+    setHasUnsavedChanges(true); // Mark as having unsaved changes
     debouncedSaveFields(updatedFields);
   }, [fields, debouncedSaveFields]);
 
@@ -167,6 +191,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
       setSelectedFieldId(updatedFields[0]?.id || "");
     }
     
+    setHasUnsavedChanges(true); // Mark as having unsaved changes
     debouncedSaveFields(updatedFields);
   }, [fields, selectedFieldId, debouncedSaveFields]);
 
@@ -196,6 +221,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
         setLocalInitialValue(field.initialValue);
       }
     }
+    setHasUnsavedChanges(true); // Mark as having unsaved changes
     debouncedSaveFields(updatedFields);
   }, [fields, selectedFieldId, debouncedSaveFields]);
 

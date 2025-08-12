@@ -46,7 +46,7 @@ import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useWllamaStore } from "@/app/stores/wllama-store";
 import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
-import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
 import { OutputFormat } from "@/modules/agent/domain";
 import { ApiSource } from "@/modules/api/domain";
 import {
@@ -1604,7 +1604,7 @@ async function* executeFlow({
     }
 
     // Validate flow structure using traverseFlow
-    const traversalResult = traverseFlow(flow);
+    const traversalResult = traverseFlowCached(flow);
     if (!traversalResult.hasValidFlow) {
       throw new Error("Invalid flow structure detected");
     }

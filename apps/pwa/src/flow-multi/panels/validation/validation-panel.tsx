@@ -16,7 +16,7 @@ import { ReadyState } from "@/modules/flow/domain";
 import { ValidationIssue, ValidationContext } from "@/flow-multi/validation/types/validation-types";
 import { agentQueries } from "@/app/queries/agent-queries";
 import { useApiConnectionsWithModels } from "@/app/hooks/use-api-connections-with-models";
-import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
 import {
@@ -34,6 +34,7 @@ import {
   validateTemplateSyntax,
   validateStructuredOutputSupport,
   validateProviderParameters,
+  validateDataStoreSchemaInitialValues,
 } from "@/flow-multi/validation/validators";
 
 export function ValidationPanel({ flowId }: ValidationPanelProps) {
@@ -62,7 +63,7 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
   const connectedAgents = useMemo(() => {
     if (!flow) return new Set<string>();
     
-    const traversalResult = traverseFlow(flow);
+    const traversalResult = traverseFlowCached(flow);
     const connected = new Set<string>();
     
     for (const [agentId, position] of traversalResult.agentPositions) {
@@ -105,7 +106,7 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     }
     
     // Create validation context
-    const traversalResult = traverseFlow(flow);
+    const traversalResult = traverseFlowCached(flow);
     const context: ValidationContext = {
       flow,
       agents: agentsMap,
@@ -151,6 +152,9 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     allIssues.push(...validateUnusedOutputVariables(context));
     allIssues.push(...validateUnusedDataStoreFields(context));
     allIssues.push(...validateTemplateSyntax(context));
+    
+    // Data store validators
+    allIssues.push(...validateDataStoreSchemaInitialValues(context));
     
     // Provider compatibility validators
     allIssues.push(...validateStructuredOutputSupport(context));

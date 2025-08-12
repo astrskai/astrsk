@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
-import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { isAgentValid } from "@/flow-multi/utils/flow-validation";
 
@@ -130,7 +130,7 @@ function AgentNodeComponent({ agent, flow, nodeId, selected }: AgentNodeComponen
     const hasOutput = currentAgent.props.enabledStructuredOutput === true && currentAgent.props.schemaFields && currentAgent.props.schemaFields.length > 0;
     
     // Check if agent is connected from start to end
-    const traversalResult = traverseFlow(flow);
+    const traversalResult = traverseFlowCached(flow);
     const agentPosition = traversalResult.agentPositions.get(agent.id.toString());
     const isConnected = agentPosition && agentPosition.isConnectedToStart && agentPosition.isConnectedToEnd;
     
@@ -661,8 +661,6 @@ function AgentNodeComponent({ agent, flow, nodeId, selected }: AgentNodeComponen
         modelName: modelName,
       };
 
-      console.log('🔧 Updating agent model with:', updateData);
-
       // Use updateAgent which handles flow state and invalidation
       await updateAgent(agent.id.toString(), updateData);
       
@@ -1009,12 +1007,36 @@ export default function AgentNode({
   
   // Use the agentId from node data, fallback to node id for backward compatibility
   const agentId = data?.agentId || id;
-  const { data: agent } = useQuery(agentQueries.detail(new UniqueEntityID(agentId)));
+  const { data: agent, isLoading: isLoadingAgent, error: agentError } = useQuery(agentQueries.detail(new UniqueEntityID(agentId)));
 
-  if (!selectedFlow || !agent) {
+  if (!selectedFlow) {
+    return (
+      <div className="w-80 bg-[#fafafa] rounded-lg border border-[#e5e7eb] p-4">
+        <div className="text-[#6b7280] text-sm">Loading flow...</div>
+      </div>
+    );
+  }
+
+  if (isLoadingAgent) {
     return (
       <div className="w-80 bg-[#fafafa] rounded-lg border border-[#e5e7eb] p-4">
         <div className="text-[#6b7280] text-sm">Loading agent...</div>
+      </div>
+    );
+  }
+
+  if (!agent || agentError) {
+    return (
+      <div className="w-80 bg-[#fee2e2] rounded-lg border-2 border-[#ef4444] p-4">
+        <div className="flex items-center gap-2 text-[#dc2626] font-medium">
+          <AlertCircle className="w-4 h-4" />
+          <span>Agent not found</span>
+        </div>
+        <div className="text-[#7f1d1d] text-sm mt-2">
+          This agent has been deleted. Remove this node to fix the flow.
+        </div>
+        <CustomHandle variant="output" nodeId={id} />
+        <CustomHandle variant="input" nodeId={id} />
       </div>
     );
   }
