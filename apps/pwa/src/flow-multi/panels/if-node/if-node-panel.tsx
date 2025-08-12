@@ -180,32 +180,26 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
     const newConditions = conditions.map(c => {
       if (c.id !== id) return c;
       
-      // When operator or data type changes, clear values to avoid invalid data
-      const dataTypeChanged = c.dataType !== dataType;
       const operatorChanged = c.operator !== operator;
       
-      // If switching to a unary operator, clear value2
-      // If switching data types or operators, clear both values for safety
-      if (dataTypeChanged) {
-        // Data type changed - clear both values
+      // Keep existing values when changing data type or operator
+      // Only clear value2 if switching to a unary operator
+      if (operatorChanged && isUnaryOperator(operator)) {
+        // Switching to unary operator - clear value2
         return {
           ...c,
           dataType,
           operator,
-          value1: '',
           value2: ''
-        };
-      } else if (operatorChanged) {
-        // Only operator changed - keep value1, but clear value2 if switching to unary
-        return {
-          ...c,
-          dataType,
-          operator,
-          value2: isUnaryOperator(operator) ? '' : c.value2
         };
       }
       
-      return { ...c, dataType, operator };
+      // Keep all values when just changing data type or switching between binary operators
+      return { 
+        ...c, 
+        dataType, 
+        operator 
+      };
     });
     setConditions(newConditions);
     saveConditions(newConditions, logicOperator);
