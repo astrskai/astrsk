@@ -1,7 +1,7 @@
 // Response design panel component for Dockview multi-panel layout
 // Handles response template design with auto-save
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { debounce } from "lodash-es";
 import { Check, Loader2, Variable, Database } from "lucide-react";
 
@@ -28,10 +28,13 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
   const { 
     data: flow, 
     isLoading,
-    error 
+    error,
+    refetch 
   } = useQuery({
     ...flowQueries.detail(flowId ? new UniqueEntityID(flowId) : undefined),
     enabled: !!flowId,
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnMount: true, // Refetch when component mounts
   });
 
   // 2. Get Monaco editor functions from flow context
@@ -39,38 +42,45 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
 
   // 3. Local UI state
   const [currentTemplate, setCurrentTemplate] = useState("");
-  const [originalTemplate, setOriginalTemplate] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
-  // Track initialization to prevent loops - only respond to flowId changes
+  // Track initialization
   const lastFlowIdRef = useRef<string | null>(null);
-  const isInitializedRef = useRef(false);
+  const lastSavedTemplateRef = useRef<string>("");
 
-  // Helper function to check if template has actually changed
-  const hasTemplateChanged = useCallback((template: string) => {
-    if (originalTemplate === null) return false;
-    return template !== originalTemplate;
-  }, [originalTemplate]);
 
-  // Initialize template only when flowId changes, not when flow data changes
+  // Initialize template only when flowId changes
+  // This is the safest approach to avoid infinite loops
   useEffect(() => {
-    if (flow && flowId !== lastFlowIdRef.current) {
+    if (!flow) return;
+    
+    // Only initialize when flowId actually changes
+    if (flowId !== lastFlowIdRef.current) {
       const template = flow.props.responseTemplate || "";
       setCurrentTemplate(template);
-      setOriginalTemplate(template);
-      isInitializedRef.current = true;
+      lastSavedTemplateRef.current = template;
+      setHasUnsavedChanges(false);
       lastFlowIdRef.current = flowId;
     }
-  }, [flowId, flow]);
+  }, [flowId]) // Only depend on flowId, access flow without adding to deps
+  
 
   // Removed dirty state tracking as dirty checking is no longer needed
 
+  // Store flow in ref to avoid recreating save function
+  const flowRef = useRef(flow);
+  useEffect(() => {
+    flowRef.current = flow;
+  }, [flow]);
+  
   // Save response template
   const saveResponseTemplate = useCallback(
     async (template: string) => {
-      if (!flow) return;
+      const currentFlow = flowRef.current;
+      if (!currentFlow) return;
 
       try {
-        const updatedFlow = flow.update({
+        const updatedFlow = currentFlow.update({
           responseTemplate: template,
         });
 
@@ -85,26 +95,37 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
         }
         
         // Invalidate flow queries so other components see the updated response template
-        await invalidateSingleFlowQueries(flow.id);
+        await invalidateSingleFlowQueries(currentFlow.id);
         
-        // Update original template to reflect the saved state
-        setOriginalTemplate(template);
+        // Update last saved template and clear unsaved changes flag
+        lastSavedTemplateRef.current = template;
+        setHasUnsavedChanges(false);
       } catch (error) {
         toast.error("Failed to save response template", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
     },
-    [flow]
+    [] // No dependencies - uses ref instead
   );
 
   // Debounced auto-save
-  const debouncedSave = useCallback(
-    debounce((template: string) => {
+  const debouncedSave = useMemo(
+    () => debounce((template: string) => {
       saveResponseTemplate(template);
     }, 1000), // Increased debounce to 1 second to prevent rapid saves
     [saveResponseTemplate]
   );
+  
+  // Cleanup: flush pending saves on unmount
+  useEffect(() => {
+    return () => {
+      // Flush any pending saves when panel is closed
+      debouncedSave.flush();
+      // Reset unsaved changes flag on unmount
+      setHasUnsavedChanges(false);
+    };
+  }, [debouncedSave]);
 
   // Handle template change
   const handleTemplateChange = useCallback(
@@ -113,12 +134,16 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
       
       setCurrentTemplate(template);
       
-      // Only save if template has actually changed (removed dirty state tracking)
-      if (hasTemplateChanged(template)) {
+      // Mark as having unsaved changes if different from last saved
+      const hasChanged = template !== lastSavedTemplateRef.current;
+      setHasUnsavedChanges(hasChanged);
+      
+      // Only save if template has actually changed
+      if (hasChanged) {
         debouncedSave(template);
       }
     },
-    [debouncedSave, hasTemplateChanged]
+    [debouncedSave]
   );
 
   // Handle editor mount for variable insertion tracking (no redundancy)
