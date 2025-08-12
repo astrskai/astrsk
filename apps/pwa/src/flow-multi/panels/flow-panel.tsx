@@ -7,6 +7,7 @@ import { Agent, ApiType } from "@/modules/agent/domain/agent";
 import { Node as FlowNode, Edge as FlowEdge, FlowViewport, Flow } from "@/modules/flow/domain/flow";
 import { getNextAvailableColor } from "@/flow-multi/utils/agent-color-assignment";
 import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
+import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
 import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
@@ -246,6 +247,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       
       // Skip the next sync since we just saved and the flow object will update
       skipNextSyncRef.current = true;
+      
       
       // Check if our local changes match what we just saved
       const currentLocalHash = createDataHash(updatedNodes, updatedEdges);

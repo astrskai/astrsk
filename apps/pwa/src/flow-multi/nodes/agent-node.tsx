@@ -103,6 +103,7 @@ function AgentNodeComponent({ agent, flow, nodeId }: AgentNodeComponentProps) {
   const colorWithOpacity = agentOpacity < 1 
     ? `${agentColor}${Math.round(agentOpacity * 255).toString(16).padStart(2, '0')}` // Add alpha channel to hex
     : agentColor;
+    
   
   // Check agent-specific panel states
   const agentIdStr = agent.id.toString();

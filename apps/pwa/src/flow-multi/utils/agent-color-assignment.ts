@@ -4,6 +4,7 @@
 import { Flow } from "@/modules/flow/domain/flow";
 import { Agent } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
+import { traverseFlow } from "./flow-traversal";
 
 // Define hex colors for agents - active (300) variants
 export const AGENT_HEX_COLORS = [
@@ -118,55 +119,25 @@ export async function getNextAvailableColor(flow: Flow): Promise<string> {
 
 /**
  * Check if an agent is on a complete path from start to end node
+ * Now properly handles connections through if and dataStore nodes
  * @param agentId - The agent ID to check
  * @param flow - The flow to check in
  * @returns true if connected to both start and end, false otherwise
  */
 export function isAgentConnected(agentId: string, flow: Flow): boolean {
-  const startNode = flow.props.nodes.find(n => n.type === 'start');
-  const endNode = flow.props.nodes.find(n => n.type === 'end');
-  if (!startNode || !endNode) return false;
+  // Use the proper traverseFlow function that handles all node types
+  const traversalResult = traverseFlow(flow);
   
-  // Build adjacency list
-  const adjacency = new Map<string, string[]>();
-  flow.props.nodes.forEach(node => adjacency.set(node.id, []));
-  flow.props.edges.forEach(edge => {
-    const neighbors = adjacency.get(edge.source) || [];
-    neighbors.push(edge.target);
-    adjacency.set(edge.source, neighbors);
-  });
+  // Check if this node is in the connected sequence
+  const isInConnectedSequence = traversalResult.connectedSequence.includes(agentId);
   
-  // Check if agent is reachable from start
-  const reachableFromStart = new Set<string>();
-  const queue = [startNode.id];
+  // Check if there's a valid flow (path from start to end)
+  const hasValidFlow = traversalResult.hasValidFlow;
   
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    if (reachableFromStart.has(current)) continue;
-    reachableFromStart.add(current);
-    
-    const neighbors = adjacency.get(current) || [];
-    queue.push(...neighbors);
-  }
   
-  if (!reachableFromStart.has(agentId)) return false;
-  
-  // Check if end is reachable from agent
-  const visited = new Set<string>();
-  const queue2 = [agentId];
-  
-  while (queue2.length > 0) {
-    const current = queue2.shift()!;
-    if (visited.has(current)) continue;
-    visited.add(current);
-    
-    if (current === endNode.id) return true;
-    
-    const neighbors = adjacency.get(current) || [];
-    queue2.push(...neighbors);
-  }
-  
-  return false;
+  // The agent is considered connected if it's in the connected sequence
+  // AND there's a valid path from start to end in the flow
+  return isInConnectedSequence && hasValidFlow;
 }
 
 /**
@@ -188,18 +159,26 @@ export function getAgentHexColor(agent: Agent): string {
  * @returns The opacity value (0.5 for disconnected, 0.7 for connected but invalid flow, 1 for valid flow)
  */
 export function getAgentOpacity(agent: Agent, flow: Flow, isFlowValid: boolean = true): number {
+  const agentId = agent.id.toString();
+  const isConnected = isAgentConnected(agentId, flow);
+  
+  let opacity = 1;
+  let reason = 'connected and valid';
+  
   // If agent is not connected to both start and end, return 70% opacity
-  if (!isAgentConnected(agent.id.toString(), flow)) {
-    return 0.7;
+  if (!isConnected) {
+    opacity = 0.7;
+    reason = 'not connected';
+  }
+  // If agent is connected but the flow has invalid agents, return 70% opacity
+  else if (!isFlowValid) {
+    opacity = 0.7;
+    reason = 'connected but flow invalid';
   }
   
-  // If agent is connected but the flow has invalid agents, return 70% opacity
-  if (!isFlowValid) {
-    return 0.7;
-  }
   
   // Return full opacity for connected agents in a valid flow
-  return 1;
+  return opacity;
 }
 
 export function getAgentState(agent: Agent, flow: Flow): boolean {

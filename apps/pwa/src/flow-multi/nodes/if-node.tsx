@@ -23,6 +23,9 @@ import { Button } from "@/components-v2/ui/button";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
 import { useAgentStore } from "@/app/stores/agent-store";
+import { useFlowValidation } from "@/app/hooks/use-flow-validation";
+import { UniqueEntityID } from "@/shared/domain";
+import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
 import { toast } from "sonner";
 
 /**
@@ -82,13 +85,36 @@ export default function IfNode({
     return baseColor;
   }, [data.color]);
   
+  // Use flow validation hook
+  const { isValid: isFlowValid } = useFlowValidation(selectedFlowId ? new UniqueEntityID(selectedFlowId) : null);
+  
+  // Calculate opacity based on connection state and flow validity
+  const nodeOpacity = useMemo(() => {
+    if (!flow) return 1;
+    
+    // Use traverseFlow to check if this node is connected
+    const traversalResult = traverseFlow(flow);
+    const isConnected = traversalResult.connectedSequence.includes(id) && traversalResult.hasValidFlow;
+    
+    // If node is not connected to both start and end, return 70% opacity
+    if (!isConnected) {
+      return 0.7;
+    }
+    // If node is connected but the flow has invalid nodes, return 70% opacity
+    else if (!isFlowValid) {
+      return 0.7;
+    }
+    
+    // Return full opacity for connected nodes in a valid flow
+    return 1;
+  }, [flow, id, isFlowValid]);
+  
   // Calculate opacity with hex alpha channel
   const colorWithOpacity = useMemo(() => {
-    const opacity = 1; // Full opacity for now, can check connection state later
-    return opacity < 1 
-      ? `${nodeColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}` 
+    return nodeOpacity < 1 
+      ? `${nodeColor}${Math.round(nodeOpacity * 255).toString(16).padStart(2, '0')}` 
       : nodeColor;
-  }, [nodeColor]);
+  }, [nodeColor, nodeOpacity]);
 
   // Save node name to flow
   const saveNodeName = useCallback(async (newName: string) => {

@@ -9,7 +9,6 @@ import { flowQueries } from "@/app/queries/flow-queries";
 import { AgentService } from "@/app/services/agent-service";
 import { useValidationStore } from "@/app/stores/validation-store";
 import {
-  areAllConnectedAgentsValid,
   isAgentValid,
 } from "@/flow-multi/utils/flow-validation";
 import { Agent } from "@/modules/agent/domain/agent";
@@ -80,13 +79,104 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
         }
       }
 
-      // Use the comprehensive flow validation
-      let isValid = areAllConnectedAgentsValid(flow, agents);
+      // Validate if nodes and data store nodes
+      let invalidIfNodes = 0;
+      let invalidDataStoreNodes = 0;
+      const invalidNodeReasons: Record<string, string[]> = {};
       
-      // If there are any invalid connected agents, the flow is invalid
-      if (invalidAgents.length > 0) {
-        isValid = false;
+      
+      // Check all nodes in the connected sequence
+      for (const nodeId of traversalResult.connectedSequence) {
+        const node = flow.props.nodes.find(n => n.id === nodeId);
+        if (!node) continue;
+        
+        // Validate if nodes - must have at least one valid condition
+        if (node.type === 'if') {
+          const nodeData = node.data as any;
+          const conditions = nodeData?.conditions || [];
+          const hasValidCondition = conditions.some((c: any) => 
+            c.value1 && c.value1.trim() !== ''
+          );
+          if (!hasValidCondition) {
+            invalidIfNodes++;
+            invalidNodeReasons[nodeId] = ['If node must have at least one condition with a value'];
+          }
+        }
+        
+        // Validate data store nodes - comprehensive validation
+        if (node.type === 'dataStore') {
+          const nodeData = node.data as any;
+          const dataStoreFields = nodeData?.dataStoreFields || [];
+          const schema = flow.props.dataStoreSchema;
+          const reasons: string[] = [];
+          
+          
+          // A data store node is valid if:
+          // 1. It has at least one field configured
+          // 2. That field exists in the schema
+          
+          if (dataStoreFields.length === 0) {
+            reasons.push('Data store must have at least one field configured');
+          } else if (!schema) {
+            // No schema defined but node exists
+            reasons.push('Data store schema is not defined');
+          } else {
+            // Check if at least one configured field exists in schema
+            let hasValidField = false;
+            
+            for (const field of dataStoreFields) {
+              const schemaField = schema.fields.find(sf => sf.id === field.schemaFieldId);
+              if (schemaField) {
+                // Found at least one valid field that exists in schema
+                hasValidField = true;
+                
+                // Optionally validate the field value matches its data type
+                if (field.value !== undefined && field.value !== '') {
+                  const value = field.value;
+                  const type = schemaField.type;
+                  
+                  // Validate based on type
+                  if (type === 'number' || type === 'integer') {
+                    const numValue = Number(value);
+                    if (isNaN(numValue)) {
+                      reasons.push(`Field '${schemaField.name}' expects ${type} but got '${value}'`);
+                    } else if (type === 'integer' && !Number.isInteger(numValue)) {
+                      reasons.push(`Field '${schemaField.name}' expects integer but got decimal '${value}'`);
+                    }
+                  } else if (type === 'boolean') {
+                    if (value !== 'true' && value !== 'false') {
+                      reasons.push(`Field '${schemaField.name}' expects boolean but got '${value}'`);
+                    }
+                  }
+                  // string type accepts any value, so no validation needed
+                }
+              }
+            }
+            
+            if (!hasValidField) {
+              reasons.push('Data store must have at least one field that exists in the schema');
+            }
+          }
+          
+          if (reasons.length > 0) {
+            invalidDataStoreNodes++;
+            invalidNodeReasons[nodeId] = reasons;
+          }
+        }
       }
+      
+      // Check if the flow has a valid path from start to end
+      let isValid = traversalResult.hasValidFlow;
+      
+      
+      // If the flow is connected, check if any connected nodes are invalid
+      if (isValid) {
+        // If there are any invalid connected agents, if nodes, or data store nodes, the flow is invalid
+        if (invalidAgents.length > 0 || invalidIfNodes > 0 || invalidDataStoreNodes > 0) {
+          isValid = false;
+        }
+      }
+      
 
       // Also check API connections for connected agents
       if (isValid && apiConnectionsWithModels) {
@@ -148,7 +238,14 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
         }
       }
 
-      return { isValid, invalidAgents };
+
+      return { 
+        isValid, 
+        invalidAgents,
+        invalidDataStoreNodes,
+        invalidIfNodes,
+        invalidNodeReasons 
+      };
     },
     enabled: !!flow && !!apiConnectionsWithModels,
   });
@@ -157,6 +254,9 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
   // Update validation store
   const isValid = data?.isValid ?? false;
   const invalidAgents = data?.invalidAgents ?? [];
+  const invalidDataStoreNodes = data?.invalidDataStoreNodes ?? 0;
+  const invalidIfNodes = data?.invalidIfNodes ?? 0;
+  const invalidNodeReasons = data?.invalidNodeReasons ?? {};
   const { setInvalid } = useValidationStore();
 
   useEffect(() => {
@@ -166,5 +266,12 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
     setInvalid("flows", flowId, !isValid);
   }, [flowId, isValid, setInvalid]);
 
-  return { isValid, invalidAgents, isFetched } as const;
+  return { 
+    isValid, 
+    invalidAgents, 
+    invalidDataStoreNodes,
+    invalidIfNodes,
+    invalidNodeReasons,
+    isFetched 
+  } as const;
 }
