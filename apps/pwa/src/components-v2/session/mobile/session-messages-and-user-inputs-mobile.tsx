@@ -40,7 +40,6 @@ import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { cn } from "@/components-v2/lib/utils";
 import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
 import { InlineChatStyles } from "@/components-v2/session/inline-chat-styles";
-import { ScrollToBottomOptions } from "@/components-v2/session/session-main";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { TypoSmall, TypoTiny } from "@/components-v2/typo";
 import { Button } from "@/components-v2/ui/button";
@@ -65,6 +64,11 @@ import { Option } from "@/modules/turn/domain/option";
 import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+interface ScrollToBottomOptions {
+  wait?: number;
+  behavior?: ScrollBehavior;
+}
 
 const MessageItemInternalMobile = ({
   characterCardId,
