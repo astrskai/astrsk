@@ -6,45 +6,71 @@ interface NodeSelectionMenuProps {
   onSelectNodeType: (type: "agent" | "dataStore" | "if") => void;
   onClose?: () => void;
   variant?: "floating" | "dropdown";
+  className?: string;
 }
 
 // Reusable menu items component
 export function NodeSelectionMenuItems({ 
   onSelectNodeType,
-  variant = "dropdown"
+  variant = "dropdown",
+  showOnlyAgent = false,
+  showOnlyDataStore = false,
+  showOnlyIf = false,
+  customAgentLabel,
+  customDataStoreLabel,
+  customIfLabel,
+  className
 }: {
   onSelectNodeType: (type: "agent" | "dataStore" | "if") => void;
   variant?: "floating" | "dropdown";
+  showOnlyAgent?: boolean;
+  showOnlyDataStore?: boolean;
+  showOnlyIf?: boolean;
+  customAgentLabel?: string;
+  customDataStoreLabel?: string;
+  customIfLabel?: string;
+  className?: string;
 }) {
-  // The actual buttons content - same for both variants
+  // Determine which buttons to show
+  const showAgent = showOnlyAgent || (!showOnlyDataStore && !showOnlyIf);
+  const showDataStore = showOnlyDataStore || (!showOnlyAgent && !showOnlyIf);
+  const showIf = showOnlyIf || (!showOnlyAgent && !showOnlyDataStore);
+  
+  // The actual buttons content - conditionally rendered based on props
   const buttons = (
     <>
-      <button
-        onClick={() => onSelectNodeType("agent")}
-        className="w-full h-[31px] px-3 bg-background-surface-4 border-b border-border-normal inline-flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
-      >
-        <div className="text-center text-text-primary text-xs font-normal">
-          Agent node
-        </div>
-      </button>
+      {showAgent && (
+        <button
+          onClick={() => onSelectNodeType("agent")}
+          className={cn("w-[92px] h-[31px] bg-background-surface-4 border-b border-border-normal inline-flex justify-center items-center hover:bg-background-surface-5 transition-colors", className)}
+        >
+          <div className="text-center text-text-primary text-xs font-normal whitespace-nowrap">
+            {customAgentLabel || "Agent node"}
+          </div>
+        </button>
+      )}
       
-      <button
-        onClick={() => onSelectNodeType("dataStore")}
-        className="w-full h-[31px] px-3 bg-background-surface-4 border-b border-border-normal inline-flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
-      >
-        <div className="text-center text-text-primary text-xs font-normal">
-          Data store node
-        </div>
-      </button>
+      {showDataStore && (
+        <button
+          onClick={() => onSelectNodeType("dataStore")}
+          className={cn(`w-[92px] h-[31px] bg-background-surface-4 ${showIf ? 'border-b border-border-normal' : ''} inline-flex justify-center items-center hover:bg-background-surface-5 transition-colors`, className)}
+        >
+          <div className="text-center text-text-primary text-xs font-normal whitespace-nowrap">
+            {customDataStoreLabel || "Data update node"}
+          </div>
+        </button>
+      )}
       
-      <button
-        onClick={() => onSelectNodeType("if")}
-        className="w-full h-[31px] px-3 bg-background-surface-4 inline-flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
-      >
-        <div className="text-center text-text-primary text-xs font-normal">
-          If node
-        </div>
-      </button>
+      {showIf && (
+        <button
+          onClick={() => onSelectNodeType("if")}
+          className={cn("w-[92px] h-[31px] bg-background-surface-4 inline-flex justify-center items-center hover:bg-background-surface-5 transition-colors", className)}
+        >
+          <div className="text-center text-text-primary text-xs font-normal whitespace-nowrap">
+            {customIfLabel || "If node"}
+          </div>
+        </button>
+      )}
     </>
   );
   
@@ -53,9 +79,9 @@ export function NodeSelectionMenuItems({
     return buttons;
   }
   
-  // For floating, wrap in a container div
+  // For floating, wrap in a container div with default width of 92px
   return (
-    <div className="min-w-[117px] w-[117px] rounded-lg flex flex-col justify-start items-start overflow-hidden">
+    <div className={cn("w-[92px] rounded-lg flex flex-col justify-start items-start overflow-hidden", className)}>
       {buttons}
     </div>
   );
@@ -66,7 +92,8 @@ export function NodeSelectionMenu({
   position, 
   onSelectNodeType, 
   onClose,
-  variant = "floating"
+  variant = "floating",
+  className
 }: NodeSelectionMenuProps) {
   // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -101,7 +128,7 @@ export function NodeSelectionMenu({
           transform: 'translateY(-50%)', // Only center vertically
         }}
       >
-        <NodeSelectionMenuItems onSelectNodeType={onSelectNodeType} variant="floating" />
+        <NodeSelectionMenuItems onSelectNodeType={onSelectNodeType} variant="floating" className={className} />
       </div>
     </>
   );

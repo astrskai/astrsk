@@ -82,11 +82,11 @@ export function getPanelTitle(panelType: PanelType, nodeName?: string): string {
       case PANEL_TYPES.VALIDATION:
         return 'Validation';
       case PANEL_TYPES.DATA_STORE_SCHEMA:
-        return 'Data store schema';
+        return 'Data schema';
       case PANEL_TYPES.IF_NODE:
         return 'If node';
       case PANEL_TYPES.DATA_STORE:
-        return 'Data store';
+        return 'Data update';
       default:
         return 'Unknown Panel';
     }

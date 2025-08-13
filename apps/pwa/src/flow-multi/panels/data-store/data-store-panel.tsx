@@ -19,7 +19,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
-import { Plus, Trash2, Maximize2 } from "lucide-react";
+import { Plus, Trash2, Maximize2, Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -118,6 +118,8 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     // Update the node data directly in the flow panel which will handle saving
     if ((window as any).flowPanelUpdateNodeData) {
       (window as any).flowPanelUpdateNodeData(nodeId, { dataStoreFields: fields });
+      // Update local state to match what was saved
+      setDataStoreFields(fields);
     } else {
       // Fallback if flow panel method is not available
       const currentFlow = flowRef.current;
@@ -153,6 +155,8 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
           
           await saveFlow(flowToSave);
           setHasUnsavedChanges(false); // Clear unsaved changes after successful save
+          // Update local state after successful save
+          setDataStoreFields(fields);
         } catch (e) {  
           console.error("Failed to save flow:", e);  
         }
@@ -173,13 +177,11 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      setDataStoreFields((items) => {
-        const oldIndex = items.findIndex((item) => item.schemaFieldId === active.id);
-        const newIndex = items.findIndex((item) => item.schemaFieldId === over.id);
-        const reorderedFields = arrayMove(items, oldIndex, newIndex);
-        saveDataStoreFields(reorderedFields);
-        return reorderedFields;
-      });
+      const oldIndex = dataStoreFields.findIndex((item) => item.schemaFieldId === active.id);
+      const newIndex = dataStoreFields.findIndex((item) => item.schemaFieldId === over.id);
+      const reorderedFields = arrayMove(dataStoreFields, oldIndex, newIndex);
+      // Save will update state via flow update
+      saveDataStoreFields(reorderedFields);
     }
   };
 
@@ -201,9 +203,9 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     };
     
     const updatedFields = [...dataStoreFields, newField];
-    setDataStoreFields(updatedFields);
     setSelectedFieldId(selectedSchemaFieldId);
     setSelectedSchemaFieldId("");
+    // Save will update state via flow update
     saveDataStoreFields(updatedFields);
   }, [selectedSchemaFieldId, dataStoreFields, schemaFields, saveDataStoreFields]);
 
@@ -215,7 +217,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
           ? { ...f, logic: value }  // Save empty string as-is, don't convert to undefined
           : f
       );
-      setDataStoreFields(updatedFields);
+      // Only update via save, which will trigger state update from flow
       saveDataStoreFields(updatedFields);
       // Reset editing flag after save
       isEditingLogicRef.current = false;
@@ -233,7 +235,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     } else {
       setSelectedFieldId("");
     }
-    setDataStoreFields(filtered);
+    // Save will update state via flow update
     saveDataStoreFields(filtered);
   }, [selectedFieldId, dataStoreFields, saveDataStoreFields]);
 
@@ -263,12 +265,18 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     });
   }, [nodeId, flowId, setLastMonacoEditor]);
 
-  // Debounced save for logic
+  // Create stable ref for save function to avoid debounce recreation
+  const saveLogicForFieldRef = useRef(saveLogicForField);
+  useEffect(() => {
+    saveLogicForFieldRef.current = saveLogicForField;
+  }, [saveLogicForField]);
+  
+  // Debounced save for logic with stable reference
   const debouncedSaveLogic = useMemo(
     () => debounce((value: string) => {
-      saveLogicForField(value);
+      saveLogicForFieldRef.current(value);
     }, 1000), // 1 second debounce like response design panel
-    [saveLogicForField]
+    [] // No dependencies - stable reference
   );
 
   // Get selected field and its schema
@@ -315,7 +323,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   return (
     <div className="flex flex-col h-full bg-background-surface-2">
       {/* Header with description */}
-      <div className="self-stretch px-2 py-2.5 bg-background-surface-2 border-b border-border-dark inline-flex flex-col justify-start items-start gap-2.5">
+      {/* <div className="self-stretch px-2 py-2.5 bg-background-surface-2 border-b border-border-dark inline-flex flex-col justify-start items-start gap-2.5">
         <div className="self-stretch inline-flex justify-start items-center gap-10">
           <div className="flex-1 justify-start text-text-subtle text-xs font-normal leading-none">
             This panel uses the schema you defined in the Data Store Schema panel.<br/>
@@ -329,7 +337,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
             Data schema setup
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* Main content */}
       <div className="flex-1 p-2 bg-background-surface-2 flex gap-2">
@@ -338,7 +346,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
           {/* Import dropdown section - single row layout */}
           <div className="self-stretch flex flex-col justify-start items-start gap-2">
             <div className="self-stretch inline-flex justify-start items-center gap-2">
-              <div className="justify-start text-text-body text-[10px] font-medium leading-none">Select data store</div>
+              <div className="justify-start text-text-body text-[10px] font-medium leading-none">Select data</div>
             </div>
             <div className="self-stretch inline-flex justify-start items-end gap-2">
               <div className="flex-1 inline-flex flex-col justify-start items-start gap-1">
@@ -434,8 +442,23 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
 
               {/* Logic field */}
               <div className="flex-1 flex flex-col gap-2">
-                <div className="self-stretch inline-flex justify-start items-start gap-2">
+                <div className="self-stretch inline-flex justify-start items-center gap-1">
                   <div className="justify-start text-text-body text-[10px] font-medium leading-none">Logic</div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-4 h-4 relative overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
+                          <Info className="w-3.5 h-3.5 absolute left-[1.33px] top-[1.33px] text-text-info" strokeWidth={2} />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <div className="max-w-xs">
+                          <p className="font-semibold mb-1">Data Update Logic</p>
+                          <p className="text-xs">Add data update logic using Jinja + JavaScript. Logic will be added next to [data_name= ].</p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 <div className="flex-1 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal flex flex-col overflow-hidden relative">
                     {/* Expand button */}

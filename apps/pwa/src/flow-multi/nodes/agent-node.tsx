@@ -89,8 +89,10 @@ function AgentNodeComponent({ agent, flow, nodeId, selected }: AgentNodeComponen
   // Use flow validation hook
   const { isValid: isFlowValid } = useFlowValidation(flowId ? new UniqueEntityID(flowId) : null);
   
+  // TEMPORARILY DISABLED: Model validation
   // Check if model is selected
-  const hasModel = !!agent.props.modelName;
+  // const hasModel = !!agent.props.modelName;
+  const hasModel = true; // Always show as having model
   
   // Use centralized color hook with flow validity
   const { hexColor: agentColor, opacity: agentOpacity } = useAgentColor({ 
@@ -122,12 +124,19 @@ function AgentNodeComponent({ agent, flow, nodeId, selected }: AgentNodeComponen
   const { promptType, parameterCount, hasPrompt, hasAgentName, hasStructuredOutput, isConnectedStartToEnd } = useMemo(() => {
     
     const isChat = currentAgent.props.targetApiType === ApiType.Chat;
-    const hasPromptContent = isChat 
-      ? (currentAgent.props.promptMessages && currentAgent.props.promptMessages.length > 0)
-      : true;
+    // TEMPORARILY DISABLED: Prompt validation
+    // const hasPromptContent = isChat 
+    //   ? (currentAgent.props.promptMessages && currentAgent.props.promptMessages.length > 0)
+    //   : true;
+    const hasPromptContent = true; // Always show as having prompt
     
-    const hasName = currentAgent.props.name && currentAgent.props.name.trim().length > 0;
-    const hasOutput = currentAgent.props.enabledStructuredOutput === true && currentAgent.props.schemaFields && currentAgent.props.schemaFields.length > 0;
+    // TEMPORARILY DISABLED: Agent name validation
+    // const hasName = currentAgent.props.name && currentAgent.props.name.trim().length > 0;
+    const hasName = true; // Always show as having name
+    
+    // TEMPORARILY DISABLED: Structured output validation
+    // const hasOutput = currentAgent.props.enabledStructuredOutput === true && currentAgent.props.schemaFields && currentAgent.props.schemaFields.length > 0;
+    const hasOutput = true; // Always show as having output
     
     // Check if agent is connected from start to end
     const traversalResult = traverseFlowCached(flow);
@@ -758,10 +767,12 @@ function AgentNodeComponent({ agent, flow, nodeId, selected }: AgentNodeComponen
 
 
 
+  // TEMPORARILY DISABLED: Agent validation in node display
   // Check if agent is valid (has all required fields)
   // Only show validation errors if agent is connected from start to end
   const shouldShowValidation = isConnectedStartToEnd;
-  const isCurrentAgentValid = shouldShowValidation ? isAgentValid(currentAgent) : true;
+  // const isCurrentAgentValid = shouldShowValidation ? isAgentValid(currentAgent) : true;
+  const isCurrentAgentValid = true; // Always show as valid
   
   return (
     <div 
@@ -780,7 +791,7 @@ function AgentNodeComponent({ agent, flow, nodeId, selected }: AgentNodeComponen
             {shouldShowValidation && !hasAgentName && (
               <AlertCircle className="min-w-4 min-h-4 text-status-destructive-light" />
             )}
-            <div className="justify-start"><span className="text-text-body text-[10px] font-medium">Agent node</span><span className="text-status-required text-[10px] font-medium">*</span></div>
+            <div className="justify-start"><span className="text-text-body text-[10px] font-medium">Agent node name</span><span className="text-status-required text-[10px] font-medium">*</span></div>
           </div>
           <Input
             value={editingName}
@@ -817,7 +828,7 @@ function AgentNodeComponent({ agent, flow, nodeId, selected }: AgentNodeComponen
             {shouldShowValidation && !hasModel && (
               <AlertCircle className="min-w-4 min-h-4 text-status-destructive-light" />
             )}
-            <div className="justify-start"><span className="text-text-body text-xs font-medium">Model</span><span className="text-status-required text-xs font-medium">*</span></div>
+            <div className="justify-start"><span className="text-text-body text-[10px] font-medium">Model</span><span className="text-status-required text-xs font-medium">*</span></div>
           </div>
           <div className="self-stretch min-w-0 nodrag">
             <AgentModels

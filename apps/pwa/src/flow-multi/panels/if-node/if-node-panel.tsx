@@ -325,7 +325,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                           />
                         </div>
                         {/* Unified Operator Combobox */}
-                        <div className="w-[148px] inline-flex flex-col justify-start items-start gap-1">
+                        <div className="w-[192px] inline-flex flex-col justify-start items-start gap-1">
                           <OperatorCombobox
                             value={{
                               dataType: condition.dataType,

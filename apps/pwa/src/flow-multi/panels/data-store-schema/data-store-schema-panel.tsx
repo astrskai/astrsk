@@ -245,7 +245,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
 
   // 10. Early returns for loading/error states
   if (isLoading) {
-    return <FlowPanelLoading message="Loading data store schema..." />;
+    return <FlowPanelLoading message="Loading data schema..." />;
   }
 
   if (!flow) {
@@ -256,7 +256,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   return (
     <div className="h-full flex flex-col bg-background-surface-2">
       {/* Header with description */}
-      <div className="px-2 py-2.5 bg-background-surface-2 border-b border-border-dark flex flex-col justify-start items-start gap-2.5">
+      {/* <div className="px-2 py-2.5 bg-background-surface-2 border-b border-border-dark flex flex-col justify-start items-start gap-2.5">
         <div className="self-stretch inline-flex justify-start items-center gap-10">
           <div className="flex-1 justify-start text-text-subtle text-xs font-normal">
             Create data fields to build nodes that can be linked into your flow and control session state dynamically.
@@ -267,10 +267,10 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
             onClick={addDataStoreNode}
           >
             <Plus />
-            Data store node
+            Data update node
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* Main content */}
       {fields.length === 0 ? (
@@ -280,7 +280,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
             <div className="self-stretch flex-1 flex flex-col justify-center items-center gap-8">
               <div className="flex flex-col justify-start items-center gap-2">
                 <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">No schema fields yet</div>
-                <div className="w-40 text-center justify-start text-background-surface-5 text-xs font-normal">Start by creating fields for your data store schema.</div>
+                <div className="w-40 text-center justify-start text-background-surface-5 text-xs font-normal">Start by creating fields for your data schema.</div>
               </div>
               <button 
                 onClick={addNewField}
@@ -448,6 +448,16 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
                 <div className="self-stretch inline-flex flex-col justify-start items-start gap-2">
                   <div className="self-stretch inline-flex justify-start items-center gap-2">
                     <div className="justify-start text-text-body text-[10px] font-medium leading-none">Initial value</div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="w-4 h-4 text-text-info" />
+                        </TooltipTrigger>
+                        <TooltipContent variant="button">
+                          <p>Default value for this field when a new<br/>session startsYou can customize this.<br/>to match your workflow needs.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <div className="self-stretch flex flex-col justify-start items-start gap-1">
                     <Input

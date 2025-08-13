@@ -660,7 +660,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         <TabsList className="w-full flex-shrink-0">
           <TabsTrigger value="variables">Variables</TabsTrigger>
           <TabsTrigger value="structured">Agent output</TabsTrigger>
-          <TabsTrigger value="datastore">Data store</TabsTrigger>
+          <TabsTrigger value="datastore">Data</TabsTrigger>
         </TabsList>
 
         <TabsContent
@@ -781,26 +781,27 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
         <TabsContent
           value="structured"
-          className="mt-0 flex-1 overflow-hidden h-0"
+          className="mt-0 flex-1 overflow-hidden"
         >
-          <ScrollArea className="h-full pr-2">
-            <div className="flex flex-col gap-2">
-              {aggregatedStructuredVariables.length === 0 ? (
-                <div className="text-center py-8 space-y-2">
-                  <Database className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <TypoLarge className="text-muted-foreground">
-                    {searchQuery
-                      ? "No structured output variables found matching your search"
-                      : "No structured output variables found"}
-                  </TypoLarge>
-                  <TypoBase className="text-muted-foreground">
-                    {searchQuery
-                      ? "Try a different search term"
-                      : "Enable structured output on agents to see variables here"}
-                  </TypoBase>
+          {aggregatedStructuredVariables.length === 0 ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="inline-flex flex-col justify-start items-center gap-2">
+                <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">
+                  {searchQuery
+                    ? "No structured output variables found matching your search"
+                    : "No structured output variables found"}
                 </div>
-              ) : (
-                aggregatedStructuredVariables
+                <div className="w-52 text-center justify-start text-background-surface-5 text-xs font-normal">
+                  {searchQuery
+                    ? "Try a different search term"
+                    : "Enable structured output on agents to see variables here"}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <ScrollArea className="h-full pr-2">
+              <div className="flex flex-col gap-2">
+                {aggregatedStructuredVariables
                   .filter((variable) => {
                     if (!searchQuery) return true;
                     const query = searchQuery.toLowerCase();
@@ -889,21 +890,21 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         </button>
                       </div>
                     );
-                  })
-              )}
-            </div>
-          </ScrollArea>
+                  })}
+              </div>
+            </ScrollArea>
+          )}
         </TabsContent>
 
         <TabsContent
           value="datastore"
           className="mt-0 flex-1 overflow-hidden h-0"
         >
-          <ScrollArea className="h-full pr-2">
-            <div className="flex flex-col gap-2">
-              {flow?.props.dataStoreSchema?.fields &&
-              flow.props.dataStoreSchema.fields.length > 0 ? (
-                flow.props.dataStoreSchema.fields
+          {flow?.props.dataStoreSchema?.fields &&
+          flow.props.dataStoreSchema.fields.length > 0 ? (
+            <ScrollArea className="h-full pr-2">
+              <div className="flex flex-col gap-2">
+                {flow.props.dataStoreSchema.fields
                   .filter(
                     (field) =>
                       !searchQuery ||
@@ -1002,24 +1003,17 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         </div>
                       </button>
                     );
-                  })
-              ) : (
-                <div className="text-center py-8 space-y-2">
-                  <Database className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <TypoLarge className="text-muted-foreground">
-                    {searchQuery
-                      ? "No data store fields found matching your search"
-                      : "No data store fields defined"}
-                  </TypoLarge>
-                  <TypoBase className="text-muted-foreground">
-                    {searchQuery
-                      ? "Try a different search term"
-                      : "Define fields in the Data Store Schema to see them here"}
-                  </TypoBase>
-                </div>
-              )}
+                  })}
+              </div>
+            </ScrollArea>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="inline-flex flex-col justify-start items-center gap-2">
+                <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">No data fields defined</div>
+                <div className="w-52 text-center justify-start text-background-surface-5 text-xs font-normal">Define fields in the Data Schema to see them here</div>
+              </div>
             </div>
-          </ScrollArea>
+          )}
         </TabsContent>
       </Tabs>
     </div>

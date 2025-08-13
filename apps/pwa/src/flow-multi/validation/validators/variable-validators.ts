@@ -103,7 +103,7 @@ const extractVariables = (template: string): string[] => {
 export const validateUndefinedOutputVariables: ValidatorFunction = (context) => {
   const issues: ValidationIssue[] = [];
   
-  // Helper function to validate variables against available agents and data store schema
+  // Helper function to validate variables against available agents and data schema
   const validateVariables = (variables: string[], sourceAgentId: string, sourceAgentName: string, location?: string, isHistoryMessage: boolean = false) => {
     for (const variable of variables) {
       // Check if it's a turn variable
@@ -665,7 +665,7 @@ export const validateUnusedDataStoreFields: ValidatorFunction = (context) => {
     
     if (!isUsed) {
       const message = generateValidationMessage(ValidationIssueCode.UNUSED_OUTPUT_VARIABLE, {
-        agentName: 'Data Store',
+        agentName: 'Data Update',
         field: field.name,
         variable: `{{${variable}}}`
       });
@@ -675,7 +675,7 @@ export const validateUnusedDataStoreFields: ValidatorFunction = (context) => {
         severity: 'warning',
         ...message,
         agentId: 'datastore',
-        agentName: 'Data Store',
+        agentName: 'Data Update',
         metadata: { variable: `{{${variable}}}`, field: field.name },
       });
     }

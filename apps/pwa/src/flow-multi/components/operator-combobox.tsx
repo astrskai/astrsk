@@ -135,32 +135,34 @@ export function OperatorCombobox({ value, onChange, className, placeholder = "Se
           "absolute z-50 w-full",
           dropdownPosition === 'bottom' ? "mt-1 top-full" : "mb-1 bottom-full"
         )}>
-          <div className="p-1 bg-background-surface-1 rounded-lg shadow-lg inline-flex flex-col justify-start items-start gap-3 w-full max-h-[280px] overflow-y-auto">
-            {dataTypes.map((dataType) => (
+          <div className="p-1 bg-background-surface-1 rounded-lg shadow-lg inline-flex flex-col justify-start items-start w-full max-h-[650px] overflow-y-auto">
+            {dataTypes.map((dataType, index) => (
               <div key={dataType.type} className="self-stretch flex flex-col justify-start items-start gap-1">
-                {/* Data Type Header */}
+                {/* Data Type Header - Add border-t for all except first */}
                 <div
                   onClick={() => handleTypeClick(dataType.type)}
                   className={cn(
-                    "self-stretch h-6 px-2 py-1 rounded-md inline-flex justify-between items-center cursor-pointer transition-colors",
+                    "self-stretch p-2 inline-flex justify-between items-center cursor-pointer transition-colors group",
+                    index > 0 && "border-t border-border-dark",
                     value.dataType === dataType.type && !expandedType
-                      ? "bg-background-surface-3 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)]" 
+                      ? "bg-background-surface-3 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] rounded-md" 
                       : ""
                   )}
                 >
                   <div className="flex justify-start items-center gap-1">
                     <div className={cn(
+                      "w-4 h-4",
                       value.dataType === dataType.type
                         ? "text-text-primary"
-                        : "text-text-subtle"
+                        : "text-text-subtle group-hover:text-text-primary"
                     )}>
                       {dataType.icon}
                     </div>
                     <div className={cn(
-                      "text-center justify-start text-xs",
+                      "justify-start text-xs",
                       value.dataType === dataType.type
                         ? "text-text-primary font-semibold"
-                        : "text-text-subtle font-normal"
+                        : "text-text-subtle font-normal group-hover:text-text-primary"
                     )}>
                       {dataType.label}
                     </div>
@@ -170,7 +172,7 @@ export function OperatorCombobox({ value, onChange, className, placeholder = "Se
                       "max-w-4 max-h-4 absolute left-[-1px] top-[-2px]",
                       value.dataType === dataType.type
                         ? "text-text-primary"
-                        : "text-background-surface-5",
+                        : "text-background-surface-5 group-hover:text-text-primary",
                       expandedType === dataType.type && "rotate-180"
                     )} />
                   </div>
@@ -178,20 +180,20 @@ export function OperatorCombobox({ value, onChange, className, placeholder = "Se
 
                 {/* Operators List (shown when expanded) */}
                 {expandedType === dataType.type && (
-                  <div className="flex flex-col justify-start items-start gap-1">
+                  <div className="self-stretch flex flex-col justify-start items-start gap-1">
                     {getOperatorsForDataType(dataType.type).map((operator) => (
                       <div
                         key={operator}
                         onClick={() => handleOperatorClick(dataType.type, operator)}
                         className={cn(
-                          "self-stretch px-2 py-1 rounded-md inline-flex justify-center items-center gap-2 cursor-pointer transition-colors group",
+                          "self-stretch p-2 rounded-md inline-flex justify-start items-center gap-2 cursor-pointer transition-colors group",
                           value.operator === operator && value.dataType === dataType.type
                             ? "bg-background-surface-3 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)]"
                             : ""
                         )}
                       >
                         <div className={cn(
-                          "text-center justify-start text-xs",
+                          "justify-start text-xs",
                           value.operator === operator && value.dataType === dataType.type
                             ? "text-text-primary font-semibold"
                             : "text-text-subtle font-normal group-hover:text-text-primary"
