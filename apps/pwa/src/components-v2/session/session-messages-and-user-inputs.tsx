@@ -486,9 +486,7 @@ const UserInputCharacterButton = ({
             alt={characterCard.props.name?.at(0)?.toUpperCase() ?? ""}
             size={48}
             className={cn(
-              isHighLighted
-                ? "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal"
-                : "",
+              isHighLighted && "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal",
             )}
           />
           <div
@@ -516,6 +514,7 @@ const UserInputCharacterButton = ({
             className={cn(
               "grid place-items-center size-[48px] rounded-full text-text-primary",
               "bg-background-surface-4 group-hover:bg-background-surface-5 transition-colors ease-out duration-300 border-1 border-border-normal",
+              isHighLighted && "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal",
             )}
           >
             {icon}
@@ -626,11 +625,8 @@ const UserInputs = ({
   setAutoReply: (autoReply: AutoReply) => void;
 }) => {
   const isMobile = useIsMobile();
-  const {
-    isGroupButtonDonNotShowAgain,
-    setIsGroupButtonDonNotShowAgain,
-    activePage,
-  } = useAppStore();
+  const isGroupButtonDonNotShowAgain = useAppStore.use.isGroupButtonDonNotShowAgain();
+  const setIsGroupButtonDonNotShowAgain = useAppStore.use.setIsGroupButtonDonNotShowAgain();
 
   // Shuffle
   const handleShuffle = useCallback(() => {
@@ -644,24 +640,18 @@ const UserInputs = ({
   const sendButtonRef = useRef<HTMLButtonElement>(null);
   const [messageContent, setMessageContent] = useState<string>("");
 
-  // Tooltip
-  const [isOpenTooltip, setIsOpenTooltip] = useState(false);
-  const [isOkayButtonClicked, setIsOkayButtonClicked] = useState(false);
-  useEffect(() => {
-    setIsOpenTooltip(
-      !isGroupButtonDonNotShowAgain &&
-        messageContent.length > 0 &&
-        activePage === Page.Sessions &&
-        !isOpenSettings &&
-        !isOkayButtonClicked,
-    );
-  }, [
-    activePage,
-    isGroupButtonDonNotShowAgain,
-    isOkayButtonClicked,
-    isOpenSettings,
-    messageContent.length,
-  ]);
+  // Guide: Select to prompt a response
+  const [isOpenGuide, setIsOpenGuide] = useState(false);
+  const onFocusUserInput = useCallback(() => {
+    if (isGroupButtonDonNotShowAgain) {
+      return;
+    }
+    setIsOpenGuide(true);
+  }, [isGroupButtonDonNotShowAgain]);
+  const onCharacterButtonClicked = useCallback(() => {
+    setIsOpenGuide(false);
+    setIsGroupButtonDonNotShowAgain(true);
+  }, []);
 
   return (
     <div
@@ -677,7 +667,7 @@ const UserInputs = ({
         )}
       >
         <TooltipProvider delayDuration={0}>
-          <Tooltip open={isOpenTooltip}>
+          <Tooltip open={isOpenGuide}>
             <TooltipTrigger asChild>
               <div className="p-0 flex flex-row justify-between">
                 <div
@@ -691,8 +681,10 @@ const UserInputs = ({
                       characterCardId={userCharacterCardId}
                       onClick={() => {
                         generateCharacterMessage?.(userCharacterCardId);
+                        onCharacterButtonClicked();
                       }}
                       isUser
+                      isHighLighted={isOpenGuide}
                     />
                   )}
                   {aiCharacterCardIds.map((characterCardId) => (
@@ -701,7 +693,9 @@ const UserInputs = ({
                       characterCardId={characterCardId}
                       onClick={() => {
                         generateCharacterMessage?.(characterCardId);
+                        onCharacterButtonClicked();
                       }}
+                      isHighLighted={isOpenGuide}
                     />
                   ))}
                   <UserInputCharacterButton
@@ -709,7 +703,9 @@ const UserInputs = ({
                     label="Shuffle"
                     onClick={() => {
                       handleShuffle();
+                      onCharacterButtonClicked();
                     }}
+                    isHighLighted={isOpenGuide}
                   />
                 </div>
                 <div className="shrink-0">
@@ -724,39 +720,10 @@ const UserInputs = ({
             <TooltipContent
               side="top"
               align="start"
-              className="py-[12px] px-[16px] ml-[-16px] mb-[12px]"
+              className="py-[12px] px-[16px] ml-[-16px] mb-[12px] bg-background-surface-2 border-border-normal border-1"
             >
-              <div className="flex flex-col gap-[8px]">
-                <div className="font-[600] text-[14px] leading-[20px] text-text-primary">
-                  Tap to prompt a response
-                </div>
-                <div className="font-[400] text-[12px] leading-[15px] text-text-primary">
-                  You orchestrate the interaction —<br />
-                  you select which character responds next.
-                </div>
-                <div className="flex flex-row justify-end gap-[8px]">
-                  <Button
-                    variant="outline"
-                    className="py-[2px] bg-transparent outline-background-surface-light text-background-surface-light"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsGroupButtonDonNotShowAgain(true);
-                    }}
-                  >
-                    Don&apos;t show this again
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="py-[2px] bg-background-surface-light text-text-contrast-text"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsOkayButtonClicked(true);
-                    }}
-                  >
-                    <div className="px-[12px]">Okay</div>
-                  </Button>
-                </div>
+              <div className="font-[600] text-[14px] leading-[20px] text-text-primary">
+                Select to prompt a response
               </div>
             </TooltipContent>
           </Tooltip>
@@ -789,6 +756,7 @@ const UserInputs = ({
                     sendButtonRef.current?.click();
                   }
                 }}
+                onFocus={onFocusUserInput}
               />
             </div>
             {streamingMessageId ? (
