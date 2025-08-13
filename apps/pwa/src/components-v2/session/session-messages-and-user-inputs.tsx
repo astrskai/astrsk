@@ -589,12 +589,14 @@ const UserInputAutoReplyButton = ({
       </div>
       <div
         className={cn(
-          "w-[82px] font-[500] text-[12px] leading-[15px] text-text-body text-center select-none",
+          "w-[105px] font-[600] text-[12px] leading-[15px] text-text-body text-center select-none",
         )}
       >
-        {autoReply === AutoReply.Off && "Auto-reply off"}
-        {autoReply === AutoReply.Random && "Random-reply"}
-        {autoReply === AutoReply.Rotate && "Rotating-reply"}
+        {autoReply === AutoReply.Off ? "Auto-reply off" : "Auto-reply on"}
+        <div className="min-h-[15px] font-[400] mt-1">
+          {autoReply === AutoReply.Random && "Random character"}
+          {autoReply === AutoReply.Rotate && "All characters"}
+        </div>
       </div>
     </div>
   );
