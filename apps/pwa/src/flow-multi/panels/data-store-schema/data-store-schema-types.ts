@@ -2,7 +2,7 @@
 export type { DataStoreSchemaField, DataStoreSchema, DataStoreFieldType } from "@/modules/flow/domain/flow";
 
 /**
- * Props for the Data Store Schema Panel
+ * Props for the Data Schema Panel
  */
 export interface DataStoreSchemaProps {
   flowId: string;

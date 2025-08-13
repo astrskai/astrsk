@@ -13,7 +13,7 @@ import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-q
 import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { BookOpen, Pencil, Check, X, Loader2, Shield, HelpCircle, Plus } from "lucide-react";
+import { BookOpen, Pencil, Check, X, Loader2, SearchCheck, HelpCircle, Plus } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
@@ -612,7 +612,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       type: "dataStore",
       position: newPosition,
       data: {
-        label: "New Data Store",
+        label: "New Data Update",
         color: nextColor,
       },
     });
@@ -629,7 +629,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       saveFlowChanges(updatedNodes, currentEdges, true);
     }, 0);
 
-    toast.success("Data Store node added");
+    toast.success("Data Update node added");
   }, [setNodes, saveFlowChanges]);
 
   const addIfNode = useCallback(async () => {
@@ -896,7 +896,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         saveFlowChanges(updatedNodes, edges, true);
       }, 0);
 
-      toast.success(`${nodeType === 'if' ? 'If' : 'Data Store'} node copied`);
+      toast.success(`${nodeType === 'if' ? 'If' : 'Data Update'} node copied`);
     } catch (error) {
       toast.error("Failed to copy node", {
         description: error instanceof Error ? error.message : "Unknown error",
@@ -943,7 +943,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         saveFlowChanges(updatedNodes, updatedEdges);
       }, 0);
 
-      toast.success(`${nodeToDelete.type === 'if' ? 'If' : 'Data Store'} node deleted`);
+      toast.success(`${nodeToDelete.type === 'if' ? 'If' : 'Data Update'} node deleted`);
     } catch (error) {
       toast.error("Failed to delete node", {
         description: error instanceof Error ? error.message : "Unknown error",
@@ -970,7 +970,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     if (!canvasRect) return;
     
     // Calculate position for menu (to the right of the node)
-    const menuOffset = 10;
+    const menuOffset = 28;
     const menuX = nodeRect.right - canvasRect.left + menuOffset;
     const menuY = nodeRect.top + (nodeRect.height / 2) - canvasRect.top;
     
@@ -1185,7 +1185,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           saveFlowChanges(result.updatedNodes, result.updatedEdges, true);
         }, 0);
         
-        toast.success(`${nodeType === "agent" ? "Agent" : nodeType === "dataStore" ? "Data Store" : "If"} node created`);
+        toast.success(`${nodeType === "agent" ? "Agent" : nodeType === "dataStore" ? "Data Update" : "If"} node created`);
       }
     }
     setShowNodeSelection(false);
@@ -1218,7 +1218,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               const nodeRect = nodeElement.getBoundingClientRect();
               
               // Position menu to the right of the node with small offset
-              const menuOffset = 10;
+              const menuOffset = 28;
               const menuX = nodeRect.right - canvasRect.left + menuOffset;
               const menuY = nodeRect.top + (nodeRect.height / 2) - canvasRect.top;
               
@@ -1288,8 +1288,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             const nodeRect = nodeElement.getBoundingClientRect();
             const canvasRectAbs = canvasRect;
             
-            // Position menu to the right of the node with small offset
-            const menuOffset = 10; // Small offset from the node
+            // Position menu to the right of the node with 16px gap
+            const menuOffset = 28; // 16px gap from the node
             
             // Calculate menu position relative to the canvas
             const menuX = nodeRect.right - canvasRectAbs.left + menuOffset;
@@ -1512,68 +1512,103 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         </div>
       </div>
       
-      {/* Variables and Validation buttons - positioned below header */}
-      <div className="w-full flex flex-wrap justify-start items-start gap-2">
-        <ButtonPill
+      {/* Flow panel buttons - new layout */}
+      <div className="w-full flex justify-between items-start gap-2">
+        {/* Left side buttons */}
+        <div className="flex gap-2">
+          {/* Agent button - creates agent node directly */}
+          <ButtonPill
+            size="default"
+            onClick={addAgentNode}
+            title="Add Agent Node"
+            className="min-w-[96px]"
+          >
+            Agent (node)
+          </ButtonPill>
+          
+          {/* Data dropdown - Schema panel or Create data store node */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="min-w-[96px]">
+                <ButtonPill
+                  size="default"
+                  title="Data Options"
+                  className="w-full"
+                >
+                  Data
+                </ButtonPill>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" sideOffset={16} className="!min-w-[92px] !w-[92px] p-0 rounded-lg overflow-hidden">
+              <button
+                onClick={() => openPanel(PANEL_TYPES.DATA_STORE_SCHEMA)}
+                className="w-[92px] h-[31px] bg-background-surface-4 border-b border-border-normal inline-flex justify-center items-center hover:bg-background-surface-5 transition-colors"
+              >
+                <div className="text-center text-text-primary text-xs font-normal whitespace-nowrap">
+                  Schema
+                </div>
+              </button>
+              <NodeSelectionMenuItems
+                onSelectNodeType={(type) => {
+                  if (type === "dataStore") {
+                    addDataStoreNode();
+                  }
+                }}
+                variant="dropdown"
+                showOnlyDataStore={true}
+                customDataStoreLabel="Update (node)"
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {/* Conditional dropdown - only If node option */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="min-w-[96px]">
+                <ButtonPill
+                  size="default"
+                  title="Conditional Options"
+                  className="w-full"
+                >
+                  Conditional
+                </ButtonPill>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" sideOffset={16} className="!min-w-[92px] !w-[92px] p-0 rounded-lg overflow-hidden">
+              <NodeSelectionMenuItems
+                onSelectNodeType={(type) => {
+                  if (type === "if") {
+                    addIfNode();
+                  }
+                }}
+                variant="dropdown"
+                showOnlyIf={true}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        
+        {/* Right side buttons */}
+        <div className="flex gap-2">
+          <ButtonPill
             size="default"
             icon={<BookOpen />}
             active={isPanelOpen(PANEL_TYPES.VARIABLE)}
             onClick={() => openPanel(PANEL_TYPES.VARIABLE)}
-            // onDoubleClick={handleCloseVariablesPanel}
-            title="Open Variables Panel"
+            className="min-w-[96px]"
           >
             Variables
           </ButtonPill>
           <ButtonPill
             size="default"
-            icon={<Shield />}
+            icon={<SearchCheck />}
             active={isPanelOpen(PANEL_TYPES.VALIDATION)}
             onClick={() => openPanel(PANEL_TYPES.VALIDATION)}
-            title="Open Validation Panel"
+            className="min-w-[96px]"
           >
             Validation
           </ButtonPill>
-        <ButtonPill
-          size="default"
-          active={isPanelOpen(PANEL_TYPES.DATA_STORE_SCHEMA)}
-          onClick={() => openPanel(PANEL_TYPES.DATA_STORE_SCHEMA)}
-          title="Open Data Store Schema Panel"
-        >
-          Data Store Schema
-        </ButtonPill>
-        
-        {/* Nodes dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div>
-              <ButtonPill
-                size="default"
-                icon={<Plus />}
-                title="Add Node"
-              >
-                Nodes
-              </ButtonPill>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="min-w-[117px] w-[117px] p-0 rounded-lg overflow-hidden">
-            <NodeSelectionMenuItems
-              onSelectNodeType={(type) => {
-                switch (type) {
-                  case "agent":
-                    addAgentNode();
-                    break;
-                  case "dataStore":
-                    addDataStoreNode();
-                    break;
-                  case "if":
-                    addIfNode();
-                    break;
-                }
-              }}
-              variant="dropdown"
-            />
-          </DropdownMenuContent>
-        </DropdownMenu>
+        </div>
       </div>
     </div>
     
@@ -1632,6 +1667,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 setShowNodeSelection(false);
                 pendingConnectionRef.current = null;
               }}
+              className="w-32"
             />
           )}
         </div>

@@ -55,8 +55,8 @@ export default function DataStoreNode({
   id,
   selected 
 }: NodeProps<DataStoreNode>) {
-  const [title, setTitle] = useState(data.label || "Data Store");
-  const [editingTitle, setEditingTitle] = useState(data.label || "Data Store");
+  const [title, setTitle] = useState(data.label || "Data Update");
+  const [editingTitle, setEditingTitle] = useState(data.label || "Data Update");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
@@ -89,8 +89,10 @@ export default function DataStoreNode({
     return nodePosition ? nodePosition.isConnectedToStart && nodePosition.isConnectedToEnd : false;
   }, [flow, id]);
   
+  // TEMPORARILY DISABLED: Data store node validation
   // Check if this specific node is invalid (only show if fully connected from start to end)
-  const isNodeInvalid = isFullyConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
+  // const isNodeInvalid = isFullyConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
+  const isNodeInvalid = false; // Always show as valid
   
   
   // Calculate opacity based on connection state and flow validity
@@ -228,8 +230,10 @@ export default function DataStoreNode({
     return fields;
   }, [data.dataStoreFields, flow?.props.dataStoreSchema?.fields]);
   
+  // TEMPORARILY DISABLED: Data store node field validation
   // Check if node has configured fields (not schema fields)
-  const hasNoFields = !data.dataStoreFields || data.dataStoreFields.length === 0;
+  // const hasNoFields = !data.dataStoreFields || data.dataStoreFields.length === 0;
+  const hasNoFields = false; // Always show as having fields
   
   return (
     <div 
@@ -246,7 +250,7 @@ export default function DataStoreNode({
         <div className="self-stretch flex flex-col justify-start items-start gap-2">
           <div className="self-stretch inline-flex justify-start items-center gap-2">
             <div className="justify-start">
-              <span className="text-text-body text-[10px] font-medium">Data store node</span>
+              <span className="text-text-body text-[10px] font-medium">Data update node name</span>
               <span className="text-secondary-normal text-[10px] font-medium">*</span>
             </div>
           </div>
@@ -263,7 +267,7 @@ export default function DataStoreNode({
             }}
             onMouseDown={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
-            placeholder="Enter data store name"
+            placeholder="Enter data update name"
             disabled={isSaving}
             className="nodrag"
           />
@@ -346,7 +350,7 @@ export default function DataStoreNode({
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent hideClose>
           <DialogHeader>
-            <DialogTitle>Delete data store</DialogTitle>
+            <DialogTitle>Delete data update</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete "{title}"? This action cannot be undone.
             </DialogDescription>
@@ -354,12 +358,14 @@ export default function DataStoreNode({
           <DialogFooter>
             <Button
               variant="outline"
+              size="lg"
               onClick={() => setIsDeleteDialogOpen(false)}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
+              size="lg"
               onClick={handleConfirmDelete}
             >
               Delete

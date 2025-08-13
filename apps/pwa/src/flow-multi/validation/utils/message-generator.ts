@@ -281,17 +281,17 @@ const messageDefinitions: Record<ValidationIssueCode, {
     }
   },
   
-  // Data Store Errors
+  // Data Update Errors
   [ValidationIssueCode.DATA_STORE_INVALID_INITIAL_VALUE]: {
     title: "Invalid initial value",
-    description: (data?: ValidationData) => `Data store "${agentName(data)}" has an invalid initial value that doesn't match the schema`,
+    description: (data?: ValidationData) => `Data update "${agentName(data)}" has an invalid initial value that doesn't match the schema`,
     suggestion: "Ensure the initial value matches the defined schema structure"
   },
   
   [ValidationIssueCode.DATA_STORE_MISSING_INITIAL_VALUE]: {
     title: "Missing initial value",
-    description: (data?: ValidationData) => `Data store "${agentName(data)}" is missing an initial value`,
-    suggestion: "Provide an initial value for the data store"
+    description: (data?: ValidationData) => `Data update "${agentName(data)}" is missing an initial value`,
+    suggestion: "Provide an initial value for the data update"
   }
 };
 

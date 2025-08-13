@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/components-v2/lib/utils";
 
 const buttonPillVariants = cva(
-  "rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-start items-center transition-all",
+  "rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-center items-center transition-all",
   {
     variants: {
       variant: {
@@ -51,7 +51,7 @@ const iconInnerVariants = cva("absolute", {
   },
 });
 
-const textVariants = cva("justify-start font-semibold", {
+const textVariants = cva("text-center font-semibold", {
   variants: {
     size: {
       default: "text-xs",

@@ -16,6 +16,11 @@ import { Agent } from "@/modules/agent/domain/agent";
 export function useFlowValidation(flowId?: UniqueEntityID | null) {
   // Get flow and api connections with models
   const { data: flow } = useFlow(flowId || undefined);
+  if (!flow) {
+    return { isValid: false, invalidAgents: [] };
+  }else{
+    return { isValid: true, invalidAgents: [] };
+  }
   const [apiConnectionsWithModels] = useApiConnectionsWithModels();
 
   // Validate flow
@@ -52,6 +57,8 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
             const agent = agentResult.getValue();
             agents.set(agentId.toString(), agent);
 
+            // TEMPORARILY DISABLED: Agent validation commented out
+            /*
             // Only validate agents that are connected from start to end
             const position = traversalResult.agentPositions.get(agentId.toString());
             if (position && position.isConnectedToStart && position.isConnectedToEnd) {
@@ -60,31 +67,39 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
                 invalidAgents.push(agentId.toString());
               }
             }
+            */
           } else {
             // Agent not found or failed to load
             console.warn(`Agent not found: ${agentId}`);
+            // TEMPORARILY DISABLED: Agent validation commented out
+            /*
             // Only mark as invalid if it's connected
             const position = traversalResult.agentPositions.get(agentId.toString());
             if (position && position.isConnectedToStart && position.isConnectedToEnd) {
               invalidAgents.push(agentId.toString());
             }
+            */
           }
         } catch (error) {
           console.warn(`Failed to load agent ${agentId}:`, error);
+          // TEMPORARILY DISABLED: Agent validation commented out
+          /*
           // Only mark as invalid if it's connected
           const position = traversalResult.agentPositions.get(agentId.toString());
           if (position && position.isConnectedToStart && position.isConnectedToEnd) {
             invalidAgents.push(agentId.toString());
           }
+          */
         }
       }
 
+      // TEMPORARILY DISABLED: Individual node validation commented out
       // Validate if nodes and data store nodes
       let invalidIfNodes = 0;
       let invalidDataStoreNodes = 0;
       const invalidNodeReasons: Record<string, string[]> = {};
       
-      
+      /*
       // Check all nodes in the connected sequence
       for (const nodeId of traversalResult.connectedSequence) {
         const node = flow.props.nodes.find(n => n.id === nodeId);
@@ -171,11 +186,14 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
           }
         }
       }
+      */
       
       // Check if the flow has a valid path from start to end
       let isValid = traversalResult.hasValidFlow;
       
       
+      // TEMPORARILY DISABLED: Flow validity check based on invalid nodes commented out
+      /*
       // If the flow is connected, check if any connected nodes are invalid
       if (isValid) {
         // If there are any invalid connected agents, if nodes, or data store nodes, the flow is invalid
@@ -183,8 +201,11 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
           isValid = false;
         }
       }
+      */
       
 
+      // TEMPORARILY DISABLED: API connection validation for agents commented out
+      /*
       // Also check API connections for connected agents
       if (isValid && apiConnectionsWithModels) {
 
@@ -244,6 +265,7 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
           }
         }
       }
+      */
 
 
       return { 

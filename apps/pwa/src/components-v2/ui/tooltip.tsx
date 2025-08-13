@@ -26,7 +26,7 @@ const TooltipContent = React.forwardRef<
   TooltipContentProps
 >(({ className, sideOffset = 4, variant = 'default', ...props }, ref) => {
   const variantStyles = {
-    default: "rounded-2xl bg-background-tooltip px-3 py-3",
+    default: "rounded-2xl bg-background-surface-2 px-3 py-3 outline outline-1 outline-offset-[-1px] outline-border-normal",
     button: "px-2.5 py-1.5 bg-background-surface-2 rounded-lg outline outline-1 outline-offset-[-1px] outline-border-normal"
   };
   

@@ -105,8 +105,10 @@ export default function IfNode({
     return nodePosition ? nodePosition.isConnectedToStart && nodePosition.isConnectedToEnd : false;
   }, [flow, id]);
   
+  // TEMPORARILY DISABLED: If node validation
   // Check if this specific node is invalid (only show if fully connected from start to end)
-  const isNodeInvalid = isFullyConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
+  // const isNodeInvalid = isFullyConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
+  const isNodeInvalid = false; // Always show as valid
   
   // Calculate opacity based on connection state and flow validity
   const nodeOpacity = useMemo(() => {
@@ -221,9 +223,11 @@ export default function IfNode({
   }, [id]);
 
   // Use centralized predicate to check valid conditions
+  // TEMPORARILY DISABLED: If node condition validation
   const hasValidConditions = data.conditions?.some((c: IfCondition) => isValidCondition(c)) ?? false;
   const displayCount = hasValidConditions ? data.conditions?.filter((c: IfCondition) => isValidCondition(c)).length ?? 0 : 0;
-  const hasConditions = hasValidConditions;
+  // const hasConditions = hasValidConditions;
+  const hasConditions = true; // Always show as having conditions
 
   return (
     <div 
@@ -240,7 +244,7 @@ export default function IfNode({
         <div className="self-stretch flex flex-col justify-start items-start gap-2">
           <div className="self-stretch inline-flex justify-start items-center gap-2">
             <div className="justify-start">
-              <span className="text-text-body text-[10px] font-medium">If node</span>
+              <span className="text-text-body text-[10px] font-medium">If node name</span>
               <span className="text-secondary-normal text-[10px] font-medium">*</span>
             </div>
           </div>
@@ -331,8 +335,8 @@ export default function IfNode({
 
       {/* React Flow Handles */}
       {/* Two source handles for true/false branches */}
-      <CustomIfHandle nodeId={id} handleId="true" label="True" position="35%" />
-      <CustomIfHandle nodeId={id} handleId="false" label="False" position="65%" />
+      <CustomIfHandle nodeId={id} handleId="true" label="True" position="60%" />
+      <CustomIfHandle nodeId={id} handleId="false" label="False" position="80%" />
       
       {/* Target handle */}
       <CustomHandle variant="input" nodeId={id} />
@@ -349,12 +353,14 @@ export default function IfNode({
           <DialogFooter>
             <Button
               variant="outline"
+              size="lg"
               onClick={() => setIsDeleteDialogOpen(false)}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
+              size="lg"
               onClick={handleConfirmDelete}
             >
               Delete

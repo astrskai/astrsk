@@ -128,16 +128,14 @@ export function isAgentConnected(agentId: string, flow: Flow): boolean {
   // Use the proper traverseFlow function that handles all node types
   const traversalResult = traverseFlowCached(flow);
   
-  // Check if this node is in the connected sequence
-  const isInConnectedSequence = traversalResult.connectedSequence.includes(agentId);
+  // Get the node position from processNodePositions (which includes all node types)
+  // This is the same approach used by if-node and data-store nodes
+  const nodePosition = traversalResult.processNodePositions.get(agentId);
   
-  // Check if there's a valid flow (path from start to end)
-  const hasValidFlow = traversalResult.hasValidFlow;
+  // Check if the node is connected from start to end (same as if-node and data-store)
+  const isConnected = nodePosition ? nodePosition.isConnectedToStart && nodePosition.isConnectedToEnd : false;
   
-  
-  // The agent is considered connected if it's in the connected sequence
-  // AND there's a valid path from start to end in the flow
-  return isInConnectedSequence && hasValidFlow;
+  return isConnected;
 }
 
 /**

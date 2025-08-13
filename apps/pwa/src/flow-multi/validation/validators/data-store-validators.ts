@@ -3,7 +3,7 @@ import { ValidatorFunction } from "@/flow-multi/validation/types/functional-vali
 import { generateIssueId } from "@/flow-multi/validation/utils/validator-utils";
 import { DataStoreFieldType } from "@/flow-multi/panels/data-store-schema/data-store-schema-types";
 
-// Validate initial values in data store schema match their field types
+// Validate initial values in data schema match their field types
 export const validateDataStoreSchemaInitialValues: ValidatorFunction = (context) => {
   const issues: ValidationIssue[] = [];
   
@@ -20,7 +20,7 @@ export const validateDataStoreSchemaInitialValues: ValidatorFunction = (context)
         id: generateIssueId(ValidationIssueCode.DATA_STORE_MISSING_INITIAL_VALUE, `field_${field.id}`),
         code: ValidationIssueCode.DATA_STORE_MISSING_INITIAL_VALUE,
         severity: 'warning',
-        title: 'Missing Initial Value in Data Store Schema',
+        title: 'Missing Initial Value in Data Schema',
         description: `Field "${field.name}" (${field.type}) has no initial value`,
         suggestion: `Provide an initial value for the field to avoid undefined behavior`,
         metadata: {
@@ -37,7 +37,7 @@ export const validateDataStoreSchemaInitialValues: ValidatorFunction = (context)
         id: generateIssueId(ValidationIssueCode.DATA_STORE_INVALID_INITIAL_VALUE, `field_${field.id}`),
         code: ValidationIssueCode.DATA_STORE_INVALID_INITIAL_VALUE,
         severity: 'warning',
-        title: 'Invalid Initial Value in Data Store Schema',
+        title: 'Invalid Initial Value in Data Schema',
         description: `Field "${field.name}" has an invalid initial value: ${validation.message}`,
         suggestion: `Update the initial value to match the ${field.type} type`,
         metadata: {

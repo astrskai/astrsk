@@ -98,7 +98,7 @@ const createFlowPanelComponentStandalone = (
   });
 };
 
-// Panel component factory for node-specific panels (Data Store, If Node)
+// Panel component factory for node-specific panels (Data Update, If Node)
 const createNodePanelComponent = (
   Component: React.FC<{ flowId: string; nodeId: string }>
 ): React.FC<IDockviewPanelProps> => {
@@ -431,7 +431,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
       // Get node name/label for title with appropriate fallback
       let nodeName: string;
       if (panelType === 'dataStore' || panelType === 'dataStoreSchema') {
-        nodeName = nodeData?.label || 'Data Store';
+        nodeName = nodeData?.label || 'Data Update';
       } else if (panelType === 'ifNode') {
         nodeName = nodeData?.label || 'If Condition';
       } else {
