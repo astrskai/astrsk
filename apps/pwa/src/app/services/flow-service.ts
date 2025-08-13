@@ -1,4 +1,4 @@
-import { LoadAgentRepo, SaveAgentRepo } from "@/modules/agent/repos";
+import { LoadAgentRepo, SaveAgentRepo, DeleteAgentRepo } from "@/modules/agent/repos";
 import { DrizzleFlowRepo } from "@/modules/flow/repos/impl/drizzle-flow-repo";
 import { CloneFlow } from "@/modules/flow/usecases/clone-flow";
 import { CreateFlow } from "@/modules/flow/usecases/create-flow";
@@ -28,13 +28,13 @@ export class FlowService {
 
   private constructor() {}
 
-  public static init(loadAgentRepo: LoadAgentRepo, saveAgentRepo: SaveAgentRepo) {
+  public static init(loadAgentRepo: LoadAgentRepo, saveAgentRepo: SaveAgentRepo, deleteAgentRepo: DeleteAgentRepo) {
     this.flowRepo = new DrizzleFlowRepo();
 
     // Initialize the use cases
     this.cloneFlow = new CloneFlow(this.flowRepo, this.flowRepo, loadAgentRepo, saveAgentRepo);
     this.createFlow = new CreateFlow(saveAgentRepo, this.flowRepo);
-    this.deleteFlow = new DeleteFlow(this.flowRepo);
+    this.deleteFlow = new DeleteFlow(this.flowRepo, this.flowRepo, deleteAgentRepo);
     this.exportFlowToFile = new ExportFlowToFile(this.flowRepo, loadAgentRepo);
     this.getFlow = new GetFlow(this.flowRepo);
     this.getModelsFromFlowFile = new GetModelsFromFlowFile();

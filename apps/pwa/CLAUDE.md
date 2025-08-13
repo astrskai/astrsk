@@ -144,13 +144,6 @@ Key modules: `agent`, `api`, `asset`, `background`, `card`, `config`, `flow`, `p
 #### Flow Query Invalidation
 When updating flows (e.g., panel layout changes, agent modifications), use the dedicated invalidation utilities:
 
-```typescript
-import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
-
-// After saving flow changes
-await invalidateSingleFlowQueries(flowId);
-```
-
 This ensures:
 - Specific flow detail queries are refreshed
 - All flow list queries are invalidated
@@ -161,13 +154,3 @@ This ensures:
 - Layout changes (panel repositioning)
 - Agent updates within a flow
 - Any flow property modifications
-
-#### Agent Query Invalidation
-Similarly, for agent-specific updates:
-
-```typescript
-import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
-
-// After agent changes
-await invalidateAllAgentQueries();
-```

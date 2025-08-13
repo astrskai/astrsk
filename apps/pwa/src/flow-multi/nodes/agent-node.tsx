@@ -1,15 +1,16 @@
 // Agent node component for flow-multi system
 // Displays agent information and provides panel access buttons
-import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
+import { type Node, type NodeProps } from "@xyflow/react";
 import { useCallback, useState, useEffect, useRef, useMemo } from "react";
-import { Copy, Trash2, Plus, AlertCircle } from "lucide-react";
+import { Copy, Trash2, AlertCircle } from "lucide-react";
+import { CustomHandle } from "@/flow-multi/components/custom-handle";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
-import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { isAgentValid } from "@/flow-multi/utils/flow-validation";
 
@@ -58,12 +59,14 @@ export type AgentNodeData = {
 interface AgentNodeComponentProps {
   agent: Agent;
   flow: any;
+  nodeId: string;
+  selected?: boolean;
 }
 
 /**
  * The main component for rendering an agent node in the flow
  */
-function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
+function AgentNodeComponent({ agent, flow, nodeId, selected }: AgentNodeComponentProps) {
   // Get updateAgent from flow panel hook
   const { updateAgent } = useFlowPanel({ flowId: flow?.id?.toString() || '' });
   
@@ -86,8 +89,10 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
   // Use flow validation hook
   const { isValid: isFlowValid } = useFlowValidation(flowId ? new UniqueEntityID(flowId) : null);
   
+  // TEMPORARILY DISABLED: Model validation
   // Check if model is selected
-  const hasModel = !!agent.props.modelName;
+  // const hasModel = !!agent.props.modelName;
+  const hasModel = true; // Always show as having model
   
   // Use centralized color hook with flow validity
   const { hexColor: agentColor, opacity: agentOpacity } = useAgentColor({ 
@@ -101,6 +106,7 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
   const colorWithOpacity = agentOpacity < 1 
     ? `${agentColor}${Math.round(agentOpacity * 255).toString(16).padStart(2, '0')}` // Add alpha channel to hex
     : agentColor;
+    
   
   // Check agent-specific panel states
   const agentIdStr = agent.id.toString();
@@ -118,15 +124,22 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
   const { promptType, parameterCount, hasPrompt, hasAgentName, hasStructuredOutput, isConnectedStartToEnd } = useMemo(() => {
     
     const isChat = currentAgent.props.targetApiType === ApiType.Chat;
-    const hasPromptContent = isChat 
-      ? (currentAgent.props.promptMessages && currentAgent.props.promptMessages.length > 0)
-      : true;
+    // TEMPORARILY DISABLED: Prompt validation
+    // const hasPromptContent = isChat 
+    //   ? (currentAgent.props.promptMessages && currentAgent.props.promptMessages.length > 0)
+    //   : true;
+    const hasPromptContent = true; // Always show as having prompt
     
-    const hasName = currentAgent.props.name && currentAgent.props.name.trim().length > 0;
-    const hasOutput = currentAgent.props.enabledStructuredOutput === true && currentAgent.props.schemaFields && currentAgent.props.schemaFields.length > 0;
+    // TEMPORARILY DISABLED: Agent name validation
+    // const hasName = currentAgent.props.name && currentAgent.props.name.trim().length > 0;
+    const hasName = true; // Always show as having name
+    
+    // TEMPORARILY DISABLED: Structured output validation
+    // const hasOutput = currentAgent.props.enabledStructuredOutput === true && currentAgent.props.schemaFields && currentAgent.props.schemaFields.length > 0;
+    const hasOutput = true; // Always show as having output
     
     // Check if agent is connected from start to end
-    const traversalResult = traverseFlow(flow);
+    const traversalResult = traverseFlowCached(flow);
     const agentPosition = traversalResult.agentPositions.get(agent.id.toString());
     const isConnected = agentPosition && agentPosition.isConnectedToStart && agentPosition.isConnectedToEnd;
     
@@ -657,8 +670,6 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
         modelName: modelName,
       };
 
-      console.log('🔧 Updating agent model with:', updateData);
-
       // Use updateAgent which handles flow state and invalidation
       await updateAgent(agent.id.toString(), updateData);
       
@@ -756,17 +767,21 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
 
 
 
+  // TEMPORARILY DISABLED: Agent validation in node display
   // Check if agent is valid (has all required fields)
   // Only show validation errors if agent is connected from start to end
   const shouldShowValidation = isConnectedStartToEnd;
-  const isCurrentAgentValid = shouldShowValidation ? isAgentValid(currentAgent) : true;
+  // const isCurrentAgentValid = shouldShowValidation ? isAgentValid(currentAgent) : true;
+  const isCurrentAgentValid = true; // Always show as valid
   
   return (
     <div 
       className={`group/node w-80 rounded-lg inline-flex justify-between items-center ${
-        isCurrentAgentValid
-          ? "bg-background-surface-3 outline-1 outline-border-light" 
-          : "bg-background-surface-2 outline-2 outline-status-destructive-light"
+        !isCurrentAgentValid
+          ? "bg-background-surface-2 outline-2 outline-status-destructive-light"
+          : selected
+            ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg"
+            : "bg-background-surface-3 outline-1 outline-border-light"
       }`}
     >
       <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-4">
@@ -776,7 +791,7 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
             {shouldShowValidation && !hasAgentName && (
               <AlertCircle className="min-w-4 min-h-4 text-status-destructive-light" />
             )}
-            <div className="justify-start"><span className="text-text-body text-xs font-medium">Agent</span><span className="text-status-required text-xs font-medium">*</span></div>
+            <div className="justify-start"><span className="text-text-body text-[10px] font-medium">Agent node name</span><span className="text-status-required text-[10px] font-medium">*</span></div>
           </div>
           <Input
             value={editingName}
@@ -813,7 +828,7 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
             {shouldShowValidation && !hasModel && (
               <AlertCircle className="min-w-4 min-h-4 text-status-destructive-light" />
             )}
-            <div className="justify-start"><span className="text-text-body text-xs font-medium">Model</span><span className="text-status-required text-xs font-medium">*</span></div>
+            <div className="justify-start"><span className="text-text-body text-[10px] font-medium">Model</span><span className="text-status-required text-xs font-medium">*</span></div>
           </div>
           <div className="self-stretch min-w-0 nodrag">
             <AgentModels
@@ -966,9 +981,9 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="ghost">Cancel</Button>
+              <Button variant="ghost" size="lg">Cancel</Button>
             </DialogClose>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button variant="destructive" size="lg" onClick={handleDelete}>
               Delete
             </Button>
           </DialogFooter>
@@ -976,33 +991,8 @@ function AgentNodeComponent({ agent, flow }: AgentNodeComponentProps) {
       </Dialog>
 
       {/* React Flow Handles */}
-      {/* Source handle with plus icon on node hover */}
-      <div className="group/handle">
-        <Handle 
-          position={Position.Right} 
-          type="source" 
-          className="!w-3 !h-3 !border-0 !bg-transparent group-hover/node:!w-6 group-hover/node:!h-6 transition-all duration-200"
-          title="Drag to connect to existing node or to empty space to create new agent"
-        />
-        {/* Default small handle */}
-        <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-3 h-3 p-[1.5px] bg-text-primary rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center group-hover/node:hidden pointer-events-none">
-          <div className="w-2 h-2 relative overflow-hidden">
-            <div className="w-1.5 h-1.5 left-[1px] top-[1px] absolute outline-[0.67px] outline-offset-[-0.33px] outline-text-primary"></div>
-          </div>
-        </div>
-        {/* Large handle on node hover with plus icon */}
-        <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-background-surface-3 rounded-xl outline-1 outline-offset-[-1px] outline-background-surface-2 hidden group-hover/node:flex justify-center items-center pointer-events-none">
-          <Plus className="min-w-4 min-h-4 text-text-primary" />
-        </div>
-      </div>
-      
-      {/* Target handle - simple white handle */}
-      <Handle 
-        position={Position.Left} 
-        type="target" 
-        className="!w-3 !h-3 !bg-white !border-2 !border-gray-300"
-        title="Connect from previous node"
-      />
+      <CustomHandle variant="output" nodeId={nodeId} />
+      <CustomHandle variant="input" nodeId={nodeId} />
     </div>
   );
 }
@@ -1015,6 +1005,7 @@ export type AgentNode = Node<AgentNodeData>;
 export default function AgentNode({
   id,
   data,
+  selected,
 }: NodeProps<AgentNode>) {
   // Get the selected flow ID from agent store
   const selectedFlowId = useAgentStore.use.selectedFlowId();
@@ -1027,9 +1018,17 @@ export default function AgentNode({
   
   // Use the agentId from node data, fallback to node id for backward compatibility
   const agentId = data?.agentId || id;
-  const { data: agent } = useQuery(agentQueries.detail(new UniqueEntityID(agentId)));
+  const { data: agent, isLoading: isLoadingAgent, error: agentError } = useQuery(agentQueries.detail(new UniqueEntityID(agentId)));
 
-  if (!selectedFlow || !agent) {
+  if (!selectedFlow) {
+    return (
+      <div className="w-80 bg-[#fafafa] rounded-lg border border-[#e5e7eb] p-4">
+        <div className="text-[#6b7280] text-sm">Loading flow...</div>
+      </div>
+    );
+  }
+
+  if (isLoadingAgent) {
     return (
       <div className="w-80 bg-[#fafafa] rounded-lg border border-[#e5e7eb] p-4">
         <div className="text-[#6b7280] text-sm">Loading agent...</div>
@@ -1037,6 +1036,22 @@ export default function AgentNode({
     );
   }
 
+  if (!agent || agentError) {
+    return (
+      <div className="w-80 bg-[#fee2e2] rounded-lg border-2 border-[#ef4444] p-4">
+        <div className="flex items-center gap-2 text-[#dc2626] font-medium">
+          <AlertCircle className="w-4 h-4" />
+          <span>Agent not found</span>
+        </div>
+        <div className="text-[#7f1d1d] text-sm mt-2">
+          This agent has been deleted. Remove this node to fix the flow.
+        </div>
+        <CustomHandle variant="output" nodeId={id} />
+        <CustomHandle variant="input" nodeId={id} />
+      </div>
+    );
+  }
+
   // Pass the data prop to the component
-  return <AgentNodeComponent agent={agent} flow={selectedFlow} />;
+  return <AgentNodeComponent agent={agent} flow={selectedFlow} nodeId={id} selected={selected} />;
 }

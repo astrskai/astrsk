@@ -55,15 +55,19 @@ export const flowQueries = {
         if (!id) return null;
         // No network request if already cached from list query
         const flowOrError = await FlowService.getFlow.execute(id);
-        if (flowOrError.isFailure) return null;
+        if (flowOrError.isFailure) {
+          return null;
+        }
         const flow = flowOrError.getValue();
         // Transform to persistence format for storage
-        return FlowDrizzleMapper.toPersistence(flow);
+        const persisted = FlowDrizzleMapper.toPersistence(flow);
+        return persisted;
       },
       select: (data) => {
         if (!data) return null;
         // Transform back to domain object
-        return FlowDrizzleMapper.toDomain(data as any);
+        const domain = FlowDrizzleMapper.toDomain(data as any);
+        return domain;
       },
       enabled: !!id,
     }),

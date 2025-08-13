@@ -1,32 +1,44 @@
 import { agentQueries } from "@/app/queries/agent-queries";
-import { sessionQueries } from "@/app/queries/session-queries";
 import { makeContext } from "@/app/services/session-play-service";
+import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAgentStore } from "@/app/stores/agent-store";
 import { SearchInput } from "@/components-v2/search-input";
 import { TypoBase, TypoLarge } from "@/components-v2/typo";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components-v2/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components-v2/ui/tabs";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import {
   FlowPanelError,
   FlowPanelLoading,
-  useFlowPanel
+  useFlowPanel,
 } from "@/flow-multi/hooks/use-flow-panel";
 import { getAgentHexColor } from "@/flow-multi/utils/agent-color-assignment";
-import { Agent, OutputFormat, SchemaField, SchemaFieldType } from "@/modules/agent/domain/agent";
-import { Variable, VariableGroupLabel, VariableLibrary } from "@/shared/prompt/domain/variable";
-import { sanitizeFileName } from "@/shared/utils/file-utils";
+import {
+  Agent,
+  OutputFormat,
+  SchemaField,
+  SchemaFieldType,
+} from "@/modules/agent/domain/agent";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { Check, ChevronDown, ChevronUp, Database, Target } from "lucide-react";
+import {
+  Variable,
+  VariableGroupLabel,
+  VariableLibrary,
+} from "@/shared/prompt/domain/variable";
+import { Datetime, logger } from "@/shared/utils";
+import { sanitizeFileName } from "@/shared/utils/file-utils";
+import { useQueries } from "@tanstack/react-query";
 import { isObject } from "lodash-es";
+import { Check, ChevronDown, ChevronUp, Database, Target } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { VariablePanelProps } from "./variable-panel-types";
-import { Datetime, logger } from "@/shared/utils";
-import { SessionService } from "@/app/services/session-service";
-import { useTurn } from "@/app/hooks/use-turn";
 
 interface AgentVariable {
   agentId: string;
@@ -49,15 +61,22 @@ const formatValue = (value: any): string => {
 };
 
 // Helper function to recursively flatten nested objects with dot notation
-const flattenObject = (obj: Record<string, any>, prefix = ""): Record<string, string> => {
+const flattenObject = (
+  obj: Record<string, any>,
+  prefix = "",
+): Record<string, string> => {
   const flattened: Record<string, string> = {};
-  Object.keys(obj).forEach(key => {
+  Object.keys(obj).forEach((key) => {
     const value = obj[key];
     if (value === null || value === undefined) {
       return;
     }
     const newKey = prefix ? `${prefix}.${key}` : key;
-    if (isObject(value) && !Array.isArray(value) && !Datetime.isDuration(value)) {
+    if (
+      isObject(value) &&
+      !Array.isArray(value) &&
+      !Datetime.isDuration(value)
+    ) {
       // Store the JSON representation of the object at this path
       flattened[newKey] = JSON.stringify(value);
       // Continue flattening nested properties
@@ -71,37 +90,102 @@ const flattenObject = (obj: Record<string, any>, prefix = ""): Record<string, st
 
 export function VariablePanel({ flowId }: VariablePanelProps) {
   // Use the flow panel hook
-  const { 
-    flow,
-    isLoading,
-  } = useFlowPanel({ flowId });
+  const { flow, isLoading } = useFlowPanel({ flowId });
 
   // Get session management from store
   const previewSessionId = useAgentStore.use.previewSessionId();
-  
-  // Query session data using Tanstack Query
-  const { data: previewSession, isLoading: isLoadingSession } = useQuery({
-    ...sessionQueries.detail(previewSessionId ? new UniqueEntityID(previewSessionId) : undefined),
-    enabled: !!previewSessionId,
-  });
 
-  // Get last monaco editor and insert function from flow context
-  const { lastMonacoEditor, insertVariableAtLastCursor } = useFlowPanelContext();
-  
+  // Direct polling for session data
+  const [previewSession, setPreviewSession] = useState<any>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
+  const [isInitialSessionLoad, setIsInitialSessionLoad] = useState(true);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    const fetchSession = async (isInitial = false) => {
+      if (!previewSessionId) {
+        setPreviewSession(null);
+        setIsLoadingSession(false);
+        setIsInitialSessionLoad(false);
+        return;
+      }
+
+      try {
+        // Only show loading for initial fetch, not for polling
+        if (isInitial) {
+          setIsLoadingSession(true);
+        }
+
+        const sessionResult = await SessionService.getSession.execute(
+          new UniqueEntityID(previewSessionId),
+        );
+        if (sessionResult.isSuccess) {
+          const newSession = sessionResult.getValue();
+          // Only update if data actually changed
+          setPreviewSession((prevSession: any) => {
+            if (JSON.stringify(prevSession) !== JSON.stringify(newSession)) {
+              return newSession;
+            }
+            return prevSession;
+          });
+        } else {
+          setPreviewSession(null);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch session:", error);
+        setPreviewSession(null);
+      } finally {
+        if (isInitial) {
+          setIsLoadingSession(false);
+          setIsInitialSessionLoad(false);
+        }
+      }
+    };
+
+    // Initial fetch
+    setIsInitialSessionLoad(true);
+    fetchSession(true);
+
+    // Set up polling (without loading states)
+    if (previewSessionId) {
+      intervalId = setInterval(() => fetchSession(false), 1000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [previewSessionId]);
+
+  // Get last monaco editor, input field and insert functions from flow context
+  const { 
+    lastMonacoEditor, 
+    insertVariableAtLastCursor,
+    lastInputField,
+    insertVariableAtInputField
+  } = useFlowPanelContext();
+
   // Local state
   const [activeTab, setActiveTab] = useState(() => {
-    const savedTab = sessionStorage.getItem('variablePanel_activeTab');
-    return savedTab === 'structured' ? 'structured' : 'variables';
+    const savedTab = sessionStorage.getItem("variablePanel_activeTab");
+    return savedTab === "structured" || savedTab === "datastore"
+      ? savedTab
+      : "variables";
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [availableVariables, setAvailableVariables] = useState<Variable[]>([]);
-  const [aggregatedStructuredVariables, setAggregatedStructuredVariables] = useState<AgentVariable[]>([]);
+  const [aggregatedStructuredVariables, setAggregatedStructuredVariables] =
+    useState<AgentVariable[]>([]);
   const [clickedVariable, setClickedVariable] = useState<string | null>(null);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(),
+  );
   const [contextValues, setContextValues] = useState<Record<string, any>>({});
 
-  // Check if we have an editor
-  const hasEditor = !!lastMonacoEditor?.editor;
+  // Check if we have an editor or input field
+  const hasEditor = !!lastMonacoEditor?.editor || !!lastInputField?.element;
 
   // Load variables from library
   useEffect(() => {
@@ -119,7 +203,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   // Get agent IDs from flow
   const agentIds = useMemo(() => {
     if (!flow) return [];
-    
+
     // Flow has agentIds array directly
     const ids = flow.agentIds || [];
     return ids;
@@ -127,23 +211,23 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
   // Query all agents
   const agentQueries_ = useQueries({
-    queries: agentIds.map(id => ({
+    queries: agentIds.map((id) => ({
       ...agentQueries.detail(id),
       enabled: !!id,
     })),
   });
 
   // Check if all agents are loaded
-  const areAgentsLoading = agentQueries_.some(q => q.isLoading);
-  
+  const areAgentsLoading = agentQueries_.some((q) => q.isLoading);
+
   // Use state and ref to manage variables with stable updates
-  const previousAgentDataRef = useRef<string>('');
-  
+  const previousAgentDataRef = useRef<string>("");
+
   useEffect(() => {
     const agents = agentQueries_
-      .filter(q => q.data && !q.isLoading)
-      .map(q => q.data as Agent);
-    
+      .filter((q) => q.data && !q.isLoading)
+      .map((q) => q.data as Agent);
+
     if (!flow || areAgentsLoading || agents.length === 0) {
       if (aggregatedStructuredVariables.length > 0) {
         setAggregatedStructuredVariables([]);
@@ -152,27 +236,28 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     }
 
     // Create a stable key from relevant agent properties
-    const agentDataKey = agents.map(agent => ({
+    const agentDataKey = agents.map((agent) => ({
       id: agent.id.toString(),
       name: agent.props.name,
       outputFormat: agent.props.outputFormat,
       enabledStructuredOutput: agent.props.enabledStructuredOutput,
-      schemaFields: agent.props.schemaFields?.map(field => ({
-        name: field.name,
-        type: field.type,
-        description: field.description,
-        required: field.required,
-        array: field.array,
-      })) || [],
+      schemaFields:
+        agent.props.schemaFields?.map((field) => ({
+          name: field.name,
+          type: field.type,
+          description: field.description,
+          required: field.required,
+          array: field.array,
+        })) || [],
     }));
-    
+
     const currentAgentData = JSON.stringify(agentDataKey);
-    
+
     // Only update if the relevant agent data has actually changed
     if (previousAgentDataRef.current === currentAgentData) {
       return;
     }
-    
+
     previousAgentDataRef.current = currentAgentData;
 
     const variables: AgentVariable[] = [];
@@ -184,7 +269,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
       const agentColor = getAgentHexColor(agent);
 
       // Check the output format
-      const outputFormat = agent.props.outputFormat || OutputFormat.StructuredOutput;
+      const outputFormat =
+        agent.props.outputFormat || OutputFormat.StructuredOutput;
 
       if (outputFormat === OutputFormat.TextOutput) {
         // For text output, add single .response variable
@@ -225,15 +311,67 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         });
       }
     });
-    
+
     setAggregatedStructuredVariables(variables);
-  }, [flow, areAgentsLoading, agentQueries_, aggregatedStructuredVariables.length]);
+  }, [
+    flow,
+    areAgentsLoading,
+    agentQueries_,
+    aggregatedStructuredVariables.length,
+  ]);
 
-
-  // Extract last turn ID for dependency array
-  const lastTurnId = previewSession?.turnIds?.[previewSession.turnIds.length - 1];
+  // Extract last turn ID and fetch turn data directly
+  const lastTurnId =
+    previewSession?.turnIds?.[previewSession.turnIds.length - 1];
   const lastTurnIdString = useMemo(() => lastTurnId?.toString(), [lastTurnId]);
-  const [lastTurn] = useTurn(lastTurnId);
+
+  // Direct polling for turn data
+  const [lastTurn, setLastTurn] = useState<any>(null);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    const fetchTurn = async () => {
+      if (!lastTurnId) {
+        setLastTurn(null);
+        return;
+      }
+
+      try {
+        const turnResult = await TurnService.getTurn.execute(lastTurnId);
+        if (turnResult.isSuccess) {
+          const newTurn = turnResult.getValue();
+          // Only update if data actually changed
+          setLastTurn((prevTurn: any) => {
+            if (JSON.stringify(prevTurn) !== JSON.stringify(newTurn)) {
+              return newTurn;
+            }
+            return prevTurn;
+          });
+        } else {
+          setLastTurn(null);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch turn:", error);
+        setLastTurn(null);
+      }
+    };
+
+    // Initial fetch
+    fetchTurn();
+
+    // Set up polling
+    if (lastTurnId) {
+      intervalId = setInterval(fetchTurn, 1000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [lastTurnId]);
+
   const lastTurnVariablesJson = useMemo(
     () => JSON.stringify(lastTurn?.variables),
     [lastTurn?.variables],
@@ -242,7 +380,9 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   // Load context values from previewSession
   useEffect(() => {
     logger.debug({
-      previewSessionId, lastTurnIdString, lastTurnVariablesJson
+      previewSessionId,
+      lastTurnIdString,
+      lastTurnVariablesJson,
     });
     const fetchContextValues = async () => {
       try {
@@ -251,7 +391,9 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
           setContextValues({});
           return;
         }
-        const previewSessionOrError = await SessionService.getSession.execute(new UniqueEntityID(previewSessionId))
+        const previewSessionOrError = await SessionService.getSession.execute(
+          new UniqueEntityID(previewSessionId),
+        );
         if (previewSessionOrError.isFailure) {
           setContextValues({});
           return;
@@ -263,39 +405,46 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         let lastTurn;
         if (previewSession.turnIds && previewSession.turnIds.length > 0) {
           try {
-            const lastTurnId = previewSession.turnIds[previewSession.turnIds.length - 1];
-            const lastTurnResult = await TurnService.getTurn.execute(lastTurnId);
+            const lastTurnId =
+              previewSession.turnIds[previewSession.turnIds.length - 1];
+            const lastTurnResult =
+              await TurnService.getTurn.execute(lastTurnId);
             if (lastTurnResult.isSuccess) {
               lastTurn = lastTurnResult.getValue();
               characterCardId = lastTurn.characterCardId;
             }
           } catch (error) {
             // Fallback to first enabled character if getting last turn fails
-            console.warn('Failed to get last turn, using fallback character:', error);
+            console.warn(
+              "Failed to get last turn, using fallback character:",
+              error,
+            );
           }
         }
-        
+
         // Fallback to first enabled character if no characterCardId from last turn
         if (!characterCardId) {
-          const firstCharacterCard = previewSession.characterCards?.find((card) => card.enabled);
+          const firstCharacterCard = previewSession.characterCards?.find(
+            (card) => card.enabled,
+          );
           characterCardId = firstCharacterCard?.id;
         }
-        
+
         const contextResult = await makeContext({
           session: previewSession,
           characterCardId,
           includeHistory: true,
         });
-        
+
         if (contextResult.isSuccess) {
           const renderContext = contextResult.getValue();
-          
+
           // Flatten the context for variable lookup using recursive utility
           const flattenedContext = flattenObject(renderContext);
-          
+
           // Add structured variables from last turn if available
           if (lastTurn?.variables) {
-            Object.keys(lastTurn.variables).forEach(key => {
+            Object.keys(lastTurn.variables).forEach((key) => {
               const value = lastTurn.variables![key];
               if (value !== null && value !== undefined) {
                 // If the value is an object, flatten it with the key as prefix
@@ -311,9 +460,19 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
           // Set history variables
           if (lastTurn) {
-            flattenedContext["turn.char_id"] = lastTurn.characterCardId?.toString() ?? "";
+            flattenedContext["turn.char_id"] =
+              lastTurn.characterCardId?.toString() ?? "";
             flattenedContext["turn.char_name"] = lastTurn.characterName ?? "";
             flattenedContext["turn.content"] = lastTurn.content;
+          }
+
+          // Set data store values
+          if (previewSession.dataStore) {
+            const flattenedDataStore = flattenObject(
+              previewSession.dataStore,
+              "",
+            );
+            Object.assign(flattenedContext, flattenedDataStore);
           }
 
           setContextValues(flattenedContext);
@@ -327,27 +486,30 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     fetchContextValues();
   }, [previewSessionId, lastTurnIdString, lastTurnVariablesJson]);
 
-
   // Group variables by their group property
   const groupedVariables = useMemo(() => {
-    const groups = availableVariables.reduce((acc, variable) => {
-      const group = variable.group;
-      if (!acc[group]) {
-        acc[group] = [];
-      }
-      acc[group].push(variable);
-      return acc;
-    }, {} as Record<string, Variable[]>);
+    const groups = availableVariables.reduce(
+      (acc, variable) => {
+        const group = variable.group;
+        if (!acc[group]) {
+          acc[group] = [];
+        }
+        acc[group].push(variable);
+        return acc;
+      },
+      {} as Record<string, Variable[]>,
+    );
 
     // Filter by search query if exists
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      Object.keys(groups).forEach(groupKey => {
+      Object.keys(groups).forEach((groupKey) => {
         groups[groupKey] = groups[groupKey].filter(
           (variable) =>
             variable.variable.toLowerCase().includes(query) ||
             variable.description.toLowerCase().includes(query) ||
-            (variable.template && variable.template.toLowerCase().includes(query)),
+            (variable.template &&
+              variable.template.toLowerCase().includes(query)),
         );
         // Remove empty groups after filtering
         if (groups[groupKey].length === 0) {
@@ -359,7 +521,6 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     return groups;
   }, [availableVariables, searchQuery]);
 
-
   // Handle structured variable insertion
   const handleInsertStructuredVariable = useCallback(
     (variablePath: string, event: React.MouseEvent) => {
@@ -369,22 +530,35 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
       const variableValue = `{{${variablePath}}}`;
       setClickedVariable(variablePath);
 
-      if (lastMonacoEditor && lastMonacoEditor.editor && lastMonacoEditor.position) {
+      if (
+        lastMonacoEditor &&
+        lastMonacoEditor.editor &&
+        lastMonacoEditor.position
+      ) {
         insertVariableAtLastCursor(variableValue);
-        toast.success(`Inserted: ${variableValue}`, {
+        toast.success(`Inserted: ${variablePath}`, {
+          duration: 2000,
+        });
+      } else if (lastInputField && lastInputField.element) {
+        insertVariableAtInputField(variableValue);
+        toast.success(`Inserted: ${variablePath}`, {
           duration: 2000,
         });
       } else {
-        toast.warning("No fields are selected to input the variables", {
-          duration: 2000,
-        });
+        // Copy to clipboard when no field is selected
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(variableValue);
+          toast.info(`No field selected. Copied ${variableValue} to clipboard.`, {
+            duration: 2000,
+          });
+        }
       }
 
       setTimeout(() => {
         setClickedVariable(null);
       }, 1000);
     },
-    [lastMonacoEditor, insertVariableAtLastCursor]
+    [lastMonacoEditor, insertVariableAtLastCursor, lastInputField, insertVariableAtInputField],
   );
 
   // Handle variable click for insertion
@@ -396,20 +570,35 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
       const variableTemplate = `{{${variable.variable}}}`;
       setClickedVariable(variable.variable);
 
-      if (lastMonacoEditor && lastMonacoEditor.editor && lastMonacoEditor.position) {
+      if (
+        lastMonacoEditor &&
+        lastMonacoEditor.editor &&
+        lastMonacoEditor.position
+      ) {
         insertVariableAtLastCursor(variableTemplate);
-        // No toast for regular variables to match original behavior
-      } else {
-        toast.warning("No fields are selected to input the variables", {
+        toast.success(`Inserted: ${variable.variable}`, {
           duration: 2000,
         });
+      } else if (lastInputField && lastInputField.element) {
+        insertVariableAtInputField(variableTemplate);
+        toast.success(`Inserted: ${variable.variable}`, {
+          duration: 2000,
+        });
+      } else {
+        // Copy to clipboard when no field is selected
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(variableTemplate);
+          toast.info(`No field selected. Copied ${variableTemplate} to clipboard.`, {
+            duration: 2000,
+          });
+        }
       }
 
       setTimeout(() => {
         setClickedVariable(null);
       }, 1000);
     },
-    [lastMonacoEditor, insertVariableAtLastCursor]
+    [lastMonacoEditor, insertVariableAtLastCursor, lastInputField, insertVariableAtInputField],
   );
 
   // Prevent focus steal on mouse down
@@ -425,7 +614,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
   // Handle group collapse/expand
   const toggleGroupCollapse = useCallback((group: string) => {
-    setCollapsedGroups(prev => {
+    setCollapsedGroups((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(group)) {
         newSet.delete(group);
@@ -462,7 +651,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         value={activeTab}
         onValueChange={(value) => {
           setActiveTab(value);
-          sessionStorage.setItem('variablePanel_activeTab', value);
+          sessionStorage.setItem("variablePanel_activeTab", value);
           // Clear search when switching tabs
           setSearchQuery("");
         }}
@@ -471,9 +660,13 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         <TabsList className="w-full flex-shrink-0">
           <TabsTrigger value="variables">Variables</TabsTrigger>
           <TabsTrigger value="structured">Agent output</TabsTrigger>
+          <TabsTrigger value="datastore">Data</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="variables" className="mt-0 flex-1 overflow-hidden h-0">
+        <TabsContent
+          value="variables"
+          className="mt-0 flex-1 overflow-hidden h-0"
+        >
           <ScrollArea className="h-full pr-2">
             <div className="flex flex-col">
               {Object.keys(groupedVariables).length === 0 ? (
@@ -492,13 +685,17 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                       <div className="flex flex-row gap-4 items-center justify-start w-full">
                         <div className="basis-0 flex flex-row gap-2 grow items-start justify-start text-xs text-left">
                           <div className="text-[#bfbfbf] font-medium text-nowrap">
-                            {VariableGroupLabel[group as keyof typeof VariableGroupLabel]?.displayName || group}
+                            {VariableGroupLabel[
+                              group as keyof typeof VariableGroupLabel
+                            ]?.displayName || group}
                           </div>
                           <div className="basis-0 grow min-h-px min-w-px text-[#696969] font-normal">
-                            {VariableGroupLabel[group as keyof typeof VariableGroupLabel]?.description || "Variables in this group"}
+                            {VariableGroupLabel[
+                              group as keyof typeof VariableGroupLabel
+                            ]?.description || "Variables in this group"}
                           </div>
                         </div>
-                        <button 
+                        <button
                           className="flex items-center justify-center"
                           onClick={() => toggleGroupCollapse(group)}
                         >
@@ -510,65 +707,67 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         </button>
                       </div>
                     </div>
-                    
+
                     {/* Group Variables */}
                     {!collapsedGroups.has(group) && (
                       <div className="bg-[#272727] pb-0">
                         <div className="flex flex-col gap-2">
                           {variables.map((variable) => (
-                          <button
-                            key={variable.variable}
-                            className={`w-full p-2 rounded-lg bg-[#313131] border border-[#525252] flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
-                              clickedVariable === variable.variable
-                                ? "bg-[#313131]"
-                                : "bg-[#313131] hover:bg-[#414141] cursor-pointer"
-                            }`}
-                            onClick={(e) => handleVariableClick(variable, e)}
-                            onMouseDown={handleMouseDown}
-                            tabIndex={-1}
-                          >
-                            {clickedVariable === variable.variable && (
-                              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
-                            )}
-                            <div className="w-full flex flex-col justify-start items-start gap-1">
-                              <div className="flex justify-start items-center gap-2 w-full text-xs text-nowrap">
-                                <div className="text-[#f1f1f1] font-medium">
-                                  {`{{${variable.variable}}}`}
-                                </div>
-                                <div className="text-[#bfbfbf] font-normal">
-                                  {variable.dataType}
-                                </div>
-                                {hasEditor &&
-                                  (clickedVariable === variable.variable ? (
-                                    <Check className="min-w-3 min-h-3 ml-auto text-green-500 transition-opacity" />
-                                  ) : (
-                                    <Target className="min-w-3 min-h-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
-                                  ))}
-                              </div>
-                              <div className="text-[#9d9d9d] text-xs font-normal leading-normal text-left">
-                                {variable.description}
-                              </div>
-                              {variable.template && (
-                                <div className="text-[#bfbfbf] text-[10px] font-medium leading-4 whitespace-pre-wrap">
-                                  <span className="text-[#f1f1f1]">
-                                    {variable.template}
-                                  </span>
-                                </div>
+                            <button
+                              key={variable.variable}
+                              className={`w-full p-2 rounded-lg bg-[#313131] border border-[#525252] flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
+                                clickedVariable === variable.variable
+                                  ? "bg-[#313131]"
+                                  : "bg-[#313131] hover:bg-[#414141] cursor-pointer"
+                              }`}
+                              onClick={(e) => handleVariableClick(variable, e)}
+                              onMouseDown={handleMouseDown}
+                              tabIndex={-1}
+                            >
+                              {clickedVariable === variable.variable && (
+                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
                               )}
-                              {contextValues[variable.variable] && (
-                                <div className="mt-2 w-full overflow-hidden">
-                                  <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
-                                    <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
-                                      Data from session
-                                    </div>
-                                    <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
-                                      {String(contextValues[variable.variable])}
+                              <div className="w-full flex flex-col justify-start items-start gap-1">
+                                <div className="flex justify-start items-center gap-2 w-full text-xs text-nowrap">
+                                  <div className="text-[#f1f1f1] font-medium">
+                                    {`{{${variable.variable}}}`}
+                                  </div>
+                                  <div className="text-[#bfbfbf] font-normal">
+                                    {variable.dataType}
+                                  </div>
+                                  {hasEditor &&
+                                    (clickedVariable === variable.variable ? (
+                                      <Check className="min-w-3 min-h-3 ml-auto text-green-500 transition-opacity" />
+                                    ) : (
+                                      <Target className="min-w-3 min-h-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
+                                    ))}
+                                </div>
+                                <div className="text-[#9d9d9d] text-xs font-normal leading-normal text-left">
+                                  {variable.description}
+                                </div>
+                                {variable.template && (
+                                  <div className="text-[#bfbfbf] text-[10px] font-medium leading-4 whitespace-pre-wrap">
+                                    <span className="text-[#f1f1f1]">
+                                      {variable.template}
+                                    </span>
+                                  </div>
+                                )}
+                                {contextValues[variable.variable] && (
+                                  <div className="mt-2 w-full overflow-hidden">
+                                    <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
+                                      <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                        Data from session
+                                      </div>
+                                      <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                        {String(
+                                          contextValues[variable.variable],
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              )}
-                            </div>
-                          </button>
+                                )}
+                              </div>
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -580,25 +779,29 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="structured" className="mt-0 flex-1 overflow-hidden h-0">
-          <ScrollArea className="h-full pr-2">
-            <div className="flex flex-col gap-2">
-              {aggregatedStructuredVariables.length === 0 ? (
-                <div className="text-center py-8 space-y-2">
-                  <Database className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <TypoLarge className="text-muted-foreground">
-                    {searchQuery
-                      ? "No structured output variables found matching your search"
-                      : "No structured output variables found"}
-                  </TypoLarge>
-                  <TypoBase className="text-muted-foreground">
-                    {searchQuery
-                      ? "Try a different search term"
-                      : "Enable structured output on agents to see variables here"}
-                  </TypoBase>
+        <TabsContent
+          value="structured"
+          className="mt-0 flex-1 overflow-hidden"
+        >
+          {aggregatedStructuredVariables.length === 0 ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="inline-flex flex-col justify-start items-center gap-2">
+                <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">
+                  {searchQuery
+                    ? "No structured output variables found matching your search"
+                    : "No structured output variables found"}
                 </div>
-              ) : (
-                aggregatedStructuredVariables
+                <div className="w-52 text-center justify-start text-background-surface-5 text-xs font-normal">
+                  {searchQuery
+                    ? "Try a different search term"
+                    : "Enable structured output on agents to see variables here"}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <ScrollArea className="h-full pr-2">
+              <div className="flex flex-col gap-2">
+                {aggregatedStructuredVariables
                   .filter((variable) => {
                     if (!searchQuery) return true;
                     const query = searchQuery.toLowerCase();
@@ -606,13 +809,18 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                       variable.field.name.toLowerCase().includes(query) ||
                       variable.agentName.toLowerCase().includes(query) ||
                       (variable.field.description &&
-                        variable.field.description.toLowerCase().includes(query))
+                        variable.field.description
+                          .toLowerCase()
+                          .includes(query))
                     );
                   })
                   .map((variable, index) => {
                     const variableKey = variable.variablePath;
                     return (
-                      <div key={`${variable.agentId}-${index}`} className="relative">
+                      <div
+                        key={`${variable.agentId}-${index}`}
+                        className="relative"
+                      >
                         <div
                           className="absolute left-0 top-0 bottom-0 w-[4px] rounded-l-lg"
                           style={{ backgroundColor: variable.agentColor }}
@@ -626,7 +834,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                           onClick={(e) =>
                             handleInsertStructuredVariable(
                               variable.variablePath,
-                              e
+                              e,
                             )
                           }
                           onMouseDown={handleMouseDown}
@@ -644,7 +852,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                 {`{{${variable.variablePath}}}`}
                               </div>
                               <div className="text-text-body text-xs font-normal">
-                                {variable.field.type}{variable.field.array && "[]"}
+                                {variable.field.type}
+                                {variable.field.array && "[]"}
                               </div>
                               {variable.field.required && (
                                 <div className="text-red-500 text-xs font-normal">
@@ -670,7 +879,9 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                     Data from session
                                   </div>
                                   <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
-                                    {String(contextValues[variable.variablePath])}
+                                    {String(
+                                      contextValues[variable.variablePath],
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -679,10 +890,130 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         </button>
                       </div>
                     );
-                  })
-              )}
+                  })}
+              </div>
+            </ScrollArea>
+          )}
+        </TabsContent>
+
+        <TabsContent
+          value="datastore"
+          className="mt-0 flex-1 overflow-hidden h-0"
+        >
+          {flow?.props.dataStoreSchema?.fields &&
+          flow.props.dataStoreSchema.fields.length > 0 ? (
+            <ScrollArea className="h-full pr-2">
+              <div className="flex flex-col gap-2">
+                {flow.props.dataStoreSchema.fields
+                  .filter(
+                    (field) =>
+                      !searchQuery ||
+                      field.name
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      field.type
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()),
+                  )
+                  .map((field) => {
+                    // Get actual value from session dataStore or use placeholder
+                    const hasValue =
+                      previewSession?.dataStore &&
+                      field.name in previewSession.dataStore;
+                    const actualValue = hasValue
+                      ? (previewSession.dataStore as any)[field.name]
+                      : "";
+                    const displayValue = hasValue ? actualValue : "";
+                    const variableName = `{{${field.name}}}`;
+
+                    return (
+                      <button
+                        key={field.id}
+                        className={`w-full p-2 bg-background-surface-3 rounded-lg outline outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
+                          clickedVariable === variableName
+                            ? "bg-background-surface-3"
+                            : "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+
+                          setClickedVariable(variableName);
+
+                          // Insert into monaco editor or input field if available
+                          if (lastMonacoEditor?.editor) {
+                            insertVariableAtLastCursor(variableName);
+                            toast.success(`Inserted: ${field.name}`, {
+                              duration: 2000,
+                            });
+                          } else if (lastInputField?.element) {
+                            insertVariableAtInputField(variableName);
+                            toast.success(`Inserted: ${field.name}`, {
+                              duration: 2000,
+                            });
+                          } else {
+                            // Copy to clipboard when no field is selected
+                            if (navigator.clipboard) {
+                              navigator.clipboard.writeText(variableName);
+                              toast.info(`No field selected. Copied ${variableName} to clipboard.`, {
+                                duration: 2000,
+                              });
+                            }
+                          }
+
+                          setTimeout(() => setClickedVariable(null), 1000);
+                        }}
+                        onMouseDown={(e) => e.preventDefault()}
+                        tabIndex={-1}
+                      >
+                        {clickedVariable === variableName && (
+                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
+                        )}
+                        <div className="self-stretch flex flex-col justify-start items-start gap-4">
+                          <div className="self-stretch flex flex-col justify-start items-start gap-1">
+                            <div className="flex justify-start items-center gap-2 w-full">
+                              <div className="justify-start text-text-primary text-xs font-medium">
+                                {variableName}
+                              </div>
+                              <div className="justify-start text-text-body text-xs font-normal">
+                                {field.type}
+                              </div>
+                              {hasEditor &&
+                                (clickedVariable === variableName ? (
+                                  <Check className="min-w-3 min-h-3 ml-auto text-green-500 transition-opacity" />
+                                ) : (
+                                  <Target className="min-w-3 min-h-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
+                                ))}
+                            </div>
+                          </div>
+                          {hasValue && displayValue !== "" && displayValue !== null && displayValue !== undefined && (
+                            <div className="mt-2 w-full overflow-hidden">
+                              <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
+                                <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                  Most recent data from session
+                                </div>
+                                <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                  {typeof displayValue === "object"
+                                    ? JSON.stringify(displayValue)
+                                    : String(displayValue)}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
+            </ScrollArea>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="inline-flex flex-col justify-start items-center gap-2">
+                <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">No data fields defined</div>
+                <div className="w-52 text-center justify-start text-background-surface-5 text-xs font-normal">Define fields in the Data Schema to see them here</div>
+              </div>
             </div>
-          </ScrollArea>
+          )}
         </TabsContent>
       </Tabs>
     </div>
