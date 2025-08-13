@@ -652,4 +652,28 @@
     min-width: 0;
     min-height: 171px;
   }
+
+  /* Custom session scrollbar with transparent background */
+  .session-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .session-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .session-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  .session-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Firefox scrollbar */
+  .session-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
 }
