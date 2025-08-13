@@ -1520,7 +1520,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           <ButtonPill
             size="default"
             onClick={addAgentNode}
-            title="Add Agent Node"
             className="min-w-[96px]"
           >
             Agent (node)
@@ -1532,7 +1531,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               <div className="min-w-[96px]">
                 <ButtonPill
                   size="default"
-                  title="Data Options"
                   className="w-full"
                 >
                   Data
@@ -1567,7 +1565,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               <div className="min-w-[96px]">
                 <ButtonPill
                   size="default"
-                  title="Conditional Options"
                   className="w-full"
                 >
                   Conditional
