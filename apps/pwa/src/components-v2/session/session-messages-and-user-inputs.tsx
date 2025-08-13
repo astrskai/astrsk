@@ -52,6 +52,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components-v2/ui/dialog";
+import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { toastError } from "@/components-v2/ui/toast-error";
 import {
   Tooltip,
@@ -614,6 +615,9 @@ const UserInputs = ({
   onStopGenerate,
   autoReply,
   setAutoReply,
+  isOpenAddPlotCardModal,
+  onSkip = () => {},
+  onAdd = () => {},
 }: {
   userCharacterCardId?: UniqueEntityID;
   aiCharacterCardIds?: UniqueEntityID[];
@@ -625,6 +629,9 @@ const UserInputs = ({
   onStopGenerate?: () => void;
   autoReply: AutoReply;
   setAutoReply: (autoReply: AutoReply) => void;
+  isOpenAddPlotCardModal?: boolean;
+  onSkip?: () => void;
+  onAdd?: () => void;
 }) => {
   const isMobile = useIsMobile();
   const isGroupButtonDonNotShowAgain =
@@ -658,16 +665,16 @@ const UserInputs = ({
   }, []);
 
   return (
-    <div
-      className={cn(
-        "sticky bottom-0 inset-x-0 pb-[80px] px-[56px]",
-        disabled && "pointer-events-none opacity-50",
+    <div className="sticky bottom-0 inset-x-0 pb-[80px] px-[56px]">
+      {isOpenAddPlotCardModal && (
+        <AddPlotCardModal onSkip={onSkip} onAdd={onAdd} />
       )}
-    >
+
       <div
         className={cn(
           "mx-auto w-full min-w-[400px] max-w-[892px] p-[24px] rounded-[40px] flex flex-col gap-[16px]",
           "bg-[#3b3b3b]/50 backdrop-blur-xl border border-background-surface-2",
+          disabled && "pointer-events-none opacity-50",
         )}
       >
         <TooltipProvider delayDuration={0}>
@@ -817,7 +824,7 @@ const AddPlotCardModal = ({
   return (
     <div
       className={cn(
-        "mx-auto w-[600px] p-[24px] rounded-[8px]",
+        "mx-auto mb-[40px] w-[600px] p-[24px] rounded-[8px]",
         "bg-background-container",
         "flex flex-col gap-[24px]",
       )}
@@ -900,32 +907,34 @@ const SelectScenarioModal = ({
               Select a scenario for your new session.
             </div>
           </div>
-          <div className="self-stretch flex flex-col justify-start items-start gap-4">
-            {renderedScenarios.length > 0 ? (
-              renderedScenarios.map((scenario, index) => (
-                <ScenarioItem
-                  key={index}
-                  name={scenario.name}
-                  contents={scenario.description}
-                  active={selectedScenarioIndex === index}
-                  onClick={() => {
-                    setSelectedScenarioIndex(index);
-                  }}
-                />
-              ))
-            ) : (
-              <div className="w-full self-stretch inline-flex flex-col justify-start items-start gap-4 py-6">
-                <div className="self-stretch text-center justify-start text-text-body text-2xl font-bold">
-                  No scenarios yet
+          <div className="self-stretch relative">
+            <ScrollAreaSimple className="max-h-[600px] flex flex-col justify-start items-start gap-4">
+              {renderedScenarios.length > 0 ? (
+                renderedScenarios.map((scenario, index) => (
+                  <ScenarioItem
+                    key={index}
+                    name={scenario.name}
+                    contents={scenario.description}
+                    active={selectedScenarioIndex === index}
+                    onClick={() => {
+                      setSelectedScenarioIndex(index);
+                    }}
+                  />
+                ))
+              ) : (
+                <div className="w-full self-stretch inline-flex flex-col justify-start items-start gap-4 py-6">
+                  <div className="self-stretch text-center justify-start text-text-body text-2xl font-bold">
+                    No scenarios yet
+                  </div>
+                  <div className="self-stretch text-center justify-start text-background-surface-5 text-base font-medium leading-normal">
+                    Start by adding a scenario to your plot card.
+                    <br />
+                    Scenarios set the opening scene for your session <br />—
+                    like a narrator kicking things off.
+                  </div>
                 </div>
-                <div className="self-stretch text-center justify-start text-background-surface-5 text-base font-medium leading-normal">
-                  Start by adding a scenario to your plot card.
-                  <br />
-                  Scenarios set the opening scene for your session <br />— like
-                  a narrator kicking things off.
-                </div>
-              </div>
-            )}
+              )}
+            </ScrollAreaSimple>
           </div>
           <div className="inline-flex justify-start items-center gap-2">
             <Button
@@ -1590,7 +1599,7 @@ const SessionMessagesAndUserInputs = ({
       }}
     >
       <div
-        className="w-full relative"
+        className="w-full min-h-[calc(100dvh-270px)] relative"
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
         }}
@@ -1641,31 +1650,22 @@ const SessionMessagesAndUserInputs = ({
               </div>
             );
           })}
+          {isOpenSelectScenarioModal && (
+            <div className="z-[20] absolute w-full flex flex-row py-[100px]">
+              <SelectScenarioModal
+                onSkip={() => {
+                  setIsOpenSelectScenarioModal(false);
+                }}
+                onAdd={addScenario}
+                renderedScenarios={renderedScenarios}
+                onRenderScenarios={renderScenarios}
+                sessionId={sessionId}
+                plotCardId={plotCardId}
+              />
+            </div>
+          )}
         </div>
       </div>
-
-      {isOpenAddPlotCardModal && (
-        <AddPlotCardModal
-          onSkip={() => {
-            setIsOpenAddPlotCardModal(false);
-          }}
-          onAdd={() => {
-            onAddPlotCard();
-          }}
-        />
-      )}
-      {isOpenSelectScenarioModal && (
-        <SelectScenarioModal
-          onSkip={() => {
-            setIsOpenSelectScenarioModal(false);
-          }}
-          onAdd={addScenario}
-          renderedScenarios={renderedScenarios}
-          onRenderScenarios={renderScenarios}
-          sessionId={sessionId}
-          plotCardId={plotCardId}
-        />
-      )}
 
       {/* Mobile Add Plot Card Dialog */}
       <Dialog
@@ -1780,6 +1780,13 @@ const SessionMessagesAndUserInputs = ({
         }}
         autoReply={session.autoReply}
         setAutoReply={setAutoReply}
+        isOpenAddPlotCardModal={isOpenAddPlotCardModal}
+        onSkip={() => {
+          setIsOpenAddPlotCardModal(false);
+        }}
+        onAdd={() => {
+          onAddPlotCard();
+        }}
       />
     </div>
   );
