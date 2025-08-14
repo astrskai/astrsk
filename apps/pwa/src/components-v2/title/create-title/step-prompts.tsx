@@ -174,17 +174,12 @@ export const isModelAvailable = (
     return false;
   }
 
-  // Extract the actual model ID from composite format (e.g., "deepseek:deepseek-chat" -> "deepseek-chat")
-  const actualModelId = modelId.includes(":")
-    ? modelId.split(":")[1]
-    : modelId;
-
   for (const apiConnectionWithModels of apiConnectionsWithModels) {
     const { apiConnection, models } = apiConnectionWithModels;
     
     if (apiConnection.source === apiSource) {
       for (const model of models) {
-        if (model.id === actualModelId && model.name === modelName) {
+        if (model.id === modelId && model.name === modelName) {
           return true;
         }
       }
