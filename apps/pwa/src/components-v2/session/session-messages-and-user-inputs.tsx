@@ -1,4 +1,5 @@
 import TextareaAutosize from "@mui/material/TextareaAutosize";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Check,
   ChevronLeft,
@@ -10,7 +11,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
@@ -33,14 +34,13 @@ import {
 } from "@/app/services/session-play-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/app/stores/app-store";
 import { AutoReply, useSessionStore } from "@/app/stores/session-store";
 import { Avatar } from "@/components-v2/avatar";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { cn } from "@/components-v2/lib/utils";
 import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
 import { InlineChatStyles } from "@/components-v2/session/inline-chat-styles";
-import { ScrollToBottomOptions } from "@/components-v2/session/session-main";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import {
@@ -52,6 +52,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components-v2/ui/dialog";
+import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { toastError } from "@/components-v2/ui/toast-error";
 import {
   Tooltip,
@@ -65,6 +66,7 @@ import { Option } from "@/modules/turn/domain/option";
 import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import delay from "lodash-es/delay";
 
 const MessageItemInternal = ({
   characterCardId,
@@ -457,7 +459,6 @@ const UserInputCharacterButton = ({
   isUser = false,
   onClick = () => {},
   isHighLighted = false,
-  isMobile = false,
 }: {
   characterCardId?: UniqueEntityID;
   icon?: React.ReactNode;
@@ -465,7 +466,6 @@ const UserInputCharacterButton = ({
   isUser?: boolean;
   onClick?: () => void;
   isHighLighted?: boolean;
-  isMobile?: boolean;
 }) => {
   const [characterCard] = useCard<CharacterCard>(characterCardId);
   const [characterIcon] = useAsset(characterCard?.props.iconAssetId);
@@ -486,9 +486,8 @@ const UserInputCharacterButton = ({
             alt={characterCard.props.name?.at(0)?.toUpperCase() ?? ""}
             size={48}
             className={cn(
-              isHighLighted
-                ? "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal"
-                : "",
+              isHighLighted &&
+                "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal",
             )}
           />
           <div
@@ -516,6 +515,8 @@ const UserInputCharacterButton = ({
             className={cn(
               "grid place-items-center size-[48px] rounded-full text-text-primary",
               "bg-background-surface-4 group-hover:bg-background-surface-5 transition-colors ease-out duration-300 border-1 border-border-normal",
+              isHighLighted &&
+                "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal",
             )}
           >
             {icon}
@@ -544,7 +545,7 @@ const UserInputAutoReplyButton = ({
   characterCount: number;
 }) => {
   const hasMultipleCharacters = characterCount > 1;
-  
+
   return (
     <div
       className="group relative flex flex-col gap-[4px] items-center cursor-pointer"
@@ -555,7 +556,9 @@ const UserInputAutoReplyButton = ({
             break;
           case AutoReply.Random:
             // Skip Rotate option if only one character
-            setAutoReply(hasMultipleCharacters ? AutoReply.Rotate : AutoReply.Off);
+            setAutoReply(
+              hasMultipleCharacters ? AutoReply.Rotate : AutoReply.Off,
+            );
             break;
           case AutoReply.Rotate:
             setAutoReply(AutoReply.Off);
@@ -589,12 +592,14 @@ const UserInputAutoReplyButton = ({
       </div>
       <div
         className={cn(
-          "w-[82px] font-[500] text-[12px] leading-[15px] text-text-body text-center select-none",
+          "w-[105px] font-[600] text-[12px] leading-[15px] text-text-body text-center select-none",
         )}
       >
-        {autoReply === AutoReply.Off && "Auto-reply off"}
-        {autoReply === AutoReply.Random && "Random-reply"}
-        {autoReply === AutoReply.Rotate && "Rotating-reply"}
+        {autoReply === AutoReply.Off ? "Auto-reply off" : "Auto-reply on"}
+        <div className="min-h-[15px] font-[400] mt-1">
+          {autoReply === AutoReply.Random && "Random character"}
+          {autoReply === AutoReply.Rotate && "All characters"}
+        </div>
       </div>
     </div>
   );
@@ -606,11 +611,13 @@ const UserInputs = ({
   generateCharacterMessage,
   addUserMessage,
   disabled = false,
-  isOpenSettings = false,
   streamingMessageId,
   onStopGenerate,
   autoReply,
   setAutoReply,
+  isOpenAddPlotCardModal,
+  onSkip = () => {},
+  onAdd = () => {},
 }: {
   userCharacterCardId?: UniqueEntityID;
   aiCharacterCardIds?: UniqueEntityID[];
@@ -622,13 +629,15 @@ const UserInputs = ({
   onStopGenerate?: () => void;
   autoReply: AutoReply;
   setAutoReply: (autoReply: AutoReply) => void;
+  isOpenAddPlotCardModal?: boolean;
+  onSkip?: () => void;
+  onAdd?: () => void;
 }) => {
   const isMobile = useIsMobile();
-  const {
-    isGroupButtonDonNotShowAgain,
-    setIsGroupButtonDonNotShowAgain,
-    activePage,
-  } = useAppStore();
+  const isGroupButtonDonNotShowAgain =
+    useAppStore.use.isGroupButtonDonNotShowAgain();
+  const setIsGroupButtonDonNotShowAgain =
+    useAppStore.use.setIsGroupButtonDonNotShowAgain();
 
   // Shuffle
   const handleShuffle = useCallback(() => {
@@ -642,40 +651,34 @@ const UserInputs = ({
   const sendButtonRef = useRef<HTMLButtonElement>(null);
   const [messageContent, setMessageContent] = useState<string>("");
 
-  // Tooltip
-  const [isOpenTooltip, setIsOpenTooltip] = useState(false);
-  const [isOkayButtonClicked, setIsOkayButtonClicked] = useState(false);
-  useEffect(() => {
-    setIsOpenTooltip(
-      !isGroupButtonDonNotShowAgain &&
-        messageContent.length > 0 &&
-        activePage === Page.Sessions &&
-        !isOpenSettings &&
-        !isOkayButtonClicked,
-    );
-  }, [
-    activePage,
-    isGroupButtonDonNotShowAgain,
-    isOkayButtonClicked,
-    isOpenSettings,
-    messageContent.length,
-  ]);
+  // Guide: Select to prompt a response
+  const [isOpenGuide, setIsOpenGuide] = useState(false);
+  const onFocusUserInput = useCallback(() => {
+    if (isGroupButtonDonNotShowAgain) {
+      return;
+    }
+    setIsOpenGuide(true);
+  }, [isGroupButtonDonNotShowAgain]);
+  const onCharacterButtonClicked = useCallback(() => {
+    setIsOpenGuide(false);
+    setIsGroupButtonDonNotShowAgain(true);
+  }, []);
 
   return (
-    <div
-      className={cn(
-        "sticky bottom-0 inset-x-0 pb-[80px] px-[56px]",
-        disabled && "pointer-events-none opacity-50",
+    <div className="sticky bottom-0 inset-x-0 pb-[80px] px-[56px]">
+      {isOpenAddPlotCardModal && (
+        <AddPlotCardModal onSkip={onSkip} onAdd={onAdd} />
       )}
-    >
+
       <div
         className={cn(
           "mx-auto w-full min-w-[400px] max-w-[892px] p-[24px] rounded-[40px] flex flex-col gap-[16px]",
           "bg-[#3b3b3b]/50 backdrop-blur-xl border border-background-surface-2",
+          disabled && "pointer-events-none opacity-50",
         )}
       >
         <TooltipProvider delayDuration={0}>
-          <Tooltip open={isOpenTooltip}>
+          <Tooltip open={isOpenGuide}>
             <TooltipTrigger asChild>
               <div className="p-0 flex flex-row justify-between">
                 <div
@@ -689,8 +692,10 @@ const UserInputs = ({
                       characterCardId={userCharacterCardId}
                       onClick={() => {
                         generateCharacterMessage?.(userCharacterCardId);
+                        onCharacterButtonClicked();
                       }}
                       isUser
+                      isHighLighted={isOpenGuide}
                     />
                   )}
                   {aiCharacterCardIds.map((characterCardId) => (
@@ -699,7 +704,9 @@ const UserInputs = ({
                       characterCardId={characterCardId}
                       onClick={() => {
                         generateCharacterMessage?.(characterCardId);
+                        onCharacterButtonClicked();
                       }}
+                      isHighLighted={isOpenGuide}
                     />
                   ))}
                   <UserInputCharacterButton
@@ -707,14 +714,16 @@ const UserInputs = ({
                     label="Shuffle"
                     onClick={() => {
                       handleShuffle();
+                      onCharacterButtonClicked();
                     }}
+                    isHighLighted={isOpenGuide}
                   />
                 </div>
                 <div className="shrink-0">
-                  <UserInputAutoReplyButton 
-                    autoReply={autoReply} 
-                    setAutoReply={setAutoReply} 
-                    characterCount={aiCharacterCardIds.length} 
+                  <UserInputAutoReplyButton
+                    autoReply={autoReply}
+                    setAutoReply={setAutoReply}
+                    characterCount={aiCharacterCardIds.length}
                   />
                 </div>
               </div>
@@ -722,39 +731,10 @@ const UserInputs = ({
             <TooltipContent
               side="top"
               align="start"
-              className="py-[12px] px-[16px] ml-[-16px] mb-[12px]"
+              className="py-[12px] px-[16px] ml-[-16px] mb-[12px] bg-background-surface-2 border-border-normal border-1"
             >
-              <div className="flex flex-col gap-[8px]">
-                <div className="font-[600] text-[14px] leading-[20px] text-text-primary">
-                  Tap to prompt a response
-                </div>
-                <div className="font-[400] text-[12px] leading-[15px] text-text-primary">
-                  You orchestrate the interaction —<br />
-                  you select which character responds next.
-                </div>
-                <div className="flex flex-row justify-end gap-[8px]">
-                  <Button
-                    variant="outline"
-                    className="py-[2px] bg-transparent outline-background-surface-light text-background-surface-light"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsGroupButtonDonNotShowAgain(true);
-                    }}
-                  >
-                    Don&apos;t show this again
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="py-[2px] bg-background-surface-light text-text-contrast-text"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsOkayButtonClicked(true);
-                    }}
-                  >
-                    <div className="px-[12px]">Okay</div>
-                  </Button>
-                </div>
+              <div className="font-[600] text-[14px] leading-[20px] text-text-primary">
+                Select to prompt a response
               </div>
             </TooltipContent>
           </Tooltip>
@@ -787,6 +767,7 @@ const UserInputs = ({
                     sendButtonRef.current?.click();
                   }
                 }}
+                onFocus={onFocusUserInput}
               />
             </div>
             {streamingMessageId ? (
@@ -843,7 +824,7 @@ const AddPlotCardModal = ({
   return (
     <div
       className={cn(
-        "mx-auto w-[600px] p-[24px] rounded-[8px]",
+        "mx-auto mb-[40px] w-[600px] p-[24px] rounded-[8px]",
         "bg-background-container",
         "flex flex-col gap-[24px]",
       )}
@@ -926,31 +907,34 @@ const SelectScenarioModal = ({
               Select a scenario for your new session.
             </div>
           </div>
-          <div className="self-stretch flex flex-col justify-start items-start gap-4">
-            {renderedScenarios.length > 0 ? (
-              renderedScenarios.map((scenario, index) => (
-                <ScenarioItem
-                  key={index}
-                  name={scenario.name}
-                  contents={scenario.description}
-                  active={selectedScenarioIndex === index}
-                  onClick={() => {
-                    setSelectedScenarioIndex(index);
-                  }}
-                />
-              ))
-            ) : (
-              <div className="w-full self-stretch inline-flex flex-col justify-start items-start gap-4 py-6">
-                <div className="self-stretch text-center justify-start text-text-body text-2xl font-bold">
-                  No scenarios yet
+          <div className="self-stretch relative">
+            <ScrollAreaSimple className="max-h-[600px] flex flex-col justify-start items-start gap-4">
+              {renderedScenarios.length > 0 ? (
+                renderedScenarios.map((scenario, index) => (
+                  <ScenarioItem
+                    key={index}
+                    name={scenario.name}
+                    contents={scenario.description}
+                    active={selectedScenarioIndex === index}
+                    onClick={() => {
+                      setSelectedScenarioIndex(index);
+                    }}
+                  />
+                ))
+              ) : (
+                <div className="w-full self-stretch inline-flex flex-col justify-start items-start gap-4 py-6">
+                  <div className="self-stretch text-center justify-start text-text-body text-2xl font-bold">
+                    No scenarios yet
+                  </div>
+                  <div className="self-stretch text-center justify-start text-background-surface-5 text-base font-medium leading-normal">
+                    Start by adding a scenario to your plot card.
+                    <br />
+                    Scenarios set the opening scene for your session <br />—
+                    like a narrator kicking things off.
+                  </div>
                 </div>
-                <div className="self-stretch text-center justify-start text-background-surface-5 text-base font-medium leading-normal">
-                  Start by adding a scenario to your plot card.<br/>
-                  Scenarios set the opening scene for your session <br/>
-                  — like a narrator kicking things off.
-                </div>
-              </div>
-            )}
+              )}
+            </ScrollAreaSimple>
           </div>
           <div className="inline-flex justify-start items-center gap-2">
             <Button
@@ -987,13 +971,13 @@ const SelectScenarioModal = ({
 };
 
 const SessionMessagesAndUserInputs = ({
-  scrollToBottom,
   onAddPlotCard,
   isOpenSettings,
+  parentRef,
 }: {
-  scrollToBottom: (options?: ScrollToBottomOptions) => void;
   onAddPlotCard: () => void;
   isOpenSettings: boolean;
+  parentRef?: React.RefObject<HTMLDivElement>;
 }) => {
   const isMobile = useIsMobile();
 
@@ -1008,6 +992,64 @@ const SessionMessagesAndUserInputs = ({
       queryKey: sessionQueries.detail(selectedSessionId ?? undefined).queryKey,
     });
   }, [queryClient, selectedSessionId]);
+
+  // Virtualizer setup
+  const parentRefInternal = useRef<HTMLDivElement>(null);
+  const effectiveParentRef = parentRef || parentRefInternal;
+  const rowVirtualizer = useVirtualizer({
+    count: session?.turnIds.length ?? 0,
+    getScrollElement: () => effectiveParentRef.current,
+    estimateSize: () => 250, // Estimated average message height
+    overscan: 5,
+    getItemKey: (index) =>
+      session?.turnIds[index]?.toString() ?? index.toString(),
+    paddingStart: 100,
+    useAnimationFrameWithResizeObserver: true,
+  });
+  const scrollToBottom = useCallback(
+    (options?: { wait?: number; behavior?: ScrollBehavior }) => {
+      if (!parentRef?.current) {
+        return;
+      }
+      const wait = options?.wait ?? 50;
+      const behavior = options?.behavior ?? "instant";
+      delay(() => {
+        if (!parentRef.current) {
+          return;
+        }
+        parentRef.current.scrollTo({
+          top: parentRef.current.scrollHeight,
+          behavior: behavior,
+        });
+      }, wait);
+    },
+    [parentRef],
+  );
+
+  // Check if all messages are loaded
+  const allMessagesLoaded = useMemo(() => {
+    if (!session?.turnIds.length) return false;
+
+    // Check if all message queries are loaded
+    return session.turnIds.every((messageId) => {
+      const messageQuery = queryClient.getQueryState(
+        turnQueries.detail(messageId).queryKey,
+      );
+      return messageQuery?.status === "success" && messageQuery.data;
+    });
+  }, [session?.turnIds, queryClient]);
+
+  // Scroll to bottom when session changes and all messages are loaded
+  useEffect(() => {
+    if (selectedSessionId && session?.turnIds.length && allMessagesLoaded) {
+      scrollToBottom();
+    }
+  }, [
+    selectedSessionId,
+    session?.turnIds.length,
+    rowVirtualizer,
+    allMessagesLoaded,
+  ]);
 
   // Generate character message
   const [streamingMessageId, setStreamingMessageId] =
@@ -1084,7 +1126,7 @@ const SessionMessagesAndUserInputs = ({
 
         // Set streaming message id
         setStreamingMessageId(streamingMessage.id);
-        scrollToBottom();
+        scrollToBottom({ behavior: "smooth" });
 
         // Execute flow
         refStopGenerate.current = new AbortController();
@@ -1109,9 +1151,7 @@ const SessionMessagesAndUserInputs = ({
           setStreamingAgentName(response.agentName ?? "");
           setStreamingModelName(response.modelName ?? "");
           if (!regenerateMessageId) {
-            scrollToBottom({
-              behavior: "smooth",
-            });
+            scrollToBottom({ behavior: "smooth" });
           }
           if (response.translations) {
             for (const [lang, translation] of response.translations) {
@@ -1187,7 +1227,7 @@ const SessionMessagesAndUserInputs = ({
       // Invalidate session
       invalidateSession();
     },
-    [invalidateSession, queryClient, scrollToBottom, session],
+    [invalidateSession, queryClient, session, scrollToBottom],
   );
 
   // Add user message
@@ -1213,7 +1253,7 @@ const SessionMessagesAndUserInputs = ({
         }
 
         // Scroll to bottom
-        scrollToBottom();
+        scrollToBottom({ behavior: "smooth" });
 
         // Auto reply
         switch (autoReply) {
@@ -1261,19 +1301,22 @@ const SessionMessagesAndUserInputs = ({
         logger.error("Failed to add user message", error);
       }
     },
-    [autoReply, generateCharacterMessage, scrollToBottom, session],
+    [autoReply, generateCharacterMessage, session, scrollToBottom],
   );
 
   // Set auto reply
-  const setAutoReply = useCallback(async (autoReply: AutoReply) => {
-    if (!session) {
-      return;
-    }
-    session.update({
-      autoReply,
-    });
-    await SessionService.saveSession.execute({ session });
-  }, [session]);
+  const setAutoReply = useCallback(
+    async (autoReply: AutoReply) => {
+      if (!session) {
+        return;
+      }
+      session.update({
+        autoReply,
+      });
+      await SessionService.saveSession.execute({ session });
+    },
+    [session],
+  );
 
   // Add plot card modal
   const [plotCard] = useCard<PlotCard>(session?.plotCard?.id);
@@ -1321,7 +1364,6 @@ const SessionMessagesAndUserInputs = ({
 
     // Show select scenario modal
     setIsOpenSelectScenarioModal(true);
-
   }, [messageCount, plotCardScenarioCount, sessionId, plotCardId]);
 
   // Render scenario
@@ -1341,7 +1383,7 @@ const SessionMessagesAndUserInputs = ({
     if (!session || !plotCard) {
       return;
     }
-    
+
     // If no scenarios, set empty array
     if (!plotCard.props.scenarios || plotCard.props.scenarios.length === 0) {
       setRenderedScenarios([]);
@@ -1544,72 +1586,86 @@ const SessionMessagesAndUserInputs = ({
     return null;
   }
 
+  const virtualItems = rowVirtualizer.getVirtualItems();
+
   return (
     <div
+      ref={effectiveParentRef}
       id={`session-${session.id}`}
-      className={cn(
-        "max-w-[1196px] mx-auto flex flex-col gap-[10px] justify-end",
-        isMobile ? "min-h-dvh pt-[20px]" : "min-h-dvh pt-[54px]",
-      )}
+      className="w-full h-full overflow-auto contain-strict session-scrollbar"
+      style={{
+        scrollbarWidth: "thin",
+        scrollbarColor: "rgba(255, 255, 255, 0.3) transparent",
+      }}
     >
-      <InlineChatStyles
-        container={`#session-${session.id}`}
-        chatStyles={session.props.chatStyles}
-      />
+      <div
+        className="w-full min-h-[calc(100dvh-270px)] relative"
+        style={{
+          height: `${rowVirtualizer.getTotalSize()}px`,
+        }}
+      >
+        <InlineChatStyles
+          container={`#session-${session.id}`}
+          chatStyles={session.props.chatStyles}
+        />
 
-      {/* Spacer to prevent overlapping with session top gradient  */}
-      <div className="h-[20px]" />
+        <div className="relative max-w-[1196px] mx-auto">
+          {virtualItems.map((virtualItem) => {
+            const messageId = session.turnIds[virtualItem.index];
+            const isLastMessage = virtualItem.index === messageCount - 1;
 
-      {session.turnIds.map((messageId, index) => (
-        <div
-          key={messageId.toString()}
-          className={cn(
-            isMobile && index === messageCount - 1 && "mb-[210px]", // Add margin for last element on mobile
-          )}
-        >
-          <MessageItem
-            messageId={messageId}
-            userCharacterCardId={session.userCharacterCardId}
-            translationConfig={session.translation}
-            disabled={!!streamingMessageId}
-            streaming={
-              messageId.equals(streamingMessageId)
-                ? {
-                    agentName: streamingAgentName,
-                    modelName: streamingModelName,
+            return (
+              <div
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                ref={rowVirtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualItem.start}px)`,
+                  paddingBottom: 16,
+                }}
+              >
+                <MessageItem
+                  messageId={messageId}
+                  userCharacterCardId={session.userCharacterCardId}
+                  translationConfig={session.translation}
+                  disabled={!!streamingMessageId}
+                  streaming={
+                    messageId.equals(streamingMessageId)
+                      ? {
+                          agentName: streamingAgentName,
+                          modelName: streamingModelName,
+                        }
+                      : undefined
                   }
-                : undefined
-            }
-            isLastMessage={index === messageCount - 1}
-            editMessage={editMessage}
-            deleteMessage={deleteMessage}
-            selectOption={selectOption}
-            generateOption={generateOption}
-          />
+                  isLastMessage={isLastMessage}
+                  editMessage={editMessage}
+                  deleteMessage={deleteMessage}
+                  selectOption={selectOption}
+                  generateOption={generateOption}
+                />
+              </div>
+            );
+          })}
+          {isOpenSelectScenarioModal && (
+            <div className="z-[20] absolute w-full flex flex-row py-[100px]">
+              <SelectScenarioModal
+                onSkip={() => {
+                  setIsOpenSelectScenarioModal(false);
+                }}
+                onAdd={addScenario}
+                renderedScenarios={renderedScenarios}
+                onRenderScenarios={renderScenarios}
+                sessionId={sessionId}
+                plotCardId={plotCardId}
+              />
+            </div>
+          )}
         </div>
-      ))}
-      {isOpenAddPlotCardModal && (
-        <AddPlotCardModal
-          onSkip={() => {
-            setIsOpenAddPlotCardModal(false);
-          }}
-          onAdd={() => {
-            onAddPlotCard();
-          }}
-        />
-      )}
-      {isOpenSelectScenarioModal && (
-        <SelectScenarioModal
-          onSkip={() => {
-            setIsOpenSelectScenarioModal(false);
-          }}
-          onAdd={addScenario}
-          renderedScenarios={renderedScenarios}
-          onRenderScenarios={renderScenarios}
-          sessionId={sessionId}
-          plotCardId={plotCardId}
-        />
-      )}
+      </div>
 
       {/* Mobile Add Plot Card Dialog */}
       <Dialog
@@ -1724,6 +1780,13 @@ const SessionMessagesAndUserInputs = ({
         }}
         autoReply={session.autoReply}
         setAutoReply={setAutoReply}
+        isOpenAddPlotCardModal={isOpenAddPlotCardModal}
+        onSkip={() => {
+          setIsOpenAddPlotCardModal(false);
+        }}
+        onAdd={() => {
+          onAddPlotCard();
+        }}
       />
     </div>
   );

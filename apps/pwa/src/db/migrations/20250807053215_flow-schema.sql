@@ -1,0 +1,1 @@
+ALTER TABLE "flows" ADD COLUMN "data_store_schema" jsonb;
