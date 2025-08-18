@@ -202,10 +202,11 @@ const FlowItem = ({
       <div
         className={cn(
           "pl-8 pr-4 py-2 group/item h-12 border-b-1 border-b-[#313131]",
-          "bg-[#272727] hover:bg-[#313131]",
+          "bg-[#272727] hover:bg-[#313131] pointer-coarse:focus-within:bg-[#313131]",
           "flex flex-row gap-1 items-center",
           selected && "bg-background-surface-4 rounded-[8px]",
         )}
+        tabIndex={0}
         onClick={handleSelect}
       >
         {/* Flow Info */}
@@ -217,7 +218,7 @@ const FlowItem = ({
         <div className="grow line-clamp-1 break-all font-[500] text-[12px] leading-[15px] text-[#F1F1F1]">
           {flow?.props.name}
         </div>
-        <div className="group-hover/item:hidden shrink-0">
+        <div className="group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden shrink-0">
           <div className={cn(
             "px-2 py-0.5 font-[500] text-xs leading-[16px]",
             flow?.props.readyState === ReadyState.Ready 
@@ -236,7 +237,7 @@ const FlowItem = ({
 
         {/* Actions */}
         <TooltipProvider>
-          <div className="group-hover/item:flex hidden shrink-0 text-[#9D9D9D] flex-row gap-2">
+          <div className="hidden group-hover/item:flex pointer-coarse:group-focus-within/item:flex shrink-0 text-[#9D9D9D] flex-row gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
