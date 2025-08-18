@@ -967,6 +967,26 @@ const createMessage = async ({
   variables?: Record<string, any>;
   messageId?: UniqueEntityID;
 }): Promise<Result<MessageEntity>> => {
+  // Get session to access last turn's dataStore
+  const session = (await SessionService.getSession.execute(sessionId))
+    .throwOnFailure()
+    .getValue();
+
+  // Get last turn's dataStore if exists
+  let dataStore = {};
+  if (session.turnIds.length > 0) {
+    const lastTurnId = session.turnIds[session.turnIds.length - 1];
+    try {
+      const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
+        .throwOnFailure()
+        .getValue();
+      // Clone the dataStore to avoid mutations
+      dataStore = { ...lastTurn.dataStore };
+    } catch (error) {
+      logger.warn(`Failed to get last turn's dataStore: ${error}`);
+    }
+  }
+
   // Get character name
   let characterName: string | null = defaultCharacterName || null;
   if (characterCardId) {
@@ -988,6 +1008,7 @@ const createMessage = async ({
     content: messageContent,
     tokenSize: 0, // TODO: calculate token size
     variables: variables,
+    dataStore: dataStore,
   }).getValue();
   return MessageEntity.create(
     {
@@ -1575,6 +1596,7 @@ type FlowResult = {
   content: string;
   variables: Record<string, any>;
   translations?: Map<string, string>;
+  dataStore?: Record<string, any>;
 };
 
 async function* executeFlow({
@@ -1594,6 +1616,7 @@ async function* executeFlow({
   let content = "";
   const variables: Record<string, any> = {};
   const translations: Map<string, string> = new Map();
+  let dataStore: Record<string, any> = {};
 
   try {
     // Get flow
@@ -1640,8 +1663,20 @@ async function* executeFlow({
       .throwOnFailure()
       .getValue();
 
+    // Get last turn's dataStore as starting point
+    if (session.turnIds.length > 0) {
+      const lastTurnId = session.turnIds[session.turnIds.length - 1];
+      try {
+        const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
+          .throwOnFailure()
+          .getValue();
+        dataStore = { ...lastTurn.dataStore };
+      } catch (error) {
+        logger.warn(`Failed to get last turn's dataStore: ${error}`);
+      }
+    }
+
     // Initialize or update dataStore from schema
-    let dataStore: Record<string, any> = { ...session.dataStore };
     if (flow.props.dataStoreSchema) {
       // Process each schema field
       for (const schemaField of flow.props.dataStoreSchema.fields) {
@@ -1706,6 +1741,7 @@ async function* executeFlow({
             modelName: result.modelName,
             content: content,
             variables: variables,
+            dataStore: dataStore,
           };
         }
 
@@ -1785,6 +1821,7 @@ async function* executeFlow({
     yield {
       content: content,
       variables: variables,
+      dataStore: dataStore,
     };
 
     // Translate variables
@@ -1802,6 +1839,7 @@ async function* executeFlow({
         content: content,
         variables: variables,
         translations: translations,
+        dataStore: dataStore,
       };
 
       // Translate by language
@@ -1820,11 +1858,11 @@ async function* executeFlow({
         content: content,
         variables: variables,
         translations: translations,
+        dataStore: dataStore,
       };
     }
 
-    // Flow execution completed successfully - save dataStore changes
-    await updateSessionDataStore(session, dataStore);
+    // Flow execution completed successfully - dataStore will be saved with the new turn
   } catch (error) {
     const parsedError = parseAiSdkErrorMessage(error);
     if (parsedError) {
@@ -1839,6 +1877,7 @@ async function* executeFlow({
     content: content,
     variables: variables,
     translations: translations,
+    dataStore: dataStore,
   };
   logger.debug("[Flow]", result);
   return result;
@@ -2221,26 +2260,6 @@ function convertToDataStoreType(value: string, type: DataStoreFieldType): any {
     }
     default:
       return value;
-  }
-}
-
-/**
- * Update session's dataStore and save to database
- * @param session - The session to update
- * @param dataStore - The new dataStore object
- */
-async function updateSessionDataStore(
-  session: Session,
-  dataStore: object,
-): Promise<void> {
-  const updateResult = session.update({ dataStore });
-  if (updateResult.isSuccess) {
-    const saveResult = await SessionService.saveSession.execute({ session });
-    if (saveResult.isFailure) {
-      logger.error("Failed to save session with updated dataStore");
-    }
-  } else {
-    logger.error("Failed to update session dataStore");
   }
 }
 

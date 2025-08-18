@@ -1071,6 +1071,20 @@ const SessionMessagesAndUserInputs = ({
       let streamingContent = "";
       let streamingVariables = {};
       try {
+        // Get last turn's dataStore for inheritance
+        let lastDataStore = {};
+        if (session.turnIds.length > 0) {
+          const lastTurnId = session.turnIds[session.turnIds.length - 1];
+          try {
+            const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
+              .throwOnFailure()
+              .getValue();
+            lastDataStore = { ...lastTurn.dataStore };
+          } catch (error) {
+            console.warn(`Failed to get last turn's dataStore: ${error}`);
+          }
+        }
+
         // Get streaming message
         if (regenerateMessageId) {
           // Get message from database
@@ -1099,10 +1113,11 @@ const SessionMessagesAndUserInputs = ({
           streamingMessage = messageOrError.getValue();
         }
 
-        // Add new empty option
+        // Add new empty option with inherited dataStore
         const emptyOptionOrError = Option.create({
           content: "",
           tokenSize: 0,
+          dataStore: lastDataStore,
         });
         if (emptyOptionOrError.isFailure) {
           throw new Error(emptyOptionOrError.getError());
@@ -1144,6 +1159,9 @@ const SessionMessagesAndUserInputs = ({
           streamingMessage.setContent(streamingContent);
           streamingVariables = response.variables;
           streamingMessage.setVariables(streamingVariables);
+          if (response.dataStore) {
+            streamingMessage.setDataStore(response.dataStore);
+          }
           queryClient.setQueryData(
             turnQueries.detail(streamingMessage.id).queryKey,
             TurnDrizzleMapper.toPersistence(streamingMessage),

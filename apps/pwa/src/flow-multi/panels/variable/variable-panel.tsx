@@ -458,21 +458,22 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
             });
           }
 
-          // Set history variables
+          // Add values from last turn
           if (lastTurn) {
+            // Set history variables
             flattenedContext["turn.char_id"] =
               lastTurn.characterCardId?.toString() ?? "";
             flattenedContext["turn.char_name"] = lastTurn.characterName ?? "";
             flattenedContext["turn.content"] = lastTurn.content;
-          }
 
-          // Set data store values
-          if (previewSession.dataStore) {
-            const flattenedDataStore = flattenObject(
-              previewSession.dataStore,
-              "",
-            );
-            Object.assign(flattenedContext, flattenedDataStore);
+            // Set data store values from last turn
+            if (lastTurn.dataStore) {
+              const flattenedDataStore = flattenObject(
+                lastTurn.dataStore,
+                "",
+              );
+              Object.assign(flattenedContext, flattenedDataStore);
+            }
           }
 
           setContextValues(flattenedContext);
@@ -916,13 +917,9 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         .includes(searchQuery.toLowerCase()),
                   )
                   .map((field) => {
-                    // Get actual value from session dataStore or use placeholder
-                    const hasValue =
-                      previewSession?.dataStore &&
-                      field.name in previewSession.dataStore;
-                    const actualValue = hasValue
-                      ? (previewSession.dataStore as any)[field.name]
-                      : "";
+                    // Get actual value from contextValues (which includes dataStore from last turn)
+                    const hasValue = field.name in contextValues;
+                    const actualValue = hasValue ? contextValues[field.name] : "";
                     const displayValue = hasValue ? actualValue : "";
                     const variableName = `{{${field.name}}}`;
 
