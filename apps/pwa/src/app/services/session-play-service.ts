@@ -327,6 +327,7 @@ const parametersInSettings = [
   "presence_pen",
   "freq_pen",
   "stop_sequence",
+  "seed",
 ];
 
 const makeSettings = ({ parameters }: { parameters: Map<string, any> }) => {
@@ -366,6 +367,10 @@ const makeSettings = ({ parameters }: { parameters: Map<string, any> }) => {
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s !== "");
+  }
+
+  if (parameters.has("seed")) {
+    settings["seed"] = Number.parseInt(parameters.get("seed"));
   }
 
   return settings;
