@@ -49,7 +49,6 @@ export class SessionDrizzleMapper {
         chatStyles: row.chat_styles ? row.chat_styles : undefined,
         flowId: new UniqueEntityID(row.flow_id),
         autoReply: row.auto_reply,
-        dataStore: row.data_store || {},
         createdAt: new Date(row.created_at),
         updatedAt: new Date(row.updated_at),
       },
@@ -85,7 +84,6 @@ export class SessionDrizzleMapper {
       chat_styles: domain.props.chatStyles,
       flow_id: domain.props.flowId.toString(),
       auto_reply: domain.props.autoReply,
-      data_store: domain.props.dataStore,
     };
   }
 
