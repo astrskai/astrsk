@@ -4,6 +4,7 @@ import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createMistral } from "@ai-sdk/mistral";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createXai } from "@ai-sdk/xai";
 import {
   createOpenRouter,
@@ -234,10 +235,7 @@ const makeContext = async ({
   for (let i = 0; i <= 1; i++) {
     for (const char of allCharacters) {
       try {
-        char.name = TemplateRenderer.render(
-          char.name || "",
-          context,
-        );
+        char.name = TemplateRenderer.render(char.name || "", context);
         char.description = TemplateRenderer.render(
           char.description || "",
           context,
@@ -263,10 +261,7 @@ const makeContext = async ({
         .scanHistory(historyContent)
         .throwOnFailure()
         .getValue()
-        .map((entry) => TemplateRenderer.render(
-          entry.content || "",
-          context,
-        ));
+        .map((entry) => TemplateRenderer.render(entry.content || "", context));
       entries.push(...activatedEntries);
       context.session.plot_entries = activatedEntries;
     } catch (error) {
@@ -332,6 +327,7 @@ const parametersInSettings = [
   "presence_pen",
   "freq_pen",
   "stop_sequence",
+  "seed",
 ];
 
 const makeSettings = ({ parameters }: { parameters: Map<string, any> }) => {
@@ -371,6 +367,10 @@ const makeSettings = ({ parameters }: { parameters: Map<string, any> }) => {
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s !== "");
+  }
+
+  if (parameters.has("seed")) {
+    settings["seed"] = Number.parseInt(parameters.get("seed"));
   }
 
   return settings;
@@ -449,7 +449,7 @@ const makeProvider = ({
       });
       break;
 
-    case ApiSource.OpenAICompatible:
+    case ApiSource.OpenAICompatible: {
       let baseUrl = apiConnection.baseUrl ?? "";
       if (!baseUrl.endsWith("/v1")) {
         baseUrl += "/v1";
@@ -459,6 +459,7 @@ const makeProvider = ({
         baseURL: baseUrl,
       });
       break;
+    }
 
     case ApiSource.Anthropic:
       provider = createAnthropic({
@@ -469,7 +470,7 @@ const makeProvider = ({
       });
       break;
 
-    case ApiSource.OpenRouter:
+    case ApiSource.OpenRouter: {
       const options: OpenRouterProviderSettings = {
         apiKey: apiConnection.apiKey,
         headers: {
@@ -498,6 +499,7 @@ const makeProvider = ({
       options.extraBody = extraBody;
       provider = createOpenRouter(options);
       break;
+    }
 
     case ApiSource.GoogleGenerativeAI:
       provider = createGoogleGenerativeAI({
@@ -533,8 +535,19 @@ const makeProvider = ({
       provider = createCohere({
         apiKey: apiConnection.apiKey,
       });
-
       break;
+
+    case ApiSource.KoboldCPP: {
+      let baseUrl = apiConnection.baseUrl ?? "";
+      if (!baseUrl.endsWith("/v1")) {
+        baseUrl += "/v1";
+      }
+      provider = createOpenAICompatible({
+        name: ApiSource.KoboldCPP,
+        baseURL: baseUrl,
+      });
+      break;
+    }
 
     default:
       throw new Error("Invalid API connection source");
@@ -561,15 +574,6 @@ const generateNonAiSdkMessage = async ({
         modelId,
         messages,
         abortSignal,
-      });
-
-    case ApiSource.KoboldCPP:
-      return generateMessageKobold({
-        modelId,
-        messages,
-        parameters,
-        abortSignal,
-        apiConnection,
       });
 
     case ApiSource.AIHorde:
@@ -704,127 +708,6 @@ const generateMessageWllama = async ({
     modelId,
     messages,
     abortSignal,
-  });
-
-  return { textStream };
-};
-
-async function* streamTextKobold({
-  modelId,
-  messages,
-  parameters,
-  abortSignal,
-  apiConnection,
-}: {
-  modelId: string;
-  messages: Message[];
-  parameters?: Map<string, any>;
-  abortSignal?: AbortSignal;
-  apiConnection: ApiConnection;
-}) {
-  // Convert messages to prompt
-  const prompt = messages.map((msg) => msg.content).join("\n");
-
-  const body: Record<string, any> = {
-    prompt: prompt,
-  };
-
-  parameters?.forEach((value, key) => {
-    const param = parameterList.find((p) => p.id === key);
-    const parsedValue = param?.parsingFunction
-      ? param.parsingFunction(value)
-      : value;
-    if (param) {
-      if (param.nameByApiSource.size === 0) {
-        body[key] = parsedValue;
-      } else if (param.nameByApiSource.has(ApiSource.KoboldCPP)) {
-        const koboldName = param.nameByApiSource.get(ApiSource.KoboldCPP);
-        if (koboldName) {
-          body[koboldName] = parsedValue;
-        }
-      }
-    }
-  });
-
-  try {
-    // Make streaming request to KoboldCPP API
-    const response = await fetch(
-      `${apiConnection.baseUrl}/api/extra/generate/stream`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-        signal: abortSignal,
-      },
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error("Response body is null");
-    }
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      // Decode the chunk and add to buffer
-      buffer += decoder.decode(value, { stream: true });
-
-      // Process SSE messages
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
-
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.token) {
-              yield data.token;
-            }
-          } catch (e) {
-            console.error("Error parsing SSE data:", e);
-          }
-        }
-      }
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === "AbortError") {
-        return;
-      }
-      throw error;
-    }
-  }
-}
-
-const generateMessageKobold = async ({
-  modelId,
-  messages,
-  parameters,
-  abortSignal,
-  apiConnection,
-}: {
-  modelId: string;
-  messages: Message[];
-  parameters?: Map<string, any>;
-  abortSignal?: AbortSignal;
-  apiConnection: ApiConnection;
-}) => {
-  // Create text stream
-  const textStream = streamTextKobold({
-    modelId,
-    messages,
-    parameters,
-    abortSignal,
-    apiConnection,
   });
 
   return { textStream };
@@ -1224,6 +1107,7 @@ async function generateTextOutput({
     case ApiSource.xAI:
     case ApiSource.Mistral:
     case ApiSource.Cohere:
+    case ApiSource.KoboldCPP:
       provider = makeProvider({
         apiConnection,
       });
@@ -1231,7 +1115,6 @@ async function generateTextOutput({
 
     // Request by non-AI SDK
     case ApiSource.Wllama:
-    case ApiSource.KoboldCPP:
     case ApiSource.AIHorde:
       return generateNonAiSdkMessage({
         apiConnection,
@@ -1281,11 +1164,12 @@ async function generateTextOutput({
       messages,
       abortSignal: combinedAbortSignal,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
-        providerOptions: {
-          [modelProvider]: providerOptions,
-        },
-      }),
+      ...(Object.keys(providerOptions).length > 0 &&
+        modelProvider && {
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }),
       experimental_transform: smoothStream({
         delayInMs: 20,
         chunking: "word",
@@ -1300,11 +1184,12 @@ async function generateTextOutput({
       messages,
       abortSignal: combinedAbortSignal,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
-        providerOptions: {
-          [modelProvider]: providerOptions,
-        },
-      }),
+      ...(Object.keys(providerOptions).length > 0 &&
+        modelProvider && {
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }),
     });
 
     // Create a generator to return the final text
@@ -1362,6 +1247,7 @@ async function generateStructuredOutput({
     case ApiSource.xAI:
     case ApiSource.Mistral:
     case ApiSource.Cohere:
+    case ApiSource.KoboldCPP:
       provider = makeProvider({
         apiConnection,
         isStructuredOutput: true,
@@ -1371,7 +1257,6 @@ async function generateStructuredOutput({
     // TODO: implement structured data for non-AI SDK
     // Request by non-AI SDK
     case ApiSource.Wllama:
-    case ApiSource.KoboldCPP:
     case ApiSource.AIHorde:
       throw new Error("Invalid API connection source for structured output");
 
@@ -1418,11 +1303,12 @@ async function generateStructuredOutput({
       schemaName: schema.name,
       schemaDescription: schema.description,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
-        providerOptions: {
-          [modelProvider]: providerOptions,
-        },
-      }),
+      ...(Object.keys(providerOptions).length > 0 &&
+        modelProvider && {
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }),
       mode,
       onError: (error) => {
         throw error.error;
@@ -1437,11 +1323,12 @@ async function generateStructuredOutput({
       schemaName: schema.name,
       schemaDescription: schema.description,
       ...settings,
-      ...(Object.keys(providerOptions).length > 0 && modelProvider && {
-        providerOptions: {
-          [modelProvider]: providerOptions,
-        },
-      }),
+      ...(Object.keys(providerOptions).length > 0 &&
+        modelProvider && {
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }),
     });
 
     // Create a generator to return the final object
