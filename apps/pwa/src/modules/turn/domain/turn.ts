@@ -63,6 +63,10 @@ export class Turn extends Entity<TurnProps> {
     return this.selectedOption.translations;
   }
 
+  get dataStore(): object {
+    return this.selectedOption.dataStore;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
@@ -117,6 +121,12 @@ export class Turn extends Entity<TurnProps> {
   public setTranslation(language: string, translation: string): void {
     this.options[this.props.selectedOptionIndex] = this.selectedOption
       .withTranslation(language, translation)
+      .getValue();
+  }
+
+  public setDataStore(dataStore: object): void {
+    this.options[this.props.selectedOptionIndex] = this.selectedOption
+      .withDataStore(dataStore)
       .getValue();
   }
 
