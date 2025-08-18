@@ -226,9 +226,9 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.Flows}: ${change.__op__} ${change.id}`);
-        queryClient.refetchQueries({
-          queryKey: flowQueries.detail(new UniqueEntityID(change.id)).queryKey,
-        });
+        // queryClient.refetchQueries({
+        //   queryKey: flowQueries.detail(new UniqueEntityID(change.id)).queryKey,
+        // });
       });
     },
   );
@@ -240,9 +240,9 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.Agents}: ${change.__op__} ${change.id}`);
-        queryClient.refetchQueries({
-          queryKey: agentQueries.detail(new UniqueEntityID(change.id)).queryKey,
-        });
+        // queryClient.refetchQueries({
+        //   queryKey: agentQueries.detail(new UniqueEntityID(change.id)).queryKey,
+        // });
       });
     },
   );

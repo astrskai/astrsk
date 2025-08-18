@@ -10,6 +10,10 @@ import { ImportFlowFromFile } from "@/modules/flow/usecases/import-flow-from-fil
 import { ListFlowByProvider } from "@/modules/flow/usecases/list-flow-by-provider";
 import { SaveFlow } from "@/modules/flow/usecases/save-flow";
 import { SearchFlow } from "@/modules/flow/usecases/search-flow";
+import { UpdateResponseTemplate } from "@/modules/flow/usecases/update-response-template";
+import { UpdateDataStoreSchema } from "@/modules/flow/usecases/update-data-store-schema";
+import { GetNode } from "@/modules/flow/usecases/get-node";
+import { UpdateNodeDataStoreFields } from "@/modules/flow/usecases/update-node-data-store-fields";
 // import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
 
 export class FlowService {
@@ -25,6 +29,10 @@ export class FlowService {
   public static saveFlow: SaveFlow;
   public static searchFlow: SearchFlow;
   public static listFlowByProvider: ListFlowByProvider;
+  public static updateResponseTemplate: UpdateResponseTemplate;
+  public static updateDataStoreSchema: UpdateDataStoreSchema;
+  public static getNode: GetNode;
+  public static updateNodeDataStoreFields: UpdateNodeDataStoreFields;
 
   private constructor() {}
 
@@ -42,5 +50,9 @@ export class FlowService {
     this.saveFlow = new SaveFlow(this.flowRepo);
     this.searchFlow = new SearchFlow(this.flowRepo);
     this.listFlowByProvider = new ListFlowByProvider(this.flowRepo);
+    this.updateResponseTemplate = new UpdateResponseTemplate();
+    this.updateDataStoreSchema = new UpdateDataStoreSchema();
+    this.getNode = new GetNode(this.flowRepo);
+    this.updateNodeDataStoreFields = new UpdateNodeDataStoreFields(this.flowRepo);
   }
 }

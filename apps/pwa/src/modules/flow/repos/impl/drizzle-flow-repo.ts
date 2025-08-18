@@ -23,6 +23,42 @@ export class DrizzleFlowRepo
 {
   // constructor(private updateLocalSyncMetadata: UpdateLocalSyncMetadata) {}
 
+  async updateResponseTemplate(flowId: string, template: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(flows)
+        .set({ response_template: template })  // Use snake_case column name
+        .where(eq(flows.id, flowId));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update response template: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateDataStoreSchema(flowId: string, schema: any): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(flows)
+        .set({ data_store_schema: schema })  // Use snake_case column name
+        .where(eq(flows.id, flowId));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update data store schema: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
   async saveFlow(flow: Flow, tx?: Transaction): Promise<Result<Flow>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {

@@ -88,6 +88,7 @@ export interface DataStoreSchemaField {
 
 // Runtime field - contains actual values and logic
 export interface DataStoreField {
+  id: string; // Unique ID for this runtime field instance (will use UniqueEntityID().toString())
   schemaFieldId: string; // References DataStoreSchemaField.id
   value: string; // Current value (stored as string)
   logic?: string; // Optional logic/formula for computed fields
