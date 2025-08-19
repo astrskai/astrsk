@@ -34,7 +34,13 @@ export interface PromptMessageProps {
 
 export function parsePromptMessage(doc: any): Result<PromptMessage> {
   try {
-    switch (doc.type) {
+    let doc_type;
+    if (!(doc instanceof PlainPromptMessage || doc instanceof HistoryPromptMessage)) {
+      doc_type = doc.type;
+    }else{
+      doc_type = doc.props.type;
+    }
+    switch (doc_type) {
       case PromptMessageType.Plain:
         return PlainPromptMessage.fromJSON(doc);
       case PromptMessageType.History:

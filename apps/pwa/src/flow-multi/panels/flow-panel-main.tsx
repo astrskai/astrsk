@@ -200,13 +200,6 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
   useEffect(() => {
     // Enhanced race condition protection
     if (!flowId || !flow || !flow.props?.nodes || !Array.isArray(flow.props.nodes)) {
-      console.log('[FLOW-PANEL-MAIN] Skipping agent load - missing data:', {
-        hasFlowId: !!flowId,
-        hasFlow: !!flow,
-        hasProps: !!flow?.props,
-        hasNodes: !!flow?.props?.nodes,
-        isNodesArray: Array.isArray(flow?.props?.nodes)
-      });
       return;
     }
     
