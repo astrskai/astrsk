@@ -107,9 +107,15 @@ export const useUpdateAgentApiType = (flowId: string, agentId: string) => {
     },
     
     onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        queryKey: [...agentKeys.all, "prompt", agentId]
-      });
+      Promise.all([
+        queryClient.invalidateQueries({ 
+          queryKey: [...agentKeys.all, "prompt", agentId]
+        }),
+        // Invalidate the full agent detail to refresh all agent data (including preview)
+        queryClient.invalidateQueries({ 
+          queryKey: agentKeys.detail(agentId)
+        })
+      ]);
     }
   });
 };
@@ -236,9 +242,15 @@ export const useUpdateAgentPromptMessages = (flowId: string, agentId: string) =>
       // 1. Use uncontrolled editor component
       // 2. Delay invalidation until after cursor leaves editor
       // 3. Use separate cache key for editor state vs display state
-      queryClient.invalidateQueries({ 
-        queryKey: [...agentKeys.all, "prompt", agentId]
-      });
+      Promise.all([
+        queryClient.invalidateQueries({ 
+          queryKey: [...agentKeys.all, "prompt", agentId]
+        }),
+        // Invalidate the full agent detail to refresh all agent data (including preview)
+        queryClient.invalidateQueries({ 
+          queryKey: agentKeys.detail(agentId)
+        })
+      ]);
     },
     
     onError: (error, variables, context) => {
@@ -407,9 +419,15 @@ export const useUpdateAgentTextPrompt = (flowId: string, agentId: string) => {
       // 1. Use uncontrolled editor component
       // 2. Delay invalidation until after cursor leaves editor
       // 3. Use separate cache key for editor state vs display state
-      queryClient.invalidateQueries({ 
-        queryKey: [...agentKeys.all, "prompt", agentId]
-      });
+      Promise.all([
+        queryClient.invalidateQueries({ 
+          queryKey: [...agentKeys.all, "prompt", agentId]
+        }),
+        // Invalidate the full agent detail to refresh all agent data (including preview)
+        queryClient.invalidateQueries({ 
+          queryKey: agentKeys.detail(agentId)
+        })
+      ]);
     },
     
     onError: (error, variables, context) => {

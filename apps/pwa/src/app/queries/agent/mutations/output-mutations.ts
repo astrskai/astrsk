@@ -120,10 +120,16 @@ export const useUpdateAgentOutput = (flowId: string, agentId: string) => {
     
     onSuccess: () => {
       endEditing();
-      // Invalidate only the output query
-      queryClient.invalidateQueries({ 
-        queryKey: [...agentKeys.all, "output", agentId]
-      });
+      // Invalidate both output and agent detail queries
+      Promise.all([
+        queryClient.invalidateQueries({ 
+          queryKey: [...agentKeys.all, "output", agentId]
+        }),
+        // Invalidate the full agent detail to refresh all agent data (including preview)
+        queryClient.invalidateQueries({ 
+          queryKey: agentKeys.detail(agentId)
+        })
+      ]);
     },
     
     onError: (error, variables, context) => {
@@ -260,13 +266,15 @@ export const useUpdateAgentOutputFormat = (flowId: string, agentId: string) => {
     },
     
     onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        queryKey: [...agentKeys.all, "output", agentId]
-      });
-      // Don't invalidate detail query - causes jittering
-      // queryClient.invalidateQueries({ 
-      //   queryKey: agentKeys.detail(agentId) 
-      // });
+      Promise.all([
+        queryClient.invalidateQueries({ 
+          queryKey: [...agentKeys.all, "output", agentId]
+        }),
+        // Invalidate the full agent detail to refresh all agent data (including preview)
+        queryClient.invalidateQueries({ 
+          queryKey: agentKeys.detail(agentId)
+        })
+      ]);
     }
   });
 };

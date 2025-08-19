@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { debounce } from "lodash-es";
+import { toast } from "sonner";
 import { SchemaFieldType, OutputFormat, SchemaField } from "@/modules/agent/domain/agent";
 import { Trash2, Plus, Maximize2, Minimize2, X } from "lucide-react";
 import {
@@ -76,6 +78,13 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
   const [localDescription, setLocalDescription] = useState("");
   const [displayFields, setDisplayFields] = useState<SchemaFieldItem[]>([]);
   
+  // Track blocking user from switching during save
+  const [showLoading, setShowLoading] = useState(false);
+  const pendingSaveRef = useRef<boolean>(false);
+  const hasRecentlyEditedRef = useRef(false);
+  const syncTimeoutRef = useRef<NodeJS.Timeout>();
+  const isSchemaFieldsPending = updateSchemaFields.isPending;
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const lastInitializedAgentId = useRef<string | null>(null);
 
@@ -110,8 +119,8 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
 
   // 7. Sync display fields when output data changes (for cross-tab sync)
   useEffect(() => {
-    // Don't sync while editing to prevent feedback loops
-    if (updateOutput.isEditing || updateSchemaFields.isEditing) {
+    // Don't sync while editing or recently edited to prevent feedback loops
+    if (updateOutput.isEditing || updateSchemaFields.isEditing || hasRecentlyEditedRef.current) {
       return;
     }
     
@@ -119,12 +128,15 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
       const fields = parseSchemaFields(outputData.schemaFields);
       setDisplayFields(fields);
       
-      // Keep selected field if it still exists
-      if (selectedFieldId && !fields.find(f => f.id === selectedFieldId)) {
-        setSelectedFieldId(fields[0]?.id || "");
-      }
+      // Keep selected field if it still exists - use callback to get latest selectedFieldId
+      setSelectedFieldId(prevSelectedId => {
+        if (prevSelectedId && !fields.find(f => f.id === prevSelectedId)) {
+          return fields[0]?.id || "";
+        }
+        return prevSelectedId;
+      });
     }
-  }, [outputData?.schemaFields, parseSchemaFields, selectedFieldId, updateOutput.isEditing, updateSchemaFields.isEditing]);
+  }, [outputData?.schemaFields, parseSchemaFields, updateOutput.isEditing, updateSchemaFields.isEditing]);
 
   // 8. Get selected field
   const selectedField = useMemo(() => 
@@ -138,6 +150,28 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
       setLocalDescription(selectedField.description || "");
     }
   }, [selectedField?.id, selectedField?.description]);
+
+  // Handle completed save and clear loading state
+  useEffect(() => {
+    // When mutation starts, clear the pending save ref
+    if (isSchemaFieldsPending && pendingSaveRef.current) {
+      pendingSaveRef.current = false;
+    }
+    
+    // When mutation completes, clear editing flags to allow sync AND clear pending ref
+    if (!isSchemaFieldsPending) {
+      hasRecentlyEditedRef.current = false;
+      pendingSaveRef.current = false; // Force clear pending ref
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+      
+      // Hide loading if it was showing
+      if (showLoading) {
+        setShowLoading(false);
+      }
+    }
+  }, [isSchemaFieldsPending, showLoading]);
 
   // 10. Save schema fields to database
   const saveSchemaFields = useCallback((fields: SchemaFieldItem[]) => {
@@ -158,12 +192,65 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     updateSchemaFields.mutate(schemaFields);
   }, [updateSchemaFields]);
 
+  // Use ref to track fields for saving without causing re-renders
+  const fieldsRef = useRef(displayFields);
+  useEffect(() => {
+    fieldsRef.current = displayFields;
+  }, [displayFields]);
+
+  // Debounced field update for description changes - doesn't update state, only saves
+  const debouncedUpdateFieldDescription = useMemo(() => 
+    debounce((fieldId: string, description: string) => {
+      // Set flags for blocking and sync prevention
+      pendingSaveRef.current = true;
+      
+      hasRecentlyEditedRef.current = true;
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = setTimeout(() => {
+        hasRecentlyEditedRef.current = false;
+      }, 1000);
+      
+      // Use ref to get current fields without causing re-render
+      const updatedFields = fieldsRef.current.map(field => 
+        field.id === fieldId ? { ...field, description } : field
+      );
+      fieldsRef.current = updatedFields; // Update ref
+      
+      saveSchemaFields(updatedFields); // Save to database - this will trigger the mutation's isPending state
+      
+      // Don't call setDisplayFields here to avoid re-render/jittering
+    }, 300),
+    [saveSchemaFields]
+  );
+
+  // Handle field selection with blocking logic
+  const handleFieldSelect = useCallback((fieldId: string) => {
+    if (fieldId === selectedFieldId) return;
+    
+    // Block if save in progress
+    if (isSchemaFieldsPending) {
+      setShowLoading(true);
+      toast.info("Saving changes before switching field...", { duration: 2000 });
+      return;
+    }
+    
+    // Block if pending unsaved changes
+    if (pendingSaveRef.current) {
+      setShowLoading(true);
+      toast.info("Saving changes before switching field...", { duration: 2000 });
+      return;
+    }
+    
+    // Switch immediately
+    setSelectedFieldId(fieldId);
+  }, [selectedFieldId, isSchemaFieldsPending, showLoading]);
+
   // 11. Field management functions
   const addNewField = useCallback(() => {
-    const newId = `field-${Date.now()}`;
+    const fieldName = `field_${displayFields.length + 1}`;
     const newField: SchemaFieldItem = {
-      id: newId,
-      name: `field_${displayFields.length + 1}`,
+      id: fieldName, // Use field name as ID to match server behavior
+      name: fieldName,
       description: "",
       type: SchemaFieldType.String,
       required: true,
@@ -173,7 +260,12 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     
     const updatedFields = [...displayFields, newField];
     setDisplayFields(updatedFields);
-    setSelectedFieldId(newId);
+    
+    // Use setTimeout to ensure state is updated before selection
+    setTimeout(() => {
+      setSelectedFieldId(fieldName);
+    }, 0);
+    
     saveSchemaFields(updatedFields);
   }, [displayFields, saveSchemaFields]);
 
@@ -366,8 +458,8 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                               key={field.id}
                               agentKey={agentKey}
                               field={field}
-                              isSelected={field.id === selectedFieldId}
-                              onClick={() => setSelectedFieldId(field.id)}
+                              isSelected={field.id === selectedFieldId && !showLoading}
+                              onClick={() => handleFieldSelect(field.id)}
                             />
                           ))}
                         </div>
@@ -570,11 +662,12 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                               onChange={(value) => {
                                 const newValue = value || "";
                                 setLocalDescription(newValue);
-                                updateField(selectedField.id, { description: newValue });
+                                debouncedUpdateFieldDescription(selectedField.id, newValue);
                               }}
                               language="markdown"
                               onMount={handleDescriptionEditorMount}
                               containerClassName="h-full"
+                              isLoading={showLoading}
                             />
                           </div>
                         </div>
@@ -614,11 +707,12 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                         onChange={(value) => {
                           const newValue = value || "";
                           setLocalDescription(newValue);
-                          updateField(selectedField.id, { description: newValue });
+                          debouncedUpdateFieldDescription(selectedField.id, newValue);
                         }}
                         language="markdown"
                         onMount={handleDescriptionEditorMount}
                         containerClassName="h-full"
+                        isLoading={showLoading}
                       />
                     </div>
                   </div>

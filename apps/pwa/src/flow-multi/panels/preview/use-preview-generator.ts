@@ -294,7 +294,7 @@ export function usePreviewGenerator(agent: Agent | null, session: Session | null
     const parameterValuesHash = agent?.props.parameterValues ? 
       JSON.stringify(Array.from(agent.props.parameterValues.entries())) : "";
     
-    const currentAgentData = agent ? `${agent.id}_${agent.props.updatedAt}_${agent.props.targetApiType}_${agent.props.textPrompt}_${agent.props.outputFormat}_${promptMessagesHash}_${enabledParamsHash}_${parameterValuesHash}` : "";
+    const currentAgentData = agent ? `${agent.id}_${agent.props.updatedAt}_${agent.props.targetApiType}_${agent.props.textPrompt}_${agent.props.outputFormat}_${agent.props.enabledStructuredOutput}_${agent.props.schemaName}_${agent.props.schemaDescription}_${JSON.stringify(agent.props.schemaFields || [])}_${agent.props.apiSource}_${agent.props.modelId}_${agent.props.modelName}_${promptMessagesHash}_${enabledParamsHash}_${parameterValuesHash}` : "";
     const currentSessionId = session?.id.toString() || "";
     const currentLastTurnId = session?.turnIds?.[session.turnIds.length - 1]?.toString() || "";
     
