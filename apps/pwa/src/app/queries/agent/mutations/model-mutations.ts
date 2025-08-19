@@ -65,28 +65,32 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
     },
     
     onMutate: async (updates) => {
-      // Cancel queries for agent and flow
+      // Cancel queries for model data and flow
       await queryClient.cancelQueries({ 
-        queryKey: agentKeys.detail(agentId)
+        queryKey: agentKeys.model(agentId)
       });
       await queryClient.cancelQueries({ 
         queryKey: flowKeys.detail(flowId)
       });
       
-      const previousAgent = queryClient.getQueryData(
-        agentKeys.detail(agentId)
+      const previousModel = queryClient.getQueryData(
+        agentKeys.model(agentId)
       );
       const previousFlow = queryClient.getQueryData(
         flowKeys.detail(flowId)
       );
       
-      // Optimistically update agent
+      // Optimistically update the model query (not the full agent)
       queryClient.setQueryData(
-        agentKeys.detail(agentId),
-        (old: Agent | undefined) => {
+        agentKeys.model(agentId),
+        (old: any) => {
           if (!old) return old;
-          const updated = old.update(updates);
-          return updated.isSuccess ? updated.getValue() : old;
+          return {
+            ...old,
+            ...(updates.apiSource !== undefined && { apiSource: updates.apiSource }),
+            ...(updates.modelId !== undefined && { modelId: updates.modelId }),
+            ...(updates.modelName !== undefined && { modelName: updates.modelName })
+          };
         }
       );
       
@@ -105,15 +109,15 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
         }
       );
       
-      return { previousAgent, previousFlow };
+      return { previousModel, previousFlow };
     },
     
     onError: (err, variables, context) => {
       // Rollback on error
-      if (context?.previousAgent) {
+      if (context?.previousModel) {
         queryClient.setQueryData(
-          agentKeys.detail(agentId),
-          context.previousAgent
+          agentKeys.model(agentId),
+          context.previousModel
         );
       }
       if (context?.previousFlow) {
@@ -126,9 +130,15 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
     
     onSettled: async () => {
       await Promise.all([
+        // Invalidate the specific model query that was optimistically updated
+        queryClient.invalidateQueries({ 
+          queryKey: agentKeys.model(agentId)
+        }),
+        // Invalidate the full agent detail to refresh all agent data
         queryClient.invalidateQueries({ 
           queryKey: agentKeys.detail(agentId)
         }),
+        // Invalidate flow validation since model changes affect flow validation
         queryClient.invalidateQueries({ 
           queryKey: flowKeys.validation(flowId)
         })

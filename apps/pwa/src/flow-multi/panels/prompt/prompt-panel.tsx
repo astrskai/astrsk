@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { debounce } from "lodash-es";
+import { toast } from "sonner";
 import {
   DndContext,
   closestCenter,
@@ -68,8 +69,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   const { 
     data: promptData, 
     isLoading, 
-    error,
-    dataUpdatedAt
+    error
   } = useQuery({
     ...agentQueries.prompt(agentId),
     enabled: queryEnabled,
@@ -84,6 +84,11 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   const [items, setItems] = useState<PromptItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [localMessageContent, setLocalMessageContent] = useState<string>("");
+  
+  // Track blocking user from switching during save
+  const [showLoading, setShowLoading] = useState(false);
+  const pendingSaveRef = useRef<boolean>(false);
+  const isPromptMessagesPending = updatePromptMessages.isPending;
   
   const containerRef = useRef<HTMLDivElement>(null);
   const lastInitializedAgentId = useRef<string | null>(null);
@@ -118,7 +123,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   useEffect(() => {
     // Don't sync while editing OR while cursor is active OR recently edited
     if (updatePromptMessages.isEditing || updateTextPrompt.isEditing || 
-        updatePromptMessages.hasCursor || updateTextPrompt.hasCursor || hasRecentlyEditedRef.current) {
+        updatePromptMessages.hasCursor || updateTextPrompt.hasCursor || 
+        hasRecentlyEditedRef.current) {
       return;
     }
     
@@ -127,6 +133,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
       
       if (mode === "chat" && promptData.promptMessages) {
         const parsedItems = convertPromptMessagesToItems(promptData.promptMessages);
+        
         // Force new array reference to trigger React re-render
         setItems([...parsedItems]);
         
@@ -142,7 +149,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
       }
     }
   }, [promptData?.promptMessages, promptData?.textPrompt, updatePromptMessages.isEditing, updateTextPrompt.isEditing, 
-      updatePromptMessages.hasCursor, updateTextPrompt.hasCursor]);
+      updatePromptMessages.hasCursor, updateTextPrompt.hasCursor, showLoading]);
 
   // 7. Debounced save for chat messages
   const debouncedSaveMessages = useMemo(
@@ -350,11 +357,64 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     itemsRef.current = items;
   }, [items]);
 
+  // Handle completed save and clear loading state
+  useEffect(() => {
+    // When mutation starts, clear the pending save ref
+    if (isPromptMessagesPending && pendingSaveRef.current) {
+      pendingSaveRef.current = false;
+    }
+    
+    // When mutation completes, clear editing flags to allow sync
+    if (!isPromptMessagesPending) {
+      hasRecentlyEditedRef.current = false;
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+      
+      // Hide loading if it was showing
+      if (showLoading) {
+        setShowLoading(false);
+      }
+    }
+  }, [isPromptMessagesPending, showLoading]);
+
+  // Handle message selection - block if save in progress
+  const handleMessageSelect = useCallback((messageId: string) => {
+    // If trying to switch to the same message, do nothing
+    if (messageId === selectedItemId) {
+      return;
+    }
+    
+    // If a save is currently in progress, block the switch
+    if (isPromptMessagesPending) {
+      setShowLoading(true);
+      toast.info("Saving changes before switching message...", {
+        duration: 2000,
+      });
+      return;
+    }
+    
+    // If we have pending unsaved changes (debounce timer), trigger save and block switch
+    if (pendingSaveRef.current) {
+      setShowLoading(true);
+      toast.info("Saving changes before switching message...", {
+        duration: 2000,
+      });
+      return;
+    }
+    
+    // No pending saves, switch immediately
+    setSelectedItemId(messageId);
+  }, [selectedItemId, isPromptMessagesPending]);
+
   // 17. Debounced save for message content - doesn't update state, only saves
   // TODO: This approach uses a ref to avoid re-renders during typing
   // Consider refactoring to use an uncontrolled Monaco editor for better performance
   const debouncedSaveMessageContent = useMemo(
     () => debounce((itemId: string, content: string) => {
+      // Set a flag that we have pending changes that will save soon
+      pendingSaveRef.current = true;
+      
       // Set flag to prevent syncing for a while after editing
       hasRecentlyEditedRef.current = true;
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
@@ -367,7 +427,9 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
         item.id === itemId ? { ...item, content } : item
       );
       itemsRef.current = updatedItems; // Update ref
-      debouncedSaveMessages(updatedItems); // Save to database
+      
+      debouncedSaveMessages(updatedItems); // Save to database - this will trigger the mutation's isPending state
+      
       // Don't call setItems here to avoid re-render
     }, 300),
     [debouncedSaveMessages]
@@ -453,8 +515,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                           <SortableItem
                             key={item.id}
                             item={item}
-                            isSelected={item.id === selectedItemId}
-                            onClick={() => setSelectedItemId(item.id)}
+                            isSelected={item.id === selectedItemId && !showLoading}
+                            onClick={() => handleMessageSelect(item.id)}
                             onToggle={(checked) => {
                               const updatedItems = items.map(i => 
                                 i.id === item.id ? { ...i, enabled: checked } : i
@@ -697,6 +759,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                               language="markdown"
                               onMount={handleEditorMount}
                               containerClassName="h-full"
+                              clearUndoOnValueChange={true}
+                              isLoading={showLoading}
                             />
                           </div>
                         </div>
@@ -722,13 +786,14 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                         value={localMessageContent}
                         onChange={(value) => {
                           const newValue = value || "";
-                          console.log('[PROMPT] Typed:', newValue.slice(-20), '| Shown:', localMessageContent.slice(-20));
                           setLocalMessageContent(newValue);
                           debouncedSaveMessageContent(selectedItem.id, newValue);
                         }}
                         language="markdown"
                         onMount={handleEditorMount}
                         containerClassName="h-full"
+                        clearUndoOnValueChange={true}
+                        isLoading={showLoading}
                       />
                     </div>
                   </div>
