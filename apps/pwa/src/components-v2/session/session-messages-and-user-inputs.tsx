@@ -4,6 +4,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  History,
   Loader2,
   RefreshCcw,
   Send,
@@ -80,6 +81,7 @@ const MessageItemInternal = ({
   streaming,
   streamingAgentName,
   streamingModelName,
+  dataStoreFields,
   onEdit,
   onDelete,
   onPrevOption,
@@ -96,6 +98,7 @@ const MessageItemInternal = ({
   streaming?: boolean;
   streamingAgentName?: string;
   streamingModelName?: string;
+  dataStoreFields?: DataStoreSavedField[];
   onEdit?: (content: string) => Promise<void>;
   onDelete?: () => Promise<void>;
   onPrevOption?: () => Promise<void>;
@@ -113,6 +116,9 @@ const MessageItemInternal = ({
     await onEdit?.(editedContent);
     setIsEditing(false);
   }, [editedContent, onEdit]);
+
+  // Toggle data store
+  const [isShowDataStore, setIsShowDataStore] = useState(false);
 
   return (
     <div className="group/message relative px-[56px]">
@@ -202,6 +208,28 @@ const MessageItemInternal = ({
                 >
                   {translation ?? content}
                 </Markdown>
+                {isShowDataStore && (
+                  <div className="mt-[10px] p-[16px] border-[1px] border-[#1111111A] rounded-[12px]">
+                    <div className="mb-[16px] flex flex-row gap-[8px] items-center text-text-subtle">
+                      <History size={20} />
+                      <div className="font-[500] text-[14px] leading-[20px]">
+                        Data schema history
+                      </div>
+                    </div>
+                    {dataStoreFields?.map((field) => (
+                      <div
+                        key={field.id}
+                        className="chat-style-text !text-[14px] !leading-[20px]"
+                      >
+                        <span className="font-[600]">{field.name} : </span>
+                        <span>{field.value}</span>{" "}
+                        <span className="capitalize chat-style-text-italic !text-[14px] !leading-[20px]">
+                          ({field.type})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -243,6 +271,23 @@ const MessageItemInternal = ({
                     onClick={async () => {
                       setEditedContent(content ?? "");
                       setIsEditing(true);
+                    }}
+                  />
+                )}
+                {isShowDataStore ? (
+                  <SvgIcon
+                    name="history_solid"
+                    size={20}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setIsShowDataStore(false);
+                    }}
+                  />
+                ) : (
+                  <History
+                    className="size-[20px] cursor-pointer"
+                    onClick={() => {
+                      setIsShowDataStore(true);
                     }}
                   />
                 )}
@@ -409,6 +454,7 @@ const MessageItem = ({
   const content = selectedOption?.content;
   const language = translationConfig?.displayLanguage ?? "none";
   const translation = selectedOption?.translations.get(language);
+  const dataStoreFields = selectedOption?.dataStore;
 
   if (!message) {
     return null;
@@ -444,6 +490,7 @@ const MessageItem = ({
       streaming={typeof streaming !== "undefined"}
       streamingAgentName={streaming?.agentName}
       streamingModelName={streaming?.modelName}
+      dataStoreFields={dataStoreFields}
       onEdit={(content) => editMessage(messageId, content)}
       onDelete={() => deleteMessage(messageId)}
       onPrevOption={() => selectOption(messageId, "prev")}

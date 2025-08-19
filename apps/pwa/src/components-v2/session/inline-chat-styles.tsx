@@ -23,7 +23,7 @@ const renderTextStyle = (style: TextStyle) => {
     props.push(renderFontStyle(style.base));
   }
   if (style.italic) {
-    props.push(`em, i {`);
+    props.push(`em, i, .chat-style-text-italic {`);
     props.push(renderFontStyle(style.italic));
     props.push(`}`);
   }
