@@ -86,5 +86,13 @@
     "bps": true,
     "folderMillis": 1755498908780,
     "hash": "80cf31052ebd9010f04be9649b6f7f7032fb95aa88bc7e905c4bdb8055075c2d"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" ADD COLUMN \"data_schema_order\" jsonb DEFAULT '[]'::jsonb NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1755603532043,
+    "hash": "10d16f332ce852841ecd1922a18cf39ce468480388278f01d5ff5cc878f56941"
   }
 ]
