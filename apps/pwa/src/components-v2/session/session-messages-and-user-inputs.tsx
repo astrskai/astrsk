@@ -1,13 +1,40 @@
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
+  CaseUpper,
   Check,
   ChevronLeft,
   ChevronRight,
+  GripVertical,
+  Hash,
+  History,
   Loader2,
+  Pencil,
   RefreshCcw,
   Send,
   Shuffle,
+  ToggleRight,
   Trash2,
   X,
 } from "lucide-react";
@@ -21,9 +48,11 @@ import { UniqueEntityID } from "@/shared/domain";
 import { parseAiSdkErrorMessage } from "@/shared/utils/error-utils";
 import { logger } from "@/shared/utils/logger";
 import { TemplateRenderer } from "@/shared/utils/template-renderer";
+import { cloneDeep } from "lodash-es";
 
 import { useAsset } from "@/app/hooks/use-asset";
 import { useCard } from "@/app/hooks/use-card";
+import { flowQueries } from "@/app/queries/flow-queries";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { turnQueries } from "@/app/queries/turn-queries";
 import { CardService } from "@/app/services";
@@ -43,6 +72,7 @@ import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
 import { InlineChatStyles } from "@/components-v2/session/inline-chat-styles";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
+import { ButtonPill } from "@/components-v2/ui/button-pill";
 import {
   Dialog,
   DialogClose,
@@ -52,6 +82,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components-v2/ui/dialog";
+import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { toastError } from "@/components-v2/ui/toast-error";
 import {
@@ -62,7 +93,7 @@ import {
 } from "@/components-v2/ui/tooltip";
 import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
-import { Option } from "@/modules/turn/domain/option";
+import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -79,6 +110,7 @@ const MessageItemInternal = ({
   streaming,
   streamingAgentName,
   streamingModelName,
+  dataStoreFields,
   onEdit,
   onDelete,
   onPrevOption,
@@ -95,6 +127,7 @@ const MessageItemInternal = ({
   streaming?: boolean;
   streamingAgentName?: string;
   streamingModelName?: string;
+  dataStoreFields?: DataStoreSavedField[];
   onEdit?: (content: string) => Promise<void>;
   onDelete?: () => Promise<void>;
   onPrevOption?: () => Promise<void>;
@@ -112,6 +145,9 @@ const MessageItemInternal = ({
     await onEdit?.(editedContent);
     setIsEditing(false);
   }, [editedContent, onEdit]);
+
+  // Toggle data store
+  const [isShowDataStore, setIsShowDataStore] = useState(false);
 
   return (
     <div className="group/message relative px-[56px]">
@@ -201,6 +237,28 @@ const MessageItemInternal = ({
                 >
                   {translation ?? content}
                 </Markdown>
+                {!streaming && isShowDataStore && (
+                  <div className="mt-[10px] p-[16px] border-[1px] border-[#1111111A] rounded-[12px]">
+                    <div className="mb-[16px] flex flex-row gap-[8px] items-center text-text-subtle">
+                      <History size={20} />
+                      <div className="font-[500] text-[14px] leading-[20px]">
+                        Data schema history
+                      </div>
+                    </div>
+                    {dataStoreFields?.map((field) => (
+                      <div
+                        key={field.id}
+                        className="chat-style-text !text-[14px] !leading-[20px]"
+                      >
+                        <span className="font-[600]">{field.name} : </span>
+                        <span>{field.value}</span>{" "}
+                        <span className="capitalize chat-style-text-italic !text-[14px] !leading-[20px]">
+                          ({field.type})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -242,6 +300,23 @@ const MessageItemInternal = ({
                     onClick={async () => {
                       setEditedContent(content ?? "");
                       setIsEditing(true);
+                    }}
+                  />
+                )}
+                {isShowDataStore ? (
+                  <SvgIcon
+                    name="history_solid"
+                    size={20}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setIsShowDataStore(false);
+                    }}
+                  />
+                ) : (
+                  <History
+                    className="size-[20px] cursor-pointer"
+                    onClick={() => {
+                      setIsShowDataStore(true);
                     }}
                   />
                 )}
@@ -379,6 +454,7 @@ const MessageItem = ({
   translationConfig,
   disabled,
   streaming,
+  dataSchemaOrder,
   editMessage,
   deleteMessage,
   selectOption,
@@ -393,6 +469,7 @@ const MessageItem = ({
     modelName?: string;
   };
   isLastMessage?: boolean;
+  dataSchemaOrder?: string[];
   editMessage: (messageId: UniqueEntityID, content: string) => Promise<void>;
   deleteMessage: (messageId: UniqueEntityID) => Promise<void>;
   selectOption: (
@@ -408,6 +485,22 @@ const MessageItem = ({
   const content = selectedOption?.content;
   const language = translationConfig?.displayLanguage ?? "none";
   const translation = selectedOption?.translations.get(language);
+
+  // Sort dataStoreFields according to dataSchemaOrder
+  const sortedDataStoreFields = useMemo(() => {
+    const fields = selectedOption?.dataStore;
+    if (!fields) return undefined;
+
+    const order = dataSchemaOrder || [];
+    return [
+      // Fields in dataSchemaOrder come first, in order
+      ...order
+        .map((name) => fields.find((f) => f.name === name))
+        .filter((f): f is NonNullable<typeof f> => f !== undefined),
+      // Fields not in dataSchemaOrder come after, in original order
+      ...fields.filter((f) => !order.includes(f.name)),
+    ];
+  }, [selectedOption?.dataStore, dataSchemaOrder]);
 
   if (!message) {
     return null;
@@ -443,6 +536,7 @@ const MessageItem = ({
       streaming={typeof streaming !== "undefined"}
       streamingAgentName={streaming?.agentName}
       streamingModelName={streaming?.modelName}
+      dataStoreFields={sortedDataStoreFields}
       onEdit={(content) => editMessage(messageId, content)}
       onDelete={() => deleteMessage(messageId)}
       onPrevOption={() => selectOption(messageId, "prev")}
@@ -970,6 +1064,130 @@ const SelectScenarioModal = ({
   return null;
 };
 
+const getSchemaTypeIcon = (type: string) => {
+  switch (type) {
+    case "string":
+      return <CaseUpper size={20} />;
+    case "number":
+      return <Hash size={20} />;
+    case "integer":
+      return <SvgIcon name="integer" size={20} />;
+    case "boolean":
+      return <ToggleRight size={20} />;
+    default:
+      return <></>;
+  }
+};
+
+const SortableDataSchemaFieldItem = ({
+  name,
+  type,
+  value,
+  onEdit,
+}: {
+  name: string;
+  type: string;
+  value: string;
+  onEdit?: (name: string, value: string) => Promise<void>;
+}) => {
+  // Edit value
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedValue, setEditedValue] = useState<string>(value ?? "");
+  const onEditDone = useCallback(async () => {
+    await onEdit?.(name, editedValue);
+    setIsEditing(false);
+  }, [editedValue, name, onEdit]);
+  const onEditCancel = useCallback(() => {
+    setIsEditing(false);
+    setEditedValue(value);
+  }, [value]);
+
+  // Sortable functionality
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: name });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="pl-[8px] pr-[24px] flex flex-row gap-[8px] my-[24px]"
+    >
+      <div className="shrink-0">
+        <div
+          className="size-[24px] grid place-items-center cursor-grab active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical size={16} className="text-text-info" />
+        </div>
+      </div>
+      <div className="grow flex flex-col gap-[8px]">
+        <div className="group/field-name flex flex-row gap-[8px] items-center text-text-subtle hover:text-text-primary">
+          {getSchemaTypeIcon(type)}
+          <div className="font-[500] text-[14px] leading-[20px]">{name}</div>
+          {isEditing ? (
+            <>
+              <Check
+                size={20}
+                className="!text-text-body"
+                onClick={() => {
+                  onEditDone();
+                }}
+              />
+              <X
+                size={20}
+                className="!text-text-body"
+                onClick={() => {
+                  onEditCancel();
+                }}
+              />
+            </>
+          ) : (
+            <Pencil
+              size={20}
+              className="!text-text-body hidden group-hover/field-name:inline-block"
+              onClick={() => {
+                setIsEditing(true);
+              }}
+            />
+          )}
+        </div>
+        {isEditing ? (
+          <TextareaAutosize
+            className={cn(
+              "w-full p-0 border-0 outline-0 bg-transparent rounded-none no-resizer",
+              "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
+            )}
+            autoFocus
+            value={editedValue}
+            onChange={(e) => setEditedValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                onEditDone();
+              }
+            }}
+          />
+        ) : (
+          <div className="text-text-primary line-clamp-3">{value}</div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const SessionMessagesAndUserInputs = ({
   onAddPlotCard,
   isOpenSettings,
@@ -1072,14 +1290,14 @@ const SessionMessagesAndUserInputs = ({
       let streamingVariables = {};
       try {
         // Get last turn's dataStore for inheritance
-        let lastDataStore = {};
+        let lastDataStore: DataStoreSavedField[] = [];
         if (session.turnIds.length > 0) {
           const lastTurnId = session.turnIds[session.turnIds.length - 1];
           try {
             const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
               .throwOnFailure()
               .getValue();
-            lastDataStore = { ...lastTurn.dataStore };
+            lastDataStore = cloneDeep(lastTurn.dataStore);
           } catch (error) {
             console.warn(`Failed to get last turn's dataStore: ${error}`);
           }
@@ -1600,6 +1818,121 @@ const SessionMessagesAndUserInputs = ({
     [generateCharacterMessage],
   );
 
+  // Data schema list
+  const [isOpenDataSchemaList, setIsOpenDataSchemaList] = useState(false);
+  const { data: flow } = useQuery(flowQueries.detail(session?.flowId));
+  const isDataSchemaUsed = useMemo(() => {
+    if (!flow) {
+      return false;
+    }
+    return (
+      flow.props.dataStoreSchema && flow.props.dataStoreSchema.fields.length > 0
+    );
+  }, [flow]);
+  const { data: lastTurn, refetch: refetchLastTurn } = useQuery(
+    turnQueries.detail(session?.turnIds[session?.turnIds.length - 1]),
+  );
+  const lastTurnDataStore: Record<string, string> = useMemo(() => {
+    if (!lastTurn) {
+      return {};
+    }
+    return Object.fromEntries(
+      lastTurn.dataStore.map((field) => [field.name, field.value]),
+    );
+  }, [lastTurn]);
+
+  // Sort data schema fields according to dataSchemaOrder
+  const sortedDataSchemaFields = useMemo(() => {
+    const fields = flow?.props.dataStoreSchema?.fields || [];
+    const dataSchemaOrder = session?.dataSchemaOrder || [];
+
+    return [
+      // 1. Fields in dataSchemaOrder come first, in order
+      ...dataSchemaOrder
+        .map((name) => fields.find((f) => f.name === name))
+        .filter((f): f is NonNullable<typeof f> => f !== undefined),
+
+      // 2. Fields not in dataSchemaOrder come after, in original order
+      ...fields.filter((f) => !dataSchemaOrder.includes(f.name)),
+    ];
+  }, [flow?.props.dataStoreSchema?.fields, session?.dataSchemaOrder]);
+
+  // DnD sensors for data schema reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  // Handle drag end for data schema field reordering
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id || !session) {
+        return;
+      }
+
+      const oldIndex = sortedDataSchemaFields.findIndex(
+        (f) => f.name === active.id,
+      );
+      const newIndex = sortedDataSchemaFields.findIndex(
+        (f) => f.name === over.id,
+      );
+
+      if (oldIndex === -1 || newIndex === -1) {
+        return;
+      }
+
+      const reorderedFields = arrayMove(
+        sortedDataSchemaFields,
+        oldIndex,
+        newIndex,
+      );
+      const newOrder = reorderedFields.map((f) => f.name);
+
+      try {
+        session.setDataSchemaOrder(newOrder);
+        await SessionService.saveSession.execute({ session });
+        // Invalidate session cache to reflect the change immediately
+        invalidateSession();
+      } catch (error) {
+        logger.error("Failed to update data schema order", error);
+        toast.error("Failed to update field order");
+      }
+    },
+    [sortedDataSchemaFields, session, invalidateSession],
+  );
+
+  // Update last turn data store
+  const updateDataStore = useCallback(
+    async (name: string, value: string) => {
+      if (!lastTurn) {
+        logger.error("No message");
+        toast.error("No message");
+        return;
+      }
+
+      try {
+        // Find the field to update
+        const updatedDataStore = lastTurn.dataStore.map((field) =>
+          field.name === name ? { ...field, value } : field,
+        );
+
+        // Update the turn with new dataStore
+        lastTurn.setDataStore(updatedDataStore);
+
+        // Save to database
+        await TurnService.updateTurn.execute(lastTurn);
+        refetchLastTurn();
+      } catch (error) {
+        logger.error("Failed to update data store", error);
+        toast.error("Failed to update data store field");
+      }
+    },
+    [lastTurn, refetchLastTurn],
+  );
+
   if (!session) {
     return null;
   }
@@ -1607,206 +1940,288 @@ const SessionMessagesAndUserInputs = ({
   const virtualItems = rowVirtualizer.getVirtualItems();
 
   return (
-    <div
-      ref={effectiveParentRef}
-      id={`session-${session.id}`}
-      className="w-full h-full overflow-auto contain-strict session-scrollbar"
-      style={{
-        scrollbarWidth: "thin",
-        scrollbarColor: "rgba(255, 255, 255, 0.3) transparent",
-      }}
-    >
+    <>
       <div
-        className="w-full min-h-[calc(100dvh-270px)] relative"
-        style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
-        }}
+        ref={effectiveParentRef}
+        id={`session-${session.id}`}
+        className={cn(
+          "w-full h-full overflow-auto contain-strict session-scrollbar",
+          "transition-[padding-right] pr-0",
+          isDataSchemaUsed && isOpenDataSchemaList && "pr-[320px]",
+        )}
       >
-        <InlineChatStyles
-          container={`#session-${session.id}`}
-          chatStyles={session.props.chatStyles}
-        />
+        <div
+          className="w-full min-h-[calc(100dvh-270px)] relative"
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+          }}
+        >
+          <InlineChatStyles
+            container={`#session-${session.id}`}
+            chatStyles={session.props.chatStyles}
+          />
 
-        <div className="relative max-w-[1196px] mx-auto">
-          {virtualItems.map((virtualItem) => {
-            const messageId = session.turnIds[virtualItem.index];
-            const isLastMessage = virtualItem.index === messageCount - 1;
+          <div className="relative max-w-[1196px] mx-auto">
+            {virtualItems.map((virtualItem) => {
+              const messageId = session.turnIds[virtualItem.index];
+              const isLastMessage = virtualItem.index === messageCount - 1;
 
-            return (
-              <div
-                key={virtualItem.key}
-                data-index={virtualItem.index}
-                ref={rowVirtualizer.measureElement}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  transform: `translateY(${virtualItem.start}px)`,
-                  paddingBottom: 16,
-                }}
-              >
-                <MessageItem
-                  messageId={messageId}
-                  userCharacterCardId={session.userCharacterCardId}
-                  translationConfig={session.translation}
-                  disabled={!!streamingMessageId}
-                  streaming={
-                    messageId.equals(streamingMessageId)
-                      ? {
-                          agentName: streamingAgentName,
-                          modelName: streamingModelName,
-                        }
-                      : undefined
-                  }
-                  isLastMessage={isLastMessage}
-                  editMessage={editMessage}
-                  deleteMessage={deleteMessage}
-                  selectOption={selectOption}
-                  generateOption={generateOption}
+              return (
+                <div
+                  key={virtualItem.key}
+                  data-index={virtualItem.index}
+                  ref={rowVirtualizer.measureElement}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualItem.start}px)`,
+                    paddingBottom: 16,
+                  }}
+                >
+                  <MessageItem
+                    messageId={messageId}
+                    userCharacterCardId={session.userCharacterCardId}
+                    translationConfig={session.translation}
+                    disabled={!!streamingMessageId}
+                    streaming={
+                      messageId.equals(streamingMessageId)
+                        ? {
+                            agentName: streamingAgentName,
+                            modelName: streamingModelName,
+                          }
+                        : undefined
+                    }
+                    isLastMessage={isLastMessage}
+                    dataSchemaOrder={session.dataSchemaOrder}
+                    editMessage={editMessage}
+                    deleteMessage={deleteMessage}
+                    selectOption={selectOption}
+                    generateOption={generateOption}
+                  />
+                </div>
+              );
+            })}
+            {isOpenSelectScenarioModal && (
+              <div className="z-[20] absolute w-full flex flex-row py-[100px]">
+                <SelectScenarioModal
+                  onSkip={() => {
+                    setIsOpenSelectScenarioModal(false);
+                  }}
+                  onAdd={addScenario}
+                  renderedScenarios={renderedScenarios}
+                  onRenderScenarios={renderScenarios}
+                  sessionId={sessionId}
+                  plotCardId={plotCardId}
                 />
               </div>
-            );
-          })}
-          {isOpenSelectScenarioModal && (
-            <div className="z-[20] absolute w-full flex flex-row py-[100px]">
-              <SelectScenarioModal
-                onSkip={() => {
-                  setIsOpenSelectScenarioModal(false);
-                }}
-                onAdd={addScenario}
-                renderedScenarios={renderedScenarios}
-                onRenderScenarios={renderScenarios}
-                sessionId={sessionId}
-                plotCardId={plotCardId}
-              />
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Mobile Add Plot Card Dialog */}
-      <Dialog
-        open={isOpenAddPlotCardModal && isMobile}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsOpenAddPlotCardModal(false);
-          }
-        }}
-      >
-        <DialogContent
-          hideClose
-          className="w-80 p-6 bg-background-surface-2 rounded-lg outline-1 outline-border-light inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden"
+        {/* Mobile Add Plot Card Dialog */}
+        <Dialog
+          open={isOpenAddPlotCardModal && isMobile}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsOpenAddPlotCardModal(false);
+            }
+          }}
         >
-          <div className="self-stretch flex flex-col justify-start items-end gap-6">
-            <div className="self-stretch flex flex-col justify-start items-start gap-2">
-              <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
-                What to add a plot card?
-              </DialogTitle>
-              <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
+          <DialogContent
+            hideClose
+            className="w-80 p-6 bg-background-surface-2 rounded-lg outline-1 outline-border-light inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden"
+          >
+            <div className="self-stretch flex flex-col justify-start items-end gap-6">
+              <div className="self-stretch flex flex-col justify-start items-start gap-2">
+                <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
+                  What to add a plot card?
+                </DialogTitle>
+                <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
+                  You will not be able to add a scenario, because you have not
+                  selected a plot card for this session.
+                </DialogDescription>
+              </div>
+              <div className="inline-flex justify-start items-center gap-2">
+                <DialogClose asChild>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => {
+                      setIsOpenAddPlotCardModal(false);
+                    }}
+                  >
+                    <div className="justify-center text-button-background-primary text-sm font-medium leading-tight">
+                      Skip
+                    </div>
+                  </Button>
+                </DialogClose>
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    setIsOpenAddPlotCardModal(false);
+                    onAddPlotCard();
+                  }}
+                >
+                  <div className="inline-flex justify-start items-center gap-2">
+                    <div className="justify-center text-button-foreground-primary text-sm font-semibold leading-tight">
+                      Add plot card
+                    </div>
+                  </div>
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Mobile Select Scenario Prompt Dialog */}
+        <Dialog
+          open={isOpenSelectScenarioModal && isMobile}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsOpenSelectScenarioModal(false);
+            }
+          }}
+        >
+          <DialogContent hideClose className="max-w-[90vw]">
+            <DialogHeader>
+              <DialogTitle>What to add a plot card?</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-text-body">
                 You will not be able to add a scenario, because you have not
                 selected a plot card for this session.
-              </DialogDescription>
+              </p>
             </div>
-            <div className="inline-flex justify-start items-center gap-2">
+            <DialogFooter>
               <DialogClose asChild>
                 <Button
                   variant="ghost"
                   size="lg"
                   onClick={() => {
-                    setIsOpenAddPlotCardModal(false);
+                    setIsOpenSelectScenarioModal(false);
                   }}
                 >
-                  <div className="justify-center text-button-background-primary text-sm font-medium leading-tight">
-                    Skip
-                  </div>
+                  Skip
                 </Button>
               </DialogClose>
               <Button
                 size="lg"
                 onClick={() => {
-                  setIsOpenAddPlotCardModal(false);
-                  onAddPlotCard();
-                }}
-              >
-                <div className="inline-flex justify-start items-center gap-2">
-                  <div className="justify-center text-button-foreground-primary text-sm font-semibold leading-tight">
-                    Add plot card
-                  </div>
-                </div>
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Mobile Select Scenario Prompt Dialog */}
-      <Dialog
-        open={isOpenSelectScenarioModal && isMobile}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsOpenSelectScenarioModal(false);
-          }
-        }}
-      >
-        <DialogContent hideClose className="max-w-[90vw]">
-          <DialogHeader>
-            <DialogTitle>What to add a plot card?</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-text-body">
-              You will not be able to add a scenario, because you have not
-              selected a plot card for this session.
-            </p>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={() => {
+                  renderScenarios();
                   setIsOpenSelectScenarioModal(false);
+                  setIsOpenSelectScenarioModal(true);
                 }}
               >
-                Skip
+                Add plot card
               </Button>
-            </DialogClose>
-            <Button
-              size="lg"
-              onClick={() => {
-                renderScenarios();
-                setIsOpenSelectScenarioModal(false);
-                setIsOpenSelectScenarioModal(true);
-              }}
-            >
-              Add plot card
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      <UserInputs
-        userCharacterCardId={session.userCharacterCardId}
-        aiCharacterCardIds={session.aiCharacterCardIds}
-        generateCharacterMessage={generateCharacterMessage}
-        addUserMessage={addUserMessage}
-        isOpenSettings={isOpenSettings}
-        disabled={isOpenAddPlotCardModal || isOpenSelectScenarioModal}
-        streamingMessageId={streamingMessageId ?? undefined}
-        onStopGenerate={() => {
-          refStopGenerate.current?.abort("Stop generate by user");
-        }}
-        autoReply={session.autoReply}
-        setAutoReply={setAutoReply}
-        isOpenAddPlotCardModal={isOpenAddPlotCardModal}
-        onSkip={() => {
-          setIsOpenAddPlotCardModal(false);
-        }}
-        onAdd={() => {
-          onAddPlotCard();
-        }}
-      />
-    </div>
+        <UserInputs
+          userCharacterCardId={session.userCharacterCardId}
+          aiCharacterCardIds={session.aiCharacterCardIds}
+          generateCharacterMessage={generateCharacterMessage}
+          addUserMessage={addUserMessage}
+          isOpenSettings={isOpenSettings}
+          disabled={isOpenAddPlotCardModal || isOpenSelectScenarioModal}
+          streamingMessageId={streamingMessageId ?? undefined}
+          onStopGenerate={() => {
+            refStopGenerate.current?.abort("Stop generate by user");
+          }}
+          autoReply={session.autoReply}
+          setAutoReply={setAutoReply}
+          isOpenAddPlotCardModal={isOpenAddPlotCardModal}
+          onSkip={() => {
+            setIsOpenAddPlotCardModal(false);
+          }}
+          onAdd={() => {
+            onAddPlotCard();
+          }}
+        />
+      </div>
+
+      {/* Data schema toggle & list */}
+      <div
+        className={cn(
+          "absolute top-[72px] bottom-[80px] right-[32px] flex flex-col items-end gap-[16px]",
+          !isDataSchemaUsed && "hidden",
+        )}
+      >
+        <ButtonPill
+          size="default"
+          active={isOpenDataSchemaList}
+          onClick={() => {
+            setIsOpenDataSchemaList((isOpen) => !isOpen);
+          }}
+        >
+          Data schema list
+        </ButtonPill>
+        <div
+          className={cn(
+            "w-[320px] border-1 border-[#F1F1F14D] rounded-[12px] bg-background-surface-3",
+            "flex flex-col overflow-hidden",
+            "transition-opacity opacity-0",
+            isOpenDataSchemaList
+              ? "opacity-100"
+              : "pointer-events-none select-none",
+          )}
+        >
+          <div className="shrink-0 h-[72px] p-[16px] border-b-1 border-b-[#F1F1F14D] flex flex-row items-center text-text-primary">
+            {streamingMessageId ? (
+              <>
+                <SvgIcon
+                  name="astrsk_symbol"
+                  size={40}
+                  className="animate-spin mr-[2px]"
+                />
+                <div className="font-[400] text-[16px] leading-[25.6px] mr-[4px]">
+                  {streamingAgentName}
+                </div>
+                <div className="font-[600] text-[16px] leading-[25.6px]">
+                  {streamingModelName}
+                </div>
+              </>
+            ) : (
+              <div className="font-[600] text-[16px] leading-[25.6px]">
+                Data schema list
+              </div>
+            )}
+          </div>
+          <div className="relative overflow-hidden">
+            <ScrollArea className="w-full h-full">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+                modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+              >
+                <SortableContext
+                  items={sortedDataSchemaFields.map((field) => field.name)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {sortedDataSchemaFields.map((field) => (
+                    <SortableDataSchemaFieldItem
+                      key={field.name}
+                      name={field.name}
+                      type={field.type}
+                      value={
+                        field.name in lastTurnDataStore
+                          ? lastTurnDataStore[field.name]
+                          : "--"
+                      }
+                      onEdit={updateDataStore}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            </ScrollArea>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 

@@ -57,7 +57,7 @@ import { PlotCard } from "@/modules/card/domain";
 import { CharacterCard } from "@/modules/card/domain/character-card";
 import { DataStoreFieldType } from "@/modules/flow/domain/flow";
 import { Session } from "@/modules/session/domain/session";
-import { Option } from "@/modules/turn/domain/option";
+import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 import { Turn as MessageEntity } from "@/modules/turn/domain/turn";
 import { parseAiSdkErrorMessage, sanitizeFileName } from "@/shared/utils";
 import { translate } from "@/shared/utils/translate-utils";
@@ -973,7 +973,7 @@ const createMessage = async ({
     .getValue();
 
   // Get last turn's dataStore if exists
-  let dataStore = {};
+  let dataStore: DataStoreSavedField[] = [];
   if (session.turnIds.length > 0) {
     const lastTurnId = session.turnIds[session.turnIds.length - 1];
     try {
@@ -981,7 +981,7 @@ const createMessage = async ({
         .throwOnFailure()
         .getValue();
       // Clone the dataStore to avoid mutations
-      dataStore = { ...lastTurn.dataStore };
+      dataStore = cloneDeep(lastTurn.dataStore);
     } catch (error) {
       logger.warn(`Failed to get last turn's dataStore: ${error}`);
     }
@@ -1596,7 +1596,7 @@ type FlowResult = {
   content: string;
   variables: Record<string, any>;
   translations?: Map<string, string>;
-  dataStore?: Record<string, any>;
+  dataStore?: DataStoreSavedField[];
 };
 
 async function* executeFlow({
@@ -1616,7 +1616,7 @@ async function* executeFlow({
   let content = "";
   const variables: Record<string, any> = {};
   const translations: Map<string, string> = new Map();
-  let dataStore: Record<string, any> = {};
+  let dataStore: DataStoreSavedField[] = [];
 
   try {
     // Get flow
@@ -1670,7 +1670,7 @@ async function* executeFlow({
         const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
           .throwOnFailure()
           .getValue();
-        dataStore = { ...lastTurn.dataStore };
+        dataStore = cloneDeep(lastTurn.dataStore);
       } catch (error) {
         logger.warn(`Failed to get last turn's dataStore: ${error}`);
       }
@@ -1678,33 +1678,55 @@ async function* executeFlow({
 
     // Initialize or update dataStore from schema
     if (flow.props.dataStoreSchema) {
+      // Create a map of existing fields for quick lookup
+      const existingFieldsMap = new Map(
+        dataStore.map((field) => [field.id, field]),
+      );
+
       // Process each schema field
       for (const schemaField of flow.props.dataStoreSchema.fields) {
-        // Only initialize if field doesn't exist in dataStore
-        if (!(schemaField.name in dataStore)) {
+        // Check if field already exists
+        const existingField = existingFieldsMap.get(schemaField.id);
+
+        if (!existingField) {
+          // Initialize new field
           try {
             // Render initial value with current context
             const renderedValue = TemplateRenderer.render(
               schemaField.initialValue,
-              createFullContext(context, {}, dataStore), // Include existing dataStore values
+              createFullContext(context, {}, dataStore),
             );
 
-            // Convert to appropriate type
-            dataStore[schemaField.name] = convertToDataStoreType(
+            // Convert to appropriate type and create DataStoreSavedField
+            const convertedValue = convertToDataStoreType(
               renderedValue,
               schemaField.type,
             );
+
+            dataStore.push({
+              id: schemaField.id,
+              name: schemaField.name,
+              type: schemaField.type,
+              value: String(convertedValue),
+            });
           } catch (error) {
             logger.error(
               `Failed to initialize dataStore field "${schemaField.name}": ${error}`,
             );
             // Set default value based on type
-            dataStore[schemaField.name] =
+            const defaultValue =
               schemaField.type === "number" || schemaField.type === "integer"
-                ? 0
+                ? "0"
                 : schemaField.type === "boolean"
-                  ? false
+                  ? "false"
                   : "";
+
+            dataStore.push({
+              id: schemaField.id,
+              name: schemaField.name,
+              type: schemaField.type,
+              value: defaultValue,
+            });
           }
         }
       }
@@ -1772,11 +1794,34 @@ async function* executeFlow({
               );
 
               if (schemaField) {
-                // Convert and store value
-                dataStore[schemaField.name] = convertToDataStoreType(
+                // Convert value
+                const convertedValue = convertToDataStoreType(
                   renderedValue,
                   schemaField.type,
                 );
+
+                // Find and update existing field or add new one
+                const existingFieldIndex = dataStore.findIndex(
+                  (f) => f.id === schemaField.id,
+                );
+
+                if (existingFieldIndex >= 0) {
+                  // Update existing field
+                  dataStore[existingFieldIndex] = {
+                    id: schemaField.id,
+                    name: schemaField.name,
+                    type: schemaField.type,
+                    value: String(convertedValue),
+                  };
+                } else {
+                  // Add new field
+                  dataStore.push({
+                    id: schemaField.id,
+                    name: schemaField.name,
+                    type: schemaField.type,
+                    value: String(convertedValue),
+                  });
+                }
               } else {
                 logger.warn(
                   `Schema field not found for dataStore field with ID: ${field.schemaFieldId}`,
@@ -1920,7 +1965,7 @@ async function handleIfNode(
   ifNode: any,
   variables: Record<string, any>,
   context: any,
-  dataStore: Record<string, any>,
+  dataStore: DataStoreSavedField[],
   adjacencyList: Map<string, string[]>,
   allNodes: any[],
 ): Promise<any | null> {
@@ -1952,13 +1997,14 @@ async function handleIfNode(
  * @param condition - The condition to evaluate
  * @param variables - Current variables
  * @param context - Current context
+ * @param dataStore - DataStore field values
  * @returns Boolean result of the condition
  */
 async function evaluateSingleCondition(
   condition: Condition,
   variables: Record<string, any>,
   context: any,
-  dataStore: Record<string, any>,
+  dataStore: DataStoreSavedField[],
 ): Promise<boolean> {
   let value1: string = "";
   let value2: string = "";
@@ -2183,7 +2229,7 @@ async function evaluateIfCondition(
   ifNode: any,
   variables: Record<string, any>,
   context: any,
-  dataStore: Record<string, any>,
+  dataStore: DataStoreSavedField[],
 ): Promise<boolean> {
   // Get if node data
   const ifNodeData = ifNode.data as {
@@ -2219,18 +2265,23 @@ async function evaluateIfCondition(
  * DataStore fields are spread at top level for direct access via {{fieldName}}
  * @param context - Base render context
  * @param variables - Variables from agent execution
- * @param dataStore - DataStore field values
+ * @param dataStore - DataStore field values as array
  * @returns Merged context object
  */
 function createFullContext(
   context: RenderContext,
   variables: Record<string, any> = {},
-  dataStore: Record<string, any> = {},
+  dataStore: DataStoreSavedField[] = [],
 ): any {
+  // Convert DataStoreSavedField[] to object for template access
+  const dataStoreObject = Object.fromEntries(
+    dataStore.map(field => [field.name, field.value])
+  );
+    
   return {
     ...context,
     ...variables,
-    ...dataStore,
+    ...dataStoreObject,
   };
 }
 

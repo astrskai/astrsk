@@ -1,1 +1,1 @@
-ALTER TABLE "sessions" DROP COLUMN "data_store";
+ALTER TABLE "sessions" DROP COLUMN "data_store" CASCADE;
