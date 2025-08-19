@@ -17,19 +17,11 @@ export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): P
     // Otherwise, parse the raw object into the proper domain class using parsePromptMessage
     const parsed = parsePromptMessage(msg as any);
     if (parsed.isFailure) {
-      console.error('[CONVERT] Failed to parse message:', parsed.getError());
       return msg; // Fallback to original if parsing fails
     }
     return parsed.getValue();
   });
   
-  console.log('[CONVERT] Converting prompt messages to items:', {
-    inputLength: promptMessages?.length,
-    parsedLength: parsedMessages?.length,
-    originalTypes: promptMessages?.map((msg: any) => msg.constructor?.name || 'plain object'),
-    parsedTypes: parsedMessages?.map(msg => msg.constructor.name)
-  });
-
   return parsedMessages.map((msg): PromptItem => {
     const msgAny = msg as any;
     let parsedMessage = msg;
@@ -37,7 +29,6 @@ export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): P
 
       const parsed = parsePromptMessage(msgAny as any);
       if (parsed.isFailure) {
-        console.error('[CONVERT] Failed to parse message:', parsed.getError());
         return msg; // Fallback to original if parsing fails
       }
       parsedMessage = parsed.getValue();
@@ -206,7 +197,6 @@ export function convertItemsToPromptMessages(items: PromptItem[]): PromptMessage
     // Parse the JSON data into proper domain objects
     const result = parsePromptMessage(messageData);
     if (result.isFailure) {
-      console.error("Failed to parse prompt message:", result.getError());
       throw new Error(`Failed to parse prompt message: ${result.getError()}`);
     }
     
