@@ -1045,11 +1045,25 @@ const DataSchemaFieldItem = ({
   name,
   type,
   value,
+  onEdit,
 }: {
   name: string;
   type: string;
   value: string;
+  onEdit?: (name: string, value: string) => Promise<void>;
 }) => {
+  // Edit value
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedValue, setEditedValue] = useState<string>(value ?? "");
+  const onEditDone = useCallback(async () => {
+    await onEdit?.(name, editedValue);
+    setIsEditing(false);
+  }, [editedValue, name, onEdit]);
+  const onEditCancel = useCallback(() => {
+    setIsEditing(false);
+    setEditedValue(value);
+  }, [value]);
+
   return (
     <div className="pl-[8px] pr-[24px] flex flex-row gap-[8px] my-[24px]">
       <div className="shrink-0">
@@ -1061,15 +1075,52 @@ const DataSchemaFieldItem = ({
         <div className="group/field-name flex flex-row gap-[8px] items-center text-text-subtle hover:text-text-primary">
           {getSchemaTypeIcon(type)}
           <div className="font-[500] text-[14px] leading-[20px]">{name}</div>
-          <Pencil
-            size={20}
-            className="!text-text-body hidden group-hover/field-name:inline-block"
-            onClick={() => {
-              // TODO: toggle edit mode
+          {isEditing ? (
+            <>
+              <Check
+                size={20}
+                className="!text-text-body"
+                onClick={() => {
+                  onEditDone();
+                }}
+              />
+              <X
+                size={20}
+                className="!text-text-body"
+                onClick={() => {
+                  onEditCancel();
+                }}
+              />
+            </>
+          ) : (
+            <Pencil
+              size={20}
+              className="!text-text-body hidden group-hover/field-name:inline-block"
+              onClick={() => {
+                setIsEditing(true);
+              }}
+            />
+          )}
+        </div>
+        {isEditing ? (
+          <TextareaAutosize
+            className={cn(
+              "w-full p-0 border-0 outline-0 bg-transparent rounded-none no-resizer",
+              "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
+            )}
+            autoFocus
+            value={editedValue}
+            onChange={(e) => setEditedValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                onEditDone();
+              }
             }}
           />
-        </div>
-        <div className="text-text-primary line-clamp-3">{value}</div>
+        ) : (
+          <div className="text-text-primary line-clamp-3">{value}</div>
+        )}
       </div>
     </div>
   );
@@ -1716,7 +1767,7 @@ const SessionMessagesAndUserInputs = ({
       flow.props.dataStoreSchema && flow.props.dataStoreSchema.fields.length > 0
     );
   }, [flow]);
-  const { data: lastTurn } = useQuery(
+  const { data: lastTurn, refetch: refetchLastTurn } = useQuery(
     turnQueries.detail(session?.turnIds[session?.turnIds.length - 1]),
   );
   const lastTurnDataStore: Record<string, string> = useMemo(() => {
@@ -1727,6 +1778,35 @@ const SessionMessagesAndUserInputs = ({
       lastTurn.dataStore.map((field) => [field.name, field.value]),
     );
   }, [lastTurn]);
+
+  // Update last turn data store
+  const updateDataStore = useCallback(
+    async (name: string, value: string) => {
+      if (!lastTurn) {
+        logger.error("No message");
+        toast.error("No message");
+        return;
+      }
+
+      try {
+        // Find the field to update
+        const updatedDataStore = lastTurn.dataStore.map((field) =>
+          field.name === name ? { ...field, value } : field,
+        );
+
+        // Update the turn with new dataStore
+        lastTurn.setDataStore(updatedDataStore);
+
+        // Save to database
+        await TurnService.updateTurn.execute(lastTurn);
+        refetchLastTurn();
+      } catch (error) {
+        logger.error("Failed to update data store", error);
+        toast.error("Failed to update data store field");
+      }
+    },
+    [lastTurn, refetchLastTurn],
+  );
 
   if (!session) {
     return null;
@@ -1980,6 +2060,7 @@ const SessionMessagesAndUserInputs = ({
                       ? lastTurnDataStore[field.name]
                       : "--"
                   }
+                  onEdit={updateDataStore}
                 />
               ))}
             </ScrollArea>
