@@ -30,7 +30,7 @@ export class UpdateCardLorebook
       if (this.saveCardRepo.updateCardLorebook) {
         const result = await this.saveCardRepo.updateCardLorebook(
           new UniqueEntityID(request.cardId),
-          request.lorebook ? request.lorebook.entries : []
+          request.lorebook ? request.lorebook.toJSON() : { entries: [] }
         );
         return result;
       }

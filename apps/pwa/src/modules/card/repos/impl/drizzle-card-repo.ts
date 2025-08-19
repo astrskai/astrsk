@@ -13,6 +13,7 @@ import { plotCards } from "@/db/schema/plot-cards";
 import { TableName } from "@/db/schema/table-name";
 import { Transaction } from "@/db/transaction";
 import { Card, CardType } from "@/modules/card/domain";
+import { LorebookJSON } from "@/modules/card/domain/lorebook";
 import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
 import { DeleteCardRepo } from "@/modules/card/repos/delete-card-repo";
 import {
@@ -136,13 +137,29 @@ export class DrizzleCardRepo
     }
   }
 
-  async updateCardLorebook(cardId: UniqueEntityID, lorebook: any[]): Promise<Result<void>> {
+  async updateCardLorebook(cardId: UniqueEntityID, lorebook: LorebookJSON): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
-      await db
-        .update(cards)
-        .set({ lorebook, updated_at: new Date() })
-        .where(eq(cards.id, cardId.toString()));
+      // First check if it's a character card or plot card
+      const cardRow = await db
+        .select({ type: cards.type })
+        .from(cards)
+        .where(eq(cards.id, cardId.toString()))
+        .then(getOneOrThrow);
+
+      if (cardRow.type === "character") {
+        await db
+          .update(characterCards)
+          .set({ lorebook, updated_at: new Date() })
+          .where(eq(characterCards.id, cardId.toString()));
+      } else if (cardRow.type === "plot") {
+        await db
+          .update(plotCards)
+          .set({ lorebook, updated_at: new Date() })
+          .where(eq(plotCards.id, cardId.toString()));
+      } else {
+        return Result.fail(`Card type ${cardRow.type} does not support lorebook`);
+      }
       
       return Result.ok();
     } catch (error) {
@@ -157,10 +174,11 @@ export class DrizzleCardRepo
   async updateCardScenarios(cardId: UniqueEntityID, scenarios: any[]): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
+      // Scenarios only exist on plot cards
       await db
-        .update(cards)
+        .update(plotCards)
         .set({ scenarios, updated_at: new Date() })
-        .where(eq(cards.id, cardId.toString()));
+        .where(eq(plotCards.id, cardId.toString()));
       
       return Result.ok();
     } catch (error) {

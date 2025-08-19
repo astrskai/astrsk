@@ -3,6 +3,7 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { Transaction } from "@/db/transaction";
 import { Card } from "@/modules/card/domain";
+import { LorebookJSON } from "@/modules/card/domain/lorebook";
 
 export interface SaveCardRepo {
   saveCard(card: Card, tx?: Transaction): Promise<Result<Card>>;
@@ -12,7 +13,7 @@ export interface SaveCardRepo {
   updateCardConceptualOrigin?(cardId: UniqueEntityID, conceptualOrigin: string): Promise<Result<void>>;
   updateCardCreator?(cardId: UniqueEntityID, creator: string): Promise<Result<void>>;
   updateCardTags?(cardId: UniqueEntityID, tags: string[]): Promise<Result<void>>;
-  updateCardLorebook?(cardId: UniqueEntityID, lorebook: any[]): Promise<Result<void>>;
+  updateCardLorebook?(cardId: UniqueEntityID, lorebook: LorebookJSON): Promise<Result<void>>;
   updateCardScenarios?(cardId: UniqueEntityID, scenarios: any[]): Promise<Result<void>>;
   updateCharacterName?(cardId: UniqueEntityID, name: string): Promise<Result<void>>;
   updateCharacterDescription?(cardId: UniqueEntityID, description: string): Promise<Result<void>>;
