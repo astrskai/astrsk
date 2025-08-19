@@ -256,9 +256,9 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.Cards}: ${change.__op__} ${change.id}`);
-        queryClient.refetchQueries({
-          queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
-        });
+        // queryClient.refetchQueries({
+        //   queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
+        // });
       });
     },
   );
@@ -272,9 +272,9 @@ async function registerLiveQueries() {
         logger.debug(
           `${TableName.CharacterCards}: ${change.__op__} ${change.id}`,
         );
-        queryClient.refetchQueries({
-          queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
-        });
+        // queryClient.refetchQueries({
+        //   queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
+        // });
       });
     },
   );
@@ -286,9 +286,9 @@ async function registerLiveQueries() {
     (res) => {
       res.forEach((change) => {
         logger.debug(`${TableName.PlotCards}: ${change.__op__} ${change.id}`);
-        queryClient.refetchQueries({
-          queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
-        });
+        // queryClient.refetchQueries({
+        //   queryKey: cardQueries.detail(new UniqueEntityID(change.id)).queryKey,
+        // });
       });
     },
   );
