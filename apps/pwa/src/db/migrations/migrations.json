@@ -81,11 +81,11 @@
   },
   {
     "sql": [
-      "ALTER TABLE \"sessions\" DROP COLUMN \"data_store\";"
+      "ALTER TABLE \"sessions\" DROP COLUMN \"data_store\" CASCADE;"
     ],
     "bps": true,
     "folderMillis": 1755498908780,
-    "hash": "80cf31052ebd9010f04be9649b6f7f7032fb95aa88bc7e905c4bdb8055075c2d"
+    "hash": "210dff2deb7ae024c474eaeb50a58da3f818a61599a67e2b5c6276b0efbbdb13"
   },
   {
     "sql": [
