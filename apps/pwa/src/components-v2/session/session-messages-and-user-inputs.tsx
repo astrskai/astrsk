@@ -1,3 +1,24 @@
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
@@ -27,10 +48,11 @@ import { UniqueEntityID } from "@/shared/domain";
 import { parseAiSdkErrorMessage } from "@/shared/utils/error-utils";
 import { logger } from "@/shared/utils/logger";
 import { TemplateRenderer } from "@/shared/utils/template-renderer";
-import { cloneDeep, last } from "lodash-es";
+import { cloneDeep } from "lodash-es";
 
 import { useAsset } from "@/app/hooks/use-asset";
 import { useCard } from "@/app/hooks/use-card";
+import { flowQueries } from "@/app/queries/flow-queries";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { turnQueries } from "@/app/queries/turn-queries";
 import { CardService } from "@/app/services";
@@ -50,6 +72,7 @@ import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
 import { InlineChatStyles } from "@/components-v2/session/inline-chat-styles";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
+import { ButtonPill } from "@/components-v2/ui/button-pill";
 import {
   Dialog,
   DialogClose,
@@ -59,6 +82,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components-v2/ui/dialog";
+import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { toastError } from "@/components-v2/ui/toast-error";
 import {
@@ -74,9 +98,6 @@ import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
-import { ButtonPill } from "@/components-v2/ui/button-pill";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { flowQueries } from "@/app/queries/flow-queries";
 
 const MessageItemInternal = ({
   characterCardId,
@@ -433,6 +454,7 @@ const MessageItem = ({
   translationConfig,
   disabled,
   streaming,
+  dataSchemaOrder,
   editMessage,
   deleteMessage,
   selectOption,
@@ -447,6 +469,7 @@ const MessageItem = ({
     modelName?: string;
   };
   isLastMessage?: boolean;
+  dataSchemaOrder?: string[];
   editMessage: (messageId: UniqueEntityID, content: string) => Promise<void>;
   deleteMessage: (messageId: UniqueEntityID) => Promise<void>;
   selectOption: (
@@ -462,7 +485,22 @@ const MessageItem = ({
   const content = selectedOption?.content;
   const language = translationConfig?.displayLanguage ?? "none";
   const translation = selectedOption?.translations.get(language);
-  const dataStoreFields = selectedOption?.dataStore;
+
+  // Sort dataStoreFields according to dataSchemaOrder
+  const sortedDataStoreFields = useMemo(() => {
+    const fields = selectedOption?.dataStore;
+    if (!fields) return undefined;
+
+    const order = dataSchemaOrder || [];
+    return [
+      // Fields in dataSchemaOrder come first, in order
+      ...order
+        .map((name) => fields.find((f) => f.name === name))
+        .filter((f): f is NonNullable<typeof f> => f !== undefined),
+      // Fields not in dataSchemaOrder come after, in original order
+      ...fields.filter((f) => !order.includes(f.name)),
+    ];
+  }, [selectedOption?.dataStore, dataSchemaOrder]);
 
   if (!message) {
     return null;
@@ -498,7 +536,7 @@ const MessageItem = ({
       streaming={typeof streaming !== "undefined"}
       streamingAgentName={streaming?.agentName}
       streamingModelName={streaming?.modelName}
-      dataStoreFields={dataStoreFields}
+      dataStoreFields={sortedDataStoreFields}
       onEdit={(content) => editMessage(messageId, content)}
       onDelete={() => deleteMessage(messageId)}
       onPrevOption={() => selectOption(messageId, "prev")}
@@ -1041,7 +1079,7 @@ const getSchemaTypeIcon = (type: string) => {
   }
 };
 
-const DataSchemaFieldItem = ({
+const SortableDataSchemaFieldItem = ({
   name,
   type,
   value,
@@ -1064,10 +1102,34 @@ const DataSchemaFieldItem = ({
     setEditedValue(value);
   }, [value]);
 
+  // Sortable functionality
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: name });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   return (
-    <div className="pl-[8px] pr-[24px] flex flex-row gap-[8px] my-[24px]">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="pl-[8px] pr-[24px] flex flex-row gap-[8px] my-[24px]"
+    >
       <div className="shrink-0">
-        <div className="size-[24px] grid place-items-center">
+        <div
+          className="size-[24px] grid place-items-center cursor-grab active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
           <GripVertical size={16} className="text-text-info" />
         </div>
       </div>
@@ -1779,6 +1841,69 @@ const SessionMessagesAndUserInputs = ({
     );
   }, [lastTurn]);
 
+  // Sort data schema fields according to dataSchemaOrder
+  const sortedDataSchemaFields = useMemo(() => {
+    const fields = flow?.props.dataStoreSchema?.fields || [];
+    const dataSchemaOrder = session?.dataSchemaOrder || [];
+
+    return [
+      // 1. Fields in dataSchemaOrder come first, in order
+      ...dataSchemaOrder
+        .map((name) => fields.find((f) => f.name === name))
+        .filter((f): f is NonNullable<typeof f> => f !== undefined),
+
+      // 2. Fields not in dataSchemaOrder come after, in original order
+      ...fields.filter((f) => !dataSchemaOrder.includes(f.name)),
+    ];
+  }, [flow?.props.dataStoreSchema?.fields, session?.dataSchemaOrder]);
+
+  // DnD sensors for data schema reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  // Handle drag end for data schema field reordering
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id || !session) {
+        return;
+      }
+
+      const oldIndex = sortedDataSchemaFields.findIndex(
+        (f) => f.name === active.id,
+      );
+      const newIndex = sortedDataSchemaFields.findIndex(
+        (f) => f.name === over.id,
+      );
+
+      if (oldIndex === -1 || newIndex === -1) {
+        return;
+      }
+
+      const reorderedFields = arrayMove(
+        sortedDataSchemaFields,
+        oldIndex,
+        newIndex,
+      );
+      const newOrder = reorderedFields.map((f) => f.name);
+
+      try {
+        session.setDataSchemaOrder(newOrder);
+        await SessionService.saveSession.execute({ session });
+        // Invalidate session cache to reflect the change immediately
+        invalidateSession();
+      } catch (error) {
+        logger.error("Failed to update data schema order", error);
+        toast.error("Failed to update field order");
+      }
+    },
+    [sortedDataSchemaFields, session, invalidateSession],
+  );
+
   // Update last turn data store
   const updateDataStore = useCallback(
     async (name: string, value: string) => {
@@ -1869,6 +1994,7 @@ const SessionMessagesAndUserInputs = ({
                         : undefined
                     }
                     isLastMessage={isLastMessage}
+                    dataSchemaOrder={session.dataSchemaOrder}
                     editMessage={editMessage}
                     deleteMessage={deleteMessage}
                     selectOption={selectOption}
@@ -2066,19 +2192,31 @@ const SessionMessagesAndUserInputs = ({
           </div>
           <div className="relative overflow-hidden">
             <ScrollArea className="w-full h-full">
-              {flow?.props.dataStoreSchema?.fields.map((field) => (
-                <DataSchemaFieldItem
-                  key={field.id}
-                  name={field.name}
-                  type={field.type}
-                  value={
-                    field.name in lastTurnDataStore
-                      ? lastTurnDataStore[field.name]
-                      : "--"
-                  }
-                  onEdit={updateDataStore}
-                />
-              ))}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+                modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+              >
+                <SortableContext
+                  items={sortedDataSchemaFields.map((field) => field.name)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {sortedDataSchemaFields.map((field) => (
+                    <SortableDataSchemaFieldItem
+                      key={field.name}
+                      name={field.name}
+                      type={field.type}
+                      value={
+                        field.name in lastTurnDataStore
+                          ? lastTurnDataStore[field.name]
+                          : "--"
+                      }
+                      onEdit={updateDataStore}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
             </ScrollArea>
           </div>
         </div>
