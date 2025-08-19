@@ -1,14 +1,19 @@
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
+  CaseUpper,
   Check,
   ChevronLeft,
   ChevronRight,
+  GripVertical,
+  Hash,
   History,
   Loader2,
+  Pencil,
   RefreshCcw,
   Send,
   Shuffle,
+  ToggleRight,
   Trash2,
   X,
 } from "lucide-react";
@@ -22,7 +27,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { parseAiSdkErrorMessage } from "@/shared/utils/error-utils";
 import { logger } from "@/shared/utils/logger";
 import { TemplateRenderer } from "@/shared/utils/template-renderer";
-import { cloneDeep } from "lodash-es";
+import { cloneDeep, last } from "lodash-es";
 
 import { useAsset } from "@/app/hooks/use-asset";
 import { useCard } from "@/app/hooks/use-card";
@@ -69,6 +74,9 @@ import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
+import { ButtonPill } from "@/components-v2/ui/button-pill";
+import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { flowQueries } from "@/app/queries/flow-queries";
 
 const MessageItemInternal = ({
   characterCardId,
@@ -1018,6 +1026,55 @@ const SelectScenarioModal = ({
   return null;
 };
 
+const getSchemaTypeIcon = (type: string) => {
+  switch (type) {
+    case "string":
+      return <CaseUpper size={20} />;
+    case "number":
+      return <Hash size={20} />;
+    case "integer":
+      return <SvgIcon name="integer" size={20} />;
+    case "boolean":
+      return <ToggleRight size={20} />;
+    default:
+      return <></>;
+  }
+};
+
+const DataSchemaFieldItem = ({
+  name,
+  type,
+  value,
+}: {
+  name: string;
+  type: string;
+  value: string;
+}) => {
+  return (
+    <div className="pl-[8px] pr-[24px] flex flex-row gap-[8px] my-[24px]">
+      <div className="shrink-0">
+        <div className="size-[24px] grid place-items-center">
+          <GripVertical size={16} className="text-text-info" />
+        </div>
+      </div>
+      <div className="grow flex flex-col gap-[8px]">
+        <div className="group/field-name flex flex-row gap-[8px] items-center text-text-subtle hover:text-text-primary">
+          {getSchemaTypeIcon(type)}
+          <div className="font-[500] text-[14px] leading-[20px]">{name}</div>
+          <Pencil
+            size={20}
+            className="!text-text-body hidden group-hover/field-name:inline-block"
+            onClick={() => {
+              // TODO: toggle edit mode
+            }}
+          />
+        </div>
+        <div className="text-text-primary line-clamp-3">{value}</div>
+      </div>
+    </div>
+  );
+};
+
 const SessionMessagesAndUserInputs = ({
   onAddPlotCard,
   isOpenSettings,
@@ -1648,6 +1705,29 @@ const SessionMessagesAndUserInputs = ({
     [generateCharacterMessage],
   );
 
+  // Data schema list
+  const [isOpenDataSchemaList, setIsOpenDataSchemaList] = useState(false);
+  const { data: flow } = useQuery(flowQueries.detail(session?.flowId));
+  const isDataSchemaUsed = useMemo(() => {
+    if (!flow) {
+      return false;
+    }
+    return (
+      flow.props.dataStoreSchema && flow.props.dataStoreSchema.fields.length > 0
+    );
+  }, [flow]);
+  const { data: lastTurn } = useQuery(
+    turnQueries.detail(session?.turnIds[session?.turnIds.length - 1]),
+  );
+  const lastTurnDataStore: Record<string, string> = useMemo(() => {
+    if (!lastTurn) {
+      return {};
+    }
+    return Object.fromEntries(
+      lastTurn.dataStore.map((field) => [field.name, field.value]),
+    );
+  }, [lastTurn]);
+
   if (!session) {
     return null;
   }
@@ -1655,206 +1735,258 @@ const SessionMessagesAndUserInputs = ({
   const virtualItems = rowVirtualizer.getVirtualItems();
 
   return (
-    <div
-      ref={effectiveParentRef}
-      id={`session-${session.id}`}
-      className="w-full h-full overflow-auto contain-strict session-scrollbar"
-      style={{
-        scrollbarWidth: "thin",
-        scrollbarColor: "rgba(255, 255, 255, 0.3) transparent",
-      }}
-    >
+    <>
       <div
-        className="w-full min-h-[calc(100dvh-270px)] relative"
-        style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
-        }}
+        ref={effectiveParentRef}
+        id={`session-${session.id}`}
+        className={cn(
+          "w-full h-full overflow-auto contain-strict session-scrollbar",
+          "transition-[padding-right] pr-0",
+          isDataSchemaUsed && isOpenDataSchemaList && "pr-[320px]",
+        )}
       >
-        <InlineChatStyles
-          container={`#session-${session.id}`}
-          chatStyles={session.props.chatStyles}
-        />
+        <div
+          className="w-full min-h-[calc(100dvh-270px)] relative"
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+          }}
+        >
+          <InlineChatStyles
+            container={`#session-${session.id}`}
+            chatStyles={session.props.chatStyles}
+          />
 
-        <div className="relative max-w-[1196px] mx-auto">
-          {virtualItems.map((virtualItem) => {
-            const messageId = session.turnIds[virtualItem.index];
-            const isLastMessage = virtualItem.index === messageCount - 1;
+          <div className="relative max-w-[1196px] mx-auto">
+            {virtualItems.map((virtualItem) => {
+              const messageId = session.turnIds[virtualItem.index];
+              const isLastMessage = virtualItem.index === messageCount - 1;
 
-            return (
-              <div
-                key={virtualItem.key}
-                data-index={virtualItem.index}
-                ref={rowVirtualizer.measureElement}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  transform: `translateY(${virtualItem.start}px)`,
-                  paddingBottom: 16,
-                }}
-              >
-                <MessageItem
-                  messageId={messageId}
-                  userCharacterCardId={session.userCharacterCardId}
-                  translationConfig={session.translation}
-                  disabled={!!streamingMessageId}
-                  streaming={
-                    messageId.equals(streamingMessageId)
-                      ? {
-                          agentName: streamingAgentName,
-                          modelName: streamingModelName,
-                        }
-                      : undefined
-                  }
-                  isLastMessage={isLastMessage}
-                  editMessage={editMessage}
-                  deleteMessage={deleteMessage}
-                  selectOption={selectOption}
-                  generateOption={generateOption}
+              return (
+                <div
+                  key={virtualItem.key}
+                  data-index={virtualItem.index}
+                  ref={rowVirtualizer.measureElement}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualItem.start}px)`,
+                    paddingBottom: 16,
+                  }}
+                >
+                  <MessageItem
+                    messageId={messageId}
+                    userCharacterCardId={session.userCharacterCardId}
+                    translationConfig={session.translation}
+                    disabled={!!streamingMessageId}
+                    streaming={
+                      messageId.equals(streamingMessageId)
+                        ? {
+                            agentName: streamingAgentName,
+                            modelName: streamingModelName,
+                          }
+                        : undefined
+                    }
+                    isLastMessage={isLastMessage}
+                    editMessage={editMessage}
+                    deleteMessage={deleteMessage}
+                    selectOption={selectOption}
+                    generateOption={generateOption}
+                  />
+                </div>
+              );
+            })}
+            {isOpenSelectScenarioModal && (
+              <div className="z-[20] absolute w-full flex flex-row py-[100px]">
+                <SelectScenarioModal
+                  onSkip={() => {
+                    setIsOpenSelectScenarioModal(false);
+                  }}
+                  onAdd={addScenario}
+                  renderedScenarios={renderedScenarios}
+                  onRenderScenarios={renderScenarios}
+                  sessionId={sessionId}
+                  plotCardId={plotCardId}
                 />
               </div>
-            );
-          })}
-          {isOpenSelectScenarioModal && (
-            <div className="z-[20] absolute w-full flex flex-row py-[100px]">
-              <SelectScenarioModal
-                onSkip={() => {
-                  setIsOpenSelectScenarioModal(false);
-                }}
-                onAdd={addScenario}
-                renderedScenarios={renderedScenarios}
-                onRenderScenarios={renderScenarios}
-                sessionId={sessionId}
-                plotCardId={plotCardId}
-              />
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Mobile Add Plot Card Dialog */}
-      <Dialog
-        open={isOpenAddPlotCardModal && isMobile}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsOpenAddPlotCardModal(false);
-          }
-        }}
-      >
-        <DialogContent
-          hideClose
-          className="w-80 p-6 bg-background-surface-2 rounded-lg outline-1 outline-border-light inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden"
+        {/* Mobile Add Plot Card Dialog */}
+        <Dialog
+          open={isOpenAddPlotCardModal && isMobile}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsOpenAddPlotCardModal(false);
+            }
+          }}
         >
-          <div className="self-stretch flex flex-col justify-start items-end gap-6">
-            <div className="self-stretch flex flex-col justify-start items-start gap-2">
-              <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
-                What to add a plot card?
-              </DialogTitle>
-              <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
+          <DialogContent
+            hideClose
+            className="w-80 p-6 bg-background-surface-2 rounded-lg outline-1 outline-border-light inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden"
+          >
+            <div className="self-stretch flex flex-col justify-start items-end gap-6">
+              <div className="self-stretch flex flex-col justify-start items-start gap-2">
+                <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
+                  What to add a plot card?
+                </DialogTitle>
+                <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
+                  You will not be able to add a scenario, because you have not
+                  selected a plot card for this session.
+                </DialogDescription>
+              </div>
+              <div className="inline-flex justify-start items-center gap-2">
+                <DialogClose asChild>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => {
+                      setIsOpenAddPlotCardModal(false);
+                    }}
+                  >
+                    <div className="justify-center text-button-background-primary text-sm font-medium leading-tight">
+                      Skip
+                    </div>
+                  </Button>
+                </DialogClose>
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    setIsOpenAddPlotCardModal(false);
+                    onAddPlotCard();
+                  }}
+                >
+                  <div className="inline-flex justify-start items-center gap-2">
+                    <div className="justify-center text-button-foreground-primary text-sm font-semibold leading-tight">
+                      Add plot card
+                    </div>
+                  </div>
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Mobile Select Scenario Prompt Dialog */}
+        <Dialog
+          open={isOpenSelectScenarioModal && isMobile}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsOpenSelectScenarioModal(false);
+            }
+          }}
+        >
+          <DialogContent hideClose className="max-w-[90vw]">
+            <DialogHeader>
+              <DialogTitle>What to add a plot card?</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-text-body">
                 You will not be able to add a scenario, because you have not
                 selected a plot card for this session.
-              </DialogDescription>
+              </p>
             </div>
-            <div className="inline-flex justify-start items-center gap-2">
+            <DialogFooter>
               <DialogClose asChild>
                 <Button
                   variant="ghost"
                   size="lg"
                   onClick={() => {
-                    setIsOpenAddPlotCardModal(false);
+                    setIsOpenSelectScenarioModal(false);
                   }}
                 >
-                  <div className="justify-center text-button-background-primary text-sm font-medium leading-tight">
-                    Skip
-                  </div>
+                  Skip
                 </Button>
               </DialogClose>
               <Button
                 size="lg"
                 onClick={() => {
-                  setIsOpenAddPlotCardModal(false);
-                  onAddPlotCard();
+                  renderScenarios();
+                  setIsOpenSelectScenarioModal(false);
+                  setIsOpenSelectScenarioModal(true);
                 }}
               >
-                <div className="inline-flex justify-start items-center gap-2">
-                  <div className="justify-center text-button-foreground-primary text-sm font-semibold leading-tight">
-                    Add plot card
-                  </div>
-                </div>
+                Add plot card
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <UserInputs
+          userCharacterCardId={session.userCharacterCardId}
+          aiCharacterCardIds={session.aiCharacterCardIds}
+          generateCharacterMessage={generateCharacterMessage}
+          addUserMessage={addUserMessage}
+          isOpenSettings={isOpenSettings}
+          disabled={isOpenAddPlotCardModal || isOpenSelectScenarioModal}
+          streamingMessageId={streamingMessageId ?? undefined}
+          onStopGenerate={() => {
+            refStopGenerate.current?.abort("Stop generate by user");
+          }}
+          autoReply={session.autoReply}
+          setAutoReply={setAutoReply}
+          isOpenAddPlotCardModal={isOpenAddPlotCardModal}
+          onSkip={() => {
+            setIsOpenAddPlotCardModal(false);
+          }}
+          onAdd={() => {
+            onAddPlotCard();
+          }}
+        />
+      </div>
+
+      {/* Data schema toggle & list */}
+      <div
+        className={cn(
+          "absolute top-[72px] bottom-[80px] right-[32px] flex flex-col items-end gap-[16px]",
+          !isDataSchemaUsed && "hidden",
+        )}
+      >
+        <ButtonPill
+          size="default"
+          active={isOpenDataSchemaList}
+          onClick={() => {
+            setIsOpenDataSchemaList((isOpen) => !isOpen);
+          }}
+        >
+          Data schema list
+        </ButtonPill>
+        <div
+          className={cn(
+            "w-[320px] border-1 border-[#F1F1F14D] rounded-[12px] bg-background-surface-3",
+            "flex flex-col overflow-hidden",
+            "transition-opacity opacity-0",
+            isOpenDataSchemaList
+              ? "opacity-100"
+              : "pointer-events-none select-none",
+          )}
+        >
+          <div className="shrink-0 p-[16px] border-b-1 border-b-[#F1F1F14D] flex flex-row items-center text-text-primary">
+            <div className="font-[600] text-[16px] leading-[25.6px]">
+              Data schema list
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Mobile Select Scenario Prompt Dialog */}
-      <Dialog
-        open={isOpenSelectScenarioModal && isMobile}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsOpenSelectScenarioModal(false);
-          }
-        }}
-      >
-        <DialogContent hideClose className="max-w-[90vw]">
-          <DialogHeader>
-            <DialogTitle>What to add a plot card?</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-text-body">
-              You will not be able to add a scenario, because you have not
-              selected a plot card for this session.
-            </p>
+          <div className="relative overflow-hidden">
+            <ScrollArea className="w-full h-full">
+              {flow?.props.dataStoreSchema?.fields.map((field) => (
+                <DataSchemaFieldItem
+                  key={field.id}
+                  name={field.name}
+                  type={field.type}
+                  value={
+                    field.name in lastTurnDataStore
+                      ? lastTurnDataStore[field.name]
+                      : "--"
+                  }
+                />
+              ))}
+            </ScrollArea>
           </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={() => {
-                  setIsOpenSelectScenarioModal(false);
-                }}
-              >
-                Skip
-              </Button>
-            </DialogClose>
-            <Button
-              size="lg"
-              onClick={() => {
-                renderScenarios();
-                setIsOpenSelectScenarioModal(false);
-                setIsOpenSelectScenarioModal(true);
-              }}
-            >
-              Add plot card
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <UserInputs
-        userCharacterCardId={session.userCharacterCardId}
-        aiCharacterCardIds={session.aiCharacterCardIds}
-        generateCharacterMessage={generateCharacterMessage}
-        addUserMessage={addUserMessage}
-        isOpenSettings={isOpenSettings}
-        disabled={isOpenAddPlotCardModal || isOpenSelectScenarioModal}
-        streamingMessageId={streamingMessageId ?? undefined}
-        onStopGenerate={() => {
-          refStopGenerate.current?.abort("Stop generate by user");
-        }}
-        autoReply={session.autoReply}
-        setAutoReply={setAutoReply}
-        isOpenAddPlotCardModal={isOpenAddPlotCardModal}
-        onSkip={() => {
-          setIsOpenAddPlotCardModal(false);
-        }}
-        onAdd={() => {
-          onAddPlotCard();
-        }}
-      />
-    </div>
+        </div>
+      </div>
+    </>
   );
 };
 
