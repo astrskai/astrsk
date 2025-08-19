@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { SchemaFieldType, OutputFormat, SchemaField } from "@/modules/agent/domain/agent";
 import { Trash2, Plus, Maximize2, Minimize2, X } from "lucide-react";
 import {
@@ -25,7 +26,6 @@ import {
 import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 import { Editor } from "@/components-v2/editor";
 import type { editor } from "monaco-editor";
-import { debounce } from "lodash-es";
 
 import { Input } from "@/components-v2/ui/input";
 import { Button } from "@/components-v2/ui/button";
@@ -33,32 +33,43 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { sanitizeFileName } from "@/shared/utils";
 
-// Import from new compact architecture
+// Import queries and mutations
+import { agentQueries } from "@/app/queries/agent-queries";
 import { 
-  useFlowPanel, 
-  FlowPanelLoading, 
-  FlowPanelError 
-} from "@/flow-multi/hooks/use-flow-panel";
+  useUpdateAgentOutput, 
+  useUpdateAgentOutputFormat, 
+  useUpdateAgentSchemaFields 
+} from "@/app/queries/agent/mutations/output-mutations";
+
+// Import context
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { OutputPanelProps, SchemaFieldItem } from "./output-panel-types";
 
-// Import reusable components from original
+// Import reusable components
 import { SortableSchemaField } from "./sortable-schema-field";
 import { OutputFormatSelector } from "./output-format-selector";
 
 export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
-  // 1. Use the new flow panel hook
-  const { 
-    agent, 
-    isLoading, 
-    updateAgent,
-    lastInitializedAgentId 
-  } = useFlowPanel({ flowId, agentId });
-
-  // 2. Get Monaco editor functions from flow context
+  // 1. Get Monaco editor functions from flow context
   const { setLastMonacoEditor } = useFlowPanelContext();
 
-  // 3. Local UI state
+  // 2. Mutations for updating output
+  const updateOutput = useUpdateAgentOutput(flowId, agentId || "");
+  const updateOutputFormat = useUpdateAgentOutputFormat(flowId, agentId || "");
+  const updateSchemaFields = useUpdateAgentSchemaFields(flowId, agentId || "");
+
+  // 3. Query for agent output data only
+  // Disable refetching while editing to prevent UI jumping
+  const { 
+    data: outputData, 
+    isLoading, 
+    error 
+  } = useQuery({
+    ...agentQueries.output(agentId),
+    enabled: !!agentId && !updateOutput.isEditing && !updateSchemaFields.isEditing,
+  });
+
+  // 4. Local UI state
   const [isExpanded, setIsExpanded] = useState(false);
   const [localAccordionOpen, setLocalAccordionOpen] = useState(true);
   const [selectedFieldId, setSelectedFieldId] = useState<string>("");
@@ -66,12 +77,11 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
   const [displayFields, setDisplayFields] = useState<SchemaFieldItem[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastInitializedAgentId = useRef<string | null>(null);
 
-  // 4. Parse schema fields from agent
-  const parseAgentSchemaFields = useCallback((agent: any): SchemaFieldItem[] => {
-    if (!agent?.props?.schemaFields) return [];
-    
-    return agent.props.schemaFields.map((field: SchemaField): SchemaFieldItem => ({
+  // 5. Parse schema fields from output data
+  const parseSchemaFields = useCallback((schemaFields: SchemaField[]): SchemaFieldItem[] => {
+    return schemaFields.map((field: SchemaField): SchemaFieldItem => ({
       id: field.name, // Use name as ID for schema fields
       name: field.name,
       description: field.description || "",
@@ -86,58 +96,69 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     }));
   }, []);
 
-  // 5. Initialize state when agent changes
+  // 6. Initialize state when agent changes
   useEffect(() => {
-    if (agentId && agentId !== lastInitializedAgentId.current && agent) {
+    if (agentId && agentId !== lastInitializedAgentId.current && outputData) {
       // Parse schema fields
-      const fields = parseAgentSchemaFields(agent);
+      const fields = parseSchemaFields(outputData.schemaFields || []);
       setDisplayFields(fields);
       setSelectedFieldId(fields[0]?.id || "");
       
       lastInitializedAgentId.current = agentId;
     }
-  }, [agentId, agent, parseAgentSchemaFields]);
+  }, [agentId, outputData, parseSchemaFields]);
 
-  // 6. Get selected field
+  // 7. Sync display fields when output data changes (for cross-tab sync)
+  useEffect(() => {
+    // Don't sync while editing to prevent feedback loops
+    if (updateOutput.isEditing || updateSchemaFields.isEditing) {
+      return;
+    }
+    
+    if (outputData?.schemaFields) {
+      const fields = parseSchemaFields(outputData.schemaFields);
+      setDisplayFields(fields);
+      
+      // Keep selected field if it still exists
+      if (selectedFieldId && !fields.find(f => f.id === selectedFieldId)) {
+        setSelectedFieldId(fields[0]?.id || "");
+      }
+    }
+  }, [outputData?.schemaFields, parseSchemaFields, selectedFieldId, updateOutput.isEditing, updateSchemaFields.isEditing]);
+
+  // 8. Get selected field
   const selectedField = useMemo(() => 
     displayFields.find(f => f.id === selectedFieldId),
     [displayFields, selectedFieldId]
   );
 
-  // 7. Sync local description with selected field
+  // 9. Sync local description with selected field
   useEffect(() => {
     if (selectedField) {
       setLocalDescription(selectedField.description || "");
     }
-  }, [selectedField?.id]);
+  }, [selectedField?.id, selectedField?.description]);
 
-  // 8. Debounced save for schema fields
-  const debouncedSaveSchema = useMemo(
-    () => debounce(async (fields: SchemaFieldItem[]) => {
-      if (!agent || !agentId) return;
-      
-      // Convert SchemaFieldItem[] to SchemaField[]
-      const schemaFields: SchemaField[] = fields.map(field => ({
-        name: field.name,
-        description: field.description || undefined,
-        type: field.type,
-        required: field.required,
-        array: field.array,
-        minimum: field.minimum,
-        maximum: field.maximum,
-        pattern: field.pattern,
-        enum: field.enum,
-      }));
-      
-      await updateAgent(agentId, { 
-        schemaFields,
-        enabledStructuredOutput: schemaFields.length > 0
-      });
-    }, 300),
-    [agent, agentId, updateAgent]
-  );
+  // 10. Save schema fields to database
+  const saveSchemaFields = useCallback((fields: SchemaFieldItem[]) => {
+    // Convert SchemaFieldItem[] to SchemaField[]
+    const schemaFields: SchemaField[] = fields.map(field => ({
+      name: field.name,
+      description: field.description || undefined,
+      type: field.type,
+      required: field.required,
+      array: field.array,
+      minimum: field.minimum,
+      maximum: field.maximum,
+      pattern: field.pattern,
+      enum: field.enum,
+    }));
+    
+    // Update using mutation
+    updateSchemaFields.mutate(schemaFields);
+  }, [updateSchemaFields]);
 
-  // 9. Field management functions
+  // 11. Field management functions
   const addNewField = useCallback(() => {
     const newId = `field-${Date.now()}`;
     const newField: SchemaFieldItem = {
@@ -153,8 +174,8 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     const updatedFields = [...displayFields, newField];
     setDisplayFields(updatedFields);
     setSelectedFieldId(newId);
-    debouncedSaveSchema(updatedFields);
-  }, [displayFields, debouncedSaveSchema]);
+    saveSchemaFields(updatedFields);
+  }, [displayFields, saveSchemaFields]);
 
   const deleteField = useCallback((fieldId: string) => {
     const updatedFields = displayFields.filter(f => f.id !== fieldId);
@@ -164,24 +185,24 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
       setSelectedFieldId(updatedFields[0]?.id || "");
     }
     
-    debouncedSaveSchema(updatedFields);
-  }, [displayFields, selectedFieldId, debouncedSaveSchema]);
+    saveSchemaFields(updatedFields);
+  }, [displayFields, selectedFieldId, saveSchemaFields]);
 
   const updateField = useCallback((fieldId: string, updates: Partial<SchemaFieldItem>) => {
     const updatedFields = displayFields.map(field => 
       field.id === fieldId ? { ...field, ...updates } : field
     );
     setDisplayFields(updatedFields);
-    debouncedSaveSchema(updatedFields);
-  }, [displayFields, debouncedSaveSchema]);
+    saveSchemaFields(updatedFields);
+  }, [displayFields, saveSchemaFields]);
 
   const reorderFields = useCallback((oldIndex: number, newIndex: number) => {
     const reorderedFields = arrayMove(displayFields, oldIndex, newIndex);
     setDisplayFields(reorderedFields);
-    debouncedSaveSchema(reorderedFields);
-  }, [displayFields, debouncedSaveSchema]);
+    saveSchemaFields(reorderedFields);
+  }, [displayFields, saveSchemaFields]);
 
-  // 10. DnD sensors
+  // 12. DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -199,7 +220,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     }
   };
 
-  // 11. Editor mount handler for variable insertion tracking
+  // 13. Editor mount handler for variable insertion tracking
   const handleDescriptionEditorMount = useCallback((editor: editor.IStandaloneCodeEditor) => {
     editor.onDidFocusEditorWidget(() => {
       // Track editor and cursor position for variable insertion
@@ -222,47 +243,57 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     });
   }, [agentId, flowId, setLastMonacoEditor]);
 
-  // 12. Handle output format change
+  // 14. Handle output format change
   const handleOutputFormatChange = useCallback(async (value: {
     outputFormat: OutputFormat;
     outputStreaming: boolean;
   }) => {
-    if (!agent || !agentId) return;
-    
-    await updateAgent(agentId, value);
-  }, [agent, agentId, updateAgent]);
+    updateOutputFormat.mutate(value);
+  }, [updateOutputFormat]);
 
-  // 13. Agent key for variable display
+  // 15. Agent key for variable display
   const agentKey = useMemo(() => {
-    return sanitizeFileName(agent?.props.name || "agentname");
-  }, [agent?.props.name]);
+    return sanitizeFileName(outputData?.name || "agentname");
+  }, [outputData?.name]);
 
-  // 14. Early returns for loading/error states
+  // 16. Early returns for loading/error states
   if (isLoading) {
-    return <FlowPanelLoading message="Loading output panel..." />;
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Loading output panel...</span>
+        </div>
+      </div>
+    );
   }
 
-  if (!agent) {
-    return <FlowPanelError message="Agent not found" />;
+  if (error || !outputData) {
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Failed to load output data</span>
+        </div>
+      </div>
+    );
   }
 
-  // 15. Main render
+  // 17. Main render
   return (
     <div ref={containerRef} className="h-full flex flex-col bg-background-surface-2">
       {/* Output Format Selector */}
       <OutputFormatSelector
         value={{
-          outputFormat: agent.props.outputFormat ?? OutputFormat.StructuredOutput,
-          outputStreaming: agent.props.outputStreaming ?? true,
+          outputFormat: outputData.outputFormat ?? OutputFormat.StructuredOutput,
+          outputStreaming: outputData.outputStreaming ?? true,
         }}
         onChange={handleOutputFormatChange}
         isOpen={localAccordionOpen}
         onOpenChange={setLocalAccordionOpen}
         disabled={false}
         hasError={
-          agent.props.enabledStructuredOutput === true && 
-          (agent.props.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.StructuredOutput &&
-          (!agent.props.schemaFields || agent.props.schemaFields.length === 0)
+          outputData.enabledStructuredOutput === true && 
+          (outputData.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.StructuredOutput &&
+          (!outputData.schemaFields || outputData.schemaFields.length === 0)
         }
         isStandalone={false}
         className="w-full"
@@ -270,7 +301,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
       
       <div className="flex-1 overflow-hidden p-2">
         {/* Show text output view when text format is selected */}
-        {(agent.props.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.TextOutput ? (
+        {(outputData.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.TextOutput ? (
           <div className="flex h-full justify-center items-center">
             <div className="inline-flex flex-col justify-center items-center gap-2">
               <div className="text-center font-[600] text-[14px] leading-[20px] text-text-body">
@@ -279,7 +310,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
             </div>
           </div>
         ) : (
-          (agent.props.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.StructuredOutput && !selectedField && displayFields.length === 0 ? (
+          (outputData.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.StructuredOutput && !selectedField && displayFields.length === 0 ? (
             <div className="h-full w-full flex items-center justify-center">
               <div className="flex flex-col justify-center items-center gap-8">
                 <div className="flex flex-col justify-start items-center gap-2">

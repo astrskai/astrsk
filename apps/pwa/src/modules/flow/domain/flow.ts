@@ -88,6 +88,7 @@ export interface DataStoreSchemaField {
 
 // Runtime field - contains actual values and logic
 export interface DataStoreField {
+  id: string; // Unique ID for this runtime field instance (will use UniqueEntityID().toString())
   schemaFieldId: string; // References DataStoreSchemaField.id
   value: string; // Current value (stored as string)
   logic?: string; // Optional logic/formula for computed fields
@@ -135,7 +136,11 @@ export class Flow extends AggregateRoot<FlowProps> {
   get agentIds(): UniqueEntityID[] {
     return this.props.nodes
       .filter((node) => node.type === "agent")
-      .map((node) => new UniqueEntityID(node.id));
+      .map((node) => {
+        // Agent nodes have agentId in their data
+        const agentId = (node.data as any)?.agentId || node.id;
+        return new UniqueEntityID(agentId);
+      });
   }
 
   public static create(

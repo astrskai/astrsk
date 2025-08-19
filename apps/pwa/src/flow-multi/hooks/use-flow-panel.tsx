@@ -1,14 +1,12 @@
 import React, { useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Flow, ReadyState } from "@/modules/flow/domain";
+import { Flow } from "@/modules/flow/domain";
 import { Agent } from "@/modules/agent/domain";
 import { UniqueEntityID } from "@/shared/domain";
-import { FlowService } from "@/app/services/flow-service";
 import { AgentService } from "@/app/services/agent-service";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { agentQueries } from "@/app/queries/agent-queries";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
-import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
 
 export interface FlowPanelProps {
   flowId: string;
@@ -24,9 +22,7 @@ interface UseFlowPanelReturn {
   agent: Agent | null | undefined;
   isLoading: boolean;
   error: Error | null;
-  isSaving: boolean;
   lastInitializedAgentId: React.MutableRefObject<string | null>;
-  saveFlow: (flow: Flow) => Promise<void>;
   updateAgent: (agentId: string, updates: Partial<Agent["props"]>) => Promise<void>;
 }
 
@@ -34,7 +30,6 @@ interface UseFlowPanelReturn {
  * Common hook for flow panels that handles:
  * - Loading flow data with React Query
  * - Getting agent from flow
- * - Saving flow with proper invalidation
  * - Tracking initialization state
  */
 export function useFlowPanel({ 
@@ -42,7 +37,6 @@ export function useFlowPanel({
   agentId 
 }: UseFlowPanelOptions): UseFlowPanelReturn {
   const lastInitializedAgentId = useRef<string | null>(null);
-  const [isSaving, setIsSaving] = React.useState(false);
 
   // Load flow data
   const { 
@@ -62,31 +56,6 @@ export function useFlowPanel({
     ...agentQueries.detail(agentId ? new UniqueEntityID(agentId) : undefined),
     enabled: !!agentId,
   });
-
-  // Save flow with invalidation
-  const saveFlow = useCallback(async (updatedFlow: Flow) => {
-    if (isSaving) {
-      return;
-    }
-    
-    setIsSaving(true);
-    try {
-      const result = await FlowService.saveFlow.execute(updatedFlow);
-      
-      if (result.isSuccess) {
-        // Invalidate flow queries to refresh UI
-        await invalidateSingleFlowQueries(updatedFlow.id);
-      } else {
-        console.error("[useFlowPanel] Failed to save flow:", result.getError());
-        throw new Error(result.getError());
-      }
-    } catch (error) {
-      console.error("[useFlowPanel] Error saving flow:", error);
-      throw error;
-    } finally {
-      setIsSaving(false);
-    }
-  }, [isSaving]);
 
   // Helper to update an agent and save it
   const updateAgent = useCallback(async (
@@ -119,31 +88,19 @@ export function useFlowPanel({
     }
 
     
-    // Reset flow state when agent changes
-    // If it was in Error state, keep it in Error state
-    // If it was in Ready state, change to Draft
-    if (flow && flow.props.readyState === ReadyState.Ready) {
-      const updateFlowResult = flow.setReadyState(ReadyState.Draft);
-      if (updateFlowResult.isSuccess) {
-        await saveFlow(flow);
-      }
-    }
-    
-    // IMPORTANT: Also invalidate flow queries including validation
+    // IMPORTANT: Invalidate flow queries including validation
     // Agent changes affect flow validity, so we must refresh validation state
     if (flow) {
       await invalidateSingleFlowQueries(flow.id);
     }
-  }, [flow, saveFlow]);
+  }, [flow]);
 
   return {
     flow,
     agent,
     isLoading: isLoading || isAgentLoading,
     error: error || agentError,
-    isSaving,
     lastInitializedAgentId,
-    saveFlow,
     updateAgent,
   };
 }

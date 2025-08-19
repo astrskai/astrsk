@@ -8,10 +8,22 @@ import { PromptItem } from "./prompt-panel-types";
  */
 export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): PromptItem[] {
   return promptMessages.map((msg): PromptItem => {
-    if (msg instanceof PlainPromptMessage) {
+    const msgAny = msg as any;
+    
+    // Check if it's a plain message (either instance or plain object with type='plain')
+    const isPlainMessage = msg instanceof PlainPromptMessage || msgAny.type === 'plain';
+    const isHistoryMessage = msg instanceof HistoryPromptMessage || msgAny.type === 'history';
+    
+    if (isPlainMessage) {
+      // Get prompt blocks from either instance property or direct property
+      const promptBlocks = (msg instanceof PlainPromptMessage) ? msg.promptBlocks : msgAny.promptBlocks || [];
+      const id = (msg instanceof PlainPromptMessage) ? msg.id.toString() : msgAny.id;
+      const role = (msg instanceof PlainPromptMessage) ? msg.role : msgAny.role;
+      const enabled = (msg instanceof PlainPromptMessage) ? msg.props.enabled : msgAny.enabled;
+      
       // Extract content from prompt blocks
-      const content = msg.promptBlocks
-        .map(block => {
+      const content = promptBlocks
+        .map((block:any) => {
           // Check if this is a PlainBlock with template property
           if ('template' in block && block.template) {
             return block.template;
@@ -25,12 +37,12 @@ export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): P
         .join('\n');
       
       // Try to use the first block's name as the label, or a combination of block names
-      let label = `Message ${msg.id.toString().slice(0, 8)}`;
-      if (msg.promptBlocks.length > 0) {
+      let label = `Message ${id.slice(0, 8)}`;
+      if (promptBlocks.length > 0) {
         // Get names from blocks that have them
-        const blockNames = msg.promptBlocks
-          .filter(block => 'name' in block && block.name)
-          .map(block => block.name);
+        const blockNames = promptBlocks
+          .filter((block:any) => 'name' in block && block.name)
+          .map((block:any) => block.name);
         
         if (blockNames.length > 0) {
           // Use first block name or combine multiple
@@ -39,19 +51,24 @@ export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): P
       }
       
       return {
-        id: msg.id.toString(),
+        id,
         label,
-        enabled: msg.props.enabled ?? true,
+        enabled: enabled ?? true,
         content,
-        role: msg.role,
+        role,
         type: "regular",
       };
-    } else if (msg instanceof HistoryPromptMessage) {
+    } else if (isHistoryMessage) {
       // For history messages, extract content similarly
-      const userBlocks = msg.userPromptBlocks || [];
+      const userBlocks = (msg instanceof HistoryPromptMessage) ? msg.userPromptBlocks : msgAny.userPromptBlocks || [];
+      const id = (msg instanceof HistoryPromptMessage) ? msg.id.toString() : msgAny.id;
+      const enabled = (msg instanceof HistoryPromptMessage) ? msg.props.enabled : msgAny.enabled;
+      const start = (msg instanceof HistoryPromptMessage) ? msg.start : msgAny.start;
+      const end = (msg instanceof HistoryPromptMessage) ? msg.end : msgAny.end;
+      const countFromEnd = (msg instanceof HistoryPromptMessage) ? msg.countFromEnd : msgAny.countFromEnd;
       
       const content = userBlocks
-        .map(block => {
+        .map((block:any) => {
           // Check if this is a PlainBlock with template property
           if ('template' in block && block.template) {
             return block.template;
@@ -66,25 +83,25 @@ export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): P
       
       // Create a more descriptive label for history messages
       let label = `History`;
-      if (msg.start !== undefined && msg.end !== undefined) {
-        const fromEnd = msg.countFromEnd !== false;
+      if (start !== undefined && end !== undefined) {
+        const fromEnd = countFromEnd !== false;
         if (fromEnd) {
-          label = `History (last ${msg.end - msg.start} messages)`;
+          label = `History (last ${end - start} messages)`;
         } else {
-          label = `History (messages ${msg.start}-${msg.end})`;
+          label = `History (messages ${start}-${end})`;
         }
       }
       
       return {
-        id: msg.id.toString(),
+        id,
         label,
-        enabled: msg.props.enabled ?? true,
+        enabled: enabled ?? true,
         content,
         role: "assistant", // History messages are typically assistant role
         type: "history",
-        start: msg.start,
-        end: msg.end,
-        countFromEnd: msg.countFromEnd,
+        start,
+        end,
+        countFromEnd,
       };
     }
     

@@ -13,6 +13,10 @@ import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-q
 import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
+import { flowKeys } from "@/app/queries/flow/query-factory";
+import { useUpdateNodesPositions } from "@/app/queries/flow/mutations/nodes-positions-mutations";
+import { useUpdateFlowName, useUpdateFlowViewport } from "@/app/queries/flow/mutations/flow-mutations";
+import { useUpdateNodesAndEdges } from "@/app/queries/flow/mutations/nodes-edges-mutations";
 import { BookOpen, Pencil, Check, X, Loader2, SearchCheck, HelpCircle, Plus } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { toast } from "sonner";
@@ -144,12 +148,18 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const queryClient = useQueryClient();
 
   // 4. React Query hooks - using global queryClient settings
-  const flowUniqueId = useMemo(() => flowId ? new UniqueEntityID(flowId) : undefined, [flowId]);
   const { data: flow } = useQuery({
-    ...flowQueries.detail(flowUniqueId),
+    ...flowQueries.detail(new UniqueEntityID(flowId)),
+    enabled: !!flowId,
   });
 
-  // Handle flow title editing
+  // 5. Granular mutations for optimized updates
+  const updateNodesPositions = useUpdateNodesPositions(flowId);
+  const updateFlowNameMutation = useUpdateFlowName(flowId);
+  const updateFlowViewportMutation = useUpdateFlowViewport(flowId);
+  const updateNodesAndEdges = useUpdateNodesAndEdges(flowId);
+
+  // Handle flow title editing with granular mutation
   const handleSaveTitle = useCallback(async () => {
     const currentFlow = flowRef.current;
     if (!currentFlow || editedTitle === currentFlow.props.name) {
@@ -158,51 +168,22 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     }
 
     setIsSavingTitle(true);
-    try {
-      // Use the update method to change the name
-      const updatedFlowResult = currentFlow.update({
-        name: editedTitle
-      });
-      
-      if (updatedFlowResult.isFailure) {
-        console.error("Failed to update flow:", updatedFlowResult.getError());
-        return;
+    
+    // Use granular mutation for name update
+    updateFlowNameMutation.mutate(editedTitle, {
+      onSuccess: () => {
+        setIsEditingTitle(false);
+        toast.success("Flow name updated");
+      },
+      onError: (error) => {
+        console.error("Error saving flow title:", error);
+        toast.error("Failed to update flow name");
+      },
+      onSettled: () => {
+        setIsSavingTitle(false);
       }
-
-      const updatedFlow = updatedFlowResult.getValue();
-
-      // Check if FlowService.saveFlow is initialized before using it
-      if (!FlowService.saveFlow || typeof FlowService.saveFlow.execute !== 'function') {
-        console.warn('⚠️ FlowService.saveFlow not initialized yet');
-        return;
-      }
-
-      const savedFlowResult = await FlowService.saveFlow.execute(updatedFlow);
-      if (savedFlowResult.isFailure) {
-        console.error("Failed to save flow:", savedFlowResult.getError());
-        return;
-      }
-      
-      // Update flowRef with the saved flow to keep it in sync
-      flowRef.current = savedFlowResult.getValue();
-      
-      // Mark that we have external changes coming
-      isLocalChangeRef.current = false; // Title change will come from external
-      
-      // Invalidate flow queries to update the name in left navigation
-      await queryClient.invalidateQueries({
-        queryKey: flowQueries.all(),
-        exact: false
-      });
-      
-      setIsEditingTitle(false);
-    } catch (error) {
-      console.error("Error saving flow title:", error);
-      toast.error("Failed to update flow name");
-    } finally {
-      setIsSavingTitle(false);
-    }
-  }, [editedTitle, queryClient]);
+    });
+  }, [editedTitle, updateFlowNameMutation]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditingTitle(false);
@@ -220,11 +201,52 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   useEffect(() => {
     flowRef.current = flow;
   }, [flow]);
+  
+  // Update refs for nodes and edges to avoid stale closures
+  useEffect(() => {
+    nodesRef.current = nodes;
+    edgesRef.current = edges;
+  }, [nodes, edges]);
 
-  // Save flow when edges/nodes change
-  const saveFlowChanges = useCallback(async (updatedNodes: CustomNodeType[], updatedEdges: CustomEdgeType[], isStructuralChange: boolean = false) => {
+  // Save flow when edges/nodes change using granular mutation
+  // IMPORTANT: This function merges React Query cache data with local changes
+  const saveFlowChanges = useCallback(async (providedNodes?: CustomNodeType[], providedEdges?: CustomEdgeType[], isStructuralChange: boolean = false) => {
     const currentFlow = flowRef.current;
     if (!currentFlow) return;
+
+    // Get the latest data from React Query cache to include ALL granular updates
+    const cachedFlow = queryClient.getQueryData<Flow>(flowKeys.detail(flowId));
+    
+    // Try to get nodes from different cache keys since if-node updates them separately
+    const nodesQueryKey = flowKeys.nodes(flowId);
+    let cachedNodes = queryClient.getQueryData<CustomNodeType[]>(nodesQueryKey);
+    
+    if (!cachedNodes) {
+      cachedNodes = (cachedFlow?.props?.nodes || nodesRef.current || []) as CustomNodeType[];
+    }
+    
+    let cachedEdges = queryClient.getQueryData<CustomEdgeType[]>(flowKeys.edges(flowId));
+    if (!cachedEdges) {
+      cachedEdges = (cachedFlow?.props?.edges || edgesRef.current || []) as CustomEdgeType[];
+    }
+    
+    
+    let updatedNodes: CustomNodeType[];
+    let updatedEdges: CustomEdgeType[];
+    
+    if (providedNodes) {
+      // Specific nodes provided - use them as-is since they represent the current state
+      // The caller has already included all necessary nodes
+      updatedNodes = providedNodes;
+    } else {
+      // No nodes provided - use cache data or refs as fallback
+      updatedNodes = cachedNodes.length > 0 ? cachedNodes : (nodesRef.current || []);
+    }
+    
+    // For edges, use provided or cached or refs as fallback
+    updatedEdges = providedEdges || (cachedEdges.length > 0 ? cachedEdges : (edgesRef.current || []));
+    
+    // This line is now handled above
 
     try {
       // Filter out invalid edges before saving
@@ -234,125 +256,53 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                nodeIds.has(edge.source) && nodeIds.has(edge.target);
       });
       
-      // IMPORTANT: Only update nodes and edges, DO NOT pass dataStoreSchema
-      // The update method should preserve existing properties that aren't being updated
-      const updatedFlow = currentFlow.update({
-        nodes: updatedNodes as any,
-        edges: validEdges as any,
-      });
-      
-      if (updatedFlow.isFailure) {
-        return;
-      }
-
-      // Check if FlowService.saveFlow is initialized before using it
-      if (!FlowService.saveFlow || typeof FlowService.saveFlow.execute !== 'function') {
-        console.warn('⚠️ FlowService.saveFlow not initialized yet');
-        return;
-      }
-      const savedFlowResult = await FlowService.saveFlow.execute(updatedFlow.getValue());
-      if (savedFlowResult.isFailure) {
-        return;
-      }
-      
-      // Update flowRef with the saved flow to keep it in sync
-      flowRef.current = savedFlowResult.getValue();
-
-      // After successful save, update our saved data hash
-      const savedNodes = (savedFlowResult.getValue().props.nodes as CustomNodeType[]) || [];
-      const savedEdges = (savedFlowResult.getValue().props.edges as CustomEdgeType[]) || [];
-      lastSavedDataHashRef.current = createDataHash(savedNodes, savedEdges);
-      
-      // Check if node IDs changed after save (backend assigns new UUIDs)
-      const originalNodeIds = updatedNodes.map(n => n.id);
-      const savedNodeIds = savedNodes.map(n => n.id);
-      const idsChanged = JSON.stringify(originalNodeIds.sort()) !== JSON.stringify(savedNodeIds.sort());
-      
-      if (idsChanged || isStructuralChange) {
-        
-        // Force update the local nodes and edges with the saved versions
-        // Use a timeout to ensure React Flow processes the update
-        setTimeout(() => {
-          setNodes(savedNodes);
-          setEdges(savedEdges);
-          
-          // Also invalidate flow queries to ensure parent component gets updated flow data
-          invalidateSingleFlowQueries(savedFlowResult.getValue().id);
-        }, 0);
-        
-        // Mark this as a remote change to prevent infinite save loop
-        isLocalChangeRef.current = false;
-      }
-      
-      // Skip the next sync since we just saved and the flow object will update
-      skipNextSyncRef.current = true;
-      
-      
-      // Check if our local changes match what we just saved
-      const currentLocalHash = createDataHash(updatedNodes, updatedEdges);
-      if (currentLocalHash === lastSavedDataHashRef.current) {
-        // Local changes are now saved, reset the flag
-        isLocalChangeRef.current = false;
-      }
-      
-      // Only invalidate queries for structural changes (agent creation/deletion, connections)
-      // Don't invalidate for simple position updates to avoid unnecessary re-renders
-      // if (isStructuralChange) {
-      //   // Invalidate the specific flow   queries to update agent nodes
-      //   await queryClient.invalidateQueries({
-      //     queryKey: flowQueries.detail(savedFlowResult.getValue().id).queryKey
-      //   });
-        
-      //   // Also invalidate all flow queries to ensure everything is refreshed
-      //   await queryClient.invalidateQueries({
-      //     queryKey: flowQueries.all(),
-      //     exact: false
-      //   });
-      // }
+      // Use granular mutation to update nodes and edges
+      updateNodesAndEdges.mutate(
+        { 
+          nodes: updatedNodes as FlowNode[], 
+          edges: validEdges as FlowEdge[] 
+        },
+        {
+          onSuccess: ({ nodes: savedNodes, edges: savedEdges }) => {
+            // After successful save, update our saved data hash
+            lastSavedDataHashRef.current = createDataHash(savedNodes as CustomNodeType[], savedEdges as CustomEdgeType[]);
+            
+            // Skip the next sync since we just saved and the flow object will update
+            skipNextSyncRef.current = true;
+            
+            // Check if our local changes match what we just saved
+            const currentLocalHash = createDataHash(updatedNodes, updatedEdges);
+            if (currentLocalHash === lastSavedDataHashRef.current) {
+              // Local changes are now saved, reset the flag
+              isLocalChangeRef.current = false;
+            }
+          },
+          onError: (error) => {
+            console.error('Failed to save flow changes:', error);
+            toast.error('Failed to save flow changes');
+          }
+        }
+      );
     } catch (error) {
       console.log(error);
     }
-  }, [flowId, queryClient]);
+  }, [updateNodesAndEdges, queryClient, flowId]);
 
   // Save viewport state to flow
   const saveViewportState = useCallback(async (newViewport: Viewport) => {
-    // IMPORTANT: Use flowRef.current to get the latest flow state, not the stale flow from props
-    const currentFlow = flowRef.current;
-    if (!currentFlow) return;
-
-    try {
-      const flowViewport: FlowViewport = {
-        x: newViewport.x,
-        y: newViewport.y,
-        zoom: newViewport.zoom
-      };
-
-      const updatedFlow = currentFlow.update({
-        viewport: flowViewport
-      });
-
-      if (updatedFlow.isFailure) {
-        return;
+    // Use granular mutation for viewport update
+    const flowViewport: FlowViewport = {
+      x: newViewport.x,
+      y: newViewport.y,
+      zoom: newViewport.zoom
+    };
+    
+    updateFlowViewportMutation.mutate(flowViewport, {
+      onError: (error) => {
+        console.error('Failed to save viewport:', error);
       }
-
-      // Check if FlowService.saveFlow is initialized before using it
-      if (!FlowService.saveFlow || typeof FlowService.saveFlow.execute !== 'function') {
-        console.warn('⚠️ FlowService.saveFlow not initialized yet');
-        return;
-      }
-      const savedFlowResult = await FlowService.saveFlow.execute(updatedFlow.getValue());
-      if (savedFlowResult.isFailure) {
-        return;
-      }
-      
-      // Update flowRef with the saved flow to keep it in sync
-      flowRef.current = savedFlowResult.getValue();
-
-      // Update store with new viewport
-    } catch (error) {
-      console.error('Failed to save viewport:', error);
-    }
-  }, []);
+    });
+  }, [updateFlowViewportMutation]);
 
   // Handle viewport changes with debouncing
   const onViewportChange = useCallback((newViewport: Viewport) => {
@@ -387,11 +337,18 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     const externalEdges = (flow.props.edges as CustomEdgeType[]) || [];
     const newHash = createDataHash(externalNodes, externalEdges);
     
-    
     // Only trigger sync if data actually changed
-    if (newHash !== lastExternalDataHashRef.current && !skipNextSyncRef.current) {
-      setSyncTrigger(prev => prev + 1);
-      lastExternalDataHashRef.current = newHash;
+    if (newHash !== lastExternalDataHashRef.current) {
+      // Check if this is from our own save (nodes/edges mutation)
+      // If it is, we can skip since we already have the data locally
+      if (skipNextSyncRef.current) {
+        skipNextSyncRef.current = false; // Reset the flag
+        lastExternalDataHashRef.current = newHash;
+      } else {
+        // This is from an external update (like if-node mutation), we should sync
+        setSyncTrigger(prev => prev + 1);
+        lastExternalDataHashRef.current = newHash;
+      }
     }
   }, [flow]); // Added back flow dependency to detect flow changes
 
@@ -399,17 +356,15 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   useEffect(() => {
     if (!flow) return;
     
-    // Skip sync if we just saved and are waiting for the query to update
-    if (skipNextSyncRef.current) {
-      skipNextSyncRef.current = false;
-      return;
-    }
-    
     const flowIdStr = flow.id.toString();
     const isDifferentFlow = lastSyncedFlowIdRef.current !== flowIdStr;
     
     // Get external data and ensure nodes are safe from keyboard deletion
     const externalNodes = ensureNodesSafety((flow.props.nodes as CustomNodeType[]) || []);
+    
+    // Debug: Check for data store nodes and their fields
+    const dataStoreNodes = externalNodes.filter(n => n.type === 'dataStore');
+
     // Filter out invalid edges (edges with both source and target must exist in nodes)
     const rawExternalEdges = (flow.props.edges as CustomEdgeType[]) || [];
     const nodeIds = new Set(externalNodes.map(n => n.id));
@@ -436,6 +391,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     
     if (isDifferentFlow) {
       // Switching flows - fresh load
+      console.log('[FLOW-SYNC] Setting nodes for different flow:', externalNodes.length);
       setNodes(externalNodes);
       setEdges(externalEdges);
       lastSyncedFlowIdRef.current = flowIdStr;
@@ -448,20 +404,35 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       
       if (currentLocalHash === lastSavedDataHashRef.current) {
         // Local changes match saved state, we can safely sync
+        console.log('[FLOW-SYNC] Local changes saved, syncing external nodes:', externalNodes.length);
         isLocalChangeRef.current = false;
         setNodes(externalNodes);
         setEdges(externalEdges);
       } else {
-        // We have unsaved local changes - preserve positions
+        // We have unsaved local changes - merge carefully
+        // IMPORTANT: Always use server data for node content but preserve local positions
         const localPositions = new Map(nodesRef.current.map(n => [n.id, n.position]));
         
         const mergedNodes = externalNodes.map(extNode => {
           const localPos = localPositions.get(extNode.id);
+          // Use server data (includes granular updates) but keep local position
           return localPos ? { ...extNode, position: localPos } : extNode;
+        });
+        
+        console.log('[FLOW-SYNC] Merging nodes with local positions:', {
+          externalCount: externalNodes.length,
+          mergedCount: mergedNodes.length,
+          dataStoreNodes: mergedNodes.filter(n => n.type === 'dataStore').map(n => ({
+            id: n.id,
+            fieldCount: (n.data as any)?.dataStoreFields?.length || 0
+          }))
         });
         
         setNodes(mergedNodes);
         setEdges(externalEdges);
+        // Update refs with the merged data so they have latest content
+        nodesRef.current = mergedNodes;
+        edgesRef.current = externalEdges;
       }
     } else {
       // No local changes - just sync
@@ -542,7 +513,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       const savedAgent = savedAgentResult.getValue();
 
       // Calculate position for copied agent node (below original)
-      const currentNode = nodes.find(n => n.id === agentId);
+      const currentNode = (currentFlow.props.nodes as CustomNodeType[]).find(n => n.id === agentId);
       const newNodePosition = currentNode 
         ? { x: currentNode.position.x+100, y: currentNode.position.y + 200 }
         : { x: 400, y: 200 };
@@ -557,16 +528,19 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         },
       });
 
-      // Update local state immediately
-      const updatedNodes = [...nodes, newAgentNode];
+      // Use current flow ref which has the most up-to-date data
+      const currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
+      
+      
+      const updatedNodes = [...currentNodes, newAgentNode];
       setNodes(updatedNodes);
       
       // Mark as local change
       isLocalChangeRef.current = true;
       
-      // Save the flow changes
+      // Save the flow changes - pass updatedNodes explicitly, let edges come from refs
       setTimeout(() => {
-        saveFlowChanges(updatedNodes, edges, true);
+        saveFlowChanges(updatedNodes, undefined, true);
       }, 0);
       
       // Invalidate agent queries for color updates
@@ -579,7 +553,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [nodes, edges, setNodes, saveFlowChanges]);
+  }, [nodes, edges, setNodes, saveFlowChanges, queryClient, flowId]);
 
   // Add node functions
   const addDataStoreNode = useCallback(async () => {
@@ -617,20 +591,22 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       },
     });
 
-    // Update nodes - use currentFlow.props.nodes instead of component state to avoid stale data
-    const currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
-    const currentEdges = (currentFlow.props.edges as CustomEdgeType[]) || [];
+    // Use current flow ref which has the most up-to-date data
+    let currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
+    let currentEdges = (currentFlow.props.edges as CustomEdgeType[]) || [];
+    
     const updatedNodes = [...currentNodes, newNode];
     setNodes(updatedNodes);
 
     // Mark as local change and save
     isLocalChangeRef.current = true;
     setTimeout(() => {
-      saveFlowChanges(updatedNodes, currentEdges, true);
+      // Pass updatedNodes explicitly, edges will come from refs
+      saveFlowChanges(updatedNodes, undefined, true);
     }, 0);
 
     toast.success("Data Update node added");
-  }, [setNodes, saveFlowChanges]);
+  }, [setNodes, saveFlowChanges, queryClient, flowId]);
 
   const addIfNode = useCallback(async () => {
     const currentFlow = flowRef.current;
@@ -671,16 +647,18 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     });
     
 
-    // Update nodes - use currentFlow.props.nodes instead of component state to avoid stale data
-    const currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
-    const currentEdges = (currentFlow.props.edges as CustomEdgeType[]) || [];
+    // Use current flow ref which has the most up-to-date data
+    let currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
+    let currentEdges = (currentFlow.props.edges as CustomEdgeType[]) || [];
+    
     const updatedNodes = [...currentNodes, newNode];
     setNodes(updatedNodes);
 
     // Mark as local change and save
     isLocalChangeRef.current = true;
     setTimeout(() => {
-      saveFlowChanges(updatedNodes, currentEdges, true);
+      // Pass updatedNodes explicitly, edges will come from refs
+      saveFlowChanges(updatedNodes, undefined, true);
     }, 0);
 
     toast.success("If node added");
@@ -769,14 +747,18 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         },
       });
 
-      // Update nodes
-      const updatedNodes = [...nodes, newAgentNode];
+      // Use current flow ref which has the most up-to-date data
+      const currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
+      
+      
+      const updatedNodes = [...currentNodes, newAgentNode];
       setNodes(updatedNodes);
 
       // Mark as local change and save
       isLocalChangeRef.current = true;
       setTimeout(() => {
-        saveFlowChanges(updatedNodes, edges);
+        // Pass updatedNodes explicitly, edges will come from refs
+        saveFlowChanges(updatedNodes, undefined);
       }, 0);
 
       // Invalidate agent queries for color updates
@@ -788,7 +770,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [nodes, edges, setNodes, saveFlowChanges]);
+  }, [nodes, edges, setNodes, saveFlowChanges, queryClient, flowId]);
 
   // Delete agent handler
   const deleteAgent = useCallback(async (agentId: string) => {
@@ -797,14 +779,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     
     try {
       // Check if this is the only agent node in the flow
-      const agentNodes = nodes.filter(n => n.type === 'agent');
+      const agentNodes = (currentFlow.props.nodes as CustomNodeType[]).filter(n => n.type === 'agent');
       if (agentNodes.length <= 1) {
         toast.error("Cannot delete the last agent in the flow");
         return;
       }
       
-      // Remove the agent node from nodes
-      const updatedNodes = nodes.filter(n => n.id !== agentId);
+      // Remove the agent node from current flow nodes
+      const updatedNodes = (currentFlow.props.nodes as CustomNodeType[]).filter(n => n.id !== agentId);
       
       // Remove all edges connected to this agent
       const updatedEdges = edges.filter(e => 
@@ -824,7 +806,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         console.error("Failed to delete agent from database:", deleteResult.getError());
       }
       
-      // Save the flow changes
+      // Save the flow changes - pass both explicitly as they're newly calculated
       setTimeout(() => {
         saveFlowChanges(updatedNodes, updatedEdges);
       }, 0);
@@ -854,7 +836,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     
     try {
       // Find the node to copy
-      const nodeToCopy = nodes.find(n => n.id === nodeId);
+      const nodeToCopy = (currentFlow.props.nodes as CustomNodeType[]).find(n => n.id === nodeId);
       if (!nodeToCopy) {
         toast.error("Node not found");
         return;
@@ -886,14 +868,18 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         data: newNodeData,
       });
 
-      // Update nodes
-      const updatedNodes = [...nodes, newNode];
+      // Use current flow ref which has the most up-to-date data
+      const currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
+      
+      
+      const updatedNodes = [...currentNodes, newNode];
       setNodes(updatedNodes);
       
       // Mark as local change and save
       isLocalChangeRef.current = true;
       setTimeout(() => {
-        saveFlowChanges(updatedNodes, edges, true);
+        // Pass updatedNodes explicitly, edges will come from refs
+        saveFlowChanges(updatedNodes, undefined, true);
       }, 0);
 
       toast.success(`${nodeType === 'if' ? 'If' : 'Data Update'} node copied`);
@@ -902,7 +888,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [nodes, edges, setNodes, saveFlowChanges]);
+  }, [nodes, edges, setNodes, saveFlowChanges, queryClient, flowId]);
 
   // Delete non-agent node handler
   const deleteNode = useCallback((nodeId: string) => {
@@ -911,7 +897,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     
     try {
       // Find the node to delete
-      const nodeToDelete = nodes.find(n => n.id === nodeId);
+      const nodeToDelete = (currentFlow.props.nodes as CustomNodeType[]).find(n => n.id === nodeId);
       if (!nodeToDelete) {
         toast.error("Node not found");
         return;
@@ -923,8 +909,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         return;
       }
 
-      // Remove the node from nodes
-      const updatedNodes = nodes.filter(n => n.id !== nodeId);
+      // Remove the node from current flow nodes
+      const updatedNodes = (currentFlow.props.nodes as CustomNodeType[]).filter(n => n.id !== nodeId);
       
       // Remove all edges connected to this node
       const updatedEdges = edges.filter(e => 
@@ -938,7 +924,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       // Mark as local change
       isLocalChangeRef.current = true;
       
-      // Save the flow changes
+      // Save the flow changes - pass both explicitly as they're newly calculated
       setTimeout(() => {
         saveFlowChanges(updatedNodes, updatedEdges);
       }, 0);
@@ -956,7 +942,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     // Only handle source handles
     if (handleType !== 'source') return;
     
-    const sourceNode = nodes.find(n => n.id === nodeId);
+    const currentFlow = flowRef.current;
+    if (!currentFlow) return { x: 0, y: 0 };
+    const sourceNode = (currentFlow.props.nodes as CustomNodeType[]).find(n => n.id === nodeId);
     if (!sourceNode) return;
 
     // Find the node element in the DOM
@@ -1026,6 +1014,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       // Mark as local change and save after state update
       isLocalChangeRef.current = true;
       setTimeout(() => {
+        // Pass updatedNodes explicitly, edges from ref is already current
         saveFlowChanges(updatedNodes, edgesRef.current, true);
       }, 0);
       
@@ -1065,7 +1054,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     
     // Add method to get node from React Flow (for when flow data is stale)
     (window as any).flowPanelGetNode = (nodeId: string) => {
-      return nodes.find(n => n.id === nodeId);
+      const currentFlow = flowRef.current;
+      if (!currentFlow) return undefined;
+      return (currentFlow.props.nodes as CustomNodeType[]).find(n => n.id === nodeId);
     };
     
     return () => {
@@ -1093,8 +1084,11 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       connectionMadeRef.current = true;
       
       // Find the source and target nodes to determine their types
-      const sourceNode = nodes.find(n => n.id === connection.source);
-      const targetNode = nodes.find(n => n.id === connection.target);
+      const currentFlow = flowRef.current;
+      if (!currentFlow) return;
+      const currentNodes = currentFlow.props.nodes as CustomNodeType[];
+      const sourceNode = currentNodes.find(n => n.id === connection.source);
+      const targetNode = currentNodes.find(n => n.id === connection.target);
       
       // Remove existing connections to implement automatic connection replacement
       const filteredEdges = filterExistingConnections(edges, sourceNode, targetNode, connection);
@@ -1129,8 +1123,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       
       // Save the flow with the new connection (use setTimeout to ensure state is updated)
       setTimeout(() => {
-        // Save and invalidate queries so agent nodes see the new connections
-        saveFlowChanges(nodes, updatedEdges, true);
+        // Pass updatedEdges explicitly, nodes will come from refs for freshness
+        saveFlowChanges(undefined, updatedEdges, true);
       }, 0);
     },
     [setEdges, edges, nodes, saveFlowChanges]
@@ -1165,14 +1159,19 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const handleNodeTypeSelection = useCallback(async (nodeType: "agent" | "dataStore" | "if") => {
     const currentFlow = flowRef.current;
     if (pendingConnectionRef.current && currentFlow) {
+      // Use current flow ref which has the most up-to-date data
+      const latestNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
+      const latestEdges = (currentFlow.props.edges as CustomEdgeType[]) || [];
+      
+      
       const result = await createNodeWithConnection(
         nodeType,
         pendingConnectionRef.current.sourceNodeId,
         pendingConnectionRef.current.sourceHandleId,
         pendingConnectionRef.current.position,
         currentFlow,
-        nodes,
-        edges,
+        latestNodes,
+        latestEdges,
         filterExistingConnections
       );
       
@@ -1182,6 +1181,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         isLocalChangeRef.current = true;
         
         setTimeout(() => {
+          // Pass both explicitly as they're the result of the operation
           saveFlowChanges(result.updatedNodes, result.updatedEdges, true);
         }, 0);
         
@@ -1190,7 +1190,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     }
     setShowNodeSelection(false);
     pendingConnectionRef.current = null;
-  }, [flow, nodes, edges, setNodes, setEdges, saveFlowChanges, filterExistingConnections]);
+  }, [flow, nodes, edges, setNodes, setEdges, saveFlowChanges, filterExistingConnections, queryClient, flowId]);
 
   // Handle connection end - show menu for short drags or handle clicks
   const onConnectEnd: OnConnectEnd = useCallback((event) => {
@@ -1209,7 +1209,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         const nodeElement = handleElement.closest('[data-id]') as HTMLElement;
         if (nodeElement) {
           const nodeId = nodeElement.getAttribute('data-id');
-          const sourceNode = nodes.find(n => n.id === nodeId);
+          const currentFlow = flowRef.current;
+          if (!currentFlow) return;
+          const sourceNode = (currentFlow.props.nodes as CustomNodeType[]).find(n => n.id === nodeId);
           
           if (sourceNode && flowRef.current) {
             // This was a click on a source handle without drag
@@ -1277,7 +1279,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           // A click is when you press and release without moving (distance ~0)
           if (dragDistance <= SHORT_DRAG_THRESHOLD) {
             // Get source node
-            const sourceNode = nodes.find(n => n.id === connectionStart.nodeId);
+            const currentFlow = flowRef.current;
+            if (!currentFlow) return;
+            const sourceNode = (currentFlow.props.nodes as CustomNodeType[]).find(n => n.id === connectionStart.nodeId);
             if (!sourceNode) return;
 
             // Find the node element in the DOM
@@ -1349,15 +1353,24 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   }, [onNodesChange]);
 
   // Handle node drag stop to save final positions
-  const handleNodeDragStop = useCallback((_event: any, _node: any) => {
-    isLocalChangeRef.current = true; // Mark that we have local changes
+  const handleNodeDragStop = useCallback((_event: any, draggedNode: any, draggedNodes: any[]) => {
+    // Get all dragged nodes (could be multiple if selection was dragged)
+    const nodesToUpdate = draggedNodes && draggedNodes.length > 0 ? draggedNodes : [draggedNode];
     
-    // Save after a small delay to ensure ReactFlow has updated
-    setTimeout(() => {
-      // Pass false to not invalidate queries
-      saveFlowChanges(nodes, edges, true);
-    }, 200);
-  }, [saveFlowChanges, nodes, edges]);
+    // Create position updates for all dragged nodes
+    const positionUpdates = nodesToUpdate.map(node => ({
+      nodeId: node.id,
+      position: node.position
+    }));
+    
+    // Use the position-only mutation to avoid overwriting other node data
+    updateNodesPositions.mutate(positionUpdates, {
+      onSuccess: () => {
+        // Skip the next sync since we just updated positions
+        skipNextSyncRef.current = true;
+      }
+    });
+  }, [updateNodesPositions]);
 
   // Handle edge changes to track dirty state
   const handleEdgesChange = useCallback((changes: any) => {
@@ -1377,7 +1390,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         // Mark as local change
         isLocalChangeRef.current = true;
         
-        // Save and invalidate queries for edge changes so agent nodes update
+        // Use refs data which is already current
         saveFlowChanges(currentNodes, currentEdges, true);
       }, 0);
     }

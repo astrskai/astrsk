@@ -4,6 +4,7 @@
 import { Flow } from "@/modules/flow/domain/flow";
 import { Agent } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
+import { UniqueEntityID } from "@/shared/domain";
 import { traverseFlowCached } from "./flow-traversal-cache";
 
 // Define hex colors for agents - active (300) variants
@@ -40,19 +41,29 @@ export function hexToRgba(hex: string, opacity: number): string {
 
 /**
  * Get the next available color for a new agent in the flow
- * @param flow - The current flow
+ * @param flow - The current flow or flow-like data structure
  * @returns The next available hex color
  */
-export async function getNextAvailableColor(flow: Flow): Promise<string> {
-  // Get all agents of flow
-  const agentIds = flow.agentIds;
+export async function getNextAvailableColor(flow: Flow | { agentIds: any[], props: { nodes: any[] } }): Promise<string> {
+  // Get all agents from the flow's nodes
   const agents: Agent[] = [];
-  for (const agentId of agentIds) {
-    const agentOrError = await AgentService.getAgent.execute(agentId);
-    if (agentOrError.isFailure) {
-      throw new Error(agentOrError.getError());
+  
+  // Check if we have nodes in the flow
+  const nodes = flow.props?.nodes || [];
+  const agentNodes = nodes.filter((n: any) => n.type === 'agent');
+  
+  for (const node of agentNodes) {
+    // Agent nodes have agentId in their data
+    const agentId = node.data?.agentId || node.id;
+    try {
+      const agentOrError = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
+      if (agentOrError.isSuccess) {
+        agents.push(agentOrError.getValue());
+      }
+    } catch (error) {
+      // If we can't get the agent, skip it
+      console.warn(`Failed to get agent ${agentId} for color assignment:`, error);
     }
-    agents.push(agentOrError.getValue());
   }
 
   // Get all colors currently used by agents and other nodes in the flow
@@ -124,7 +135,7 @@ export async function getNextAvailableColor(flow: Flow): Promise<string> {
  * @param flow - The flow to check in
  * @returns true if connected to both start and end, false otherwise
  */
-export function isAgentConnected(agentId: string, flow: Flow): boolean {
+export function isAgentConnected(agentId: string, flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }): boolean {
   // Use the proper traverseFlow function that handles all node types
   const traversalResult = traverseFlowCached(flow);
   
@@ -156,7 +167,7 @@ export function getAgentHexColor(agent: Agent): string {
  * @param isFlowValid - Optional: Whether all connected agents in the flow are valid
  * @returns The opacity value (0.5 for disconnected, 0.7 for connected but invalid flow, 1 for valid flow)
  */
-export function getAgentOpacity(agent: Agent, flow: Flow, isFlowValid: boolean = true): number {
+export function getAgentOpacity(agent: Agent, flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }, isFlowValid: boolean = true): number {
   const agentId = agent.id.toString();
   const isConnected = isAgentConnected(agentId, flow);
   
@@ -179,7 +190,7 @@ export function getAgentOpacity(agent: Agent, flow: Flow, isFlowValid: boolean =
   return opacity;
 }
 
-export function getAgentState(agent: Agent, flow: Flow): boolean {
+export function getAgentState(agent: Agent, flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }): boolean {
   if (!isAgentConnected(agent.id.toString(), flow)){
     return true;
   } 

@@ -18,20 +18,27 @@ type CustomEdgeType = {
 };
 
 // Helper function to generate unique agent name
-export const generateUniqueAgentName = async (flow: Flow, baseName: string = "New Agent"): Promise<string> => {
+export const generateUniqueAgentName = async (flow: Flow | { agentIds: any[], props?: { nodes: any[] } }, baseName: string = "New Agent"): Promise<string> => {
   const existingNames = new Set<string>();
   
   // Collect existing agent names from current flow
-  if (flow?.agentIds) {
-    for (const agentId of flow.agentIds) {
-      const agentOrError = await AgentService.getAgent.execute(agentId);
-      if (agentOrError.isFailure) {
-        throw new Error(agentOrError.getError());
+  // Check if we have nodes in the flow
+  const nodes = (flow as any)?.props?.nodes || [];
+  const agentNodes = nodes.filter((n: any) => n.type === 'agent');
+  
+  for (const node of agentNodes) {
+    // Agent nodes have agentId in their data
+    const agentId = node.data?.agentId || node.id;
+    try {
+      const agentOrError = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
+      if (agentOrError.isSuccess) {
+        const agent = agentOrError.getValue();
+        if (agent.props.name) {
+          existingNames.add(agent.props.name);
+        }
       }
-      const agent = agentOrError.getValue();
-      if (agent.props.name) {
-        existingNames.add(agent.props.name);
-      }
+    } catch (error) {
+      // If we can't get the agent, skip it
     }
   }
   
@@ -57,7 +64,7 @@ export const createNodeWithConnection = async (
   sourceNodeId: string,
   sourceHandleId: string | undefined,
   position: { x: number; y: number },
-  flow: Flow,
+  flow: Flow | { agentIds: any[], props: { nodes: any[] } },
   nodes: CustomNodeType[],
   edges: CustomEdgeType[],
   filterExistingConnections: Function

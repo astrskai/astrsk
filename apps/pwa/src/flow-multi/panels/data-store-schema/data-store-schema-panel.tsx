@@ -1,160 +1,120 @@
+// Data store schema panel component for Dockview multi-panel layout
+// Uses targeted mutations and panel-specific queries for optimal performance
+
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Trash2, Plus, Database, HelpCircle } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 import { debounce } from "lodash-es";
 
 import { Input } from "@/components-v2/ui/input";
 import { Button } from "@/components-v2/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
+import { HelpCircle } from "lucide-react";
+
+// Import query and mutation system
+import { useQuery } from "@tanstack/react-query";
+import { flowQueries } from "@/app/queries/flow/query-factory";
+import { useUpdateDataStoreSchema } from "@/app/queries/flow/mutations/data-store-mutations";
 
 // Import from flow panel architecture
-import { 
-  useFlowPanel, 
-  FlowPanelLoading, 
-  FlowPanelError 
-} from "@/flow-multi/hooks/use-flow-panel";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { DataStoreSchemaProps, DataStoreSchemaField, DataStoreSchema, DataStoreFieldType } from "./data-store-schema-types";
 import { SortableField } from "./sortable-field";
 import { UniqueEntityID } from "@/shared/domain";
 import { sanitizeFileName } from "@/shared/utils/file-utils";
-import { ReadyState } from "@/modules/flow/domain";
+import { toast } from "sonner";
 
 export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
-  // 1. Use flow panel hook for flow data
+  
+  // 1. Get the mutation hook with edit mode support
+  const updateDataStoreSchema = useUpdateDataStoreSchema(flowId);
+  
+  // 2. Load just the data store schema - more efficient than loading entire flow
   const { 
-    flow,
+    data: schema, 
     isLoading,
-    saveFlow,
-  } = useFlowPanel({ flowId });
+    error,
+    dataUpdatedAt,
+    isRefetching,
+    isFetching,
+    status
+  } = useQuery({
+    ...flowQueries.dataStoreSchema(flowId),
+    enabled: !!flowId && !updateDataStoreSchema.isEditing, // Pause during edits
+    refetchOnMount: false, // Don't refetch on mount - only when needed
+    refetchOnWindowFocus: !updateDataStoreSchema.isEditing
+  });
 
   // Get flow panel context for opening panels and adding nodes
   const { openPanel, addDataStoreNode } = useFlowPanelContext();
 
-  // 2. Local state for fields
+  // 3. Local state for fields
   const [fields, setFields] = useState<DataStoreSchemaField[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string>("");
   const [localInitialValue, setLocalInitialValue] = useState("");
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
-  // Use ref to hold current flow for debounced save
-  const flowRef = useRef(flow);
-  const saveFlowRef = useRef(saveFlow);
-  
-  // Update refs when flow or saveFlow changes
+  // Use ref to store the mutation to avoid recreating debounced function
+  const updateDataStoreSchemaRef = useRef(updateDataStoreSchema);
   useEffect(() => {
-    flowRef.current = flow;
-    saveFlowRef.current = saveFlow;
-  }, [flow, saveFlow]);
+    updateDataStoreSchemaRef.current = updateDataStoreSchema;
+  }, [updateDataStoreSchema]);
+  
+  // Track editing state in a ref to avoid triggering effects
+  const isEditingRef = useRef(updateDataStoreSchema.isEditing);
+  useEffect(() => {
+    isEditingRef.current = updateDataStoreSchema.isEditing;
+  }, [updateDataStoreSchema.isEditing]);
+  
+  // 4. Initialize fields from schema
+  useEffect(() => {
+    // Only update fields from schema if we have schema data and we're not editing
+    if (schema?.fields && !isEditingRef.current) {
+      setFields(schema.fields);
+      // Maintain selection if possible
+      if (!selectedFieldId || !schema.fields.find(f => f.id === selectedFieldId)) {
+        setSelectedFieldId(schema.fields[0]?.id || "");
+      }
+    }
+    // Don't clear fields just because schema is null - preserve local state
+  }, [schema, isLoading, status]); // Don't include isEditing to avoid unnecessary re-runs
+  // Note: selectedFieldId is intentionally not in deps to preserve selection
 
-  // 3. Get selected field
+  // 5. Get selected field
   const selectedField = useMemo(() => 
     fields.find(f => f.id === selectedFieldId),
     [fields, selectedFieldId]
   );
 
-  // Track if this is the initial load
-  const isFirstLoadRef = useRef(true);
-  
-  // 4. Initialize fields from flow's dataStoreSchema
-  // Only update if we don't have unsaved changes to prevent overwriting user edits
-  useEffect(() => {
-    if (flow && !isLoading && !hasUnsavedChanges) {
-      const schema = flow.props.dataStoreSchema;
-      if (schema?.fields && schema.fields.length > 0) {
-        setFields(schema.fields);
-        
-        // Only set selection on first load or if current selection doesn't exist
-        setSelectedFieldId(prevSelectedId => {
-          // If this is the first load or no previous selection, select first field
-          if (isFirstLoadRef.current || !prevSelectedId) {
-            isFirstLoadRef.current = false;
-            return schema.fields[0]?.id || "";
-          }
-          
-          // Check if the previously selected field still exists
-          const fieldStillExists = schema.fields.some(f => f.id === prevSelectedId);
-          if (fieldStillExists) {
-            return prevSelectedId; // Keep current selection
-          } else {
-            return schema.fields[0]?.id || ""; // Field was deleted, select first
-          }
-        });
-      } else {
-        setFields([]);
-        setSelectedFieldId("");
-        isFirstLoadRef.current = true; // Reset for next time
-      }
-    }
-  }, [flow?.props.dataStoreSchema, isLoading, hasUnsavedChanges]); // Re-initialize when schema changes or loading completes
-
-  // 5. Sync local fields with selected field
+  // 6. Sync local initial value with selected field
   useEffect(() => {
     if (selectedField) {
       setLocalInitialValue(selectedField.initialValue || "");
     }
   }, [selectedField?.id, selectedField?.initialValue]);
 
-  // 6. Debounced save for fields to flow's dataStoreSchema
-  // Using useCallback with empty deps and refs to avoid recreation
+  // 7. Debounced save for fields
   const debouncedSaveFields = useMemo(
-    () => debounce(async (updatedFields: DataStoreSchemaField[]) => {
-      const currentFlow = flowRef.current;
-      const currentSaveFlow = saveFlowRef.current;
-      
-      if (!currentFlow || !currentSaveFlow) {
-        console.error('[DATA_STORE_SCHEMA] Cannot save - flow or saveFlow is null');
-        return;
-      }
-      
-      // Update flow's dataStoreSchema
+    () => debounce((updatedFields: DataStoreSchemaField[]) => {
       const updatedSchema: DataStoreSchema = {
         fields: updatedFields
       };
       
-      const updateResult = currentFlow.update({ dataStoreSchema: updatedSchema });
-      if (updateResult.isSuccess) {
-        let flowToSave = updateResult.getValue();
-        
-        // Set flow to Draft state if it was Ready
-        if (flowToSave.props.readyState === ReadyState.Ready) {
-          const stateUpdateResult = flowToSave.setReadyState(ReadyState.Draft);
-          if (stateUpdateResult.isSuccess) {
-            flowToSave = stateUpdateResult.getValue();
-          }
+      // Use the ref to get the current mutation
+      updateDataStoreSchemaRef.current.mutate(updatedSchema, {
+        onError: (error) => {
+          toast.error("Failed to save data store schema", {
+            description: error instanceof Error ? error.message : "Unknown error",
+          });
         }
-        
-        await currentSaveFlow(flowToSave);
-        // Clear unsaved changes after successful save
-        setHasUnsavedChanges(false);
-      } else {
-        console.error("[DATA_STORE_SCHEMA] Failed to update flow:", updateResult.getError());
-      }
+      });
     }, 300),
-    [] // Empty deps to create debounce only once
+    [] // Empty deps for stable debounced function
   );
   
   // Clean up debounced function on unmount
@@ -164,34 +124,19 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
     };
   }, [debouncedSaveFields]);
 
-  // 7. DnD sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  // 8. Handle drag end for reordering (disabled - no reordering in schema panel)
-  const handleDragEnd = (event: DragEndEvent) => {
-    // Drag functionality disabled for schema panel
-    return;
-  };
-
-  // 9. Field management functions
+  // 8. Field management functions
   const addNewField = useCallback(() => {
     const newId = new UniqueEntityID().toString();
     const newField: DataStoreSchemaField = {
       id: newId,
       name: `field_${fields.length + 1}`,
       type: 'string',
-      initialValue: ""  // Will be set to 'false' if type changes to boolean
+      initialValue: ""
     };
     
     const updatedFields = [...fields, newField];
     setFields(updatedFields);
     setSelectedFieldId(newId);
-    setHasUnsavedChanges(true); // Mark as having unsaved changes
     debouncedSaveFields(updatedFields);
   }, [fields, debouncedSaveFields]);
 
@@ -203,10 +148,8 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
       setSelectedFieldId(updatedFields[0]?.id || "");
     }
     
-    setHasUnsavedChanges(true); // Mark as having unsaved changes
     debouncedSaveFields(updatedFields);
   }, [fields, selectedFieldId, debouncedSaveFields]);
-
 
   const updateField = useCallback((fieldId: string, updates: Partial<DataStoreSchemaField>) => {
     // Sanitize field name if it's being updated  
@@ -231,6 +174,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
       return field;
     });
     setFields(updatedFields);
+    
     // Update local state if this is the selected field (only for non-boolean types)
     if (fieldId === selectedFieldId && updates.type && updates.type !== 'boolean') {
       const field = updatedFields.find(f => f.id === fieldId);
@@ -238,40 +182,34 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
         setLocalInitialValue(field.initialValue);
       }
     }
-    setHasUnsavedChanges(true); // Mark as having unsaved changes
+    
     debouncedSaveFields(updatedFields);
   }, [fields, selectedFieldId, debouncedSaveFields]);
 
-
-  // 10. Early returns for loading/error states
+  // 9. Early returns for loading/error states
   if (isLoading) {
-    return <FlowPanelLoading message="Loading data schema..." />;
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Loading data schema...</span>
+        </div>
+      </div>
+    );
   }
 
-  if (!flow) {
-    return <FlowPanelError message="Flow not found" />;
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="text-text-subtle">
+          Error loading data store schema
+        </div>
+      </div>
+    );
   }
 
-  // 11. Main render
+  // 10. Main render
   return (
     <div className="h-full flex flex-col bg-background-surface-2">
-      {/* Header with description */}
-      {/* <div className="px-2 py-2.5 bg-background-surface-2 border-b border-border-dark flex flex-col justify-start items-start gap-2.5">
-        <div className="self-stretch inline-flex justify-start items-center gap-10">
-          <div className="flex-1 justify-start text-text-subtle text-xs font-normal">
-            Create data fields to build nodes that can be linked into your flow and control session state dynamically.
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={addDataStoreNode}
-          >
-            <Plus />
-            Data update node
-          </Button>
-        </div>
-      </div> */}
-
       {/* Main content */}
       {fields.length === 0 ? (
         // Empty state
@@ -305,28 +243,16 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
             </button>
 
             <ScrollAreaSimple className="self-stretch flex-1">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-                modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-              >
-                <SortableContext
-                  items={fields.map(field => field.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                    {fields.map((field) => (
-                      <SortableField
-                        key={field.id}
-                        field={field}
-                        isSelected={field.id === selectedFieldId}
-                        onClick={() => setSelectedFieldId(field.id)}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
+              <div className="self-stretch flex flex-col justify-start items-start gap-2">
+                {fields.map((field) => (
+                  <SortableField
+                    key={field.id}
+                    field={field}
+                    isSelected={field.id === selectedFieldId}
+                    onClick={() => setSelectedFieldId(field.id)}
+                  />
+                ))}
+              </div>
             </ScrollAreaSimple>
           </div>
 
@@ -471,7 +397,6 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
                         selectedField.type === 'string' ? "Enter text value" :
                         selectedField.type === 'number' ? "0" :
                         selectedField.type === 'integer' ? "0" :
-                        selectedField.type === 'boolean' ? "true" :
                         "Enter initial value"
                       }
                     />

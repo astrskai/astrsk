@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
+import { useQuery } from "@tanstack/react-query";
+import { flowQueries } from "@/app/queries/flow/query-factory";
+import { useUpdateDataStoreNodeFields } from "@/app/queries/flow/mutations/data-store-node-mutations";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { Button } from "@/components-v2/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
@@ -29,10 +31,11 @@ import {
 import { Editor } from "@/components-v2/editor";
 import type { editor } from "monaco-editor";
 import { debounce } from "lodash-es";
-import type { DataStoreField, Flow } from "@/modules/flow/domain/flow";
+import type { DataStoreField } from "@/modules/flow/domain/flow";
 import { SortableDataField } from "./sortable-data-field";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
-import { ReadyState } from "@/modules/flow/domain";
+import { UniqueEntityID } from "@/shared/domain";
+import { toast } from "sonner";
 
 interface DataStorePanelProps {
   flowId: string;
@@ -40,35 +43,33 @@ interface DataStorePanelProps {
 }
 
 export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
-  const { flow, saveFlow } = useFlowPanel({ flowId });
   const { openPanel, closePanel } = useFlowPanelContext();
 
-  // Store flow in ref to prevent re-renders from triggering logic reset
-  const flowRef = useRef(flow);
-  useEffect(() => {
-    flowRef.current = flow;
-  }, [flow]);
-
+  // Get mutation hook with proper node-level updates
+  const updateNodeFields = useUpdateDataStoreNodeFields(flowId, nodeId);
+  
+  // Query for node data - more efficient than loading entire flow
+  const { data: node, isLoading: nodeLoading } = useQuery({
+    ...flowQueries.node(flowId, nodeId),
+    enabled: !!flowId && !!nodeId && !updateNodeFields.isEditing,
+  });
+  
+  // Query for data store schema - panel-specific query
+  const { data: schema, isLoading: schemaLoading } = useQuery({
+    ...flowQueries.dataStoreSchema(flowId),
+    enabled: !!flowId && !updateNodeFields.isEditing,
+  });
+  
+  const nodeData = node?.data as any;
+  const schemaFields = useMemo(() => schema?.fields || [], [schema?.fields]);
+  
   // Auto-close panel when connected node is deleted
   useEffect(() => {
-    if (!flow || !nodeId) return;
-    
-    // Check if the node still exists in the flow
-    const nodeExists = flow.props.nodes.some(n => n.id === nodeId);
-    
-    if (!nodeExists) {
+    if (!nodeLoading && !node && nodeId) {
       // Node has been deleted, close the panel
       closePanel(`dataStore-${nodeId}`);
     }
-  }, [flow?.props.nodes, nodeId, closePanel]);
-
-
-  // Get node data from flow
-  const node = flow?.props.nodes.find(n => n.id === nodeId);
-  const nodeData = node?.data as any;
-  
-  // Get schema fields from flow's dataStoreSchema
-  const schemaFields = useMemo(() => flow?.props.dataStoreSchema?.fields || [], [flow?.props.dataStoreSchema?.fields]);
+  }, [node, nodeLoading, nodeId, closePanel]);
 
   // Local state for imported fields and logic
   const [dataStoreFields, setDataStoreFields] = useState<DataStoreField[]>([]);
@@ -77,13 +78,11 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   const [localLogic, setLocalLogic] = useState("");
   const lastNodeIdRef = useRef<string>("");
   const isEditingLogicRef = useRef<boolean>(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Initialize data store fields from node data - only when nodeId changes and no unsaved changes
+  // Initialize data store fields from node data
   useEffect(() => {
-    if (flow && nodeId && nodeId !== lastNodeIdRef.current && !hasUnsavedChanges) {
-      const currentNode = flow.props.nodes.find(n => n.id === nodeId);
-      const currentNodeData = currentNode?.data as any;
+    if (node && nodeId && nodeId !== lastNodeIdRef.current && !updateNodeFields.isEditing) {
+      const currentNodeData = node.data as any;
       
       if (currentNodeData?.dataStoreFields) {
         setDataStoreFields(currentNodeData.dataStoreFields);
@@ -96,7 +95,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
       }
       lastNodeIdRef.current = nodeId;
     }
-  }, [flow, nodeId, hasUnsavedChanges]); // Only when nodeId changes and no unsaved changes
+  }, [node, nodeId, updateNodeFields.isEditing]);
 
   // Sync logic with selected field - only when field selection changes or initial load
   useEffect(() => {
@@ -113,56 +112,20 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     }
   }, [selectedFieldId, dataStoreFields]);
 
-  // Save data store fields to node
-  const saveDataStoreFields = useCallback(async (fields: DataStoreField[]) => {
-    // Update the node data directly in the flow panel which will handle saving
-    if ((window as any).flowPanelUpdateNodeData) {
-      (window as any).flowPanelUpdateNodeData(nodeId, { dataStoreFields: fields });
-      // Update local state to match what was saved
-      setDataStoreFields(fields);
-    } else {
-      // Fallback if flow panel method is not available
-      const currentFlow = flowRef.current;
-      if (!currentFlow) return;
-      
-      const currentNode = currentFlow.props.nodes.find(n => n.id === nodeId);
-      if (!currentNode) return;
-      
-      const updatedNode = {
-        ...currentNode,
-        data: {
-          ...currentNode.data,
-          dataStoreFields: fields
-        }
-      };
-      
-      const updatedNodes = currentFlow.props.nodes.map(n => 
-        n.id === nodeId ? updatedNode : n
-      );
-      
-      const updateResult = currentFlow.update({ nodes: updatedNodes });
-      if (updateResult.isSuccess) {
-        try {
-          let flowToSave = updateResult.getValue();
-          
-          // Set flow to Draft state if it was Ready
-          if (flowToSave.props.readyState === ReadyState.Ready) {
-            const stateUpdateResult = flowToSave.setReadyState(ReadyState.Draft);
-            if (stateUpdateResult.isSuccess) {
-              flowToSave = stateUpdateResult.getValue();
-            }
-          }
-          
-          await saveFlow(flowToSave);
-          setHasUnsavedChanges(false); // Clear unsaved changes after successful save
-          // Update local state after successful save
-          setDataStoreFields(fields);
-        } catch (e) {  
-          console.error("Failed to save flow:", e);  
-        }
+  // Save data store fields to node using targeted mutation
+  const saveDataStoreFields = useCallback((fields: DataStoreField[]) => {
+    updateNodeFields.mutate(fields, {
+      onSuccess: () => {
+        // Update local state after successful save
+        setDataStoreFields(fields);
+      },
+      onError: (error) => {
+        toast.error("Failed to save data store fields", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
       }
-    }
-  }, [nodeId, saveFlow]);
+    });
+  }, [updateNodeFields]);
 
   // DnD sensors
   const sensors = useSensors(
@@ -197,6 +160,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     if (!schemaField) return;
     
     const newField: DataStoreField = {
+      id: new UniqueEntityID().toString(),
       schemaFieldId: selectedSchemaFieldId,
       value: schemaField.initialValue || '',
       logic: ''  // Initialize with empty string instead of undefined
@@ -296,6 +260,17 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     [schemaFields, dataStoreFields]
   );
 
+  // Loading states
+  if (nodeLoading || schemaLoading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Loading data store...</span>
+        </div>
+      </div>
+    );
+  }
+  
   // Check if there are no schema fields at all
   const hasNoSchema = schemaFields.length === 0;
 
@@ -470,7 +445,6 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                               className="p-2 inline-flex justify-start items-center gap-2 hover:bg-background-surface-1 rounded transition-colors"
                               onClick={() => {
                                 // TODO: Implement expand functionality
-                                console.log("Expand editor");
                               }}
                             >
                               <Maximize2 className="w-4 h-4 text-text-subtle" />

@@ -32,8 +32,11 @@ import { UniqueEntityID } from "@/shared/domain";
 import { Agent } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
+import { agentKeys } from "@/app/queries/agent/query-factory";
+import { flowKeys } from "@/app/queries/flow/query-factory";
+import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-mutations";
 
 // Watermark component
 const Watermark = React.memo(() => (
@@ -145,14 +148,18 @@ interface FlowPanelMainProps {
 }
 
 export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
+  const queryClient = useQueryClient();
+  
   // Fetch flow data when flowId changes
   const { data: flow } = useQuery({
     ...flowQueries.detail(flowId ? new UniqueEntityID(flowId) : undefined),
     enabled: !!flowId,
   });
 
+  // Panel layout mutation
+  const updatePanelLayoutMutation = useUpdatePanelLayout(flowId || '');
+  
   const [dockviewApi, setDockviewApi] = useState<DockviewApi>();
-  const savePanelLayoutRef = useRef<boolean>(false);
   const isFlowSwitchingRef = useRef<boolean>(false);
   
   // Track agents for color updates
@@ -169,10 +176,19 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
   flowIdRef.current = flowId;
   flowRef.current = flow;
   agentsRef.current = agents;
+  
+  // Invalidate all agent queries when flow ID changes
+  useEffect(() => {
+    if (flowId && flowId !== prevFlowIdRef.current) {
+      // Invalidate all agent queries to force refetch with new flow context
+      queryClient.invalidateQueries({ queryKey: agentKeys.all });
+      prevFlowIdRef.current = flowId;
+    }
+  }, [flowId, queryClient]);
 
   // Track agent node IDs to detect actual changes
   const agentNodeIds = useMemo(() => {
-    if (!flow) return [];
+    if (!flow || !flow.props?.nodes) return [];
     return flow.props.nodes
       .filter(node => node.type === 'agent')
       .map(node => node.id)
@@ -182,7 +198,32 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
 
   // Load agents when flow changes
   useEffect(() => {
-    if (!flow) return;
+    // Enhanced race condition protection
+    if (!flowId || !flow || !flow.props?.nodes || !Array.isArray(flow.props.nodes)) {
+      console.log('[FLOW-PANEL-MAIN] Skipping agent load - missing data:', {
+        hasFlowId: !!flowId,
+        hasFlow: !!flow,
+        hasProps: !!flow?.props,
+        hasNodes: !!flow?.props?.nodes,
+        isNodesArray: Array.isArray(flow?.props?.nodes)
+      });
+      return;
+    }
+    
+    // Ensure we're loading agents for the correct flow
+    const currentFlowId = flow.id.toString();
+    if (currentFlowId !== flowId) {
+      console.log('[FLOW-PANEL-MAIN] Flow ID mismatch, skipping agent load:', {
+        currentFlowId,
+        expectedFlowId: flowId
+      });
+      return;
+    }
+    
+    console.log('[FLOW-PANEL-MAIN] Loading agents for flow:', {
+      flowId: currentFlowId,
+      nodeCount: flow.props.nodes.length
+    });
 
     const loadAgents = async () => {
       const agentMap = new Map<string, Agent>();
@@ -241,64 +282,42 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     };
   };
 
-  // Function to save panel layout
+  // Function to save panel layout using mutation
   const savePanelLayout = useCallback(async (api: DockviewApi) => {
     const currentFlowId = flowIdRef.current;
-    const currentFlow = flowRef.current;
     
-    if (!currentFlowId || !currentFlow || savePanelLayoutRef.current) return;
+    if (!currentFlowId || updatePanelLayoutMutation.isPending) return;
 
-    savePanelLayoutRef.current = true;
-    try {
-      const panelStructure = createPanelStructure(api);
-      const updatedFlow = currentFlow.update({ panelStructure });
-      
-      if (updatedFlow.isSuccess) {
-        if (FlowService.saveFlow && typeof FlowService.saveFlow.execute === "function") {
-          await FlowService.saveFlow.execute(updatedFlow.getValue());
-          // Note: We don't invalidate flow queries for layout changes since 
-          // panel layout doesn't affect the core flow data that other components display.
-          // This prevents unnecessary flickering during panel operations.
-        }
-      }
-    } catch (error) {
-      console.error("Failed to save panel layout:", error);
-    } finally {
-      savePanelLayoutRef.current = false;
-    }
-  }, []); // Empty dependency array since we use refs
+    const panelStructure = createPanelStructure(api);
+    
+    // Use mutation for optimistic update and proper error handling
+    updatePanelLayoutMutation.mutate(panelStructure);
+  }, [updatePanelLayoutMutation]);
 
   // Function to save panel layout to a specific flow ID
   const savePanelLayoutToFlow = useCallback(async (api: DockviewApi, targetFlowId: string) => {
-    if (savePanelLayoutRef.current) return;
+    if (!targetFlowId) return;
 
-    savePanelLayoutRef.current = true;
+    const panelStructure = createPanelStructure(api);
+    
+    // Direct service call for saving to a different flow
+    // This is used when switching flows to save the previous flow's layout
     try {
-      // Get the target flow
-      const targetFlowResult = await FlowService.getFlow.execute(new UniqueEntityID(targetFlowId));
-      if (targetFlowResult.isFailure) {
-        console.error('Failed to get target flow:', targetFlowResult.getError());
-        return;
-      }
-      const targetFlow = targetFlowResult.getValue();
-
-      const panelStructure = createPanelStructure(api);
-      const updatedFlow = targetFlow.update({ panelStructure });
+      const result = await FlowService.updatePanelLayout.execute({
+        flowId: targetFlowId,
+        panelStructure,
+      });
       
-      if (updatedFlow.isSuccess) {
-        if (FlowService.saveFlow && typeof FlowService.saveFlow.execute === "function") {
-          await FlowService.saveFlow.execute(updatedFlow.getValue());
-          
-          // Invalidate the flow query to ensure fresh data on next read
-          await invalidateSingleFlowQueries(new UniqueEntityID(targetFlowId));
-        }
+      if (result.isFailure) {
+        console.error('Failed to save panel layout to flow:', result.getError());
+      } else {
+        // Invalidate the panel layout query for that flow
+        queryClient.invalidateQueries({ queryKey: flowKeys.panelLayout(targetFlowId) });
       }
     } catch (error) {
       console.error("Failed to save panel layout to flow:", error);
-    } finally {
-      savePanelLayoutRef.current = false;
     }
-  }, []);
+  }, [queryClient]);
 
   // Debounced save layout (reduced to 200ms for quicker saves)
   const debouncedSaveLayout = useMemo(
@@ -405,28 +424,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
       let node = flow.props.nodes.find(n => n.id === agentId);
       let nodeData = node?.data as any;
       
-      // If node not found in flow, try to get it from the React Flow instance via window
-      if (!node && (window as any).flowPanelGetNode) {
-        const reactFlowNode = (window as any).flowPanelGetNode(agentId);
-        if (reactFlowNode) {
-          node = reactFlowNode;
-          nodeData = reactFlowNode.data;
-          console.log('[Panel Debug] Node not in flow, got from React Flow:', reactFlowNode);
-        }
-      }
       
       agentColor = nodeData?.color as string | undefined;
-      
-      // Debug logging for color issue
-      console.log('[Panel Debug] Opening panel:', {
-        panelType,
-        nodeId: agentId,
-        nodeFound: !!node,
-        nodeData,
-        color: agentColor,
-        flowNodesCount: flow.props.nodes.length,
-        allNodeIds: flow.props.nodes.map(n => n.id)
-      });
       
       // Get node name/label for title with appropriate fallback
       let nodeName: string;
