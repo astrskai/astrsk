@@ -216,7 +216,7 @@ const MessageItemInternal = ({
                 >
                   {translation ?? content}
                 </Markdown>
-                {isShowDataStore && (
+                {!streaming && isShowDataStore && (
                   <div className="mt-[10px] p-[16px] border-[1px] border-[#1111111A] rounded-[12px]">
                     <div className="mb-[16px] flex flex-row gap-[8px] items-center text-text-subtle">
                       <History size={20} />
@@ -2043,10 +2043,26 @@ const SessionMessagesAndUserInputs = ({
               : "pointer-events-none select-none",
           )}
         >
-          <div className="shrink-0 p-[16px] border-b-1 border-b-[#F1F1F14D] flex flex-row items-center text-text-primary">
-            <div className="font-[600] text-[16px] leading-[25.6px]">
-              Data schema list
-            </div>
+          <div className="shrink-0 h-[72px] p-[16px] border-b-1 border-b-[#F1F1F14D] flex flex-row items-center text-text-primary">
+            {streamingMessageId ? (
+              <>
+                <SvgIcon
+                  name="astrsk_symbol"
+                  size={40}
+                  className="animate-spin mr-[2px]"
+                />
+                <div className="font-[400] text-[16px] leading-[25.6px] mr-[4px]">
+                  {streamingAgentName}
+                </div>
+                <div className="font-[600] text-[16px] leading-[25.6px]">
+                  {streamingModelName}
+                </div>
+              </>
+            ) : (
+              <div className="font-[600] text-[16px] leading-[25.6px]">
+                Data schema list
+              </div>
+            )}
           </div>
           <div className="relative overflow-hidden">
             <ScrollArea className="w-full h-full">
