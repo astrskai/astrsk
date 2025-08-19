@@ -11,6 +11,18 @@ import {
   ImportCardFromFile,
   SaveCard,
   SearchCard,
+  UpdateCardTitle,
+  UpdateCardSummary,
+  UpdateCardVersion,
+  UpdateCardConceptualOrigin,
+  UpdateCharacterName,
+  UpdateCharacterDescription,
+  UpdateCharacterExampleDialogue,
+  UpdateCardTags,
+  UpdateCardCreator,
+  UpdateCardLorebook,
+  UpdateCardScenarios,
+  UpdatePlotDescription,
 } from "@/modules/card/usecases";
 // import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
 
@@ -24,6 +36,18 @@ export class CardService {
   public static importCardFromFile: ImportCardFromFile;
   public static saveCard: SaveCard;
   public static searchCard: SearchCard;
+  public static updateCardTitle: UpdateCardTitle;
+  public static updateCardSummary: UpdateCardSummary;
+  public static updateCardVersion: UpdateCardVersion;
+  public static updateCardConceptualOrigin: UpdateCardConceptualOrigin;
+  public static updateCharacterName: UpdateCharacterName;
+  public static updateCharacterDescription: UpdateCharacterDescription;
+  public static updateCharacterExampleDialogue: UpdateCharacterExampleDialogue;
+  public static updateCardTags: UpdateCardTags;
+  public static updateCardCreator: UpdateCardCreator;
+  public static updateCardLorebook: UpdateCardLorebook;
+  public static updateCardScenarios: UpdateCardScenarios;
+  public static updatePlotDescription: UpdatePlotDescription;
 
   private constructor() {}
 
@@ -47,5 +71,17 @@ export class CardService {
     );
     this.saveCard = new SaveCard(this.cardRepo);
     this.searchCard = new SearchCard(this.cardRepo);
+    this.updateCardTitle = new UpdateCardTitle(this.cardRepo, this.cardRepo);
+    this.updateCardSummary = new UpdateCardSummary(this.cardRepo, this.cardRepo);
+    this.updateCardVersion = new UpdateCardVersion(this.cardRepo, this.cardRepo);
+    this.updateCardConceptualOrigin = new UpdateCardConceptualOrigin(this.cardRepo, this.cardRepo);
+    this.updateCharacterName = new UpdateCharacterName(this.cardRepo, this.cardRepo);
+    this.updateCharacterDescription = new UpdateCharacterDescription(this.cardRepo, this.cardRepo);
+    this.updateCharacterExampleDialogue = new UpdateCharacterExampleDialogue(this.cardRepo, this.cardRepo);
+    this.updateCardTags = new UpdateCardTags(this.cardRepo, this.cardRepo);
+    this.updateCardCreator = new UpdateCardCreator(this.cardRepo, this.cardRepo);
+    this.updateCardLorebook = new UpdateCardLorebook(this.cardRepo, this.cardRepo);
+    this.updateCardScenarios = new UpdateCardScenarios(this.cardRepo, this.cardRepo);
+    this.updatePlotDescription = new UpdatePlotDescription(this.cardRepo, this.cardRepo);
   }
 }

@@ -13,6 +13,7 @@ import { plotCards } from "@/db/schema/plot-cards";
 import { TableName } from "@/db/schema/table-name";
 import { Transaction } from "@/db/transaction";
 import { Card, CardType } from "@/modules/card/domain";
+import { LorebookJSON } from "@/modules/card/domain/lorebook";
 import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
 import { DeleteCardRepo } from "@/modules/card/repos/delete-card-repo";
 import {
@@ -27,6 +28,239 @@ export class DrizzleCardRepo
   implements SaveCardRepo, LoadCardRepo, DeleteCardRepo
 {
   // constructor(private updateLocalSyncMetadata: UpdateLocalSyncMetadata) {}
+
+  async updateCardTitle(cardId: UniqueEntityID, title: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(cards)
+        .set({ title, updated_at: new Date() })
+        .where(eq(cards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update card title: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateCardSummary(cardId: UniqueEntityID, summary: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(cards)
+        .set({ card_summary: summary, updated_at: new Date() })
+        .where(eq(cards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update card summary: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateCardVersion(cardId: UniqueEntityID, version: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(cards)
+        .set({ version, updated_at: new Date() })
+        .where(eq(cards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update card version: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateCardConceptualOrigin(cardId: UniqueEntityID, conceptualOrigin: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(cards)
+        .set({ conceptual_origin: conceptualOrigin, updated_at: new Date() })
+        .where(eq(cards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update card conceptual origin: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateCardCreator(cardId: UniqueEntityID, creator: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(cards)
+        .set({ creator, updated_at: new Date() })
+        .where(eq(cards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update card creator: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateCardTags(cardId: UniqueEntityID, tags: string[]): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(cards)
+        .set({ tags, updated_at: new Date() })
+        .where(eq(cards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update card tags: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateCardLorebook(cardId: UniqueEntityID, lorebook: LorebookJSON): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      // First check if it's a character card or plot card
+      const cardRow = await db
+        .select({ type: cards.type })
+        .from(cards)
+        .where(eq(cards.id, cardId.toString()))
+        .then(getOneOrThrow);
+
+      if (cardRow.type === "character") {
+        await db
+          .update(characterCards)
+          .set({ lorebook, updated_at: new Date() })
+          .where(eq(characterCards.id, cardId.toString()));
+      } else if (cardRow.type === "plot") {
+        await db
+          .update(plotCards)
+          .set({ lorebook, updated_at: new Date() })
+          .where(eq(plotCards.id, cardId.toString()));
+      } else {
+        return Result.fail(`Card type ${cardRow.type} does not support lorebook`);
+      }
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update card lorebook: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateCardScenarios(cardId: UniqueEntityID, scenarios: any[]): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      // Scenarios only exist on plot cards
+      await db
+        .update(plotCards)
+        .set({ scenarios, updated_at: new Date() })
+        .where(eq(plotCards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update card scenarios: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateCharacterName(cardId: UniqueEntityID, name: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(characterCards)
+        .set({ name, updated_at: new Date() })
+        .where(eq(characterCards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update character name: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateCharacterDescription(cardId: UniqueEntityID, description: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(characterCards)
+        .set({ description, updated_at: new Date() })
+        .where(eq(characterCards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update character description: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateCharacterExampleDialogue(cardId: UniqueEntityID, exampleDialogue: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(characterCards)
+        .set({ example_dialogue: exampleDialogue, updated_at: new Date() })
+        .where(eq(characterCards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update character example dialogue: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updatePlotDescription(cardId: UniqueEntityID, description: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(plotCards)
+        .set({ description, updated_at: new Date() })
+        .where(eq(plotCards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update plot description: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
 
   async saveCard(card: Card, tx?: Transaction): Promise<Result<Card>> {
     const db = tx ?? (await Drizzle.getInstance());

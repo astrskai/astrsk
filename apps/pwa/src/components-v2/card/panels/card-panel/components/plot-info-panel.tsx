@@ -1,11 +1,18 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Editor } from "@/components-v2/editor";
 import type { editor } from "monaco-editor";
 import { PlotCard } from "@/modules/card/domain";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
+
+// Import queries and mutations
 import { 
-  useCardPanel, 
+  cardQueries, 
+  useUpdatePlotDescription 
+} from "@/app/queries/card";
+
+import { 
   CardPanelProps, 
   CardPanelLoading, 
   CardPanelError 
@@ -14,30 +21,66 @@ import {
 interface PlotInfoPanelProps extends CardPanelProps {}
 
 export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
-  // 1. Use abstraction hook for card panel functionality
-  const { card, isLoading, lastInitializedCardId, saveCard } = useCardPanel<PlotCard>({
-    cardId,
+  // 1. Mutation for updating plot description
+  const updatePlotDescription = useUpdatePlotDescription(cardId);
+
+  // 2. Query for card data - disable refetching while editing or cursor is active
+  const { data: card, isLoading } = useQuery({
+    ...cardQueries.detail(cardId),
+    enabled: !!cardId && !updatePlotDescription.isEditing && !updatePlotDescription.hasCursor,
   });
   
-  // 2. UI state (expansion, errors, etc.)
+  // 3. UI state (expansion, errors, etc.)
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // 3. Local form state (for immediate UI feedback)
+  // 4. Local form state (for immediate UI feedback)
   const [description, setDescription] = useState("");
+  
+  // 5. Refs
+  const lastInitializedCardId = useRef<string | null>(null);
 
-  // 4. SINGLE initialization useEffect (right after state)
+  // 6. Initialize and sync data (cross-tab synchronization)
   useEffect(() => {
-    if (cardId !== lastInitializedCardId.current && card && card instanceof PlotCard) {
-      setDescription(card.props.description || "");
+    // Initialize when card changes
+    if (cardId && cardId !== lastInitializedCardId.current && card) {
+      if (card instanceof PlotCard) {
+        setDescription(card.props.description || "");
+      } else {
+        setDescription("");
+      }
       lastInitializedCardId.current = cardId;
     }
-  }, [cardId, card, lastInitializedCardId]);
+    // Sync when card changes externally (cross-tab sync) - but not during editing
+    else if (card && !updatePlotDescription.isEditing && !updatePlotDescription.hasCursor) {
+      if (card instanceof PlotCard) {
+        const newDescription = card.props.description || "";
+        // Only update if description actually changed
+        if (description !== newDescription) {
+          setDescription(newDescription);
+        }
+      } else if (description !== "") {
+        setDescription("");
+      }
+    }
+  }, [cardId, card, updatePlotDescription.isEditing, updatePlotDescription.hasCursor, description]);
 
-  // 5. Common Monaco editor mount handler
+  // 7. Common Monaco editor mount handler with cursor tracking
   const handleEditorMount = useCallback((editor: any) => {
     // Register editor for variable insertion
     const position = editor.getPosition();
     registerCardMonacoEditor(editor, position);
+
+    // Track focus - mark cursor as active
+    editor.onDidFocusEditorWidget(() => {
+      const position = editor.getPosition();
+      registerCardMonacoEditor(editor, position);
+      updatePlotDescription.setCursorActive(true);
+    });
+    
+    // Track blur - mark cursor as inactive
+    editor.onDidBlurEditorWidget(() => {
+      updatePlotDescription.setCursorActive(false);
+    });
 
     // Track cursor changes
     editor.onDidChangeCursorPosition(
@@ -46,53 +89,55 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
       },
     );
 
-    // Track focus
-    editor.onDidFocusEditorWidget(() => {
-      const position = editor.getPosition();
-      registerCardMonacoEditor(editor, position);
-    });
-
     // Focus the editor when mounted (only for expanded views)
     if (editor.getDomNode()?.closest('.absolute.inset-0')) {
       editor.focus();
     }
-  }, []);
+  }, [updatePlotDescription]);
 
-  // 6. Debounced save with parameters (NOT closures!)
+  // 8. Helper function to save description using mutation
+  const saveDescription = useCallback((newDescription: string) => {
+    if (!card || !(card instanceof PlotCard)) return;
+
+    // Check for actual changes inline
+    const currentDescription = card.props.description || "";
+    
+    // If no changes, don't save
+    if (newDescription === currentDescription) {
+      return;
+    }
+    
+    updatePlotDescription.mutate(newDescription);
+  }, [card, updatePlotDescription]);
+
+  // 9. Debounced save with parameters (NOT closures!)
   const debouncedSave = useMemo(
     () => debounce((desc: string) => {
-      if (!card || !(card instanceof PlotCard)) return;
-
-      // Check for actual changes before saving
-      if (desc === (card.props.description || "")) return;
-
-      const updateResult = card.update({
-        description: desc.trim(),
-      });
-
-      if (updateResult.isSuccess) {
-        saveCard(card);
-      }
+      saveDescription(desc);
     }, 300),
-    [card, saveCard]
+    [saveDescription]
   );
 
-  // 7. Change handlers that pass current values
+  // 10. Change handlers that pass current values
   const handleDescriptionChange = useCallback((value: string) => {
     setDescription(value);
     debouncedSave(value);
   }, [debouncedSave]);
 
-  // 8. Early returns using abstraction components
+  // 11. Early returns using abstraction components
   if (isLoading) {
     return <CardPanelLoading message="Loading plot info..." />;
   }
 
-  if (!card || !(card instanceof PlotCard)) {
+  if (!card) {
+    return <CardPanelError message="Card not found" />;
+  }
+
+  if (!(card instanceof PlotCard)) {
     return <CardPanelError message="Plot info is only available for plot cards" />;
   }
 
-  // 9. Render
+  // 12. Render
   return (
     <div className="h-full w-full p-4 bg-background-surface-2 flex flex-col gap-4 overflow-hidden relative">
 
