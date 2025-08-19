@@ -121,56 +121,32 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
   // 7. Sync state when prompt data changes (for cross-tab sync)
   useEffect(() => {
-    console.log('[SYNC] Effect triggered, checking conditions:', {
-      isEditing: updatePromptMessages.isEditing,
-      isEditingText: updateTextPrompt.isEditing,
-      hasCursor: updatePromptMessages.hasCursor,
-      hasCursorText: updateTextPrompt.hasCursor,
-      hasRecentlyEdited: hasRecentlyEditedRef.current,
-      showLoading,
-      hasPromptData: !!promptData
-    });
-    
     // Don't sync while editing OR while cursor is active OR recently edited
     if (updatePromptMessages.isEditing || updateTextPrompt.isEditing || 
         updatePromptMessages.hasCursor || updateTextPrompt.hasCursor || 
         hasRecentlyEditedRef.current) {
-      console.log('[SYNC] Skipping sync due to editing/cursor/recent edit conditions');
       return;
     }
     
     if (promptData) {
       const mode = promptData.targetApiType === ApiType.Chat ? "chat" : "text";
-      console.log('[SYNC] Processing sync for mode:', mode);
       
       if (mode === "chat" && promptData.promptMessages) {
         const parsedItems = convertPromptMessagesToItems(promptData.promptMessages);
-        console.log('[SYNC] Parsed items from server:', parsedItems.map(item => ({
-          id: item.id,
-          label: item.label,
-          contentLength: item.content?.length || 0,
-          contentPreview: item.content?.slice(0, 50) + '...'
-        })));
         
         // Force new array reference to trigger React re-render
         setItems([...parsedItems]);
-        console.log('[SYNC] Updated items state');
         
         // Keep selected item if it still exists - use callback to get latest selectedItemId
         setSelectedItemId(prevSelectedId => {
-          console.log('[SYNC] Checking selected item:', prevSelectedId, 'exists:', !!parsedItems.find(item => item.id === prevSelectedId));
           if (prevSelectedId && !parsedItems.find(item => item.id === prevSelectedId)) {
-            console.log('[SYNC] Selected item not found, switching to first:', parsedItems[0]?.id);
             return parsedItems[0]?.id || "";
           }
           return prevSelectedId;
         });
       } else if (mode === "text" && promptData.textPrompt !== undefined) {
-        console.log('[SYNC] Updating text prompt:', promptData.textPrompt?.slice(0, 50) + '...');
         setEditorContent(promptData.textPrompt || "");
       }
-    } else {
-      console.log('[SYNC] No prompt data available');
     }
   }, [promptData?.promptMessages, promptData?.textPrompt, updatePromptMessages.isEditing, updateTextPrompt.isEditing, 
       updatePromptMessages.hasCursor, updateTextPrompt.hasCursor, showLoading]);
@@ -370,16 +346,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
   // 15. Sync local message content with selected item
   useEffect(() => {
-    console.log('[MESSAGE-CONTENT-SYNC] Selected item changed:', {
-      selectedItemId: selectedItem?.id,
-      contentLength: selectedItem?.content?.length || 0,
-      contentPreview: selectedItem?.content?.slice(0, 50) + '...',
-      currentLocalContent: localMessageContent.slice(0, 50) + '...'
-    });
-    
     if (selectedItem) {
       setLocalMessageContent(selectedItem.content || "");
-      console.log('[MESSAGE-CONTENT-SYNC] Updated local message content');
     }
   }, [selectedItem?.id, selectedItem?.content]);
 
@@ -391,21 +359,13 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
   // Handle completed save and clear loading state
   useEffect(() => {
-    console.log('[SAVE-COMPLETION] Effect triggered:', {
-      isPromptMessagesPending,
-      showLoading,
-      pendingSaveRefValue: pendingSaveRef.current
-    });
-    
     // When mutation starts, clear the pending save ref
     if (isPromptMessagesPending && pendingSaveRef.current) {
-      console.log('[SAVE-COMPLETION] Mutation started, clearing pendingSaveRef');
       pendingSaveRef.current = false;
     }
     
     // When mutation completes, clear editing flags to allow sync
     if (!isPromptMessagesPending) {
-      console.log('[SAVE-COMPLETION] Save completed, clearing recently edited flag');
       hasRecentlyEditedRef.current = false;
       if (syncTimeoutRef.current) {
         clearTimeout(syncTimeoutRef.current);
@@ -413,7 +373,6 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
       
       // Hide loading if it was showing
       if (showLoading) {
-        console.log('[SAVE-COMPLETION] Hiding loading');
         setShowLoading(false);
       }
     }
