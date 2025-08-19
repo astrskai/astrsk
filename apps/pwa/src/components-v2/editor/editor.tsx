@@ -171,12 +171,6 @@ export function Editor({
       const currentModel = editor.getModel();
       
       if (currentModel) {
-        console.log('[EDITOR] Clearing undo history - switching content:', {
-          from: prevValueRef.current?.slice(0, 50) + '...',
-          to: value?.slice(0, 50) + '...',
-          fromLength: prevValueRef.current?.length || 0,
-          toLength: value?.length || 0
-        });
         
         // Store current editor state
         const currentPosition = editor.getPosition();
@@ -210,7 +204,6 @@ export function Editor({
           editor.setPosition(currentPosition);
         }
         
-        console.log('[EDITOR] Model recreated with fresh undo history and event handlers');
       }
     }
     prevValueRef.current = value;
