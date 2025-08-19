@@ -2,6 +2,13 @@ import { Guard } from "@/shared/core/guard";
 import { Result } from "@/shared/core/result";
 import { ValueObject } from "@/shared/domain";
 
+export interface DataStoreSavedField {
+  id: string; // DataStoreSchemaField.id
+  name: string; // DataStoreSchemaField.name
+  type: string; // DataStoreSchemaField.type
+  value: string;
+}
+
 export interface OptionProps {
   // Content
   content: string;
@@ -9,7 +16,7 @@ export interface OptionProps {
   variables?: object;
 
   // Data Store
-  dataStore: object;
+  dataStore: DataStoreSavedField[];
 
   // Translation
   translations: Map<string, string>;
@@ -19,7 +26,7 @@ export interface OptionJSON {
   content: string;
   tokenSize: number;
   variables?: object;
-  dataStore?: object;
+  dataStore?: DataStoreSavedField[];
   translations: Record<string, string>;
 }
 
@@ -40,7 +47,7 @@ export class Option extends ValueObject<OptionProps> {
     return this.props.translations;
   }
 
-  get dataStore(): object {
+  get dataStore(): DataStoreSavedField[] {
     return this.props.dataStore;
   }
 
@@ -58,7 +65,7 @@ export class Option extends ValueObject<OptionProps> {
       tokenSize: props.tokenSize ?? 0,
       translations: props.translations ?? new Map<string, string>(),
       variables: props.variables ?? {},
-      dataStore: props.dataStore ?? {},
+      dataStore: props.dataStore ?? [],
     };
     const option = new Option(propsWithDefaults);
     return Result.ok(option);
@@ -76,7 +83,7 @@ export class Option extends ValueObject<OptionProps> {
     return Option.create({ ...this.props, variables });
   }
 
-  public withDataStore(dataStore: object): Result<Option> {
+  public withDataStore(dataStore: DataStoreSavedField[]): Result<Option> {
     return Option.create({ ...this.props, dataStore });
   }
 
@@ -106,7 +113,7 @@ export class Option extends ValueObject<OptionProps> {
       content: json.content,
       tokenSize: json.tokenSize,
       variables: json.variables,
-      dataStore: json.dataStore ?? {},
+      dataStore: json.dataStore ?? [],
       translations: new Map(Object.entries(json.translations)),
     });
   }

@@ -21,6 +21,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { parseAiSdkErrorMessage } from "@/shared/utils/error-utils";
 import { logger } from "@/shared/utils/logger";
 import { TemplateRenderer } from "@/shared/utils/template-renderer";
+import { cloneDeep } from "lodash-es";
 
 import { useAsset } from "@/app/hooks/use-asset";
 import { useCard } from "@/app/hooks/use-card";
@@ -62,7 +63,7 @@ import {
 } from "@/components-v2/ui/tooltip";
 import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
-import { Option } from "@/modules/turn/domain/option";
+import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -1072,14 +1073,14 @@ const SessionMessagesAndUserInputs = ({
       let streamingVariables = {};
       try {
         // Get last turn's dataStore for inheritance
-        let lastDataStore = {};
+        let lastDataStore: DataStoreSavedField[] = [];
         if (session.turnIds.length > 0) {
           const lastTurnId = session.turnIds[session.turnIds.length - 1];
           try {
             const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
               .throwOnFailure()
               .getValue();
-            lastDataStore = { ...lastTurn.dataStore };
+            lastDataStore = cloneDeep(lastTurn.dataStore);
           } catch (error) {
             console.warn(`Failed to get last turn's dataStore: ${error}`);
           }

@@ -1,7 +1,7 @@
 import { Guard, Result } from "@/shared/core";
 import { Entity, UniqueEntityID } from "@/shared/domain";
 
-import { Option } from "@/modules/turn/domain/option";
+import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 
 export interface TurnProps {
   // Session
@@ -63,7 +63,7 @@ export class Turn extends Entity<TurnProps> {
     return this.selectedOption.translations;
   }
 
-  get dataStore(): object {
+  get dataStore(): DataStoreSavedField[] {
     return this.selectedOption.dataStore;
   }
 
@@ -124,7 +124,7 @@ export class Turn extends Entity<TurnProps> {
       .getValue();
   }
 
-  public setDataStore(dataStore: object): void {
+  public setDataStore(dataStore: DataStoreSavedField[]): void {
     this.options[this.props.selectedOptionIndex] = this.selectedOption
       .withDataStore(dataStore)
       .getValue();

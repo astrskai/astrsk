@@ -505,9 +505,13 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
             flattenedContext["turn.content"] = lastTurn.content;
 
             // Set data store values from last turn
-            if (lastTurn.dataStore) {
+            if (lastTurn.dataStore && lastTurn.dataStore.length > 0) {
+              // Convert DataStoreSavedField[] to object
+              const dataStoreObject = Object.fromEntries(
+                lastTurn.dataStore.map(field => [field.name, field.value])
+              );
               const flattenedDataStore = flattenObject(
-                lastTurn.dataStore,
+                dataStoreObject,
                 "",
               );
               Object.assign(flattenedContext, flattenedDataStore);
