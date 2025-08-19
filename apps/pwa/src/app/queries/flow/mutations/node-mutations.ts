@@ -1,90 +1,23 @@
 /**
  * Node Mutation Hooks
  * 
- * Mutations for general node operations (position, label, color)
- * These work on all node types for their common properties
+ * Mutations for general node operations (title, data, etc.)
+ * Uses targeted node updates to avoid race conditions
  */
 
 import { useState, useRef, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FlowService } from "@/app/services/flow-service";
-import { Flow, Node } from "@/modules/flow/domain/flow";
-import * as optimistic from "../optimistic-updates";
 import { flowKeys } from "../query-factory";
+import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 
 /**
- * Hook for updating node position
- * No edit mode needed - positions aren't text fields
+ * Hook for updating a node's title/label
+ * Uses targeted node update to avoid race conditions with other flow fields
+ * 
+ * @returns mutation with isEditing state for preventing race conditions
  */
-export const useUpdateNodePosition = (flowId: string, nodeId: string) => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (position: { x: number; y: number }) => {
-      const flow = queryClient.getQueryData<Flow>(flowKeys.detail(flowId));
-      if (!flow) throw new Error("Flow not found");
-      
-      const nodes = [...flow.props.nodes];
-      const nodeIndex = nodes.findIndex(n => n.id === nodeId);
-      if (nodeIndex === -1) throw new Error("Node not found");
-      
-      nodes[nodeIndex] = { 
-        ...nodes[nodeIndex], 
-        position 
-      };
-      
-      const updatedFlow = flow.update({ nodes });
-      if (updatedFlow.isFailure) {
-        throw new Error(updatedFlow.getError());
-      }
-      
-      const saveResult = await FlowService.saveFlow.execute(updatedFlow.getValue());
-      if (saveResult.isFailure) {
-        throw new Error(saveResult.getError());
-      }
-      
-      return saveResult.getValue();
-    },
-    
-    onMutate: async (position) => {
-      await queryClient.cancelQueries({ 
-        queryKey: flowKeys.node(flowId, nodeId) 
-      });
-      
-      const previousNode = queryClient.getQueryData(
-        flowKeys.node(flowId, nodeId)
-      );
-      
-      optimistic.updateNode(queryClient, flowId, nodeId, (old) => ({
-        ...old,
-        position
-      }));
-      
-      return { previousNode };
-    },
-    
-    onError: (err, variables, context) => {
-      if (context?.previousNode) {
-        queryClient.setQueryData(
-          flowKeys.node(flowId, nodeId),
-          context.previousNode
-        );
-      }
-    },
-    
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ 
-        queryKey: flowKeys.node(flowId, nodeId) 
-      });
-    },
-  });
-};
-
-/**
- * Hook for updating node label
- * Has edit mode for text field
- */
-export const useUpdateNodeLabel = (flowId: string, nodeId: string) => {
+export const useUpdateNodeTitle = (flowId: string, nodeId: string) => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const editEndTimerRef = useRef<NodeJS.Timeout>();
@@ -106,38 +39,49 @@ export const useUpdateNodeLabel = (flowId: string, nodeId: string) => {
   }, []);
   
   const mutation = useMutation({
-    mutationFn: async (label: string) => {
-      const flow = queryClient.getQueryData<Flow>(flowKeys.detail(flowId));
-      if (!flow) throw new Error("Flow not found");
+    mutationFn: async (title: string) => {
+      // Get current node data first
+      const currentNode = queryClient.getQueryData<any>(
+        flowKeys.node(flowId, nodeId)
+      );
       
-      const nodes = [...flow.props.nodes];
-      const nodeIndex = nodes.findIndex(n => n.id === nodeId);
-      if (nodeIndex === -1) throw new Error("Node not found");
+      if (!currentNode) {
+        throw new Error("Node not found");
+      }
       
-      nodes[nodeIndex] = { 
-        ...nodes[nodeIndex], 
-        data: {
-          ...nodes[nodeIndex].data,
-          label
-        }
+      // Update the node's data with new title
+      const updatedNodeData = {
+        ...currentNode.data,
+        label: title
       };
       
-      const updatedFlow = flow.update({ nodes });
-      if (updatedFlow.isFailure) {
-        throw new Error(updatedFlow.getError());
+      // Use dedicated method that only updates the node's data
+      const result = await FlowService.updateNode.execute({
+        flowId,
+        nodeId,
+        nodeData: updatedNodeData
+      });
+      
+      if (result.isFailure) {
+        throw new Error(result.getError());
       }
       
-      const saveResult = await FlowService.saveFlow.execute(updatedFlow.getValue());
-      if (saveResult.isFailure) {
-        throw new Error(saveResult.getError());
+      // Update flow ready state to Draft if it's Ready
+      const flow = queryClient.getQueryData<Flow>(flowKeys.detail(flowId));
+      if (flow && flow.props && flow.props.readyState === ReadyState.Ready) {
+        await FlowService.updateFlowReadyState.execute({
+          flowId,
+          readyState: ReadyState.Draft
+        });
       }
       
-      return saveResult.getValue();
+      return title;
     },
     
-    onMutate: async (label) => {
+    onMutate: async (title) => {
       startEditing();
       
+      // Cancel any in-flight queries for this node
       await queryClient.cancelQueries({ 
         queryKey: flowKeys.node(flowId, nodeId) 
       });
@@ -146,19 +90,25 @@ export const useUpdateNodeLabel = (flowId: string, nodeId: string) => {
         flowKeys.node(flowId, nodeId)
       );
       
-      optimistic.updateNode(queryClient, flowId, nodeId, (old) => ({
-        ...old,
-        data: {
-          ...old.data,
-          label
-        }
-      }));
+      // Optimistic update
+      if (previousNode) {
+        queryClient.setQueryData(
+          flowKeys.node(flowId, nodeId),
+          (old: any) => ({
+            ...old,
+            data: {
+              ...old.data,
+              label: title
+            }
+          })
+        );
+      }
       
       return { previousNode };
     },
     
     onError: (err, variables, context) => {
-      if (context?.previousNode) {
+      if (context?.previousNode !== undefined) {
         queryClient.setQueryData(
           flowKeys.node(flowId, nodeId),
           context.previousNode
@@ -176,9 +126,18 @@ export const useUpdateNodeLabel = (flowId: string, nodeId: string) => {
         endEditing();
       }
       
-      await queryClient.invalidateQueries({ 
-        queryKey: flowKeys.node(flowId, nodeId) 
-      });
+      // Invalidate all queries that contain this node's data
+      await Promise.all([
+        queryClient.invalidateQueries({ 
+          queryKey: flowKeys.node(flowId, nodeId) // Specific node
+        }),
+        queryClient.invalidateQueries({ 
+          queryKey: flowKeys.nodes(flowId) // All nodes array
+        }),
+        queryClient.invalidateQueries({ 
+          queryKey: flowKeys.detail(flowId) // Full flow detail
+        })
+      ]);
     },
   });
   
@@ -191,78 +150,3 @@ export const useUpdateNodeLabel = (flowId: string, nodeId: string) => {
     error: mutation.error,
   };
 };
-
-/**
- * Hook for updating node color/theme
- * No edit mode needed - color picker isn't a text field
- */
-export const useUpdateNodeColor = (flowId: string, nodeId: string) => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (color: string) => {
-      const flow = queryClient.getQueryData<Flow>(flowKeys.detail(flowId));
-      if (!flow) throw new Error("Flow not found");
-      
-      const nodes = [...flow.props.nodes];
-      const nodeIndex = nodes.findIndex(n => n.id === nodeId);
-      if (nodeIndex === -1) throw new Error("Node not found");
-      
-      nodes[nodeIndex] = { 
-        ...nodes[nodeIndex], 
-        data: {
-          ...nodes[nodeIndex].data,
-          color
-        }
-      };
-      
-      const updatedFlow = flow.update({ nodes });
-      if (updatedFlow.isFailure) {
-        throw new Error(updatedFlow.getError());
-      }
-      
-      const saveResult = await FlowService.saveFlow.execute(updatedFlow.getValue());
-      if (saveResult.isFailure) {
-        throw new Error(saveResult.getError());
-      }
-      
-      return saveResult.getValue();
-    },
-    
-    onMutate: async (color) => {
-      await queryClient.cancelQueries({ 
-        queryKey: flowKeys.node(flowId, nodeId) 
-      });
-      
-      const previousNode = queryClient.getQueryData(
-        flowKeys.node(flowId, nodeId)
-      );
-      
-      optimistic.updateNode(queryClient, flowId, nodeId, (old) => ({
-        ...old,
-        data: {
-          ...old.data,
-          color
-        }
-      }));
-      
-      return { previousNode };
-    },
-    
-    onError: (err, variables, context) => {
-      if (context?.previousNode) {
-        queryClient.setQueryData(
-          flowKeys.node(flowId, nodeId),
-          context.previousNode
-        );
-      }
-    },
-    
-    onSettled: async () => {
-      await queryClient.invalidateQueries({ 
-        queryKey: flowKeys.node(flowId, nodeId) 
-      });
-    },
-  });
-};
-

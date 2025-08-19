@@ -1,7 +1,7 @@
 // Data store schema panel component for Dockview multi-panel layout
 // Uses targeted mutations and panel-specific queries for optimal performance
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Trash2, Plus } from "lucide-react";
 import {
   Tooltip,
@@ -31,6 +31,7 @@ import { sanitizeFileName } from "@/shared/utils/file-utils";
 import { toast } from "sonner";
 
 export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
+  
   // 1. Get the mutation hook with edit mode support
   const updateDataStoreSchema = useUpdateDataStoreSchema(flowId);
   
@@ -38,10 +39,16 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   const { 
     data: schema, 
     isLoading,
-    error
+    error,
+    dataUpdatedAt,
+    isRefetching,
+    isFetching,
+    status
   } = useQuery({
     ...flowQueries.dataStoreSchema(flowId),
     enabled: !!flowId && !updateDataStoreSchema.isEditing, // Pause during edits
+    refetchOnMount: false, // Don't refetch on mount - only when needed
+    refetchOnWindowFocus: !updateDataStoreSchema.isEditing
   });
 
   // Get flow panel context for opening panels and adding nodes
@@ -52,19 +59,31 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   const [selectedFieldId, setSelectedFieldId] = useState<string>("");
   const [localInitialValue, setLocalInitialValue] = useState("");
   
+  // Use ref to store the mutation to avoid recreating debounced function
+  const updateDataStoreSchemaRef = useRef(updateDataStoreSchema);
+  useEffect(() => {
+    updateDataStoreSchemaRef.current = updateDataStoreSchema;
+  }, [updateDataStoreSchema]);
+  
+  // Track editing state in a ref to avoid triggering effects
+  const isEditingRef = useRef(updateDataStoreSchema.isEditing);
+  useEffect(() => {
+    isEditingRef.current = updateDataStoreSchema.isEditing;
+  }, [updateDataStoreSchema.isEditing]);
+  
   // 4. Initialize fields from schema
   useEffect(() => {
-    if (schema?.fields && !updateDataStoreSchema.isEditing) {
+    // Only update fields from schema if we have schema data and we're not editing
+    if (schema?.fields && !isEditingRef.current) {
       setFields(schema.fields);
       // Maintain selection if possible
       if (!selectedFieldId || !schema.fields.find(f => f.id === selectedFieldId)) {
         setSelectedFieldId(schema.fields[0]?.id || "");
       }
-    } else if (!schema && !isLoading) {
-      setFields([]);
-      setSelectedFieldId("");
     }
-  }, [schema, isLoading, updateDataStoreSchema.isEditing]);
+    // Don't clear fields just because schema is null - preserve local state
+  }, [schema, isLoading, status]); // Don't include isEditing to avoid unnecessary re-runs
+  // Note: selectedFieldId is intentionally not in deps to preserve selection
 
   // 5. Get selected field
   const selectedField = useMemo(() => 
@@ -86,7 +105,8 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
         fields: updatedFields
       };
       
-      updateDataStoreSchema.mutate(updatedSchema, {
+      // Use the ref to get the current mutation
+      updateDataStoreSchemaRef.current.mutate(updatedSchema, {
         onError: (error) => {
           toast.error("Failed to save data store schema", {
             description: error instanceof Error ? error.message : "Unknown error",
@@ -94,7 +114,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
         }
       });
     }, 300),
-    [] // Empty deps to create debounce only once
+    [] // Empty deps for stable debounced function
   );
   
   // Clean up debounced function on unmount

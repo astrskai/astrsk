@@ -136,7 +136,11 @@ export class Flow extends AggregateRoot<FlowProps> {
   get agentIds(): UniqueEntityID[] {
     return this.props.nodes
       .filter((node) => node.type === "agent")
-      .map((node) => new UniqueEntityID(node.id));
+      .map((node) => {
+        // Agent nodes have agentId in their data
+        const agentId = (node.data as any)?.agentId || node.id;
+        return new UniqueEntityID(agentId);
+      });
   }
 
   public static create(

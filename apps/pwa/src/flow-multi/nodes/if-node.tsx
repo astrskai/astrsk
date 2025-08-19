@@ -22,10 +22,12 @@ import {
 } from "@/components-v2/ui/dialog";
 import { Button } from "@/components-v2/ui/button";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
-import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
+import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";
 import { useAgentStore } from "@/app/stores/agent-store";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { UniqueEntityID } from "@/shared/domain";
+import { useQuery } from "@tanstack/react-query";
+import { flowQueries } from "@/app/queries/flow-queries";
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
 import { toast } from "sonner";
 
@@ -73,7 +75,6 @@ export default function IfNode({
 }: NodeProps<IfNode>) {
   const [title, setTitle] = useState(data.label || "If Condition");
   const [editingTitle, setEditingTitle] = useState(data.label || "If Condition");
-  const [isSaving, setIsSaving] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
@@ -81,8 +82,14 @@ export default function IfNode({
   // Get flow ID from agent store
   const selectedFlowId = useAgentStore.use.selectedFlowId();
   
-  // Get flow data and save function
-  const { flow, saveFlow } = useFlowPanel({ flowId: selectedFlowId || "" });
+  // Get flow from query
+  const { data: flow } = useQuery({
+    ...flowQueries.detail(selectedFlowId ? new UniqueEntityID(selectedFlowId) : undefined),
+    enabled: !!selectedFlowId
+  });
+  
+  // Get node title mutation
+  const updateNodeTitle = useUpdateNodeTitle(selectedFlowId || "", id);
   
   // Check if the if-node panel is open
   const isPanelActive = isPanelOpen('ifNode', id);
@@ -99,10 +106,15 @@ export default function IfNode({
   
   // Check if node is connected from start to end
   const isFullyConnected = useMemo(() => {
-    if (!flow) return false;
-    const traversalResult = traverseFlowCached(flow);
-    const nodePosition = traversalResult.processNodePositions.get(id);
-    return nodePosition ? nodePosition.isConnectedToStart && nodePosition.isConnectedToEnd : false;
+    if (!flow || !flow.props?.nodes || !flow.props?.edges) return false;
+    try {
+      const traversalResult = traverseFlowCached(flow);
+      const nodePosition = traversalResult.processNodePositions.get(id);
+      return nodePosition ? nodePosition.isConnectedToStart && nodePosition.isConnectedToEnd : false;
+    } catch (error) {
+      console.warn('[IF-NODE] Flow traversal error:', error);
+      return false;
+    }
   }, [flow, id]);
   
   // TEMPORARILY DISABLED: If node validation
@@ -136,40 +148,23 @@ export default function IfNode({
 
   // Save node name to flow
   const saveNodeName = useCallback(async (newName: string) => {
-    if (!flow || isSaving) return;
+    if (updateNodeTitle.isPending) return;
     
-    setIsSaving(true);
     try {
-      const node = flow.props.nodes.find(n => n.id === id);
-      if (!node) return;
+      await updateNodeTitle.mutateAsync(newName);
+      setTitle(newName);
       
-      const updatedNode = {
-        ...node,
-        data: {
-          ...node.data,
-          label: newName
-        }
-      };
+      // Update panel states to reflect the new name
+      updateNodePanelStates(id, newName);
       
-      const updatedNodes = flow.props.nodes.map(n => 
-        n.id === id ? updatedNode : n
-      );
-      
-      const updateResult = flow.update({ nodes: updatedNodes });
-      if (updateResult.isSuccess) {
-        await saveFlow(flow);
-        setTitle(newName);
-        
-        // Update panel states to reflect the new name
-        updateNodePanelStates(id, newName);
-        
-        // Show success toast
-        toast.success("Node name updated");
-      }
-    } finally {
-      setIsSaving(false);
+      // Show success toast
+      toast.success("Node name updated");
+    } catch (error) {
+      // Reset to original title on error
+      setEditingTitle(title);
+      toast.error("Failed to update node name");
     }
-  }, [flow, id, saveFlow, isSaving, updateNodePanelStates]);
+  }, [id, title, updateNodeTitle, updateNodePanelStates]);
 
   // Handle title changes
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -262,7 +257,7 @@ export default function IfNode({
             onMouseDown={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="Enter condition name"
-            disabled={isSaving}
+            disabled={updateNodeTitle.isPending}
             className="nodrag"
           />
         </div>

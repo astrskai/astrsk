@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { debounce } from "lodash-es";
 import {
   DndContext,
@@ -30,91 +31,140 @@ import {
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
-import { ApiType } from "@/modules/agent/domain";
+import { ApiType } from "@/modules/agent/domain/agent";
+import { PromptMessage } from "@/modules/agent/domain";
 
-// Import from new compact architecture
+// Import queries and mutations
+import { agentQueries } from "@/app/queries/agent-queries";
 import { 
-  useFlowPanel, 
-  FlowPanelLoading, 
-  FlowPanelError 
-} from "@/flow-multi/hooks/use-flow-panel";
+  useUpdateAgentApiType,
+  useUpdateAgentPromptMessages,
+  useUpdateAgentTextPrompt
+} from "@/app/queries/agent/mutations/prompt-mutations-new";
+
+// Import context
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { PromptPanelProps, PromptItem } from "./prompt-panel-types";
 import { convertPromptMessagesToItems, convertItemsToPromptMessages } from "./prompt-panel-utils";
 
-// Import reusable components from original (these can be reused as-is)
+// Import reusable components
 import { SortableItem } from "./sortable-item";
 import { FormatSelectorAccordion } from "@/flow-multi/components/format-selector-accordion";
 
 export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
-  // 1. Use the new flow panel hook
-  const { 
-    agent, 
-    isLoading, 
-    updateAgent,
-    lastInitializedAgentId 
-  } = useFlowPanel({ flowId, agentId });
+  // 1. Get Monaco editor functions from flow context
+  const { setLastMonacoEditor } = useFlowPanelContext();
 
-  // 3. Local UI state
+  // 2. Mutations for updating prompt
+  const updateApiType = useUpdateAgentApiType(flowId, agentId || "");
+  const updatePromptMessages = useUpdateAgentPromptMessages(flowId, agentId || "");
+  const updateTextPrompt = useUpdateAgentTextPrompt(flowId, agentId || "");
+
+  // 3. Query for agent prompt data only
+  // Disable refetching while editing or cursor is active to prevent UI jumping
+  const queryEnabled = !!agentId && !updatePromptMessages.isEditing && !updateTextPrompt.isEditing && 
+                      !updatePromptMessages.hasCursor && !updateTextPrompt.hasCursor;
+  
+  const { 
+    data: promptData, 
+    isLoading, 
+    error,
+    dataUpdatedAt
+  } = useQuery({
+    ...agentQueries.prompt(agentId),
+    enabled: queryEnabled,
+  });
+  
+
+  // 4. Local UI state
   const [isExpanded, setIsExpanded] = useState(false);
   const [localAccordionOpen, setLocalAccordionOpen] = useState(true);
   const [completionMode, setCompletionMode] = useState<"chat" | "text">("chat");
   const [editorContent, setEditorContent] = useState("");
   const [items, setItems] = useState<PromptItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [localMessageContent, setLocalMessageContent] = useState<string>("");
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastInitializedAgentId = useRef<string | null>(null);
 
-  // 4. Initialize state when agent changes
+  // 5. Initialize state when agent changes
   useEffect(() => {
-    if (agentId && agentId !== lastInitializedAgentId.current && agent) {
+    if (agentId && agentId !== lastInitializedAgentId.current && promptData) {
       // Set completion mode based on agent's API type
-      const mode = agent.props.targetApiType === ApiType.Chat ? "chat" : "text";
+      const mode = promptData.targetApiType === ApiType.Chat ? "chat" : "text";
       setCompletionMode(mode);
 
       if (mode === "chat") {
         // Parse agent's prompt messages into items
-        const parsedItems = agent.props.promptMessages ? 
-          convertPromptMessagesToItems(agent.props.promptMessages) : [];
+        const parsedItems = promptData.promptMessages ? 
+          convertPromptMessagesToItems(promptData.promptMessages) : [];
         setItems(parsedItems);
         setSelectedItemId(parsedItems[0]?.id || "");
       } else {
         // Load text prompt
-        setEditorContent(agent.props.textPrompt || "");
+        setEditorContent(promptData.textPrompt || "");
       }
       
       lastInitializedAgentId.current = agentId;
     }
-  }, [agentId, agent]);
+  }, [agentId, promptData]);
 
+  // 6. Track if we've recently edited to prevent sync issues
+  const hasRecentlyEditedRef = useRef(false);
+  const syncTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // 6. Debounced save for chat messages
-  const debouncedSaveToAgent = useMemo(
+  // 7. Sync state when prompt data changes (for cross-tab sync)
+  useEffect(() => {
+    // Don't sync while editing OR while cursor is active OR recently edited
+    if (updatePromptMessages.isEditing || updateTextPrompt.isEditing || 
+        updatePromptMessages.hasCursor || updateTextPrompt.hasCursor || hasRecentlyEditedRef.current) {
+      return;
+    }
+    
+    if (promptData) {
+      const mode = promptData.targetApiType === ApiType.Chat ? "chat" : "text";
+      
+      if (mode === "chat" && promptData.promptMessages) {
+        const parsedItems = convertPromptMessagesToItems(promptData.promptMessages);
+        // Force new array reference to trigger React re-render
+        setItems([...parsedItems]);
+        
+        // Keep selected item if it still exists - use callback to get latest selectedItemId
+        setSelectedItemId(prevSelectedId => {
+          if (prevSelectedId && !parsedItems.find(item => item.id === prevSelectedId)) {
+            return parsedItems[0]?.id || "";
+          }
+          return prevSelectedId;
+        });
+      } else if (mode === "text" && promptData.textPrompt !== undefined) {
+        setEditorContent(promptData.textPrompt || "");
+      }
+    }
+  }, [promptData?.promptMessages, promptData?.textPrompt, updatePromptMessages.isEditing, updateTextPrompt.isEditing, 
+      updatePromptMessages.hasCursor, updateTextPrompt.hasCursor]);
+
+  // 7. Debounced save for chat messages
+  const debouncedSaveMessages = useMemo(
     () => debounce(async (items: PromptItem[]) => {
-      if (!agent || !agentId) return;
+      if (!agentId) return;
       
       // Convert items to the format expected by the agent
       const promptMessages = convertItemsToPromptMessages(items);
-      
-      await updateAgent(agentId, { promptMessages });
+      updatePromptMessages.mutate(promptMessages);
     }, 300),
-    [agent, agentId, updateAgent]
+    [agentId, updatePromptMessages]
   );
 
-  // 7. Debounced save for text prompt
+  // 8. Debounced save for text prompt
   const debouncedSaveText = useMemo(
     () => debounce(async (text: string) => {
-      if (!agent || !agentId) return;
-      await updateAgent(agentId, { textPrompt: text });
+      if (!agentId) return;
+      
+      updateTextPrompt.mutate(text);
     }, 300),
-    [agent, agentId, updateAgent]
+    [agentId, updateTextPrompt]
   );
-
-  // 8. Save API type when completion mode changes
-  const saveApiType = useCallback(async (apiType: ApiType) => {
-    if (!agent || !agentId) return;
-    await updateAgent(agentId, { targetApiType: apiType });
-  }, [agent, agentId, updateAgent]);
 
   // 9. DnD sensors
   const sensors = useSensors(
@@ -135,36 +185,47 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
         const reorderedItems = arrayMove(items, oldIndex, newIndex);
         
         // Auto-save the reordered items
-        debouncedSaveToAgent(reorderedItems);
+        debouncedSaveMessages(reorderedItems);
         
         return reorderedItems;
       });
     }
   };
 
-  // Get Monaco editor functions from flow context
-  const { setLastMonacoEditor } = useFlowPanelContext();
-
-  // 11. Editor mount handlers for variable insertion tracking (no redundancy)
+  // 11. Editor mount handlers for variable insertion tracking
   const handleEditorMount = useCallback((editor: editor.IStandaloneCodeEditor) => {
     editor.onDidFocusEditorWidget(() => {
       // Track editor and cursor position for variable insertion
       const position = editor.getPosition();
-      if (position) {
+      if (position && agentId) {
         setLastMonacoEditor(agentId, `prompt-${agentId}-${flowId}`, editor, position);
+      }
+      // Mark cursor as active when editor is focused
+      if (completionMode === "chat") {
+        updatePromptMessages.setCursorActive(true);
+      } else {
+        updateTextPrompt.setCursorActive(true);
       }
     });
     
     editor.onDidBlurEditorWidget(() => {
       // Clear editor tracking when focus lost
       setLastMonacoEditor(null, null, null, null);
+      // Mark cursor as inactive when editor loses focus
+      if (completionMode === "chat") {
+        updatePromptMessages.setCursorActive(false);
+      } else {
+        updateTextPrompt.setCursorActive(false);
+      }
     });
     
     // Update position on cursor change
     editor.onDidChangeCursorPosition((e) => {
-      setLastMonacoEditor(agentId, `prompt-${agentId}-${flowId}`, editor, e.position);
+      if (agentId) {
+        setLastMonacoEditor(agentId, `prompt-${agentId}-${flowId}`, editor, e.position);
+      }
     });
-  }, [agentId, flowId, setLastMonacoEditor]);
+  }, [agentId, flowId, setLastMonacoEditor, completionMode, updatePromptMessages, updateTextPrompt]);
 
   // 12. Handle completion mode change
   const handleCompletionModeChange = useCallback((mode: "chat" | "text") => {
@@ -172,20 +233,20 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     
     // Save the API type to the agent
     const apiType = mode === "chat" ? ApiType.Chat : ApiType.Text;
-    saveApiType(apiType);
+    updateApiType.mutate(apiType);
     
     // Re-parse content for the new mode
-    if (agent) {
+    if (promptData) {
       if (mode === "chat") {
-        const agentItems = agent.props.promptMessages ? 
-          convertPromptMessagesToItems(agent.props.promptMessages) : [];
+        const agentItems = promptData.promptMessages ? 
+          convertPromptMessagesToItems(promptData.promptMessages) : [];
         setItems(agentItems);
         setSelectedItemId(agentItems[0]?.id || "");
       } else {
-        setEditorContent(agent.props.textPrompt || "");
+        setEditorContent(promptData.textPrompt || "");
       }
     }
-  }, [agent, saveApiType]);
+  }, [promptData, updateApiType]);
 
   // 13. Message management functions
   const addNewMessage = useCallback(() => {
@@ -202,8 +263,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     const updatedItems = [...items, newMessage];
     setItems(updatedItems);
     setSelectedItemId(newId);
-    debouncedSaveToAgent(updatedItems);
-  }, [items, debouncedSaveToAgent]);
+    debouncedSaveMessages(updatedItems);
+  }, [items, debouncedSaveMessages]);
 
   const addNewHistoryMessage = useCallback(() => {
     const newId = `history-${Date.now()}`;
@@ -222,16 +283,16 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     const updatedItems = [...items, newHistoryMessage];
     setItems(updatedItems);
     setSelectedItemId(newId);
-    debouncedSaveToAgent(updatedItems);
-  }, [items, debouncedSaveToAgent]);
+    debouncedSaveMessages(updatedItems);
+  }, [items, debouncedSaveMessages]);
 
   const updateItemRole = useCallback((itemId: string, newRole: "system" | "user" | "assistant") => {
     const updatedItems = items.map(item => 
       item.id === itemId ? { ...item, role: newRole } : item
     );
     setItems(updatedItems);
-    debouncedSaveToAgent(updatedItems);
-  }, [items, debouncedSaveToAgent]);
+    debouncedSaveMessages(updatedItems);
+  }, [items, debouncedSaveMessages]);
 
   const deleteMessage = useCallback((itemId: string) => {
     if (items.length <= 1) return;
@@ -243,8 +304,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
       setSelectedItemId(updatedItems[0]?.id || "");
     }
     
-    debouncedSaveToAgent(updatedItems);
-  }, [items, selectedItemId, debouncedSaveToAgent]);
+    debouncedSaveMessages(updatedItems);
+  }, [items, selectedItemId, debouncedSaveMessages]);
 
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
@@ -255,16 +316,64 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
   // 14. Early returns for loading/error states
   if (isLoading) {
-    return <FlowPanelLoading message="Loading prompt panel..." />;
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Loading prompt panel...</span>
+        </div>
+      </div>
+    );
   }
 
-  if (!agent) {
-    return <FlowPanelError message="Agent not found" />;
+  if (error || !promptData) {
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Failed to load prompt data</span>
+        </div>
+      </div>
+    );
   }
 
   const selectedItem = items.find(item => item.id === selectedItemId);
 
-  // 15. Main render
+  // 15. Sync local message content with selected item
+  useEffect(() => {
+    if (selectedItem) {
+      setLocalMessageContent(selectedItem.content || "");
+    }
+  }, [selectedItem?.id, selectedItem?.content]);
+
+  // 16. Use ref to track items for saving without causing re-renders
+  const itemsRef = useRef(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  // 17. Debounced save for message content - doesn't update state, only saves
+  // TODO: This approach uses a ref to avoid re-renders during typing
+  // Consider refactoring to use an uncontrolled Monaco editor for better performance
+  const debouncedSaveMessageContent = useMemo(
+    () => debounce((itemId: string, content: string) => {
+      // Set flag to prevent syncing for a while after editing
+      hasRecentlyEditedRef.current = true;
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = setTimeout(() => {
+        hasRecentlyEditedRef.current = false;
+      }, 1000); // Wait 1 second after last edit before allowing sync
+      
+      // Use ref to get current items without causing re-render
+      const updatedItems = itemsRef.current.map(item => 
+        item.id === itemId ? { ...item, content } : item
+      );
+      itemsRef.current = updatedItems; // Update ref
+      debouncedSaveMessages(updatedItems); // Save to database
+      // Don't call setItems here to avoid re-render
+    }, 300),
+    [debouncedSaveMessages]
+  );
+
+  // 17. Main render
   return (
     <div ref={containerRef} className="h-full flex flex-col bg-background-surface-2">
       <FormatSelectorAccordion
@@ -351,7 +460,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 i.id === item.id ? { ...i, enabled: checked } : i
                               );
                               setItems(updatedItems);
-                              debouncedSaveToAgent(updatedItems);
+                              debouncedSaveMessages(updatedItems);
                             }}
                             onRoleChange={(role) => updateItemRole(item.id, role)}
                             onDelete={() => deleteMessage(item.id)}
@@ -372,12 +481,19 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                 {selectedItem && (
                   <div className="w-full h-full flex flex-col justify-start items-start gap-4 min-w-0 relative p-1">
                     {items.length > 1 && (
-                      <button
-                        onClick={() => deleteMessage(selectedItem.id)}
-                        className="absolute top-1 right-1 w-6 h-6 rounded-sm hover:opacity-80 transition-opacity z-10"
-                      >
-                        <Trash2 className="min-w-3.5 min-h-4 text-text-subtle" />
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => deleteMessage(selectedItem.id)}
+                            className="absolute top-1 right-1 w-6 h-6 rounded-sm hover:opacity-80 transition-opacity z-10"
+                          >
+                            <Trash2 className="min-w-3.5 min-h-4 text-text-subtle" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent variant="button">
+                          <p>Delete</p>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                     
                     {/* Title header */}
@@ -404,7 +520,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                   i.id === selectedItem.id ? { ...i, label: e.target.value } : i
                                 );
                                 setItems(updatedItems);
-                                debouncedSaveToAgent(updatedItems);
+                                debouncedSaveMessages(updatedItems);
                               }}
                               className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                               placeholder="History message"
@@ -426,7 +542,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                   i.id === selectedItem.id ? { ...i, label: e.target.value } : i
                                 );
                                 setItems(updatedItems);
-                                debouncedSaveToAgent(updatedItems);
+                                debouncedSaveMessages(updatedItems);
                               }}
                               className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                               placeholder="Enter message name"
@@ -485,7 +601,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                   i.id === selectedItem.id ? { ...i, countFromEnd: !i.countFromEnd } : i
                                 );
                                 setItems(updatedItems);
-                                debouncedSaveToAgent(updatedItems);
+                                debouncedSaveMessages(updatedItems);
                               }}
                               className="self-stretch inline-flex justify-start items-center gap-2 cursor-pointer"
                             >
@@ -504,7 +620,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                   i.id === selectedItem.id ? { ...i, countFromEnd: false } : i
                                 );
                                 setItems(updatedItems);
-                                debouncedSaveToAgent(updatedItems);
+                                debouncedSaveMessages(updatedItems);
                               }}
                               className="self-stretch inline-flex justify-start items-center gap-2 cursor-pointer mt-1"
                             >
@@ -531,7 +647,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                   i.id === selectedItem.id ? { ...i, start } : i
                                 );
                                 setItems(updatedItems);
-                                debouncedSaveToAgent(updatedItems);
+                                debouncedSaveMessages(updatedItems);
                               }}
                               className="self-stretch min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal text-center"
                               min="0"
@@ -548,7 +664,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                   i.id === selectedItem.id ? { ...i, end } : i
                                 );
                                 setItems(updatedItems);
-                                debouncedSaveToAgent(updatedItems);
+                                debouncedSaveMessages(updatedItems);
                               }}
                               className="self-stretch min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal text-center"
                               min="1"
@@ -572,15 +688,11 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                           <div className="w-full h-full">
                             <Editor
                               key={selectedItem.id} // Force new editor instance for each message
-                              value={selectedItem.content}
+                              value={localMessageContent}
                               onChange={(value) => {
-                                const updatedItems = items.map(item => 
-                                  item.id === selectedItemId 
-                                    ? { ...item, content: value || "" }
-                                    : item
-                                );
-                                setItems(updatedItems);
-                                debouncedSaveToAgent(updatedItems);
+                                const newValue = value || "";
+                                setLocalMessageContent(newValue);
+                                debouncedSaveMessageContent(selectedItem.id, newValue);
                               }}
                               language="markdown"
                               onMount={handleEditorMount}
@@ -607,15 +719,12 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                     <div className="w-full h-full">
                       <Editor
                         key={selectedItem.id} // Force new editor instance for each message
-                        value={selectedItem.content}
+                        value={localMessageContent}
                         onChange={(value) => {
-                          const updatedItems = items.map(item => 
-                            item.id === selectedItemId 
-                              ? { ...item, content: value || "" }
-                              : item
-                          );
-                          setItems(updatedItems);
-                          debouncedSaveToAgent(updatedItems);
+                          const newValue = value || "";
+                          console.log('[PROMPT] Typed:', newValue.slice(-20), '| Shown:', localMessageContent.slice(-20));
+                          setLocalMessageContent(newValue);
+                          debouncedSaveMessageContent(selectedItem.id, newValue);
                         }}
                         language="markdown"
                         onMount={handleEditorMount}

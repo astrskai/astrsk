@@ -24,15 +24,16 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
   const updateResponseTemplate = useUpdateResponseTemplate(flowId);
   
   // 2. Load just the response template - more efficient than loading entire flow
+  // Disable refetching while editing to prevent UI jumping
   const { 
     data: responseTemplate, 
     isLoading,
     error
   } = useQuery({
     ...flowQueries.response(flowId),
-    enabled: !!flowId,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    enabled: !!flowId && !updateResponseTemplate.isEditing,
+    refetchOnWindowFocus: !updateResponseTemplate.isEditing,
+    refetchOnMount: false, // Don't refetch on mount - only when needed
   });
 
   // 3. Get Monaco editor functions from flow context
@@ -43,18 +44,25 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
   
   // Track initialization
   const lastFlowIdRef = useRef<string | null>(null);
-
-  // Initialize template when it loads or flowId changes
+  
+  // Track editing state in a ref to avoid triggering effects
+  const isEditingRef = useRef(updateResponseTemplate.isEditing);
   useEffect(() => {
-    if (responseTemplate === undefined) return;
-    
-    // Initialize when flowId changes or on first load
-    if (flowId !== lastFlowIdRef.current) {
+    isEditingRef.current = updateResponseTemplate.isEditing;
+  }, [updateResponseTemplate.isEditing]);
+
+  // Initialize and sync template
+  useEffect(() => {
+    // Initialize when flow changes
+    if (flowId && flowId !== lastFlowIdRef.current && responseTemplate !== undefined) {
       setCurrentTemplate(responseTemplate);
       lastFlowIdRef.current = flowId;
     }
-    // Don't sync after initialization - let local state be the source of truth
-  }, [flowId, responseTemplate]);
+    // Sync when response template changes externally (but not during editing)
+    else if (responseTemplate !== undefined && !isEditingRef.current) {
+      setCurrentTemplate(responseTemplate);
+    }
+  }, [flowId, responseTemplate]); // Don't include isEditing in deps to avoid re-running when edit mode changes
 
   // Debounced save
   const debouncedSave = useMemo(
@@ -67,7 +75,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
         }
       });
     }, 1000),
-    [] // Empty deps - stable reference
+    [updateResponseTemplate] // Include mutation in deps
   );
 
   // Handle template change
@@ -76,13 +84,9 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
       if (template === undefined) return;
       
       setCurrentTemplate(template);
-      
-      // Only save if template has actually changed from saved value
-      if (template !== responseTemplate) {
-        debouncedSave(template);
-      }
+      debouncedSave(template);
     },
-    [debouncedSave, responseTemplate]
+    [debouncedSave]
   );
 
   // Handle editor mount for variable insertion tracking (no redundancy)

@@ -14,6 +14,16 @@ import { UpdateResponseTemplate } from "@/modules/flow/usecases/update-response-
 import { UpdateDataStoreSchema } from "@/modules/flow/usecases/update-data-store-schema";
 import { GetNode } from "@/modules/flow/usecases/get-node";
 import { UpdateNodeDataStoreFields } from "@/modules/flow/usecases/update-node-data-store-fields";
+import { UpdateIfNodeConditions } from "@/modules/flow/usecases/update-if-node-conditions";
+import { UpdateNode } from "@/modules/flow/usecases/update-node";
+import { UpdateFlowName } from "@/modules/flow/usecases/update-flow-name";
+import { UpdateFlowViewport } from "@/modules/flow/usecases/update-flow-viewport";
+import { UpdateNodePosition } from "@/modules/flow/usecases/update-node-position";
+import { UpdateNodesPositions } from "@/modules/flow/usecases/update-nodes-positions";
+import { UpdatePanelLayout } from "@/modules/flow/usecases/update-panel-layout";
+import { UpdateNodesAndEdges } from "@/modules/flow/usecases/update-nodes-and-edges";
+import { UpdateFlowValidation } from "@/modules/flow/usecases/update-flow-validation";
+import { UpdateFlowReadyState } from "@/modules/flow/usecases/update-flow-ready-state";
 // import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
 
 export class FlowService {
@@ -33,6 +43,16 @@ export class FlowService {
   public static updateDataStoreSchema: UpdateDataStoreSchema;
   public static getNode: GetNode;
   public static updateNodeDataStoreFields: UpdateNodeDataStoreFields;
+  public static updateIfNodeConditions: UpdateIfNodeConditions;
+  public static updateNode: UpdateNode;
+  public static updateFlowName: UpdateFlowName;
+  public static updateFlowViewport: UpdateFlowViewport;
+  public static updateNodePosition: UpdateNodePosition;
+  public static updateNodesPositions: UpdateNodesPositions;
+  public static updatePanelLayout: UpdatePanelLayout;
+  public static updateNodesAndEdges: UpdateNodesAndEdges;
+  public static updateFlowValidation: UpdateFlowValidation;
+  public static updateFlowReadyState: UpdateFlowReadyState;
 
   private constructor() {}
 
@@ -54,5 +74,15 @@ export class FlowService {
     this.updateDataStoreSchema = new UpdateDataStoreSchema();
     this.getNode = new GetNode(this.flowRepo);
     this.updateNodeDataStoreFields = new UpdateNodeDataStoreFields(this.flowRepo);
+    this.updateIfNodeConditions = new UpdateIfNodeConditions(this.flowRepo);
+    this.updateNode = new UpdateNode(this.flowRepo);
+    this.updateFlowName = new UpdateFlowName(this.flowRepo, this.flowRepo);
+    this.updateFlowViewport = new UpdateFlowViewport(this.flowRepo, this.flowRepo);
+    this.updateNodePosition = new UpdateNodePosition(this.flowRepo);
+    this.updateNodesPositions = new UpdateNodesPositions(this.flowRepo);
+    this.updatePanelLayout = new UpdatePanelLayout(this.flowRepo, this.flowRepo);
+    this.updateNodesAndEdges = new UpdateNodesAndEdges(this.flowRepo);
+    this.updateFlowValidation = new UpdateFlowValidation(this.flowRepo);
+    this.updateFlowReadyState = new UpdateFlowReadyState(this.flowRepo);
   }
 }

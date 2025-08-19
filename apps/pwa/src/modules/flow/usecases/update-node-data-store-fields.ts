@@ -4,17 +4,22 @@ import { UniqueEntityID } from "@/shared/domain";
 import { DataStoreField, Node } from "../domain/flow";
 import { LoadFlowRepo, SaveFlowRepo } from "../repos";
 import { ReadyState } from "../domain";
+import { UpdateNode } from "./update-node";
 
-type UpdateNodeDataStoreFieldsDTO = {
+type UpdateNodeDataStoreFieldsRequest = {
   flowId: string;
   nodeId: string;
   fields: DataStoreField[];
 };
 
-export class UpdateNodeDataStoreFields implements UseCase<UpdateNodeDataStoreFieldsDTO, Promise<Result<void>>> {
-  constructor(private flowRepo: LoadFlowRepo & SaveFlowRepo) {}
+export class UpdateNodeDataStoreFields implements UseCase<UpdateNodeDataStoreFieldsRequest, Promise<Result<void>>> {
+  private updateNode: UpdateNode;
+  
+  constructor(private flowRepo: LoadFlowRepo & SaveFlowRepo) {
+    this.updateNode = new UpdateNode(flowRepo);
+  }
 
-  async execute(request: UpdateNodeDataStoreFieldsDTO): Promise<Result<void>> {
+  async execute(request: UpdateNodeDataStoreFieldsRequest): Promise<Result<void>> {
     const { flowId, nodeId, fields } = request;
 
     // Get the current flow
@@ -36,36 +41,19 @@ export class UpdateNodeDataStoreFields implements UseCase<UpdateNodeDataStoreFie
       return Result.fail<void>(`Node ${nodeId} is not a data store node`);
     }
 
-    // Update the node's data store fields
-    const updatedNode = {
-      ...node,
-      data: {
-        ...node.data,
-        dataStoreFields: fields
-      }
+    // Prepare the updated node data
+    const updatedNodeData = {
+      ...node.data,
+      dataStoreFields: fields
     };
 
-    const updatedNodes = [...flow.props.nodes];
-    updatedNodes[nodeIndex] = updatedNode;
-
-    // Update the flow with new nodes
-    const updateResult = flow.update({ nodes: updatedNodes });
-    if (updateResult.isFailure) {
-      return Result.fail<void>(updateResult.getError());
-    }
-
-    let flowToSave = updateResult.getValue();
-
-    // Set flow to Draft state if it was Ready
-    if (flowToSave.props.readyState === ReadyState.Ready) {
-      const stateUpdateResult = flowToSave.setReadyState(ReadyState.Draft);
-      if (stateUpdateResult.isSuccess) {
-        flowToSave = stateUpdateResult.getValue();
-      }
-    }
-
-    // Save the updated flow
-    const saveResult = await this.flowRepo.saveFlow(flowToSave);
+    // Use targeted update to only save this node's data (avoids race conditions)
+    const saveResult = await this.updateNode.execute({
+      flowId,
+      nodeId,
+      nodeData: updatedNodeData
+    });
+    
     if (saveResult.isFailure) {
       return Result.fail<void>(saveResult.getError());
     }

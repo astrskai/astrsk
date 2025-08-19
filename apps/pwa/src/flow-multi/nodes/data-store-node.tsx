@@ -21,8 +21,10 @@ import {
 } from "@/components-v2/ui/dialog";
 import { Button } from "@/components-v2/ui/button";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
-import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
+import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";
 import { useAgentStore } from "@/app/stores/agent-store";
+import { useQuery } from "@tanstack/react-query";
+import { flowQueries } from "@/app/queries/flow/query-factory";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { UniqueEntityID } from "@/shared/domain";
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
@@ -48,25 +50,41 @@ export type { DataStoreField, DataStoreSchemaField } from "@/modules/flow/domain
 export type DataStoreNode = Node<DataStoreNodeData, "dataStore">;
 
 /**
- * Data Store node component
+ * Props for the DataStoreNodeComponent
  */
-export default function DataStoreNode({ 
+interface DataStoreNodeComponentProps {
+  data: DataStoreNodeData;
+  id: string;
+  selected?: boolean;
+  flow: any;
+}
+
+/**
+ * Inner Data Store node component that receives flow as prop
+ */
+function DataStoreNodeComponent({ 
   data, 
   id,
-  selected 
-}: NodeProps<DataStoreNode>) {
+  selected,
+  flow
+}: DataStoreNodeComponentProps) {
   const [title, setTitle] = useState(data.label || "Data Update");
   const [editingTitle, setEditingTitle] = useState(data.label || "Data Update");
-  const [isSaving, setIsSaving] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
   
-  // Get flow ID from agent store
-  const selectedFlowId = useAgentStore.use.selectedFlowId();
+  // Get flow ID from the flow object
+  const selectedFlowId = flow?.id?.toString();
   
-  // Get flow data and save function
-  const { flow, saveFlow } = useFlowPanel({ flowId: selectedFlowId || "" });
+  // Get node data directly from query to ensure fresh data
+  const { data: nodeData } = useQuery({
+    ...flowQueries.node(selectedFlowId!, id),
+    enabled: !!selectedFlowId && !!id
+  });
+  
+  // Get node title mutation
+  const updateNodeTitle = useUpdateNodeTitle(selectedFlowId!, id);
   
   // Check if the data-store panel is open
   const isPanelActive = isPanelOpen('dataStore', id);
@@ -83,10 +101,15 @@ export default function DataStoreNode({
   
   // Check if node is connected from start to end
   const isFullyConnected = useMemo(() => {
-    if (!flow) return false;
-    const traversalResult = traverseFlowCached(flow);
-    const nodePosition = traversalResult.processNodePositions.get(id);
-    return nodePosition ? nodePosition.isConnectedToStart && nodePosition.isConnectedToEnd : false;
+    if (!flow || !flow.id) return false;
+    try {
+      const traversalResult = traverseFlowCached(flow);
+      const nodePosition = traversalResult.processNodePositions.get(id);
+      return nodePosition ? nodePosition.isConnectedToStart && nodePosition.isConnectedToEnd : false;
+    } catch (error) {
+      console.warn('[DATA-STORE-NODE] Flow traversal error:', error);
+      return false;
+    }
   }, [flow, id]);
   
   // TEMPORARILY DISABLED: Data store node validation
@@ -121,40 +144,23 @@ export default function DataStoreNode({
 
   // Save node name to flow
   const saveNodeName = useCallback(async (newName: string) => {
-    if (!flow || isSaving) return;
+    if (updateNodeTitle.isPending) return;
     
-    setIsSaving(true);
     try {
-      const node = flow.props.nodes.find(n => n.id === id);
-      if (!node) return;
+      await updateNodeTitle.mutateAsync(newName);
+      setTitle(newName);
       
-      const updatedNode = {
-        ...node,
-        data: {
-          ...node.data,
-          label: newName
-        }
-      };
+      // Update panel states to reflect the new name
+      updateNodePanelStates(id, newName);
       
-      const updatedNodes = flow.props.nodes.map(n => 
-        n.id === id ? updatedNode : n
-      );
-      
-      const updateResult = flow.update({ nodes: updatedNodes });
-      if (updateResult.isSuccess) {
-        await saveFlow(flow);
-        setTitle(newName);
-        
-        // Update panel states to reflect the new name
-        updateNodePanelStates(id, newName);
-        
-        // Show success toast
-        toast.success("Node name updated");
-      }
-    } finally {
-      setIsSaving(false);
+      // Show success toast
+      toast.success("Node name updated");
+    } catch (error) {
+      // Reset to original title on error
+      setEditingTitle(title);
+      toast.error("Failed to update node name");
     }
-  }, [flow, id, saveFlow, isSaving, updateNodePanelStates]);
+  }, [id, title, updateNodeTitle, updateNodePanelStates]);
 
   // Handle title changes
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,17 +215,24 @@ export default function DataStoreNode({
 
   // Note: Schema is stored in flow.dataStoreSchema
   // Get fields from the node's actual dataStoreFields (runtime values)
-  // These are the fields that have been configured for this specific node
+  // Use fresh nodeData from query instead of stale data prop
   const displayFields = useMemo(() => {
+    // Use fresh nodeData if available, fallback to data prop
+    const freshData = nodeData?.data || data;
+    const nodeFields = (freshData as any)?.dataStoreFields;
+    
+    
     const fields: Array<{ id: string; name: string }> = [];
     
     // Get the node's configured fields
-    if (data.dataStoreFields && data.dataStoreFields.length > 0) {
+    if (nodeFields && nodeFields.length > 0) {
       // We need to get the field names from the schema using the schemaFieldId
-      data.dataStoreFields.forEach(field => {
+      nodeFields.forEach((field: any) => {
         // Find the corresponding schema field to get the name
-        const schemaField = flow?.props.dataStoreSchema?.fields.find(
-          sf => sf.id === field.schemaFieldId
+        // Get the schema from flow props
+        const schema = flow?.props?.dataStoreSchema;
+        const schemaField = schema?.fields?.find(
+          (sf: any) => sf.id === field.schemaFieldId
         );
         if (schemaField) {
           fields.push({ id: field.schemaFieldId, name: schemaField.name });
@@ -228,7 +241,7 @@ export default function DataStoreNode({
     }
     
     return fields;
-  }, [data.dataStoreFields, flow?.props.dataStoreSchema?.fields]);
+  }, [nodeData?.data, data, flow?.props?.dataStoreSchema, id]);
   
   // TEMPORARILY DISABLED: Data store node field validation
   // Check if node has configured fields (not schema fields)
@@ -268,7 +281,7 @@ export default function DataStoreNode({
             onMouseDown={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="Enter data update name"
-            disabled={isSaving}
+            disabled={updateNodeTitle.isPending}
             className="nodrag"
           />
         </div>
@@ -375,4 +388,33 @@ export default function DataStoreNode({
       </Dialog>
     </div>
   );
+}
+
+/**
+ * Wrapper Data Store node component that queries flow data and passes it as prop
+ */
+export default function DataStoreNode({
+  id,
+  data,
+  selected,
+}: NodeProps<DataStoreNode>) {
+  // Get the selected flow ID from agent store
+  const selectedFlowId = useAgentStore.use.selectedFlowId();
+  
+  // Use React Query to get the flow data
+  const { data: selectedFlow, isLoading } = useQuery({
+    ...flowQueries.detail(selectedFlowId!),
+    enabled: !!selectedFlowId
+  });
+  
+  // Show loading state while flow is loading or invalid
+  if (!selectedFlow || isLoading || !selectedFlow.props?.nodes || !selectedFlow.props?.edges) {
+    return (
+      <div className="w-80 bg-[#fafafa] rounded-lg border border-[#e5e7eb] p-4">
+        <div className="text-[#6b7280] text-sm">Loading flow...</div>
+      </div>
+    );
+  }
+
+  return <DataStoreNodeComponent data={data} id={id} selected={selected} flow={selectedFlow} />;
 }

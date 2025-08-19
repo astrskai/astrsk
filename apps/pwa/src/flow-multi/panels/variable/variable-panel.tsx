@@ -1,4 +1,5 @@
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
+import { flowQueries } from "@/app/queries/flow/query-factory";
 import { makeContext } from "@/app/services/session-play-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
@@ -33,7 +34,7 @@ import {
 } from "@/shared/prompt/domain/variable";
 import { Datetime, logger } from "@/shared/utils";
 import { sanitizeFileName } from "@/shared/utils/file-utils";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { isObject } from "lodash-es";
 import { Check, ChevronDown, ChevronUp, Database, Target } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -91,6 +92,13 @@ const flattenObject = (
 export function VariablePanel({ flowId }: VariablePanelProps) {
   // Use the flow panel hook
   const { flow, isLoading } = useFlowPanel({ flowId });
+  
+  // Query data store schema separately for real-time updates
+  const { data: dataStoreSchema } = useQuery({
+    ...flowQueries.dataStoreSchema(flowId),
+    enabled: !!flowId,
+    refetchOnWindowFocus: true, // Ensure we get latest schema
+  });
 
   // Get session management from store
   const previewSessionId = useAgentStore.use.previewSessionId();
@@ -204,16 +212,25 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   const agentIds = useMemo(() => {
     if (!flow) return [];
 
-    // Flow has agentIds array directly
-    const ids = flow.agentIds || [];
+    // Flow has agentIds array of UniqueEntityID objects, convert to strings
+    const ids = (flow.agentIds || []).map(id => id?.toString()).filter(id => !!id);
     return ids;
   }, [flow]);
 
-  // Query all agents
+  // Query all agents for their details
   const agentQueries_ = useQueries({
     queries: agentIds.map((id) => ({
       ...agentQueries.detail(id),
       enabled: !!id,
+    })),
+  });
+  
+  // Query agent names separately for real-time updates
+  const agentNameQueries = useQueries({
+    queries: agentIds.map((id) => ({
+      ...agentQueries.name(id),
+      enabled: !!id,
+      refetchOnWindowFocus: true,
     })),
   });
 
@@ -226,7 +243,16 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   useEffect(() => {
     const agents = agentQueries_
       .filter((q) => q.data && !q.isLoading)
-      .map((q) => q.data as Agent);
+      .map((q) => q.data as Agent)
+      .filter(agent => agent != null); // Filter out any null/undefined agents
+    
+    // Get agent names from name queries
+    const agentNames = new Map<string, string>();
+    agentNameQueries.forEach((q, index) => {
+      if (q.data && agentIds[index]) {
+        agentNames.set(agentIds[index], q.data);
+      }
+    });
 
     if (!flow || areAgentsLoading || agents.length === 0) {
       if (aggregatedStructuredVariables.length > 0) {
@@ -236,20 +262,25 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     }
 
     // Create a stable key from relevant agent properties
-    const agentDataKey = agents.map((agent) => ({
-      id: agent.id.toString(),
-      name: agent.props.name,
-      outputFormat: agent.props.outputFormat,
-      enabledStructuredOutput: agent.props.enabledStructuredOutput,
-      schemaFields:
-        agent.props.schemaFields?.map((field) => ({
-          name: field.name,
-          type: field.type,
-          description: field.description,
-          required: field.required,
-          array: field.array,
-        })) || [],
-    }));
+    const agentDataKey = agents.map((agent) => {
+      if (!agent || !agent.props) {
+        return null;
+      }
+      return {
+        id: agent.id.toString(),
+        name: agentNames.get(agent.id.toString()) || agent.props.name, // Use name from name query
+        outputFormat: agent.props.outputFormat,
+        enabledStructuredOutput: agent.props.enabledStructuredOutput,
+        schemaFields:
+          agent.props.schemaFields?.map((field) => ({
+            name: field.name,
+            type: field.type,
+            description: field.description,
+            required: field.required,
+            array: field.array,
+          })) || [],
+      };
+    }).filter(data => data != null);
 
     const currentAgentData = JSON.stringify(agentDataKey);
 
@@ -264,8 +295,13 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
     // Iterate through all agents
     agents.forEach((agent) => {
+      if (!agent || !agent.props) {
+        return;
+      }
+      
       const agentId = agent.id.toString();
-      const agentName = agent.props.name || "Unnamed Agent";
+      const nameFromQuery = agentNames.get(agentId);
+      const agentName = nameFromQuery || agent.props.name || "Unnamed Agent"; // Use name from name query
       const agentColor = getAgentHexColor(agent);
 
       // Check the output format
@@ -317,6 +353,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     flow,
     areAgentsLoading,
     agentQueries_,
+    agentNameQueries, // Add agent name queries to dependencies
+    agentIds,
     aggregatedStructuredVariables.length,
   ]);
 
@@ -900,11 +938,11 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
           value="datastore"
           className="mt-0 flex-1 overflow-hidden h-0"
         >
-          {flow?.props.dataStoreSchema?.fields &&
-          flow.props.dataStoreSchema.fields.length > 0 ? (
+          {dataStoreSchema?.fields &&
+          dataStoreSchema.fields.length > 0 ? (
             <ScrollArea className="h-full pr-2">
               <div className="flex flex-col gap-2">
-                {flow.props.dataStoreSchema.fields
+                {dataStoreSchema.fields
                   .filter(
                     (field) =>
                       !searchQuery ||

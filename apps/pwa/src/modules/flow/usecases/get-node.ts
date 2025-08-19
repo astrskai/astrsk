@@ -4,15 +4,15 @@ import { Result } from "@/shared/core";
 import { Node } from "../domain/flow";
 import { LoadFlowRepo } from "../repos";
 
-type GetNodeDTO = {
+type GetNodeRequest = {
   flowId: UniqueEntityID;
   nodeId: string;
 };
 
-export class GetNode implements UseCase<GetNodeDTO, Promise<Result<Node>>> {
+export class GetNode implements UseCase<GetNodeRequest, Promise<Result<Node>>> {
   constructor(private flowRepo: LoadFlowRepo) {}
 
-  async execute(request: GetNodeDTO): Promise<Result<Node>> {
+  async execute(request: GetNodeRequest): Promise<Result<Node>> {
     const { flowId, nodeId } = request;
 
     const flowOrError = await this.flowRepo.getFlowById(flowId);

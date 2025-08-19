@@ -445,7 +445,6 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                               className="p-2 inline-flex justify-start items-center gap-2 hover:bg-background-surface-1 rounded transition-colors"
                               onClick={() => {
                                 // TODO: Implement expand functionality
-                                console.log("Expand editor");
                               }}
                             >
                               <Maximize2 className="w-4 h-4 text-text-subtle" />

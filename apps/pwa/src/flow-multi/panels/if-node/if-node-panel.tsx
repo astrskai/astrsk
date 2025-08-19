@@ -1,14 +1,14 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Plus, X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components-v2/ui/input";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
-import { useFlowPanel } from "@/flow-multi/hooks/use-flow-panel";
-import { FlowPanelLoading } from "@/flow-multi/hooks/use-flow-panel";
+import { flowQueries } from "@/app/queries/flow/query-factory";
+import { useUpdateIfNodeConditions, type EditableCondition as EditableConditionType } from "@/app/queries/flow/mutations/if-node-mutations";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
-import { debounce } from "lodash-es";
+import { IfCondition } from "@/flow-multi/nodes/if-node";
 import { 
-  Condition, 
   ConditionDataType, 
   ConditionOperator,
   getDefaultOperatorForDataType,
@@ -16,101 +16,74 @@ import {
   isValidOperatorForDataType
 } from '@/flow-multi/types/condition-types';
 import { OperatorCombobox } from '@/flow-multi/components/operator-combobox';
-import { ReadyState } from "@/modules/flow/domain";
+import { toast } from "sonner";
 
 interface IfNodePanelProps {
   flowId: string;
   nodeId: string;
 }
 
-// Extended condition type to allow null operator during creation
-type EditableCondition = Omit<Condition, 'operator' | 'dataType'> & {
-  dataType: ConditionDataType | null;
-  operator: ConditionOperator | null;
-};
+// Use the EditableCondition type from mutations
+type EditableCondition = EditableConditionType;
 
 export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
-  const { flow, isLoading, saveFlow } = useFlowPanel({ flowId });
-  const { setLastInputField } = useFlowPanelContext();
-  const { closePanel } = useFlowPanelContext();
+  const { setLastInputField, closePanel } = useFlowPanelContext();
+  
+  // Get mutation hook for updating conditions
+  const updateConditions = useUpdateIfNodeConditions(flowId, nodeId);
+  
+  // Query for node data - more efficient than loading entire flow
+  const { data: node, isLoading: nodeLoading } = useQuery({
+    ...flowQueries.node(flowId, nodeId),
+    enabled: !!flowId && !!nodeId && !updateConditions.isEditing,
+  });
   const [logicOperator, setLogicOperator] = useState<'AND' | 'OR'>('AND');
   const [conditions, setConditions] = useState<EditableCondition[]>([]);
   const lastInitializedNodeId = useRef<string | null>(null);
-  const flowLoadedRef = useRef<boolean>(false);
   const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   // Auto-close panel when connected node is deleted
   useEffect(() => {
-    if (!flow || !nodeId) return;
-    
-    // Check if the node still exists in the flow
-    const nodeExists = flow.props.nodes.some(n => n.id === nodeId);
-    
-    if (!nodeExists) {
+    if (!nodeLoading && !node && nodeId) {
       // Node has been deleted, close the panel
       closePanel(`ifNode-${nodeId}`);
     }
-  }, [flow?.props.nodes, nodeId, closePanel]);
+  }, [node, nodeLoading, nodeId, closePanel]);
 
-  // Save conditions to node
-  const saveConditions = useCallback(async (newConditions: EditableCondition[], newOperator: 'AND' | 'OR') => {
+  // Save conditions to node using targeted mutation
+  const saveConditions = useCallback((newConditions: EditableCondition[], newOperator: 'AND' | 'OR') => {
     // Filter out incomplete conditions (where dataType or operator is null)
     // Only persist fully-formed conditions to prevent downstream issues
-    const validConditions = newConditions.filter(c => 
-      c.dataType !== null && c.operator !== null
-    );
+    const validConditions = newConditions
+      .filter((c): c is EditableCondition & { dataType: ConditionDataType; operator: ConditionOperator } => 
+        c.dataType !== null && c.operator !== null
+      )
+      .map((c): IfCondition => ({
+        id: c.id,
+        dataType: c.dataType,
+        value1: c.value1,
+        operator: c.operator,
+        value2: c.value2
+      }));
 
-    // Update the node data directly in the flow panel which will handle saving
-    if ((window as any).flowPanelUpdateNodeData) {
-      (window as any).flowPanelUpdateNodeData(nodeId, { 
-        conditions: validConditions, // Only valid conditions for evaluation
-        draftConditions: newConditions, // All conditions including drafts
-        logicOperator: newOperator 
-      });
-    } else {
-      // Fallback if flow panel method is not available
-      if (!flow) return;
-      
-      const node = flow.props.nodes.find(n => n.id === nodeId);
-      if (!node) return;
-
-      const updatedNode = {
-        ...node,
-        data: {
-          ...node.data,
-          conditions: validConditions,
-          draftConditions: newConditions, // Store all conditions including drafts
-          logicOperator: newOperator
-        }
-      };
-
-      const updatedNodes = flow.props.nodes.map(n => 
-        n.id === nodeId ? updatedNode : n
-      );
-
-      const updateResult = flow.update({ nodes: updatedNodes });
-      if (updateResult.isSuccess) {
-        let flowToSave = updateResult.getValue();
-        
-        // Set flow to Draft state if it was Ready
-        if (flowToSave.props.readyState === ReadyState.Ready) {
-          const stateUpdateResult = flowToSave.setReadyState(ReadyState.Draft);
-          if (stateUpdateResult.isSuccess) {
-            flowToSave = stateUpdateResult.getValue();
-          }
-        }
-        
-        await saveFlow(flowToSave);
+    updateConditions.mutate({
+      conditions: validConditions,
+      draftConditions: newConditions,
+      logicOperator: newOperator
+    }, {
+      onSuccess: () => {
+        // Update local state after successful save
+        setConditions(newConditions);
+        setLogicOperator(newOperator);
+      },
+      onError: (error) => {
+        toast.error("Failed to save conditions", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
       }
-    }
-  }, [flow, nodeId, saveFlow]);
+    });
+  }, [updateConditions]);
 
-  // Track when flow is loaded
-  useEffect(() => {
-    if (flow && !flowLoadedRef.current) {
-      flowLoadedRef.current = true;
-    }
-  }, [flow]);
 
   // Clean up input field tracking on unmount
   useEffect(() => {
@@ -121,8 +94,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
   // Initialize from node data
   useEffect(() => {
-    if (nodeId && nodeId !== lastInitializedNodeId.current && flow && flowLoadedRef.current) {
-      const node = flow.props.nodes.find(n => n.id === nodeId);
+    if (nodeId && nodeId !== lastInitializedNodeId.current && node && !updateConditions.isEditing) {
       const nodeData = node?.data as any;
       
       // Load existing conditions or create default
@@ -173,7 +145,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       
       lastInitializedNodeId.current = nodeId;
     }
-  }, [nodeId, flow]); // Depend on both but use refs to control initialization
+  }, [nodeId, node, updateConditions.isEditing]); // Depend on node and editing state
 
   const addCondition = useCallback(() => {
     const newCondition: EditableCondition = {
@@ -255,8 +227,14 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
     saveConditions(newConditions, logicOperator);
   }, [conditions, logicOperator, saveConditions]);
 
-  if (isLoading) {
-    return <FlowPanelLoading message="Loading if node..." />;
+  if (nodeLoading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Loading if node...</span>
+        </div>
+      </div>
+    );
   }
 
   return (

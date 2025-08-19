@@ -33,11 +33,10 @@ import { ValidationIssue } from "@/flow-multi/validation/types/validation-types"
  * - details: ['flows', 'detail']
  * - detail(id): ['flows', 'detail', id]
  *   - metadata: ['flows', 'detail', id, 'metadata']
- *   - graph: ['flows', 'detail', id, 'graph']
- *     - nodes: ['flows', 'detail', id, 'graph', 'nodes']
- *     - node(nodeId): ['flows', 'detail', id, 'graph', 'nodes', nodeId]
- *     - edges: ['flows', 'detail', id, 'graph', 'edges']
- *     - edge(edgeId): ['flows', 'detail', id, 'graph', 'edges', edgeId]
+ *   - nodes: ['flows', 'detail', id, 'nodes']
+ *     - node(nodeId): ['flows', 'detail', id, 'nodes', nodeId]
+ *   - edges: ['flows', 'detail', id, 'edges']
+ *     - edge(edgeId): ['flows', 'detail', id, 'edges', edgeId]
  *   - dataStore: ['flows', 'detail', id, 'dataStore']
  *     - schema: ['flows', 'detail', id, 'dataStore', 'schema']
  *     - fields: ['flows', 'detail', id, 'dataStore', 'schema', 'fields']
@@ -95,12 +94,16 @@ export const flowKeys = {
   
   // Sub-queries for a specific flow
   metadata: (id: string) => [...flowKeys.detail(id), 'metadata'] as const,
+  panelLayout: (id: string) => [...flowKeys.detail(id), 'panelLayout'] as const,
   
-  graph: (id: string) => [...flowKeys.detail(id), 'graph'] as const,
-  nodes: (id: string) => [...flowKeys.graph(id), 'nodes'] as const,
+  // Remove unnecessary 'graph' nesting - nodes and edges are direct children of flow detail
+  nodes: (id: string) => [...flowKeys.detail(id), 'nodes'] as const,
   node: (id: string, nodeId: string) => [...flowKeys.nodes(id), nodeId] as const,
-  edges: (id: string) => [...flowKeys.graph(id), 'edges'] as const,
+  edges: (id: string) => [...flowKeys.detail(id), 'edges'] as const,
   edge: (id: string, edgeId: string) => [...flowKeys.edges(id), edgeId] as const,
+  
+  // Keep graph for backwards compatibility if needed
+  graph: (id: string) => [...flowKeys.detail(id), 'graph'] as const,
   
   dataStore: (id: string) => [...flowKeys.detail(id), 'dataStore'] as const,
   dataStoreSchema: (id: string) => [...flowKeys.dataStore(id), 'schema'] as const,
@@ -211,6 +214,21 @@ export const flowQueries = {
       staleTime: 1000 * 10,
     }),
 
+  // Panel layout only
+  panelLayout: (id: string) =>
+    queryOptions({
+      queryKey: flowKeys.panelLayout(id),
+      queryFn: async () => {
+        const flowOrError = await FlowService.getFlow.execute(
+          new UniqueEntityID(id)
+        );
+        if (flowOrError.isFailure) return null;
+        
+        return flowOrError.getValue().props.panelStructure || null;
+      },
+      staleTime: 1000 * 60, // 1 minute - panel layout doesn't change often
+    }),
+
   // Single node
   node: (id: string, nodeId: string) =>
     queryOptions({
@@ -264,9 +282,15 @@ export const flowQueries = {
         const flowOrError = await FlowService.getFlow.execute(
           new UniqueEntityID(id)
         );
-        if (flowOrError.isFailure) return null;
+        if (flowOrError.isFailure) {
+          console.error('[flowQueries.dataStoreSchema] Failed to get flow:', flowOrError.getError());
+          return null;
+        }
         
-        return flowOrError.getValue().props.dataStoreSchema || null;
+        const flow = flowOrError.getValue();
+        const schema = flow.props.dataStoreSchema;
+        
+        return schema || null;
       },
       staleTime: 1000 * 30,
     }),
@@ -421,6 +445,26 @@ export const flowQueries = {
       },
       staleTime: 1000 * 60,
     }),
+
+  // Agent IDs in the flow (computed from nodes)
+  agents: (id: string) =>
+    queryOptions({
+      queryKey: flowKeys.agents(id),
+      queryFn: async () => {
+        const flowOrError = await FlowService.getFlow.execute(
+          new UniqueEntityID(id)
+        );
+        if (flowOrError.isFailure) return [];
+        
+        const flow = flowOrError.getValue();
+        // Extract agent IDs from nodes with type 'agent'
+        const agentNodes = flow.props.nodes.filter((node: any) => node.type === 'agent');
+        const agentIds = agentNodes.map((node: any) => new UniqueEntityID(node.id));
+        
+        return agentIds;
+      },
+      staleTime: 1000 * 30,
+    }),
 };
 
 /**
@@ -433,7 +477,6 @@ export const flowQueries = {
  * 
  * // Invalidating queries
  * queryClient.invalidateQueries({ queryKey: flowKeys.all }); // All flow queries
- * queryClient.invalidateQueries({ queryKey: flowKeys.detail(flowId) }); // Specific flow
  * queryClient.invalidateQueries({ queryKey: flowKeys.nodes(flowId) }); // Just nodes
  * queryClient.invalidateQueries({ queryKey: flowKeys.dataStoreSchema(flowId) }); // Just schema
  * 

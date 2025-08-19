@@ -33,10 +33,30 @@ export interface FlowTraversalResult {
  * @returns FlowTraversalResult with process node positions and connectivity info
  */
 export function traverseFlow(flow: Flow): FlowTraversalResult {
-  const nodes = flow.props.nodes;
-  const edges = flow.props.edges;
+  const nodes = flow.props?.nodes;
+  const edges = flow.props?.edges;
   
-  // Debug logging to understand the issue
+  // Handle missing or invalid data
+  if (!nodes || !Array.isArray(nodes) || !edges || !Array.isArray(edges)) {
+    console.warn('[FLOW-TRAVERSAL] Invalid flow data:', { 
+      hasNodes: !!nodes, 
+      isNodesArray: Array.isArray(nodes),
+      hasEdges: !!edges, 
+      isEdgesArray: Array.isArray(edges),
+      flowId: (flow as any)?.id 
+    });
+    
+    // Return empty traversal result
+    return {
+      processNodePositions: new Map(),
+      connectedSequence: [],
+      disconnectedProcessNodes: [],
+      hasValidFlow: false,
+      // Backward compatibility aliases
+      agentPositions: new Map(),
+      disconnectedAgents: []
+    };
+  }
   
   // Find start and end nodes
   const startNode = nodes.find(n => n.type === 'start');

@@ -50,6 +50,11 @@ export const updateNode = (
     flowKeys.detail(flowId),
     (old) => {
       if (!old) return old;
+      // Check if flow has the expected structure
+      if (!old.props || !old.props.nodes) {
+        console.warn('[optimistic.updateNode] Flow in cache does not have props.nodes structure');
+        return old;
+      }
       const nodes = [...old.props.nodes];
       const index = nodes.findIndex(n => n.id === nodeId);
       if (index === -1) return old;

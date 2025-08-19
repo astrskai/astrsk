@@ -1,0 +1,113 @@
+/**
+ * Nodes and Edges Batch Mutation Hooks
+ * 
+ * Mutations for updating nodes and edges together in a single operation
+ * Used when multiple nodes/edges change together (e.g., flow editor operations)
+ */
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { FlowService } from "@/app/services/flow-service";
+import { Node, Edge, Flow, ReadyState } from "@/modules/flow/domain/flow";
+import { flowKeys } from "../query-factory";
+
+/**
+ * Hook for updating nodes and edges together
+ * This is more efficient than separate mutations when both change
+ */
+export const useUpdateNodesAndEdges = (flowId: string) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationKey: [`flow-${flowId}`, 'nodes-edges'],
+    mutationFn: async ({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) => {
+      
+      const result = await FlowService.updateNodesAndEdges.execute({
+        flowId,
+        nodes,
+        edges
+      });
+      
+      if (result.isFailure) {
+        throw new Error(result.getError());
+      }
+      
+      // Update flow ready state to Draft if it's Ready
+      const flow = queryClient.getQueryData<Flow>(flowKeys.detail(flowId));
+      if (flow && flow.props.readyState === ReadyState.Ready) {
+        await FlowService.updateFlowReadyState.execute({
+          flowId,
+          readyState: ReadyState.Draft
+        });
+      }
+      
+      return { nodes, edges };
+    },
+    
+    onMutate: async ({ nodes, edges }) => {
+      
+      // Cancel any in-flight queries to prevent overwriting
+      await queryClient.cancelQueries({ queryKey: flowKeys.detail(flowId) });
+      await queryClient.cancelQueries({ queryKey: flowKeys.nodes(flowId) });
+      await queryClient.cancelQueries({ queryKey: flowKeys.edges(flowId) });
+      
+      // Get previous values for rollback
+      const previousFlow = queryClient.getQueryData(flowKeys.detail(flowId));
+      const previousNodes = queryClient.getQueryData(flowKeys.nodes(flowId));
+      const previousEdges = queryClient.getQueryData(flowKeys.edges(flowId));
+      
+      
+      // Optimistically update all relevant queries
+      // 1. Update nodes query
+      queryClient.setQueryData(flowKeys.nodes(flowId), nodes);
+      
+      // 2. Update edges query
+      queryClient.setQueryData(flowKeys.edges(flowId), edges);
+      
+      // 3. Update flow detail
+      queryClient.setQueryData(flowKeys.detail(flowId), (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          props: {
+            ...old.props,
+            nodes,
+            edges,
+            updatedAt: new Date()
+          }
+        };
+      });
+      
+      // 4. Update individual node queries for nodes that changed
+      nodes.forEach(node => {
+        queryClient.setQueryData(flowKeys.node(flowId, node.id), node);
+      });
+      
+      return { previousFlow, previousNodes, previousEdges };
+    },
+    
+    onError: (err, variables, context) => {
+      console.error('[NODE] Mutation error - rolling back', err);
+      
+      // Rollback on error
+      if (context?.previousFlow) {
+        queryClient.setQueryData(flowKeys.detail(flowId), context.previousFlow);
+      }
+      if (context?.previousNodes) {
+        queryClient.setQueryData(flowKeys.nodes(flowId), context.previousNodes);
+      }
+      if (context?.previousEdges) {
+        queryClient.setQueryData(flowKeys.edges(flowId), context.previousEdges);
+      }
+    },
+    
+    onSettled: async () => {
+      // Invalidate affected queries to ensure consistency
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: flowKeys.detail(flowId) }), // IMPORTANT: Invalidate flow detail
+        queryClient.invalidateQueries({ queryKey: flowKeys.nodes(flowId) }),
+        queryClient.invalidateQueries({ queryKey: flowKeys.edges(flowId) }),
+        queryClient.invalidateQueries({ queryKey: flowKeys.validation(flowId) })
+      ]);
+    },
+  });
+};

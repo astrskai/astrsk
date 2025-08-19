@@ -8,6 +8,7 @@ import {
   FlowPanelLoading, 
   FlowPanelError 
 } from "@/flow-multi/hooks/use-flow-panel";
+import { useUpdateFlowValidation } from "@/app/queries/flow/mutations/validation-mutations";
 import { ValidationPanelProps } from "./validation-panel-types";
 import { useQueries } from "@tanstack/react-query";
 import { IssueItem } from "./issue-item";
@@ -46,9 +47,11 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
   // Use the flow panel hook
   const { 
     flow,
-    isLoading,
-    saveFlow
+    isLoading
   } = useFlowPanel({ flowId });
+  
+  // Get validation mutation
+  const updateFlowValidation = useUpdateFlowValidation(flowId);
   
   // Query all agents using the same pattern as preview panel
   const agentIds = flow?.agentIds || [];
@@ -183,38 +186,19 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     // Update flow state and validation issues based on validation results
     const hasErrors = allIssues.some(issue => issue.severity === 'error');
     if (flow) {
-      let needsSave = false;
-      let updatedFlow = flow;
+      // Determine the new ready state
+      const newReadyState = hasErrors ? ReadyState.Error : ReadyState.Ready;
       
-      // Update validation issues
-      const updateIssuesResult = updatedFlow.update({ validationIssues: allIssues });
-      if (updateIssuesResult.isSuccess) {
-        needsSave = true;
-      }
-      
-      // Update ready state
-      if (hasErrors && flow.props.readyState !== ReadyState.Error) {
-        // Set to Error state if there are errors
-        const updateFlowResult = updatedFlow.setReadyState(ReadyState.Error);
-        if (updateFlowResult.isSuccess) {
-          needsSave = true;
-        }
-      } else if (!hasErrors && flow.props.readyState !== ReadyState.Ready) {
-        // Set to Ready state if there are no errors
-        const updateFlowResult = updatedFlow.setReadyState(ReadyState.Ready);
-        if (updateFlowResult.isSuccess) {
-          needsSave = true;
-        }
-      }
-      
-      // Save flow if any changes were made
-      if (needsSave) {
-        saveFlow(updatedFlow).catch(error => {
-          console.error('Failed to save flow with validation results:', error);
+      // Only update if there's a change
+      if (flow.props.readyState !== newReadyState || 
+          JSON.stringify(flow.props.validationIssues) !== JSON.stringify(allIssues)) {
+        updateFlowValidation.mutate({
+          readyState: newReadyState,
+          validationIssues: allIssues
         });
       }
     }
-  }, [flow, agentsMap, connectedAgents, apiConnectionsWithModels, saveFlow]);
+  }, [flow, agentsMap, connectedAgents, apiConnectionsWithModels, updateFlowValidation]);
   
   // Track if we had a successful validation (no errors) before
   const [hadSuccessfulValidation, setHadSuccessfulValidation] = useState(false);
