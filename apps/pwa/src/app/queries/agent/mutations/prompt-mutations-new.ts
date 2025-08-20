@@ -47,14 +47,14 @@ export const useUpdateAgentApiType = (flowId: string, agentId: string) => {
     onMutate: async (targetApiType) => {
       // Cancel queries
       await queryClient.cancelQueries({ 
-        queryKey: [...agentKeys.all, "prompt", agentId]
+        queryKey: agentKeys.prompt(agentId)
       });
       await queryClient.cancelQueries({ 
         queryKey: flowKeys.detail(flowId)
       });
       
       const previousPrompt = queryClient.getQueryData(
-        [...agentKeys.all, "prompt", agentId]
+        agentKeys.prompt(agentId)
       );
       const previousFlow = queryClient.getQueryData(
         flowKeys.detail(flowId)
@@ -62,7 +62,7 @@ export const useUpdateAgentApiType = (flowId: string, agentId: string) => {
       
       // Optimistic update
       queryClient.setQueryData(
-        [...agentKeys.all, "prompt", agentId],
+        agentKeys.prompt(agentId),
         (old: any) => {
           if (!old) return old;
           return {
@@ -94,7 +94,7 @@ export const useUpdateAgentApiType = (flowId: string, agentId: string) => {
       // Rollback on error
       if (context?.previousPrompt) {
         queryClient.setQueryData(
-          [...agentKeys.all, "prompt", agentId],
+          agentKeys.prompt(agentId),
           context.previousPrompt
         );
       }
@@ -109,7 +109,7 @@ export const useUpdateAgentApiType = (flowId: string, agentId: string) => {
     onSuccess: () => {
       Promise.all([
         queryClient.invalidateQueries({ 
-          queryKey: [...agentKeys.all, "prompt", agentId]
+          queryKey: agentKeys.prompt(agentId)
         }),
         // Invalidate the full agent detail to refresh all agent data (including preview)
         queryClient.invalidateQueries({ 
@@ -179,14 +179,14 @@ export const useUpdateAgentPromptMessages = (flowId: string, agentId: string) =>
       
       // Cancel queries
       await queryClient.cancelQueries({ 
-        queryKey: [...agentKeys.all, "prompt", agentId]
+        queryKey: agentKeys.prompt(agentId)
       });
       await queryClient.cancelQueries({ 
         queryKey: flowKeys.detail(flowId)
       });
       
       const previousPrompt = queryClient.getQueryData(
-        [...agentKeys.all, "prompt", agentId]
+        agentKeys.prompt(agentId)
       );
       const previousFlow = queryClient.getQueryData(
         flowKeys.detail(flowId)
@@ -207,7 +207,7 @@ export const useUpdateAgentPromptMessages = (flowId: string, agentId: string) =>
       
       // Optimistic update
       queryClient.setQueryData(
-        [...agentKeys.all, "prompt", agentId],
+        agentKeys.prompt(agentId),
         (old: any) => {
           if (!old) return old;
           return {
@@ -244,7 +244,7 @@ export const useUpdateAgentPromptMessages = (flowId: string, agentId: string) =>
       // 3. Use separate cache key for editor state vs display state
       Promise.all([
         queryClient.invalidateQueries({ 
-          queryKey: [...agentKeys.all, "prompt", agentId]
+          queryKey: agentKeys.prompt(agentId)
         }),
         // Invalidate the full agent detail to refresh all agent data (including preview)
         queryClient.invalidateQueries({ 
@@ -268,7 +268,7 @@ export const useUpdateAgentPromptMessages = (flowId: string, agentId: string) =>
       // Rollback on error
       if (context?.previousPrompt) {
         queryClient.setQueryData(
-          [...agentKeys.all, "prompt", agentId],
+          agentKeys.prompt(agentId),
           context.previousPrompt
         );
       }
@@ -356,14 +356,14 @@ export const useUpdateAgentTextPrompt = (flowId: string, agentId: string) => {
       
       // Cancel queries
       await queryClient.cancelQueries({ 
-        queryKey: [...agentKeys.all, "prompt", agentId]
+        queryKey: agentKeys.prompt(agentId)
       });
       await queryClient.cancelQueries({ 
         queryKey: flowKeys.detail(flowId)
       });
       
       const previousPrompt = queryClient.getQueryData(
-        [...agentKeys.all, "prompt", agentId]
+        agentKeys.prompt(agentId)
       );
       const previousFlow = queryClient.getQueryData(
         flowKeys.detail(flowId)
@@ -384,7 +384,7 @@ export const useUpdateAgentTextPrompt = (flowId: string, agentId: string) => {
       
       // Optimistic update
       queryClient.setQueryData(
-        [...agentKeys.all, "prompt", agentId],
+        agentKeys.prompt(agentId),
         (old: any) => {
           if (!old) return old;
           return {
@@ -421,7 +421,7 @@ export const useUpdateAgentTextPrompt = (flowId: string, agentId: string) => {
       // 3. Use separate cache key for editor state vs display state
       Promise.all([
         queryClient.invalidateQueries({ 
-          queryKey: [...agentKeys.all, "prompt", agentId]
+          queryKey: agentKeys.prompt(agentId)
         }),
         // Invalidate the full agent detail to refresh all agent data (including preview)
         queryClient.invalidateQueries({ 
@@ -445,7 +445,7 @@ export const useUpdateAgentTextPrompt = (flowId: string, agentId: string) => {
       // Rollback on error
       if (context?.previousPrompt) {
         queryClient.setQueryData(
-          [...agentKeys.all, "prompt", agentId],
+          agentKeys.prompt(agentId),
           context.previousPrompt
         );
       }

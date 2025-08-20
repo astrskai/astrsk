@@ -36,7 +36,7 @@ import { ApiType } from "@/modules/agent/domain/agent";
 import { PromptMessage } from "@/modules/agent/domain";
 
 // Import queries and mutations
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
 import { 
   useUpdateAgentApiType,
   useUpdateAgentPromptMessages,

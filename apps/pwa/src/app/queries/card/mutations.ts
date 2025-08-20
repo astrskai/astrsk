@@ -980,22 +980,18 @@ export const useUpdateCardLorebook = (cardId: string) => {
       
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
       await queryClient.cancelQueries({ queryKey: cardKeys.lorebook(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.lorebookEntries(cardId) });
       
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
       const previousLorebook = queryClient.getQueryData(cardKeys.lorebook(cardId));
-      const previousEntries = queryClient.getQueryData(cardKeys.lorebookEntries(cardId));
       
       // Optimistic update for lorebook queries
       if (lorebook) {
         queryClient.setQueryData(cardKeys.lorebook(cardId), lorebook);
-        queryClient.setQueryData(cardKeys.lorebookEntries(cardId), lorebook.entries || []);
       } else {
         queryClient.setQueryData(cardKeys.lorebook(cardId), null);
-        queryClient.setQueryData(cardKeys.lorebookEntries(cardId), []);
       }
       
-      return { previousCard, previousLorebook, previousEntries };
+      return { previousCard, previousLorebook };
     },
     
     onError: (_err, _variables, context) => {
@@ -1004,9 +1000,6 @@ export const useUpdateCardLorebook = (cardId: string) => {
       }
       if (context?.previousLorebook) {
         queryClient.setQueryData(cardKeys.lorebook(cardId), context.previousLorebook);
-      }
-      if (context?.previousEntries) {
-        queryClient.setQueryData(cardKeys.lorebookEntries(cardId), context.previousEntries);
       }
       
       setIsEditing(false);
@@ -1022,7 +1015,7 @@ export const useUpdateCardLorebook = (cardId: string) => {
       
       await queryClient.invalidateQueries({ queryKey: cardKeys.detail(cardId) });
       await queryClient.invalidateQueries({ queryKey: cardKeys.lorebook(cardId) });
-      await queryClient.invalidateQueries({ queryKey: cardKeys.lorebookEntries(cardId) });
+      await queryClient.invalidateQueries({ queryKey: cardKeys.lorebook(cardId) });
     },
   });
   
@@ -1249,7 +1242,6 @@ export const useDeleteCard = () => {
       queryClient.removeQueries({ queryKey: cardKeys.content(cardId) });
       queryClient.removeQueries({ queryKey: cardKeys.lorebook(cardId) });
       queryClient.removeQueries({ queryKey: cardKeys.scenarios(cardId) });
-      queryClient.removeQueries({ queryKey: cardKeys.variables(cardId) });
       
       // Invalidate list queries to remove from lists
       queryClient.invalidateQueries({ queryKey: cardKeys.lists() });

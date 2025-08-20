@@ -12,9 +12,10 @@
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardService } from "@/app/services/card-service";
-import { Card, CardType, CharacterCard, PlotCard, Entry } from "@/modules/card/domain";
-import { SearchCardsSort } from "@/modules/card/repos";
 import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
+import { LorebookDrizzleMapper } from "@/modules/card/mappers/lorebook-drizzle-mapper";
+import { Card, CardType, CharacterCard, PlotCard } from "@/modules/card/domain";
+import { SearchCardsSort } from "@/modules/card/repos";
 
 /**
  * Query Key Factory
@@ -84,16 +85,10 @@ export const cardKeys = {
   
   // Lorebook queries
   lorebook: (id: string) => [...cardKeys.detail(id), 'lorebook'] as const,
-  lorebookEntries: (id: string) => [...cardKeys.lorebook(id), 'entries'] as const,
-  lorebookEntry: (id: string, entryId: string) => [...cardKeys.lorebookEntries(id), entryId] as const,
   
   // Scenarios queries (for plot cards)
   scenarios: (id: string) => [...cardKeys.detail(id), 'scenarios'] as const,
   scenario: (id: string, scenarioId: string) => [...cardKeys.scenarios(id), scenarioId] as const,
-  
-  // Variables queries
-  variables: (id: string) => [...cardKeys.detail(id), 'variables'] as const,
-  variable: (id: string, variableId: string) => [...cardKeys.variables(id), variableId] as const,
 };
 
 // Query Options Factory
@@ -126,12 +121,12 @@ export const cardQueries = {
         );
         if (cardOrError.isFailure) return null;
         const card = cardOrError.getValue();
-        // Transform to persistence format for consistent storage
+        // Transform to persistence format for consistent caching (like legacy system)
         return CardDrizzleMapper.toPersistence(card);
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
+        // Transform back to domain object for components
         return CardDrizzleMapper.toDomain(data as any);
       },
       staleTime: 1000 * 30, // 30 seconds
@@ -200,42 +195,17 @@ export const cardQueries = {
         if (cardOrError.isFailure) return null;
         
         const card = cardOrError.getValue();
-        return card.props.lorebook || null;
+        // Transform lorebook to persistence format for consistent caching
+        return card.props.lorebook ? LorebookDrizzleMapper.toPersistence(card.props.lorebook) : null;
+      },
+      select: (data) => {
+        if (!data) return null;
+        // Transform back to domain object using mapper
+        return LorebookDrizzleMapper.toDomain(data);
       },
       staleTime: 1000 * 30,
     }),
 
-  // Lorebook entries
-  lorebookEntries: (id: string) =>
-    queryOptions({
-      queryKey: cardKeys.lorebookEntries(id),
-      queryFn: async () => {
-        const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id)
-        );
-        if (cardOrError.isFailure) return [];
-        
-        const card = cardOrError.getValue();
-        return card.props.lorebook?.entries || [];
-      },
-      staleTime: 1000 * 30,
-    }),
-
-  // Single lorebook entry
-  lorebookEntry: (id: string, entryId: string) =>
-    queryOptions({
-      queryKey: cardKeys.lorebookEntry(id, entryId),
-      queryFn: async () => {
-        const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id)
-        );
-        if (cardOrError.isFailure) return null;
-        
-        const card = cardOrError.getValue();
-        return card.props.lorebook?.entries.find((e: Entry) => e.id.toString() === entryId) || null;
-      },
-      staleTime: 1000 * 30,
-    }),
 
   // Scenarios (for plot cards)
   scenarios: (id: string) =>
@@ -275,37 +245,6 @@ export const cardQueries = {
       staleTime: 1000 * 30,
     }),
 
-  // Variables
-  variables: (id: string) =>
-    queryOptions({
-      queryKey: cardKeys.variables(id),
-      queryFn: async () => {
-        const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id)
-        );
-        if (cardOrError.isFailure) return {};
-        
-        // Variables are typically stored as part of the card props or computed
-        return {};
-      },
-      staleTime: 1000 * 30,
-    }),
-
-  // Single variable
-  variable: (id: string, variableId: string) =>
-    queryOptions({
-      queryKey: cardKeys.variable(id, variableId),
-      queryFn: async () => {
-        const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id)
-        );
-        if (cardOrError.isFailure) return null;
-        
-        // Variables are typically stored as part of the card props or computed
-        return null;
-      },
-      staleTime: 1000 * 30,
-    }),
 };
 
 /**

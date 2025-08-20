@@ -1,9 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AgentService } from "@/app/services/agent-service";
-import { agentQueries } from "@/app/queries/agent-queries";
-import { flowQueries } from "@/app/queries/flow-queries";
-import { UniqueEntityID } from "@/shared/domain";
+import { agentKeys } from "@/app/queries/agent/query-factory";
 
 /**
  * Hook for updating agent name with isEditing flag
@@ -45,18 +43,18 @@ export function useUpdateAgentName(agentId: string) {
       startEditing();
       
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: agentQueries.name(agentId).queryKey });
+      await queryClient.cancelQueries({ queryKey: agentKeys.name(agentId) });
       
       // Optimistically update the cache
-      const previousName = queryClient.getQueryData(agentQueries.name(agentId).queryKey);
-      queryClient.setQueryData(agentQueries.name(agentId).queryKey, { name });
+      const previousName = queryClient.getQueryData(agentKeys.name(agentId));
+      queryClient.setQueryData(agentKeys.name(agentId), { name });
       
       return { previousName };
     },
-    onError: (err, name, context) => {
+    onError: (_err, _name, context) => {
       // Revert optimistic update on error
       if (context?.previousName) {
-        queryClient.setQueryData(agentQueries.name(agentId).queryKey, context.previousName);
+        queryClient.setQueryData(agentKeys.name(agentId), context.previousName);
       }
       setIsEditing(false);
       if (editTimeoutRef.current) {
@@ -67,7 +65,7 @@ export function useUpdateAgentName(agentId: string) {
       endEditing();
       // Invalidate to ensure consistency after delay
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: agentQueries.name(agentId).queryKey });
+        queryClient.invalidateQueries({ queryKey: agentKeys.name(agentId) });
       }, 600);
     },
   });

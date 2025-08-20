@@ -34,7 +34,7 @@ import {
 } from "@/components-v2/ui/dialog";
 import { Button } from "@/components-v2/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
 import { agentKeys } from "@/app/queries/agent/query-factory";
 import { UniqueEntityID } from "@/shared/domain";
 import { flowQueries } from "@/app/queries/flow-queries";
@@ -97,8 +97,8 @@ function AgentNodeComponent({ agentId, flow, nodeId, selected }: AgentNodeCompon
   // 1. Name query - just the name field
   const { data: nameData } = useQuery({
     ...agentQueries.name(agentId),
-    // Don't refetch while mutation is pending
-    enabled: !!agentId && !updateNameMutation.isPending,
+    // Don't refetch while mutation is pending OR while user is editing
+    enabled: !!agentId && !updateNameMutation.isPending && !updateNameMutation.isEditing,
   });
   
   // 2. Model query - model fields only

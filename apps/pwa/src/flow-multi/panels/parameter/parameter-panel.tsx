@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { SearchInput } from "@/components-v2/search-input";
 import { ParameterSettingsFields } from "@/flow-multi/panels/parameter/parameter-settings/parameter-settings-fields";
 import { ParameterPanelProps } from "./parameter-panel-types";
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
 import { useUpdateAgentParametersQueue } from "@/app/queries/agent/mutations/parameter-mutations";
 import { toast } from "sonner";
 

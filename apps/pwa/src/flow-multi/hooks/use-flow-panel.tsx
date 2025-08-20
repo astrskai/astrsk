@@ -5,7 +5,7 @@ import { Agent } from "@/modules/agent/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { AgentService } from "@/app/services/agent-service";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 
 export interface FlowPanelProps {
@@ -53,7 +53,7 @@ export function useFlowPanel({
     isLoading: isAgentLoading,
     error: agentError
   } = useQuery({
-    ...agentQueries.detail(agentId ? new UniqueEntityID(agentId) : undefined),
+    ...agentQueries.detail(agentId || ""),
     enabled: !!agentId,
   });
 

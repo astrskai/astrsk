@@ -10,7 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
 import { OutputFormat, SchemaField } from "@/modules/agent/domain/agent";
-import { agentKeys } from "../query-factory";
+import { agentKeys } from "@/app/queries/agent/query-factory";
 import { flowKeys } from "@/app/queries/flow/query-factory";
 import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 
@@ -80,14 +80,14 @@ export const useUpdateAgentOutput = (flowId: string, agentId: string) => {
       
       // Cancel queries
       await queryClient.cancelQueries({ 
-        queryKey: [...agentKeys.all, "output", agentId]
+        queryKey: agentKeys.output(agentId)
       });
       await queryClient.cancelQueries({ 
         queryKey: flowKeys.detail(flowId)
       });
       
       const previousOutput = queryClient.getQueryData(
-        [...agentKeys.all, "output", agentId]
+        agentKeys.output(agentId)
       );
       const previousFlow = queryClient.getQueryData(
         flowKeys.detail(flowId)
@@ -95,7 +95,7 @@ export const useUpdateAgentOutput = (flowId: string, agentId: string) => {
       
       // Optimistic update
       queryClient.setQueryData(
-        [...agentKeys.all, "output", agentId],
+        agentKeys.output(agentId),
         (old: any) => {
           if (!old) return old;
           return {
@@ -128,7 +128,7 @@ export const useUpdateAgentOutput = (flowId: string, agentId: string) => {
       // Invalidate both output and agent detail queries
       Promise.all([
         queryClient.invalidateQueries({ 
-          queryKey: [...agentKeys.all, "output", agentId]
+          queryKey: agentKeys.output(agentId)
         }),
         // Invalidate the full agent detail to refresh all agent data (including preview)
         queryClient.invalidateQueries({ 
@@ -137,13 +137,13 @@ export const useUpdateAgentOutput = (flowId: string, agentId: string) => {
       ]);
     },
     
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       console.error("Failed to update agent output:", error);
       
       // Rollback on error
       if (context?.previousOutput) {
         queryClient.setQueryData(
-          [...agentKeys.all, "output", agentId],
+          agentKeys.output(agentId),
           context.previousOutput
         );
       }
@@ -212,14 +212,14 @@ export const useUpdateAgentOutputFormat = (flowId: string, agentId: string) => {
     onMutate: async ({ outputFormat, outputStreaming }) => {
       // Cancel queries
       await queryClient.cancelQueries({ 
-        queryKey: [...agentKeys.all, "output", agentId]
+        queryKey: agentKeys.output(agentId)
       });
       await queryClient.cancelQueries({ 
         queryKey: flowKeys.detail(flowId)
       });
       
       const previousOutput = queryClient.getQueryData(
-        [...agentKeys.all, "output", agentId]
+        agentKeys.output(agentId)
       );
       const previousFlow = queryClient.getQueryData(
         flowKeys.detail(flowId)
@@ -227,7 +227,7 @@ export const useUpdateAgentOutputFormat = (flowId: string, agentId: string) => {
       
       // Optimistic update
       queryClient.setQueryData(
-        [...agentKeys.all, "output", agentId],
+        agentKeys.output(agentId),
         (old: any) => {
           if (!old) return old;
           return {
@@ -256,11 +256,11 @@ export const useUpdateAgentOutputFormat = (flowId: string, agentId: string) => {
       return { previousOutput, previousFlow };
     },
     
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       // Rollback on error
       if (context?.previousOutput) {
         queryClient.setQueryData(
-          [...agentKeys.all, "output", agentId],
+          agentKeys.output(agentId),
           context.previousOutput
         );
       }
@@ -275,7 +275,7 @@ export const useUpdateAgentOutputFormat = (flowId: string, agentId: string) => {
     onSuccess: () => {
       Promise.all([
         queryClient.invalidateQueries({ 
-          queryKey: [...agentKeys.all, "output", agentId]
+          queryKey: agentKeys.output(agentId)
         }),
         // Invalidate the full agent detail to refresh all agent data (including preview)
         queryClient.invalidateQueries({ 
@@ -346,14 +346,14 @@ export const useUpdateAgentSchemaFields = (flowId: string, agentId: string) => {
       
       // Cancel queries
       await queryClient.cancelQueries({ 
-        queryKey: [...agentKeys.all, "output", agentId]
+        queryKey: agentKeys.output(agentId)
       });
       await queryClient.cancelQueries({ 
         queryKey: flowKeys.detail(flowId)
       });
       
       const previousOutput = queryClient.getQueryData(
-        [...agentKeys.all, "output", agentId]
+        agentKeys.output(agentId)
       );
       const previousFlow = queryClient.getQueryData(
         flowKeys.detail(flowId)
@@ -374,7 +374,7 @@ export const useUpdateAgentSchemaFields = (flowId: string, agentId: string) => {
       
       // Optimistic update
       queryClient.setQueryData(
-        [...agentKeys.all, "output", agentId],
+        agentKeys.output(agentId),
         (old: any) => {
           if (!old) return old;
           return {
@@ -406,14 +406,14 @@ export const useUpdateAgentSchemaFields = (flowId: string, agentId: string) => {
     onSuccess: () => {
       endEditing();
       queryClient.invalidateQueries({ 
-        queryKey: [...agentKeys.all, "output", agentId]
+        queryKey: agentKeys.output(agentId)
       });
       queryClient.invalidateQueries({ 
-        queryKey: agentKeys.detail(agentId) 
+        queryKey: agentKeys.detail(agentId)
       });
     },
     
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       console.error("Failed to update schema fields:", error);
       
       // Skip rollback if we skipped optimistic update
@@ -428,7 +428,7 @@ export const useUpdateAgentSchemaFields = (flowId: string, agentId: string) => {
       // Rollback on error
       if (context?.previousOutput) {
         queryClient.setQueryData(
-          [...agentKeys.all, "output", agentId],
+          agentKeys.output(agentId),
           context.previousOutput
         );
       }

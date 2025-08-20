@@ -19,7 +19,11 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
   
   return useMutation({
     mutationKey: [`flow-${flowId}`, 'nodes-edges'],
-    mutationFn: async ({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) => {
+    mutationFn: async ({ nodes, edges, invalidateAgents }: { 
+      nodes: Node[]; 
+      edges: Edge[]; 
+      invalidateAgents?: boolean;
+    }) => {
       
       const result = await FlowService.updateNodesAndEdges.execute({
         flowId,
@@ -43,7 +47,7 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
       return { nodes, edges };
     },
     
-    onMutate: async ({ nodes, edges }) => {
+    onMutate: async ({ nodes, edges, invalidateAgents }) => {
       
       // Cancel any in-flight queries to prevent overwriting
       await queryClient.cancelQueries({ queryKey: flowKeys.detail(flowId) });
@@ -82,7 +86,7 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
         queryClient.setQueryData(flowKeys.node(flowId, node.id), node);
       });
       
-      return { previousFlow, previousNodes, previousEdges };
+      return { previousFlow, previousNodes, previousEdges, invalidateAgents };
     },
     
     onError: (err, variables, context) => {
@@ -100,11 +104,35 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
       }
     },
     
-    onSettled: async () => {
-      
-      // Get current cached data before invalidation
-      const cachedFlowBefore = queryClient.getQueryData(flowKeys.detail(flowId));
+    onSuccess: async (data, variables, context) => {
+      // Only invalidate agents if explicitly requested via flag
+      if (data && variables && context?.invalidateAgents) {
+        const { nodes } = variables;
+        const agentNodes = nodes.filter(node => node.type === 'agent');
+        
+        if (agentNodes.length > 0) {
+          // Small delay to ensure agent persistence is complete
+          setTimeout(async () => {
+            // Invalidate agent detail queries for agent nodes
+            // This ensures the variable panel gets fresh agent data
+            const { agentKeys } = await import("@/app/queries/agent/query-factory");
+            await Promise.all(
+              agentNodes.map(async (node) => {
+                const agentId = node.id;
+                if (agentId) {
+                  await queryClient.invalidateQueries({ 
+                    queryKey: agentKeys.detail(agentId),
+                    exact: true
+                  });
+                }
+              })
+            );
+          }, 100); // 100ms delay to allow agent persistence
+        }
+      }
+    },
 
+    onSettled: async () => {
       // Invalidate affected queries to ensure consistency
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: flowKeys.detail(flowId) }), // IMPORTANT: Invalidate flow detail
@@ -112,7 +140,6 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
         queryClient.invalidateQueries({ queryKey: flowKeys.edges(flowId) }),
         queryClient.invalidateQueries({ queryKey: flowKeys.validation(flowId) })
       ]);
-      
     },
   });
 };
