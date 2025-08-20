@@ -9,6 +9,7 @@ export const TableName = {
   Flows: "flows",
   Agents: "agents",
   DataStoreNodes: "data_store_nodes",
+  IfNodes: "if_nodes",
 
   // Card
   Cards: "cards",

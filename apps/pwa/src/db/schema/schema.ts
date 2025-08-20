@@ -6,6 +6,7 @@ import { cards } from "@/db/schema/cards";
 import { characterCards } from "@/db/schema/character-cards";
 import { dataStoresNodes } from "@/db/schema/data-store-nodes";
 import { flows } from "@/db/schema/flows";
+import { ifNodes } from "@/db/schema/if-nodes";
 import { plotCards } from "@/db/schema/plot-cards";
 import { sessions } from "@/db/schema/sessions";
 import { turns } from "@/db/schema/turns";
@@ -21,6 +22,7 @@ export const Schema = {
   flows,
   agents,
   dataStoresNodes,
+  ifNodes,
 
   // Card
   cards,
