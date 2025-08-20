@@ -238,11 +238,11 @@ const MessageItemInternal = ({
                   {translation ?? content}
                 </Markdown>
                 {!streaming && isShowDataStore && (
-                  <div className="mt-[10px] p-[16px] border-[1px] border-[#1111111A] rounded-[12px]">
+                  <div className="mt-[10px] p-[16px] border-[1px] rounded-[12px] bg-background-surface-0/5 data-history">
                     <div className="mb-[16px] flex flex-row gap-[8px] items-center text-text-subtle">
                       <History size={20} />
                       <div className="font-[500] text-[14px] leading-[20px]">
-                        Data schema history
+                        Data history
                       </div>
                     </div>
                     {dataStoreFields?.map((field) => (

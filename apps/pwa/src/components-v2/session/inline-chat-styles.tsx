@@ -55,6 +55,11 @@ const renderChatStyle = (style?: ChatStyle | null) => {
     props.push(renderChatBubbleStyle(style.chatBubble));
     props.push(`}`);
   }
+  if (style?.text?.base) {
+    props.push(`.data-history {`);
+    props.push(`border-color: ${style.text.base.color}80;`);
+    props.push(`}`);
+  }
   return props.join("\n");
 };
 
