@@ -120,7 +120,7 @@ export const createNodeWithConnection = async (
         type: "dataStore",
         position: newNodePosition,
         data: {
-          label: "New Data Update",
+          name: "New Data Update",
           color: nextColor,
         },
       });
@@ -131,7 +131,7 @@ export const createNodeWithConnection = async (
         type: "if",
         position: newNodePosition,
         data: {
-          label: "New If Node",
+          name: "New If Node",
           color: nextColor,
         },
       });

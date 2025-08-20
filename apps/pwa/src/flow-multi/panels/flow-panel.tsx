@@ -586,7 +586,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       type: "dataStore",
       position: newPosition,
       data: {
-        label: "New Data Update",
+        name: "New Data Update",
         color: nextColor,
       },
     });
@@ -639,7 +639,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       type: "if",
       position: newPosition,
       data: {
-        label: "New If",
+        name: "New If",
         logicOperator: 'AND',
         conditions: [],
         color: nextColor
