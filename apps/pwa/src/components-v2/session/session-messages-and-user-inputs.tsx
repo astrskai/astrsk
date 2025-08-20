@@ -26,6 +26,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Database,
   GripVertical,
   Hash,
   History,
@@ -72,7 +73,6 @@ import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
 import { InlineChatStyles } from "@/components-v2/session/inline-chat-styles";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
-import { ButtonPill } from "@/components-v2/ui/button-pill";
 import {
   Dialog,
   DialogClose,
@@ -82,6 +82,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components-v2/ui/dialog";
+import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { toastError } from "@/components-v2/ui/toast-error";
@@ -767,7 +768,7 @@ const UserInputs = ({
       <div
         className={cn(
           "mx-auto w-full min-w-[400px] max-w-[892px] p-[24px] rounded-[40px] flex flex-col gap-[16px]",
-          "bg-[#3b3b3b]/50 backdrop-blur-xl border border-background-surface-2",
+          "bg-[#3b3b3b]/50 backdrop-blur-xl border border-text-primary/10",
           disabled && "pointer-events-none opacity-50",
         )}
       >
@@ -1818,8 +1819,8 @@ const SessionMessagesAndUserInputs = ({
     [generateCharacterMessage],
   );
 
-  // Data schema list
-  const [isOpenDataSchemaList, setIsOpenDataSchemaList] = useState(false);
+  // Session data
+  const [isOpenSessionData, setIsOpenSessionData] = useState(false);
   const { data: flow } = useQuery(flowQueries.detail(session?.flowId));
   const isDataSchemaUsed = useMemo(() => {
     if (!flow) {
@@ -1947,7 +1948,7 @@ const SessionMessagesAndUserInputs = ({
         className={cn(
           "w-full h-full overflow-auto contain-strict session-scrollbar",
           "transition-[padding-right] pr-0",
-          isDataSchemaUsed && isOpenDataSchemaList && "pr-[320px]",
+          isDataSchemaUsed && isOpenSessionData && "pr-[320px]",
         )}
       >
         <div
@@ -2150,26 +2151,28 @@ const SessionMessagesAndUserInputs = ({
           !isDataSchemaUsed && "hidden",
         )}
       >
-        <ButtonPill
-          size="default"
-          active={isOpenDataSchemaList}
+        <FloatingActionButton
+          icon={<Database size={24} />}
+          label="Session data"
+          position="top-right"
+          className="top-0 right-0"
+          openned={isOpenSessionData}
           onClick={() => {
-            setIsOpenDataSchemaList((isOpen) => !isOpen);
+            setIsOpenSessionData((isOpen) => !isOpen);
           }}
-        >
-          Data schema list
-        </ButtonPill>
+        />
         <div
           className={cn(
-            "w-[320px] border-1 border-[#F1F1F14D] rounded-[12px] bg-background-surface-3",
+            "w-[320px] mt-[48px] rounded-[12px]",
+            "bg-[#3b3b3b]/50 backdrop-blur-xl border border-text-primary/10",
             "flex flex-col overflow-hidden",
             "transition-opacity opacity-0",
-            isOpenDataSchemaList
+            isOpenSessionData
               ? "opacity-100"
               : "pointer-events-none select-none",
           )}
         >
-          <div className="shrink-0 h-[72px] p-[16px] border-b-1 border-b-[#F1F1F14D] flex flex-row items-center text-text-primary">
+          <div className="shrink-0 h-[72px] p-[16px] border-b-1 border-text-primary/10 flex flex-row items-center text-text-primary">
             {streamingMessageId ? (
               <>
                 <SvgIcon
@@ -2186,7 +2189,7 @@ const SessionMessagesAndUserInputs = ({
               </>
             ) : (
               <div className="font-[600] text-[16px] leading-[25.6px]">
-                Data schema list
+                Session data
               </div>
             )}
           </div>
