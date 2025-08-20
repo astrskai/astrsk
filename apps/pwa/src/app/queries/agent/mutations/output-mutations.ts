@@ -22,6 +22,7 @@ import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 export const useUpdateAgentOutput = (flowId: string, agentId: string) => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [hasCursor, setHasCursor] = useState(false);
   const editTimeoutRef = useRef<NodeJS.Timeout>();
   
   const startEditing = useCallback(() => {
@@ -38,6 +39,10 @@ export const useUpdateAgentOutput = (flowId: string, agentId: string) => {
     editTimeoutRef.current = setTimeout(() => {
       setIsEditing(false);
     }, 500);
+  }, []);
+  
+  const setCursorActive = useCallback((active: boolean) => {
+    setHasCursor(active);
   }, []);
   
   const mutation = useMutation({
@@ -162,7 +167,9 @@ export const useUpdateAgentOutput = (flowId: string, agentId: string) => {
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error,
-    isEditing
+    isEditing,
+    hasCursor,
+    setCursorActive
   };
 };
 
@@ -287,6 +294,7 @@ export const useUpdateAgentOutputFormat = (flowId: string, agentId: string) => {
 export const useUpdateAgentSchemaFields = (flowId: string, agentId: string) => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [hasCursor, setHasCursor] = useState(false);
   const editTimeoutRef = useRef<NodeJS.Timeout>();
   
   const startEditing = useCallback(() => {
@@ -303,6 +311,10 @@ export const useUpdateAgentSchemaFields = (flowId: string, agentId: string) => {
     editTimeoutRef.current = setTimeout(() => {
       setIsEditing(false);
     }, 500);
+  }, []);
+  
+  const setCursorActive = useCallback((active: boolean) => {
+    setHasCursor(active);
   }, []);
   
   const mutation = useMutation({
@@ -440,6 +452,8 @@ export const useUpdateAgentSchemaFields = (flowId: string, agentId: string) => {
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error,
-    isEditing
+    isEditing,
+    hasCursor,
+    setCursorActive
   };
 };
