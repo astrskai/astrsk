@@ -192,10 +192,11 @@ const SessionItem = ({
       <div
         className={cn(
           "pl-8 pr-4 py-2 group/item h-12 border-b-1 border-b-[#313131]",
-          "bg-[#272727] hover:bg-[#313131]",
+          "bg-[#272727] hover:bg-[#313131] pointer-coarse:focus-within:bg-[#313131]",
           "flex flex-row gap-1 items-center",
           selected && "bg-background-surface-4 rounded-[8px]",
         )}
+        tabIndex={0}
         onClick={handleSelect}
       >
         {/* Session Info */}
@@ -207,12 +208,12 @@ const SessionItem = ({
         <div className="grow line-clamp-1 break-all font-[500] text-[12px] leading-[15px] text-[#F1F1F1]">
           {session?.title}
         </div>
-        <div className="group-hover/item:hidden shrink-0 font-[500] text-[10px] leading-[16px] text-[#9D9D9D]">
+        <div className="group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden shrink-0 font-[500] text-[10px] leading-[16px] text-[#9D9D9D]">
           {session?.turnIds.length} Messages
         </div>
 
         {/* Actions */}
-        <div className="group-hover/item:flex hidden shrink-0 text-[#9D9D9D] flex-row gap-2">
+        <div className="hidden group-hover/item:flex pointer-coarse:group-focus-within/item:flex shrink-0 text-[#9D9D9D] flex-row gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
               <button

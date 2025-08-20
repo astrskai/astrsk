@@ -37,6 +37,9 @@ export interface SessionProps {
 
   autoReply: AutoReply;
 
+  // Data Schema
+  dataSchemaOrder?: string[];
+
   // Set by system
   createdAt: Date;
   updatedAt: Date;
@@ -115,6 +118,10 @@ export class Session extends AggregateRoot<SessionProps> {
     return this.props.autoReply;
   }
 
+  get dataSchemaOrder(): string[] {
+    return this.props.dataSchemaOrder || [];
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
@@ -142,6 +149,7 @@ export class Session extends AggregateRoot<SessionProps> {
       chatStyles: props.chatStyles,
       flowId: props.flowId!,
       autoReply: props.autoReply ?? AutoReply.Off,
+      dataSchemaOrder: props.dataSchemaOrder || [],
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date(),
     };
@@ -232,5 +240,9 @@ export class Session extends AggregateRoot<SessionProps> {
 
   public setTranslation(translation: TranslationConfig): void {
     this.props.translation = translation;
+  }
+
+  public setDataSchemaOrder(order: string[]): void {
+    this.props.dataSchemaOrder = order;
   }
 }

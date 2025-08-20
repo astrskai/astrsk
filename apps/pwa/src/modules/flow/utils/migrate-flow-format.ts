@@ -35,6 +35,12 @@ interface FlowData {
   panelStructure?: any;
   createdAt?: string;
   updatedAt?: string;
+  // Enhanced format fields
+  dataStoreNodes?: Record<string, any>;
+  ifNodes?: Record<string, any>;
+  exportedAt?: string;
+  exportedBy?: string;
+  metadata?: any;
 }
 
 /**
@@ -134,6 +140,27 @@ export function migrateFlowToNewFormat(oldFlowData: FlowData): Result<FlowData> 
     
     if (oldFlowData.updatedAt) {
       migratedFlow.updatedAt = oldFlowData.updatedAt;
+    }
+
+    // Preserve enhanced format fields if they exist
+    if (oldFlowData.dataStoreNodes) {
+      migratedFlow.dataStoreNodes = oldFlowData.dataStoreNodes;
+    }
+    
+    if (oldFlowData.ifNodes) {
+      migratedFlow.ifNodes = oldFlowData.ifNodes;
+    }
+    
+    if (oldFlowData.exportedAt) {
+      migratedFlow.exportedAt = oldFlowData.exportedAt;
+    }
+    
+    if (oldFlowData.exportedBy) {
+      migratedFlow.exportedBy = oldFlowData.exportedBy;
+    }
+    
+    if (oldFlowData.metadata) {
+      migratedFlow.metadata = oldFlowData.metadata;
     }
     
     return Result.ok(migratedFlow);

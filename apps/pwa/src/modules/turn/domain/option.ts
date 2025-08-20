@@ -2,11 +2,21 @@ import { Guard } from "@/shared/core/guard";
 import { Result } from "@/shared/core/result";
 import { ValueObject } from "@/shared/domain";
 
+export interface DataStoreSavedField {
+  id: string; // DataStoreSchemaField.id
+  name: string; // DataStoreSchemaField.name
+  type: string; // DataStoreSchemaField.type
+  value: string;
+}
+
 export interface OptionProps {
   // Content
   content: string;
   tokenSize: number;
   variables?: object;
+
+  // Data Store
+  dataStore: DataStoreSavedField[];
 
   // Translation
   translations: Map<string, string>;
@@ -16,6 +26,7 @@ export interface OptionJSON {
   content: string;
   tokenSize: number;
   variables?: object;
+  dataStore?: DataStoreSavedField[];
   translations: Record<string, string>;
 }
 
@@ -36,6 +47,10 @@ export class Option extends ValueObject<OptionProps> {
     return this.props.translations;
   }
 
+  get dataStore(): DataStoreSavedField[] {
+    return this.props.dataStore;
+  }
+
   public static create(props: Partial<OptionProps>): Result<Option> {
     const guardResult = Guard.againstNullOrUndefinedBulk([
       { argument: props.content, argumentName: "content" },
@@ -50,6 +65,7 @@ export class Option extends ValueObject<OptionProps> {
       tokenSize: props.tokenSize ?? 0,
       translations: props.translations ?? new Map<string, string>(),
       variables: props.variables ?? {},
+      dataStore: props.dataStore ?? [],
     };
     const option = new Option(propsWithDefaults);
     return Result.ok(option);
@@ -67,6 +83,10 @@ export class Option extends ValueObject<OptionProps> {
     return Option.create({ ...this.props, variables });
   }
 
+  public withDataStore(dataStore: DataStoreSavedField[]): Result<Option> {
+    return Option.create({ ...this.props, dataStore });
+  }
+
   public withTranslation(
     language: string,
     translation: string,
@@ -81,6 +101,7 @@ export class Option extends ValueObject<OptionProps> {
       content: this.props.content,
       tokenSize: this.props.tokenSize,
       variables: this.props.variables,
+      dataStore: this.props.dataStore,
       translations: Object.fromEntries(
         this.props.translations?.entries() ?? [],
       ),
@@ -92,6 +113,7 @@ export class Option extends ValueObject<OptionProps> {
       content: json.content,
       tokenSize: json.tokenSize,
       variables: json.variables,
+      dataStore: json.dataStore ?? [],
       translations: new Map(Object.entries(json.translations)),
     });
   }

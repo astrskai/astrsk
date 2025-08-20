@@ -57,6 +57,27 @@
       "when": 1754962374495,
       "tag": "20250812013254_data_store",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1755498908780,
+      "tag": "20250818063508_remove_data_store",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1755603532043,
+      "tag": "20250819113852_sessions_data_schema_order",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1755658008260,
+      "tag": "20250820024648_nodes",
+      "breakpoints": true
     }
   ]
 }

@@ -9,7 +9,7 @@ import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
 import { Agent } from "@/modules/agent/domain";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
 import { AgentListItemMobile } from "../components/agent-list-item-mobile";
 import { TypoXLarge } from "@/components-v2/typo";
 

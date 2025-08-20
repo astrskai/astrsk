@@ -8,15 +8,16 @@ import {
   FlowPanelLoading, 
   FlowPanelError 
 } from "@/flow-multi/hooks/use-flow-panel";
+import { useUpdateFlowValidation } from "@/app/queries/flow/mutations/validation-mutations";
 import { ValidationPanelProps } from "./validation-panel-types";
 import { useQueries } from "@tanstack/react-query";
 import { IssueItem } from "./issue-item";
 import { Agent } from "@/modules/agent/domain";
 import { ReadyState } from "@/modules/flow/domain";
 import { ValidationIssue, ValidationContext } from "@/flow-multi/validation/types/validation-types";
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
 import { useApiConnectionsWithModels } from "@/app/hooks/use-api-connections-with-models";
-import { traverseFlow } from "@/flow-multi/utils/flow-traversal";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
 import {
@@ -30,9 +31,11 @@ import {
   validateHistoryMessage,
   validateUndefinedOutputVariables,
   validateUnusedOutputVariables,
+  validateUnusedDataStoreFields,
   validateTemplateSyntax,
   validateStructuredOutputSupport,
   validateProviderParameters,
+  validateDataStoreSchemaInitialValues,
 } from "@/flow-multi/validation/validators";
 
 export function ValidationPanel({ flowId }: ValidationPanelProps) {
@@ -44,9 +47,11 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
   // Use the flow panel hook
   const { 
     flow,
-    isLoading,
-    saveFlow
+    isLoading
   } = useFlowPanel({ flowId });
+  
+  // Get validation mutation
+  const updateFlowValidation = useUpdateFlowValidation(flowId);
   
   // Query all agents using the same pattern as preview panel
   const agentIds = flow?.agentIds || [];
@@ -57,20 +62,31 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     })),
   });
   
-  // Get connected agents
-  const connectedAgents = useMemo(() => {
-    if (!flow) return new Set<string>();
+  // Get connected agents, nodes and agent positions from flow traversal
+  const { connectedAgents, connectedNodes, agentPositions } = useMemo(() => {
+    if (!flow) return { 
+      connectedAgents: new Set<string>(), 
+      connectedNodes: new Set<string>(),
+      agentPositions: new Map()
+    };
     
-    const traversalResult = traverseFlow(flow);
-    const connected = new Set<string>();
+    const traversalResult = traverseFlowCached(flow);
+    const agents = new Set<string>();
     
     for (const [agentId, position] of traversalResult.agentPositions) {
       if (position.isConnectedToStart && position.isConnectedToEnd) {
-        connected.add(agentId);
+        agents.add(agentId);
       }
     }
     
-    return connected;
+    // Build connected nodes set (includes all process nodes: agents, if, dataStore)
+    const nodes = new Set<string>(traversalResult.connectedSequence);
+    
+    return {
+      connectedAgents: agents,
+      connectedNodes: nodes,
+      agentPositions: traversalResult.agentPositions
+    };
   }, [flow]);
   
   // Convert agents to Map for validation context
@@ -104,12 +120,12 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     }
     
     // Create validation context
-    const traversalResult = traverseFlow(flow);
     const context: ValidationContext = {
       flow,
       agents: agentsMap,
       connectedAgents,
-      agentPositions: traversalResult.agentPositions,
+      connectedNodes,
+      agentPositions,
       apiConnectionsWithModels,
     };
     
@@ -148,7 +164,11 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     // Variable validators
     allIssues.push(...validateUndefinedOutputVariables(context));
     allIssues.push(...validateUnusedOutputVariables(context));
+    allIssues.push(...validateUnusedDataStoreFields(context));
     allIssues.push(...validateTemplateSyntax(context));
+    
+    // Data store validators
+    allIssues.push(...validateDataStoreSchemaInitialValues(context));
     
     // Provider compatibility validators
     allIssues.push(...validateStructuredOutputSupport(context));
@@ -166,38 +186,19 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     // Update flow state and validation issues based on validation results
     const hasErrors = allIssues.some(issue => issue.severity === 'error');
     if (flow) {
-      let needsSave = false;
-      let updatedFlow = flow;
+      // Determine the new ready state
+      const newReadyState = hasErrors ? ReadyState.Error : ReadyState.Ready;
       
-      // Update validation issues
-      const updateIssuesResult = updatedFlow.update({ validationIssues: allIssues });
-      if (updateIssuesResult.isSuccess) {
-        needsSave = true;
-      }
-      
-      // Update ready state
-      if (hasErrors && flow.props.readyState !== ReadyState.Error) {
-        // Set to Error state if there are errors
-        const updateFlowResult = updatedFlow.setReadyState(ReadyState.Error);
-        if (updateFlowResult.isSuccess) {
-          needsSave = true;
-        }
-      } else if (!hasErrors && flow.props.readyState !== ReadyState.Ready) {
-        // Set to Ready state if there are no errors
-        const updateFlowResult = updatedFlow.setReadyState(ReadyState.Ready);
-        if (updateFlowResult.isSuccess) {
-          needsSave = true;
-        }
-      }
-      
-      // Save flow if any changes were made
-      if (needsSave) {
-        saveFlow(updatedFlow).catch(error => {
-          console.error('Failed to save flow with validation results:', error);
+      // Only update if there's a change
+      if (flow.props.readyState !== newReadyState || 
+          JSON.stringify(flow.props.validationIssues) !== JSON.stringify(allIssues)) {
+        updateFlowValidation.mutate({
+          readyState: newReadyState,
+          validationIssues: allIssues
         });
       }
     }
-  }, [flow, agentsMap, connectedAgents, apiConnectionsWithModels, saveFlow]);
+  }, [flow, agentsMap, connectedAgents, apiConnectionsWithModels, updateFlowValidation]);
   
   // Track if we had a successful validation (no errors) before
   const [hadSuccessfulValidation, setHadSuccessfulValidation] = useState(false);

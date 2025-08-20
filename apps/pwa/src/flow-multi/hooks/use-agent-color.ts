@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
 import { Agent } from '@/modules/agent/domain';
 import { Flow } from '@/modules/flow/domain';
-import { getAgentHexColor, getAgentOpacity } from '../utils/agent-color-assignment';
-import { DEFAULT_AGENT_COLOR, DEFAULT_AGENT_OPACITY } from '../constants/colors';
+import { getAgentHexColor, getAgentOpacity, DEFAULT_AGENT_COLOR, DEFAULT_NODE_OPACITY, hexToRgba } from '../utils/node-color-assignment';
 
 interface UseAgentColorProps {
   agent: Agent | null;
@@ -41,8 +40,8 @@ export function useAgentColor({
     if (!agent) {
       return {
         hexColor: DEFAULT_AGENT_COLOR,
-        rgbaColor: hexToRgba(DEFAULT_AGENT_COLOR, DEFAULT_AGENT_OPACITY),
-        opacity: DEFAULT_AGENT_OPACITY,
+        rgbaColor: hexToRgba(DEFAULT_AGENT_COLOR, DEFAULT_NODE_OPACITY),
+        opacity: DEFAULT_NODE_OPACITY,
         isDisconnected: true,
       };
     }
@@ -50,10 +49,12 @@ export function useAgentColor({
     // Get the agent's hex color
     const hexColor = getAgentHexColor(agent);
     
-    // Get opacity based on connection state and flow validity (unless overridden)
+    // Get opacity based on connection state (unless overridden)
     // If flow is not provided, use default opacity
-    const opacity = overrideOpacity ?? (flow ? getAgentOpacity(agent, flow, isFlowValid) : DEFAULT_AGENT_OPACITY);
+    const calculatedOpacity = flow ? getAgentOpacity(agent, flow) : DEFAULT_NODE_OPACITY;
+    const opacity = overrideOpacity ?? calculatedOpacity;
     const isDisconnected = opacity < 1;
+    
 
     // Convert hex to rgba if needed
     let rgbaColor = hexColor;
@@ -74,16 +75,7 @@ export function useAgentColor({
   }, [agent, flow, overrideOpacity, withAlpha, isFlowValid]);
 }
 
-/**
- * Utility function to convert hex color to rgba
- * Exported for cases where the hook can't be used
- */
-export function hexToRgba(hex: string, alpha: number = 1): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+// hexToRgba function moved to node-color-assignment.ts for unified usage
 
 /**
  * Get CSS variables for an agent color
@@ -98,12 +90,12 @@ export function getAgentColorCssVars(agent: Agent | null, flow?: Flow | null): R
     return {
       '--agent-color': DEFAULT_AGENT_COLOR,
       '--agent-color-rgb': `${r}, ${g}, ${b}`,
-      '--agent-color-opacity': DEFAULT_AGENT_OPACITY.toString(),
+      '--agent-color-opacity': DEFAULT_NODE_OPACITY.toString(),
     };
   }
 
   const hexColor = getAgentHexColor(agent);
-  const opacity = flow ? getAgentOpacity(agent, flow) : DEFAULT_AGENT_OPACITY;
+  const opacity = flow ? getAgentOpacity(agent, flow) : DEFAULT_NODE_OPACITY;
   
   // Extract RGB values
   const r = parseInt(hexColor.slice(1, 3), 16);

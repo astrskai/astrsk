@@ -18,7 +18,7 @@ export const sessions = pgTable(TableName.Sessions, {
   chat_styles: jsonb().$type<ChatStyles>(),
   flow_id: uuid().notNull(),
   auto_reply: varchar().$type<AutoReply>().notNull().default(AutoReply.Off),
-  data_store: jsonb().$type<object>().default({}),
+  data_schema_order: jsonb().$type<string[]>().notNull().default([]),
   ...timestamps,
 });
 

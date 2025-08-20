@@ -23,7 +23,7 @@ const renderTextStyle = (style: TextStyle) => {
     props.push(renderFontStyle(style.base));
   }
   if (style.italic) {
-    props.push(`em, i {`);
+    props.push(`em, i, .chat-style-text-italic {`);
     props.push(renderFontStyle(style.italic));
     props.push(`}`);
   }
@@ -53,6 +53,11 @@ const renderChatStyle = (style?: ChatStyle | null) => {
   if (style?.chatBubble) {
     props.push(`.chat-style-chat-bubble {`);
     props.push(renderChatBubbleStyle(style.chatBubble));
+    props.push(`}`);
+  }
+  if (style?.text?.base) {
+    props.push(`.data-history {`);
+    props.push(`border-color: ${style.text.base.color}80;`);
     props.push(`}`);
   }
   return props.join("\n");

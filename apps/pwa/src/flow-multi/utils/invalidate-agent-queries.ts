@@ -1,5 +1,5 @@
 import { UniqueEntityID } from "@/shared/domain";
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentKeys } from "@/app/queries/agent/query-factory";
 import { queryClient } from "@/app/queries/query-client";
 
 /**
@@ -15,12 +15,12 @@ export async function invalidateSingleAgentQueries(
   const invalidations = [
     // Invalidate specific agent detail
     queryClient.invalidateQueries({
-      queryKey: agentQueries.detail(new UniqueEntityID(agentIdString)).queryKey
+      queryKey: agentKeys.detail(agentIdString)
     }),
     
     // Invalidate all agent lists regardless of params
     queryClient.invalidateQueries({
-      queryKey: agentQueries.lists(),
+      queryKey: agentKeys.lists(),
       exact: false // Match all queries that start with ["agents", "list"]
     })
   ];
@@ -36,7 +36,7 @@ export async function invalidateSingleAgentQueries(
  */
 export async function invalidateAllAgentQueries() {
   await queryClient.invalidateQueries({
-    queryKey: agentQueries.all(),
+    queryKey: agentKeys.all,
     exact: false // Match all queries that start with ["agents"]
   });
 }

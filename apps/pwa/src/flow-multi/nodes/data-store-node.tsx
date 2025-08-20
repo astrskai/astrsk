@@ -1,0 +1,383 @@
+// Data Store node component for flow-multi system
+// Manages data storage and variables within the flow
+import { type Node, type NodeProps } from "@xyflow/react";
+import { useState, useCallback, useMemo } from "react";
+import { Copy, Trash2, Pencil } from "lucide-react";
+import { CustomHandle } from "@/flow-multi/components/custom-handle";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components-v2/ui/tooltip";
+import { Input } from "@/components-v2/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components-v2/ui/dialog";
+import { Button } from "@/components-v2/ui/button";
+import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
+import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";
+import { useAgentStore } from "@/app/stores/agent-store";
+import { useQuery } from "@tanstack/react-query";
+import { flowQueries } from "@/app/queries/flow/query-factory";
+import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
+import { useUpdateDataStoreNodeName } from "@/app/queries/data-store-node/mutations";
+// Removed flow validation imports as validation is disabled
+import { getDataStoreNodeHexColor, getDataStoreNodeOpacity, applyOpacityToHexColor } from "@/flow-multi/utils/node-color-assignment";
+import { SimpleFieldBadges } from "@/components-v2/ui/field-badges";
+import { toast } from "sonner";
+import type { DataStoreSchemaField, DataStoreField } from "@/modules/flow/domain/flow";
+
+/**
+ * Data Store node data type definition
+ */
+export type DataStoreNodeData = {
+  name?: string;
+  color?: string; // Hex color for the node
+  dataStoreFields?: DataStoreField[]; // Runtime field values with logic
+  flowId?: string; // Used in new data structure for query key
+};
+
+// Re-export types from flow domain
+export type { DataStoreField, DataStoreSchemaField } from "@/modules/flow/domain/flow";
+
+/**
+ * Data Store node type
+ */
+export type DataStoreNode = Node<DataStoreNodeData, "dataStore">;
+
+/**
+ * Props for the DataStoreNodeComponent
+ */
+interface DataStoreNodeComponentProps {
+  data: DataStoreNodeData;
+  id: string;
+  selected?: boolean;
+}
+
+/**
+ * Inner Data Store node component that gets flow from data.flowId
+ */
+function DataStoreNodeComponent({ 
+  data, 
+  id,
+  selected
+}: DataStoreNodeComponentProps) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
+  
+  // Get flow ID from data (new structure) or fall back to agent store (old structure)
+  const flowIdFromData = data.flowId;
+  const selectedFlowIdFromStore = useAgentStore.use.selectedFlowId();
+  const selectedFlowId = flowIdFromData || selectedFlowIdFromStore;
+  
+  // Get flow data when needed (for schema access, validation, etc.)
+  const { data: flow } = useQuery({
+    ...flowQueries.detail(selectedFlowId!),
+    enabled: !!selectedFlowId
+  });
+  
+  // Get node data directly from query to ensure fresh data (fallback for old structure)
+  const { data: nodeData } = useQuery({
+    ...flowQueries.node(selectedFlowId!, id),
+    enabled: !!selectedFlowId && !!id && !flowIdFromData // Only query if old structure
+  });
+
+  // Try to get separate data store node data with fallback
+  const { data: dataStoreNodeData } = useQuery({
+    ...dataStoreNodeQueries.detail(selectedFlowId!, id),
+    enabled: !!selectedFlowId && !!id && !!flowIdFromData, // Only query if new data structure
+  });
+
+  // Use separate data if available, fallback to embedded data
+  const displayName = dataStoreNodeData?.name || data.name || "Data Update";
+  const displayColor = dataStoreNodeData?.color || data.color;
+  const displayFields = dataStoreNodeData?.dataStoreFields || data.dataStoreFields || [];
+  
+  const [title, setTitle] = useState(displayName);
+  const [editingTitle, setEditingTitle] = useState(displayName);
+  
+  // Get node title mutation - use new mutation if separate data exists, otherwise fall back to old
+  const updateNodeTitle = useUpdateNodeTitle(selectedFlowId!, id);
+  const updateDataStoreNodeName = useUpdateDataStoreNodeName(selectedFlowId!, id);
+  
+  // Check if the data-store panel is open
+  const isPanelActive = isPanelOpen('dataStore', id);
+  
+  // Get node color using unified color assignment
+  const nodeColor = useMemo(() => {
+    return getDataStoreNodeHexColor(displayColor);
+  }, [displayColor]);
+  
+  // Calculate color with opacity using unified node color assignment
+  const colorWithOpacity = useMemo(() => {
+    if (!flow) return nodeColor;
+    
+    const opacity = getDataStoreNodeOpacity(id, flow);
+    return applyOpacityToHexColor(nodeColor, opacity);
+  }, [nodeColor, flow, id]);
+
+  // Save node name - use new mutation if separate data exists, otherwise fall back to old
+  const saveNodeName = useCallback(async (newName: string) => {
+    // Determine which mutation to use based on data structure
+    const useNewMutation = !!dataStoreNodeData || !!data.flowId;
+    const mutation = useNewMutation ? updateDataStoreNodeName : updateNodeTitle;
+    
+    if (mutation.isPending) return;
+    
+    try {
+      await mutation.mutateAsync(newName);
+      setTitle(newName);
+      
+      // Update panel states to reflect the new name
+      updateNodePanelStates(id, newName);
+      
+      // Show success toast
+      toast.success("Node name updated");
+    } catch (error) {
+      // Reset to original title on error
+      setEditingTitle(title);
+      toast.error("Failed to update node name");
+    }
+  }, [id, title, updateNodeTitle, updateDataStoreNodeName, updateNodePanelStates, dataStoreNodeData, data.flowId]);
+
+  // Handle title changes
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditingTitle(e.target.value);
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (editingTitle.trim()) {
+        saveNodeName(editingTitle.trim());
+      }
+    } else if (e.key === 'Escape') {
+      setEditingTitle(title);
+    }
+  }, [editingTitle, title, saveNodeName]);
+
+  // Handle edit button click
+  const handleEditClick = useCallback(() => {
+    // Open Data Store Panel with nodeId
+    openPanel('dataStore', id);
+  }, [id, openPanel]);
+
+  // Handle copy action
+  const handleCopyClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Use flow panel's copy method if available
+    if ((window as any).flowPanelCopyNode) {
+      (window as any).flowPanelCopyNode(id);
+    } else {
+      console.error("Copy function not available");
+    }
+  }, [id]);
+
+  // Handle delete action
+  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleteDialogOpen(true);
+  }, []);
+  
+  // Confirm delete action
+  const handleConfirmDelete = useCallback(() => {
+    // Use flow panel's delete method if available
+    if ((window as any).flowPanelDeleteNode) {
+      (window as any).flowPanelDeleteNode(id);
+    } else {
+      console.error("Delete function not available");
+    }
+    setIsDeleteDialogOpen(false);
+  }, [id]);
+
+  // Note: Schema is stored in flow.dataStoreSchema
+  // Get fields for display - use the displayFields from new data or fallback
+  const fieldsForDisplay = useMemo(() => {
+    const fields: Array<{ id: string; name: string }> = [];
+    
+    // Get the node's configured fields from new or old data structure
+    const nodeFields = displayFields;
+    if (nodeFields && nodeFields.length > 0) {
+      // We need to get the field names from the schema using the schemaFieldId
+      nodeFields.forEach((field: any) => {
+        // Find the corresponding schema field to get the name
+        // Get the schema from flow props
+        const schema = flow?.props?.dataStoreSchema;
+        const schemaField = schema?.fields?.find(
+          (sf: any) => sf.id === field.schemaFieldId
+        );
+        if (schemaField) {
+          fields.push({ id: field.schemaFieldId, name: schemaField.name });
+        }
+      });
+    }
+    
+    return fields;
+  }, [displayFields, flow?.props?.dataStoreSchema]);
+  
+  // TEMPORARILY DISABLED: Data store node field validation
+  // Check if node has configured fields (not schema fields)
+  // const hasNoFields = !data.dataStoreFields || data.dataStoreFields.length === 0;
+  const hasNoFields = false; // Always show as having fields
+  
+  return (
+    <div 
+      className={`group/node relative w-80 rounded-lg inline-flex justify-between items-center ${
+        // "bg-background-surface-3 outline-2 outline-status-destructive-light"
+        // isNodeInvalid
+        // ? "bg-background-surface-3 outline-2 outline-status-destructive-light"
+        selected 
+          ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
+          : "bg-background-surface-3 outline-1 outline-border-light"
+      }`}
+    >
+      <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-4">
+        {/* Node Name Section */}
+        <div className="self-stretch flex flex-col justify-start items-start gap-2">
+          <div className="self-stretch inline-flex justify-start items-center gap-2">
+            <div className="justify-start">
+              <span className="text-text-body text-[10px] font-medium">Data update node name</span>
+              <span className="text-secondary-normal text-[10px] font-medium">*</span>
+            </div>
+          </div>
+          <Input
+            value={editingTitle}
+            onChange={handleTitleChange}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+              if (editingTitle.trim() && editingTitle.trim() !== title) {
+                saveNodeName(editingTitle.trim());
+              } else if (!editingTitle.trim()) {
+                setEditingTitle(title);
+              }
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            placeholder="Enter data update name"
+            disabled={updateNodeTitle.isPending || updateDataStoreNodeName.isPending}
+            className="nodrag"
+          />
+        </div>
+
+        {/* Edit Fields Button */}
+        <button 
+          onClick={handleEditClick}
+          className={`self-stretch h-20 px-2 rounded-lg outline outline-offset-[-1px] flex flex-col justify-center items-center gap-2 transition-all ${
+            hasNoFields
+              ? isPanelActive
+                ? 'bg-background-surface-light outline-status-destructive-light hover:opacity-70'
+                : 'bg-background-surface-4 outline-status-destructive-light hover:bg-background-surface-5'
+              : isPanelActive
+                ? 'bg-background-surface-light outline-border-light hover:opacity-70'
+                : 'bg-background-surface-4 outline-border-light hover:bg-background-surface-5'
+          }`}
+        >
+          <Pencil className={`w-5 h-5 ${isPanelActive ? 'text-text-contrast-text' : 'text-text-primary'}`} />
+          <div className={`self-stretch text-center justify-start text-xs font-medium ${
+            isPanelActive ? 'text-text-info' : 'text-text-secondary'
+          }`}>
+            Edit data fields
+          </div>
+        </button>
+        
+        {/* Fields Badges Section - only show if there are fields */}
+        {fieldsForDisplay.length > 0 && (
+          <SimpleFieldBadges 
+            fields={fieldsForDisplay}
+            maxVisible={8}
+            className="self-stretch"
+          />
+        )}
+      </div>
+
+      {/* Side Actions - matching agent node style */}
+      <div 
+        className="self-stretch px-2 py-4 rounded-tr-lg rounded-br-lg inline-flex flex-col justify-start items-start gap-3"
+        style={{ backgroundColor: colorWithOpacity }}
+      >
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleCopyClick}
+                className="w-6 h-6 relative overflow-hidden hover:opacity-80 transition-opacity group/copy"
+              >
+                <Copy className="min-w-4 min-h-5 text-text-contrast-text" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" variant="button">
+              <p>Copy</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleDeleteClick}
+                className="w-6 h-6 relative overflow-hidden hover:opacity-80 transition-opacity group/delete"
+              >
+                <Trash2 className="min-w-4 min-h-5 text-text-contrast-text" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" variant="button">
+              <p>Delete</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      {/* React Flow Handles */}
+      <CustomHandle variant="output" nodeId={id} />
+      <CustomHandle variant="input" nodeId={id} />
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent hideClose>
+          <DialogHeader>
+            <DialogTitle>Delete data update</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{title}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="lg"
+              onClick={handleConfirmDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/**
+ * Data Store node component that handles both old and new data structures
+ */
+export default function DataStoreNode({
+  id,
+  data,
+  selected,
+}: NodeProps<DataStoreNode>) {
+  return <DataStoreNodeComponent data={data} id={id} selected={selected} />;
+}

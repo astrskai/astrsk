@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" ADD COLUMN "data_schema_order" jsonb DEFAULT '[]'::jsonb NOT NULL;

@@ -177,13 +177,22 @@ const CardItem = ({
         queryKey: cardQueries.lists(),
       });
 
-      // Invalidate used sessions validation
+      // Invalidate used sessions validation and detail queries
       for (const usedSession of usedSessions) {
+        // Invalidate validation queries
         queryClient.invalidateQueries({
           queryKey: [
             TableName.Sessions,
             usedSession.id.toString(),
             "validation",
+          ],
+        });
+        // Also invalidate the session detail query so it reloads and detects missing card
+        queryClient.invalidateQueries({
+          queryKey: [
+            TableName.Sessions,
+            "detail",
+            usedSession.id.toString(),
           ],
         });
       }
@@ -213,17 +222,18 @@ const CardItem = ({
         className={cn(
           "pl-8 pr-4 py-2 group/item h-12 border-b-1 border-b-[#313131]",
           "bg-[#272727]",
-          !disableHover && "hover:bg-[#313131]",
+          !disableHover && "hover:bg-[#313131] pointer-coarse:focus-within:bg-[#313131]",
           "flex flex-row gap-1 items-center relative",
           selected && "bg-background-surface-4 rounded-[8px]",
         )}
+        tabIndex={!disableHover ? 0 : undefined}
         onClick={!disableHover ? handleSelect : undefined}
       >
         {/* Card Info */}
         <div
           className={cn(
             "absolute inset-0 overflow-hidden pointer-events-none",
-            !disableHover && "group-hover/item:hidden",
+            !disableHover && "group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden",
           )}
         >
           <img
@@ -272,7 +282,7 @@ const CardItem = ({
         {/* Actions */}
         {!disableHover && (
           <TooltipProvider>
-            <div className="z-0 group-hover/item:flex hidden shrink-0 text-[#9D9D9D] flex-row gap-2">
+            <div className="z-0 hidden group-hover/item:flex pointer-coarse:group-focus-within/item:flex shrink-0 text-[#9D9D9D] flex-row gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button

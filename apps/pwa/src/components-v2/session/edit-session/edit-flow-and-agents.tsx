@@ -18,7 +18,7 @@ import { Button } from "@/components-v2/ui/button";
 import { CarouselItem } from "@/components-v2/ui/carousel";
 import { SessionProps } from "@/modules/session/domain";
 import { useQuery } from "@tanstack/react-query";
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain/api-connection";
 
 const AgentListItem = ({

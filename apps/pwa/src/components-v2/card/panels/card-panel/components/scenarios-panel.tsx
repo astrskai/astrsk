@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   DndContext,
   closestCenter,
@@ -34,12 +35,17 @@ import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 
+// Import queries and mutations
+import { 
+  cardQueries, 
+  useUpdateCardScenarios 
+} from "@/app/queries/card";
+
 // Import the sortable component
 import { SortableItem } from "@/components-v2/card/panels/card-panel/components/sortable-item";
 
 // Import our abstraction
 import { 
-  useCardPanel, 
   CardPanelProps, 
   CardPanelLoading, 
   CardPanelError, 
@@ -55,21 +61,26 @@ interface Scenario {
 }
 
 export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
-  // 1. Use our custom hook for card panel functionality
-  const { card, isLoading, lastInitializedCardId, saveCard } = useCardPanel<PlotCard>({
-    cardId,
+  // 1. Mutation for updating scenarios
+  const updateScenarios = useUpdateCardScenarios(cardId);
+
+  // 2. Query for card data - disable refetching while mutation is pending
+  const { data: card, isLoading } = useQuery({
+    ...cardQueries.detail(cardId),
+    enabled: !!cardId && !updateScenarios.isPending,
   });
   
-  // 2. UI state (expansion, errors, etc.)
+  // 3. UI state (expansion, errors, etc.)
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   
-  // 3. Local form state (for immediate UI feedback)
+  // 4. Local form state (for immediate UI feedback)
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   
-  // 4. Refs
+  // 5. Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const lastInitializedCardId = useRef<string | null>(null);
   
   // DnD sensors
   const sensors = useSensors(
@@ -79,9 +90,10 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
     }),
   );
 
-  // 5. SINGLE initialization useEffect (right after state)
+  // 5. Initialize and sync data (cross-tab synchronization)
   useEffect(() => {
-    if (cardId !== lastInitializedCardId.current && card && card instanceof PlotCard) {
+    // Initialize when card changes
+    if (cardId && cardId !== lastInitializedCardId.current && card && card instanceof PlotCard) {
       const scenarioList = card.props.scenarios?.map((scenario, index) => ({
         id: `scenario-${index}`,
         name: scenario.name || "",
@@ -93,7 +105,24 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
       }
       lastInitializedCardId.current = cardId;
     }
-  }, [cardId, card]); // Only depend on cardId and card, not selectedScenarioId
+    // Sync when card changes externally (cross-tab sync) - but not during mutation
+    else if (card && card instanceof PlotCard && !updateScenarios.isPending && !updateScenarios.hasCursor) {
+      const newScenarios = card.props.scenarios?.map((scenario, index) => ({
+        id: `scenario-${index}`,
+        name: scenario.name || "",
+        description: scenario.description || "",
+      })) || [];
+      
+      // Only update if scenarios actually changed (deep comparison)
+      if (JSON.stringify(scenarios) !== JSON.stringify(newScenarios)) {
+        setScenarios(newScenarios);
+        // Keep selected scenario if it still exists
+        if (selectedScenarioId && !newScenarios.find(s => s.id === selectedScenarioId)) {
+          setSelectedScenarioId(newScenarios[0]?.id || null);
+        }
+      }
+    }
+  }, [cardId, card, updateScenarios.isPending, updateScenarios.hasCursor, scenarios, selectedScenarioId]);
 
   // Focus on name input when selected scenario changes
   useEffect(() => {
@@ -107,29 +136,22 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
   }, [selectedScenarioId]);
 
 
-  // 6. Debounced save with parameters (NOT closures!)
-  const debouncedSave = useMemo(
-    () => debounce((newScenarios: Scenario[]) => {
-      if (!card) return;
+  // 6. Helper function to save scenarios using mutation
+  const saveScenarios = useCallback((newScenarios: Scenario[]) => {
+    if (!card || !(card instanceof PlotCard)) return;
 
-      // Check for actual changes inline
-      const currentScenarios = card.props.scenarios || [];
-      
-      // Check if scenarios count differs
-      if (newScenarios.length !== currentScenarios.length) {
-        const scenariosData = newScenarios.map((scenario) => ({
-          name: scenario.name,
-          description: scenario.description,
-        }));
-        const updateResult = card.update({ scenarios: scenariosData });
-        if (updateResult.isSuccess) {
-          saveCard(card);
-        }
-        return;
-      }
-      
-      // Check if scenario content differs
-      const hasChanges = newScenarios.some((scenario, index) => {
+    // Check for actual changes inline
+    const currentScenarios = card.props.scenarios || [];
+    
+    // Convert scenarios to domain objects
+    const scenariosData = newScenarios.map((scenario) => ({
+      name: scenario.name,
+      description: scenario.description,
+    }));
+    
+    // Check if scenarios count differs or content differs
+    const hasChanges = newScenarios.length !== currentScenarios.length ||
+      newScenarios.some((scenario, index) => {
         const currentScenario = currentScenarios[index];
         if (!currentScenario) return true;
         return (
@@ -138,42 +160,47 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
         );
       });
 
-      if (hasChanges) {
-        const scenariosData = newScenarios.map((scenario) => ({
-          name: scenario.name,
-          description: scenario.description,
-        }));
-        const updateResult = card.update({ scenarios: scenariosData });
-        if (updateResult.isSuccess) {
-          saveCard(card);
-        }
-      }
+    if (hasChanges) {
+      updateScenarios.mutate(scenariosData);
+    }
+  }, [card, updateScenarios]);
+
+  // 7. Debounced save with parameters (NOT closures!)
+  const debouncedSave = useMemo(
+    () => debounce((newScenarios: Scenario[]) => {
+      saveScenarios(newScenarios);
     }, 300),
-    [card, saveCard]
+    [saveScenarios]
   );
 
-  // Common Monaco editor mount handler
+  // Common Monaco editor mount handler with cursor tracking
   const handleEditorMount = useCallback((editor: any) => {
     // Register editor for variable insertion
     const position = editor.getPosition();
     registerCardMonacoEditor(editor, position);
+
+    // Track focus - mark cursor as active
+    editor.onDidFocusEditorWidget(() => {
+      const position = editor.getPosition();
+      registerCardMonacoEditor(editor, position);
+      updateScenarios.setCursorActive(true);
+    });
+    
+    // Track blur - mark cursor as inactive
+    editor.onDidBlurEditorWidget(() => {
+      updateScenarios.setCursorActive(false);
+    });
 
     // Track cursor changes
     editor.onDidChangeCursorPosition((e: any) => {
       registerCardMonacoEditor(editor, e.position);
     });
 
-    // Track focus
-    editor.onDidFocusEditorWidget(() => {
-      const position = editor.getPosition();
-      registerCardMonacoEditor(editor, position);
-    });
-
     // Focus the editor when mounted (only for expanded views)
     if (editor.getDomNode()?.closest('.absolute.inset-0')) {
       editor.focus();
     }
-  }, []);
+  }, [updateScenarios]);
 
   const selectedScenario = scenarios.find((s) => s.id === selectedScenarioId);
 
@@ -187,8 +214,9 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
     const newScenarios = [...scenarios, newScenario];
     setScenarios(newScenarios);
     setSelectedScenarioId(newScenario.id);
-    debouncedSave(newScenarios);
-  }, [scenarios, debouncedSave]);
+    // Save immediately for user-initiated actions like adding scenarios
+    saveScenarios(newScenarios);
+  }, [scenarios, saveScenarios]);
 
   const handleDeleteScenario = useCallback(
     (scenarioId: string) => {
@@ -197,9 +225,10 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
       if (selectedScenarioId === scenarioId) {
         setSelectedScenarioId(newScenarios.length > 0 ? newScenarios[0].id : null);
       }
-      debouncedSave(newScenarios);
+      // Save immediately for user-initiated actions like deleting scenarios
+      saveScenarios(newScenarios);
     },
-    [scenarios, selectedScenarioId, debouncedSave],
+    [scenarios, selectedScenarioId, saveScenarios],
   );
 
   const handleUpdateScenario = useCallback(
@@ -225,9 +254,10 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
       );
       const newScenarios = arrayMove(scenarios, oldIndex, newIndex);
       setScenarios(newScenarios);
-      debouncedSave(newScenarios);
+      // Save immediately for user-initiated actions like reordering
+      saveScenarios(newScenarios);
     }
-  }, [scenarios, debouncedSave]);
+  }, [scenarios, saveScenarios]);
 
   // 9. Early returns
   if (isLoading) {
@@ -363,6 +393,8 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
                               name: e.target.value,
                             })
                           }
+                          onFocus={() => updateScenarios.setCursorActive(true)}
+                          onBlur={() => updateScenarios.setCursorActive(false)}
                           className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                           placeholder=""
                         />

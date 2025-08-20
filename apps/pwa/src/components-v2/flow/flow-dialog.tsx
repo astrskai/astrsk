@@ -61,10 +61,10 @@ export function FlowDialog({
             autoFocus
           />
           <div className="flex gap-2 justify-end">
-            <Button variant="ghost" onClick={onClose} disabled={loading}>
+            <Button variant="ghost" size="lg" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={loading}>
+            <Button size="lg" onClick={handleSave} disabled={loading}>
               {mode === "create" ? "Create" : "Save"}
             </Button>
           </div>

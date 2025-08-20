@@ -8,7 +8,7 @@ import { getOneOrThrow } from "@/db/helpers/get-one-or-throw";
 import { flows } from "@/db/schema/flows";
 import { Transaction } from "@/db/transaction";
 import { ApiSource } from "@/modules/api/domain";
-import { Flow } from "@/modules/flow/domain/flow";
+import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 import { FlowDrizzleMapper } from "@/modules/flow/mappers/flow-drizzle-mapper";
 import {
   DeleteFlowRepo,
@@ -22,6 +22,240 @@ export class DrizzleFlowRepo
   implements SaveFlowRepo, LoadFlowRepo, DeleteFlowRepo
 {
   // constructor(private updateLocalSyncMetadata: UpdateLocalSyncMetadata) {}
+
+  async updateResponseTemplate(flowId: string, template: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(flows)
+        .set({ response_template: template })  // Use snake_case column name
+        .where(eq(flows.id, flowId));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update response template: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateDataStoreSchema(flowId: string, schema: any): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(flows)
+        .set({ data_store_schema: schema })  // Use snake_case column name
+        .where(eq(flows.id, flowId));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update data store schema: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateFlowName(flowId: UniqueEntityID, name: string): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(flows)
+        .set({ name })
+        .where(eq(flows.id, flowId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update flow name: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateFlowViewport(flowId: UniqueEntityID, viewport: any): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(flows)
+        .set({ viewport })
+        .where(eq(flows.id, flowId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update flow viewport: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updatePanelLayout(flowId: UniqueEntityID, panelStructure: any): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(flows)
+        .set({ 
+          panel_structure: panelStructure,
+          updated_at: new Date()
+        })
+        .where(eq(flows.id, flowId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update panel layout: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateNodePosition(flowId: UniqueEntityID, nodeId: string, position: { x: number; y: number }): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      // First get the current nodes array
+      const row = await db
+        .select({ nodes: flows.nodes })
+        .from(flows)
+        .where(eq(flows.id, flowId.toString()))
+        .then(getOneOrThrow);
+      
+      // Find and update the specific node's position
+      const nodes = row.nodes as any[];
+      const nodeIndex = nodes.findIndex((n: any) => n.id === nodeId);
+      
+      if (nodeIndex === -1) {
+        return Result.fail(`Node with id ${nodeId} not found in flow`);
+      }
+      
+      // Update only the position
+      nodes[nodeIndex] = {
+        ...nodes[nodeIndex],
+        position
+      };
+      
+      // Save back only the nodes field
+      await db
+        .update(flows)
+        .set({ nodes })
+        .where(eq(flows.id, flowId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update node position: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateNodesPositions(flowId: UniqueEntityID, positions: Array<{ nodeId: string; position: { x: number; y: number } }>): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      // First get the current nodes array
+      const row = await db
+        .select({ nodes: flows.nodes })
+        .from(flows)
+        .where(eq(flows.id, flowId.toString()))
+        .then(getOneOrThrow);
+      
+      // Update positions for all specified nodes
+      const nodes = row.nodes as any[];
+      for (const update of positions) {
+        const nodeIndex = nodes.findIndex((n: any) => n.id === update.nodeId);
+        if (nodeIndex !== -1) {
+          nodes[nodeIndex] = {
+            ...nodes[nodeIndex],
+            position: update.position
+          };
+        }
+      }
+      
+      // Save back only the nodes field
+      await db
+        .update(flows)
+        .set({ nodes })
+        .where(eq(flows.id, flowId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update node positions: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateNode(flowId: string, nodeId: string, nodeData: any): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      // First get the current nodes array
+      const row = await db
+        .select({ nodes: flows.nodes })
+        .from(flows)
+        .where(eq(flows.id, flowId))
+        .then(getOneOrThrow);
+      
+      // Find and update the specific node
+      const nodes = row.nodes as any[];
+      const nodeIndex = nodes.findIndex((n: any) => n.id === nodeId);
+      
+      if (nodeIndex === -1) {
+        return Result.fail(`Node with id ${nodeId} not found in flow`);
+      }
+      
+      // Update the node's data
+      nodes[nodeIndex] = {
+        ...nodes[nodeIndex],
+        data: nodeData
+      };
+      
+      // Save back only the nodes field
+      await db
+        .update(flows)
+        .set({ nodes })
+        .where(eq(flows.id, flowId));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update node: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async updateNodesAndEdges(flowId: UniqueEntityID, nodes: any[], edges: any[]): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      // Update nodes and edges directly in database
+      await db
+        .update(flows)
+        .set({ 
+          nodes: nodes,
+          edges: edges,
+          updated_at: new Date()
+        })
+        .where(eq(flows.id, flowId.toString()));
+
+      return Result.ok<void>();
+    } catch (error) {
+      return Result.fail<void>(
+        `Failed to update nodes and edges: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
 
   async saveFlow(flow: Flow, tx?: Transaction): Promise<Result<Flow>> {
     const db = tx ?? (await Drizzle.getInstance());
@@ -72,7 +306,8 @@ export class DrizzleFlowRepo
         .then(getOneOrThrow);
 
       // Return flow
-      return Result.ok(FlowDrizzleMapper.toDomain(row));
+      const flow = FlowDrizzleMapper.toDomain(row);
+      return Result.ok(flow);
     } catch (error) {
       return Result.fail<Flow>(
         `Failed to get flow: ${
@@ -176,6 +411,58 @@ export class DrizzleFlowRepo
         `Failed to delete flow: ${
           error instanceof Error ? error.message : String(error)
         }`,
+      );
+    }
+  }
+
+  async updateFlowValidation(
+    flowId: string,
+    readyState: ReadyState,
+    validationIssues: any[],
+    tx?: Transaction
+  ): Promise<Result<void>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      await db
+        .update(flows)
+        .set({
+          ready_state: readyState,
+          validation_issues: validationIssues,
+          updated_at: new Date(),
+        })
+        .where(eq(flows.id, flowId));
+
+      return Result.ok();
+    } catch (error) {
+      return Result.fail<void>(
+        `Failed to update flow validation: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  async updateFlowReadyState(
+    flowId: string,
+    readyState: ReadyState,
+    tx?: Transaction
+  ): Promise<Result<void>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      await db
+        .update(flows)
+        .set({
+          ready_state: readyState,
+          updated_at: new Date(),
+        })
+        .where(eq(flows.id, flowId));
+
+      return Result.ok();
+    } catch (error) {
+      return Result.fail<void>(
+        `Failed to update flow ready state: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   }

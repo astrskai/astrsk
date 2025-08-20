@@ -103,7 +103,7 @@ const extractVariables = (template: string): string[] => {
 export const validateUndefinedOutputVariables: ValidatorFunction = (context) => {
   const issues: ValidationIssue[] = [];
   
-  // Helper function to validate variables against available agents
+  // Helper function to validate variables against available agents and data schema
   const validateVariables = (variables: string[], sourceAgentId: string, sourceAgentName: string, location?: string, isHistoryMessage: boolean = false) => {
     for (const variable of variables) {
       // Check if it's a turn variable
@@ -133,7 +133,60 @@ export const validateUndefinedOutputVariables: ValidatorFunction = (context) => 
         continue; // It's a valid system variable, skip validation
       }
       
-      // If not a system variable, check if it references an agent's output
+      // Check if it's a data store field that's actually configured in a connected data store node
+      const dataStoreSchema = context.flow.props.dataStoreSchema;
+      if (dataStoreSchema && dataStoreSchema.fields) {
+        // First check if this variable matches a schema field name
+        const schemaField = dataStoreSchema.fields.find(field => field.name === variable);
+        if (schemaField) {
+          // Now check if any connected data store node has this field configured
+          let isFieldConfigured = false;
+          
+          // Check all connected nodes for data store nodes
+          for (const nodeId of context.connectedNodes) {
+            const node = context.flow.props.nodes.find(n => n.id === nodeId);
+            if (node && node.type === 'dataStore') {
+              // Check if this data store node has the field configured
+              const nodeData = node.data as any;
+              if (nodeData?.dataStoreFields) {
+                // Check if this field is imported in this node
+                const hasField = nodeData.dataStoreFields.some((f: any) => 
+                  f.schemaFieldId === schemaField.id
+                );
+                if (hasField) {
+                  isFieldConfigured = true;
+                  break;
+                }
+              }
+            }
+          }
+          
+          if (isFieldConfigured) {
+            continue; // It's a valid configured data store field
+          } else {
+            // Field exists in schema but not configured in any connected data store node
+            const message = generateValidationMessage(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, {
+              agentName: sourceAgentName,
+              referencedAgent: 'datastore',
+              field: variable,
+              variable,
+              location
+            });
+            issues.push({
+              id: generateIssueId(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, sourceAgentId),
+              code: ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE,
+              severity: 'error',
+              ...message,
+              agentId: sourceAgentId,
+              agentName: sourceAgentName,
+              metadata: { variable, referencedAgent: 'datastore', field: variable },
+            });
+            continue;
+          }
+        }
+      }
+      
+      // If not a system variable or data store field, check if it references an agent's output
       const parts = variable.split('.');
       
       // Handle both agent.field format and single agent references
@@ -277,6 +330,60 @@ export const validateUndefinedOutputVariables: ValidatorFunction = (context) => 
     const responseVariables = extractVariables(context.flow.props.responseTemplate);
     validateVariables(responseVariables, 'response-design', 'Response Design', undefined, false);
   }
+  
+  // Check if-node condition fields
+  context.connectedNodes.forEach(nodeId => {
+    const node = context.flow.props.nodes.find(n => n.id === nodeId);
+    if (node && node.type === 'if') {
+      const nodeData = node.data as any;
+      const nodeName = nodeData?.label || `If-node ${nodeId}`;
+      
+      // Check conditions (both conditions and draftConditions)
+      const conditions = nodeData?.conditions || nodeData?.draftConditions || [];
+      conditions.forEach((condition: any, index: number) => {
+        // Check value1 field for variables
+        if (condition.value1 && typeof condition.value1 === 'string') {
+          // Extract variables from value1 (it might contain {{variable}} syntax)
+          const value1Variables = extractVariables(condition.value1);
+          if (value1Variables.length > 0) {
+            validateVariables(value1Variables, nodeId, nodeName, `condition ${index + 1} value1`, false);
+          }
+        }
+        
+        // Check value2 field for variables
+        if (condition.value2 && typeof condition.value2 === 'string') {
+          // Extract variables from value2
+          const value2Variables = extractVariables(condition.value2);
+          if (value2Variables.length > 0) {
+            validateVariables(value2Variables, nodeId, nodeName, `condition ${index + 1} value2`, false);
+          }
+        }
+      });
+    }
+  });
+  
+  // Check data store node logic fields
+  context.connectedNodes.forEach(nodeId => {
+    const node = context.flow.props.nodes.find(n => n.id === nodeId);
+    if (node && node.type === 'dataStore') {
+      const nodeData = node.data as any;
+      const nodeName = nodeData?.label || `DataStore-node ${nodeId}`;
+      
+      // Check each data store field's logic expression
+      if (nodeData?.dataStoreFields && Array.isArray(nodeData.dataStoreFields)) {
+        nodeData.dataStoreFields.forEach((field: any, index: number) => {
+          if (field.logic && typeof field.logic === 'string') {
+            // Extract variables from the logic expression
+            const logicVariables = extractVariables(field.logic);
+            if (logicVariables.length > 0) {
+              const fieldName = field.name || `field ${index + 1}`;
+              validateVariables(logicVariables, nodeId, nodeName, `field "${fieldName}" logic`, false);
+            }
+          }
+        });
+      }
+    }
+  });
   
   return issues;
 };
@@ -475,6 +582,107 @@ export const validateUnusedOutputVariables: ValidatorFunction = forEachConnected
     return issues;
   }
 );
+
+// Check for unused data store fields
+export const validateUnusedDataStoreFields: ValidatorFunction = (context) => {
+  const issues: ValidationIssue[] = [];
+  
+  // Only check if data store schema is defined
+  if (!context.flow.props.dataStoreSchema) {
+    return issues;
+  }
+  
+  const dataStoreFields = context.flow.props.dataStoreSchema.fields;
+  
+  // Check each field for usage
+  for (const field of dataStoreFields) {
+    const variable = field.name; // Use direct field name, not datastore.fieldname
+    let isUsed = false;
+    
+    // Helper function to check if template contains the variable
+    const checkTemplate = (template: string | undefined) => {
+      if (!template) return false;
+      return template.includes(`{{${variable}}}`) || 
+             template.includes(`{{ ${variable} }}`);
+    };
+    
+    // Check all connected agents
+    for (const agentId of context.connectedAgents) {
+      const agent = context.agents.get(agentId);
+      if (!agent) continue;
+      
+      // Check prompts
+      agent.props.promptMessages?.forEach(message => {
+        if ('promptBlocks' in message) {
+          message.promptBlocks?.forEach(block => {
+            if (block.type === 'plain' && checkTemplate(block.template)) {
+              isUsed = true;
+            }
+          });
+        }
+        
+        // Check history messages
+        if ('userPromptBlocks' in message) {
+          message.userPromptBlocks?.forEach(block => {
+            if (block.type === 'plain' && checkTemplate(block.template)) {
+              isUsed = true;
+            }
+          });
+        }
+        
+        if ('assistantPromptBlocks' in message) {
+          message.assistantPromptBlocks?.forEach(block => {
+            if (block.type === 'plain' && checkTemplate(block.template)) {
+              isUsed = true;
+            }
+          });
+        }
+      });
+      
+      // Check structured output field descriptions
+      if (agent.props.schemaFields) {
+        agent.props.schemaFields.forEach(schemaField => {
+          if (checkTemplate(schemaField.description)) {
+            isUsed = true;
+          }
+        });
+      }
+      
+      // Check schema description
+      if (checkTemplate(agent.props.schemaDescription)) {
+        isUsed = true;
+      }
+      
+      if (isUsed) break;
+    }
+    
+    // Also check flow's response template
+    if (!isUsed && context.flow.props.responseTemplate) {
+      if (checkTemplate(context.flow.props.responseTemplate)) {
+        isUsed = true;
+      }
+    }
+    
+    if (!isUsed) {
+      const message = generateValidationMessage(ValidationIssueCode.UNUSED_OUTPUT_VARIABLE, {
+        agentName: 'Data Update',
+        field: field.name,
+        variable: `{{${variable}}}`
+      });
+      issues.push({
+        id: generateIssueId(ValidationIssueCode.UNUSED_OUTPUT_VARIABLE, 'datastore'),
+        code: ValidationIssueCode.UNUSED_OUTPUT_VARIABLE,
+        severity: 'warning',
+        ...message,
+        agentId: 'datastore',
+        agentName: 'Data Update',
+        metadata: { variable: `{{${variable}}}`, field: field.name },
+      });
+    }
+  }
+  
+  return issues;
+};
 
 // Check for syntax errors in templates
 export const validateTemplateSyntax: ValidatorFunction = (context) => {

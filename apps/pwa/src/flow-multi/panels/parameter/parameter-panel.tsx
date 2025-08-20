@@ -1,21 +1,12 @@
-import { useState, useMemo, useCallback, useRef } from "react";
-import { debounce } from "lodash-es";
+import { useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { SearchInput } from "@/components-v2/search-input";
 import { ParameterSettingsFields } from "@/flow-multi/panels/parameter/parameter-settings/parameter-settings-fields";
-import { 
-  useFlowPanel, 
-  FlowPanelLoading, 
-  FlowPanelError 
-} from "@/flow-multi/hooks/use-flow-panel";
 import { ParameterPanelProps } from "./parameter-panel-types";
-import { AgentService } from "@/app/services/agent-service";
-import { UniqueEntityID } from "@/shared/domain";
+import { agentQueries } from "@/app/queries/agent/query-factory";
+import { useUpdateAgentParametersQueue } from "@/app/queries/agent/mutations/parameter-mutations";
+import { toast } from "sonner";
 
-interface ParameterUpdate {
-  parameterId: string;
-  enabled: boolean;
-  value?: any;
-}
 
 export function ParameterPanel({ 
   flowId, 
@@ -23,105 +14,60 @@ export function ParameterPanel({
 }: ParameterPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Use the new flow panel hook
-  const { 
-    agent, 
-    isLoading, 
-    updateAgent
-  } = useFlowPanel({ flowId, agentId });
+  // Get queue-based mutation hook for saving all changes
+  const updateParameters = useUpdateAgentParametersQueue(agentId || "");
   
-  // Operation queue to prevent race conditions
-  const operationQueueRef = useRef<ParameterUpdate[]>([]);
-  const isProcessingRef = useRef(false);
+  // Query only for agent parameters - not the entire agent
+  const { data: parameters, isLoading, error } = useQuery({
+    ...agentQueries.parameters(agentId),
+    enabled: !!agentId && !updateParameters.isProcessing,
+  });
   
-  // Process queued operations sequentially with fresh data
-  const processOperationQueue = useCallback(async () => {
-    if (isProcessingRef.current || operationQueueRef.current.length === 0 || !agentId) {
-      return;
+  // Handle parameter changes - save immediately without debouncing
+  const handleParameterChange = useCallback((parameterId: string, enabled: boolean, value?: any) => {
+    if (!parameters) return;
+    
+    // Create new Maps from the current parameters
+    const enabledParameters = new Map<string, boolean>(parameters.enabledParameters);
+    const parameterValues = new Map<string, any>(parameters.parameterValues);
+    
+    // Update the specific parameter
+    enabledParameters.set(parameterId, enabled);
+    if (enabled && value !== undefined) {
+      parameterValues.set(parameterId, value);
+    } else if (!enabled) {
+      parameterValues.delete(parameterId);
     }
     
-    isProcessingRef.current = true;
-    
-    try {
-      // Get fresh agent data to avoid stale state
-      const agentResult = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
-      if (agentResult.isFailure) {
-        console.error("Failed to get fresh agent data:", agentResult.getError());
-        return;
-      }
-      
-      const freshAgent = agentResult.getValue();
-      
-      // Apply all queued operations to fresh data
-      const enabledParameters = new Map(freshAgent.props.enabledParameters);
-      const parameterValues = new Map(freshAgent.props.parameterValues);
-      
-      // Process all queued operations
-      const operations = [...operationQueueRef.current];
-      operationQueueRef.current = []; // Clear queue
-      
-      for (const operation of operations) {
-        enabledParameters.set(operation.parameterId, operation.enabled);
-        if (operation.enabled && operation.value !== undefined) {
-          parameterValues.set(operation.parameterId, operation.value);
-        } else if (!operation.enabled) {
-          parameterValues.delete(operation.parameterId);
-        }
-      }
-      
-      // Save all changes in one batch
-      await updateAgent(agentId, {
-        enabledParameters,
-        parameterValues
-      });
-      
-    } catch (error) {
-      console.error("Error processing parameter operations:", error);
-    } finally {
-      isProcessingRef.current = false;
-      
-      // Process any new operations that came in while we were working
-      if (operationQueueRef.current.length > 0) {
-        setTimeout(() => processOperationQueue(), 0);
-      }
-    }
-  }, [agentId, updateAgent]);
-  
-  // Debounced queue processor
-  const debouncedProcessQueue = useMemo(
-    () => debounce(processOperationQueue, 200),
-    [processOperationQueue]
-  );
-  
-  // Queue parameter changes instead of processing immediately
-  const queueParameterChange = useCallback((parameterId: string, enabled: boolean, value?: any) => {
-    // Add to queue, replacing any existing operation for the same parameter
-    const existingIndex = operationQueueRef.current.findIndex(op => op.parameterId === parameterId);
-    const newOperation: ParameterUpdate = { parameterId, enabled, value };
-    
-    if (existingIndex >= 0) {
-      operationQueueRef.current[existingIndex] = newOperation;
-    } else {
-      operationQueueRef.current.push(newOperation);
-    }
-    
-    // Process the queue after a short delay
-    debouncedProcessQueue();
-  }, [debouncedProcessQueue]);
-
-  // Prepare initial values for ParameterSettingsFields
-  const initialEnabledParameters = agent?.props.enabledParameters || new Map();
-  const initialParameterValues = agent?.props.parameterValues || new Map();
+    // Queue the update - ensures all changes are saved
+    updateParameters.mutate(enabledParameters, parameterValues);
+  }, [parameters, updateParameters]);
 
   // Loading state
   if (isLoading) {
-    return <FlowPanelLoading message="Loading parameters..." />;
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Loading parameters...</span>
+        </div>
+      </div>
+    );
   }
 
   // Empty state
-  if (!agent) {
-    return <FlowPanelError message="Agent not found" />;
+  if (!parameters) {
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Parameters not found</span>
+        </div>
+      </div>
+    );
   }
+  
+  // Parameters should already be Maps from the query select function
+  const initialEnabledParameters = parameters.enabledParameters || new Map<string, boolean>();
+  const initialParameterValues = parameters.parameterValues || new Map<string, any>();
 
   return (
     <div className="h-full flex flex-col bg-background-surface-2 p-4">
@@ -132,10 +78,11 @@ export function ParameterPanel({
         className="mb-4"
       />
       <ParameterSettingsFields
+        key={agentId} // Force re-mount when agent changes
         searchTerm={searchTerm}
         initialEnabledParameters={initialEnabledParameters}
         initialParameterValues={initialParameterValues}
-        onParameterChange={queueParameterChange}
+        onParameterChange={handleParameterChange}
         className="flex-1"
       />
     </div>

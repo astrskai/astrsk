@@ -186,6 +186,28 @@ const messageDefinitions: Record<ValidationIssueCode, {
     suggestion: "Ensure agents are properly connected from start to end"
   },
   
+  [ValidationIssueCode.IF_NODE_MISSING_BRANCHES]: {
+    title: "If-Node Missing Branches",
+    description: (data?: ValidationData) => {
+      if (data && 'nodeName' in data) {
+        return `If-node "${data.nodeName}" does not have both branches connected`;
+      }
+      return "If-node is missing one or both branch connections";
+    },
+    suggestion: "Connect both true and false branches of the if-node to downstream nodes"
+  },
+  
+  [ValidationIssueCode.IF_NODE_BRANCH_NOT_REACHING_END]: {
+    title: "If-Node Branch Not Reaching End",
+    description: (data?: ValidationData) => {
+      if (data && 'nodeName' in data && 'branch' in data) {
+        return `The ${data.branch} branch of if-node "${data.nodeName}" does not reach the end node`;
+      }
+      return "One or more branches of an if-node do not reach the end node";
+    },
+    suggestion: "Ensure all branches of if-nodes eventually connect to the end node"
+  },
+  
   // Warnings
   [ValidationIssueCode.MISSING_HISTORY_MESSAGE]: {
     title: "Missing history message",
@@ -257,6 +279,19 @@ const messageDefinitions: Record<ValidationIssueCode, {
       }
       return `Set the parameter value within the valid range`;
     }
+  },
+  
+  // Data Update Errors
+  [ValidationIssueCode.DATA_STORE_INVALID_INITIAL_VALUE]: {
+    title: "Invalid initial value",
+    description: (data?: ValidationData) => `Data update "${agentName(data)}" has an invalid initial value that doesn't match the schema`,
+    suggestion: "Ensure the initial value matches the defined schema structure"
+  },
+  
+  [ValidationIssueCode.DATA_STORE_MISSING_INITIAL_VALUE]: {
+    title: "Missing initial value",
+    description: (data?: ValidationData) => `Data update "${agentName(data)}" is missing an initial value`,
+    suggestion: "Provide an initial value for the data update"
   }
 };
 

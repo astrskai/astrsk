@@ -54,6 +54,14 @@ export type RenderContext = {
 
   // Model Response
   response?: string;
+
+  // Data Store (for regeneration context)
+  dataStore?: Array<{
+    id: string;
+    name: string;
+    type: string;
+    value: string;
+  }>;
 };
 
 export type RenderContextWithVariables = RenderContext & object;

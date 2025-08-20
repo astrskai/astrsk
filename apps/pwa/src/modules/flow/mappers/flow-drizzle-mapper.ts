@@ -12,11 +12,15 @@ export class FlowDrizzleMapper {
    */
   public static toDomain(row: SelectFlow): Flow {
     try {
+      
       // Parse panel structure if exists
       const panelStructure = row.panel_structure as any;
 
       // Parse viewport if exists
       const viewport = row.viewport as any;
+
+      // Parse data store schema if exists
+      const dataStoreSchema = row.data_store_schema as any;
 
       // Create flow entity
       const flowOrError = Flow.create(
@@ -26,6 +30,7 @@ export class FlowDrizzleMapper {
           nodes: row.nodes,
           edges: row.edges as any[],
           responseTemplate: row.response_template,
+          dataStoreSchema,
           panelStructure,
           viewport,
           readyState: (row.ready_state as ReadyState) || ReadyState.Draft,
@@ -41,7 +46,9 @@ export class FlowDrizzleMapper {
       }
 
       // Return flow
-      return flowOrError.getValue();
+      const flow = flowOrError.getValue();
+      
+      return flow;
     } catch (error) {
       logger.error(`Failed to convert flow row to domain: ${error}`);
       throw error;
@@ -54,19 +61,24 @@ export class FlowDrizzleMapper {
   public static toPersistence(flow: Flow): InsertFlow {
     try {
       const props = flow.props;
+      
 
-      return {
+      const result = {
         id: flow.id.toString(),
         name: props.name,
         description: props.description,
         nodes: props.nodes,
         edges: props.edges,
         response_template: props.responseTemplate,
+        data_store_schema: props.dataStoreSchema,
         panel_structure: props.panelStructure,
         viewport: props.viewport,
         ready_state: props.readyState,
         validation_issues: props.validationIssues,
       };
+      
+      
+      return result;
     } catch (error) {
       logger.error(`Failed to convert flow domain to row: ${error}`);
       throw error;
