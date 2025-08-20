@@ -1242,7 +1242,6 @@ export const useDeleteCard = () => {
       queryClient.removeQueries({ queryKey: cardKeys.content(cardId) });
       queryClient.removeQueries({ queryKey: cardKeys.lorebook(cardId) });
       queryClient.removeQueries({ queryKey: cardKeys.scenarios(cardId) });
-      queryClient.removeQueries({ queryKey: cardKeys.variables(cardId) });
       
       // Invalidate list queries to remove from lists
       queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
