@@ -1323,9 +1323,36 @@ const SessionMessagesAndUserInputs = ({
       let streamingContent = "";
       let streamingVariables = {};
       try {
-        // Get last turn's dataStore for inheritance
+        // Get dataStore for inheritance - prioritize regeneration context
         let lastDataStore: DataStoreSavedField[] = [];
-        if (session.turnIds.length > 0) {
+        
+        if (regenerateMessageId) {
+          // For regeneration, get dataStore from the turn before the regenerated message
+          let dataStoreForRegeneration: DataStoreSavedField[] = [];
+          
+          for (const turnId of session.turnIds) {
+            if (turnId.equals(regenerateMessageId)) {
+              break;
+            }
+            try {
+              const turn = (await TurnService.getTurn.execute(turnId))
+                .throwOnFailure()
+                .getValue();
+              
+              // Store dataStore from each processed turn
+              if (turn.dataStore && turn.dataStore.length > 0) {
+                dataStoreForRegeneration = cloneDeep(turn.dataStore);
+              }
+            } catch (error) {
+              console.warn(`Failed to get turn for regeneration dataStore: ${error}`);
+              continue;
+            }
+          }
+          
+          lastDataStore = dataStoreForRegeneration;
+          console.log(`Using dataStore from regeneration context (${lastDataStore.length} fields)`);
+        } else if (session.turnIds.length > 0) {
+          // For new messages, use last turn's dataStore
           const lastTurnId = session.turnIds[session.turnIds.length - 1];
           try {
             const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
