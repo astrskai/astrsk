@@ -50,9 +50,6 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.3.5
         version: 0.3.5
-      '@electric-sql/pglite-react':
-        specifier: ^0.2.23
-        version: 0.2.23(@electric-sql/pglite@0.3.5)(react@18.3.1)
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@18.3.23)(react@18.3.1)
@@ -459,6 +456,12 @@ importers:
       workbox-window:
         specifier: ^7.3.0
         version: 7.3.0
+
+  ../..: {}
+
+  ../docs: {}
+
+  ../electron: {}
 
 packages:
 
@@ -1226,12 +1229,6 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
-
-  '@electric-sql/pglite-react@0.2.23':
-    resolution: {integrity: sha512-PqrSVAso0rNL93ysezD/ib2P1wYneMs0UHA5hu1/q7owi9dXIFL7SwE5ckgheMeBqxfSar+buroOm8udemoY7A==}
-    peerDependencies:
-      '@electric-sql/pglite': 0.3.5
-      react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
 
   '@electric-sql/pglite@0.3.5':
     resolution: {integrity: sha512-fhODErXJjOrnsJj5f1A8sH/Zj0INpLUbqOCiskufIUImUsFOBNHE6/FApY656Q2VSOp46wkXX3rvbBBO8O8Cag==}
@@ -8122,11 +8119,6 @@ snapshots:
       tslib: 2.8.1
 
   '@drizzle-team/brocli@0.10.2': {}
-
-  '@electric-sql/pglite-react@0.2.23(@electric-sql/pglite@0.3.5)(react@18.3.1)':
-    dependencies:
-      '@electric-sql/pglite': 0.3.5
-      react: 18.3.1
 
   '@electric-sql/pglite@0.3.5': {}
 
