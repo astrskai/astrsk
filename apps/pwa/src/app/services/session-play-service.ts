@@ -42,6 +42,7 @@ import { getTokenizer } from "@/shared/utils/tokenizer/tokenizer";
 import { AgentService } from "@/app/services/agent-service";
 import { ApiService } from "@/app/services/api-service";
 import { CardService } from "@/app/services/card-service";
+import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
@@ -1659,8 +1660,18 @@ async function* executeFlow({
         // Move to next node
         currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
       } else if (currentNode.type === "dataStore") {
+        // Get datastore node
+        const dataStoreNode = (
+          await DataStoreNodeService.getDataStoreNode.execute({
+            flowId: flowId.toString(),
+            nodeId: currentNode.id,
+          })
+        )
+          .throwOnFailure()
+          .getValue();
+
         // Execute datastore node
-        const dataStoreFields = (currentNode.data as any).dataStoreFields || [];
+        const dataStoreFields = dataStoreNode?.dataStoreFields || [];
 
         // Process each field sequentially
         for (const field of dataStoreFields) {
