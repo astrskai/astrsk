@@ -104,14 +104,37 @@ export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): P
         })
         .join('\n');
       
-      // Create a more descriptive label for history messages
+      // Try to use the first block's name as the label, or fall back to descriptive label
       let label = `History`;
-      if (start !== undefined && end !== undefined) {
-        const fromEnd = countFromEnd !== false;
-        if (fromEnd) {
-          label = `History (last ${end - start} messages)`;
+      if (userBlocks.length > 0) {
+        // Get names from blocks that have them
+        const blockNames = userBlocks
+          .filter((block:any) => 'name' in block && block.name)
+          .map((block:any) => block.name);
+        
+        if (blockNames.length > 0) {
+          // Use first block name or combine multiple
+          label = blockNames.length === 1 ? blockNames[0] : blockNames.join(' + ');
         } else {
-          label = `History (messages ${start}-${end})`;
+          // Fall back to descriptive label if no custom names
+          if (start !== undefined && end !== undefined) {
+            const fromEnd = countFromEnd !== false;
+            if (fromEnd) {
+              label = `History (last ${end - start} messages)`;
+            } else {
+              label = `History (messages ${start}-${end})`;
+            }
+          }
+        }
+      } else {
+        // Fall back to descriptive label if no blocks
+        if (start !== undefined && end !== undefined) {
+          const fromEnd = countFromEnd !== false;
+          if (fromEnd) {
+            label = `History (last ${end - start} messages)`;
+          } else {
+            label = `History (messages ${start}-${end})`;
+          }
         }
       }
 

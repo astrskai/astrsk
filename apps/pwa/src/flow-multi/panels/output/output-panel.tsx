@@ -61,14 +61,17 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
   const updateSchemaFields = useUpdateAgentSchemaFields(flowId, agentId || "");
 
   // 3. Query for agent output data only
-  // Disable refetching while editing to prevent UI jumping
+  // Disable refetching while editing or cursor is active to prevent UI jumping
+  const queryEnabled = !!agentId && !updateOutput.isEditing && !updateSchemaFields.isEditing && 
+                      !updateOutput.hasCursor && !updateSchemaFields.hasCursor;
+  
   const { 
     data: outputData, 
     isLoading, 
     error 
   } = useQuery({
     ...agentQueries.output(agentId),
-    enabled: !!agentId && !updateOutput.isEditing && !updateSchemaFields.isEditing,
+    enabled: queryEnabled,
   });
 
   // 4. Local UI state
@@ -119,8 +122,10 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
 
   // 7. Sync display fields when output data changes (for cross-tab sync)
   useEffect(() => {
-    // Don't sync while editing or recently edited to prevent feedback loops
-    if (updateOutput.isEditing || updateSchemaFields.isEditing || hasRecentlyEditedRef.current) {
+    // Don't sync while editing, cursor is active, or recently edited to prevent feedback loops
+    if (updateOutput.isEditing || updateSchemaFields.isEditing || 
+        updateOutput.hasCursor || updateSchemaFields.hasCursor || 
+        hasRecentlyEditedRef.current) {
       return;
     }
     
@@ -320,11 +325,15 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
       if (position && agentId) {
         setLastMonacoEditor(agentId, `output-${agentId}-${flowId}`, editor, position);
       }
+      // Mark cursor as active when editor is focused
+      updateOutput.setCursorActive(true);
     });
     
     editor.onDidBlurEditorWidget(() => {
       // Clear editor tracking when focus lost
       setLastMonacoEditor(null, null, null, null);
+      // Mark cursor as inactive when editor loses focus
+      updateOutput.setCursorActive(false);
     });
     
     // Update position on cursor change
@@ -333,7 +342,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
         setLastMonacoEditor(agentId, `output-${agentId}-${flowId}`, editor, e.position);
       }
     });
-  }, [agentId, flowId, setLastMonacoEditor]);
+  }, [agentId, flowId, setLastMonacoEditor, updateOutput]);
 
   // 14. Handle output format change
   const handleOutputFormatChange = useCallback(async (value: {
@@ -500,6 +509,8 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                           <Input
                             value={selectedField.name}
                             onChange={(e) => updateField(selectedField.id, { name: e.target.value })}
+                            onFocus={() => updateOutput.setCursorActive(true)}
+                            onBlur={() => updateOutput.setCursorActive(false)}
                             className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                             placeholder="variable_name"
                           />
@@ -555,6 +566,8 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                               type="number"
                               value={selectedField.minimum || ""}
                               onChange={(e) => updateField(selectedField.id, { minimum: e.target.value ? Number(e.target.value) : undefined })}
+                              onFocus={() => updateOutput.setCursorActive(true)}
+                              onBlur={() => updateOutput.setCursorActive(false)}
                               className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                               placeholder="0"
                             />
@@ -569,6 +582,8 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                               type="number"
                               value={selectedField.maximum || ""}
                               onChange={(e) => updateField(selectedField.id, { maximum: e.target.value ? Number(e.target.value) : undefined })}
+                              onFocus={() => updateOutput.setCursorActive(true)}
+                              onBlur={() => updateOutput.setCursorActive(false)}
                               className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                               placeholder="0"
                             />
@@ -604,7 +619,9 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                                   newEnum[index] = e.target.value;
                                   updateField(selectedField.id, { enum: newEnum });
                                 }}
+                                onFocus={() => updateOutput.setCursorActive(true)}
                                 onBlur={(e) => {
+                                  updateOutput.setCursorActive(false);
                                   const trimmedValue = e.target.value.trim();
                                   if (trimmedValue !== e.target.value) {
                                     const newEnum = [...(selectedField.enum || [])];
