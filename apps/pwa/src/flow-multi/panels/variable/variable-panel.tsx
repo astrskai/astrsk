@@ -231,6 +231,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
       ...agentQueries.name(id),
       enabled: !!id,
       refetchOnWindowFocus: true,
+      staleTime: 500 //TODO: Remove this for invalidations
     })),
   });
 
