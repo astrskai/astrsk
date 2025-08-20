@@ -54,7 +54,6 @@ const isValidCondition = (c: IfCondition): boolean => {
  */
 export type IfNodeData = {
   name?: string;
-  condition?: string;
   logicOperator?: 'AND' | 'OR';
   conditions?: IfCondition[];
   color?: string; // Hex color for the node
