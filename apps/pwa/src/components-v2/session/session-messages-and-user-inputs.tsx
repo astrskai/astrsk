@@ -1535,6 +1535,9 @@ const SessionMessagesAndUserInputs = ({
           throw new Error(userMessageOrError.getError());
         }
 
+        // Invalidate session query
+        invalidateSession();
+
         // Scroll to bottom
         scrollToBottom({ behavior: "smooth" });
 
