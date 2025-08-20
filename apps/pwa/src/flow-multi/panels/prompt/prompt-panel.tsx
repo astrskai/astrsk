@@ -584,6 +584,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 setItems(updatedItems);
                                 debouncedSaveMessages(updatedItems);
                               }}
+                              onFocus={() => updatePromptMessages.setCursorActive(true)}
+                              onBlur={() => updatePromptMessages.setCursorActive(false)}
                               className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                               placeholder="History message"
                             />
@@ -606,6 +608,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 setItems(updatedItems);
                                 debouncedSaveMessages(updatedItems);
                               }}
+                              onFocus={() => updatePromptMessages.setCursorActive(true)}
+                              onBlur={() => updatePromptMessages.setCursorActive(false)}
                               className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                               placeholder="Enter message name"
                             />
@@ -711,6 +715,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 setItems(updatedItems);
                                 debouncedSaveMessages(updatedItems);
                               }}
+                              onFocus={() => updatePromptMessages.setCursorActive(true)}
+                              onBlur={() => updatePromptMessages.setCursorActive(false)}
                               className="self-stretch min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal text-center"
                               min="0"
                             />
@@ -728,6 +734,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 setItems(updatedItems);
                                 debouncedSaveMessages(updatedItems);
                               }}
+                              onFocus={() => updatePromptMessages.setCursorActive(true)}
+                              onBlur={() => updatePromptMessages.setCursorActive(false)}
                               className="self-stretch min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal text-center"
                               min="1"
                             />
