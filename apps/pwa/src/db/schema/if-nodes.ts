@@ -13,5 +13,5 @@ export const ifNodes = pgTable(TableName.IfNodes, {
   ...timestamps,
 });
 
-export type SelectDataStoreNode = typeof ifNodes.$inferSelect;
-export type InsertDataStoreNode = typeof ifNodes.$inferInsert;
+export type SelectIfNode = typeof ifNodes.$inferSelect;
+export type InsertIfNode = typeof ifNodes.$inferInsert;

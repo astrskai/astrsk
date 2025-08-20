@@ -4,8 +4,11 @@
 import { Flow } from "@/modules/flow/domain/flow";
 import { Agent } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
+import { DataStoreNodeService } from "@/app/services/data-store-node-service";
+import { IfNodeService } from "@/app/services/if-node-service";
+import { NodeType } from "@/flow-multi/types/node-types";
 import { UniqueEntityID } from "@/shared/domain";
-import { traverseFlowCached } from "./flow-traversal-cache";
+import { traverseFlowCached } from "./flow-traversal";
 
 // Define hex colors for agents - active (300) variants
 export const AGENT_HEX_COLORS = [
@@ -40,92 +43,102 @@ export function hexToRgba(hex: string, opacity: number): string {
 }
 
 /**
- * Get the next available color for a new agent in the flow
- * @param flow - The current flow or flow-like data structure
+ * Get the next available color for a new node in the flow
+ * Queries actual node data from services to get accurate color information
+ * @param flow - The current flow or flow-like data structure  
  * @returns The next available hex color
  */
 export async function getNextAvailableColor(flow: Flow | { agentIds: any[], props: { nodes: any[] } }): Promise<string> {
-  // Get all agents from the flow's nodes
-  const agents: Agent[] = [];
-  
-  // Check if we have nodes in the flow
-  const nodes = flow.props?.nodes || [];
-  const agentNodes = nodes.filter((n: any) => n.type === 'agent');
-  
-  for (const node of agentNodes) {
-    // Agent nodes have agentId in their data
-    const agentId = node.data?.agentId || node.id;
-    try {
-      const agentOrError = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
-      if (agentOrError.isSuccess) {
-        agents.push(agentOrError.getValue());
+  try {
+    const usedColors = new Set<string>();
+    const nodes = flow.props?.nodes || [];
+    const flowId = (flow as any)?.props?.id || (flow as any)?.id;
+    
+    // 1. Get agent colors
+    const agentNodes = nodes.filter((n: any) => n.type === NodeType.AGENT);
+    for (const node of agentNodes) {
+      const agentId = node.data?.agentId || node.id;
+      try {
+        const agentResult = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
+        if (agentResult.isSuccess) {
+          const agent = agentResult.getValue();
+          if (agent.props.color) {
+            usedColors.add(agent.props.color);
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to get agent ${agentId} for color assignment:`, error);
       }
-    } catch (error) {
-      // If we can't get the agent, skip it
-      console.warn(`Failed to get agent ${agentId} for color assignment:`, error);
     }
+    
+    // 2. Get data store node colors
+    if (flowId) {
+      try {
+        const dataStoreResult = await DataStoreNodeService.getAllDataStoreNodesByFlow.execute({ flowId: flowId.toString() });
+        if (dataStoreResult.isSuccess) {
+          const dataStoreNodes = dataStoreResult.getValue();
+          dataStoreNodes.forEach(dataStoreNode => {
+            if (dataStoreNode.props.color) {
+              usedColors.add(dataStoreNode.props.color);
+            }
+          });
+        }
+      } catch (error) {
+        console.warn(`Failed to get data store nodes for color assignment:`, error);
+      }
+    }
+    
+    // 3. Get if node colors
+    if (flowId) {
+      try {
+        const ifNodeResult = await IfNodeService.getAllIfNodesByFlow.execute({ flowId: flowId.toString() });
+        if (ifNodeResult.isSuccess) {
+          const ifNodes = ifNodeResult.getValue();
+          ifNodes.forEach(ifNode => {
+            if (ifNode.props.color) {
+              usedColors.add(ifNode.props.color);
+            }
+          });
+        }
+      } catch (error) {
+        console.warn(`Failed to get if nodes for color assignment:`, error);
+      }
+    }
+    
+    // Find the first available color
+    for (const color of AGENT_HEX_COLORS) {
+      if (!usedColors.has(color)) {
+        return color;
+      }
+    }
+    
+    // If all colors are used, find the color used least frequently
+    const colorCounts = new Map<string, number>();
+    AGENT_HEX_COLORS.forEach(color => colorCounts.set(color, 0));
+    
+    // Count all used colors
+    usedColors.forEach(color => {
+      if (colorCounts.has(color)) {
+        colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
+      }
+    });
+    
+    // Find the color with minimum usage
+    let minCount = Infinity;
+    let selectedColor = AGENT_HEX_COLORS[0];
+    
+    colorCounts.forEach((count, color) => {
+      if (count < minCount) {
+        minCount = count;
+        selectedColor = color;
+      }
+    });
+    
+    return selectedColor;
+  } catch (error) {
+    console.warn('Failed to get colors from services, falling back to first color:', error);
+    return AGENT_HEX_COLORS[0];
   }
-
-  // Get all colors currently used by agents and other nodes in the flow
-  const usedColors = new Set<string>();
-  
-  // Add agent colors
-  agents.forEach(agent => {
-    if (agent.props.color) {
-      usedColors.add(agent.props.color);
-    }
-  });
-  
-  // Add colors from other nodes (if, dataStore, etc.)
-  flow.props.nodes.forEach(node => {
-    if (node.type !== 'agent' && node.type !== 'start' && node.type !== 'end') {
-      const nodeData = node.data as any;
-      if (nodeData?.color) {
-        usedColors.add(nodeData.color);
-      }
-    }
-  });
-  
-  // Find the first available color
-  for (const color of AGENT_HEX_COLORS) {
-    if (!usedColors.has(color)) {
-      return color;
-    }
-  }
-  
-  // If all colors are used, find the color used least frequently
-  const colorCounts = new Map<string, number>();
-  AGENT_HEX_COLORS.forEach(color => colorCounts.set(color, 0));
-  
-  agents.forEach(agent => {
-    const color = agent.props.color;
-    if (color && colorCounts.has(color)) {
-      colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
-    }
-  });
-  
-  // Count colors from other nodes too
-  flow.props.nodes.forEach(node => {
-    if (node.type !== 'agent' && node.type !== 'start' && node.type !== 'end') {
-      const nodeData = node.data as any;
-      if (nodeData?.color && colorCounts.has(nodeData.color)) {
-        colorCounts.set(nodeData.color, (colorCounts.get(nodeData.color) || 0) + 1);
-      }
-    }
-  });
-  
-  // Find the color with minimum usage
-  let minCount = Infinity;
-  let selectedColor = AGENT_HEX_COLORS[0];
-  
-  colorCounts.forEach((count, color) => {
-    if (count < minCount) {
-      minCount = count;
-      selectedColor = color;
-    }
-  });
-  
-  return selectedColor;
 }
 
 /**
@@ -136,7 +149,7 @@ export async function getNextAvailableColor(flow: Flow | { agentIds: any[], prop
  * @returns true if connected to both start and end, false otherwise
  */
 export function isAgentConnected(agentId: string, flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }): boolean {
-  // Use the proper traverseFlow function that handles all node types
+  // Use the basic cached traversal for synchronous connectivity check
   const traversalResult = traverseFlowCached(flow);
   
   // Get the node position from processNodePositions (which includes all node types)
@@ -161,33 +174,19 @@ export function getAgentHexColor(agent: Agent): string {
 }
 
 /**
- * Get the opacity for an agent based on its connection state and flow validity
+ * Get the opacity for an agent based on its connection state
  * @param agent - The agent
  * @param flow - The flow containing the agent
- * @param isFlowValid - Optional: Whether all connected agents in the flow are valid
- * @returns The opacity value (0.5 for disconnected, 0.7 for connected but invalid flow, 1 for valid flow)
+ * @param isFlowValid - Optional: Whether all connected agents in the flow are valid (unused since validation is disabled)
+ * @returns The opacity value (0.7 for disconnected, 1 for connected)
  */
 export function getAgentOpacity(agent: Agent, flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }, isFlowValid: boolean = true): number {
   const agentId = agent.id.toString();
   const isConnected = isAgentConnected(agentId, flow);
   
-  let opacity = 1;
-  let reason = 'connected and valid';
-  
-  // If agent is not connected to both start and end, return 70% opacity
-  if (!isConnected) {
-    opacity = 0.7;
-    reason = 'not connected';
-  }
-  // If agent is connected but the flow has invalid agents, return 70% opacity
-  else if (!isFlowValid) {
-    opacity = 0.7;
-    reason = 'connected but flow invalid';
-  }
-  
-  
-  // Return full opacity for connected agents in a valid flow
-  return opacity;
+  // Simple opacity calculation: connected = 100%, disconnected = 70%
+  // Flow validation is disabled, so we only check connection state
+  return isConnected ? 1 : 0.7;
 }
 
 export function getAgentState(agent: Agent, flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }): boolean {

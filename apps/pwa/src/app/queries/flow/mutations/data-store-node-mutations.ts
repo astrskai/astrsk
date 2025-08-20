@@ -13,12 +13,13 @@ import { DataStoreField, Flow, ReadyState } from "@/modules/flow/domain/flow";
 import { flowKeys } from "../query-factory";
 
 /**
- * Hook for updating data store fields on a specific node
- * Uses targeted node update to avoid race conditions with other flow fields
+ * @deprecated Legacy flow-level data store node field mutation
+ * Use useUpdateDataStoreNodeFields from @/app/queries/data-store-node/mutations instead
+ * This mutation updates the flow document and can cause race conditions
  * 
  * @returns mutation with isEditing state for preventing race conditions
  */
-export const useUpdateDataStoreNodeFields = (flowId: string, nodeId: string) => {
+export const useUpdateDataStoreNodeFieldsLegacy = (flowId: string, nodeId: string) => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const editEndTimerRef = useRef<NodeJS.Timeout>();

@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
-import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 
 import { useAgentStore } from "@/app/stores/agent-store";

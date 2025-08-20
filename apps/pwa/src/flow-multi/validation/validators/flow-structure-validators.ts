@@ -2,7 +2,7 @@ import { ValidationIssue, ValidationIssueCode } from "@/flow-multi/validation/ty
 import { ValidatorFunction } from "@/flow-multi/validation/types/functional-validation-types";
 import { generateIssueId } from "@/flow-multi/validation/utils/validator-utils";
 import { generateValidationMessage } from "@/flow-multi/validation/utils/message-generator";
-import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
 
 // Check if flow has valid path from start to end
 // Helper function to check if a node can reach the end

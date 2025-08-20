@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { IDockviewPanelHeaderProps } from 'dockview';
+import { useQuery } from '@tanstack/react-query';
+import { dataStoreNodeQueries } from '@/app/queries/data-store-node/query-factory';
+import { ifNodeQueries } from '@/app/queries/if-node/query-factory';
+import { AgentService } from '@/app/services/agent-service';
+import { UniqueEntityID } from '@/shared/domain';
+import { getAgentHexColor } from '@/flow-multi/utils/node-color-assignment';
 
 type CustomTabParameters = {
   title?: string;
   backgroundColor?: string;
   agentColor?: string;
   agentInactive?: boolean;
+  flowId?: string;
+  nodeId?: string;
+  panelType?: string;
 };
 
 const CustomDockviewTab = React.memo((props: IDockviewPanelHeaderProps<CustomTabParameters>) => {
@@ -14,6 +23,45 @@ const CustomDockviewTab = React.memo((props: IDockviewPanelHeaderProps<CustomTab
   const [isVisible, setIsVisible] = useState(api.isVisible);
   const [showFocusAnimation, setShowFocusAnimation] = useState(false);
   const [currentParams, setCurrentParams] = useState(params);
+
+  // Extract panel information
+  const flowId = params?.flowId || currentParams?.flowId;
+  const nodeId = params?.nodeId || currentParams?.nodeId;
+  const panelType = params?.panelType || currentParams?.panelType;
+
+  // Query color data based on panel type and nodeId
+  const { data: dataStoreNodeColor } = useQuery({
+    ...dataStoreNodeQueries.color(flowId!, nodeId!),
+    enabled: !!(flowId && nodeId && panelType === 'dataStore'),
+  });
+
+  const { data: ifNodeColor } = useQuery({
+    ...ifNodeQueries.color(flowId!, nodeId!),
+    enabled: !!(flowId && nodeId && panelType === 'ifNode'),
+  });
+
+  // Query agent data for agent panels
+  const { data: agentData } = useQuery({
+    queryKey: ['agent', nodeId],
+    queryFn: async () => {
+      if (!nodeId) return null;
+      const result = await AgentService.getAgent.execute(new UniqueEntityID(nodeId));
+      return result.isSuccess ? result.getValue() : null;
+    },
+    enabled: !!(nodeId && (panelType === 'prompt' || panelType === 'parameter' || panelType === 'structuredOutput' || panelType === 'preview')),
+  });
+
+  // Determine the color based on panel type
+  const getNodeColor = (): string | undefined => {
+    if (panelType === 'dataStore') {
+      return dataStoreNodeColor?.color;
+    } else if (panelType === 'ifNode') {
+      return ifNodeColor?.color;
+    } else if (agentData) {
+      return getAgentHexColor(agentData);
+    }
+    return undefined;
+  };
 
   // Listen for parameter changes
   useEffect(() => {
@@ -81,7 +129,8 @@ const CustomDockviewTab = React.memo((props: IDockviewPanelHeaderProps<CustomTab
   // Try params first, then currentParams, then api.title
   const displayTitle = params?.title || currentParams?.title || api.title;
   const customBgColor = params?.backgroundColor || currentParams?.backgroundColor;
-  const agentColor = params?.agentColor || currentParams?.agentColor;
+  // Use queried color first, then fallback to parameter-based color for backward compatibility
+  const agentColor = getNodeColor() || params?.agentColor || currentParams?.agentColor;
   const agentInactive = params?.agentInactive || currentParams?.agentInactive;
   
   // Helper function to convert hex to rgba with opacity

@@ -1,12 +1,21 @@
 import { LoadAgentRepo, SaveAgentRepo, DeleteAgentRepo } from "@/modules/agent/repos";
+import { LoadDataStoreNodeRepo, SaveDataStoreNodeRepo } from "@/modules/data-store-node/repos";
+import { LoadIfNodeRepo, SaveIfNodeRepo } from "@/modules/if-node/repos";
 import { DrizzleFlowRepo } from "@/modules/flow/repos/impl/drizzle-flow-repo";
+import { DrizzleDataStoreNodeRepo } from "@/modules/data-store-node/repos/impl/drizzle-data-store-node-repo";
+import { DrizzleIfNodeRepo } from "@/modules/if-node/repos/impl/drizzle-if-node-repo";
 import { CloneFlow } from "@/modules/flow/usecases/clone-flow";
+import { CloneFlowWithNodes } from "@/modules/flow/usecases/clone-flow-with-nodes";
 import { CreateFlow } from "@/modules/flow/usecases/create-flow";
 import { DeleteFlow } from "@/modules/flow/usecases/delete-flow";
+import { DeleteFlowWithNodes } from "@/modules/flow/usecases/delete-flow-with-nodes";
 import { ExportFlowToFile } from "@/modules/flow/usecases/export-flow-to-file";
+import { ExportFlowWithNodes } from "@/modules/flow/usecases/export-flow-with-nodes";
 import { GetFlow } from "@/modules/flow/usecases/get-flow";
+import { GetFlowWithNodes } from "@/modules/flow/usecases/get-flow-with-nodes";
 import { GetModelsFromFlowFile } from "@/modules/flow/usecases/get-models-from-flow-file";
 import { ImportFlowFromFile } from "@/modules/flow/usecases/import-flow-from-file";
+import { ImportFlowWithNodes } from "@/modules/flow/usecases/import-flow-with-nodes";
 import { ListFlowByProvider } from "@/modules/flow/usecases/list-flow-by-provider";
 import { SaveFlow } from "@/modules/flow/usecases/save-flow";
 import { SearchFlow } from "@/modules/flow/usecases/search-flow";
@@ -28,14 +37,21 @@ import { UpdateFlowReadyState } from "@/modules/flow/usecases/update-flow-ready-
 
 export class FlowService {
   public static flowRepo: DrizzleFlowRepo;
+  public static dataStoreNodeRepo: DrizzleDataStoreNodeRepo;
+  public static ifNodeRepo: DrizzleIfNodeRepo;
 
   public static cloneFlow: CloneFlow;
+  public static cloneFlowWithNodes: CloneFlowWithNodes;
   public static createFlow: CreateFlow;
   public static deleteFlow: DeleteFlow;
+  public static deleteFlowWithNodes: DeleteFlowWithNodes;
   public static exportFlowToFile: ExportFlowToFile;
+  public static exportFlowWithNodes: ExportFlowWithNodes;
   public static getFlow: GetFlow;
+  public static getFlowWithNodes: GetFlowWithNodes;
   public static getModelsFromFlowFile: GetModelsFromFlowFile;
   public static importFlowFromFile: ImportFlowFromFile;
+  public static importFlowWithNodes: ImportFlowWithNodes;
   public static saveFlow: SaveFlow;
   public static searchFlow: SearchFlow;
   public static listFlowByProvider: ListFlowByProvider;
@@ -58,15 +74,37 @@ export class FlowService {
 
   public static init(loadAgentRepo: LoadAgentRepo, saveAgentRepo: SaveAgentRepo, deleteAgentRepo: DeleteAgentRepo) {
     this.flowRepo = new DrizzleFlowRepo();
+    this.dataStoreNodeRepo = new DrizzleDataStoreNodeRepo();
+    this.ifNodeRepo = new DrizzleIfNodeRepo();
 
     // Initialize the use cases
     this.cloneFlow = new CloneFlow(this.flowRepo, this.flowRepo, loadAgentRepo, saveAgentRepo);
+    this.cloneFlowWithNodes = new CloneFlowWithNodes(
+      this.flowRepo, 
+      this.flowRepo, 
+      loadAgentRepo, 
+      saveAgentRepo, 
+      this.dataStoreNodeRepo, 
+      this.dataStoreNodeRepo, 
+      this.ifNodeRepo, 
+      this.ifNodeRepo
+    );
     this.createFlow = new CreateFlow(saveAgentRepo, this.flowRepo);
     this.deleteFlow = new DeleteFlow(this.flowRepo, this.flowRepo, deleteAgentRepo);
+    this.deleteFlowWithNodes = new DeleteFlowWithNodes(
+      this.flowRepo, 
+      this.flowRepo, 
+      deleteAgentRepo,
+      this.dataStoreNodeRepo,
+      this.ifNodeRepo
+    );
     this.exportFlowToFile = new ExportFlowToFile(this.flowRepo, loadAgentRepo);
+    this.exportFlowWithNodes = new ExportFlowWithNodes(this.flowRepo, loadAgentRepo, this.dataStoreNodeRepo, this.ifNodeRepo);
     this.getFlow = new GetFlow(this.flowRepo);
+    this.getFlowWithNodes = new GetFlowWithNodes(this.flowRepo, this.dataStoreNodeRepo, this.ifNodeRepo);
     this.getModelsFromFlowFile = new GetModelsFromFlowFile();
     this.importFlowFromFile = new ImportFlowFromFile(this.flowRepo, saveAgentRepo);
+    this.importFlowWithNodes = new ImportFlowWithNodes(this.flowRepo, saveAgentRepo, this.dataStoreNodeRepo, this.ifNodeRepo);
     this.saveFlow = new SaveFlow(this.flowRepo);
     this.searchFlow = new SearchFlow(this.flowRepo);
     this.listFlowByProvider = new ListFlowByProvider(this.flowRepo);

@@ -13,7 +13,7 @@ import { debounce } from "lodash-es";
 import { cn } from "@/shared/utils";
 import { FlowPanelProvider } from "@/flow-multi/components/flow-panel-provider";
 import { getPanelTitle, PanelType } from "@/flow-multi/components/panel-types";
-import { getAgentHexColor, getAgentState } from "@/flow-multi/utils/agent-color-assignment";
+import { getAgentHexColor, getAgentState } from "@/flow-multi/utils/node-color-assignment";
 import { FlowPanel } from "./flow-panel";
 import { PromptPanel } from "@/flow-multi/panels/prompt/prompt-panel";
 import { OutputPanel } from "@/flow-multi/panels/output/output-panel";
@@ -33,9 +33,8 @@ import { Agent } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { flowQueries } from "@/app/queries/flow-queries";
 import { agentKeys } from "@/app/queries/agent/query-factory";
-import { flowKeys } from "@/app/queries/flow/query-factory";
+import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
 import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-mutations";
 
 // Watermark component
@@ -152,7 +151,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
   
   // Fetch flow data when flowId changes
   const { data: flow } = useQuery({
-    ...flowQueries.detail(flowId ? new UniqueEntityID(flowId) : undefined),
+    ...flowQueries.detail(flowId || ""),
     enabled: !!flowId,
   });
 
@@ -206,17 +205,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     // Ensure we're loading agents for the correct flow
     const currentFlowId = flow.id.toString();
     if (currentFlowId !== flowId) {
-      console.log('[FLOW-PANEL-MAIN] Flow ID mismatch, skipping agent load:', {
-        currentFlowId,
-        expectedFlowId: flowId
-      });
       return;
     }
-    
-    console.log('[FLOW-PANEL-MAIN] Loading agents for flow:', {
-      flowId: currentFlowId,
-      nodeCount: flow.props.nodes.length
-    });
 
     const loadAgents = async () => {
       const agentMap = new Map<string, Agent>();
@@ -413,12 +403,12 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     } 
     // Check if this is an if-node or data-store-node panel
     else if ((panelType === 'ifNode' || panelType === 'dataStore' || panelType === 'dataStoreSchema') && agentId) {
-      // Get node from flow to get its color and name
+      // Get node from flow to get its name (color will be queried by tab component)
       let node = flow.props.nodes.find(n => n.id === agentId);
       let nodeData = node?.data as any;
       
-      
-      agentColor = nodeData?.color as string | undefined;
+      // Color will be queried by the tab component, so we don't set it here
+      agentColor = undefined;
       
       // Get node name/label for title with appropriate fallback
       let nodeName: string;
@@ -459,6 +449,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
             ...(agentId && { agentId }),
             // For node panels, also pass nodeId
             ...(agentId && (panelType === 'ifNode' || panelType === 'dataStore') && { nodeId: agentId }),
+            // Pass panel type and flow info to tab for color querying
+            panelType,
             ...(agentColor && { agentColor }),
             ...(agentInactive !== undefined && { agentInactive })
           },
@@ -483,6 +475,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
             ...(agentId && { agentId }),
             // For node panels, also pass nodeId
             ...(agentId && (panelType === 'ifNode' || panelType === 'dataStore') && { nodeId: agentId }),
+            // Pass panel type and flow info to tab for color querying
+            panelType,
             ...(agentColor && { agentColor }),
             ...(agentInactive !== undefined && { agentInactive })
           },
@@ -509,6 +503,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
           ...(agentId && { agentId }),
           // For node panels, also pass nodeId
           ...(agentId && (panelType === 'ifNode' || panelType === 'dataStore' || panelType === 'dataStoreSchema') && { nodeId: agentId }),
+          // Pass panel type and flow info to tab for color querying
+          panelType,
           ...(agentColor && { agentColor })
         },
         position: {
@@ -555,7 +551,10 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
       
       const existingPanels = [...dockviewApi.panels]; // Create copy since removePanel modifies the array
       existingPanels.forEach(panel => {
-        dockviewApi.removePanel(panel);
+        // Check if panel and panel.group exist before removing
+        if (panel && panel.group) {
+          dockviewApi.removePanel(panel);
+        }
       });
       
       // Reset flow switching flag

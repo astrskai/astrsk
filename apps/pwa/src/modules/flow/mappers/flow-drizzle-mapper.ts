@@ -12,6 +12,7 @@ export class FlowDrizzleMapper {
    */
   public static toDomain(row: SelectFlow): Flow {
     try {
+      
       // Parse panel structure if exists
       const panelStructure = row.panel_structure as any;
 
@@ -45,7 +46,9 @@ export class FlowDrizzleMapper {
       }
 
       // Return flow
-      return flowOrError.getValue();
+      const flow = flowOrError.getValue();
+      
+      return flow;
     } catch (error) {
       logger.error(`Failed to convert flow row to domain: ${error}`);
       throw error;
@@ -58,8 +61,9 @@ export class FlowDrizzleMapper {
   public static toPersistence(flow: Flow): InsertFlow {
     try {
       const props = flow.props;
+      
 
-      return {
+      const result = {
         id: flow.id.toString(),
         name: props.name,
         description: props.description,
@@ -72,6 +76,9 @@ export class FlowDrizzleMapper {
         ready_state: props.readyState,
         validation_issues: props.validationIssues,
       };
+      
+      
+      return result;
     } catch (error) {
       logger.error(`Failed to convert flow domain to row: ${error}`);
       throw error;

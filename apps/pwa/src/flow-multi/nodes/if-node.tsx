@@ -28,7 +28,10 @@ import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
+import { ifNodeQueries } from "@/app/queries/if-node/query-factory";
+import { useUpdateIfNodeName } from "@/app/queries/if-node/mutations";
+import { getIfNodeHexColor, getIfNodeOpacity, applyOpacityToHexColor } from "@/flow-multi/utils/node-color-assignment";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
 import { toast } from "sonner";
 
 /**
@@ -57,6 +60,7 @@ export type IfNodeData = {
   logicOperator?: 'AND' | 'OR';
   conditions?: IfCondition[];
   color?: string; // Hex color for the node
+  flowId?: string; // Used in new data structure for query key
 };
 
 /**
@@ -72,33 +76,49 @@ export default function IfNode({
   id,
   selected 
 }: NodeProps<IfNode>) {
-  const [title, setTitle] = useState(data.name || "If Condition");
-  const [editingTitle, setEditingTitle] = useState(data.name || "If Condition");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
   
-  // Get flow ID from agent store
-  const selectedFlowId = useAgentStore.use.selectedFlowId();
+  // Get flow ID from data (new structure) or fall back to agent store (old structure)
+  const flowIdFromData = data.flowId;
+  const selectedFlowIdFromStore = useAgentStore.use.selectedFlowId();
+  const selectedFlowId = flowIdFromData || selectedFlowIdFromStore;
   
-  // Get flow from query
+  // Get flow from query when needed (for schema access, validation, etc.)
   const { data: flow } = useQuery({
     ...flowQueries.detail(selectedFlowId ? new UniqueEntityID(selectedFlowId) : undefined),
     enabled: !!selectedFlowId
   });
+
+  // Try to get separate if node data with fallback
+  const { data: ifNodeData } = useQuery({
+    ...ifNodeQueries.detail(selectedFlowId || "", id),
+    enabled: !!selectedFlowId && !!id && !!flowIdFromData, // Only query if new data structure
+  });
+
+  // Use separate data if available, fallback to embedded data
+  const displayName = ifNodeData?.name || data.name || "If Condition";
+  const displayColor = ifNodeData?.color || data.color;
+  const displayLogicOperator = ifNodeData?.logicOperator || data.logicOperator || 'AND';
+  const displayConditions = ifNodeData?.conditions || data.conditions || [];
   
-  // Get node title mutation
+  const [title, setTitle] = useState(displayName);
+  const [editingTitle, setEditingTitle] = useState(displayName);
+  
+  // Get node title mutation - use new mutation if separate data exists, otherwise fall back to old
   const updateNodeTitle = useUpdateNodeTitle(selectedFlowId || "", id);
+  const updateIfNodeName = useUpdateIfNodeName(selectedFlowId || "", id);
   
   // Check if the if-node panel is open
   const isPanelActive = isPanelOpen('ifNode', id);
   
   // Get node color with opacity based on connection state
   const nodeColor = useMemo(() => {
-    // Use the assigned color from data
-    const baseColor = data.color || '#A5B4FC'; // fallback to indigo-300 if not set
+    // Use the assigned color from separate data or embedded data
+    const baseColor = displayColor || '#A5B4FC'; // fallback to indigo-300 if not set
     return baseColor;
-  }, [data.color]);
+  }, [displayColor]);
   
   // Use flow validation hook
   const { isValid: isFlowValid, invalidNodeReasons } = useFlowValidation(selectedFlowId ? new UniqueEntityID(selectedFlowId) : null);
@@ -116,41 +136,26 @@ export default function IfNode({
     }
   }, [flow, id]);
   
-  // TEMPORARILY DISABLED: If node validation
-  // Check if this specific node is invalid (only show if fully connected from start to end)
-  // const isNodeInvalid = isFullyConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
-  const isNodeInvalid = false; // Always show as valid
+  // Node validation disabled
   
-  // Calculate opacity based on connection state and flow validity
-  const nodeOpacity = useMemo(() => {
-    if (!flow) return 1;
-    
-    // If node is not connected to both start and end, return 70% opacity
-    if (!isFullyConnected) {
-      return 0.7;
-    }
-    // If node is connected but the flow has invalid nodes, return 70% opacity
-    else if (!isFlowValid) {
-      return 0.7;
-    }
-    
-    // Return full opacity for connected nodes in a valid flow
-    return 1;
-  }, [flow, isFullyConnected, isFlowValid]);
-  
-  // Calculate opacity with hex alpha channel
+  // Calculate color with opacity using unified node color assignment
   const colorWithOpacity = useMemo(() => {
-    return nodeOpacity < 1 
-      ? `${nodeColor}${Math.round(nodeOpacity * 255).toString(16).padStart(2, '0')}` 
-      : nodeColor;
-  }, [nodeColor, nodeOpacity]);
+    if (!flow) return nodeColor;
+    
+    const opacity = getIfNodeOpacity(id, flow);
+    return applyOpacityToHexColor(nodeColor, opacity);
+  }, [nodeColor, flow, id]);
 
-  // Save node name to flow
+  // Save node name - use new mutation if separate data exists, otherwise fall back to old
   const saveNodeName = useCallback(async (newName: string) => {
-    if (updateNodeTitle.isPending) return;
+    // Determine which mutation to use based on data structure
+    const useNewMutation = !!ifNodeData || !!data.flowId;
+    const mutation = useNewMutation ? updateIfNodeName : updateNodeTitle;
+    
+    if (mutation.isPending) return;
     
     try {
-      await updateNodeTitle.mutateAsync(newName);
+      await mutation.mutateAsync(newName);
       setTitle(newName);
       
       // Update panel states to reflect the new name
@@ -163,7 +168,7 @@ export default function IfNode({
       setEditingTitle(title);
       toast.error("Failed to update node name");
     }
-  }, [id, title, updateNodeTitle, updateNodePanelStates]);
+  }, [id, title, updateNodeTitle, updateIfNodeName, updateNodePanelStates, ifNodeData, data.flowId]);
 
   // Handle title changes
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -218,19 +223,17 @@ export default function IfNode({
 
   // Use centralized predicate to check valid conditions
   // TEMPORARILY DISABLED: If node condition validation
-  const hasValidConditions = data.conditions?.some((c: IfCondition) => isValidCondition(c)) ?? false;
-  const displayCount = hasValidConditions ? data.conditions?.filter((c: IfCondition) => isValidCondition(c)).length ?? 0 : 0;
+  const hasValidConditions = displayConditions?.some((c: IfCondition) => isValidCondition(c)) ?? false;
+  const displayCount = hasValidConditions ? displayConditions?.filter((c: IfCondition) => isValidCondition(c)).length ?? 0 : 0;
   // const hasConditions = hasValidConditions;
   const hasConditions = true; // Always show as having conditions
 
   return (
     <div 
       className={`group/node relative w-80 rounded-lg inline-flex justify-between items-center ${
-        isNodeInvalid
-          ? "bg-background-surface-3 outline-2 outline-status-destructive-light"
-          : selected 
-            ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
-            : "bg-background-surface-3 outline-1 outline-border-light"
+        selected 
+          ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
+          : "bg-background-surface-3 outline-1 outline-border-light"
       }`}
     >
       <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-4">
@@ -256,7 +259,7 @@ export default function IfNode({
             onMouseDown={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="Enter condition name"
-            disabled={updateNodeTitle.isPending}
+            disabled={updateNodeTitle.isPending || updateIfNodeName.isPending}
             className="nodrag"
           />
         </div>

@@ -46,7 +46,7 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
 
       // First, get flow traversal to know which agents are connected
       const { traverseFlowCached } = await import(
-        "@/flow-multi/utils/flow-traversal-cache"
+        "@/flow-multi/utils/flow-traversal"
       );
       const traversalResult = traverseFlowCached(flow);
 

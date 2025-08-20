@@ -101,6 +101,10 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
     },
     
     onSettled: async () => {
+      
+      // Get current cached data before invalidation
+      const cachedFlowBefore = queryClient.getQueryData(flowKeys.detail(flowId));
+
       // Invalidate affected queries to ensure consistency
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: flowKeys.detail(flowId) }), // IMPORTANT: Invalidate flow detail
@@ -108,6 +112,7 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
         queryClient.invalidateQueries({ queryKey: flowKeys.edges(flowId) }),
         queryClient.invalidateQueries({ queryKey: flowKeys.validation(flowId) })
       ]);
+      
     },
   });
 };

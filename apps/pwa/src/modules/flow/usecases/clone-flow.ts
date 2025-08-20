@@ -108,6 +108,9 @@ export class CloneFlow
         ...edge,
         source: newSource ?? edge.source,
         target: newTarget ?? edge.target,
+        // Convert null handles to undefined for React Flow compatibility
+        sourceHandle: edge.sourceHandle === null ? undefined : edge.sourceHandle,
+        targetHandle: edge.targetHandle === null ? undefined : edge.targetHandle,
       };
     });
 
