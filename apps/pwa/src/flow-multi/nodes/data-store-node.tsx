@@ -36,7 +36,7 @@ import type { DataStoreSchemaField, DataStoreField } from "@/modules/flow/domain
  * Data Store node data type definition
  */
 export type DataStoreNodeData = {
-  label?: string;
+  name?: string;
   color?: string; // Hex color for the node
   dataStoreFields?: DataStoreField[]; // Runtime field values with logic
 };
@@ -68,8 +68,8 @@ function DataStoreNodeComponent({
   selected,
   flow
 }: DataStoreNodeComponentProps) {
-  const [title, setTitle] = useState(data.label || "Data Update");
-  const [editingTitle, setEditingTitle] = useState(data.label || "Data Update");
+  const [title, setTitle] = useState(data.name || "Data Update");
+  const [editingTitle, setEditingTitle] = useState(data.name || "Data Update");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();

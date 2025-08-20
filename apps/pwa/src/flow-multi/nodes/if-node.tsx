@@ -53,8 +53,7 @@ const isValidCondition = (c: IfCondition): boolean => {
  * If node data type definition
  */
 export type IfNodeData = {
-  label?: string;
-  condition?: string;
+  name?: string;
   logicOperator?: 'AND' | 'OR';
   conditions?: IfCondition[];
   color?: string; // Hex color for the node
@@ -73,8 +72,8 @@ export default function IfNode({
   id,
   selected 
 }: NodeProps<IfNode>) {
-  const [title, setTitle] = useState(data.label || "If Condition");
-  const [editingTitle, setEditingTitle] = useState(data.label || "If Condition");
+  const [title, setTitle] = useState(data.name || "If Condition");
+  const [editingTitle, setEditingTitle] = useState(data.name || "If Condition");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
