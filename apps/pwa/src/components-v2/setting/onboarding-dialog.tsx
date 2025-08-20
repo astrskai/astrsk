@@ -47,45 +47,7 @@ const OnboardingDialog = () => {
         {step === 1 && (
           <>
             <DialogHeader>
-              <StepIndicator totalSteps={3} currentStep={step} />
-              <DialogTitle>
-                <div className="font-[500] text-[24px] leading-[40px] text-[#F1F1F1]">
-                  GPT-5 Flow Contest + Free Access
-                </div>
-              </DialogTitle>
-              <DialogDescription>
-                <div className="font-[400] text-[16px] leading-[25.6px] text-[#A1A1A1]">
-                  Design epic roleplay flows with free GPT-5 access
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-            <div className="relative w-full h-[349px] rounded-[12px] bg-background-surface-1 overflow-hidden">
-              <img
-                className="w-full h-full object-cover"
-                src="/img/onboarding/gpt-5-contest.jpg"
-                alt="GPT-5 Flow Contest"
-              />
-            </div>
-            <div className="flex flex-row justify-end gap-2">
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={() =>
-                  window.open("https://www.reddit.com/r/astrsk_ai/comments/1mkt4f3/gpt5_roleplay_flowpreset_contest_create_with_free/", "_blank")
-                }
-              >
-                Contest info
-              </Button>
-              <Button size="lg" onClick={() => setStep((prev) => prev + 1)}>
-                Next
-              </Button>
-            </div>
-          </>
-        )}
-        {step === 2 && (
-          <>
-            <DialogHeader>
-              <StepIndicator totalSteps={3} currentStep={step} />
+              <StepIndicator totalSteps={2} currentStep={step} />
               <DialogTitle>
                 <div className="font-[500] text-[24px] leading-[40px] text-[#F1F1F1]">
                   2 short minutes to understand how astrsk works!
@@ -103,29 +65,21 @@ const OnboardingDialog = () => {
                 height="100%"
                 src="https://www.youtube.com/embed/vO6JFL6R_mc?autoplay=1&mute=1&cc_load_policy=1"
                 title="astrsk Tutorial"
-                frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
             </div>
             <div className="flex flex-row justify-end gap-2">
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={() => setStep((prev) => prev - 1)}
-              >
-                Back
-              </Button>
               <Button size="lg" onClick={() => setStep((prev) => prev + 1)}>
                 Next
               </Button>
             </div>
           </>
         )}
-        {step === 3 && (
+        {step === 2 && (
           <>
             <DialogHeader>
-              <StepIndicator totalSteps={3} currentStep={step} />
+              <StepIndicator totalSteps={2} currentStep={step} />
               <DialogTitle>
                 <div className="font-[500] text-[24px] leading-[40px] text-[#F1F1F1]">
                   Help us improve—but only if you choose to
