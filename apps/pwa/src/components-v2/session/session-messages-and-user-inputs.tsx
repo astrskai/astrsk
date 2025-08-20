@@ -24,8 +24,11 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   CaseUpper,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  Database,
   GripVertical,
   Hash,
   History,
@@ -72,7 +75,6 @@ import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
 import { InlineChatStyles } from "@/components-v2/session/inline-chat-styles";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
-import { ButtonPill } from "@/components-v2/ui/button-pill";
 import {
   Dialog,
   DialogClose,
@@ -82,6 +84,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components-v2/ui/dialog";
+import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { toastError } from "@/components-v2/ui/toast-error";
@@ -238,11 +241,11 @@ const MessageItemInternal = ({
                   {translation ?? content}
                 </Markdown>
                 {!streaming && isShowDataStore && (
-                  <div className="mt-[10px] p-[16px] border-[1px] border-[#1111111A] rounded-[12px]">
+                  <div className="mt-[10px] p-[16px] border-[1px] rounded-[12px] bg-background-surface-0/5 data-history">
                     <div className="mb-[16px] flex flex-row gap-[8px] items-center text-text-subtle">
                       <History size={20} />
                       <div className="font-[500] text-[14px] leading-[20px]">
-                        Data schema history
+                        Data history
                       </div>
                     </div>
                     {dataStoreFields?.map((field) => (
@@ -767,7 +770,7 @@ const UserInputs = ({
       <div
         className={cn(
           "mx-auto w-full min-w-[400px] max-w-[892px] p-[24px] rounded-[40px] flex flex-col gap-[16px]",
-          "bg-[#3b3b3b]/50 backdrop-blur-xl border border-background-surface-2",
+          "bg-[#3b3b3b]/50 backdrop-blur-xl border border-text-primary/10",
           disabled && "pointer-events-none opacity-50",
         )}
       >
@@ -1111,12 +1114,22 @@ const SortableDataSchemaFieldItem = ({
     transition,
     isDragging,
   } = useSortable({ id: name });
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+
+  // Collapse long value
+  const valueRef = useRef<HTMLDivElement>(null);
+  const [isOpenValue, setIsOpenValue] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  useEffect(() => {
+    const element = valueRef.current;
+    if (element) {
+      setIsClamped(element.scrollHeight > element.clientHeight);
+    }
+  }, [value]);
 
   return (
     <div
@@ -1134,34 +1147,43 @@ const SortableDataSchemaFieldItem = ({
         </div>
       </div>
       <div className="grow flex flex-col gap-[8px]">
-        <div className="group/field-name flex flex-row gap-[8px] items-center text-text-subtle hover:text-text-primary">
-          {getSchemaTypeIcon(type)}
-          <div className="font-[500] text-[14px] leading-[20px]">{name}</div>
-          {isEditing ? (
-            <>
-              <Check
+        <div className="group/field-name flex flex-row justify-between items-center">
+          <div className="flex flex-row gap-[8px] items-center text-text-subtle group-hover/field-name:text-text-primary">
+            {getSchemaTypeIcon(type)}
+            <div className="font-[500] text-[14px] leading-[20px]">{name}</div>
+            {isEditing ? (
+              <>
+                <Check
+                  size={20}
+                  className="!text-text-body"
+                  onClick={() => {
+                    onEditDone();
+                  }}
+                />
+                <X
+                  size={20}
+                  className="!text-text-body"
+                  onClick={() => {
+                    onEditCancel();
+                  }}
+                />
+              </>
+            ) : (
+              <Pencil
                 size={20}
-                className="!text-text-body"
+                className="!text-text-body hidden group-hover/field-name:inline-block"
                 onClick={() => {
-                  onEditDone();
+                  setIsEditing(true);
                 }}
               />
-              <X
-                size={20}
-                className="!text-text-body"
-                onClick={() => {
-                  onEditCancel();
-                }}
-              />
-            </>
-          ) : (
-            <Pencil
-              size={20}
-              className="!text-text-body hidden group-hover/field-name:inline-block"
-              onClick={() => {
-                setIsEditing(true);
-              }}
-            />
+            )}
+          </div>
+          {isClamped && (
+            <div className="text-background-surface-5" onClick={() => {
+              setIsOpenValue((open) => !open);
+            }}>
+              {isOpenValue ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           )}
         </div>
         {isEditing ? (
@@ -1181,7 +1203,12 @@ const SortableDataSchemaFieldItem = ({
             }}
           />
         ) : (
-          <div className="text-text-primary line-clamp-3">{value}</div>
+          <div
+            ref={valueRef}
+            className={cn("text-text-primary", !isOpenValue && "line-clamp-3")}
+          >
+            {value}
+          </div>
         )}
       </div>
     </div>
@@ -1818,8 +1845,8 @@ const SessionMessagesAndUserInputs = ({
     [generateCharacterMessage],
   );
 
-  // Data schema list
-  const [isOpenDataSchemaList, setIsOpenDataSchemaList] = useState(false);
+  // Session data
+  const [isOpenSessionData, setIsOpenSessionData] = useState(false);
   const { data: flow } = useQuery(flowQueries.detail(session?.flowId));
   const isDataSchemaUsed = useMemo(() => {
     if (!flow) {
@@ -1947,7 +1974,7 @@ const SessionMessagesAndUserInputs = ({
         className={cn(
           "w-full h-full overflow-auto contain-strict session-scrollbar",
           "transition-[padding-right] pr-0",
-          isDataSchemaUsed && isOpenDataSchemaList && "pr-[320px]",
+          isDataSchemaUsed && isOpenSessionData && "pr-[320px]",
         )}
       >
         <div
@@ -2150,26 +2177,28 @@ const SessionMessagesAndUserInputs = ({
           !isDataSchemaUsed && "hidden",
         )}
       >
-        <ButtonPill
-          size="default"
-          active={isOpenDataSchemaList}
+        <FloatingActionButton
+          icon={<Database size={24} />}
+          label="Session data"
+          position="top-right"
+          className="top-0 right-0"
+          openned={isOpenSessionData}
           onClick={() => {
-            setIsOpenDataSchemaList((isOpen) => !isOpen);
+            setIsOpenSessionData((isOpen) => !isOpen);
           }}
-        >
-          Data schema list
-        </ButtonPill>
+        />
         <div
           className={cn(
-            "w-[320px] border-1 border-[#F1F1F14D] rounded-[12px] bg-background-surface-3",
+            "w-[320px] mt-[48px] rounded-[12px]",
+            "bg-[#3b3b3b]/50 backdrop-blur-xl border border-text-primary/10",
             "flex flex-col overflow-hidden",
             "transition-opacity opacity-0",
-            isOpenDataSchemaList
+            isOpenSessionData
               ? "opacity-100"
               : "pointer-events-none select-none",
           )}
         >
-          <div className="shrink-0 h-[72px] p-[16px] border-b-1 border-b-[#F1F1F14D] flex flex-row items-center text-text-primary">
+          <div className="shrink-0 h-[72px] p-[16px] border-b-1 border-text-primary/10 flex flex-row items-center text-text-primary">
             {streamingMessageId ? (
               <>
                 <SvgIcon
@@ -2186,7 +2215,7 @@ const SessionMessagesAndUserInputs = ({
               </>
             ) : (
               <div className="font-[600] text-[16px] leading-[25.6px]">
-                Data schema list
+                Session data
               </div>
             )}
           </div>
