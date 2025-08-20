@@ -115,10 +115,12 @@ const makeContext = async ({
     context.session.scenario = plotCard.props.description;
   }
 
-  // Set `{{history}}`
+  // Set `{{history}}` and prepare dataStore for regeneration
   if (includeHistory) {
     const history: HistoryItem[] = [];
     const lastMessageId = session.turnIds[session.turnIds.length - 1];
+    let dataStoreForRegeneration: DataStoreSavedField[] = [];
+
     for (const messageId of session.turnIds) {
       if (regenerateMessageId && messageId.equals(regenerateMessageId)) {
         break;
@@ -134,6 +136,12 @@ const makeContext = async ({
         );
         continue;
       }
+
+      // Store dataStore from the last processed turn for regeneration
+      if (message.dataStore && message.dataStore.length > 0) {
+        dataStoreForRegeneration = cloneDeep(message.dataStore);
+      }
+
       const content =
         session.translation && session.translation.promptLanguage !== "none"
           ? message.translations.get(session.translation.promptLanguage)
@@ -156,6 +164,11 @@ const makeContext = async ({
       });
     }
     context.history = history;
+
+    // Set dataStore for regeneration context
+    if (regenerateMessageId && dataStoreForRegeneration.length > 0) {
+      context.dataStore = dataStoreForRegeneration;
+    }
   }
 
   // Make entries list
@@ -1555,8 +1568,15 @@ async function* executeFlow({
       .throwOnFailure()
       .getValue();
 
-    // Get last turn's dataStore as starting point
-    if (session.turnIds.length > 0) {
+    // Get dataStore as starting point - prioritize context dataStore for regeneration
+    if (context.dataStore && context.dataStore.length > 0) {
+      // Use dataStore from context (regeneration scenario)
+      dataStore = cloneDeep(context.dataStore);
+      logger.info(
+        `Using dataStore from context for regeneration (${context.dataStore.length} fields)`,
+      );
+    } else if (session.turnIds.length > 0) {
+      // Use last turn's dataStore as fallback
       const lastTurnId = session.turnIds[session.turnIds.length - 1];
       try {
         const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
@@ -1591,7 +1611,10 @@ async function* executeFlow({
 
             // Execute rendered value as JavaScript code
             const fullContext = createFullContext(context, {}, dataStore);
-            const executedValue = executeJavaScriptCode(renderedValue, fullContext);
+            const executedValue = executeJavaScriptCode(
+              renderedValue,
+              fullContext,
+            );
 
             // Convert to appropriate type and create DataStoreSavedField
             const convertedValue = convertToDataStoreType(
@@ -1701,8 +1724,11 @@ async function* executeFlow({
 
               if (schemaField) {
                 // Execute rendered value as JavaScript code
-                const executedValue = executeJavaScriptCode(renderedValue, fullContext);
-                
+                const executedValue = executeJavaScriptCode(
+                  renderedValue,
+                  fullContext,
+                );
+
                 // Convert value
                 const convertedValue = convertToDataStoreType(
                   String(executedValue),
@@ -2207,7 +2233,10 @@ function createFullContext(
  * @param context - The context object to make available in the code
  * @returns The result of the executed code
  */
-function executeJavaScriptCode(code: string, context: Record<string, unknown>): unknown {
+function executeJavaScriptCode(
+  code: string,
+  context: Record<string, unknown>,
+): unknown {
   try {
     // Basic security check - reject code with potentially dangerous keywords
     const dangerousPatterns = [
@@ -2220,22 +2249,24 @@ function executeJavaScriptCode(code: string, context: Record<string, unknown>): 
       /\bprocess\b/,
       /\bglobal\b/,
       /\bwindow\b/,
-      /\bdocument\b/
+      /\bdocument\b/,
     ];
-    
-    if (dangerousPatterns.some(pattern => pattern.test(code))) {
-      logger.warn(`JavaScript code contains potentially dangerous patterns: ${code}`);
+
+    if (dangerousPatterns.some((pattern) => pattern.test(code))) {
+      logger.warn(
+        `JavaScript code contains potentially dangerous patterns: ${code}`,
+      );
       return code; // Return original code without execution
     }
-    
+
     // Create a list of context keys and values
     const contextKeys = Object.keys(context);
     const contextValues = Object.values(context);
-    
+
     // Create a safe function that has access to the context
     // Use Function constructor instead of eval for better security
     const func = new Function(...contextKeys, `"use strict"; return (${code})`);
-    
+
     // Execute the function with context values
     return func(...contextValues);
   } catch (error) {
@@ -2251,7 +2282,10 @@ function executeJavaScriptCode(code: string, context: Record<string, unknown>): 
  * @param type - The target DataStore field type
  * @returns The converted value
  */
-function convertToDataStoreType(value: string, type: DataStoreFieldType): string | number | boolean {
+function convertToDataStoreType(
+  value: string,
+  type: DataStoreFieldType,
+): string | number | boolean {
   switch (type) {
     case "string":
       return String(value);
