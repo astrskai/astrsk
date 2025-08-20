@@ -145,23 +145,12 @@ const ProviderListItem = ({
                 </div>
               ))}
               {apiSource === ApiSource.AstrskAi && (
-                <div className="self-stretch inline-flex flex-col justify-start items-start gap-1">
-                  <div className="self-stretch inline-flex justify-start items-center gap-1">
-                    <SvgIcon name="tropy" width={12} height={12} />
-                    <div className="flex-1 inline-flex flex-col justify-start items-start gap-1">
-                      <div className="self-stretch justify-start text-text-primary text-xs font-semibold leading-none">Special Contest Exclusive!</div>
-                    </div>
-                  </div>
-                  <div className="self-stretch justify-start text-xs font-normal leading-tight">
-                    <span className="text-text-body">
-                      FREE access to LLMs during our contest!<br/>
-                      (GPT-5, GPT-5 mini, GPT-5 nano, Gemini 2.5 flash)
-                    </span>
-                    <span className="text-text-subtle">
-                      {" "}* Responses may be slower than usual<br/>
-                      due to rate limits.
-                    </span>
-                  </div>
+                <div className="font-[600] text-[12px] leading-[15.6px] text-text-input-subtitle">
+                  <span className="text-text-muted-title">
+                    Free Gemini 2.5 Flash & GPT-5 mini
+                  </span>
+                  <br />
+                  for a limited period!
                 </div>
               )}
             </div>
