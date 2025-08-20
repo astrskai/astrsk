@@ -36,7 +36,7 @@ import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { sanitizeFileName } from "@/shared/utils";
 
 // Import queries and mutations
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
 import { 
   useUpdateAgentOutput, 
   useUpdateAgentOutputFormat, 
@@ -68,8 +68,9 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     error 
   } = useQuery({
     ...agentQueries.output(agentId),
-    enabled: !!agentId && !updateOutput.isEditing && !updateSchemaFields.isEditing,
+    enabled: !!agentId && !updateOutput.isEditing && !updateSchemaFields.isEditing && !updateOutputFormat.isPending,
   });
+
 
   // 4. Local UI state
   const [isExpanded, setIsExpanded] = useState(false);

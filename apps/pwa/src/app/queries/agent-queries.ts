@@ -64,7 +64,7 @@ export const agentQueries = {
   // Parameters query - only fetches parameter fields
   parameters: (id?: string) =>
     queryOptions({
-      queryKey: [...agentQueries.all(), "parameters", id ?? ""],
+      queryKey: [...agentQueries.all(), "detail", id ?? "", "parameters"],
       queryFn: async () => {
         if (!id) {
           return null;
@@ -97,7 +97,7 @@ export const agentQueries = {
   // Output query - only fetches output-related fields
   output: (id?: string) =>
     queryOptions({
-      queryKey: [...agentQueries.all(), "output", id ?? ""],
+      queryKey: [...agentQueries.all(), "detail", id ?? "", "output"],
       queryFn: async () => {
         if (!id) {
           return null;
@@ -116,7 +116,7 @@ export const agentQueries = {
   // Prompt query - only fetches prompt-related fields
   prompt: (id?: string) =>
     queryOptions({
-      queryKey: [...agentQueries.all(), "prompt", id ?? ""],
+      queryKey: [...agentQueries.all(), "detail", id ?? "", "prompt"],
       queryFn: async () => {
         if (!id) {
           return null;
@@ -135,7 +135,7 @@ export const agentQueries = {
   // Name query - only fetches agent name
   name: (id?: string) =>
     queryOptions({
-      queryKey: [...agentQueries.all(), "name", id ?? ""],
+      queryKey: [...agentQueries.all(), "detail", id ?? "", "name"],
       queryFn: async () => {
         if (!id) {
           return null;
@@ -154,7 +154,7 @@ export const agentQueries = {
   // Model query - only fetches model-related fields
   model: (id?: string) =>
     queryOptions({
-      queryKey: [...agentQueries.all(), "model", id ?? ""],
+      queryKey: [...agentQueries.all(), "detail", id ?? "", "model"],
       queryFn: async () => {
         if (!id) {
           return null;

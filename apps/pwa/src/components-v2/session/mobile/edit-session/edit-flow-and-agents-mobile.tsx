@@ -9,7 +9,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { useFlow } from "@/app/hooks/use-flow";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { useFlows } from "@/app/hooks/use-flows";
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
 import { SessionService } from "@/app/services/session-service";
 import { Combobox } from "@/components-v2/combobox";
 import { cn } from "@/components-v2/lib/utils";

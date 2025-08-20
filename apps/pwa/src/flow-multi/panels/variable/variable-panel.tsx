@@ -250,7 +250,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     const agentNames = new Map<string, string>();
     agentNameQueries.forEach((q, index) => {
       if (q.data && agentIds[index]) {
-        agentNames.set(agentIds[index], q.data);
+        agentNames.set(agentIds[index], q.data.name);
       }
     });
 
@@ -263,12 +263,13 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
     // Create a stable key from relevant agent properties
     const agentDataKey = agents.map((agent) => {
-      if (!agent || !agent.props) {
+      if (!agent || !agent.props || !agent.id) {
         return null;
       }
+      const agentIdString = agent.id.toString();
       return {
-        id: agent.id.toString(),
-        name: agentNames.get(agent.id.toString()) || agent.props.name, // Use name from name query
+        id: agentIdString,
+        name: agentNames.get(agentIdString) || agent.props.name, // Use name from name query
         outputFormat: agent.props.outputFormat,
         enabledStructuredOutput: agent.props.enabledStructuredOutput,
         schemaFields:
@@ -295,7 +296,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
     // Iterate through all agents
     agents.forEach((agent) => {
-      if (!agent || !agent.props) {
+      if (!agent || !agent.props || !agent.id) {
         return;
       }
       

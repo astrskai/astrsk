@@ -158,15 +158,13 @@ export const flowQueries = {
           return null;
         }
         const flow = flowOrError.getValue();
-        // Transform to persistence format for storage
-        const persisted = FlowDrizzleMapper.toPersistence(flow);
-        return persisted;
+        // Transform to persistence format for consistent caching (like legacy system)
+        return FlowDrizzleMapper.toPersistence(flow);
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        const domain = FlowDrizzleMapper.toDomain(data as any);
-        return domain;
+        // Transform back to domain object for components
+        return FlowDrizzleMapper.toDomain(data as any);
       },
       gcTime: 1000 * 60 * 5, // 5 minutes cache
       staleTime: 0, // Always consider stale - force refetch

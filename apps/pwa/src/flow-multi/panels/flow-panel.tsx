@@ -212,7 +212,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // Save flow when edges/nodes change using granular mutation
   // IMPORTANT: This function merges React Query cache data with local changes
-  const saveFlowChanges = useCallback(async (providedNodes?: CustomNodeType[], providedEdges?: CustomEdgeType[], isStructuralChange: boolean = false) => {
+  const saveFlowChanges = useCallback(async (providedNodes?: CustomNodeType[], providedEdges?: CustomEdgeType[], isStructuralChange: boolean = false, invalidateAgents: boolean = false) => {
 
     
     const currentFlow = flowRef.current;
@@ -256,7 +256,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       updateNodesAndEdges.mutate(
         { 
           nodes: updatedNodes as FlowNode[], 
-          edges: validEdges as FlowEdge[] 
+          edges: validEdges as FlowEdge[],
+          invalidateAgents
         },
         {
           onSuccess: ({ nodes: savedNodes, edges: savedEdges }) => {
@@ -535,8 +536,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       isLocalChangeRef.current = true;
       
       // Save the flow changes - pass updatedNodes explicitly, let edges come from refs
+      // Set invalidateAgents to true when adding new agents
       setTimeout(() => {
-        saveFlowChanges(updatedNodes, undefined, true);
+        saveFlowChanges(updatedNodes, undefined, true, true);
       }, 0);
       
       // Invalidate agent queries for color updates
