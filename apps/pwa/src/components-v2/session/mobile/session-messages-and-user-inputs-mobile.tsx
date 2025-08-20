@@ -1261,6 +1261,11 @@ const SessionMessagesAndUserInputsMobile = ({
 
         // Update message to database
         await TurnService.updateTurn.execute(streamingMessage);
+
+        // Invalidate turn query
+        queryClient.invalidateQueries({
+          queryKey: turnQueries.detail(streamingMessage.id).queryKey,
+        });
       } catch (error) {
         // Notify error to user
         const parsedError = parseAiSdkErrorMessage(error);
@@ -1298,6 +1303,11 @@ const SessionMessagesAndUserInputsMobile = ({
           } else {
             // Update message to database
             await TurnService.updateTurn.execute(streamingMessage);
+
+            // Invalidate turn query
+            queryClient.invalidateQueries({
+              queryKey: turnQueries.detail(streamingMessage.id).queryKey,
+            });
           }
         }
       } finally {
