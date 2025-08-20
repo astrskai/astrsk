@@ -6,9 +6,9 @@ import {
   GetCard,
   ImportCardFromFile,
 } from "@/modules/card/usecases";
-import { ExportFlowToFile } from "@/modules/flow/usecases/export-flow-to-file";
+import { ExportFlowWithNodes } from "@/modules/flow/usecases/export-flow-with-nodes";
 import { GetModelsFromFlowFile } from "@/modules/flow/usecases/get-models-from-flow-file";
-import { ImportFlowFromFile } from "@/modules/flow/usecases/import-flow-from-file";
+import { ImportFlowWithNodes } from "@/modules/flow/usecases/import-flow-with-nodes";
 import { DrizzleSessionRepo } from "@/modules/session/repos/impl/drizzle-session-repo";
 import {
   AddMessage,
@@ -57,12 +57,12 @@ export class SessionService {
     turnRepo: DrizzleTurnRepo, // TODO: replace to interface
     getCard: GetCard,
     // updateLocalSyncMetadata: UpdateLocalSyncMetadata,
-    exportFlowToFile: ExportFlowToFile,
+    exportFlowWithNodes: ExportFlowWithNodes,
     exportCardToFile: ExportCardToFile,
     getBackground: GetBackground,
     getAsset: GetAsset,
     getTurn: GetTurn,
-    importFlowFromFile: ImportFlowFromFile,
+    importFlowWithNodes: ImportFlowWithNodes,
     importCardFromFile: ImportCardFromFile,
     saveFileToBackground: SaveFileToBackground,
     saveFlowRepo: SaveFlowRepo,
@@ -113,7 +113,7 @@ export class SessionService {
     this.searchSession = new SearchSession(this.sessionRepo);
     this.exportSessionToFile = new ExportSessionToFile(
       this.sessionRepo,
-      exportFlowToFile,
+      exportFlowWithNodes,
       exportCardToFile,
       getBackground,
       getAsset,
@@ -121,7 +121,7 @@ export class SessionService {
     );
     this.importSessionFromFile = new ImportSessionFromFile(
       this.sessionRepo,
-      importFlowFromFile,
+      importFlowWithNodes,
       importCardFromFile,
       saveFileToBackground,
       this.addMessage,

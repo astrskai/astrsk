@@ -66,14 +66,41 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
 
   private isEnhancedFormat(data: any): boolean {
     // Enhanced format has separate node data sections alongside legacy structure
-    return data.dataStoreNodes !== undefined || data.ifNodes !== undefined;
+    const hasDataStoreNodes = data.dataStoreNodes !== undefined;
+    const hasIfNodes = data.ifNodes !== undefined;
+    const isEnhanced = hasDataStoreNodes || hasIfNodes;
+    
+    console.info('🔍 Enhanced Format Detection:', {
+      hasDataStoreNodes,
+      hasIfNodes,
+      isEnhanced,
+      dataStoreNodesType: typeof data.dataStoreNodes,
+      ifNodesType: typeof data.ifNodes,
+      dataStoreNodesKeys: hasDataStoreNodes ? Object.keys(data.dataStoreNodes) : 'N/A',
+      ifNodesKeys: hasIfNodes ? Object.keys(data.ifNodes) : 'N/A'
+    });
+    
+    return isEnhanced;
   }
 
   private isLegacyFormat(data: any): boolean {
     // Legacy format: has agents but no separate node data sections
-    return data.agents !== undefined && 
-           data.dataStoreNodes === undefined && 
-           data.ifNodes === undefined;
+    const hasAgents = data.agents !== undefined;
+    const noDataStoreNodes = data.dataStoreNodes === undefined;
+    const noIfNodes = data.ifNodes === undefined;
+    const isLegacy = hasAgents && noDataStoreNodes && noIfNodes;
+    
+    console.info('🔍 Legacy Format Detection:', {
+      hasAgents,
+      noDataStoreNodes,
+      noIfNodes,
+      isLegacy,
+      agentsType: typeof data.agents,
+      agentsKeys: hasAgents ? Object.keys(data.agents) : 'N/A',
+      topLevelKeys: Object.keys(data)
+    });
+    
+    return isLegacy;
   }
 
   private convertSillyTavernPrompt(prompt: STPrompt, filename: string): any {
@@ -197,6 +224,15 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
     try {
       // Enhanced format: extract separate node data while keeping flow structure
       const { agents, dataStoreNodes, ifNodes, exportedAt, exportedBy, metadata, ...flowData } = data;
+      
+      console.info('🔧 Enhanced Format Import Started:', {
+        agentsCount: agents ? Object.keys(agents).length : 0,
+        dataStoreNodesCount: dataStoreNodes ? Object.keys(dataStoreNodes).length : 0,
+        ifNodesCount: ifNodes ? Object.keys(ifNodes).length : 0,
+        flowNodesCount: flowData.nodes ? flowData.nodes.length : 0,
+        exportedAt,
+        exportedBy
+      });
 
       // Create node ID mapping for all node types to prevent conflicts
       const nodeIdMap = new Map<string, string>();
@@ -315,6 +351,13 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
     try {
       // Use existing legacy import logic for current user flows
       const { agents, panelStructure, viewport, ...flowJson } = data;
+      
+      console.info('🔧 Legacy Format Import Started:', {
+        agentsCount: agents ? Object.keys(agents).length : 0,
+        flowNodesCount: flowJson.nodes ? flowJson.nodes.length : 0,
+        hasPanelStructure: !!panelStructure,
+        hasViewport: !!viewport
+      });
 
       // Import agent with new id
       const agentIdMap = new Map<string, string>();
@@ -424,17 +467,41 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
     try {
       // Read file to string
       const text = await readFileToString(file);
+      console.info('📄 Import File Content Sample:', {
+        fileName: file.name,
+        fileSize: file.size,
+        contentLength: text.length,
+        contentSample: text.substring(0, 500) + '...',
+        hasDataStoreNodesInText: text.includes('"dataStoreNodes"'),
+        hasIfNodesInText: text.includes('"ifNodes"'),
+        hasExportedAtInText: text.includes('"exportedAt"')
+      });
 
       // Parse text to json
       let parsedData = JSON.parse(text);
 
+      // Debug: Log the parsed data structure immediately after JSON.parse
+      console.info('📋 Raw Parsed JSON Data Structure:', {
+        topLevelKeys: Object.keys(parsedData),
+        hasAgents: 'agents' in parsedData,
+        hasDataStoreNodes: 'dataStoreNodes' in parsedData,
+        hasIfNodes: 'ifNodes' in parsedData,
+        hasExportedAt: 'exportedAt' in parsedData,
+        hasExportedBy: 'exportedBy' in parsedData,
+        hasMetadata: 'metadata' in parsedData,
+        dataStoreNodesValue: parsedData.dataStoreNodes,
+        ifNodesValue: parsedData.ifNodes
+      });
+
       // Convert ST prompt
       if (this.isSillyTavernPrompt(parsedData)) {
+        console.info('🔄 Converting SillyTavern prompt format');
         parsedData = this.convertSillyTavernPrompt(parsedData, file.name);
       }
 
       // Check if this is old format and migrate if needed
       if (isOldFlowFormat(parsedData)) {
+        console.info('🔄 Migrating old flow format');
         const migrationResult = migrateFlowToNewFormat(parsedData);
         if (migrationResult.isFailure) {
           throw new Error(migrationResult.getError());
@@ -442,14 +509,32 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
         parsedData = migrationResult.getValue();
       }
 
+      // Debug: Log the parsed data structure after all transformations
+      console.info('📋 Final Parsed Flow Data Structure:', {
+        topLevelKeys: Object.keys(parsedData),
+        hasAgents: 'agents' in parsedData,
+        hasDataStoreNodes: 'dataStoreNodes' in parsedData,
+        hasIfNodes: 'ifNodes' in parsedData,
+        hasExportedAt: 'exportedAt' in parsedData,
+        hasExportedBy: 'exportedBy' in parsedData,
+        hasMetadata: 'metadata' in parsedData,
+        dataStoreNodesValue: parsedData.dataStoreNodes,
+        ifNodesValue: parsedData.ifNodes
+      });
+
       // Route to appropriate import method based on format
       if (this.isEnhancedFormat(parsedData)) {
-        console.info('Importing enhanced format flow with separate node data');
+        console.info('✅ Importing enhanced format flow with separate node data');
         return this.importEnhancedFormat(parsedData, agentModelOverrides);
       } else if (this.isLegacyFormat(parsedData)) {
-        console.info('Importing legacy format flow (current user flows)');
+        console.info('✅ Importing legacy format flow (current user flows)');
         return this.importLegacyFormat(parsedData, agentModelOverrides);
       } else {
+        console.error('❌ Unknown flow format detected:', {
+          isEnhanced: this.isEnhancedFormat(parsedData),
+          isLegacy: this.isLegacyFormat(parsedData),
+          dataKeys: Object.keys(parsedData)
+        });
         return Result.fail('Unknown flow format. This file may be corrupted or from an unsupported version.');
       }
 

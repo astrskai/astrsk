@@ -156,43 +156,83 @@ export class ExportFlowWithNodes implements UseCase<UniqueEntityID, Result<File>
 
       // 4. Create comprehensive export structure (enhanced legacy format)
       const flowJson = flow.toJSON();
-      const exportData = {
+      const exportData: any = {
         // Keep legacy format structure
         ...flowJson,
         // Add agent data (just like legacy format)
         agents,
-        // Add new separate node data sections
-        dataStoreNodes,
-        ifNodes,
-        // Add metadata for tracking
-        exportedAt: new Date().toISOString(),
-        exportedBy: "astrsk-v2.3.0"
       };
 
-      // 5. Add processing metadata for debugging
-      (exportData as any).metadata = {
-        processing,
-        totalNodes: flow.props.nodes.length,
-        nodeTypes: flow.props.nodes.reduce((acc, node) => {
-          acc[node.type] = (acc[node.type] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>),
-      };
+      // Debug: Check actual content of node data objects
+      console.info('🔧 Export Data Objects Check:', {
+        dataStoreNodesKeys: Object.keys(dataStoreNodes),
+        dataStoreNodesLength: Object.keys(dataStoreNodes).length,
+        ifNodesKeys: Object.keys(ifNodes),
+        ifNodesLength: Object.keys(ifNodes).length,
+        dataStoreNodesSample: Object.keys(dataStoreNodes).length > 0 ? dataStoreNodes[Object.keys(dataStoreNodes)[0]] : 'empty',
+        ifNodesSample: Object.keys(ifNodes).length > 0 ? ifNodes[Object.keys(ifNodes)[0]] : 'empty'
+      });
+
+      // Only add separate node data sections if they contain data
+      // This ensures compatibility: flows with only agents remain in legacy format
+      const hasDataStoreNodes = Object.keys(dataStoreNodes).length > 0;
+      const hasIfNodes = Object.keys(ifNodes).length > 0;
+      
+      console.info('🔧 Export Format Decision:', {
+        hasDataStoreNodes,
+        hasIfNodes,
+        willUseEnhancedFormat: hasDataStoreNodes || hasIfNodes
+      });
+      
+      if (hasDataStoreNodes || hasIfNodes) {
+        // Enhanced format: add separate node data sections
+        if (hasDataStoreNodes) {
+          exportData.dataStoreNodes = dataStoreNodes;
+        }
+        if (hasIfNodes) {
+          exportData.ifNodes = ifNodes;
+        }
+        // Add metadata for enhanced format tracking
+        exportData.exportedAt = new Date().toISOString();
+        exportData.exportedBy = "astrsk-v2.3.0";
+      }
+
+      // 5. Add processing metadata for debugging (only for enhanced format)
+      if (hasDataStoreNodes || hasIfNodes) {
+        exportData.metadata = {
+          processing,
+          totalNodes: flow.props.nodes.length,
+          nodeTypes: flow.props.nodes.reduce((acc, node) => {
+            acc[node.type] = (acc[node.type] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>),
+        };
+      }
 
       // 6. Create file
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      const jsonString = JSON.stringify(exportData, null, 2);
+      console.info('📄 Export JSON Content Sample:', {
+        contentLength: jsonString.length,
+        contentSample: jsonString.substring(0, 500) + '...',
+        hasDataStoreNodesInJSON: jsonString.includes('"dataStoreNodes"'),
+        hasIfNodesInJSON: jsonString.includes('"ifNodes"'),
+        hasExportedAtInJSON: jsonString.includes('"exportedAt"')
+      });
+      
+      const blob = new Blob([jsonString], {
         type: "application/json",
       });
       const file = new File([blob], `${flow.props.name}.json`, {
         type: "application/json",
       });
 
+      const format = (hasDataStoreNodes || hasIfNodes) ? "enhanced" : "legacy-compatible";
       console.info(`Successfully exported flow "${flow.props.name}" with:`, {
         agents: Object.keys(agents).length,
         dataStoreNodes: Object.keys(dataStoreNodes).length,
         ifNodes: Object.keys(ifNodes).length,
         totalFileSize: blob.size,
-        format: "v2.0"
+        format: format
       });
 
       return Result.ok(file);
