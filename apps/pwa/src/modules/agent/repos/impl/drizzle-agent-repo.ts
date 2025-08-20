@@ -262,7 +262,7 @@ export class DrizzleAgentRepo
         name: row.name,
         enabledStructuredOutput: row.enabled_structured_output,
         outputFormat: row.output_format,
-        outputStreaming: row.output_streaming || undefined,
+        outputStreaming: row.output_streaming ?? undefined,
         schemaName: row.schema_name || undefined,
         schemaDescription: row.schema_description || undefined,
         schemaFields: row.schema_fields || [],

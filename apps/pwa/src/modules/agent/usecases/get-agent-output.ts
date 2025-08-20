@@ -8,7 +8,7 @@ interface GetAgentOutputDTO {
   agentId: string;
 }
 
-interface AgentOutputResult {
+export interface AgentOutputResult {
   enabledStructuredOutput: boolean;
   outputFormat?: OutputFormat;
   outputStreaming?: boolean;

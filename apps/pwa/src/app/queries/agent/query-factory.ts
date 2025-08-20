@@ -12,7 +12,11 @@
 import { queryOptions } from "@tanstack/react-query";
 import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";
-import { Agent } from "@/modules/agent/domain/agent";
+import { AgentDrizzleMapper } from "@/modules/agent/mappers/agent-drizzle-mapper";
+import { PromptDrizzleMapper } from "@/modules/agent/mappers/prompt-drizzle-mapper";
+import { ParameterDrizzleMapper } from "@/modules/agent/mappers/parameter-drizzle-mapper";
+import { OutputDrizzleMapper } from "@/modules/agent/mappers/output-drizzle-mapper";
+import { queryClient } from "@/app/queries/query-client";
 
 /**
  * Query Key Factory
@@ -85,8 +89,6 @@ export interface AgentMetadata {
   name: string;
   description?: string;
   color?: string;
-  createdAt: Date;
-  updatedAt?: Date;
 }
 
 export interface AgentListFilters {
@@ -101,46 +103,67 @@ export const agentQueries = {
     queryOptions({
       queryKey: agentKeys.list(filters),
       queryFn: async () => {
-        const result = await AgentService.searchAgent.execute({
+        const agentsOrError = await AgentService.searchAgent.execute({
           keyword: filters.keyword || "",
           limit: filters.limit || 100,
         });
-        if (result.isFailure) return [];
-        return result.getValue();
+        if (agentsOrError.isFailure) return [];
+        const agents = agentsOrError.getValue();
+
+        // Store each agent in detail cache
+        agents.forEach((agent) => {
+          queryClient.setQueryData(
+            agentKeys.detail(agent.id.toString()),
+            AgentDrizzleMapper.toPersistence(agent),
+          );
+        });
+
+        // Return persistence objects for caching
+        return agents.map((agent) => AgentDrizzleMapper.toPersistence(agent));
+      },
+      select: (data) => {
+        // Transform back to domain object
+        return data.map((agent) => AgentDrizzleMapper.toDomain(agent as any));
       },
       staleTime: 1000 * 10, // 10 seconds
       gcTime: 1000 * 60, // 1 minute
     }),
 
   // Full agent detail
-  detail: (id: string) =>
+  detail: (id: string | UniqueEntityID) =>
     queryOptions({
-      queryKey: agentKeys.detail(id),
+      queryKey: agentKeys.detail(typeof id === 'string' ? id : id.toString()),
       queryFn: async () => {
-        const result = await AgentService.getAgent.execute(
-          new UniqueEntityID(id)
-        );
+        const uniqueId = typeof id === 'string' ? new UniqueEntityID(id) : id;
+        const result = await AgentService.getAgent.execute(uniqueId);
         if (result.isFailure) return null;
-        return result.getValue();
+        const agent = result.getValue();
+        // Transform to persistence format for storage
+        return AgentDrizzleMapper.toPersistence(agent);
+      },
+      select: (data) => {
+        if (!data) return null;
+        // Transform back to domain object
+        return AgentDrizzleMapper.toDomain(data as any);
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
 
   // Agent name only
-  name: (id: string) =>
+  name: (id?: string) =>
     queryOptions({
-      queryKey: agentKeys.name(id),
+      queryKey: agentKeys.name(id ?? ""),
       queryFn: async () => {
+        if (!id) return null;
         const result = await AgentService.getAgentName.execute({ 
           agentId: id 
         });
         if (result.isFailure) {
           return null;
         }
-        const nameData = result.getValue();
-        const name = nameData.name; // Extract the name string from the object
-        return name;
+        return result.getValue(); // Return the full object with name property
       },
+      enabled: !!id,
       staleTime: 1000 * 60, // 1 minute
     }),
 
@@ -160,49 +183,52 @@ export const agentQueries = {
           name: agent.props.name,
           description: agent.props.description,
           color: agent.props.color,
-          createdAt: agent.props.createdAt,
-          updatedAt: agent.props.updatedAt,
         } as AgentMetadata;
       },
       staleTime: 1000 * 60, // 1 minute
     }),
 
   // Agent prompt
-  prompt: (id: string) =>
+  prompt: (id?: string) =>
     queryOptions({
-      queryKey: agentKeys.prompt(id),
+      queryKey: agentKeys.prompt(id ?? ""),
       queryFn: async () => {
-        const result = await AgentService.getAgent.execute(
-          new UniqueEntityID(id)
-        );
+        if (!id) return null;
+        const result = await AgentService.getAgentPrompt.execute({ agentId: id });
         if (result.isFailure) return null;
+        const value = result.getValue();
         
-        const agent = result.getValue();
-        return {
-          promptMessages: agent.props.promptMessages,
-          textPrompt: agent.props.textPrompt,
-        };
+        // Transform to persistence format for caching
+        return PromptDrizzleMapper.toPersistence(value);
       },
+      select: (data) => {
+        if (!data) return null;
+        // Transform back to domain object
+        return PromptDrizzleMapper.toDomain(data as any);
+      },
+      enabled: !!id,
       staleTime: 1000 * 30, // 30 seconds
     }),
 
   // Agent output configuration
-  output: (id: string) =>
+  output: (id?: string) =>
     queryOptions({
-      queryKey: agentKeys.output(id),
+      queryKey: agentKeys.output(id ?? ""),
       queryFn: async () => {
-        const result = await AgentService.getAgent.execute(
-          new UniqueEntityID(id)
-        );
+        if (!id) return null;
+        const result = await AgentService.getAgentOutput.execute({ agentId: id });
         if (result.isFailure) return null;
+        const value = result.getValue();
         
-        const agent = result.getValue();
-        return {
-          outputFormat: agent.props.outputFormat,
-          enabledStructuredOutput: agent.props.enabledStructuredOutput,
-          schemaFields: agent.props.schemaFields,
-        };
+        // Transform to persistence format for caching
+        return OutputDrizzleMapper.toPersistence(value);
       },
+      select: (data) => {
+        if (!data) return null;
+        // Transform back to domain object
+        return OutputDrizzleMapper.toDomain(data as any);
+      },
+      enabled: !!id,
       staleTime: 1000 * 30, // 30 seconds
     }),
 
@@ -243,23 +269,24 @@ export const agentQueries = {
     }),
 
   // Agent parameters
-  parameters: (id: string) =>
+  parameters: (id?: string) =>
     queryOptions({
-      queryKey: agentKeys.parameters(id),
+      queryKey: agentKeys.parameters(id ?? ""),
       queryFn: async () => {
-        const result = await AgentService.getAgent.execute(
-          new UniqueEntityID(id)
-        );
+        if (!id) return null;
+        const result = await AgentService.getAgentParameters.execute({ agentId: id });
         if (result.isFailure) return null;
+        const value = result.getValue();
         
-        const agent = result.getValue();
-        const params = agent.props.parameterValues || new Map();
-        const enabled = agent.props.enabledParameters || new Map();
-        return {
-          enabledParameters: enabled,
-          parameterValues: params,
-        };
+        // Transform to persistence format for caching
+        return ParameterDrizzleMapper.toPersistence(value);
       },
+      select: (data) => {
+        if (!data) return null;
+        // Transform back to domain object
+        return ParameterDrizzleMapper.toDomain(data as any);
+      },
+      enabled: !!id,
       staleTime: 1000 * 60, // 1 minute
     }),
 };

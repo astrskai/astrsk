@@ -36,6 +36,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentKeys } from "@/app/queries/agent/query-factory";
 import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
 import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-mutations";
+import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
+import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
 
 // Watermark component
 const Watermark = React.memo(() => (
@@ -176,11 +178,51 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
   flowRef.current = flow;
   agentsRef.current = agents;
   
-  // Invalidate all agent queries when flow ID changes
+  // Invalidate all flow-related queries when flow ID changes
   useEffect(() => {
     if (flowId && flowId !== prevFlowIdRef.current) {
-      // Invalidate all agent queries to force refetch with new flow context
-      queryClient.invalidateQueries({ queryKey: agentKeys.all });
+      // Clear previous flow's cached data to prevent UI state conflicts
+      if (prevFlowIdRef.current) {
+        queryClient.removeQueries({ queryKey: flowKeys.detail(prevFlowIdRef.current) });
+        queryClient.removeQueries({ queryKey: flowKeys.panelLayout(prevFlowIdRef.current) });
+        queryClient.removeQueries({ queryKey: flowKeys.uiViewport(prevFlowIdRef.current) });
+        
+        // Invalidate all node-specific queries for the previous flow to prevent stale cache
+        queryClient.invalidateQueries({ queryKey: ifNodeKeys.byFlow(prevFlowIdRef.current) });
+        queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.byFlow(prevFlowIdRef.current) });
+      }
+      
+      // Invalidate agents in both previous and current flows to force refetch
+      // This ensures agent colors and properties are fresh for the flows being switched
+      
+      // Get agent IDs from previous flow and invalidate their queries
+      if (prevFlowIdRef.current) {
+        const previousFlow = queryClient.getQueryData(flowKeys.detail(prevFlowIdRef.current)) as any;
+        const previousAgentNodes = previousFlow?.props?.nodes?.filter((node: any) => node.type === 'agent') || [];
+        previousAgentNodes.forEach((node: any) => {
+          const agentId = node.data?.agentId || node.id;
+          if (agentId) {
+            queryClient.invalidateQueries({ queryKey: agentKeys.detail(agentId) });
+          }
+        });
+      }
+      
+      // Get agent IDs from current flow and invalidate their queries  
+      const currentFlow = queryClient.getQueryData(flowKeys.detail(flowId)) as any;
+      const currentAgentNodes = currentFlow?.props?.nodes?.filter((node: any) => node.type === 'agent') || [];
+      currentAgentNodes.forEach((node: any) => {
+        const agentId = node.data?.agentId || node.id;
+        if (agentId) {
+          queryClient.invalidateQueries({ queryKey: agentKeys.detail(agentId) });
+        }
+      });
+      
+      // Also invalidate node queries for the new flow to ensure fresh data
+      if (flowId) {
+        queryClient.invalidateQueries({ queryKey: ifNodeKeys.byFlow(flowId) });
+        queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.byFlow(flowId) });
+      }
+      
       prevFlowIdRef.current = flowId;
     }
   }, [flowId, queryClient]);

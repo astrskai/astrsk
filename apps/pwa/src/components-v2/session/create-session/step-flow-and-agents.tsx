@@ -12,7 +12,7 @@ import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
 import { SessionProps } from "@/modules/session/domain";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
 
 const StepFlowAndAgentsSchema = z.object({
   flowId: z.string().nonempty(),
