@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
+import { queryClient } from "@/app/queries/query-client";
 import { ApiConnection } from "@/modules/api/domain";
 import { ApiModel } from "@/modules/api/domain/api-model";
 
@@ -12,8 +13,11 @@ export interface ApiConnectionWithModels {
 export const useApiConnectionsWithModels = () => {
   const { data } = useQuery(apiConnectionQueries.listWithModels());
 
-  // TODO: remove invalidate
-  const invalidate = () => {};
+  const invalidate = () => {
+    queryClient.invalidateQueries({
+      queryKey: apiConnectionQueries.withModels(),
+    });
+  };
 
   return [data, invalidate] as const;
 };

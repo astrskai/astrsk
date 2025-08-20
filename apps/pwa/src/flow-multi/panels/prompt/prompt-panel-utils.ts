@@ -7,11 +7,46 @@ import { PromptItem } from "./prompt-panel-types";
  * Convert agent's PromptMessage array to UI-friendly PromptItem array
  */
 export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): PromptItem[] {
-  return promptMessages.map((msg): PromptItem => {
-    if (msg instanceof PlainPromptMessage) {
+  // Parse raw objects back into domain classes if needed
+  const parsedMessages = promptMessages.map(msg => {
+    // If it's already a domain instance, use it directly
+    if (msg instanceof PlainPromptMessage || msg instanceof HistoryPromptMessage) {
+      return msg;
+    }
+    
+    // Otherwise, parse the raw object into the proper domain class using parsePromptMessage
+    const parsed = parsePromptMessage(msg as any);
+    if (parsed.isFailure) {
+      return msg; // Fallback to original if parsing fails
+    }
+    return parsed.getValue();
+  });
+  
+  return parsedMessages.map((msg): PromptItem => {
+    const msgAny = msg as any;
+    let parsedMessage = msg;
+    if (!(msg instanceof PlainPromptMessage || msg instanceof HistoryPromptMessage)) {
+
+      const parsed = parsePromptMessage(msgAny as any);
+      if (parsed.isFailure) {
+        return msg; // Fallback to original if parsing fails
+      }
+      parsedMessage = parsed.getValue();
+    }
+    // Check if it's a plain message (either instance or plain object with type='plain')
+    const isPlainMessage = parsedMessage instanceof PlainPromptMessage;
+    const isHistoryMessage = parsedMessage instanceof HistoryPromptMessage;
+
+    if (isPlainMessage) {
+      // Handle both domain instances and plain objects
+      const promptBlocks = parsedMessage.promptBlocks || [];
+      const id = parsedMessage.id.toString();
+      const role = parsedMessage.role || 'user';
+      const enabled = parsedMessage.props.enabled;
+
       // Extract content from prompt blocks
-      const content = msg.promptBlocks
-        .map(block => {
+      const content = promptBlocks
+        .map((block:any) => {
           // Check if this is a PlainBlock with template property
           if ('template' in block && block.template) {
             return block.template;
@@ -25,12 +60,12 @@ export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): P
         .join('\n');
       
       // Try to use the first block's name as the label, or a combination of block names
-      let label = `Message ${msg.id.toString().slice(0, 8)}`;
-      if (msg.promptBlocks.length > 0) {
+      let label = `Message`;
+      if (promptBlocks.length > 0) {
         // Get names from blocks that have them
-        const blockNames = msg.promptBlocks
-          .filter(block => 'name' in block && block.name)
-          .map(block => block.name);
+        const blockNames = promptBlocks
+          .filter((block:any) => 'name' in block && block.name)
+          .map((block:any) => block.name);
         
         if (blockNames.length > 0) {
           // Use first block name or combine multiple
@@ -39,19 +74,24 @@ export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): P
       }
       
       return {
-        id: msg.id.toString(),
+        id,
         label,
-        enabled: msg.props.enabled ?? true,
+        enabled: enabled ?? true,
         content,
-        role: msg.role,
+        role,
         type: "regular",
       };
-    } else if (msg instanceof HistoryPromptMessage) {
-      // For history messages, extract content similarly
-      const userBlocks = msg.userPromptBlocks || [];
+    } else if (isHistoryMessage) {
+      // Handle both domain instances and plain objects
+      const userBlocks = parsedMessage instanceof HistoryPromptMessage ? parsedMessage.userPromptBlocks || [] : [];
+      const id = parsedMessage instanceof HistoryPromptMessage ? parsedMessage.id.toString() : msgAny._id?.value || msgAny.id;
+      const enabled = parsedMessage instanceof HistoryPromptMessage ? parsedMessage.props.enabled : msgAny.props?.enabled;
+      const start = parsedMessage instanceof HistoryPromptMessage ? parsedMessage.start : msgAny.props?.start;
+      const end = parsedMessage instanceof HistoryPromptMessage ? parsedMessage.end : msgAny.props?.end;
+      const countFromEnd = parsedMessage instanceof HistoryPromptMessage ? parsedMessage.countFromEnd : msgAny.props?.countFromEnd;
       
       const content = userBlocks
-        .map(block => {
+        .map((block:any) => {
           // Check if this is a PlainBlock with template property
           if ('template' in block && block.template) {
             return block.template;
@@ -64,27 +104,51 @@ export function convertPromptMessagesToItems(promptMessages: PromptMessage[]): P
         })
         .join('\n');
       
-      // Create a more descriptive label for history messages
+      // Try to use the first block's name as the label, or fall back to descriptive label
       let label = `History`;
-      if (msg.start !== undefined && msg.end !== undefined) {
-        const fromEnd = msg.countFromEnd !== false;
-        if (fromEnd) {
-          label = `History (last ${msg.end - msg.start} messages)`;
+      if (userBlocks.length > 0) {
+        // Get names from blocks that have them
+        const blockNames = userBlocks
+          .filter((block:any) => 'name' in block && block.name)
+          .map((block:any) => block.name);
+        
+        if (blockNames.length > 0) {
+          // Use first block name or combine multiple
+          label = blockNames.length === 1 ? blockNames[0] : blockNames.join(' + ');
         } else {
-          label = `History (messages ${msg.start}-${msg.end})`;
+          // Fall back to descriptive label if no custom names
+          if (start !== undefined && end !== undefined) {
+            const fromEnd = countFromEnd !== false;
+            if (fromEnd) {
+              label = `History (last ${end - start} messages)`;
+            } else {
+              label = `History (messages ${start}-${end})`;
+            }
+          }
+        }
+      } else {
+        // Fall back to descriptive label if no blocks
+        if (start !== undefined && end !== undefined) {
+          const fromEnd = countFromEnd !== false;
+          if (fromEnd) {
+            label = `History (last ${end - start} messages)`;
+          } else {
+            label = `History (messages ${start}-${end})`;
+          }
         }
       }
+
       
       return {
-        id: msg.id.toString(),
+        id,
         label,
-        enabled: msg.props.enabled ?? true,
+        enabled: enabled ?? true,
         content,
         role: "assistant", // History messages are typically assistant role
         type: "history",
-        start: msg.start,
-        end: msg.end,
-        countFromEnd: msg.countFromEnd,
+        start,
+        end,
+        countFromEnd,
       };
     }
     
@@ -156,7 +220,6 @@ export function convertItemsToPromptMessages(items: PromptItem[]): PromptMessage
     // Parse the JSON data into proper domain objects
     const result = parsePromptMessage(messageData);
     if (result.isFailure) {
-      console.error("Failed to parse prompt message:", result.getError());
       throw new Error(`Failed to parse prompt message: ${result.getError()}`);
     }
     

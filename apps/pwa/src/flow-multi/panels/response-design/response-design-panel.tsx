@@ -1,109 +1,81 @@
 // Response design panel component for Dockview multi-panel layout
-// Handles response template design with auto-save
+// Handles response template design with auto-save using mutation system
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { debounce } from "lodash-es";
-import { Check, Loader2, Variable, Database } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { Editor } from "@/components-v2/editor";
 import type { editor } from "monaco-editor";
-import { TypoLarge, TypoSmall } from "@/components-v2/typo";
-import { Button } from "@/components-v2/ui/button";
 import { toast } from "sonner";
 
-// Import flow services and queries directly
+// Import flow queries and mutations
 import { useQuery } from "@tanstack/react-query";
-import { flowQueries } from "@/app/queries/flow-queries";
-import { FlowService } from "@/app/services/flow-service";
-import { UniqueEntityID } from "@/shared/domain";
+import { flowQueries } from "@/app/queries/flow/query-factory";
+import { useUpdateResponseTemplate } from "@/app/queries/flow/mutations";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
-import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 
 interface ResponseDesignPanelProps {
   flowId: string;
 }
 
 export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
-  // 1. Load flow data using global queryClient settings
+  // 1. Get the mutation hook with edit mode support
+  const updateResponseTemplate = useUpdateResponseTemplate(flowId);
+  
+  // 2. Load just the response template - more efficient than loading entire flow
+  // Disable refetching while editing to prevent UI jumping
   const { 
-    data: flow, 
+    data: responseTemplate, 
     isLoading,
-    error 
+    error
   } = useQuery({
-    ...flowQueries.detail(flowId ? new UniqueEntityID(flowId) : undefined),
-    enabled: !!flowId,
+    ...flowQueries.response(flowId),
+    enabled: !!flowId && !updateResponseTemplate.isEditing,
+    refetchOnWindowFocus: !updateResponseTemplate.isEditing,
+    refetchOnMount: false, // Don't refetch on mount - only when needed
   });
 
-  // 2. Get Monaco editor functions from flow context
+  // 3. Get Monaco editor functions from flow context
   const { setLastMonacoEditor } = useFlowPanelContext();
 
-  // 3. Local UI state
+  // 4. Local UI state for the editor
   const [currentTemplate, setCurrentTemplate] = useState("");
-  const [originalTemplate, setOriginalTemplate] = useState<string | null>(null);
   
-  // Track initialization to prevent loops - only respond to flowId changes
+  // Track initialization
   const lastFlowIdRef = useRef<string | null>(null);
-  const isInitializedRef = useRef(false);
-
-  // Helper function to check if template has actually changed
-  const hasTemplateChanged = useCallback((template: string) => {
-    if (originalTemplate === null) return false;
-    return template !== originalTemplate;
-  }, [originalTemplate]);
-
-  // Initialize template only when flowId changes, not when flow data changes
+  
+  // Track editing state in a ref to avoid triggering effects
+  const isEditingRef = useRef(updateResponseTemplate.isEditing);
   useEffect(() => {
-    if (flow && flowId !== lastFlowIdRef.current) {
-      const template = flow.props.responseTemplate || "";
-      setCurrentTemplate(template);
-      setOriginalTemplate(template);
-      isInitializedRef.current = true;
+    isEditingRef.current = updateResponseTemplate.isEditing;
+  }, [updateResponseTemplate.isEditing]);
+
+  // Initialize and sync template
+  useEffect(() => {
+    // Initialize when flow changes
+    if (flowId && flowId !== lastFlowIdRef.current && responseTemplate !== undefined) {
+      setCurrentTemplate(responseTemplate);
       lastFlowIdRef.current = flowId;
     }
-  }, [flowId, flow]);
+    // Sync when response template changes externally (but not during editing)
+    else if (responseTemplate !== undefined && !isEditingRef.current) {
+      setCurrentTemplate(responseTemplate);
+    }
+  }, [flowId, responseTemplate]); // Don't include isEditing in deps to avoid re-running when edit mode changes
 
-  // Removed dirty state tracking as dirty checking is no longer needed
-
-  // Save response template
-  const saveResponseTemplate = useCallback(
-    async (template: string) => {
-      if (!flow) return;
-
-      try {
-        const updatedFlow = flow.update({
-          responseTemplate: template,
-        });
-
-        if (updatedFlow.isFailure) {
-          throw new Error(updatedFlow.getError());
+  // Debounced save
+  const debouncedSave = useMemo(
+    () => debounce((template: string) => {
+      updateResponseTemplate.mutate(template, {
+        onError: (error) => {
+          toast.error("Failed to save response template", {
+            description: error instanceof Error ? error.message : "Unknown error",
+          });
         }
-
-        // Save with invalidation so other components see the changes
-        const result = await FlowService.saveFlow.execute(updatedFlow.getValue());
-        if (result.isFailure) {
-          throw new Error(result.getError());
-        }
-        
-        // Invalidate queries for other components, this component won't refetch due to global staleTime
-        await invalidateSingleFlowQueries(updatedFlow.getValue().id);
-        
-        // Update original template to reflect the saved state
-        setOriginalTemplate(template);
-      } catch (error) {
-        toast.error("Failed to save response template", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
-    },
-    [flow]
-  );
-
-  // Debounced auto-save
-  const debouncedSave = useCallback(
-    debounce((template: string) => {
-      saveResponseTemplate(template);
-    }, 1000), // Increased debounce to 1 second to prevent rapid saves
-    [saveResponseTemplate]
+      });
+    }, 1000),
+    [updateResponseTemplate] // Include mutation in deps
   );
 
   // Handle template change
@@ -112,13 +84,9 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
       if (template === undefined) return;
       
       setCurrentTemplate(template);
-      
-      // Only save if template has actually changed (removed dirty state tracking)
-      if (hasTemplateChanged(template)) {
-        debouncedSave(template);
-      }
+      debouncedSave(template);
     },
-    [debouncedSave, hasTemplateChanged]
+    [debouncedSave]
   );
 
   // Handle editor mount for variable insertion tracking (no redundancy)
@@ -158,11 +126,11 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
     );
   }
 
-  if (!flow || error) {
+  if (error) {
     return (
       <div className="h-full flex items-center justify-center bg-[#111111]">
         <div className="text-text-subtle">
-          {error ? 'Error loading flow' : 'Flow not found'}
+          Error loading response template
         </div>
       </div>
     );

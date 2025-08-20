@@ -27,6 +27,8 @@ interface EditorProps {
   onBlur?: () => void;
   options?: editor.IStandaloneEditorConstructionOptions;
   defaultOptions?: boolean;
+  clearUndoOnValueChange?: boolean;
+  isLoading?: boolean;
   padding?: {
     top?: number;
     right?: number;
@@ -83,6 +85,8 @@ export function Editor({
   onBlur,
   options = {},
   defaultOptions = true,
+  clearUndoOnValueChange = false,
+  isLoading = false,
   padding = { top: 2, right: 2, bottom: 2, left: 2 },
 }: EditorProps) {
   const { theme } = useTheme();
@@ -141,6 +145,15 @@ export function Editor({
       // Force set theme after mount
       monaco.editor.setTheme(currentTheme);
 
+      // Track focus state to prevent model disposal while editor is focused
+      editor.onDidFocusEditorWidget(() => {
+        isFocusedRef.current = true;
+      });
+
+      editor.onDidBlurEditorWidget(() => {
+        isFocusedRef.current = false;
+      });
+
       // Call custom onMount if provided
       if (onMount) {
         onMount(editor, monaco);
@@ -155,6 +168,88 @@ export function Editor({
       monacoRef.current.editor.setTheme(currentTheme);
     }
   }, [currentTheme]);
+
+  // Clear undo history when value changes externally (e.g., switching between message fields)
+  const prevValueRef = useRef(value);
+  const isUserTypingRef = useRef(false);
+  const isFocusedRef = useRef(false);
+  const lastDisposeTimeRef = useRef(0);
+  
+  useEffect(() => {
+    // Add extra safety checks to prevent disposal during active use
+    const now = Date.now();
+    const timeSinceLastDispose = now - lastDisposeTimeRef.current;
+    const hasRecentDispose = timeSinceLastDispose < 500; // Don't dispose within 500ms of last dispose
+    
+    if (clearUndoOnValueChange && 
+        editorRef.current && 
+        monacoRef.current && 
+        value !== prevValueRef.current && 
+        !isUserTypingRef.current && 
+        !isFocusedRef.current &&
+        !hasRecentDispose) {
+      
+      const editor = editorRef.current;
+      const monaco = monacoRef.current;
+      const currentModel = editor.getModel();
+      
+      if (currentModel) {
+        try {
+          // Additional check: make sure editor is not busy with any operations
+          if (editor.hasTextFocus() || document.activeElement === editor.getDomNode()) {
+            // Editor is still active, don't dispose
+            prevValueRef.current = value;
+            return;
+          }
+          
+          // Store current editor state
+          const currentPosition = editor.getPosition();
+          
+          // Dispose the old model and create a new one to completely clear undo history
+          const oldUri = currentModel.uri;
+          currentModel.dispose();
+          lastDisposeTimeRef.current = now;
+          
+          // Create a new model with the new content
+          const newModel = monaco.editor.createModel(value, language, oldUri);
+          
+          // Set the new model on the editor
+          editor.setModel(newModel);
+          
+          // Re-establish the onChange handler for the new model
+          if (onChange) {
+            newModel.onDidChangeContent((e) => {
+              isUserTypingRef.current = true;
+              const newValue = newModel.getValue();
+              onChange(newValue, e);
+              // Reset the flag after a short delay to allow for the next external change
+              setTimeout(() => {
+                isUserTypingRef.current = false;
+              }, 150);
+            });
+          }
+          
+          // Restore cursor position if possible
+          if (currentPosition && value.length >= currentPosition.lineNumber) {
+            editor.setPosition(currentPosition);
+          }
+          
+        } catch (error) {
+          // Silently handle disposal errors to prevent console spam
+          // Fall back to just updating the value without clearing undo
+          try {
+            const currentModel = editor.getModel();
+            if (currentModel && currentModel.getValue() !== value) {
+              currentModel.setValue(value);
+            }
+          } catch (fallbackError) {
+            // Even fallback failed, just ignore to prevent further errors
+          }
+        }
+      }
+    }
+    prevValueRef.current = value;
+  }, [value, clearUndoOnValueChange, language, onChange]);
 
   // Handle expand toggle
   const handleExpandToggle = useCallback(() => {
@@ -239,7 +334,7 @@ export function Editor({
           )}
         </button>
       )}
-      <div className={cn("w-full h-full", paddingClasses, className)}>
+      <div className={cn("w-full h-full relative", paddingClasses, className)}>
         <MonacoEditor
           height={height}
           width={width}
@@ -251,6 +346,16 @@ export function Editor({
           onChange={onChange}
           options={mergedOptions}
         />
+        
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-background-surface-0/80 backdrop-blur-sm flex items-center justify-center z-20">
+            <div className="flex items-center gap-2 px-3 py-2 bg-background-surface-2 rounded-md shadow-sm">
+              <div className="w-4 h-4 border-2 border-border-normal border-t-text-primary rounded-full animate-spin"></div>
+              <span className="text-text-subtle text-xs font-medium">Saving...</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

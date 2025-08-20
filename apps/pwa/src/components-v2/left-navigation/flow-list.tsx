@@ -2,6 +2,7 @@
 
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { flowQueries } from "@/app/queries/flow-queries";
+import { useCloneFlowWithNodes, useDeleteFlowWithNodes } from "@/app/queries/flow/mutations/flow-mutations";
 import { queryClient } from "@/app/queries/query-client";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
@@ -58,6 +59,12 @@ const FlowItem = ({
   const { isValid, isFetched } = useFlowValidation(flowId);
   const isInvalid = isFetched && !isValid;
 
+  // Clone mutation
+  const cloneFlowMutation = useCloneFlowWithNodes();
+  
+  // Delete mutation  
+  const deleteFlowMutation = useDeleteFlowWithNodes();
+
   // Handle select
   const setActivePage = useAppStore.use.setActivePage();
   const setIsLoading = useAppStore.use.setIsLoading();
@@ -85,19 +92,19 @@ const FlowItem = ({
     try {
       // Check if service is initialized
       if (
-        !FlowService.exportFlowToFile ||
-        typeof FlowService.exportFlowToFile.execute !== "function"
+        !FlowService.exportFlowWithNodes ||
+        typeof FlowService.exportFlowWithNodes.execute !== "function"
       ) {
         console.error(
-          "FlowService.exportFlowToFile not initialized:",
-          FlowService.exportFlowToFile,
+          "FlowService.exportFlowWithNodes not initialized:",
+          FlowService.exportFlowWithNodes,
         );
         toast.error("Export service not initialized yet. Please try again.");
         return;
       }
 
-      // Export flow to file
-      const fileOrError = await FlowService.exportFlowToFile.execute(flowId);
+      // Export flow to file using enhanced export
+      const fileOrError = await FlowService.exportFlowWithNodes.execute(flowId);
       if (fileOrError.isFailure) {
         throw new Error(fileOrError.getError());
       }
@@ -124,21 +131,12 @@ const FlowItem = ({
   // Handle copy
   const handleCopy = useCallback(async () => {
     try {
-      // Copy flow
-      const copiedFlowOrError = await FlowService.cloneFlow.execute(flowId);
-      if (copiedFlowOrError.isFailure) {
-        throw new Error(copiedFlowOrError.getError());
-      }
-      const copiedFlow = copiedFlowOrError.getValue();
-
-      // Select copied flow
+      const copiedFlow = await cloneFlowMutation.mutateAsync(flowId.toString());
+      
+      // Select copied flow after the clone operation is fully complete
+      // The mutation's onSuccess has already populated the cache
       selectFlowId(copiedFlow.id.toString());
-
-      // Invalidate flows
-      await queryClient.invalidateQueries({
-        queryKey: flowQueries.lists(),
-      });
-
+      
       toast.success("Flow copied successfully");
     } catch (error) {
       logger.error(error);
@@ -148,7 +146,7 @@ const FlowItem = ({
         });
       }
     }
-  }, [flowId, selectFlowId]);
+  }, [flowId, selectFlowId, cloneFlowMutation]);
 
   // Handle delete
   const [isOpenDelete, setIsOpenDelete] = useState(false);
@@ -167,22 +165,16 @@ const FlowItem = ({
 
   const handleDelete = useCallback(async () => {
     try {
-      // Delete flow
-      const deleteFlowOrError = await FlowService.deleteFlow.execute(flowId);
-      if (deleteFlowOrError.isFailure) {
-        throw new Error(deleteFlowOrError.getError());
-      }
+      // Delete flow with all nodes
+      await deleteFlowMutation.mutateAsync(flowId.toString());
 
       // Unselect deleted flow
       if (selectedFlowId === flowId.toString()) {
         selectFlowId(null);
         setActivePage(Page.Init);
       }
-
-      // Invalidate flows
-      queryClient.invalidateQueries({
-        queryKey: flowQueries.lists(),
-      });
+      
+      toast.success("Flow deleted successfully");
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {
@@ -194,7 +186,7 @@ const FlowItem = ({
       // Close delete dialog
       setIsOpenDelete(false);
     }
-  }, [flowId, selectFlowId, selectedFlowId, setActivePage]);
+  }, [flowId, selectFlowId, selectedFlowId, setActivePage, deleteFlowMutation]);
 
   return (
     <>
@@ -263,13 +255,21 @@ const FlowItem = ({
                     e.stopPropagation();
                     handleCopy();
                   }}
+                  disabled={cloneFlowMutation.isPending}
+                  className={cn(
+                    cloneFlowMutation.isPending && "opacity-50 cursor-not-allowed"
+                  )}
                 >
-                  <Copy size={20} />
+                  {cloneFlowMutation.isPending ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <Copy size={20} />
+                  )}
                   <span className="sr-only">Copy</span>
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" sideOffset={14} variant="button">
-                <p>Copy</p>
+                <p>{cloneFlowMutation.isPending ? "Copying..." : "Copy"}</p>
               </TooltipContent>
             </Tooltip>
             <Tooltip>
@@ -283,13 +283,21 @@ const FlowItem = ({
                     }
                     setIsOpenDelete(true);
                   }}
+                  disabled={deleteFlowMutation.isPending}
+                  className={cn(
+                    deleteFlowMutation.isPending && "opacity-50 cursor-not-allowed"
+                  )}
                 >
-                  <Trash2 size={20} />
+                  {deleteFlowMutation.isPending ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={20} />
+                  )}
                   <span className="sr-only">Delete</span>
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" sideOffset={14} variant="button">
-                <p>Delete</p>
+                <p>{deleteFlowMutation.isPending ? "Deleting..." : "Delete"}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -467,10 +475,10 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
 
         // Check if service is initialized
         if (
-          !FlowService.importFlowFromFile ||
-          typeof FlowService.importFlowFromFile.execute !== "function"
+          !FlowService.importFlowWithNodes ||
+          typeof FlowService.importFlowWithNodes.execute !== "function"
         ) {
-          console.error("FlowService.importFlowFromFile not initialized");
+          console.error("FlowService.importFlowWithNodes not initialized");
           toast.error("Import service not initialized yet. Please try again.");
           return;
         }
@@ -479,8 +487,8 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
         const modelOverrides = overrides || agentModelOverrides;
 
 
-        // Import flow from file
-        const importedFlowOrError = await FlowService.importFlowFromFile.execute({
+        // Import flow from file using enhanced import
+        const importedFlowOrError = await FlowService.importFlowWithNodes.execute({
           file,
           agentModelOverrides:
             modelOverrides.size > 0 ? modelOverrides : undefined,
@@ -561,7 +569,7 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
             onClick={() => {
               // Check if services are initialized before opening import dialog
               if (
-                !FlowService.importFlowFromFile ||
+                !FlowService.importFlowWithNodes ||
                 !FlowService.getModelsFromFlowFile
               ) {
                 toast.error(

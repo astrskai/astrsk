@@ -1,0 +1,51 @@
+import { Result, UseCase } from "@/shared/core";
+import { DataStoreNode } from "../domain";
+import { LoadDataStoreNodeRepo, SaveDataStoreNodeRepo } from "../repos";
+
+export interface UpdateDataStoreNodeNameRequest {
+  flowId: string;
+  nodeId: string;
+  name: string;
+}
+
+export class UpdateDataStoreNodeNameUseCase implements UseCase<UpdateDataStoreNodeNameRequest, Result<void>> {
+  constructor(
+    private loadDataStoreNodeRepo: LoadDataStoreNodeRepo,
+    private saveDataStoreNodeRepo: SaveDataStoreNodeRepo,
+  ) {}
+
+  async execute(request: UpdateDataStoreNodeNameRequest): Promise<Result<void>> {
+    try {
+      // Get the existing node
+      const getResult = await this.loadDataStoreNodeRepo.getDataStoreNodeByFlowAndNodeId(
+        request.flowId,
+        request.nodeId
+      );
+
+      if (getResult.isFailure) {
+        return Result.fail(getResult.getError());
+      }
+
+      const dataStoreNode = getResult.getValue();
+      if (!dataStoreNode) {
+        return Result.fail(`DataStoreNode with nodeId ${request.nodeId} not found`);
+      }
+
+      // Update the name
+      const updateResult = dataStoreNode.updateName(request.name);
+      if (updateResult.isFailure) {
+        return Result.fail(updateResult.getError());
+      }
+
+      // Save the updated node
+      const saveResult = await this.saveDataStoreNodeRepo.saveDataStoreNode(dataStoreNode);
+      if (saveResult.isFailure) {
+        return Result.fail(saveResult.getError());
+      }
+
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(`Failed to update data store node name: ${error}`);
+    }
+  }
+}

@@ -13,7 +13,7 @@ import { debounce } from "lodash-es";
 import { cn } from "@/shared/utils";
 import { FlowPanelProvider } from "@/flow-multi/components/flow-panel-provider";
 import { getPanelTitle, PanelType } from "@/flow-multi/components/panel-types";
-import { getAgentHexColor, getAgentState } from "@/flow-multi/utils/agent-color-assignment";
+import { getAgentHexColor, getAgentState } from "@/flow-multi/utils/node-color-assignment";
 import { FlowPanel } from "./flow-panel";
 import { PromptPanel } from "@/flow-multi/panels/prompt/prompt-panel";
 import { OutputPanel } from "@/flow-multi/panels/output/output-panel";
@@ -22,6 +22,9 @@ import { PreviewPanel } from "@/flow-multi/panels/preview/preview-panel";
 import { VariablePanel } from "@/flow-multi/panels/variable/variable-panel";
 import { ResponseDesignPanel } from "@/flow-multi/panels/response-design/response-design-panel";
 import { ValidationPanel } from "@/flow-multi/panels/validation/validation-panel";
+import { DataStoreSchemaPanel } from "@/flow-multi/panels/data-store-schema/data-store-schema-panel";
+import { IfNodePanel } from "@/flow-multi/panels/if-node/if-node-panel";
+import { DataStorePanel } from "@/flow-multi/panels/data-store/data-store-panel";
 import { FlowService } from "@/app/services/flow-service";
 import { PanelStructure } from "@/modules/flow/domain";
 import { SvgIcon } from "@/components-v2/svg-icon";
@@ -29,8 +32,10 @@ import { UniqueEntityID } from "@/shared/domain";
 import { Agent } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
-import { useQuery } from "@tanstack/react-query";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { agentKeys } from "@/app/queries/agent/query-factory";
+import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
+import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-mutations";
 
 // Watermark component
 const Watermark = React.memo(() => (
@@ -95,6 +100,20 @@ const createFlowPanelComponentStandalone = (
   });
 };
 
+// Panel component factory for node-specific panels (Data Update, If Node)
+const createNodePanelComponent = (
+  Component: React.FC<{ flowId: string; nodeId: string }>
+): React.FC<IDockviewPanelProps> => {
+  return React.memo((props: IDockviewPanelProps) => {
+    const { flowId, nodeId } = props.params;
+    return (
+      <PanelFocusAnimationWrapper api={props.api} containerApi={props.containerApi}>
+        <Component flowId={flowId} nodeId={nodeId || ''} />
+      </PanelFocusAnimationWrapper>
+    );
+  });
+};
+
 // Panel component registry
 const PromptPanelComponent = createFlowPanelComponent(PromptPanel);
 const ParameterPanelComponent = createFlowPanelComponentOptional(ParameterPanel);
@@ -103,6 +122,9 @@ const PreviewPanelComponent = createFlowPanelComponentOptional(PreviewPanel);
 const VariablePanelComponent = createFlowPanelComponent(VariablePanel);
 const ResponseDesignPanelComponent = createFlowPanelComponentStandalone(ResponseDesignPanel);
 const ValidationPanelComponent = createFlowPanelComponentStandalone(ValidationPanel);
+const DataStoreSchemaPanelComponent = createFlowPanelComponentStandalone(DataStoreSchemaPanel);
+const IfNodePanelComponent = createNodePanelComponent(IfNodePanel);
+const DataStorePanelComponent = createNodePanelComponent(DataStorePanel);
 
 // Panel Components - must be defined outside component to avoid re-creation
 const components = {
@@ -114,6 +136,9 @@ const components = {
   variable: VariablePanelComponent,
   responseDesign: ResponseDesignPanelComponent,
   validation: ValidationPanelComponent,
+  dataStoreSchema: DataStoreSchemaPanelComponent,
+  ifNode: IfNodePanelComponent,
+  dataStore: DataStorePanelComponent,
 };
 
 interface FlowPanelMainProps {
@@ -122,14 +147,18 @@ interface FlowPanelMainProps {
 }
 
 export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
+  const queryClient = useQueryClient();
+  
   // Fetch flow data when flowId changes
   const { data: flow } = useQuery({
-    ...flowQueries.detail(flowId ? new UniqueEntityID(flowId) : undefined),
+    ...flowQueries.detail(flowId || ""),
     enabled: !!flowId,
   });
 
+  // Panel layout mutation
+  const updatePanelLayoutMutation = useUpdatePanelLayout(flowId || '');
+  
   const [dockviewApi, setDockviewApi] = useState<DockviewApi>();
-  const savePanelLayoutRef = useRef<boolean>(false);
   const isFlowSwitchingRef = useRef<boolean>(false);
   
   // Track agents for color updates
@@ -142,19 +171,42 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
   const prevFlowIdRef = useRef<string | null>(null);
   
   // Update refs when flow data changes
-  useEffect(() => {
-    flowIdRef.current = flowId;
-    flowRef.current = flow;
-  }, [flowId, flow]);
+  // Update refs directly without useEffect to avoid re-renders
+  flowIdRef.current = flowId;
+  flowRef.current = flow;
+  agentsRef.current = agents;
   
-  // Update agents ref when agents change
+  // Invalidate all agent queries when flow ID changes
   useEffect(() => {
-    agentsRef.current = agents;
-  }, [agents]);
+    if (flowId && flowId !== prevFlowIdRef.current) {
+      // Invalidate all agent queries to force refetch with new flow context
+      queryClient.invalidateQueries({ queryKey: agentKeys.all });
+      prevFlowIdRef.current = flowId;
+    }
+  }, [flowId, queryClient]);
+
+  // Track agent node IDs to detect actual changes
+  const agentNodeIds = useMemo(() => {
+    if (!flow || !flow.props?.nodes) return [];
+    return flow.props.nodes
+      .filter(node => node.type === 'agent')
+      .map(node => node.id)
+      .sort()
+      .join(',');
+  }, [flow]);
 
   // Load agents when flow changes
   useEffect(() => {
-    if (!flow) return;
+    // Enhanced race condition protection
+    if (!flowId || !flow || !flow.props?.nodes || !Array.isArray(flow.props.nodes)) {
+      return;
+    }
+    
+    // Ensure we're loading agents for the correct flow
+    const currentFlowId = flow.id.toString();
+    if (currentFlowId !== flowId) {
+      return;
+    }
 
     const loadAgents = async () => {
       const agentMap = new Map<string, Agent>();
@@ -178,7 +230,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     };
 
     loadAgents();
-  }, [flowId, flow?.props.nodes]);
+  }, [agentNodeIds]); // Only reload when agent nodes actually change
 
 
 
@@ -213,64 +265,42 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     };
   };
 
-  // Function to save panel layout
+  // Function to save panel layout using mutation
   const savePanelLayout = useCallback(async (api: DockviewApi) => {
     const currentFlowId = flowIdRef.current;
-    const currentFlow = flowRef.current;
     
-    if (!currentFlowId || !currentFlow || savePanelLayoutRef.current) return;
+    if (!currentFlowId || updatePanelLayoutMutation.isPending) return;
 
-    savePanelLayoutRef.current = true;
-    try {
-      const panelStructure = createPanelStructure(api);
-      const updatedFlow = currentFlow.update({ panelStructure });
-      
-      if (updatedFlow.isSuccess) {
-        if (FlowService.saveFlow && typeof FlowService.saveFlow.execute === "function") {
-          await FlowService.saveFlow.execute(updatedFlow.getValue());
-          // Note: We don't invalidate flow queries for layout changes since 
-          // panel layout doesn't affect the core flow data that other components display.
-          // This prevents unnecessary flickering during panel operations.
-        }
-      }
-    } catch (error) {
-      console.error("Failed to save panel layout:", error);
-    } finally {
-      savePanelLayoutRef.current = false;
-    }
-  }, []); // Empty dependency array since we use refs
+    const panelStructure = createPanelStructure(api);
+    
+    // Use mutation for optimistic update and proper error handling
+    updatePanelLayoutMutation.mutate(panelStructure);
+  }, [updatePanelLayoutMutation]);
 
   // Function to save panel layout to a specific flow ID
   const savePanelLayoutToFlow = useCallback(async (api: DockviewApi, targetFlowId: string) => {
-    if (savePanelLayoutRef.current) return;
+    if (!targetFlowId) return;
 
-    savePanelLayoutRef.current = true;
+    const panelStructure = createPanelStructure(api);
+    
+    // Direct service call for saving to a different flow
+    // This is used when switching flows to save the previous flow's layout
     try {
-      // Get the target flow
-      const targetFlowResult = await FlowService.getFlow.execute(new UniqueEntityID(targetFlowId));
-      if (targetFlowResult.isFailure) {
-        console.error('Failed to get target flow:', targetFlowResult.getError());
-        return;
-      }
-      const targetFlow = targetFlowResult.getValue();
-
-      const panelStructure = createPanelStructure(api);
-      const updatedFlow = targetFlow.update({ panelStructure });
+      const result = await FlowService.updatePanelLayout.execute({
+        flowId: targetFlowId,
+        panelStructure,
+      });
       
-      if (updatedFlow.isSuccess) {
-        if (FlowService.saveFlow && typeof FlowService.saveFlow.execute === "function") {
-          await FlowService.saveFlow.execute(updatedFlow.getValue());
-          
-          // Invalidate the flow query to ensure fresh data on next read
-          await invalidateSingleFlowQueries(new UniqueEntityID(targetFlowId));
-        }
+      if (result.isFailure) {
+        console.error('Failed to save panel layout to flow:', result.getError());
+      } else {
+        // Invalidate the panel layout query for that flow
+        queryClient.invalidateQueries({ queryKey: flowKeys.panelLayout(targetFlowId) });
       }
     } catch (error) {
       console.error("Failed to save panel layout to flow:", error);
-    } finally {
-      savePanelLayoutRef.current = false;
     }
-  }, []);
+  }, [queryClient]);
 
   // Debounced save layout (reduced to 200ms for quicker saves)
   const debouncedSaveLayout = useMemo(
@@ -360,10 +390,41 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     }
 
     // Get agent name, color, and inactive state if applicable
-    const agent = agentId ? agents.get(agentId) : null;
-    const title = getPanelTitle(panelType, agent?.props.name);
-    const agentColor = agent ? getAgentHexColor(agent) : undefined;
-    const agentInactive = agent && flow ? getAgentState(agent, flow) : undefined;
+    let agentColor: string | undefined;
+    let title: string;
+    let agentInactive: boolean | undefined;
+    
+    // Check if this is an agent panel
+    if (panelType === 'prompt' || panelType === 'parameter' || panelType === 'structuredOutput' || panelType === 'preview') {
+      const agent = agentId ? agentsRef.current.get(agentId) : null;
+      title = getPanelTitle(panelType, agent?.props.name);
+      agentColor = agent ? getAgentHexColor(agent) : undefined;
+      agentInactive = agent && flow ? getAgentState(agent, flow) : undefined;
+    } 
+    // Check if this is an if-node or data-store-node panel
+    else if ((panelType === 'ifNode' || panelType === 'dataStore' || panelType === 'dataStoreSchema') && agentId) {
+      // Get node from flow to get its name (color will be queried by tab component)
+      let node = flow.props.nodes.find(n => n.id === agentId);
+      let nodeData = node?.data as any;
+      
+      // Color will be queried by the tab component, so we don't set it here
+      agentColor = undefined;
+      
+      // Get node name/label for title with appropriate fallback
+      let nodeName: string;
+      if (panelType === 'dataStore' || panelType === 'dataStoreSchema') {
+        nodeName = nodeData?.label || 'Data Update';
+      } else if (panelType === 'ifNode') {
+        nodeName = nodeData?.label || 'If Condition';
+      } else {
+        nodeName = nodeData?.label || nodeData?.name || 'Unnamed';
+      }
+      title = getPanelTitle(panelType, nodeName);
+    } 
+    // Default case
+    else {
+      title = getPanelTitle(panelType);
+    }
     // Check if there are any panels besides the flow panel
     const panels = dockviewApi.panels;
     const hasOtherPanels = Object.values(panels).some((panel) => panel.id !== FLOW_PANEL_ID);
@@ -386,6 +447,10 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
             flowId, 
             title,
             ...(agentId && { agentId }),
+            // For node panels, also pass nodeId
+            ...(agentId && (panelType === 'ifNode' || panelType === 'dataStore') && { nodeId: agentId }),
+            // Pass panel type and flow info to tab for color querying
+            panelType,
             ...(agentColor && { agentColor }),
             ...(agentInactive !== undefined && { agentInactive })
           },
@@ -408,6 +473,10 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
             flowId, 
             title,
             ...(agentId && { agentId }),
+            // For node panels, also pass nodeId
+            ...(agentId && (panelType === 'ifNode' || panelType === 'dataStore') && { nodeId: agentId }),
+            // Pass panel type and flow info to tab for color querying
+            panelType,
             ...(agentColor && { agentColor }),
             ...(agentInactive !== undefined && { agentInactive })
           },
@@ -432,6 +501,10 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
           flowId, 
           title,
           ...(agentId && { agentId }),
+          // For node panels, also pass nodeId
+          ...(agentId && (panelType === 'ifNode' || panelType === 'dataStore' || panelType === 'dataStoreSchema') && { nodeId: agentId }),
+          // Pass panel type and flow info to tab for color querying
+          panelType,
           ...(agentColor && { agentColor })
         },
         position: {
@@ -444,7 +517,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     if (newPanel) {
       debouncedSaveLayout(dockviewApi);
     }
-  }, [dockviewApi, flowId, agents, debouncedSaveLayout]);
+  }, [dockviewApi, flowId, debouncedSaveLayout]); // Removed agents dependency to prevent re-renders
 
   // Initialize dockview when flowId changes (not flow object)
   useEffect(() => {
@@ -478,7 +551,10 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
       
       const existingPanels = [...dockviewApi.panels]; // Create copy since removePanel modifies the array
       existingPanels.forEach(panel => {
-        dockviewApi.removePanel(panel);
+        // Check if panel and panel.group exist before removing
+        if (panel && panel.group) {
+          dockviewApi.removePanel(panel);
+        }
       });
       
       // Reset flow switching flag
@@ -596,12 +672,6 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     <FlowPanelProvider
       flowId={flowId || ""}
       api={dockviewApi || null}
-      invalidateFlowQueries={async () => {
-        // Only invalidate when explicitly needed (e.g., agent updates, not layout changes)
-        if (flowId) {
-          await invalidateSingleFlowQueries(new UniqueEntityID(flowId));
-        }
-      }}
       openPanel={openPanel}
     >
       <div className={cn("h-full w-full relative", className)} style={{ height: "calc(100% - 40px)" }}>

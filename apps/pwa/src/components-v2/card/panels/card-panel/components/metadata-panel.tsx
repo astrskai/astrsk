@@ -1,10 +1,18 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Card } from "@/modules/card/domain";
 import { Input } from "@/components-v2/ui/input";
 import { X } from "lucide-react";
 import { debounce } from "lodash-es";
+import { useQuery } from "@tanstack/react-query";
 import { 
-  useCardPanel, 
+  cardQueries, 
+  useUpdateCardTags,
+  useUpdateCardCreator,
+  useUpdateCardSummary,
+  useUpdateCardVersion,
+  useUpdateCardConceptualOrigin
+} from "@/app/queries/card";
+import { 
   CardPanelProps, 
   CardPanelLoading, 
   CardPanelError 
@@ -13,15 +21,60 @@ import {
 interface MetadataPanelProps extends CardPanelProps {}
 
 export function MetadataPanel({ cardId }: MetadataPanelProps) {
-  // 1. Use abstraction hook for card panel functionality
-  const { card, isLoading, lastInitializedCardId, saveCard } = useCardPanel<Card>({
-    cardId,
+  // Fine-grained mutations with optimistic updates
+  const updateTags = useUpdateCardTags(cardId);
+  const updateCreator = useUpdateCardCreator(cardId);
+  const updateSummary = useUpdateCardSummary(cardId);
+  const updateVersion = useUpdateCardVersion(cardId);
+  const updateConceptualOrigin = useUpdateCardConceptualOrigin(cardId);
+  
+  // Track editing state in refs to avoid triggering effects
+  const isEditingTagsRef = useRef(updateTags.isEditing);
+  const isEditingCreatorRef = useRef(updateCreator.isEditing);
+  const isEditingSummaryRef = useRef(updateSummary.isEditing);
+  const isEditingVersionRef = useRef(updateVersion.isEditing);
+  const isEditingOriginRef = useRef(updateConceptualOrigin.isEditing);
+  
+  useEffect(() => {
+    isEditingTagsRef.current = updateTags.isEditing;
+  }, [updateTags.isEditing]);
+  
+  useEffect(() => {
+    isEditingCreatorRef.current = updateCreator.isEditing;
+  }, [updateCreator.isEditing]);
+
+  useEffect(() => {
+    isEditingSummaryRef.current = updateSummary.isEditing;
+  }, [updateSummary.isEditing]);
+
+  useEffect(() => {
+    isEditingVersionRef.current = updateVersion.isEditing;
+  }, [updateVersion.isEditing]);
+
+  useEffect(() => {
+    isEditingOriginRef.current = updateConceptualOrigin.isEditing;
+  }, [updateConceptualOrigin.isEditing]);
+
+  // Load card data - disable refetching while editing or cursor is active
+  const isAnyEditing = updateTags.isEditing || updateCreator.isEditing || 
+                      updateSummary.isEditing || updateVersion.isEditing || 
+                      updateConceptualOrigin.isEditing;
+  const hasCursor = updateTags.hasCursor || updateCreator.hasCursor || 
+                   updateSummary.hasCursor || updateVersion.hasCursor || 
+                   updateConceptualOrigin.hasCursor;
+  const queryEnabled = !!cardId && !isAnyEditing && !hasCursor;
+  
+  const { data: card, isLoading } = useQuery({
+    ...cardQueries.detail(cardId),
+    enabled: queryEnabled,
+    refetchOnWindowFocus: !isAnyEditing && !hasCursor,
+    refetchOnMount: false,
   });
   
-  // 2. UI state
+  // UI state
   const [tagError, setTagError] = useState(false);
   
-  // 3. Local form state
+  // Local form state
   const [tags, setTags] = useState<string[]>([]);
   const [creator, setCreator] = useState("");
   const [cardSummary, setCardSummary] = useState("");
@@ -29,67 +82,124 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
   const [conceptualOrigin, setConceptualOrigin] = useState("");
   const [newTag, setNewTag] = useState("");
 
-  // 4. SINGLE initialization useEffect (right after state)
+  // Track initialization
+  const lastCardIdRef = useRef<string | null>(null);
+  
+  // Track current card in ref to avoid recreating debounced functions
+  const cardRef = useRef(card);
   useEffect(() => {
-    if (cardId !== lastInitializedCardId.current && card) {
+    cardRef.current = card;
+  }, [card]);
+
+  // Initialize and sync data
+  useEffect(() => {
+    // Initialize when card changes
+    if (cardId && cardId !== lastCardIdRef.current && card) {
       setTags(card.props.tags || []);
       setCreator(card.props.creator || "");
       setCardSummary(card.props.cardSummary || "");
       setVersion(card.props.version || "");
       setConceptualOrigin(card.props.conceptualOrigin || "");
-      lastInitializedCardId.current = cardId;
+      lastCardIdRef.current = cardId;
     }
-  }, [cardId, card, lastInitializedCardId]);
+    // Sync when card changes externally (but not during editing or cursor active) - only if values actually differ
+    else if (card && !isEditingTagsRef.current && !isEditingCreatorRef.current && 
+             !isEditingSummaryRef.current && !isEditingVersionRef.current && 
+             !isEditingOriginRef.current && !hasCursor) {
+      const newTags = card.props.tags || [];
+      const newCreator = card.props.creator || "";
+      const newSummary = card.props.cardSummary || "";
+      const newVersion = card.props.version || "";
+      const newOrigin = card.props.conceptualOrigin || "";
+      
+      // Only update state if values actually changed
+      if (JSON.stringify(tags) !== JSON.stringify(newTags)) {
+        setTags(newTags);
+      }
+      if (creator !== newCreator) {
+        setCreator(newCreator);
+      }
+      if (cardSummary !== newSummary) {
+        setCardSummary(newSummary);
+      }
+      if (version !== newVersion) {
+        setVersion(newVersion);
+      }
+      if (conceptualOrigin !== newOrigin) {
+        setConceptualOrigin(newOrigin);
+      }
+    }
+  }, [cardId, card, tags, creator, cardSummary, version, conceptualOrigin, hasCursor]);
 
-  // 5. Debounced save with parameters (NOT closures!)
-  const debouncedSave = useMemo(
-    () => debounce((newTags: string[], newCreator: string, newCardSummary: string, newVersion: string, newConceptualOrigin: string) => {
+  // Debounced save using fine-grained mutations
+  const debouncedSaveCreator = useMemo(
+    () => debounce((creator: string) => {
+      const card = cardRef.current;
       if (!card) return;
-
-      // Check for actual changes before saving
-      if (
-        JSON.stringify(newTags) === JSON.stringify(card.props.tags || []) &&
-        newCreator === (card.props.creator || "") &&
-        newCardSummary === (card.props.cardSummary || "") &&
-        newVersion === (card.props.version || "") &&
-        newConceptualOrigin === (card.props.conceptualOrigin || "")
-      ) return;
-
-      const updateResult = card.update({
-        tags: newTags,
-        creator: newCreator,
-        cardSummary: newCardSummary,
-        version: newVersion,
-        conceptualOrigin: newConceptualOrigin,
-      });
-
-      if (updateResult.isSuccess) {
-        saveCard(card);
+      const currentCreator = card.props.creator || "";
+      if (creator !== currentCreator) {
+        updateCreator.mutate(creator);
       }
     }, 300),
-    [card, saveCard]
+    [updateCreator]
   );
 
-  // 6. Change handlers that pass current values
+  const debouncedSaveSummary = useMemo(
+    () => debounce((summary: string) => {
+      const card = cardRef.current;
+      if (!card) return;
+      const currentSummary = card.props.cardSummary || "";
+      if (summary !== currentSummary) {
+        updateSummary.mutate(summary);
+      }
+    }, 300),
+    [updateSummary]
+  );
+
+  const debouncedSaveVersion = useMemo(
+    () => debounce((version: string) => {
+      const card = cardRef.current;
+      if (!card) return;
+      const currentVersion = card.props.version || "";
+      if (version !== currentVersion) {
+        updateVersion.mutate(version);
+      }
+    }, 300),
+    [updateVersion]
+  );
+
+  const debouncedSaveConceptualOrigin = useMemo(
+    () => debounce((origin: string) => {
+      const card = cardRef.current;
+      if (!card) return;
+      const currentOrigin = card.props.conceptualOrigin || "";
+      if (origin !== currentOrigin) {
+        updateConceptualOrigin.mutate(origin);
+      }
+    }, 300),
+    [updateConceptualOrigin]
+  );
+
+  // Change handlers for individual fields
   const handleCreatorChange = useCallback((value: string) => {
     setCreator(value);
-    debouncedSave(tags, value, cardSummary, version, conceptualOrigin);
-  }, [debouncedSave, tags, cardSummary, version, conceptualOrigin]);
+    debouncedSaveCreator(value);
+  }, [debouncedSaveCreator]);
 
   const handleCardSummaryChange = useCallback((value: string) => {
     setCardSummary(value);
-    debouncedSave(tags, creator, value, version, conceptualOrigin);
-  }, [debouncedSave, tags, creator, version, conceptualOrigin]);
+    debouncedSaveSummary(value);
+  }, [debouncedSaveSummary]);
 
   const handleVersionChange = useCallback((value: string) => {
     setVersion(value);
-    debouncedSave(tags, creator, cardSummary, value, conceptualOrigin);
-  }, [debouncedSave, tags, creator, cardSummary, conceptualOrigin]);
+    debouncedSaveVersion(value);
+  }, [debouncedSaveVersion]);
 
   const handleConceptualOriginChange = useCallback((value: string) => {
     setConceptualOrigin(value);
-    debouncedSave(tags, creator, cardSummary, version, value);
-  }, [debouncedSave, tags, creator, cardSummary, version]);
+    debouncedSaveConceptualOrigin(value);
+  }, [debouncedSaveConceptualOrigin]);
 
   // Tag management functions
   const handleAddTag = useCallback(() => {
@@ -103,16 +213,16 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
       setTags(newTags);
       setNewTag("");
       setTagError(false);
-      debouncedSave(newTags, creator, cardSummary, version, conceptualOrigin);
+      updateTags.mutate(newTags);
     }
-  }, [newTag, tags, creator, cardSummary, version, conceptualOrigin, debouncedSave]);
+  }, [newTag, tags, updateTags]);
 
   const handleRemoveTag = useCallback((tagToRemove: string) => {
     const newTags = tags.filter(tag => tag !== tagToRemove);
     setTags(newTags);
     setTagError(false);
-    debouncedSave(newTags, creator, cardSummary, version, conceptualOrigin);
-  }, [tags, creator, cardSummary, version, conceptualOrigin, debouncedSave]);
+    updateTags.mutate(newTags);
+  }, [tags, updateTags]);
 
   // 7. Early returns using abstraction components
   if (isLoading) {
@@ -142,6 +252,8 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
                   if (tagError) setTagError(false);
                 }}
                 onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+                onFocus={() => updateTags.setCursorActive(true)}
+                onBlur={() => updateTags.setCursorActive(false)}
                 placeholder="Add a tag"
                 className={`flex-1 h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] ${
                   tagError
@@ -202,6 +314,8 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
           <Input
             value={creator}
             onChange={(e) => handleCreatorChange(e.target.value)}
+            onFocus={() => updateCreator.setCursorActive(true)}
+            onBlur={() => updateCreator.setCursorActive(false)}
             placeholder="Creator name"
             className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
           />
@@ -219,6 +333,8 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
           <Input
             value={cardSummary}
             onChange={(e) => handleCardSummaryChange(e.target.value)}
+            onFocus={() => updateSummary.setCursorActive(true)}
+            onBlur={() => updateSummary.setCursorActive(false)}
             placeholder="Brief summary of the card"
             className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
             maxLength={40}
@@ -242,6 +358,8 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
           <Input
             value={version}
             onChange={(e) => handleVersionChange(e.target.value)}
+            onFocus={() => updateVersion.setCursorActive(true)}
+            onBlur={() => updateVersion.setCursorActive(false)}
             placeholder="e.g. V1"
             className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
           />
@@ -259,6 +377,8 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
           <Input
             value={conceptualOrigin}
             onChange={(e) => handleConceptualOriginChange(e.target.value)}
+            onFocus={() => updateConceptualOrigin.setCursorActive(true)}
+            onBlur={() => updateConceptualOrigin.setCursorActive(false)}
             placeholder="e.g. Book, Movie, Original, etc."
             className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
           />

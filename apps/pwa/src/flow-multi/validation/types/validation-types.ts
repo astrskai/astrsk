@@ -41,6 +41,8 @@ export enum ValidationIssueCode {
   
   // Flow Structure Errors
   INVALID_FLOW_STRUCTURE = 'INVALID_FLOW_STRUCTURE',
+  IF_NODE_MISSING_BRANCHES = 'IF_NODE_MISSING_BRANCHES',
+  IF_NODE_BRANCH_NOT_REACHING_END = 'IF_NODE_BRANCH_NOT_REACHING_END',
   
   // Warnings
   MISSING_HISTORY_MESSAGE = 'MISSING_HISTORY_MESSAGE',
@@ -53,12 +55,17 @@ export enum ValidationIssueCode {
   
   // Parameter Errors
   PARAMETER_OUT_OF_RANGE = 'PARAMETER_OUT_OF_RANGE',
+  
+  // Data Store Errors
+  DATA_STORE_INVALID_INITIAL_VALUE = 'DATA_STORE_INVALID_INITIAL_VALUE',
+  DATA_STORE_MISSING_INITIAL_VALUE = 'DATA_STORE_MISSING_INITIAL_VALUE',
 }
 
 export interface ValidationContext {
   flow: Flow;
   agents: Map<string, Agent>;
   connectedAgents: Set<string>;
+  connectedNodes: Set<string>; // All connected nodes (agents, if, dataStore, etc.)
   agentPositions: Map<string, { isConnectedToStart: boolean; isConnectedToEnd: boolean }>;
   apiConnectionsWithModels?: ApiConnectionWithModels[];
 }

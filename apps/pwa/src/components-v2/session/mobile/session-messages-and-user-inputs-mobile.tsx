@@ -1261,6 +1261,11 @@ const SessionMessagesAndUserInputsMobile = ({
 
         // Update message to database
         await TurnService.updateTurn.execute(streamingMessage);
+
+        // Invalidate turn query
+        queryClient.invalidateQueries({
+          queryKey: turnQueries.detail(streamingMessage.id).queryKey,
+        });
       } catch (error) {
         // Notify error to user
         const parsedError = parseAiSdkErrorMessage(error);
@@ -1294,10 +1299,18 @@ const SessionMessagesAndUserInputsMobile = ({
                 sessionId: session.id,
                 messageId: streamingMessage.id,
               });
+
+              // Invalidate session query
+              invalidateSession();
             }
           } else {
             // Update message to database
             await TurnService.updateTurn.execute(streamingMessage);
+
+            // Invalidate turn query
+            queryClient.invalidateQueries({
+              queryKey: turnQueries.detail(streamingMessage.id).queryKey,
+            });
           }
         }
       } finally {
@@ -1388,7 +1401,12 @@ const SessionMessagesAndUserInputsMobile = ({
       autoReply,
     });
     await SessionService.saveSession.execute({ session });
-  }, [session]);
+
+    // Invalidate session query
+    queryClient.invalidateQueries({
+      queryKey: sessionQueries.detail(selectedSessionId ?? undefined).queryKey,
+    });
+  }, [session, queryClient, selectedSessionId]);
 
   // Add plot card modal
   const [plotCard] = useCard<PlotCard>(session?.plotCard?.id);
@@ -1599,7 +1617,7 @@ const SessionMessagesAndUserInputsMobile = ({
         return;
       }
 
-      // Invalidate session
+      // Invalidate session query
       invalidateSession();
     },
     [invalidateSession, session],

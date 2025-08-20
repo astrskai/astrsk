@@ -23,7 +23,7 @@ export class GetModelsFromFlowFile
       const text = await readFileToString(file);
       let jsonData = JSON.parse(text);
       
-      // Check if this is old format and migrate if needed
+      // Handle migration if needed
       if (isOldFlowFormat(jsonData)) {
         const migrationResult = migrateFlowToNewFormat(jsonData);
         if (migrationResult.isFailure) {
@@ -32,20 +32,24 @@ export class GetModelsFromFlowFile
         jsonData = migrationResult.getValue();
       }
 
+      // All formats (legacy and enhanced) have the same structure now
+      const flowData = jsonData;
+      const agentsData = jsonData.agents;
+
       // Get agents that are actually used in nodes
       const usedAgentIds = new Set<string>();
-      if (jsonData.nodes) {
-        jsonData.nodes.forEach((node: any) => {
+      if (flowData?.nodes) {
+        flowData.nodes.forEach((node: any) => {
           if (node.type === "agent") {
-            // After migration, node.id is always the agent ID for agent nodes
+            // Node.id is the agent ID for agent nodes
             usedAgentIds.add(node.id);
           }
         });
       }
 
       // Only include agents that are used in nodes
-      if (jsonData.agents) {
-        for (const [agentId, agent] of Object.entries(jsonData.agents)) {
+      if (agentsData) {
+        for (const [agentId, agent] of Object.entries(agentsData)) {
           if (usedAgentIds.has(agentId)) {
             models.push({
               agentId: agentId,
@@ -62,4 +66,5 @@ export class GetModelsFromFlowFile
       return Result.fail(`Failed to get models from flow file: ${error}`);
     }
   }
+
 }

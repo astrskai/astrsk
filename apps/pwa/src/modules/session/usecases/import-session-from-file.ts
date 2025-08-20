@@ -10,7 +10,7 @@ import { InsertSession } from "@/db/schema/sessions";
 import { SaveFileToBackground } from "@/modules/background/usecases/save-file-to-background";
 import { CardType } from "@/modules/card/domain/card";
 import { ImportCardFromFile } from "@/modules/card/usecases/import-card-from-file";
-import { ImportFlowFromFile } from "@/modules/flow/usecases/import-flow-from-file";
+import { ImportFlowWithNodes } from "@/modules/flow/usecases/import-flow-with-nodes";
 import { Session } from "@/modules/session/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { SaveSessionRepo } from "@/modules/session/repos";
@@ -36,7 +36,7 @@ export class ImportSessionFromFile
 {
   constructor(
     private saveSessionRepo: SaveSessionRepo,
-    private importFlowFromFile: ImportFlowFromFile,
+    private importFlowWithNodes: ImportFlowWithNodes,
     private importCardFromFile: ImportCardFromFile,
     private saveFileToBackground: SaveFileToBackground,
     private addMessage: AddMessage,
@@ -76,8 +76,8 @@ export class ImportSessionFromFile
       const fileBlob = await fileEntry.async("blob");
       const file = new File([fileBlob], fileEntry.name);
 
-      // Import flow from file
-      const flowOrError = await this.importFlowFromFile.execute({
+      // Import flow from file with nodes
+      const flowOrError = await this.importFlowWithNodes.execute({
         file,
         agentModelOverrides,
       });

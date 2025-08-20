@@ -12,3 +12,6 @@ export * from './flow-structure-validators';
 
 // Provider compatibility validators
 export * from './provider-compatibility-validators';
+
+// Data store validators
+export * from './data-store-validators';

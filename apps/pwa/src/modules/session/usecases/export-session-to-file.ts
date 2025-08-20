@@ -10,7 +10,7 @@ import { defaultBackgrounds } from "@/app/stores/background-store";
 import { GetAsset } from "@/modules/asset/usecases/get-asset";
 import { GetBackground } from "@/modules/background/usecases/get-background";
 import { ExportCardToFile } from "@/modules/card/usecases";
-import { ExportFlowToFile } from "@/modules/flow/usecases/export-flow-to-file";
+import { ExportFlowWithNodes } from "@/modules/flow/usecases/export-flow-with-nodes";
 import { Session } from "@/modules/session/domain";
 import { SessionDrizzleMapper } from "@/modules/session/mappers/session-drizzle-mapper";
 import { LoadSessionRepo } from "@/modules/session/repos";
@@ -25,7 +25,7 @@ interface Command {
 export class ExportSessionToFile implements UseCase<Command, Result<File>> {
   constructor(
     private loadSessionRepo: LoadSessionRepo,
-    private exportFlowToFile: ExportFlowToFile,
+    private exportFlowWithNodes: ExportFlowWithNodes,
     private exportCardToFile: ExportCardToFile,
     private getBackground: GetBackground,
     private getAsset: GetAsset,
@@ -63,8 +63,8 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
     zip: JSZip,
     flowId: UniqueEntityID,
   ): Promise<void> {
-    // Export flow to file
-    const flowOrError = await this.exportFlowToFile.execute(flowId);
+    // Export flow to file with nodes
+    const flowOrError = await this.exportFlowWithNodes.execute(flowId);
     if (flowOrError.isFailure) {
       throw new Error(flowOrError.getError());
     }

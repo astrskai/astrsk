@@ -9,11 +9,19 @@ import EndNode, {
 import StartNode, {
   type StartNode as StartNodeType,
 } from "@/flow-multi/nodes/start-node";
+import DataStoreNode, {
+  type DataStoreNode as DataStoreNodeType,
+} from "@/flow-multi/nodes/data-store-node";
+import IfNode, {
+  type IfNode as IfNodeType,
+} from "@/flow-multi/nodes/if-node";
 
 export const nodeTypes = {
   start: StartNode,
   end: EndNode,
   agent: AgentNode,
+  dataStore: DataStoreNode,
+  if: IfNode,
 } satisfies NodeTypes;
 
 // Append the types of you custom edges to the BuiltInNode type
@@ -21,4 +29,6 @@ export type CustomNodeType =
   | BuiltInNode
   | StartNodeType
   | EndNodeType
-  | AgentNodeType;
+  | AgentNodeType
+  | DataStoreNodeType
+  | IfNodeType;

@@ -9,11 +9,13 @@ function FloatingActionButton({
   position,
   icon,
   label,
+  openned,
   ...props
 }: React.ComponentProps<typeof Button> & {
   icon?: React.ReactNode;
   label?: string;
   position: "top-left" | "top-right";
+  openned?: boolean;
 }) {
   const { open } = useSidebarLeft();
 
@@ -40,6 +42,7 @@ function FloatingActionButton({
           "h-full flex flex-row items-center",
           "transition-[margin-inline] ease-out duration-300",
           "mx-[7px] group-hover/fab:mx-[16px]",
+          openned && "mx-[16px]",
         )}
       >
         {icon}
@@ -48,6 +51,7 @@ function FloatingActionButton({
             "grid transition-[margin-left,grid-template-columns,opacity] ease-out duration-300",
             "ml-0 grid-cols-[0fr] opacity-0",
             "group-hover/fab:ml-2 group-hover/fab:grid-cols-[1fr] group-hover/fab:opacity-100",
+            openned && "ml-2 grid-cols-[1fr] opacity-100",
           )}
         >
           <span className="overflow-hidden font-medium text-[14px] leading-[20px]">

@@ -51,7 +51,7 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
       chat_styles: insertSession.chat_styles ?? null,
       flow_id: insertSession.flow_id,
       auto_reply: insertSession.auto_reply ?? AutoReply.Off,
-      data_store: insertSession.data_store ?? {},
+      data_schema_order: insertSession.data_schema_order ?? [],
       created_at: new Date(),
       updated_at: new Date(),
     });

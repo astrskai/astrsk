@@ -78,5 +78,30 @@
     "bps": true,
     "folderMillis": 1754962374495,
     "hash": "338a246aa9bb69573911159c80b2b69388648e7a57d0cb9f29e063626c57048e"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" DROP COLUMN \"data_store\" CASCADE;"
+    ],
+    "bps": true,
+    "folderMillis": 1755498908780,
+    "hash": "210dff2deb7ae024c474eaeb50a58da3f818a61599a67e2b5c6276b0efbbdb13"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" ADD COLUMN \"data_schema_order\" jsonb DEFAULT '[]'::jsonb NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1755603532043,
+    "hash": "10d16f332ce852841ecd1922a18cf39ce468480388278f01d5ff5cc878f56941"
+  },
+  {
+    "sql": [
+      "CREATE TABLE \"data_store_nodes\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"flow_id\" uuid NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"color\" varchar DEFAULT '#3b82f6' NOT NULL,\n\t\"data_store_fields\" jsonb DEFAULT '[]'::jsonb,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE \"if_nodes\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"flow_id\" uuid NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"color\" varchar DEFAULT '#3b82f6' NOT NULL,\n\t\"logicOperator\" varchar,\n\t\"conditions\" jsonb DEFAULT '[]'::jsonb,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n"
+    ],
+    "bps": true,
+    "folderMillis": 1755658008260,
+    "hash": "7869d980df5f344abed43f89fd9199797935a0e14b2870405b650348353d8674"
   }
 ]

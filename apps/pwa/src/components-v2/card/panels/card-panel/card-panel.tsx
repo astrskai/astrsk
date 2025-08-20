@@ -11,7 +11,7 @@ import { useAsset } from "@/app/hooks/use-asset";
 import { cn } from "@/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries, useUpdateCardTitle } from "@/app/queries/card";
 import { BookOpen, Pencil, Check, X } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { Button } from "@/components-v2/ui/button";
@@ -70,23 +70,22 @@ const TradingCardItem = ({
 export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
-  const [isSavingTitle, setIsSavingTitle] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { openPanel, closePanel, panelVisibility } = useCardPanelContext();
   const queryClient = useQueryClient();
 
+  // Use fine-grained mutation for title updates with optimistic updates
+  const updateTitle = useUpdateCardTitle(cardId);
+
   // Get left navigation state for conditional margins
   const { isExpanded, isMobile } = useLeftNavigationWidth();
 
   // Use React Query to get card data
-  const { data: cardFromQuery } = useQuery({
-    ...cardQueries.detail<Card>(cardId ? new UniqueEntityID(cardId) : undefined),
-  });
+  const { data: cardFromQuery } = useQuery(cardQueries.detail(cardId));
 
   // Use provided card or the one from query
   const card = providedCard || cardFromQuery;
-
 
   // Helper function to extract character name from card
   const getCharacterName = (card: Card): string => {
@@ -116,27 +115,13 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
       return;
     }
 
-    setIsSavingTitle(true);
     try {
-      // Always update title
-      const updateResult = card.update({ title: editedTitle });
-      if (updateResult.isSuccess) {
-        const result = await CardService.saveCard.execute(card);
-        if (result.isSuccess) {
-          setIsEditingTitle(false);
-
-          // Invalidate all queries for this card
-          await invalidateSingleCardQueries(queryClient, card.id);
-        } else {
-          console.error("Failed to save card:", result.getError());
-        }
-      } else {
-        console.error("Failed to update card:", updateResult.getError());
-      }
+      // Use the fine-grained mutation with optimistic updates
+      await updateTitle.mutateAsync(editedTitle);
+      setIsEditingTitle(false);
     } catch (error) {
       console.error("Error saving card title:", error);
-    } finally {
-      setIsSavingTitle(false);
+      // The mutation will handle rolling back optimistic updates on error
     }
   };
 
@@ -249,7 +234,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
                 />
                 <button
                   onClick={handleSaveTitle}
-                  disabled={isSavingTitle}
+                  disabled={updateTitle.isPending || updateTitle.isEditing}
                   className="p-1 hover:bg-background-surface-4 rounded transition-colors flex-shrink-0"
                 >
                   <Check className="w-3 h-3 text-status-success" />

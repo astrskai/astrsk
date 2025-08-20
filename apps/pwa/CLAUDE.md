@@ -25,6 +25,34 @@ npm run preview
 npx vitest path/to/test.spec.ts
 ```
 
+### ⚠️ IMPORTANT: TypeScript Error Checking in Monorepo
+
+**DO NOT use `npx tsc` directly on individual files in this Vite project!**
+
+This is a pnpm monorepo and Vite project, which means:
+- Path aliases (`@/`) won't resolve correctly with standalone `tsc`
+- TypeScript needs full project context to work properly
+- Vite uses esbuild for development, not `tsc`
+
+**✅ CORRECT way to check TypeScript errors:**
+```bash
+# From the PWA directory
+npm run build
+
+# Or from monorepo root using pnpm
+pnpm --filter pwa build
+
+# To check specific file errors, use grep
+npm run build 2>&1 | grep -A 5 "filename"
+```
+
+**❌ WRONG way (will not work properly):**
+```bash
+# These commands will fail or give incorrect results
+npx tsc --noEmit file.ts
+npx tsc --skipLibCheck file.ts
+```
+
 ## Architecture Overview
 
 ### Application Structure
@@ -144,13 +172,6 @@ Key modules: `agent`, `api`, `asset`, `background`, `card`, `config`, `flow`, `p
 #### Flow Query Invalidation
 When updating flows (e.g., panel layout changes, agent modifications), use the dedicated invalidation utilities:
 
-```typescript
-import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
-
-// After saving flow changes
-await invalidateSingleFlowQueries(flowId);
-```
-
 This ensures:
 - Specific flow detail queries are refreshed
 - All flow list queries are invalidated
@@ -161,13 +182,3 @@ This ensures:
 - Layout changes (panel repositioning)
 - Agent updates within a flow
 - Any flow property modifications
-
-#### Agent Query Invalidation
-Similarly, for agent-specific updates:
-
-```typescript
-import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
-
-// After agent changes
-await invalidateAllAgentQueries();
-```

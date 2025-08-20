@@ -91,6 +91,7 @@ function createMainWindow(): BrowserWindow {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
+      backgroundThrottling: false,
 
       // Allow insecure content
       ...(allowInsecureContent && {

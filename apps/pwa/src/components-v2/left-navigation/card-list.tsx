@@ -177,13 +177,22 @@ const CardItem = ({
         queryKey: cardQueries.lists(),
       });
 
-      // Invalidate used sessions validation
+      // Invalidate used sessions validation and detail queries
       for (const usedSession of usedSessions) {
+        // Invalidate validation queries
         queryClient.invalidateQueries({
           queryKey: [
             TableName.Sessions,
             usedSession.id.toString(),
             "validation",
+          ],
+        });
+        // Also invalidate the session detail query so it reloads and detects missing card
+        queryClient.invalidateQueries({
+          queryKey: [
+            TableName.Sessions,
+            "detail",
+            usedSession.id.toString(),
           ],
         });
       }

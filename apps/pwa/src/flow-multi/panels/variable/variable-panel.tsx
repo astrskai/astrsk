@@ -1,4 +1,5 @@
-import { agentQueries } from "@/app/queries/agent-queries";
+import { agentQueries } from "@/app/queries/agent/query-factory";
+import { flowQueries } from "@/app/queries/flow/query-factory";
 import { makeContext } from "@/app/services/session-play-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
@@ -18,7 +19,7 @@ import {
   FlowPanelLoading,
   useFlowPanel,
 } from "@/flow-multi/hooks/use-flow-panel";
-import { getAgentHexColor } from "@/flow-multi/utils/agent-color-assignment";
+import { getAgentHexColor } from "@/flow-multi/utils/node-color-assignment";
 import {
   Agent,
   OutputFormat,
@@ -33,7 +34,7 @@ import {
 } from "@/shared/prompt/domain/variable";
 import { Datetime, logger } from "@/shared/utils";
 import { sanitizeFileName } from "@/shared/utils/file-utils";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { isObject } from "lodash-es";
 import { Check, ChevronDown, ChevronUp, Database, Target } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -91,6 +92,13 @@ const flattenObject = (
 export function VariablePanel({ flowId }: VariablePanelProps) {
   // Use the flow panel hook
   const { flow, isLoading } = useFlowPanel({ flowId });
+  
+  // Query data store schema separately for real-time updates
+  const { data: dataStoreSchema } = useQuery({
+    ...flowQueries.dataStoreSchema(flowId),
+    enabled: !!flowId,
+    refetchOnWindowFocus: true, // Ensure we get latest schema
+  });
 
   // Get session management from store
   const previewSessionId = useAgentStore.use.previewSessionId();
@@ -159,14 +167,20 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     };
   }, [previewSessionId]);
 
-  // Get last monaco editor and insert function from flow context
-  const { lastMonacoEditor, insertVariableAtLastCursor } =
-    useFlowPanelContext();
+  // Get last monaco editor, input field and insert functions from flow context
+  const { 
+    lastMonacoEditor, 
+    insertVariableAtLastCursor,
+    lastInputField,
+    insertVariableAtInputField
+  } = useFlowPanelContext();
 
   // Local state
   const [activeTab, setActiveTab] = useState(() => {
-    const savedTab = sessionStorage.getItem('variablePanel_activeTab');
-    return savedTab === 'structured' ? 'structured' : 'variables';
+    const savedTab = sessionStorage.getItem("variablePanel_activeTab");
+    return savedTab === "structured" || savedTab === "datastore"
+      ? savedTab
+      : "variables";
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [availableVariables, setAvailableVariables] = useState<Variable[]>([]);
@@ -178,8 +192,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   );
   const [contextValues, setContextValues] = useState<Record<string, any>>({});
 
-  // Check if we have an editor
-  const hasEditor = !!lastMonacoEditor?.editor;
+  // Check if we have an editor or input field
+  const hasEditor = !!lastMonacoEditor?.editor || !!lastInputField?.element;
 
   // Load variables from library
   useEffect(() => {
@@ -198,16 +212,25 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   const agentIds = useMemo(() => {
     if (!flow) return [];
 
-    // Flow has agentIds array directly
-    const ids = flow.agentIds || [];
+    // Flow has agentIds array of UniqueEntityID objects, convert to strings
+    const ids = (flow.agentIds || []).map(id => id?.toString()).filter(id => !!id);
     return ids;
   }, [flow]);
 
-  // Query all agents
+  // Query all agents for their details
   const agentQueries_ = useQueries({
     queries: agentIds.map((id) => ({
       ...agentQueries.detail(id),
       enabled: !!id,
+    })),
+  });
+  
+  // Query agent names separately for real-time updates
+  const agentNameQueries = useQueries({
+    queries: agentIds.map((id) => ({
+      ...agentQueries.name(id),
+      enabled: !!id,
+      refetchOnWindowFocus: true,
     })),
   });
 
@@ -220,7 +243,16 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   useEffect(() => {
     const agents = agentQueries_
       .filter((q) => q.data && !q.isLoading)
-      .map((q) => q.data as Agent);
+      .map((q) => q.data as Agent)
+      .filter(agent => agent != null); // Filter out any null/undefined agents
+    
+    // Get agent names from name queries
+    const agentNames = new Map<string, string>();
+    agentNameQueries.forEach((q, index) => {
+      if (q.data && agentIds[index]) {
+        agentNames.set(agentIds[index], q.data);
+      }
+    });
 
     if (!flow || areAgentsLoading || agents.length === 0) {
       if (aggregatedStructuredVariables.length > 0) {
@@ -230,20 +262,25 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     }
 
     // Create a stable key from relevant agent properties
-    const agentDataKey = agents.map((agent) => ({
-      id: agent.id.toString(),
-      name: agent.props.name,
-      outputFormat: agent.props.outputFormat,
-      enabledStructuredOutput: agent.props.enabledStructuredOutput,
-      schemaFields:
-        agent.props.schemaFields?.map((field) => ({
-          name: field.name,
-          type: field.type,
-          description: field.description,
-          required: field.required,
-          array: field.array,
-        })) || [],
-    }));
+    const agentDataKey = agents.map((agent) => {
+      if (!agent || !agent.props) {
+        return null;
+      }
+      return {
+        id: agent.id.toString(),
+        name: agentNames.get(agent.id.toString()) || agent.props.name, // Use name from name query
+        outputFormat: agent.props.outputFormat,
+        enabledStructuredOutput: agent.props.enabledStructuredOutput,
+        schemaFields:
+          agent.props.schemaFields?.map((field) => ({
+            name: field.name,
+            type: field.type,
+            description: field.description,
+            required: field.required,
+            array: field.array,
+          })) || [],
+      };
+    }).filter(data => data != null);
 
     const currentAgentData = JSON.stringify(agentDataKey);
 
@@ -258,8 +295,13 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
     // Iterate through all agents
     agents.forEach((agent) => {
+      if (!agent || !agent.props) {
+        return;
+      }
+      
       const agentId = agent.id.toString();
-      const agentName = agent.props.name || "Unnamed Agent";
+      const nameFromQuery = agentNames.get(agentId);
+      const agentName = nameFromQuery || agent.props.name || "Unnamed Agent"; // Use name from name query
       const agentColor = getAgentHexColor(agent);
 
       // Check the output format
@@ -311,6 +353,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     flow,
     areAgentsLoading,
     agentQueries_,
+    agentNameQueries, // Add agent name queries to dependencies
+    agentIds,
     aggregatedStructuredVariables.length,
   ]);
 
@@ -452,12 +496,26 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
             });
           }
 
-          // Set history variables
+          // Add values from last turn
           if (lastTurn) {
+            // Set history variables
             flattenedContext["turn.char_id"] =
               lastTurn.characterCardId?.toString() ?? "";
             flattenedContext["turn.char_name"] = lastTurn.characterName ?? "";
             flattenedContext["turn.content"] = lastTurn.content;
+
+            // Set data store values from last turn
+            if (lastTurn.dataStore && lastTurn.dataStore.length > 0) {
+              // Convert DataStoreSavedField[] to object
+              const dataStoreObject = Object.fromEntries(
+                lastTurn.dataStore.map(field => [field.name, field.value])
+              );
+              const flattenedDataStore = flattenObject(
+                dataStoreObject,
+                "",
+              );
+              Object.assign(flattenedContext, flattenedDataStore);
+            }
           }
 
           setContextValues(flattenedContext);
@@ -521,20 +579,29 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         lastMonacoEditor.position
       ) {
         insertVariableAtLastCursor(variableValue);
-        toast.success(`Inserted: ${variableValue}`, {
+        toast.success(`Inserted: ${variablePath}`, {
+          duration: 2000,
+        });
+      } else if (lastInputField && lastInputField.element) {
+        insertVariableAtInputField(variableValue);
+        toast.success(`Inserted: ${variablePath}`, {
           duration: 2000,
         });
       } else {
-        toast.warning("No fields are selected to input the variables", {
-          duration: 2000,
-        });
+        // Copy to clipboard when no field is selected
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(variableValue);
+          toast.info(`No field selected. Copied ${variableValue} to clipboard.`, {
+            duration: 2000,
+          });
+        }
       }
 
       setTimeout(() => {
         setClickedVariable(null);
       }, 1000);
     },
-    [lastMonacoEditor, insertVariableAtLastCursor],
+    [lastMonacoEditor, insertVariableAtLastCursor, lastInputField, insertVariableAtInputField],
   );
 
   // Handle variable click for insertion
@@ -552,18 +619,29 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         lastMonacoEditor.position
       ) {
         insertVariableAtLastCursor(variableTemplate);
-        // No toast for regular variables to match original behavior
-      } else {
-        toast.warning("No fields are selected to input the variables", {
+        toast.success(`Inserted: ${variable.variable}`, {
           duration: 2000,
         });
+      } else if (lastInputField && lastInputField.element) {
+        insertVariableAtInputField(variableTemplate);
+        toast.success(`Inserted: ${variable.variable}`, {
+          duration: 2000,
+        });
+      } else {
+        // Copy to clipboard when no field is selected
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(variableTemplate);
+          toast.info(`No field selected. Copied ${variableTemplate} to clipboard.`, {
+            duration: 2000,
+          });
+        }
       }
 
       setTimeout(() => {
         setClickedVariable(null);
       }, 1000);
     },
-    [lastMonacoEditor, insertVariableAtLastCursor],
+    [lastMonacoEditor, insertVariableAtLastCursor, lastInputField, insertVariableAtInputField],
   );
 
   // Prevent focus steal on mouse down
@@ -625,6 +703,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         <TabsList className="w-full flex-shrink-0">
           <TabsTrigger value="variables">Variables</TabsTrigger>
           <TabsTrigger value="structured">Agent output</TabsTrigger>
+          <TabsTrigger value="datastore">Data</TabsTrigger>
         </TabsList>
 
         <TabsContent
@@ -745,26 +824,27 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
         <TabsContent
           value="structured"
-          className="mt-0 flex-1 overflow-hidden h-0"
+          className="mt-0 flex-1 overflow-hidden"
         >
-          <ScrollArea className="h-full pr-2">
-            <div className="flex flex-col gap-2">
-              {aggregatedStructuredVariables.length === 0 ? (
-                <div className="text-center py-8 space-y-2">
-                  <Database className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <TypoLarge className="text-muted-foreground">
-                    {searchQuery
-                      ? "No structured output variables found matching your search"
-                      : "No structured output variables found"}
-                  </TypoLarge>
-                  <TypoBase className="text-muted-foreground">
-                    {searchQuery
-                      ? "Try a different search term"
-                      : "Enable structured output on agents to see variables here"}
-                  </TypoBase>
+          {aggregatedStructuredVariables.length === 0 ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="inline-flex flex-col justify-start items-center gap-2">
+                <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">
+                  {searchQuery
+                    ? "No structured output variables found matching your search"
+                    : "No structured output variables found"}
                 </div>
-              ) : (
-                aggregatedStructuredVariables
+                <div className="w-52 text-center justify-start text-background-surface-5 text-xs font-normal">
+                  {searchQuery
+                    ? "Try a different search term"
+                    : "Enable structured output on agents to see variables here"}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <ScrollArea className="h-full pr-2">
+              <div className="flex flex-col gap-2">
+                {aggregatedStructuredVariables
                   .filter((variable) => {
                     if (!searchQuery) return true;
                     const query = searchQuery.toLowerCase();
@@ -853,10 +933,126 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         </button>
                       </div>
                     );
-                  })
-              )}
+                  })}
+              </div>
+            </ScrollArea>
+          )}
+        </TabsContent>
+
+        <TabsContent
+          value="datastore"
+          className="mt-0 flex-1 overflow-hidden h-0"
+        >
+          {dataStoreSchema?.fields &&
+          dataStoreSchema.fields.length > 0 ? (
+            <ScrollArea className="h-full pr-2">
+              <div className="flex flex-col gap-2">
+                {dataStoreSchema.fields
+                  .filter(
+                    (field) =>
+                      !searchQuery ||
+                      field.name
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      field.type
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()),
+                  )
+                  .map((field) => {
+                    // Get actual value from contextValues (which includes dataStore from last turn)
+                    const hasValue = field.name in contextValues;
+                    const actualValue = hasValue ? contextValues[field.name] : "";
+                    const displayValue = hasValue ? actualValue : "";
+                    const variableName = `{{${field.name}}}`;
+
+                    return (
+                      <button
+                        key={field.id}
+                        className={`w-full p-2 bg-background-surface-3 rounded-lg outline outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
+                          clickedVariable === variableName
+                            ? "bg-background-surface-3"
+                            : "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+
+                          setClickedVariable(variableName);
+
+                          // Insert into monaco editor or input field if available
+                          if (lastMonacoEditor?.editor) {
+                            insertVariableAtLastCursor(variableName);
+                            toast.success(`Inserted: ${field.name}`, {
+                              duration: 2000,
+                            });
+                          } else if (lastInputField?.element) {
+                            insertVariableAtInputField(variableName);
+                            toast.success(`Inserted: ${field.name}`, {
+                              duration: 2000,
+                            });
+                          } else {
+                            // Copy to clipboard when no field is selected
+                            if (navigator.clipboard) {
+                              navigator.clipboard.writeText(variableName);
+                              toast.info(`No field selected. Copied ${variableName} to clipboard.`, {
+                                duration: 2000,
+                              });
+                            }
+                          }
+
+                          setTimeout(() => setClickedVariable(null), 1000);
+                        }}
+                        onMouseDown={(e) => e.preventDefault()}
+                        tabIndex={-1}
+                      >
+                        {clickedVariable === variableName && (
+                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
+                        )}
+                        <div className="self-stretch flex flex-col justify-start items-start gap-4">
+                          <div className="self-stretch flex flex-col justify-start items-start gap-1">
+                            <div className="flex justify-start items-center gap-2 w-full">
+                              <div className="justify-start text-text-primary text-xs font-medium">
+                                {variableName}
+                              </div>
+                              <div className="justify-start text-text-body text-xs font-normal">
+                                {field.type}
+                              </div>
+                              {hasEditor &&
+                                (clickedVariable === variableName ? (
+                                  <Check className="min-w-3 min-h-3 ml-auto text-green-500 transition-opacity" />
+                                ) : (
+                                  <Target className="min-w-3 min-h-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
+                                ))}
+                            </div>
+                          </div>
+                          {hasValue && displayValue !== "" && displayValue !== null && displayValue !== undefined && (
+                            <div className="mt-2 w-full overflow-hidden">
+                              <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
+                                <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                  Most recent data from session
+                                </div>
+                                <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                  {typeof displayValue === "object"
+                                    ? JSON.stringify(displayValue)
+                                    : String(displayValue)}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
+            </ScrollArea>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="inline-flex flex-col justify-start items-center gap-2">
+                <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">No data fields defined</div>
+                <div className="w-52 text-center justify-start text-background-surface-5 text-xs font-normal">Define fields in the Data Schema to see them here</div>
+              </div>
             </div>
-          </ScrollArea>
+          )}
         </TabsContent>
       </Tabs>
     </div>

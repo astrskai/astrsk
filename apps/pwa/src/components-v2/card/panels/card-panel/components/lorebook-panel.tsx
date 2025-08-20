@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   DndContext,
   closestCenter,
@@ -43,12 +44,17 @@ import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 
+// Import queries and mutations
+import { 
+  cardQueries, 
+  useUpdateCardLorebook 
+} from "@/app/queries/card";
+
 // Import the sortable component
 import { SortableItem } from "@/components-v2/card/panels/card-panel/components/sortable-item";
 
 // Import our abstraction
 import { 
-  useCardPanel, 
   CardPanelProps, 
   CardPanelLoading, 
   CardPanelError,
@@ -67,22 +73,30 @@ interface LorebookEntry {
 }
 
 export function LorebookPanel({ cardId }: LorebookPanelProps) {
-  // 1. Use abstraction hook for card panel functionality
-  const { card, isLoading, lastInitializedCardId, saveCard } = useCardPanel<CharacterCard | PlotCard>({
-    cardId,
+  // 1. Mutation for updating lorebook
+  const updateLorebook = useUpdateCardLorebook(cardId);
+
+  // 2. Query for card data - disable refetching while editing but allow after mutation completes
+  const { data: card, isLoading } = useQuery({
+    ...cardQueries.detail(cardId),
+    enabled: !!cardId && !updateLorebook.isPending, // Use isPending instead of isEditing
   });
+
   
-  // 2. UI state (expansion, errors, etc.)
+  // 3. UI state (expansion, errors, etc.)
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [newKeyword, setNewKeyword] = useState<string>("");
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   
-  // 3. Local form state (for immediate UI feedback)
+  // 4. Local form state (for immediate UI feedback)
   const [entries, setEntries] = useState<LorebookEntry[]>([]);
+  const [localContent, setLocalContent] = useState("");
   
-  // 4. Refs
+  // 5. Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const lastInitializedCardId = useRef<string | null>(null);
+  const lastAddTimeRef = useRef<number>(0);
 
   // DnD sensors
   const sensors = useSensors(
@@ -92,9 +106,10 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
     }),
   );
 
-  // 5. SINGLE initialization useEffect (right after state)
+  // 6. Initialize and sync data (cross-tab synchronization)
   useEffect(() => {
-    if (cardId !== lastInitializedCardId.current && card) {
+    // Initialize when card changes
+    if (cardId && cardId !== lastInitializedCardId.current && card) {
       if ((card instanceof CharacterCard || card instanceof PlotCard) && card.props.lorebook) {
         const lorebookEntries = card.props.lorebook.entries.map((entry) => ({
           id: entry.id.toString(),
@@ -115,7 +130,33 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
       }
       lastInitializedCardId.current = cardId;
     }
-  }, [cardId, card, lastInitializedCardId]);
+    // Sync when card changes externally (cross-tab sync) - but not during mutation
+    else if (card && !updateLorebook.isPending && !updateLorebook.hasCursor) {
+      if ((card instanceof CharacterCard || card instanceof PlotCard) && card.props.lorebook) {
+        const newEntries = card.props.lorebook.entries.map((entry) => ({
+          id: entry.id.toString(),
+          name: entry.name || "",
+          content: entry.content || "",
+          keys: entry.keys || [],
+          enabled: entry.enabled,
+          recallRange: entry.recallRange || 2,
+        }));
+        
+        // Only update if entries actually changed (deep comparison)
+        if (JSON.stringify(entries) !== JSON.stringify(newEntries)) {
+          setEntries(newEntries);
+          // Keep selected entry if it still exists
+          if (selectedEntryId && !newEntries.find(e => e.id === selectedEntryId)) {
+            setSelectedEntryId(newEntries[0]?.id || null);
+          }
+        }
+      } else if (entries.length > 0) {
+        // Card no longer has lorebook, clear entries
+        setEntries([]);
+        setSelectedEntryId(null);
+      }
+    }
+  }, [cardId, card, updateLorebook.isPending, updateLorebook.hasCursor, entries, selectedEntryId]);
 
   // Focus on name input when selected entry changes
   useEffect(() => {
@@ -128,163 +169,81 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
     }
   }, [selectedEntryId]);
 
-  // 6. Debounced save with parameters (NOT closures!)
+  // 6. Helper function to convert entries to lorebook and save using mutation
+  const saveLorebook = useCallback((newEntries: LorebookEntry[]) => {
+    if (!card || !(card instanceof CharacterCard || card instanceof PlotCard)) return;
+
+    // Check for actual changes inline
+    const currentLorebook = card.props.lorebook;
+    
+    // If no entries, pass undefined to clear lorebook
+    if (newEntries.length === 0) {
+      if (currentLorebook) {
+        updateLorebook.mutate(undefined);
+      }
+      return;
+    }
+    
+    // Convert entries to domain objects
+    const entryResults = newEntries.map((entry) =>
+      Entry.create({
+        id: new UniqueEntityID(entry.id),
+        name: entry.name,
+        content: entry.content,
+        keys: entry.keys,
+        enabled: entry.enabled,
+        recallRange: entry.recallRange,
+      }),
+    );
+
+    const invalidEntry = entryResults.find((result) => result.isFailure);
+    if (!invalidEntry) {
+      const lorebookResult = Lorebook.create({
+        entries: entryResults.map((result) => result.getValue()),
+      });
+
+      if (lorebookResult.isSuccess) {
+        updateLorebook.mutate(lorebookResult.getValue());
+      }
+    }
+  }, [card, updateLorebook]);
+
+  // 7. Debounced save with parameters (NOT closures!)
   const debouncedSave = useMemo(
     () => debounce((newEntries: LorebookEntry[]) => {
-      if (!card || !(card instanceof CharacterCard || card instanceof PlotCard)) return;
-
-      // Check for actual changes inline
-      const currentLorebook = card.props.lorebook;
-      
-      // If one exists and the other doesn't, there are changes
-      if (!currentLorebook && newEntries.length > 0) {
-        const entryResults = newEntries.map((entry) =>
-          Entry.create({
-            id: new UniqueEntityID(entry.id),
-            name: entry.name,
-            content: entry.content,
-            keys: entry.keys,
-            enabled: entry.enabled,
-            recallRange: entry.recallRange,
-          }),
-        );
-
-        const invalidEntry = entryResults.find((result) => result.isFailure);
-        if (!invalidEntry) {
-          const lorebookResult = Lorebook.create({
-            entries: entryResults.map((result) => result.getValue()),
-          });
-
-          if (lorebookResult.isSuccess) {
-            const updateResult = card.update({
-              lorebook: lorebookResult.getValue(),
-            });
-            
-            if (updateResult.isSuccess) {
-              saveCard(card);
-            }
-          }
-        }
-        return;
-      }
-      
-      if (currentLorebook && newEntries.length === 0) {
-        const updateResult = card.update({
-          lorebook: undefined,
-        });
-        
-        if (updateResult.isSuccess) {
-          saveCard(card);
-        }
-        return;
-      }
-      
-      // If both don't exist, no changes
-      if (!currentLorebook && newEntries.length === 0) return;
-      
-      // Compare entry count
-      if (currentLorebook && currentLorebook.entries.length !== newEntries.length) {
-        const entryResults = newEntries.map((entry) =>
-          Entry.create({
-            id: new UniqueEntityID(entry.id),
-            name: entry.name,
-            content: entry.content,
-            keys: entry.keys,
-            enabled: entry.enabled,
-            recallRange: entry.recallRange,
-          }),
-        );
-
-        const invalidEntry = entryResults.find((result) => result.isFailure);
-        if (!invalidEntry) {
-          const lorebookResult = Lorebook.create({
-            entries: entryResults.map((result) => result.getValue()),
-          });
-
-          if (lorebookResult.isSuccess) {
-            const updateResult = card.update({
-              lorebook: lorebookResult.getValue(),
-            });
-            
-            if (updateResult.isSuccess) {
-              saveCard(card);
-            }
-          }
-        }
-        return;
-      }
-      
-      // Compare each entry
-      if (currentLorebook) {
-        const hasChanges = newEntries.some((entry) => {
-          const domainEntry = currentLorebook.entries.find(e => e.id.toString() === entry.id);
-          if (!domainEntry) return true;
-          
-          return (
-            entry.name !== (domainEntry.name || "") ||
-            entry.content !== (domainEntry.content || "") ||
-            JSON.stringify(entry.keys) !== JSON.stringify(domainEntry.keys || []) ||
-            entry.enabled !== (domainEntry.enabled !== false) ||
-            entry.recallRange !== (domainEntry.recallRange || 2)
-          );
-        });
-
-        if (hasChanges) {
-          const entryResults = newEntries.map((entry) =>
-            Entry.create({
-              id: new UniqueEntityID(entry.id),
-              name: entry.name,
-              content: entry.content,
-              keys: entry.keys,
-              enabled: entry.enabled,
-              recallRange: entry.recallRange,
-            }),
-          );
-
-          const invalidEntry = entryResults.find((result) => result.isFailure);
-          if (!invalidEntry) {
-            const lorebookResult = Lorebook.create({
-              entries: entryResults.map((result) => result.getValue()),
-            });
-
-            if (lorebookResult.isSuccess) {
-              const updateResult = card.update({
-                lorebook: lorebookResult.getValue(),
-              });
-              
-              if (updateResult.isSuccess) {
-                saveCard(card);
-              }
-            }
-          }
-        }
-      }
+      saveLorebook(newEntries);
     }, 300),
-    [card, saveCard]
+    [saveLorebook]
   );
 
-  // Common Monaco editor mount handler
+  // Common Monaco editor mount handler with cursor tracking
   const handleEditorMount = useCallback((editor: any) => {
     // Register editor for variable insertion
     const position = editor.getPosition();
     registerCardMonacoEditor(editor, position);
+
+    // Track focus - mark cursor as active
+    editor.onDidFocusEditorWidget(() => {
+      const position = editor.getPosition();
+      registerCardMonacoEditor(editor, position);
+      updateLorebook.setCursorActive(true);
+    });
+    
+    // Track blur - mark cursor as inactive
+    editor.onDidBlurEditorWidget(() => {
+      updateLorebook.setCursorActive(false);
+    });
 
     // Track cursor changes
     editor.onDidChangeCursorPosition((e: any) => {
       registerCardMonacoEditor(editor, e.position);
     });
 
-    // Track focus
-    editor.onDidFocusEditorWidget(() => {
-      const position = editor.getPosition();
-      registerCardMonacoEditor(editor, position);
-    });
-
     // Focus the editor when mounted (only for expanded views)
     if (editor.getDomNode()?.closest('.absolute.inset-0')) {
       editor.focus();
     }
-  }, []);
+  }, [updateLorebook]);
 
   const selectedEntry = entries.find((e) => e.id === selectedEntryId);
 
@@ -301,8 +260,9 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
     const newEntries = [...entries, newEntry];
     setEntries(newEntries);
     setSelectedEntryId(newEntry.id);
-    debouncedSave(newEntries);
-  }, [entries, debouncedSave]);
+    // Save immediately for user-initiated actions like adding entries
+    saveLorebook(newEntries);
+  }, [entries, saveLorebook]);
 
   const handleDeleteEntry = useCallback(
     (entryId: string) => {
@@ -311,9 +271,10 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
       if (selectedEntryId === entryId) {
         setSelectedEntryId(newEntries.length > 0 ? newEntries[0].id : null);
       }
-      debouncedSave(newEntries);
+      // Save immediately for user-initiated actions like deleting entries
+      saveLorebook(newEntries);
     },
-    [entries, selectedEntryId, debouncedSave],
+    [entries, selectedEntryId, saveLorebook],
   );
 
   const handleUpdateEntry = useCallback(
@@ -335,9 +296,10 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
       const newIndex = entries.findIndex((entry) => entry.id === over.id);
       const newEntries = arrayMove(entries, oldIndex, newIndex);
       setEntries(newEntries);
-      debouncedSave(newEntries);
+      // Save immediately for user-initiated actions like reordering
+      saveLorebook(newEntries);
     }
-  }, [entries, debouncedSave]);
+  }, [entries, saveLorebook]);
 
   // 8. Early returns using abstraction components
   if (isLoading) {
@@ -465,6 +427,8 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
                             name: e.target.value,
                           })
                         }
+                        onFocus={() => updateLorebook.setCursorActive(true)}
+                        onBlur={() => updateLorebook.setCursorActive(false)}
                         className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                         placeholder=""
                       />
@@ -482,6 +446,8 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
                           <Input
                             value={newKeyword}
                             onChange={(e) => setNewKeyword(e.target.value)}
+                            onFocus={() => updateLorebook.setCursorActive(true)}
+                            onBlur={() => updateLorebook.setCursorActive(false)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" && newKeyword.trim()) {
                                 const updatedKeys = [
@@ -580,6 +546,8 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
                             recallRange: parseInt(e.target.value) || 0,
                           })
                         }
+                        onFocus={() => updateLorebook.setCursorActive(true)}
+                        onBlur={() => updateLorebook.setCursorActive(false)}
                         className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
                         placeholder="Messages to apply"
                         min="0"

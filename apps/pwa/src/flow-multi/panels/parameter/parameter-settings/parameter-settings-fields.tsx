@@ -3,7 +3,7 @@
 "use client";
 
 import { Plus, RefreshCcw, X, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Parameter, parameterList } from "@/shared/task/domain/parameter";
 
@@ -55,6 +55,15 @@ const ParameterItem = ({
   const [enabled, setEnabled] = useState(initialEnabled ?? false);
   const [value, setValue] = useState(initialValue ?? parameter.default);
 
+  // Sync state when props change (for cross-tab updates)
+  useEffect(() => {
+    setEnabled(initialEnabled ?? false);
+  }, [initialEnabled]);
+
+  useEffect(() => {
+    setValue(initialValue ?? parameter.default);
+  }, [initialValue, parameter.default]);
+
   // Handle parameter enable/disable changes
   const handleEnabledChange = (newEnabled: boolean) => {
     setEnabled(newEnabled);
@@ -99,6 +108,28 @@ const ParameterItem = ({
     }
     return [];
   });
+
+  // Update logitBiases when value changes
+  useEffect(() => {
+    if (parameter.type === "logit_bias" && typeof value === "string") {
+      try {
+        setLogitBiases(JSON.parse(value));
+      } catch {
+        setLogitBiases([]);
+      }
+    }
+  }, [value, parameter.type]);
+
+  // Update safetySettings when value changes
+  useEffect(() => {
+    if (parameter.type === "safety_settings" && typeof value === "string") {
+      try {
+        setSafetySettings(JSON.parse(value));
+      } catch {
+        setSafetySettings([]);
+      }
+    }
+  }, [value, parameter.type]);
 
   // If disabled (collapsed state)
   if (!enabled) {

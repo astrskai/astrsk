@@ -2,6 +2,7 @@ import { Result } from "@/shared/core/result";
 import { AggregateRoot, UniqueEntityID } from "@/shared/domain";
 import { PartialOmit } from "@/shared/utils";
 import type { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
+import { NodeType } from "@/flow-multi/types/node-types";
 
 export enum TaskType {
   AiResponse = "ai_response",
@@ -17,7 +18,7 @@ export enum ReadyState {
 // TODO: change name to `FlowNode`
 export type Node = {
   id: string;
-  type: "start" | "end" | "agent";
+  type: NodeType; // Use enum instead of string literal
   position: {
     x: number;
     y: number;
@@ -33,7 +34,9 @@ export type Edge = {
   id: string;
   source: string;
   target: string;
-  label?: string; // Optional label for visualization
+  sourceHandle?: string | null; // Handle ID on source node (e.g., "true"/"false" for if-nodes)
+  targetHandle?: string | null; // Handle ID on target node
+  label?: string; // Optional label for visualization (e.g., "True"/"False" for if-nodes)
 };
 
 export type PanelLayout = {
@@ -72,6 +75,31 @@ export type FlowViewport = {
   zoom: number;
 };
 
+// Data Store Schema types
+export type DataStoreFieldType = 'string' | 'number' | 'boolean' | 'integer';
+
+// Schema definition - defines the structure
+export interface DataStoreSchemaField {
+  id: string; // Will use UniqueEntityID().toString()
+  name: string;
+  type: DataStoreFieldType;
+  initialValue: string; // Store as string, parse based on type
+  description?: string;
+}
+
+// Runtime field - contains actual values and logic
+export interface DataStoreField {
+  id: string; // Unique ID for this runtime field instance (will use UniqueEntityID().toString())
+  schemaFieldId: string; // References DataStoreSchemaField.id
+  value: string; // Current value (stored as string)
+  logic?: string; // Optional logic/formula for computed fields
+}
+
+export interface DataStoreSchema {
+  fields: DataStoreSchemaField[];
+  version?: number; // For future migrations
+}
+
 export interface FlowProps {
   // Metadata
   name: string;
@@ -83,6 +111,9 @@ export interface FlowProps {
 
   // Response Design
   responseTemplate: string;
+
+  // Data Store Schema
+  dataStoreSchema?: DataStoreSchema;
 
   // Panel Layout
   panelStructure?: PanelStructure;
@@ -105,8 +136,12 @@ export type UpdateFlowProps = Partial<CreateFlowProps>;
 export class Flow extends AggregateRoot<FlowProps> {
   get agentIds(): UniqueEntityID[] {
     return this.props.nodes
-      .filter((node) => node.type === "agent")
-      .map((node) => new UniqueEntityID(node.id));
+      .filter((node) => node.type === NodeType.AGENT)
+      .map((node) => {
+        // Agent nodes have agentId in their data
+        const agentId = (node.data as any)?.agentId || node.id;
+        return new UniqueEntityID(agentId);
+      });
   }
 
   public static create(
@@ -161,9 +196,17 @@ export class Flow extends AggregateRoot<FlowProps> {
         newReadyState = ReadyState.Draft;
       }
       
-      // Update flow props
+      // Update flow props - only update properties that are explicitly passed
+      // Filter out undefined values to avoid overwriting existing properties
+      const filteredProps = Object.entries(props).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as any);
+      
       Object.assign(this.props, { 
-        ...props,
+        ...filteredProps,
         readyState: newReadyState,
       });
 
@@ -198,6 +241,8 @@ export class Flow extends AggregateRoot<FlowProps> {
         id: edge.id,
         source: edge.source,
         target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
         label: edge.label,
       })),
       responseTemplate: this.props.responseTemplate,
@@ -245,7 +290,7 @@ export class Flow extends AggregateRoot<FlowProps> {
 
               // Ensure start and end nodes have high z-index
               let zIndex = node.zIndex;
-              if (node.type === "start" || node.type === "end") {
+              if (node.type === NodeType.START || node.type === NodeType.END) {
                 zIndex = zIndex ?? 1000; // Use 1000 if not already set
               }
 
@@ -259,8 +304,11 @@ export class Flow extends AggregateRoot<FlowProps> {
           })(),
           edges:
             props.edges?.map((edge: any) => ({
-              ...edge,
-              condition: edge.condition,
+              id: edge.id,
+              source: edge.source,
+              target: edge.target,
+              sourceHandle: edge.sourceHandle || null,
+              targetHandle: edge.targetHandle || null,
               label: edge.label,
             })) || [],
           panelStructure: props.panelStructure,
