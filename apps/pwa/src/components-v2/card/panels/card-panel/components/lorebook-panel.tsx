@@ -76,11 +76,12 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
   // 1. Mutation for updating lorebook
   const updateLorebook = useUpdateCardLorebook(cardId);
 
-  // 2. Query for card data - disable refetching while editing 
+  // 2. Query for card data - disable refetching while editing but allow after mutation completes
   const { data: card, isLoading } = useQuery({
     ...cardQueries.detail(cardId),
-    enabled: !!cardId && !updateLorebook.isEditing,
+    enabled: !!cardId && !updateLorebook.isPending, // Use isPending instead of isEditing
   });
+
   
   // 3. UI state (expansion, errors, etc.)
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -89,11 +90,13 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
   
   // 4. Local form state (for immediate UI feedback)
   const [entries, setEntries] = useState<LorebookEntry[]>([]);
+  const [localContent, setLocalContent] = useState("");
   
   // 5. Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const lastInitializedCardId = useRef<string | null>(null);
+  const lastAddTimeRef = useRef<number>(0);
 
   // DnD sensors
   const sensors = useSensors(
@@ -127,8 +130,8 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
       }
       lastInitializedCardId.current = cardId;
     }
-    // Sync when card changes externally (cross-tab sync) - but not during editing
-    else if (card && !updateLorebook.isEditing && !updateLorebook.hasCursor) {
+    // Sync when card changes externally (cross-tab sync) - but not during mutation
+    else if (card && !updateLorebook.isPending && !updateLorebook.hasCursor) {
       if ((card instanceof CharacterCard || card instanceof PlotCard) && card.props.lorebook) {
         const newEntries = card.props.lorebook.entries.map((entry) => ({
           id: entry.id.toString(),
@@ -153,7 +156,7 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
         setSelectedEntryId(null);
       }
     }
-  }, [cardId, card, updateLorebook.isEditing, updateLorebook.hasCursor, entries, selectedEntryId]);
+  }, [cardId, card, updateLorebook.isPending, updateLorebook.hasCursor, entries, selectedEntryId]);
 
   // Focus on name input when selected entry changes
   useEffect(() => {
@@ -257,8 +260,9 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
     const newEntries = [...entries, newEntry];
     setEntries(newEntries);
     setSelectedEntryId(newEntry.id);
-    debouncedSave(newEntries);
-  }, [entries, debouncedSave]);
+    // Save immediately for user-initiated actions like adding entries
+    saveLorebook(newEntries);
+  }, [entries, saveLorebook]);
 
   const handleDeleteEntry = useCallback(
     (entryId: string) => {
@@ -267,9 +271,10 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
       if (selectedEntryId === entryId) {
         setSelectedEntryId(newEntries.length > 0 ? newEntries[0].id : null);
       }
-      debouncedSave(newEntries);
+      // Save immediately for user-initiated actions like deleting entries
+      saveLorebook(newEntries);
     },
-    [entries, selectedEntryId, debouncedSave],
+    [entries, selectedEntryId, saveLorebook],
   );
 
   const handleUpdateEntry = useCallback(
@@ -291,9 +296,10 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
       const newIndex = entries.findIndex((entry) => entry.id === over.id);
       const newEntries = arrayMove(entries, oldIndex, newIndex);
       setEntries(newEntries);
-      debouncedSave(newEntries);
+      // Save immediately for user-initiated actions like reordering
+      saveLorebook(newEntries);
     }
-  }, [entries, debouncedSave]);
+  }, [entries, saveLorebook]);
 
   // 8. Early returns using abstraction components
   if (isLoading) {

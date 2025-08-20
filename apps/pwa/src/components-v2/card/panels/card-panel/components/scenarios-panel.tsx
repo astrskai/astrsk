@@ -64,10 +64,10 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
   // 1. Mutation for updating scenarios
   const updateScenarios = useUpdateCardScenarios(cardId);
 
-  // 2. Query for card data - disable refetching while editing
+  // 2. Query for card data - disable refetching while mutation is pending
   const { data: card, isLoading } = useQuery({
     ...cardQueries.detail(cardId),
-    enabled: !!cardId && !updateScenarios.isEditing,
+    enabled: !!cardId && !updateScenarios.isPending,
   });
   
   // 3. UI state (expansion, errors, etc.)
@@ -105,8 +105,8 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
       }
       lastInitializedCardId.current = cardId;
     }
-    // Sync when card changes externally (cross-tab sync) - but not during editing
-    else if (card && card instanceof PlotCard && !updateScenarios.isEditing && !updateScenarios.hasCursor) {
+    // Sync when card changes externally (cross-tab sync) - but not during mutation
+    else if (card && card instanceof PlotCard && !updateScenarios.isPending && !updateScenarios.hasCursor) {
       const newScenarios = card.props.scenarios?.map((scenario, index) => ({
         id: `scenario-${index}`,
         name: scenario.name || "",
@@ -122,7 +122,7 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
         }
       }
     }
-  }, [cardId, card, updateScenarios.isEditing, updateScenarios.hasCursor, scenarios, selectedScenarioId]);
+  }, [cardId, card, updateScenarios.isPending, updateScenarios.hasCursor, scenarios, selectedScenarioId]);
 
   // Focus on name input when selected scenario changes
   useEffect(() => {
@@ -214,8 +214,9 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
     const newScenarios = [...scenarios, newScenario];
     setScenarios(newScenarios);
     setSelectedScenarioId(newScenario.id);
-    debouncedSave(newScenarios);
-  }, [scenarios, debouncedSave]);
+    // Save immediately for user-initiated actions like adding scenarios
+    saveScenarios(newScenarios);
+  }, [scenarios, saveScenarios]);
 
   const handleDeleteScenario = useCallback(
     (scenarioId: string) => {
