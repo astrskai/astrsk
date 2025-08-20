@@ -64,6 +64,8 @@ import { Turn as MessageEntity } from "@/modules/turn/domain/turn";
 import { parseAiSdkErrorMessage, sanitizeFileName } from "@/shared/utils";
 import { translate } from "@/shared/utils/translate-utils";
 import * as amplitude from "@amplitude/analytics-browser";
+import { IfNodeService } from "@/app/services/if-node-service";
+import { IfNode } from "@/modules/if-node/domain";
 
 const makeContext = async ({
   session,
@@ -1738,9 +1740,22 @@ async function* executeFlow({
         // Move to next node
         currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
       } else if (currentNode.type === "if") {
+        // Get if node
+        const ifNode = (
+          await IfNodeService.getIfNode.execute({
+            flowId: flowId.toString(),
+            nodeId: currentNode.id,
+          })
+        )
+          .throwOnFailure()
+          .getValue();
+        if (!ifNode) {
+          throw new Error(`No node: ${currentNode.id}`);
+        }
+
         // Handle if node - evaluate condition and choose branch
         currentNode = await handleIfNode(
-          currentNode,
+          ifNode,
           variables,
           context,
           dataStore,
@@ -1862,7 +1877,7 @@ function getNextNode(
  * @returns Next node based on condition evaluation
  */
 async function handleIfNode(
-  ifNode: any,
+  ifNode: IfNode,
   variables: Record<string, any>,
   context: any,
   dataStore: DataStoreSavedField[],
@@ -1870,7 +1885,7 @@ async function handleIfNode(
   allNodes: any[],
 ): Promise<any | null> {
   // Check neighbors
-  const neighbors = adjacencyList.get(ifNode.id) || [];
+  const neighbors = adjacencyList.get(ifNode.id.toString()) || [];
   if (neighbors.length !== 2) {
     throw new Error(
       `If node ${ifNode.id} must have exactly 2 outgoing connections`,
@@ -2126,32 +2141,26 @@ function evaluateConditionOperator(
  * @returns Boolean result of condition evaluation
  */
 async function evaluateIfCondition(
-  ifNode: any,
+  ifNode: IfNode,
   variables: Record<string, any>,
   context: any,
   dataStore: DataStoreSavedField[],
 ): Promise<boolean> {
-  // Get if node data
-  const ifNodeData = ifNode.data as {
-    logicOperator: "AND" | "OR";
-    conditions: Condition[];
-  };
-
   // No conditions means default to true
-  if (!ifNodeData.conditions || ifNodeData.conditions.length === 0) {
+  if (!ifNode.conditions || ifNode.conditions.length === 0) {
     return true;
   }
 
   // Evaluate conditions
   try {
     const conditionResults = await Promise.all(
-      ifNodeData.conditions.map((condition) =>
+      ifNode.conditions.map((condition) =>
         evaluateSingleCondition(condition, variables, context, dataStore),
       ),
     );
 
     // Apply logic operator
-    return ifNodeData.logicOperator === "AND"
+    return ifNode.logicOperator === "AND"
       ? conditionResults.every((result) => result)
       : conditionResults.some((result) => result);
   } catch (error) {
