@@ -24,8 +24,10 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   CaseUpper,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Database,
   GripVertical,
   Hash,
@@ -1112,12 +1114,22 @@ const SortableDataSchemaFieldItem = ({
     transition,
     isDragging,
   } = useSortable({ id: name });
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+
+  // Collapse long value
+  const valueRef = useRef<HTMLDivElement>(null);
+  const [isOpenValue, setIsOpenValue] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  useEffect(() => {
+    const element = valueRef.current;
+    if (element) {
+      setIsClamped(element.scrollHeight > element.clientHeight);
+    }
+  }, [value]);
 
   return (
     <div
@@ -1135,34 +1147,43 @@ const SortableDataSchemaFieldItem = ({
         </div>
       </div>
       <div className="grow flex flex-col gap-[8px]">
-        <div className="group/field-name flex flex-row gap-[8px] items-center text-text-subtle hover:text-text-primary">
-          {getSchemaTypeIcon(type)}
-          <div className="font-[500] text-[14px] leading-[20px]">{name}</div>
-          {isEditing ? (
-            <>
-              <Check
+        <div className="group/field-name flex flex-row justify-between items-center">
+          <div className="flex flex-row gap-[8px] items-center text-text-subtle group-hover/field-name:text-text-primary">
+            {getSchemaTypeIcon(type)}
+            <div className="font-[500] text-[14px] leading-[20px]">{name}</div>
+            {isEditing ? (
+              <>
+                <Check
+                  size={20}
+                  className="!text-text-body"
+                  onClick={() => {
+                    onEditDone();
+                  }}
+                />
+                <X
+                  size={20}
+                  className="!text-text-body"
+                  onClick={() => {
+                    onEditCancel();
+                  }}
+                />
+              </>
+            ) : (
+              <Pencil
                 size={20}
-                className="!text-text-body"
+                className="!text-text-body hidden group-hover/field-name:inline-block"
                 onClick={() => {
-                  onEditDone();
+                  setIsEditing(true);
                 }}
               />
-              <X
-                size={20}
-                className="!text-text-body"
-                onClick={() => {
-                  onEditCancel();
-                }}
-              />
-            </>
-          ) : (
-            <Pencil
-              size={20}
-              className="!text-text-body hidden group-hover/field-name:inline-block"
-              onClick={() => {
-                setIsEditing(true);
-              }}
-            />
+            )}
+          </div>
+          {isClamped && (
+            <div className="text-background-surface-5" onClick={() => {
+              setIsOpenValue((open) => !open);
+            }}>
+              {isOpenValue ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </div>
           )}
         </div>
         {isEditing ? (
@@ -1182,7 +1203,12 @@ const SortableDataSchemaFieldItem = ({
             }}
           />
         ) : (
-          <div className="text-text-primary line-clamp-3">{value}</div>
+          <div
+            ref={valueRef}
+            className={cn("text-text-primary", !isOpenValue && "line-clamp-3")}
+          >
+            {value}
+          </div>
         )}
       </div>
     </div>
