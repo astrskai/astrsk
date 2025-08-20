@@ -1589,9 +1589,13 @@ async function* executeFlow({
               createFullContext(context, {}, dataStore),
             );
 
+            // Execute rendered value as JavaScript code
+            const fullContext = createFullContext(context, {}, dataStore);
+            const executedValue = executeJavaScriptCode(renderedValue, fullContext);
+
             // Convert to appropriate type and create DataStoreSavedField
             const convertedValue = convertToDataStoreType(
-              renderedValue,
+              String(executedValue),
               schemaField.type,
             );
 
@@ -1696,9 +1700,12 @@ async function* executeFlow({
               );
 
               if (schemaField) {
+                // Execute rendered value as JavaScript code
+                const executedValue = executeJavaScriptCode(renderedValue, fullContext);
+                
                 // Convert value
                 const convertedValue = convertToDataStoreType(
-                  renderedValue,
+                  String(executedValue),
                   schemaField.type,
                 );
 
@@ -2195,12 +2202,56 @@ function createFullContext(
 }
 
 /**
+ * Execute JavaScript code safely within the provided context
+ * @param code - The JavaScript code to execute
+ * @param context - The context object to make available in the code
+ * @returns The result of the executed code
+ */
+function executeJavaScriptCode(code: string, context: Record<string, unknown>): unknown {
+  try {
+    // Basic security check - reject code with potentially dangerous keywords
+    const dangerousPatterns = [
+      /\beval\b/,
+      /\bFunction\b/,
+      /\bsetTimeout\b/,
+      /\bsetInterval\b/,
+      /\bimport\b/,
+      /\brequire\b/,
+      /\bprocess\b/,
+      /\bglobal\b/,
+      /\bwindow\b/,
+      /\bdocument\b/
+    ];
+    
+    if (dangerousPatterns.some(pattern => pattern.test(code))) {
+      logger.warn(`JavaScript code contains potentially dangerous patterns: ${code}`);
+      return code; // Return original code without execution
+    }
+    
+    // Create a list of context keys and values
+    const contextKeys = Object.keys(context);
+    const contextValues = Object.values(context);
+    
+    // Create a safe function that has access to the context
+    // Use Function constructor instead of eval for better security
+    const func = new Function(...contextKeys, `"use strict"; return (${code})`);
+    
+    // Execute the function with context values
+    return func(...contextValues);
+  } catch (error) {
+    logger.error(`Failed to execute JavaScript code: ${error}`);
+    // Return the original code if execution fails
+    return code;
+  }
+}
+
+/**
  * Convert a string value to the specified DataStore field type
  * @param value - The string value to convert
  * @param type - The target DataStore field type
  * @returns The converted value
  */
-function convertToDataStoreType(value: string, type: DataStoreFieldType): any {
+function convertToDataStoreType(value: string, type: DataStoreFieldType): string | number | boolean {
   switch (type) {
     case "string":
       return String(value);
