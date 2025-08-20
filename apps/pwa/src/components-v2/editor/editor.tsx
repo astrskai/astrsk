@@ -145,6 +145,15 @@ export function Editor({
       // Force set theme after mount
       monaco.editor.setTheme(currentTheme);
 
+      // Track focus state to prevent model disposal while editor is focused
+      editor.onDidFocusEditorWidget(() => {
+        isFocusedRef.current = true;
+      });
+
+      editor.onDidBlurEditorWidget(() => {
+        isFocusedRef.current = false;
+      });
+
       // Call custom onMount if provided
       if (onMount) {
         onMount(editor, monaco);
@@ -163,51 +172,84 @@ export function Editor({
   // Clear undo history when value changes externally (e.g., switching between message fields)
   const prevValueRef = useRef(value);
   const isUserTypingRef = useRef(false);
+  const isFocusedRef = useRef(false);
+  const lastDisposeTimeRef = useRef(0);
   
   useEffect(() => {
-    if (clearUndoOnValueChange && editorRef.current && monacoRef.current && value !== prevValueRef.current && !isUserTypingRef.current) {
+    // Add extra safety checks to prevent disposal during active use
+    const now = Date.now();
+    const timeSinceLastDispose = now - lastDisposeTimeRef.current;
+    const hasRecentDispose = timeSinceLastDispose < 500; // Don't dispose within 500ms of last dispose
+    
+    if (clearUndoOnValueChange && 
+        editorRef.current && 
+        monacoRef.current && 
+        value !== prevValueRef.current && 
+        !isUserTypingRef.current && 
+        !isFocusedRef.current &&
+        !hasRecentDispose) {
+      
       const editor = editorRef.current;
       const monaco = monacoRef.current;
       const currentModel = editor.getModel();
       
       if (currentModel) {
-        
-        // Store current editor state
-        const currentPosition = editor.getPosition();
-        const currentSelection = editor.getSelection();
-        
-        // Dispose the old model and create a new one to completely clear undo history
-        const oldUri = currentModel.uri;
-        currentModel.dispose();
-        
-        // Create a new model with the new content
-        const newModel = monaco.editor.createModel(value, language, oldUri);
-        
-        // Set the new model on the editor
-        editor.setModel(newModel);
-        
-        // Re-establish the onChange handler for the new model
-        if (onChange) {
-          newModel.onDidChangeContent((e) => {
-            isUserTypingRef.current = true;
-            const newValue = newModel.getValue();
-            onChange(newValue, e);
-            // Reset the flag after a short delay to allow for the next external change
-            setTimeout(() => {
-              isUserTypingRef.current = false;
-            }, 100);
-          });
+        try {
+          // Additional check: make sure editor is not busy with any operations
+          if (editor.hasTextFocus() || document.activeElement === editor.getDomNode()) {
+            // Editor is still active, don't dispose
+            prevValueRef.current = value;
+            return;
+          }
+          
+          // Store current editor state
+          const currentPosition = editor.getPosition();
+          
+          // Dispose the old model and create a new one to completely clear undo history
+          const oldUri = currentModel.uri;
+          currentModel.dispose();
+          lastDisposeTimeRef.current = now;
+          
+          // Create a new model with the new content
+          const newModel = monaco.editor.createModel(value, language, oldUri);
+          
+          // Set the new model on the editor
+          editor.setModel(newModel);
+          
+          // Re-establish the onChange handler for the new model
+          if (onChange) {
+            newModel.onDidChangeContent((e) => {
+              isUserTypingRef.current = true;
+              const newValue = newModel.getValue();
+              onChange(newValue, e);
+              // Reset the flag after a short delay to allow for the next external change
+              setTimeout(() => {
+                isUserTypingRef.current = false;
+              }, 150);
+            });
+          }
+          
+          // Restore cursor position if possible
+          if (currentPosition && value.length >= currentPosition.lineNumber) {
+            editor.setPosition(currentPosition);
+          }
+          
+        } catch (error) {
+          // Silently handle disposal errors to prevent console spam
+          // Fall back to just updating the value without clearing undo
+          try {
+            const currentModel = editor.getModel();
+            if (currentModel && currentModel.getValue() !== value) {
+              currentModel.setValue(value);
+            }
+          } catch (fallbackError) {
+            // Even fallback failed, just ignore to prevent further errors
+          }
         }
-        
-        // Restore cursor position if possible
-        if (currentPosition && value.length >= currentPosition.lineNumber) {
-          editor.setPosition(currentPosition);
-        }
-        
       }
     }
     prevValueRef.current = value;
-  }, [value, clearUndoOnValueChange, language]);
+  }, [value, clearUndoOnValueChange, language, onChange]);
 
   // Handle expand toggle
   const handleExpandToggle = useCallback(() => {
