@@ -5,11 +5,10 @@ export const TableName = {
   // API
   ApiConnections: "api_connections",
 
-  // Agent
-  Agents: "agents",
-
   // Flow
   Flows: "flows",
+  Agents: "agents",
+  DataStoreNodes: "data_store_nodes",
 
   // Card
   Cards: "cards",

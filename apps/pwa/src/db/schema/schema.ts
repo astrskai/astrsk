@@ -4,6 +4,7 @@ import { assets } from "@/db/schema/assets";
 import { backgrounds } from "@/db/schema/backgrounds";
 import { cards } from "@/db/schema/cards";
 import { characterCards } from "@/db/schema/character-cards";
+import { dataStoresNodes } from "@/db/schema/data-store-nodes";
 import { flows } from "@/db/schema/flows";
 import { plotCards } from "@/db/schema/plot-cards";
 import { sessions } from "@/db/schema/sessions";
@@ -19,6 +20,7 @@ export const Schema = {
   // Flow
   flows,
   agents,
+  dataStoresNodes,
 
   // Card
   cards,
