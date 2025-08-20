@@ -139,7 +139,10 @@ export const flowQueries = {
           limit: filters.limit || 100,
         });
         if (result.isFailure) return [];
-        return result.getValue();
+        return result.getValue().map((flow) => FlowDrizzleMapper.toPersistence(flow));
+      },
+      select: (data) => {
+        return data.map((flow) => FlowDrizzleMapper.toDomain(flow as any));
       },
       staleTime: 1000 * 10, // 10 seconds
       gcTime: 1000 * 60, // 1 minute
@@ -475,7 +478,10 @@ export const flowQueries = {
         const agentNodes = flow.props.nodes.filter((node: any) => node.type === 'agent');
         const agentIds = agentNodes.map((node: any) => new UniqueEntityID(node.id));
         
-        return agentIds;
+        return agentIds.map((id) => id.toString());
+      },
+      select: (data) => {
+        return data.map((id) => new UniqueEntityID(id));
       },
       staleTime: 1000 * 30,
     }),
