@@ -254,10 +254,7 @@ const MessageItemInternal = ({
                         className="chat-style-text !text-[14px] !leading-[20px]"
                       >
                         <span className="font-[600]">{field.name} : </span>
-                        <span>{field.value}</span>{" "}
-                        <span className="capitalize chat-style-text-italic !text-[14px] !leading-[20px]">
-                          ({field.type})
-                        </span>
+                        <span>{field.value}</span>
                       </div>
                     ))}
                   </div>
