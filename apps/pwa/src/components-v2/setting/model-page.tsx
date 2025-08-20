@@ -10,6 +10,7 @@ import { logger } from "@/shared/utils";
 import { useApiConnections } from "@/app/hooks/use-api-connections";
 import { ApiService } from "@/app/services";
 import { queryClient } from "@/app/queries/query-client";
+import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
 import { Combobox } from "@/components-v2/combobox";
 import { cn } from "@/components-v2/lib/utils";
 import {
@@ -280,7 +281,7 @@ export default function ModelPage({ className }: { className?: string }) {
   // Invalidate api connections
   const invalidateApiConnections = useCallback(() => {
     queryClient.invalidateQueries({
-      queryKey: [TableName.ApiConnections],
+      queryKey: apiConnectionQueries.all(),
     });
   }, []);
 

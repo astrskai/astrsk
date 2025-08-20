@@ -1,7 +1,6 @@
 import Worker from "@/db/pglite-worker.ts?worker";
 import { logger } from "@/shared/utils/logger";
 import { PGliteInterface } from "@electric-sql/pglite";
-import { live } from "@electric-sql/pglite/live";
 import { PGliteWorker } from "@electric-sql/pglite/worker";
 import { Base64 } from "js-base64";
 import { file, write } from "opfs-tools";
@@ -105,9 +104,6 @@ export class Pglite {
         {
           dataDir: PGLITE_DATA_DIR,
           relaxedDurability: true,
-          extensions: {
-            live,
-          },
         },
       );
 

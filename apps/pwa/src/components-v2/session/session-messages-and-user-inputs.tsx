@@ -1437,6 +1437,11 @@ const SessionMessagesAndUserInputs = ({
 
         // Update message to database
         await TurnService.updateTurn.execute(streamingMessage);
+
+        // Invalidate turn query
+        queryClient.invalidateQueries({
+          queryKey: turnQueries.detail(streamingMessage.id).queryKey,
+        });
       } catch (error) {
         // Notify error to user
         const parsedError = parseAiSdkErrorMessage(error);
@@ -1480,10 +1485,18 @@ const SessionMessagesAndUserInputs = ({
                 sessionId: session.id,
                 messageId: streamingMessage.id,
               });
+
+              // Invalidate session query
+              invalidateSession();
             }
           } else {
             // Update message to database
             await TurnService.updateTurn.execute(streamingMessage);
+
+            // Invalidate turn query
+            queryClient.invalidateQueries({
+              queryKey: turnQueries.detail(streamingMessage.id).queryKey,
+            });
           }
         }
       } finally {
@@ -1584,8 +1597,13 @@ const SessionMessagesAndUserInputs = ({
         autoReply,
       });
       await SessionService.saveSession.execute({ session });
+
+      // Invalidate session query
+      queryClient.invalidateQueries({
+        queryKey: sessionQueries.detail(selectedSessionId ?? undefined).queryKey,
+      });
     },
-    [session],
+    [session, queryClient, selectedSessionId],
   );
 
   // Add plot card modal
@@ -1797,7 +1815,7 @@ const SessionMessagesAndUserInputs = ({
         return;
       }
 
-      // Invalidate session
+      // Invalidate session query
       invalidateSession();
     },
     [invalidateSession, session],
@@ -1863,7 +1881,7 @@ const SessionMessagesAndUserInputs = ({
       flow.props.dataStoreSchema && flow.props.dataStoreSchema.fields.length > 0
     );
   }, [flow]);
-  const { data: lastTurn, refetch: refetchLastTurn } = useQuery(
+  const { data: lastTurn } = useQuery(
     turnQueries.detail(session?.turnIds[session?.turnIds.length - 1]),
   );
   const lastTurnDataStore: Record<string, string> = useMemo(() => {
@@ -1958,13 +1976,17 @@ const SessionMessagesAndUserInputs = ({
 
         // Save to database
         await TurnService.updateTurn.execute(lastTurn);
-        refetchLastTurn();
+
+        // Invalidate turn query
+        queryClient.invalidateQueries({
+          queryKey: turnQueries.detail(lastTurn.id).queryKey,
+        });
       } catch (error) {
         logger.error("Failed to update data store", error);
         toast.error("Failed to update data store field");
       }
     },
-    [lastTurn, refetchLastTurn],
+    [lastTurn, queryClient],
   );
 
   if (!session) {
