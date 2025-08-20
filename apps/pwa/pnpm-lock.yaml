@@ -48,8 +48,8 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(react@18.3.1)
       '@electric-sql/pglite':
-        specifier: ^0.3.5
-        version: 0.3.5
+        specifier: ^0.3.7
+        version: 0.3.7
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@18.3.23)(react@18.3.1)
@@ -181,7 +181,7 @@ importers:
         version: 4.5.0(react@18.3.1)
       drizzle-orm:
         specifier: ^0.40.0
-        version: 0.40.1(@electric-sql/pglite@0.3.5)(@opentelemetry/api@1.9.0)(postgres@3.4.7)
+        version: 0.40.1(@electric-sql/pglite@0.3.7)(@opentelemetry/api@1.9.0)(postgres@3.4.7)
       embla-carousel-auto-scroll:
         specifier: ^8.6.0
         version: 8.6.0(embla-carousel@8.6.0)
@@ -1230,8 +1230,8 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@electric-sql/pglite@0.3.5':
-    resolution: {integrity: sha512-fhODErXJjOrnsJj5f1A8sH/Zj0INpLUbqOCiskufIUImUsFOBNHE6/FApY656Q2VSOp46wkXX3rvbBBO8O8Cag==}
+  '@electric-sql/pglite@0.3.7':
+    resolution: {integrity: sha512-5c3mybVrhxu5s47zFZtIGdG8YHkKCBENOmqxnNBjY53ZoDhADY/c5UqBDl159b7qtkzNPtbbb893wL9zi1kAuw==}
 
   '@emnapi/core@1.4.5':
     resolution: {integrity: sha512-XsLw1dEOpkSX/WucdqUhPWP7hDxSvZiY+fsUC14h+FtQ2Ifni4znbBt8punRX+Uj2JG/uDb8nEHVKvrVlvdZ5Q==}
@@ -8120,7 +8120,7 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@electric-sql/pglite@0.3.5': {}
+  '@electric-sql/pglite@0.3.7': {}
 
   '@emnapi/core@1.4.5':
     dependencies:
@@ -10843,9 +10843,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.40.1(@electric-sql/pglite@0.3.5)(@opentelemetry/api@1.9.0)(postgres@3.4.7):
+  drizzle-orm@0.40.1(@electric-sql/pglite@0.3.7)(@opentelemetry/api@1.9.0)(postgres@3.4.7):
     optionalDependencies:
-      '@electric-sql/pglite': 0.3.5
+      '@electric-sql/pglite': 0.3.7
       '@opentelemetry/api': 1.9.0
       postgres: 3.4.7
 
