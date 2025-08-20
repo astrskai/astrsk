@@ -225,9 +225,10 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
       if (selectedScenarioId === scenarioId) {
         setSelectedScenarioId(newScenarios.length > 0 ? newScenarios[0].id : null);
       }
-      debouncedSave(newScenarios);
+      // Save immediately for user-initiated actions like deleting scenarios
+      saveScenarios(newScenarios);
     },
-    [scenarios, selectedScenarioId, debouncedSave],
+    [scenarios, selectedScenarioId, saveScenarios],
   );
 
   const handleUpdateScenario = useCallback(
@@ -253,9 +254,10 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
       );
       const newScenarios = arrayMove(scenarios, oldIndex, newIndex);
       setScenarios(newScenarios);
-      debouncedSave(newScenarios);
+      // Save immediately for user-initiated actions like reordering
+      saveScenarios(newScenarios);
     }
-  }, [scenarios, debouncedSave]);
+  }, [scenarios, saveScenarios]);
 
   // 9. Early returns
   if (isLoading) {
