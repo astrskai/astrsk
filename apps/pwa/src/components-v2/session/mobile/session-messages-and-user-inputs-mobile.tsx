@@ -1299,6 +1299,9 @@ const SessionMessagesAndUserInputsMobile = ({
                 sessionId: session.id,
                 messageId: streamingMessage.id,
               });
+
+              // Invalidate session query
+              invalidateSession();
             }
           } else {
             // Update message to database
@@ -1398,7 +1401,12 @@ const SessionMessagesAndUserInputsMobile = ({
       autoReply,
     });
     await SessionService.saveSession.execute({ session });
-  }, [session]);
+
+    // Invalidate session query
+    queryClient.invalidateQueries({
+      queryKey: sessionQueries.detail(selectedSessionId ?? undefined).queryKey,
+    });
+  }, [session, queryClient, selectedSessionId]);
 
   // Add plot card modal
   const [plotCard] = useCard<PlotCard>(session?.plotCard?.id);
@@ -1609,7 +1617,7 @@ const SessionMessagesAndUserInputsMobile = ({
         return;
       }
 
-      // Invalidate session
+      // Invalidate session query
       invalidateSession();
     },
     [invalidateSession, session],
