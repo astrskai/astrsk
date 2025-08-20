@@ -1179,10 +1179,17 @@ const SortableDataSchemaFieldItem = ({
             )}
           </div>
           {isClamped && (
-            <div className="text-background-surface-5" onClick={() => {
-              setIsOpenValue((open) => !open);
-            }}>
-              {isOpenValue ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            <div
+              className="text-background-surface-5"
+              onClick={() => {
+                setIsOpenValue((open) => !open);
+              }}
+            >
+              {isOpenValue ? (
+                <ChevronUp size={20} />
+              ) : (
+                <ChevronDown size={20} />
+              )}
             </div>
           )}
         </div>

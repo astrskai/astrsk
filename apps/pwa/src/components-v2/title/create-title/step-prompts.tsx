@@ -174,16 +174,12 @@ export const isModelAvailable = (
     return false;
   }
 
-  // Use the model ID as-is without any extraction
-  // The model ID should match exactly what's in the API connections
-  const actualModelId = modelId;
-
   for (const apiConnectionWithModels of apiConnectionsWithModels) {
     const { apiConnection, models } = apiConnectionWithModels;
     
     if (apiConnection.source === apiSource) {
       for (const model of models) {
-        if (model.id === actualModelId && model.name === modelName) {
+        if (model.id === modelId && model.name === modelName) {
           return true;
         }
       }
