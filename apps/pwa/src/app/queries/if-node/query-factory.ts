@@ -12,6 +12,9 @@
 import { queryOptions } from "@tanstack/react-query";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { IfCondition } from "@/flow-multi/nodes/if-node";
+import { IfNodeDrizzleMapper } from "@/modules/if-node/mappers/if-node-drizzle-mapper";
+import { IfNode } from "@/modules/if-node/domain/if-node";
+import { parse, stringify } from "superjson";
 
 /**
  * Check if a nodeId is in the old format (not a UUID)
@@ -61,8 +64,6 @@ export interface IfNodeData {
   color: string;
   logicOperator: 'AND' | 'OR';
   conditions: IfCondition[];
-  createdAt: Date;
-  updatedAt?: Date;
 }
 
 export interface IfNodeNameData {
@@ -87,7 +88,7 @@ export const ifNodeQueries = {
   detail: (flowId: string, nodeId: string) =>
     queryOptions({
       queryKey: ifNodeKeys.detail(flowId, nodeId),
-      queryFn: async (): Promise<IfNodeData | null> => {
+      queryFn: async () => {
         const result = await IfNodeService.getIfNode.execute({ flowId, nodeId });
         if (result.isFailure) {
           throw new Error(result.getError());
@@ -96,16 +97,13 @@ export const ifNodeQueries = {
         const ifNode = result.getValue();
         if (!ifNode) return null;
         
-        return {
-          id: ifNode.id.toString(),
-          flowId: ifNode.flowId,
-          name: ifNode.name,
-          color: ifNode.color,
-          logicOperator: ifNode.logicOperator,
-          conditions: ifNode.conditions,
-          createdAt: ifNode.createdAt,
-          updatedAt: ifNode.updatedAt,
-        };
+        // Transform to persistence format for caching
+        return IfNodeDrizzleMapper.toPersistence(ifNode);
+      },
+      select: (data): IfNode | null => {
+        if (!data) return null;
+        // Transform back to domain object
+        return IfNodeDrizzleMapper.toDomain(data as any);
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
@@ -132,7 +130,7 @@ export const ifNodeQueries = {
   conditions: (flowId: string, nodeId: string) =>
     queryOptions({
       queryKey: ifNodeKeys.conditions(flowId, nodeId),
-      queryFn: async (): Promise<IfNodeConditionsData | null> => {
+      queryFn: async (): Promise<any> => {
         const result = await IfNodeService.getIfNode.execute({ flowId, nodeId });
         if (result.isFailure) {
           throw new Error(result.getError());
@@ -141,7 +139,17 @@ export const ifNodeQueries = {
         const ifNode = result.getValue();
         if (!ifNode) return null;
         
-        return { conditions: ifNode.conditions };
+        // Transform conditions array to serializable format for caching
+        return {
+          conditions: stringify(ifNode.conditions)
+        };
+      },
+      select: (data): IfNodeConditionsData | null => {
+        if (!data) return null;
+        // Transform back to domain objects when selecting from cache
+        return {
+          conditions: parse(data.conditions) || []
+        };
       },
       staleTime: 1000 * 30, // 30 seconds
     }),

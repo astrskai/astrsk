@@ -11,6 +11,9 @@
 
 import { queryOptions } from "@tanstack/react-query";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
+import { DataStoreNodeDrizzleMapper } from "@/modules/data-store-node/mappers/data-store-node-drizzle-mapper";
+import { DataStoreNode } from "@/modules/data-store-node/domain/data-store-node";
+import { parse, stringify } from "superjson";
 
 /**
  * Query Key Factory
@@ -46,8 +49,6 @@ export interface DataStoreNodeData {
   name: string;
   color: string;
   dataStoreFields: any[];
-  createdAt: Date;
-  updatedAt?: Date;
 }
 
 export interface DataStoreNodeNameData {
@@ -68,7 +69,7 @@ export const dataStoreNodeQueries = {
   detail: (flowId: string, nodeId: string) =>
     queryOptions({
       queryKey: dataStoreNodeKeys.detail(flowId, nodeId),
-      queryFn: async (): Promise<DataStoreNodeData | null> => {
+      queryFn: async () => {
         const result = await DataStoreNodeService.getDataStoreNode.execute({ flowId, nodeId });
         if (result.isFailure) {
           throw new Error(result.getError());
@@ -77,15 +78,13 @@ export const dataStoreNodeQueries = {
         const dataStoreNode = result.getValue();
         if (!dataStoreNode) return null;
         
-        return {
-          id: dataStoreNode.id.toString(),
-          flowId: dataStoreNode.flowId,
-          name: dataStoreNode.name,
-          color: dataStoreNode.color,
-          dataStoreFields: dataStoreNode.dataStoreFields,
-          createdAt: dataStoreNode.createdAt,
-          updatedAt: dataStoreNode.updatedAt,
-        };
+        // Transform to persistence format for caching
+        return DataStoreNodeDrizzleMapper.toPersistence(dataStoreNode);
+      },
+      select: (data): DataStoreNode | null => {
+        if (!data) return null;
+        // Transform back to domain object
+        return DataStoreNodeDrizzleMapper.toDomain(data as any);
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
@@ -112,7 +111,7 @@ export const dataStoreNodeQueries = {
   fields: (flowId: string, nodeId: string) =>
     queryOptions({
       queryKey: dataStoreNodeKeys.fields(flowId, nodeId),
-      queryFn: async (): Promise<DataStoreNodeFieldsData | null> => {
+      queryFn: async (): Promise<any> => {
         const result = await DataStoreNodeService.getDataStoreNode.execute({ flowId, nodeId });
         if (result.isFailure) {
           throw new Error(result.getError());
@@ -121,7 +120,17 @@ export const dataStoreNodeQueries = {
         const dataStoreNode = result.getValue();
         if (!dataStoreNode) return null;
         
-        return { fields: dataStoreNode.dataStoreFields };
+        // Transform fields array to serializable format for caching
+        return {
+          fields: stringify(dataStoreNode.dataStoreFields)
+        };
+      },
+      select: (data): DataStoreNodeFieldsData | null => {
+        if (!data) return null;
+        // Transform back to domain objects when selecting from cache
+        return {
+          fields: parse(data.fields) || []
+        };
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
