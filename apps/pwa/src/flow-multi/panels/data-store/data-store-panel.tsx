@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow/query-factory";
-import { useUpdateDataStoreNodeFields } from "@/app/queries/flow/mutations/data-store-node-mutations";
+import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
+import { useUpdateDataStoreNodeFields } from "@/app/queries/data-store-node/mutations/field-mutations";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { Button } from "@/components-v2/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
@@ -48,9 +49,9 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   // Get mutation hook with proper node-level updates
   const updateNodeFields = useUpdateDataStoreNodeFields(flowId, nodeId);
   
-  // Query for node data - more efficient than loading entire flow
-  const { data: node, isLoading: nodeLoading } = useQuery({
-    ...flowQueries.node(flowId, nodeId),
+  // Query for node data from separate data store (new architecture)
+  const { data: dataStoreNodeData, isLoading: dataStoreNodeLoading } = useQuery({
+    ...dataStoreNodeQueries.detail(flowId, nodeId),
     enabled: !!flowId && !!nodeId && !updateNodeFields.isEditing,
   });
   
@@ -60,16 +61,15 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     enabled: !!flowId && !updateNodeFields.isEditing,
   });
   
-  const nodeData = node?.data as any;
   const schemaFields = useMemo(() => schema?.fields || [], [schema?.fields]);
   
   // Auto-close panel when connected node is deleted
   useEffect(() => {
-    if (!nodeLoading && !node && nodeId) {
+    if (!dataStoreNodeLoading && !dataStoreNodeData && nodeId) {
       // Node has been deleted, close the panel
       closePanel(`dataStore-${nodeId}`);
     }
-  }, [node, nodeLoading, nodeId, closePanel]);
+  }, [dataStoreNodeData, dataStoreNodeLoading, nodeId, closePanel]);
 
   // Local state for imported fields and logic
   const [dataStoreFields, setDataStoreFields] = useState<DataStoreField[]>([]);
@@ -81,13 +81,11 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
 
   // Initialize data store fields from node data
   useEffect(() => {
-    if (node && nodeId && nodeId !== lastNodeIdRef.current && !updateNodeFields.isEditing) {
-      const currentNodeData = node.data as any;
-      
-      if (currentNodeData?.dataStoreFields) {
-        setDataStoreFields(currentNodeData.dataStoreFields);
-        if (currentNodeData.dataStoreFields.length > 0) {
-          setSelectedFieldId(currentNodeData.dataStoreFields[0].schemaFieldId);
+    if (dataStoreNodeData && nodeId && nodeId !== lastNodeIdRef.current && !updateNodeFields.isEditing) {
+      if (dataStoreNodeData.dataStoreFields) {
+        setDataStoreFields(dataStoreNodeData.dataStoreFields);
+        if (dataStoreNodeData.dataStoreFields.length > 0) {
+          setSelectedFieldId(dataStoreNodeData.dataStoreFields[0].schemaFieldId);
         }
       } else {
         setDataStoreFields([]);
@@ -95,7 +93,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
       }
       lastNodeIdRef.current = nodeId;
     }
-  }, [node, nodeId, updateNodeFields.isEditing]);
+  }, [dataStoreNodeData, nodeId, updateNodeFields.isEditing]);
 
   // Sync logic with selected field - only when field selection changes or initial load
   useEffect(() => {
@@ -261,7 +259,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   );
 
   // Loading states
-  if (nodeLoading || schemaLoading) {
+  if (dataStoreNodeLoading || schemaLoading) {
     return (
       <div className="h-full flex items-center justify-center bg-background-surface-2">
         <div className="flex items-center gap-2 text-text-subtle">

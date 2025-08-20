@@ -1,7 +1,13 @@
-// Flow traversal utilities for determining process node order and connectivity
+// Flow traversal utilities with caching for performance optimization
 // Implements algorithms to traverse the flow graph and determine sequence for agent, if, and dataStore nodes
+// Includes enhanced traversal that queries actual node data from services
 
 import { Flow, Node as FlowNode, Edge as FlowEdge } from "@/modules/flow/domain/flow";
+import { AgentService } from "@/app/services/agent-service";
+import { DataStoreNodeService } from "@/app/services/data-store-node-service";
+import { IfNodeService } from "@/app/services/if-node-service";
+import { NodeType } from "@/flow-multi/types/node-types";
+import { UniqueEntityID } from "@/shared/domain";
 
 export interface ProcessNodePosition {
   nodeId: string;
@@ -26,25 +32,35 @@ export interface FlowTraversalResult {
   disconnectedAgents: string[];
 }
 
+// Process node types (excludes start and end nodes)
+export type ProcessNodeType = NodeType.AGENT | NodeType.IF | NodeType.DATA_STORE;
+
+// Enhanced interface that includes actual node data
+export interface ProcessNodeData {
+  nodeId: string;
+  type: ProcessNodeType;
+  name?: string;
+  color?: string;
+  data?: any; // The actual domain object (Agent, IfNode, DataStoreNode)
+}
+
+// Enhanced traversal result that includes actual node data
+export interface EnhancedFlowTraversalResult extends FlowTraversalResult {
+  processNodeData: Map<string, ProcessNodeData>; // Actual node data from services
+}
+
 /**
- * Traverse the flow graph to determine process node order and connectivity
+ * Basic traverse function (no caching, no enhanced data)
  * Handles agent, if, and dataStore node types
  * @param flow - The flow to analyze
  * @returns FlowTraversalResult with process node positions and connectivity info
  */
-export function traverseFlow(flow: Flow): FlowTraversalResult {
+function traverseFlowBasic(flow: Flow): FlowTraversalResult {
   const nodes = flow.props?.nodes;
   const edges = flow.props?.edges;
   
   // Handle missing or invalid data
   if (!nodes || !Array.isArray(nodes) || !edges || !Array.isArray(edges)) {
-    console.warn('[FLOW-TRAVERSAL] Invalid flow data:', { 
-      hasNodes: !!nodes, 
-      isNodesArray: Array.isArray(nodes),
-      hasEdges: !!edges, 
-      isEdgesArray: Array.isArray(edges),
-      flowId: (flow as any)?.id 
-    });
     
     // Return empty traversal result
     return {
@@ -235,11 +251,6 @@ function findReachableProcessNodes(startNodeId: string, adjacencyList: Map<strin
   return reachableProcessNodes;
 }
 
-// Backward compatibility alias
-function findReachableAgents(startNodeId: string, adjacencyList: Map<string, string[]>, agentNodes: FlowNode[]): Set<string> {
-  return findReachableProcessNodes(startNodeId, adjacencyList, agentNodes);
-}
-
 function findProcessNodesThatCanReachEnd(endNodeId: string, reverseAdjacencyList: Map<string, string[]>, processNodes: FlowNode[]): Set<string> {
   const visited = new Set<string>();
   const processNodeIds = new Set(processNodes.map(n => n.id));
@@ -263,26 +274,21 @@ function findProcessNodesThatCanReachEnd(endNodeId: string, reverseAdjacencyList
   return canReachEnd;
 }
 
-// Backward compatibility alias
-function findAgentsThatCanReachEnd(endNodeId: string, reverseAdjacencyList: Map<string, string[]>, agentNodes: FlowNode[]): Set<string> {
-  return findProcessNodesThatCanReachEnd(endNodeId, reverseAdjacencyList, agentNodes);
-}
-
 function getDepthFromStart(nodeId: string, startNodeId: string, adjacencyList: Map<string, string[]>): number {
   const visited = new Set<string>();
   const queue: { nodeId: string; depth: number }[] = [{ nodeId: startNodeId, depth: 0 }];
   
   while (queue.length > 0) {
-    const { nodeId, depth } = queue.shift()!;
+    const { nodeId: currentNodeId, depth } = queue.shift()!;
     
-    if (visited.has(nodeId)) continue;
-    visited.add(nodeId);
+    if (visited.has(currentNodeId)) continue;
+    visited.add(currentNodeId);
     
-    if (nodeId === nodeId) {
+    if (currentNodeId === nodeId) {
       return depth;
     }
     
-    const neighbors = adjacencyList.get(nodeId) || [];
+    const neighbors = adjacencyList.get(currentNodeId) || [];
     neighbors.forEach(neighbor => {
       if (!visited.has(neighbor)) {
         queue.push({ nodeId: neighbor, depth: depth + 1 });
@@ -310,18 +316,6 @@ function sortProcessNodesByDepth(nodeIds: string[], startNodeId: string, adjacen
   return nodesWithDepth.map(item => item.nodeId);
 }
 
-// Backward compatibility alias
-function sortAgentsByDepth(agentIds: string[], startNodeId: string, adjacencyList: Map<string, string[]>): string[] {
-  return sortProcessNodesByDepth(agentIds, startNodeId, adjacencyList);
-}
-
-/**
- * Validate if nodes have proper branching structure
- * @param ifNodes - Array of if nodes to validate
- * @param adjacencyList - Adjacency list for the flow
- * @param allNodes - All nodes in the flow
- * @returns true if all if nodes are valid, false otherwise
- */
 function validateIfNodes(ifNodes: FlowNode[], adjacencyList: Map<string, string[]>, allNodes: FlowNode[]): boolean {
   // If no if nodes, return true
   if (ifNodes.length === 0) {
@@ -351,15 +345,6 @@ function validateIfNodes(ifNodes: FlowNode[], adjacencyList: Map<string, string[
   return true;
 }
 
-/**
- * Validate that all possible paths from start reach the end node
- * This ensures that every branch of every if node eventually leads to the end
- * @param startNodeId - ID of the start node
- * @param endNodeId - ID of the end node  
- * @param adjacencyList - Adjacency list for the flow
- * @param ifNodes - Array of if nodes in the flow
- * @returns true if all paths reach end, false otherwise
- */
 function validateAllPathsReachEnd(startNodeId: string, endNodeId: string, adjacencyList: Map<string, string[]>, ifNodes: FlowNode[]): boolean {
   // Use a more sophisticated approach that handles cycles properly
   // Track visited nodes globally to detect if end is reachable
@@ -429,4 +414,284 @@ function validateAllPathsReachEnd(startNodeId: string, endNodeId: string, adjace
   }
   
   return validatePath(startNodeId, new Set());
+}
+
+interface CacheEntry {
+  flowId: string;
+  nodesHash: string;
+  edgesHash: string;
+  result: FlowTraversalResult;
+  timestamp: number;
+}
+
+interface EnhancedCacheEntry {
+  flowId: string;
+  nodesHash: string;
+  edgesHash: string;
+  result: EnhancedFlowTraversalResult;
+  timestamp: number;
+}
+
+class FlowTraversalCache {
+  private cache = new Map<string, CacheEntry>();
+  private enhancedCache = new Map<string, EnhancedCacheEntry>();
+  private readonly maxAge = 1000; // Cache for 1 second
+  
+  // Generate a hash from nodes and edges to detect changes
+  private generateHash(flow: Flow | { props: { nodes: any[], edges: any[] } }): { nodesHash: string; edgesHash: string } {
+    const nodes = flow.props?.nodes;
+    const edges = flow.props?.edges;
+    
+    // Handle cases where nodes or edges might be undefined/null
+    if (!nodes || !Array.isArray(nodes)) {
+      return { nodesHash: 'invalid-nodes', edgesHash: 'invalid-edges' };
+    }
+    
+    if (!edges || !Array.isArray(edges)) {
+      return { nodesHash: 'invalid-nodes', edgesHash: 'invalid-edges' };
+    }
+    
+    // Create a simple hash based on node IDs, types, and edge connections
+    const nodesHash = nodes
+      .map(n => `${n.id}:${n.type}`)
+      .sort()
+      .join(',');
+    
+    const edgesHash = edges
+      .map(e => `${e.source}:${e.sourceHandle || ''}->${e.target}:${e.targetHandle || ''}`)
+      .sort()
+      .join(',');
+    
+    return { nodesHash, edgesHash };
+  }
+  
+  // Get cached result or compute new one
+  getCachedTraversal(flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }): FlowTraversalResult {
+    // Handle case where flow.id is undefined
+    if (!flow?.id) {
+      return traverseFlowBasic(flow as Flow);
+    }
+    
+    const flowId = typeof flow.id === 'string' ? flow.id : flow.id.toString();
+    const { nodesHash, edgesHash } = this.generateHash(flow);
+    const now = Date.now();
+    
+    // Check if we have a cached entry
+    const cached = this.cache.get(flowId);
+    
+    if (cached) {
+      // Check if cache is still valid (not expired and flow hasn't changed)
+      if (
+        cached.nodesHash === nodesHash &&
+        cached.edgesHash === edgesHash &&
+        now - cached.timestamp < this.maxAge
+      ) {
+        return cached.result;
+      }
+    }
+    
+    // Compute new traversal result - use local basic function
+    const result = traverseFlowBasic(flow as Flow);
+    
+    // Only cache if we got valid data (not the empty fallback)
+    if (result.processNodePositions.size > 0 || nodesHash !== 'invalid-nodes') {
+      this.cache.set(flowId, {
+        flowId,
+        nodesHash,
+        edgesHash,
+        result,
+        timestamp: now
+      });
+    }
+    
+    // Clean up old entries to prevent memory leaks
+    this.cleanupOldEntries();
+    
+    return result;
+  }
+  
+  // Enhanced traversal that queries actual node data from services
+  async getEnhancedCachedTraversal(flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }): Promise<EnhancedFlowTraversalResult> {
+    // Handle case where flow.id is undefined
+    if (!flow?.id) {
+      const basicResult = this.getCachedTraversal(flow);
+      return {
+        ...basicResult,
+        processNodeData: new Map()
+      };
+    }
+    
+    const flowId = typeof flow.id === 'string' ? flow.id : flow.id.toString();
+    const { nodesHash, edgesHash } = this.generateHash(flow);
+    const now = Date.now();
+    
+    // Check if we have a cached enhanced entry
+    const cached = this.enhancedCache.get(flowId);
+    
+    if (cached) {
+      // Check if cache is still valid (not expired and flow hasn't changed)
+      if (
+        cached.nodesHash === nodesHash &&
+        cached.edgesHash === edgesHash &&
+        now - cached.timestamp < this.maxAge
+      ) {
+        return cached.result;
+      }
+    }
+    
+    // Get basic traversal result first
+    const basicResult = this.getCachedTraversal(flow);
+    
+    // Query actual node data from services
+    const processNodeData = new Map<string, ProcessNodeData>();
+    
+    // Get all process nodes from the flow
+    const nodes = flow.props?.nodes || [];
+    const processNodes = nodes.filter(n => 
+      n.type === NodeType.AGENT || 
+      n.type === NodeType.IF || 
+      n.type === NodeType.DATA_STORE
+    );
+    
+    // Query agent data
+    const agentNodes = processNodes.filter(n => n.type === NodeType.AGENT);
+    for (const node of agentNodes) {
+      const agentId = node.data?.agentId || node.id;
+      try {
+        const agentResult = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
+        if (agentResult.isSuccess) {
+          const agent = agentResult.getValue();
+          processNodeData.set(node.id, {
+            nodeId: node.id,
+            type: NodeType.AGENT,
+            name: agent.props.name,
+            color: agent.props.color,
+            data: agent
+          });
+        }
+      } catch (error) {
+        console.warn(`Failed to get agent ${agentId} for enhanced traversal:`, error);
+      }
+    }
+    
+    // Query data store node data
+    if (flowId) {
+      try {
+        const dataStoreResult = await DataStoreNodeService.getAllDataStoreNodesByFlow.execute({ flowId });
+        if (dataStoreResult.isSuccess) {
+          const dataStoreNodes = dataStoreResult.getValue();
+          dataStoreNodes.forEach(dataStoreNode => {
+            processNodeData.set(dataStoreNode.id.toString(), {
+              nodeId: dataStoreNode.id.toString(),
+              type: NodeType.DATA_STORE,
+              name: dataStoreNode.props.name,
+              color: dataStoreNode.props.color,
+              data: dataStoreNode
+            });
+          });
+        }
+      } catch (error) {
+        console.warn(`Failed to get data store nodes for enhanced traversal:`, error);
+      }
+    }
+    
+    // Query if node data  
+    if (flowId) {
+      try {
+        const ifNodeResult = await IfNodeService.getAllIfNodesByFlow.execute({ flowId });
+        if (ifNodeResult.isSuccess) {
+          const ifNodes = ifNodeResult.getValue();
+          ifNodes.forEach(ifNode => {
+            processNodeData.set(ifNode.id.toString(), {
+              nodeId: ifNode.id.toString(),
+              type: NodeType.IF,
+              name: ifNode.props.name,
+              color: ifNode.props.color,
+              data: ifNode
+            });
+          });
+        }
+      } catch (error) {
+        console.warn(`Failed to get if nodes for enhanced traversal:`, error);
+      }
+    }
+    
+    // Create enhanced result
+    const enhancedResult: EnhancedFlowTraversalResult = {
+      ...basicResult,
+      processNodeData
+    };
+    
+    // Cache the enhanced result
+    this.enhancedCache.set(flowId, {
+      flowId,
+      nodesHash,
+      edgesHash,
+      result: enhancedResult,
+      timestamp: now
+    });
+    
+    // Clean up old entries
+    this.cleanupEnhancedEntries();
+    
+    return enhancedResult;
+  }
+  
+  // Clear cache for a specific flow
+  clearFlow(flowId: string): void {
+    this.cache.delete(flowId);
+    this.enhancedCache.delete(flowId);
+  }
+  
+  // Clear entire cache
+  clearAll(): void {
+    this.cache.clear();
+    this.enhancedCache.clear();
+  }
+  
+  // Remove entries older than maxAge
+  private cleanupOldEntries(): void {
+    const now = Date.now();
+    const entriesToDelete: string[] = [];
+    
+    this.cache.forEach((entry, key) => {
+      if (now - entry.timestamp > this.maxAge * 2) {
+        entriesToDelete.push(key);
+      }
+    });
+    
+    entriesToDelete.forEach(key => this.cache.delete(key));
+  }
+  
+  // Remove enhanced entries older than maxAge
+  private cleanupEnhancedEntries(): void {
+    const now = Date.now();
+    const entriesToDelete: string[] = [];
+    
+    this.enhancedCache.forEach((entry, key) => {
+      if (now - entry.timestamp > this.maxAge * 2) {
+        entriesToDelete.push(key);
+      }
+    });
+    
+    entriesToDelete.forEach(key => this.enhancedCache.delete(key));
+  }
+}
+
+// Singleton instance
+export const flowTraversalCache = new FlowTraversalCache();
+
+// Cached traversal function (basic, for backward compatibility)
+export function traverseFlowCached(flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }): FlowTraversalResult {
+  return flowTraversalCache.getCachedTraversal(flow);
+}
+
+// Main traversal function - enhanced with actual node data from services
+export async function traverseFlow(flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }): Promise<EnhancedFlowTraversalResult> {
+  return flowTraversalCache.getEnhancedCachedTraversal(flow);
+}
+
+// Enhanced cached traversal function that queries actual node data (alias for backwards compatibility)
+export async function traverseFlowEnhanced(flow: Flow | { id: any, props: { nodes: any[], edges: any[] } }): Promise<EnhancedFlowTraversalResult> {
+  return flowTraversalCache.getEnhancedCachedTraversal(flow);
 }

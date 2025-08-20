@@ -48,7 +48,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
     ...flowQueries.dataStoreSchema(flowId),
     enabled: !!flowId && !updateDataStoreSchema.isEditing, // Pause during edits
     refetchOnMount: false, // Don't refetch on mount - only when needed
-    refetchOnWindowFocus: !updateDataStoreSchema.isEditing
+    refetchOnWindowFocus: !updateDataStoreSchema.isEditing,
   });
 
   // Get flow panel context for opening panels and adding nodes

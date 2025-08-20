@@ -4,10 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components-v2/ui/input";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
-import { flowQueries } from "@/app/queries/flow/query-factory";
-import { useUpdateIfNodeConditions, type EditableCondition as EditableConditionType } from "@/app/queries/flow/mutations/if-node-mutations";
+import { ifNodeQueries } from "@/app/queries/if-node/query-factory";
+import { useUpdateIfNodeConditions, type EditableCondition as EditableConditionType } from "@/app/queries/if-node/mutations/condition-mutations";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { IfCondition } from "@/flow-multi/nodes/if-node";
+import { UniqueEntityID } from "@/shared/domain";
 import { 
   ConditionDataType, 
   ConditionOperator,
@@ -32,9 +33,9 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
   // Get mutation hook for updating conditions
   const updateConditions = useUpdateIfNodeConditions(flowId, nodeId);
   
-  // Query for node data - more efficient than loading entire flow
-  const { data: node, isLoading: nodeLoading } = useQuery({
-    ...flowQueries.node(flowId, nodeId),
+  // Query for if node data from separate data store (new architecture)
+  const { data: ifNodeData, isLoading: ifNodeLoading } = useQuery({
+    ...ifNodeQueries.detail(flowId, nodeId),
     enabled: !!flowId && !!nodeId && !updateConditions.isEditing,
   });
   const [logicOperator, setLogicOperator] = useState<'AND' | 'OR'>('AND');
@@ -44,11 +45,11 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
   // Auto-close panel when connected node is deleted
   useEffect(() => {
-    if (!nodeLoading && !node && nodeId) {
+    if (!ifNodeLoading && !ifNodeData && nodeId) {
       // Node has been deleted, close the panel
       closePanel(`ifNode-${nodeId}`);
     }
-  }, [node, nodeLoading, nodeId, closePanel]);
+  }, [ifNodeData, ifNodeLoading, nodeId, closePanel]);
 
   // Save conditions to node using targeted mutation
   const saveConditions = useCallback((newConditions: EditableCondition[], newOperator: 'AND' | 'OR') => {
@@ -92,48 +93,30 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
     };
   }, [setLastInputField]);
 
-  // Initialize from node data
+  // Initialize from if node data
   useEffect(() => {
-    if (nodeId && nodeId !== lastInitializedNodeId.current && node && !updateConditions.isEditing) {
-      const nodeData = node?.data as any;
-      
+    if (nodeId && nodeId !== lastInitializedNodeId.current && ifNodeData && !updateConditions.isEditing) {
       // Load existing conditions or create default
-      // Prefer draftConditions (includes incomplete ones) for UI state
-      const existingConditions = nodeData?.draftConditions || nodeData?.conditions || [];
-      const existingOperator = nodeData?.logicOperator || 'AND';
+      const existingConditions = ifNodeData.conditions || [];
+      const existingOperator = ifNodeData.logicOperator || 'AND';
       
       setLogicOperator(existingOperator);
       
       // If there are existing conditions, use them
       if (existingConditions.length > 0) {
-        // Migrate old conditions that don't have dataType
-        const migratedConditions: EditableCondition[] = existingConditions.map((c: any) => {
-          if (!c.dataType && c.operator) {
-            // Infer data type from operator for backwards compatibility
-            let dataType: ConditionDataType | null = 'string';
-            if (c.operator === 'greater_than' || c.operator === 'less_than' || 
-                c.operator === 'greater_than_or_equals' || c.operator === 'less_than_or_equals') {
-              dataType = 'number';
-            }
-            
-            return {
-              ...c,
-              dataType,
-              operator: c.operator || 'equals'
-            };
-          }
-          // For new conditions with null dataType/operator, keep them as-is
-          return {
-            ...c,
-            dataType: c.dataType ?? null,
-            operator: c.operator ?? null
-          };
-        });
-        setConditions(migratedConditions);
+        // Convert to editable conditions format
+        const editableConditions: EditableCondition[] = existingConditions.map((c: any) => ({
+          id: c.id,
+          dataType: c.dataType ?? null,
+          value1: c.value1 || '',
+          operator: c.operator ?? null,
+          value2: c.value2 || ''
+        }));
+        setConditions(editableConditions);
       } else {
-        // Only create default condition if none exist - start with no operator selected
+        // Create default condition if none exist - start with no operator selected
         const defaultCondition: EditableCondition = {
-          id: `cond-${Date.now()}`,
+          id: new UniqueEntityID().toString(),
           dataType: null,
           value1: '',
           operator: null,
@@ -145,11 +128,11 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       
       lastInitializedNodeId.current = nodeId;
     }
-  }, [nodeId, node, updateConditions.isEditing]); // Depend on node and editing state
+  }, [nodeId, ifNodeData, updateConditions.isEditing]); // Depend on ifNodeData and editing state
 
   const addCondition = useCallback(() => {
     const newCondition: EditableCondition = {
-      id: `cond-${Date.now()}`,
+      id: new UniqueEntityID().toString(),
       dataType: null,
       value1: '',
       operator: null,
@@ -227,7 +210,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
     saveConditions(newConditions, logicOperator);
   }, [conditions, logicOperator, saveConditions]);
 
-  if (nodeLoading) {
+  if (ifNodeLoading) {
     return (
       <div className="h-full flex items-center justify-center bg-background-surface-2">
         <div className="flex items-center gap-2 text-text-subtle">

@@ -1,6 +1,6 @@
 import { Flow } from "@/modules/flow/domain/flow";
 import { Agent } from "@/modules/agent/domain/agent";
-import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
+import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
 import { ValidationContext, ValidationIssue } from "@/flow-multi/validation/types/validation-types";
 import { ValidatorFunction, FunctionalValidator } from "@/flow-multi/validation/types/functional-validation-types";
 import { composeValidators } from "@/flow-multi/validation/utils/validator-utils";

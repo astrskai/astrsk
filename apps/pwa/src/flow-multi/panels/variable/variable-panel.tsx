@@ -19,7 +19,7 @@ import {
   FlowPanelLoading,
   useFlowPanel,
 } from "@/flow-multi/hooks/use-flow-panel";
-import { getAgentHexColor } from "@/flow-multi/utils/agent-color-assignment";
+import { getAgentHexColor } from "@/flow-multi/utils/node-color-assignment";
 import {
   Agent,
   OutputFormat,

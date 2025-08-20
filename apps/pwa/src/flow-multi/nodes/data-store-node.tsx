@@ -25,9 +25,10 @@ import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations"
 import { useAgentStore } from "@/app/stores/agent-store";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow/query-factory";
-import { useFlowValidation } from "@/app/hooks/use-flow-validation";
-import { UniqueEntityID } from "@/shared/domain";
-import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal-cache";
+import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
+import { useUpdateDataStoreNodeName } from "@/app/queries/data-store-node/mutations";
+// Removed flow validation imports as validation is disabled
+import { getDataStoreNodeHexColor, getDataStoreNodeOpacity, applyOpacityToHexColor } from "@/flow-multi/utils/node-color-assignment";
 import { SimpleFieldBadges } from "@/components-v2/ui/field-badges";
 import { toast } from "sonner";
 import type { DataStoreSchemaField, DataStoreField } from "@/modules/flow/domain/flow";
@@ -39,6 +40,7 @@ export type DataStoreNodeData = {
   name?: string;
   color?: string; // Hex color for the node
   dataStoreFields?: DataStoreField[]; // Runtime field values with logic
+  flowId?: string; // Used in new data structure for query key
 };
 
 // Re-export types from flow domain
@@ -56,98 +58,81 @@ interface DataStoreNodeComponentProps {
   data: DataStoreNodeData;
   id: string;
   selected?: boolean;
-  flow: any;
 }
 
 /**
- * Inner Data Store node component that receives flow as prop
+ * Inner Data Store node component that gets flow from data.flowId
  */
 function DataStoreNodeComponent({ 
   data, 
   id,
-  selected,
-  flow
+  selected
 }: DataStoreNodeComponentProps) {
-  const [title, setTitle] = useState(data.name || "Data Update");
-  const [editingTitle, setEditingTitle] = useState(data.name || "Data Update");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
   
-  // Get flow ID from the flow object
-  const selectedFlowId = flow?.id?.toString();
+  // Get flow ID from data (new structure) or fall back to agent store (old structure)
+  const flowIdFromData = data.flowId;
+  const selectedFlowIdFromStore = useAgentStore.use.selectedFlowId();
+  const selectedFlowId = flowIdFromData || selectedFlowIdFromStore;
   
-  // Get node data directly from query to ensure fresh data
-  const { data: nodeData } = useQuery({
-    ...flowQueries.node(selectedFlowId!, id),
-    enabled: !!selectedFlowId && !!id
+  // Get flow data when needed (for schema access, validation, etc.)
+  const { data: flow } = useQuery({
+    ...flowQueries.detail(selectedFlowId!),
+    enabled: !!selectedFlowId
   });
   
-  // Get node title mutation
+  // Get node data directly from query to ensure fresh data (fallback for old structure)
+  const { data: nodeData } = useQuery({
+    ...flowQueries.node(selectedFlowId!, id),
+    enabled: !!selectedFlowId && !!id && !flowIdFromData // Only query if old structure
+  });
+
+  // Try to get separate data store node data with fallback
+  const { data: dataStoreNodeData } = useQuery({
+    ...dataStoreNodeQueries.detail(selectedFlowId!, id),
+    enabled: !!selectedFlowId && !!id && !!flowIdFromData, // Only query if new data structure
+  });
+
+  // Use separate data if available, fallback to embedded data
+  const displayName = dataStoreNodeData?.name || data.name || "Data Update";
+  const displayColor = dataStoreNodeData?.color || data.color;
+  const displayFields = dataStoreNodeData?.dataStoreFields || data.dataStoreFields || [];
+  
+  const [title, setTitle] = useState(displayName);
+  const [editingTitle, setEditingTitle] = useState(displayName);
+  
+  // Get node title mutation - use new mutation if separate data exists, otherwise fall back to old
   const updateNodeTitle = useUpdateNodeTitle(selectedFlowId!, id);
+  const updateDataStoreNodeName = useUpdateDataStoreNodeName(selectedFlowId!, id);
   
   // Check if the data-store panel is open
   const isPanelActive = isPanelOpen('dataStore', id);
   
-  // Get node color with opacity based on connection state
+  // Get node color using unified color assignment
   const nodeColor = useMemo(() => {
-    // Use the assigned color from data
-    const baseColor = data.color || '#A5B4FC'; // fallback to indigo-300 if not set
-    return baseColor;
-  }, [data.color]);
+    return getDataStoreNodeHexColor(displayColor);
+  }, [displayColor]);
   
-  // Use flow validation hook
-  const { isValid: isFlowValid, invalidNodeReasons } = useFlowValidation(selectedFlowId ? new UniqueEntityID(selectedFlowId) : null);
-  
-  // Check if node is connected from start to end
-  const isFullyConnected = useMemo(() => {
-    if (!flow || !flow.id) return false;
-    try {
-      const traversalResult = traverseFlowCached(flow);
-      const nodePosition = traversalResult.processNodePositions.get(id);
-      return nodePosition ? nodePosition.isConnectedToStart && nodePosition.isConnectedToEnd : false;
-    } catch (error) {
-      console.warn('[DATA-STORE-NODE] Flow traversal error:', error);
-      return false;
-    }
-  }, [flow, id]);
-  
-  // TEMPORARILY DISABLED: Data store node validation
-  // Check if this specific node is invalid (only show if fully connected from start to end)
-  // const isNodeInvalid = isFullyConnected && invalidNodeReasons && invalidNodeReasons[id] && invalidNodeReasons[id].length > 0;
-  const isNodeInvalid = false; // Always show as valid
-  
-  
-  // Calculate opacity based on connection state and flow validity
-  const nodeOpacity = useMemo(() => {
-    if (!flow) return 1;
-    
-    // If node is not connected to both start and end, return 70% opacity
-    if (!isFullyConnected) {
-      return 0.7;
-    }
-    // If node is connected but the flow has invalid nodes, return 70% opacity
-    else if (!isFlowValid) {
-      return 0.7;
-    }
-    
-    // Return full opacity for connected nodes in a valid flow
-    return 1;
-  }, [flow, isFullyConnected, isFlowValid]);
-  
-  // Calculate opacity with hex alpha channel
+  // Calculate color with opacity using unified node color assignment
   const colorWithOpacity = useMemo(() => {
-    return nodeOpacity < 1 
-      ? `${nodeColor}${Math.round(nodeOpacity * 255).toString(16).padStart(2, '0')}` 
-      : nodeColor;
-  }, [nodeColor, nodeOpacity]);
+    if (!flow) return nodeColor;
+    
+    const opacity = getDataStoreNodeOpacity(id, flow);
+    return applyOpacityToHexColor(nodeColor, opacity);
+  }, [nodeColor, flow, id]);
 
-  // Save node name to flow
+  // Save node name - use new mutation if separate data exists, otherwise fall back to old
   const saveNodeName = useCallback(async (newName: string) => {
-    if (updateNodeTitle.isPending) return;
+    // Determine which mutation to use based on data structure
+    const useNewMutation = !!dataStoreNodeData || !!data.flowId;
+    const mutation = useNewMutation ? updateDataStoreNodeName : updateNodeTitle;
+    
+    if (mutation.isPending) return;
     
     try {
-      await updateNodeTitle.mutateAsync(newName);
+      await mutation.mutateAsync(newName);
       setTitle(newName);
       
       // Update panel states to reflect the new name
@@ -160,7 +145,7 @@ function DataStoreNodeComponent({
       setEditingTitle(title);
       toast.error("Failed to update node name");
     }
-  }, [id, title, updateNodeTitle, updateNodePanelStates]);
+  }, [id, title, updateNodeTitle, updateDataStoreNodeName, updateNodePanelStates, dataStoreNodeData, data.flowId]);
 
   // Handle title changes
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,17 +199,12 @@ function DataStoreNodeComponent({
   }, [id]);
 
   // Note: Schema is stored in flow.dataStoreSchema
-  // Get fields from the node's actual dataStoreFields (runtime values)
-  // Use fresh nodeData from query instead of stale data prop
-  const displayFields = useMemo(() => {
-    // Use fresh nodeData if available, fallback to data prop
-    const freshData = nodeData?.data || data;
-    const nodeFields = (freshData as any)?.dataStoreFields;
-    
-    
+  // Get fields for display - use the displayFields from new data or fallback
+  const fieldsForDisplay = useMemo(() => {
     const fields: Array<{ id: string; name: string }> = [];
     
-    // Get the node's configured fields
+    // Get the node's configured fields from new or old data structure
+    const nodeFields = displayFields;
     if (nodeFields && nodeFields.length > 0) {
       // We need to get the field names from the schema using the schemaFieldId
       nodeFields.forEach((field: any) => {
@@ -241,7 +221,7 @@ function DataStoreNodeComponent({
     }
     
     return fields;
-  }, [nodeData?.data, data, flow?.props?.dataStoreSchema, id]);
+  }, [displayFields, flow?.props?.dataStoreSchema]);
   
   // TEMPORARILY DISABLED: Data store node field validation
   // Check if node has configured fields (not schema fields)
@@ -251,11 +231,12 @@ function DataStoreNodeComponent({
   return (
     <div 
       className={`group/node relative w-80 rounded-lg inline-flex justify-between items-center ${
-        isNodeInvalid
-          ? "bg-background-surface-3 outline-2 outline-status-destructive-light"
-          : selected 
-            ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
-            : "bg-background-surface-3 outline-1 outline-border-light"
+        // "bg-background-surface-3 outline-2 outline-status-destructive-light"
+        // isNodeInvalid
+        // ? "bg-background-surface-3 outline-2 outline-status-destructive-light"
+        selected 
+          ? "bg-background-surface-3 outline-2 outline-accent-primary shadow-lg" 
+          : "bg-background-surface-3 outline-1 outline-border-light"
       }`}
     >
       <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-4">
@@ -281,7 +262,7 @@ function DataStoreNodeComponent({
             onMouseDown={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="Enter data update name"
-            disabled={updateNodeTitle.isPending}
+            disabled={updateNodeTitle.isPending || updateDataStoreNodeName.isPending}
             className="nodrag"
           />
         </div>
@@ -290,7 +271,7 @@ function DataStoreNodeComponent({
         <button 
           onClick={handleEditClick}
           className={`self-stretch h-20 px-2 rounded-lg outline outline-offset-[-1px] flex flex-col justify-center items-center gap-2 transition-all ${
-            hasNoFields && isFullyConnected 
+            hasNoFields
               ? isPanelActive
                 ? 'bg-background-surface-light outline-status-destructive-light hover:opacity-70'
                 : 'bg-background-surface-4 outline-status-destructive-light hover:bg-background-surface-5'
@@ -308,9 +289,9 @@ function DataStoreNodeComponent({
         </button>
         
         {/* Fields Badges Section - only show if there are fields */}
-        {displayFields.length > 0 && (
+        {fieldsForDisplay.length > 0 && (
           <SimpleFieldBadges 
-            fields={displayFields}
+            fields={fieldsForDisplay}
             maxVisible={8}
             className="self-stretch"
           />
@@ -391,30 +372,12 @@ function DataStoreNodeComponent({
 }
 
 /**
- * Wrapper Data Store node component that queries flow data and passes it as prop
+ * Data Store node component that handles both old and new data structures
  */
 export default function DataStoreNode({
   id,
   data,
   selected,
 }: NodeProps<DataStoreNode>) {
-  // Get the selected flow ID from agent store
-  const selectedFlowId = useAgentStore.use.selectedFlowId();
-  
-  // Use React Query to get the flow data
-  const { data: selectedFlow, isLoading } = useQuery({
-    ...flowQueries.detail(selectedFlowId!),
-    enabled: !!selectedFlowId
-  });
-  
-  // Show loading state while flow is loading or invalid
-  if (!selectedFlow || isLoading || !selectedFlow.props?.nodes || !selectedFlow.props?.edges) {
-    return (
-      <div className="w-80 bg-[#fafafa] rounded-lg border border-[#e5e7eb] p-4">
-        <div className="text-[#6b7280] text-sm">Loading flow...</div>
-      </div>
-    );
-  }
-
-  return <DataStoreNodeComponent data={data} id={id} selected={selected} flow={selectedFlow} />;
+  return <DataStoreNodeComponent data={data} id={id} selected={selected} />;
 }

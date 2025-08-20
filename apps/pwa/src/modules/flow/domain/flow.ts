@@ -2,6 +2,7 @@ import { Result } from "@/shared/core/result";
 import { AggregateRoot, UniqueEntityID } from "@/shared/domain";
 import { PartialOmit } from "@/shared/utils";
 import type { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
+import { NodeType } from "@/flow-multi/types/node-types";
 
 export enum TaskType {
   AiResponse = "ai_response",
@@ -17,7 +18,7 @@ export enum ReadyState {
 // TODO: change name to `FlowNode`
 export type Node = {
   id: string;
-  type: "start" | "end" | "agent" | "if" | "dataStore";
+  type: NodeType; // Use enum instead of string literal
   position: {
     x: number;
     y: number;
@@ -135,7 +136,7 @@ export type UpdateFlowProps = Partial<CreateFlowProps>;
 export class Flow extends AggregateRoot<FlowProps> {
   get agentIds(): UniqueEntityID[] {
     return this.props.nodes
-      .filter((node) => node.type === "agent")
+      .filter((node) => node.type === NodeType.AGENT)
       .map((node) => {
         // Agent nodes have agentId in their data
         const agentId = (node.data as any)?.agentId || node.id;
@@ -289,7 +290,7 @@ export class Flow extends AggregateRoot<FlowProps> {
 
               // Ensure start and end nodes have high z-index
               let zIndex = node.zIndex;
-              if (node.type === "start" || node.type === "end") {
+              if (node.type === NodeType.START || node.type === NodeType.END) {
                 zIndex = zIndex ?? 1000; // Use 1000 if not already set
               }
 

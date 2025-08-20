@@ -4,6 +4,7 @@ import { Agent, ApiType } from "@/modules/agent/domain";
 import { Flow } from "@/modules/flow/domain/flow";
 import { SaveAgentRepo } from "@/modules/agent/repos";
 import { SaveFlowRepo } from "@/modules/flow/repos";
+import { NodeType } from "@/flow-multi/types/node-types";
 
 export class CreateFlow implements UseCase<void, Result<Flow>> {
   constructor(
@@ -29,7 +30,7 @@ export class CreateFlow implements UseCase<void, Result<Flow>> {
         nodes: [
           {
             id: "start",
-            type: "start",
+            type: NodeType.START,
             position: { x: 0, y: 0 },
             data: {},
             deletable: false,
@@ -37,7 +38,7 @@ export class CreateFlow implements UseCase<void, Result<Flow>> {
           },
           {
             id: "end",
-            type: "end",
+            type: NodeType.END,
             position: { x: 870, y: 0 },
             data: {},
             deletable: false,
@@ -45,7 +46,7 @@ export class CreateFlow implements UseCase<void, Result<Flow>> {
           },
           {
             id: agent.id.toString(),
-            type: "agent",
+            type: NodeType.AGENT,
             position: { x: 400, y: -200 },
             data: {},
           },

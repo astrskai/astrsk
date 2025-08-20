@@ -1,11 +1,14 @@
 import { toast } from "sonner";
 import { Agent, ApiType } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
-import { getNextAvailableColor } from "@/flow-multi/utils/agent-color-assignment";
+import { DataStoreNodeService } from "@/app/services/data-store-node-service";
+import { IfNodeService } from "@/app/services/if-node-service";
+import { getNextAvailableColor } from "@/flow-multi/utils/node-color-assignment";
 import { ensureNodeSafety } from "@/flow-multi/utils/ensure-node-safety";
 import { ensureEdgeSelectable } from "@/flow-multi/utils/ensure-edge-selectable";
 import { Flow } from "@/modules/flow/domain/flow";
 import { CustomNodeType } from "@/flow-multi/nodes";
+import { NodeType } from "@/flow-multi/types/node-types";
 import { UniqueEntityID } from "@/shared/domain";
 
 // Define CustomEdgeType locally
@@ -114,26 +117,67 @@ export const createNodeWithConnection = async (
         },
       });
     } else if (nodeType === "dataStore") {
+      // Use UniqueEntityID for node IDs instead of custom string patterns
+      const nodeId = new UniqueEntityID().toString();
       const nextColor = await getNextAvailableColor(flow);
+      
+      // Get flowId from flow object
+      const flowId = (flow as any)?.props?.id || (flow as any)?.id;
+      if (!flowId) {
+        throw new Error('Cannot create data store node: Flow ID not found');
+      }
+      
+      // 1. Create separate node data entry first
+      const createResult = await DataStoreNodeService.createDataStoreNode.execute({
+        flowId: flowId.toString(),
+        nodeId: nodeId,
+        name: "New Data Update",
+        color: nextColor,
+        dataStoreFields: [],
+      });
+      
+      if (createResult.isFailure) {
+        throw new Error(createResult.getError());
+      }
+
+      // 2. Create flow node with only flowId
       newNode = ensureNodeSafety({
-        id: `datastore-${Date.now()}`,
-        type: "dataStore",
+        id: nodeId,
+        type: NodeType.DATA_STORE,
         position: newNodePosition,
-        data: {
-          name: "New Data Update",
-          color: nextColor,
-        },
+        data: { flowId: flowId.toString() },
       });
     } else if (nodeType === "if") {
+      // Use UniqueEntityID for node IDs instead of custom string patterns
+      const nodeId = new UniqueEntityID().toString();
       const nextColor = await getNextAvailableColor(flow);
+      
+      // Get flowId from flow object
+      const flowId = (flow as any)?.props?.id || (flow as any)?.id;
+      if (!flowId) {
+        throw new Error('Cannot create if node: Flow ID not found');
+      }
+      
+      // 1. Create separate node data entry first
+      const createResult = await IfNodeService.createIfNode.execute({
+        flowId: flowId.toString(),
+        nodeId: nodeId,
+        name: "New If",
+        logicOperator: 'AND',
+        conditions: [],
+        color: nextColor,
+      });
+      
+      if (createResult.isFailure) {
+        throw new Error(createResult.getError());
+      }
+
+      // 2. Create flow node with only flowId
       newNode = ensureNodeSafety({
-        id: `if-${Date.now()}`,
-        type: "if",
+        id: nodeId,
+        type: NodeType.IF,
         position: newNodePosition,
-        data: {
-          name: "New If Node",
-          color: nextColor,
-        },
+        data: { flowId: flowId.toString() },
       });
     } else {
       return null;

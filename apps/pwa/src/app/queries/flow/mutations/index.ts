@@ -10,7 +10,7 @@ export * from '../mutations';
 
 // Data store mutations
 export * from './data-store-mutations';
-export * from './data-store-node-mutations';
+// export * from './data-store-node-mutations'; // Commented out - legacy mutations deprecated
 
 // If node mutations
 export * from './if-node-mutations';

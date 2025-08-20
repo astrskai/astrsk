@@ -12,6 +12,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { FlowService } from "@/app/services/flow-service";
+import { FlowDrizzleMapper } from "@/modules/flow/mappers/flow-drizzle-mapper";
 import { 
   Flow, 
   Node, 
@@ -90,7 +91,7 @@ export const flowKeys = {
   
   // Detail queries
   details: () => [...flowKeys.all, 'detail'] as const,
-  detail: (id: string) => [...flowKeys.details(), id] as const,
+  detail: (id: string) => [...flowKeys.details(), id, "enhanced-v1"] as const,
   
   // Sub-queries for a specific flow
   metadata: (id: string) => [...flowKeys.detail(id), 'metadata'] as const,
@@ -145,17 +146,30 @@ export const flowQueries = {
     }),
 
   // Full flow detail
+  // Flow detail - Enhanced with dedicated table loading
   detail: (id: string) =>
     queryOptions({
       queryKey: flowKeys.detail(id),
       queryFn: async () => {
-        const flowOrError = await FlowService.getFlow.execute(
-          new UniqueEntityID(id)
-        );
-        if (flowOrError.isFailure) return null;
-        return flowOrError.getValue();
+        if (!id) return null;
+        // Use enhanced getFlowWithNodes to properly load data from dedicated tables
+        const flowOrError = await FlowService.getFlowWithNodes.execute(new UniqueEntityID(id));
+        if (flowOrError.isFailure) {
+          return null;
+        }
+        const flow = flowOrError.getValue();
+        // Transform to persistence format for storage
+        const persisted = FlowDrizzleMapper.toPersistence(flow);
+        return persisted;
       },
-      staleTime: 1000 * 30, // 30 seconds
+      select: (data) => {
+        if (!data) return null;
+        // Transform back to domain object
+        const domain = FlowDrizzleMapper.toDomain(data as any);
+        return domain;
+      },
+      gcTime: 1000 * 60 * 5, // 5 minutes cache
+      staleTime: 0, // Always consider stale - force refetch
     }),
 
   // Metadata only
@@ -274,16 +288,16 @@ export const flowQueries = {
       staleTime: 1000 * 10,
     }),
 
-  // Data store schema
+  // Data store schema - Enhanced
   dataStoreSchema: (id: string) =>
     queryOptions({
       queryKey: flowKeys.dataStoreSchema(id),
       queryFn: async () => {
-        const flowOrError = await FlowService.getFlow.execute(
+        const flowOrError = await FlowService.getFlowWithNodes.execute(
           new UniqueEntityID(id)
         );
         if (flowOrError.isFailure) {
-          console.error('[flowQueries.dataStoreSchema] Failed to get flow:', flowOrError.getError());
+          console.error('[dataStoreSchema] Failed to get flow:', flowOrError.getError());
           return null;
         }
         
@@ -348,12 +362,12 @@ export const flowQueries = {
       staleTime: 1000 * 10,
     }),
 
-  // Response template
+  // Response template - Enhanced
   response: (id: string) =>
     queryOptions({
       queryKey: flowKeys.response(id),
       queryFn: async () => {
-        const flowOrError = await FlowService.getFlow.execute(
+        const flowOrError = await FlowService.getFlowWithNodes.execute(
           new UniqueEntityID(id)
         );
         if (flowOrError.isFailure) {
