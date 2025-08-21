@@ -74,6 +74,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     ...agentQueries.prompt(agentId),
     enabled: queryEnabled,
   });
+
   
 
   // 4. Local UI state
@@ -120,6 +121,9 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   const syncTimeoutRef = useRef<NodeJS.Timeout>();
 
   // 7. Sync state when prompt data changes (for cross-tab sync)
+  // Add data comparison like output panel to prevent unnecessary re-renders
+  const previousDataRef = useRef<string>("");
+  
   useEffect(() => {
     // Don't sync while editing OR while cursor is active OR recently edited
     if (updatePromptMessages.isEditing || updateTextPrompt.isEditing || 
@@ -129,13 +133,24 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     }
     
     if (promptData) {
+      // Compare data to prevent unnecessary updates when objects have same content but different references
+      const currentDataKey = JSON.stringify({
+        promptMessages: promptData.promptMessages,
+        textPrompt: promptData.textPrompt,
+        targetApiType: promptData.targetApiType
+      });
+      
+      if (currentDataKey === previousDataRef.current) {
+        return; // No actual data change, skip update
+      }
+      
+      previousDataRef.current = currentDataKey;
+      
       const mode = promptData.targetApiType === ApiType.Chat ? "chat" : "text";
       
       if (mode === "chat" && promptData.promptMessages) {
         const parsedItems = convertPromptMessagesToItems(promptData.promptMessages);
-        
-        // Force new array reference to trigger React re-render
-        setItems([...parsedItems]);
+        setItems(parsedItems);
         
         // Keep selected item if it still exists - use callback to get latest selectedItemId
         setSelectedItemId(prevSelectedId => {
@@ -149,7 +164,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
       }
     }
   }, [promptData?.promptMessages, promptData?.textPrompt, updatePromptMessages.isEditing, updateTextPrompt.isEditing, 
-      updatePromptMessages.hasCursor, updateTextPrompt.hasCursor, showLoading]);
+      updatePromptMessages.hasCursor, updateTextPrompt.hasCursor]);
 
   // 7. Debounced save for chat messages
   const debouncedSaveMessages = useMemo(
@@ -321,43 +336,23 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     }
   };
 
-  // 14. Early returns for loading/error states
-  if (isLoading) {
-    return (
-      <div className="h-full flex items-center justify-center bg-background-surface-2">
-        <div className="flex items-center gap-2 text-text-subtle">
-          <span>Loading prompt panel...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !promptData) {
-    return (
-      <div className="h-full flex items-center justify-center bg-background-surface-2">
-        <div className="flex items-center gap-2 text-text-subtle">
-          <span>Failed to load prompt data</span>
-        </div>
-      </div>
-    );
-  }
-
+  // 14. Get selected item (moved before early returns to avoid hooks rule violation)
   const selectedItem = items.find(item => item.id === selectedItemId);
 
-  // 15. Sync local message content with selected item
+  // 15. Sync local message content with selected item (moved before early returns)
   useEffect(() => {
     if (selectedItem) {
       setLocalMessageContent(selectedItem.content || "");
     }
   }, [selectedItem?.id, selectedItem?.content]);
 
-  // 16. Use ref to track items for saving without causing re-renders
+  // 16. Use ref to track items for saving without causing re-renders (moved before early returns)
   const itemsRef = useRef(items);
   useEffect(() => {
     itemsRef.current = items;
   }, [items]);
 
-  // Handle completed save and clear loading state
+  // Handle completed save and clear loading state (moved before early returns)
   useEffect(() => {
     // When mutation starts, clear the pending save ref
     if (isPromptMessagesPending && pendingSaveRef.current) {
@@ -378,7 +373,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     }
   }, [isPromptMessagesPending, showLoading]);
 
-  // Handle message selection - block if save in progress
+  // Handle message selection - block if save in progress (moved before early returns)
   const handleMessageSelect = useCallback((messageId: string) => {
     // If trying to switch to the same message, do nothing
     if (messageId === selectedItemId) {
@@ -407,9 +402,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     setSelectedItemId(messageId);
   }, [selectedItemId, isPromptMessagesPending]);
 
-  // 17. Debounced save for message content - doesn't update state, only saves
-  // TODO: This approach uses a ref to avoid re-renders during typing
-  // Consider refactoring to use an uncontrolled Monaco editor for better performance
+  // Debounced save for message content (moved before early returns)
   const debouncedSaveMessageContent = useMemo(
     () => debounce((itemId: string, content: string) => {
       // Set a flag that we have pending changes that will save soon
@@ -435,7 +428,33 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     [debouncedSaveMessages]
   );
 
-  // 17. Main render
+  // Early returns for loading/error states - only show when truly loading, not during editing
+  if (isLoading && !promptData) {
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Loading prompt panel...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !promptData) {
+    return (
+      <div className="h-full flex items-center justify-center bg-background-surface-2">
+        <div className="flex items-center gap-2 text-text-subtle">
+          <span>Failed to load prompt data</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If we don't have data and we're not loading (likely no agentId), show nothing
+  if (!promptData) {
+    return null;
+  }
+
+  // Main render
   return (
     <div ref={containerRef} className="h-full flex flex-col bg-background-surface-2">
       <FormatSelectorAccordion
