@@ -52,8 +52,22 @@ export const validateDataStoreSchemaInitialValues: ValidatorFunction = (context)
   return issues;
 };
 
+// Helper function to detect variables in double curly brackets
+function containsVariables(value: string): boolean {
+  const variablePattern = /\{\{[^}]*\}\}/;
+  return variablePattern.test(value);
+}
+
 // Helper function to validate a value against a field type
 function validateInitialValue(value: string, type: DataStoreFieldType): { isValid: boolean; message: string } {
+  // First check if the value contains variables - not allowed in initial values
+  if (containsVariables(value)) {
+    return {
+      isValid: false,
+      message: `Variables ({{variable}}) are not allowed in initial values. Use static values only.`
+    };
+  }
+
   switch (type) {
     case 'boolean':
       if (value !== 'true' && value !== 'false') {
