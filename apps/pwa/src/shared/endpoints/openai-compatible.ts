@@ -67,22 +67,17 @@ export class OpenAIComptableEndpoint implements LlmEndpoint {
       props.max_tokens = 1;
       const response = await this.makeRequest(props);
 
-      if (props.stream) {
-        logger.info("OpenAI API streaming connection successful");
-        return true;
-      } else if (
-        response.status === 200 &&
-        response.data.choices &&
-        response.data.choices.length > 0
-      ) {
-        logger.info("OpenAI API connection successful");
+      // For OpenAI Compatible endpoints, services may force streaming responses
+      // regardless of the request parameters, so just check for successful status
+      if (response.status === 200) {
+        logger.info("OpenAI Compatible API connection successful");
         return true;
       } else {
-        logger.info("OpenAI API connection failed");
+        logger.info("OpenAI Compatible API connection failed", { status: response.status });
         return false;
       }
     } catch (error) {
-      logger.error("Error connecting to OpenAI API:", error);
+      logger.error("Error connecting to OpenAI Compatible API:", error);
       return false;
     }
   }
