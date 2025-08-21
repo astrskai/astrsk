@@ -153,7 +153,7 @@ const MessageItemInternal = ({
   const [isShowDataStore, setIsShowDataStore] = useState(false);
 
   return (
-    <div className="group/message relative px-[56px]">
+    <div className="group/message relative px-[56px]" tabIndex={0}>
       <div
         className={cn(
           "flex gap-[16px] items-start",
@@ -265,7 +265,8 @@ const MessageItemInternal = ({
           <div
             className={cn(
               "px-[16px] py-[8px] rounded-[8px] flex flex-row items-center",
-              "transition-opacity duration-200 ease-in-out opacity-0 group-hover/message:opacity-100",
+              "transition-opacity duration-200 ease-in-out opacity-0",
+              "group-hover/message:opacity-100 pointer-coarse:group-focus-within/message:opacity-100",
               "chat-style-chat-bubble message-buttons",
               !streaming && disabled && "!opacity-0",
               streaming && streamingAgentName && "opacity-100",
