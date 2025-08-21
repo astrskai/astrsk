@@ -28,6 +28,7 @@ import { DataStorePanel } from "@/flow-multi/panels/data-store/data-store-panel"
 import { FlowService } from "@/app/services/flow-service";
 import { PanelStructure } from "@/modules/flow/domain";
 import { SvgIcon } from "@/components-v2/svg-icon";
+import { Button } from "@/components-v2/ui/button";
 import { UniqueEntityID } from "@/shared/domain";
 import { Agent } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
@@ -39,10 +40,19 @@ import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-
 import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
 import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
 
-// Watermark component
-const Watermark = React.memo(() => (
-  <div className="flex items-center justify-center h-full text-text-subtle opacity-30">
+// Watermark component with restore button
+const Watermark = React.memo<{ onRestore?: () => void }>(({ onRestore }) => (
+  <div className="flex flex-col items-center justify-center h-full text-text-subtle opacity-30 gap-4">
     <span className="text-2xl font-light">astrsk</span>
+    {onRestore && (
+      <Button
+        onClick={onRestore}
+        className="opacity-100"
+        title="Restore panels - resets to flow panel only"
+      >
+        Restore Panels
+      </Button>
+    )}
   </div>
 ));
 
@@ -418,6 +428,32 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     return flowPanel;
   }, []);
 
+  // Function to restore only the flow panel (recovery mode)
+  const restoreFlowPanelOnly = useCallback(() => {
+    if (!dockviewApi || !flowId) {
+      console.error('Cannot restore layout: dockviewApi or flowId missing');
+      return;
+    }
+    
+    console.log('Restoring flow panel only (recovery mode)');
+    
+    // Clear all existing panels
+    const existingPanels = [...dockviewApi.panels];
+    existingPanels.forEach(panel => {
+      if (panel && panel.group) {
+        dockviewApi.removePanel(panel);
+      }
+    });
+    
+    // Create only the flow panel
+    createFlowPanel(dockviewApi, flowId);
+    
+    // Save the clean layout
+    setTimeout(() => {
+      savePanelLayout(dockviewApi);
+    }, 100);
+  }, [dockviewApi, flowId, createFlowPanel, savePanelLayout]);
+
   // Panel operations
   const openPanel = useCallback((panelType: PanelType, agentId?: string) => {
     if (!dockviewApi || !flow) return;
@@ -691,6 +727,11 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     };
   }, [debouncedSaveLayout]);
 
+  // Create watermark component with restore functionality - MUST be before any conditional returns
+  const WatermarkWithRestore = useCallback(() => (
+    <Watermark onRestore={restoreFlowPanelOnly} />
+  ), [restoreFlowPanelOnly]);
+
   // Show empty state when no flow
   if (!flow) {
     return (
@@ -743,7 +784,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
           }}
           components={components}
           tabComponents={{ colored: CustomDockviewTab }}
-          watermarkComponent={Watermark}
+          watermarkComponent={WatermarkWithRestore}
           floatingGroupBounds="boundedWithinViewport"
           disableFloatingGroups={true}
         />
