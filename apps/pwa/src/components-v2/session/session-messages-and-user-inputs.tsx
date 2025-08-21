@@ -153,7 +153,7 @@ const MessageItemInternal = ({
   const [isShowDataStore, setIsShowDataStore] = useState(false);
 
   return (
-    <div className="group/message relative px-[56px]">
+    <div className="group/message relative px-[56px]" tabIndex={0}>
       <div
         className={cn(
           "flex gap-[16px] items-start",
@@ -265,7 +265,8 @@ const MessageItemInternal = ({
           <div
             className={cn(
               "px-[16px] py-[8px] rounded-[8px] flex flex-row items-center",
-              "transition-opacity duration-200 ease-in-out opacity-0 group-hover/message:opacity-100",
+              "transition-opacity duration-200 ease-in-out opacity-0",
+              "group-hover/message:opacity-100 pointer-coarse:group-focus-within/message:opacity-100",
               "chat-style-chat-bubble message-buttons",
               !streaming && disabled && "!opacity-0",
               streaming && streamingAgentName && "opacity-100",
@@ -288,57 +289,54 @@ const MessageItemInternal = ({
             ) : (
               <div className="flex flex-row items-center gap-[12px]">
                 {isEditing ? (
-                  <Check
-                    className="size-[20px] cursor-pointer"
-                    onClick={onEditDone}
-                  />
+                  <button className="cursor-pointer" onClick={onEditDone}>
+                    <Check size={20} />
+                  </button>
                 ) : (
-                  <SvgIcon
-                    name="edit"
-                    size={20}
+                  <button
                     className="cursor-pointer"
                     onClick={async () => {
                       setEditedContent(content ?? "");
                       setIsEditing(true);
                     }}
-                  />
+                  >
+                    <SvgIcon name="edit" size={20} />
+                  </button>
                 )}
                 {isShowDataStore ? (
-                  <SvgIcon
-                    name="history_solid"
-                    size={20}
+                  <button
                     className="cursor-pointer"
                     onClick={() => {
                       setIsShowDataStore(false);
                     }}
-                  />
+                  >
+                    <SvgIcon name="history_solid" size={20} />
+                  </button>
                 ) : (
-                  <History
-                    className="size-[20px] cursor-pointer"
+                  <button
+                    className="cursor-pointer"
                     onClick={() => {
                       setIsShowDataStore(true);
                     }}
-                  />
+                  >
+                    <History size={20} />
+                  </button>
                 )}
-                <Trash2
-                  className="size-[20px] cursor-pointer"
-                  onClick={onDelete}
-                />
+                <button className="cursor-pointer" onClick={onDelete}>
+                  <Trash2 size={20} />
+                </button>
                 <div className="flex flex-row gap-[2px] items-center">
-                  <ChevronLeft
-                    className="size-[16px] cursor-pointer"
-                    onClick={onPrevOption}
-                  />
+                  <button className="cursor-pointer" onClick={onPrevOption}>
+                    <ChevronLeft size={16} />
+                  </button>
                   <div className="min-w-[24px] text-center font-[600] text-[10px] leading-[12px] select-none">{`${selectedOptionIndex + 1} / ${optionsLength}`}</div>
-                  <ChevronRight
-                    className="size-[16px] cursor-pointer"
-                    onClick={onNextOption}
-                  />
+                  <button className="cursor-pointer" onClick={onNextOption}>
+                    <ChevronRight size={16} />
+                  </button>
                 </div>
-                <RefreshCcw
-                  className="size-[20px] cursor-pointer"
-                  onClick={onRegenerate}
-                />
+                <button className="cursor-pointer" onClick={onRegenerate}>
+                  <RefreshCcw size={20} />
+                </button>
               </div>
             )}
           </div>
@@ -2028,8 +2026,8 @@ const SessionMessagesAndUserInputs = ({
         ref={effectiveParentRef}
         id={`session-${session.id}`}
         className={cn(
-          "w-full h-full overflow-auto contain-strict session-scrollbar",
-          "transition-[padding-right] pr-0",
+          "z-10 relative w-full h-full overflow-auto contain-strict session-scrollbar",
+          "transition-[padding-right] duration-200 pr-0",
           isDataSchemaUsed && isOpenSessionData && "pr-[320px]",
         )}
       >
@@ -2245,13 +2243,13 @@ const SessionMessagesAndUserInputs = ({
         />
         <div
           className={cn(
-            "w-[320px] mt-[48px] rounded-[12px]",
+            "z-10 relative w-[320px] mt-[48px] rounded-[12px]",
             "bg-[#3b3b3b]/50 backdrop-blur-xl border border-text-primary/10",
             "flex flex-col overflow-hidden",
-            "transition-opacity opacity-0",
+            "transition-opacity duration-200",
             isOpenSessionData
-              ? "opacity-100"
-              : "pointer-events-none select-none",
+              ? "opacity-100 visible"
+              : "opacity-0 invisible pointer-events-none",
           )}
         >
           <div className="shrink-0 h-[72px] p-[16px] border-b-1 border-text-primary/10 flex flex-row items-center text-text-primary">
