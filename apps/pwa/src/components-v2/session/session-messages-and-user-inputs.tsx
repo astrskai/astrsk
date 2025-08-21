@@ -288,57 +288,54 @@ const MessageItemInternal = ({
             ) : (
               <div className="flex flex-row items-center gap-[12px]">
                 {isEditing ? (
-                  <Check
-                    className="size-[20px] cursor-pointer"
-                    onClick={onEditDone}
-                  />
+                  <button className="cursor-pointer" onClick={onEditDone}>
+                    <Check size={20} />
+                  </button>
                 ) : (
-                  <SvgIcon
-                    name="edit"
-                    size={20}
+                  <button
                     className="cursor-pointer"
                     onClick={async () => {
                       setEditedContent(content ?? "");
                       setIsEditing(true);
                     }}
-                  />
+                  >
+                    <SvgIcon name="edit" size={20} />
+                  </button>
                 )}
                 {isShowDataStore ? (
-                  <SvgIcon
-                    name="history_solid"
-                    size={20}
+                  <button
                     className="cursor-pointer"
                     onClick={() => {
                       setIsShowDataStore(false);
                     }}
-                  />
+                  >
+                    <SvgIcon name="history_solid" size={20} />
+                  </button>
                 ) : (
-                  <History
-                    className="size-[20px] cursor-pointer"
+                  <button
+                    className="cursor-pointer"
                     onClick={() => {
                       setIsShowDataStore(true);
                     }}
-                  />
+                  >
+                    <History size={20} />
+                  </button>
                 )}
-                <Trash2
-                  className="size-[20px] cursor-pointer"
-                  onClick={onDelete}
-                />
+                <button className="cursor-pointer" onClick={onDelete}>
+                  <Trash2 size={20} />
+                </button>
                 <div className="flex flex-row gap-[2px] items-center">
-                  <ChevronLeft
-                    className="size-[16px] cursor-pointer"
-                    onClick={onPrevOption}
-                  />
+                  <button className="cursor-pointer" onClick={onPrevOption}>
+                    <ChevronLeft size={16} />
+                  </button>
                   <div className="min-w-[24px] text-center font-[600] text-[10px] leading-[12px] select-none">{`${selectedOptionIndex + 1} / ${optionsLength}`}</div>
-                  <ChevronRight
-                    className="size-[16px] cursor-pointer"
-                    onClick={onNextOption}
-                  />
+                  <button className="cursor-pointer" onClick={onNextOption}>
+                    <ChevronRight size={16} />
+                  </button>
                 </div>
-                <RefreshCcw
-                  className="size-[20px] cursor-pointer"
-                  onClick={onRegenerate}
-                />
+                <button className="cursor-pointer" onClick={onRegenerate}>
+                  <RefreshCcw size={20} />
+                </button>
               </div>
             )}
           </div>
