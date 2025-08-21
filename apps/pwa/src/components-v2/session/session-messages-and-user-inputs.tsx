@@ -2026,8 +2026,8 @@ const SessionMessagesAndUserInputs = ({
         ref={effectiveParentRef}
         id={`session-${session.id}`}
         className={cn(
-          "w-full h-full overflow-auto contain-strict session-scrollbar",
-          "transition-[padding-right] pr-0",
+          "z-10 relative w-full h-full overflow-auto contain-strict session-scrollbar",
+          "transition-[padding-right] duration-200 pr-0",
           isDataSchemaUsed && isOpenSessionData && "pr-[320px]",
         )}
       >
@@ -2243,13 +2243,13 @@ const SessionMessagesAndUserInputs = ({
         />
         <div
           className={cn(
-            "w-[320px] mt-[48px] rounded-[12px]",
+            "z-10 relative w-[320px] mt-[48px] rounded-[12px]",
             "bg-[#3b3b3b]/50 backdrop-blur-xl border border-text-primary/10",
             "flex flex-col overflow-hidden",
-            "transition-opacity opacity-0",
+            "transition-opacity duration-200",
             isOpenSessionData
-              ? "opacity-100"
-              : "pointer-events-none select-none",
+              ? "opacity-100 visible"
+              : "opacity-0 invisible pointer-events-none",
           )}
         >
           <div className="shrink-0 h-[72px] p-[16px] border-b-1 border-text-primary/10 flex flex-row items-center text-text-primary">
