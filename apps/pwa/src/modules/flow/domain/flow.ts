@@ -25,7 +25,6 @@ export type Node = {
   };
   data: object;
   deletable?: boolean;
-  draggable?: boolean;
   zIndex?: number; // Controls the layering order of nodes
 };
 
