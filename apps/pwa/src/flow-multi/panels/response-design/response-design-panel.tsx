@@ -24,15 +24,17 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
   const updateResponseTemplate = useUpdateResponseTemplate(flowId);
   
   // 2. Load just the response template - more efficient than loading entire flow
-  // Disable refetching while editing to prevent UI jumping
+  // Disable refetching while editing or cursor is active to prevent UI jumping
+  const queryEnabled = !!flowId && !updateResponseTemplate.isEditing && !updateResponseTemplate.hasCursor;
+  
   const { 
     data: responseTemplate, 
     isLoading,
     error
   } = useQuery({
     ...flowQueries.response(flowId),
-    enabled: !!flowId && !updateResponseTemplate.isEditing,
-    refetchOnWindowFocus: !updateResponseTemplate.isEditing,
+    enabled: queryEnabled,
+    refetchOnWindowFocus: queryEnabled,
     refetchOnMount: false, // Don't refetch on mount - only when needed
   });
 
@@ -47,22 +49,29 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
   
   // Track editing state in a ref to avoid triggering effects
   const isEditingRef = useRef(updateResponseTemplate.isEditing);
+  const hasCursorRef = useRef(updateResponseTemplate.hasCursor);
   useEffect(() => {
     isEditingRef.current = updateResponseTemplate.isEditing;
-  }, [updateResponseTemplate.isEditing]);
+    hasCursorRef.current = updateResponseTemplate.hasCursor;
+  }, [updateResponseTemplate.isEditing, updateResponseTemplate.hasCursor]);
 
   // Initialize and sync template
   useEffect(() => {
+    // Don't sync while editing OR while cursor is active
+    if (updateResponseTemplate.isEditing || updateResponseTemplate.hasCursor) {
+      return;
+    }
+    
     // Initialize when flow changes
     if (flowId && flowId !== lastFlowIdRef.current && responseTemplate !== undefined) {
       setCurrentTemplate(responseTemplate);
       lastFlowIdRef.current = flowId;
     }
-    // Sync when response template changes externally (but not during editing)
-    else if (responseTemplate !== undefined && !isEditingRef.current) {
+    // Sync when response template changes externally (but not during editing or cursor active)
+    else if (responseTemplate !== undefined) {
       setCurrentTemplate(responseTemplate);
     }
-  }, [flowId, responseTemplate]); // Don't include isEditing in deps to avoid re-running when edit mode changes
+  }, [flowId, responseTemplate, updateResponseTemplate.isEditing, updateResponseTemplate.hasCursor]);
 
   // Debounced save
   const debouncedSave = useMemo(
@@ -98,11 +107,15 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
         if (position) {
           setLastMonacoEditor(null, `responseDesign-${flowId}`, editorInstance, position);
         }
+        // Mark cursor as active when editor is focused
+        updateResponseTemplate.setCursorActive(true);
       });
       
       editorInstance.onDidBlurEditorWidget(() => {
         // Clear editor tracking when focus lost
         setLastMonacoEditor(null, null, null, null);
+        // Mark cursor as inactive when editor loses focus
+        updateResponseTemplate.setCursorActive(false);
       });
       
       // Update position on cursor change
@@ -110,7 +123,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
         setLastMonacoEditor(null, `responseDesign-${flowId}`, editorInstance, e.position);
       });
     },
-    [setLastMonacoEditor, flowId]
+    [setLastMonacoEditor, flowId, updateResponseTemplate]
   );
 
 

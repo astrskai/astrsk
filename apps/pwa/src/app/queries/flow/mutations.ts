@@ -19,6 +19,7 @@ import { flowKeys } from "./query-factory";
 export const useUpdateResponseTemplate = (flowId: string) => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [hasCursor, setHasCursor] = useState(false);
   const editEndTimerRef = useRef<NodeJS.Timeout>();
   
   // Function to end editing with debounce
@@ -39,6 +40,11 @@ export const useUpdateResponseTemplate = (flowId: string) => {
     if (editEndTimerRef.current) {
       clearTimeout(editEndTimerRef.current);
     }
+  }, []);
+  
+  // Function to set cursor active state
+  const setCursorActive = useCallback((active: boolean) => {
+    setHasCursor(active);
   }, []);
   
   const mutation = useMutation({
@@ -105,6 +111,8 @@ export const useUpdateResponseTemplate = (flowId: string) => {
     mutate: mutation.mutate,
     mutateAsync: mutation.mutateAsync,
     isEditing, // Always present, TypeScript knows this exists
+    hasCursor,
+    setCursorActive,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error,
