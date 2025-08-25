@@ -235,6 +235,7 @@ export class Flow extends AggregateRoot<FlowProps> {
         position: node.position,
         data: node.data,
         deletable: node.deletable,
+        zIndex: node.zIndex,
       })),
       edges: this.props.edges.map((edge) => ({
         id: edge.id,
