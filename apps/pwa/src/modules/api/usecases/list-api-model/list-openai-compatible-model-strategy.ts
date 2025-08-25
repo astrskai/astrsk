@@ -35,9 +35,11 @@ export class ListOpenaiCompatibleModelStrategy implements ListApiModelStrategy {
       }
 
       const modelListFromUserInput =
-        apiConnection.modelUrls?.map((url) =>
-          ApiModel.create({ id: url, name: url }).getValue(),
-        ) ?? [];
+        apiConnection.modelUrls
+          ?.map((url) => url.trim())
+          .filter((url) => url.length > 0)
+          .map((url) => ApiModel.create({ id: url, name: url }).getValue()) ??
+        [];
 
       return Result.ok([...modelListFromApi, ...modelListFromUserInput]);
     } catch (error) {

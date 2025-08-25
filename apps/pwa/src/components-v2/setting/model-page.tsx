@@ -395,16 +395,9 @@ export default function ModelPage({ className }: { className?: string }) {
       }
     }
 
-    // Check model URL
-    if (showModelUrl.get(source)) {
-      if (modelUrl.trim() === "") {
-        return false;
-      }
-    }
-
     // Form is valid
     return true;
-  }, [apiKey, baseUrl, editingApiConnection, modelUrl]);
+  }, [apiKey, baseUrl, editingApiConnection]);
 
   // Save api connection
   const [isLoading, setIsLoading] = useState(false);
