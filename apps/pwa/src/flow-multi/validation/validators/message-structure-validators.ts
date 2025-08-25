@@ -39,7 +39,7 @@ export const validateSystemMessagePlacement: ValidatorFunction = forEachConnecte
           issues.push({
             id: generateIssueId(ValidationIssueCode.NON_SYSTEM_MESSAGE_BETWEEN_SYSTEM_MESSAGES, agentId),
             code: ValidationIssueCode.NON_SYSTEM_MESSAGE_BETWEEN_SYSTEM_MESSAGES,
-            severity: 'error',
+            severity: 'warning',
             ...validationMessage,
             agentId,
             agentName: agent.props.name,
@@ -104,7 +104,7 @@ export const validateGeminiMessageStructure: ValidatorFunction = forEachConnecte
         issues.push({
           id: generateIssueId(ValidationIssueCode.MISSING_USER_MESSAGE_AFTER_SYSTEM, agentId),
           code: ValidationIssueCode.MISSING_USER_MESSAGE_AFTER_SYSTEM,
-          severity: 'error',
+          severity: 'warning',
           ...validationMessage,
           agentId,
           agentName: agent.props.name,
