@@ -448,7 +448,21 @@ const transformMessagesForModel = (
   if (modelId.includes("gemini") || modelId.includes("claude")) {
     let nonSystemMessageFound = false;
 
-    return messages.map((message) => {
+    // First, check if we need to add a filler user message
+    // Find the first non-system message
+    const firstNonSystemIndex = messages.findIndex(
+      (msg) => msg.role !== "system",
+    );
+
+    // Check if we need a filler user message:
+    // 1. When there are only system messages (firstNonSystemIndex === -1) AND messages array is not empty
+    // 2. When the first non-system message is an assistant message
+    const needsFillerUser =
+      (firstNonSystemIndex === -1 && messages.length > 0) || // Only system messages exist (but not empty)
+      (firstNonSystemIndex !== -1 &&
+        messages[firstNonSystemIndex].role === "assistant");
+
+    const transformedMessages: Message[] = messages.map((message) => {
       // Once we find a non-system message, mark it
       if (message.role !== "system") {
         nonSystemMessageFound = true;
@@ -461,8 +475,36 @@ const transformMessagesForModel = (
       }
 
       // Convert system messages that come after non-system messages to user
-      return { ...message, role: "user" };
+      return { ...message, role: "user" as Message["role"] };
     });
+
+    // If we need to add a filler user message
+    if (needsFillerUser) {
+      const fillerUserMessage: Message = {
+        role: "user",
+        content:
+          "Respond based on the information and instructions provided above.",
+      };
+
+      if (firstNonSystemIndex === -1) {
+        // Only system messages exist, add filler user message at the end
+        transformedMessages.push(fillerUserMessage);
+      } else {
+        // Insert before the first non-system message (which is an assistant message)
+        const firstNonSystemIndexInTransformed = transformedMessages.findIndex(
+          (msg) => msg.role !== "system",
+        );
+        if (firstNonSystemIndexInTransformed !== -1) {
+          transformedMessages.splice(
+            firstNonSystemIndexInTransformed,
+            0,
+            fillerUserMessage,
+          );
+        }
+      }
+    }
+
+    return transformedMessages;
   }
 
   return messages;
@@ -2355,6 +2397,5 @@ export {
   executeFlow,
   makeContext,
   renderMessages,
-  transformMessagesForModel
+  transformMessagesForModel,
 };
-
