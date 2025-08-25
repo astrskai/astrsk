@@ -316,7 +316,6 @@ export class Flow extends AggregateRoot<FlowProps> {
             })) || [],
           panelStructure: props.panelStructure,
           viewport: props.viewport,
-          isTemporary: props.isTemporary ?? false,
           readyState: props.readyState || ReadyState.Draft,
           validationIssues: props.validationIssues || undefined,
         },

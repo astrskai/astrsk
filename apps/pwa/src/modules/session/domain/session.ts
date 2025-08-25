@@ -53,7 +53,6 @@ export const SessionPropsKeys = [
   "promptToggle",
   "isPlotBackground",
   "backgroundId",
-  "isTemporary",
   "translation",
   "aiResponse",
   "userResponse",
