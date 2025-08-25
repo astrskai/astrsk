@@ -98,8 +98,8 @@ const messageDefinitions: Record<ValidationIssueCode, {
   
   [ValidationIssueCode.MISSING_USER_MESSAGE_AFTER_SYSTEM]: {
     title: "First message role for Gemini",
-    description: (data?: ValidationData) => `Agent "${agentName(data)}" is using Gemini. Prompts for Gemini must have a user or history message at the start of the prompt (except for system message).`,
-    suggestion: "First message's role will automatically be changed to role:user for Gemini models"
+    description: (data?: ValidationData) => `Agent "${agentName(data)}" is using Gemini but has a prompt that does not have a user message immediately after its system message`,
+    suggestion: "A filler message will be added with role:user right after the system message"
   },
   
   [ValidationIssueCode.GEMINI_SYSTEM_MESSAGE_AFTER_NON_SYSTEM]: {
