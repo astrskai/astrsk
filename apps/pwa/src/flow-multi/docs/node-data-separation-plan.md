@@ -78,7 +78,6 @@ export type Node = {
   position: { x: number; y: number; };
   data: object;
   deletable?: boolean;
-  draggable?: boolean;
   zIndex?: number;
 };
 ```

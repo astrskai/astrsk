@@ -44,6 +44,7 @@ import { ApiService } from "@/app/services/api-service";
 import { CardService } from "@/app/services/card-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { FlowService } from "@/app/services/flow-service";
+import { IfNodeService } from "@/app/services/if-node-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useWllamaStore } from "@/app/stores/wllama-store";
@@ -58,14 +59,13 @@ import {
 import { PlotCard } from "@/modules/card/domain";
 import { CharacterCard } from "@/modules/card/domain/character-card";
 import { DataStoreFieldType } from "@/modules/flow/domain/flow";
+import { IfNode } from "@/modules/if-node/domain";
 import { Session } from "@/modules/session/domain/session";
 import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 import { Turn as MessageEntity } from "@/modules/turn/domain/turn";
 import { parseAiSdkErrorMessage, sanitizeFileName } from "@/shared/utils";
 import { translate } from "@/shared/utils/translate-utils";
 import * as amplitude from "@amplitude/analytics-browser";
-import { IfNodeService } from "@/app/services/if-node-service";
-import { IfNode } from "@/modules/if-node/domain";
 
 const makeContext = async ({
   session,
@@ -433,6 +433,81 @@ const makeProviderOptions = ({
     }
   }
   return options;
+};
+
+const transformMessagesForModel = (
+  messages: Message[],
+  modelId?: string,
+): Message[] => {
+  // No transformation needed if no modelId
+  if (!modelId) {
+    return messages;
+  }
+
+  // Transform for Gemini or Claude models
+  if (modelId.includes("gemini") || modelId.includes("claude")) {
+    let nonSystemMessageFound = false;
+
+    // First, check if we need to add a filler user message
+    // Find the first non-system message
+    const firstNonSystemIndex = messages.findIndex(
+      (msg) => msg.role !== "system",
+    );
+
+    // Check if we need a filler user message:
+    // 1. When there are only system messages (firstNonSystemIndex === -1) AND messages array is not empty
+    // 2. When the first non-system message is an assistant message
+    const needsFillerUser =
+      (firstNonSystemIndex === -1 && messages.length > 0) || // Only system messages exist (but not empty)
+      (firstNonSystemIndex !== -1 &&
+        messages[firstNonSystemIndex].role === "assistant");
+
+    const transformedMessages: Message[] = messages.map((message) => {
+      // Once we find a non-system message, mark it
+      if (message.role !== "system") {
+        nonSystemMessageFound = true;
+        return message;
+      }
+
+      // Keep system messages at the beginning (before any non-system message)
+      if (message.role === "system" && !nonSystemMessageFound) {
+        return message;
+      }
+
+      // Convert system messages that come after non-system messages to user
+      return { ...message, role: "user" as Message["role"] };
+    });
+
+    // If we need to add a filler user message
+    if (needsFillerUser) {
+      const fillerUserMessage: Message = {
+        role: "user",
+        content:
+          "Respond based on the information and instructions provided above.",
+      };
+
+      if (firstNonSystemIndex === -1) {
+        // Only system messages exist, add filler user message at the end
+        transformedMessages.push(fillerUserMessage);
+      } else {
+        // Insert before the first non-system message (which is an assistant message)
+        const firstNonSystemIndexInTransformed = transformedMessages.findIndex(
+          (msg) => msg.role !== "system",
+        );
+        if (firstNonSystemIndexInTransformed !== -1) {
+          transformedMessages.splice(
+            firstNonSystemIndexInTransformed,
+            0,
+            fillerUserMessage,
+          );
+        }
+      }
+    }
+
+    return transformedMessages;
+  }
+
+  return messages;
 };
 
 const validateMessages = (messages: Message[], apiSource: ApiSource) => {
@@ -1120,6 +1195,9 @@ async function generateTextOutput({
   stopSignalByUser?: AbortSignal;
   streaming?: boolean;
 }) {
+  // Transform messages for specific models
+  const transformedMessages = transformMessagesForModel(messages, modelId);
+
   // Timeout and abort signals
   const abortSignals: AbortSignal[] = [];
   if (stopSignalByUser) {
@@ -1201,7 +1279,7 @@ async function generateTextOutput({
   if (streaming) {
     return streamText({
       model,
-      messages,
+      messages: transformedMessages,
       abortSignal: combinedAbortSignal,
       ...settings,
       ...(Object.keys(providerOptions).length > 0 && modelProvider
@@ -1222,7 +1300,7 @@ async function generateTextOutput({
   } else {
     const { text } = await generateText({
       model,
-      messages,
+      messages: transformedMessages,
       abortSignal: combinedAbortSignal,
       ...settings,
       ...(Object.keys(providerOptions).length > 0 && modelProvider
@@ -1264,8 +1342,10 @@ async function generateStructuredOutput({
   };
   streaming?: boolean;
 }) {
+  // Transform messages for specific models
+  const transformedMessages = transformMessagesForModel(messages, modelId);
   // Validate messages
-  validateMessages(messages, apiConnection.source);
+  validateMessages(transformedMessages, apiConnection.source);
 
   // Timeout and abort signals
   const abortSignals = [AbortSignal.timeout(120000)];
@@ -1339,7 +1419,7 @@ async function generateStructuredOutput({
   if (streaming) {
     return streamObject({
       model,
-      messages,
+      messages: transformedMessages,
       abortSignal: combinedAbortSignal,
       schema: jsonSchema(schema.typeDef),
       schemaName: schema.name,
@@ -1360,7 +1440,7 @@ async function generateStructuredOutput({
   } else {
     const { object } = await generateObject({
       model,
-      messages,
+      messages: transformedMessages,
       abortSignal: combinedAbortSignal,
       schema: jsonSchema(schema.typeDef),
       schemaName: schema.name,
@@ -1426,7 +1506,8 @@ async function* executeAgentNode({
       context: fullContext,
       parameters: agent.parameters,
     });
-    validateMessages(messages, apiConnection.source);
+    const transformedMessages = transformMessagesForModel(messages, apiModelId);
+    validateMessages(transformedMessages, apiConnection.source);
 
     // Generate agent output
     const agentKey = sanitizeFileName(agent.props.name);
@@ -1444,7 +1525,7 @@ async function* executeAgentNode({
       const { partialObjectStream } = await generateStructuredOutput({
         apiConnection: apiConnection,
         modelId: apiModelId,
-        messages: messages,
+        messages: transformedMessages,
         parameters: agent.parameters,
         schema: {
           typeDef: agent.getSchemaTypeDef({
@@ -1467,7 +1548,7 @@ async function* executeAgentNode({
       const { textStream } = await generateTextOutput({
         apiConnection: apiConnection,
         modelId: apiModelId,
-        messages: messages,
+        messages: transformedMessages,
         parameters: agent.parameters,
         streaming: agent.props.outputStreaming,
         stopSignalByUser: stopSignalByUser,
@@ -2316,4 +2397,5 @@ export {
   executeFlow,
   makeContext,
   renderMessages,
+  transformMessagesForModel,
 };

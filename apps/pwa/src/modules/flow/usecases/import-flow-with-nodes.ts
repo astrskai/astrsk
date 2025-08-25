@@ -316,23 +316,57 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
       }
 
       // Update flow nodes and edges with new IDs
-      const newNodes = flowData.nodes.map((node: any) => ({
-        ...node,
-        id: nodeIdMap.get(node.id) || node.id,
-        data: node.type === NodeType.AGENT 
-          ? { flowId: newFlowId }
-          : node.type === NodeType.DATA_STORE || node.type === NodeType.IF
-            ? { flowId: newFlowId }
-            : node.data
-      }));
+      const newNodes = flowData.nodes.map((node: any) => {
+        const newId = nodeIdMap.get(node.id) || node.id;
+        
+        // For dataStore nodes, update the flowId in data if present
+        let nodeData = {};
+        if (node.type === 'dataStore' && node.data && node.data.flowId) {
+          nodeData = { flowId: newFlowId };
+        }
+        
+        return {
+          ...node,
+          id: newId,
+          data: nodeData
+        };
+      });
 
       const newEdges = this.remapEdgeIds(flowData.edges, nodeIdMap);
+
+      // Update panel structure to use new flow ID
+      let updatedPanelStructure = flowData.panelStructure;
+      if (updatedPanelStructure) {
+        // Deep clone to avoid mutations
+        updatedPanelStructure = JSON.parse(JSON.stringify(updatedPanelStructure));
+        
+        // Update flow IDs in panel metadata
+        if (updatedPanelStructure.panelMetadata) {
+          for (const key in updatedPanelStructure.panelMetadata) {
+            const panel = updatedPanelStructure.panelMetadata[key];
+            if (panel.params && panel.params.flowId) {
+              panel.params.flowId = newFlowId;
+            }
+          }
+        }
+        
+        // Update flow IDs in serialized layout panels
+        if (updatedPanelStructure.serializedLayout?.panels) {
+          for (const key in updatedPanelStructure.serializedLayout.panels) {
+            const panel = updatedPanelStructure.serializedLayout.panels[key];
+            if (panel.params && panel.params.flowId) {
+              panel.params.flowId = newFlowId;
+            }
+          }
+        }
+      }
 
       // Create and save flow
       const flow = Flow.create({
         ...flowData,
         nodes: newNodes,
         edges: newEdges,
+        panelStructure: updatedPanelStructure,
       }, new UniqueEntityID(newFlowId));
 
       if (flow.isFailure) {
@@ -340,6 +374,11 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
       }
 
       const savedFlow = await this.saveFlowRepo.saveFlow(flow.getValue());
+      
+      if (savedFlow.isFailure) {
+        return Result.fail(savedFlow.getError());
+      }
+      
       return savedFlow;
 
     } catch (error) {

@@ -395,16 +395,9 @@ export default function ModelPage({ className }: { className?: string }) {
       }
     }
 
-    // Check model URL
-    if (showModelUrl.get(source)) {
-      if (modelUrl.trim() === "") {
-        return false;
-      }
-    }
-
     // Form is valid
     return true;
-  }, [apiKey, baseUrl, editingApiConnection, modelUrl]);
+  }, [apiKey, baseUrl, editingApiConnection]);
 
   // Save api connection
   const [isLoading, setIsLoading] = useState(false);
@@ -638,7 +631,7 @@ export default function ModelPage({ className }: { className?: string }) {
           {editingApiConnection?.source &&
             showBaseUrl.get(editingApiConnection?.source) && (
               <FloatingLabelInput
-                label="Base URL"
+                label="Base URL*"
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
               />
@@ -663,7 +656,7 @@ export default function ModelPage({ className }: { className?: string }) {
           {editingApiConnection?.source &&
             showApiKey.get(editingApiConnection?.source) && (
               <FloatingLabelInput
-                label="API key"
+                label="API key*"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
               />
@@ -671,7 +664,7 @@ export default function ModelPage({ className }: { className?: string }) {
           {editingApiConnection?.source &&
             showModelUrl.get(editingApiConnection?.source) && (
               <FloatingLabelInput
-                label="Model ID"
+                label="Model ID (Optional)"
                 value={modelUrl}
                 onChange={(e) => setModelUrl(e.target.value)}
               />

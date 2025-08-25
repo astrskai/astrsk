@@ -1,5 +1,9 @@
+import type { Message } from "../../shared/prompt/domain/renderable";
 import { describe, expect, it } from "vitest";
-import { evaluateConditionOperator } from "./session-play-service";
+import {
+  evaluateConditionOperator,
+  transformMessagesForModel,
+} from "./session-play-service";
 
 describe("evaluateConditionOperator", () => {
   describe("String Operators", () => {
@@ -1266,5 +1270,284 @@ describe("evaluateConditionOperator", () => {
         evaluateConditionOperator("number_less_than", -Infinity, -1000000),
       ).toBe(true);
     });
+  });
+});
+
+describe("transformMessagesForModel", () => {
+  const mockMessages: Message[] = [
+    { role: "system", content: "System message 1" },
+    { role: "system", content: "System message 2" },
+    { role: "user", content: "User message 1" },
+    { role: "system", content: "System message 3" },
+    { role: "assistant", content: "Assistant message 1" },
+    { role: "system", content: "System message 4" },
+    { role: "user", content: "User message 2" },
+  ];
+
+  it("should not transform messages when modelId is not provided", () => {
+    const result = transformMessagesForModel(mockMessages);
+    expect(result).toEqual(mockMessages);
+  });
+
+  it("should not transform messages when modelId does not include gemini or claude", () => {
+    const result = transformMessagesForModel(mockMessages, "gpt-4");
+    expect(result).toEqual(mockMessages);
+  });
+
+  it("should transform system messages after non-system messages for gemini model", () => {
+    const result = transformMessagesForModel(mockMessages, "gemini-pro");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "user", content: "User message 1" },
+      { role: "user", content: "System message 3" }, // Converted to user
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "System message 4" }, // Converted to user
+      { role: "user", content: "User message 2" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should transform system messages after non-system messages for claude model", () => {
+    const result = transformMessagesForModel(mockMessages, "claude-3-sonnet");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "user", content: "User message 1" },
+      { role: "user", content: "System message 3" }, // Converted to user
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "System message 4" }, // Converted to user
+      { role: "user", content: "User message 2" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should preserve all system messages at the beginning", () => {
+    const allSystemAtStart: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "system", content: "System message 3" },
+      { role: "user", content: "User message 1" },
+      { role: "assistant", content: "Assistant message 1" },
+    ];
+
+    const result = transformMessagesForModel(allSystemAtStart, "gemini-pro");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "system", content: "System message 3" },
+      { role: "user", content: "User message 1" },
+      { role: "assistant", content: "Assistant message 1" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should handle partial gemini model names", () => {
+    const result = transformMessagesForModel(
+      mockMessages,
+      "models/gemini-2.5-pro",
+    );
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "user", content: "User message 1" },
+      { role: "user", content: "System message 3" }, // Converted to user
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "System message 4" }, // Converted to user
+      { role: "user", content: "User message 2" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should handle partial claude model names", () => {
+    const result = transformMessagesForModel(
+      mockMessages,
+      "anthropic/claude-3-5-sonnet",
+    );
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "user", content: "User message 1" },
+      { role: "user", content: "System message 3" }, // Converted to user
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "System message 4" }, // Converted to user
+      { role: "user", content: "User message 2" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should add filler user message when first non-system message is assistant for gemini", () => {
+    const assistantFirstMessages: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "User message 1" },
+      { role: "assistant", content: "Assistant message 2" },
+    ];
+
+    const result = transformMessagesForModel(assistantFirstMessages, "gemini-pro");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "user", content: "Respond based on the information and instructions provided above." }, // Filler user message added
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "User message 1" },
+      { role: "assistant", content: "Assistant message 2" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should add filler user message when first non-system message is assistant for claude", () => {
+    const assistantFirstMessages: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "User message 1" },
+    ];
+
+    const result = transformMessagesForModel(assistantFirstMessages, "claude-3-sonnet");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "user", content: "Respond based on the information and instructions provided above." }, // Filler user message added
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "User message 1" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should not add filler user message when first non-system message is user", () => {
+    const userFirstMessages: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "user", content: "User message 1" },
+      { role: "assistant", content: "Assistant message 1" },
+    ];
+
+    const result = transformMessagesForModel(userFirstMessages, "gemini-pro");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "user", content: "User message 1" },
+      { role: "assistant", content: "Assistant message 1" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should not add filler user message for non-gemini/claude models", () => {
+    const assistantFirstMessages: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "User message 1" },
+    ];
+
+    const result = transformMessagesForModel(assistantFirstMessages, "gpt-4");
+
+    // Should return unchanged for non-gemini/claude models
+    expect(result).toEqual(assistantFirstMessages);
+  });
+
+  it("should handle assistant-first with system messages after for gemini", () => {
+    const complexMessages: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "system", content: "System message 2" }, // Should be converted to user
+      { role: "user", content: "User message 1" },
+    ];
+
+    const result = transformMessagesForModel(complexMessages, "gemini-pro");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "user", content: "Respond based on the information and instructions provided above." }, // Filler user message added
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "System message 2" }, // Converted to user
+      { role: "user", content: "User message 1" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should add filler user message when only system messages exist for gemini", () => {
+    const systemOnlyMessages: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "system", content: "System message 3" },
+    ];
+
+    const result = transformMessagesForModel(systemOnlyMessages, "gemini-pro");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "system", content: "System message 3" },
+      { role: "user", content: "Respond based on the information and instructions provided above." }, // Filler user message added at the end
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should add filler user message when only system messages exist for claude", () => {
+    const systemOnlyMessages: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+    ];
+
+    const result = transformMessagesForModel(systemOnlyMessages, "claude-3-sonnet");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "user", content: "Respond based on the information and instructions provided above." }, // Filler user message added at the end
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should not add filler user message for system-only messages in non-gemini/claude models", () => {
+    const systemOnlyMessages: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+    ];
+
+    const result = transformMessagesForModel(systemOnlyMessages, "gpt-4");
+
+    // Should return unchanged for non-gemini/claude models
+    expect(result).toEqual(systemOnlyMessages);
+  });
+
+  it("should handle empty messages array for gemini", () => {
+    const emptyMessages: Message[] = [];
+
+    const result = transformMessagesForModel(emptyMessages, "gemini-pro");
+
+    expect(result).toEqual([]);
+  });
+
+  it("should handle single system message for claude", () => {
+    const singleSystemMessage: Message[] = [
+      { role: "system", content: "System message" },
+    ];
+
+    const result = transformMessagesForModel(singleSystemMessage, "claude-3-opus");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message" },
+      { role: "user", content: "Respond based on the information and instructions provided above." }, // Filler user message added
+    ];
+
+    expect(result).toEqual(expected);
   });
 });

@@ -25,7 +25,6 @@ export type Node = {
   };
   data: object;
   deletable?: boolean;
-  draggable?: boolean;
   zIndex?: number; // Controls the layering order of nodes
 };
 
@@ -236,6 +235,7 @@ export class Flow extends AggregateRoot<FlowProps> {
         position: node.position,
         data: node.data,
         deletable: node.deletable,
+        zIndex: node.zIndex,
       })),
       edges: this.props.edges.map((edge) => ({
         id: edge.id,
@@ -257,7 +257,10 @@ export class Flow extends AggregateRoot<FlowProps> {
     if (this.props.viewport) {
       json.viewport = this.props.viewport;
     }
-    
+    if (this.props.dataStoreSchema) {
+      json.dataStoreSchema = this.props.dataStoreSchema;
+    }
+
     // Add validation state fields
     json.readyState = this.props.readyState;
     if (this.props.validationIssues) {
@@ -313,7 +316,6 @@ export class Flow extends AggregateRoot<FlowProps> {
             })) || [],
           panelStructure: props.panelStructure,
           viewport: props.viewport,
-          isTemporary: props.isTemporary ?? false,
           readyState: props.readyState || ReadyState.Draft,
           validationIssues: props.validationIssues || undefined,
         },
