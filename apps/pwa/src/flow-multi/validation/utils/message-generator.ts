@@ -97,9 +97,9 @@ const messageDefinitions: Record<ValidationIssueCode, {
   },
   
   [ValidationIssueCode.MISSING_USER_MESSAGE_AFTER_SYSTEM]: {
-    title: "Invalid message structure for Gemini",
-    description: (data?: ValidationData) => `Agent "${agentName(data)}" is using Gemini. Prompts for Gemini must have a user or history message immediately after the last system message`,
-    suggestion: "Add a user message or history message after the last system message"
+    title: "First message role for Gemini",
+    description: (data?: ValidationData) => `Agent "${agentName(data)}" is using Gemini. Prompts for Gemini must have a user or history message at the start of the prompt (except for system message).`,
+    suggestion: "First message's role will automatically be changed to role:user for Gemini models"
   },
   
   [ValidationIssueCode.GEMINI_SYSTEM_MESSAGE_AFTER_NON_SYSTEM]: {
@@ -115,9 +115,9 @@ const messageDefinitions: Record<ValidationIssueCode, {
   },
   
   [ValidationIssueCode.NON_SYSTEM_MESSAGE_BETWEEN_SYSTEM_MESSAGES]: {
-    title: "Non-system message between system messages (Gemini and Claude requirement)",
-    description: (data?: ValidationData) => `Prompt for agent "${agentName(data)}" has non-system message(user, assistant or history message) between system messages (Gemini and Claude requirement)`,
-    suggestion: "For Gemini and Claude models, all system messages must be consecutive without any other messages in between."
+    title: "System message in the middle of prompt (Gemini and Claude requirement)",
+    description: (data?: ValidationData) => `Agent "${agentName(data)}" is using system message(s) in the middle of its prompt`,
+    suggestion: "System message(s) will automatically convert to user messages when using Gemini or Claude models"
   },
   
   // Variables

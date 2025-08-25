@@ -78,6 +78,14 @@ const extractVariables = (template: string): string[] => {
       continue;
     }
     
+    // Skip validation if the expression uses roll, random, or date_to_relative filters
+    // Check for the filter names anywhere in the expression (handles any spacing)
+    if (expression.includes('roll') || 
+        expression.includes('random') || 
+        expression.includes('date_to_relative')) {
+      continue;
+    }
+    
     // Handle Jinja2 filters - split by pipe and only process the variable part
     const pipeIndex = expression.indexOf('|');
     const variablePart = pipeIndex !== -1 ? expression.substring(0, pipeIndex).trim() : expression;
@@ -133,56 +141,13 @@ export const validateUndefinedOutputVariables: ValidatorFunction = (context) => 
         continue; // It's a valid system variable, skip validation
       }
       
-      // Check if it's a data store field that's actually configured in a connected data store node
+      // Check if it's a data store field defined in the schema
       const dataStoreSchema = context.flow.props.dataStoreSchema;
       if (dataStoreSchema && dataStoreSchema.fields) {
-        // First check if this variable matches a schema field name
+        // Check if this variable matches a schema field name
         const schemaField = dataStoreSchema.fields.find(field => field.name === variable);
         if (schemaField) {
-          // Now check if any connected data store node has this field configured
-          let isFieldConfigured = false;
-          
-          // Check all connected nodes for data store nodes
-          for (const nodeId of context.connectedNodes) {
-            const node = context.flow.props.nodes.find(n => n.id === nodeId);
-            if (node && node.type === 'dataStore') {
-              // Check if this data store node has the field configured
-              const nodeData = node.data as any;
-              if (nodeData?.dataStoreFields) {
-                // Check if this field is imported in this node
-                const hasField = nodeData.dataStoreFields.some((f: any) => 
-                  f.schemaFieldId === schemaField.id
-                );
-                if (hasField) {
-                  isFieldConfigured = true;
-                  break;
-                }
-              }
-            }
-          }
-          
-          if (isFieldConfigured) {
-            continue; // It's a valid configured data store field
-          } else {
-            // Field exists in schema but not configured in any connected data store node
-            const message = generateValidationMessage(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, {
-              agentName: sourceAgentName,
-              referencedAgent: 'datastore',
-              field: variable,
-              variable,
-              location
-            });
-            issues.push({
-              id: generateIssueId(ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE, sourceAgentId),
-              code: ValidationIssueCode.UNDEFINED_OUTPUT_VARIABLE,
-              severity: 'error',
-              ...message,
-              agentId: sourceAgentId,
-              agentName: sourceAgentName,
-              metadata: { variable, referencedAgent: 'datastore', field: variable },
-            });
-            continue;
-          }
+          continue; // It's a valid data store schema field, allow it regardless of node configuration
         }
       }
       
