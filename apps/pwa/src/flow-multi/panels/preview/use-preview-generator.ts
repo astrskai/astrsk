@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { Agent, ApiType, SchemaField } from "@/modules/agent/domain/agent";
 import { Session } from "@/modules/session/domain/session";
 import { Turn } from "@/modules/turn/domain/turn";
+import { DataStoreSavedField } from "@/modules/turn/domain/option";
 import { RenderContext } from "@/shared/prompt/domain";
 import { logger } from "@/shared/utils/logger";
 import { makeContext } from "@/app/services/session-play-service";
@@ -55,6 +56,16 @@ const createRenderContext = async (session: Session | null, lastTurn: Turn | nul
         renderContext = { ...renderContext, ...variables };
         logger.debug("[createRenderContext] Added variables from last turn:", variables);
       }
+    }
+
+    // Add data store fields from the last turn if available
+    if (lastTurn?.dataStore && lastTurn.dataStore.length > 0) {
+      // Convert DataStoreSavedField[] to object for template access
+      const dataStoreObject = Object.fromEntries(
+        lastTurn.dataStore.map((field: DataStoreSavedField) => [field.name, field.value])
+      );
+      renderContext = { ...renderContext, ...dataStoreObject };
+      logger.debug("[createRenderContext] Added data store fields from last turn:", dataStoreObject);
     }
     
     return renderContext;
@@ -300,7 +311,7 @@ export function usePreviewGenerator(agent: Agent | null, session: Session | null
     
     // Create a hash of last turn data to detect content changes
     const currentLastTurnData = lastTurn ? 
-      `${lastTurn.id}_${lastTurn.props.updatedAt}_${JSON.stringify(lastTurn.variables || {})}` : "";
+      `${lastTurn.id}_${lastTurn.props.updatedAt}_${JSON.stringify(lastTurn.variables || {})}_${JSON.stringify(lastTurn.dataStore || [])}` : "";
     
     // Check if this is the first time with an agent or if something actually changed
     const agentChanged = prevAgentData.current !== currentAgentData;
