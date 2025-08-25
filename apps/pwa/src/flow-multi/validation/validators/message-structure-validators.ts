@@ -73,28 +73,35 @@ export const validateGeminiMessageStructure: ValidatorFunction = forEachConnecte
     const messages = agent.props.promptMessages || [];
     if (messages.length === 0) return issues;
     
-    // Find the last system message
-    let lastSystemIndex = -1;
-    for (let i = messages.length - 1; i >= 0; i--) {
+    // Find the last consecutive system message from the beginning
+    let lastConsecutiveSystemIndex = -1;
+    for (let i = 0; i < messages.length; i++) {
       if (messages[i].role === MessageRole.System) {
-        lastSystemIndex = i;
+        lastConsecutiveSystemIndex = i;
+      } else {
+        // Once we hit a non-system message, stop looking
         break;
       }
     }
     
-    // If there's a system message and there's a message after it
-    if (lastSystemIndex >= 0 && lastSystemIndex < messages.length - 1) {
-      const messageAfterSystem = messages[lastSystemIndex + 1];
+    // If there are consecutive system messages at the start
+    if (lastConsecutiveSystemIndex >= 0) {
       let isValidMessage = false;
       
-      // Check if it's a user message
-      if (messageAfterSystem.role === MessageRole.User) {
-        isValidMessage = true;
-      } 
-      // Check if it's a history message
-      else if ('type' in messageAfterSystem && messageAfterSystem.type === PromptMessageType.History) {
-        isValidMessage = true;
+      // Check if there's a message after the last consecutive system message
+      if (lastConsecutiveSystemIndex < messages.length - 1) {
+        const messageAfterSystem = messages[lastConsecutiveSystemIndex + 1];
+        
+        // Check if it's a user message
+        if (messageAfterSystem.role === MessageRole.User) {
+          isValidMessage = true;
+        } 
+        // Check if it's a history message
+        else if ('type' in messageAfterSystem && messageAfterSystem.type === PromptMessageType.History) {
+          isValidMessage = true;
+        }
       }
+      // If there's no message after system messages (only system messages), it's also invalid
       
       if (!isValidMessage) {
         const validationMessage = generateValidationMessage(
