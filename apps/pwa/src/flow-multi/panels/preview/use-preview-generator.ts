@@ -5,7 +5,7 @@ import { Turn } from "@/modules/turn/domain/turn";
 import { DataStoreSavedField } from "@/modules/turn/domain/option";
 import { RenderContext } from "@/shared/prompt/domain";
 import { logger } from "@/shared/utils/logger";
-import { makeContext } from "@/app/services/session-play-service";
+import { makeContext, transformMessagesForModel } from "@/app/services/session-play-service";
 
 // Empty context for when no session is available
 const EMPTY_CONTEXT: RenderContext = {
@@ -191,7 +191,10 @@ export function usePreviewGenerator(agent: Agent | null, session: Session | null
       if (agent.props.targetApiType === ApiType.Chat) {
         const messagesResult = await agent.renderMessages(renderContext);
         if (messagesResult.isSuccess) {
-          requestData.messages = messagesResult.getValue();
+          const messages = messagesResult.getValue();
+          // Apply model-specific transformations (e.g., for Gemini/Claude)
+          const transformedMessages = transformMessagesForModel(messages, agent.props.modelId);
+          requestData.messages = transformedMessages;
         }
       } else {
         const promptResult = await agent.renderPrompt(renderContext);
