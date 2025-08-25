@@ -1,5 +1,9 @@
+import type { Message } from "../../shared/prompt/domain/renderable";
 import { describe, expect, it } from "vitest";
-import { evaluateConditionOperator } from "./session-play-service";
+import {
+  evaluateConditionOperator,
+  transformMessagesForModel,
+} from "./session-play-service";
 
 describe("evaluateConditionOperator", () => {
   describe("String Operators", () => {
@@ -1266,5 +1270,119 @@ describe("evaluateConditionOperator", () => {
         evaluateConditionOperator("number_less_than", -Infinity, -1000000),
       ).toBe(true);
     });
+  });
+});
+
+describe("transformMessagesForModel", () => {
+  const mockMessages: Message[] = [
+    { role: "system", content: "System message 1" },
+    { role: "system", content: "System message 2" },
+    { role: "user", content: "User message 1" },
+    { role: "system", content: "System message 3" },
+    { role: "assistant", content: "Assistant message 1" },
+    { role: "system", content: "System message 4" },
+    { role: "user", content: "User message 2" },
+  ];
+
+  it("should not transform messages when modelId is not provided", () => {
+    const result = transformMessagesForModel(mockMessages);
+    expect(result).toEqual(mockMessages);
+  });
+
+  it("should not transform messages when modelId does not include gemini or claude", () => {
+    const result = transformMessagesForModel(mockMessages, "gpt-4");
+    expect(result).toEqual(mockMessages);
+  });
+
+  it("should transform system messages after non-system messages for gemini model", () => {
+    const result = transformMessagesForModel(mockMessages, "gemini-pro");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "user", content: "User message 1" },
+      { role: "user", content: "System message 3" }, // Converted to user
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "System message 4" }, // Converted to user
+      { role: "user", content: "User message 2" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should transform system messages after non-system messages for claude model", () => {
+    const result = transformMessagesForModel(mockMessages, "claude-3-sonnet");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "user", content: "User message 1" },
+      { role: "user", content: "System message 3" }, // Converted to user
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "System message 4" }, // Converted to user
+      { role: "user", content: "User message 2" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should preserve all system messages at the beginning", () => {
+    const allSystemAtStart: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "system", content: "System message 3" },
+      { role: "user", content: "User message 1" },
+      { role: "assistant", content: "Assistant message 1" },
+    ];
+
+    const result = transformMessagesForModel(allSystemAtStart, "gemini-pro");
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "system", content: "System message 3" },
+      { role: "user", content: "User message 1" },
+      { role: "assistant", content: "Assistant message 1" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should handle partial gemini model names", () => {
+    const result = transformMessagesForModel(
+      mockMessages,
+      "models/gemini-2.5-pro",
+    );
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "user", content: "User message 1" },
+      { role: "user", content: "System message 3" }, // Converted to user
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "System message 4" }, // Converted to user
+      { role: "user", content: "User message 2" },
+    ];
+
+    expect(result).toEqual(expected);
+  });
+
+  it("should handle partial claude model names", () => {
+    const result = transformMessagesForModel(
+      mockMessages,
+      "anthropic/claude-3-5-sonnet",
+    );
+
+    const expected: Message[] = [
+      { role: "system", content: "System message 1" },
+      { role: "system", content: "System message 2" },
+      { role: "user", content: "User message 1" },
+      { role: "user", content: "System message 3" }, // Converted to user
+      { role: "assistant", content: "Assistant message 1" },
+      { role: "user", content: "System message 4" }, // Converted to user
+      { role: "user", content: "User message 2" },
+    ];
+
+    expect(result).toEqual(expected);
   });
 });

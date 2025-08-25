@@ -1146,31 +1146,33 @@ const SortableDataSchemaFieldItem = ({
           <div className="flex flex-row gap-[8px] items-center text-text-subtle group-hover/field-name:text-text-primary">
             {getSchemaTypeIcon(type)}
             <div className="font-[500] text-[14px] leading-[20px]">{name}</div>
-            {isEditing ? (
-              <>
-                <Check
+            {onEdit && (
+              isEditing ? (
+                <>
+                  <Check
+                    size={20}
+                    className="!text-text-body"
+                    onClick={() => {
+                      onEditDone();
+                    }}
+                  />
+                  <X
+                    size={20}
+                    className="!text-text-body"
+                    onClick={() => {
+                      onEditCancel();
+                    }}
+                  />
+                </>
+              ) : (
+                <Pencil
                   size={20}
-                  className="!text-text-body"
+                  className="!text-text-body hidden group-hover/field-name:inline-block"
                   onClick={() => {
-                    onEditDone();
+                    setIsEditing(true);
                   }}
                 />
-                <X
-                  size={20}
-                  className="!text-text-body"
-                  onClick={() => {
-                    onEditCancel();
-                  }}
-                />
-              </>
-            ) : (
-              <Pencil
-                size={20}
-                className="!text-text-body hidden group-hover/field-name:inline-block"
-                onClick={() => {
-                  setIsEditing(true);
-                }}
-              />
+              )
             )}
           </div>
           {isClamped && (
@@ -1909,6 +1911,9 @@ const SessionMessagesAndUserInputs = ({
   const { data: lastTurn } = useQuery(
     turnQueries.detail(session?.turnIds[session?.turnIds.length - 1]),
   );
+  const hasMessages = useMemo(() => {
+    return (session?.turnIds.length ?? 0) > 0;
+  }, [session?.turnIds.length]);
   const lastTurnDataStore: Record<string, string> = useMemo(() => {
     if (!lastTurn) {
       return {};
@@ -2291,11 +2296,13 @@ const SessionMessagesAndUserInputs = ({
                       name={field.name}
                       type={field.type}
                       value={
-                        field.name in lastTurnDataStore
-                          ? lastTurnDataStore[field.name]
-                          : "--"
+                        hasMessages
+                          ? (field.name in lastTurnDataStore
+                              ? lastTurnDataStore[field.name]
+                              : "--")
+                          : field.initialValue
                       }
-                      onEdit={updateDataStore}
+                      onEdit={hasMessages ? updateDataStore : undefined}
                     />
                   ))}
                 </SortableContext>
