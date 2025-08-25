@@ -2,7 +2,6 @@ import { httpClient } from "@/shared/infra";
 
 import { DrizzleApiConnectionRepo } from "@/modules/api/repos/impl/drizzle-api-connection-repo";
 import {
-  CheckApiModel,
   DeleteApiConnection,
   GetApiConnection,
   ListApiConnection,
@@ -17,7 +16,6 @@ export class ApiService {
   public static apiConnectionRepo: DrizzleApiConnectionRepo;
 
   public static checkApiKey: CheckApiKey;
-  public static checkApiModel: CheckApiModel;
   public static deleteApiConnection: DeleteApiConnection;
   public static getApiConnection: GetApiConnection;
   public static listApiConnection: ListApiConnection;
@@ -31,7 +29,6 @@ export class ApiService {
     this.apiConnectionRepo = new DrizzleApiConnectionRepo();
 
     this.checkApiKey = new CheckApiKey(httpClient);
-    this.checkApiModel = new CheckApiModel(httpClient, this.apiConnectionRepo);
     this.deleteApiConnection = new DeleteApiConnection(this.apiConnectionRepo);
     this.getApiConnection = new GetApiConnection(this.apiConnectionRepo);
     this.listApiConnection = new ListApiConnection(this.apiConnectionRepo);
