@@ -257,7 +257,10 @@ export class Flow extends AggregateRoot<FlowProps> {
     if (this.props.viewport) {
       json.viewport = this.props.viewport;
     }
-    
+    if (this.props.dataStoreSchema) {
+      json.dataStoreSchema = this.props.dataStoreSchema;
+    }
+
     // Add validation state fields
     json.readyState = this.props.readyState;
     if (this.props.validationIssues) {
