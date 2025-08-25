@@ -66,20 +66,27 @@ export function useImportFlowWithNodes() {
       return result.getValue();
     },
     onSuccess: (flow) => {
-      // Invalidate flow queries to show new flow
+      const flowId = flow.id.toString();
+      
+      // Set the flow data in cache immediately
+      queryClient.setQueryData(flowKeys.detail(flowId), flow);
+      
+      // Invalidate flow queries to refresh lists
       queryClient.invalidateQueries({ queryKey: flowKeys.all });
       
       toast.success(`Flow "${flow.props.name}" imported successfully`);
       
-      // Navigate to the new flow if running in browser
+      // Navigate to the new flow with a small delay to ensure cache is ready
       if (typeof window !== 'undefined' && window.history) {
-        const newUrl = `/flow/${flow.id.toString()}`;
-        window.history.pushState(null, '', newUrl);
-        
-        // Dispatch a custom event to notify components of navigation
-        window.dispatchEvent(new CustomEvent('flowNavigated', { 
-          detail: { flowId: flow.id.toString() } 
-        }));
+        setTimeout(() => {
+          const newUrl = `/flow/${flowId}`;
+          window.history.pushState(null, '', newUrl);
+          
+          // Dispatch a custom event to notify components of navigation
+          window.dispatchEvent(new CustomEvent('flowNavigated', { 
+            detail: { flowId } 
+          }));
+        }, 1000);
       }
     },
     onError: (error) => {
