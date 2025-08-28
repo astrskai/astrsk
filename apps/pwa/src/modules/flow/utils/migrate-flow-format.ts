@@ -33,6 +33,7 @@ interface FlowData {
   responseTemplate: string;
   viewport?: any;
   panelStructure?: any;
+  dataStoreSchema?: any; // Add dataStoreSchema field
   createdAt?: string;
   updatedAt?: string;
   // Enhanced format fields
@@ -132,6 +133,10 @@ export function migrateFlowToNewFormat(oldFlowData: FlowData): Result<FlowData> 
     
     if (oldFlowData.panelStructure) {
       migratedFlow.panelStructure = oldFlowData.panelStructure;
+    }
+    
+    if (oldFlowData.dataStoreSchema) {
+      migratedFlow.dataStoreSchema = oldFlowData.dataStoreSchema;
     }
     
     if (oldFlowData.createdAt) {

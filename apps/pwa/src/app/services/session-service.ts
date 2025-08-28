@@ -24,7 +24,6 @@ import { GetModelsFromSessionFile } from "@/modules/session/usecases/get-models-
 import { GetSession } from "@/modules/session/usecases/get-session";
 import { ImportCharactersFromSessionFile } from "@/modules/session/usecases/import-characters-from-session-file";
 import { ImportSessionFromFile } from "@/modules/session/usecases/import-session-from-file";
-import { ImportSessionFromFileV1 } from "@/modules/session/usecases/import-session-from-file-v1";
 import { ListSessionByCard } from "@/modules/session/usecases/list-session-by-card";
 import { ListSessionByFlow } from "@/modules/session/usecases/list-session-by-flow";
 import { SearchSession } from "@/modules/session/usecases/search-session";
@@ -44,7 +43,6 @@ export class SessionService {
   public static getSession: GetSession;
   public static getModelsFromSessionFile: GetModelsFromSessionFile;
   public static importCharactersFromSessionFile: ImportCharactersFromSessionFile;
-  public static importSessionFromFileV1: ImportSessionFromFileV1;
   public static listSession: ListSession;
   public static saveSession: SaveSession;
   public static searchSession: SearchSession;
@@ -102,12 +100,6 @@ export class SessionService {
     );
     this.importCharactersFromSessionFile =
       new ImportCharactersFromSessionFile();
-    this.importSessionFromFileV1 = new ImportSessionFromFileV1(
-      this.importCharactersFromSessionFile,
-      getCard,
-      this.sessionRepo,
-      this.addMessage,
-    );
     this.listSession = new ListSession(this.sessionRepo);
     this.saveSession = new SaveSession(this.sessionRepo);
     this.searchSession = new SearchSession(this.sessionRepo);

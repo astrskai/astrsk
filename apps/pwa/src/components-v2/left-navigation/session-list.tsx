@@ -51,6 +51,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { fetchBackgrounds } from "@/app/stores/background-store";
 
 const SessionItem = ({
   sessionId,
@@ -388,6 +389,9 @@ const SessionSection = ({ onClick }: { onClick?: () => void }) => {
       queryClient.invalidateQueries({
         queryKey: cardQueries.lists(),
       });
+
+      // Refetch backgrounds
+      fetchBackgrounds();
 
       // Select imported session
       selectSession(importedSession.id, importedSession.title);

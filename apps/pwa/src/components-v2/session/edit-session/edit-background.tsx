@@ -41,9 +41,7 @@ const SelectedBackground = ({
           <img
             src={background.src}
             alt={background.name ?? "Background"}
-            style={{ objectFit: "cover" }}
-            className="pointer-events-none"
-            // fill
+            className="pointer-events-none w-full h-full object-cover"
           />
         </div>
       ) : (
@@ -52,9 +50,8 @@ const SelectedBackground = ({
             <img
               src={asset}
               alt={background?.name ?? "Background"}
-              style={{ objectFit: "cover" }}
-              className="pointer-events-none"
-              // fill
+              className="pointer-events-none w-full h-full object-cover"
+
             />
           </div>
         )
