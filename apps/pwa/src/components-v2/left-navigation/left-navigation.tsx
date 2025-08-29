@@ -208,7 +208,7 @@ LeftNavigationHeader.displayName = "LeftNavigationHeader";
 
 const DocumentationButton = memo(() => {
   const handleClick = useCallback(() => {
-    openInNewTab("https://astrskai.github.io/astrsk-ai-docs/");
+    openInNewTab("https://docs.astrsk.ai/");
   }, []);
 
   return (
