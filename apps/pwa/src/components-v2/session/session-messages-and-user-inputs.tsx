@@ -1911,9 +1911,20 @@ const SessionMessagesAndUserInputs = ({
   const { data: lastTurn } = useQuery(
     turnQueries.detail(session?.turnIds[session?.turnIds.length - 1]),
   );
-  const hasMessages = useMemo(() => {
-    return (session?.turnIds.length ?? 0) > 0;
-  }, [session?.turnIds.length]);
+  const isInitialDataStore = useMemo(() => {
+    if (!session || session.turnIds.length === 0) return true;
+
+    // Only scenario message exists if:
+    // 1. There's only one message
+    // 2. That message is a scenario (no characterCardId and no characterName)
+    if (session.turnIds.length === 1 && lastTurn) {
+      const isScenarioMessage = !lastTurn.characterCardId && !lastTurn.characterName;
+      return isScenarioMessage;
+    }
+
+    // Multiple messages mean conversation has started
+    return false;
+  }, [session, lastTurn]);
   const lastTurnDataStore: Record<string, string> = useMemo(() => {
     if (!lastTurn) {
       return {};
@@ -2296,13 +2307,13 @@ const SessionMessagesAndUserInputs = ({
                       name={field.name}
                       type={field.type}
                       value={
-                        hasMessages
-                          ? (field.name in lastTurnDataStore
+                        isInitialDataStore
+                          ? field.initialValue
+                          : (field.name in lastTurnDataStore
                               ? lastTurnDataStore[field.name]
                               : "--")
-                          : field.initialValue
                       }
-                      onEdit={hasMessages ? updateDataStore : undefined}
+                      onEdit={isInitialDataStore ? undefined : updateDataStore}
                     />
                   ))}
                 </SortableContext>
