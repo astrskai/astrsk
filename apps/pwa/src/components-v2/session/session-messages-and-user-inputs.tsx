@@ -214,7 +214,7 @@ const MessageItemInternal = ({
               <>
                 <Markdown
                   rehypePlugins={[rehypeRaw, rehypeSanitize]}
-                  className="chat-style-text"
+                  className="markdown chat-style-text"
                   components={{
                     pre: ({ children }) => (
                       <pre
@@ -391,7 +391,7 @@ const ScenarioMessageItem = ({
             }}
           />
         ) : (
-          <Markdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+          <Markdown className="markdown" rehypePlugins={[rehypeRaw, rehypeSanitize]}>
             {content}
           </Markdown>
         )}
