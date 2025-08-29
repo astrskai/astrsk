@@ -232,7 +232,7 @@ const LeftNavigationMobile = ({ onNavigate }: { onNavigate?: () => void }) => {
           <MobileNavItem
             name="Documentation"
             icon={<Book className="min-w-6 min-h-6" />}
-            onClick={() => openInNewTab("https://astrskai.github.io/astrsk-ai-docs/")}
+            onClick={() => openInNewTab("https://docs.astrsk.ai/")}
           />
           <MobileUpdater />
         </div>

@@ -268,7 +268,7 @@ const MainPage = () => {
           <div
             className="flex items-center text-text-body justify-between cursor-pointer"
             onClick={() =>
-              openInNewTab("https://astrskai.github.io/astrsk-ai-docs/")
+              openInNewTab("https://docs.astrsk.ai/")
             }
           >
             <TypoBase className="font-semibold text-text-body">

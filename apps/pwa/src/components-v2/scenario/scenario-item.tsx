@@ -34,7 +34,7 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
       {!isMobile && contents && (
         <Markdown
           rehypePlugins={[rehypeRaw, rehypeSanitize]}
-          className="self-stretch justify-start text-text-body text-sm font-normal opacity-70"
+          className="markdown self-stretch justify-start text-text-body text-sm font-normal opacity-70"
         >
           {contents}
         </Markdown>

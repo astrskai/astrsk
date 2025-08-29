@@ -240,7 +240,7 @@ const MessageItemInternalMobile = ({
                 )}
                 <Markdown
                   rehypePlugins={[rehypeRaw, rehypeSanitize]}
-                  className="chat-style-text"
+                  className="markdown chat-style-text"
                   components={{
                     pre: ({ children }) => (
                       <pre
@@ -412,7 +412,7 @@ const ScenarioMessageItemMobile = ({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <Markdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+          <Markdown className="markdown" rehypePlugins={[rehypeRaw, rehypeSanitize]}>
             {content}
           </Markdown>
         )}
@@ -532,7 +532,7 @@ const ScenarioMessageItem = ({
             }}
           />
         ) : (
-          <Markdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+          <Markdown className="markdown" rehypePlugins={[rehypeRaw, rehypeSanitize]}>
             {content}
           </Markdown>
         )}
