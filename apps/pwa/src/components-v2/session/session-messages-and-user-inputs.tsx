@@ -1740,7 +1740,7 @@ const SessionMessagesAndUserInputs = ({
 
     // Render scenarios
     const renderedScenarios = await Promise.all(
-      plotCard.props.scenarios.map(async (scenario) => {
+      plotCard.props.scenarios.map(async (scenario: { name: string; description: string }) => {
         const renderedScenario = await TemplateRenderer.render(
           scenario.description,
           context,
