@@ -17,9 +17,9 @@ import { LorebookDrizzleMapper } from "@/modules/card/mappers/lorebook-drizzle-m
 import { Card, CardType, CharacterCard, PlotCard } from "@/modules/card/domain";
 import { SearchCardsSort } from "@/modules/card/repos";
 
-// Select result cache for preventing unnecessary re-renders
-// Maps query key to [persistenceData, transformedResult] tuple
-const selectResultCache = new Map<string, [any, any]>();
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
 
 /**
  * Query Key Factory
@@ -130,23 +130,11 @@ export const cardQueries = {
       select: (data): Card | null => {
         if (!data) return null;
 
-        const queryKey = cardKeys.detail(id);
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
 
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-
-        // Transform new data
         const result = CardDrizzleMapper.toDomain(data as any);
-
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-
+        selectResultCache.set(data as object, result);
         return result;
       },
       staleTime: 1000 * 30, // 30 seconds
@@ -223,23 +211,11 @@ export const cardQueries = {
       select: (data): any => {
         if (!data) return null;
 
-        const queryKey = cardKeys.lorebook(id);
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
 
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-
-        // Transform new data
         const result = LorebookDrizzleMapper.toDomain(data);
-
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-
+        selectResultCache.set(data as object, result);
         return result;
       },
       staleTime: 1000 * 30,
@@ -264,23 +240,12 @@ export const cardQueries = {
       select: (data): any[] => {
         if (!data) return [];
 
-        const queryKey = cardKeys.scenarios(id);
-        const cacheKey = JSON.stringify(queryKey);
-
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
 
         // For scenarios, data is already in the right format, just cache it
         const result = data;
-
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-
+        selectResultCache.set(data as object, result);
         return result;
       },
       staleTime: 1000 * 30,

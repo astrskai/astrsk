@@ -16,9 +16,9 @@ import { IfNodeDrizzleMapper } from "@/modules/if-node/mappers/if-node-drizzle-m
 import { IfNode } from "@/modules/if-node/domain/if-node";
 import { parse, stringify } from "superjson";
 
-// Select result cache for preventing unnecessary re-renders
-// Maps query key to [persistenceData, transformedResult] tuple
-const selectResultCache = new Map<string, [any, any]>();
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
 
 /**
  * Check if a nodeId is in the old format (not a UUID)
@@ -107,23 +107,11 @@ export const ifNodeQueries = {
       select: (data): IfNode | null => {
         if (!data) return null;
         
-        const queryKey = ifNodeKeys.detail(flowId, nodeId);
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
         
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-        
-        // Transform new data
         const result = IfNodeDrizzleMapper.toDomain(data as any);
-        
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-        
+        selectResultCache.set(data as object, result);
         return result;
       },
       staleTime: 1000 * 30, // 30 seconds
@@ -168,25 +156,15 @@ export const ifNodeQueries = {
       select: (data): IfNodeConditionsData | null => {
         if (!data) return null;
         
-        const queryKey = ifNodeKeys.conditions(flowId, nodeId);
-        const cacheKey = JSON.stringify(queryKey);
-        
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
         
         // Transform new data - deserialize SuperJSON conditions
         const result: IfNodeConditionsData = {
           conditions: parse(data.conditions) as IfCondition[] || []
         };
         
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-        
+        selectResultCache.set(data as object, result);
         return result;
       },
       staleTime: 1000 * 30, // 30 seconds

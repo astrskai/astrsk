@@ -19,9 +19,9 @@ import { OutputDrizzleMapper } from "@/modules/agent/mappers/output-drizzle-mapp
 import { queryClient } from "@/app/queries/query-client";
 import { Agent } from "@/modules/agent/domain";
 
-// Select result cache for preventing unnecessary re-renders
-// Maps query key to [persistenceData, transformedResult] tuple
-const selectResultCache = new Map<string, [any, any]>();
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
 
 /**
  * Query Key Factory
@@ -131,25 +131,14 @@ export const agentQueries = {
       select: (data): Agent[] => {
         if (!data || !Array.isArray(data)) return [];
 
-        const queryKey = agentKeys.list(filters);
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
 
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-
-        // Transform new data
         const result = data.map((agent) =>
           AgentDrizzleMapper.toDomain(agent as any),
         );
-
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-
+        
+        selectResultCache.set(data as object, result);
         return result;
       },
       staleTime: 1000 * 10, // 10 seconds
@@ -171,25 +160,11 @@ export const agentQueries = {
       select: (data): Agent | null => {
         if (!data) return null;
 
-        const queryKey = agentKeys.detail(
-          typeof id === "string" ? id : id.toString(),
-        );
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
 
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-
-        // Transform new data
         const result = AgentDrizzleMapper.toDomain(data as any);
-
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-
+        selectResultCache.set(data as object, result);
         return result;
       },
       staleTime: 1000 * 30, // 30 seconds
@@ -252,23 +227,11 @@ export const agentQueries = {
       select: (data): any => {
         if (!data) return null;
 
-        const queryKey = agentKeys.prompt(id ?? "");
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
 
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-
-        // Transform new data
         const result = PromptDrizzleMapper.toDomain(data as any);
-
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-
+        selectResultCache.set(data as object, result);
         return result;
       },
       enabled: !!id,
@@ -293,23 +256,11 @@ export const agentQueries = {
       select: (data): any => {
         if (!data) return null;
 
-        const queryKey = agentKeys.output(id ?? "");
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
 
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-
-        // Transform new data
         const result = OutputDrizzleMapper.toDomain(data as any);
-
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-
+        selectResultCache.set(data as object, result);
         return result;
       },
       enabled: !!id,
@@ -370,23 +321,11 @@ export const agentQueries = {
       select: (data): any => {
         if (!data) return null;
 
-        const queryKey = agentKeys.parameters(id ?? "");
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
 
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-
-        // Transform new data
         const result = ParameterDrizzleMapper.toDomain(data as any);
-
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-
+        selectResultCache.set(data as object, result);
         return result;
       },
       enabled: !!id,

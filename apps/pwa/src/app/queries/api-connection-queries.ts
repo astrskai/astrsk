@@ -6,9 +6,9 @@ import { ApiModel } from "@/modules/api/domain/api-model";
 import { ApiConnection } from "@/modules/api/domain";
 import { queryClient } from "@/app/queries/query-client";
 
-// Select result cache for preventing unnecessary re-renders
-// Maps query key to [persistenceData, transformedResult] tuple
-const selectResultCache = new Map<string, [any, any]>();
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
 
 interface ListApiConnectionsParams {
   keyword?: string;
@@ -54,25 +54,14 @@ export const apiConnectionQueries = {
       select: (data) => {
         if (!data || !Array.isArray(data)) return [];
         
-        const queryKey = [...apiConnectionQueries.lists(), params];
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
         
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-        
-        // Transform new data
         const result = data.map((apiConnection) =>
           ApiConnectionDrizzleMapper.toDomain(apiConnection as any),
         );
         
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-        
+        selectResultCache.set(data as object, result);
         return result;
       },
       gcTime: 1000 * 30, // 30 seconds cache
@@ -117,18 +106,9 @@ export const apiConnectionQueries = {
       select: (data) => {
         if (!data) return [];
         
-        const queryKey = [...apiConnectionQueries.withModels()];
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
         
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-        
-        // Transform new data
         const result = data.map((item) => ({
           apiConnection: ApiConnectionDrizzleMapper.toDomain(
             item.apiConnection as any,
@@ -138,9 +118,7 @@ export const apiConnectionQueries = {
           ),
         }));
         
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-        
+        selectResultCache.set(data as object, result);
         return result;
       },
     }),
@@ -163,23 +141,11 @@ export const apiConnectionQueries = {
       select: (data) => {
         if (!data) return null;
         
-        const queryKey = [...apiConnectionQueries.details(), id?.toString() ?? ""];
-        const cacheKey = JSON.stringify(queryKey);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
         
-        const cached = selectResultCache.get(cacheKey);
-        if (cached) {
-          const [cachedData, cachedResult] = cached;
-          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
-            return cachedResult;
-          }
-        }
-        
-        // Transform new data
         const result = ApiConnectionDrizzleMapper.toDomain(data as any);
-        
-        // Cache both persistence data and transformed result
-        selectResultCache.set(cacheKey, [data, result]);
-        
+        selectResultCache.set(data as object, result);
         return result;
       },
       enabled: !!id,
