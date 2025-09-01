@@ -1472,7 +1472,7 @@ const SessionMessagesAndUserInputs = ({
         const parsedError = parseAiSdkErrorMessage(error);
         if (parsedError) {
           toastError({
-            title: "Faild to generate message",
+            title: "Failed to generate message",
             details: parsedError.message,
           });
         } else if (error instanceof Error) {
@@ -1480,7 +1480,7 @@ const SessionMessagesAndUserInputs = ({
             toast.info("Generation stopped.");
           } else {
             toastError({
-              title: "Faild to generate message",
+              title: "Failed to generate message",
               details: JSON.stringify(
                 {
                   name: error.name,
@@ -2134,7 +2134,7 @@ const SessionMessagesAndUserInputs = ({
             <div className="self-stretch flex flex-col justify-start items-end gap-6">
               <div className="self-stretch flex flex-col justify-start items-start gap-2">
                 <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
-                  What to add a plot card?
+                  Want to add a plot card?
                 </DialogTitle>
                 <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
                   You will not be able to add a scenario, because you have not
@@ -2184,7 +2184,7 @@ const SessionMessagesAndUserInputs = ({
         >
           <DialogContent hideClose className="max-w-[90vw]">
             <DialogHeader>
-              <DialogTitle>What to add a plot card?</DialogTitle>
+              <DialogTitle>Want to add a plot card?</DialogTitle>
             </DialogHeader>
             <div className="py-4">
               <p className="text-text-body">

@@ -1758,7 +1758,7 @@ const SessionMessagesAndUserInputsMobile = ({
           <div className="self-stretch flex flex-col justify-start items-end gap-6">
             <div className="self-stretch flex flex-col justify-start items-start gap-2">
               <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
-                What to add a plot card?
+                Want to add a plot card?
               </DialogTitle>
               <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
                 You will not be able to add a scenario, because you have not
@@ -1808,7 +1808,7 @@ const SessionMessagesAndUserInputsMobile = ({
       >
         <DialogContent hideClose className="max-w-[90vw]">
           <DialogHeader>
-            <DialogTitle>What to add a plot card?</DialogTitle>
+            <DialogTitle>Want to add a plot card?</DialogTitle>
             <p className="text-text-body">
               You will not be able to add a scenario, because you have not selected a plot card for this session.
             </p>
