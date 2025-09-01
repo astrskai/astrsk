@@ -113,16 +113,14 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
         description: scenario.description || "",
       })) || [];
       
-      // Only update if scenarios actually changed (deep comparison)
-      if (JSON.stringify(scenarios) !== JSON.stringify(newScenarios)) {
-        setScenarios(newScenarios);
-        // Keep selected scenario if it still exists
-        if (selectedScenarioId && !newScenarios.find(s => s.id === selectedScenarioId)) {
-          setSelectedScenarioId(newScenarios[0]?.id || null);
-        }
+      // Select result caching handles object stability
+      setScenarios(newScenarios);
+      // Keep selected scenario if it still exists
+      if (selectedScenarioId && !newScenarios.find(s => s.id === selectedScenarioId)) {
+        setSelectedScenarioId(newScenarios[0]?.id || null);
       }
     }
-  }, [cardId, card, updateScenarios.isPending, updateScenarios.hasCursor, scenarios, selectedScenarioId]);
+  }, [cardId, card, updateScenarios.isPending, updateScenarios.hasCursor]);
 
   // Focus on name input when selected scenario changes
   useEffect(() => {

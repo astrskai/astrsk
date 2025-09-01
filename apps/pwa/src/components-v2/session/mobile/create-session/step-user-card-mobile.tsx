@@ -10,7 +10,7 @@ import { cn } from "@/components-v2/lib/utils";
 import { SearchInput } from "@/components-v2/search-input";
 import { TypoBase, TypoSmall, TypoXLarge } from "@/components-v2/typo";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
-import { CardType } from "@/modules/card/domain";
+import { Card, CardType } from "@/modules/card/domain";
 
 // Re-export schema from the shared step
 export { StepUserCardSchema } from "@/components-v2/session/create-session/step-user-card";
@@ -142,7 +142,7 @@ export const StepUserCardMobile = ({ isEdit = false }: { isEdit?: boolean }) => 
               <ScrollArea className="h-full">
                 <div className="p-[2px]">
                   <div className="grid grid-cols-2 gap-[8px]">
-                    {characterCards.map((card) => {
+                    {characterCards.map((card: Card) => {
                       const cardId = card.id.toString();
                       const isDisabled = aiCharacterCardIds.includes(cardId);
                       return (

@@ -7,6 +7,7 @@ import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { Combobox } from "@/components-v2/combobox";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
 import { Agent } from "@/modules/agent/domain";
+import { Flow, Node } from "@/modules/flow/domain";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { agentQueries } from "@/app/queries/agent/query-factory";
@@ -36,12 +37,12 @@ export const StepFlowAndAgentsMobile = () => {
 
   // Get agent IDs from flow nodes
   const agentIds = selectedFlow?.props.nodes
-    .filter(node => node.type === 'agent')
-    .map(node => new UniqueEntityID(node.id)) || [];
+    .filter((node: Node) => node.type === 'agent')
+    .map((node: Node) => new UniqueEntityID(node.id)) || [];
 
   // Fetch agent data for all agents in the flow
   const agentQueries_ = useQueries({
-    queries: agentIds.map(id => ({
+    queries: agentIds.map((id: UniqueEntityID) => ({
       ...agentQueries.detail(id),
       enabled: !!id,
     })),
@@ -50,11 +51,11 @@ export const StepFlowAndAgentsMobile = () => {
   // Extract loaded agents
   const agents = agentQueries_
     .filter(q => q.data)
-    .map(q => q.data!);
+    .map(q => q.data as Agent);
 
   // Create a map of node ID to agent data for easy lookup
   const agentMap = new Map<string, Agent>();
-  agents.forEach(agent => {
+  agents.forEach((agent: Agent) => {
     agentMap.set(agent.id.toString(), agent);
   });
 
@@ -80,7 +81,7 @@ export const StepFlowAndAgentsMobile = () => {
                 triggerPlaceholder="Flow"
                 searchPlaceholder="Search flows..."
                 searchEmpty="No flow found."
-                options={flows?.map((flow) => ({
+                options={flows?.map((flow: Flow) => ({
                   value: flow.id.toString(),
                   label: flow.props.name,
                 }))}
@@ -106,8 +107,8 @@ export const StepFlowAndAgentsMobile = () => {
             </div>
             <div className="flex flex-col gap-[16px]">
               {selectedFlow?.props.nodes
-                .filter(node => node.type === 'agent')
-                .map((node) => {
+                .filter((node: Node) => node.type === 'agent')
+                .map((node: Node) => {
                   const agent = agentMap.get(node.id);
                   const agentName = agent?.props.name || "Loading...";
                   const modelName = agent 

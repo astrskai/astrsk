@@ -36,6 +36,7 @@ import {
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { TableName } from "@/db/schema/table-name";
 import { Card as CardType } from "@/modules/card/domain";
+import { Session } from "@/modules/session/domain";
 
 export function humanizeBytes(bytes: number): string {
   const units = ["Bytes", "KB", "MB", "GB", "TB"];
@@ -398,7 +399,7 @@ const SessionListMobile = ({
             </div>
           ) : (
             <div className="space-y-0">
-              {sessions.map((session) => (
+              {sessions.map((session: Session) => (
                 <div key={session.id.toString()}>
                   <SessionListItemMobile
                     sessionId={session.id}
@@ -546,7 +547,7 @@ const SessionListItemMobile = ({
               </div>
             </div>
             <div className="flex justify-end items-center">
-              {session.characterCards.slice(0, 3).map((card, index) => (
+              {session.characterCards.slice(0, 3).map((card: CardType, index: number) => (
                 <MobileCharacterAvatar
                   key={card.id.toString()}
                   cardId={card.id}

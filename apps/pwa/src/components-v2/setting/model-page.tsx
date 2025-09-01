@@ -535,18 +535,18 @@ export default function ModelPage({ className }: { className?: string }) {
       >
         <div className="flex flex-wrap justify-start p-[32px] pr-0 pb-[16px]">
           {apiConnections
-            ?.filter((apiConnection, index, array) => {
+            ?.filter((apiConnection: ApiConnection, index: number, array: ApiConnection[]) => {
               // For AstrskAi connections, only keep the first occurrence
               if (apiConnection.source === ApiSource.AstrskAi) {
                 return (
                   array.findIndex(
-                    (conn) => conn.source === ApiSource.AstrskAi,
+                    (conn: ApiConnection) => conn.source === ApiSource.AstrskAi,
                   ) === index
                 );
               }
               return true;
             })
-            ?.map((apiConnection) =>
+            ?.map((apiConnection: ApiConnection) =>
               renderProviderListItem({
                 apiConnection: apiConnection,
                 onOpenEdit: () => {

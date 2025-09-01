@@ -98,6 +98,7 @@ import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 import { Turn } from "@/modules/turn/domain/turn";
+import { DataStoreSchemaField } from "@/modules/flow/domain/flow";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
@@ -493,10 +494,10 @@ const MessageItem = ({
     return [
       // Fields in dataSchemaOrder come first, in order
       ...order
-        .map((name) => fields.find((f) => f.name === name))
-        .filter((f): f is NonNullable<typeof f> => f !== undefined),
+        .map((name: string) => fields.find((f: DataStoreSavedField) => f.name === name))
+        .filter((f: DataStoreSavedField | undefined): f is NonNullable<typeof f> => f !== undefined),
       // Fields not in dataSchemaOrder come after, in original order
-      ...fields.filter((f) => !order.includes(f.name)),
+      ...fields.filter((f: DataStoreSavedField) => !order.includes(f.name)),
     ];
   }, [selectedOption?.dataStore, dataSchemaOrder]);
 
@@ -1280,7 +1281,7 @@ const SessionMessagesAndUserInputs = ({
     if (!session?.turnIds.length) return false;
 
     // Check if all message queries are loaded
-    return session.turnIds.every((messageId) => {
+    return session.turnIds.every((messageId: UniqueEntityID) => {
       const messageQuery = queryClient.getQueryState(
         turnQueries.detail(messageId).queryKey,
       );
@@ -1471,7 +1472,7 @@ const SessionMessagesAndUserInputs = ({
         const parsedError = parseAiSdkErrorMessage(error);
         if (parsedError) {
           toastError({
-            title: "Faild to generate message",
+            title: "Failed to generate message",
             details: parsedError.message,
           });
         } else if (error instanceof Error) {
@@ -1479,7 +1480,7 @@ const SessionMessagesAndUserInputs = ({
             toast.info("Generation stopped.");
           } else {
             toastError({
-              title: "Faild to generate message",
+              title: "Failed to generate message",
               details: JSON.stringify(
                 {
                   name: error.name,
@@ -1739,7 +1740,7 @@ const SessionMessagesAndUserInputs = ({
 
     // Render scenarios
     const renderedScenarios = await Promise.all(
-      plotCard.props.scenarios.map(async (scenario) => {
+      plotCard.props.scenarios.map(async (scenario: { name: string; description: string }) => {
         const renderedScenario = await TemplateRenderer.render(
           scenario.description,
           context,
@@ -1930,7 +1931,7 @@ const SessionMessagesAndUserInputs = ({
       return {};
     }
     return Object.fromEntries(
-      lastTurn.dataStore.map((field) => [field.name, field.value]),
+      lastTurn.dataStore.map((field: DataStoreSavedField) => [field.name, field.value]),
     );
   }, [lastTurn]);
 
@@ -1942,11 +1943,11 @@ const SessionMessagesAndUserInputs = ({
     return [
       // 1. Fields in dataSchemaOrder come first, in order
       ...dataSchemaOrder
-        .map((name) => fields.find((f) => f.name === name))
-        .filter((f): f is NonNullable<typeof f> => f !== undefined),
+        .map((name: string) => fields.find((f: DataStoreSchemaField) => f.name === name))
+        .filter((f: DataStoreSchemaField | undefined): f is NonNullable<typeof f> => f !== undefined),
 
       // 2. Fields not in dataSchemaOrder come after, in original order
-      ...fields.filter((f) => !dataSchemaOrder.includes(f.name)),
+      ...fields.filter((f: DataStoreSchemaField) => !dataSchemaOrder.includes(f.name)),
     ];
   }, [flow?.props.dataStoreSchema?.fields, session?.dataSchemaOrder]);
 
@@ -2008,7 +2009,7 @@ const SessionMessagesAndUserInputs = ({
 
       try {
         // Find the field to update
-        const updatedDataStore = lastTurn.dataStore.map((field) =>
+        const updatedDataStore = lastTurn.dataStore.map((field: DataStoreSavedField) =>
           field.name === name ? { ...field, value } : field,
         );
 
@@ -2133,7 +2134,7 @@ const SessionMessagesAndUserInputs = ({
             <div className="self-stretch flex flex-col justify-start items-end gap-6">
               <div className="self-stretch flex flex-col justify-start items-start gap-2">
                 <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
-                  What to add a plot card?
+                  Want to add a plot card?
                 </DialogTitle>
                 <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
                   You will not be able to add a scenario, because you have not
@@ -2183,7 +2184,7 @@ const SessionMessagesAndUserInputs = ({
         >
           <DialogContent hideClose className="max-w-[90vw]">
             <DialogHeader>
-              <DialogTitle>What to add a plot card?</DialogTitle>
+              <DialogTitle>Want to add a plot card?</DialogTitle>
             </DialogHeader>
             <div className="py-4">
               <p className="text-text-body">

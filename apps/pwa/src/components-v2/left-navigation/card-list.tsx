@@ -611,7 +611,7 @@ const CardSection = ({ onClick }: { onClick?: () => void }) => {
           />
         </div>
         {cards && cards.length > 0 ? (
-          cards.map((card) => (
+          cards.map((card: Card) => (
             <CardItem
               key={card.id.toString()}
               cardId={card.id}

@@ -112,10 +112,8 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
       const newVersion = card.props.version || "";
       const newOrigin = card.props.conceptualOrigin || "";
       
-      // Only update state if values actually changed
-      if (JSON.stringify(tags) !== JSON.stringify(newTags)) {
-        setTags(newTags);
-      }
+      // Select result caching handles object stability
+      setTags(newTags);
       if (creator !== newCreator) {
         setCreator(newCreator);
       }

@@ -6,6 +6,10 @@ import { CardType } from "@/modules/card/domain";
 import { SearchCardsSort } from "@/modules/card/repos";
 import { queryClient } from "@/app/queries/query-client";
 
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
+
 interface SearchCardsParams {
   keyword?: string;
   limit?: number;
@@ -52,8 +56,14 @@ export const cardQueries = {
         return cards.map((card) => CardDrizzleMapper.toPersistence(card));
       },
       select: (data) => {
-        // Transform back to domain object
-        return data.map((card) => CardDrizzleMapper.toDomain(card as any));
+        if (!data || !Array.isArray(data)) return [];
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = data.map((card) => CardDrizzleMapper.toDomain(card as any));
+        selectResultCache.set(data as object, result);
+        return result;
       },
       gcTime: 1000 * 30, // 30 seconds cache
       staleTime: 1000 * 10, // 10 seconds stale time
@@ -75,8 +85,13 @@ export const cardQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return CardDrizzleMapper.toDomain(data as any) as T;
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = CardDrizzleMapper.toDomain(data as any) as T;
+        selectResultCache.set(data as object, result);
+        return result;
       },
       enabled: !!id,
     }),

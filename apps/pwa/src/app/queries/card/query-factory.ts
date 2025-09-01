@@ -1,6 +1,6 @@
 /**
  * Card Query Factory
- * 
+ *
  * Based on TkDodo's query factory pattern and TanStack Query v5 best practices.
  * This factory provides:
  * - Centralized query key management
@@ -17,9 +17,13 @@ import { LorebookDrizzleMapper } from "@/modules/card/mappers/lorebook-drizzle-m
 import { Card, CardType, CharacterCard, PlotCard } from "@/modules/card/domain";
 import { SearchCardsSort } from "@/modules/card/repos";
 
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
+
 /**
  * Query Key Factory
- * 
+ *
  * Hierarchical structure:
  * - all: ['cards']
  * - lists: ['cards', 'list']
@@ -66,29 +70,28 @@ export interface CardContent {
 
 // Query Key Factory
 export const cardKeys = {
-  all: ['cards'] as const,
-  
+  all: ["cards"] as const,
+
   // List queries
-  lists: () => [...cardKeys.all, 'list'] as const,
-  list: (filters?: CardListFilters) => 
-    filters 
-      ? [...cardKeys.lists(), filters] as const
-      : cardKeys.lists(),
-  
+  lists: () => [...cardKeys.all, "list"] as const,
+  list: (filters?: CardListFilters) =>
+    filters ? ([...cardKeys.lists(), filters] as const) : cardKeys.lists(),
+
   // Detail queries
-  details: () => [...cardKeys.all, 'detail'] as const,
+  details: () => [...cardKeys.all, "detail"] as const,
   detail: (id: string) => [...cardKeys.details(), id] as const,
-  
+
   // Sub-queries for a specific card
-  metadata: (id: string) => [...cardKeys.detail(id), 'metadata'] as const,
-  content: (id: string) => [...cardKeys.detail(id), 'content'] as const,
-  
+  metadata: (id: string) => [...cardKeys.detail(id), "metadata"] as const,
+  content: (id: string) => [...cardKeys.detail(id), "content"] as const,
+
   // Lorebook queries
-  lorebook: (id: string) => [...cardKeys.detail(id), 'lorebook'] as const,
-  
+  lorebook: (id: string) => [...cardKeys.detail(id), "lorebook"] as const,
+
   // Scenarios queries (for plot cards)
-  scenarios: (id: string) => [...cardKeys.detail(id), 'scenarios'] as const,
-  scenario: (id: string, scenarioId: string) => [...cardKeys.scenarios(id), scenarioId] as const,
+  scenarios: (id: string) => [...cardKeys.detail(id), "scenarios"] as const,
+  scenario: (id: string, scenarioId: string) =>
+    [...cardKeys.scenarios(id), scenarioId] as const,
 };
 
 // Query Options Factory
@@ -117,17 +120,22 @@ export const cardQueries = {
       queryKey: cardKeys.detail(id),
       queryFn: async () => {
         const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id)
+          new UniqueEntityID(id),
         );
         if (cardOrError.isFailure) return null;
         const card = cardOrError.getValue();
         // Transform to persistence format for consistent caching (like legacy system)
         return CardDrizzleMapper.toPersistence(card);
       },
-      select: (data) => {
+      select: (data): Card | null => {
         if (!data) return null;
-        // Transform back to domain object for components
-        return CardDrizzleMapper.toDomain(data as any);
+
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+
+        const result = CardDrizzleMapper.toDomain(data as any);
+        selectResultCache.set(data as object, result);
+        return result;
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
@@ -138,10 +146,10 @@ export const cardQueries = {
       queryKey: cardKeys.metadata(id),
       queryFn: async () => {
         const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id)
+          new UniqueEntityID(id),
         );
         if (cardOrError.isFailure) return null;
-        
+
         const card = cardOrError.getValue();
         return {
           id: card.id.toString(),
@@ -161,10 +169,10 @@ export const cardQueries = {
       queryKey: cardKeys.content(id),
       queryFn: async () => {
         const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id)
+          new UniqueEntityID(id),
         );
         if (cardOrError.isFailure) return null;
-        
+
         const card = cardOrError.getValue();
         const content: CardContent = {
           name: card.props.title,
@@ -174,9 +182,9 @@ export const cardQueries = {
         if (card instanceof CharacterCard) {
           content.greeting = card.props.name;
           content.systemPrompt = card.props.description;
-          content.exampleMessages = card.props.exampleDialogue ? [
-            { user: "Example", assistant: card.props.exampleDialogue }
-          ] : [];
+          content.exampleMessages = card.props.exampleDialogue
+            ? [{ user: "Example", assistant: card.props.exampleDialogue }]
+            : [];
         }
 
         return content;
@@ -190,22 +198,28 @@ export const cardQueries = {
       queryKey: cardKeys.lorebook(id),
       queryFn: async () => {
         const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id)
+          new UniqueEntityID(id),
         );
         if (cardOrError.isFailure) return null;
-        
+
         const card = cardOrError.getValue();
         // Transform lorebook to persistence format for consistent caching
-        return card.props.lorebook ? LorebookDrizzleMapper.toPersistence(card.props.lorebook) : null;
+        return card.props.lorebook
+          ? LorebookDrizzleMapper.toPersistence(card.props.lorebook)
+          : null;
       },
-      select: (data) => {
+      select: (data): any => {
         if (!data) return null;
-        // Transform back to domain object using mapper
-        return LorebookDrizzleMapper.toDomain(data);
+
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+
+        const result = LorebookDrizzleMapper.toDomain(data);
+        selectResultCache.set(data as object, result);
+        return result;
       },
       staleTime: 1000 * 30,
     }),
-
 
   // Scenarios (for plot cards)
   scenarios: (id: string) =>
@@ -213,15 +227,26 @@ export const cardQueries = {
       queryKey: cardKeys.scenarios(id),
       queryFn: async () => {
         const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id)
+          new UniqueEntityID(id),
         );
         if (cardOrError.isFailure) return [];
-        
+
         const card = cardOrError.getValue();
         if (card instanceof PlotCard) {
           return card.props.scenarios || [];
         }
         return [];
+      },
+      select: (data): any[] => {
+        if (!data) return [];
+
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+
+        // For scenarios, data is already in the right format, just cache it
+        const result = data;
+        selectResultCache.set(data as object, result);
+        return result;
       },
       staleTime: 1000 * 30,
     }),
@@ -232,40 +257,42 @@ export const cardQueries = {
       queryKey: cardKeys.scenario(id, scenarioId),
       queryFn: async () => {
         const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id)
+          new UniqueEntityID(id),
         );
         if (cardOrError.isFailure) return null;
-        
+
         const card = cardOrError.getValue();
         if (card instanceof PlotCard) {
-          return card.props.scenarios?.find((s: any) => s.name === scenarioId) || null;
+          return (
+            card.props.scenarios?.find((s: any) => s.name === scenarioId) ||
+            null
+          );
         }
         return null;
       },
       staleTime: 1000 * 30,
     }),
-
 };
 
 /**
  * Usage Examples:
- * 
+ *
  * // Using query options
  * const { data: card } = useQuery(cardQueries.detail(cardId));
  * const { data: metadata } = useQuery(cardQueries.metadata(cardId));
  * const { data: lorebook } = useQuery(cardQueries.lorebook(cardId));
- * 
+ *
  * // Invalidating queries
  * queryClient.invalidateQueries({ queryKey: cardKeys.all }); // All card queries
  * queryClient.invalidateQueries({ queryKey: cardKeys.lorebook(cardId) }); // Just lorebook
  * queryClient.invalidateQueries({ queryKey: cardKeys.content(cardId) }); // Just content
- * 
+ *
  * // Prefetching
  * await queryClient.prefetchQuery(cardQueries.detail(cardId));
- * 
+ *
  * // Setting query data
  * queryClient.setQueryData(cardKeys.metadata(cardId), updatedMetadata);
- * 
+ *
  * // Getting query data
  * const cachedCard = client.getQueryData<Card>(cardKeys.detail(cardId));
  */

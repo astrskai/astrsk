@@ -18,7 +18,7 @@ import {
   AccordionTrigger,
 } from "@/components-v2/ui/accordion";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
-import { CardType } from "@/modules/card/domain";
+import { Card, CardType } from "@/modules/card/domain";
 import { CardListItem, SessionProps } from "@/modules/session/domain";
 import { useQuery } from "@tanstack/react-query";
 import { cardQueries } from "@/app/queries/card-queries";
@@ -383,7 +383,7 @@ const StepCards = () => {
                 )}
             <div className="flex flex-wrap gap-[24px] justify-start">
               {(activeTab === "plot" ? plotCards : characterCards)?.map(
-                (card) => (
+                (card: Card) => (
                   <CardItem
                     key={card.id.toString()}
                     cardId={card.id.toString()}

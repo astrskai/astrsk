@@ -6,6 +6,10 @@ import { ApiModel } from "@/modules/api/domain/api-model";
 import { ApiConnection } from "@/modules/api/domain";
 import { queryClient } from "@/app/queries/query-client";
 
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
+
 interface ListApiConnectionsParams {
   keyword?: string;
   limit?: number;
@@ -48,10 +52,17 @@ export const apiConnectionQueries = {
         );
       },
       select: (data) => {
-        // Transform back to domain object
-        return data.map((apiConnection) =>
+        if (!data || !Array.isArray(data)) return [];
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = data.map((apiConnection) =>
           ApiConnectionDrizzleMapper.toDomain(apiConnection as any),
         );
+        
+        selectResultCache.set(data as object, result);
+        return result;
       },
       gcTime: 1000 * 30, // 30 seconds cache
       staleTime: 1000 * 10, // 10 seconds stale time
@@ -94,8 +105,11 @@ export const apiConnectionQueries = {
       },
       select: (data) => {
         if (!data) return [];
-        // Transform back to domain objects
-        return data.map((item) => ({
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = data.map((item) => ({
           apiConnection: ApiConnectionDrizzleMapper.toDomain(
             item.apiConnection as any,
           ),
@@ -103,6 +117,9 @@ export const apiConnectionQueries = {
             (modelProps) => ApiModel.create(modelProps).getValue()!,
           ),
         }));
+        
+        selectResultCache.set(data as object, result);
+        return result;
       },
     }),
 
@@ -123,8 +140,13 @@ export const apiConnectionQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return ApiConnectionDrizzleMapper.toDomain(data as any);
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = ApiConnectionDrizzleMapper.toDomain(data as any);
+        selectResultCache.set(data as object, result);
+        return result;
       },
       enabled: !!id,
     }),

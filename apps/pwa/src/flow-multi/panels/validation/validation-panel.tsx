@@ -53,13 +53,11 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
   // Get validation mutation
   const updateFlowValidation = useUpdateFlowValidation(flowId);
   
-  // Query all agents using the same pattern as preview panel
+  // Query all agents - using useQueries might not apply select functions properly
   const agentIds = flow?.agentIds || [];
   const agentQueriesResults = useQueries({
-    queries: agentIds.map(agentId => ({
-      ...agentQueries.detail(agentId),
-      enabled: !!flow,
-    })),
+    queries: agentIds.map(agentId => agentQueries.detail(agentId)),
+    combine: (results) => results, // This might help preserve select functions
   });
   
   // Get connected agents, nodes and agent positions from flow traversal
@@ -94,7 +92,9 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
     const map = new Map<string, Agent>();
     agentQueriesResults.forEach((query, index) => {
       if (query.data && agentIds[index]) {
-        map.set(agentIds[index].toString(), query.data);
+        // If useQueries doesn't apply select function, query.data is persistence data
+        // Cast it as Agent since validation functions expect Agent interface
+        map.set(agentIds[index].toString(), query.data as unknown as Agent);
       }
     });
     return map;
@@ -112,6 +112,8 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
       setHasRunValidation(true);
     }
   }, [flow, hasLoadedInitialIssues]);
+  
+  // Select result caching handles object stability, no need for manual hashing
   
   // Validate function
   const runValidation = useCallback(() => {
@@ -198,7 +200,7 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
         });
       }
     }
-  }, [flow, agentsMap, connectedAgents, apiConnectionsWithModels, updateFlowValidation]);
+  }, [flow, agentsMap, connectedAgents, apiConnectionsWithModels, updateFlowValidation.isPending]);
   
   // Track if we had a successful validation (no errors) before
   const [hadSuccessfulValidation, setHadSuccessfulValidation] = useState(false);

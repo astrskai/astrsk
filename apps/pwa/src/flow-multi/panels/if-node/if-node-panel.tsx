@@ -83,7 +83,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
         });
       }
     });
-  }, [updateConditions]);
+  }, [flowId, nodeId]); // Only recreate when save target changes
 
 
   // Clean up input field tracking on unmount

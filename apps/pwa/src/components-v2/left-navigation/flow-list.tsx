@@ -636,7 +636,7 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
           />
         </div>
         {flows && flows.length > 0 ? (
-          flows.map((flow) => (
+          flows.map((flow: Flow) => (
             <FlowItem
               key={flow.id.toString()}
               flowId={flow.id}

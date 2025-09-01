@@ -6,6 +6,7 @@ import {
   getPanelTitle,
 } from "@/flow-multi/components/panel-types";
 import { Agent } from "@/modules/agent/domain/agent";
+import { Node } from "@/modules/flow/domain/flow";
 import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
@@ -366,7 +367,7 @@ export function FlowPanelProvider({
     if (!api || !flow) return;
     
     // Get the node from flow to get its color
-    const node = flow.props.nodes.find(n => n.id === nodeId);
+    const node = flow.props.nodes.find((n: Node) => n.id === nodeId);
     if (!node) return;
     
     const nodeData = node.data as any;

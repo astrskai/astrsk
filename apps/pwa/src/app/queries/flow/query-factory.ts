@@ -24,6 +24,10 @@ import {
 } from "@/modules/flow/domain/flow";
 import { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
 
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
+
 /**
  * Query Key Factory
  * 
@@ -141,8 +145,15 @@ export const flowQueries = {
         if (result.isFailure) return [];
         return result.getValue().map((flow) => FlowDrizzleMapper.toPersistence(flow));
       },
-      select: (data) => {
-        return data.map((flow) => FlowDrizzleMapper.toDomain(flow as any));
+      select: (data): Flow[] => {
+        if (!data || !Array.isArray(data)) return [];
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = data.map((flow) => FlowDrizzleMapper.toDomain(flow as any));
+        selectResultCache.set(data as object, result);
+        return result;
       },
       staleTime: 1000 * 10, // 10 seconds
       gcTime: 1000 * 60, // 1 minute
@@ -164,10 +175,15 @@ export const flowQueries = {
         // Transform to persistence format for consistent caching (like legacy system)
         return FlowDrizzleMapper.toPersistence(flow);
       },
-      select: (data) => {
+      select: (data): Flow | null => {
         if (!data) return null;
-        // Transform back to domain object for components
-        return FlowDrizzleMapper.toDomain(data as any);
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = FlowDrizzleMapper.toDomain(data as any);
+        selectResultCache.set(data as object, result);
+        return result;
       },
       gcTime: 1000 * 60 * 5, // 5 minutes cache
       staleTime: 0, // Always consider stale - force refetch
@@ -478,7 +494,7 @@ export const flowQueries = {
         
         return agentIds.map((id) => id.toString());
       },
-      select: (data) => {
+      select: (data): UniqueEntityID[] => {
         return data.map((id) => new UniqueEntityID(id));
       },
       staleTime: 1000 * 30,

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { downloadFile, logger } from "@/shared/utils";
 import { languagesLabelMap } from "@/shared/utils/translate-utils";
+import { UniqueEntityID } from "@/shared/domain";
 
 import { useFlow } from "@/app/hooks/use-flow";
 import { useSession } from "@/app/hooks/use-session";
@@ -370,7 +371,7 @@ const SessionSettings = ({
                   />
                 )}
                 {session?.aiCharacterCardIds.length > 0 ? (
-                  session?.aiCharacterCardIds.map((cardId, index) => (
+                  session?.aiCharacterCardIds.map((cardId: UniqueEntityID, index: number) => (
                     <CardListItem
                       key={cardId.toString()}
                       cardId={cardId}
@@ -413,7 +414,7 @@ const SessionSettings = ({
             >
               <SectionCarousel>
                 {flow ? (
-                  flow.agentIds.map((agentId) => (
+                  flow.agentIds.map((agentId: UniqueEntityID) => (
                     <AgentListItem key={agentId.toString()} agentId={agentId} />
                   ))
                 ) : (

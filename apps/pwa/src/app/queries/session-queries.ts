@@ -5,6 +5,10 @@ import { SessionDrizzleMapper } from "@/modules/session/mappers/session-drizzle-
 import { SearchSessionsQuery } from "@/modules/session/repos";
 import { queryClient } from "@/app/queries/query-client";
 
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
+
 export const sessionQueries = {
   all: () => ["sessions"] as const,
 
@@ -35,10 +39,16 @@ export const sessionQueries = {
         );
       },
       select: (data) => {
-        // Transform back to domain object
-        return data.map((session) =>
+        if (!data || !Array.isArray(data)) return [];
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = data.map((session) =>
           SessionDrizzleMapper.toDomain(session as any),
         );
+        selectResultCache.set(data as object, result);
+        return result;
       },
       gcTime: 1000 * 30, // 30 seconds cache
       staleTime: 1000 * 10, // 10 seconds stale time
@@ -60,8 +70,13 @@ export const sessionQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return SessionDrizzleMapper.toDomain(data as any);
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = SessionDrizzleMapper.toDomain(data as any);
+        selectResultCache.set(data as object, result);
+        return result;
       },
       enabled: !!id,
     }),

@@ -10,7 +10,7 @@ import { cn } from "@/components-v2/lib/utils";
 import { SearchInput } from "@/components-v2/search-input";
 import { TypoSmall } from "@/components-v2/typo";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { CardType } from "@/modules/card/domain";
+import { Card, CardType } from "@/modules/card/domain";
 
 const StepCharacterCardsSchema = z.object({
   aiCharacterCardIds: z.string().array().min(1),
@@ -159,7 +159,7 @@ const StepCharacterCards = ({ isEdit = false }: { isEdit?: boolean }) => {
         ) : (
           <ScrollArea className="flex-1">
             <div className="grid grid-cols-2 gap-4 pb-4">
-              {characterCards.map((card) => {
+              {characterCards.map((card: Card) => {
                 const cardId = card.id.toString();
                 const isDisabled = userCharacterCardId === cardId;
                 return (
