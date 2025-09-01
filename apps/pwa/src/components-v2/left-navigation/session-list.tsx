@@ -35,6 +35,7 @@ import {
 import { Label } from "@/components-v2/ui/label";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { Agent } from "@/modules/agent/domain/agent";
+import { Session } from "@/modules/session/domain/session";
 import { ApiSource } from "@/modules/api/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
@@ -479,7 +480,7 @@ const SessionSection = ({ onClick }: { onClick?: () => void }) => {
           />
         </div>
         {sessions && sessions.length > 0 ? (
-          sessions.map((session) => (
+          sessions.map((session: Session) => (
             <SessionItem
               key={session.id.toString()}
               sessionId={session.id}

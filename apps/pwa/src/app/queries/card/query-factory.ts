@@ -127,7 +127,7 @@ export const cardQueries = {
         // Transform to persistence format for consistent caching (like legacy system)
         return CardDrizzleMapper.toPersistence(card);
       },
-      select: (data) => {
+      select: (data): Card | null => {
         if (!data) return null;
 
         const queryKey = cardKeys.detail(id);
@@ -220,7 +220,7 @@ export const cardQueries = {
           ? LorebookDrizzleMapper.toPersistence(card.props.lorebook)
           : null;
       },
-      select: (data) => {
+      select: (data): any => {
         if (!data) return null;
 
         const queryKey = cardKeys.lorebook(id);
@@ -261,7 +261,7 @@ export const cardQueries = {
         }
         return [];
       },
-      select: (data) => {
+      select: (data): any[] => {
         if (!data) return [];
 
         const queryKey = cardKeys.scenarios(id);

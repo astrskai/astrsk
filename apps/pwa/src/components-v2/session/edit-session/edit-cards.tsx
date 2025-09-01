@@ -33,7 +33,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components-v2/ui/tabs";
-import { CardType } from "@/modules/card/domain/card";
+import { Card, CardType } from "@/modules/card/domain/card";
 import { SessionProps } from "@/modules/session/domain/session";
 import { useQuery } from "@tanstack/react-query";
 import { cardQueries } from "@/app/queries/card-queries";
@@ -374,7 +374,7 @@ const EditCards = ({
               </div>
             )}
         <div className="grid grid-cols-4 gap-[24px]">
-          {(activeTab === "plot" ? plotCards : characterCards)?.map((card) => (
+          {(activeTab === "plot" ? plotCards : characterCards)?.map((card: Card) => (
             <CardItem
               key={card.id.toString()}
               cardId={card.id.toString()}

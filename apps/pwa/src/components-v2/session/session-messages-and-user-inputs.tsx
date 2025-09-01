@@ -98,6 +98,7 @@ import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 import { Turn } from "@/modules/turn/domain/turn";
+import { DataStoreSchemaField } from "@/modules/flow/domain/flow";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
@@ -493,10 +494,10 @@ const MessageItem = ({
     return [
       // Fields in dataSchemaOrder come first, in order
       ...order
-        .map((name) => fields.find((f) => f.name === name))
-        .filter((f): f is NonNullable<typeof f> => f !== undefined),
+        .map((name: string) => fields.find((f: DataStoreSavedField) => f.name === name))
+        .filter((f: DataStoreSavedField | undefined): f is NonNullable<typeof f> => f !== undefined),
       // Fields not in dataSchemaOrder come after, in original order
-      ...fields.filter((f) => !order.includes(f.name)),
+      ...fields.filter((f: DataStoreSavedField) => !order.includes(f.name)),
     ];
   }, [selectedOption?.dataStore, dataSchemaOrder]);
 
@@ -1280,7 +1281,7 @@ const SessionMessagesAndUserInputs = ({
     if (!session?.turnIds.length) return false;
 
     // Check if all message queries are loaded
-    return session.turnIds.every((messageId) => {
+    return session.turnIds.every((messageId: UniqueEntityID) => {
       const messageQuery = queryClient.getQueryState(
         turnQueries.detail(messageId).queryKey,
       );
@@ -1930,7 +1931,7 @@ const SessionMessagesAndUserInputs = ({
       return {};
     }
     return Object.fromEntries(
-      lastTurn.dataStore.map((field) => [field.name, field.value]),
+      lastTurn.dataStore.map((field: DataStoreSavedField) => [field.name, field.value]),
     );
   }, [lastTurn]);
 
@@ -1942,11 +1943,11 @@ const SessionMessagesAndUserInputs = ({
     return [
       // 1. Fields in dataSchemaOrder come first, in order
       ...dataSchemaOrder
-        .map((name) => fields.find((f) => f.name === name))
-        .filter((f): f is NonNullable<typeof f> => f !== undefined),
+        .map((name: string) => fields.find((f: DataStoreSchemaField) => f.name === name))
+        .filter((f: DataStoreSchemaField | undefined): f is NonNullable<typeof f> => f !== undefined),
 
       // 2. Fields not in dataSchemaOrder come after, in original order
-      ...fields.filter((f) => !dataSchemaOrder.includes(f.name)),
+      ...fields.filter((f: DataStoreSchemaField) => !dataSchemaOrder.includes(f.name)),
     ];
   }, [flow?.props.dataStoreSchema?.fields, session?.dataSchemaOrder]);
 
@@ -2008,7 +2009,7 @@ const SessionMessagesAndUserInputs = ({
 
       try {
         // Find the field to update
-        const updatedDataStore = lastTurn.dataStore.map((field) =>
+        const updatedDataStore = lastTurn.dataStore.map((field: DataStoreSavedField) =>
           field.name === name ? { ...field, value } : field,
         );
 

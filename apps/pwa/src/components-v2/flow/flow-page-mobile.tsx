@@ -41,7 +41,7 @@ import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { TableName } from "@/db/schema/table-name";
 import { Agent } from "@/modules/agent/domain";
 import { ApiSource } from "@/modules/api/domain";
-import { Flow } from "@/modules/flow/domain";
+import { Flow, Node } from "@/modules/flow/domain";
 import { Session } from "@/modules/session/domain/session";
 import * as amplitude from "@amplitude/analytics-browser";
 import { ListEditDialog } from "@/components-v2/list-edit-dialog";
@@ -249,7 +249,7 @@ export default function FlowPageMobile({
 
     if (selectionAction === "copy") {
       for (const flowId of selectedFlows) {
-        const flow = flows?.find((f) => f.id.toString() === flowId);
+        const flow = flows?.find((f: Flow) => f.id.toString() === flowId);
         if (!flow) continue;
 
         const resultOrError = await FlowService.cloneFlow.execute(flow.id);
@@ -262,7 +262,7 @@ export default function FlowPageMobile({
         const newAgents = new Map();
 
         try {
-          const agentNodes = flow.props.nodes.filter(node => node.type === 'agent');
+          const agentNodes = flow.props.nodes.filter((node: Node) => node.type === 'agent');
           for (const node of agentNodes) {
             const resultOrError = await AgentService.cloneAgent.execute(
               new UniqueEntityID(node.id),
@@ -303,11 +303,11 @@ export default function FlowPageMobile({
       }
     } else if (selectionAction === "delete") {
       for (const flowId of selectedFlows) {
-        const flow = flows?.find((f) => f.id.toString() === flowId);
+        const flow = flows?.find((f: Flow) => f.id.toString() === flowId);
         if (!flow) continue;
 
         // Delete agents first
-        const agentNodes = flow.props.nodes.filter(node => node.type === 'agent');
+        const agentNodes = flow.props.nodes.filter((node: any) => node.type === 'agent');
         for (const node of agentNodes) {
           const resultOrError = await AgentService.deleteAgent.execute(
             new UniqueEntityID(node.id),
@@ -333,7 +333,7 @@ export default function FlowPageMobile({
       }
     } else if (selectionAction === "export") {
       for (const flowId of selectedFlows) {
-        const flow = flows?.find((f) => f.id.toString() === flowId);
+        const flow = flows?.find((f: Flow) => f.id.toString() === flowId);
         if (!flow) continue;
 
         const exportResult = await FlowService.exportFlowToFile.execute(
@@ -655,7 +655,7 @@ export default function FlowPageMobile({
               </div>
             ) : (
               <div className="space-y-0">
-                {filteredFlows.map((flow, index) => (
+                {filteredFlows.map((flow: Flow, index: number) => (
                   <div key={flow.id.toString()}>
                     <FlowListItemMobile
                       flow={flow}

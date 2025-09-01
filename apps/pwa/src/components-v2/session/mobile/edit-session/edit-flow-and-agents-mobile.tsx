@@ -5,6 +5,7 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { UniqueEntityID } from "@/shared/domain";
+import { Flow } from "@/modules/flow/domain";
 
 import { useFlow } from "@/app/hooks/use-flow";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
@@ -150,7 +151,7 @@ export function EditFlowAndAgentsMobile({
                       triggerPlaceholder="Select a flow"
                       searchPlaceholder="Search flows..."
                       searchEmpty="No flow found."
-                      options={flows?.map((flow) => ({
+                      options={flows?.map((flow: Flow) => ({
                         value: flow.id.toString(),
                         label: flow.props.name,
                       }))}
@@ -172,7 +173,7 @@ export function EditFlowAndAgentsMobile({
                   </p>
 
                   <div className="space-y-[24px]">
-                    {selectedFlow.agentIds.map((agentId) => (
+                    {selectedFlow.agentIds.map((agentId: UniqueEntityID) => (
                       <AgentListItem
                         key={agentId.toString()}
                         agentId={agentId}

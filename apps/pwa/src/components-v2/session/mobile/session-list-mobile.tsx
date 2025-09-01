@@ -44,6 +44,8 @@ import { Label } from "@/components-v2/ui/label";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { TableName } from "@/db/schema/table-name";
 import { Agent } from "@/modules/agent/domain/agent";
+import { Card } from "@/modules/card/domain";
+import { Session } from "@/modules/session/domain/session";
 import { AgentService } from "@/app/services/agent-service";
 import { ApiSource } from "@/modules/api/domain";
 import { toast } from "sonner";
@@ -191,7 +193,7 @@ const SessionItemMobile = ({
             </div>
           </div>
           <div className="flex justify-end items-center">
-            {session.characterCards.slice(0, 3).map((card, index) => (
+            {session.characterCards.slice(0, 3).map((card: Card, index: number) => (
               <div
                 key={card.id.toString()}
                 style={{ zIndex: session.characterCards.length - index }}
@@ -539,7 +541,7 @@ const SessionListMobile = ({
       setCurrentSessionId(sessionId);
       setIsSessionOpen(true);
       // Also update the global session store if needed
-      const session = sessions?.find((s) => s.id.toString() === sessionId);
+      const session = sessions?.find((s: Session) => s.id.toString() === sessionId);
       if (session) {
         selectSession(session.id, session.props.title);
       }
@@ -773,7 +775,7 @@ const SessionListMobile = ({
               </div>
             )}
             <div className="pb-4 bg-background-surface-2">
-              {sessions?.map((session) => (
+              {sessions?.map((session: Session) => (
                 <>
                   <SessionItemMobile
                     key={session.id.toString()}

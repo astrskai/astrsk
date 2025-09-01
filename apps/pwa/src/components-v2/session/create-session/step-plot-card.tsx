@@ -10,7 +10,7 @@ import { cn } from "@/components-v2/lib/utils";
 import { SearchInput } from "@/components-v2/search-input";
 import { TypoSmall } from "@/components-v2/typo";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { CardType } from "@/modules/card/domain";
+import { Card, CardType } from "@/modules/card/domain";
 
 const StepPlotCardSchema = z.object({
   plotCardId: z.string().nullable(),
@@ -149,7 +149,7 @@ const StepPlotCard = ({ isEdit = false }: { isEdit?: boolean }) => {
         ) : (
           <ScrollArea className="flex-1">
             <div className="grid grid-cols-2 gap-4 pb-4">
-              {plotCards.map((card) => (
+              {plotCards.map((card: Card) => (
                 <CardItem
                   key={card.id.toString()}
                   cardId={card.id.toString()}

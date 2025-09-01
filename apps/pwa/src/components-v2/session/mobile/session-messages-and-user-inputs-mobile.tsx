@@ -1692,7 +1692,7 @@ const SessionMessagesAndUserInputsMobile = ({
       {/* Spacer to prevent overlapping with session top gradient  */}
       <div className="h-[20px]" />
 
-      {session.turnIds.map((messageId, index) => (
+      {session.turnIds.map((messageId: UniqueEntityID, index: number) => (
         <div
           key={messageId.toString()}
           className={cn(

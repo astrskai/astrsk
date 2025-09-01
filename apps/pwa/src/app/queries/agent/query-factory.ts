@@ -17,6 +17,7 @@ import { PromptDrizzleMapper } from "@/modules/agent/mappers/prompt-drizzle-mapp
 import { ParameterDrizzleMapper } from "@/modules/agent/mappers/parameter-drizzle-mapper";
 import { OutputDrizzleMapper } from "@/modules/agent/mappers/output-drizzle-mapper";
 import { queryClient } from "@/app/queries/query-client";
+import { Agent } from "@/modules/agent/domain";
 
 // Select result cache for preventing unnecessary re-renders
 // Maps query key to [persistenceData, transformedResult] tuple
@@ -127,7 +128,7 @@ export const agentQueries = {
         // Return persistence objects for caching
         return agents.map((agent) => AgentDrizzleMapper.toPersistence(agent));
       },
-      select: (data) => {
+      select: (data): Agent[] => {
         if (!data || !Array.isArray(data)) return [];
 
         const queryKey = agentKeys.list(filters);
@@ -167,7 +168,7 @@ export const agentQueries = {
         // Transform to persistence format for storage
         return AgentDrizzleMapper.toPersistence(agent);
       },
-      select: (data) => {
+      select: (data): Agent | null => {
         if (!data) return null;
 
         const queryKey = agentKeys.detail(
@@ -248,7 +249,7 @@ export const agentQueries = {
         // Transform to persistence format for caching
         return PromptDrizzleMapper.toPersistence(value);
       },
-      select: (data) => {
+      select: (data): any => {
         if (!data) return null;
 
         const queryKey = agentKeys.prompt(id ?? "");
@@ -289,7 +290,7 @@ export const agentQueries = {
         // Transform to persistence format for caching
         return OutputDrizzleMapper.toPersistence(value);
       },
-      select: (data) => {
+      select: (data): any => {
         if (!data) return null;
 
         const queryKey = agentKeys.output(id ?? "");
@@ -366,7 +367,7 @@ export const agentQueries = {
         // Transform to persistence format for caching
         return ParameterDrizzleMapper.toPersistence(value);
       },
-      select: (data) => {
+      select: (data): any => {
         if (!data) return null;
 
         const queryKey = agentKeys.parameters(id ?? "");

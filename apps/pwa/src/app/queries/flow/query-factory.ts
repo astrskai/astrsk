@@ -145,7 +145,7 @@ export const flowQueries = {
         if (result.isFailure) return [];
         return result.getValue().map((flow) => FlowDrizzleMapper.toPersistence(flow));
       },
-      select: (data) => {
+      select: (data): Flow[] => {
         if (!data || !Array.isArray(data)) return [];
         
         const queryKey = flowKeys.list(filters);
@@ -187,7 +187,7 @@ export const flowQueries = {
         // Transform to persistence format for consistent caching (like legacy system)
         return FlowDrizzleMapper.toPersistence(flow);
       },
-      select: (data) => {
+      select: (data): Flow | null => {
         if (!data) return null;
         
         const queryKey = flowKeys.detail(id);
@@ -518,7 +518,7 @@ export const flowQueries = {
         
         return agentIds.map((id) => id.toString());
       },
-      select: (data) => {
+      select: (data): UniqueEntityID[] => {
         return data.map((id) => new UniqueEntityID(id));
       },
       staleTime: 1000 * 30,
