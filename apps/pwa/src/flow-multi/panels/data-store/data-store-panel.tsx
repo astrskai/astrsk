@@ -95,7 +95,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     }
   }, [dataStoreNodeData, nodeId, updateNodeFields.isEditing]);
 
-  // Sync logic with selected field - only when field selection changes or initial load
+  // Sync logic with selected field - only when field selection or field logic changes
   useEffect(() => {
     // Don't sync if we're actively editing
     if (isEditingLogicRef.current) {
@@ -103,12 +103,11 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     }
     
     const selectedField = dataStoreFields.find(f => f.schemaFieldId === selectedFieldId);
-    if (selectedField) {
-      setLocalLogic(selectedField.logic || "");
-    } else {
-      setLocalLogic("");
+    const newLogic = selectedField?.logic || "";
+    if (localLogic !== newLogic) {
+      setLocalLogic(newLogic);
     }
-  }, [selectedFieldId, dataStoreFields]);
+  }, [selectedFieldId, dataStoreFields.find(f => f.schemaFieldId === selectedFieldId)?.logic, localLogic]);
 
   // Save data store fields to node using targeted mutation
   const saveDataStoreFields = useCallback((fields: DataStoreField[]) => {
@@ -123,7 +122,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
         });
       }
     });
-  }, [updateNodeFields]);
+  }, [flowId, nodeId]); // Only recreate when save target changes
 
   // DnD sensors
   const sensors = useSensors(
@@ -184,7 +183,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
       // Reset editing flag after save
       isEditingLogicRef.current = false;
     }
-  }, [selectedFieldId, dataStoreFields, saveDataStoreFields]);
+  }, [flowId, nodeId]); // Only recreate when target changes
 
   // Delete selected field
   const handleDeleteField = useCallback(() => {
@@ -199,7 +198,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     }
     // Save will update state via flow update
     saveDataStoreFields(filtered);
-  }, [selectedFieldId, dataStoreFields, saveDataStoreFields]);
+  }, [flowId, nodeId]); // Only recreate when target changes
 
   // Handle opening data schema setup
   const handleOpenSchema = useCallback(() => {

@@ -24,6 +24,10 @@ import {
 } from "@/modules/flow/domain/flow";
 import { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
 
+// Select result cache for preventing unnecessary re-renders
+// Maps query key to [persistenceData, transformedResult] tuple
+const selectResultCache = new Map<string, [any, any]>();
+
 /**
  * Query Key Factory
  * 
@@ -142,7 +146,26 @@ export const flowQueries = {
         return result.getValue().map((flow) => FlowDrizzleMapper.toPersistence(flow));
       },
       select: (data) => {
-        return data.map((flow) => FlowDrizzleMapper.toDomain(flow as any));
+        if (!data || !Array.isArray(data)) return [];
+        
+        const queryKey = flowKeys.list(filters);
+        const cacheKey = JSON.stringify(queryKey);
+        
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+        
+        // Transform new data
+        const result = data.map((flow) => FlowDrizzleMapper.toDomain(flow as any));
+        
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+        
+        return result;
       },
       staleTime: 1000 * 10, // 10 seconds
       gcTime: 1000 * 60, // 1 minute
@@ -166,8 +189,25 @@ export const flowQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object for components
-        return FlowDrizzleMapper.toDomain(data as any);
+        
+        const queryKey = flowKeys.detail(id);
+        const cacheKey = JSON.stringify(queryKey);
+        
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+        
+        // Transform new data
+        const result = FlowDrizzleMapper.toDomain(data as any);
+        
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+        
+        return result;
       },
       gcTime: 1000 * 60 * 5, // 5 minutes cache
       staleTime: 0, // Always consider stale - force refetch

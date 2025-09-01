@@ -59,12 +59,6 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   const [selectedFieldId, setSelectedFieldId] = useState<string>("");
   const [localInitialValue, setLocalInitialValue] = useState("");
   
-  // Use ref to store the mutation to avoid recreating debounced function
-  const updateDataStoreSchemaRef = useRef(updateDataStoreSchema);
-  useEffect(() => {
-    updateDataStoreSchemaRef.current = updateDataStoreSchema;
-  }, [updateDataStoreSchema]);
-  
   // Track editing state in a ref to avoid triggering effects
   const isEditingRef = useRef(updateDataStoreSchema.isEditing);
   useEffect(() => {
@@ -98,15 +92,15 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
     }
   }, [selectedField?.id, selectedField?.initialValue]);
 
-  // 7. Debounced save for fields
+  // 7. Debounced save for fields - only recreate when target changes
   const debouncedSaveFields = useMemo(
     () => debounce((updatedFields: DataStoreSchemaField[]) => {
       const updatedSchema: DataStoreSchema = {
         fields: updatedFields
       };
       
-      // Use the ref to get the current mutation
-      updateDataStoreSchemaRef.current.mutate(updatedSchema, {
+      // Access mutation directly
+      updateDataStoreSchema.mutate(updatedSchema, {
         onError: (error) => {
           toast.error("Failed to save data store schema", {
             description: error instanceof Error ? error.message : "Unknown error",
@@ -114,7 +108,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
         }
       });
     }, 300),
-    [] // Empty deps for stable debounced function
+    [flowId] // Only recreate when save target changes
   );
   
   // Clean up debounced function on unmount

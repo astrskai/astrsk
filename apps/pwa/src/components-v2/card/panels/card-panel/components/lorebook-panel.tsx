@@ -142,13 +142,11 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
           recallRange: entry.recallRange || 2,
         }));
         
-        // Only update if entries actually changed (deep comparison)
-        if (JSON.stringify(entries) !== JSON.stringify(newEntries)) {
-          setEntries(newEntries);
-          // Keep selected entry if it still exists
-          if (selectedEntryId && !newEntries.find(e => e.id === selectedEntryId)) {
-            setSelectedEntryId(newEntries[0]?.id || null);
-          }
+        // Select result caching handles object stability
+        setEntries(newEntries);
+        // Keep selected entry if it still exists
+        if (selectedEntryId && !newEntries.find(e => e.id === selectedEntryId)) {
+          setSelectedEntryId(newEntries[0]?.id || null);
         }
       } else if (entries.length > 0) {
         // Card no longer has lorebook, clear entries
@@ -156,7 +154,7 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
         setSelectedEntryId(null);
       }
     }
-  }, [cardId, card, updateLorebook.isPending, updateLorebook.hasCursor, entries, selectedEntryId]);
+  }, [cardId, card, updateLorebook.isPending, updateLorebook.hasCursor]);
 
   // Focus on name input when selected entry changes
   useEffect(() => {

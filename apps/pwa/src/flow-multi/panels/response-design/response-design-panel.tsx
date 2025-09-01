@@ -73,7 +73,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
     }
   }, [flowId, responseTemplate, updateResponseTemplate.isEditing, updateResponseTemplate.hasCursor]);
 
-  // Debounced save
+  // Debounced save - only recreate when target changes
   const debouncedSave = useMemo(
     () => debounce((template: string) => {
       updateResponseTemplate.mutate(template, {
@@ -84,7 +84,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
         }
       });
     }, 1000),
-    [updateResponseTemplate] // Include mutation in deps
+    [flowId] // Only recreate when save target changes
   );
 
   // Handle template change

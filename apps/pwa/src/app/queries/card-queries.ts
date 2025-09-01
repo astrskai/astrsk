@@ -6,6 +6,10 @@ import { CardType } from "@/modules/card/domain";
 import { SearchCardsSort } from "@/modules/card/repos";
 import { queryClient } from "@/app/queries/query-client";
 
+// Select result cache for preventing unnecessary re-renders
+// Maps query key to [persistenceData, transformedResult] tuple
+const selectResultCache = new Map<string, [any, any]>();
+
 interface SearchCardsParams {
   keyword?: string;
   limit?: number;
@@ -52,8 +56,26 @@ export const cardQueries = {
         return cards.map((card) => CardDrizzleMapper.toPersistence(card));
       },
       select: (data) => {
-        // Transform back to domain object
-        return data.map((card) => CardDrizzleMapper.toDomain(card as any));
+        if (!data || !Array.isArray(data)) return [];
+        
+        const queryKey = [...cardQueries.lists(), params];
+        const cacheKey = JSON.stringify(queryKey);
+        
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+        
+        // Transform new data
+        const result = data.map((card) => CardDrizzleMapper.toDomain(card as any));
+        
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+        
+        return result;
       },
       gcTime: 1000 * 30, // 30 seconds cache
       staleTime: 1000 * 10, // 10 seconds stale time
@@ -75,8 +97,25 @@ export const cardQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return CardDrizzleMapper.toDomain(data as any) as T;
+        
+        const queryKey = [...cardQueries.details(), id?.toString() ?? ""];
+        const cacheKey = JSON.stringify(queryKey);
+        
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult as T;
+          }
+        }
+        
+        // Transform new data
+        const result = CardDrizzleMapper.toDomain(data as any) as T;
+        
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+        
+        return result;
       },
       enabled: !!id,
     }),

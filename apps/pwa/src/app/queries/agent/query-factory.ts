@@ -1,6 +1,6 @@
 /**
  * Agent Query Factory
- * 
+ *
  * Based on TkDodo's query factory pattern and TanStack Query v5 best practices.
  * This factory provides:
  * - Centralized query key management
@@ -18,9 +18,13 @@ import { ParameterDrizzleMapper } from "@/modules/agent/mappers/parameter-drizzl
 import { OutputDrizzleMapper } from "@/modules/agent/mappers/output-drizzle-mapper";
 import { queryClient } from "@/app/queries/query-client";
 
+// Select result cache for preventing unnecessary re-renders
+// Maps query key to [persistenceData, transformedResult] tuple
+const selectResultCache = new Map<string, [any, any]>();
+
 /**
  * Query Key Factory
- * 
+ *
  * Hierarchical structure:
  * - all: ['agents']
  * - lists: ['agents', 'list']
@@ -39,48 +43,50 @@ import { queryClient } from "@/app/queries/query-client";
  */
 export const agentKeys = {
   // Root key for all agent queries
-  all: ['agents'] as const,
-  
+  all: ["agents"] as const,
+
   // List queries
-  lists: () => [...agentKeys.all, 'list'] as const,
-  list: (filters?: any) => 
-    filters 
-      ? [...agentKeys.lists(), filters] as const
-      : agentKeys.lists(),
-  
+  lists: () => [...agentKeys.all, "list"] as const,
+  list: (filters?: any) =>
+    filters ? ([...agentKeys.lists(), filters] as const) : agentKeys.lists(),
+
   // Detail queries
-  details: () => [...agentKeys.all, 'detail'] as const,
+  details: () => [...agentKeys.all, "detail"] as const,
   detail: (id: string) => [...agentKeys.details(), id] as const,
-  
+
   // Sub-queries for a specific agent
-  name: (id: string) => [...agentKeys.detail(id), 'name'] as const,
-  metadata: (id: string) => [...agentKeys.detail(id), 'metadata'] as const,
-  
+  name: (id: string) => [...agentKeys.detail(id), "name"] as const,
+  metadata: (id: string) => [...agentKeys.detail(id), "metadata"] as const,
+
   // Prompt-related queries
-  prompt: (id: string) => [...agentKeys.detail(id), 'prompt'] as const,
-  promptMessages: (id: string) => [...agentKeys.prompt(id), 'messages'] as const,
-  promptMessage: (id: string, messageId: string) => [...agentKeys.promptMessages(id), messageId] as const,
-  textPrompt: (id: string) => [...agentKeys.prompt(id), 'text'] as const,
-  
+  prompt: (id: string) => [...agentKeys.detail(id), "prompt"] as const,
+  promptMessages: (id: string) =>
+    [...agentKeys.prompt(id), "messages"] as const,
+  promptMessage: (id: string, messageId: string) =>
+    [...agentKeys.promptMessages(id), messageId] as const,
+  textPrompt: (id: string) => [...agentKeys.prompt(id), "text"] as const,
+
   // Output configuration
-  output: (id: string) => [...agentKeys.detail(id), 'output'] as const,
-  outputFormat: (id: string) => [...agentKeys.output(id), 'format'] as const,
-  schema: (id: string) => [...agentKeys.output(id), 'schema'] as const,
-  schemaFields: (id: string) => [...agentKeys.schema(id), 'fields'] as const,
-  schemaField: (id: string, fieldName: string) => [...agentKeys.schemaFields(id), fieldName] as const,
-  
+  output: (id: string) => [...agentKeys.detail(id), "output"] as const,
+  outputFormat: (id: string) => [...agentKeys.output(id), "format"] as const,
+  schema: (id: string) => [...agentKeys.output(id), "schema"] as const,
+  schemaFields: (id: string) => [...agentKeys.schema(id), "fields"] as const,
+  schemaField: (id: string, fieldName: string) =>
+    [...agentKeys.schemaFields(id), fieldName] as const,
+
   // Model configuration
-  model: (id: string) => [...agentKeys.detail(id), 'model'] as const,
-  apiType: (id: string) => [...agentKeys.model(id), 'apiType'] as const,
-  modelName: (id: string) => [...agentKeys.model(id), 'name'] as const,
-  
+  model: (id: string) => [...agentKeys.detail(id), "model"] as const,
+  apiType: (id: string) => [...agentKeys.model(id), "apiType"] as const,
+  modelName: (id: string) => [...agentKeys.model(id), "name"] as const,
+
   // Parameters
-  parameters: (id: string) => [...agentKeys.detail(id), 'parameters'] as const,
-  parameter: (id: string, paramName: string) => [...agentKeys.parameters(id), paramName] as const,
-  
+  parameters: (id: string) => [...agentKeys.detail(id), "parameters"] as const,
+  parameter: (id: string, paramName: string) =>
+    [...agentKeys.parameters(id), paramName] as const,
+
   // Agent relationships
-  flows: (id: string) => [...agentKeys.detail(id), 'flows'] as const,
-  sessions: (id: string) => [...agentKeys.detail(id), 'sessions'] as const,
+  flows: (id: string) => [...agentKeys.detail(id), "flows"] as const,
+  sessions: (id: string) => [...agentKeys.detail(id), "sessions"] as const,
 };
 
 // Types for query data
@@ -122,8 +128,28 @@ export const agentQueries = {
         return agents.map((agent) => AgentDrizzleMapper.toPersistence(agent));
       },
       select: (data) => {
-        // Transform back to domain object
-        return data.map((agent) => AgentDrizzleMapper.toDomain(agent as any));
+        if (!data || !Array.isArray(data)) return [];
+
+        const queryKey = agentKeys.list(filters);
+        const cacheKey = JSON.stringify(queryKey);
+
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+
+        // Transform new data
+        const result = data.map((agent) =>
+          AgentDrizzleMapper.toDomain(agent as any),
+        );
+
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+
+        return result;
       },
       staleTime: 1000 * 10, // 10 seconds
       gcTime: 1000 * 60, // 1 minute
@@ -132,9 +158,9 @@ export const agentQueries = {
   // Full agent detail
   detail: (id: string | UniqueEntityID) =>
     queryOptions({
-      queryKey: agentKeys.detail(typeof id === 'string' ? id : id.toString()),
+      queryKey: agentKeys.detail(typeof id === "string" ? id : id.toString()),
       queryFn: async () => {
-        const uniqueId = typeof id === 'string' ? new UniqueEntityID(id) : id;
+        const uniqueId = typeof id === "string" ? new UniqueEntityID(id) : id;
         const result = await AgentService.getAgent.execute(uniqueId);
         if (result.isFailure) return null;
         const agent = result.getValue();
@@ -143,8 +169,27 @@ export const agentQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return AgentDrizzleMapper.toDomain(data as any);
+
+        const queryKey = agentKeys.detail(
+          typeof id === "string" ? id : id.toString(),
+        );
+        const cacheKey = JSON.stringify(queryKey);
+
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+
+        // Transform new data
+        const result = AgentDrizzleMapper.toDomain(data as any);
+
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+
+        return result;
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
@@ -155,8 +200,8 @@ export const agentQueries = {
       queryKey: agentKeys.name(id ?? ""),
       queryFn: async () => {
         if (!id) return null;
-        const result = await AgentService.getAgentName.execute({ 
-          agentId: id 
+        const result = await AgentService.getAgentName.execute({
+          agentId: id,
         });
         if (result.isFailure) {
           return null;
@@ -173,10 +218,10 @@ export const agentQueries = {
       queryKey: agentKeys.metadata(id),
       queryFn: async () => {
         const result = await AgentService.getAgent.execute(
-          new UniqueEntityID(id)
+          new UniqueEntityID(id),
         );
         if (result.isFailure) return null;
-        
+
         const agent = result.getValue();
         return {
           id: agent.id.toString(),
@@ -194,17 +239,36 @@ export const agentQueries = {
       queryKey: agentKeys.prompt(id ?? ""),
       queryFn: async () => {
         if (!id) return null;
-        const result = await AgentService.getAgentPrompt.execute({ agentId: id });
+        const result = await AgentService.getAgentPrompt.execute({
+          agentId: id,
+        });
         if (result.isFailure) return null;
         const value = result.getValue();
-        
+
         // Transform to persistence format for caching
         return PromptDrizzleMapper.toPersistence(value);
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return PromptDrizzleMapper.toDomain(data as any);
+
+        const queryKey = agentKeys.prompt(id ?? "");
+        const cacheKey = JSON.stringify(queryKey);
+
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+
+        // Transform new data
+        const result = PromptDrizzleMapper.toDomain(data as any);
+
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+
+        return result;
       },
       enabled: !!id,
       staleTime: 1000 * 30, // 30 seconds
@@ -216,17 +280,36 @@ export const agentQueries = {
       queryKey: agentKeys.output(id ?? ""),
       queryFn: async () => {
         if (!id) return null;
-        const result = await AgentService.getAgentOutput.execute({ agentId: id });
+        const result = await AgentService.getAgentOutput.execute({
+          agentId: id,
+        });
         if (result.isFailure) return null;
         const value = result.getValue();
-        
+
         // Transform to persistence format for caching
         return OutputDrizzleMapper.toPersistence(value);
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return OutputDrizzleMapper.toDomain(data as any);
+
+        const queryKey = agentKeys.output(id ?? "");
+        const cacheKey = JSON.stringify(queryKey);
+
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+
+        // Transform new data
+        const result = OutputDrizzleMapper.toDomain(data as any);
+
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+
+        return result;
       },
       enabled: !!id,
       staleTime: 1000 * 30, // 30 seconds
@@ -238,10 +321,10 @@ export const agentQueries = {
       queryKey: agentKeys.schemaFields(id),
       queryFn: async () => {
         const result = await AgentService.getAgent.execute(
-          new UniqueEntityID(id)
+          new UniqueEntityID(id),
         );
         if (result.isFailure) return [];
-        
+
         return result.getValue().props.schemaFields || [];
       },
       staleTime: 1000 * 30, // 30 seconds
@@ -253,10 +336,10 @@ export const agentQueries = {
       queryKey: agentKeys.model(id),
       queryFn: async () => {
         const result = await AgentService.getAgent.execute(
-          new UniqueEntityID(id)
+          new UniqueEntityID(id),
         );
         if (result.isFailure) return null;
-        
+
         const agent = result.getValue();
         return {
           apiType: agent.props.targetApiType,
@@ -274,17 +357,36 @@ export const agentQueries = {
       queryKey: agentKeys.parameters(id ?? ""),
       queryFn: async () => {
         if (!id) return null;
-        const result = await AgentService.getAgentParameters.execute({ agentId: id });
+        const result = await AgentService.getAgentParameters.execute({
+          agentId: id,
+        });
         if (result.isFailure) return null;
         const value = result.getValue();
-        
+
         // Transform to persistence format for caching
         return ParameterDrizzleMapper.toPersistence(value);
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return ParameterDrizzleMapper.toDomain(data as any);
+
+        const queryKey = agentKeys.parameters(id ?? "");
+        const cacheKey = JSON.stringify(queryKey);
+
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+
+        // Transform new data
+        const result = ParameterDrizzleMapper.toDomain(data as any);
+
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+
+        return result;
       },
       enabled: !!id,
       staleTime: 1000 * 60, // 1 minute
@@ -293,23 +395,23 @@ export const agentQueries = {
 
 /**
  * Usage Examples:
- * 
+ *
  * // Using query options
  * const { data: agent } = useQuery(agentQueries.detail(agentId));
  * const { data: name } = useQuery(agentQueries.name(agentId));
  * const { data: schema } = useQuery(agentQueries.schemaFields(agentId));
- * 
+ *
  * // Invalidating queries
  * queryClient.invalidateQueries({ queryKey: agentKeys.all }); // All agent queries
  * queryClient.invalidateQueries({ queryKey: agentKeys.name(agentId) }); // Just name
  * queryClient.invalidateQueries({ queryKey: agentKeys.output(agentId) }); // Just output config
- * 
+ *
  * // Prefetching
  * await queryClient.prefetchQuery(agentQueries.detail(agentId));
- * 
+ *
  * // Setting query data
  * queryClient.setQueryData(agentKeys.name(agentId), newName);
- * 
+ *
  * // Getting query data
  * const cachedAgent = queryClient.getQueryData<Agent>(agentKeys.detail(agentId));
  */

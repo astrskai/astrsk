@@ -5,6 +5,10 @@ import { SessionDrizzleMapper } from "@/modules/session/mappers/session-drizzle-
 import { SearchSessionsQuery } from "@/modules/session/repos";
 import { queryClient } from "@/app/queries/query-client";
 
+// Select result cache for preventing unnecessary re-renders
+// Maps query key to [persistenceData, transformedResult] tuple
+const selectResultCache = new Map<string, [any, any]>();
+
 export const sessionQueries = {
   all: () => ["sessions"] as const,
 
@@ -35,10 +39,28 @@ export const sessionQueries = {
         );
       },
       select: (data) => {
-        // Transform back to domain object
-        return data.map((session) =>
+        if (!data || !Array.isArray(data)) return [];
+        
+        const queryKey = [...sessionQueries.lists(), query];
+        const cacheKey = JSON.stringify(queryKey);
+        
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+        
+        // Transform new data
+        const result = data.map((session) =>
           SessionDrizzleMapper.toDomain(session as any),
         );
+        
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+        
+        return result;
       },
       gcTime: 1000 * 30, // 30 seconds cache
       staleTime: 1000 * 10, // 10 seconds stale time
@@ -60,8 +82,25 @@ export const sessionQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return SessionDrizzleMapper.toDomain(data as any);
+        
+        const queryKey = [...sessionQueries.details(), id?.toString() ?? ""];
+        const cacheKey = JSON.stringify(queryKey);
+        
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+        
+        // Transform new data
+        const result = SessionDrizzleMapper.toDomain(data as any);
+        
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+        
+        return result;
       },
       enabled: !!id,
     }),

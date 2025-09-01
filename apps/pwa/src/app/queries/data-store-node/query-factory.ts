@@ -15,6 +15,10 @@ import { DataStoreNodeDrizzleMapper } from "@/modules/data-store-node/mappers/da
 import { DataStoreNode } from "@/modules/data-store-node/domain/data-store-node";
 import { parse, stringify } from "superjson";
 
+// Select result cache for preventing unnecessary re-renders
+// Maps query key to [persistenceData, transformedResult] tuple
+const selectResultCache = new Map<string, [any, any]>();
+
 /**
  * Query Key Factory
  * 
@@ -83,8 +87,25 @@ export const dataStoreNodeQueries = {
       },
       select: (data): DataStoreNode | null => {
         if (!data) return null;
-        // Transform back to domain object
-        return DataStoreNodeDrizzleMapper.toDomain(data as any);
+        
+        const queryKey = dataStoreNodeKeys.detail(flowId, nodeId);
+        const cacheKey = JSON.stringify(queryKey);
+        
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+        
+        // Transform new data
+        const result = DataStoreNodeDrizzleMapper.toDomain(data as any);
+        
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+        
+        return result;
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
@@ -127,10 +148,27 @@ export const dataStoreNodeQueries = {
       },
       select: (data): DataStoreNodeFieldsData | null => {
         if (!data) return null;
-        // Transform back to domain objects when selecting from cache
-        return {
-          fields: parse(data.fields) || []
+        
+        const queryKey = dataStoreNodeKeys.fields(flowId, nodeId);
+        const cacheKey = JSON.stringify(queryKey);
+        
+        const cached = selectResultCache.get(cacheKey);
+        if (cached) {
+          const [cachedData, cachedResult] = cached;
+          if (JSON.stringify(cachedData) === JSON.stringify(data)) {
+            return cachedResult;
+          }
+        }
+        
+        // Transform new data - deserialize SuperJSON fields
+        const result: DataStoreNodeFieldsData = {
+          fields: parse(data.fields) as any[] || []
         };
+        
+        // Cache both persistence data and transformed result
+        selectResultCache.set(cacheKey, [data, result]);
+        
+        return result;
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
