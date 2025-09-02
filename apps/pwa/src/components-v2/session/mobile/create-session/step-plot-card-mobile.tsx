@@ -10,7 +10,7 @@ import { cn } from "@/components-v2/lib/utils";
 import { SearchInput } from "@/components-v2/search-input";
 import { TypoBase, TypoSmall, TypoXLarge } from "@/components-v2/typo";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
-import { CardType } from "@/modules/card/domain";
+import { Card, CardType } from "@/modules/card/domain";
 
 // Re-export schema from the shared step
 export { StepPlotCardSchema } from "@/components-v2/session/create-session/step-plot-card";
@@ -134,7 +134,7 @@ export const StepPlotCardMobile = ({ isEdit = false }: { isEdit?: boolean }) => 
               <ScrollArea className="h-full">
                 <div className="p-[2px]">
                   <div className="grid grid-cols-2 gap-[8px]">
-                    {plotCards.map((card) => (
+                    {plotCards.map((card: Card) => (
                       <CardItemMobile
                         key={card.id.toString()}
                         cardId={card.id.toString()}

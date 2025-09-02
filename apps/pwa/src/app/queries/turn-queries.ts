@@ -3,6 +3,10 @@ import { UniqueEntityID } from "@/shared/domain";
 import { TurnService } from "@/app/services/turn-service";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
+
 export const turnQueries = {
   all: () => ["turns"] as const,
 
@@ -20,8 +24,13 @@ export const turnQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return TurnDrizzleMapper.toDomain(data as any);
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = TurnDrizzleMapper.toDomain(data as any);
+        selectResultCache.set(data as object, result);
+        return result;
       },
       enabled: !!id,
     }),

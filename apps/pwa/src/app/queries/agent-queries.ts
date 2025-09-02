@@ -5,6 +5,10 @@ import { AgentDrizzleMapper } from "@/modules/agent/mappers/agent-drizzle-mapper
 import { SearchAgentQuery } from "@/modules/agent/repos";
 import { queryClient } from "@/app/queries/query-client";
 
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
+
 export const agentQueries = {
   all: () => ["agents"] as const,
 
@@ -32,8 +36,14 @@ export const agentQueries = {
         return agents.map((agent) => AgentDrizzleMapper.toPersistence(agent));
       },
       select: (data) => {
-        // Transform back to domain object
-        return data.map((agent) => AgentDrizzleMapper.toDomain(agent as any));
+        if (!data || !Array.isArray(data)) return [];
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = data.map((agent) => AgentDrizzleMapper.toDomain(agent as any));
+        selectResultCache.set(data as object, result);
+        return result;
       },
       gcTime: 1000 * 30, // 30 seconds cache
       staleTime: 1000 * 10, // 10 seconds stale time
@@ -55,8 +65,13 @@ export const agentQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        // Transform back to domain object
-        return AgentDrizzleMapper.toDomain(data as any);
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = AgentDrizzleMapper.toDomain(data as any);
+        selectResultCache.set(data as object, result);
+        return result;
       },
       enabled: !!id,
     }),
@@ -83,11 +98,18 @@ export const agentQueries = {
       },
       select: (data) => {
         if (!data) return null;
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
         // Convert back to Maps when selecting from cache
-        return {
+        const result = {
           enabledParameters: new Map(data.enabledParameters),
           parameterValues: new Map(data.parameterValues)
         };
+        
+        selectResultCache.set(data as object, result);
+        return result;
       },
       gcTime: 5 * 60 * 1000, // 5 minutes cache
       staleTime: 30 * 1000, // 30 seconds stale time

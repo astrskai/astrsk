@@ -15,6 +15,10 @@ import { DataStoreNodeDrizzleMapper } from "@/modules/data-store-node/mappers/da
 import { DataStoreNode } from "@/modules/data-store-node/domain/data-store-node";
 import { parse, stringify } from "superjson";
 
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
+
 /**
  * Query Key Factory
  * 
@@ -83,8 +87,13 @@ export const dataStoreNodeQueries = {
       },
       select: (data): DataStoreNode | null => {
         if (!data) return null;
-        // Transform back to domain object
-        return DataStoreNodeDrizzleMapper.toDomain(data as any);
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = DataStoreNodeDrizzleMapper.toDomain(data as any);
+        selectResultCache.set(data as object, result);
+        return result;
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
@@ -127,10 +136,17 @@ export const dataStoreNodeQueries = {
       },
       select: (data): DataStoreNodeFieldsData | null => {
         if (!data) return null;
-        // Transform back to domain objects when selecting from cache
-        return {
-          fields: parse(data.fields) || []
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        // Transform new data - deserialize SuperJSON fields
+        const result: DataStoreNodeFieldsData = {
+          fields: parse(data.fields) as any[] || []
         };
+        
+        selectResultCache.set(data as object, result);
+        return result;
       },
       staleTime: 1000 * 30, // 30 seconds
     }),

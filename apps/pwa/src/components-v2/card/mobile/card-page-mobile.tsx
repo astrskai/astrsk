@@ -160,9 +160,9 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
     setActiveCardType(type);
     let card: Card | undefined;
     if (type === CardType.Character) {
-      card = characterCards?.find((c) => c.id.toString() === id);
+      card = characterCards?.find((c: Card) => c.id.toString() === id);
     } else if (type === CardType.Plot) {
-      card = plotCards?.find((c) => c.id.toString() === id);
+      card = plotCards?.find((c: Card) => c.id.toString() === id);
     }
 
     if (card) {

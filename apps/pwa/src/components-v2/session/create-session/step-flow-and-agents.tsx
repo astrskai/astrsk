@@ -13,6 +13,7 @@ import { SessionProps } from "@/modules/session/domain";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { agentQueries } from "@/app/queries/agent/query-factory";
+import { Flow } from "@/modules/flow/domain";
 
 const StepFlowAndAgentsSchema = z.object({
   flowId: z.string().nonempty(),
@@ -119,7 +120,7 @@ const StepFlowAndAgents = () => {
               triggerPlaceholder="Flow"
               searchPlaceholder="Search flows..."
               searchEmpty="No flow found."
-              options={flows?.map((flow) => ({
+              options={flows?.map((flow: Flow) => ({
                 value: flow.id.toString(),
                 label: flow.props.name,
               }))}
@@ -148,7 +149,7 @@ const StepFlowAndAgents = () => {
             </div>
           </div>
           <div className="flex flex-col gap-[24px]">
-            {selectedFlow?.agentIds.map((agentId) => (
+            {selectedFlow?.agentIds.map((agentId: UniqueEntityID) => (
               <AgentListItem
                 key={agentId.toString()}
                 agentId={agentId}

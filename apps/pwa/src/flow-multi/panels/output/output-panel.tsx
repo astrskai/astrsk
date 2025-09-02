@@ -60,10 +60,9 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
   const updateOutputFormat = useUpdateAgentOutputFormat(flowId, agentId || "");
   const updateSchemaFields = useUpdateAgentSchemaFields(flowId, agentId || "");
 
-  // 3. Query for agent output data only
-  // Disable refetching while editing or cursor is active to prevent UI jumping
-  const queryEnabled = !!agentId && !updateOutput.isEditing && !updateSchemaFields.isEditing && 
-                      !updateOutput.hasCursor && !updateSchemaFields.hasCursor;
+  // 3. Query for agent output data
+  // With select result caching implemented, we can simplify query enabling
+  const queryEnabled = !!agentId && !updateOutput.isEditing && !updateSchemaFields.isEditing;
   
   const { 
     data: outputData, 
@@ -179,7 +178,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     }
   }, [isSchemaFieldsPending, showLoading]);
 
-  // 10. Save schema fields to database
+  // 10. Save schema fields to database - only recreate when target changes
   const saveSchemaFields = useCallback((fields: SchemaFieldItem[]) => {
     // Convert SchemaFieldItem[] to SchemaField[]
     const schemaFields: SchemaField[] = fields.map(field => ({
@@ -196,7 +195,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     
     // Update using mutation
     updateSchemaFields.mutate(schemaFields);
-  }, [updateSchemaFields]);
+  }, [agentId, flowId]); // Only recreate when save target changes
 
   // Use ref to track fields for saving without causing re-renders
   const fieldsRef = useRef(displayFields);
@@ -204,7 +203,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     fieldsRef.current = displayFields;
   }, [displayFields]);
 
-  // Debounced field update for description changes - doesn't update state, only saves
+  // Debounced field update for description changes with stable reference
   const debouncedUpdateFieldDescription = useMemo(() => 
     debounce((fieldId: string, description: string) => {
       // Set flags for blocking and sync prevention
@@ -226,7 +225,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
       
       // Don't call setDisplayFields here to avoid re-render/jittering
     }, 300),
-    [saveSchemaFields]
+    [saveSchemaFields] // saveSchemaFields now has stable reference
   );
 
   // Handle field selection with blocking logic

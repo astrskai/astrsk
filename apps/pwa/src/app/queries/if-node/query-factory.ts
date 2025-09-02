@@ -16,6 +16,10 @@ import { IfNodeDrizzleMapper } from "@/modules/if-node/mappers/if-node-drizzle-m
 import { IfNode } from "@/modules/if-node/domain/if-node";
 import { parse, stringify } from "superjson";
 
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
+
 /**
  * Check if a nodeId is in the old format (not a UUID)
  * Old format examples: "if-1755665937310", "datastore-1234567890"
@@ -102,8 +106,13 @@ export const ifNodeQueries = {
       },
       select: (data): IfNode | null => {
         if (!data) return null;
-        // Transform back to domain object
-        return IfNodeDrizzleMapper.toDomain(data as any);
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = IfNodeDrizzleMapper.toDomain(data as any);
+        selectResultCache.set(data as object, result);
+        return result;
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
@@ -146,10 +155,17 @@ export const ifNodeQueries = {
       },
       select: (data): IfNodeConditionsData | null => {
         if (!data) return null;
-        // Transform back to domain objects when selecting from cache
-        return {
-          conditions: parse(data.conditions) || []
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        // Transform new data - deserialize SuperJSON conditions
+        const result: IfNodeConditionsData = {
+          conditions: parse(data.conditions) as IfCondition[] || []
         };
+        
+        selectResultCache.set(data as object, result);
+        return result;
       },
       staleTime: 1000 * 30, // 30 seconds
     }),

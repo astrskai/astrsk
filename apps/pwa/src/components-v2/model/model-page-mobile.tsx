@@ -677,7 +677,7 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
           {/* Active Connections */}
           {apiConnections && apiConnections.length > 0 && (
             <>
-              {apiConnections.map((apiConnection) =>
+              {apiConnections.map((apiConnection: ApiConnection) =>
                 renderProviderListItem({
                   apiConnection: apiConnection,
                   onOpenEdit: () => {
@@ -892,7 +892,7 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
               <div className="shrink-0 p-6 pt-0 bg-background-surface-2">
                 {/* Check if this is a new connection (no existing connection with this source) */}
                 {!apiConnections?.find(
-                  (conn) => conn.source === editingApiConnection.source,
+                  (conn: ApiConnection) => conn.source === editingApiConnection.source,
                 ) ? (
                   // New connection - only show Connect button
                   <Button
@@ -911,7 +911,7 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
                       className="flex-1 h-12"
                       onClick={() => {
                         const existingConnection = apiConnections?.find(
-                          (conn) => conn.source === editingApiConnection.source,
+                          (conn: ApiConnection) => conn.source === editingApiConnection.source,
                         );
                         if (existingConnection) {
                           handleOnDisconnect(existingConnection, {

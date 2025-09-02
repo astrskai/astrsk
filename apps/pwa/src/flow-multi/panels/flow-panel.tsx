@@ -7,6 +7,7 @@ import { IfNodeService } from "@/app/services/if-node-service";
 import { PANEL_TYPES } from "@/flow-multi/components/panel-types";
 import { Agent, ApiType } from "@/modules/agent/domain/agent";
 import { Node as FlowNode, Edge as FlowEdge, FlowViewport, Flow } from "@/modules/flow/domain/flow";
+import { Session } from "@/modules/session/domain/session";
 import { NodeType } from "@/flow-multi/types/node-types";
 import { getNextAvailableColor } from "@/flow-multi/utils/node-color-assignment";
 import { ensureNodeSafety, ensureNodesSafety } from "@/flow-multi/utils/ensure-node-safety";
@@ -1581,8 +1582,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 </SelectItem>
               ) : (
                 sessions
-                  .filter((session) => session.flowId?.equals(flow.id))
-                  .map((session) => (
+                  .filter((session: Session) => session.flowId?.equals(flow.id))
+                  .map((session: Session) => (
                     <SelectItem
                       key={session.id.toString()}
                       value={session.id.toString()}

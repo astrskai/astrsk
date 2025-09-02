@@ -4,6 +4,10 @@ import { FlowService } from "@/app/services/flow-service";
 import { FlowDrizzleMapper } from "@/modules/flow/mappers/flow-drizzle-mapper";
 import { queryClient } from "@/app/queries/query-client";
 
+// WeakMap cache for preventing unnecessary re-renders
+// Uses data object references as keys for automatic garbage collection
+const selectResultCache = new WeakMap<object, any>();
+
 interface SearchFlowsParams {
   keyword?: string;
   limit?: number;
@@ -65,8 +69,14 @@ export const flowQueries = {
         return enhancedFlows.map((flow) => FlowDrizzleMapper.toPersistence(flow));
       },
       select: (data) => {
-        // Transform back to domain object
-        return data.map((flow) => FlowDrizzleMapper.toDomain(flow as any));
+        if (!data || !Array.isArray(data)) return [];
+        
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
+        
+        const result = data.map((flow) => FlowDrizzleMapper.toDomain(flow as any));
+        selectResultCache.set(data as object, result);
+        return result;
       },
       gcTime: 1000 * 30, // 30 seconds cache
       staleTime: 1000 * 10, // 10 seconds stale time
@@ -102,14 +112,14 @@ export const flowQueries = {
         return persisted;
       },
       select: (data) => {
-        
         if (!data) return null;
         
-        // Transform back to domain object
-        const domain = FlowDrizzleMapper.toDomain(data as any);
+        const cached = selectResultCache.get(data as object);
+        if (cached) return cached;
         
-        
-        return domain;
+        const result = FlowDrizzleMapper.toDomain(data as any);
+        selectResultCache.set(data as object, result);
+        return result;
       },
       enabled: !!id,
       gcTime: 1000 * 60 * 5, // 5 minutes cache

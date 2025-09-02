@@ -101,9 +101,9 @@ export default function CardPage({ className }: { className?: string }) {
     // Find the card by ID
     let card: Card | undefined;
     if (type === CardType.Character) {
-      card = characterCards?.find((c) => c.id.toString() === id);
+      card = characterCards?.find((c: Card) => c.id.toString() === id);
     } else if (type === CardType.Plot) {
-      card = plotCards?.find((c) => c.id.toString() === id);
+      card = plotCards?.find((c: Card) => c.id.toString() === id);
     }
 
     if (card) {
@@ -157,7 +157,7 @@ export default function CardPage({ className }: { className?: string }) {
           >
             <CardList
               title="Characters"
-              cards={characterCards?.map((card) => card.id.toValue()) || []}
+              cards={characterCards?.map((card: Card) => card.id.toValue()) || []}
               cardType={CardType.Character}
               maxColumns={4} // Character grids have 5 max columns
               onSearch={(query) => {
@@ -187,7 +187,7 @@ export default function CardPage({ className }: { className?: string }) {
           >
             <CardList
               title="Plots"
-              cards={plotCards?.map((card) => card.id.toValue()) || []}
+              cards={plotCards?.map((card: Card) => card.id.toValue()) || []}
               cardType={CardType.Plot}
               maxColumns={4} // Plot grids have 4 max columns
               onSearch={(query) => {

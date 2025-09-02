@@ -1,6 +1,6 @@
 {
   "name": "electron",
-  "version": "2.3.5",
+  "version": "2.3.6",
   "main": "./out/main/index.js",
   "build": {
     "productName": "astrsk"
