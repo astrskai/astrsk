@@ -195,7 +195,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     
     // Update using mutation
     updateSchemaFields.mutate(schemaFields);
-  }, [agentId, flowId]); // Only recreate when save target changes
+  }, [updateSchemaFields]);
 
   // Use ref to track fields for saving without causing re-renders
   const fieldsRef = useRef(displayFields);
