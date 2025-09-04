@@ -20,7 +20,8 @@ const SubscribePage = () => {
     <div
       className={cn(
         "z-40 absolute inset-0 top-[38px] grid place-content-center",
-        "bg-[url('/img/subscription/bg-subscribe.jpg')] bg-cover bg-center",
+        "bg-background-surface-2",
+        // "bg-[url('/img/subscription/bg-subscribe.jpg')] bg-cover bg-center",
       )}
     >
       {/* Close */}
