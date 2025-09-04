@@ -22,6 +22,7 @@ import {
 } from "@/components-v2/left-navigation/left-navigation";
 import { cn } from "@/components-v2/lib/utils";
 import { Loading } from "@/components-v2/loading";
+import { PaymentPage } from "@/components-v2/setting/payment-page";
 import { SignUpPage } from "@/components-v2/setting/signup-page";
 import { SubscribePage } from "@/components-v2/setting/subscribe-page";
 import { ThemeProvider } from "@/components-v2/theme-provider";
@@ -239,6 +240,7 @@ const AppInternal = () => {
       </V2Layout>
       {activePage === Page.Subscribe && <SubscribePage />}
       {activePage === Page.SignUp && <SignUpPage />}
+      {activePage === Page.Payment && <PaymentPage />}
     </>
   );
 };

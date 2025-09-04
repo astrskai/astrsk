@@ -126,21 +126,24 @@ const SignUpPage = () => {
       title: "Welcome to astrsk!",
       details: "Your account is ready to use"
     });
-  }, []);
+    setActivePage(Page.Payment);
+  }, [setActivePage]);
   const signUpWithDiscord = useCallback(() => {
     // TODO: sign up with discord
     toastSuccess({
       title: "Welcome to astrsk!",
       details: "Your account is ready to use"
     });
-  }, []);
+    setActivePage(Page.Payment);
+  }, [setActivePage]);
   const signUpWithEmailAndPassword = useCallback(() => {
     // TODO: sign up with email and password
     toastSuccess({
       title: "Welcome to astrsk!",
       details: "Your account is ready to use"
     });
-  }, []);
+    setActivePage(Page.Payment);
+  }, [setActivePage]);
 
   return (
     <div className={cn("z-40 absolute inset-0 top-[38px]")}>

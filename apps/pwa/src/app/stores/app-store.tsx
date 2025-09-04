@@ -43,6 +43,7 @@ export const Page = {
   Subscribe: "subscribe",
   AddCredits: "add_credits",
   SignUp: "sign_up",
+  Payment: "payment",
 } as const;
 
 export type Page = (typeof Page)[keyof typeof Page];
