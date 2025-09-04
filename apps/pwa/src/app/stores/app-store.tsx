@@ -68,6 +68,7 @@ export const SettingSubPageType = {
   providers: "providers",
   legal: "legal",
   advanced: "advanced",
+  account: "account",
 } as const;
 
 export type SettingSubPageType =

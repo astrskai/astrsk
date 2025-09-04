@@ -7,6 +7,7 @@ import {
   useAppStore,
 } from "@/app/stores/app-store";
 import { cn } from "@/components-v2/lib/utils";
+import { AccountPage } from "@/components-v2/setting/account-page";
 import ContentPolicy from "@/components-v2/setting/content-policy";
 import ModelPage from "@/components-v2/setting/model-page";
 import OssNotice from "@/components-v2/setting/oss-notice";
@@ -183,6 +184,19 @@ const MainPage = () => {
           <TypoXLarge className="font-semibold text-text-primary">
             App Preferences
           </TypoXLarge>
+
+          <div
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => {
+              setSettingPageLevel(SettingPageLevel.sub);
+              setSettingSubPage(SettingSubPageType.account);
+            }}
+          >
+            <TypoBase className="font-semibold text-text-body">
+              Account and subscription
+            </TypoBase>
+            <ChevronRight className="h-5 w-5 text-text-secondary" />
+          </div>
 
           <div
             className="flex items-center justify-between cursor-pointer"
@@ -372,6 +386,7 @@ export default function SettingPage({ className }: { className?: string }) {
           />
         )}
         {settingSubPage === SettingSubPageType.advanced && <AdvancedPage />}
+        {settingSubPage === SettingSubPageType.account && <AccountPage />}
       </div>
 
       {/* Page Level 3 */}
