@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
 import { useGlobalErrorHandler } from "@/app/hooks/use-global-error-handler";
 import { queryClient } from "@/app/queries/query-client";
-import { useAppStore } from "@/app/stores/app-store";
+import { Page, useAppStore } from "@/app/stores/app-store";
 import DesktopApp from "@/app/v2/desktop-app";
 import MobileApp from "@/app/v2/mobile-app";
 import {
@@ -22,6 +22,7 @@ import {
 } from "@/components-v2/left-navigation/left-navigation";
 import { cn } from "@/components-v2/lib/utils";
 import { Loading } from "@/components-v2/loading";
+import { SubscribePage } from "@/components-v2/setting/subscribe-page";
 import { ThemeProvider } from "@/components-v2/theme-provider";
 import { TopBar } from "@/components-v2/top-bar";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
@@ -192,6 +193,8 @@ function V2Layout({
 }
 
 const AppInternal = () => {
+  const activePage = useAppStore.use.activePage();
+
   // Toggle telemetry
   const isTelemetryEnabled = useAppStore.use.isTelemetryEnabled();
   const [isTelemetryInitialized, setIsTelemetryInitialized] = useState(false);
@@ -224,15 +227,24 @@ const AppInternal = () => {
     logger.debug(`start_app:  ${isMobile ? "mobile" : "desktop"}`);
   }, [isMobile, isStartAppSent, isTelemetryInitialized]);
 
-  return isMobile ? <MobileApp /> : <DesktopApp />;
+  return isMobile ? (
+    <V2Layout>
+      <MobileApp />
+    </V2Layout>
+  ) : (
+    <>
+      <V2Layout>
+        <DesktopApp />
+      </V2Layout>
+      {activePage === Page.Subscribe && <SubscribePage />}
+    </>
+  );
 };
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <V2Layout>
-        <AppInternal />
-      </V2Layout>
+      <AppInternal />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
