@@ -8,7 +8,7 @@ import {
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
-import { Bot, Clapperboard, Sparkles, X, Zap } from "lucide-react";
+import { Bot, Clapperboard, Sparkles, Zap } from "lucide-react";
 
 const SubscribePage = () => {
   const setActivePage = useAppStore.use.setActivePage();
@@ -184,7 +184,15 @@ const SubscribePage = () => {
                       </div>
                     </div>
                   </div>
-                  <Button size="lg">Upgrade now</Button>
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      // TODO: subscribe yearly plan
+                      setActivePage(Page.SignUp);
+                    }}
+                  >
+                    Upgrade now
+                  </Button>
                 </div>
               </div>
 
@@ -204,7 +212,14 @@ const SubscribePage = () => {
                       </div>
                     </div>
                   </div>
-                  <Button variant="secondary" size="lg">
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    onClick={() => {
+                      // TODO: subscribe monthly plan
+                      setActivePage(Page.SignUp);
+                    }}
+                  >
                     Upgrade now
                   </Button>
                 </div>

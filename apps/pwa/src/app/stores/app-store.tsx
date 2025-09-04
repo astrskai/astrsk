@@ -42,6 +42,7 @@ export const Page = {
   CardPanel: "card_panel", // Card detail panel view
   Subscribe: "subscribe",
   AddCredits: "add_credits",
+  SignUp: "sign_up",
 } as const;
 
 export type Page = (typeof Page)[keyof typeof Page];
