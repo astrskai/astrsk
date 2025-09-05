@@ -19,10 +19,10 @@ import { toast } from "sonner";
 const SignUpStep = {
   SignUp: "sign_up",
   SignUpWithEmailAndPassword: "sign_up_with_email_and_password",
-  VerifyEmail: "verify_email",
+  VerifySignUpEmail: "verify_sign_up_email",
   SignIn: "sign_in",
-  ForgotPassword: "forgot_password", // TODO: reset password
-  NewPassword: "new_password", // TODO: reset password
+  ForgotPassword: "forgot_password",
+  NewPassword: "new_password",
 } as const;
 
 type SignUpStep = (typeof SignUpStep)[keyof typeof SignUpStep];
@@ -97,21 +97,27 @@ const SignUpPage = () => {
   const [step, setStep] = useState<SignUpStep>(SignUpStep.SignUp);
   const back = useCallback(() => {
     switch (step) {
-      case "sign_up_with_email_and_password":
+      case SignUpStep.SignUpWithEmailAndPassword:
         setPassword("");
         setPasswordConfirm("");
         setStep(SignUpStep.SignUp);
         break;
-      case "verify_email":
+
+      case SignUpStep.VerifySignUpEmail:
         setEmailCode("");
         setStep(SignUpStep.SignUpWithEmailAndPassword);
         break;
-      case "sign_in":
+
+      case SignUpStep.SignIn:
         setStep(SignUpStep.SignUp);
         break;
-      case "forgot_password":
-      case "new_password":
+
+      case SignUpStep.ForgotPassword:
         setStep(SignUpStep.SignIn);
+        break;
+
+      case SignUpStep.NewPassword:
+        setStep(SignUpStep.ForgotPassword);
         break;
     }
   }, [step]);
@@ -189,7 +195,7 @@ const SignUpPage = () => {
       });
 
       // Step to verify email code
-      setStep(SignUpStep.VerifyEmail);
+      setStep(SignUpStep.VerifySignUpEmail);
     } catch (error) {
       logger.error(error);
       toast.error("Failed to sign up", {
@@ -197,7 +203,7 @@ const SignUpPage = () => {
       });
     }
   }, [email, isLoadedSignUp, password, signUp]);
-  const verifyEmailCode = useCallback(async () => {
+  const verifySignUpEmailCode = useCallback(async () => {
     // Check sign up is loaded
     if (!isLoadedSignUp) {
       return;
@@ -267,6 +273,70 @@ const SignUpPage = () => {
       });
     }
   }, [email, isLoadedSignIn, password, setActiveSignIn, setActivePage, signIn]);
+
+  // Forgot password
+  const forgotPassword = useCallback(async () => {
+    // Check sign in is loaded
+    if (!isLoadedSignIn) {
+      return;
+    }
+
+    try {
+      // Try to send reset password email code
+      await signIn.create({
+        strategy: "reset_password_email_code",
+        identifier: email,
+      });
+
+      // Next step
+      setPassword("");
+      setPasswordConfirm("");
+      setStep(SignUpStep.NewPassword);
+    } catch (error) {
+      logger.error(error);
+      toast.error("Failed to reset password", {
+        description: JSON.stringify(error),
+      });
+    }
+  }, [email, isLoadedSignIn, signIn]);
+  const resetPassword = useCallback(async () => {
+    // Check sign in is loaded
+    if (!isLoadedSignIn) {
+      return;
+    }
+
+    try {
+      // Try to reset password
+      const signInAttempt = await signIn.attemptFirstFactor({
+        strategy: "reset_password_email_code",
+        code: emailCode,
+        password: password,
+      });
+
+      // Success to reset password
+      if (signInAttempt.status === "complete") {
+        await setActiveSignIn({
+          session: signInAttempt.createdSessionId,
+        });
+        setActivePage(Page.Payment);
+      } else {
+        // Failed to reset password
+        toast.error(signInAttempt.status);
+      }
+    } catch (error) {
+      logger.error(error);
+      toast.error("Failed to reset password", {
+        description: JSON.stringify(error),
+      });
+    }
+  }, [
+    emailCode,
+    isLoadedSignIn,
+    password,
+    setActivePage,
+    setActiveSignIn,
+    signIn,
+  ]);
 
   return (
     <div className={cn("z-40 absolute inset-0 top-[38px]")}>
@@ -397,8 +467,9 @@ const SignUpPage = () => {
                 Create your password
               </div>
               <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
-                Your password must be at least 8 characters long, and include 1
-                symbol and 1 number.
+                Your password must be at least 8 characters long,
+                <br />
+                and include 1 symbol and 1 number.
               </div>
             </div>
             <FloatingLabelInput
@@ -454,11 +525,11 @@ const SignUpPage = () => {
             </Button>
           </div>
 
-          {/* Verify Email */}
+          {/* Verify Sign Up Email */}
           <div
             className={cn(
               "w-[384px] flex-col gap-4 items-center",
-              step === SignUpStep.VerifyEmail ? "flex" : "hidden",
+              step === SignUpStep.VerifySignUpEmail ? "flex" : "hidden",
             )}
           >
             <SvgIcon
@@ -491,13 +562,19 @@ const SignUpPage = () => {
               <button
                 className="text-button-background-primary"
                 onClick={() => {
-                  // TODO: resend verify email code
+                  signUp?.prepareEmailAddressVerification({
+                    strategy: "email_code",
+                  });
                 }}
               >
                 Resend to email
               </button>
             </div>
-            <Button className="w-full" size="lg" onClick={verifyEmailCode}>
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={verifySignUpEmailCode}
+            >
               Verify email
             </Button>
           </div>
@@ -543,8 +620,142 @@ const SignUpPage = () => {
             >
               Sign in
             </Button>
-            <Button variant="ghost" className="w-full" size="lg">
+            <Button
+              variant="ghost"
+              className="w-full"
+              size="lg"
+              onClick={() => {
+                setStep(SignUpStep.ForgotPassword);
+              }}
+            >
               I forgot my password
+            </Button>
+          </div>
+
+          {/* Forgot Password */}
+          <div
+            className={cn(
+              "w-[384px] flex-col gap-4 items-center",
+              step === SignUpStep.ForgotPassword ? "flex" : "hidden",
+            )}
+          >
+            <SvgIcon
+              name="astrsk_logo_full"
+              width={119}
+              height={28}
+              className="absolute top-[30px]"
+            />
+            <div className="mb-[24px] text-center">
+              <div className="mb-[8px] text-[20px] leading-[24px] font-[600] text-text-primary">
+                Forgot password
+              </div>
+              <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
+                Enter your email address. If it&apos;s correct, we&apos;ll send
+                <br />
+                you an email with password reset instructions.
+              </div>
+            </div>
+            <FloatingLabelInput
+              label="Email"
+              type="email"
+              className="w-[384px]"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+              }}
+            />
+            <Button className="w-full" size="lg" onClick={forgotPassword}>
+              Continue
+            </Button>
+          </div>
+
+          {/* New password */}
+          <div
+            className={cn(
+              "w-[384px] flex-col gap-4 items-center",
+              step === SignUpStep.NewPassword ? "flex" : "hidden",
+            )}
+          >
+            <SvgIcon
+              name="astrsk_logo_full"
+              width={119}
+              height={28}
+              className="absolute top-[30px]"
+            />
+            <div className="mb-[24px] text-center">
+              <div className="mb-[8px] text-[20px] leading-[24px] font-[600] text-text-primary">
+                Create new password
+              </div>
+              <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
+                Your password must be at least 8 characters long,
+                <br />
+                and include 1 symbol and 1 number.
+              </div>
+            </div>
+            <FloatingLabelInput
+              label="Code"
+              type="number"
+              className="w-[384px]"
+              value={emailCode}
+              onChange={(e) => {
+                setEmailCode(e.target.value);
+              }}
+            />
+            <FloatingLabelInput
+              label="Password"
+              type="password"
+              className="w-[384px]"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+              }}
+            />
+            <FloatingLabelInput
+              label="Password confirm"
+              type="password"
+              className="w-[384px]"
+              value={passwordConfirm}
+              onChange={(e) => {
+                setPasswordConfirm(e.target.value);
+              }}
+            />
+            <div className="flex flex-col gap-[8px]">
+              <div className="flex flex-row gap-[4px] items-center">
+                <Check size={16} />
+                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                  Minimum 8 characters
+                </div>
+              </div>
+              <div className="flex flex-row gap-[4px] items-center">
+                <Check size={16} />
+                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                  At least one number
+                </div>
+              </div>
+              <div className="flex flex-row gap-[4px] items-center">
+                <Check size={16} />
+                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                  At least one symbol
+                </div>
+              </div>
+              <div className="flex flex-row gap-[4px] items-center">
+                <Check size={16} />
+                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                  Match password confirm
+                </div>
+              </div>
+            </div>
+            <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
+              Don&apos;t see a code?{" "}
+              <button
+                className="text-button-background-primary"
+                onClick={forgotPassword}
+              >
+                Resend to email
+              </button>
+            </div>
+            <Button className="w-full" size="lg" onClick={resetPassword}>
+              Save
             </Button>
           </div>
         </div>
