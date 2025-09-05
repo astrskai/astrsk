@@ -78,6 +78,13 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   const [localLogic, setLocalLogic] = useState("");
   const lastNodeIdRef = useRef<string>("");
   const isEditingLogicRef = useRef<boolean>(false);
+  
+  // Track blocking user from switching during save
+  const [showLoading, setShowLoading] = useState(false);
+  const pendingSaveRef = useRef<boolean>(false);
+  const hasRecentlyEditedRef = useRef(false);
+  const syncTimeoutRef = useRef<NodeJS.Timeout>();
+  const isFieldsPending = updateNodeFields.isPending;
 
   // Initialize data store fields from node data
   useEffect(() => {
@@ -97,8 +104,8 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
 
   // Sync logic with selected field - only when field selection or field logic changes
   useEffect(() => {
-    // Don't sync if we're actively editing
-    if (isEditingLogicRef.current) {
+    // Don't sync if we're actively editing or have pending changes
+    if (isEditingLogicRef.current || hasRecentlyEditedRef.current) {
       return;
     }
     
@@ -107,7 +114,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     if (localLogic !== newLogic) {
       setLocalLogic(newLogic);
     }
-  }, [selectedFieldId, dataStoreFields.find(f => f.schemaFieldId === selectedFieldId)?.logic, localLogic]);
+  }, [selectedFieldId, dataStoreFields, localLogic]);
 
   // Save data store fields to node using targeted mutation
   const saveDataStoreFields = useCallback((fields: DataStoreField[]) => {
@@ -122,7 +129,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
         });
       }
     });
-  }, [flowId, nodeId]); // Only recreate when save target changes
+  }, [updateNodeFields]);
 
   // DnD sensors
   const sensors = useSensors(
@@ -170,6 +177,12 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     saveDataStoreFields(updatedFields);
   }, [selectedSchemaFieldId, dataStoreFields, schemaFields, saveDataStoreFields]);
 
+  // Use ref to track fields for saving without causing re-renders
+  const fieldsRef = useRef(dataStoreFields);
+  useEffect(() => {
+    fieldsRef.current = dataStoreFields;
+  }, [dataStoreFields]);
+
   // Save logic for selected field (called by debounced function)
   const saveLogicForField = useCallback((value: string) => {
     if (selectedFieldId) {
@@ -183,7 +196,57 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
       // Reset editing flag after save
       isEditingLogicRef.current = false;
     }
-  }, [flowId, nodeId]); // Only recreate when target changes
+  }, [selectedFieldId, dataStoreFields, saveDataStoreFields]);
+
+  // Handle completed save and clear loading state
+  useEffect(() => {
+    // When mutation starts, clear the pending save ref
+    if (isFieldsPending && pendingSaveRef.current) {
+      pendingSaveRef.current = false;
+    }
+    
+    // When mutation completes, clear editing flags to allow sync
+    if (!isFieldsPending) {
+      hasRecentlyEditedRef.current = false;
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+      
+      // Hide loading if it was showing
+      if (showLoading) {
+        setShowLoading(false);
+      }
+    }
+  }, [isFieldsPending, showLoading]);
+
+  // Handle field selection with blocking logic
+  const handleFieldSelect = useCallback((fieldId: string) => {
+    // If trying to switch to the same field, do nothing
+    if (fieldId === selectedFieldId) {
+      return;
+    }
+    
+    // If a save is currently in progress, block the switch
+    if (isFieldsPending) {
+      setShowLoading(true);
+      toast.info("Saving changes before switching field...", {
+        duration: 2000,
+      });
+      return;
+    }
+    
+    // If we have pending unsaved changes (debounce timer), block switch
+    if (pendingSaveRef.current) {
+      setShowLoading(true);
+      toast.info("Saving changes before switching field...", {
+        duration: 2000,
+      });
+      return;
+    }
+    
+    // No pending saves, switch immediately
+    setSelectedFieldId(fieldId);
+  }, [selectedFieldId, isFieldsPending]);
 
   // Delete selected field
   const handleDeleteField = useCallback(() => {
@@ -198,7 +261,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     }
     // Save will update state via flow update
     saveDataStoreFields(filtered);
-  }, [flowId, nodeId]); // Only recreate when target changes
+  }, [selectedFieldId, dataStoreFields, saveDataStoreFields]);
 
   // Handle opening data schema setup
   const handleOpenSchema = useCallback(() => {
@@ -226,18 +289,35 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     });
   }, [nodeId, flowId, setLastMonacoEditor]);
 
-  // Create stable ref for save function to avoid debounce recreation
-  const saveLogicForFieldRef = useRef(saveLogicForField);
-  useEffect(() => {
-    saveLogicForFieldRef.current = saveLogicForField;
-  }, [saveLogicForField]);
-  
-  // Debounced save for logic with stable reference
+  // Debounced save for logic with pending flag support
   const debouncedSaveLogic = useMemo(
     () => debounce((value: string) => {
-      saveLogicForFieldRef.current(value);
+      // Set a flag that we have pending changes that will save soon
+      pendingSaveRef.current = true;
+      
+      // Set flag to prevent syncing for a while after editing
+      hasRecentlyEditedRef.current = true;
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = setTimeout(() => {
+        hasRecentlyEditedRef.current = false;
+      }, 1000); // Wait 1 second after last edit before allowing sync
+      
+      // Save logic for current field
+      if (selectedFieldId) {
+        const updatedFields = fieldsRef.current.map(f => 
+          f.schemaFieldId === selectedFieldId 
+            ? { ...f, logic: value }
+            : f
+        );
+        fieldsRef.current = updatedFields; // Update ref
+        
+        saveDataStoreFields(updatedFields); // Save to database - this will trigger the mutation's isPending state
+        
+        // Reset editing flag after save
+        isEditingLogicRef.current = false;
+      }
     }, 1000), // 1 second debounce like response design panel
-    [] // No dependencies - stable reference
+    [selectedFieldId, saveDataStoreFields]
   );
 
   // Get selected field and its schema
@@ -374,8 +454,8 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                           key={field.schemaFieldId}
                           field={field}
                           fieldName={schemaField.name}
-                          isSelected={field.schemaFieldId === selectedFieldId}
-                          onClick={() => setSelectedFieldId(field.schemaFieldId)}
+                          isSelected={field.schemaFieldId === selectedFieldId && !showLoading}
+                          onClick={() => handleFieldSelect(field.schemaFieldId)}
                         />
                       ) : null;
                     })}
@@ -467,6 +547,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                         language="javascript"
                         onMount={handleEditorMount}
                         containerClassName="h-full"
+                        isLoading={showLoading}
                         options={{
                           minimap: { enabled: false },
                           fontSize: 12,

@@ -84,7 +84,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
         }
       });
     }, 1000),
-    [flowId] // Only recreate when save target changes
+    [updateResponseTemplate]
   );
 
   // Handle template change

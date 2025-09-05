@@ -184,7 +184,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
         const promptMessages = convertItemsToPromptMessages(items);
         updatePromptMessages.mutate(promptMessages);
       }, 300),
-    [agentId, flowId], // Only recreate when save target changes
+    [agentId, updatePromptMessages],
   );
 
   // 8. Debounced save for text prompt - only recreate when target changes
@@ -195,7 +195,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
         updateTextPrompt.mutate(text);
       }, 300),
-    [agentId, flowId], // Only recreate when save target changes
+    [agentId, updateTextPrompt],
   );
 
   // 9. DnD sensors
