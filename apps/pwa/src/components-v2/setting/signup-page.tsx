@@ -469,7 +469,7 @@ const SignUpPage = () => {
             />
             <div className="mb-[24px] text-center">
               <div className="mb-[8px] text-[20px] leading-[24px] font-[600] text-text-primary">
-                Verify you email
+                Verify your email
               </div>
               <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
                 We just sent a 6-digit code to
