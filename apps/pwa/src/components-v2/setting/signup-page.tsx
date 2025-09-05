@@ -129,21 +129,45 @@ const SignUpPage = () => {
     setActive: setActiveSignUp,
   } = useSignUp();
   const signUpWithGoogle = useCallback(() => {
-    // TODO: sign up with google
-    toastSuccess({
-      title: "Welcome to astrsk!",
-      details: "Your account is ready to use",
-    });
-    setActivePage(Page.Payment);
-  }, [setActivePage]);
+    // Check sign up is loaded
+    if (!isLoadedSignUp) {
+      return;
+    }
+
+    try {
+      // Try to sign up with google
+      signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/",
+        redirectUrlComplete: "/",
+      });
+    } catch (error) {
+      logger.error(error);
+      toast.error("Failed to sign up", {
+        description: JSON.stringify(error),
+      });
+    }
+  }, [isLoadedSignUp, signUp]);
   const signUpWithDiscord = useCallback(() => {
-    // TODO: sign up with discord
-    toastSuccess({
-      title: "Welcome to astrsk!",
-      details: "Your account is ready to use",
-    });
-    setActivePage(Page.Payment);
-  }, [setActivePage]);
+    // Check sign up is loaded
+    if (!isLoadedSignUp) {
+      return;
+    }
+
+    try {
+      // Try to sign up with google
+      signUp.authenticateWithRedirect({
+        strategy: "oauth_discord",
+        redirectUrl: "/",
+        redirectUrlComplete: "/",
+      });
+    } catch (error) {
+      logger.error(error);
+      toast.error("Failed to sign up", {
+        description: JSON.stringify(error),
+      });
+    }
+  }, [isLoadedSignUp, signUp]);
 
   // Sign up with email and password
   const signUpWithEmailAndPassword = useCallback(async () => {
