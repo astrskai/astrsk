@@ -562,7 +562,9 @@ const SignUpPage = () => {
               <button
                 className="text-button-background-primary"
                 onClick={() => {
-                  // TODO: resend verify email code
+                  signUp?.prepareEmailAddressVerification({
+                    strategy: "email_code",
+                  });
                 }}
               >
                 Resend to email
@@ -747,9 +749,7 @@ const SignUpPage = () => {
               Don&apos;t see a code?{" "}
               <button
                 className="text-button-background-primary"
-                onClick={() => {
-                  // TODO: resend verify email code
-                }}
+                onClick={forgotPassword}
               >
                 Resend to email
               </button>
