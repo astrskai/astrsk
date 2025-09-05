@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
 import { UpdaterNew } from "@/components-v2/updater-new";
+import { Authenticated, Unauthenticated } from "convex/react";
 import {
   ArrowLeftFromLine,
   ArrowRightFromLine,
@@ -24,7 +25,7 @@ import {
   ChevronUp,
   Settings,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, memo } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -256,20 +257,26 @@ const LeftNavigationFooter = memo(
           "bg-background-surface-2 text-text-primary",
         )}
       >
-        <Button
-          size="sm"
-          className="bg-secondary-normal text-secondary-heavy font-[600]"
-          onClick={() => {
-            setActivePage(Page.Subscribe);
-          }}
-        >
-          <SvgIcon name="astrsk_symbol_fit" size={12} />
-          Subscribe to astrsk+
-        </Button>
-        {/* <Button size="sm" className="font-[600]">
-          <SvgIcon name="astrsk_symbol_fit" size={12} />
-          Add credits
-        </Button> */}
+        <div className="min-h-[28px]">
+          <Unauthenticated>
+            <Button
+              size="sm"
+              className="bg-secondary-normal text-secondary-heavy font-[600]"
+              onClick={() => {
+                setActivePage(Page.Subscribe);
+              }}
+            >
+              <SvgIcon name="astrsk_symbol_fit" size={12} />
+              Subscribe to astrsk+
+            </Button>
+          </Unauthenticated>
+          <Authenticated>
+            <Button size="sm" className="font-[600]">
+              <SvgIcon name="astrsk_symbol_fit" size={12} />
+              Add credits
+            </Button>
+          </Authenticated>
+        </div>
         <div className="w-full flex flex-row justify-end gap-[16px] text-text-primary">
           <div className="flex flex-row gap-[16px]">
             <UpdaterNew />

@@ -10,8 +10,11 @@ import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 import { toastSuccess } from "@/components-v2/ui/toast-success";
+import { logger } from "@/shared/utils";
+import { useSignIn } from "@clerk/clerk-react";
 import { ArrowLeft, Check } from "lucide-react";
 import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
 const SignUpStep = {
   SignUp: "sign_up",
@@ -124,7 +127,7 @@ const SignUpPage = () => {
     // TODO: sign up with google
     toastSuccess({
       title: "Welcome to astrsk!",
-      details: "Your account is ready to use"
+      details: "Your account is ready to use",
     });
     setActivePage(Page.Payment);
   }, [setActivePage]);
@@ -132,7 +135,7 @@ const SignUpPage = () => {
     // TODO: sign up with discord
     toastSuccess({
       title: "Welcome to astrsk!",
-      details: "Your account is ready to use"
+      details: "Your account is ready to use",
     });
     setActivePage(Page.Payment);
   }, [setActivePage]);
@@ -140,10 +143,46 @@ const SignUpPage = () => {
     // TODO: sign up with email and password
     toastSuccess({
       title: "Welcome to astrsk!",
-      details: "Your account is ready to use"
+      details: "Your account is ready to use",
     });
     setActivePage(Page.Payment);
   }, [setActivePage]);
+
+  // Sign in
+  const {
+    isLoaded: isLoadedSignIn,
+    signIn,
+    setActive: setActiveSignIn,
+  } = useSignIn();
+  const signInWithEmailAndPassword = useCallback(async () => {
+    // Check sign in is loaded
+    if (!isLoadedSignIn) {
+      return;
+    }
+
+    try {
+      // Try to sign in
+      const signInAttempt = await signIn.create({
+        identifier: email,
+        password: password,
+      });
+
+      // Success
+      if (signInAttempt.status === "complete") {
+        await setActiveSignIn({
+          session: signInAttempt.createdSessionId,
+        });
+        setActivePage(Page.Payment);
+      } else {
+        toast.error(signInAttempt.status);
+      }
+    } catch (error) {
+      logger.error(error);
+      toast.error("Failed to sign in", {
+        description: JSON.stringify(error),
+      });
+    }
+  }, [email, isLoadedSignIn, password, setActiveSignIn, setActivePage, signIn]);
 
   return (
     <div className={cn("z-40 absolute inset-0 top-[38px]")}>
@@ -422,7 +461,11 @@ const SignUpPage = () => {
                 setPassword(e.target.value);
               }}
             />
-            <Button className="w-full" size="lg">
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={signInWithEmailAndPassword}
+            >
               Sign in
             </Button>
             <Button variant="ghost" className="w-full" size="lg">
