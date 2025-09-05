@@ -8,6 +8,7 @@ import { FlowSection } from "@/components-v2/left-navigation/flow-list";
 import { SessionSection } from "@/components-v2/left-navigation/session-list";
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components-v2/svg-icon";
+import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import {
   Tooltip,
@@ -15,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
 import { UpdaterNew } from "@/components-v2/updater-new";
+import { Authenticated, Unauthenticated } from "convex/react";
 import {
   ArrowLeftFromLine,
   ArrowRightFromLine,
@@ -23,7 +25,7 @@ import {
   ChevronUp,
   Settings,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, memo } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -109,7 +111,7 @@ const LeftNavigation = () => {
     <SidebarLeft className="pt-[38px] border-r-text-contrast-text z-20">
       <div className="h-full max-h-full flex flex-col bg-background-surface-2">
         {/* Header */}
-        <LeftNavigationHeader 
+        <LeftNavigationHeader
           setActivePage={setActivePage}
           setClickCount={setClickCount}
           setOpen={setOpen}
@@ -127,7 +129,7 @@ const LeftNavigation = () => {
         </ScrollArea>
 
         {/* Footer */}
-        <LeftNavigationFooter 
+        <LeftNavigationFooter
           activePage={activePage}
           setActivePage={setActivePage}
         />
@@ -155,55 +157,57 @@ const LeftNavigationTrigger = () => {
 };
 
 // Memoized sub-components to prevent unnecessary re-renders
-const LeftNavigationHeader = memo(({ 
-  setActivePage, 
-  setClickCount, 
-  setOpen 
-}: {
-  setActivePage: (page: Page) => void;
-  setClickCount: React.Dispatch<React.SetStateAction<number>>;
-  setOpen: (open: boolean) => void;
-}) => {
-  const handleLogoClick = useCallback(() => {
-    setActivePage(Page.Init);
-    setClickCount((prev) => prev + 1);
-  }, [setActivePage, setClickCount]);
+const LeftNavigationHeader = memo(
+  ({
+    setActivePage,
+    setClickCount,
+    setOpen,
+  }: {
+    setActivePage: (page: Page) => void;
+    setClickCount: React.Dispatch<React.SetStateAction<number>>;
+    setOpen: (open: boolean) => void;
+  }) => {
+    const handleLogoClick = useCallback(() => {
+      setActivePage(Page.Init);
+      setClickCount((prev) => prev + 1);
+    }, [setActivePage, setClickCount]);
 
-  const handleCollapseClick = useCallback(() => {
-    setOpen(false);
-  }, [setOpen]);
+    const handleCollapseClick = useCallback(() => {
+      setOpen(false);
+    }, [setOpen]);
 
-  return (
-    <div
-      className={cn(
-        "shrink-0 p-4 border-b-[1px] border-text-contrast-text",
-        "flex flex-row justify-between items-center",
-        "bg-background-surface-2 text-text-primary",
-      )}
-    >
-      <button
-        onClick={handleLogoClick}
-        className="hover:opacity-80 transition-opacity flex flex-row items-center gap-2"
+    return (
+      <div
+        className={cn(
+          "shrink-0 p-4 border-b-[1px] border-text-contrast-text",
+          "flex flex-row justify-between items-center",
+          "bg-background-surface-2 text-text-primary",
+        )}
       >
-        <SvgIcon name="astrsk_logo_full" width={68} height={16} />
-        <div className="font-[400] text-[12px] leading-[15px] text-text-body">
-          v{__APP_VERSION__}
-        </div>
-      </button>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button onClick={handleCollapseClick}>
-            <ArrowLeftFromLine size={20} />
-            <span className="sr-only">Hide Sidebar</span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" variant="button">
-          <p>Collapse</p>
-        </TooltipContent>
-      </Tooltip>
-    </div>
-  );
-});
+        <button
+          onClick={handleLogoClick}
+          className="hover:opacity-80 transition-opacity flex flex-row items-center gap-2"
+        >
+          <SvgIcon name="astrsk_logo_full" width={68} height={16} />
+          <div className="font-[400] text-[12px] leading-[15px] text-text-body">
+            v{__APP_VERSION__}
+          </div>
+        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button onClick={handleCollapseClick}>
+              <ArrowLeftFromLine size={20} />
+              <span className="sr-only">Hide Sidebar</span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" variant="button">
+            <p>Collapse</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    );
+  },
+);
 LeftNavigationHeader.displayName = "LeftNavigationHeader";
 
 const DocumentationButton = memo(() => {
@@ -229,47 +233,85 @@ const DocumentationButton = memo(() => {
 });
 DocumentationButton.displayName = "DocumentationButton";
 
-const LeftNavigationFooter = memo(({ 
-  activePage, 
-  setActivePage 
-}: {
-  activePage: Page;
-  setActivePage: (page: Page) => void;
-}) => {
-  const handleSettingsClick = useCallback(() => {
-    setActivePage(Page.Settings);
-  }, [setActivePage]);
+const LeftNavigationFooter = memo(
+  ({
+    activePage,
+    setActivePage,
+  }: {
+    activePage: Page;
+    setActivePage: (page: Page) => void;
+  }) => {
+    const handleDocsClick = useCallback(() => {
+      openInNewTab("https://docs.astrsk.ai/");
+    }, []);
 
-  return (
-    <div
-      className={cn(
-        "shrink-0 p-4",
-        "flex flex-row justify-between items-center",
-        "bg-background-surface-2 text-text-primary",
-      )}
-    >
-      <DocumentationButton />
-      <div className="w-full flex flex-row justify-end gap-[16px] text-text-primary">
-        <UpdaterNew />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button onClick={handleSettingsClick}>
-              {activePage === Page.Settings ? (
-                <SvgIcon name="settings_solid" size={20} />
-              ) : (
-                <Settings size={20} />
-              )}
-              <span className="sr-only">Settings</span>
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" variant="button">
-            <p>Settings</p>
-          </TooltipContent>
-        </Tooltip>
+    const handleSettingsClick = useCallback(() => {
+      setActivePage(Page.Settings);
+    }, [setActivePage]);
+
+    return (
+      <div
+        className={cn(
+          "shrink-0 p-4 pt-2",
+          "flex flex-row justify-between items-center",
+          "bg-background-surface-2 text-text-primary",
+        )}
+      >
+        <div className="min-h-[28px]">
+          <Unauthenticated>
+            <Button
+              size="sm"
+              className="bg-secondary-normal text-secondary-heavy font-[600]"
+              onClick={() => {
+                setActivePage(Page.Subscribe);
+              }}
+            >
+              <SvgIcon name="astrsk_symbol_fit" size={12} />
+              Subscribe to astrsk+
+            </Button>
+          </Unauthenticated>
+          <Authenticated>
+            <Button size="sm" className="font-[600]">
+              <SvgIcon name="astrsk_symbol_fit" size={12} />
+              Add credits
+            </Button>
+          </Authenticated>
+        </div>
+        <div className="w-full flex flex-row justify-end gap-[16px] text-text-primary">
+          <div className="flex flex-row gap-[16px]">
+            <UpdaterNew />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={handleDocsClick}>
+                  <Book size={20} />
+                  <span className="sr-only">Docs</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" variant="button">
+                <p>Docs</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={handleSettingsClick}>
+                  {activePage === Page.Settings ? (
+                    <SvgIcon name="settings_solid" size={20} />
+                  ) : (
+                    <Settings size={20} />
+                  )}
+                  <span className="sr-only">Settings</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" variant="button">
+                <p>Settings</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 LeftNavigationFooter.displayName = "LeftNavigationFooter";
 
 export { LeftNavigation, LeftNavigationTrigger, SectionHeader };

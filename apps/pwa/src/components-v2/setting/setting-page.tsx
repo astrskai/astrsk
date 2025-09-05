@@ -7,6 +7,7 @@ import {
   useAppStore,
 } from "@/app/stores/app-store";
 import { cn } from "@/components-v2/lib/utils";
+import { AccountPage } from "@/components-v2/setting/account-page";
 import ContentPolicy from "@/components-v2/setting/content-policy";
 import ModelPage from "@/components-v2/setting/model-page";
 import OssNotice from "@/components-v2/setting/oss-notice";
@@ -19,6 +20,7 @@ import { FloatingActionButton } from "@/components-v2/ui/floating-action-button"
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { Separator } from "@/components-v2/ui/separator";
 import { Switch } from "@/components-v2/ui/switch";
+import { Authenticated } from "convex/react";
 import { useEffect, useState } from "react";
 
 function openInNewTab(url: string) {
@@ -184,6 +186,21 @@ const MainPage = () => {
             App Preferences
           </TypoXLarge>
 
+          <Authenticated>
+            <div
+              className="flex items-center justify-between cursor-pointer"
+              onClick={() => {
+                setSettingPageLevel(SettingPageLevel.sub);
+                setSettingSubPage(SettingSubPageType.account);
+              }}
+            >
+              <TypoBase className="font-semibold text-text-body">
+                Account and subscription
+              </TypoBase>
+              <ChevronRight className="h-5 w-5 text-text-secondary" />
+            </div>
+          </Authenticated>
+
           <div
             className="flex items-center justify-between cursor-pointer"
             onClick={() => {
@@ -267,9 +284,7 @@ const MainPage = () => {
 
           <div
             className="flex items-center text-text-body justify-between cursor-pointer"
-            onClick={() =>
-              openInNewTab("https://docs.astrsk.ai/")
-            }
+            onClick={() => openInNewTab("https://docs.astrsk.ai/")}
           >
             <TypoBase className="font-semibold text-text-body">
               User manual
@@ -372,6 +387,7 @@ export default function SettingPage({ className }: { className?: string }) {
           />
         )}
         {settingSubPage === SettingSubPageType.advanced && <AdvancedPage />}
+        {settingSubPage === SettingSubPageType.account && <AccountPage />}
       </div>
 
       {/* Page Level 3 */}
