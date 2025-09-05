@@ -11,7 +11,7 @@ import { Button } from "@/components-v2/ui/button";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 import { toastSuccess } from "@/components-v2/ui/toast-success";
 import { logger } from "@/shared/utils";
-import { useSignIn } from "@clerk/clerk-react";
+import { useSignIn, useSignUp } from "@clerk/clerk-react";
 import { ArrowLeft, Check } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -103,7 +103,7 @@ const SignUpPage = () => {
         setStep(SignUpStep.SignUp);
         break;
       case "verify_email":
-        setEmailVerifyCode("");
+        setEmailCode("");
         setStep(SignUpStep.SignUpWithEmailAndPassword);
         break;
       case "sign_in":
@@ -120,9 +120,14 @@ const SignUpPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [emailVerifyCode, setEmailVerifyCode] = useState("");
+  const [emailCode, setEmailCode] = useState("");
 
-  // Sign up
+  // Sign up with SSO
+  const {
+    isLoaded: isLoadedSignUp,
+    signUp,
+    setActive: setActiveSignUp,
+  } = useSignUp();
   const signUpWithGoogle = useCallback(() => {
     // TODO: sign up with google
     toastSuccess({
@@ -139,14 +144,68 @@ const SignUpPage = () => {
     });
     setActivePage(Page.Payment);
   }, [setActivePage]);
-  const signUpWithEmailAndPassword = useCallback(() => {
-    // TODO: sign up with email and password
-    toastSuccess({
-      title: "Welcome to astrsk!",
-      details: "Your account is ready to use",
-    });
-    setActivePage(Page.Payment);
-  }, [setActivePage]);
+
+  // Sign up with email and password
+  const signUpWithEmailAndPassword = useCallback(async () => {
+    // Check sign up is loaded
+    if (!isLoadedSignUp) {
+      return;
+    }
+
+    try {
+      // Try to sign up
+      await signUp.create({
+        emailAddress: email,
+        password: password,
+      });
+
+      // Send verify email code
+      await signUp.prepareEmailAddressVerification({
+        strategy: "email_code",
+      });
+
+      // Step to verify email code
+      setStep(SignUpStep.VerifyEmail);
+    } catch (error) {
+      logger.error(error);
+      toast.error("Failed to sign up", {
+        description: JSON.stringify(error),
+      });
+    }
+  }, [email, isLoadedSignUp, password, signUp]);
+  const verifyEmailCode = useCallback(async () => {
+    // Check sign up is loaded
+    if (!isLoadedSignUp) {
+      return;
+    }
+
+    try {
+      // Verify code
+      const signUpAttempt = await signUp.attemptEmailAddressVerification({
+        code: emailCode,
+      });
+
+      // Success to sign up
+      if (signUpAttempt.status === "complete") {
+        await setActiveSignUp({
+          session: signUpAttempt.createdSessionId,
+        });
+        toastSuccess({
+          title: "Welcome to astrsk!",
+          details: "Your account is ready to use",
+        });
+        setActivePage(Page.Payment);
+      } else {
+        // Failed to sign up
+        toast.error(signUpAttempt.status);
+      }
+    } catch (error) {
+      logger.error(error);
+      toast.error("Failed to verify email code", {
+        description: JSON.stringify(error),
+      });
+    }
+  }, [emailCode, isLoadedSignUp, setActivePage, setActiveSignUp, signUp]);
 
   // Sign in
   const {
@@ -167,13 +226,14 @@ const SignUpPage = () => {
         password: password,
       });
 
-      // Success
+      // Success to sign in
       if (signInAttempt.status === "complete") {
         await setActiveSignIn({
           session: signInAttempt.createdSessionId,
         });
         setActivePage(Page.Payment);
       } else {
+        // Failed to sign in
         toast.error(signInAttempt.status);
       }
     } catch (error) {
@@ -364,9 +424,7 @@ const SignUpPage = () => {
             <Button
               className="w-full"
               size="lg"
-              onClick={() => {
-                setStep(SignUpStep.VerifyEmail);
-              }}
+              onClick={signUpWithEmailAndPassword}
             >
               Create password
             </Button>
@@ -399,9 +457,9 @@ const SignUpPage = () => {
               label="Code"
               type="number"
               className="w-[384px]"
-              value={emailVerifyCode}
+              value={emailCode}
               onChange={(e) => {
-                setEmailVerifyCode(e.target.value);
+                setEmailCode(e.target.value);
               }}
             />
             <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
@@ -415,14 +473,7 @@ const SignUpPage = () => {
                 Resend to email
               </button>
             </div>
-            <Button
-              className="w-full"
-              size="lg"
-              onClick={() => {
-                // TODO: verify email code
-                signUpWithEmailAndPassword();
-              }}
-            >
+            <Button className="w-full" size="lg" onClick={verifyEmailCode}>
               Verify email
             </Button>
           </div>
