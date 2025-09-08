@@ -40,20 +40,13 @@ export const Page = {
   CreatePrompt: "create_prompt",
   CreateResponseDesign: "create_response_design",
   CardPanel: "card_panel", // Card detail panel view
+  Subscribe: "subscribe",
+  AddCredits: "add_credits",
+  SignUp: "sign_up",
+  Payment: "payment",
 } as const;
 
 export type Page = (typeof Page)[keyof typeof Page];
-
-export const AgreementType = {
-  Privacy: "privacy",
-  Terms: "terms",
-  Content: "content",
-  Refund: "refund",
-  Subscription: "subscription",
-  None: "none",
-} as const;
-
-export type AgreementType = (typeof AgreementType)[keyof typeof AgreementType];
 
 export const SettingPageLevel = {
   main: "main",
@@ -68,6 +61,7 @@ export const SettingSubPageType = {
   providers: "providers",
   legal: "legal",
   advanced: "advanced",
+  account: "account",
 } as const;
 
 export type SettingSubPageType =
@@ -129,10 +123,6 @@ interface AppState {
   isDataManagementOpen: boolean;
   setIsDataManagementOpen: (isOpen: boolean) => void;
 
-  // Agreements
-  agreement: AgreementType;
-  setAgreement: (agreement: AgreementType) => void;
-
   // Card Import Don't Show Again
   isCardImportDonNotShowAgain: boolean;
   setIsCardImportDonNotShowAgain: (isDonNotShowAgain: boolean) => void;
@@ -152,8 +142,6 @@ interface AppState {
   setSettingSubPage: (settingSubPage: SettingSubPageType) => void;
   settingDetailPage: LegalPageType;
   setSettingDetailPage: (settingDetailPage: LegalPageType) => void;
-  legalPage: LegalPageType; // TODO: remove this
-  setLegalPage: (legalPage: LegalPageType) => void; // TODO: remove this
 
   // Loading
   isLoading: boolean;
@@ -298,13 +286,6 @@ const useAppStoreBase = create<AppState>()(
           state.isDataManagementOpen = isOpen;
         }),
 
-      // Agreements
-      agreement: AgreementType.None,
-      setAgreement: (agreement) =>
-        set((state) => {
-          state.agreement = agreement;
-        }),
-
       // Card Import Don't Show Again
       isCardImportDonNotShowAgain: false,
       setIsCardImportDonNotShowAgain: (isDonNotShowAgain) =>
@@ -341,11 +322,6 @@ const useAppStoreBase = create<AppState>()(
       setSettingDetailPage: (settingDetailPage) =>
         set((state) => {
           state.settingDetailPage = settingDetailPage;
-        }),
-      legalPage: LegalPageType.privacyPolicy,
-      setLegalPage: (legalPage) =>
-        set((state) => {
-          state.legalPage = legalPage;
         }),
 
       // Loading

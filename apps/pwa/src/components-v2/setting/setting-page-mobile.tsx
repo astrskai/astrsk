@@ -196,7 +196,7 @@ const MainPageMobile = ({
   const setIsTelemetryEnabled = useAppStore.use.setIsTelemetryEnabled();
 
   // Legal
-  const setLegalPage = useAppStore.use.setLegalPage();
+  const setSettingDetailPage = useAppStore.use.setSettingDetailPage();
 
   return (
     <div className="flex flex-col h-dvh bg-background-surface-2">
@@ -230,7 +230,7 @@ const MainPageMobile = ({
                     className="text-secondary-normal cursor-pointer"
                     onClick={() => {
                       setSettingPageLevel(SettingPageLevel.detail);
-                      setLegalPage(LegalPageType.privacyPolicy);
+                      setSettingDetailPage(LegalPageType.privacyPolicy);
                     }}
                   >
                     [click here]
@@ -320,7 +320,7 @@ interface SettingPageMobileProps {
 export default function SettingPageMobile({
   className,
 }: SettingPageMobileProps) {
-  const { settingPageLevel, setSettingPageLevel, legalPage, setLegalPage } =
+  const { settingPageLevel, setSettingPageLevel, settingDetailPage, setSettingDetailPage } =
     useAppStore();
 
   const renderCurrentPage = () => {
@@ -329,14 +329,14 @@ export default function SettingPageMobile({
         return (
           <LegalDetailPageMobile
             setSettingPageLevel={setSettingPageLevel}
-            legalPage={legalPage}
+            legalPage={settingDetailPage}
           />
         );
       case SettingPageLevel.sub:
         return (
           <LegalPageMobile
             setSettingPageLevel={setSettingPageLevel}
-            setLegalPage={setLegalPage}
+            setLegalPage={setSettingDetailPage}
           />
         );
       case SettingPageLevel.main:

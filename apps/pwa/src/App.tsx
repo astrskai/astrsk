@@ -7,7 +7,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
 import { useGlobalErrorHandler } from "@/app/hooks/use-global-error-handler";
 import { queryClient } from "@/app/queries/query-client";
-import { useAppStore } from "@/app/stores/app-store";
+import { Page, useAppStore } from "@/app/stores/app-store";
 import DesktopApp from "@/app/v2/desktop-app";
 import MobileApp from "@/app/v2/mobile-app";
 import {
@@ -25,6 +25,9 @@ import { GlobalDockView } from "@/components-v2/global-dockview";
 import { RightSidebarContextProvider } from "@/components-v2/top-bar";
 import { cn } from "@/components-v2/lib/utils";
 import { Loading } from "@/components-v2/loading";
+import { PaymentPage } from "@/components-v2/setting/payment-page";
+import { SignUpPage } from "@/components-v2/setting/signup-page";
+import { SubscribePage } from "@/components-v2/setting/subscribe-page";
 import { ThemeProvider } from "@/components-v2/theme-provider";
 import { TopBar } from "@/components-v2/top-bar";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
@@ -200,6 +203,8 @@ function V2Layout({
 }
 
 const AppInternal = () => {
+  const activePage = useAppStore.use.activePage();
+
   // Toggle telemetry
   const isTelemetryEnabled = useAppStore.use.isTelemetryEnabled();
   const [isTelemetryInitialized, setIsTelemetryInitialized] = useState(false);
@@ -232,18 +237,29 @@ const AppInternal = () => {
     logger.debug(`start_app:  ${isMobile ? "mobile" : "desktop"}`);
   }, [isMobile, isStartAppSent, isTelemetryInitialized]);
 
-  return isMobile ? <MobileApp /> : <DesktopApp />;
+  return isMobile ? (
+    <V2Layout>
+      <MobileApp />
+    </V2Layout>
+  ) : (
+    <>
+      <V2Layout>
+        <DesktopApp />
+      </V2Layout>
+      {activePage === Page.Subscribe && <SubscribePage />}
+      {activePage === Page.SignUp && <SignUpPage />}
+      {activePage === Page.Payment && <PaymentPage />}
+    </>
+  );
 };
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ConvexProvider client={vibeConvexClient}>
-        <V2Layout>
-          <AppInternal />
-        </V2Layout>
+        <AppInternal />
       </ConvexProvider>
-      {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }
