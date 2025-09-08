@@ -23,7 +23,7 @@ export class SaveFileToAsset implements UseCase<Command, Result<Asset>> {
         file: command.file,
       });
       if (assetOrError.isFailure) {
-        return Result.fail<File>(assetOrError.getError());
+        return Result.fail<Asset>(assetOrError.getError());
       }
 
       // Save and return asset
