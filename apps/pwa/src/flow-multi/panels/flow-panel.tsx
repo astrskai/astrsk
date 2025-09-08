@@ -1080,7 +1080,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       isLocalChangeRef.current = true;
       
       // Delete the node from database based on type
-      if (nodeToDelete.type === 'dataStore') {
+      if (nodeToDelete.type === NodeType.DATA_STORE) {
         const deleteResult = await DataStoreNodeService.deleteDataStoreNode.execute({
           nodeId: nodeId
         });
@@ -1090,7 +1090,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         // Invalidate data store node queries
         const { dataStoreNodeKeys } = await import("@/app/queries/data-store-node/query-factory");
         await queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.detail(flowId, nodeId) });
-      } else if (nodeToDelete.type === 'if') {
+      } else if (nodeToDelete.type === NodeType.IF) {
         const deleteResult = await IfNodeService.deleteIfNode.execute({
           nodeId: nodeId
         });
@@ -1101,6 +1101,8 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         const { ifNodeKeys } = await import("@/app/queries/if-node/query-factory");
         await queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
       }
+      // Ensure flow consumers update after structural delete
+      await invalidateSingleFlowQueries(flowId);
       
       // Save the flow changes - pass both explicitly as they're newly calculated
       setTimeout(() => {

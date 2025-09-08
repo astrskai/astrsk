@@ -151,7 +151,6 @@ export async function applyPlotCardUpdates(
   updates: ReturnType<typeof mapPlotEditsToUpdates>,
 ): Promise<{ success: boolean; errors: string[] }> {
   const errors: string[] = [];
-  const { CardService } = await import("@/app/services/card-service");
 
   try {
     // Apply title change

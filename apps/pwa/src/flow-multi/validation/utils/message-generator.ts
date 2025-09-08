@@ -151,9 +151,9 @@ const messageDefinitions: Record<
       // Regular agent handling
       const locationPart = data.location ? ` ${data.location}` : "";
       if (data.field) {
-        return `Agent "${data.agentName}" -${locationPart} is referencing a agent output that does not exist in the connected agents: \{\{"${data.field}"."${data.referencedAgent}"\}\}`;
+        return `Agent "${data.agentName}"${locationPart} is referencing an agent output that does not exist in the connected agents: {{"${data.referencedAgent}"."${data.field}"}}`;
       }
-      return `Agent "${data.agentName}" -${locationPart} is referencing an agent that does not exist in the connected agents: "${data.referencedAgent}"`;
+      return `Agent "${data.agentName}"${locationPart} is referencing an agent that does not exist in the connected agents: "${data.referencedAgent}"`;
     },
     suggestion: (data?: ValidationData) => {
       if (!isVariableValidationData(data) || !data.referencedAgent) {

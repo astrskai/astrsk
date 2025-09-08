@@ -16,11 +16,6 @@ import { Agent } from "@/modules/agent/domain/agent";
 export function useFlowValidation(flowId?: UniqueEntityID | null) {
   // Get flow and api connections with models
   const { data: flow } = useFlow(flowId || undefined);
-  if (!flow) {
-    return { isValid: false, invalidAgents: [] };
-  }else{
-    return { isValid: true, invalidAgents: [] };
-  }
   const [apiConnectionsWithModels] = useApiConnectionsWithModels();
 
   // Validate flow

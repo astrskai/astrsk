@@ -246,6 +246,11 @@ function AgentNodeComponent({ agentId, flow, nodeId, selected }: AgentNodeCompon
     
     try {
       // Get fresh flow data
+      if (!flowId) {
+        toast.error("No flow selected");
+        setEditingName(currentName);
+        return;
+      }
       const flowResult = await FlowService.getFlow.execute(new UniqueEntityID(flowId));
       if (flowResult.isFailure) {
         throw new Error("Flow not found");

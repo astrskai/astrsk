@@ -252,6 +252,10 @@ export function useVibeSession({
             // Deep merge function that handles arrays specially
             const merge = (target: any, source: any, path: string = "") => {
               Object.keys(source).forEach((key) => {
+                // Prevent prototype pollution
+                if (key === "__proto__" || key === "constructor" || key === "prototype") {
+                  return;
+                }
                 const currentPath = path ? `${path}.${key}` : key;
 
                 if (source[key] === null) {

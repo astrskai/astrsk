@@ -143,20 +143,22 @@ export async function processAgentOperations(
                   const { queryClient } = await import(
                     "@/app/queries/query-client"
                   );
-                  const { agentQueries } = await import(
+                  const { agentKeys } = await import(
                     "@/app/queries/agent/query-factory"
                   );
 
                   // Invalidate relevant agent queries using the new query factory structure
-                  await queryClient.invalidateQueries({
-                    queryKey: agentQueries.detail(agentId).queryKey,
-                  });
-                  await queryClient.invalidateQueries({
-                    queryKey: agentQueries.prompt(agentId).queryKey,
-                  });
-                  await queryClient.invalidateQueries({
-                    queryKey: agentQueries.output(agentId).queryKey,
-                  });
+                  await Promise.all([
+                    queryClient.invalidateQueries({
+                      queryKey: agentKeys.detail(agentId),
+                    }),
+                    queryClient.invalidateQueries({
+                      queryKey: agentKeys.prompt(agentId),
+                    }),
+                    queryClient.invalidateQueries({
+                      queryKey: agentKeys.output(agentId),
+                    }),
+                  ]);
 
                   console.log(
                     `✅ [AGENT-OPERATIONS] Invalidated agent queries for ${agentId}`,
@@ -215,17 +217,19 @@ export async function processAgentOperations(
               const { queryClient } = await import(
                 "@/app/queries/query-client"
               );
-              const { agentQueries } = await import(
+              const { agentKeys } = await import(
                 "@/app/queries/agent/query-factory"
               );
 
               // Invalidate relevant agent queries
-              await queryClient.invalidateQueries({
-                queryKey: agentQueries.detail(agentId).queryKey,
-              });
-              await queryClient.invalidateQueries({
-                queryKey: agentQueries.name(agentId).queryKey,
-              });
+              await Promise.all([
+                queryClient.invalidateQueries({
+                  queryKey: agentKeys.detail(agentId),
+                }),
+                queryClient.invalidateQueries({
+                  queryKey: agentKeys.name(agentId),
+                }),
+              ]);
 
               console.log(
                 `✅ [AGENT-OPERATIONS] Invalidated agent name queries for ${agentId}`,
@@ -325,17 +329,19 @@ export async function processAgentOperations(
                 const { queryClient } = await import(
                   "@/app/queries/query-client"
                 );
-                const { agentQueries } = await import(
+                const { agentKeys } = await import(
                   "@/app/queries/agent/query-factory"
                 );
 
                 // Invalidate relevant agent queries
-                await queryClient.invalidateQueries({
-                  queryKey: agentQueries.detail(agentId).queryKey,
-                });
-                await queryClient.invalidateQueries({
-                  queryKey: agentQueries.output(agentId).queryKey,
-                });
+                await Promise.all([
+                  queryClient.invalidateQueries({
+                    queryKey: agentKeys.detail(agentId),
+                  }),
+                  queryClient.invalidateQueries({
+                    queryKey: agentKeys.output(agentId),
+                  }),
+                ]);
 
                 console.log(
                   `✅ [AGENT-OPERATIONS] Invalidated agent queries for ${agentId}`,
