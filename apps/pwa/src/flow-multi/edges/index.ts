@@ -8,8 +8,8 @@ import CustomLabelEdge, {
 } from "@/flow-multi/edges/custom-label-edge";
 
 export const initialEdges = [
-  { id: "a->b", source: "a", target: "b", animated: true },
-  { id: "b->c", source: "b", target: "c", animated: true },
+  { id: "a->b", source: "a", target: "b", type: "default", animated: true },
+  { id: "b->c", source: "b", target: "c", type: "default", animated: true },
 ] satisfies Edge[];
 
 export const edgeTypes = {

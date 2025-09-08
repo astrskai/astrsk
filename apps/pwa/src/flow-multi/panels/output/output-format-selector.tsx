@@ -11,13 +11,11 @@ import { Switch } from "@/components-v2/ui/switch";
 
 interface OutputFormatSelectorProps {
   value: {
-    outputFormat: OutputFormat;
+    enabledStructuredOutput: boolean;
     outputStreaming: boolean;
   };
-  onChange: (value: {
-    outputFormat: OutputFormat;
-    outputStreaming: boolean;
-  }) => void;
+  onChange: (enabled: boolean) => void;
+  onStreamingChange?: (streaming: boolean) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   disabled?: boolean;
@@ -29,6 +27,7 @@ interface OutputFormatSelectorProps {
 export function OutputFormatSelector({ 
   value, 
   onChange, 
+  onStreamingChange,
   isOpen = true,
   onOpenChange,
   disabled,
@@ -57,7 +56,7 @@ export function OutputFormatSelector({
                   {isStandalone ? "Output Editor" : "Output"}:
                 </div>
                 <div className="justify-start text-text-secondary text-xs font-medium">
-                  {value.outputFormat === OutputFormat.StructuredOutput ? "Structured output" : "Text output"}
+                  {value.enabledStructuredOutput ? "Structured output" : "Text output"}
                   {" / "}
                   {value.outputStreaming ? "Stream response On" : "Stream response Off"}
                   {isStandalone && " (Standalone Mode)"}
@@ -71,30 +70,24 @@ export function OutputFormatSelector({
           <AccordionContent className="pt-2.5 pb-0 flex flex-col gap-2">
             <div className="px-2 flex flex-col justify-start items-start gap-2">
               <button
-                onClick={() => onChange({
-                  ...value,
-                  outputFormat: OutputFormat.StructuredOutput,
-                })}
+                onClick={() => onChange(true)}
                 disabled={disabled}
                 className="self-stretch inline-flex justify-start items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="w-3 h-3 p-0.5 bg-background-surface-5 rounded-md flex justify-center items-center gap-2">
-                  {value.outputFormat === OutputFormat.StructuredOutput && (
+                  {value.enabledStructuredOutput && (
                     <div className="w-1.5 h-1.5 bg-text-primary rounded-full"></div>
                   )}
                 </div>
                 <div className="justify-start text-text-primary text-xs font-medium">Structured output</div>
               </button>
               <button
-                onClick={() => onChange({
-                  ...value,
-                  outputFormat: OutputFormat.TextOutput,
-                })}
+                onClick={() => onChange(false)}
                 disabled={disabled}
                 className="self-stretch inline-flex justify-start items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="w-3 h-3 p-0.5 bg-background-surface-5 rounded-md flex justify-center items-center gap-2">
-                  {value.outputFormat === OutputFormat.TextOutput && (
+                  {!value.enabledStructuredOutput && (
                     <div className="w-1.5 h-1.5 bg-text-primary rounded-full"></div>
                   )}
                 </div>
@@ -104,10 +97,7 @@ export function OutputFormatSelector({
             <div className="px-2 py-2.5 flex flex-row justify-start items-center gap-2">
               <Switch
                 checked={value.outputStreaming}
-                onCheckedChange={(streaming) => onChange({
-                  ...value,
-                  outputStreaming: streaming,
-                })}
+                onCheckedChange={onStreamingChange || (() => {})}
                 size="small"
               />
               <div className="flex flex-col gap-1">

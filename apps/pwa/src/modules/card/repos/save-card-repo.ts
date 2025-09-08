@@ -15,6 +15,7 @@ export interface SaveCardRepo {
   updateCardTags?(cardId: UniqueEntityID, tags: string[]): Promise<Result<void>>;
   updateCardLorebook?(cardId: UniqueEntityID, lorebook: LorebookJSON): Promise<Result<void>>;
   updateCardScenarios?(cardId: UniqueEntityID, scenarios: any[]): Promise<Result<void>>;
+  updateCardIconAssetId?(cardId: UniqueEntityID, iconAssetId: UniqueEntityID | null): Promise<Result<void>>;
   updateCharacterName?(cardId: UniqueEntityID, name: string): Promise<Result<void>>;
   updateCharacterDescription?(cardId: UniqueEntityID, description: string): Promise<Result<void>>;
   updateCharacterExampleDialogue?(cardId: UniqueEntityID, exampleDialogue: string): Promise<Result<void>>;

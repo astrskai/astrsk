@@ -12,11 +12,13 @@ import { cn } from "@/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { cardQueries, useUpdateCardTitle } from "@/app/queries/card";
-import { BookOpen, Pencil, Check, X } from "lucide-react";
+import { BookOpen, Pencil, Check, X, Image } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { Button } from "@/components-v2/ui/button";
+import { SvgIcon } from "@/components-v2/svg-icon";
 import { invalidateSingleCardQueries } from "@/components-v2/card/utils/invalidate-card-queries";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
+import { useRightSidebarState } from "@/components-v2/top-bar";
 import { Avatar } from "@/components-v2/avatar";
 
 interface CardPanelProps {
@@ -80,6 +82,16 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
 
   // Get left navigation state for conditional margins
   const { isExpanded, isMobile } = useLeftNavigationWidth();
+  
+  // Right sidebar state for vibe coding panel
+  const rightSidebar = useRightSidebarState();
+
+  // Vibe Coding handler
+  const handleVibeCodingToggle = () => {
+    if (rightSidebar) {
+      rightSidebar.setIsOpen(!rightSidebar.isOpen);
+    }
+  };
 
   // Use React Query to get card data
   const { data: cardFromQuery } = useQuery(cardQueries.detail(cardId));
@@ -266,57 +278,81 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
         </div>
 
         {/* Panel control buttons */}
-        <div className="w-full flex flex-wrap justify-start items-start gap-2">
-          <ButtonPill
-            onClick={() => handleOpenPanel("metadata")}
-            // onDoubleClick={() => handleClosePanel("metadata")}
-            active={panelVisibility?.["metadata"]}
-            size="default"
-          >
-            Metadata
-          </ButtonPill>
-
-          <ButtonPill
-            onClick={() => handleOpenPanel("content")}
-            // onDoubleClick={() => handleClosePanel("content")}
-            active={panelVisibility?.["content"]}
-            size="default"
-            className="whitespace-nowrap"
-          >
-            {card.props.type === CardType.Plot ? "Plot info" : "Character info"}
-          </ButtonPill>
-
-          {/* Show Lore books button for both Character and Plot cards */}
-          <ButtonPill
-            onClick={() => handleOpenPanel("lorebooks")}
-            // onDoubleClick={() => handleClosePanel("lorebooks")}
-            active={panelVisibility?.["lorebooks"]}
-            size="default"
-          >
-            Lorebook
-          </ButtonPill>
-
-          {/* Show Scenarios button only for Plot cards */}
-          {card.props.type === CardType.Plot && (
+        <div className="w-full flex justify-between items-start gap-2">
+          {/* Left side buttons */}
+          <div className="flex flex-wrap gap-2">
             <ButtonPill
-              onClick={() => handleOpenPanel("scenarios")}
-              // onDoubleClick={() => handleClosePanel("scenarios")}
-              active={panelVisibility?.["scenarios"]}
+              onClick={() => handleOpenPanel("metadata")}
+              // onDoubleClick={() => handleClosePanel("metadata")}
+              active={panelVisibility?.["metadata"]}
               size="default"
             >
-              Scenarios
+              Metadata
             </ButtonPill>
-          )}
 
-          <ButtonPill
-            onClick={() => handleOpenPanel("variables")}
-            // onDoubleClick={() => handleClosePanel("variables")}
-            active={panelVisibility?.["variables"]}
-            size="default"
-            icon={<BookOpen />}
-          >
-            Variables
-          </ButtonPill>
+            <ButtonPill
+              onClick={() => handleOpenPanel("content")}
+              // onDoubleClick={() => handleClosePanel("content")}
+              active={panelVisibility?.["content"]}
+              size="default"
+              className="whitespace-nowrap"
+            >
+              {card.props.type === CardType.Plot ? "Plot info" : "Character info"}
+            </ButtonPill>
+
+            {/* Show Lore books button for both Character and Plot cards */}
+            <ButtonPill
+              onClick={() => handleOpenPanel("lorebooks")}
+              // onDoubleClick={() => handleClosePanel("lorebooks")}
+              active={panelVisibility?.["lorebooks"]}
+              size="default"
+            >
+              Lorebook
+            </ButtonPill>
+
+            {/* Show Scenarios button only for Plot cards */}
+            {card.props.type === CardType.Plot && (
+              <ButtonPill
+                onClick={() => handleOpenPanel("scenarios")}
+                // onDoubleClick={() => handleClosePanel("scenarios")}
+                active={panelVisibility?.["scenarios"]}
+                size="default"
+              >
+                Scenarios
+              </ButtonPill>
+            )}
+          </div>
+          
+          {/* Right side buttons */}
+          <div className="flex gap-2">
+            <ButtonPill
+              onClick={() => handleOpenPanel("variables")}
+              // onDoubleClick={() => handleClosePanel("variables")}
+              active={panelVisibility?.["variables"]}
+              size="default"
+              icon={<BookOpen />}
+            >
+              Variables
+            </ButtonPill>
+            <ButtonPill
+              onClick={() => handleOpenPanel("imageGenerator")}
+              // onDoubleClick={() => handleClosePanel("imageGenerator")}
+              active={panelVisibility?.["imageGenerator"]}
+              size="default"
+              icon={<Image />}
+            >
+              Image studio
+            </ButtonPill>
+            <ButtonPill
+              size="default"
+              variant="gradient"
+              icon={<SvgIcon name="ai_assistant" />}
+              active={rightSidebar?.isOpen}
+              onClick={handleVibeCodingToggle}
+            >
+              AI assistant
+            </ButtonPill>
+          </div>
         </div>
       </div>
 
@@ -363,6 +399,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

@@ -206,8 +206,8 @@ export function usePreviewGenerator(agent: Agent | null, session: Session | null
       // Add model
       requestData.model = agent.props.modelName;
 
-      // Add structured output schema if available
-      if (agent.props.schemaFields && agent.props.schemaFields.length > 0) {
+      // Add structured output schema if enabled and available
+      if (agent.props.enabledStructuredOutput && agent.props.schemaFields && agent.props.schemaFields.length > 0) {
         requestData.response_format = buildSchema(agent.props.schemaFields);
       }
 
@@ -308,7 +308,7 @@ export function usePreviewGenerator(agent: Agent | null, session: Session | null
     const parameterValuesHash = agent?.props.parameterValues ? 
       JSON.stringify(Array.from(agent.props.parameterValues.entries())) : "";
     
-    const currentAgentData = agent ? `${agent.id}_${agent.props.updatedAt}_${agent.props.targetApiType}_${agent.props.textPrompt}_${agent.props.outputFormat}_${agent.props.enabledStructuredOutput}_${agent.props.schemaName}_${agent.props.schemaDescription}_${JSON.stringify(agent.props.schemaFields || [])}_${agent.props.apiSource}_${agent.props.modelId}_${agent.props.modelName}_${promptMessagesHash}_${enabledParamsHash}_${parameterValuesHash}` : "";
+    const currentAgentData = agent ? `${agent.id}_${agent.props.updatedAt}_${agent.props.targetApiType}_${agent.props.textPrompt}_${agent.props.enabledStructuredOutput}_${agent.props.schemaName}_${agent.props.schemaDescription}_${JSON.stringify(agent.props.schemaFields || [])}_${agent.props.apiSource}_${agent.props.modelId}_${agent.props.modelName}_${promptMessagesHash}_${enabledParamsHash}_${parameterValuesHash}` : "";
     const currentSessionId = session?.id.toString() || "";
     const currentLastTurnId = session?.turnIds?.[session.turnIds.length - 1]?.toString() || "";
     

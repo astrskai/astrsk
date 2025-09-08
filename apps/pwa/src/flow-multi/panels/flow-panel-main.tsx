@@ -196,10 +196,6 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
         queryClient.removeQueries({ queryKey: flowKeys.detail(prevFlowIdRef.current) });
         queryClient.removeQueries({ queryKey: flowKeys.panelLayout(prevFlowIdRef.current) });
         queryClient.removeQueries({ queryKey: flowKeys.uiViewport(prevFlowIdRef.current) });
-        
-        // Invalidate all node-specific queries for the previous flow to prevent stale cache
-        queryClient.invalidateQueries({ queryKey: ifNodeKeys.byFlow(prevFlowIdRef.current) });
-        queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.byFlow(prevFlowIdRef.current) });
       }
       
       // Invalidate agents in both previous and current flows to force refetch
@@ -226,12 +222,6 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
           queryClient.invalidateQueries({ queryKey: agentKeys.detail(agentId) });
         }
       });
-      
-      // Also invalidate node queries for the new flow to ensure fresh data
-      if (flowId) {
-        queryClient.invalidateQueries({ queryKey: ifNodeKeys.byFlow(flowId) });
-        queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.byFlow(flowId) });
-      }
       
       prevFlowIdRef.current = flowId;
     }

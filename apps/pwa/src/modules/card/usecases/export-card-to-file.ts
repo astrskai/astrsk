@@ -49,7 +49,7 @@ export class ExportCardToFile
       return Result.fail<File>("Unsupported card type");
     }
 
-    if (options.format === "png") {
+    if (options.format === "json") {
       let iconAsset: Asset;
       if (card.props.iconAssetId) {
         // Get asset

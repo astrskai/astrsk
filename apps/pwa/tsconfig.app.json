@@ -25,7 +25,8 @@
     /* Aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "vibe-shared-types": ["../vibe-shared-types/src/index.ts"]
     }
   },
   "include": ["src"],

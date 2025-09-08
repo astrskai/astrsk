@@ -50,7 +50,6 @@ import { TurnService } from "@/app/services/turn-service";
 import { useWllamaStore } from "@/app/stores/wllama-store";
 import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
-import { OutputFormat } from "@/modules/agent/domain";
 import { ApiSource } from "@/modules/api/domain";
 import {
   ApiConnection,
@@ -1518,8 +1517,7 @@ async function* executeAgentNode({
       output: {},
     };
     yield result;
-    const isStructuredOutput =
-      agent.props.outputFormat === OutputFormat.StructuredOutput;
+    const isStructuredOutput = agent.props.enabledStructuredOutput;
     if (isStructuredOutput) {
       // Generate structured output
       const { partialObjectStream } = await generateStructuredOutput({

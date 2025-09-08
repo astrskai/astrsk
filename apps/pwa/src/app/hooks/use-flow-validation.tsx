@@ -147,31 +147,8 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
                 // Found at least one valid field that exists in schema
                 hasValidField = true;
                 
-                // Check if field has logic - if it has logic, we don't validate the value
-                // as it will be computed at runtime
-                if (!field.logic || field.logic.trim() === '') {
-                  // Only validate the field value if there's no logic
-                  if (field.value !== undefined && field.value !== '') {
-                    const value = field.value;
-                    const type = schemaField.type;
-                    
-                    
-                    // Validate based on type
-                    if (type === 'number' || type === 'integer') {
-                      const numValue = Number(value);
-                      if (isNaN(numValue)) {
-                        reasons.push(`Field '${schemaField.name}' expects ${type} but got '${value}'`);
-                      } else if (type === 'integer' && !Number.isInteger(numValue)) {
-                        reasons.push(`Field '${schemaField.name}' expects integer but got decimal '${value}'`);
-                      }
-                    } else if (type === 'boolean') {
-                      if (value !== 'true' && value !== 'false') {
-                        reasons.push(`Field '${schemaField.name}' expects boolean but got '${value}'`);
-                      }
-                    }
-                    // string type accepts any value, so no validation needed
-                  }
-                }
+                // DataStoreFields no longer have values - they only have logic
+                // Validation of actual values happens at runtime during execution
               }
             }
             

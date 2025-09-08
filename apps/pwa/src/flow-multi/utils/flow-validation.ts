@@ -22,7 +22,7 @@ export function isAgentValid(agent: Agent): boolean {
 
   // Check structured output if needed
   let hasStructuredOutput = true;
-  if ((agent.props.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.StructuredOutput) {
+  if (agent.props.enabledStructuredOutput) {
     hasStructuredOutput = !!(agent.props.schemaFields && 
                            agent.props.schemaFields.length > 0);
   }

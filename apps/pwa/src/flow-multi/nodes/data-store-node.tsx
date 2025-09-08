@@ -73,7 +73,7 @@ function DataStoreNodeComponent({
   const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
   
   // Get flow ID from data (new structure) or fall back to agent store (old structure)
-  const flowIdFromData = data.flowId;
+  const flowIdFromData = data?.flowId;
   const selectedFlowIdFromStore = useAgentStore.use.selectedFlowId();
   const selectedFlowId = flowIdFromData || selectedFlowIdFromStore;
   
@@ -126,7 +126,7 @@ function DataStoreNodeComponent({
   // Save node name - use new mutation if separate data exists, otherwise fall back to old
   const saveNodeName = useCallback(async (newName: string) => {
     // Determine which mutation to use based on data structure
-    const useNewMutation = !!dataStoreNodeData || !!data.flowId;
+    const useNewMutation = !!dataStoreNodeData || !!data?.flowId;
     const mutation = useNewMutation ? updateDataStoreNodeName : updateNodeTitle;
     
     if (mutation.isPending) return;
@@ -145,7 +145,7 @@ function DataStoreNodeComponent({
       setEditingTitle(title);
       toast.error("Failed to update node name");
     }
-  }, [id, title, updateNodeTitle, updateDataStoreNodeName, updateNodePanelStates, dataStoreNodeData, data.flowId]);
+  }, [id, title, updateNodeTitle, updateDataStoreNodeName, updateNodePanelStates, dataStoreNodeData, data?.flowId]);
 
   // Handle title changes
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

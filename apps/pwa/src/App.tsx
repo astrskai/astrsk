@@ -1,5 +1,6 @@
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { ConvexProvider } from "convex/react";
 
 import { createContext, useContext, useEffect, useState } from "react";
 
@@ -20,6 +21,8 @@ import {
   LeftNavigation,
   LeftNavigationTrigger,
 } from "@/components-v2/left-navigation/left-navigation";
+import { GlobalDockView } from "@/components-v2/global-dockview";
+import { RightSidebarContextProvider } from "@/components-v2/top-bar";
 import { cn } from "@/components-v2/lib/utils";
 import { Loading } from "@/components-v2/loading";
 import { ThemeProvider } from "@/components-v2/theme-provider";
@@ -29,6 +32,7 @@ import { Toaster } from "@/components-v2/ui/sonner";
 import { logger } from "@/shared/utils/logger";
 import * as amplitude from "@amplitude/analytics-browser";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { vibeConvexClient } from "@/lib/convex-client";
 
 // Init amplitude
 if (import.meta.env.VITE_AMPLITUDE_API_KEY) {
@@ -177,15 +181,19 @@ function V2Layout({
           "antialiased font-inter text-foreground",
         )}
       >
-        <TopBar />
-        <SidebarLeftProvider defaultOpen={!isMobile}>
-          <LeftNavigation />
-          <LeftNavigationTrigger />
-          <SidebarInset>
-            <main className="relative flex-1 overflow-hidden">{children}</main>
-          </SidebarInset>
-          <Toaster expand className="!z-[100]" />
-        </SidebarLeftProvider>
+        <RightSidebarContextProvider>
+          <TopBar />
+          <SidebarLeftProvider defaultOpen={!isMobile}>
+            <LeftNavigation />
+            <LeftNavigationTrigger />
+            <SidebarInset>
+              <main className="relative flex-1 overflow-hidden">
+                <GlobalDockView>{children}</GlobalDockView>
+              </main>
+            </SidebarInset>
+            <Toaster expand className="!z-[100]" />
+          </SidebarLeftProvider>
+        </RightSidebarContextProvider>
       </div>
     </ThemeProvider>
   );
@@ -230,10 +238,12 @@ const AppInternal = () => {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <V2Layout>
-        <AppInternal />
-      </V2Layout>
-      <ReactQueryDevtools initialIsOpen={false} />
+      <ConvexProvider client={vibeConvexClient}>
+        <V2Layout>
+          <AppInternal />
+        </V2Layout>
+      </ConvexProvider>
+      {/* <ReactQueryDevtools initialIsOpen={false} /> */}
     </QueryClientProvider>
   );
 }

@@ -53,7 +53,7 @@ export const useUpdateResponseTemplate = (flowId: string) => {
       // This avoids race conditions where we might overwrite other fields
       const result = await FlowService.updateResponseTemplate.execute({
         flowId,
-        template
+        responseTemplate: template
       });
       
       if (result.isFailure) {
@@ -101,8 +101,9 @@ export const useUpdateResponseTemplate = (flowId: string) => {
         endEditing();
       }
       
-      // Only invalidate the response query - we only changed the response template
+      // Invalidate both response and detail queries since detail query is used by vibe panel
       await queryClient.invalidateQueries({ queryKey: flowKeys.response(flowId) });
+      await queryClient.invalidateQueries({ queryKey: flowKeys.detail(flowId) });
     },
   });
   

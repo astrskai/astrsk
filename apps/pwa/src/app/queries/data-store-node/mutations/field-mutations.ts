@@ -37,6 +37,7 @@ export function useUpdateDataStoreNodeFields(flowId: string, nodeId: string) {
         nodeId,
         fields,
       });
+      
       if (result.isFailure) {
         throw new Error(result.getError());
       }

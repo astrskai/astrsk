@@ -88,10 +88,6 @@ function AgentNodeComponent({ agentId, flow, nodeId, selected }: AgentNodeCompon
   const { data: agent, isLoading: isAgentLoading } = useQuery({
     ...agentQueries.detail(new UniqueEntityID(agentId)),
     enabled: !!agentId,
-    staleTime: 1000 * 30, // 30 seconds - prevent refetch on mount
-    // Force refetch when flow changes by using flow ID as a dependency
-    refetchInterval: false,
-    refetchOnWindowFocus: false,
   });
   
   // 1. Name query - just the name field
@@ -222,13 +218,10 @@ function AgentNodeComponent({ agentId, flow, nodeId, selected }: AgentNodeCompon
     }
   }, [isConnectedStartToEnd, updateAgentPanelStates, agentId]);
 
-  // Initialize editing name only when agent changes or first load
-  const lastInitializedAgentIdRef = useRef<string | null>(null);
+  // Initialize editing name whenever nameData changes
   useEffect(() => {
-    // Only initialize if it's a different agent or first load
-    if (agentId && agentId !== lastInitializedAgentIdRef.current && nameData?.name) {
+    if (agentId && nameData?.name) {
       setEditingName(nameData.name);
-      lastInitializedAgentIdRef.current = agentId;
     }
   }, [agentId, nameData?.name]);
 
@@ -309,7 +302,7 @@ function AgentNodeComponent({ agentId, flow, nodeId, selected }: AgentNodeCompon
       if (responseTemplateChanged && updatedResponseTemplate) {
         const result = await FlowService.updateResponseTemplate.execute({
           flowId,
-          template: updatedResponseTemplate
+          responseTemplate: updatedResponseTemplate
         });
         if (result.isFailure) {
           console.error(`Failed to update response template:`, result.getError());
@@ -572,7 +565,7 @@ function AgentNodeComponent({ agentId, flow, nodeId, selected }: AgentNodeCompon
             <button 
               onClick={handleStructuredOutputClick}
               className={`flex-1 h-20 px-2 pt-1.5 pb-2.5 rounded-lg outline outline-offset-[-1px] transition-all inline-flex flex-col justify-center items-center ${
-                shouldShowValidation && (outputData?.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.StructuredOutput && !hasStructuredOutput
+                shouldShowValidation && outputData?.enabledStructuredOutput && !hasStructuredOutput
                   ? panelStates.structuredOutput
                     ? 'bg-background-surface-light outline-status-destructive-light hover:opacity-70'
                     : 'bg-background-surface-4 outline-status-destructive-light hover:bg-background-surface-5'
@@ -584,7 +577,7 @@ function AgentNodeComponent({ agentId, flow, nodeId, selected }: AgentNodeCompon
               <div className={`self-stretch text-center justify-start text-xl font-medium leading-9 ${
                 panelStates.structuredOutput ? 'text-text-contrast-text' : 'text-text-primary'
               }`}>
-                {outputData?.outputFormat === OutputFormat.TextOutput ? 'Response' : 'Structured'}
+                {!outputData?.enabledStructuredOutput ? 'Response' : 'Structured'}
               </div>
               <div className="self-stretch text-center justify-start">
                 <span className={`text-xs font-medium ${panelStates.structuredOutput ? 'text-text-info' : 'text-text-secondary'}`}>

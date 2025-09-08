@@ -18,6 +18,7 @@ export const cards = pgTable(TableName.Cards, {
   card_summary: text(),
   version: varchar(),
   conceptual_origin: varchar(),
+  vibe_session_id: uuid(), // Reference to active vibe session
   ...timestamps,
 });
 

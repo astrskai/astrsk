@@ -271,7 +271,6 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
       return {
         id: agentIdString,
         name: agentNames.get(agentIdString) || agent.props.name, // Use name from name query
-        outputFormat: agent.props.outputFormat,
         enabledStructuredOutput: agent.props.enabledStructuredOutput,
         schemaFields:
           agent.props.schemaFields?.map((field) => ({
@@ -306,11 +305,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
       const agentName = nameFromQuery || agent.props.name || "Unnamed Agent"; // Use name from name query
       const agentColor = getAgentHexColor(agent);
 
-      // Check the output format
-      const outputFormat =
-        agent.props.outputFormat || OutputFormat.StructuredOutput;
-
-      if (outputFormat === OutputFormat.TextOutput) {
+      // Check if structured output is disabled (text output mode)
+      if (!agent.props.enabledStructuredOutput) {
         // For text output, add single .response variable
         const sanitizedAgentName = sanitizeFileName(agentName);
         const variablePath = `${sanitizedAgentName}.response`;

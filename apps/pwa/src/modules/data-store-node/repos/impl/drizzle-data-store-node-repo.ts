@@ -4,7 +4,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { Drizzle } from "@/db/drizzle";
 import { dataStoresNodes, SelectDataStoreNode } from "@/db/schema/data-store-nodes";
 import { DataStoreNode } from "../../domain";
-import { DataStoreNodeMapper } from "../../mappers/data-store-node-mapper";
+import { DataStoreNodeDrizzleMapper } from "../../mappers/data-store-node-drizzle-mapper";
 import { SaveDataStoreNodeRepo } from "../save-data-store-node-repo";
 import { LoadDataStoreNodeRepo } from "../load-data-store-node-repo";
 import { DeleteDataStoreNodeRepo } from "../delete-data-store-node-repo";
@@ -15,7 +15,7 @@ export class DrizzleDataStoreNodeRepo
   async saveDataStoreNode(dataStoreNode: DataStoreNode): Promise<Result<DataStoreNode>> {
     try {
       const db = await Drizzle.getInstance();
-      const raw = DataStoreNodeMapper.toPersistence(dataStoreNode);
+      const raw = DataStoreNodeDrizzleMapper.toPersistence(dataStoreNode);
 
       // Try to update first, then insert if not found
       const existing = await db
@@ -61,7 +61,7 @@ export class DrizzleDataStoreNodeRepo
         return Result.ok(null);
       }
 
-      const dataStoreNode = DataStoreNodeMapper.toDomain(rows[0]);
+      const dataStoreNode = DataStoreNodeDrizzleMapper.toDomain(rows[0]);
       return Result.ok(dataStoreNode);
     } catch (error) {
       console.error("Failed to get data store node:", error);
@@ -87,11 +87,11 @@ export class DrizzleDataStoreNodeRepo
         return Result.ok(null);
       }
 
-      const dataStoreNode = DataStoreNodeMapper.toDomain(rows[0]);
+      const dataStoreNode = DataStoreNodeDrizzleMapper.toDomain(rows[0]);
       return Result.ok(dataStoreNode);
     } catch (error) {
       console.error("Failed to get data store node by flow and node ID:", error);
-      return Result.fail(`Failed to get data store node by flow and node ID: ${error}`);
+      return Result.fail(`Failed to get data store node by flow and node ID: ${(error as any)?.message || String(error)}`);
     }
   }
 
@@ -103,7 +103,7 @@ export class DrizzleDataStoreNodeRepo
         .from(dataStoresNodes)
         .where(eq(dataStoresNodes.flow_id, flowId));
 
-      const dataStoreNodes = rows.map(row => DataStoreNodeMapper.toDomain(row));
+      const dataStoreNodes = rows.map(row => DataStoreNodeDrizzleMapper.toDomain(row));
       return Result.ok(dataStoreNodes);
     } catch (error) {
       console.error("Failed to get data store nodes by flow:", error);

@@ -190,6 +190,27 @@ export class DrizzleCardRepo
     }
   }
 
+  async updateCardIconAssetId(cardId: UniqueEntityID, iconAssetId: UniqueEntityID | null): Promise<Result<void>> {
+    const db = await Drizzle.getInstance();
+    try {
+      await db
+        .update(cards)
+        .set({ 
+          icon_asset_id: iconAssetId ? iconAssetId.toString() : null, 
+          updated_at: new Date() 
+        })
+        .where(eq(cards.id, cardId.toString()));
+      
+      return Result.ok();
+    } catch (error) {
+      return Result.fail(
+        `Failed to update card icon asset: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
   async updateCharacterName(cardId: UniqueEntityID, name: string): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {

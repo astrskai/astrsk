@@ -14,17 +14,20 @@ import { ensureNodeSafety, ensureNodesSafety } from "@/flow-multi/utils/ensure-n
 import { ensureEdgeSelectable, ensureEdgesSelectable } from "@/flow-multi/utils/ensure-edge-selectable";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
+import { useFlowLocalStateSync } from "@/utils/flow-local-state-sync";
 import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
 import { useUpdateNodesPositions } from "@/app/queries/flow/mutations/nodes-positions-mutations";
 import { useUpdateFlowName, useUpdateFlowViewport } from "@/app/queries/flow/mutations/flow-mutations";
 import { useUpdateNodesAndEdges } from "@/app/queries/flow/mutations/nodes-edges-mutations";
-import { BookOpen, Pencil, Check, X, Loader2, SearchCheck, HelpCircle, Plus } from "lucide-react";
+import { BookOpen, Pencil, Check, X, Loader2, SearchCheck, HelpCircle, Plus, Code } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
+import { useRightSidebarState } from "@/components-v2/top-bar";
+import { SvgIcon } from "@/components-v2/svg-icon";
 import { Card } from "@/components-v2/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
 import {
@@ -148,7 +151,15 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   // 3. Context hooks
   const { openPanel, closePanel, isPanelOpen, registerFlowActions } = useFlowPanelContext();
   const { isExpanded, isMobile } = useLeftNavigationWidth();
+  const rightSidebar = useRightSidebarState();
   const queryClient = useQueryClient();
+
+  // Vibe Coding handler
+  const handleVibeCodingToggle = () => {
+    if (rightSidebar) {
+      rightSidebar.setIsOpen(!rightSidebar.isOpen);
+    }
+  };
 
   // 4. React Query hooks - using global queryClient settings
   const { data: flow } = useQuery({
@@ -161,6 +172,60 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const updateFlowNameMutation = useUpdateFlowName(flowId);
   const updateFlowViewportMutation = useUpdateFlowViewport(flowId);
   const updateNodesAndEdges = useUpdateNodesAndEdges(flowId);
+
+  // 6. Window-based local state sync for preview operations
+  useFlowLocalStateSync(
+    flowId,
+    // Handle nodes/edges update from operations (preview)
+    useCallback((localNodes?: any[], localEdges?: any[]) => {
+      console.log('🔄 [FLOW-PANEL] Received local nodes/edges update from operation:', {
+        nodeCount: localNodes?.length || 0,
+        edgeCount: localEdges?.length || 0,
+        hasNodes: !!localNodes,
+        hasEdges: !!localEdges,
+      });
+
+      // Apply the local changes to the flow panel immediately
+      if (localNodes) {
+        console.log('🔄 [FLOW-PANEL] Updating nodes:', localNodes.map(n => ({ id: n.id.slice(0, 8) + '...', type: n.type })));
+        setNodes(localNodes);
+        
+        // Mark as local change so the sync logic doesn't overwrite these changes
+        isLocalChangeRef.current = true;
+      }
+      
+      if (localEdges) {
+        console.log('🔄 [FLOW-PANEL] Updating edges:', localEdges.map(e => ({ source: e.source?.slice(0, 8) + '...', target: e.target?.slice(0, 8) + '...' })));
+        
+        // Ensure all edges have the required 'type' field for ReactFlow
+        const edgesWithType = localEdges.map((edge: any) => ({
+          ...edge,
+          type: edge.type || 'default'
+        }));
+        
+        setEdges(edgesWithType);
+      }
+    }, [setNodes, setEdges]),
+    // Handle individual node updates (if needed)
+    useCallback((nodeId: string, nodeData: any) => {
+      console.log('🔄 [FLOW-PANEL] Received individual node update:', { 
+        nodeId: nodeId.slice(0, 8) + '...', 
+        nodeType: nodeData?.type 
+      });
+
+      // Update the specific node in the local state
+      setNodes((currentNodes) => {
+        const updatedNodes = currentNodes.map(node => 
+          node.id === nodeId ? { ...node, ...nodeData } : node
+        );
+        
+        // Mark as local change
+        isLocalChangeRef.current = true;
+        
+        return updatedNodes;
+      });
+    }, [setNodes])
+  );
 
   // Handle flow title editing with granular mutation
   const handleSaveTitle = useCallback(async () => {
@@ -368,17 +433,22 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     const nodeIds = new Set(externalNodes.map(n => n.id));
     
     const externalEdges = ensureEdgesSelectable(
-      rawExternalEdges.filter(edge => {
-        // Edge must have valid source and target that exist in nodes
-        const isValid = edge.source && edge.target && 
-                       nodeIds.has(edge.source) && nodeIds.has(edge.target);
-        
-        if (!isValid && edge.source && edge.target) {
-          console.warn(`Filtering out orphaned edge: ${edge.source} -> ${edge.target}`);
-        }
-        
-        return isValid;
-      })
+      rawExternalEdges
+        .filter(edge => {
+          // Edge must have valid source and target that exist in nodes
+          const isValid = edge.source && edge.target && 
+                         nodeIds.has(edge.source) && nodeIds.has(edge.target);
+          
+          if (!isValid && edge.source && edge.target) {
+            console.warn(`Filtering out orphaned edge: ${edge.source} -> ${edge.target}`);
+          }
+          
+          return isValid;
+        })
+        .map(edge => ({
+          ...edge,
+          type: edge.type || 'default' // Ensure all edges have the required 'type' field for ReactFlow
+        }))
     );
     const currentDataHash = createDataHash(externalNodes, externalEdges);
     
@@ -630,6 +700,10 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       }
     }, 0);
 
+    // Invalidate data store node queries to ensure vibe panel sees the new node
+    const { dataStoreNodeKeys } = await import("@/app/queries/data-store-node/query-factory");
+    await queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.detail(flowId, nodeId) });
+
     toast.success("Data Update node added");
   }, [setNodes, saveFlowChanges, queryClient, flowId]);
 
@@ -661,6 +735,13 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     const nextColor = await getNextAvailableColor(currentFlow);
     
     // 1. Create separate node data entry first
+    console.log('🔄 [ADD-IF-NODE] Creating if-node in database:', {
+      flowId,
+      nodeId,
+      name: "New If",
+      color: nextColor
+    });
+    
     const createResult = await IfNodeService.createIfNode.execute({
       flowId: flowId,
       nodeId: nodeId,
@@ -671,9 +752,12 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     });
 
     if (createResult.isFailure) {
+      console.error('❌ [ADD-IF-NODE] If-node creation failed:', createResult.getError());
       toast.error(`Failed to create if node: ${createResult.getError()}`);
       return;
     }
+    
+    console.log('✅ [ADD-IF-NODE] If-node created successfully in database');
 
     // 2. Create flow node with only flowId (nodeId comes from node.id)
     const newNode: CustomNodeType = ensureNodeSafety({
@@ -699,6 +783,10 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       // Pass updatedNodes explicitly, edges will come from refs
       saveFlowChanges(updatedNodes, undefined, true);
     }, 0);
+
+    // Invalidate if node queries to ensure vibe panel sees the new node
+    const { ifNodeKeys } = await import("@/app/queries/if-node/query-factory");
+    await queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
 
     toast.success("If node added");
   }, [setNodes, saveFlowChanges, queryClient, flowId]);
@@ -958,7 +1046,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   }, [nodes, edges, setNodes, saveFlowChanges, queryClient, flowId]);
 
   // Delete non-agent node handler
-  const deleteNode = useCallback((nodeId: string) => {
+  const deleteNode = useCallback(async (nodeId: string) => {
     const currentFlow = flowRef.current;
     if (!currentFlow) return;
     
@@ -991,6 +1079,29 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       // Mark as local change
       isLocalChangeRef.current = true;
       
+      // Delete the node from database based on type
+      if (nodeToDelete.type === 'dataStore') {
+        const deleteResult = await DataStoreNodeService.deleteDataStoreNode.execute({
+          nodeId: nodeId
+        });
+        if (deleteResult.isFailure) {
+          console.error("Failed to delete data store node from database:", deleteResult.getError());
+        }
+        // Invalidate data store node queries
+        const { dataStoreNodeKeys } = await import("@/app/queries/data-store-node/query-factory");
+        await queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.detail(flowId, nodeId) });
+      } else if (nodeToDelete.type === 'if') {
+        const deleteResult = await IfNodeService.deleteIfNode.execute({
+          nodeId: nodeId
+        });
+        if (deleteResult.isFailure) {
+          console.error("Failed to delete if node from database:", deleteResult.getError());
+        }
+        // Invalidate if node queries
+        const { ifNodeKeys } = await import("@/app/queries/if-node/query-factory");
+        await queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
+      }
+      
       // Save the flow changes - pass both explicitly as they're newly calculated
       setTimeout(() => {
         saveFlowChanges(updatedNodes, updatedEdges);
@@ -1002,7 +1113,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [nodes, edges, setNodes, setEdges, saveFlowChanges]);
+  }, [nodes, edges, setNodes, setEdges, saveFlowChanges, queryClient, flowId]);
 
   // Handle click on node handle to show node creation menu
   const handleHandleClick = useCallback((nodeId: string, handleType: string, handleId?: string) => {
@@ -1690,6 +1801,16 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             className="min-w-[96px]"
           >
             Validation
+          </ButtonPill>
+          <ButtonPill
+            size="default"
+            variant="gradient"
+            icon={<SvgIcon name="ai_assistant"/>}
+            active={rightSidebar?.isOpen}
+            onClick={handleVibeCodingToggle}
+            className="min-w-[96px]"
+          >
+            AI assistant
           </ButtonPill>
         </div>
       </div>

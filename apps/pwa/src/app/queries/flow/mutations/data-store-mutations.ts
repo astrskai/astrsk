@@ -88,8 +88,9 @@ export const useUpdateDataStoreSchema = (flowId: string) => {
         endEditing();
       }
       
-      // Only invalidate the data store schema query - we only changed the schema
+      // Invalidate both schema and detail queries since detail query is used by vibe panel
       await queryClient.invalidateQueries({ queryKey: flowKeys.dataStoreSchema(flowId) });
+      await queryClient.invalidateQueries({ queryKey: flowKeys.detail(flowId) });
     },
   });
   

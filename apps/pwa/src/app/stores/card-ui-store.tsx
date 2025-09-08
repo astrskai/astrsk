@@ -11,6 +11,7 @@ export interface CardPanelVisibility {
   lorebooks: boolean;
   variables: boolean;
   scenarios: boolean;
+  imageGenerator: boolean;
 }
 
 interface LayoutState {
@@ -73,6 +74,7 @@ const defaultPanelVisibility: CardPanelVisibility = {
   lorebooks: false,
   variables: false,
   scenarios: false,
+  imageGenerator: false,
 };
 
 // Helper function to validate layout

@@ -39,9 +39,9 @@ import { toast } from "sonner";
  */
 export interface IfCondition {
   id: string;
-  dataType: ConditionDataType;
+  dataType: ConditionDataType | null;
   value1: string;
-  operator: ConditionOperator;
+  operator: ConditionOperator | null;
   value2: string;
 }
 
@@ -81,7 +81,7 @@ export default function IfNode({
   const { openPanel, isPanelOpen, updateNodePanelStates } = useFlowPanelContext();
   
   // Get flow ID from data (new structure) or fall back to agent store (old structure)
-  const flowIdFromData = data.flowId;
+  const flowIdFromData = data?.flowId;
   const selectedFlowIdFromStore = useAgentStore.use.selectedFlowId();
   const selectedFlowId = flowIdFromData || selectedFlowIdFromStore;
   
@@ -149,7 +149,7 @@ export default function IfNode({
   // Save node name - use new mutation if separate data exists, otherwise fall back to old
   const saveNodeName = useCallback(async (newName: string) => {
     // Determine which mutation to use based on data structure
-    const useNewMutation = !!ifNodeData || !!data.flowId;
+    const useNewMutation = !!ifNodeData || !!data?.flowId;
     const mutation = useNewMutation ? updateIfNodeName : updateNodeTitle;
     
     if (mutation.isPending) return;
@@ -168,7 +168,7 @@ export default function IfNode({
       setEditingTitle(title);
       toast.error("Failed to update node name");
     }
-  }, [id, title, updateNodeTitle, updateIfNodeName, updateNodePanelStates, ifNodeData, data.flowId]);
+  }, [id, title, updateNodeTitle, updateIfNodeName, updateNodePanelStates, ifNodeData, data?.flowId]);
 
   // Handle title changes
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
