@@ -56,9 +56,9 @@ export type ConditionOperator = StringOperator | NumberOperator | IntegerOperato
 
 export interface IfCondition {
   id: string;
-  dataType: ConditionDataType;
+  dataType: ConditionDataType | null;
   value1: string;
-  operator: ConditionOperator;
+  operator: ConditionOperator | null;
   value2: string;
 }
 

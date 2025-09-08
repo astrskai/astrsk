@@ -83,9 +83,9 @@ export const UNARY_OPERATORS: ConditionOperator[] = [
 // Updated condition interface
 export interface Condition {
   id: string;
-  dataType: ConditionDataType;
+  dataType: ConditionDataType | null;
   value1: string;
-  operator: ConditionOperator;
+  operator: ConditionOperator | null;
   value2: string;
 }
 
@@ -203,7 +203,8 @@ export function getOperatorsForDataType(dataType: ConditionDataType): ConditionO
 }
 
 // Check if operator requires a second value
-export function isUnaryOperator(operator: ConditionOperator): boolean {
+export function isUnaryOperator(operator: ConditionOperator | null): boolean {
+  if (operator === null) return false;
   return UNARY_OPERATORS.includes(operator);
 }
 
