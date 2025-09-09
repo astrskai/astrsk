@@ -33,7 +33,6 @@ export class FlowDrizzleMapper {
           dataStoreSchema,
           panelStructure,
           viewport,
-          isCodingPanelOpen: row.is_coding_panel_open ?? false,
           readyState: (row.ready_state as ReadyState) || ReadyState.Draft,
           validationIssues: row.validation_issues as any,
         },
@@ -74,7 +73,6 @@ export class FlowDrizzleMapper {
         data_store_schema: props.dataStoreSchema,
         panel_structure: props.panelStructure,
         viewport: props.viewport,
-        is_coding_panel_open: props.isCodingPanelOpen || false,
         ready_state: props.readyState,
         validation_issues: props.validationIssues,
       };

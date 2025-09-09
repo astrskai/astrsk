@@ -461,9 +461,10 @@ Based on this card data and the user's request, generate an image: ${imagePrompt
             const file = new File([blob], `nano-banana-${imageData.id}.png`, { type: imageData.mimeType || "image/png" });
 
             // Save to GeneratedImageService with card association
+            // Always use the original user prompt (not the enhanced prompt with card context)
             const saveResult = await GeneratedImageService.saveFileToGeneratedImage.execute({
               file,
-              prompt: imageData.originalPrompt || imageData.prompt,
+              prompt: imagePrompt, // Always use the original user input
               style: imageData.style || selectedStyle,
               aspectRatio: imageData.aspectRatio || selectedAspectRatio,
               associatedCardId: cardId ? new UniqueEntityID(cardId) : undefined,

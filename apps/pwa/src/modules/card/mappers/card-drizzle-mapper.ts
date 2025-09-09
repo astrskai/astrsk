@@ -27,7 +27,6 @@ export class CardDrizzleMapper {
       cardSummary: row.common.card_summary ?? undefined,
       version: row.common.version ?? undefined,
       conceptualOrigin: row.common.conceptual_origin ?? undefined,
-      isCodingPanelOpen: row.common.is_coding_panel_open ?? false,
       createdAt: row.common.created_at,
       updatedAt: row.common.updated_at,
     };
@@ -94,7 +93,6 @@ export class CardDrizzleMapper {
         card_summary: domain.props.cardSummary,
         version: domain.props.version,
         conceptual_origin: domain.props.conceptualOrigin,
-        is_coding_panel_open: domain.props.isCodingPanelOpen || false,
       },
     };
 

@@ -146,5 +146,14 @@
     "bps": true,
     "folderMillis": 1757400281942,
     "hash": "c9c017301f216f2b7a954f4dfc6cd741dad8678a07d3f9ab401ecfcfd99c50e1"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"cards\" DROP COLUMN \"is_coding_panel_open\";",
+      "\nALTER TABLE \"flows\" DROP COLUMN \"is_coding_panel_open\";"
+    ],
+    "bps": true,
+    "folderMillis": 1757433163764,
+    "hash": "74254570fb10dfac4d8756889743f458bbc5c8939e8a67bc51f4089b00c5754a"
   }
 ]

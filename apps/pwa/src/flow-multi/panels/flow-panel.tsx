@@ -19,7 +19,7 @@ import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
 import { useUpdateNodesPositions } from "@/app/queries/flow/mutations/nodes-positions-mutations";
-import { useUpdateFlowName, useUpdateFlowViewport, useUpdateCodingPanelState } from "@/app/queries/flow/mutations/flow-mutations";
+import { useUpdateFlowName, useUpdateFlowViewport } from "@/app/queries/flow/mutations/flow-mutations";
 import { useUpdateNodesAndEdges } from "@/app/queries/flow/mutations/nodes-edges-mutations";
 import { BookOpen, Pencil, Check, X, Loader2, SearchCheck, HelpCircle, Plus, Code } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
@@ -163,7 +163,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const updateNodesPositions = useUpdateNodesPositions(flowId);
   const updateFlowNameMutation = useUpdateFlowName(flowId);
   const updateFlowViewportMutation = useUpdateFlowViewport(flowId);
-  const updateCodingPanelState = useUpdateCodingPanelState(flowId);
   const updateNodesAndEdges = useUpdateNodesAndEdges(flowId);
 
   // Vibe Coding handler - opens the local vibe panel instead of global right panel

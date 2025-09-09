@@ -20,4 +20,3 @@ export * from "./update-card-lorebook";
 export * from "./update-card-scenarios";
 export * from "./update-plot-description";
 export * from "./restore-card-from-snapshot";
-export * from "./update-card-coding-panel-state";

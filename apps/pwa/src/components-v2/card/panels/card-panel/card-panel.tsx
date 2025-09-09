@@ -182,10 +182,14 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               // Invalidate all queries for this card
               await invalidateSingleCardQueries(queryClient, card.id);
               
-              // Also invalidate generated images for this card
-              console.log("🔄 [CARD-PANEL] Invalidating generated images query for card:", card.id.toString());
+              // Also invalidate generated images for this card and global list
+              console.log("🔄 [CARD-PANEL] Invalidating generated images queries");
               await queryClient.invalidateQueries({
                 queryKey: generatedImageKeys.cardImages(card.id.toString()),
+              });
+              // Also invalidate the global list so image generator gallery updates immediately
+              await queryClient.invalidateQueries({
+                queryKey: generatedImageKeys.lists(),
               });
               console.log("✅ [CARD-PANEL] Image added to gallery and set as card icon using same asset");
             } else {
