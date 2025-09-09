@@ -19,6 +19,8 @@ import { useResourceData } from "./hooks/use-resource-data";
 import { useStartCodingSession } from "@/app/hooks/use-vibe-coding-convex";
 import { useAppStore, Page } from "@/app/stores/app-store";
 import { useAgentStore } from "@/app/stores/agent-store";
+import { useUpdateCodingPanelState } from "@/app/queries/flow/mutations/flow-mutations";
+import { useUpdateCardCodingPanelState } from "@/app/queries/card/mutations/card-coding-panel-mutations";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardType } from "@/modules/card/domain";
 import { VibeSessionService } from "@/app/services/vibe-session-service";
@@ -83,6 +85,7 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
     resourceName: currentResourceName,
     editableData,
     selectedCard,
+    selectedFlow,
   } = useResourceData({
     selectedCardId,
     selectedFlowId,
@@ -831,11 +834,44 @@ Operations are being generated and will be ready for review shortly.`;
     [messages, updateMessage, queryClient],
   );
 
+  // Flow-specific coding panel state hook
+  const updateFlowCodingPanelState = useUpdateCodingPanelState(selectedFlowId || '');
+  
+  // Card-specific coding panel state hook
+  const updateCardCodingPanelState = useUpdateCardCodingPanelState(selectedCardId || '');
+
+  // Sync collapsed state with coding panel state for cards
+  useEffect(() => {
+    if (isCardPage && selectedCard) {
+      // Provide fallback for cards without isCodingPanelOpen field (pre-migration)
+      const isCodingPanelOpen = selectedCard.props.isCodingPanelOpen ?? false;
+      const shouldBeCollapsed = !isCodingPanelOpen;
+      
+      if (isCollapsed !== shouldBeCollapsed) {
+        setIsCollapsed(shouldBeCollapsed);
+      }
+    }
+  }, [isCardPage, selectedCard, isCollapsed]);
+
   // Handle collapse
   const handleToggleCollapse = useCallback(() => {
-    setIsCollapsed((prev) => !prev);
+    const newCollapsed = !isCollapsed;
+    setIsCollapsed(newCollapsed);
+    
+    if (newCollapsed) {
+      // Panel is being closed
+      if (isFlowPage && selectedFlowId) {
+        // Update flow-specific coding panel state
+        updateFlowCodingPanelState.mutate(false);
+      } else if (isCardPage && selectedCardId) {
+        // Update card-specific coding panel state
+        updateCardCodingPanelState.mutate(false);
+      }
+    }
+    
+    // Always call onToggle after updating the specific state
     onToggle?.();
-  }, [onToggle]);
+  }, [isCollapsed, onToggle, isFlowPage, selectedFlowId, updateFlowCodingPanelState, isCardPage, selectedCardId, updateCardCodingPanelState]);
 
   // Handle reset
   const handleReset = useCallback(async () => {

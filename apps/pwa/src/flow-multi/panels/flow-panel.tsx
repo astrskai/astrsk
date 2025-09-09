@@ -19,7 +19,7 @@ import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
 import { useUpdateNodesPositions } from "@/app/queries/flow/mutations/nodes-positions-mutations";
-import { useUpdateFlowName, useUpdateFlowViewport } from "@/app/queries/flow/mutations/flow-mutations";
+import { useUpdateFlowName, useUpdateFlowViewport, useUpdateCodingPanelState } from "@/app/queries/flow/mutations/flow-mutations";
 import { useUpdateNodesAndEdges } from "@/app/queries/flow/mutations/nodes-edges-mutations";
 import { BookOpen, Pencil, Check, X, Loader2, SearchCheck, HelpCircle, Plus, Code } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
@@ -154,12 +154,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const rightSidebar = useRightSidebarState();
   const queryClient = useQueryClient();
 
-  // Vibe Coding handler
-  const handleVibeCodingToggle = () => {
-    if (rightSidebar) {
-      rightSidebar.setIsOpen(!rightSidebar.isOpen);
-    }
-  };
 
   // 4. React Query hooks - using global queryClient settings
   const { data: flow } = useQuery({
@@ -171,7 +165,28 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const updateNodesPositions = useUpdateNodesPositions(flowId);
   const updateFlowNameMutation = useUpdateFlowName(flowId);
   const updateFlowViewportMutation = useUpdateFlowViewport(flowId);
+  const updateCodingPanelState = useUpdateCodingPanelState(flowId);
   const updateNodesAndEdges = useUpdateNodesAndEdges(flowId);
+
+  // Vibe Coding handler - now flow-specific (only opens, doesn't close)
+  const handleVibeCodingToggle = useCallback(() => {
+    if (!flow) return;
+    
+    // Always set to true for redundancy - ensures panel opens even if state gets out of sync
+    updateCodingPanelState.mutate(true, {
+      onError: (error) => {
+        console.error('Failed to update coding panel state:', error);
+        toast.error('Failed to update AI assistant panel state');
+      }
+    });
+  }, [flow, updateCodingPanelState]);
+
+  // Sync flow coding panel state with global sidebar when flow changes
+  useEffect(() => {
+    if (flow && rightSidebar && flow.props.isCodingPanelOpen !== rightSidebar.isOpen) {
+      rightSidebar.setIsOpen(flow.props.isCodingPanelOpen || false);
+    }
+  }, [flow?.props.isCodingPanelOpen, rightSidebar]);
 
   // 6. Window-based local state sync for preview operations
   useFlowLocalStateSync(
@@ -1807,7 +1822,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             size="default"
             variant="gradient"
             icon={<SvgIcon name="ai_assistant"/>}
-            active={rightSidebar?.isOpen}
+            active={flow?.props.isCodingPanelOpen || false}
             onClick={handleVibeCodingToggle}
             className="w-32 h-8"
           >

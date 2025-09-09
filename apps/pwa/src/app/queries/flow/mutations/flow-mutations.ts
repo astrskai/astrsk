@@ -282,3 +282,55 @@ export function useDeleteFlow() {
     },
   });
 }
+
+// Hook for updating coding panel state with optimistic updates
+export function useUpdateCodingPanelState(flowId: string) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (isOpen: boolean) => {
+      const result = await FlowService.updateFlowCodingPanelState.execute({ 
+        flowId: new UniqueEntityID(flowId), 
+        isCodingPanelOpen: isOpen 
+      });
+      if (result.isFailure) throw new Error(result.getError());
+      return isOpen;
+    },
+    onMutate: async (isOpen: boolean) => {
+      // Cancel any outgoing refetches to prevent overwriting our optimistic update
+      await queryClient.cancelQueries({ queryKey: flowKeys.detail(flowId) });
+      
+      // Snapshot the previous value
+      const previousFlow = queryClient.getQueryData(flowKeys.detail(flowId));
+      
+      // Optimistically update the flow detail
+      queryClient.setQueryData(flowKeys.detail(flowId), (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          props: {
+            ...old.props,
+            isCodingPanelOpen: isOpen,
+            updatedAt: new Date()
+          }
+        };
+      });
+      
+      // Return context for potential rollback
+      return { previousFlow };
+    },
+    onError: (err, isOpen, context) => {
+      // Restore previous value on error
+      if (context?.previousFlow) {
+        queryClient.setQueryData(flowKeys.detail(flowId), context.previousFlow);
+      }
+      console.error('Failed to update coding panel state:', err);
+    },
+    onSuccess: () => {
+      // Invalidate to ensure consistency with server
+      queryClient.invalidateQueries({ 
+        queryKey: flowKeys.detail(flowId)
+      });
+    },
+  });
+}

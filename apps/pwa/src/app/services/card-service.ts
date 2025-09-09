@@ -25,6 +25,7 @@ import {
   UpdateCardScenarios,
   UpdatePlotDescription,
   RestoreCardFromSnapshot,
+  UpdateCardCodingPanelState,
 } from "@/modules/card/usecases";
 // import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
 
@@ -52,6 +53,7 @@ export class CardService {
   public static updateCardScenarios: UpdateCardScenarios;
   public static updatePlotDescription: UpdatePlotDescription;
   public static restoreCardFromSnapshot: RestoreCardFromSnapshot;
+  public static updateCardCodingPanelState: UpdateCardCodingPanelState;
 
   private constructor() {}
 
@@ -88,5 +90,6 @@ export class CardService {
     this.updateCardScenarios = new UpdateCardScenarios(this.cardRepo, this.cardRepo);
     this.updatePlotDescription = new UpdatePlotDescription(this.cardRepo, this.cardRepo);
     this.restoreCardFromSnapshot = new RestoreCardFromSnapshot(this.cardRepo);
+    this.updateCardCodingPanelState = new UpdateCardCodingPanelState(this.cardRepo, this.cardRepo);
   }
 }

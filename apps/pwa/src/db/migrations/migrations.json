@@ -130,5 +130,21 @@
     "bps": true,
     "folderMillis": 1757256794993,
     "hash": "c133359a0ddd37aa54128e33e0da978ef55ddb39886655484792f0d42a9e3d58"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"flows\" ADD COLUMN \"is_coding_panel_open\" boolean DEFAULT false NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1757398124448,
+    "hash": "b6cb754d1aa9e80d026f3bffba2a1bacc817f205d06ae36d45b844fc3e59d865"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"cards\" ADD COLUMN \"is_coding_panel_open\" boolean DEFAULT false NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1757400281942,
+    "hash": "c9c017301f216f2b7a954f4dfc6cd741dad8678a07d3f9ab401ecfcfd99c50e1"
   }
 ]

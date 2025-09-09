@@ -20,6 +20,7 @@ import { Button } from "@/components-v2/ui/button";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { invalidateSingleCardQueries } from "@/components-v2/card/utils/invalidate-card-queries";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
+import { useUpdateCardCodingPanelState } from "@/app/queries/card/mutations/card-coding-panel-mutations";
 import { useRightSidebarState } from "@/components-v2/top-bar";
 import { Avatar } from "@/components-v2/avatar";
 
@@ -85,21 +86,34 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   // Get left navigation state for conditional margins
   const { isExpanded, isMobile } = useLeftNavigationWidth();
   
-  // Right sidebar state for vibe coding panel
-  const rightSidebar = useRightSidebarState();
-
-  // Vibe Coding handler
-  const handleVibeCodingToggle = () => {
-    if (rightSidebar) {
-      rightSidebar.setIsOpen(!rightSidebar.isOpen);
-    }
-  };
-
   // Use React Query to get card data
   const { data: cardFromQuery } = useQuery(cardQueries.detail(cardId));
 
   // Use provided card or the one from query
   const card = providedCard || cardFromQuery;
+
+  // Right sidebar state and card coding panel mutation
+  const rightSidebar = useRightSidebarState();
+  const updateCodingPanelState = useUpdateCardCodingPanelState(cardId);
+
+  // Sync card coding panel state with global sidebar when card changes (same as flow)
+  useEffect(() => {
+    if (card && rightSidebar && card.props.isCodingPanelOpen !== rightSidebar.isOpen) {
+      rightSidebar.setIsOpen(card.props.isCodingPanelOpen || false);
+    }
+  }, [card?.props.isCodingPanelOpen, rightSidebar]);
+
+  // Vibe Coding handler (only opens, doesn't close) - same as flow implementation
+  const handleVibeCodingToggle = () => {
+    if (!card) return;
+    
+    // Always set to true for redundancy - ensures panel opens even if state gets out of sync
+    updateCodingPanelState.mutate(true, {
+      onError: (error) => {
+        console.error('Failed to update card coding panel state:', error);
+      }
+    });
+  };
 
   // Helper function to extract character name from card
   const getCharacterName = (card: Card): string => {
@@ -372,7 +386,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               size="default"
               variant="gradient"
               icon={<SvgIcon name="ai_assistant" />}
-              active={rightSidebar?.isOpen}
+              active={card?.props.isCodingPanelOpen || false}
               onClick={handleVibeCodingToggle}
               className="w-32 h-8"
             >
