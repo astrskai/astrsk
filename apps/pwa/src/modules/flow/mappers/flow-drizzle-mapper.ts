@@ -33,7 +33,7 @@ export class FlowDrizzleMapper {
           dataStoreSchema,
           panelStructure,
           viewport,
-          isCodingPanelOpen: row.is_coding_panel_open || false,
+          isCodingPanelOpen: row.is_coding_panel_open ?? false,
           readyState: (row.ready_state as ReadyState) || ReadyState.Draft,
           validationIssues: row.validation_issues as any,
         },

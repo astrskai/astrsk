@@ -183,8 +183,11 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // Sync flow coding panel state with global sidebar when flow changes
   useEffect(() => {
-    if (flow && rightSidebar && flow.props.isCodingPanelOpen !== rightSidebar.isOpen) {
-      rightSidebar.setIsOpen(flow.props.isCodingPanelOpen || false);
+    if (flow && rightSidebar) {
+      const panelState = flow.props.isCodingPanelOpen ?? false;
+      if (panelState !== rightSidebar.isOpen) {
+        rightSidebar.setIsOpen(panelState);
+      }
     }
   }, [flow?.props.isCodingPanelOpen, rightSidebar]);
 
