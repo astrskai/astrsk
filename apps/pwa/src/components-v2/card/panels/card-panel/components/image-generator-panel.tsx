@@ -65,7 +65,7 @@ const ImageToImageSetting = ({
           </div>
         </div>
         <div className="self-stretch justify-start text-text-info text-xs font-normal">
-          {isDisabled ? 'Select an image to unlock transformation' : 'Transform the selected character image based on your prompt'}
+          {isDisabled ? 'Select an image to unlock transformation' : 'Transform the selected image based on your prompt'}
         </div>
       </div>
       <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${

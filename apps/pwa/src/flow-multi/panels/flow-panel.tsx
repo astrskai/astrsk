@@ -1714,12 +1714,12 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       {/* Flow panel buttons - new layout */}
       <div className="w-full flex justify-between items-start gap-2">
         {/* Left side buttons */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {/* Agent button - creates agent node directly */}
           <ButtonPill
             size="default"
             onClick={addAgentNode}
-            className="min-w-[96px]"
+            className="w-32"
           >
             Agent (node)
           </ButtonPill>
@@ -1785,13 +1785,12 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         </div>
         
         {/* Right side buttons */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 justify-end">
           <ButtonPill
             size="default"
             icon={<BookOpen />}
             active={isPanelOpen(PANEL_TYPES.VARIABLE)}
             onClick={() => openPanel(PANEL_TYPES.VARIABLE)}
-            className="min-w-[96px]"
           >
             Variables
           </ButtonPill>
@@ -1800,7 +1799,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             icon={<SearchCheck />}
             active={isPanelOpen(PANEL_TYPES.VALIDATION)}
             onClick={() => openPanel(PANEL_TYPES.VALIDATION)}
-            className="min-w-[96px]"
+            className="w-32 h-8"
           >
             Validation
           </ButtonPill>
@@ -1810,7 +1809,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             icon={<SvgIcon name="ai_assistant"/>}
             active={rightSidebar?.isOpen}
             onClick={handleVibeCodingToggle}
-            className="min-w-[96px]"
+            className="w-32 h-8"
           >
             AI assistant
           </ButtonPill>

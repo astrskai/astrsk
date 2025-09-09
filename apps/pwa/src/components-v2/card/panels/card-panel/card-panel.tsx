@@ -348,7 +348,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
           </div>
           
           {/* Right side buttons */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-end">
             <ButtonPill
               onClick={() => handleOpenPanel("variables")}
               // onDoubleClick={() => handleClosePanel("variables")}
@@ -364,6 +364,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               active={panelVisibility?.["imageGenerator"]}
               size="default"
               icon={<Image />}
+              className="w-32 h-8"
             >
               Image studio
             </ButtonPill>
@@ -373,8 +374,9 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               icon={<SvgIcon name="ai_assistant" />}
               active={rightSidebar?.isOpen}
               onClick={handleVibeCodingToggle}
+              className="w-32 h-8"
             >
-              AI assistant
+              AI assistant  
             </ButtonPill>
           </div>
         </div>
