@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { Button } from "@/components-v2/ui/button";
 import { Textarea } from "@/components-v2/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
 import { Loader2, Download, Sparkles, Upload, Image, Type, Copy } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components-v2/ui/tooltip";
 import { Switch } from "@/components-v2/ui/switch";
@@ -14,11 +15,17 @@ import {
   CardPanelError,
   useCardPanel 
 } from "@/components-v2/card/panels/hooks/use-card-panel";
+import { useResourceData } from "@/components-v2/right-navigation/vibe-panel/hooks/use-resource-data";
+import { useAppStore, Page } from "@/app/stores/app-store";
+import { CardType } from "@/modules/card/domain";
+import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
 import { useNanoBananaGenerator, CustomImageResponse, ImageToImageResponse } from "@/app/hooks/use-nano-banana-generator";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { generatedImageQueries, generatedImageKeys } from "@/app/queries/generated-image/query-factory";
 import { cn } from "@/shared/utils";
+import { useModelStore, IMAGE_MODELS } from "@/app/stores/model-store";
+import { toast } from "sonner";
 
 interface ImageGeneratorPanelProps extends CardPanelProps {}
 
@@ -171,6 +178,23 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   // Card data hook
   const { card } = useCardPanel({ cardId });
   
+  // Get app state for resource gathering
+  const activePage = useAppStore((state) => state.activePage);
+  const isCardPage = activePage === Page.Cards || activePage === Page.CardPanel;
+  
+  // Resource data gathering (same pattern as AI panel)
+  const {
+    resourceType,
+    resourceName,
+    editableData,
+    selectedCard,
+  } = useResourceData({
+    selectedCardId: cardId,
+    selectedFlowId: null,
+    isCardPage,
+    isFlowPage: false,
+  });
+  
   // Query client for invalidation
   const queryClient = useQueryClient();
   
@@ -178,16 +202,6 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   const { data: generatedImages = [], isLoading, error } = useQuery({
     ...generatedImageQueries.list(),
   });
-
-  // Debug logging for query state
-  useEffect(() => {
-    console.log("🖼️ [IMAGE-GENERATOR] Query state:", {
-      cardId,
-      imagesCount: generatedImages.length,
-      isLoading,
-      error: error?.message,
-    });
-  }, [cardId, generatedImages.length, isLoading, error]);
 
   // Sync selected state with current card icon
   useEffect(() => {
@@ -206,23 +220,16 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   
   // Card icon asset hook
   const [cardIconAssetUrl] = useAsset(card?.props?.iconAssetId);
-
-  // Debug logging
-  // useEffect(() => {
-  //   console.log("🖼️ [IMAGE-GENERATOR] Card debug:", {
-  //     cardId,
-  //     cardExists: !!card,
-  //     iconAssetId: card?.props?.iconAssetId?.toString(),
-  //     cardIconAssetUrl,
-  //     hasCardImage: !!cardIconAssetUrl
-  //   });
-  // }, [cardId, card, cardIconAssetUrl]);
   
   // UI state
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState("photorealistic"); // Hidden but functional
   const [selectedAspectRatio, setSelectedAspectRatio] = useState("2:3"); // Hidden but functional
   const [useCardImage, setUseCardImage] = useState(false); // Switch to use card image as input
+  
+  // Use global model store instead of local state
+  const selectedModel = useModelStore.use.selectedImageModel();
+  const setSelectedModel = useModelStore.use.setSelectedImageModel();
   
   // Local form state
   const [imagePrompt, setImagePrompt] = useState("");
@@ -380,7 +387,6 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
               const base64 = result.split(',')[1];
               const mimeType = 'image/jpeg';
               
-              console.log(`🖼️ [IMAGE-RESIZE] Resized from ${img.width}x${img.height} to ${width}x${height}, size: ${Math.round(compressedBlob.size/1024)}KB`);
               resolve({ base64, mimeType });
             };
             reader.onerror = reject;
@@ -403,82 +409,70 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
 
     // Check if we need card image but it's not available
     if (useCardImage && !cardIconAssetUrl) {
-      alert("Card image is required but not available. Please upload an image to the card first.");
+      toast("Card image is required but not available. Please upload an image to the card first.");
       return;
     }
 
     setIsGenerating(true);
     
     try {
-      console.log("🍌 [IMAGE-GENERATOR] Calling nano banana with prompt:", imagePrompt);
-      console.log("🍌 [IMAGE-GENERATOR] Using card image:", useCardImage);
+      // Generate enhanced prompt with card data
+      let enhancedPrompt = imagePrompt;
+      
+      if (selectedCard) {
+        // Convert card to JSON using drizzle mapper
+        const cardJson = CardDrizzleMapper.toPersistence(selectedCard);
+        
+        // Add card context to prompt
+        enhancedPrompt = `This is the card data in JSON format:
+${JSON.stringify(cardJson, null, 2)}
+
+Based on this card data and the user's request, generate an image: ${imagePrompt}`;
+      }
       
       let result: CustomImageResponse | ImageToImageResponse;
 
       if (useCardImage && cardIconAssetUrl) {
         // Image-to-image generation using card image
-        console.log("🖼️ [IMAGE-GENERATOR] Converting card image to base64...");
         const { base64, mimeType } = await urlToBase64(cardIconAssetUrl);
-        
-        console.log("🖼️ [IMAGE-GENERATOR] Calling generateImageToImage with:", {
-          hasBase64: !!base64,
-          base64Length: base64.length,
-          mimeType,
-          prompt: imagePrompt,
-          style: selectedStyle,
-          aspectRatio: selectedAspectRatio
-        });
-        
+
+        //TODO add modelId
         result = await generateImageToImage({
           inputImageBase64: base64,
           inputImageMimeType: mimeType,
-          prompt: imagePrompt,
+          prompt: enhancedPrompt,
           style: selectedStyle,
           aspectRatio: selectedAspectRatio,
         });
       } else {
         // Regular text-to-image generation
         result = await generateCustomImage({
-          prompt: imagePrompt,
+          prompt: enhancedPrompt,
           style: selectedStyle,
           aspectRatio: selectedAspectRatio,
         });
       }
 
-      console.log("🍌 [IMAGE-GENERATOR] Nano banana response:", {
-        success: result.success,
-        imagesGenerated: result.images?.length || 0,
-        textContent: result.textContent?.substring(0, 100) + "...",
-      });
-
       if (result.success && result.images && result.images.length > 0) {
         // Process each generated image - now they come with URLs from file storage
         for (const imageData of result.images) {
           try {
-            console.log("🖼️ [IMAGE-GENERATOR] Processing image from file storage:", {
-              id: imageData.id,
-              storageId: imageData.storageId,
-              url: imageData.url,
-              size: imageData.size,
-              mimeType: imageData.mimeType
-            });
-
             // Fetch the image from the storage URL to convert to File for GeneratedImageService
             const response = await fetch(imageData.url);
             const blob = await response.blob();
             const file = new File([blob], `nano-banana-${imageData.id}.png`, { type: imageData.mimeType || "image/png" });
 
             // Save to GeneratedImageService with card association
+            // Always use the original user prompt (not the enhanced prompt with card context)
             const saveResult = await GeneratedImageService.saveFileToGeneratedImage.execute({
               file,
-              prompt: imageData.originalPrompt || imageData.prompt,
+              prompt: imagePrompt, // Always use the original user input
               style: imageData.style || selectedStyle,
               aspectRatio: imageData.aspectRatio || selectedAspectRatio,
               associatedCardId: cardId ? new UniqueEntityID(cardId) : undefined,
             });
 
             if (saveResult.isSuccess) {
-              console.log("✅ [IMAGE-GENERATOR] Image saved successfully");
               // Invalidate queries to refresh the image list
               await refreshGlobalImages();
             } else {
@@ -491,17 +485,17 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
       } else {
         console.error("❌ [IMAGE-GENERATOR] No images generated or generation failed:", result.error);
         // Show user-friendly error message
-        alert(`Image generation failed: ${result.error || "No images were generated. This may be due to content policy restrictions or technical issues."}`);
+        toast(`Image generation failed: ${result.error || "No images were generated. This may be due to content policy restrictions or technical issues."}`);
       }
       
     } catch (error) {
       console.error("❌ [IMAGE-GENERATOR] Error generating image:", error);
       // Show user-friendly error message
-      alert(`Image generation failed: ${error instanceof Error ? error.message : "An unexpected error occurred. Please try again."}`);
+      toast(`Image generation failed: ${error instanceof Error ? error.message : "An unexpected error occurred. Please try again."}`);
     } finally {
       setIsGenerating(false);
     }
-  }, [imagePrompt, selectedStyle, selectedAspectRatio, generateCustomImage, generateImageToImage, useCardImage, cardIconAssetUrl, urlToBase64]);
+  }, [imagePrompt, selectedStyle, selectedAspectRatio, generateCustomImage, generateImageToImage, useCardImage, cardIconAssetUrl, urlToBase64, selectedModel]);
 
 
   const handleDownloadImage = useCallback((imageUrl: string, prompt: string) => {
@@ -519,7 +513,6 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
       // Update card icon to use the selected image
       updateCardIconAsset.mutate(assetId.toString(), {
         onSuccess: () => {
-          console.log("✅ Card image updated to use gallery asset");
           // Could add a toast notification here
         },
         onError: (error) => {
@@ -620,6 +613,20 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
             cardImageUrl={cardIconAssetUrl || undefined}
             disabled={!cardIconAssetUrl}
           />
+        </div>
+
+        {/* Model Selection */}
+        <div className="flex flex-col gap-2 flex-shrink-0">
+          <label className="text-sm font-medium text-text-primary">Model</label>
+          <Select value={selectedModel} onValueChange={setSelectedModel}>
+            <SelectTrigger className="h-9 bg-background-surface-0 border-border-normal">
+              <SelectValue placeholder="Select a model" />
+            </SelectTrigger>
+            <SelectContent side="top">
+              <SelectItem value={IMAGE_MODELS.NANO_BANANA}>Nano Banana</SelectItem>
+              <SelectItem value={IMAGE_MODELS.SEEDDREAM_4_0}>Seeddream 4.0</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Action Buttons */}

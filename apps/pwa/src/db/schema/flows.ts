@@ -23,7 +23,6 @@ export const flows = pgTable(TableName.Flows, {
   panel_structure: jsonb().$type<PanelStructure>(),
   viewport: jsonb().$type<FlowViewport>(),
   vibe_session_id: uuid(), // Reference to active vibe session
-  is_coding_panel_open: boolean().notNull().default(false), // AI Assistant panel state
   ready_state: varchar().$type<ReadyState>().notNull().default(ReadyState.Draft),
   validation_issues: jsonb().$type<ValidationIssue[]>(),
   ...timestamps,

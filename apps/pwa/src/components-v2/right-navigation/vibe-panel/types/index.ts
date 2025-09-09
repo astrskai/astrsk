@@ -43,4 +43,8 @@ export interface VibePanelProps {
   className?: string;
   onToggle?: () => void;
   isCollapsed?: boolean;
+  // New props for local panel context
+  resourceId?: string;
+  resourceType?: 'card' | 'flow';
+  isLocalPanel?: boolean;
 }

@@ -19,7 +19,6 @@ export const cards = pgTable(TableName.Cards, {
   version: varchar(),
   conceptual_origin: varchar(),
   vibe_session_id: uuid(), // Reference to active vibe session
-  is_coding_panel_open: boolean().notNull().default(false), // AI Assistant panel state
   ...timestamps,
 });
 

@@ -34,7 +34,6 @@ import { UpdatePanelLayout } from "@/modules/flow/usecases/update-panel-layout";
 import { UpdateNodesAndEdges } from "@/modules/flow/usecases/update-nodes-and-edges";
 import { UpdateFlowValidation } from "@/modules/flow/usecases/update-flow-validation";
 import { UpdateFlowReadyState } from "@/modules/flow/usecases/update-flow-ready-state";
-import { UpdateFlowCodingPanelState } from "@/modules/flow/usecases/update-flow-coding-panel-state";
 import { RestoreFlowFromSnapshot } from "@/modules/flow/usecases/restore-flow-from-snapshot";
 // import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
 
@@ -73,7 +72,6 @@ export class FlowService {
   public static updateNodesAndEdges: UpdateNodesAndEdges;
   public static updateFlowValidation: UpdateFlowValidation;
   public static updateFlowReadyState: UpdateFlowReadyState;
-  public static updateFlowCodingPanelState: UpdateFlowCodingPanelState;
   public static restoreFlowFromSnapshot: RestoreFlowFromSnapshot;
 
   private constructor() {}
@@ -129,7 +127,6 @@ export class FlowService {
     this.updateNodesAndEdges = new UpdateNodesAndEdges(this.flowRepo);
     this.updateFlowValidation = new UpdateFlowValidation(this.flowRepo);
     this.updateFlowReadyState = new UpdateFlowReadyState(this.flowRepo);
-    this.updateFlowCodingPanelState = new UpdateFlowCodingPanelState(this.flowRepo, this.flowRepo);
     this.restoreFlowFromSnapshot = new RestoreFlowFromSnapshot(this.flowRepo);
   }
 }

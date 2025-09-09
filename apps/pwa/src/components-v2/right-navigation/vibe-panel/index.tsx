@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { vibeToast } from "./utils/vibe-toast";
+import { toast } from "sonner";
 import { cn } from "@/shared/utils";
 import type {
   VibeAnalysisResult,
@@ -19,8 +19,6 @@ import { useResourceData } from "./hooks/use-resource-data";
 import { useStartCodingSession } from "@/app/hooks/use-vibe-coding-convex";
 import { useAppStore, Page } from "@/app/stores/app-store";
 import { useAgentStore } from "@/app/stores/agent-store";
-import { useUpdateCodingPanelState } from "@/app/queries/flow/mutations/flow-mutations";
-import { useUpdateCardCodingPanelState } from "@/app/queries/card/mutations/card-coding-panel-mutations";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardType } from "@/modules/card/domain";
 import { VibeSessionService } from "@/app/services/vibe-session-service";
@@ -57,6 +55,9 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
   className,
   onToggle,
   isCollapsed: initialCollapsed = false,
+  resourceId: overrideResourceId,
+  resourceType: overrideResourceType,
+  isLocalPanel = false,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
   const [appliedChanges, setAppliedChanges] = useState<
@@ -64,14 +65,18 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
   >([]);
   const queryClient = useQueryClient();
 
-  // Get selected resource from app stores
-  const selectedCardId = useAppStore((state) => state.selectedCardId);
-  const selectedFlowId = useAgentStore((state) => state.selectedFlowId);
+  // Get selected resource from app stores or use overrides for local panels
+  const globalSelectedCardId = useAppStore((state) => state.selectedCardId);
+  const globalSelectedFlowId = useAgentStore((state) => state.selectedFlowId);
   const activePage = useAppStore((state) => state.activePage);
 
-  // Determine primary resource based on active page
-  const isCardPage = activePage === Page.Cards || activePage === Page.CardPanel;
-  const isFlowPage = activePage === Page.Flow || activePage === Page.Agents;
+  // Use override values for local panels, otherwise use global app state
+  const selectedCardId = isLocalPanel && overrideResourceType === 'card' ? overrideResourceId || null : globalSelectedCardId;
+  const selectedFlowId = isLocalPanel && overrideResourceType === 'flow' ? overrideResourceId || null : globalSelectedFlowId;
+
+  // Determine primary resource based on active page or local panel context
+  const isCardPage = isLocalPanel && overrideResourceType === 'card' ? true : (activePage === Page.Cards || activePage === Page.CardPanel);
+  const isFlowPage = isLocalPanel && overrideResourceType === 'flow' ? true : (activePage === Page.Flow || activePage === Page.Agents);
 
   const primaryResourceId = useMemo(() => {
     if (isCardPage && selectedCardId) return selectedCardId;
@@ -150,13 +155,9 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
           if (validationResult.dataStoreOperations.length > 0) {
             if (!validationResult.success) {
               // Show validation errors to user but don't block the operation
-              vibeToast.error(
-                `Data store validation warnings: ${validationResult.errors.join(", ")}`,
-              );
+              toast.error(`Data store validation warnings: ${validationResult.errors.join(", ")}`);
             } else {
-              vibeToast.success(
-                "Data store operations validated - UUID integrity maintained",
-              );
+              toast.success("Data store operations validated - UUID integrity maintained");
             }
           }
         } catch (error) {
@@ -251,7 +252,7 @@ Operations are being generated and will be ready for review shortly.`;
   const handleSessionError = useCallback(
     (error: string, metadata?: any) => {
       // Session error occurred
-      vibeToast.error(formatErrorMessage(error));
+      toast.error(`Session error occurred: ${formatErrorMessage(error)}`);
 
       // Remove processing message if exists
       const processingMsg = messages.find((m) => m.isProcessing);
@@ -284,14 +285,14 @@ Operations are being generated and will be ready for review shortly.`;
 
   // Handle sending message
   const handleSendMessage = useCallback(
-    async (prompt: string) => {
+    async (prompt: string, modelId?: string) => {
       if (!primaryResourceId || !currentResourceType || !editableData) {
         console.error("❌ [VIBE-PANEL] Missing required data:", {
           primaryResourceId,
           currentResourceType,
           hasEditableData: !!editableData,
         });
-        vibeToast.error("Please select a card or flow to edit");
+        toast.error("Please select a card or flow to edit");
         return;
       }
 
@@ -368,6 +369,7 @@ Operations are being generated and will be ready for review shortly.`;
         const result = await createSessionMutation.mutateAsync({
           originalRequest: prompt,
           context: enhancedContext,
+          modelId: modelId,
         });
 
         if (result.success && result.data?.sessionId) {
@@ -425,9 +427,7 @@ Operations are being generated and will be ready for review shortly.`;
           if (result.success) {
             // Query invalidation is already handled by applyOperationsToResource via invalidateSingleFlowQueries
             // No need to duplicate the invalidation here
-            vibeToast.success(
-              `Flow changes applied successfully (${message.editData.appliedChanges.length} operations)`,
-            );
+            toast.success(`Flow changes applied successfully (${message.editData.appliedChanges.length} operations)`);
 
             // Update button state immediately after toast
             setAppliedChanges((prev) => [
@@ -441,16 +441,8 @@ Operations are being generated and will be ready for review shortly.`;
               status: "approved",
             });
           } else {
-            // Show a summary toast and individual error toasts
-            vibeToast.error(
-              `Failed to apply ${result.errors.length} operations out of ${message.editData.appliedChanges.length} total`,
-            );
-            result.errors.forEach((error, index) => {
-              vibeToast.error(`Operation ${index + 1}: ${error}`, {
-                duration: 5000,
-                description: "Check console for details",
-              });
-            });
+            // Show a summary toast
+            toast.error(`Failed to apply ${result.errors.length} operations out of ${message.editData.appliedChanges.length} total`);
           }
         } else {
           // Apply card changes using operations
@@ -472,7 +464,7 @@ Operations are being generated and will be ready for review shortly.`;
 
               if (result.success) {
                 // Show success toast immediately
-                vibeToast.success(
+                toast.success(
                   `Character card changes applied successfully (${message.editData.appliedChanges.length} operations)`,
                 );
 
@@ -497,13 +489,13 @@ Operations are being generated and will be ready for review shortly.`;
                 });
               } else {
                 // Show a summary toast and individual error toasts
-                vibeToast.error(
+                toast.error(
                   `Failed to apply ${result.errors.length} operations out of ${message.editData.appliedChanges.length} total`,
                 );
                 result.errors.forEach((error, index) => {
                   // Show detailed error with delay to avoid overwhelming the user
                   setTimeout(
-                    () => vibeToast.error(`Error ${index + 1}: ${error}`),
+                    () => toast.error(`Error ${index + 1}: ${error}`),
                     index * 500,
                   );
                 });
@@ -520,7 +512,7 @@ Operations are being generated and will be ready for review shortly.`;
 
               if (result.success) {
                 // Show success toast immediately
-                vibeToast.success(
+                toast.success(
                   "Character card changes applied successfully (legacy system)",
                 );
 
@@ -544,12 +536,12 @@ Operations are being generated and will be ready for review shortly.`;
                   queryKey: cardKeys.lists(),
                 });
               } else {
-                vibeToast.error(
+                toast.error(
                   `Failed to apply character card updates: ${result.errors.length} errors`,
                 );
                 result.errors.forEach((error, index) => {
                   setTimeout(
-                    () => vibeToast.error(`Error ${index + 1}: ${error}`),
+                    () => toast.error(`Error ${index + 1}: ${error}`),
                     index * 500,
                   );
                 });
@@ -593,7 +585,7 @@ Operations are being generated and will be ready for review shortly.`;
 
               if (result.success) {
                 // Show success toast immediately
-                vibeToast.success(
+                toast.success(
                   `Plot card changes applied successfully (${message.editData.appliedChanges.length} operations)`,
                 );
 
@@ -618,13 +610,13 @@ Operations are being generated and will be ready for review shortly.`;
                 });
               } else {
                 // Show a summary toast and individual error toasts
-                vibeToast.error(
+                toast.error(
                   `Failed to apply ${result.errors.length} operations out of ${message.editData.appliedChanges.length} total`,
                 );
                 result.errors.forEach((error, index) => {
                   // Show detailed error with delay to avoid overwhelming the user
                   setTimeout(
-                    () => vibeToast.error(`Error ${index + 1}: ${error}`),
+                    () => toast.error(`Error ${index + 1}: ${error}`),
                     index * 500,
                   );
                 });
@@ -636,7 +628,7 @@ Operations are being generated and will be ready for review shortly.`;
 
               if (result.success) {
                 // Show success toast immediately
-                vibeToast.success(
+                toast.success(
                   "Plot card changes applied successfully (legacy system)",
                 );
 
@@ -660,12 +652,12 @@ Operations are being generated and will be ready for review shortly.`;
                   queryKey: cardKeys.lists(),
                 });
               } else {
-                vibeToast.error(
+                toast.error(
                   `Failed to apply plot card updates: ${result.errors.length} errors`,
                 );
                 result.errors.forEach((error, index) => {
                   setTimeout(
-                    () => vibeToast.error(`Error ${index + 1}: ${error}`),
+                    () => toast.error(`Error ${index + 1}: ${error}`),
                     index * 500,
                   );
                 });
@@ -674,7 +666,7 @@ Operations are being generated and will be ready for review shortly.`;
           }
         }
       } catch (error) {
-        vibeToast.error(`Failed to apply changes: ${formatErrorMessage(error)}`);
+        toast.error(`Failed to apply changes: ${formatErrorMessage(error)}`);
       }
     },
     [messages, updateMessage],
@@ -688,7 +680,7 @@ Operations are being generated and will be ready for review shortly.`;
         status: "rejected",
       });
 
-      vibeToast.success("Changes rejected");
+      toast.success("Changes rejected");
     },
     [updateMessage],
   );
@@ -728,7 +720,7 @@ Operations are being generated and will be ready for review shortly.`;
               if (revertResult.isSuccess) {
                 
                 // Show success toast immediately
-                vibeToast.success(`Reverted to: ${latestSnapshot.description}`);
+                toast.success(`Reverted to: ${latestSnapshot.description}`);
                 
                 // Invalidate queries to refresh UI in background (fire-and-forget)
                 if (resourceType === "character_card" || resourceType === "plot_card") {
@@ -816,42 +808,25 @@ Operations are being generated and will be ready for review shortly.`;
                   })();
                 }
               } else {
-                vibeToast.error(`Failed to revert: ${revertResult.getError()}`);
+                toast.error(`Failed to revert: ${revertResult.getError()}`);
               }
             } else {
-              vibeToast.warning("No snapshots available to revert to");
+              toast.warning("No snapshots available to revert to");
             }
           } else {
-            vibeToast.error(`Failed to get snapshots: ${snapshotsResult.getError()}`);
+            toast.error(`Failed to get snapshots: ${snapshotsResult.getError()}`);
           }
         } else {
-          vibeToast.warning("Revert is only supported for cards and flows currently");
+          toast.warning("Revert is only supported for cards and flows currently");
         }
       } catch (error) {
-        vibeToast.error(`Revert failed: ${formatErrorMessage(error)}`);
+        toast.error(`Revert failed: ${formatErrorMessage(error)}`);
       }
     },
     [messages, updateMessage, queryClient],
   );
 
-  // Flow-specific coding panel state hook
-  const updateFlowCodingPanelState = useUpdateCodingPanelState(selectedFlowId || '');
-  
-  // Card-specific coding panel state hook
-  const updateCardCodingPanelState = useUpdateCardCodingPanelState(selectedCardId || '');
 
-  // Sync collapsed state with coding panel state for cards
-  useEffect(() => {
-    if (isCardPage && selectedCard) {
-      // Provide fallback for cards without isCodingPanelOpen field (pre-migration)
-      const isCodingPanelOpen = selectedCard.props.isCodingPanelOpen ?? false;
-      const shouldBeCollapsed = !isCodingPanelOpen;
-      
-      if (isCollapsed !== shouldBeCollapsed) {
-        setIsCollapsed(shouldBeCollapsed);
-      }
-    }
-  }, [isCardPage, selectedCard, isCollapsed]);
 
   // Close vibe coding panel when switching away from card/flow pages
   useEffect(() => {
@@ -866,23 +841,20 @@ Operations are being generated and will be ready for review shortly.`;
 
   // Handle collapse
   const handleToggleCollapse = useCallback(() => {
+    if (isLocalPanel) {
+      // For local panels, just call onToggle to close the panel tab
+      onToggle?.();
+      return;
+    }
+    
+    // Original global panel behavior
     const newCollapsed = !isCollapsed;
     setIsCollapsed(newCollapsed);
     
-    if (newCollapsed) {
-      // Panel is being closed
-      if (isFlowPage && selectedFlowId) {
-        // Update flow-specific coding panel state
-        updateFlowCodingPanelState.mutate(false);
-      } else if (isCardPage && selectedCardId) {
-        // Update card-specific coding panel state
-        updateCardCodingPanelState.mutate(false);
-      }
-    }
     
     // Always call onToggle after updating the specific state
     onToggle?.();
-  }, [isCollapsed, onToggle, isFlowPage, selectedFlowId, updateFlowCodingPanelState, isCardPage, selectedCardId, updateCardCodingPanelState]);
+  }, [isLocalPanel, isCollapsed, onToggle, isFlowPage, selectedFlowId, isCardPage, selectedCardId]);
 
   // Handle reset
   const handleReset = useCallback(async () => {
@@ -892,8 +864,8 @@ Operations are being generated and will be ready for review shortly.`;
   }, [clearSession, cancelSession]);
 
 
-  // Collapsed view
-  if (isCollapsed) {
+  // Collapsed view (only for global panels, local panels are always expanded)
+  if (isCollapsed && !isLocalPanel) {
     return (
       <div
         className={cn(
@@ -913,7 +885,9 @@ Operations are being generated and will be ready for review shortly.`;
   return (
     <div
       className={cn(
-        "w-full h-[calc(100vh-40px)] min-w-80 bg-background-surface-1 rounded-lg flex flex-col",
+        isLocalPanel 
+          ? "h-full w-full bg-background-surface-2 flex flex-col" 
+          : "w-full h-[calc(100vh-40px)] min-w-80 bg-background-surface-1 rounded-lg flex flex-col",
         className,
       )}
     >
@@ -931,6 +905,7 @@ Operations are being generated and will be ready for review shortly.`;
               : null
         }
         isRestored={isRestored}
+        isLocalPanel={isLocalPanel}
       />
 
       <MessageList

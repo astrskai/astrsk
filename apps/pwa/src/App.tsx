@@ -21,7 +21,6 @@ import {
   LeftNavigationTrigger,
 } from "@/components-v2/left-navigation/left-navigation";
 import { GlobalDockView } from "@/components-v2/global-dockview";
-import { RightSidebarContextProvider } from "@/components-v2/top-bar";
 import { cn } from "@/components-v2/lib/utils";
 import { Loading } from "@/components-v2/loading";
 import { PaymentPage } from "@/components-v2/setting/payment-page";
@@ -182,19 +181,17 @@ function V2Layout({
           "antialiased font-inter text-foreground",
         )}
       >
-        <RightSidebarContextProvider>
-          <TopBar />
-          <SidebarLeftProvider defaultOpen={!isMobile}>
-            <LeftNavigation />
-            <LeftNavigationTrigger />
-            <SidebarInset>
-              <main className="relative flex-1 overflow-hidden">
-                <GlobalDockView>{children}</GlobalDockView>
-              </main>
-            </SidebarInset>
-            <Toaster expand className="!z-[100]" />
-          </SidebarLeftProvider>
-        </RightSidebarContextProvider>
+        <TopBar />
+        <SidebarLeftProvider defaultOpen={!isMobile}>
+          <LeftNavigation />
+          <LeftNavigationTrigger />
+          <SidebarInset>
+            <main className="relative flex-1 overflow-hidden">
+              <GlobalDockView>{children}</GlobalDockView>
+            </main>
+          </SidebarInset>
+          <Toaster expand className="!z-[100]" />
+        </SidebarLeftProvider>
       </div>
     </ThemeProvider>
   );

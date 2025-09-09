@@ -428,6 +428,7 @@ export interface CreateEditingSessionArgs {
     [resourceId: string]: EditableCharacterCard | EditablePlotCard | EditableFlowData;
   };
   originalRequest: string;
+  modelId?: string; // <- new
 }
 
 // updateResourceWithChanges mutation args
@@ -515,6 +516,7 @@ export interface StartVibeCodingRequest {
   originalRequest: string;
   userId?: string;
   context?: VibeCodingSessionContext;
+  modelId?: string;
 }
 
 // Frontend session status (enriched version of EditingSession)
@@ -757,6 +759,7 @@ export function transformToCreateEditingSessionArgs(
     resourceTypes,
     resourceData,
     originalRequest: request.originalRequest,
+    modelId: request.modelId, // <- forward
   };
 }
 

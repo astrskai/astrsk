@@ -122,9 +122,6 @@ export interface FlowProps {
   // Vibe Session Reference (AI Assistant)
   vibeSessionId?: string;
 
-  // AI Assistant Panel State
-  isCodingPanelOpen?: boolean;
-
   // Validation State
   readyState: ReadyState;
   validationIssues?: ValidationIssue[];

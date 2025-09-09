@@ -45,7 +45,6 @@ export class PlotCard extends AggregateRoot<CardProps & PlotCardProps> {
           cardSummary: props.cardSummary,
           version: props.version,
           conceptualOrigin: props.conceptualOrigin,
-          isCodingPanelOpen: props.isCodingPanelOpen ?? false,
           createdAt: new Date(),
           description: props.description,
           scenarios: props.scenarios,

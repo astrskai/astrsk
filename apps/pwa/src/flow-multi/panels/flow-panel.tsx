@@ -19,14 +19,13 @@ import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
 import { useUpdateNodesPositions } from "@/app/queries/flow/mutations/nodes-positions-mutations";
-import { useUpdateFlowName, useUpdateFlowViewport, useUpdateCodingPanelState } from "@/app/queries/flow/mutations/flow-mutations";
+import { useUpdateFlowName, useUpdateFlowViewport } from "@/app/queries/flow/mutations/flow-mutations";
 import { useUpdateNodesAndEdges } from "@/app/queries/flow/mutations/nodes-edges-mutations";
 import { BookOpen, Pencil, Check, X, Loader2, SearchCheck, HelpCircle, Plus, Code } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
-import { useRightSidebarState } from "@/components-v2/top-bar";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Card } from "@/components-v2/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
@@ -151,7 +150,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   // 3. Context hooks
   const { openPanel, closePanel, isPanelOpen, registerFlowActions } = useFlowPanelContext();
   const { isExpanded, isMobile } = useLeftNavigationWidth();
-  const rightSidebar = useRightSidebarState();
   const queryClient = useQueryClient();
 
 
@@ -165,31 +163,16 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const updateNodesPositions = useUpdateNodesPositions(flowId);
   const updateFlowNameMutation = useUpdateFlowName(flowId);
   const updateFlowViewportMutation = useUpdateFlowViewport(flowId);
-  const updateCodingPanelState = useUpdateCodingPanelState(flowId);
   const updateNodesAndEdges = useUpdateNodesAndEdges(flowId);
 
-  // Vibe Coding handler - now flow-specific (only opens, doesn't close)
+  // Vibe Coding handler - opens the local vibe panel instead of global right panel
   const handleVibeCodingToggle = useCallback(() => {
     if (!flow) return;
     
-    // Always set to true for redundancy - ensures panel opens even if state gets out of sync
-    updateCodingPanelState.mutate(true, {
-      onError: (error) => {
-        console.error('Failed to update coding panel state:', error);
-        toast.error('Failed to update AI assistant panel state');
-      }
-    });
-  }, [flow, updateCodingPanelState]);
+    // Open the local vibe panel tab instead of the global right panel
+    openPanel(PANEL_TYPES.VIBE);
+  }, [flow, openPanel]);
 
-  // Sync flow coding panel state with global sidebar when flow changes
-  useEffect(() => {
-    if (flow && rightSidebar) {
-      const panelState = flow.props.isCodingPanelOpen ?? false;
-      if (panelState !== rightSidebar.isOpen) {
-        rightSidebar.setIsOpen(panelState);
-      }
-    }
-  }, [flow?.props.isCodingPanelOpen, rightSidebar]);
 
   // 6. Window-based local state sync for preview operations
   useFlowLocalStateSync(
@@ -1825,7 +1808,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             size="default"
             variant="gradient"
             icon={<SvgIcon name="ai_assistant"/>}
-            active={flow?.props.isCodingPanelOpen || false}
+            active={isPanelOpen(PANEL_TYPES.VIBE)}
             onClick={handleVibeCodingToggle}
             className="w-32 h-8"
           >

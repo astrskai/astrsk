@@ -20,14 +20,21 @@ import { Button } from "@/components-v2/ui/button";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { invalidateSingleCardQueries } from "@/components-v2/card/utils/invalidate-card-queries";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
-import { useUpdateCardCodingPanelState } from "@/app/queries/card/mutations/card-coding-panel-mutations";
-import { useRightSidebarState } from "@/components-v2/top-bar";
 import { Avatar } from "@/components-v2/avatar";
 
 interface CardPanelProps {
   cardId: string;
   card?: Card | null;
 }
+
+type CardPanelType =
+  | "metadata"
+  | "content"
+  | "lorebooks"
+  | "scenarios"
+  | "variables"
+  | "imageGenerator"
+  | "vibe";
 
 // Trading card item component with proper scaling
 const TradingCardItem = ({
@@ -62,12 +69,17 @@ const TradingCardItem = ({
           </div>
         </div>
       )}
+      <div className="absolute inset-0 rounded-[19px] ring-2 ring-border-light pointer-events-none" />
+      {/*
+      todo: remove this 
+      */}
+      {/*
       {isActive ? (
         <div className="absolute inset-0 rounded-[19px] ring-2 ring-border-light pointer-events-none" />
       ) : (
         // Default border
         <div className="absolute inset-0 rounded-[19px] ring-2 ring-border-light pointer-events-none" />
-      )}
+      )} */}
     </div>
   );
 };
@@ -92,30 +104,12 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   // Use provided card or the one from query
   const card = providedCard || cardFromQuery;
 
-  // Right sidebar state and card coding panel mutation
-  const rightSidebar = useRightSidebarState();
-  const updateCodingPanelState = useUpdateCardCodingPanelState(cardId);
+  // No longer need right sidebar state since vibe panel is now local
 
-  // Sync card coding panel state with global sidebar when card changes (same as flow)
-  useEffect(() => {
-    if (card && rightSidebar) {
-      const panelState = card.props.isCodingPanelOpen ?? false;
-      if (panelState !== rightSidebar.isOpen) {
-        rightSidebar.setIsOpen(panelState);
-      }
-    }
-  }, [card?.props.isCodingPanelOpen, rightSidebar]);
-
-  // Vibe Coding handler (only opens, doesn't close) - same as flow implementation
+  // Vibe Coding handler - opens the local vibe panel instead of global right panel
   const handleVibeCodingToggle = () => {
     if (!card) return;
-    
-    // Always set to true for redundancy - ensures panel opens even if state gets out of sync
-    updateCodingPanelState.mutate(true, {
-      onError: (error) => {
-        console.error('Failed to update card coding panel state:', error);
-      }
-    });
+    handleOpenPanel("vibe");
   };
 
   // Helper function to extract character name from card
@@ -132,7 +126,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   // Get the avatar image URL
   const [avatarUrl] = useAsset(card?.props.iconAssetId);
 
-  const handleOpenPanel = (panelType: string) => {
+  const handleOpenPanel = (panelType: CardPanelType) => {
     openPanel(panelType);
   };
 
@@ -200,10 +194,14 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               // Invalidate all queries for this card
               await invalidateSingleCardQueries(queryClient, card.id);
               
-              // Also invalidate generated images for this card
-              console.log("🔄 [CARD-PANEL] Invalidating generated images query for card:", card.id.toString());
+              // Also invalidate generated images for this card and global list
+              console.log("🔄 [CARD-PANEL] Invalidating generated images queries");
               await queryClient.invalidateQueries({
                 queryKey: generatedImageKeys.cardImages(card.id.toString()),
+              });
+              // Also invalidate the global list so image generator gallery updates immediately
+              await queryClient.invalidateQueries({
+                queryKey: generatedImageKeys.lists(),
               });
               console.log("✅ [CARD-PANEL] Image added to gallery and set as card icon using same asset");
             } else {
@@ -389,7 +387,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               size="default"
               variant="gradient"
               icon={<SvgIcon name="ai_assistant" />}
-              active={card?.props.isCodingPanelOpen || false}
+              active={panelVisibility?.["vibe"] || false}
               onClick={handleVibeCodingToggle}
               className="w-32 h-8"
             >
