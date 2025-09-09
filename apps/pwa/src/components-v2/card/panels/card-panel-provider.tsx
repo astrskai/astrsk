@@ -100,7 +100,7 @@ export function CardPanelProvider({
           title = "Scenarios";
           break;
         case "imageGenerator":
-          title = "Image Generator";
+          title = "Image Studio";
           break;
       }
 

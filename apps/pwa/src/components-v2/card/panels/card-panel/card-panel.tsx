@@ -152,55 +152,51 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
 
     setIsUploadingAvatar(true);
     try {
-      // Upload the file to create an asset
+      // Step 1: Create asset first
+      console.log("🖼️ [CARD-PANEL] Creating asset from uploaded file");
       const assetResult = await AssetService.saveFileToAsset.execute({ file });
 
       if (assetResult.isSuccess) {
         const asset = assetResult.getValue();
+        console.log("✅ [CARD-PANEL] Asset created:", asset.id.toString());
 
-        // Update the card with the new icon asset ID
-        const updateResult = card.update({ iconAssetId: asset.id });
+        // Step 2: Add to gallery FIRST (this becomes the source of truth)
+        console.log("🖼️ [CARD-PANEL] Adding image to gallery first");
+        const generatedImageResult = await GeneratedImageService.saveGeneratedImageFromAsset.execute({
+          assetId: asset.id,
+          name: file.name.replace(/\.[^/.]+$/, ""),
+          prompt: `Card avatar for ${card.props.title || "Untitled"}`,
+          style: "uploaded",
+          associatedCardId: card.id,
+        });
 
-        if (updateResult.isSuccess) {
-          // Save the card to the database
-          const saveResult = await CardService.saveCard.execute(card);
+        if (generatedImageResult.isSuccess) {
+          console.log("✅ [CARD-PANEL] Image added to gallery");
 
-          if (saveResult.isSuccess) {
-            // Also add this image to the card's generated images collection
-            try {
-              console.log("🖼️ [CARD-PANEL] Saving uploaded image to generated images for card:", card.id.toString());
-              const generatedImageResult = await GeneratedImageService.saveFileToGeneratedImage.execute({
-                file,
-                prompt: `Card avatar for ${card.props.title || "Untitled"}`,
-                style: "uploaded",
-                associatedCardId: card.id,
-              });
-              
-              if (generatedImageResult.isFailure) {
-                console.warn("❌ [CARD-PANEL] Failed to add uploaded image to generated images:", generatedImageResult.getError());
-              } else {
-                console.log("✅ [CARD-PANEL] Successfully saved uploaded image to generated images");
-              }
-            } catch (error) {
-              console.warn("❌ [CARD-PANEL] Error adding uploaded image to generated images:", error);
-            }
-
-            // Invalidate all queries for this card
-            await invalidateSingleCardQueries(queryClient, card.id);
+          // Step 3: Update card to reference the SAME asset (no separate asset creation)
+          const updateResult = card.update({ iconAssetId: asset.id });
+          
+          if (updateResult.isSuccess) {
+            const saveResult = await CardService.saveCard.execute(card);
             
-            // Also invalidate generated images for this card
-            console.log("🔄 [CARD-PANEL] Invalidating generated images query for card:", card.id.toString());
-            await queryClient.invalidateQueries({
-              queryKey: generatedImageKeys.cardImages(card.id.toString()),
-            });
-            console.log("✅ [CARD-PANEL] Generated images query invalidated");
-
-            // Avatar updated successfully
+            if (saveResult.isSuccess) {
+              // Invalidate all queries for this card
+              await invalidateSingleCardQueries(queryClient, card.id);
+              
+              // Also invalidate generated images for this card
+              console.log("🔄 [CARD-PANEL] Invalidating generated images query for card:", card.id.toString());
+              await queryClient.invalidateQueries({
+                queryKey: generatedImageKeys.cardImages(card.id.toString()),
+              });
+              console.log("✅ [CARD-PANEL] Image added to gallery and set as card icon using same asset");
+            } else {
+              console.error("Failed to save card:", saveResult.getError());
+            }
           } else {
-            console.error("Failed to save card:", saveResult.getError());
+            console.error("Failed to update card:", updateResult.getError());
           }
         } else {
-          console.error("Failed to update card:", updateResult.getError());
+          console.error("Failed to add image to gallery:", generatedImageResult.getError());
         }
       } else {
         console.error("Failed to upload file:", assetResult.getError());

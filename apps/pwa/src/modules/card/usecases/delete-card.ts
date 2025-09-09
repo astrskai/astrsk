@@ -7,31 +7,21 @@ import { DeleteCardRepo } from "@/modules/card/repos/delete-card-repo";
 export class DeleteCard implements UseCase<UniqueEntityID, Result<void>> {
   constructor(
     private deleteCardRepo: DeleteCardRepo,
-    private deleteAsset: DeleteAsset,
+    // Remove deleteAsset dependency - we preserve assets in gallery
   ) {}
 
   // TODO: transaction
   async execute(id: UniqueEntityID): Promise<Result<void>> {
     try {
-      // Delete card
+      // Only delete the card record, not the associated assets
+      // Assets remain in gallery and are managed separately
       const deletedCardOrError = await this.deleteCardRepo.deleteCardById(id);
       if (deletedCardOrError.isFailure) {
         throw new Error(deletedCardOrError.getError());
       }
-      const deletedCard = deletedCardOrError.getValue();
 
-      // Check icon asset exists
-      if (deletedCard.props.iconAssetId) {
-        // Remove icon asset
-        const assetRefRemoveResult = await this.deleteAsset.execute({
-          assetId: deletedCard.props.iconAssetId,
-        });
-        if (assetRefRemoveResult.isFailure) {
-          throw new Error(assetRefRemoveResult.getError());
-        }
-      }
-
-      // Return success
+      // Assets are preserved in gallery - they're managed by GeneratedImageService
+      console.log("✅ Card deleted, assets preserved in gallery");
       return Result.ok<void>();
     } catch (error) {
       return Result.fail<void>(

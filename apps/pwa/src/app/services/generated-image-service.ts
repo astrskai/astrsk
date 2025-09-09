@@ -6,6 +6,7 @@ import { GetGeneratedImage } from "@/modules/generated-image/usecases/get-genera
 import { ListGeneratedImages } from "@/modules/generated-image/usecases/list-generated-images";
 import { SaveGeneratedImage } from "@/modules/generated-image/usecases/save-generated-image";
 import { SaveFileToGeneratedImage } from "@/modules/generated-image/usecases/save-file-to-generated-image";
+import { SaveGeneratedImageFromAsset } from "@/modules/generated-image/usecases/save-generated-image-from-asset";
 
 export class GeneratedImageService {
   public static generatedImageRepo: DrizzleGeneratedImageRepo;
@@ -15,6 +16,7 @@ export class GeneratedImageService {
   public static listGeneratedImages: ListGeneratedImages;
   public static saveGeneratedImage: SaveGeneratedImage;
   public static saveFileToGeneratedImage: SaveFileToGeneratedImage;
+  public static saveGeneratedImageFromAsset: SaveGeneratedImageFromAsset;
 
   public static init(
     saveFileToAsset: SaveFileToAsset,
@@ -32,6 +34,9 @@ export class GeneratedImageService {
     );
     this.saveFileToGeneratedImage = new SaveFileToGeneratedImage(
       saveFileToAsset,
+      this.saveGeneratedImage,
+    );
+    this.saveGeneratedImageFromAsset = new SaveGeneratedImageFromAsset(
       this.saveGeneratedImage,
     );
   }

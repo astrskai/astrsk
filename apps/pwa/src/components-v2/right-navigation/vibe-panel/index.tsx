@@ -897,14 +897,14 @@ Operations are being generated and will be ready for review shortly.`;
         isProcessing={isProcessing}
       />
 
-      <div className="px-4 pb-4">
+      {/* <div className="px-4 pb-4">
         <ChatInput
           onSendMessage={handleSendMessage}
           isProcessing={isProcessing}
           hasResource={!!primaryResourceId}
           hasMessages={messages.length > 0}
         />
-      </div>
+      </div> */}
       
     </div>
   );

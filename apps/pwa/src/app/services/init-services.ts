@@ -37,7 +37,6 @@ export async function initServices(): Promise<void> {
   // Card
   CardService.init(
     AssetService.assetRepo,
-    AssetService.deleteAsset,
     AssetService.saveFileToAsset,
     AssetService.cloneAsset,
   );

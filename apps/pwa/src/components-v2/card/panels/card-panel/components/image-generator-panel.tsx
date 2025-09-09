@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { Button } from "@/components-v2/ui/button";
 import { Textarea } from "@/components-v2/ui/textarea";
-import { Loader2, Download, Sparkles, Upload, Image, Type } from "lucide-react";
+import { Loader2, Download, Sparkles, Upload, Image, Type, Copy } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components-v2/ui/tooltip";
 import { Switch } from "@/components-v2/ui/switch";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
@@ -16,28 +16,104 @@ import {
 } from "@/components-v2/card/panels/hooks/use-card-panel";
 import { useNanoBananaGenerator, CustomImageResponse, ImageToImageResponse } from "@/app/hooks/use-nano-banana-generator";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
-import { AssetService } from "@/app/services/asset-service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { generatedImageQueries, generatedImageKeys } from "@/app/queries/generated-image/query-factory";
+import { cn } from "@/shared/utils";
 
 interface ImageGeneratorPanelProps extends CardPanelProps {}
+
+// Image to Image Setting Component
+const ImageToImageSetting = ({
+  enabled,
+  onToggle,
+  cardImageUrl,
+  disabled = false
+}: {
+  enabled: boolean;
+  onToggle: (enabled: boolean) => void;
+  cardImageUrl?: string;
+  disabled?: boolean;
+}) => {
+  // Three states: no image (disabled), image available (off), image available (on)
+  const hasCardImage = !!cardImageUrl;
+  const isDisabled = disabled || !hasCardImage;
+
+  return (
+    <div className="w-full inline-flex justify-start items-start gap-2">
+      <div className="inline-flex flex-col justify-center items-center">
+        <Switch
+          checked={enabled && hasCardImage}
+          onCheckedChange={(checked) => hasCardImage && !disabled && onToggle(checked)}
+          disabled={isDisabled}
+          size="small"
+          className={cn(
+            // Override default off state background to match design
+            "data-[state=unchecked]:bg-alpha-80/20"
+          )}
+        />
+      </div>
+      <div className="flex-1 inline-flex flex-col justify-center items-start gap-2">
+        <div className="inline-flex justify-start items-center gap-2">
+          <div className={`justify-center text-xs font-semibold leading-none ${
+            isDisabled 
+              ? 'text-text-info' 
+              : hasCardImage && !enabled 
+                ? 'text-text-primary opacity-60'
+                : 'text-text-primary'
+          }`}>
+            Image to image
+          </div>
+        </div>
+        <div className="self-stretch justify-start text-text-info text-xs font-normal">
+          {isDisabled ? 'Select an image to unlock transformation' : 'Transform the selected character image based on your prompt'}
+        </div>
+      </div>
+      <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
+        hasCardImage ? 'bg-neutral-500/60 overflow-hidden' : 'bg-background-surface-4'
+      } ${hasCardImage && !enabled ? 'opacity-60' : ''}`}>
+        {hasCardImage ? (
+          <img 
+            src={cardImageUrl} 
+            alt="Card image" 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-6 h-6 relative overflow-hidden flex items-center justify-center">
+            <Image className="w-4 h-4 text-text-subtle" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 // Image item component
 const ImageItem = ({ 
   image, 
   isGenerating,
+  isSelected,
   onDownload,
-  onUseAsCardImage 
+  onUseAsCardImage,
+  onSelect
 }: { 
   image: GeneratedImage; 
   isGenerating?: boolean;
+  isSelected?: boolean;
   onDownload: (url: string, prompt: string) => void;
   onUseAsCardImage: (imageUrl: string, assetId: UniqueEntityID) => void;
+  onSelect: (imageUrl: string, assetId: UniqueEntityID) => void;
 }) => {
   const [assetUrl] = useAsset(image.assetId);
 
   return (
-    <div className="relative bg-background-surface-0 overflow-hidden w-16 h-32">
+    <div 
+      className="relative bg-background-surface-0 overflow-hidden w-16 h-32 cursor-pointer"
+      onClick={() => {
+        if (assetUrl) {
+          onSelect(assetUrl, image.assetId);
+        }
+      }}
+    >
       {isGenerating ? (
         <div className="w-full h-full flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-text-subtle" />
@@ -49,30 +125,10 @@ const ImageItem = ({
             alt={image.prompt}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors group">
-            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUseAsCardImage(assetUrl, image.assetId);
-                }}
-                className="p-1 bg-black/50 rounded hover:bg-black/70 transition-colors"
-                title="Use as card image"
-              >
-                <Image className="w-3 h-3 text-white" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDownload(assetUrl, image.prompt);
-                }}
-                className="p-1 bg-black/50 rounded hover:bg-black/70 transition-colors"
-                title="Download image"
-              >
-                <Download className="w-3 h-3 text-white" />
-              </button>
-            </div>
-          </div>
+          {/* Selected border overlay using inset */}
+          {isSelected && (
+            <div className="absolute inset-0 border-[3px] border-text-primary pointer-events-none" />
+          )}
         </>
       ) : (
         <div className="w-full h-full flex items-center justify-center">
@@ -85,14 +141,24 @@ const ImageItem = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="p-1 bg-background-surface-4 rounded-md inline-flex justify-start items-center gap-2">
+              <div className="p-1 bg-background-surface-4/50 rounded-md inline-flex justify-start items-center gap-2">
                 <div className="w-3 h-3 relative overflow-hidden">
                   <Type className="w-3 h-3 text-text-primary" />                
                 </div>
               </div>
             </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs max-w-xs">{image.prompt}</p>
+            <TooltipContent className="relative pr-8 pb-6">
+              <p className="text-xs max-w-xs pr-2 pb-2">{image.prompt}</p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(image.prompt);
+                }}
+                className="absolute bottom-1 right-1 p-1 hover:bg-background-surface-4 rounded transition-colors"
+                title="Copy prompt"
+              >
+                <Copy className="w-3 h-3 text-text-subtle hover:text-text-primary transition-colors" />
+              </button>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -108,10 +174,9 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   // Query client for invalidation
   const queryClient = useQueryClient();
   
-  // Query for card-specific generated images
+  // Query for all generated images (global resource)
   const { data: generatedImages = [], isLoading, error } = useQuery({
-    ...generatedImageQueries.cardImages(cardId),
-    enabled: !!cardId,
+    ...generatedImageQueries.list(),
   });
 
   // Debug logging for query state
@@ -123,6 +188,15 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
       error: error?.message,
     });
   }, [cardId, generatedImages.length, isLoading, error]);
+
+  // Sync selected state with current card icon
+  useEffect(() => {
+    if (card?.props?.iconAssetId) {
+      setSelectedImageAssetId(card.props.iconAssetId.toString());
+    } else {
+      setSelectedImageAssetId(undefined);
+    }
+  }, [card?.props?.iconAssetId]);
   
   // Nano banana generator hook
   const { generateCustomImage, generateImageToImage } = useNanoBananaGenerator();
@@ -153,6 +227,7 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   // Local form state
   const [imagePrompt, setImagePrompt] = useState("");
   const [generatingImages, setGeneratingImages] = useState<Set<string>>(new Set());
+  const [selectedImageAssetId, setSelectedImageAssetId] = useState<string | undefined>(undefined);
   
   // Image-to-image state
   const [inputImage, setInputImage] = useState<File | null>(null);
@@ -192,12 +267,12 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
     return () => clearTimeout(timer);
   }, [generatedImages.length, isLoading, isGenerating]);
 
-  // Function to invalidate and refresh card images
-  const refreshCardImages = useCallback(async () => {
+  // Function to invalidate and refresh global images
+  const refreshGlobalImages = useCallback(async () => {
     await queryClient.invalidateQueries({
-      queryKey: generatedImageKeys.cardImages(cardId),
+      queryKey: generatedImageKeys.lists(),
     });
-  }, [queryClient, cardId]);
+  }, [queryClient]);
 
   // Change handlers
   const handlePromptChange = useCallback((value: string) => {
@@ -247,14 +322,14 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
 
       if (result.isSuccess) {
         // Invalidate queries to refresh the image list
-        await refreshCardImages();
+        await refreshGlobalImages();
       } else {
         console.error("Failed to upload file:", result.getError());
       }
     } catch (error) {
       console.error("Error uploading image:", error);
     }
-  }, [selectedStyle, selectedAspectRatio, cardId, refreshCardImages]);
+  }, [selectedStyle, selectedAspectRatio, cardId, refreshGlobalImages]);
 
   // Helper function to convert image URL to base64 with aggressive size reduction
   const urlToBase64 = useCallback(async (url: string): Promise<{ base64: string; mimeType: string }> => {
@@ -405,7 +480,7 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
             if (saveResult.isSuccess) {
               console.log("✅ [IMAGE-GENERATOR] Image saved successfully");
               // Invalidate queries to refresh the image list
-              await refreshCardImages();
+              await refreshGlobalImages();
             } else {
               console.error("❌ [IMAGE-GENERATOR] Failed to save image:", saveResult.getError());
             }
@@ -436,36 +511,38 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
     link.click();
   }, []);
 
-  const handleUseAsCardImage = useCallback(async (imageUrl: string, assetId: UniqueEntityID) => {
+  const handleSelectImage = useCallback(async (imageUrl: string, assetId: UniqueEntityID) => {
     try {
-      // Clone the asset to prevent deletion issues when card is deleted
-      const cloneResult = await AssetService.cloneAsset.execute({ assetId });
+      // Set the selected state
+      setSelectedImageAssetId(assetId.toString());
       
-      if (cloneResult.isFailure) {
-        console.error("Failed to clone asset:", cloneResult.getError());
-        alert("Failed to set card image: Could not duplicate asset");
-        return;
-      }
-      
-      const clonedAsset = cloneResult.getValue();
-      
-      // Update the card's icon asset with the cloned asset
-      updateCardIconAsset.mutate(clonedAsset.id.toString(), {
+      // Update card icon to use the selected image
+      updateCardIconAsset.mutate(assetId.toString(), {
         onSuccess: () => {
-          console.log("✅ Card image updated successfully");
+          console.log("✅ Card image updated to use gallery asset");
           // Could add a toast notification here
         },
         onError: (error) => {
           console.error("❌ Failed to update card image:", error);
           alert("Failed to set card image: " + (error instanceof Error ? error.message : "Unknown error"));
+          // Reset selection on error
+          setSelectedImageAssetId(undefined);
         }
       });
       
     } catch (error) {
       console.error("❌ Error setting card image:", error);
       alert("Failed to set card image: " + (error instanceof Error ? error.message : "Unknown error"));
+      // Reset selection on error
+      setSelectedImageAssetId(undefined);
     }
   }, [updateCardIconAsset]);
+
+  const handleUseAsCardImage = useCallback(async (imageUrl: string, assetId: UniqueEntityID) => {
+    // This is now handled by handleSelectImage when clicking on the image
+    // Keep this for the button click (if we want to keep the button)
+    await handleSelectImage(imageUrl, assetId);
+  }, [handleSelectImage]);
 
   // Calculate dynamic sizing based on number of images or generating state
   const hasImagesOrGenerating = generatedImages.length > 0 || isGenerating;
@@ -473,17 +550,17 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   
   // Calculate dynamic sizing for images section
   const imageHeight = 128; // h-32 for each image
-  const gapSize = 12; // gap-3
+  const gapSize = 0; // gap-0 - no gap between images
   const imageWidth = 64; // w-16 for each image
   const maxImageSectionHeight = 800; // Maximum height for images section
   
   // Calculate how many images per row based on available width
   const availableWidth = panelRef.current?.clientWidth || 400;
-  const imagesPerRow = Math.max(1, Math.floor((availableWidth - 32) / (imageWidth + gapSize))); // 32px for padding
+  const imagesPerRow = Math.max(1, Math.floor((availableWidth - 32) / imageWidth)); // 32px for padding, no gap
   
   // Calculate needed height based on actual content
   const totalRows = Math.ceil(totalImages / imagesPerRow);
-  const neededImageHeight = totalImages > 0 ? totalRows * (imageHeight + gapSize) + 32 : 0; // +32 for padding
+  const neededImageHeight = totalImages > 0 ? totalRows * imageHeight + 32 : 0; // +32 for padding, no gap between rows
   
   // Determine if images section should be scrollable
   const shouldCapImageHeight = neededImageHeight > maxImageSectionHeight;
@@ -535,30 +612,14 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
           </div>
         </div>
 
-        {/* Image Input Options */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={useCardImage}
-              onCheckedChange={setUseCardImage}
-              disabled={!cardIconAssetUrl}
-            />
-            <span className="text-text-body text-xs font-medium">
-              Use card image
-            </span>
-          </div>
-          {useCardImage && cardIconAssetUrl && (
-            <div className="flex items-center gap-2">
-              <img 
-                src={cardIconAssetUrl} 
-                alt="Card image" 
-                className="w-6 h-6 rounded object-cover border border-border-normal"
-              />
-              <span className="text-text-subtle text-xs">
-                as input
-              </span>
-            </div>
-          )}
+        {/* Image to Image Setting */}
+        <div className="flex-shrink-0">
+          <ImageToImageSetting
+            enabled={useCardImage}
+            onToggle={setUseCardImage}
+            cardImageUrl={cardIconAssetUrl || undefined}
+            disabled={!cardIconAssetUrl}
+          />
         </div>
 
         {/* Action Buttons */}
@@ -570,17 +631,8 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
             variant="secondary"
             size="lg"
           >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate
-              </>
-            )}
+            <Sparkles className="w-4 h-4 mr-2" />
+            {isGenerating ? "Generating..." : "Generate"}
           </Button>
           
           {/* Hidden file input - keeping for future use */}
@@ -612,7 +664,7 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
               <span className="ml-2 text-text-subtle text-sm">Loading images...</span>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-3 h-fit justify-start">
+            <div className="flex flex-wrap gap-0 h-fit justify-start">
               {/* Loading placeholder when generating */}
               {isGenerating && (
                 <div className="w-16 h-32 relative">
@@ -628,8 +680,10 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
                   key={image.id.toString()}
                   image={image}
                   isGenerating={generatingImages.has(image.id.toString())}
+                  isSelected={selectedImageAssetId === image.assetId.toString()}
                   onDownload={(url, prompt) => handleDownloadImage(url, prompt)}
                   onUseAsCardImage={handleUseAsCardImage}
+                  onSelect={handleSelectImage}
                 />
               ))}
 

@@ -57,7 +57,6 @@ export class CardService {
 
   public static init(
     loadAssetRepo: LoadAssetRepo,
-    deleteAsset: DeleteAsset,
     saveFileToAsset: SaveFileToAsset,
     cloneAsset: CloneAsset,
     // updateLocalSyncMetadata: UpdateLocalSyncMetadata,
@@ -66,7 +65,7 @@ export class CardService {
     this.cardRepo = new DrizzleCardRepo();
 
     this.cloneCard = new CloneCard(this.cardRepo, this.cardRepo, cloneAsset);
-    this.deleteCard = new DeleteCard(this.cardRepo, deleteAsset);
+    this.deleteCard = new DeleteCard(this.cardRepo);
     this.exportCardToFile = new ExportCardToFile(this.cardRepo, loadAssetRepo);
     this.getCard = new GetCard(this.cardRepo);
     this.importCardFromFile = new ImportCardFromFile(
