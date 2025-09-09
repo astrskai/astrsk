@@ -50,7 +50,7 @@ export class CharacterCard extends AggregateRoot<
           cardSummary: props.cardSummary,
           version: props.version,
           conceptualOrigin: props.conceptualOrigin,
-          isCodingPanelOpen: props.isCodingPanelOpen,
+          isCodingPanelOpen: props.isCodingPanelOpen ?? false,
           createdAt: new Date(),
           description: props.description,
           exampleDialogue: props.exampleDialogue,

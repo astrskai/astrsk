@@ -98,8 +98,11 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
 
   // Sync card coding panel state with global sidebar when card changes (same as flow)
   useEffect(() => {
-    if (card && rightSidebar && card.props.isCodingPanelOpen !== rightSidebar.isOpen) {
-      rightSidebar.setIsOpen(card.props.isCodingPanelOpen || false);
+    if (card && rightSidebar) {
+      const panelState = card.props.isCodingPanelOpen ?? false;
+      if (panelState !== rightSidebar.isOpen) {
+        rightSidebar.setIsOpen(panelState);
+      }
     }
   }, [card?.props.isCodingPanelOpen, rightSidebar]);
 
