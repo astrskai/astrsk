@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { debounce } from "lodash-es";
 import { toast } from "sonner";
-import { SchemaFieldType, OutputFormat, SchemaField } from "@/modules/agent/domain/agent";
+import { SchemaFieldType, SchemaField } from "@/modules/agent/domain/agent";
 import { Trash2, Plus, Maximize2, Minimize2, X } from "lucide-react";
 import {
   Tooltip,
@@ -61,8 +61,12 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
   const updateSchemaFields = useUpdateAgentSchemaFields(flowId, agentId || "");
 
   // 3. Query for agent output data
-  // With select result caching implemented, we can simplify query enabling
-  const queryEnabled = !!agentId && !updateOutput.isEditing && !updateSchemaFields.isEditing;
+  // Prevent query refetching while mutations are active (like agent-node.tsx pattern)
+  const queryEnabled = !!agentId && 
+    !updateOutput.isEditing && 
+    !updateSchemaFields.isEditing &&
+    !updateOutput.isPending &&
+    !updateOutputFormat.isPending;
   
   const { 
     data: outputData, 
@@ -119,6 +123,19 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
       lastInitializedAgentId.current = agentId;
     }
   }, [agentId, outputData, parseSchemaFields]);
+
+  // 6a. Sync UI state when backend data changes externally (similar to agent-node.tsx)
+  // This ensures the toggle switches reflect changes made by AI operations
+  useEffect(() => {
+    // Don't sync while mutations are active to prevent conflicts
+    if (updateOutput.isPending || updateOutputFormat.isPending || updateOutput.isEditing) {
+      return;
+    }
+    
+    // The OutputFormatSelector will automatically use the latest outputData values
+    // since it reads directly from outputData?.enabledStructuredOutput and outputData?.outputStreaming
+    // No additional state sync needed - React will re-render when outputData changes
+  }, [outputData?.enabledStructuredOutput, outputData?.outputStreaming, updateOutput.isPending, updateOutputFormat.isPending, updateOutput.isEditing]);
 
   // 7. Sync display fields when output data changes (for cross-tab sync)
   useEffect(() => {
@@ -344,13 +361,19 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     });
   }, [agentId, flowId, setLastMonacoEditor, updateOutput]);
 
-  // 14. Handle output format change
-  const handleOutputFormatChange = useCallback(async (value: {
-    outputFormat: OutputFormat;
-    outputStreaming: boolean;
-  }) => {
-    updateOutputFormat.mutate(value);
-  }, [updateOutputFormat]);
+  // 14. Handle structured output toggle change
+  const handleStructuredOutputChange = useCallback(async (enabled: boolean) => {
+    updateOutput.mutate({
+      enabledStructuredOutput: enabled,
+    });
+  }, [updateOutput]);
+
+  // 15. Handle streaming toggle change
+  const handleStreamingChange = useCallback(async (streaming: boolean) => {
+    updateOutput.mutate({
+      outputStreaming: streaming,
+    });
+  }, [updateOutput]);
 
   // 15. Agent key for variable display
   const agentKey = useMemo(() => {
@@ -384,25 +407,25 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
       {/* Output Format Selector */}
       <OutputFormatSelector
         value={{
-          outputFormat: outputData.outputFormat ?? OutputFormat.StructuredOutput,
-          outputStreaming: outputData.outputStreaming ?? true,
+          enabledStructuredOutput: outputData?.enabledStructuredOutput ?? false,
+          outputStreaming: outputData?.outputStreaming ?? true,
         }}
-        onChange={handleOutputFormatChange}
+        onChange={handleStructuredOutputChange}
+        onStreamingChange={handleStreamingChange}
         isOpen={localAccordionOpen}
         onOpenChange={setLocalAccordionOpen}
         disabled={false}
         hasError={
-          outputData.enabledStructuredOutput === true && 
-          (outputData.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.StructuredOutput &&
-          (!outputData.schemaFields || outputData.schemaFields.length === 0)
+          outputData?.enabledStructuredOutput === true && 
+          (!outputData?.schemaFields || outputData.schemaFields.length === 0)
         }
         isStandalone={false}
         className="w-full"
       />
       
       <div className="flex-1 overflow-hidden p-2">
-        {/* Show text output view when text format is selected */}
-        {(outputData.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.TextOutput ? (
+        {/* Show text output view when structured output is disabled */}
+        {!outputData?.enabledStructuredOutput ? (
           <div className="flex h-full justify-center items-center">
             <div className="inline-flex flex-col justify-center items-center gap-2">
               <div className="text-center font-[600] text-[14px] leading-[20px] text-text-body">
@@ -411,7 +434,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
             </div>
           </div>
         ) : (
-          (outputData.outputFormat || OutputFormat.StructuredOutput) === OutputFormat.StructuredOutput && !selectedField && displayFields.length === 0 ? (
+          outputData?.enabledStructuredOutput && !selectedField && displayFields.length === 0 ? (
             <div className="h-full w-full flex items-center justify-center">
               <div className="flex flex-col justify-center items-center gap-8">
                 <div className="flex flex-col justify-start items-center gap-2">

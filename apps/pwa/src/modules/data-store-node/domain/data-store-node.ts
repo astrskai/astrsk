@@ -8,13 +8,16 @@ export interface DataStoreNodeProps {
   name: string;
   color: string;
   dataStoreFields: DataStoreField[];
-  
+
   // Set by System
   createdAt: Date;
   updatedAt?: Date;
 }
 
-export type CreateDataStoreNodeProps = PartialOmit<DataStoreNodeProps, "createdAt" | "updatedAt">;
+export type CreateDataStoreNodeProps = PartialOmit<
+  DataStoreNodeProps,
+  "createdAt" | "updatedAt"
+>;
 export type UpdateDataStoreNodeProps = Partial<CreateDataStoreNodeProps>;
 
 export class DataStoreNode extends AggregateRoot<DataStoreNodeProps> {
@@ -61,7 +64,7 @@ export class DataStoreNode extends AggregateRoot<DataStoreNodeProps> {
         // Required props
         flowId: props.flowId,
         name: props.name,
-        
+
         // Default values
         color: props.color || "#3b82f6",
         dataStoreFields: props.dataStoreFields || [],
@@ -84,12 +87,15 @@ export class DataStoreNode extends AggregateRoot<DataStoreNodeProps> {
       }
 
       // Update props - only update properties that are explicitly passed
-      const filteredProps = Object.entries(props).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as any);
+      const filteredProps = Object.entries(props).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as any,
+      );
 
       Object.assign(this.props, {
         ...filteredProps,
@@ -111,7 +117,9 @@ export class DataStoreNode extends AggregateRoot<DataStoreNodeProps> {
     return this.update({ color });
   }
 
-  public updateFields(dataStoreFields: DataStoreField[]): Result<DataStoreNode> {
+  public updateFields(
+    dataStoreFields: DataStoreField[],
+  ): Result<DataStoreNode> {
     return this.update({ dataStoreFields });
   }
 }

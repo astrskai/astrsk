@@ -161,7 +161,7 @@ export function hexToRgba(hex: string, alpha: number = 1): string {
  * @param flow - The current flow or flow-like data structure  
  * @returns The next available hex color
  */
-export async function getNextAvailableColor(flow: Flow | { agentIds: any[], props: { nodes: any[] } }): Promise<string> {
+export async function getNextAvailableColor(flow: Flow | { props: { nodes: any[] }, id: string }): Promise<string> {
   try {
     const usedColors = new Set<string>();
     const nodes = flow.props?.nodes || [];

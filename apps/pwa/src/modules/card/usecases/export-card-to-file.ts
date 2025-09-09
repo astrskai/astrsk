@@ -57,7 +57,7 @@ export class ExportCardToFile
           card.props.iconAssetId,
         );
         if (assetOrError.isFailure) {
-          throw new Error(assetOrError.getError());
+          return Result.fail<File>(assetOrError.getError());
         }
         iconAsset = assetOrError.getValue();
       } else {

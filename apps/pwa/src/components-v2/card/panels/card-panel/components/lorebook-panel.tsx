@@ -484,7 +484,7 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
                       </div>
                     </div>
                     <div className="self-stretch inline-flex justify-start items-end gap-1 flex-wrap content-end">
-                      {selectedEntry.keys.map((keyword, index) => (
+                      {(Array.isArray(selectedEntry.keys) ? selectedEntry.keys : []).map((keyword, index) => (
                         <div
                           key={index}
                           className="px-2.5 py-1.5 bg-button-chips rounded-md flex justify-center items-center gap-2"

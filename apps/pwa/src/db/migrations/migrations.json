@@ -103,5 +103,32 @@
     "bps": true,
     "folderMillis": 1755658008260,
     "hash": "7869d980df5f344abed43f89fd9199797935a0e14b2870405b650348353d8674"
+  },
+  {
+    "sql": [
+      "CREATE TABLE \"vibe_sessions\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"session_id\" varchar NOT NULL,\n\t\"resource_id\" varchar NOT NULL,\n\t\"resource_type\" varchar NOT NULL,\n\t\"messages\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"applied_changes\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"ai_results\" jsonb,\n\t\"conversation_history\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"status\" varchar NOT NULL,\n\t\"version\" integer DEFAULT 1 NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL,\n\t\"last_active_at\" text NOT NULL,\n\tCONSTRAINT \"vibe_sessions_session_id_unique\" UNIQUE(\"session_id\")\n);\n",
+      "\nALTER TABLE \"cards\" ADD COLUMN \"vibe_session_id\" uuid;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"vibe_session_id\" uuid;"
+    ],
+    "bps": true,
+    "folderMillis": 1757064475506,
+    "hash": "c5ee483c443dfa9b3dd79580f6dbb9c604e5f461a6ad73794a024ba3d613fc2f"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"vibe_sessions\" ADD COLUMN \"snapshots\" jsonb DEFAULT '[]'::jsonb NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1757149406985,
+    "hash": "ce2e6dfc13be71c2877b80483ed8feec26ae66f65485489570eb495be512384a"
+  },
+  {
+    "sql": [
+      "CREATE TABLE \"generated_images\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"asset_id\" uuid NOT NULL,\n\t\"prompt\" text NOT NULL,\n\t\"style\" varchar,\n\t\"aspect_ratio\" varchar,\n\t\"associated_card_id\" uuid,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE UNIQUE INDEX \"unique_resource_session\" ON \"vibe_sessions\" USING btree (\"resource_id\",\"resource_type\");"
+    ],
+    "bps": true,
+    "folderMillis": 1757256794993,
+    "hash": "c133359a0ddd37aa54128e33e0da978ef55ddb39886655484792f0d42a9e3d58"
   }
 ]

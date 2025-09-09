@@ -50,7 +50,6 @@ import { TurnService } from "@/app/services/turn-service";
 import { useWllamaStore } from "@/app/stores/wllama-store";
 import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
-import { OutputFormat } from "@/modules/agent/domain";
 import { ApiSource } from "@/modules/api/domain";
 import {
   ApiConnection,
@@ -1518,8 +1517,7 @@ async function* executeAgentNode({
       output: {},
     };
     yield result;
-    const isStructuredOutput =
-      agent.props.outputFormat === OutputFormat.StructuredOutput;
+    const isStructuredOutput = agent.props.enabledStructuredOutput;
     if (isStructuredOutput) {
       // Generate structured output
       const { partialObjectStream } = await generateStructuredOutput({
@@ -2038,6 +2036,12 @@ async function evaluateSingleCondition(
   let value1: string = "";
   let value2: string = "";
   try {
+    // Check for null dataType or operator
+    if (!condition.dataType || !condition.operator) {
+      console.warn(`Condition ${condition.id} has null dataType or operator`);
+      return false;
+    }
+
     // Render templates in condition values
     const fullContext = createFullContext(context, variables, dataStore);
     value1 = TemplateRenderer.render(condition.value1, fullContext);
@@ -2060,7 +2064,7 @@ async function evaluateSingleCondition(
     );
   } catch (error) {
     const debugInfo = `value1="${value1}"${
-      !isUnaryOperator(condition.operator) ? ` value2="${value2}"` : ""
+      condition.operator && !isUnaryOperator(condition.operator) ? ` value2="${value2}"` : ""
     } dataType="${condition.dataType}"`;
     console.warn(
       `Failed to evaluate condition ${condition.id} (${condition.operator}): ${debugInfo} - ${error}`,
@@ -2077,6 +2081,10 @@ function convertValueToType(
   dataType: Condition["dataType"],
 ): any {
   if (value == null) {
+    return value;
+  }
+
+  if (dataType == null) {
     return value;
   }
 
@@ -2126,6 +2134,10 @@ function evaluateConditionOperator(
   value1: any,
   value2: any,
 ): boolean {
+  if (operator == null) {
+    return false;
+  }
+
   // Handle exists/not_exists operators
   if (operator.endsWith("_exists")) {
     const isNotExists = operator.endsWith("_not_exists");

@@ -15,6 +15,7 @@ import {
   UpdateCardSummary,
   UpdateCardVersion,
   UpdateCardConceptualOrigin,
+  UpdateCardIconAsset,
   UpdateCharacterName,
   UpdateCharacterDescription,
   UpdateCharacterExampleDialogue,
@@ -23,6 +24,7 @@ import {
   UpdateCardLorebook,
   UpdateCardScenarios,
   UpdatePlotDescription,
+  RestoreCardFromSnapshot,
 } from "@/modules/card/usecases";
 // import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
 
@@ -40,6 +42,7 @@ export class CardService {
   public static updateCardSummary: UpdateCardSummary;
   public static updateCardVersion: UpdateCardVersion;
   public static updateCardConceptualOrigin: UpdateCardConceptualOrigin;
+  public static updateCardIconAsset: UpdateCardIconAsset;
   public static updateCharacterName: UpdateCharacterName;
   public static updateCharacterDescription: UpdateCharacterDescription;
   public static updateCharacterExampleDialogue: UpdateCharacterExampleDialogue;
@@ -48,12 +51,12 @@ export class CardService {
   public static updateCardLorebook: UpdateCardLorebook;
   public static updateCardScenarios: UpdateCardScenarios;
   public static updatePlotDescription: UpdatePlotDescription;
+  public static restoreCardFromSnapshot: RestoreCardFromSnapshot;
 
   private constructor() {}
 
   public static init(
     loadAssetRepo: LoadAssetRepo,
-    deleteAsset: DeleteAsset,
     saveFileToAsset: SaveFileToAsset,
     cloneAsset: CloneAsset,
     // updateLocalSyncMetadata: UpdateLocalSyncMetadata,
@@ -62,7 +65,7 @@ export class CardService {
     this.cardRepo = new DrizzleCardRepo();
 
     this.cloneCard = new CloneCard(this.cardRepo, this.cardRepo, cloneAsset);
-    this.deleteCard = new DeleteCard(this.cardRepo, deleteAsset);
+    this.deleteCard = new DeleteCard(this.cardRepo);
     this.exportCardToFile = new ExportCardToFile(this.cardRepo, loadAssetRepo);
     this.getCard = new GetCard(this.cardRepo);
     this.importCardFromFile = new ImportCardFromFile(
@@ -75,6 +78,7 @@ export class CardService {
     this.updateCardSummary = new UpdateCardSummary(this.cardRepo, this.cardRepo);
     this.updateCardVersion = new UpdateCardVersion(this.cardRepo, this.cardRepo);
     this.updateCardConceptualOrigin = new UpdateCardConceptualOrigin(this.cardRepo, this.cardRepo);
+    this.updateCardIconAsset = new UpdateCardIconAsset(this.cardRepo);
     this.updateCharacterName = new UpdateCharacterName(this.cardRepo, this.cardRepo);
     this.updateCharacterDescription = new UpdateCharacterDescription(this.cardRepo, this.cardRepo);
     this.updateCharacterExampleDialogue = new UpdateCharacterExampleDialogue(this.cardRepo, this.cardRepo);
@@ -83,5 +87,6 @@ export class CardService {
     this.updateCardLorebook = new UpdateCardLorebook(this.cardRepo, this.cardRepo);
     this.updateCardScenarios = new UpdateCardScenarios(this.cardRepo, this.cardRepo);
     this.updatePlotDescription = new UpdatePlotDescription(this.cardRepo, this.cardRepo);
+    this.restoreCardFromSnapshot = new RestoreCardFromSnapshot(this.cardRepo);
   }
 }

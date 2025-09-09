@@ -6,6 +6,7 @@ import { IfCondition } from "@/flow-multi/nodes/if-node";
 import { ConditionDataType, ConditionOperator } from "@/flow-multi/types/condition-types";
 
 // Type for conditions that may be incomplete (during editing)
+// Now the same as IfCondition since both support null values
 export interface EditableCondition {
   id: string;
   dataType: ConditionDataType | null;
@@ -98,12 +99,22 @@ export function useUpdateIfNodeConditions(flowId: string, nodeId: string) {
         clearTimeout(editTimeoutRef.current);
       }
     },
-    onSettled: () => {
+    onSettled: async () => {
       endEditing();
-      // Invalidate to ensure consistency after delay
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
-      }, 600);
+      
+      // Immediate invalidation for if node queries
+      await queryClient.invalidateQueries({ 
+        queryKey: ifNodeKeys.detail(flowId, nodeId),
+        refetchType: 'inactive'
+      });
+      
+      // Also invalidate flow queries since if node conditions affect flow validation
+      try {
+        const { invalidateSingleFlowQueries } = await import("@/flow-multi/utils/invalidate-flow-queries");
+        await invalidateSingleFlowQueries(flowId);
+      } catch (error) {
+        console.warn("Failed to invalidate flow queries after if node condition update:", error);
+      }
     },
   });
 
@@ -180,12 +191,22 @@ export function useUpdateIfNodeLogicOperator(flowId: string, nodeId: string) {
         clearTimeout(editTimeoutRef.current);
       }
     },
-    onSettled: () => {
+    onSettled: async () => {
       endEditing();
-      // Invalidate to ensure consistency after delay
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
-      }, 600);
+      
+      // Immediate invalidation for if node queries
+      await queryClient.invalidateQueries({ 
+        queryKey: ifNodeKeys.detail(flowId, nodeId),
+        refetchType: 'inactive'
+      });
+      
+      // Also invalidate flow queries since if node conditions affect flow validation
+      try {
+        const { invalidateSingleFlowQueries } = await import("@/flow-multi/utils/invalidate-flow-queries");
+        await invalidateSingleFlowQueries(flowId);
+      } catch (error) {
+        console.warn("Failed to invalidate flow queries after if node logic operator update:", error);
+      }
     },
   });
 

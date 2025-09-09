@@ -1270,3 +1270,68 @@ export const useCloneCard = () => {
     },
   });
 };
+
+/**
+ * Hook for updating card icon asset
+ */
+export const useUpdateCardIconAsset = (cardId: string) => {
+  const queryClient = useQueryClient();
+  
+  const mutation = useMutation({
+    mutationFn: async (iconAssetId: string | null) => {
+      const result = await CardService.updateCardIconAsset.execute({
+        cardId,
+        iconAssetId
+      });
+      
+      if (result.isFailure) {
+        throw new Error(result.getError());
+      }
+      
+      return iconAssetId;
+    },
+    
+    onMutate: async (iconAssetId) => {
+      await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
+      await queryClient.cancelQueries({ queryKey: cardKeys.metadata(cardId) });
+      
+      const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
+      const previousMetadata = queryClient.getQueryData(cardKeys.metadata(cardId));
+      
+      // Optimistic update - metadata
+      queryClient.setQueryData(cardKeys.metadata(cardId), (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          iconAssetId,
+          updatedAt: new Date()
+        };
+      });
+      
+      return { previousCard, previousMetadata };
+    },
+    
+    onError: (_err, _variables, context) => {
+      if (context?.previousCard) {
+        queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
+      }
+      if (context?.previousMetadata) {
+        queryClient.setQueryData(cardKeys.metadata(cardId), context.previousMetadata);
+      }
+    },
+    
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: cardKeys.detail(cardId) });
+      await queryClient.invalidateQueries({ queryKey: cardKeys.metadata(cardId) });
+      await queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
+    },
+  });
+  
+  return {
+    mutate: mutation.mutate,
+    mutateAsync: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+    error: mutation.error,
+  };
+};

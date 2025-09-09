@@ -86,12 +86,11 @@ export interface DataStoreSchemaField {
   description?: string;
 }
 
-// Runtime field - contains actual values and logic
+// Runtime field - contains logic for computed fields
 export interface DataStoreField {
   id: string; // Unique ID for this runtime field instance (will use UniqueEntityID().toString())
   schemaFieldId: string; // References DataStoreSchemaField.id
-  value: string; // Current value (stored as string)
-  logic?: string; // Optional logic/formula for computed fields
+  logic?: string; // Optional logic/formula for computed fields using Jinja template syntax (validated in validation phase)
 }
 
 export interface DataStoreSchema {
@@ -120,6 +119,9 @@ export interface FlowProps {
   // Flow Viewport State
   viewport?: FlowViewport;
 
+  // Vibe Session Reference (AI Assistant)
+  vibeSessionId?: string;
+
   // Validation State
   readyState: ReadyState;
   validationIssues?: ValidationIssue[];
@@ -140,6 +142,26 @@ export class Flow extends AggregateRoot<FlowProps> {
         // Agent nodes have agentId in their data
         const agentId = (node.data as any)?.agentId || node.id;
         return new UniqueEntityID(agentId);
+      });
+  }
+
+  get dataStoreNodeIds(): UniqueEntityID[] {
+    return this.props.nodes
+      .filter((node) => node.type === NodeType.DATA_STORE)
+      .map((node) => {
+        // Data store nodes have dataStoreNodeId in their data
+        const dataStoreNodeId = (node.data as any)?.dataStoreNodeId || node.id;
+        return new UniqueEntityID(dataStoreNodeId);
+      });
+  }
+
+  get ifNodeIds(): UniqueEntityID[] {
+    return this.props.nodes
+      .filter((node) => node.type === NodeType.IF)
+      .map((node) => {
+        // If nodes have ifNodeId in their data
+        const ifNodeId = (node.data as any)?.ifNodeId || node.id;
+        return new UniqueEntityID(ifNodeId);
       });
   }
 
@@ -260,6 +282,9 @@ export class Flow extends AggregateRoot<FlowProps> {
     if (this.props.dataStoreSchema) {
       json.dataStoreSchema = this.props.dataStoreSchema;
     }
+    if (this.props.vibeSessionId) {
+      json.vibeSessionId = this.props.vibeSessionId;
+    }
 
     // Add validation state fields
     json.readyState = this.props.readyState;
@@ -316,6 +341,7 @@ export class Flow extends AggregateRoot<FlowProps> {
             })) || [],
           panelStructure: props.panelStructure,
           viewport: props.viewport,
+          vibeSessionId: props.vibeSessionId,
           readyState: props.readyState || ReadyState.Draft,
           validationIssues: props.validationIssues || undefined,
         },

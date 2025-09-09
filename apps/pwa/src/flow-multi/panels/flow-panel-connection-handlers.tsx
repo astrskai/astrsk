@@ -21,7 +21,7 @@ type CustomEdgeType = {
 };
 
 // Helper function to generate unique agent name
-export const generateUniqueAgentName = async (flow: Flow | { agentIds: any[], props?: { nodes: any[] } }, baseName: string = "New Agent"): Promise<string> => {
+export const generateUniqueAgentName = async (flow: Flow | { props?: { nodes: any[] }, id: string }, baseName: string = "New Agent"): Promise<string> => {
   const existingNames = new Set<string>();
   
   // Collect existing agent names from current flow
@@ -67,7 +67,7 @@ export const createNodeWithConnection = async (
   sourceNodeId: string,
   sourceHandleId: string | undefined,
   position: { x: number; y: number },
-  flow: Flow | { agentIds: any[], props: { nodes: any[] } },
+  flow: Flow | { props: { nodes: any[] }, id: string },
   nodes: CustomNodeType[],
   edges: CustomEdgeType[],
   filterExistingConnections: Function

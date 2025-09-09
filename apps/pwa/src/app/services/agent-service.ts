@@ -16,6 +16,7 @@ import { UpdateAgentName } from "@/modules/agent/usecases/update-agent-name";
 import { UpdateAgentParameters } from "@/modules/agent/usecases/update-agent-parameters";
 import { UpdateAgentOutput } from "@/modules/agent/usecases/update-agent-output";
 import { UpdateAgentPrompt } from "@/modules/agent/usecases/update-agent-prompt";
+import { RestoreAgentFromSnapshot } from "@/modules/agent/usecases/restore-agent-from-snapshot";
 // import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
 
 export class AgentService {
@@ -38,6 +39,7 @@ export class AgentService {
   public static updateAgentParameters: UpdateAgentParameters;
   public static updateAgentOutput: UpdateAgentOutput;
   public static updateAgentPrompt: UpdateAgentPrompt;
+  public static restoreAgentFromSnapshot: RestoreAgentFromSnapshot;
 
   private constructor() {}
 
@@ -62,5 +64,6 @@ export class AgentService {
     this.updateAgentParameters = new UpdateAgentParameters();
     this.updateAgentOutput = new UpdateAgentOutput(this.agentRepo);
     this.updateAgentPrompt = new UpdateAgentPrompt(this.agentRepo);
+    this.restoreAgentFromSnapshot = new RestoreAgentFromSnapshot(this.agentRepo);
   }
 }

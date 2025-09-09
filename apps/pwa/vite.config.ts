@@ -19,6 +19,7 @@ export default defineConfig({
   resolve: {
     alias: {
       buffer: "buffer",
+      "vibe-shared-types": path.resolve(__dirname, "../vibe-shared-types/src/index.ts"),
     },
   },
   define: {

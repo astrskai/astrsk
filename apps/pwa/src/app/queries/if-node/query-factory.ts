@@ -36,7 +36,6 @@ function isOldNodeIdFormat(nodeId: string): boolean {
  * 
  * Hierarchical structure:
  * - all: ['if-nodes']
- * - byFlow: ['if-nodes', 'flow', flowId]
  * - detail: ['if-nodes', 'flow', flowId, nodeId]
  *   - name: ['if-nodes', 'flow', flowId, nodeId, 'name']
  *   - conditions: ['if-nodes', 'flow', flowId, nodeId, 'conditions']
@@ -47,11 +46,8 @@ export const ifNodeKeys = {
   // Root key for all if node queries
   all: ['if-nodes'] as const,
   
-  // Flow-based queries
-  byFlow: (flowId: string) => [...ifNodeKeys.all, 'flow', flowId] as const,
-  
   // Detail queries for specific node
-  detail: (flowId: string, nodeId: string) => [...ifNodeKeys.byFlow(flowId), nodeId] as const,
+  detail: (flowId: string, nodeId: string) => [...ifNodeKeys.all, 'flow', flowId, nodeId] as const,
   
   // Sub-queries for specific data
   name: (flowId: string, nodeId: string) => [...ifNodeKeys.detail(flowId, nodeId), 'name'] as const,
@@ -217,7 +213,7 @@ export const ifNodeQueries = {
  * 
  * // Invalidating queries
  * queryClient.invalidateQueries({ queryKey: ifNodeKeys.all }); // All if node queries
- * queryClient.invalidateQueries({ queryKey: ifNodeKeys.byFlow(flowId) }); // All nodes in flow
+ * queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) }); // Specific node
  * queryClient.invalidateQueries({ queryKey: ifNodeKeys.name(flowId, nodeId) }); // Just name
  * 
  * // Prefetching

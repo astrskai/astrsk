@@ -88,19 +88,22 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
 
   // Initialize data store fields from node data
   useEffect(() => {
-    if (dataStoreNodeData && nodeId && nodeId !== lastNodeIdRef.current && !updateNodeFields.isEditing) {
+    if (dataStoreNodeData && nodeId) {
+      // Always sync when data changes, regardless of editing state
       if (dataStoreNodeData.dataStoreFields) {
         setDataStoreFields(dataStoreNodeData.dataStoreFields);
-        if (dataStoreNodeData.dataStoreFields.length > 0) {
+        if (dataStoreNodeData.dataStoreFields.length > 0 && nodeId !== lastNodeIdRef.current) {
           setSelectedFieldId(dataStoreNodeData.dataStoreFields[0].schemaFieldId);
         }
       } else {
         setDataStoreFields([]);
-        setSelectedFieldId("");
+        if (nodeId !== lastNodeIdRef.current) {
+          setSelectedFieldId("");
+        }
       }
       lastNodeIdRef.current = nodeId;
     }
-  }, [dataStoreNodeData, nodeId, updateNodeFields.isEditing]);
+  }, [dataStoreNodeData, nodeId]);
 
   // Sync logic with selected field - only when field selection or field logic changes
   useEffect(() => {
@@ -166,7 +169,6 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
     const newField: DataStoreField = {
       id: new UniqueEntityID().toString(),
       schemaFieldId: selectedSchemaFieldId,
-      value: schemaField.initialValue || '',
       logic: ''  // Initialize with empty string instead of undefined
     };
     

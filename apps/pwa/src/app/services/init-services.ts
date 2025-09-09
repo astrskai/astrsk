@@ -2,11 +2,13 @@ import { ApiService, CardService } from "@/app/services";
 import { AgentService } from "@/app/services/agent-service";
 import { AssetService } from "@/app/services/asset-service";
 import { BackgroundService } from "@/app/services/background-service";
+import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
+import { VibeSessionService } from "@/app/services/vibe-session-service";
 
 export async function initServices(): Promise<void> {
   // Common
@@ -22,6 +24,9 @@ export async function initServices(): Promise<void> {
   DataStoreNodeService.init();
   IfNodeService.init();
 
+  // Vibe Session Service
+  VibeSessionService.init();
+
   // Flow
   FlowService.init(
     AgentService.agentRepo,
@@ -32,7 +37,6 @@ export async function initServices(): Promise<void> {
   // Card
   CardService.init(
     AssetService.assetRepo,
-    AssetService.deleteAsset,
     AssetService.saveFileToAsset,
     AssetService.cloneAsset,
   );
@@ -40,6 +44,10 @@ export async function initServices(): Promise<void> {
   // Session
   TurnService.init();
   BackgroundService.init(
+    AssetService.saveFileToAsset,
+    AssetService.deleteAsset,
+  );
+  GeneratedImageService.init(
     AssetService.saveFileToAsset,
     AssetService.deleteAsset,
   );
