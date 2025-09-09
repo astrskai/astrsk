@@ -25,6 +25,7 @@ import { ValidationPanel } from "@/flow-multi/panels/validation/validation-panel
 import { DataStoreSchemaPanel } from "@/flow-multi/panels/data-store-schema/data-store-schema-panel";
 import { IfNodePanel } from "@/flow-multi/panels/if-node/if-node-panel";
 import { DataStorePanel } from "@/flow-multi/panels/data-store/data-store-panel";
+import { FlowVibePanel } from "@/flow-multi/panels/vibe/vibe-panel";
 import { FlowService } from "@/app/services/flow-service";
 import { PanelStructure } from "@/modules/flow/domain";
 import { SvgIcon } from "@/components-v2/svg-icon";
@@ -137,6 +138,7 @@ const ValidationPanelComponent = createFlowPanelComponentStandalone(ValidationPa
 const DataStoreSchemaPanelComponent = createFlowPanelComponentStandalone(DataStoreSchemaPanel);
 const IfNodePanelComponent = createNodePanelComponent(IfNodePanel);
 const DataStorePanelComponent = createNodePanelComponent(DataStorePanel);
+const FlowVibePanelComponent = createFlowPanelComponentStandalone(FlowVibePanel);
 
 // Panel Components - must be defined outside component to avoid re-creation
 const components = {
@@ -151,6 +153,7 @@ const components = {
   dataStoreSchema: DataStoreSchemaPanelComponent,
   ifNode: IfNodePanelComponent,
   dataStore: DataStorePanelComponent,
+  vibe: FlowVibePanelComponent,
 };
 
 interface FlowPanelMainProps {

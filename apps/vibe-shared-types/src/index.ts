@@ -515,6 +515,7 @@ export interface StartVibeCodingRequest {
   originalRequest: string;
   userId?: string;
   context?: VibeCodingSessionContext;
+  modelId?: string;
 }
 
 // Frontend session status (enriched version of EditingSession)

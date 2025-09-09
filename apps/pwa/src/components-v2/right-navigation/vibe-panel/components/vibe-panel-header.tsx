@@ -21,6 +21,7 @@ interface VibePanelHeaderProps {
   resourceType?: 'card' | 'flow' | null;
   isRestored?: boolean;
   className?: string;
+  isLocalPanel?: boolean;
 }
 
 export const VibePanelHeader: React.FC<VibePanelHeaderProps> = ({
@@ -31,6 +32,7 @@ export const VibePanelHeader: React.FC<VibePanelHeaderProps> = ({
   resourceName,
   resourceType,
   isRestored = false,
+  isLocalPanel = false,
   className,
 }) => {
   if (isCollapsed) {
@@ -65,14 +67,16 @@ export const VibePanelHeader: React.FC<VibePanelHeaderProps> = ({
             <span className="text-text-subtle text-xs font-normal leading-none">Clear All Chat</span>
           </Button>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleCollapse}
-          className="h-7 px-3 py-2 bg-tailwind-colors-base-transparent/0 rounded-full"
-        >
-          <span className="text-text-subtle text-xs font-normal leading-none">Close</span>
-        </Button>
+        {!isLocalPanel && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleCollapse}
+            className="h-7 px-3 py-2 bg-tailwind-colors-base-transparent/0 rounded-full"
+          >
+            <span className="text-text-subtle text-xs font-normal leading-none">Close</span>
+          </Button>
+        )}
       </div>
     </div>
   );

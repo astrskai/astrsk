@@ -20,8 +20,6 @@ import { Button } from "@/components-v2/ui/button";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { invalidateSingleCardQueries } from "@/components-v2/card/utils/invalidate-card-queries";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
-import { useUpdateCardCodingPanelState } from "@/app/queries/card/mutations/card-coding-panel-mutations";
-import { useRightSidebarState } from "@/components-v2/top-bar";
 import { Avatar } from "@/components-v2/avatar";
 
 interface CardPanelProps {
@@ -92,30 +90,14 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   // Use provided card or the one from query
   const card = providedCard || cardFromQuery;
 
-  // Right sidebar state and card coding panel mutation
-  const rightSidebar = useRightSidebarState();
-  const updateCodingPanelState = useUpdateCardCodingPanelState(cardId);
+  // No longer need right sidebar state since vibe panel is now local
 
-  // Sync card coding panel state with global sidebar when card changes (same as flow)
-  useEffect(() => {
-    if (card && rightSidebar) {
-      const panelState = card.props.isCodingPanelOpen ?? false;
-      if (panelState !== rightSidebar.isOpen) {
-        rightSidebar.setIsOpen(panelState);
-      }
-    }
-  }, [card?.props.isCodingPanelOpen, rightSidebar]);
-
-  // Vibe Coding handler (only opens, doesn't close) - same as flow implementation
+  // Vibe Coding handler - opens the local vibe panel instead of global right panel
   const handleVibeCodingToggle = () => {
     if (!card) return;
     
-    // Always set to true for redundancy - ensures panel opens even if state gets out of sync
-    updateCodingPanelState.mutate(true, {
-      onError: (error) => {
-        console.error('Failed to update card coding panel state:', error);
-      }
-    });
+    // Open the local vibe panel tab instead of the global right panel
+    handleOpenPanel("vibe");
   };
 
   // Helper function to extract character name from card
@@ -389,7 +371,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               size="default"
               variant="gradient"
               icon={<SvgIcon name="ai_assistant" />}
-              active={card?.props.isCodingPanelOpen || false}
+              active={panelVisibility?.["vibe"] || false}
               onClick={handleVibeCodingToggle}
               className="w-32 h-8"
             >

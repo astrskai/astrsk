@@ -7,27 +7,8 @@ import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { Code, SquareArrowUpRight } from "lucide-react";
-import { useCallback, useEffect, useState, createContext, useContext } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-// Simple context for right sidebar state
-const RightSidebarContext = createContext<{
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
-} | null>(null);
-
-export const useRightSidebarState = () => {
-  const context = useContext(RightSidebarContext);
-  return context;
-};
-
-export const RightSidebarContextProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <RightSidebarContext.Provider value={{ isOpen, setIsOpen }}>
-      {children}
-    </RightSidebarContext.Provider>
-  );
-};
 
 const NewWindowButton = () => {
   const handleNewWindow = useCallback(() => {

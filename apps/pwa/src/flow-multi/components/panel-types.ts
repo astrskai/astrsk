@@ -15,6 +15,7 @@ export const PANEL_TYPES = {
   DATA_STORE_SCHEMA: 'dataStoreSchema',
   IF_NODE: 'ifNode',
   DATA_STORE: 'dataStore',
+  VIBE: 'vibe',
 } as const;
 
 export type PanelType = typeof PANEL_TYPES[keyof typeof PANEL_TYPES];
@@ -41,6 +42,7 @@ export const STANDALONE_PANEL_TYPES = [
   PANEL_TYPES.DATA_STORE_SCHEMA,
   PANEL_TYPES.IF_NODE,
   PANEL_TYPES.DATA_STORE,
+  PANEL_TYPES.VIBE,
 ] as const;
 
 export type StandalonePanelType = typeof STANDALONE_PANEL_TYPES[number];
@@ -87,6 +89,8 @@ export function getPanelTitle(panelType: PanelType, nodeName?: string): string {
         return 'If node';
       case PANEL_TYPES.DATA_STORE:
         return 'Data update';
+      case PANEL_TYPES.VIBE:
+        return 'AI assistant';
       default:
         return 'Unknown Panel';
     }

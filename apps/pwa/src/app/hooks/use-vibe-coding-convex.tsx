@@ -90,14 +90,18 @@ export const useStartCodingSession = () => {
 
       const sessionId = `pwa-vibe-${Date.now()}`;
 
-      const result = await createEditingSession({
+      // Debug: Log the full request being sent to createEditingSession
+      const sessionArgs = {
         sessionId,
         originalRequest: request.originalRequest,
         conversationHistory: request.context?.conversationHistory || [],
         resourceIds,
         resourceTypes,
         resourceData,
-      });
+        modelId: request.modelId,
+      };
+
+      const result = await createEditingSession(sessionArgs);
 
       return {
         success: true,

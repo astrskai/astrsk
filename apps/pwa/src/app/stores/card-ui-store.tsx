@@ -12,6 +12,7 @@ export interface CardPanelVisibility {
   variables: boolean;
   scenarios: boolean;
   imageGenerator: boolean;
+  vibe: boolean;
 }
 
 interface LayoutState {
@@ -75,6 +76,7 @@ const defaultPanelVisibility: CardPanelVisibility = {
   variables: false,
   scenarios: false,
   imageGenerator: false,
+  vibe: false,
 };
 
 // Helper function to validate layout
