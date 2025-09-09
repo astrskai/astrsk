@@ -428,6 +428,7 @@ export interface CreateEditingSessionArgs {
     [resourceId: string]: EditableCharacterCard | EditablePlotCard | EditableFlowData;
   };
   originalRequest: string;
+  modelId?: string; // <- new
 }
 
 // updateResourceWithChanges mutation args
@@ -758,6 +759,7 @@ export function transformToCreateEditingSessionArgs(
     resourceTypes,
     resourceData,
     originalRequest: request.originalRequest,
+    modelId: request.modelId, // <- forward
   };
 }
 

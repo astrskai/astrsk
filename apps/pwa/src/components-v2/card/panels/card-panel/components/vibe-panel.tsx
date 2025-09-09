@@ -23,7 +23,6 @@ export const CardVibePanel: React.FC<CardVibePanelProps> = ({ cardId }) => {
         resourceId={cardId}
         resourceType="card"
         isLocalPanel={true}
-        isCollapsed={false}
       />
     </div>
   );

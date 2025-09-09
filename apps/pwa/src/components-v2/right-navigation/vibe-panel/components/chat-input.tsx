@@ -32,10 +32,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const handleSend = () => {
     
     if (prompt.trim() && !isProcessing && hasResource) {
-      console.log('✅ [CHAT-INPUT] Calling onSendMessage with:', {
-        message: prompt.trim(),
-        selectedModel: selectedModel
-      });
       onSendMessage(prompt.trim(), selectedModel);
       setPrompt('');
     } else {

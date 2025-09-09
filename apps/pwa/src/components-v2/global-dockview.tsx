@@ -51,7 +51,7 @@ export function GlobalDockView({ children }: GlobalDockViewProps) {
     if (mainPanel?.group) {
       mainPanel.group.model.locked = true;
     }
-  }, [children]);
+  }, []);
 
 
   // Update main panel content when children change

@@ -103,7 +103,7 @@ export function CardPanelProvider({
           title = "Image studio";
           break;
         case "vibe":
-          title = "AI Assistant";
+          title = "AI assistant";
           break;
       }
 

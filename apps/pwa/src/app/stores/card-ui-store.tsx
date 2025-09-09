@@ -39,7 +39,7 @@ interface CardUIState {
   // Set panel visibility for a specific card type
   setCardTypePanelVisibility: (
     cardType: string,
-    panel: string,
+    panel: keyof CardPanelVisibility,
     visible: boolean,
   ) => void;
 
@@ -245,9 +245,7 @@ const useCardUIStoreBase = create<CardUIState>()(
                 ...defaultPanelVisibility,
               };
             }
-            state.cardTypePanelVisibility[cardType][
-              panel as keyof CardPanelVisibility
-            ] = visible;
+            state.cardTypePanelVisibility[cardType][panel] = visible;
           }),
 
         getCardTypeLayout: (cardType) => {

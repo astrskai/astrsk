@@ -24,7 +24,6 @@ export const FlowVibePanel: React.FC<FlowVibePanelProps> = ({ flowId }) => {
         resourceId={flowId}
         resourceType="flow"
         isLocalPanel={true}
-        isCollapsed={false}
       />
     </div>
   );

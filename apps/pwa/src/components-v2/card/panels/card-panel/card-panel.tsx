@@ -27,6 +27,15 @@ interface CardPanelProps {
   card?: Card | null;
 }
 
+type CardPanelType =
+  | "metadata"
+  | "content"
+  | "lorebooks"
+  | "scenarios"
+  | "variables"
+  | "imageGenerator"
+  | "vibe";
+
 // Trading card item component with proper scaling
 const TradingCardItem = ({
   cardId,
@@ -60,12 +69,17 @@ const TradingCardItem = ({
           </div>
         </div>
       )}
+      <div className="absolute inset-0 rounded-[19px] ring-2 ring-border-light pointer-events-none" />
+      {/*
+      todo: remove this 
+      */}
+      {/*
       {isActive ? (
         <div className="absolute inset-0 rounded-[19px] ring-2 ring-border-light pointer-events-none" />
       ) : (
         // Default border
         <div className="absolute inset-0 rounded-[19px] ring-2 ring-border-light pointer-events-none" />
-      )}
+      )} */}
     </div>
   );
 };
@@ -95,8 +109,6 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   // Vibe Coding handler - opens the local vibe panel instead of global right panel
   const handleVibeCodingToggle = () => {
     if (!card) return;
-    
-    // Open the local vibe panel tab instead of the global right panel
     handleOpenPanel("vibe");
   };
 
@@ -114,7 +126,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   // Get the avatar image URL
   const [avatarUrl] = useAsset(card?.props.iconAssetId);
 
-  const handleOpenPanel = (panelType: string) => {
+  const handleOpenPanel = (panelType: CardPanelType) => {
     openPanel(panelType);
   };
 

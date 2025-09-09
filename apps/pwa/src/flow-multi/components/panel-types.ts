@@ -126,4 +126,5 @@ export interface FlowPanelVisibility {
   [PANEL_TYPES.DATA_STORE_SCHEMA]: boolean;
   [PANEL_TYPES.IF_NODE]: boolean;
   [PANEL_TYPES.DATA_STORE]: boolean;
+  [PANEL_TYPES.VIBE]: boolean;
 }

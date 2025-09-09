@@ -25,6 +25,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { generatedImageQueries, generatedImageKeys } from "@/app/queries/generated-image/query-factory";
 import { cn } from "@/shared/utils";
 import { useModelStore, IMAGE_MODELS } from "@/app/stores/model-store";
+import { toast } from "sonner";
 
 interface ImageGeneratorPanelProps extends CardPanelProps {}
 
@@ -408,7 +409,7 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
 
     // Check if we need card image but it's not available
     if (useCardImage && !cardIconAssetUrl) {
-      alert("Card image is required but not available. Please upload an image to the card first.");
+      toast("Card image is required but not available. Please upload an image to the card first.");
       return;
     }
 
@@ -434,7 +435,8 @@ Based on this card data and the user's request, generate an image: ${imagePrompt
       if (useCardImage && cardIconAssetUrl) {
         // Image-to-image generation using card image
         const { base64, mimeType } = await urlToBase64(cardIconAssetUrl);
-        
+
+        //TODO add modelId
         result = await generateImageToImage({
           inputImageBase64: base64,
           inputImageMimeType: mimeType,
@@ -483,13 +485,13 @@ Based on this card data and the user's request, generate an image: ${imagePrompt
       } else {
         console.error("❌ [IMAGE-GENERATOR] No images generated or generation failed:", result.error);
         // Show user-friendly error message
-        alert(`Image generation failed: ${result.error || "No images were generated. This may be due to content policy restrictions or technical issues."}`);
+        toast(`Image generation failed: ${result.error || "No images were generated. This may be due to content policy restrictions or technical issues."}`);
       }
       
     } catch (error) {
       console.error("❌ [IMAGE-GENERATOR] Error generating image:", error);
       // Show user-friendly error message
-      alert(`Image generation failed: ${error instanceof Error ? error.message : "An unexpected error occurred. Please try again."}`);
+      toast(`Image generation failed: ${error instanceof Error ? error.message : "An unexpected error occurred. Please try again."}`);
     } finally {
       setIsGenerating(false);
     }
