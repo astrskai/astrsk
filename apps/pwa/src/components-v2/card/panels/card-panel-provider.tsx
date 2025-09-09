@@ -13,6 +13,7 @@ interface CardPanelContextType {
   openPanel: (panelType: string) => void;
   closePanel: (panelType: string) => void;
   invalidateExternalQueries: () => Promise<void>;
+  refreshImageGenerator: () => void;
 }
 
 const CardPanelContext = createContext<CardPanelContextType | null>(null);

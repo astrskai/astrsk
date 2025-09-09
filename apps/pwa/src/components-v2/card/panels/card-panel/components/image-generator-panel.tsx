@@ -17,6 +17,8 @@ import {
 import { useNanoBananaGenerator, CustomImageResponse, ImageToImageResponse } from "@/app/hooks/use-nano-banana-generator";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { AssetService } from "@/app/services/asset-service";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { generatedImageQueries, generatedImageKeys } from "@/app/queries/generated-image/query-factory";
 
 interface ImageGeneratorPanelProps extends CardPanelProps {}
 
@@ -103,6 +105,25 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   // Card data hook
   const { card } = useCardPanel({ cardId });
   
+  // Query client for invalidation
+  const queryClient = useQueryClient();
+  
+  // Query for card-specific generated images
+  const { data: generatedImages = [], isLoading, error } = useQuery({
+    ...generatedImageQueries.cardImages(cardId),
+    enabled: !!cardId,
+  });
+
+  // Debug logging for query state
+  useEffect(() => {
+    console.log("🖼️ [IMAGE-GENERATOR] Query state:", {
+      cardId,
+      imagesCount: generatedImages.length,
+      isLoading,
+      error: error?.message,
+    });
+  }, [cardId, generatedImages.length, isLoading, error]);
+  
   // Nano banana generator hook
   const { generateCustomImage, generateImageToImage } = useNanoBananaGenerator();
   
@@ -124,7 +145,6 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   // }, [cardId, card, cardIconAssetUrl]);
   
   // UI state
-  const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState("photorealistic"); // Hidden but functional
   const [selectedAspectRatio, setSelectedAspectRatio] = useState("2:3"); // Hidden but functional
@@ -132,7 +152,6 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   
   // Local form state
   const [imagePrompt, setImagePrompt] = useState("");
-  const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [generatingImages, setGeneratingImages] = useState<Set<string>>(new Set());
   
   // Image-to-image state
@@ -144,7 +163,7 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [panelHeight, setPanelHeight] = useState<number>(0);
 
-  // Track panel height
+  // Track panel height and recalculate when content changes
   useEffect(() => {
     const updateHeight = () => {
       if (panelRef.current) {
@@ -158,24 +177,27 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
-  // Load all generated images on mount (global images)
+  // Recalculate layout when images or loading state changes
   useEffect(() => {
-    const fetchImages = async () => {
-      setIsLoading(true);
-      try {
-        const result = await GeneratedImageService.listGeneratedImages.execute();
-        if (result.isSuccess) {
-          setGeneratedImages(result.getValue());
-        }
-      } catch (error) {
-        console.error("Error fetching generated images:", error);
-      } finally {
-        setIsLoading(false);
+    // Small delay to ensure DOM has updated
+    const timer = setTimeout(() => {
+      if (panelRef.current) {
+        setPanelHeight(panelRef.current.clientHeight);
+        // Force a re-render to recalculate image layout
+        const event = new Event('resize');
+        window.dispatchEvent(event);
       }
-    };
-    
-    fetchImages();
-  }, []);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [generatedImages.length, isLoading, isGenerating]);
+
+  // Function to invalidate and refresh card images
+  const refreshCardImages = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: generatedImageKeys.cardImages(cardId),
+    });
+  }, [queryClient, cardId]);
 
   // Change handlers
   const handlePromptChange = useCallback((value: string) => {
@@ -220,18 +242,19 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
         prompt: file.name.replace(/\.[^/.]+$/, ""), // Use filename without extension as prompt
         style: selectedStyle,
         aspectRatio: selectedAspectRatio,
+        associatedCardId: cardId ? new UniqueEntityID(cardId) : undefined,
       });
 
       if (result.isSuccess) {
-        const newImage = result.getValue();
-        setGeneratedImages(prev => [newImage, ...prev]);
+        // Invalidate queries to refresh the image list
+        await refreshCardImages();
       } else {
         console.error("Failed to upload file:", result.getError());
       }
     } catch (error) {
       console.error("Error uploading image:", error);
     }
-  }, [selectedStyle, selectedAspectRatio]);
+  }, [selectedStyle, selectedAspectRatio, cardId, refreshCardImages]);
 
   // Helper function to convert image URL to base64 with aggressive size reduction
   const urlToBase64 = useCallback(async (url: string): Promise<{ base64: string; mimeType: string }> => {
@@ -370,17 +393,19 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
             const blob = await response.blob();
             const file = new File([blob], `nano-banana-${imageData.id}.png`, { type: imageData.mimeType || "image/png" });
 
-            // Save to GeneratedImageService
+            // Save to GeneratedImageService with card association
             const saveResult = await GeneratedImageService.saveFileToGeneratedImage.execute({
               file,
               prompt: imageData.originalPrompt || imageData.prompt,
               style: imageData.style || selectedStyle,
               aspectRatio: imageData.aspectRatio || selectedAspectRatio,
+              associatedCardId: cardId ? new UniqueEntityID(cardId) : undefined,
             });
 
             if (saveResult.isSuccess) {
-              setGeneratedImages(prev => [saveResult.getValue(), ...prev]);
               console.log("✅ [IMAGE-GENERATOR] Image saved successfully");
+              // Invalidate queries to refresh the image list
+              await refreshCardImages();
             } else {
               console.error("❌ [IMAGE-GENERATOR] Failed to save image:", saveResult.getError());
             }
@@ -442,44 +467,45 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
     }
   }, [updateCardIconAsset]);
 
-  // Early returns
-  if (isLoading) {
-    return <CardPanelLoading message="Loading image generator..." />;
-  }
-
-  // if (!card) {
-  //   return <CardPanelError message="Card not found" />;
-  // }
   // Calculate dynamic sizing based on number of images or generating state
   const hasImagesOrGenerating = generatedImages.length > 0 || isGenerating;
   const totalImages = generatedImages.length + (isGenerating ? 1 : 0);
   
-  // Calculate needed height for images (each image is h-32 = 128px + gaps)
-  const imageHeight = 128; // h-32
+  // Calculate dynamic sizing for images section
+  const imageHeight = 128; // h-32 for each image
   const gapSize = 12; // gap-3
-  const imagesPerRow = Math.floor((panelHeight - 100) / (64 + gapSize)); // Rough calculation based on w-16 + gap
-  const totalRows = Math.ceil(totalImages / Math.max(imagesPerRow, 1));
-  const neededImageHeight = totalRows * (imageHeight + gapSize);
-  const maxImageHeight = panelHeight * 0.5; // 50% of total height
+  const imageWidth = 64; // w-16 for each image
+  const maxImageSectionHeight = 800; // Maximum height for images section
   
-  // Determine if images section should be capped at 50%
-  const shouldCapImageHeight = neededImageHeight > maxImageHeight;
+  // Calculate how many images per row based on available width
+  const availableWidth = panelRef.current?.clientWidth || 400;
+  const imagesPerRow = Math.max(1, Math.floor((availableWidth - 32) / (imageWidth + gapSize))); // 32px for padding
+  
+  // Calculate needed height based on actual content
+  const totalRows = Math.ceil(totalImages / imagesPerRow);
+  const neededImageHeight = totalImages > 0 ? totalRows * (imageHeight + gapSize) + 32 : 0; // +32 for padding
+  
+  // Determine if images section should be scrollable
+  const shouldCapImageHeight = neededImageHeight > maxImageSectionHeight;
+  const actualImageHeight = shouldCapImageHeight ? maxImageSectionHeight : neededImageHeight;
   
   let promptSectionClass: string;
   let imagesSectionClass: string;
+  let imagesSectionStyle: React.CSSProperties = {};
   
   if (!hasImagesOrGenerating) {
     // No images - prompt takes all space
     promptSectionClass = "flex-1 min-h-0";
     imagesSectionClass = "flex-shrink-0";
-  } else if (shouldCapImageHeight) {
-    // Images would exceed 50% - cap them and make scrollable
-    promptSectionClass = "flex-1 min-h-0";
-    imagesSectionClass = `flex-shrink-0 overflow-auto`;
   } else {
-    // Normal case - flex distribution
-    promptSectionClass = "flex-[3] min-h-0";
-    imagesSectionClass = "flex-[2] min-h-0";
+    // Images present - fit content up to max height
+    promptSectionClass = "flex-1 min-h-0";
+    imagesSectionClass = "flex-shrink-0";
+    imagesSectionStyle = {
+      height: `${actualImageHeight}px`,
+      maxHeight: `${maxImageSectionHeight}px`,
+      overflow: shouldCapImageHeight ? 'auto' : 'visible'
+    };
   }
 
   return (
@@ -577,30 +603,38 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
       {/* Dynamic Images Section */}
       <div 
         className={`${imagesSectionClass} flex flex-col gap-2`}
-        style={shouldCapImageHeight ? { maxHeight: `${maxImageHeight}px` } : undefined}
+        style={imagesSectionStyle}
       >
         <div className="flex-1 overflow-auto">
-          <div className="flex flex-wrap gap-3 h-fit justify-start">
-            {/* Loading placeholder when generating */}
-            {isGenerating && (
-              <div className="w-16 h-32 relative">
-                <div className="w-16 h-32 left-0 top-[-0.25px] absolute bg-background-surface-4"></div>
-                <div className="w-6 h-6 left-[23.25px] top-[53.25px] absolute overflow-hidden">
-                  <Loader2 className="w-4 h-4 left-[3px] top-[3px] absolute animate-spin text-text-primary" />
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="w-6 h-6 animate-spin text-text-subtle" />
+              <span className="ml-2 text-text-subtle text-sm">Loading images...</span>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3 h-fit justify-start">
+              {/* Loading placeholder when generating */}
+              {isGenerating && (
+                <div className="w-16 h-32 relative">
+                  <div className="w-16 h-32 left-0 top-[-0.25px] absolute bg-background-surface-4"></div>
+                  <div className="w-6 h-6 left-[23.25px] top-[53.25px] absolute overflow-hidden">
+                    <Loader2 className="w-4 h-4 left-[3px] top-[3px] absolute animate-spin text-text-primary" />
+                  </div>
                 </div>
-              </div>
-            )}
-            
-            {generatedImages.map((image) => (
-              <ImageItem
-                key={image.id.toString()}
-                image={image}
-                isGenerating={generatingImages.has(image.id.toString())}
-                onDownload={(url, prompt) => handleDownloadImage(url, prompt)}
-                onUseAsCardImage={handleUseAsCardImage}
-              />
-            ))}
-          </div>
+              )}
+              
+              {generatedImages.map((image) => (
+                <ImageItem
+                  key={image.id.toString()}
+                  image={image}
+                  isGenerating={generatingImages.has(image.id.toString())}
+                  onDownload={(url, prompt) => handleDownloadImage(url, prompt)}
+                  onUseAsCardImage={handleUseAsCardImage}
+                />
+              ))}
+
+            </div>
+          )}
         </div>
       </div>
     </div>

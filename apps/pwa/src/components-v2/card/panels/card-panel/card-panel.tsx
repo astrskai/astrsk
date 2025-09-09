@@ -4,6 +4,8 @@ import { CardType } from "@/modules/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardService } from "@/app/services/card-service";
 import { AssetService } from "@/app/services/asset-service";
+import { GeneratedImageService } from "@/app/services/generated-image-service";
+import { generatedImageKeys } from "@/app/queries/generated-image/query-factory";
 import { TradingCard } from "@/components-v2/card/components/trading-card";
 import { useCardPanelContext } from "@/components-v2/card/panels/card-panel-provider";
 import { CardItem } from "@/components-v2/left-navigation/card-list";
@@ -164,8 +166,34 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
           const saveResult = await CardService.saveCard.execute(card);
 
           if (saveResult.isSuccess) {
+            // Also add this image to the card's generated images collection
+            try {
+              console.log("🖼️ [CARD-PANEL] Saving uploaded image to generated images for card:", card.id.toString());
+              const generatedImageResult = await GeneratedImageService.saveFileToGeneratedImage.execute({
+                file,
+                prompt: `Card avatar for ${card.props.title || "Untitled"}`,
+                style: "uploaded",
+                associatedCardId: card.id,
+              });
+              
+              if (generatedImageResult.isFailure) {
+                console.warn("❌ [CARD-PANEL] Failed to add uploaded image to generated images:", generatedImageResult.getError());
+              } else {
+                console.log("✅ [CARD-PANEL] Successfully saved uploaded image to generated images");
+              }
+            } catch (error) {
+              console.warn("❌ [CARD-PANEL] Error adding uploaded image to generated images:", error);
+            }
+
             // Invalidate all queries for this card
             await invalidateSingleCardQueries(queryClient, card.id);
+            
+            // Also invalidate generated images for this card
+            console.log("🔄 [CARD-PANEL] Invalidating generated images query for card:", card.id.toString());
+            await queryClient.invalidateQueries({
+              queryKey: generatedImageKeys.cardImages(card.id.toString()),
+            });
+            console.log("✅ [CARD-PANEL] Generated images query invalidated");
 
             // Avatar updated successfully
           } else {
