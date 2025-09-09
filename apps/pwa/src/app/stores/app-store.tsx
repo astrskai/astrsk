@@ -67,15 +67,19 @@ export const SettingSubPageType = {
 export type SettingSubPageType =
   (typeof SettingSubPageType)[keyof typeof SettingSubPageType];
 
-export const LegalPageType = {
+export const SettingDetailPageType = {
+  // Legal
   refundPolicy: "refundPolicy",
   privacyPolicy: "privacyPolicy",
   termOfService: "termOfService",
   contentPolicy: "contentPolicy",
   ossNotice: "ossNotice",
+
+  // Payment
+  creditUsage: "creditUsage",
 } as const;
 
-export type LegalPageType = (typeof LegalPageType)[keyof typeof LegalPageType];
+export type SettingDetailPageType = (typeof SettingDetailPageType)[keyof typeof SettingDetailPageType];
 
 interface AppState {
   // Default
@@ -140,8 +144,8 @@ interface AppState {
   setSettingPageLevel: (settingPageLevel: SettingPageLevel) => void;
   settingSubPage: SettingSubPageType;
   setSettingSubPage: (settingSubPage: SettingSubPageType) => void;
-  settingDetailPage: LegalPageType;
-  setSettingDetailPage: (settingDetailPage: LegalPageType) => void;
+  settingDetailPage: SettingDetailPageType;
+  setSettingDetailPage: (settingDetailPage: SettingDetailPageType) => void;
 
   // Loading
   isLoading: boolean;
@@ -318,7 +322,7 @@ const useAppStoreBase = create<AppState>()(
         set((state) => {
           state.settingSubPage = settingSubPage;
         }),
-      settingDetailPage: LegalPageType.privacyPolicy,
+      settingDetailPage: SettingDetailPageType.privacyPolicy,
       setSettingDetailPage: (settingDetailPage) =>
         set((state) => {
           state.settingDetailPage = settingDetailPage;

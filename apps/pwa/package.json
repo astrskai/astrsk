@@ -15,7 +15,8 @@
     "check:licenses": "node scripts/check-licenses.js",
     "postbuild": "npm run check:licenses",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "convex": "npx convex-helpers ts-api-spec --output-file src/convex"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.0",
@@ -73,6 +74,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "convex": "^1.26.2",
+    "convex-helpers": "^0.1.104",
     "dayjs": "^1.11.13",
     "dockview": "^4.4.0",
     "dockview-core": "^4.3.1",

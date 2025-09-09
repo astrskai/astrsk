@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { useMobileNavigation } from "@/App";
 import {
-  LegalPageType,
+  SettingDetailPageType,
   SettingPageLevel,
   useAppStore,
 } from "@/app/stores/app-store";
@@ -28,7 +28,7 @@ const LegalPageMobile = ({
   setLegalPage,
 }: {
   setSettingPageLevel: (value: SettingPageLevel) => void;
-  setLegalPage: (value: LegalPageType) => void;
+  setLegalPage: (value: SettingDetailPageType) => void;
 }) => {
   return (
     <div className="flex flex-col h-dvh bg-background-surface-2">
@@ -54,7 +54,7 @@ const LegalPageMobile = ({
             <div
               className="flex items-center justify-between cursor-pointer"
               onClick={() => {
-                setLegalPage(LegalPageType.privacyPolicy);
+                setLegalPage(SettingDetailPageType.privacyPolicy);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
@@ -66,7 +66,7 @@ const LegalPageMobile = ({
             <div
               className="flex items-center justify-between cursor-pointer"
               onClick={() => {
-                setLegalPage(LegalPageType.termOfService);
+                setLegalPage(SettingDetailPageType.termOfService);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
@@ -78,7 +78,7 @@ const LegalPageMobile = ({
             <div
               className="flex items-center justify-between cursor-pointer"
               onClick={() => {
-                setLegalPage(LegalPageType.contentPolicy);
+                setLegalPage(SettingDetailPageType.contentPolicy);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
@@ -90,7 +90,7 @@ const LegalPageMobile = ({
             <div
               className="flex items-center justify-between cursor-pointer"
               onClick={() => {
-                setLegalPage(LegalPageType.refundPolicy);
+                setLegalPage(SettingDetailPageType.refundPolicy);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
@@ -102,7 +102,7 @@ const LegalPageMobile = ({
             <div
               className="flex items-center justify-between cursor-pointer"
               onClick={() => {
-                setLegalPage(LegalPageType.ossNotice);
+                setLegalPage(SettingDetailPageType.ossNotice);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
@@ -124,19 +124,19 @@ const LegalDetailPageMobile = ({
   legalPage,
 }: {
   setSettingPageLevel: (value: SettingPageLevel) => void;
-  legalPage: LegalPageType;
+  legalPage: SettingDetailPageType;
 }) => {
-  const getTitleByLegalPage = (type: LegalPageType) => {
+  const getTitleByLegalPage = (type: SettingDetailPageType) => {
     switch (type) {
-      case LegalPageType.privacyPolicy:
+      case SettingDetailPageType.privacyPolicy:
         return "Privacy Policy";
-      case LegalPageType.termOfService:
+      case SettingDetailPageType.termOfService:
         return "Term of Use";
-      case LegalPageType.contentPolicy:
+      case SettingDetailPageType.contentPolicy:
         return "Content Policy";
-      case LegalPageType.refundPolicy:
+      case SettingDetailPageType.refundPolicy:
         return "Refund Policy";
-      case LegalPageType.ossNotice:
+      case SettingDetailPageType.ossNotice:
         return "Open-source Software Notice";
       default:
         return "Legal";
@@ -163,15 +163,15 @@ const LegalDetailPageMobile = ({
       <ScrollArea className="flex-1">
         <div className="mx-auto my-6 w-full max-w-[587px] px-4">
           <div className="[&>div]:!static [&>div]:!inset-auto [&>div]:!z-auto [&>div]:!overflow-visible [&>div]:!pt-0 [&>div]:!max-w-none [&>div]:!mx-0">
-            {legalPage === LegalPageType.refundPolicy ? (
+            {legalPage === SettingDetailPageType.refundPolicy ? (
               <RefundPolicy />
-            ) : legalPage === LegalPageType.privacyPolicy ? (
+            ) : legalPage === SettingDetailPageType.privacyPolicy ? (
               <PrivacyPolicy />
-            ) : legalPage === LegalPageType.termOfService ? (
+            ) : legalPage === SettingDetailPageType.termOfService ? (
               <TermOfService />
-            ) : legalPage === LegalPageType.contentPolicy ? (
+            ) : legalPage === SettingDetailPageType.contentPolicy ? (
               <ContentPolicy />
-            ) : legalPage === LegalPageType.ossNotice ? (
+            ) : legalPage === SettingDetailPageType.ossNotice ? (
               <OssNotice />
             ) : (
               <div className="text-text-primary">Loading...</div>
@@ -230,7 +230,7 @@ const MainPageMobile = ({
                     className="text-secondary-normal cursor-pointer"
                     onClick={() => {
                       setSettingPageLevel(SettingPageLevel.detail);
-                      setSettingDetailPage(LegalPageType.privacyPolicy);
+                      setSettingDetailPage(SettingDetailPageType.privacyPolicy);
                     }}
                   >
                     [click here]
