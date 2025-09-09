@@ -76,12 +76,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <div className="flex flex-col gap-4">
       {/* Suggestions */}
-      {!hasMessages && hasResource && (
+      {/* {!hasMessages && hasResource && (
         <ChatSuggestions 
           suggestions={suggestions}
           onSuggestionClick={handleSuggestionClick}
         />
-      )}
+      )} */}
       
       {/* Input Box */}
       <div className="self-stretch min-h-14 p-2 bg-background-surface-2 rounded-[28px] outline outline-1 outline-offset-[-1px] outline-zinc-100/30 flex items-end gap-4">
