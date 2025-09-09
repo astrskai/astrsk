@@ -15,7 +15,7 @@ export type PublicApiType = {
           additional_balance: number;
           overdraft_amount: number;
           subscription_balance: number;
-        }
+        } | null
       >;
       listCreditLogs: FunctionReference<
         "query",
@@ -55,7 +55,7 @@ export type PublicApiType = {
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
-        }
+        } | null
       >;
     };
   };
