@@ -15,7 +15,8 @@
     "check:licenses": "node scripts/check-licenses.js",
     "postbuild": "npm run check:licenses",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "convex": "npx convex-helpers ts-api-spec --output-file src/convex"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.0",
