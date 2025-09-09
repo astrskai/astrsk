@@ -14,6 +14,10 @@ import {
   CardPanelError,
   useCardPanel 
 } from "@/components-v2/card/panels/hooks/use-card-panel";
+import { useResourceData } from "@/components-v2/right-navigation/vibe-panel/hooks/use-resource-data";
+import { useAppStore, Page } from "@/app/stores/app-store";
+import { CardType } from "@/modules/card/domain";
+import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
 import { useNanoBananaGenerator, CustomImageResponse, ImageToImageResponse } from "@/app/hooks/use-nano-banana-generator";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -170,6 +174,23 @@ const ImageItem = ({
 export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   // Card data hook
   const { card } = useCardPanel({ cardId });
+  
+  // Get app state for resource gathering
+  const activePage = useAppStore((state) => state.activePage);
+  const isCardPage = activePage === Page.Cards || activePage === Page.CardPanel;
+  
+  // Resource data gathering (same pattern as AI panel)
+  const {
+    resourceType,
+    resourceName,
+    editableData,
+    selectedCard,
+  } = useResourceData({
+    selectedCardId: cardId,
+    selectedFlowId: null,
+    isCardPage,
+    isFlowPage: false,
+  });
   
   // Query client for invalidation
   const queryClient = useQueryClient();
@@ -410,7 +431,22 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
     setIsGenerating(true);
     
     try {
-      console.log("🍌 [IMAGE-GENERATOR] Calling nano banana with prompt:", imagePrompt);
+      // Generate enhanced prompt with card data
+      let enhancedPrompt = imagePrompt;
+      
+      if (selectedCard) {
+        // Convert card to JSON using drizzle mapper
+        const cardJson = CardDrizzleMapper.toPersistence(selectedCard);
+        console.log("🗂️ [IMAGE-GENERATOR] Card JSON data being sent:", JSON.stringify(cardJson, null, 2));
+        
+        // Add card context to prompt
+        enhancedPrompt = `This is the card data in JSON format:
+${JSON.stringify(cardJson, null, 2)}
+
+Based on this card data and the user's request, generate an image: ${imagePrompt}`;
+      }
+
+      console.log("🍌 [IMAGE-GENERATOR] Calling nano banana with enhanced prompt:", enhancedPrompt);
       console.log("🍌 [IMAGE-GENERATOR] Using card image:", useCardImage);
       
       let result: CustomImageResponse | ImageToImageResponse;
@@ -424,7 +460,7 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
           hasBase64: !!base64,
           base64Length: base64.length,
           mimeType,
-          prompt: imagePrompt,
+          prompt: enhancedPrompt,
           style: selectedStyle,
           aspectRatio: selectedAspectRatio
         });
@@ -432,14 +468,14 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
         result = await generateImageToImage({
           inputImageBase64: base64,
           inputImageMimeType: mimeType,
-          prompt: imagePrompt,
+          prompt: enhancedPrompt,
           style: selectedStyle,
           aspectRatio: selectedAspectRatio,
         });
       } else {
         // Regular text-to-image generation
         result = await generateCustomImage({
-          prompt: imagePrompt,
+          prompt: enhancedPrompt,
           style: selectedStyle,
           aspectRatio: selectedAspectRatio,
         });
