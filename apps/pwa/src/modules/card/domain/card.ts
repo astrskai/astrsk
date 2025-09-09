@@ -30,6 +30,9 @@ export interface CardProps {
 
   // Vibe Session Reference (AI Assistant)
   vibeSessionId?: string;
+  
+  // AI Assistant Panel State
+  isCodingPanelOpen?: boolean;
 
   // Set by System
   createdAt: Date;
@@ -47,6 +50,7 @@ export const CardPropsKeys = [
   "version",
   "conceptualOrigin",
   "vibeSessionId",
+  "isCodingPanelOpen",
   "createdAt",
   "updatedAt",
   "tokenCount",

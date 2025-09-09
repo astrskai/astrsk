@@ -1,0 +1,1 @@
+ALTER TABLE "cards" ADD COLUMN "is_coding_panel_open" boolean DEFAULT false NOT NULL;
