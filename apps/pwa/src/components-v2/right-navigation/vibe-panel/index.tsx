@@ -853,6 +853,17 @@ Operations are being generated and will be ready for review shortly.`;
     }
   }, [isCardPage, selectedCard, isCollapsed]);
 
+  // Close vibe coding panel when switching away from card/flow pages
+  useEffect(() => {
+    if (!isCardPage && !isFlowPage) {
+      // Not on card or flow page - close the panel
+      if (!isCollapsed) {
+        setIsCollapsed(true);
+        onToggle?.(); // Close the right sidebar
+      }
+    }
+  }, [isCardPage, isFlowPage, isCollapsed, onToggle]);
+
   // Handle collapse
   const handleToggleCollapse = useCallback(() => {
     const newCollapsed = !isCollapsed;
