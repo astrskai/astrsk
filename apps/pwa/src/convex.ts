@@ -17,7 +17,7 @@ export type PublicApiType = {
           subscription_balance: number;
         } | null
       >;
-      listCreditLogs: FunctionReference<
+      listCreditUsage: FunctionReference<
         "query",
         "public",
         {
@@ -48,6 +48,7 @@ export type PublicApiType = {
               subscription_balance: number;
             };
             description: string;
+            detail?: any;
             related_id?: string;
             related_type?: string;
             type: "charge" | "expire" | "use";
@@ -55,7 +56,7 @@ export type PublicApiType = {
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
-        } | null
+        }
       >;
     };
   };

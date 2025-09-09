@@ -1,4 +1,9 @@
-import { Page, SettingPageLevel, useAppStore } from "@/app/stores/app-store";
+import {
+  Page,
+  SettingDetailPageType,
+  SettingPageLevel,
+  useAppStore,
+} from "@/app/stores/app-store";
 import { TypoBase, TypoXLarge } from "@/components-v2/typo";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
@@ -13,6 +18,8 @@ function formatCreditNumber(num: number): string {
 
 const SubscriptionSection = () => {
   const setActivePage = useAppStore.use.setActivePage();
+  const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
+  const setSettingDetailPage = useAppStore.use.setSettingDetailPage();
 
   const subscription = useQuery(api.payment.public.getSubscription);
   const balance = useQuery(api.credit.public.getCreditBalance);
@@ -77,7 +84,8 @@ const SubscriptionSection = () => {
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              // TODO: credit usage history
+              setSettingPageLevel(SettingPageLevel.detail);
+              setSettingDetailPage(SettingDetailPageType.creditUsage);
             }}
           >
             <TypoBase className="font-semibold text-text-body">

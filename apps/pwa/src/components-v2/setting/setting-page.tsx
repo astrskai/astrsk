@@ -1,7 +1,7 @@
 import { ArrowLeft, ChevronRight } from "lucide-react";
 
 import {
-  LegalPageType,
+  SettingDetailPageType,
   SettingPageLevel,
   SettingSubPageType,
   useAppStore,
@@ -9,6 +9,7 @@ import {
 import { cn } from "@/components-v2/lib/utils";
 import { AccountPage } from "@/components-v2/setting/account-page";
 import ContentPolicy from "@/components-v2/setting/content-policy";
+import CreditUsagePage from "@/components-v2/setting/credit-usage-page";
 import ModelPage from "@/components-v2/setting/model-page";
 import OssNotice from "@/components-v2/setting/oss-notice";
 import PrivacyPolicy from "@/components-v2/setting/privacy-policy";
@@ -32,7 +33,7 @@ const LegalPage = ({
   setLegalPage,
 }: {
   setSettingPageLevel: (value: SettingPageLevel) => void;
-  setLegalPage: (value: LegalPageType) => void;
+  setLegalPage: (value: SettingDetailPageType) => void;
 }) => {
   return (
     <ScrollArea className="h-full">
@@ -41,7 +42,7 @@ const LegalPage = ({
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              setLegalPage(LegalPageType.privacyPolicy);
+              setLegalPage(SettingDetailPageType.privacyPolicy);
               setSettingPageLevel(SettingPageLevel.detail);
             }}
           >
@@ -53,7 +54,7 @@ const LegalPage = ({
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              setLegalPage(LegalPageType.termOfService);
+              setLegalPage(SettingDetailPageType.termOfService);
               setSettingPageLevel(SettingPageLevel.detail);
             }}
           >
@@ -65,7 +66,7 @@ const LegalPage = ({
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              setLegalPage(LegalPageType.contentPolicy);
+              setLegalPage(SettingDetailPageType.contentPolicy);
               setSettingPageLevel(SettingPageLevel.detail);
             }}
           >
@@ -77,7 +78,7 @@ const LegalPage = ({
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              setLegalPage(LegalPageType.refundPolicy);
+              setLegalPage(SettingDetailPageType.refundPolicy);
               setSettingPageLevel(SettingPageLevel.detail);
             }}
           >
@@ -89,7 +90,7 @@ const LegalPage = ({
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              setLegalPage(LegalPageType.ossNotice);
+              setLegalPage(SettingDetailPageType.ossNotice);
               setSettingPageLevel(SettingPageLevel.detail);
             }}
           >
@@ -228,7 +229,7 @@ const MainPage = () => {
                   className="text-secondary-normal cursor-pointer"
                   onClick={() => {
                     setSettingPageLevel(SettingPageLevel.detail);
-                    setSettingDetailPage(LegalPageType.privacyPolicy);
+                    setSettingDetailPage(SettingDetailPageType.privacyPolicy);
                   }}
                 >
                   [click here]
@@ -343,7 +344,13 @@ export default function SettingPage({ className }: { className?: string }) {
     <ScrollArea className={cn("h-full bg-background-surface-1", className)}>
       <FloatingActionButton
         icon={<ArrowLeft className="min-w-[24px] min-h-[24px]" />}
-        label={settingPageLevel === SettingPageLevel.sub ? "Settings" : "Legal"}
+        label={
+          settingPageLevel === SettingPageLevel.sub
+            ? "Settings"
+            : settingDetailPage === SettingDetailPageType.creditUsage
+              ? "Account and subscription"
+              : "Legal"
+        }
         position="top-left"
         className={cn(
           "transition-opacity duration-[600ms] ease-in-out opacity-100",
@@ -397,11 +404,22 @@ export default function SettingPage({ className }: { className?: string }) {
           settingPageLevel === SettingPageLevel.detail && "translate-x-0",
         )}
       >
-        {settingDetailPage === LegalPageType.refundPolicy && <RefundPolicy />}
-        {settingDetailPage === LegalPageType.privacyPolicy && <PrivacyPolicy />}
-        {settingDetailPage === LegalPageType.termOfService && <TermOfService />}
-        {settingDetailPage === LegalPageType.contentPolicy && <ContentPolicy />}
-        {settingDetailPage === LegalPageType.ossNotice && <OssNotice />}
+        {settingDetailPage === SettingDetailPageType.refundPolicy && (
+          <RefundPolicy />
+        )}
+        {settingDetailPage === SettingDetailPageType.privacyPolicy && (
+          <PrivacyPolicy />
+        )}
+        {settingDetailPage === SettingDetailPageType.termOfService && (
+          <TermOfService />
+        )}
+        {settingDetailPage === SettingDetailPageType.contentPolicy && (
+          <ContentPolicy />
+        )}
+        {settingDetailPage === SettingDetailPageType.ossNotice && <OssNotice />}
+        {settingDetailPage === SettingDetailPageType.creditUsage && (
+          <CreditUsagePage />
+        )}
       </div>
       <ScrollBar orientation="vertical" className="w-1.5" />
     </ScrollArea>

@@ -1,5 +1,5 @@
 import {
-  LegalPageType,
+  SettingDetailPageType,
   Page,
   SettingPageLevel,
   SettingSubPageType,
@@ -427,7 +427,7 @@ const SignUpPage = () => {
                   setActivePage(Page.Settings);
                   setSettingPageLevel(SettingPageLevel.detail);
                   setSettingSubPage(SettingSubPageType.legal);
-                  setSettingDetailPage(LegalPageType.termOfService);
+                  setSettingDetailPage(SettingDetailPageType.termOfService);
                 }}
               >
                 Terms of Use
@@ -439,7 +439,7 @@ const SignUpPage = () => {
                   setActivePage(Page.Settings);
                   setSettingPageLevel(SettingPageLevel.detail);
                   setSettingSubPage(SettingSubPageType.legal);
-                  setSettingDetailPage(LegalPageType.privacyPolicy);
+                  setSettingDetailPage(SettingDetailPageType.privacyPolicy);
                 }}
               >
                 Privacy Policy
