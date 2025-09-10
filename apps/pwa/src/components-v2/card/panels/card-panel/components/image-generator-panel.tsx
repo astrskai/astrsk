@@ -352,7 +352,7 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
       
       img.onload = () => {
         // Set small dimensions - max 256px for better quality while staying under token limit
-        const MAX_SIZE = 256;
+        const MAX_SIZE = 256*4;
         let { width, height } = img;
         
         if (width > height) {
