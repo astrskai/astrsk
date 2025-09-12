@@ -548,7 +548,7 @@ const CardSection = ({
         onboardingHelpGlow={onboardingHelpGlow}
       />
       <div className={cn(!expanded && "hidden")}>
-        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center w-[320px]">
+        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center w-[315px]">
           <SearchInput
             className="grow"
             value={keyword}
