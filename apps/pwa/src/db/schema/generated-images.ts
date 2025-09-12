@@ -10,6 +10,8 @@ export const generatedImages = pgTable(TableName.GeneratedImages, {
   prompt: text().notNull(),
   style: varchar(),
   aspect_ratio: varchar(),
+  media_type: varchar(), // 'image' or 'video'
+  thumbnail_asset_id: uuid(), // For video thumbnails
   associated_card_id: uuid(), // Optional association to a card
   ...timestamps,
 });

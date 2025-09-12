@@ -22,6 +22,8 @@ export type LanguageModel = typeof LANGUAGE_MODELS[keyof typeof LANGUAGE_MODELS]
 export const IMAGE_MODELS = {
   NANO_BANANA: 'nano-banana',
   SEEDDREAM_4_0: 'seeddream-4.0',
+  SEEDANCE_1_0: 'seedance-1.0',
+  SEEDANCE_LITE_1_0: 'seedance-lite-1.0',
 } as const;
 
 export type ImageModel = typeof IMAGE_MODELS[keyof typeof IMAGE_MODELS];

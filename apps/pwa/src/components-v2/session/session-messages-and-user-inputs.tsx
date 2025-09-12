@@ -140,7 +140,7 @@ const MessageItemInternal = ({
 }) => {
   // Character card
   const [characterCard] = useCard<CharacterCard>(characterCardId);
-  const [icon] = useAsset(characterCard?.props.iconAssetId);
+  const [icon, iconIsVideo] = useAsset(characterCard?.props.iconAssetId);
 
   // Edit message
   const [isEditing, setIsEditing] = useState(false);
@@ -169,6 +169,7 @@ const MessageItemInternal = ({
                 src={icon}
                 alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
                 size={80}
+                isVideo={iconIsVideo}
               />
               <div className="max-w-[80px] truncate font-medium text-[16px] leading-[19px] text-text-primary">
                 {characterCard?.props.name}
@@ -561,7 +562,7 @@ const UserInputCharacterButton = ({
   isHighLighted?: boolean;
 }) => {
   const [characterCard] = useCard<CharacterCard>(characterCardId);
-  const [characterIcon] = useAsset(characterCard?.props.iconAssetId);
+  const [characterIcon, characterIconIsVideo] = useAsset(characterCard?.props.iconAssetId);
 
   if (characterCardId && !characterCard) {
     return null;
@@ -578,6 +579,7 @@ const UserInputCharacterButton = ({
             src={characterIcon}
             alt={characterCard.props.name?.at(0)?.toUpperCase() ?? ""}
             size={48}
+            isVideo={characterIconIsVideo}
             className={cn(
               isHighLighted &&
                 "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal",

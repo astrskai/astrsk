@@ -7,6 +7,7 @@ import { Typo3XLarge, TypoSmall } from "@/components-v2/typo";
 import { Card as CardUI } from "@/components-v2/ui/card";
 import { Skeleton } from "@/components-v2/ui/skeleton";
 import { Card, CardType, CharacterCard } from "@/modules/card/domain";
+import { MediaDisplay } from "@/components-v2/shared/media-display";
 
 // Simple tag component for displaying card tags
 const Tag = ({ name }: { name: string }) => {
@@ -75,13 +76,14 @@ const CardWrapper = ({ children }: PropsWithChildren<{}>) => {
 interface TradingCardDisplayProps {
   card: Card | null;
   imageUrl?: string | null;
+  isVideo?: boolean;
   isLoading?: boolean;
   onClick?: () => void;
 }
 
 const tagContainerWidth = 152;
 
-export const TradingCardDisplay = ({ card, imageUrl, isLoading = false, onClick }: TradingCardDisplayProps) => {
+export const TradingCardDisplay = ({ card, imageUrl, isVideo = false, isLoading = false, onClick }: TradingCardDisplayProps) => {
   const estimateTextWidth = (text: string): number => {
     const avgCharWidth = 5;
     return text.length * avgCharWidth;
@@ -149,17 +151,24 @@ export const TradingCardDisplay = ({ card, imageUrl, isLoading = false, onClick 
           )}
           onClick={onClick}
         >
-          <img
+          <MediaDisplay
             width={164}
             height={289}
-            src={
-              imageUrl ||
-              (card.props.type === CardType.Character
+            src={imageUrl || null}
+            fallbackSrc={
+              card.props.type === CardType.Character
                 ? "/img/placeholder/character-card-image.png"
-                : "/img/placeholder/plot-card-image.png")
+                : "/img/placeholder/plot-card-image.png"
             }
             alt={card.props.title}
             className="w-full h-full object-cover"
+            isVideo={isVideo}
+            showControls={true}
+            autoPlay={false}
+            muted={true}
+            loop={true}
+            playOnHover={false}
+            clickToToggle={false}
           />
 
           {card.props.tags && card.props.tags.length > 0 ? (
@@ -200,17 +209,24 @@ export const TradingCardDisplay = ({ card, imageUrl, isLoading = false, onClick 
           onClick={onClick}
         >
           <div className="w-full h-full object-cover opacity-70 blur-lg">
-            <img
+            <MediaDisplay
               width={164}
               height={289}
-              src={
-                imageUrl ||
-                (card.props.type === CardType.Character
+              src={imageUrl || null}
+              fallbackSrc={
+                card.props.type === CardType.Character
                   ? "/img/placeholder/character-card-image.png"
-                  : "/img/placeholder/plot-card-image.png")
+                  : "/img/placeholder/plot-card-image.png"
               }
               alt={card.props.title}
               className="w-full h-full object-cover object-right"
+              isVideo={isVideo}
+              showControls={false}
+              autoPlay={false}
+              muted={true}
+              loop={true}
+              playOnHover={false}
+              clickToToggle={false}
             />
           </div>
           <div className="absolute top-2 right-2.5">

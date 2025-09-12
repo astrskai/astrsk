@@ -35,4 +35,30 @@ export const assetQueries = {
       },
       enabled: !!id,
     }),
+    
+  // New query that returns full asset metadata including mime type
+  fullDetail: (id?: UniqueEntityID) =>
+    queryOptions({
+      queryKey: [...assetQueries.details(), "full", id?.toString() ?? ""],
+      queryFn: async () => {
+        if (!id) return null;
+        const assetOrError = await AssetService.getAsset.execute(id);
+        if (assetOrError.isFailure) {
+          logger.error(
+            `Failed to get asset(${id.toString()})`,
+            assetOrError.getError(),
+          );
+          return null;
+        }
+        const asset = assetOrError.getValue();
+
+        // Return full asset with metadata
+        return {
+          filePath: asset.filePath,
+          mimeType: asset.mimeType,
+          name: asset.name
+        };
+      },
+      enabled: !!id,
+    }),
 };

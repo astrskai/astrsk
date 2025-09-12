@@ -124,7 +124,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   };
 
   // Get the avatar image URL
-  const [avatarUrl] = useAsset(card?.props.iconAssetId);
+  const [avatarUrl, isAvatarVideo] = useAsset(card?.props.iconAssetId);
 
   const handleOpenPanel = (panelType: CardPanelType) => {
     openPanel(panelType);
@@ -409,6 +409,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
                     src={avatarUrl}
                     alt={getCharacterName(card)}
                     size={112}
+                    isVideo={isAvatarVideo}
                   />
                 </div>
                 <div className="w-28 text-center text-text-primary text-xl font-normal truncate">

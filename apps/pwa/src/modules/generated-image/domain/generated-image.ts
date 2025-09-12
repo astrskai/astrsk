@@ -8,6 +8,8 @@ export interface GeneratedImageProps {
   prompt: string;
   style?: string;
   aspectRatio?: string;
+  mediaType?: string; // 'image' or 'video'
+  thumbnailAssetId?: UniqueEntityID; // For video thumbnails
   associatedCardId?: UniqueEntityID;
   createdAt: Date;
   updatedAt: Date;
@@ -19,6 +21,8 @@ export const GeneratedImagePropsKeys = [
   "prompt",
   "style",
   "aspectRatio",
+  "mediaType",
+  "thumbnailAssetId",
   "associatedCardId",
   "createdAt",
   "updatedAt"
@@ -45,6 +49,14 @@ export class GeneratedImage extends AggregateRoot<GeneratedImageProps> {
 
   get aspectRatio(): string | undefined {
     return this.props.aspectRatio;
+  }
+
+  get mediaType(): string | undefined {
+    return this.props.mediaType;
+  }
+
+  get thumbnailAssetId(): UniqueEntityID | undefined {
+    return this.props.thumbnailAssetId;
   }
 
   get associatedCardId(): UniqueEntityID | undefined {
@@ -119,6 +131,8 @@ export class GeneratedImage extends AggregateRoot<GeneratedImageProps> {
           prompt: props.prompt ?? "",
           style: props.style,
           aspectRatio: props.aspectRatio,
+          mediaType: props.mediaType,
+          thumbnailAssetId: props.thumbnailAssetId,
           associatedCardId: props.associatedCardId,
           createdAt: props.createdAt ?? now,
           updatedAt: props.updatedAt ?? now,

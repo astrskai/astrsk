@@ -7,6 +7,7 @@ import { CardService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import useCardImport from "@/components-v2/card/hooks/useCardImport";
+import { MediaDisplay } from "@/components-v2/shared/media-display";
 import { SECTION_HEADER_HEIGHT } from "@/components-v2/left-navigation/constants";
 import { SectionHeader } from "@/components-v2/left-navigation/left-navigation";
 import { SearchInput, CreateButton, ImportButton } from "@/components-v2/left-navigation/shared-list-components";
@@ -69,7 +70,7 @@ const CardItem = ({
 }) => {
   // Fetch card data
   const { data: card } = useQuery(cardQueries.detail<Card>(cardId));
-  const [icon] = useAsset(card?.props.iconAssetId);
+  const [icon, isVideo] = useAsset(card?.props.iconAssetId);
 
   // Handle select
   const setSelectedCardId = useAppStore.use.setSelectedCardId();
@@ -236,12 +237,12 @@ const CardItem = ({
             !disableHover && "group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden",
           )}
         >
-          <img
-            src={
-              icon ??
-              (card?.props.type === CardType.Character
+          <MediaDisplay
+            src={icon || null}
+            fallbackSrc={
+              card?.props.type === CardType.Character
                 ? "/img/placeholder/character-card-image.png"
-                : "/img/placeholder/plot-card-image.png")
+                : "/img/placeholder/plot-card-image.png"
             }
             alt="Card icon"
             className={cn(
@@ -250,6 +251,13 @@ const CardItem = ({
                 card?.props.type === CardType.Character &&
                 "w-[90px] translate-x-[0px] translate-y-[-30px]",
             )}
+            isVideo={isVideo}
+            showControls={false}
+            autoPlay={false}
+            muted={true}
+            loop={true}
+            playOnHover={true}
+            clickToToggle={false}
           />
           <div
             className={cn(
