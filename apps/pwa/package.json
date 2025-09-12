@@ -27,7 +27,6 @@
     "@ai-sdk/openai": "^1.1.0",
     "@ai-sdk/openai-compatible": "0.2.16",
     "@ai-sdk/xai": "^1.1.13",
-    "@amplitude/analytics-browser": "^2.17.6",
     "@clerk/clerk-react": "^5.46.1",
     "@dnd-kit/core": "^6.1.0",
     "@dnd-kit/modifiers": "^8.0.0",
