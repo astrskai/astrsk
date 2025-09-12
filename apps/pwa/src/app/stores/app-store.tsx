@@ -96,9 +96,25 @@ interface AppState {
   activePage: Page;
   setActivePage: (activePage: Page) => void;
 
-  // Onboarding
+  // Onboarding (legacy - for existing users)
   isPassedOnboarding: boolean;
   setIsPassedOnboarding: (isPassedOnboarding: boolean) => void;
+  
+  // Onboarding selected session
+  onboardingSelectedSessionId: string | null;
+  setOnboardingSelectedSessionId: (sessionId: string | null) => void;
+
+  // Session Onboarding Steps (complete onboarding flow)
+  sessionOnboardingSteps: {
+    genreSelection: boolean;      // Initial genre selection dialog
+    inferenceButton: boolean;      // Guide for using the inference button
+    sessionEdit: boolean;          // Guide for editing session
+    openResource: boolean;         // Guide for opening resources
+    resourceManagement: boolean;   // Guide for managing resources
+    helpVideo: boolean;            // Guide for help video
+    sessionData: boolean;          // Guide for session data
+  };
+  setSessionOnboardingStep: (step: 'genreSelection' | 'inferenceButton' | 'sessionEdit' | 'openResource' | 'resourceManagement' | 'helpVideo' | 'sessionData', completed: boolean) => void;
 
   // Auth
   userId: string | null;
@@ -179,7 +195,7 @@ const lastPagePerMenu = new Map<Menu, Page>([
 
 const useAppStoreBase = create<AppState>()(
   persist(
-    immer((set) => ({
+    immer((set, get) => ({
       // Default
       isDefaultInitialized: false,
       setIsDefaultInitialized: (isDefaultInitialized) =>
@@ -200,7 +216,7 @@ const useAppStoreBase = create<AppState>()(
           state.blockedMenu = blockedMenu;
         }),
 
-      activePage: Page.Init,
+      activePage: Page.Init, // Will be updated by initialization logic
       setActivePage: (activePage) =>
         set((state) => {
           switch (activePage) {
@@ -232,11 +248,44 @@ const useAppStoreBase = create<AppState>()(
           lastPagePerMenu.set(state.activeMenu, activePage);
         }),
 
-      // Onboarding
+      // Onboarding (legacy - for existing users)
       isPassedOnboarding: false,
       setIsPassedOnboarding: (isPassedOnboarding) =>
         set((state) => {
           state.isPassedOnboarding = isPassedOnboarding;
+        }),
+
+      // Onboarding selected session
+      onboardingSelectedSessionId: null,
+      setOnboardingSelectedSessionId: (sessionId) =>
+        set((state) => {
+          state.onboardingSelectedSessionId = sessionId;
+        }),
+
+      // Session Onboarding Steps
+      sessionOnboardingSteps: {
+        genreSelection: false,
+        inferenceButton: false,
+        sessionEdit: false,
+        openResource: false,
+        resourceManagement: false,
+        helpVideo: false,
+        sessionData: false,
+      },
+      setSessionOnboardingStep: (step, completed) =>
+        set((state) => {
+          state.sessionOnboardingSteps[step] = completed;
+          
+          // Check if all onboarding steps are completed
+          const allStepsCompleted = Object.entries(state.sessionOnboardingSteps)
+            .filter(([key]) => key !== 'genreSelection') // Exclude genre selection from completion check
+            .every(([, value]) => value === true);
+          
+          // If all steps completed, mark legacy onboarding as passed
+          if (allStepsCompleted && state.sessionOnboardingSteps.genreSelection) {
+            state.isPassedOnboarding = true;
+            state.onboardingSelectedSessionId = null;
+          }
         }),
 
       // Auth
@@ -365,6 +414,41 @@ const useAppStoreBase = create<AppState>()(
     {
       name: "app-store",
       storage: new LocalPersistStorage<AppState>(),
+      onRehydrateStorage: () => (state) => {
+        if (state && state.isPassedOnboarding === true) {
+          // For existing users who already passed onboarding, mark all steps as completed
+          state.sessionOnboardingSteps = {
+            genreSelection: true,
+            inferenceButton: true,
+            sessionEdit: true,
+            openResource: true,
+            resourceManagement: true,
+            helpVideo: true,
+            sessionData: true,
+          };
+        }
+      },
+      // version: 2, // Increment version to trigger migration
+      // migrate: (persistedState: any, version: number) => {
+      //   if (version === 0 || version === 1) {
+      //     // For existing users who have passed onboarding, 
+      //     // automatically set new onboarding states to completed
+      //     if (persistedState.isPassedOnboarding === true) {
+      //       persistedState.onboardingStep = OnboardingStep.Completed;
+      //       persistedState.onboardingSelectedSessionId = null;
+      //       // Mark all session onboarding steps as completed for existing users
+      //       persistedState.sessionOnboardingSteps = {
+      //         inferenceButton: true,
+      //         sessionEdit: true,
+      //         openResource: true,
+      //         resourceManagement: true,
+      //         helpVideo: true,
+      //         sessionData: true,
+      //       };
+      //     }
+      //   }
+      //   return persistedState;
+      // },
       // Do not persist these states
       partialize: (state) =>
         Object.fromEntries(

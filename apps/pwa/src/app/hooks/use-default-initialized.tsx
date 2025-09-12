@@ -1,6 +1,9 @@
 import { ApiService } from "@/app/services";
 import { CardService } from "@/app/services/card-service";
 import { FlowService } from "@/app/services/flow-service";
+import { SessionService } from "@/app/services/session-service";
+import { useAppStore } from "@/app/stores/app-store";
+import { fetchBackgrounds } from "@/app/stores/background-store";
 import { ApiConnection, ApiSource } from "@/modules/api/domain";
 import { useQuery } from "@tanstack/react-query";
 
@@ -18,8 +21,10 @@ export const plotFilePath = [
 ];
 
 export const useDefaultInitialized = () => {
+  const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
+  
   const { data } = useQuery({
-    queryKey: ["init-default"],
+    queryKey: ["init-default", sessionOnboardingSteps.genreSelection],
     queryFn: async () => {
       // Init astrsk.ai provider
       const apiConnections = (await ApiService.listApiConnection.execute({}))
@@ -55,7 +60,8 @@ export const useDefaultInitialized = () => {
         await ApiService.saveApiConnection.execute(astrskaiProvider);
       }
 
-      // Init default flows
+      // Init default flows - COMMENTED OUT FOR SESSION-BASED INITIALIZATION
+      /*
       const flows = (await FlowService.searchFlow.execute({}))
         .throwOnFailure()
         .getValue();
@@ -78,8 +84,10 @@ export const useDefaultInitialized = () => {
           }
         }
       }
+      */
 
-      // Init default cards
+      // Init default cards - COMMENTED OUT FOR SESSION-BASED INITIALIZATION
+      /*
       const cards = (await CardService.searchCard.execute({}))
         .throwOnFailure()
         .getValue();
@@ -103,6 +111,45 @@ export const useDefaultInitialized = () => {
           await CardService.importCardFromFile.execute(file);
         }
       }
+      */
+
+      // Init default sessions - only for new users who haven't selected a genre yet
+      if (!sessionOnboardingSteps.genreSelection) {
+        const sessions = (await SessionService.listSession.execute({}))
+          .throwOnFailure()
+          .getValue();
+        if (sessions && sessions.length === 0) {
+          // Import default sessions
+          const sessionFilePaths = [
+            "/default/session/dice_of_fate.astrsk.session",
+            "/default/session/sakura_blooms,_hearts_awaken.astrsk.session",
+          ];
+          
+          for (const path of sessionFilePaths) {
+            try {
+              const response = await fetch(path);
+              const file = new File([await response.blob()], path.split('/').pop() || path, {
+                type: "application/octet-stream",
+              });
+              
+              const importResult = await SessionService.importSessionFromFile.execute({
+                file: file,
+                includeHistory: true,
+              });
+              if (importResult.isFailure) {
+                console.log("Failed to import session:", path, importResult.getError());
+                continue;
+              }
+            } catch (error) {
+              console.log("Error fetching session file:", path, error);
+              continue;
+            }
+          }
+        }
+      }
+
+      // Initialize backgrounds - Load all backgrounds into the store
+      await fetchBackgrounds();
 
       return true;
     },

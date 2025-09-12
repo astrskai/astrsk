@@ -417,6 +417,7 @@ function SidebarOpenTrigger({
   side: "left" | "right";
   setOpen: (open: boolean) => void;
 }) {
+
   return (
     <FloatingActionButton
       className={className}

@@ -28,6 +28,10 @@ export default function SessionPage({ className }: { className?: string }) {
     keyword: "",
   });
 
+  // Session onboarding
+  const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
+  const shouldShowSessionEditTooltip = sessionOnboardingSteps.inferenceButton && !sessionOnboardingSteps.sessionEdit;
+
   // Background
   const { backgroundMap } = useBackgroundStore();
   const background = backgroundMap.get(
@@ -37,6 +41,10 @@ export default function SessionPage({ className }: { className?: string }) {
   const backgroundSrc =
     backgroundAsset ??
     (background && "src" in background ? background.src : "");
+  
+  // Don't show background if it's still loading (skeleton path indicates loading)
+  const isLoadingBackground = backgroundAsset === "/img/skeleton.svg";
+  const shouldShowBackground = backgroundSrc && !isLoadingBackground;
 
   // Add plot card
   const refEditCards = useRef<HTMLDivElement>(null);
@@ -54,7 +62,7 @@ export default function SessionPage({ className }: { className?: string }) {
         className,
       )}
     >
-      {backgroundSrc && (
+      {shouldShowBackground && (
         <div className="pointer-events-none">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -114,6 +122,8 @@ export default function SessionPage({ className }: { className?: string }) {
             onClick={() => {
               setIsOpenSettings(true);
             }}
+            onboarding={shouldShowSessionEditTooltip && !isOpenSettings}
+            onboardingTooltip="Wanna edit this session?"
           />
           <FloatingActionButton
             icon={<ArrowLeft className="min-w-[24px] min-h-[24px]" />}
@@ -138,6 +148,7 @@ export default function SessionPage({ className }: { className?: string }) {
                 setIsOpenSettings={setIsOpenSettings}
                 refEditCards={refEditCards}
                 refInitCardTab={refInitCardTab}
+                isSettingsOpen={isOpenSettings}
               />
             </ScrollArea>
           </div>

@@ -8,7 +8,7 @@ import { cn } from "@/components-v2/lib/utils";
 import { LoadingOverlay } from "@/components-v2/loading-overlay";
 import CreateSessionPage from "@/components-v2/session/create-session-page";
 import SessionPage from "@/components-v2/session/session-page";
-import { OnboardingDialog } from "@/components-v2/setting/onboarding-dialog";
+import { OnboardingDialog } from "@/components-v2/setting/onboarding-genre-dialog";
 import SettingPage from "@/components-v2/setting/setting-page";
 import FlowMultiPage from "@/flow-multi/pages/flow-multi-page";
 
