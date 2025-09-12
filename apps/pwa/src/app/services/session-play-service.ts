@@ -47,6 +47,7 @@ import { FlowService } from "@/app/services/flow-service";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
+import { useAppStore } from "@/app/stores/app-store";
 import { useWllamaStore } from "@/app/stores/wllama-store";
 import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
@@ -521,42 +522,43 @@ const validateMessages = (messages: Message[], apiSource: ApiSource) => {
 };
 
 const makeProvider = ({
-  apiConnection,
+  source,
+  apiKey,
+  baseUrl,
   isStructuredOutput,
+  openrouterProviderSort,
 }: {
-  apiConnection: ApiConnection;
+  source: ApiSource;
+  apiKey?: string;
+  baseUrl?: string;
   isStructuredOutput?: boolean;
+  openrouterProviderSort?: OpenrouterProviderSort;
 }) => {
   let provider;
-  switch (apiConnection.source) {
-    case ApiSource.AstrskAi:
-      provider = createOpenAI({
-        apiKey: apiConnection.apiKey,
-        baseURL: apiConnection.baseUrl,
-      });
-      break;
-
+  switch (source) {
     case ApiSource.OpenAI:
       provider = createOpenAI({
-        apiKey: apiConnection.apiKey,
+        apiKey: apiKey,
+        baseURL: baseUrl,
       });
       break;
 
     case ApiSource.OpenAICompatible: {
-      let baseUrl = apiConnection.baseUrl ?? "";
-      if (!baseUrl.endsWith("/v1")) {
-        baseUrl += "/v1";
+      let oaiCompBaseUrl = baseUrl ?? "";
+      if (!oaiCompBaseUrl.endsWith("/v1")) {
+        oaiCompBaseUrl += "/v1";
       }
       provider = createOpenAI({
-        apiKey: apiConnection.apiKey,
-        baseURL: baseUrl,
+        apiKey: apiKey,
+        baseURL: oaiCompBaseUrl,
       });
       break;
     }
 
     case ApiSource.Anthropic:
       provider = createAnthropic({
-        apiKey: apiConnection.apiKey,
+        apiKey: apiKey,
+        baseURL: baseUrl,
         headers: {
           "anthropic-dangerous-direct-browser-access": "true",
         },
@@ -565,7 +567,8 @@ const makeProvider = ({
 
     case ApiSource.OpenRouter: {
       const options: OpenRouterProviderSettings = {
-        apiKey: apiConnection.apiKey,
+        apiKey: apiKey,
+        baseURL: baseUrl,
         headers: {
           "HTTP-Referer": "https://astrsk.ai",
           "X-Title": "astrsk.ai",
@@ -580,12 +583,12 @@ const makeProvider = ({
         });
       }
       if (
-        apiConnection.openrouterProviderSort &&
-        apiConnection.openrouterProviderSort !== OpenrouterProviderSort.Default
+        openrouterProviderSort &&
+        openrouterProviderSort !== OpenrouterProviderSort.Default
       ) {
         merge(extraBody, {
           provider: {
-            sort: apiConnection.openrouterProviderSort,
+            sort: openrouterProviderSort,
           },
         });
       }
@@ -596,48 +599,53 @@ const makeProvider = ({
 
     case ApiSource.GoogleGenerativeAI:
       provider = createGoogleGenerativeAI({
-        apiKey: apiConnection.apiKey,
+        apiKey: apiKey,
+        baseURL: baseUrl,
       });
       break;
 
     case ApiSource.Ollama:
       provider = createOllama({
-        baseURL: apiConnection.baseUrl,
+        baseURL: baseUrl,
       });
       break;
 
     case ApiSource.DeepSeek:
       provider = createDeepSeek({
-        apiKey: apiConnection.apiKey,
+        apiKey: apiKey,
+        baseURL: baseUrl,
       });
       break;
 
     case ApiSource.xAI:
       provider = createXai({
-        apiKey: apiConnection.apiKey,
+        apiKey: apiKey,
+        baseURL: baseUrl,
       });
       break;
 
     case ApiSource.Mistral:
       provider = createMistral({
-        apiKey: apiConnection.apiKey,
+        apiKey: apiKey,
+        baseURL: baseUrl,
       });
       break;
 
     case ApiSource.Cohere:
       provider = createCohere({
-        apiKey: apiConnection.apiKey,
+        apiKey: apiKey,
+        baseURL: baseUrl,
       });
       break;
 
     case ApiSource.KoboldCPP: {
-      let baseUrl = apiConnection.baseUrl ?? "";
-      if (!baseUrl.endsWith("/v1")) {
-        baseUrl += "/v1";
+      let koboldBaseUrl = baseUrl ?? "";
+      if (!koboldBaseUrl.endsWith("/v1")) {
+        koboldBaseUrl += "/v1";
       }
       provider = createOpenAICompatible({
         name: ApiSource.KoboldCPP,
-        baseURL: baseUrl,
+        baseURL: koboldBaseUrl,
       });
       break;
     }
@@ -1186,6 +1194,7 @@ async function generateTextOutput({
   parameters,
   stopSignalByUser,
   streaming,
+  creditLog,
 }: {
   apiConnection: ApiConnection;
   modelId: string;
@@ -1193,6 +1202,7 @@ async function generateTextOutput({
   parameters: Map<string, any>;
   stopSignalByUser?: AbortSignal;
   streaming?: boolean;
+  creditLog?: object;
 }) {
   // Transform messages for specific models
   const transformedMessages = transformMessagesForModel(messages, modelId);
@@ -1211,9 +1221,23 @@ async function generateTextOutput({
 
   // Request by API source
   let provider;
+  let parsedModelId = modelId;
   switch (apiConnection.source) {
+    // Route by model provider
+    case ApiSource.AstrskAi: {
+      const modelIdSplitted = modelId.split(":");
+      const astrskSource = modelIdSplitted.at(0) as ApiSource;
+      parsedModelId = modelIdSplitted.at(1) ?? modelId;
+      const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/${astrskSource}`;
+      provider = makeProvider({
+        source: modelIdSplitted.at(0) as ApiSource,
+        apiKey: "DUMMY",
+        baseUrl: astrskBaseUrl,
+      });
+      break;
+    }
+
     // Request by AI SDK
-    case ApiSource.AstrskAi:
     case ApiSource.OpenAI:
     case ApiSource.OpenAICompatible:
     case ApiSource.Anthropic:
@@ -1226,7 +1250,10 @@ async function generateTextOutput({
     case ApiSource.Cohere:
     case ApiSource.KoboldCPP:
       provider = makeProvider({
-        apiConnection,
+        source: apiConnection.source,
+        apiKey: apiConnection.apiKey,
+        baseUrl: apiConnection.baseUrl,
+        openrouterProviderSort: apiConnection.openrouterProviderSort,
       });
       break;
 
@@ -1274,6 +1301,13 @@ async function generateTextOutput({
   });
   const modelProvider = model.provider.split(".").at(0);
 
+  // Extra headers for astrsk
+  const jwt = useAppStore.getState().jwt;
+  const headers = {
+    Authorization: `Bearer ${jwt}`,
+    "x-astrsk-credit-log": JSON.stringify(creditLog),
+  };
+
   // Request to LLM endpoint
   if (streaming) {
     return streamText({
@@ -1295,6 +1329,9 @@ async function generateTextOutput({
       onError: (error) => {
         throw error.error;
       },
+      ...(apiConnection.source === ApiSource.AstrskAi && {
+        headers: headers,
+      }),
     });
   } else {
     const { text } = await generateText({
@@ -1309,6 +1346,9 @@ async function generateTextOutput({
             },
           }
         : {}),
+      ...(apiConnection.source === ApiSource.AstrskAi && {
+        headers: headers,
+      }),
     });
 
     // Create a generator to return the final text
@@ -1328,6 +1368,7 @@ async function generateStructuredOutput({
   stopSignalByUser,
   schema,
   streaming,
+  creditLog,
 }: {
   apiConnection: ApiConnection;
   modelId: string;
@@ -1340,6 +1381,7 @@ async function generateStructuredOutput({
     description?: string;
   };
   streaming?: boolean;
+  creditLog?: object;
 }) {
   // Transform messages for specific models
   const transformedMessages = transformMessagesForModel(messages, modelId);
@@ -1355,9 +1397,24 @@ async function generateStructuredOutput({
 
   // Request by API source
   let provider;
+  let parsedModelId = modelId;
   switch (apiConnection.source) {
+    // Route by model provider
+    case ApiSource.AstrskAi: {
+      const modelIdSplitted = modelId.split(":");
+      const astrskSource = modelIdSplitted.at(0) as ApiSource;
+      parsedModelId = modelIdSplitted.at(1) ?? modelId;
+      const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/${astrskSource}`;
+      provider = makeProvider({
+        source: modelIdSplitted.at(0) as ApiSource,
+        apiKey: "DUMMY",
+        baseUrl: astrskBaseUrl,
+        isStructuredOutput: true,
+      });
+      break;
+    }
+
     // Request by AI SDK
-    case ApiSource.AstrskAi:
     case ApiSource.OpenAI:
     case ApiSource.OpenAICompatible:
     case ApiSource.Anthropic:
@@ -1370,7 +1427,10 @@ async function generateStructuredOutput({
     case ApiSource.Cohere:
     case ApiSource.KoboldCPP:
       provider = makeProvider({
-        apiConnection,
+        source: apiConnection.source,
+        apiKey: apiConnection.apiKey,
+        baseUrl: apiConnection.baseUrl,
+        openrouterProviderSort: apiConnection.openrouterProviderSort,
         isStructuredOutput: true,
       });
       break;
@@ -1394,8 +1454,11 @@ async function generateStructuredOutput({
   // Make model
   const model =
     "chat" in provider
-      ? provider.chat(modelId, modelSettings)
-      : (provider.languageModel(modelId, modelSettings) as LanguageModelV1);
+      ? provider.chat(parsedModelId, modelSettings)
+      : (provider.languageModel(
+          parsedModelId,
+          modelSettings,
+        ) as LanguageModelV1);
 
   // Make settings
   const settings = makeSettings({
@@ -1413,6 +1476,13 @@ async function generateStructuredOutput({
   if (apiConnection.source === ApiSource.OpenRouter) {
     mode = "json";
   }
+
+  // Extra headers for astrsk
+  const jwt = useAppStore.getState().jwt;
+  const headers = {
+    Authorization: `Bearer ${jwt}`,
+    "x-astrsk-credit-log": JSON.stringify(creditLog),
+  };
 
   // Request to LLM endpoint
   if (streaming) {
@@ -1435,6 +1505,9 @@ async function generateStructuredOutput({
       onError: (error) => {
         throw error.error;
       },
+      ...(apiConnection.source === ApiSource.AstrskAi && {
+        headers: headers,
+      }),
     });
   } else {
     const { object } = await generateObject({
@@ -1452,6 +1525,9 @@ async function generateStructuredOutput({
             },
           }
         : {}),
+      ...(apiConnection.source === ApiSource.AstrskAi && {
+        headers: headers,
+      }),
     });
 
     // Create a generator to return the final object
@@ -1474,10 +1550,12 @@ async function* executeAgentNode({
   agentId,
   fullContext,
   stopSignalByUser,
+  creditLog,
 }: {
   agentId: UniqueEntityID;
   fullContext: any;
   stopSignalByUser?: AbortSignal;
+  creditLog?: object;
 }): AsyncGenerator<AgentNodeResult, AgentNodeResult, void> {
   try {
     // Get agent
@@ -1534,6 +1612,7 @@ async function* executeAgentNode({
         },
         streaming: agent.props.outputStreaming,
         stopSignalByUser: stopSignalByUser,
+        creditLog: creditLog,
       });
 
       // Stream structured output
@@ -1550,6 +1629,7 @@ async function* executeAgentNode({
         parameters: agent.parameters,
         streaming: agent.props.outputStreaming,
         stopSignalByUser: stopSignalByUser,
+        creditLog: creditLog,
       });
 
       // Stream text output
@@ -1741,6 +1821,10 @@ async function* executeFlow({
           agentId: new UniqueEntityID(currentNode.id),
           fullContext: createFullContext(context, variables, dataStore),
           stopSignalByUser: stopSignalByUser,
+          creditLog: {
+            session_id: sessionId.toString(),
+            flow_id: flowId.toString(),
+          },
         });
 
         for await (const result of executeAgentNodeResult) {
@@ -2064,7 +2148,9 @@ async function evaluateSingleCondition(
     );
   } catch (error) {
     const debugInfo = `value1="${value1}"${
-      condition.operator && !isUnaryOperator(condition.operator) ? ` value2="${value2}"` : ""
+      condition.operator && !isUnaryOperator(condition.operator)
+        ? ` value2="${value2}"`
+        : ""
     } dataType="${condition.dataType}"`;
     console.warn(
       `Failed to evaluate condition ${condition.id} (${condition.operator}): ${debugInfo} - ${error}`,
