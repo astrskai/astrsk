@@ -7,6 +7,8 @@ import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
 import { useGlobalErrorHandler } from "@/app/hooks/use-global-error-handler";
 import { queryClient } from "@/app/queries/query-client";
 import { Page, useAppStore } from "@/app/stores/app-store";
+import { useSessionStore } from "@/app/stores/session-store";
+import { UniqueEntityID } from "@/shared/domain";
 import DesktopApp from "@/app/v2/desktop-app";
 import MobileApp from "@/app/v2/mobile-app";
 import {
@@ -75,6 +77,46 @@ function V2Layout({
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const { isStandalone, canInstall, install } = usePwa();
   const defaultInitialized = useDefaultInitialized();
+
+  // Onboarding-based sidebar control
+  const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
+  const onboardingSelectedSessionId = useAppStore.use.onboardingSelectedSessionId();
+  const setActivePage = useAppStore.use.setActivePage();
+
+  // Session store for restoring selected session
+  const selectSession = useSessionStore.use.selectSession();
+
+  // Determine if sidebar should be closed based on onboarding state
+  // Close sidebar when genre is selected but session data step not complete (in onboarding flow)
+  const isInOnboardingFlow = !sessionOnboardingSteps.openResource;
+  const shouldCloseSidebar = isInOnboardingFlow;
+
+  // Initialize page based on onboarding state
+  useEffect(() => {
+    if (defaultInitialized) {
+      // If in onboarding flow, ensure we're on sessions page
+      if (isInOnboardingFlow) {
+        console.log("In onboarding session play state");
+        // Always navigate to sessions page when in session play state
+        setActivePage(Page.Sessions);
+        
+        // If we have a stored session, select it
+        if (onboardingSelectedSessionId) {
+          console.log("Restoring onboarding session:", onboardingSelectedSessionId);
+          setTimeout(() => {
+            selectSession(new UniqueEntityID(onboardingSelectedSessionId), "Onboarding Session");
+          }, 100);
+        }
+      }
+    }
+  }, [
+    defaultInitialized,
+    sessionOnboardingSteps, 
+    onboardingSelectedSessionId, 
+    setActivePage, 
+    selectSession,
+    isInOnboardingFlow
+  ]);
 
   // Initialize global error handler
   useGlobalErrorHandler();
@@ -181,7 +223,9 @@ function V2Layout({
         )}
       >
         <TopBar />
-        <SidebarLeftProvider defaultOpen={!isMobile}>
+        <SidebarLeftProvider 
+          defaultOpen={!isMobile && !shouldCloseSidebar}
+        >
           <LeftNavigation />
           <LeftNavigationTrigger />
           <SidebarInset>

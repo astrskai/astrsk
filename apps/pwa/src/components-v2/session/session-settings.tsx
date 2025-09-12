@@ -3,6 +3,7 @@ import {
   forwardRef,
   MutableRefObject,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -79,8 +80,9 @@ const Section = forwardRef<
     className?: string;
     fill?: boolean;
     error?: boolean;
+    onboarding?: boolean;
   }
->(({ title, subtitle, children, className, fill, error, ...props }, ref) => {
+>(({ title, subtitle, children, className, fill, error, onboarding, ...props }, ref) => {
   return (
     <div
       ref={ref}
@@ -88,6 +90,7 @@ const Section = forwardRef<
         "group/section relative bg-background-surface-3 rounded-[8px] cursor-pointer",
         "transition-all duration-200 ease-in-out",
         "border border-border-normal hover:border-text-primary hover:ring hover:ring-text-primary",
+        onboarding && "border-text-primary ring ring-text-primary",
         className,
       )}
       {...props}
@@ -103,7 +106,10 @@ const Section = forwardRef<
             </div>
           )}
         </div>
-        <div className="transition-opacity duration-200 ease-in-out opacity-0 group-hover/section:opacity-100">
+        <div className={cn(
+          "transition-opacity duration-200 ease-in-out opacity-0 group-hover/section:opacity-100",
+          onboarding && "opacity-100"
+        )}>
           <SvgIcon name="edit" size={24} />
         </div>
       </div>
@@ -141,13 +147,51 @@ const SessionSettings = ({
   setIsOpenSettings,
   refEditCards,
   refInitCardTab,
+  isSettingsOpen,
 }: {
   setIsOpenSettings: (open: boolean) => void;
   refEditCards: React.RefObject<HTMLDivElement>;
   refInitCardTab: MutableRefObject<CardTab>;
+  isSettingsOpen: boolean;
 }) => {
   const { activePage } = useAppStore();
   const { selectedSessionId } = useSessionStore();
+  
+  // Session onboarding
+  const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
+  const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
+  const shouldShowResourceManagementTooltip = !sessionOnboardingSteps.sessionEdit;
+  const [showSectionAnimation, setShowSectionAnimation] = useState(false);
+  
+  // Detect if there's enough space for the tooltip on the left
+  const [hasSpaceForTooltip, setHasSpaceForTooltip] = useState(false);
+  useEffect(() => {
+    const checkSpace = () => {
+      // Check if viewport is wide enough (need at least 1364px for 1024px container + 340px tooltip)
+      setHasSpaceForTooltip(window.innerWidth >= 1464);
+    };
+    checkSpace();
+    window.addEventListener('resize', checkSpace);
+    return () => window.removeEventListener('resize', checkSpace);
+  }, []);
+  
+  // Derive tooltip visibility directly from onboarding state (no useState needed!)
+  const showResourceTooltip = shouldShowResourceManagementTooltip;
+
+  // Handle completing the session edit onboarding step
+  const handleResourceManagementGotIt = useCallback(() => {
+    // Complete the onboarding step (this will hide the tooltip automatically)
+    setSessionOnboardingStep('sessionEdit', true);
+    
+    // Trigger animation on "Got it!" press
+    setShowSectionAnimation(true);
+    setTimeout(() => {
+      setShowSectionAnimation(false);
+    }, 1500);
+    
+    // Close the settings page to go back to session page
+    setIsOpenSettings(false);
+  }, [setSessionOnboardingStep, setIsOpenSettings]);
   const [session, invalidateSession] = useSession(selectedSessionId);
   const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
   
@@ -280,8 +324,9 @@ const SessionSettings = ({
   return (
     <div
       className={cn(
-        "w-full min-w-[873px] max-w-[1024px] mx-auto my-[80px] p-[16px] rounded-[16px] flex flex-col",
+        "w-full min-w-[873px] max-w-[1024px] mx-auto my-[80px] p-[16px] rounded-[16px] flex flex-col relative",
         "bg-background-surface-2",
+        shouldShowResourceManagementTooltip && "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
       )}
     >
       <div className="flex flex-col space-y-0 gap-[16px] justify-end">
@@ -353,6 +398,7 @@ const SessionSettings = ({
               title="Cards"
               className=""
               error={session?.aiCharacterCardIds.length === 0}
+              onboarding={showSectionAnimation}
               fill
             >
               <SectionCarousel>
@@ -410,6 +456,7 @@ const SessionSettings = ({
               className="col-span-3"
               subtitle={flow?.props.name}
               error={!flow || isFlowInvalid}
+              onboarding={showSectionAnimation}
               fill
             >
               <SectionCarousel>
@@ -434,7 +481,7 @@ const SessionSettings = ({
                 await updateSession(newValue);
               }}
               trigger={
-                <Section title="Language & Translation" className="h-full">
+                <Section title="Language & Translation" className="h-full" onboarding={showSectionAnimation}>
                   <div className="w-full">
                     <div className="flex flex-col gap-[16px]">
                       <div className="flex flex-col gap-[8px]">
@@ -472,7 +519,7 @@ const SessionSettings = ({
                 await updateSession(newValue);
               }}
               trigger={
-                <Section title="Background" className="h-full">
+                <Section title="Background" className="h-full" onboarding={showSectionAnimation}>
                   <div className="max-w-full">
                     <SelectedBackground backgroundId={session?.backgroundId} />
                   </div>
@@ -494,6 +541,7 @@ const SessionSettings = ({
                 <Section
                   title="Message styling"
                   className="items-center h-full"
+                  onboarding={showSectionAnimation}
                 >
                   <ColorTable chatStyles={session?.chatStyles} />
                 </Section>
@@ -504,6 +552,35 @@ const SessionSettings = ({
           </div>
         </div>
       </div>
+
+      {/* Resource Management Tooltip */}
+      {showResourceTooltip && (
+        <div 
+          className={cn(
+            "absolute px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-center items-end gap-2 z-10",
+            hasSpaceForTooltip 
+              ? "top-4 left-[-340px] w-80 max-w-80"  // Outside to the left when space available
+              : "top-4 left-4 right-4"  // Inside at the top when no space
+          )}
+        >
+          <div className="self-stretch justify-start text-text-primary text-sm font-semibold leading-tight">
+            Local resource management
+          </div>
+          <div className="self-stretch justify-start text-text-primary text-xs font-normal">
+            This area manages local resources specific to this session only. Session-specific assets & tools.
+          </div>
+          <div className="inline-flex justify-start items-start gap-2">
+            <button
+              onClick={handleResourceManagementGotIt}
+              className="min-w-20 px-3 py-1.5 bg-background-surface-light rounded-[20px] inline-flex flex-col justify-center items-center gap-2 hover:bg-background-surface-4 transition-colors"
+            >
+              <div className="justify-center text-text-contrast-text text-xs font-semibold">
+                Got it
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

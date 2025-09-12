@@ -431,9 +431,21 @@ const CardFilter = ({
   );
 };
 
-const CardSection = ({ onClick }: { onClick?: () => void }) => {
+const CardSection = ({ 
+  onClick, 
+  onboardingHighlight, 
+  onboardingCollapsed,
+  onHelpClick,
+  onboardingHelpGlow
+}: { 
+  onClick?: () => void; 
+  onboardingHighlight?: boolean; 
+  onboardingCollapsed?: boolean; 
+  onHelpClick?: () => void;
+  onboardingHelpGlow?: boolean;
+}) => {
   // Handle expand
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(onboardingCollapsed ? false : true);
 
   // Fetch cards
   const [keyword, setKeyword] = useState("");
@@ -516,7 +528,9 @@ const CardSection = ({ onClick }: { onClick?: () => void }) => {
   } = useCardImport(handleInvalidation);
 
   return (
-    <>
+    <div className={cn(
+      onboardingHighlight && "border-1 border-border-selected-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
+    )}>
       <SectionHeader
         name="Cards"
         icon={<SvgIcon name="cards" size={20} />}
@@ -530,6 +544,8 @@ const CardSection = ({ onClick }: { onClick?: () => void }) => {
             onClick?.();
           }, 50);
         }}
+        onHelpClick={onHelpClick}
+        onboardingHelpGlow={onboardingHelpGlow}
       />
       <div className={cn(!expanded && "hidden")}>
         <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center w-[320px]">
@@ -629,7 +645,7 @@ const CardSection = ({ onClick }: { onClick?: () => void }) => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 
