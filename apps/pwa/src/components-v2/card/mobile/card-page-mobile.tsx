@@ -35,7 +35,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMobileNavigation } from "@/App";
 import { DeleteConfirm } from "@/components-v2/confirm";
 import { SearchCardsSort } from "@/modules/card/repos";
-import * as amplitude from "@amplitude/analytics-browser";
 import { ListEditDialog } from "@/components-v2/list-edit-dialog";
 import { TopNavigation } from "@/components-v2/top-navigation";
 import { SortDialog } from "@/components-v2/sort-dialog";
@@ -145,11 +144,6 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
 
   // Card creation functions
   const handleCreateCard = (type: CardType) => {
-    if (type === CardType.Character) {
-      amplitude.track("create_charactercard_initiate");
-    } else if (type === CardType.Plot) {
-      amplitude.track("create_plotcard_initiate");
-    }
     setActiveCardType(type);
     createCard(type);
     setIsSheetOpen(true);

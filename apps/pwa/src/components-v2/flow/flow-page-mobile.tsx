@@ -43,7 +43,6 @@ import { Agent } from "@/modules/agent/domain";
 import { ApiSource } from "@/modules/api/domain";
 import { Flow, Node } from "@/modules/flow/domain";
 import { Session } from "@/modules/session/domain/session";
-import * as amplitude from "@amplitude/analytics-browser";
 import { ListEditDialog } from "@/components-v2/list-edit-dialog";
 import { TopNavigation } from "@/components-v2/top-navigation";
 
@@ -467,7 +466,6 @@ export default function FlowPageMobile({
 
   // Create flow handlers
   const handleClickCreate = () => {
-    amplitude.track("create_flow_initiate");
     setDialogOpen(true);
   };
 

@@ -30,7 +30,6 @@ import { ApiSource } from "@/modules/api/domain";
 import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
-import * as amplitude from "@amplitude/analytics-browser";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import {
@@ -359,7 +358,6 @@ const FlowSection = ({
   const [isOpenCreate, setIsOpenCreate] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const handleClickCreate = useCallback(() => {
-    amplitude.track("create_flow_initiate");
     setIsOpenCreate(true);
   }, []);
   const handleDialogCreate = useCallback(

@@ -33,23 +33,7 @@ import { TopBar } from "@/components-v2/top-bar";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
 import { Toaster } from "@/components-v2/ui/sonner";
 import { logger } from "@/shared/utils/logger";
-import * as amplitude from "@amplitude/analytics-browser";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-
-// Init amplitude
-if (import.meta.env.VITE_AMPLITUDE_API_KEY) {
-  amplitude.init(import.meta.env.VITE_AMPLITUDE_API_KEY, {
-    // Disable auto capture
-    autocapture: false,
-
-    // Disable optional tracking
-    trackingOptions: {
-      ipAddress: false,
-      language: false,
-      platform: false,
-    },
-  });
-}
 
 // Mobile navigation context
 const MobileNavigationContext = createContext<{
@@ -243,38 +227,7 @@ function V2Layout({
 
 const AppInternal = () => {
   const activePage = useAppStore.use.activePage();
-
-  // Toggle telemetry
-  const isTelemetryEnabled = useAppStore.use.isTelemetryEnabled();
-  const [isTelemetryInitialized, setIsTelemetryInitialized] = useState(false);
-  useEffect(() => {
-    amplitude.setOptOut(!isTelemetryEnabled);
-    setIsTelemetryInitialized(true);
-    logger.debug(`Telemetry ${isTelemetryEnabled ? "enabled" : "disabled"}`);
-  }, [isTelemetryEnabled]);
-
-  // Track `start_app` event
   const isMobile = useIsMobile();
-  const [isStartAppSent, setIsStartAppSent] = useState(false);
-  useEffect(() => {
-    // Check telemetry initialized or already sent event
-    if (!isTelemetryInitialized || isStartAppSent) {
-      return;
-    }
-
-    // Set `app_platform`
-    const identifyEvent = new amplitude.Identify();
-    identifyEvent.set("app_platform", isMobile ? "mobile" : "desktop");
-    amplitude.identify(identifyEvent);
-
-    // Track `start_app` event
-    amplitude.track("start_app");
-    amplitude.flush();
-
-    // Set state
-    setIsStartAppSent(true);
-    logger.debug(`start_app:  ${isMobile ? "mobile" : "desktop"}`);
-  }, [isMobile, isStartAppSent, isTelemetryInitialized]);
 
   return isMobile ? (
     <V2Layout>

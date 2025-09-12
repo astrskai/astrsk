@@ -4,7 +4,6 @@ import { Session } from "@/modules/session/domain/session";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
 import { toast } from "sonner";
-import * as amplitude from "@amplitude/analytics-browser";
 
 export type SelectionAction = "copy" | "export" | "delete";
 
@@ -66,10 +65,6 @@ export function useCardSelection() {
         const failCount = results.filter((r) => r.status === "rejected").length;
         
         if (successCount > 0) {
-          amplitude.track("card_copied", {
-            count: successCount,
-            source: "mobile_batch",
-          });
           toast.success(`${successCount} card${successCount > 1 ? "s" : ""} copied successfully`);
           onInvalidation();
         }
@@ -126,10 +121,6 @@ export function useCardSelection() {
         }
         
         if (successCount > 0) {
-          amplitude.track("card_exported", {
-            count: successCount,
-            source: "mobile_batch",
-          });
           toast.success(`${successCount} card${successCount > 1 ? "s" : ""} exported successfully`);
         }
         
@@ -188,10 +179,6 @@ export function useCardSelection() {
         const failCount = results.filter((r) => r.status === "rejected").length;
         
         if (successCount > 0) {
-          amplitude.track("card_deleted", {
-            count: successCount,
-            source: "mobile_batch",
-          });
           toast.success(`${successCount} card${successCount > 1 ? "s" : ""} deleted successfully`);
           onInvalidation();
         }

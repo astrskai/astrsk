@@ -21,7 +21,6 @@ import {
   DialogTitle,
 } from "@/components-v2/ui/dialog";
 import { Card, CardType } from "@/modules/card/domain";
-import * as amplitude from "@amplitude/analytics-browser";
 
 export default function CardPage({ className }: { className?: string }) {
   // Sheet state
@@ -85,10 +84,8 @@ export default function CardPage({ className }: { className?: string }) {
   const handleCreateCard = (type: CardType) => {
     if (type === CardType.Character) {
       console.log("Tracking new character card creation button pressed");
-      amplitude.track("create_charactercard_initiate");
     } else if (type === CardType.Plot) {
       console.log("Tracking new plot card creation button pressed");
-      amplitude.track("create_plotcard_initiate");
     }
     setActiveCardType(type);
     createCard(type);
