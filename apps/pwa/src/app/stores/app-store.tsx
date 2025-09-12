@@ -119,6 +119,8 @@ interface AppState {
   // Auth
   userId: string | null;
   setUserId: (userId: string | null) => void;
+  jwt: string | null;
+  setJwt: (jwt: string | null) => void;
 
   // Sync
   isSyncEnabled: boolean;
@@ -294,6 +296,11 @@ const useAppStoreBase = create<AppState>()(
         set((state) => {
           state.userId = userId;
         }),
+      jwt: null,
+      setJwt: (jwt) =>
+        set((state) => {
+          state.jwt = jwt;
+        }),
 
       // Sync status
       isSyncEnabled: true,
@@ -456,6 +463,7 @@ const useAppStoreBase = create<AppState>()(
             ([key]) =>
               ![
                 "userId",
+                "jwt",
                 "activeSubscription",
                 "isSyncReady",
                 "isLoginOpen",
