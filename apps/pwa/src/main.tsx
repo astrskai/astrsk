@@ -4,13 +4,14 @@ import { Loading } from "@/components-v2/loading.tsx";
 import { migrate } from "@/db/migrate.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
-import { ConvexReactClient } from "convex/react";
-import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
 import { enableMapSet } from "immer";
-import { StrictMode } from "react";
+import { StrictMode, useCallback, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { logger } from "@/shared/utils/logger.ts";
+import { useAppStore } from "@/app/stores/app-store.tsx";
 
 // Convex
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
@@ -21,6 +22,38 @@ enableMapSet();
 // Buffer polyfill
 if (!window.Buffer) {
   window.Buffer = Buffer;
+}
+
+function useConvexAuthWithClerk() {
+  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const setJwt = useAppStore.use.setJwt();
+
+  const fetchAccessToken = useCallback(
+    async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
+      try {
+        const jwt = await getToken({
+          template: "convex",
+          skipCache: forceRefreshToken,
+        });
+        setJwt(jwt);
+        return jwt;
+      } catch (error) {
+        logger.error("Failed to fetch access token", error);
+        setJwt(null);
+        return null;
+      }
+    },
+    [getToken, setJwt],
+  );
+
+  return useMemo(
+    () => ({
+      isLoading: !isLoaded,
+      isAuthenticated: !!isSignedIn,
+      fetchAccessToken,
+    }),
+    [isLoaded, isSignedIn, fetchAccessToken],
+  );
 }
 
 async function initializeApp() {
@@ -51,9 +84,12 @@ async function initializeApp() {
       <ClerkProvider
         publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
       >
-        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <ConvexProviderWithAuth
+          client={convex}
+          useAuth={useConvexAuthWithClerk}
+        >
           <App />
-        </ConvexProviderWithClerk>
+        </ConvexProviderWithAuth>
       </ClerkProvider>
     </StrictMode>,
   );

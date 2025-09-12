@@ -17,6 +17,12 @@ export type PublicApiType = {
           subscription_balance: number;
         } | null
       >;
+      canUseCredit: FunctionReference<
+        "query",
+        "public",
+        Record<string, never>,
+        boolean
+      >;
       listCreditUsage: FunctionReference<
         "query",
         "public",
@@ -89,6 +95,7 @@ export type PublicApiType = {
       "public",
       {
         conversationHistory?: Array<any>;
+        modelId?: string;
         originalRequest: string;
         resourceData: any;
         resourceIds: Array<string>;
@@ -123,6 +130,7 @@ export type PublicApiType = {
         "public",
         {
           conversationHistory?: Array<any>;
+          modelId?: string;
           originalRequest: string;
           resourceData: any;
           resourceIds: Array<string>;
@@ -219,6 +227,7 @@ export type PublicApiType = {
           "public",
           {
             conversationHistory?: Array<any>;
+            modelId?: string;
             originalRequest: string;
             resourceData: any;
             resourceIds: Array<string>;
@@ -282,6 +291,7 @@ export type PublicApiType = {
           "public",
           {
             conversationHistory?: Array<any>;
+            modelId?: string;
             originalRequest: string;
             resourceData: any;
             resourceIds: Array<string>;

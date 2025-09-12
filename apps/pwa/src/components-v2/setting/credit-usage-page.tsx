@@ -1,5 +1,8 @@
+import { useFlow } from "@/app/hooks/use-flow";
+import { useSession } from "@/app/hooks/use-session";
 import { Button } from "@/components-v2/ui/button";
 import { api } from "@/convex";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { Datetime } from "@/shared/utils";
 import { usePaginatedQuery } from "convex/react";
 
@@ -8,6 +11,43 @@ const PAGE_SIZE = 10;
 function formatNumberWithComma(num: number): string {
   return num.toLocaleString();
 }
+
+const CreditUsageItem = ({
+  item,
+}: {
+  item: {
+    _id: string;
+    _creationTime: number;
+    amount: number;
+    detail?: {
+      session_id: string;
+      flow_id: string;
+      model_id: string;
+      input_tokens: number;
+      output_tokens: number;
+    };
+  };
+}) => {
+  const [session] = useSession(new UniqueEntityID(item.detail?.session_id));
+  const { data: flow } = useFlow(new UniqueEntityID(item.detail?.flow_id));
+
+  return (
+    <div
+      className="flex flex-row *:p-2 *:w-[120px] *:h-[40px] *:truncate text-text-primary"
+    >
+      <div>{Datetime(item._creationTime).format("MMM D, h:mm A")}</div>
+      <div>{session?.props.title}</div>
+      <div>{flow?.props.name}</div>
+      <div>{item.detail?.model_id}</div>
+      <div>
+        {formatNumberWithComma(item.detail?.input_tokens ?? 0)}
+        {" -> "}
+        {formatNumberWithComma(item.detail?.output_tokens ?? 0)}
+      </div>
+      <div className="text-right">{formatNumberWithComma(item.amount)}</div>
+    </div>
+  );
+};
 
 const CreditUsagePage = () => {
   const { results, status, loadMore } = usePaginatedQuery(
@@ -37,19 +77,7 @@ const CreditUsagePage = () => {
             <div className="text-right">Cost</div>
           </div>
           {results?.map((item) => (
-            <div
-              key={item._id}
-              className="flex flex-row *:p-2 *:w-[120px] *:h-[40px] *:truncate text-text-primary"
-            >
-              <div>{Datetime(item._creationTime).format("MMM D, h:mm A")}</div>
-              <div>Session name</div>
-              <div>Flow name</div>
-              <div>Model ID</div>
-              <div>1,000 {"->"} 1,000</div>
-              <div className="text-right">
-                {formatNumberWithComma(item.amount)}
-              </div>
-            </div>
+            <CreditUsageItem key={item._id} item={item} />
           ))}
           {status === "CanLoadMore" && (
             <Button
