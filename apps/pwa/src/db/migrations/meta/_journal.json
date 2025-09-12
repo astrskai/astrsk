@@ -120,6 +120,20 @@
       "when": 1757433163764,
       "tag": "20250909155243_coding-panel-removed",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1757577968859,
+      "tag": "20250911080608_media_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1757679083372,
+      "tag": "20250912121123_image_asset",
+      "breakpoints": true
     }
   ]
 }

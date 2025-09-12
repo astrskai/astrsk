@@ -35,6 +35,7 @@ export class GeneratedImageService {
     this.saveFileToGeneratedImage = new SaveFileToGeneratedImage(
       saveFileToAsset,
       this.saveGeneratedImage,
+      this.generatedImageRepo,
     );
     this.saveGeneratedImageFromAsset = new SaveGeneratedImageFromAsset(
       this.saveGeneratedImage,

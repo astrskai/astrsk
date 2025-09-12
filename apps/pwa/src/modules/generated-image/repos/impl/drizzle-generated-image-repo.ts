@@ -88,6 +88,25 @@ export class DrizzleGeneratedImageRepo
     }
   }
 
+  async getGeneratedImageByAssetId(assetId: UniqueEntityID): Promise<Result<GeneratedImage | null>> {
+    const db = await Drizzle.getInstance();
+    try {
+      const rows = await db
+        .select()
+        .from(generatedImages)
+        .where(eq(generatedImages.asset_id, assetId.toString()));
+
+      if (rows.length === 0) {
+        return Result.ok<GeneratedImage | null>(null);
+      }
+
+      const generatedImage = GeneratedImageDrizzleMapper.toDomain(rows[0]);
+      return Result.ok<GeneratedImage | null>(generatedImage);
+    } catch (error) {
+      return formatFail("Failed to get generated image by asset id", error);
+    }
+  }
+
   async delete(id: UniqueEntityID): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {

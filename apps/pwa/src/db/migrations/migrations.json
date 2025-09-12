@@ -155,5 +155,21 @@
     "bps": true,
     "folderMillis": 1757433163764,
     "hash": "74254570fb10dfac4d8756889743f458bbc5c8939e8a67bc51f4089b00c5754a"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"generated_images\" ADD COLUMN \"media_type\" varchar;"
+    ],
+    "bps": true,
+    "folderMillis": 1757577968859,
+    "hash": "f40689e7a74bf0fd55af7dcfbda998e4a9488611c23fc26edfd812aac0c8aa17"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"generated_images\" ADD COLUMN \"thumbnail_asset_id\" uuid;"
+    ],
+    "bps": true,
+    "folderMillis": 1757679083372,
+    "hash": "a36d78efc589e165c22db2446fd3e9cf7dc3bf278c02c0c3cbc79ab4198bcbea"
   }
 ]
