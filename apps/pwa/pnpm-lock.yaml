@@ -466,14 +466,6 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
 
-  ../..: {}
-
-  ../docs: {}
-
-  ../electron: {}
-
-  ../vibe-shared-types: {}
-
 packages:
 
   '@adobe/css-tools@4.4.3':
