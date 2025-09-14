@@ -6,6 +6,7 @@ import {
   SettingSubPageType,
   useAppStore,
 } from "@/app/stores/app-store";
+import { ConvexReady } from "@/components-v2/convex-ready";
 import { cn } from "@/components-v2/lib/utils";
 import { AccountPage } from "@/components-v2/setting/account-page";
 import ContentPolicy from "@/components-v2/setting/content-policy";
@@ -187,20 +188,22 @@ const MainPage = () => {
             App Preferences
           </TypoXLarge>
 
-          <Authenticated>
-            <div
-              className="flex items-center justify-between cursor-pointer"
-              onClick={() => {
-                setSettingPageLevel(SettingPageLevel.sub);
-                setSettingSubPage(SettingSubPageType.account);
-              }}
-            >
-              <TypoBase className="font-semibold text-text-body">
-                Account and subscription
-              </TypoBase>
-              <ChevronRight className="h-5 w-5 text-text-secondary" />
-            </div>
-          </Authenticated>
+          <ConvexReady>
+            <Authenticated>
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => {
+                  setSettingPageLevel(SettingPageLevel.sub);
+                  setSettingSubPage(SettingSubPageType.account);
+                }}
+              >
+                <TypoBase className="font-semibold text-text-body">
+                  Account and subscription
+                </TypoBase>
+                <ChevronRight className="h-5 w-5 text-text-secondary" />
+              </div>
+            </Authenticated>
+          </ConvexReady>
 
           <div
             className="flex items-center justify-between cursor-pointer"
@@ -394,7 +397,9 @@ export default function SettingPage({ className }: { className?: string }) {
           />
         )}
         {settingSubPage === SettingSubPageType.advanced && <AdvancedPage />}
-        {settingSubPage === SettingSubPageType.account && <AccountPage />}
+        <ConvexReady>
+          {settingSubPage === SettingSubPageType.account && <AccountPage />}
+        </ConvexReady>
       </div>
 
       {/* Page Level 3 */}
@@ -417,9 +422,11 @@ export default function SettingPage({ className }: { className?: string }) {
           <ContentPolicy />
         )}
         {settingDetailPage === SettingDetailPageType.ossNotice && <OssNotice />}
-        {settingDetailPage === SettingDetailPageType.creditUsage && (
-          <CreditUsagePage />
-        )}
+        <ConvexReady>
+          {settingDetailPage === SettingDetailPageType.creditUsage && (
+            <CreditUsagePage />
+          )}
+        </ConvexReady>
       </div>
       <ScrollBar orientation="vertical" className="w-1.5" />
     </ScrollArea>

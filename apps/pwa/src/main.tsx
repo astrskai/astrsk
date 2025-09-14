@@ -1,7 +1,9 @@
 import { initServices } from "@/app/services/init-services.ts";
+import { useAppStore } from "@/app/stores/app-store.tsx";
 import { initStores } from "@/app/stores/init-stores.ts";
 import { Loading } from "@/components-v2/loading.tsx";
 import { migrate } from "@/db/migrate.ts";
+import { logger } from "@/shared/utils/logger.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
 import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
@@ -10,11 +12,15 @@ import { StrictMode, useCallback, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { logger } from "@/shared/utils/logger.ts";
-import { useAppStore } from "@/app/stores/app-store.tsx";
 
 // Convex
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+const isConvexReady =
+  import.meta.env.VITE_CONVEX_URL &&
+  import.meta.env.VITE_CONVEX_SITE_URL &&
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const convex = isConvexReady
+  ? new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string)
+  : null;
 
 // Enable Map/Set support in Immer before anything else
 enableMapSet();
@@ -79,19 +85,29 @@ async function initializeApp() {
   await initStores();
 
   // Render app
-  root.render(
-    <StrictMode>
-      <ClerkProvider
-        publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
-      >
-        <ConvexProviderWithAuth
-          client={convex}
-          useAuth={useConvexAuthWithClerk}
+  if (isConvexReady && convex) {
+    // Convex ready
+    root.render(
+      <StrictMode>
+        <ClerkProvider
+          publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
         >
-          <App />
-        </ConvexProviderWithAuth>
-      </ClerkProvider>
-    </StrictMode>,
-  );
+          <ConvexProviderWithAuth
+            client={convex}
+            useAuth={useConvexAuthWithClerk}
+          >
+            <App />
+          </ConvexProviderWithAuth>
+        </ClerkProvider>
+      </StrictMode>,
+    );
+  } else {
+    // Self-hosted
+    root.render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+  }
 }
 initializeApp();
