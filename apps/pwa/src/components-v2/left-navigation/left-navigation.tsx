@@ -2,6 +2,8 @@
 
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { SidebarLeft, useSidebarLeft } from "@/components-v2/both-sidebar";
+import { ConvexReady } from "@/components-v2/convex-ready";
+import { HelpVideoDialog } from "@/components-v2/help-video-dialog";
 import { CardSection } from "@/components-v2/left-navigation/card-list";
 import { SECTION_HEADER_HEIGHT } from "@/components-v2/left-navigation/constants";
 import { FlowSection } from "@/components-v2/left-navigation/flow-list";
@@ -16,7 +18,6 @@ import {
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
 import { UpdaterNew } from "@/components-v2/updater-new";
-import { HelpVideoDialog } from "@/components-v2/help-video-dialog";
 import { Authenticated, Unauthenticated } from "convex/react";
 import {
   ArrowLeftFromLine,
@@ -32,7 +33,6 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
-
 
 const SectionHeader = ({
   name,
@@ -78,7 +78,8 @@ const SectionHeader = ({
             }}
             className={cn(
               "text-text-info hover:text-text-primary transition-colors",
-              onboardingHelpGlow && "text-button-background-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] rounded-full"
+              onboardingHelpGlow &&
+                "text-button-background-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] rounded-full",
             )}
           >
             <PlayCircle size={16} />
@@ -86,7 +87,6 @@ const SectionHeader = ({
         )}
       </div>
       <div className="flex flex-row gap-[8px] items-center">
-
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -134,10 +134,10 @@ const LeftNavigation = () => {
   // Help video dialog state
   const [helpVideoDialog, setHelpVideoDialog] = useState<{
     open: boolean;
-    type: 'sessions' | 'cards' | 'flows' | null;
+    type: "sessions" | "cards" | "flows" | null;
   }>({ open: false, type: null });
 
-  const openHelpVideo = useCallback((type: 'sessions' | 'cards' | 'flows') => {
+  const openHelpVideo = useCallback((type: "sessions" | "cards" | "flows") => {
     setHelpVideoDialog({ open: true, type });
   }, []);
 
@@ -148,11 +148,11 @@ const LeftNavigation = () => {
   // Session onboarding - show resource management tooltip and section highlights
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
   const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
-  
+
   // Exception: When sidebar is open, prioritize resourceManagement and helpVideo steps
   let shouldShowResourceManagementTooltip = false;
   let shouldShowHelpVideoTooltip = false;
-  
+
   // If sidebar is open, check these steps first as an exception
   if (open) {
     // Priority 1: Show resource management if not completed
@@ -160,7 +160,10 @@ const LeftNavigation = () => {
       shouldShowResourceManagementTooltip = true;
     }
     // Priority 2: Show help video if resource management is done but help video isn't
-    else if (sessionOnboardingSteps.resourceManagement && !sessionOnboardingSteps.helpVideo) {
+    else if (
+      sessionOnboardingSteps.resourceManagement &&
+      !sessionOnboardingSteps.helpVideo
+    ) {
       shouldShowHelpVideoTooltip = true;
     }
   }
@@ -179,26 +182,26 @@ const LeftNavigation = () => {
           {/* Navigation */}
           <ScrollArea viewportRef={navigationRef} className="flex-1 min-h-0">
             <div id="nav-session" />
-            <SessionSection 
-              onClick={() => scrollNavigation("session")} 
+            <SessionSection
+              onClick={() => scrollNavigation("session")}
               onboardingHighlight={shouldShowResourceManagementTooltip}
-              onHelpClick={() => openHelpVideo('sessions')}
+              onHelpClick={() => openHelpVideo("sessions")}
               onboardingHelpGlow={shouldShowHelpVideoTooltip}
             />
             <div id="nav-card" />
-            <CardSection 
-              onClick={() => scrollNavigation("card")} 
+            <CardSection
+              onClick={() => scrollNavigation("card")}
               onboardingHighlight={shouldShowResourceManagementTooltip}
               onboardingCollapsed={shouldShowResourceManagementTooltip}
-              onHelpClick={() => openHelpVideo('cards')}
+              onHelpClick={() => openHelpVideo("cards")}
               onboardingHelpGlow={shouldShowHelpVideoTooltip}
             />
             <div id="nav-flow" />
-            <FlowSection 
-              onClick={() => scrollNavigation("flow")} 
+            <FlowSection
+              onClick={() => scrollNavigation("flow")}
               onboardingHighlight={shouldShowResourceManagementTooltip}
               onboardingCollapsed={shouldShowResourceManagementTooltip}
-              onHelpClick={() => openHelpVideo('flows')}
+              onHelpClick={() => openHelpVideo("flows")}
               onboardingHelpGlow={shouldShowHelpVideoTooltip}
             />
             <ScrollBar className="z-30" />
@@ -220,14 +223,15 @@ const LeftNavigation = () => {
               Global resource management
             </div>
             <div className="self-stretch justify-start text-text-primary text-xs font-normal">
-              This area manages global resources shared across all sessions. You can use Cards and Flows here are available in all your sessions
+              This area manages global resources shared across all sessions. You
+              can use Cards and Flows here are available in all your sessions
             </div>
             <div className="inline-flex justify-start items-start gap-2">
               <button
                 className="min-w-20 px-3 py-1.5 bg-background-surface-light rounded-[20px] inline-flex flex-col justify-center items-center gap-2"
                 onClick={() => {
                   // Mark resourceManagement step as completed
-                  setSessionOnboardingStep('resourceManagement', true);
+                  setSessionOnboardingStep("resourceManagement", true);
                 }}
               >
                 <div className="inline-flex justify-start items-center gap-2">
@@ -256,7 +260,7 @@ const LeftNavigation = () => {
                 className="min-w-20 px-3 py-1.5 bg-background-surface-light rounded-[20px] inline-flex flex-col justify-center items-center gap-2"
                 onClick={() => {
                   // Mark helpVideo step as completed
-                  setSessionOnboardingStep('helpVideo', true);
+                  setSessionOnboardingStep("helpVideo", true);
                 }}
               >
                 <div className="inline-flex justify-start items-center gap-2">
@@ -289,13 +293,16 @@ const LeftNavigationTrigger = () => {
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
   const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
   // Show sidebar trigger tooltip only when sidebar is closed and step 2 is done but step 3 (openResource) is not
-  const shouldShowSidebarTooltip = !open && sessionOnboardingSteps.sessionEdit && !sessionOnboardingSteps.openResource;
+  const shouldShowSidebarTooltip =
+    !open &&
+    sessionOnboardingSteps.sessionEdit &&
+    !sessionOnboardingSteps.openResource;
 
   return (
     <div className="group/trigger-parent">
       {/* Onboarding Tooltip */}
       {shouldShowSidebarTooltip && (
-        <div 
+        <div
           className={cn(
             "absolute top-[calc(38px+16px)] left-[72px] z-50 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] outline-1 outline-offset-[-1px] outline-border-normal whitespace-nowrap",
             "transition-all ease-out duration-300",
@@ -313,13 +320,14 @@ const LeftNavigationTrigger = () => {
           "z-40 absolute top-[calc(38px+16px)] left-[16px] grid place-items-center",
           "size-[40px] bg-[#313131] border-1 border-[#757575] rounded-full",
           open && "hidden",
-          shouldShowSidebarTooltip && "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)]",
+          shouldShowSidebarTooltip &&
+            "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)]",
         )}
         onClick={() => {
           setOpen(true);
           // Complete openResource step if showing tooltip
           if (shouldShowSidebarTooltip) {
-            setSessionOnboardingStep('openResource', true);
+            setSessionOnboardingStep("openResource", true);
           }
         }}
       >
@@ -432,24 +440,26 @@ const LeftNavigationFooter = memo(
         )}
       >
         <div className="min-h-[28px]">
-          <Unauthenticated>
-            <Button
-              size="sm"
-              className="bg-secondary-normal text-secondary-heavy font-[600]"
-              onClick={() => {
-                setActivePage(Page.Subscribe);
-              }}
-            >
-              <SvgIcon name="astrsk_symbol_fit" size={12} />
-              Subscribe to astrsk+
-            </Button>
-          </Unauthenticated>
-          <Authenticated>
-            <Button size="sm" className="font-[600]">
-              <SvgIcon name="astrsk_symbol_fit" size={12} />
-              Add credits
-            </Button>
-          </Authenticated>
+          <ConvexReady>
+            <Unauthenticated>
+              <Button
+                size="sm"
+                className="bg-secondary-normal text-secondary-heavy font-[600]"
+                onClick={() => {
+                  setActivePage(Page.Subscribe);
+                }}
+              >
+                <SvgIcon name="astrsk_symbol_fit" size={12} />
+                Subscribe to astrsk+
+              </Button>
+            </Unauthenticated>
+            <Authenticated>
+              <Button size="sm" className="font-[600]">
+                <SvgIcon name="astrsk_symbol_fit" size={12} />
+                Add credits
+              </Button>
+            </Authenticated>
+          </ConvexReady>
         </div>
         <div className="w-full flex flex-row justify-end gap-[16px] text-text-primary">
           <div className="flex flex-row gap-[16px]">
