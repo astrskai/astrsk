@@ -12,6 +12,7 @@ interface SaveFileToGeneratedImageRequest {
   style?: string;
   aspectRatio?: string;
   associatedCardId?: UniqueEntityID;
+  inputImageFile?: File; // For image-to-video, the original input image to use as thumbnail
 }
 
 export class SaveFileToGeneratedImage {
@@ -35,16 +36,33 @@ export class SaveFileToGeneratedImage {
 
       return new Promise((resolve) => {
         video.onloadedmetadata = () => {
-          // Set canvas size to video dimensions
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          // Set canvas size to video dimensions (with max size limit for performance)
+          const maxWidth = 800;
+          const maxHeight = 800;
+          let width = video.videoWidth;
+          let height = video.videoHeight;
+          
+          // Scale down if needed while maintaining aspect ratio
+          if (width > maxWidth || height > maxHeight) {
+            const aspectRatio = width / height;
+            if (width > height) {
+              width = maxWidth;
+              height = width / aspectRatio;
+            } else {
+              height = maxHeight;
+              width = height * aspectRatio;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
           
           // Seek to first frame
           video.currentTime = 0.1; // Small offset to ensure we get a frame
         };
 
         video.onseeked = () => {
-          // Draw the current frame to canvas
+          // Draw the current frame to canvas (scaled to fit)
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           
           // Convert canvas to blob
@@ -62,7 +80,7 @@ export class SaveFileToGeneratedImage {
             
             // Clean up
             URL.revokeObjectURL(video.src);
-          }, 'image/jpeg', 0.8);
+          }, 'image/jpeg', 0.9); // Higher quality for thumbnails
         };
 
         video.onerror = () => {
@@ -114,11 +132,22 @@ export class SaveFileToGeneratedImage {
       // Extract and save thumbnail for videos
       let thumbnailAssetId: UniqueEntityID | undefined;
       if (isVideo) {
-        const thumbnailFile = await this.extractVideoThumbnail(request.file);
-        if (thumbnailFile) {
-          const thumbnailAssetResult = await this.saveFileToAsset.execute({ file: thumbnailFile });
+        // For image-to-video: use the input image as thumbnail
+        // For text-to-video: extract thumbnail from the video
+        if (request.inputImageFile) {
+          // Image-to-video: save the original input image as thumbnail
+          const thumbnailAssetResult = await this.saveFileToAsset.execute({ file: request.inputImageFile });
           if (thumbnailAssetResult.isSuccess) {
             thumbnailAssetId = thumbnailAssetResult.getValue().id;
+          }
+        } else {
+          // Text-to-video: extract thumbnail from the generated video
+          const thumbnailFile = await this.extractVideoThumbnail(request.file);
+          if (thumbnailFile) {
+            const thumbnailAssetResult = await this.saveFileToAsset.execute({ file: thumbnailFile });
+            if (thumbnailAssetResult.isSuccess) {
+              thumbnailAssetId = thumbnailAssetResult.getValue().id;
+            }
           }
         }
       }
