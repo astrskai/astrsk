@@ -44,7 +44,6 @@ import { Card, CardType } from "@/modules/card/domain/card";
 import { Session } from "@/modules/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
-import * as amplitude from "@amplitude/analytics-browser";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import {
@@ -153,12 +152,6 @@ const CardItem = ({
       if (!card) {
         return;
       }
-
-      // Track event
-      amplitude.track("delete_card", {
-        card_type: card.props.type,
-        card_token_count: card.props.tokenCount,
-      });
 
       // Delete card
       const deleteResult = await CardService.deleteCard.execute(card.id);

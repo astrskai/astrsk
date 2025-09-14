@@ -65,7 +65,6 @@ import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 import { Turn as MessageEntity } from "@/modules/turn/domain/turn";
 import { parseAiSdkErrorMessage, sanitizeFileName } from "@/shared/utils";
 import { translate } from "@/shared/utils/translate-utils";
-import * as amplitude from "@amplitude/analytics-browser";
 
 const makeContext = async ({
   session,
@@ -1063,12 +1062,6 @@ const addMessage = async ({
       })
     ).throwOnFailure();
   }
-
-  // Track event
-  amplitude.track("add_turn", {
-    session_id: sessionAndMessage.session.id.toString(),
-    turn_count: sessionAndMessage.session.turnIds.length,
-  });
 
   return Result.ok(sessionAndMessage.message);
 };
