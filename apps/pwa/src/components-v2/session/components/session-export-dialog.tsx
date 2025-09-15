@@ -123,7 +123,11 @@ export function SessionExportDialog({
           <Checkbox
             id="include-history"
             checked={includeHistory}
-            onCheckedChange={setIncludeHistory}
+            onCheckedChange={(checked) => {
+              if (typeof checked === 'boolean') {
+                setIncludeHistory(checked);
+              }
+            }}
           />
           <Label
             htmlFor="include-history"
