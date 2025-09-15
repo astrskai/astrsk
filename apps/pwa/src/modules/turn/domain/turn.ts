@@ -130,6 +130,12 @@ export class Turn extends Entity<TurnProps> {
       .getValue();
   }
 
+  public setAssetId(assetId: string | undefined): void {
+    this.options[this.props.selectedOptionIndex] = this.selectedOption
+      .withAssetId(assetId)
+      .getValue();
+  }
+
   public addOption(option: Option): void {
     this.props.options.push(option);
     this.props.selectedOptionIndex = this.props.options.length - 1;

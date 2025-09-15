@@ -49,7 +49,7 @@ const useModelStoreBase = create<ModelState>()(
         }),
 
       // Default image model
-      selectedImageModel: IMAGE_MODELS.NANO_BANANA,
+      selectedImageModel: IMAGE_MODELS.SEEDDREAM_4_0,
       setSelectedImageModel: (model) =>
         set((state) => {
           state.selectedImageModel = model;

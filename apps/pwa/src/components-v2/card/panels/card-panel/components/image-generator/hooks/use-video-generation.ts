@@ -25,7 +25,7 @@ interface UseVideoGenerationProps {
 interface UseVideoGenerationReturn {
   isGeneratingVideo: boolean;
   videoGenerationStatus: string;
-  generateVideo: (config: VideoGenerationConfig) => Promise<void>;
+  generateVideo: (config: VideoGenerationConfig) => Promise<string | undefined>;
 }
 
 export const useVideoGeneration = ({
@@ -138,11 +138,13 @@ export const useVideoGeneration = ({
     });
   }, []);
 
-  // Poll for video generation status
-  const pollVideoStatus = useCallback(async (taskId: string, prompt: string, userPrompt?: string, style?: string, aspectRatio?: string, inputImageFile?: File) => {
+  // Poll for video generation status - returns a promise that resolves with asset ID
+  const pollVideoStatus = useCallback((taskId: string, prompt: string, userPrompt?: string, style?: string, aspectRatio?: string, inputImageFile?: File): Promise<string | undefined> => {
+    return new Promise((resolve, reject) => {
     // Check if this task has already been processed
     if (processedTaskIds.current.has(taskId)) {
       console.log(`Task ${taskId} already processed, skipping polling`);
+      resolve(undefined);
       return;
     }
     
@@ -153,8 +155,9 @@ export const useVideoGeneration = ({
     }
 
     // Do an immediate check first
-    try {
-      const immediateResult = await checkVideoStatus({ taskId });
+    (async () => {
+      try {
+        const immediateResult = await checkVideoStatus({ taskId });
       
       // If already succeeded, process immediately without polling
       if (immediateResult.status === "succeeded" && immediateResult.video) {
@@ -184,23 +187,30 @@ export const useVideoGeneration = ({
             });
 
             if (saveResult.isSuccess) {
+              const savedVideo = saveResult.getValue();
               onSuccess?.();
               toast.success("Video generated and saved successfully!");
+              // Resolve the promise with the asset ID
+              const assetId = savedVideo.props.assetId?.toString();
+              resolve(assetId);
+              return assetId;
             } else {
               console.error("❌ [VIDEO-GENERATOR] Failed to save video:", saveResult.getError());
               toast.error("Failed to save video", {
                 description: saveResult.getError()
               });
+              reject(new Error(saveResult.getError() || "Failed to save video"));
             }
           } catch (videoError) {
             console.error("❌ [VIDEO-GENERATOR] Error processing video:", videoError);
             toast.error("Error processing video", {
               description: videoError instanceof Error ? videoError.message : "Unknown error occurred"
             });
+            reject(videoError);
           }
           
           setIsGeneratingVideo(false);
-          return; // Exit early, no need to poll
+          return; // Exit early, no need to poll - promise already resolved
         }
       } else if (immediateResult.status === "failed") {
         processedTaskIds.current.add(taskId);
@@ -212,6 +222,7 @@ export const useVideoGeneration = ({
         toast.error("Video generation failed", {
           description: errorMessage
         });
+        reject(new Error(errorMessage));
         return; // Exit early, no need to poll
       }
       
@@ -223,12 +234,14 @@ export const useVideoGeneration = ({
         console.warn(`Unknown video status: ${immediateResult.status}`);
         setVideoGenerationStatus("");
         setIsGeneratingVideo(false);
+        resolve(undefined);
         return;
       }
-    } catch (error) {
-      console.error("❌ [VIDEO-GENERATOR] Error checking initial video status:", error);
-      // Continue to set up polling in case of error
-    }
+      } catch (error) {
+        console.error("❌ [VIDEO-GENERATOR] Error checking initial video status:", error);
+        // Continue to set up polling in case of error
+      }
+    })();
 
     // Start polling every 5 seconds only if needed
     pollingIntervalRef.current = setInterval(async () => {
@@ -277,19 +290,26 @@ export const useVideoGeneration = ({
             });
 
             if (saveResult.isSuccess) {
+              const savedVideo = saveResult.getValue();
               onSuccess?.();
               toast.success("Video generated and saved successfully!");
+              // Resolve the promise with the asset ID
+              const assetId = savedVideo.props.assetId?.toString();
+              resolve(assetId);
+              return assetId;
             } else {
               console.error("❌ [VIDEO-GENERATOR] Failed to save video:", saveResult.getError());
               toast.error("Failed to save video", {
                 description: saveResult.getError()
               });
+              reject(new Error(saveResult.getError() || "Failed to save video"));
             }
           } catch (videoError) {
             console.error("❌ [VIDEO-GENERATOR] Error processing video:", videoError);
             toast.error("Error processing video", {
               description: videoError instanceof Error ? videoError.message : "Unknown error occurred"
             });
+            reject(videoError);
           }
           
           setIsGeneratingVideo(false);
@@ -308,12 +328,14 @@ export const useVideoGeneration = ({
           toast.error("Video generation failed", {
             description: errorMessage
           });
+          reject(new Error(errorMessage));
         }
       } catch (error) {
         console.error("❌ [VIDEO-GENERATOR] Error checking video status:", error);
         // Don't clear interval here - let it retry
       }
     }, 5000);
+    });
   }, [cardId, checkVideoStatus, onSuccess]);
 
   const generateVideo = useCallback(async (config: VideoGenerationConfig) => {
@@ -388,8 +410,8 @@ export const useVideoGeneration = ({
       
       if (taskResult && taskResult.taskId) {
         setVideoGenerationStatus("Video generation started...");
-        // Don't await - let it run in background
-        pollVideoStatus(taskResult.taskId, config.prompt, config.userPrompt, config.style, config.aspectRatio, inputImageFile);
+        // Return the promise from polling
+        return await pollVideoStatus(taskResult.taskId, config.prompt, config.userPrompt, config.style, config.aspectRatio, inputImageFile);
       } else {
         throw new Error("Failed to start video generation");
       }

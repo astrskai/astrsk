@@ -40,6 +40,8 @@ import {
   ToggleRight,
   Trash2,
   X,
+  Image,
+  Video,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
@@ -55,6 +57,10 @@ import { cloneDeep } from "lodash-es";
 
 import { useAsset } from "@/app/hooks/use-asset";
 import { useCard } from "@/app/hooks/use-card";
+import { useImageGeneration } from "@/components-v2/card/panels/card-panel/components/image-generator/hooks/use-image-generation";
+import { useVideoGeneration } from "@/components-v2/card/panels/card-panel/components/image-generator/hooks/use-video-generation";
+import { useEnhancedImagePrompt } from "@/components-v2/session/hooks/use-enhanced-image-prompt";
+import { IMAGE_MODELS } from "@/app/stores/model-store";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { turnQueries } from "@/app/queries/turn-queries";
@@ -104,6 +110,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
 
 const MessageItemInternal = ({
+  messageId,
+  sessionId,
   characterCardId,
   isUser,
   content,
@@ -114,13 +122,17 @@ const MessageItemInternal = ({
   streaming,
   streamingAgentName,
   streamingModelName,
+  assetId,
   dataStoreFields,
   onEdit,
   onDelete,
   onPrevOption,
   onNextOption,
   onRegenerate,
+  onUpdateAssetId,
 }: {
+  messageId?: UniqueEntityID;
+  sessionId?: UniqueEntityID;
   characterCardId?: UniqueEntityID;
   isUser?: boolean;
   content?: string;
@@ -131,12 +143,14 @@ const MessageItemInternal = ({
   streaming?: boolean;
   streamingAgentName?: string;
   streamingModelName?: string;
+  assetId?: string;
   dataStoreFields?: DataStoreSavedField[];
   onEdit?: (content: string) => Promise<void>;
   onDelete?: () => Promise<void>;
   onPrevOption?: () => Promise<void>;
   onNextOption?: () => Promise<void>;
   onRegenerate?: () => Promise<void>;
+  onUpdateAssetId?: (assetId: string) => Promise<void>;
 }) => {
   // Character card
   const [characterCard] = useCard<CharacterCard>(characterCardId);
@@ -152,6 +166,113 @@ const MessageItemInternal = ({
 
   // Toggle data store
   const [isShowDataStore, setIsShowDataStore] = useState(false);
+  
+  // Image generation states
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  
+  // Asset URL for displaying generated image
+  const [assetUrl, assetIsVideo] = useAsset(assetId ? new UniqueEntityID(assetId) : undefined);
+  
+  // Enhanced prompt for image generation
+  const { prompt: enhancedPrompt, characterImageUrl } = useEnhancedImagePrompt({
+    content,
+    characterCardId,
+    sessionId,
+    messageId,
+  });
+  
+  // Image generation hook
+  const { generateImage } = useImageGeneration({
+    onSuccess: async () => {
+      // Refresh will be handled by parent component
+    }
+  });
+  
+  // Video generation hook
+  const { generateVideo, isGeneratingVideo, videoGenerationStatus } = useVideoGeneration({
+    onSuccess: async () => {
+      // Refresh will be handled by parent component
+    }
+  });
+  
+  // Handle image generation
+  const handleGenerateImage = useCallback(async () => {
+    if (!content || isGeneratingImage) return;
+    
+    console.log('Starting image generation with:', {
+      content,
+      enhancedPrompt,
+      characterImageUrl,
+      messageId: messageId?.toString(),
+      sessionId: sessionId?.toString(),
+      useImageToImage: !!characterImageUrl,
+    });
+    
+    setIsGeneratingImage(true);
+    try {
+      // Generate image from enhanced prompt
+      // Use image-to-image if character image is available, otherwise text-to-image
+      const assetId = await generateImage({
+        prompt: enhancedPrompt || content, // Fallback to content if enhanced prompt fails
+        userPrompt: content, // Keep original for display
+        selectedModel: IMAGE_MODELS.SEEDDREAM_4_0,
+        imageToImage: !!characterImageUrl, // False for text-to-image, true for image-to-image
+        imageUrl: characterImageUrl || undefined, // Only pass if available
+        aspectRatio: '1:1',
+      });
+      
+      // Update the message with the new asset ID
+      if (assetId && onUpdateAssetId) {
+        console.log('Updating message with asset ID:', assetId);
+        await onUpdateAssetId(assetId);
+      } else {
+        console.error('No asset ID returned from image generation');
+      }
+    } catch (error) {
+      console.error('Failed to generate image:', error);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  }, [content, enhancedPrompt, characterImageUrl, generateImage, isGeneratingImage, onUpdateAssetId, messageId, sessionId]);
+  
+  // Handle video generation
+  const handleGenerateVideo = useCallback(async () => {
+    if (!content || isGeneratingVideo) return;
+    
+    console.log('Starting video generation with:', {
+      content,
+      enhancedPrompt,
+      characterImageUrl,
+      messageId: messageId?.toString(),
+      sessionId: sessionId?.toString(),
+      useImageToVideo: !!characterImageUrl,
+    });
+    
+    try {
+      // Generate video from enhanced prompt
+      // Use image-to-video if character image is available, otherwise text-to-video
+      const assetId = await generateVideo({
+        prompt: enhancedPrompt || content, // Fallback to content if enhanced prompt fails
+        userPrompt: content, // Keep original for display
+        selectedModel: IMAGE_MODELS.SEEDANCE_1_0, // Use Seedance Pro
+        imageToImage: !!characterImageUrl, // False for text-to-video, true for image-to-video
+        imageUrl: characterImageUrl || undefined, // Only pass if available
+        aspectRatio: '1:1',
+        videoDuration: 5, // 5 seconds default
+        videoLoop: false,
+      });
+      
+      // Update the message with the new asset ID
+      if (assetId && onUpdateAssetId) {
+        console.log('Updating message with video asset ID:', assetId);
+        await onUpdateAssetId(assetId);
+      } else {
+        console.error('No asset ID returned from video generation');
+      }
+    } catch (error) {
+      console.error('Failed to generate video:', error);
+    }
+  }, [content, enhancedPrompt, characterImageUrl, generateVideo, isGeneratingVideo, onUpdateAssetId, messageId, sessionId]);
 
   return (
     <div className="group/message relative px-[56px]" tabIndex={0}>
@@ -196,6 +317,25 @@ const MessageItemInternal = ({
               // !streaming && "min-w-[300px]",
             )}
           >
+            {/* Display generated image if exists */}
+            {assetUrl && (
+              <div className="mb-[12px] rounded-[8px] overflow-hidden">
+                {assetIsVideo ? (
+                  <video 
+                    src={assetUrl} 
+                    controls 
+                    className="w-full h-auto rounded-[8px]"
+                  />
+                ) : (
+                  <img 
+                    src={assetUrl} 
+                    alt="Generated content" 
+                    className="w-full h-auto rounded-[8px]"
+                  />
+                )}
+              </div>
+            )}
+            
             {isEditing && !disabled ? (
               <TextareaAutosize
                 className={cn(
@@ -339,6 +479,30 @@ const MessageItemInternal = ({
                 <button className="cursor-pointer" onClick={onRegenerate}>
                   <RefreshCcw size={20} />
                 </button>
+                <button 
+                  className="cursor-pointer" 
+                  onClick={handleGenerateImage}
+                  disabled={isGeneratingImage}
+                  title="Generate image"
+                >
+                  {isGeneratingImage ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <Image size={20} />
+                  )}
+                </button>
+                <button 
+                  className="cursor-pointer" 
+                  onClick={handleGenerateVideo}
+                  disabled={isGeneratingVideo}
+                  title={isGeneratingVideo ? videoGenerationStatus || "Generating video..." : "Generate video"}
+                >
+                  {isGeneratingVideo ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <Video size={20} />
+                  )}
+                </button>
               </div>
             )}
           </div>
@@ -478,6 +642,7 @@ const MessageItem = ({
   ) => Promise<void>;
   generateOption: (messageId: UniqueEntityID) => Promise<void>;
 }) => {
+  const queryClient = useQueryClient();
   const { data: message } = useQuery(turnQueries.detail(messageId));
   const selectedOption = message?.options[message.selectedOptionIndex];
 
@@ -526,6 +691,8 @@ const MessageItem = ({
 
   return (
     <MessageItemInternal
+      messageId={messageId}
+      sessionId={message.sessionId}
       characterCardId={message.characterCardId}
       isUser={isUser}
       content={content}
@@ -536,12 +703,37 @@ const MessageItem = ({
       streaming={typeof streaming !== "undefined"}
       streamingAgentName={streaming?.agentName}
       streamingModelName={streaming?.modelName}
+      assetId={selectedOption?.assetId}
       dataStoreFields={sortedDataStoreFields}
       onEdit={(content) => editMessage(messageId, content)}
       onDelete={() => deleteMessage(messageId)}
       onPrevOption={() => selectOption(messageId, "prev")}
       onNextOption={() => selectOption(messageId, "next")}
       onRegenerate={() => generateOption(messageId)}
+      onUpdateAssetId={async (assetId) => {
+        // Update the option with the new assetId
+        try {
+          const turn = (await TurnService.getTurn.execute(messageId))
+            .throwOnFailure()
+            .getValue();
+          
+          // Update the selected option with the new assetId
+          turn.setAssetId(assetId);
+          
+          // Save the updated turn
+          const result = await TurnService.updateTurn.execute(turn);
+          if (result.isFailure) {
+            console.error('Failed to update turn:', result.getError());
+          } else {
+            // Invalidate the turn query to trigger re-render
+            await queryClient.invalidateQueries({
+              queryKey: turnQueries.detail(messageId).queryKey
+            });
+          }
+        } catch (error) {
+          console.error('Failed to update asset ID:', error);
+        }
+      }}
     />
   );
 };

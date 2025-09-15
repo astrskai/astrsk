@@ -23,7 +23,7 @@ interface UseImageGenerationProps {
 
 interface UseImageGenerationReturn {
   isGeneratingImage: boolean;
-  generateImage: (config: ImageGenerationConfig) => Promise<void>;
+  generateImage: (config: ImageGenerationConfig) => Promise<string | undefined>;
 }
 
 export const useImageGeneration = ({
@@ -222,8 +222,11 @@ export const useImageGeneration = ({
 
       if (saveResult.isSuccess) {
         console.log('Image saved successfully, calling onSuccess callback');
+        const savedImage = saveResult.getValue();
         onSuccess?.();
         toast.success('Image generated successfully!');
+        // Return the asset ID of the saved image
+        return savedImage.props.assetId?.toString();
       } else {
         console.error('Failed to save image:', saveResult.getError());
         throw new Error(saveResult.getError() || 'Failed to save generated image');
