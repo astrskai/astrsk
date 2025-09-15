@@ -1221,7 +1221,7 @@ async function generateTextOutput({
       const modelIdSplitted = modelId.split(":");
       const astrskSource = modelIdSplitted.at(0) as ApiSource;
       parsedModelId = modelIdSplitted.at(1) ?? modelId;
-      const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/${astrskSource}`;
+      const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/${astrskSource}`;
       provider = makeProvider({
         source: modelIdSplitted.at(0) as ApiSource,
         apiKey: "DUMMY",
@@ -1279,8 +1279,11 @@ async function generateTextOutput({
   // Make model
   const model =
     "chat" in provider
-      ? provider.chat(modelId, modelSettings)
-      : (provider.languageModel(modelId, modelSettings) as LanguageModelV1);
+      ? provider.chat(parsedModelId, modelSettings)
+      : (provider.languageModel(
+          parsedModelId,
+          modelSettings,
+        ) as LanguageModelV1);
 
   // Make settings
   const settings = makeSettings({
