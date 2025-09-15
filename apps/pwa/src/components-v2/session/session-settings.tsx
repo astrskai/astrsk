@@ -41,6 +41,7 @@ import {
   EmptyFlow,
 } from "@/components-v2/session/edit-session/edit-flow-and-agents";
 import { EditLanguage } from "@/components-v2/session/edit-session/edit-language";
+import { SessionExportDialog, AgentModelTierInfo } from "@/components-v2/session/components/session-export-dialog";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import {
   Tooltip,
@@ -188,10 +189,8 @@ const SessionSettings = ({
     setTimeout(() => {
       setShowSectionAnimation(false);
     }, 1500);
-    
-    // Close the settings page to go back to session page
-    setIsOpenSettings(false);
   }, [setSessionOnboardingStep, setIsOpenSettings]);
+  
   const [session, invalidateSession] = useSession(selectedSessionId);
   const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
   

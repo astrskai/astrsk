@@ -11,6 +11,7 @@ import { GetAsset } from "@/modules/asset/usecases/get-asset";
 import { GetBackground } from "@/modules/background/usecases/get-background";
 import { ExportCardToFile } from "@/modules/card/usecases";
 import { ExportFlowWithNodes } from "@/modules/flow/usecases/export-flow-with-nodes";
+import { ModelTier } from "@/modules/agent/domain/agent";
 import { Session } from "@/modules/session/domain";
 import { SessionDrizzleMapper } from "@/modules/session/mappers/session-drizzle-mapper";
 import { LoadSessionRepo } from "@/modules/session/repos";
@@ -20,6 +21,7 @@ import { GetTurn } from "@/modules/turn/usecases/get-turn";
 interface Command {
   sessionId: UniqueEntityID;
   includeHistory?: boolean;
+  modelTierSelections?: Map<string, ModelTier>;
 }
 
 export class ExportSessionToFile implements UseCase<Command, Result<File>> {
@@ -62,9 +64,13 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
   private async exportFlowToZip(
     zip: JSZip,
     flowId: UniqueEntityID,
+    modelTierSelections?: Map<string, ModelTier>,
   ): Promise<void> {
     // Export flow to file with nodes
-    const flowOrError = await this.exportFlowWithNodes.execute(flowId);
+    const flowOrError = await this.exportFlowWithNodes.execute({
+      flowId,
+      modelTierSelections,
+    });
     if (flowOrError.isFailure) {
       throw new Error(flowOrError.getError());
     }
@@ -176,6 +182,7 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
   async execute({
     sessionId,
     includeHistory = false,
+    modelTierSelections,
   }: Command): Promise<Result<File>> {
     try {
       // Get session
@@ -194,7 +201,7 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
 
       // Export flow to zip
       if (session.flowId) {
-        await this.exportFlowToZip(zip, session.flowId);
+        await this.exportFlowToZip(zip, session.flowId, modelTierSelections);
       }
 
       // Export card to zip

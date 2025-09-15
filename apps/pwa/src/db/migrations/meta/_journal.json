@@ -120,6 +120,13 @@
       "when": 1757433163764,
       "tag": "20250909155243_coding-panel-removed",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1757914033662,
+      "tag": "20250915052713_agent-model-tier",
+      "breakpoints": true
     }
   ]
 }

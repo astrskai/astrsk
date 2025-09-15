@@ -4,7 +4,7 @@ import { readFileToString } from "@/shared/utils/file-utils";
 import { Flow } from "@/modules/flow/domain/flow";
 import { SaveFlowRepo } from "@/modules/flow/repos/save-flow-repo";
 import { ApiSource } from "@/modules/api/domain";
-import { Agent } from "@/modules/agent/domain";
+import { Agent, ModelTier } from "@/modules/agent/domain";
 import { SaveAgentRepo } from "@/modules/agent/repos";
 import { SaveDataStoreNodeRepo } from "@/modules/data-store-node/repos";
 import { SaveIfNodeRepo } from "@/modules/if-node/repos";

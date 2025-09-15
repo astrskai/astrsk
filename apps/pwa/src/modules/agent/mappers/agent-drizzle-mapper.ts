@@ -4,7 +4,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/utils/logger";
 
 import { SelectAgent, InsertAgent } from "@/db/schema/agents";
-import { Agent, ApiType, OutputFormat } from "@/modules/agent/domain";
+import { Agent, ApiType, OutputFormat, ModelTier } from "@/modules/agent/domain";
 
 export class AgentDrizzleMapper {
   private constructor() {}
@@ -21,6 +21,7 @@ export class AgentDrizzleMapper {
         apiSource: row.api_source ?? undefined,
         modelId: row.model_id ?? undefined,
         modelName: row.model_name ?? undefined,
+        modelTier: row.model_tier as ModelTier ?? undefined,
         promptMessages: row.prompt_messages ? (parse(row.prompt_messages) || []) : [],
         textPrompt: row.text_prompt ?? "",
         enabledParameters: new Map(Object.entries(row.enabled_parameters)),
@@ -64,6 +65,7 @@ export class AgentDrizzleMapper {
       api_source: props.apiSource,
       model_id: props.modelId,
       model_name: props.modelName,
+      model_tier: props.modelTier,
       prompt_messages: stringify(props.promptMessages || []),
       text_prompt: props.textPrompt ?? "",
       enabled_parameters: Object.fromEntries(props.enabledParameters),

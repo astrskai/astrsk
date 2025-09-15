@@ -32,6 +32,11 @@ export enum SchemaFieldType {
   Enum = "enum",
 }
 
+export enum ModelTier {
+  Light = "light",
+  Heavy = "heavy",
+}
+
 export type SchemaField = {
   name: string;
   description?: string;
@@ -62,6 +67,7 @@ export interface AgentProps {
   apiSource?: ApiSource;
   modelId?: string;
   modelName?: string;
+  modelTier?: ModelTier; // Model tier for export/import (Light or Heavy)
 
   // Prompts - separated by completion type
   promptMessages: PromptMessage[]; // For chat completion
@@ -462,6 +468,7 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
           apiSource: json.apiSource ?? undefined,
           modelId: json.modelId ?? undefined,
           modelName: json.modelName ?? undefined,
+          modelTier: json.modelTier ?? undefined,
 
           promptMessages:
             json.promptMessages?.map((message: any) =>

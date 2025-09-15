@@ -2,11 +2,13 @@ import { Result } from "@/shared/core/result";
 import { UseCase } from "@/shared/core/use-case";
 import JSZip from "jszip";
 import { GetModelsFromFlowFile } from "@/modules/flow/usecases/get-models-from-flow-file";
+import { ModelTier } from "@/modules/agent/domain/agent";
 
 type ModelListItem = {
   agentId: string;
   agentName: string;
   modelName: string;
+  modelTier?: ModelTier;
 };
 
 export class GetModelsFromSessionFile
