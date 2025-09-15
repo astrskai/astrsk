@@ -570,7 +570,7 @@ const makeProvider = ({
         baseURL: baseUrl,
         headers: {
           "HTTP-Referer": "https://astrsk.ai",
-          "X-Title": "astrsk.ai",
+          "X-Title": "astrsk",
         },
       };
       const extraBody = {};
