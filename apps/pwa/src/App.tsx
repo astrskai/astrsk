@@ -8,13 +8,13 @@ import { useGlobalErrorHandler } from "@/app/hooks/use-global-error-handler";
 import { queryClient } from "@/app/queries/query-client";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { useSessionStore } from "@/app/stores/session-store";
-import { UniqueEntityID } from "@/shared/domain";
 import DesktopApp from "@/app/v2/desktop-app";
 import MobileApp from "@/app/v2/mobile-app";
 import {
   SidebarInset,
   SidebarLeftProvider,
 } from "@/components-v2/both-sidebar";
+import { GlobalDockView } from "@/components-v2/global-dockview";
 import { usePwa } from "@/components-v2/hooks/use-pwa";
 import { InstallPwa } from "@/components-v2/install-pwa";
 import { LeftNavigationMobile } from "@/components-v2/left-navigation";
@@ -22,7 +22,6 @@ import {
   LeftNavigation,
   LeftNavigationTrigger,
 } from "@/components-v2/left-navigation/left-navigation";
-import { GlobalDockView } from "@/components-v2/global-dockview";
 import { cn } from "@/components-v2/lib/utils";
 import { Loading } from "@/components-v2/loading";
 import { PaymentPage } from "@/components-v2/setting/payment-page";
@@ -32,8 +31,17 @@ import { ThemeProvider } from "@/components-v2/theme-provider";
 import { TopBar } from "@/components-v2/top-bar";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
 import { Toaster } from "@/components-v2/ui/sonner";
-import { logger } from "@/shared/utils/logger";
+import { UniqueEntityID } from "@/shared/domain";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
+import {
+  Outlet,
+  RouterProvider,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from "@tanstack/react-router";
 
 // Mobile navigation context
 const MobileNavigationContext = createContext<{
@@ -65,7 +73,8 @@ function V2Layout({
 
   // Onboarding-based sidebar control
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
-  const onboardingSelectedSessionId = useAppStore.use.onboardingSelectedSessionId();
+  const onboardingSelectedSessionId =
+    useAppStore.use.onboardingSelectedSessionId();
   const setActivePage = useAppStore.use.setActivePage();
 
   // Session store for restoring selected session
@@ -84,23 +93,29 @@ function V2Layout({
         console.log("In onboarding session play state");
         // Always navigate to sessions page when in session play state
         setActivePage(Page.Sessions);
-        
+
         // If we have a stored session, select it
         if (onboardingSelectedSessionId) {
-          console.log("Restoring onboarding session:", onboardingSelectedSessionId);
+          console.log(
+            "Restoring onboarding session:",
+            onboardingSelectedSessionId,
+          );
           setTimeout(() => {
-            selectSession(new UniqueEntityID(onboardingSelectedSessionId), "Onboarding Session");
+            selectSession(
+              new UniqueEntityID(onboardingSelectedSessionId),
+              "Onboarding Session",
+            );
           }, 100);
         }
       }
     }
   }, [
     defaultInitialized,
-    sessionOnboardingSteps, 
-    onboardingSelectedSessionId, 
-    setActivePage, 
+    sessionOnboardingSteps,
+    onboardingSelectedSessionId,
+    setActivePage,
     selectSession,
-    isInOnboardingFlow
+    isInOnboardingFlow,
   ]);
 
   // Initialize global error handler
@@ -208,9 +223,7 @@ function V2Layout({
         )}
       >
         <TopBar />
-        <SidebarLeftProvider 
-          defaultOpen={!isMobile && !shouldCloseSidebar}
-        >
+        <SidebarLeftProvider defaultOpen={!isMobile && !shouldCloseSidebar}>
           <LeftNavigation />
           <LeftNavigationTrigger />
           <SidebarInset>
@@ -245,10 +258,36 @@ const AppInternal = () => {
   );
 };
 
+const rootRoute = createRootRoute({
+  component: () => <Outlet />,
+});
+
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: () => <AppInternal />,
+});
+
+const ssoCallbackRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/sso-callback",
+  component: () => <AuthenticateWithRedirectCallback />,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, ssoCallbackRoute]);
+
+const router = createRouter({ routeTree });
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppInternal />
+      <RouterProvider router={router} />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
