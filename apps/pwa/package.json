@@ -63,6 +63,7 @@
     "@tanstack/query-persist-client-core": "5.80.7",
     "@tanstack/react-query": "5.80.7",
     "@tanstack/react-query-devtools": "5.80.7",
+    "@tanstack/react-router": "^1.131.44",
     "@tanstack/react-virtual": "^3.13.12",
     "@wllama/wllama": "^2.2.1",
     "@xyflow/react": "^12.5.5",
