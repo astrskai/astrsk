@@ -8,20 +8,26 @@ export interface GeneratedImageProps {
   prompt: string;
   style?: string;
   aspectRatio?: string;
+  mediaType?: string; // 'image' or 'video'
+  thumbnailAssetId?: UniqueEntityID; // For video thumbnails
   associatedCardId?: UniqueEntityID;
+  isSessionGenerated?: boolean; // True for images/videos generated in sessions
   createdAt: Date;
   updatedAt: Date;
 }
 
 export const GeneratedImagePropsKeys = [
   "name",
-  "assetId", 
+  "assetId",
   "prompt",
   "style",
   "aspectRatio",
+  "mediaType",
+  "thumbnailAssetId",
   "associatedCardId",
+  "isSessionGenerated",
   "createdAt",
-  "updatedAt"
+  "updatedAt",
 ];
 
 type CreateGeneratedImageProps = Partial<GeneratedImageProps>;
@@ -47,8 +53,20 @@ export class GeneratedImage extends AggregateRoot<GeneratedImageProps> {
     return this.props.aspectRatio;
   }
 
+  get mediaType(): string | undefined {
+    return this.props.mediaType;
+  }
+
+  get thumbnailAssetId(): UniqueEntityID | undefined {
+    return this.props.thumbnailAssetId;
+  }
+
   get associatedCardId(): UniqueEntityID | undefined {
     return this.props.associatedCardId;
+  }
+
+  get isSessionGenerated(): boolean {
+    return this.props.isSessionGenerated || false;
   }
 
   get createdAt(): Date {
@@ -119,7 +137,10 @@ export class GeneratedImage extends AggregateRoot<GeneratedImageProps> {
           prompt: props.prompt ?? "",
           style: props.style,
           aspectRatio: props.aspectRatio,
+          mediaType: props.mediaType,
+          thumbnailAssetId: props.thumbnailAssetId,
           associatedCardId: props.associatedCardId,
+          isSessionGenerated: props.isSessionGenerated ?? false,
           createdAt: props.createdAt ?? now,
           updatedAt: props.updatedAt ?? now,
         },

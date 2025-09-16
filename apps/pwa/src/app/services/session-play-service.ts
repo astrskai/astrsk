@@ -209,6 +209,7 @@ const makeContext = async ({
         all_char_entries.push(...activatedEntries);
       } catch (error) {
         // Ignore lorebook scan errors
+        console.log("Lorebook scan error:", error);
       }
     }
 

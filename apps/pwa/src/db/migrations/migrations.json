@@ -162,6 +162,30 @@
     ],
     "bps": true,
     "folderMillis": 1757914033662,
-    "hash": "b9b8d48a1ac8368b81e94aa1b873fd9893bab7ebcf73d4680c59076c3dc7e65d"
+    "hash": "b9b8d48a1ac8368b81e94aa1b873fd9893bab7ebcf73d4680c59076c3dc7e65d"  
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"generated_images\" ADD COLUMN \"media_type\" varchar;"
+    ],
+    "bps": true,
+    "folderMillis": 1757577968859,
+    "hash": "f40689e7a74bf0fd55af7dcfbda998e4a9488611c23fc26edfd812aac0c8aa17"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"generated_images\" ADD COLUMN \"thumbnail_asset_id\" uuid;"
+    ],
+    "bps": true,
+    "folderMillis": 1757679083372,
+    "hash": "a36d78efc589e165c22db2446fd3e9cf7dc3bf278c02c0c3cbc79ab4198bcbea"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"generated_images\" ADD COLUMN \"is_session_generated\" boolean DEFAULT false;"
+    ],
+    "bps": true,
+    "folderMillis": 1757997490794,
+    "hash": "3cdfbe81ad371b820b631d650c9d46d23fffe280527b62827a1463abcf063b86"
   }
 ]

@@ -60,11 +60,19 @@ const useAsset = (assetId?: UniqueEntityID) => {
   const { data: opfsFilePath, isFetching } = useQuery(
     assetQueries.detail(assetId),
   );
+  
+  // Get full asset metadata including mime type
+  const { data: assetData } = useQuery(
+    assetQueries.fullDetail(assetId),
+  );
 
   // Get OPFS file object URL
   const { data: opfsFileObjectURL } = useOpfsFile(opfsFilePath);
+  
+  // Check if it's a video based on mime type
+  const isVideo = assetData?.mimeType?.startsWith('video/') || false;
 
-  return [isFetching ? SKELETON_PATH : opfsFileObjectURL] as const;
+  return [isFetching ? SKELETON_PATH : opfsFileObjectURL, isVideo] as const;
 };
 
 export { useAsset };

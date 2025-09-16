@@ -101,21 +101,27 @@ export class Turn extends Entity<TurnProps> {
   }
 
   public setContent(content: string): void {
-    this.options[this.props.selectedOptionIndex] = this.selectedOption
+    const updatedOption = this.selectedOption
       .withContent(content)
       .getValue();
+    this.props.options[this.props.selectedOptionIndex] = updatedOption;
+    this.props.updatedAt = new Date();
   }
 
   public setTokenSize(tokenSize: number): void {
-    this.options[this.props.selectedOptionIndex] = this.selectedOption
+    const updatedOption = this.selectedOption
       .withTokenSize(tokenSize)
       .getValue();
+    this.props.options[this.props.selectedOptionIndex] = updatedOption;
+    this.props.updatedAt = new Date();
   }
 
   public setVariables(variables: object): void {
-    this.options[this.props.selectedOptionIndex] = this.selectedOption
+    const updatedOption = this.selectedOption
       .withVariables(variables)
       .getValue();
+    this.props.options[this.props.selectedOptionIndex] = updatedOption;
+    this.props.updatedAt = new Date();
   }
 
   public setTranslation(language: string, translation: string): void {
@@ -125,9 +131,19 @@ export class Turn extends Entity<TurnProps> {
   }
 
   public setDataStore(dataStore: DataStoreSavedField[]): void {
-    this.options[this.props.selectedOptionIndex] = this.selectedOption
+    const updatedOption = this.selectedOption
       .withDataStore(dataStore)
       .getValue();
+    this.props.options[this.props.selectedOptionIndex] = updatedOption;
+    this.props.updatedAt = new Date();
+  }
+
+  public setAssetId(assetId: string | undefined): void {
+    const updatedOption = this.selectedOption
+      .withAssetId(assetId)
+      .getValue();
+    this.props.options[this.props.selectedOptionIndex] = updatedOption;
+    this.props.updatedAt = new Date();
   }
 
   public addOption(option: Option): void {

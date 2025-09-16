@@ -1,207 +1,74 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { UniqueEntityID } from "@/shared/domain";
+import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { Button } from "@/components-v2/ui/button";
 import { Textarea } from "@/components-v2/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
-import { Loader2, Download, Sparkles, Upload, Image, Type, Copy } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components-v2/ui/tooltip";
-import { Switch } from "@/components-v2/ui/switch";
-import { GeneratedImageService } from "@/app/services/generated-image-service";
-import { GeneratedImage } from "@/modules/generated-image/domain";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components-v2/ui/select";
+import { Loader2, Sparkles } from "lucide-react";
+import { Slider } from "@/components-v2/ui/slider";
+import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { useAsset } from "@/app/hooks/use-asset";
-import { 
-  CardPanelProps, 
-  CardPanelLoading, 
-  CardPanelError,
-  useCardPanel 
+import {
+  CardPanelProps,
+  useCardPanel,
 } from "@/components-v2/card/panels/hooks/use-card-panel";
 import { useResourceData } from "@/components-v2/right-navigation/vibe-panel/hooks/use-resource-data";
 import { useAppStore, Page } from "@/app/stores/app-store";
-import { CardType } from "@/modules/card/domain";
-import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
-import { useNanoBananaGenerator, CustomImageResponse, ImageToImageResponse } from "@/app/hooks/use-nano-banana-generator";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { generatedImageQueries, generatedImageKeys } from "@/app/queries/generated-image/query-factory";
-import { cn } from "@/shared/utils";
+import {
+  generatedImageQueries,
+  generatedImageKeys,
+} from "@/app/queries/generated-image/query-factory";
 import { useModelStore, IMAGE_MODELS } from "@/app/stores/model-store";
 import { toast } from "sonner";
+import { VIDEO_SETTINGS, GALLERY_LAYOUT } from "./image-generator/constants";
+import { ImageItem } from "./image-generator/components/image-item";
+import { ImageToImageSetting } from "./image-generator/components/image-to-image-setting";
+import { useVideoGeneration } from "./image-generator/hooks/use-video-generation";
+import { useImageGeneration } from "./image-generator/hooks/use-image-generation";
+import { enhancePromptWithCardContext } from "./image-generator/utils";
 
-interface ImageGeneratorPanelProps extends CardPanelProps {}
-
-// Image to Image Setting Component
-const ImageToImageSetting = ({
-  enabled,
-  onToggle,
-  cardImageUrl,
-  disabled = false
-}: {
-  enabled: boolean;
-  onToggle: (enabled: boolean) => void;
-  cardImageUrl?: string;
-  disabled?: boolean;
-}) => {
-  // Three states: no image (disabled), image available (off), image available (on)
-  const hasCardImage = !!cardImageUrl;
-  const isDisabled = disabled || !hasCardImage;
-
-  return (
-    <div className="w-full inline-flex justify-start items-start gap-2">
-      <div className="inline-flex flex-col justify-center items-center">
-        <Switch
-          checked={enabled && hasCardImage}
-          onCheckedChange={(checked) => hasCardImage && !disabled && onToggle(checked)}
-          disabled={isDisabled}
-          size="small"
-          className={cn(
-            // Override default off state background to match design
-            "data-[state=unchecked]:bg-alpha-80/20"
-          )}
-        />
-      </div>
-      <div className="flex-1 inline-flex flex-col justify-center items-start gap-2">
-        <div className="inline-flex justify-start items-center gap-2">
-          <div className={`justify-center text-xs font-semibold leading-none ${
-            isDisabled 
-              ? 'text-text-info' 
-              : hasCardImage && !enabled 
-                ? 'text-text-primary opacity-60'
-                : 'text-text-primary'
-          }`}>
-            Image to image
-          </div>
-        </div>
-        <div className="self-stretch justify-start text-text-info text-xs font-normal">
-          {isDisabled ? 'Select an image to unlock transformation' : 'Transform the selected image based on your prompt'}
-        </div>
-      </div>
-      <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
-        hasCardImage ? 'bg-neutral-500/60 overflow-hidden' : 'bg-background-surface-4'
-      } ${hasCardImage && !enabled ? 'opacity-60' : ''}`}>
-        {hasCardImage ? (
-          <img 
-            src={cardImageUrl} 
-            alt="Card image" 
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-6 h-6 relative overflow-hidden flex items-center justify-center">
-            <Image className="w-4 h-4 text-text-subtle" />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Image item component
-const ImageItem = ({ 
-  image, 
-  isGenerating,
-  isSelected,
-  onDownload,
-  onUseAsCardImage,
-  onSelect
-}: { 
-  image: GeneratedImage; 
-  isGenerating?: boolean;
-  isSelected?: boolean;
-  onDownload: (url: string, prompt: string) => void;
-  onUseAsCardImage: (imageUrl: string, assetId: UniqueEntityID) => void;
-  onSelect: (imageUrl: string, assetId: UniqueEntityID) => void;
-}) => {
-  const [assetUrl] = useAsset(image.assetId);
-
-  return (
-    <div 
-      className="relative bg-background-surface-0 overflow-hidden w-16 h-32 cursor-pointer"
-      onClick={() => {
-        if (assetUrl) {
-          onSelect(assetUrl, image.assetId);
-        }
-      }}
-    >
-      {isGenerating ? (
-        <div className="w-full h-full flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-text-subtle" />
-        </div>
-      ) : assetUrl ? (
-        <>
-          <img
-            src={assetUrl}
-            alt={image.prompt}
-            className="w-full h-full object-cover"
-          />
-          {/* Selected border overlay using inset */}
-          {isSelected && (
-            <div className="absolute inset-0 border-[3px] border-text-primary pointer-events-none" />
-          )}
-        </>
-      ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="text-text-subtle text-xs">Failed to load</div>
-        </div>
-      )}
-      
-      {/* Prompt tooltip */}
-      <div className="absolute bottom-1 right-1">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="p-1 bg-background-surface-4/50 rounded-md inline-flex justify-start items-center gap-2">
-                <div className="w-3 h-3 relative overflow-hidden">
-                  <Type className="w-3 h-3 text-text-primary" />                
-                </div>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent className="relative pr-8 pb-6">
-              <p className="text-xs max-w-xs pr-2 pb-2">{image.prompt}</p>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.clipboard.writeText(image.prompt);
-                }}
-                className="absolute bottom-1 right-1 p-1 hover:bg-background-surface-4 rounded transition-colors"
-                title="Copy prompt"
-              >
-                <Copy className="w-3 h-3 text-text-subtle hover:text-text-primary transition-colors" />
-              </button>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-    </div>
-  );
-};
-
-export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
+export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
   // Card data hook
   const { card } = useCardPanel({ cardId });
-  
+
   // Get app state for resource gathering
   const activePage = useAppStore((state) => state.activePage);
   const isCardPage = activePage === Page.Cards || activePage === Page.CardPanel;
-  
+
   // Resource data gathering (same pattern as AI panel)
-  const {
-    resourceType,
-    resourceName,
-    editableData,
-    selectedCard,
-  } = useResourceData({
+  const { selectedCard } = useResourceData({
     selectedCardId: cardId,
     selectedFlowId: null,
     isCardPage,
     isFlowPage: false,
   });
-  
+
   // Query client for invalidation
   const queryClient = useQueryClient();
-  
+
   // Query for all generated images (global resource)
-  const { data: generatedImages = [], isLoading, error } = useQuery({
+  const { data: allGeneratedImages = [], isLoading } = useQuery({
     ...generatedImageQueries.list(),
   });
+
+  // Filter out session-generated images from gallery
+  const generatedImages = useMemo(() => {
+    const filtered = allGeneratedImages.filter((image) => {
+      // Explicitly check for true to filter out session-generated images
+      // Treat undefined/null as false (not session-generated) for backward compatibility
+      return image.isSessionGenerated !== true;
+    });
+
+    return filtered;
+  }, [allGeneratedImages]);
 
   // Sync selected state with current card icon
   useEffect(() => {
@@ -211,68 +78,6 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
       setSelectedImageAssetId(undefined);
     }
   }, [card?.props?.iconAssetId]);
-  
-  // Nano banana generator hook
-  const { generateCustomImage, generateImageToImage } = useNanoBananaGenerator();
-  
-  // Card icon asset mutation
-  const updateCardIconAsset = useUpdateCardIconAsset(cardId);
-  
-  // Card icon asset hook
-  const [cardIconAssetUrl] = useAsset(card?.props?.iconAssetId);
-  
-  // UI state
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState("photorealistic"); // Hidden but functional
-  const [selectedAspectRatio, setSelectedAspectRatio] = useState("2:3"); // Hidden but functional
-  const [useCardImage, setUseCardImage] = useState(false); // Switch to use card image as input
-  
-  // Use global model store instead of local state
-  const selectedModel = useModelStore.use.selectedImageModel();
-  const setSelectedModel = useModelStore.use.setSelectedImageModel();
-  
-  // Local form state
-  const [imagePrompt, setImagePrompt] = useState("");
-  const [generatingImages, setGeneratingImages] = useState<Set<string>>(new Set());
-  const [selectedImageAssetId, setSelectedImageAssetId] = useState<string | undefined>(undefined);
-  
-  // Image-to-image state
-  const [inputImage, setInputImage] = useState<File | null>(null);
-  const [inputImagePreview, setInputImagePreview] = useState<string | null>(null);
-  const [generationMode, setGenerationMode] = useState<'text-to-image' | 'image-to-image'>('text-to-image');
-  
-  // Panel height tracking
-  const panelRef = useRef<HTMLDivElement>(null);
-  const [panelHeight, setPanelHeight] = useState<number>(0);
-
-  // Track panel height and recalculate when content changes
-  useEffect(() => {
-    const updateHeight = () => {
-      if (panelRef.current) {
-        setPanelHeight(panelRef.current.clientHeight);
-      }
-    };
-
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-    
-    return () => window.removeEventListener('resize', updateHeight);
-  }, []);
-
-  // Recalculate layout when images or loading state changes
-  useEffect(() => {
-    // Small delay to ensure DOM has updated
-    const timer = setTimeout(() => {
-      if (panelRef.current) {
-        setPanelHeight(panelRef.current.clientHeight);
-        // Force a re-render to recalculate image layout
-        const event = new Event('resize');
-        window.dispatchEvent(event);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [generatedImages.length, isLoading, isGenerating]);
 
   // Function to invalidate and refresh global images
   const refreshGlobalImages = useCallback(async () => {
@@ -281,306 +86,239 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
     });
   }, [queryClient]);
 
+  // Custom generation hooks
+  const { isGeneratingVideo, generateVideo } = useVideoGeneration({
+    cardId,
+    onSuccess: refreshGlobalImages,
+  });
+
+  const { isGeneratingImage, generateImage } = useImageGeneration({
+    cardId,
+    onSuccess: refreshGlobalImages,
+  });
+
+  // Card icon asset mutation
+  const updateCardIconAsset = useUpdateCardIconAsset(cardId);
+
+  // Card icon asset hook - returns [url, isVideo]
+  const [cardIconAssetUrl, cardIconIsVideo] = useAsset(
+    card?.props?.iconAssetId,
+  );
+
+  // Find the selected generated image to get its thumbnail if it's a video
+  const selectedGeneratedImage = generatedImages.find(
+    (img) =>
+      card?.props?.iconAssetId &&
+      img.assetId.toString() === card.props.iconAssetId.toString(),
+  );
+
+  // Use thumbnail for videos, otherwise use the main asset
+  const [thumbnailAssetUrl] = useAsset(
+    selectedGeneratedImage?.thumbnailAssetId,
+  );
+  const imageToUseForGeneration =
+    selectedGeneratedImage?.mediaType === "video" && thumbnailAssetUrl
+      ? thumbnailAssetUrl
+      : cardIconAssetUrl;
+
+  // UI state
+  const isGenerating = isGeneratingVideo || isGeneratingImage;
+  const [selectedAspectRatio] = useState("2:3"); // Hidden but functional
+
+  // Use global model store for persisted settings
+  const selectedModel = useModelStore.use.selectedImageModel();
+  const setSelectedModel = useModelStore.use.setSelectedImageModel();
+  const videoDuration = useModelStore.use.videoDuration();
+  const setVideoDuration = useModelStore.use.setVideoDuration();
+  const useCardImage = useModelStore.use.useCardImageForVideo();
+  const setUseCardImage = useModelStore.use.setUseCardImageForVideo();
+
+  // Local form state
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [generatingImages] = useState<Set<string>>(new Set());
+  const [selectedImageAssetId, setSelectedImageAssetId] = useState<
+    string | undefined
+  >(undefined);
+
   // Change handlers
   const handlePromptChange = useCallback((value: string) => {
     setImagePrompt(value);
   }, []);
 
-  // Style options (hidden but functional)
-  const styleOptions = [
-    { value: "photorealistic", label: "Photorealistic" },
-    { value: "artistic", label: "Artistic" },
-    { value: "cartoon", label: "Cartoon" },
-    { value: "anime", label: "Anime" },
-    { value: "oil painting", label: "Oil Painting" },
-    { value: "watercolor", label: "Watercolor" },
-    { value: "digital art", label: "Digital Art" },
-    { value: "vintage", label: "Vintage" },
-    { value: "minimalist", label: "Minimalist" },
-    { value: "abstract", label: "Abstract" },
-  ];
-
-  const aspectRatioOptions = [
-    { value: "2:3", label: "Card Size (2:3)" },
-    { value: "1:1", label: "Square (1:1)" },
-    { value: "16:9", label: "Widescreen (16:9)" },
-    { value: "9:16", label: "Portrait (9:16)" },
-    { value: "4:3", label: "Classic (4:3)" },
-    { value: "3:4", label: "Portrait Classic (3:4)" },
-    { value: "2:1", label: "Panoramic (2:1)" },
-    { value: "1:2", label: "Tall Portrait (1:2)" },
-  ];
-
-
   // File upload handler
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = useCallback(async (file: File) => {
-    if (!file) return;
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      if (!file) return;
 
-    try {
-      const result = await GeneratedImageService.saveFileToGeneratedImage.execute({
-        file,
-        prompt: file.name.replace(/\.[^/.]+$/, ""), // Use filename without extension as prompt
-        style: selectedStyle,
-        aspectRatio: selectedAspectRatio,
-        associatedCardId: cardId ? new UniqueEntityID(cardId) : undefined,
-      });
+      try {
+        const result =
+          await GeneratedImageService.saveFileToGeneratedImage.execute({
+            file,
+            prompt: file.name.replace(/\.[^/.]+$/, ""), // Use filename without extension as prompt
+            aspectRatio: selectedAspectRatio,
+            associatedCardId: cardId ? new UniqueEntityID(cardId) : undefined,
+          });
 
-      if (result.isSuccess) {
-        // Invalidate queries to refresh the image list
-        await refreshGlobalImages();
-      } else {
-        console.error("Failed to upload file:", result.getError());
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    }
-  }, [selectedStyle, selectedAspectRatio, cardId, refreshGlobalImages]);
-
-  // Helper function to convert image URL to base64 with aggressive size reduction
-  const urlToBase64 = useCallback(async (url: string): Promise<{ base64: string; mimeType: string }> => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    
-    // Create canvas to resize image very aggressively
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    return new Promise((resolve, reject) => {
-      const img = document.createElement('img');
-      
-      img.onload = () => {
-        // Set small dimensions - max 256px for better quality while staying under token limit
-        const MAX_SIZE = 256*4;
-        let { width, height } = img;
-        
-        if (width > height) {
-          if (width > MAX_SIZE) {
-            height = (height * MAX_SIZE) / width;
-            width = MAX_SIZE;
-          }
+        if (result.isSuccess) {
+          // Invalidate queries to refresh the image list
+          await refreshGlobalImages();
         } else {
-          if (height > MAX_SIZE) {
-            width = (width * MAX_SIZE) / height;
-            height = MAX_SIZE;
-          }
+          console.error("Failed to upload file:", result.getError());
         }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        // Draw and compress very aggressively
-        ctx!.drawImage(img, 0, 0, width, height);
-        
-        // Convert to base64 with very high compression (0.1 quality)
-        canvas.toBlob(
-          (compressedBlob) => {
-            if (!compressedBlob) {
-              reject(new Error('Failed to compress image'));
-              return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = () => {
-              const result = reader.result as string;
-              const base64 = result.split(',')[1];
-              const mimeType = 'image/jpeg';
-              
-              resolve({ base64, mimeType });
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(compressedBlob);
-          },
-          'image/jpeg',
-          0.1 // Very low quality for maximum compression
-        );
-      };
-      
-      img.onerror = reject;
-      img.crossOrigin = 'anonymous'; // Handle CORS
-      img.src = url;
-    });
-  }, []);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
+    },
+    [selectedAspectRatio, cardId, refreshGlobalImages],
+  );
 
-  // Nano banana image generation function
+  // Unified generation function
   const handleGenerateImage = useCallback(async () => {
     if (!imagePrompt.trim()) return;
 
     // Check if we need card image but it's not available
-    if (useCardImage && !cardIconAssetUrl) {
-      toast("Card image is required but not available. Please upload an image to the card first.");
+    if (useCardImage && !imageToUseForGeneration) {
+      toast(
+        "Card image is required but not available. Please upload an image to the card first.",
+      );
       return;
     }
 
-    setIsGenerating(true);
-    
-    try {
-      // Generate enhanced prompt with card data
-      let enhancedPrompt = imagePrompt;
-      
-      if (selectedCard) {
-        // Convert card to JSON using drizzle mapper
-        const cardJson = CardDrizzleMapper.toPersistence(selectedCard);
-        
-        // Add card context to prompt
-        enhancedPrompt = `This is the card data in JSON format:
-${JSON.stringify(cardJson, null, 2)}
+    // Generate enhanced prompt with card data
+    const enhancedPrompt = enhancePromptWithCardContext(
+      imagePrompt,
+      selectedCard,
+    );
 
-Based on this card data and the user's request, generate an image: ${imagePrompt}`;
-      }
-      
-      let result: CustomImageResponse | ImageToImageResponse;
+    // Check if we should generate video
+    const isVideoModel =
+      selectedModel === IMAGE_MODELS.SEEDANCE_1_0 ||
+      selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0;
 
-      if (useCardImage && cardIconAssetUrl) {
-        // Image-to-image generation using card image
-        const { base64, mimeType } = await urlToBase64(cardIconAssetUrl);
+    if (isVideoModel) {
+      // Use video generation hook
+      await generateVideo({
+        prompt: enhancedPrompt,
+        userPrompt: imagePrompt, // Pass original user prompt for display
+        aspectRatio: selectedAspectRatio,
+        imageToImage: useCardImage,
+        imageUrl: imageToUseForGeneration || undefined,
+        selectedModel,
+        videoDuration,
+      });
+    } else {
+      // Use image generation hook
+      await generateImage({
+        prompt: enhancedPrompt,
+        userPrompt: imagePrompt, // Pass original user prompt for display
+        aspectRatio: selectedAspectRatio,
+        imageToImage: useCardImage,
+        imageUrl: imageToUseForGeneration || undefined,
+        selectedModel,
+      });
+    }
+  }, [
+    imagePrompt,
+    selectedAspectRatio,
+    useCardImage,
+    imageToUseForGeneration,
+    selectedModel,
+    selectedCard,
+    videoDuration,
+    generateVideo,
+    generateImage,
+  ]);
 
-        //TODO add modelId
-        result = await generateImageToImage({
-          inputImageBase64: base64,
-          inputImageMimeType: mimeType,
-          prompt: enhancedPrompt,
-          style: selectedStyle,
-          aspectRatio: selectedAspectRatio,
-        });
-      } else {
-        // Regular text-to-image generation
-        result = await generateCustomImage({
-          prompt: enhancedPrompt,
-          style: selectedStyle,
-          aspectRatio: selectedAspectRatio,
-        });
-      }
+  const handleDownloadImage = useCallback(
+    (imageUrl: string, prompt: string, isVideo: boolean) => {
+      // Set extension based on media type
+      let extension = isVideo ? "mp4" : "webp"; // Default to mp4 for video, webp for images
 
-      if (result.success && result.images && result.images.length > 0) {
-        // Process each generated image - now they come with URLs from file storage
-        for (const imageData of result.images) {
-          try {
-            // Fetch the image from the storage URL to convert to File for GeneratedImageService
-            const response = await fetch(imageData.url);
-            const blob = await response.blob();
-            const file = new File([blob], `nano-banana-${imageData.id}.png`, { type: imageData.mimeType || "image/png" });
+      // Try to detect actual extension from URL if available
+      if (!imageUrl.startsWith("blob:")) {
+        // For non-blob URLs, try to extract extension
+        const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+        const imageExtensions = [".png", ".jpg", ".jpeg", ".webp", ".gif"];
 
-            // Save to GeneratedImageService with card association
-            // Always use the original user prompt (not the enhanced prompt with card context)
-            const saveResult = await GeneratedImageService.saveFileToGeneratedImage.execute({
-              file,
-              prompt: imagePrompt, // Always use the original user input
-              style: imageData.style || selectedStyle,
-              aspectRatio: imageData.aspectRatio || selectedAspectRatio,
-              associatedCardId: cardId ? new UniqueEntityID(cardId) : undefined,
-            });
-
-            if (saveResult.isSuccess) {
-              // Invalidate queries to refresh the image list
-              await refreshGlobalImages();
-            } else {
-              console.error("❌ [IMAGE-GENERATOR] Failed to save image:", saveResult.getError());
-            }
-          } catch (imageError) {
-            console.error("❌ [IMAGE-GENERATOR] Error processing image:", imageError);
+        const extensions = isVideo ? videoExtensions : imageExtensions;
+        for (const ext of extensions) {
+          if (imageUrl.toLowerCase().includes(ext)) {
+            extension = ext.substring(1); // Remove the dot
+            break;
           }
         }
-      } else {
-        console.error("❌ [IMAGE-GENERATOR] No images generated or generation failed:", result.error);
-        // Show user-friendly error message
-        toast(`Image generation failed: ${result.error || "No images were generated. This may be due to content policy restrictions or technical issues."}`);
       }
-      
-    } catch (error) {
-      console.error("❌ [IMAGE-GENERATOR] Error generating image:", error);
-      // Show user-friendly error message
-      toast(`Image generation failed: ${error instanceof Error ? error.message : "An unexpected error occurred. Please try again."}`);
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [imagePrompt, selectedStyle, selectedAspectRatio, generateCustomImage, generateImageToImage, useCardImage, cardIconAssetUrl, urlToBase64, selectedModel]);
 
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.download = `generated-${prompt.slice(0, 20).replace(/[^a-zA-Z0-9]/g, "-")}-${Date.now()}.${extension}`;
+      link.click();
+    },
+    [],
+  );
 
-  const handleDownloadImage = useCallback((imageUrl: string, prompt: string) => {
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = `generated-${prompt.slice(0, 20)}-${Date.now()}.png`;
-    link.click();
-  }, []);
+  const handleSelectImage = useCallback(
+    async (_imageUrl: string, assetId: UniqueEntityID) => {
+      try {
+        // Set the selected state
+        setSelectedImageAssetId(assetId.toString());
 
-  const handleSelectImage = useCallback(async (imageUrl: string, assetId: UniqueEntityID) => {
-    try {
-      // Set the selected state
-      setSelectedImageAssetId(assetId.toString());
-      
-      // Update card icon to use the selected image
-      updateCardIconAsset.mutate(assetId.toString(), {
-        onSuccess: () => {
-          // Could add a toast notification here
-        },
-        onError: (error) => {
-          console.error("❌ Failed to update card image:", error);
-          alert("Failed to set card image: " + (error instanceof Error ? error.message : "Unknown error"));
-          // Reset selection on error
-          setSelectedImageAssetId(undefined);
-        }
-      });
-      
-    } catch (error) {
-      console.error("❌ Error setting card image:", error);
-      alert("Failed to set card image: " + (error instanceof Error ? error.message : "Unknown error"));
-      // Reset selection on error
-      setSelectedImageAssetId(undefined);
-    }
-  }, [updateCardIconAsset]);
+        // Update card icon to use the selected image
+        updateCardIconAsset.mutate(assetId.toString(), {
+          onSuccess: () => {
+            // Could add a toast notification here
+          },
+          onError: (error) => {
+            console.error("❌ Failed to update card image:", error);
+            toast.error("Failed to set card image", {
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Unknown error occurred",
+            });
+            // Reset selection on error
+            setSelectedImageAssetId(undefined);
+          },
+        });
+      } catch (error) {
+        console.error("❌ Error setting card image:", error);
+        toast.error("Failed to set card image", {
+          description:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        });
+        // Reset selection on error
+        setSelectedImageAssetId(undefined);
+      }
+    },
+    [updateCardIconAsset],
+  );
 
-  const handleUseAsCardImage = useCallback(async (imageUrl: string, assetId: UniqueEntityID) => {
-    // This is now handled by handleSelectImage when clicking on the image
-    // Keep this for the button click (if we want to keep the button)
-    await handleSelectImage(imageUrl, assetId);
-  }, [handleSelectImage]);
-
-  // Calculate dynamic sizing based on number of images or generating state
+  // Fixed gallery sizing - max 3 rows then scroll
   const hasImagesOrGenerating = generatedImages.length > 0 || isGenerating;
-  const totalImages = generatedImages.length + (isGenerating ? 1 : 0);
-  
-  // Calculate dynamic sizing for images section
-  const imageHeight = 128; // h-32 for each image
-  const gapSize = 0; // gap-0 - no gap between images
-  const imageWidth = 64; // w-16 for each image
-  const maxImageSectionHeight = 800; // Maximum height for images section
-  
-  // Calculate how many images per row based on available width
-  const availableWidth = panelRef.current?.clientWidth || 400;
-  const imagesPerRow = Math.max(1, Math.floor((availableWidth - 32) / imageWidth)); // 32px for padding, no gap
-  
-  // Calculate needed height based on actual content
-  const totalRows = Math.ceil(totalImages / imagesPerRow);
-  const neededImageHeight = totalImages > 0 ? totalRows * imageHeight + 32 : 0; // +32 for padding, no gap between rows
-  
-  // Determine if images section should be scrollable
-  const shouldCapImageHeight = neededImageHeight > maxImageSectionHeight;
-  const actualImageHeight = shouldCapImageHeight ? maxImageSectionHeight : neededImageHeight;
-  
+  const galleryHeight = GALLERY_LAYOUT.FIXED_HEIGHT; // Fixed height for 3 rows
+
   let promptSectionClass: string;
   let imagesSectionClass: string;
   let imagesSectionStyle: React.CSSProperties = {};
-  
+
   if (!hasImagesOrGenerating) {
     // No images - prompt takes all space
     promptSectionClass = "flex-1 min-h-0";
-    imagesSectionClass = "flex-shrink-0";
+    imagesSectionClass = "hidden"; // Hide gallery when empty
   } else {
-    // Images present - fit content up to max height
+    // Images present - fixed height gallery
     promptSectionClass = "flex-1 min-h-0";
     imagesSectionClass = "flex-shrink-0";
     imagesSectionStyle = {
-      height: `${actualImageHeight}px`,
-      maxHeight: `${maxImageSectionHeight}px`,
-      overflow: shouldCapImageHeight ? 'auto' : 'visible'
+      height: `${galleryHeight}px`, // Fixed height for exactly 3 rows
+      overflow: "auto", // Always scrollable if content exceeds
     };
   }
 
   return (
-    <div ref={panelRef} className="h-full w-full p-4 bg-background-surface-2 flex flex-col gap-4">
-      
+    <div className="h-full w-full p-4 bg-background-surface-2 flex flex-col gap-4">
       {/* Dynamic Prompt Section */}
       <div className={`${promptSectionClass} flex flex-col gap-4`}>
         {/* Image Prompt */}
@@ -610,10 +348,33 @@ Based on this card data and the user's request, generate an image: ${imagePrompt
           <ImageToImageSetting
             enabled={useCardImage}
             onToggle={setUseCardImage}
-            cardImageUrl={cardIconAssetUrl || undefined}
-            disabled={!cardIconAssetUrl}
+            cardImageUrl={imageToUseForGeneration || undefined}
+            cardIsVideo={Boolean(cardIconIsVideo)}
+            disabled={!imageToUseForGeneration}
+            isGeneratingVideo={
+              selectedModel === IMAGE_MODELS.SEEDANCE_1_0 ||
+              selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0
+            }
           />
         </div>
+
+        {/* Duration Slider - Show only for Seedance models */}
+        {(selectedModel === IMAGE_MODELS.SEEDANCE_1_0 ||
+          selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0) && (
+          <div className="flex flex-col gap-3 flex-shrink-0">
+            <label className="text-sm font-medium text-text-primary">
+              Duration
+            </label>
+            <Slider
+              value={[videoDuration]}
+              onValueChange={(value) => setVideoDuration(value[0])}
+              min={VIDEO_SETTINGS.MIN_DURATION}
+              max={VIDEO_SETTINGS.MAX_DURATION}
+              step={1}
+              showValue={true}
+            />
+          </div>
+        )}
 
         {/* Model Selection */}
         <div className="flex flex-col gap-2 flex-shrink-0">
@@ -623,8 +384,18 @@ Based on this card data and the user's request, generate an image: ${imagePrompt
               <SelectValue placeholder="Select a model" />
             </SelectTrigger>
             <SelectContent side="top">
-              <SelectItem value={IMAGE_MODELS.NANO_BANANA}>Nano Banana</SelectItem>
-              <SelectItem value={IMAGE_MODELS.SEEDDREAM_4_0}>Seeddream 4.0</SelectItem>
+              <SelectItem value={IMAGE_MODELS.SEEDDREAM_4_0}>
+                Seeddream 4.0 (Images)
+              </SelectItem>
+              <SelectItem value={IMAGE_MODELS.NANO_BANANA}>
+                Nano Banana (Images)
+              </SelectItem>
+              <SelectItem value={IMAGE_MODELS.SEEDANCE_1_0}>
+                Seedance 1.0 Pro (Videos)
+              </SelectItem>
+              <SelectItem value={IMAGE_MODELS.SEEDANCE_LITE_1_0}>
+                Seedance 1.0 Lite (Videos)
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -639,9 +410,14 @@ Based on this card data and the user's request, generate an image: ${imagePrompt
             size="lg"
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            {isGenerating ? "Generating..." : "Generate"}
+            {isGenerating
+              ? "Generating..."
+              : selectedModel === IMAGE_MODELS.SEEDANCE_1_0 ||
+                  selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0
+                ? "Generate Video"
+                : "Generate Image"}
           </Button>
-          
+
           {/* Hidden file input - keeping for future use */}
           <input
             ref={fileInputRef}
@@ -660,17 +436,19 @@ Based on this card data and the user's request, generate an image: ${imagePrompt
       </div>
 
       {/* Dynamic Images Section */}
-      <div 
+      <div
         className={`${imagesSectionClass} flex flex-col gap-2`}
         style={imagesSectionStyle}
       >
-        <div className="flex-1 overflow-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="w-6 h-6 animate-spin text-text-subtle" />
-              <span className="ml-2 text-text-subtle text-sm">Loading images...</span>
-            </div>
-          ) : (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="w-6 h-6 animate-spin text-text-subtle" />
+            <span className="ml-2 text-text-subtle text-sm">
+              Loading images...
+            </span>
+          </div>
+        ) : (
+          <ScrollArea className="h-full w-full">
             <div className="flex flex-wrap gap-0 h-fit justify-start">
               {/* Loading placeholder when generating */}
               {isGenerating && (
@@ -681,22 +459,22 @@ Based on this card data and the user's request, generate an image: ${imagePrompt
                   </div>
                 </div>
               )}
-              
+
               {generatedImages.map((image) => (
                 <ImageItem
                   key={image.id.toString()}
                   image={image}
                   isGenerating={generatingImages.has(image.id.toString())}
                   isSelected={selectedImageAssetId === image.assetId.toString()}
-                  onDownload={(url, prompt) => handleDownloadImage(url, prompt)}
-                  onUseAsCardImage={handleUseAsCardImage}
+                  onDownload={(url, prompt, isVideo) =>
+                    handleDownloadImage(url, prompt, isVideo)
+                  }
                   onSelect={handleSelectImage}
                 />
               ))}
-
             </div>
-          )}
-        </div>
+          </ScrollArea>
+        )}
       </div>
     </div>
   );

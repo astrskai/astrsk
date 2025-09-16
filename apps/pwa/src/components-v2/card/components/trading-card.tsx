@@ -14,9 +14,9 @@ export const TradingCard = ({ cardId, onClick }: TradingCardProps) => {
   // Convert string ID to UniqueEntityID
   const uniqueCardId = new UniqueEntityID(cardId);
 
-  // Fetch card data and image
+  // Fetch card data and image with metadata
   const [card] = useCard<Card>(uniqueCardId);
-  const [imageUrl] = useAsset(card?.props.iconAssetId);
+  const [imageUrl, isVideo] = useAsset(card?.props.iconAssetId);
 
   // Handle click event
   const handleClick = () => {
@@ -29,6 +29,7 @@ export const TradingCard = ({ cardId, onClick }: TradingCardProps) => {
     <TradingCardDisplay 
       card={card || null} 
       imageUrl={imageUrl} 
+      isVideo={isVideo}
       isLoading={false}
       onClick={handleClick}
     />

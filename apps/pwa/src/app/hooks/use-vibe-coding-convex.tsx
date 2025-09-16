@@ -5,12 +5,10 @@
  */
 
 import { useMutation, useQuery } from "convex/react";
-import { toast } from "sonner";
 import { api } from "@/../convex/_generated/api";
 import { SESSION_STATUS } from "vibe-shared-types";
 import type {
   StartVibeCodingRequest,
-  VibeCodingSessionStatus,
   SessionStatus as SharedSessionStatus,
 } from "vibe-shared-types";
 import {
