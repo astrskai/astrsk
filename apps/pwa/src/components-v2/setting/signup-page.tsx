@@ -144,8 +144,8 @@ const SignUpPage = () => {
       // Try to sign up with google
       signUp.authenticateWithRedirect({
         strategy: "oauth_google",
-        redirectUrl: "/",
-        redirectUrlComplete: "/",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/sso-callback",
       });
     } catch (error) {
       logger.error(error);
@@ -164,8 +164,8 @@ const SignUpPage = () => {
       // Try to sign up with google
       signUp.authenticateWithRedirect({
         strategy: "oauth_discord",
-        redirectUrl: "/",
-        redirectUrlComplete: "/",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/sso-callback",
       });
     } catch (error) {
       logger.error(error);
