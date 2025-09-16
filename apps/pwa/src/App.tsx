@@ -34,6 +34,7 @@ import { Toaster } from "@/components-v2/ui/sonner";
 import { UniqueEntityID } from "@/shared/domain";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
+import { OnboardingStepOnePage } from "@/components-v2/setting/onboarding-step-one-page";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import {
   Outlet,
@@ -251,6 +252,7 @@ const AppInternal = () => {
       <V2Layout>
         <DesktopApp />
       </V2Layout>
+      {activePage === Page.OnboardingStepOne && <OnboardingStepOnePage />}
       {activePage === Page.Subscribe && <SubscribePage />}
       {activePage === Page.SignUp && <SignUpPage />}
       {activePage === Page.Payment && <PaymentPage />}

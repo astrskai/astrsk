@@ -44,6 +44,8 @@ export const Page = {
   AddCredits: "add_credits",
   SignUp: "sign_up",
   Payment: "payment",
+  OnboardingStepOne: "onboarding_step_one",
+  OnboardingStepTwo: "onboarding_step_two",
 } as const;
 
 export type Page = (typeof Page)[keyof typeof Page];
@@ -218,7 +220,7 @@ const useAppStoreBase = create<AppState>()(
           state.blockedMenu = blockedMenu;
         }),
 
-      activePage: Page.Init, // Will be updated by initialization logic
+      activePage: Page.OnboardingStepOne, // Will be updated by initialization logic
       setActivePage: (activePage) =>
         set((state) => {
           switch (activePage) {
