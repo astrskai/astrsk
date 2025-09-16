@@ -258,7 +258,7 @@ const renderProviderListItem = ({
 };
 
 const providerOrder: ApiSource[] = [
-  ApiSource.AstrskAi,
+  // ApiSource.AstrskAi,
   ApiSource.OpenAI,
   ApiSource.GoogleGenerativeAI,
   ApiSource.Anthropic,
@@ -529,13 +529,10 @@ export default function ModelPage({ className }: { className?: string }) {
             ?.filter((apiConnection: ApiConnection, index: number, array: ApiConnection[]) => {
               // For AstrskAi connections, only keep the first occurrence
               if (apiConnection.source === ApiSource.AstrskAi) {
-                return (
-                  array.findIndex(
-                    (conn: ApiConnection) => conn.source === ApiSource.AstrskAi,
-                  ) === index
-                );
+                return false;
+              } else {
+                return true;
               }
-              return true;
             })
             ?.map((apiConnection: ApiConnection) =>
               renderProviderListItem({
