@@ -91,7 +91,7 @@ const Section = forwardRef<
         "group/section relative bg-background-surface-3 rounded-[8px] cursor-pointer",
         "transition-all duration-200 ease-in-out",
         "border border-border-normal hover:border-text-primary hover:ring hover:ring-text-primary",
-        onboarding && "border-text-primary ring ring-text-primary",
+        onboarding && "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary",
         className,
       )}
       {...props}
@@ -325,7 +325,7 @@ const SessionSettings = ({
       className={cn(
         "w-full min-w-[873px] max-w-[1024px] mx-auto my-[80px] p-[16px] rounded-[16px] flex flex-col relative",
         "bg-background-surface-2",
-        shouldShowResourceManagementTooltip && "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+        shouldShowResourceManagementTooltip && "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary",
       )}
     >
       <div className="flex flex-col space-y-0 gap-[16px] justify-end">
@@ -556,10 +556,10 @@ const SessionSettings = ({
       {showResourceTooltip && (
         <div 
           className={cn(
-            "absolute px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-center items-end gap-2 z-10",
+            "absolute px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary flex flex-col justify-center items-end gap-2 z-10",
             hasSpaceForTooltip 
               ? "top-4 left-[-340px] w-80 max-w-80"  // Outside to the left when space available
-              : "top-4 left-4 right-4"  // Inside at the top when no space
+              : "top-4 left-4 w-80 max-w-80 right-4"  // Inside at the top when no space
           )}
         >
           <div className="self-stretch justify-start text-text-primary text-sm font-semibold leading-tight">

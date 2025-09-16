@@ -218,7 +218,7 @@ function V2Layout({
               <GlobalDockView>{children}</GlobalDockView>
             </main>
           </SidebarInset>
-          <Toaster expand className="!z-9999" />
+          <Toaster expand className="!z-[9999]" />
         </SidebarLeftProvider>
       </div>
     </ThemeProvider>

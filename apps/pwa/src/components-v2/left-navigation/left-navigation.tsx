@@ -79,7 +79,7 @@ const SectionHeader = ({
             className={cn(
               "text-text-info hover:text-text-primary transition-colors",
               onboardingHelpGlow &&
-                "text-button-background-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] rounded-full",
+                "text-button-background-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary rounded-full",
             )}
           >
             <PlayCircle size={16} />
@@ -218,7 +218,7 @@ const LeftNavigation = () => {
       {/* Resource Management Onboarding Tooltip */}
       {shouldShowResourceManagementTooltip && (
         <div className="absolute top-[40px] left-[340px] z-50">
-          <div className="w-80 max-w-80 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] outline-1 outline-offset-[-1px] outline-border-normal inline-flex flex-col justify-center items-end gap-2">
+          <div className="w-80 max-w-80 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary inline-flex flex-col justify-center items-end gap-2">
             <div className="self-stretch justify-start text-text-primary text-sm font-semibold leading-tight">
               Global resource management
             </div>
@@ -248,7 +248,7 @@ const LeftNavigation = () => {
       {/* Help Video Tooltip - 4th step, next to Sessions HelpCircle */}
       {shouldShowHelpVideoTooltip && (
         <div className="absolute top-[40px] left-[140px] z-50">
-          <div className="w-60 max-w-60 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] outline-1 outline-offset-[-1px] outline-border-normal inline-flex flex-col justify-center items-end gap-2">
+          <div className="w-60 max-w-60 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary inline-flex flex-col justify-center items-end gap-2">
             <div className="self-stretch justify-start text-text-primary text-sm font-semibold leading-tight">
               Not sure how it works?
             </div>
@@ -304,7 +304,7 @@ const LeftNavigationTrigger = () => {
       {shouldShowSidebarTooltip && (
         <div
           className={cn(
-            "absolute top-[calc(38px+76px)] left-[16px] z-50 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] outline-1 outline-offset-[-1px] outline-border-normal whitespace-nowrap",
+            "absolute top-[calc(38px+76px)] left-[16px] z-50 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary whitespace-nowrap",
             "transition-all ease-out duration-300",
             "group-hover/trigger-parent:opacity-0",
           )}
@@ -321,7 +321,7 @@ const LeftNavigationTrigger = () => {
           "size-[40px] bg-[#313131] border-1 border-[#757575] rounded-full",
           open && "hidden",
           shouldShowSidebarTooltip &&
-            "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)]",
+            "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary",
         )}
         onClick={() => {
           setOpen(true);

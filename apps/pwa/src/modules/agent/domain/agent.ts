@@ -468,7 +468,11 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
           apiSource: json.apiSource ?? undefined,
           modelId: json.modelId ?? undefined,
           modelName: json.modelName ?? undefined,
-          modelTier: json.modelTier ?? undefined,
+          modelTier:
+            json.modelTier !== undefined &&
+            Object.values(ModelTier).includes(json.modelTier)
+              ? (json.modelTier as ModelTier)
+              : undefined,
 
           promptMessages:
             json.promptMessages?.map((message: any) =>
