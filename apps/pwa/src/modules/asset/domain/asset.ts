@@ -30,25 +30,19 @@ export interface AssetProps {
  */
 async function convertToWebp(file: File, quality?: number): Promise<File> {
   return new Promise((resolve, reject) => {
-    console.log('🔄 [CONVERT] Checking file:', file.name, 'Type:', file.type);
-    
     // Check if file is a video
-    const isVideo = file.type.startsWith("video/") || 
-                    file.name.toLowerCase().endsWith('.mp4') ||
-                    file.name.toLowerCase().endsWith('.webm') ||
-                    file.name.toLowerCase().endsWith('.ogg') ||
-                    file.name.toLowerCase().endsWith('.mov') ||
-                    file.name.toLowerCase().endsWith('.avi');
-    
-    console.log('🔄 [CONVERT] Is video?', isVideo, 'Is image?', file.type.startsWith("image/"));
-    
+    const isVideo =
+      file.type.startsWith("video/") ||
+      file.name.toLowerCase().endsWith(".mp4") ||
+      file.name.toLowerCase().endsWith(".webm") ||
+      file.name.toLowerCase().endsWith(".ogg") ||
+      file.name.toLowerCase().endsWith(".mov") ||
+      file.name.toLowerCase().endsWith(".avi");
+
     // Only process image files, skip videos and other file types
     if (!file.type.startsWith("image/") || isVideo) {
-      console.log('🔄 [CONVERT] Skipping conversion, returning original file');
       return resolve(file); // Return original file if not an image or if it's a video
     }
-    
-    console.log('🔄 [CONVERT] Converting image to WebP');
 
     // Set quality based on file type if not explicitly provided
     if (quality === undefined) {
@@ -144,12 +138,26 @@ export class Asset extends AggregateRoot<AssetProps> {
     id?: UniqueEntityID,
   ): Promise<Result<Asset>> {
     try {
-      console.log('📦 [ASSET] Creating asset from file:', props.file.name, 'Type:', props.file.type, 'Size:', props.file.size);
-      
+      console.log(
+        "📦 [ASSET] Creating asset from file:",
+        props.file.name,
+        "Type:",
+        props.file.type,
+        "Size:",
+        props.file.size,
+      );
+
       // Convert file to WebP format (only for images, videos are kept as-is)
       const webpFile = await convertToWebp(props.file);
-      
-      console.log('📦 [ASSET] After conversion:', webpFile.name, 'Type:', webpFile.type, 'Size:', webpFile.size);
+
+      console.log(
+        "📦 [ASSET] After conversion:",
+        webpFile.name,
+        "Type:",
+        webpFile.type,
+        "Size:",
+        webpFile.size,
+      );
 
       // Get hash
       const hash = await getFileHash(webpFile);

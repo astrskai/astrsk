@@ -171,5 +171,13 @@
     "bps": true,
     "folderMillis": 1757679083372,
     "hash": "a36d78efc589e165c22db2446fd3e9cf7dc3bf278c02c0c3cbc79ab4198bcbea"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"generated_images\" ADD COLUMN \"is_session_generated\" boolean DEFAULT false;"
+    ],
+    "bps": true,
+    "folderMillis": 1757997490794,
+    "hash": "3cdfbe81ad371b820b631d650c9d46d23fffe280527b62827a1463abcf063b86"
   }
 ]

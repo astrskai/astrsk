@@ -1,0 +1,1 @@
+ALTER TABLE "generated_images" ADD COLUMN "is_session_generated" boolean DEFAULT false;

@@ -6,6 +6,7 @@ import { Asset } from "@/modules/asset/domain/asset";
 import { LoadAssetRepo } from "@/modules/asset/repos/load-asset-repo";
 import { Card, CharacterCard, PlotCard } from "@/modules/card/domain";
 import { LoadCardRepo } from "@/modules/card/repos";
+import { LoadGeneratedImageRepo } from "@/modules/generated-image/repos/load-generated-image-repo";
 //TODO: replace them with electron path
 import {
   character_card_placeholder,
@@ -23,6 +24,7 @@ export class ExportCardToFile
   constructor(
     private loadCardRepo: LoadCardRepo,
     private loadAssetRepo: LoadAssetRepo,
+    private generatedImageRepo: LoadGeneratedImageRepo,
   ) {}
 
   async execute({
@@ -60,31 +62,126 @@ export class ExportCardToFile
           return Result.fail<File>(assetOrError.getError());
         }
         iconAsset = assetOrError.getValue();
+
+        // Check if the asset is a video
+        const isVideo =
+          iconAsset.props.mimeType.startsWith("video/") ||
+          iconAsset.props.mimeType.includes("mp4") ||
+          iconAsset.props.mimeType.includes("webm");
+
+        if (isVideo) {
+          console.log(
+            "[ExportCard] Asset is a video, looking for thumbnail...",
+          );
+
+          // Check if generatedImageRepo is available
+          if (!this.generatedImageRepo) {
+            console.log(
+              "[ExportCard] GeneratedImageRepo not initialized, extracting thumbnail from video",
+            );
+            // Try to extract thumbnail directly from video
+            const extractedThumbnail =
+              await this.extractVideoThumbnail(iconAsset);
+            if (extractedThumbnail) {
+              console.log(
+                "[ExportCard] Successfully extracted thumbnail from video",
+              );
+              iconAsset = extractedThumbnail;
+            } else {
+              console.log(
+                "[ExportCard] Failed to extract thumbnail, using placeholder",
+              );
+              iconAsset = await this.getPlaceholderAsset(card);
+            }
+          } else {
+            // Find the GeneratedImage entry for this video asset
+            const generatedImagesResult =
+              await this.generatedImageRepo.listGeneratedImages();
+            if (generatedImagesResult.isSuccess) {
+              const generatedImages = generatedImagesResult.getValue();
+              const videoGeneratedImage = generatedImages.find((img) =>
+                img.props.assetId?.equals(card.props.iconAssetId),
+              );
+
+              if (
+                videoGeneratedImage &&
+                videoGeneratedImage.props.thumbnailAssetId
+              ) {
+                console.log(
+                  "[ExportCard] Found video thumbnail, using it for export",
+                );
+                // Get the thumbnail asset instead
+                const thumbnailAssetResult =
+                  await this.loadAssetRepo.getAssetById(
+                    videoGeneratedImage.props.thumbnailAssetId,
+                  );
+
+                if (thumbnailAssetResult.isSuccess) {
+                  iconAsset = thumbnailAssetResult.getValue();
+                  console.log(
+                    "[ExportCard] Successfully loaded existing thumbnail asset",
+                  );
+                } else {
+                  console.log(
+                    "[ExportCard] Failed to load thumbnail asset, extracting from video",
+                  );
+                  // Try to extract thumbnail directly from video
+                  const extractedThumbnail =
+                    await this.extractVideoThumbnail(iconAsset);
+                  if (extractedThumbnail) {
+                    console.log(
+                      "[ExportCard] Successfully extracted thumbnail from video",
+                    );
+                    iconAsset = extractedThumbnail;
+                  } else {
+                    console.log(
+                      "[ExportCard] Failed to extract thumbnail, using placeholder",
+                    );
+                    iconAsset = await this.getPlaceholderAsset(card);
+                  }
+                }
+              } else {
+                console.log(
+                  "[ExportCard] No thumbnail found in GeneratedImage table, extracting from video",
+                );
+                // Try to extract thumbnail directly from video
+                const extractedThumbnail =
+                  await this.extractVideoThumbnail(iconAsset);
+                if (extractedThumbnail) {
+                  console.log(
+                    "[ExportCard] Successfully extracted thumbnail from video",
+                  );
+                  iconAsset = extractedThumbnail;
+                } else {
+                  console.log(
+                    "[ExportCard] Failed to extract thumbnail, using placeholder",
+                  );
+                  iconAsset = await this.getPlaceholderAsset(card);
+                }
+              }
+            } else {
+              console.log(
+                "[ExportCard] Failed to list generated images, extracting from video",
+              );
+              // Try to extract thumbnail directly from video
+              const extractedThumbnail =
+                await this.extractVideoThumbnail(iconAsset);
+              if (extractedThumbnail) {
+                console.log(
+                  "[ExportCard] Successfully extracted thumbnail from video",
+                );
+                iconAsset = extractedThumbnail;
+              } else {
+                console.log(
+                  "[ExportCard] Failed to extract thumbnail, using placeholder",
+                );
+                iconAsset = await this.getPlaceholderAsset(card);
+              }
+            }
+          }
+        }
       } else {
-        let svgContent;
-        if (card instanceof CharacterCard) {
-          svgContent = character_card_placeholder;
-        } else if (card instanceof PlotCard) {
-          svgContent = plot_card_placeholder;
-        }
-        const placeholderBlob = new Blob([svgContent!], {
-          type: "image/svg+xml",
-        });
-
-        // Create file with correct MIME type
-        const placeholderFile = new File([placeholderBlob], "placeholder.svg", {
-          type: "image/svg+xml",
-        });
-
-        // Set icon asset
-        const iconAssetOrError = await Asset.createFromFile({
-          file: placeholderFile,
-        });
-
-        if (iconAssetOrError.isFailure) {
-          throw new Error(iconAssetOrError.getError());
-        }
-        iconAsset = iconAssetOrError.getValue();
+        iconAsset = await this.getPlaceholderAsset(card);
       }
 
       // Create PNG with metadata using either the card's icon or placeholder
@@ -179,5 +276,132 @@ export class ExportCardToFile
         name: entry.name,
       })),
     };
+  }
+
+  private async getPlaceholderAsset(card: Card): Promise<Asset> {
+    let svgContent;
+    if (card instanceof CharacterCard) {
+      svgContent = character_card_placeholder;
+    } else if (card instanceof PlotCard) {
+      svgContent = plot_card_placeholder;
+    }
+    const placeholderBlob = new Blob([svgContent!], {
+      type: "image/svg+xml",
+    });
+
+    // Create file with correct MIME type
+    const placeholderFile = new File([placeholderBlob], "placeholder.svg", {
+      type: "image/svg+xml",
+    });
+
+    // Set icon asset
+    const iconAssetOrError = await Asset.createFromFile({
+      file: placeholderFile,
+    });
+
+    if (iconAssetOrError.isFailure) {
+      throw new Error(iconAssetOrError.getError());
+    }
+    return iconAssetOrError.getValue();
+  }
+
+  /**
+   * Extract first frame from video as thumbnail
+   */
+  private async extractVideoThumbnail(
+    videoAsset: Asset,
+  ): Promise<Asset | null> {
+    try {
+      // First, we need to get the actual video file from the asset
+      // Assets store the file path, we need to retrieve the actual blob
+      const response = await fetch(videoAsset.props.filePath);
+      const blob = await response.blob();
+      const videoFile = new File([blob], videoAsset.props.name, {
+        type: videoAsset.props.mimeType,
+      });
+
+      // Create a video element
+      const video = document.createElement("video");
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) return null;
+
+      return new Promise((resolve) => {
+        video.onloadedmetadata = () => {
+          // Set canvas size to video dimensions (with max size limit for performance)
+          const maxWidth = 800;
+          const maxHeight = 800;
+          let width = video.videoWidth;
+          let height = video.videoHeight;
+
+          // Scale down if needed while maintaining aspect ratio
+          if (width > maxWidth || height > maxHeight) {
+            const aspectRatio = width / height;
+            if (width > height) {
+              width = maxWidth;
+              height = width / aspectRatio;
+            } else {
+              height = maxHeight;
+              width = height * aspectRatio;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Seek to first frame
+          video.currentTime = 0.1; // Small offset to ensure we get a frame
+        };
+
+        video.onseeked = async () => {
+          // Draw the current frame to canvas (scaled to fit)
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          // Convert canvas to blob
+          canvas.toBlob(
+            async (blob) => {
+              if (blob) {
+                const thumbnailFile = new File(
+                  [blob],
+                  `thumbnail-${videoAsset.props.name.replace(/\.[^/.]+$/, "")}.png`,
+                  { type: "image/png" },
+                );
+
+                // Create an asset from the thumbnail
+                const assetOrError = await Asset.createFromFile({
+                  file: thumbnailFile,
+                });
+
+                if (assetOrError.isSuccess) {
+                  resolve(assetOrError.getValue());
+                } else {
+                  resolve(null);
+                }
+              } else {
+                resolve(null);
+              }
+
+              // Clean up
+              URL.revokeObjectURL(video.src);
+            },
+            "image/png",
+            1.0, // Max quality for export
+          );
+        };
+
+        video.onerror = () => {
+          URL.revokeObjectURL(video.src);
+          resolve(null);
+        };
+
+        // Create object URL and load video
+        video.src = URL.createObjectURL(videoFile);
+        video.load();
+      });
+    } catch (error) {
+      console.error("[ExportCard] Failed to extract video thumbnail:", error);
+      return null;
+    }
   }
 }

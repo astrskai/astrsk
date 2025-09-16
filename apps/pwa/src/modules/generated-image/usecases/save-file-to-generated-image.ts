@@ -13,6 +13,7 @@ interface SaveFileToGeneratedImageRequest {
   aspectRatio?: string;
   associatedCardId?: UniqueEntityID;
   inputImageFile?: File; // For image-to-video, the original input image to use as thumbnail
+  isSessionGenerated?: boolean; // True for images/videos generated in sessions
 }
 
 export class SaveFileToGeneratedImage {
@@ -28,10 +29,10 @@ export class SaveFileToGeneratedImage {
   private async extractVideoThumbnail(videoFile: File): Promise<File | null> {
     try {
       // Create a video element
-      const video = document.createElement('video');
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
+      const video = document.createElement("video");
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
       if (!ctx) return null;
 
       return new Promise((resolve) => {
@@ -41,7 +42,7 @@ export class SaveFileToGeneratedImage {
           const maxHeight = 800;
           let width = video.videoWidth;
           let height = video.videoHeight;
-          
+
           // Scale down if needed while maintaining aspect ratio
           if (width > maxWidth || height > maxHeight) {
             const aspectRatio = width / height;
@@ -53,10 +54,10 @@ export class SaveFileToGeneratedImage {
               width = height * aspectRatio;
             }
           }
-          
+
           canvas.width = width;
           canvas.height = height;
-          
+
           // Seek to first frame
           video.currentTime = 0.1; // Small offset to ensure we get a frame
         };
@@ -64,23 +65,27 @@ export class SaveFileToGeneratedImage {
         video.onseeked = () => {
           // Draw the current frame to canvas (scaled to fit)
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
+
           // Convert canvas to blob
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const thumbnailFile = new File(
-                [blob], 
-                `thumb-${videoFile.name.replace(/\.[^/.]+$/, '')}.jpg`,
-                { type: 'image/jpeg' }
-              );
-              resolve(thumbnailFile);
-            } else {
-              resolve(null);
-            }
-            
-            // Clean up
-            URL.revokeObjectURL(video.src);
-          }, 'image/jpeg', 0.9); // Higher quality for thumbnails
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const thumbnailFile = new File(
+                  [blob],
+                  `thumb-${videoFile.name.replace(/\.[^/.]+$/, "")}.jpg`,
+                  { type: "image/jpeg" },
+                );
+                resolve(thumbnailFile);
+              } else {
+                resolve(null);
+              }
+
+              // Clean up
+              URL.revokeObjectURL(video.src);
+            },
+            "image/jpeg",
+            0.9,
+          ); // Higher quality for thumbnails
         };
 
         video.onerror = () => {
@@ -93,15 +98,19 @@ export class SaveFileToGeneratedImage {
         video.load();
       });
     } catch (error) {
-      console.error('Failed to extract video thumbnail:', error);
+      console.error("Failed to extract video thumbnail:", error);
       return null;
     }
   }
 
-  async execute(request: SaveFileToGeneratedImageRequest): Promise<Result<GeneratedImage>> {
+  async execute(
+    request: SaveFileToGeneratedImageRequest,
+  ): Promise<Result<GeneratedImage>> {
     try {
       // Save file to asset
-      const assetResult = await this.saveFileToAsset.execute({ file: request.file });
+      const assetResult = await this.saveFileToAsset.execute({
+        file: request.file,
+      });
       if (assetResult.isFailure) {
         return Result.fail<GeneratedImage>(assetResult.getError());
       }
@@ -110,7 +119,8 @@ export class SaveFileToGeneratedImage {
 
       // Check if a generated image already exists for this asset
       if (this.generatedImageRepo) {
-        const existingImageResult = await this.generatedImageRepo.getGeneratedImageByAssetId(asset.id);
+        const existingImageResult =
+          await this.generatedImageRepo.getGeneratedImageByAssetId(asset.id);
         if (existingImageResult.isSuccess) {
           const existingImage = existingImageResult.getValue();
           if (existingImage) {
@@ -121,13 +131,14 @@ export class SaveFileToGeneratedImage {
       }
 
       // Detect media type from file
-      const isVideo = request.file.type.startsWith('video/') || 
-                      request.file.name.toLowerCase().endsWith('.mp4') ||
-                      request.file.name.toLowerCase().endsWith('.webm') ||
-                      request.file.name.toLowerCase().endsWith('.ogg') ||
-                      request.file.name.toLowerCase().endsWith('.mov') ||
-                      request.file.name.toLowerCase().endsWith('.avi');
-      const mediaType = isVideo ? 'video' : 'image';
+      const isVideo =
+        request.file.type.startsWith("video/") ||
+        request.file.name.toLowerCase().endsWith(".mp4") ||
+        request.file.name.toLowerCase().endsWith(".webm") ||
+        request.file.name.toLowerCase().endsWith(".ogg") ||
+        request.file.name.toLowerCase().endsWith(".mov") ||
+        request.file.name.toLowerCase().endsWith(".avi");
+      const mediaType = isVideo ? "video" : "image";
 
       // Extract and save thumbnail for videos
       let thumbnailAssetId: UniqueEntityID | undefined;
@@ -136,7 +147,9 @@ export class SaveFileToGeneratedImage {
         // For text-to-video: extract thumbnail from the video
         if (request.inputImageFile) {
           // Image-to-video: save the original input image as thumbnail
-          const thumbnailAssetResult = await this.saveFileToAsset.execute({ file: request.inputImageFile });
+          const thumbnailAssetResult = await this.saveFileToAsset.execute({
+            file: request.inputImageFile,
+          });
           if (thumbnailAssetResult.isSuccess) {
             thumbnailAssetId = thumbnailAssetResult.getValue().id;
           }
@@ -144,7 +157,9 @@ export class SaveFileToGeneratedImage {
           // Text-to-video: extract thumbnail from the generated video
           const thumbnailFile = await this.extractVideoThumbnail(request.file);
           if (thumbnailFile) {
-            const thumbnailAssetResult = await this.saveFileToAsset.execute({ file: thumbnailFile });
+            const thumbnailAssetResult = await this.saveFileToAsset.execute({
+              file: thumbnailFile,
+            });
             if (thumbnailAssetResult.isSuccess) {
               thumbnailAssetId = thumbnailAssetResult.getValue().id;
             }
@@ -152,7 +167,6 @@ export class SaveFileToGeneratedImage {
         }
       }
 
-      // Create generated image entity
       const generatedImageResult = GeneratedImage.create({
         name: request.file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
         assetId: asset.id,
@@ -162,6 +176,7 @@ export class SaveFileToGeneratedImage {
         mediaType: mediaType,
         thumbnailAssetId: thumbnailAssetId,
         associatedCardId: request.associatedCardId,
+        isSessionGenerated: request.isSessionGenerated || false,
       });
 
       if (generatedImageResult.isFailure) {
@@ -178,7 +193,9 @@ export class SaveFileToGeneratedImage {
 
       return Result.ok<GeneratedImage>(generatedImage);
     } catch (error) {
-      return Result.fail<GeneratedImage>(`Failed to save file to generated image: ${error}`);
+      return Result.fail<GeneratedImage>(
+        `Failed to save file to generated image: ${error}`,
+      );
     }
   }
 }

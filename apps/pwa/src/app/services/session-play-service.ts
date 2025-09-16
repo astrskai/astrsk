@@ -209,6 +209,7 @@ const makeContext = async ({
         all_char_entries.push(...activatedEntries);
       } catch (error) {
         // Ignore lorebook scan errors
+        console.log("Lorebook scan error:", error);
       }
     }
 
@@ -2064,7 +2065,9 @@ async function evaluateSingleCondition(
     );
   } catch (error) {
     const debugInfo = `value1="${value1}"${
-      condition.operator && !isUnaryOperator(condition.operator) ? ` value2="${value2}"` : ""
+      condition.operator && !isUnaryOperator(condition.operator)
+        ? ` value2="${value2}"`
+        : ""
     } dataType="${condition.dataType}"`;
     console.warn(
       `Failed to evaluate condition ${condition.id} (${condition.operator}): ${debugInfo} - ${error}`,

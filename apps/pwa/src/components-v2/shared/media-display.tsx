@@ -18,12 +18,12 @@ interface MediaDisplayProps {
   clickToToggle?: boolean; // Click to play/pause
 }
 
-export const MediaDisplay = ({ 
-  src, 
-  alt = '', 
-  className = '', 
-  width, 
-  height, 
+export const MediaDisplay = ({
+  src,
+  alt = '',
+  className = '',
+  width,
+  height,
   fallbackSrc,
   isVideo: forceIsVideo,
   showControls = true,
@@ -116,7 +116,7 @@ export const MediaDisplay = ({
 
   if (isVideo) {
     return (
-      <div 
+      <div
         className="relative w-full h-full group"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}

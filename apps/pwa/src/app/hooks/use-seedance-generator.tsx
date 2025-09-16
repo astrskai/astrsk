@@ -7,20 +7,34 @@ import { api } from "@/../convex/_generated/api";
  */
 export const useSeedanceGenerator = () => {
   // Seedance video generation actions - using videoMutations file (where they're actually defined)
-  // @ts-ignore - Convex types will be generated when dev server runs
-  const generateSeedanceVideo = useAction(api.vibe_coding.mutations.videoMutations.generateSeedanceTextToVideo);
-  // @ts-ignore - Convex types will be generated when dev server runs
-  const generateSeedanceImageToVideo = useAction(api.vibe_coding.mutations.videoMutations.generateSeedanceImageToVideo);
-  // @ts-ignore - Convex types will be generated when dev server runs
-  const checkVideoStatus = useAction(api.vibe_coding.mutations.videoMutations.checkVideoStatus);
-  // @ts-ignore - Convex types will be generated when dev server runs
-  const getVideoOptions = useAction(api.vibe_coding.mutations.videoMutations.getVideoOptions);
+  const generateSeedanceVideo = useAction(
+    // @ts-ignore - Convex types will be generated when dev server runs
+    api.vibe_coding.mutations.videoMutations.generateSeedanceTextToVideo,
+  );
+  const generateSeedanceImageToVideo = useAction(
+    // @ts-ignore - Convex types will be generated when dev server runs
+    api.vibe_coding.mutations.videoMutations.generateSeedanceImageToVideo,
+  );
+  const checkVideoStatus = useAction(
+    // @ts-ignore - Convex types will be generated when dev server runs
+    api.vibe_coding.mutations.videoMutations.checkVideoStatus,
+  );
+  const getVideoOptions = useAction(
+    // @ts-ignore - Convex types will be generated when dev server runs
+    api.vibe_coding.mutations.videoMutations.getVideoOptions,
+  );
+
+  const generateImageThenVideo = useAction(
+    // @ts-ignore - Convex types will be generated when dev server runs
+    api.vibe_coding.mutations.videoMutations.generateImageThenVideo,
+  );
 
   return {
     generateSeedanceVideo,
     generateSeedanceImageToVideo,
     checkVideoStatus,
     getVideoOptions,
+    generateImageThenVideo,
   };
 };
 

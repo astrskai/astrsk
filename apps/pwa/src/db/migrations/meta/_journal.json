@@ -134,6 +134,13 @@
       "when": 1757679083372,
       "tag": "20250912121123_image_asset",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1757997490794,
+      "tag": "20250916043810_image-session",
+      "breakpoints": true
     }
   ]
 }

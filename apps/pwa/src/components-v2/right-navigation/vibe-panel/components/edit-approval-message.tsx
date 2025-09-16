@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components-v2/ui/button";
-import { Check, X, RotateCcw, Code, Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { Editor } from "@/components-v2/editor/editor";
 import { SimpleMessage } from "../types";
 
@@ -58,21 +58,24 @@ export const EditApprovalMessage: React.FC<EditApprovalMessageProps> = ({
             change.operation === "append"
               ? "PUT"
               : change.operation.toUpperCase();
-          
+
           return {
             operation: `Operation ${index + 1}: ${normalizedOperation}`,
-            path: change.path || 'unknown',
-            ...(change.metadata?.changeReason && { reason: change.metadata.changeReason }),
-            ...(change.metadata?.confidence !== undefined && !isNaN(change.metadata.confidence) && { 
-              confidence: `${Math.round(change.metadata.confidence * 100)}%` 
+            path: change.path || "unknown",
+            ...(change.metadata?.changeReason && {
+              reason: change.metadata.changeReason,
             }),
+            ...(change.metadata?.confidence !== undefined &&
+              !isNaN(change.metadata.confidence) && {
+                confidence: `${Math.round(change.metadata.confidence * 100)}%`,
+              }),
             ...(change.value !== undefined && { value: change.value }),
           };
         });
 
         return {
           operationsText: JSON.stringify(operationsArray, null, 2),
-          language: "json"
+          language: "json",
         };
       } catch (error) {
         // Fallback to plaintext format if JSON parsing fails
@@ -83,13 +86,16 @@ export const EditApprovalMessage: React.FC<EditApprovalMessageProps> = ({
               ? "PUT"
               : change.operation.toUpperCase();
           text += `Operation ${index + 1}: ${normalizedOperation}\n`;
-          text += `Path: ${String(change.path || 'unknown')}\n`;
+          text += `Path: ${String(change.path || "unknown")}\n`;
 
           if (change.metadata?.changeReason) {
             text += `Reason: ${String(change.metadata.changeReason)}\n`;
           }
 
-          if (change.metadata?.confidence !== undefined && !isNaN(change.metadata.confidence)) {
+          if (
+            change.metadata?.confidence !== undefined &&
+            !isNaN(change.metadata.confidence)
+          ) {
             text += `Confidence: ${Math.round(change.metadata.confidence * 100)}%\n`;
           }
 
@@ -108,17 +114,17 @@ export const EditApprovalMessage: React.FC<EditApprovalMessageProps> = ({
 
           text += "\n" + "-".repeat(50) + "\n\n";
         });
-        
+
         return {
           operationsText: text,
-          language: "plaintext"
+          language: "plaintext",
         };
       }
     }
 
     return {
       operationsText: "No operations available",
-      language: "plaintext"
+      language: "plaintext",
     };
   }, [appliedChanges, message.analysis]);
 
@@ -126,45 +132,6 @@ export const EditApprovalMessage: React.FC<EditApprovalMessageProps> = ({
   if (!message.editData || message.type !== "edit_approval") {
     return null;
   }
-
-  const getStatusColor = () => {
-    switch (message.status) {
-      case "approved":
-        return "text-green-600 bg-green-50 border-green-200";
-      case "rejected":
-        return "text-red-600 bg-red-50 border-red-200";
-      case "reverted":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200";
-      default:
-        return "text-blue-600 bg-blue-50 border-blue-200";
-    }
-  };
-
-  const getStatusIcon = () => {
-    switch (message.status) {
-      case "approved":
-        return <Check className="min-w-4 min-h-4 text-green-600" />;
-      case "rejected":
-        return <X className="min-w-4 min-h-4 text-red-600" />;
-      case "reverted":
-        return <RotateCcw className="min-w-4 min-h-4 text-yellow-600" />;
-      default:
-        return <Code className="min-w-4 min-h-4 text-blue-600" />;
-    }
-  };
-
-  const getStatusText = () => {
-    switch (message.status) {
-      case "approved":
-        return "Changes approved and applied";
-      case "rejected":
-        return "Changes rejected";
-      case "reverted":
-        return "Changes reverted";
-      default:
-        return "Awaiting review";
-    }
-  };
 
   const handleApprove = async () => {
     if (message.sessionId && editData!.resourceId) {
@@ -260,11 +227,12 @@ export const EditApprovalMessage: React.FC<EditApprovalMessageProps> = ({
             >
               Reject
             </Button>
-            <Button 
-              size="sm" 
-              variant="secondary" 
-              onClick={handleApprove} 
-              disabled={isProcessing}>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleApprove}
+              disabled={isProcessing}
+            >
               Approve and commit
             </Button>
           </>

@@ -34,20 +34,23 @@ export async function initServices(): Promise<void> {
     AgentService.agentRepo,
   );
 
-  // Card
+  // Generated Image - Initialize BEFORE CardService since CardService depends on it
+  GeneratedImageService.init(
+    AssetService.saveFileToAsset,
+    AssetService.deleteAsset,
+  );
+
+  // Card - Now can use GeneratedImageService.generatedImageRepo
   CardService.init(
     AssetService.assetRepo,
     AssetService.saveFileToAsset,
     AssetService.cloneAsset,
+    GeneratedImageService.generatedImageRepo,
   );
 
   // Session
   TurnService.init();
   BackgroundService.init(
-    AssetService.saveFileToAsset,
-    AssetService.deleteAsset,
-  );
-  GeneratedImageService.init(
     AssetService.saveFileToAsset,
     AssetService.deleteAsset,
   );

@@ -1,67 +1,74 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { Button } from "@/components-v2/ui/button";
 import { Textarea } from "@/components-v2/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components-v2/ui/select";
 import { Loader2, Sparkles } from "lucide-react";
-import { Switch } from "@/components-v2/ui/switch";
+import { Slider } from "@/components-v2/ui/slider";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { useAsset } from "@/app/hooks/use-asset";
-import { 
-  CardPanelProps, 
-  useCardPanel 
+import {
+  CardPanelProps,
+  useCardPanel,
 } from "@/components-v2/card/panels/hooks/use-card-panel";
 import { useResourceData } from "@/components-v2/right-navigation/vibe-panel/hooks/use-resource-data";
 import { useAppStore, Page } from "@/app/stores/app-store";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { generatedImageQueries, generatedImageKeys } from "@/app/queries/generated-image/query-factory";
+import {
+  generatedImageQueries,
+  generatedImageKeys,
+} from "@/app/queries/generated-image/query-factory";
 import { useModelStore, IMAGE_MODELS } from "@/app/stores/model-store";
 import { toast } from "sonner";
-import { 
-  STYLE_OPTIONS, 
-  ASPECT_RATIO_OPTIONS, 
-  VIDEO_SETTINGS, 
-  IMAGE_COMPRESSION, 
-  GALLERY_LAYOUT 
-} from "./image-generator/constants";
+import { VIDEO_SETTINGS, GALLERY_LAYOUT } from "./image-generator/constants";
 import { ImageItem } from "./image-generator/components/image-item";
 import { ImageToImageSetting } from "./image-generator/components/image-to-image-setting";
 import { useVideoGeneration } from "./image-generator/hooks/use-video-generation";
 import { useImageGeneration } from "./image-generator/hooks/use-image-generation";
 import { enhancePromptWithCardContext } from "./image-generator/utils";
 
-interface ImageGeneratorPanelProps extends CardPanelProps {}
-
-export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
+export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
   // Card data hook
   const { card } = useCardPanel({ cardId });
-  
+
   // Get app state for resource gathering
   const activePage = useAppStore((state) => state.activePage);
   const isCardPage = activePage === Page.Cards || activePage === Page.CardPanel;
-  
+
   // Resource data gathering (same pattern as AI panel)
-  const {
-    resourceType,
-    resourceName,
-    editableData,
-    selectedCard,
-  } = useResourceData({
+  const { selectedCard } = useResourceData({
     selectedCardId: cardId,
     selectedFlowId: null,
     isCardPage,
     isFlowPage: false,
   });
-  
+
   // Query client for invalidation
   const queryClient = useQueryClient();
-  
+
   // Query for all generated images (global resource)
-  const { data: generatedImages = [], isLoading, error } = useQuery({
+  const { data: allGeneratedImages = [], isLoading } = useQuery({
     ...generatedImageQueries.list(),
   });
+
+  // Filter out session-generated images from gallery
+  const generatedImages = useMemo(() => {
+    const filtered = allGeneratedImages.filter((image) => {
+      // Explicitly check for true to filter out session-generated images
+      // Treat undefined/null as false (not session-generated) for backward compatibility
+      return image.isSessionGenerated !== true;
+    });
+
+    return filtered;
+  }, [allGeneratedImages]);
 
   // Sync selected state with current card icon
   useEffect(() => {
@@ -71,60 +78,67 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
       setSelectedImageAssetId(undefined);
     }
   }, [card?.props?.iconAssetId]);
-  
+
   // Function to invalidate and refresh global images
   const refreshGlobalImages = useCallback(async () => {
     await queryClient.invalidateQueries({
       queryKey: generatedImageKeys.lists(),
     });
   }, [queryClient]);
-  
+
   // Custom generation hooks
-  const { isGeneratingVideo, videoGenerationStatus, generateVideo } = useVideoGeneration({
+  const { isGeneratingVideo, generateVideo } = useVideoGeneration({
     cardId,
-    onSuccess: refreshGlobalImages
+    onSuccess: refreshGlobalImages,
   });
-  
+
   const { isGeneratingImage, generateImage } = useImageGeneration({
     cardId,
-    onSuccess: refreshGlobalImages
+    onSuccess: refreshGlobalImages,
   });
-  
+
   // Card icon asset mutation
   const updateCardIconAsset = useUpdateCardIconAsset(cardId);
-  
+
   // Card icon asset hook - returns [url, isVideo]
-  const [cardIconAssetUrl, cardIconIsVideo] = useAsset(card?.props?.iconAssetId);
-  
-  // Find the selected generated image to get its thumbnail if it's a video
-  const selectedGeneratedImage = generatedImages.find(img => 
-    card?.props?.iconAssetId && img.assetId.toString() === card.props.iconAssetId.toString()
+  const [cardIconAssetUrl, cardIconIsVideo] = useAsset(
+    card?.props?.iconAssetId,
   );
-  
+
+  // Find the selected generated image to get its thumbnail if it's a video
+  const selectedGeneratedImage = generatedImages.find(
+    (img) =>
+      card?.props?.iconAssetId &&
+      img.assetId.toString() === card.props.iconAssetId.toString(),
+  );
+
   // Use thumbnail for videos, otherwise use the main asset
-  const [thumbnailAssetUrl] = useAsset(selectedGeneratedImage?.thumbnailAssetId);
-  const imageToUseForGeneration = selectedGeneratedImage?.mediaType === 'video' && thumbnailAssetUrl 
-    ? thumbnailAssetUrl 
-    : cardIconAssetUrl;
-  
+  const [thumbnailAssetUrl] = useAsset(
+    selectedGeneratedImage?.thumbnailAssetId,
+  );
+  const imageToUseForGeneration =
+    selectedGeneratedImage?.mediaType === "video" && thumbnailAssetUrl
+      ? thumbnailAssetUrl
+      : cardIconAssetUrl;
+
   // UI state
   const isGenerating = isGeneratingVideo || isGeneratingImage;
-  const [selectedStyle, setSelectedStyle] = useState("photorealistic"); // Hidden but functional
-  const [selectedAspectRatio, setSelectedAspectRatio] = useState("2:3"); // Hidden but functional
-  const [useCardImage, setUseCardImage] = useState(false); // Switch to use card image as input
-  
-  // Use global model store instead of local state
+  const [selectedAspectRatio] = useState("2:3"); // Hidden but functional
+
+  // Use global model store for persisted settings
   const selectedModel = useModelStore.use.selectedImageModel();
   const setSelectedModel = useModelStore.use.setSelectedImageModel();
-  
+  const videoDuration = useModelStore.use.videoDuration();
+  const setVideoDuration = useModelStore.use.setVideoDuration();
+  const useCardImage = useModelStore.use.useCardImageForVideo();
+  const setUseCardImage = useModelStore.use.setUseCardImageForVideo();
+
   // Local form state
   const [imagePrompt, setImagePrompt] = useState("");
-  const [generatingImages, setGeneratingImages] = useState<Set<string>>(new Set());
-  const [selectedImageAssetId, setSelectedImageAssetId] = useState<string | undefined>(undefined);
-  
-  // Video-specific settings
-  const [videoDuration, setVideoDuration] = useState<number>(VIDEO_SETTINGS.DEFAULT_DURATION);
-  const [videoLoop, setVideoLoop] = useState<boolean>(false);
+  const [generatingImages] = useState<Set<string>>(new Set());
+  const [selectedImageAssetId, setSelectedImageAssetId] = useState<
+    string | undefined
+  >(undefined);
 
   // Change handlers
   const handlePromptChange = useCallback((value: string) => {
@@ -134,28 +148,31 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
   // File upload handler
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = useCallback(async (file: File) => {
-    if (!file) return;
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      if (!file) return;
 
-    try {
-      const result = await GeneratedImageService.saveFileToGeneratedImage.execute({
-        file,
-        prompt: file.name.replace(/\.[^/.]+$/, ""), // Use filename without extension as prompt
-        style: selectedStyle,
-        aspectRatio: selectedAspectRatio,
-        associatedCardId: cardId ? new UniqueEntityID(cardId) : undefined,
-      });
+      try {
+        const result =
+          await GeneratedImageService.saveFileToGeneratedImage.execute({
+            file,
+            prompt: file.name.replace(/\.[^/.]+$/, ""), // Use filename without extension as prompt
+            aspectRatio: selectedAspectRatio,
+            associatedCardId: cardId ? new UniqueEntityID(cardId) : undefined,
+          });
 
-      if (result.isSuccess) {
-        // Invalidate queries to refresh the image list
-        await refreshGlobalImages();
-      } else {
-        console.error("Failed to upload file:", result.getError());
+        if (result.isSuccess) {
+          // Invalidate queries to refresh the image list
+          await refreshGlobalImages();
+        } else {
+          console.error("Failed to upload file:", result.getError());
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
       }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    }
-  }, [selectedStyle, selectedAspectRatio, cardId, refreshGlobalImages]);
+    },
+    [selectedAspectRatio, cardId, refreshGlobalImages],
+  );
 
   // Unified generation function
   const handleGenerateImage = useCallback(async () => {
@@ -163,107 +180,129 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
 
     // Check if we need card image but it's not available
     if (useCardImage && !imageToUseForGeneration) {
-      toast("Card image is required but not available. Please upload an image to the card first.");
+      toast(
+        "Card image is required but not available. Please upload an image to the card first.",
+      );
       return;
     }
 
     // Generate enhanced prompt with card data
-    const enhancedPrompt = enhancePromptWithCardContext(imagePrompt, selectedCard);
+    const enhancedPrompt = enhancePromptWithCardContext(
+      imagePrompt,
+      selectedCard,
+    );
 
     // Check if we should generate video
-    const isVideoModel = selectedModel === IMAGE_MODELS.SEEDANCE_1_0 || selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0;
-    
+    const isVideoModel =
+      selectedModel === IMAGE_MODELS.SEEDANCE_1_0 ||
+      selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0;
+
     if (isVideoModel) {
       // Use video generation hook
       await generateVideo({
         prompt: enhancedPrompt,
         userPrompt: imagePrompt, // Pass original user prompt for display
-        style: selectedStyle,
         aspectRatio: selectedAspectRatio,
         imageToImage: useCardImage,
         imageUrl: imageToUseForGeneration || undefined,
         selectedModel,
         videoDuration,
-        videoLoop
       });
     } else {
       // Use image generation hook
       await generateImage({
         prompt: enhancedPrompt,
         userPrompt: imagePrompt, // Pass original user prompt for display
-        style: selectedStyle,
         aspectRatio: selectedAspectRatio,
         imageToImage: useCardImage,
         imageUrl: imageToUseForGeneration || undefined,
-        selectedModel
+        selectedModel,
       });
     }
-  }, [imagePrompt, selectedStyle, selectedAspectRatio, useCardImage, imageToUseForGeneration, selectedModel, selectedCard, videoDuration, videoLoop, generateVideo, generateImage]);
+  }, [
+    imagePrompt,
+    selectedAspectRatio,
+    useCardImage,
+    imageToUseForGeneration,
+    selectedModel,
+    selectedCard,
+    videoDuration,
+    generateVideo,
+    generateImage,
+  ]);
 
+  const handleDownloadImage = useCallback(
+    (imageUrl: string, prompt: string, isVideo: boolean) => {
+      // Set extension based on media type
+      let extension = isVideo ? "mp4" : "webp"; // Default to mp4 for video, webp for images
 
-  const handleDownloadImage = useCallback((imageUrl: string, prompt: string, isVideo: boolean) => {
-    // Set extension based on media type
-    let extension = isVideo ? 'mp4' : 'webp'; // Default to mp4 for video, webp for images
-    
-    // Try to detect actual extension from URL if available
-    if (!imageUrl.startsWith('blob:')) {
-      // For non-blob URLs, try to extract extension
-      const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
-      const imageExtensions = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
-      
-      const extensions = isVideo ? videoExtensions : imageExtensions;
-      for (const ext of extensions) {
-        if (imageUrl.toLowerCase().includes(ext)) {
-          extension = ext.substring(1); // Remove the dot
-          break;
+      // Try to detect actual extension from URL if available
+      if (!imageUrl.startsWith("blob:")) {
+        // For non-blob URLs, try to extract extension
+        const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+        const imageExtensions = [".png", ".jpg", ".jpeg", ".webp", ".gif"];
+
+        const extensions = isVideo ? videoExtensions : imageExtensions;
+        for (const ext of extensions) {
+          if (imageUrl.toLowerCase().includes(ext)) {
+            extension = ext.substring(1); // Remove the dot
+            break;
+          }
         }
       }
-    }
-    
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = `generated-${prompt.slice(0, 20).replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.${extension}`;
-    link.click();
-  }, []);
 
-  const handleSelectImage = useCallback(async (_imageUrl: string, assetId: UniqueEntityID) => {
-    try {
-      // Set the selected state
-      setSelectedImageAssetId(assetId.toString());
-      
-      // Update card icon to use the selected image
-      updateCardIconAsset.mutate(assetId.toString(), {
-        onSuccess: () => {
-          // Could add a toast notification here
-        },
-        onError: (error) => {
-          console.error("❌ Failed to update card image:", error);
-          toast.error("Failed to set card image", {
-            description: error instanceof Error ? error.message : "Unknown error occurred"
-          });
-          // Reset selection on error
-          setSelectedImageAssetId(undefined);
-        }
-      });
-      
-    } catch (error) {
-      console.error("❌ Error setting card image:", error);
-      toast.error("Failed to set card image", {
-        description: error instanceof Error ? error.message : "Unknown error occurred"
-      });
-      // Reset selection on error
-      setSelectedImageAssetId(undefined);
-    }
-  }, [updateCardIconAsset]);
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.download = `generated-${prompt.slice(0, 20).replace(/[^a-zA-Z0-9]/g, "-")}-${Date.now()}.${extension}`;
+      link.click();
+    },
+    [],
+  );
+
+  const handleSelectImage = useCallback(
+    async (_imageUrl: string, assetId: UniqueEntityID) => {
+      try {
+        // Set the selected state
+        setSelectedImageAssetId(assetId.toString());
+
+        // Update card icon to use the selected image
+        updateCardIconAsset.mutate(assetId.toString(), {
+          onSuccess: () => {
+            // Could add a toast notification here
+          },
+          onError: (error) => {
+            console.error("❌ Failed to update card image:", error);
+            toast.error("Failed to set card image", {
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Unknown error occurred",
+            });
+            // Reset selection on error
+            setSelectedImageAssetId(undefined);
+          },
+        });
+      } catch (error) {
+        console.error("❌ Error setting card image:", error);
+        toast.error("Failed to set card image", {
+          description:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        });
+        // Reset selection on error
+        setSelectedImageAssetId(undefined);
+      }
+    },
+    [updateCardIconAsset],
+  );
 
   // Fixed gallery sizing - max 3 rows then scroll
   const hasImagesOrGenerating = generatedImages.length > 0 || isGenerating;
   const galleryHeight = GALLERY_LAYOUT.FIXED_HEIGHT; // Fixed height for 3 rows
-  
+
   let promptSectionClass: string;
   let imagesSectionClass: string;
   let imagesSectionStyle: React.CSSProperties = {};
-  
+
   if (!hasImagesOrGenerating) {
     // No images - prompt takes all space
     promptSectionClass = "flex-1 min-h-0";
@@ -274,13 +313,12 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
     imagesSectionClass = "flex-shrink-0";
     imagesSectionStyle = {
       height: `${galleryHeight}px`, // Fixed height for exactly 3 rows
-      overflow: 'auto' // Always scrollable if content exceeds
+      overflow: "auto", // Always scrollable if content exceeds
     };
   }
 
   return (
     <div className="h-full w-full p-4 bg-background-surface-2 flex flex-col gap-4">
-      
       {/* Dynamic Prompt Section */}
       <div className={`${promptSectionClass} flex flex-col gap-4`}>
         {/* Image Prompt */}
@@ -311,11 +349,32 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
             enabled={useCardImage}
             onToggle={setUseCardImage}
             cardImageUrl={imageToUseForGeneration || undefined}
-            cardIsVideo={false}
+            cardIsVideo={Boolean(cardIconIsVideo)}
             disabled={!imageToUseForGeneration}
-            isGeneratingVideo={selectedModel === IMAGE_MODELS.SEEDANCE_1_0 || selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0}
+            isGeneratingVideo={
+              selectedModel === IMAGE_MODELS.SEEDANCE_1_0 ||
+              selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0
+            }
           />
         </div>
+
+        {/* Duration Slider - Show only for Seedance models */}
+        {(selectedModel === IMAGE_MODELS.SEEDANCE_1_0 ||
+          selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0) && (
+          <div className="flex flex-col gap-3 flex-shrink-0">
+            <label className="text-sm font-medium text-text-primary">
+              Duration
+            </label>
+            <Slider
+              value={[videoDuration]}
+              onValueChange={(value) => setVideoDuration(value[0])}
+              min={VIDEO_SETTINGS.MIN_DURATION}
+              max={VIDEO_SETTINGS.MAX_DURATION}
+              step={1}
+              showValue={true}
+            />
+          </div>
+        )}
 
         {/* Model Selection */}
         <div className="flex flex-col gap-2 flex-shrink-0">
@@ -325,51 +384,21 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
               <SelectValue placeholder="Select a model" />
             </SelectTrigger>
             <SelectContent side="top">
-              <SelectItem value={IMAGE_MODELS.SEEDDREAM_4_0}>Seeddream 4.0 (Images)</SelectItem>
-              <SelectItem value={IMAGE_MODELS.NANO_BANANA}>Nano Banana (Images)</SelectItem>
-              <SelectItem value={IMAGE_MODELS.SEEDANCE_1_0}>Seedance 1.0 Pro (Videos)</SelectItem>
-              <SelectItem value={IMAGE_MODELS.SEEDANCE_LITE_1_0}>Seedance 1.0 Lite (Videos)</SelectItem>
+              <SelectItem value={IMAGE_MODELS.SEEDDREAM_4_0}>
+                Seeddream 4.0 (Images)
+              </SelectItem>
+              <SelectItem value={IMAGE_MODELS.NANO_BANANA}>
+                Nano Banana (Images)
+              </SelectItem>
+              <SelectItem value={IMAGE_MODELS.SEEDANCE_1_0}>
+                Seedance 1.0 Pro (Videos)
+              </SelectItem>
+              <SelectItem value={IMAGE_MODELS.SEEDANCE_LITE_1_0}>
+                Seedance 1.0 Lite (Videos)
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
-
-        {/* Video Settings - Show only for Seedance models */}
-        {(selectedModel === IMAGE_MODELS.SEEDANCE_1_0 || selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0) && (
-          <div className="flex gap-4 flex-shrink-0">
-            {/* Duration Setting */}
-            <div className="flex flex-col gap-2 flex-1">
-              <label className="text-sm font-medium text-text-primary">Duration (seconds)</label>
-              <input
-                type="number"
-                min={VIDEO_SETTINGS.MIN_DURATION}
-                max={VIDEO_SETTINGS.MAX_DURATION}
-                value={videoDuration}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  if (!isNaN(value)) {
-                    setVideoDuration(Math.max(VIDEO_SETTINGS.MIN_DURATION, Math.min(VIDEO_SETTINGS.MAX_DURATION, value)));
-                  }
-                }}
-                className="h-9 px-3 bg-background-surface-0 border border-border-normal rounded-md text-sm text-text-primary"
-              />
-            </div>
-            
-            {/* Loop Setting - Show only for Lite model with image-to-video (Pro doesn't support loop) */}
-            {useCardImage && selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0 && (
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-text-primary">Loop Video</label>
-                <div className="flex items-center h-9">
-                  <Switch
-                    checked={videoLoop}
-                    onCheckedChange={setVideoLoop}
-                    size="small"
-                    className="data-[state=unchecked]:bg-alpha-80/20"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Action Buttons */}
         <div className="flex gap-2 flex-shrink-0">
@@ -381,12 +410,14 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
             size="lg"
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            {isGenerating ? 
-              "Generating..." : 
-              (selectedModel === IMAGE_MODELS.SEEDANCE_1_0 || selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0) ? "Generate Video" : "Generate Image"
-            }
+            {isGenerating
+              ? "Generating..."
+              : selectedModel === IMAGE_MODELS.SEEDANCE_1_0 ||
+                  selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0
+                ? "Generate Video"
+                : "Generate Image"}
           </Button>
-          
+
           {/* Hidden file input - keeping for future use */}
           <input
             ref={fileInputRef}
@@ -405,14 +436,16 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
       </div>
 
       {/* Dynamic Images Section */}
-      <div 
+      <div
         className={`${imagesSectionClass} flex flex-col gap-2`}
         style={imagesSectionStyle}
       >
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
             <Loader2 className="w-6 h-6 animate-spin text-text-subtle" />
-            <span className="ml-2 text-text-subtle text-sm">Loading images...</span>
+            <span className="ml-2 text-text-subtle text-sm">
+              Loading images...
+            </span>
           </div>
         ) : (
           <ScrollArea className="h-full w-full">
@@ -426,14 +459,16 @@ export function ImageGeneratorPanel({ cardId }: ImageGeneratorPanelProps) {
                   </div>
                 </div>
               )}
-              
+
               {generatedImages.map((image) => (
                 <ImageItem
                   key={image.id.toString()}
                   image={image}
                   isGenerating={generatingImages.has(image.id.toString())}
                   isSelected={selectedImageAssetId === image.assetId.toString()}
-                  onDownload={(url, prompt, isVideo) => handleDownloadImage(url, prompt, isVideo)}
+                  onDownload={(url, prompt, isVideo) =>
+                    handleDownloadImage(url, prompt, isVideo)
+                  }
                   onSelect={handleSelectImage}
                 />
               ))}

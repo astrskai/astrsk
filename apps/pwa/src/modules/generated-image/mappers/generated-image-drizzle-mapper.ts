@@ -16,8 +16,13 @@ export class GeneratedImageDrizzleMapper {
         style: raw.style ?? undefined,
         aspectRatio: raw.aspect_ratio ?? undefined,
         mediaType: raw.media_type ?? undefined,
-        thumbnailAssetId: raw.thumbnail_asset_id ? new UniqueEntityID(raw.thumbnail_asset_id) : undefined,
-        associatedCardId: raw.associated_card_id ? new UniqueEntityID(raw.associated_card_id) : undefined,
+        thumbnailAssetId: raw.thumbnail_asset_id
+          ? new UniqueEntityID(raw.thumbnail_asset_id)
+          : undefined,
+        associatedCardId: raw.associated_card_id
+          ? new UniqueEntityID(raw.associated_card_id)
+          : undefined,
+        isSessionGenerated: raw.is_session_generated ?? false,
         createdAt: raw.created_at,
         updatedAt: raw.updated_at,
       },
@@ -31,8 +36,10 @@ export class GeneratedImageDrizzleMapper {
     return generatedImageOrError.getValue();
   }
 
-  public static toPersistence(generatedImage: GeneratedImage): InsertGeneratedImage {
-    return {
+  public static toPersistence(
+    generatedImage: GeneratedImage,
+  ): InsertGeneratedImage {
+    const result = {
       id: generatedImage.id.toString(),
       name: generatedImage.name,
       asset_id: generatedImage.assetId.toString(),
@@ -42,8 +49,11 @@ export class GeneratedImageDrizzleMapper {
       media_type: generatedImage.mediaType ?? null,
       thumbnail_asset_id: generatedImage.thumbnailAssetId?.toString() ?? null,
       associated_card_id: generatedImage.associatedCardId?.toString() ?? null,
+      is_session_generated: generatedImage.isSessionGenerated ?? false,
       created_at: generatedImage.createdAt,
       updated_at: generatedImage.updatedAt,
     };
+
+    return result;
   }
 }
