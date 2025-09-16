@@ -32,9 +32,6 @@ importers:
       '@ai-sdk/xai':
         specifier: ^1.1.13
         version: 1.2.18(zod@3.25.76)
-      '@amplitude/analytics-browser':
-        specifier: ^2.17.6
-        version: 2.20.1
       '@clerk/clerk-react':
         specifier: ^5.46.1
         version: 5.46.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -146,6 +143,9 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: 5.80.7
         version: 5.80.7(@tanstack/react-query@5.80.7(react@18.3.1))(react@18.3.1)
+      '@tanstack/react-router':
+        specifier: ^1.131.44
+        version: 1.131.44(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tanstack/react-virtual':
         specifier: ^3.13.12
         version: 3.13.12(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -582,36 +582,6 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.0.0
-
-  '@amplitude/analytics-browser@2.20.1':
-    resolution: {integrity: sha512-TEDCgLh4A8qzTpZMV5se6gEjkG9yuCkbctBFgtnhv6tthIXgqfKqPdyNWGo16AF4BgzZ9OLJa5RCmp4AmG/uUA==}
-
-  '@amplitude/analytics-client-common@2.3.30':
-    resolution: {integrity: sha512-GGjBgGaRGeww/x7TcOmVKhR6fgUe2l91aSyXiFYWGVU+Cih+tnJ1nePt61JcwUVhLcRogn25NYQ2T2k5KJnfdQ==}
-
-  '@amplitude/analytics-connector@1.6.4':
-    resolution: {integrity: sha512-SpIv0IQMNIq6SH3UqFGiaZyGSc7PBZwRdq7lvP0pBxW8i4Ny+8zwI0pV+VMfMHQwWY3wdIbWw5WQphNjpdq1/Q==}
-
-  '@amplitude/analytics-core@2.18.0':
-    resolution: {integrity: sha512-OXJSgL64NJUN5cGe29WXZpOdV4yHBOulY2plLU+U101GNeT/8I0Y9PZ1k7oBVMWfxxLTeZ+PpphOJHTUnGllBg==}
-
-  '@amplitude/analytics-remote-config@0.4.1':
-    resolution: {integrity: sha512-BYl6kQ9qjztrCACsugpxO+foLaQIC0aSEzoXEAb/gwOzInmqkyyI+Ub+aWTBih4xgB/lhWlOcidWHAmNiTJTNw==}
-
-  '@amplitude/analytics-types@2.9.2':
-    resolution: {integrity: sha512-juhTz396dDP/jLJYP9zDOEAZBtJM0JVvP8G10p1OxUDBVwVIprpQL598F9GRQwVFyqV4CEhDmNyAY0HqqU5bhA==}
-
-  '@amplitude/plugin-autocapture-browser@1.7.1':
-    resolution: {integrity: sha512-4V6nBJK8m1558euEgfxqA0AodH4kKCVydTrcdWsJdEFvuIlI5MXmX65GphqfsSzsKHy35ieMeZ4bkeQJbbCLlw==}
-
-  '@amplitude/plugin-network-capture-browser@1.4.1':
-    resolution: {integrity: sha512-610eXZ4yq5VojL+m3GAMnHJYvC/2Yvtaf71+WHTA4d+pxa+1A68VWWAF+KBM1v85FKiA7Hzpw5EU4oZTRUxmoQ==}
-
-  '@amplitude/plugin-page-view-tracking-browser@2.3.36':
-    resolution: {integrity: sha512-sYMFRTNVknJVb7JFJp9pmoMffI9FPOkQ5VqEqWoVREGS2CBtHVGDfKGsJ8cSWYwMN0mGXicAzAwETGDORBBAlQ==}
-
-  '@amplitude/plugin-web-vitals-browser@0.1.0-frustrationanalytics.0':
-    resolution: {integrity: sha512-xv4sje6/D8r+SgNFTA22FJ5PhtdhN+VSydvs63Frll+qWlyQwaZ1IgDbPyqjzryEkldHRPD7GUaQual+geoIYg==}
 
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -2942,6 +2912,10 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
 
+  '@tanstack/history@1.131.2':
+    resolution: {integrity: sha512-cs1WKawpXIe+vSTeiZUuSBy8JFjEuDgdMKZFRLKwQysKo8y2q6Q1HvS74Yw+m5IhOW1nTZooa6rlgdfXcgFAaw==}
+    engines: {node: '>=12'}
+
   '@tanstack/query-async-storage-persister@5.80.7':
     resolution: {integrity: sha512-Ou+z8WGRRKL4lgQ4l1KsNH94zgR+girDzBzqLPBoTgjEvVYB7huJ+rc08Dl6MZ8xb1rLlhC2+21yayt8B2YvLQ==}
 
@@ -2968,11 +2942,31 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
+  '@tanstack/react-router@1.131.44':
+    resolution: {integrity: sha512-LREJfrl8lSedXHCRAAt0HvnHFP9ikAQWnVhYRM++B26w4ZYQBbLvgCT1BCDZVY7MR6rslcd4OfgpZMOyVhNzFg==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=18.0.0 || >=19.0.0'
+      react-dom: '>=18.0.0 || >=19.0.0'
+
+  '@tanstack/react-store@0.7.5':
+    resolution: {integrity: sha512-A+WZtEnHZpvbKXm8qR+xndNKywBLez2KKKKEQc7w0Qs45GvY1LpRI3BTZNmELwEVim8+Apf99iEDH2J+MUIzlQ==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   '@tanstack/react-virtual@3.13.12':
     resolution: {integrity: sha512-Gd13QdxPSukP8ZrkbgS2RwoZseTTbQPLnQEn7HY/rqtM+8Zt95f7xKC7N0EsKs7aoz0WzZ+fditZux+F8EzYxA==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@tanstack/router-core@1.131.44':
+    resolution: {integrity: sha512-Npi9xB3GSYZhRW8+gPhP6bEbyx0vNc8ZNwsi0JapdiFpIiszgRJ57pesy/rklruv46gYQjLVA5KDOsuaCT/urA==}
+    engines: {node: '>=12'}
+
+  '@tanstack/store@0.7.5':
+    resolution: {integrity: sha512-qd/OjkjaFRKqKU4Yjipaen/EOB9MyEg6Wr9fW103RBPACf1ZcKhbhcu2S5mj5IgdPib6xFIgCUti/mKVkl+fRw==}
 
   '@tanstack/virtual-core@3.13.12':
     resolution: {integrity: sha512-1YBOJfRHV4sXUmWsFSf5rQor4Ss82G8dQWLRbnk3GA4jeP8hQt1hxXh0tmflpC0dz3VgEv/1+qwPyLeWkQuPFA==}
@@ -3960,6 +3954,9 @@ packages:
         optional: true
       react:
         optional: true
+
+  cookie-es@1.2.2:
+    resolution: {integrity: sha512-+W7VmiVINB+ywl1HGXJXmrqkOhpKrIiVZV6tQuV54ZyQC7MMuBt81Vc336GMLoHBq5hV/F9eXgt5Mnx0Rha5Fg==}
 
   cookie@0.7.2:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
@@ -5151,6 +5148,10 @@ packages:
   isarray@2.0.5:
     resolution: {integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==}
 
+  isbot@5.1.30:
+    resolution: {integrity: sha512-3wVJEonAns1OETX83uWsk5IAne2S5zfDcntD2hbtU23LelSqNXzXs9zKjMPOLMzroCgIjCfjYAEHrd2D6FOkiA==}
+    engines: {node: '>=18'}
+
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
@@ -6259,9 +6260,6 @@ packages:
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
 
-  rxjs@7.8.2:
-    resolution: {integrity: sha512-dhKf903U/PQZY6boNNtAGdWbG85WAbjT/1xYoZIC7FAY0yWapOBQVsVrDl58W86//e1VpMNBtRV4MaXfdMySFA==}
-
   safe-array-concat@1.1.3:
     resolution: {integrity: sha512-AURm5f0jYEOydBj7VQlVvDrjeFgthDdEF5H1dP+6mNpoXOMo1quQqJ4wvJDyRZ9+pO3kGWoOdmV08cSv2aJV6Q==}
     engines: {node: '>=0.4'}
@@ -6320,6 +6318,16 @@ packages:
 
   serialize-javascript@6.0.2:
     resolution: {integrity: sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==}
+
+  seroval-plugins@1.3.3:
+    resolution: {integrity: sha512-16OL3NnUBw8JG1jBLUoZJsLnQq0n5Ua6aHalhJK4fMQkz1lqR7Osz1sA30trBtd9VUDc2NgkuRCn8+/pBwqZ+w==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      seroval: ^1.0
+
+  seroval@1.3.2:
+    resolution: {integrity: sha512-RbcPH1n5cfwKrru7v7+zrZvjLurgHhGyso3HTyGtRivGWgYjbOmGuivCQaORNELjNONoK35nj28EoWul9sb1zQ==}
+    engines: {node: '>=10'}
 
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
@@ -6731,6 +6739,9 @@ packages:
 
   tiny-invariant@1.3.3:
     resolution: {integrity: sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==}
+
+  tiny-warning@1.0.3:
+    resolution: {integrity: sha512-lBN9zLN/oAf68o3zNXYrdCt1kP8WsiGW8Oo2ka41b2IM5JL/S1CTyX1rW0mb/zSuJun0ZUrDxx4sqvYS2FWzPA==}
 
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
@@ -7163,9 +7174,6 @@ packages:
   web-namespaces@2.0.1:
     resolution: {integrity: sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ==}
 
-  web-vitals@5.0.3:
-    resolution: {integrity: sha512-4KmOFYxj7qT6RAdCH0SWwq8eKeXNhAFXR4PmgF6nrWFmrJ41n7lq3UCA6UK0GebQ4uu+XP8e8zGjaDO3wZlqTg==}
-
   webidl-conversions@4.0.2:
     resolution: {integrity: sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==}
 
@@ -7523,64 +7531,6 @@ snapshots:
       '@ai-sdk/provider': 1.1.3
       '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
       zod: 3.25.76
-
-  '@amplitude/analytics-browser@2.20.1':
-    dependencies:
-      '@amplitude/analytics-core': 2.18.0
-      '@amplitude/analytics-remote-config': 0.4.1
-      '@amplitude/plugin-autocapture-browser': 1.7.1
-      '@amplitude/plugin-network-capture-browser': 1.4.1
-      '@amplitude/plugin-page-view-tracking-browser': 2.3.36
-      '@amplitude/plugin-web-vitals-browser': 0.1.0-frustrationanalytics.0
-      tslib: 2.8.1
-
-  '@amplitude/analytics-client-common@2.3.30':
-    dependencies:
-      '@amplitude/analytics-connector': 1.6.4
-      '@amplitude/analytics-core': 2.18.0
-      '@amplitude/analytics-types': 2.9.2
-      tslib: 2.8.1
-
-  '@amplitude/analytics-connector@1.6.4': {}
-
-  '@amplitude/analytics-core@2.18.0':
-    dependencies:
-      '@amplitude/analytics-connector': 1.6.4
-      tslib: 2.8.1
-
-  '@amplitude/analytics-remote-config@0.4.1':
-    dependencies:
-      '@amplitude/analytics-client-common': 2.3.30
-      '@amplitude/analytics-core': 2.18.0
-      '@amplitude/analytics-types': 2.9.2
-      tslib: 2.8.1
-
-  '@amplitude/analytics-types@2.9.2': {}
-
-  '@amplitude/plugin-autocapture-browser@1.7.1':
-    dependencies:
-      '@amplitude/analytics-core': 2.18.0
-      rxjs: 7.8.2
-      tslib: 2.8.1
-
-  '@amplitude/plugin-network-capture-browser@1.4.1':
-    dependencies:
-      '@amplitude/analytics-core': 2.18.0
-      rxjs: 7.8.2
-      tslib: 2.8.1
-
-  '@amplitude/plugin-page-view-tracking-browser@2.3.36':
-    dependencies:
-      '@amplitude/analytics-client-common': 2.3.30
-      '@amplitude/analytics-types': 2.9.2
-      tslib: 2.8.1
-
-  '@amplitude/plugin-web-vitals-browser@0.1.0-frustrationanalytics.0':
-    dependencies:
-      '@amplitude/analytics-core': 2.18.0
-      rxjs: 7.8.2
-      tslib: 2.8.1
-      web-vitals: 5.0.3
 
   '@ampproject/remapping@2.3.0':
     dependencies:
@@ -9914,6 +9864,8 @@ snapshots:
       tailwindcss: 4.1.11
       vite: 6.3.5(@types/node@20.19.9)(jiti@2.5.0)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)
 
+  '@tanstack/history@1.131.2': {}
+
   '@tanstack/query-async-storage-persister@5.80.7':
     dependencies:
       '@tanstack/query-persist-client-core': 5.80.7
@@ -9942,11 +9894,41 @@ snapshots:
       '@tanstack/query-core': 5.80.7
       react: 18.3.1
 
+  '@tanstack/react-router@1.131.44(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tanstack/history': 1.131.2
+      '@tanstack/react-store': 0.7.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@tanstack/router-core': 1.131.44
+      isbot: 5.1.30
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      tiny-invariant: 1.3.3
+      tiny-warning: 1.0.3
+
+  '@tanstack/react-store@0.7.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tanstack/store': 0.7.5
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      use-sync-external-store: 1.5.0(react@18.3.1)
+
   '@tanstack/react-virtual@3.13.12(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@tanstack/virtual-core': 3.13.12
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+
+  '@tanstack/router-core@1.131.44':
+    dependencies:
+      '@tanstack/history': 1.131.2
+      '@tanstack/store': 0.7.5
+      cookie-es: 1.2.2
+      seroval: 1.3.2
+      seroval-plugins: 1.3.3(seroval@1.3.2)
+      tiny-invariant: 1.3.3
+      tiny-warning: 1.0.3
+
+  '@tanstack/store@0.7.5': {}
 
   '@tanstack/virtual-core@3.13.12': {}
 
@@ -11012,6 +10994,8 @@ snapshots:
     optionalDependencies:
       '@clerk/clerk-react': 5.46.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
+
+  cookie-es@1.2.2: {}
 
   cookie@0.7.2: {}
 
@@ -12257,6 +12241,8 @@ snapshots:
   isarray@1.0.0: {}
 
   isarray@2.0.5: {}
+
+  isbot@5.1.30: {}
 
   isexe@2.0.0: {}
 
@@ -13580,10 +13566,6 @@ snapshots:
     dependencies:
       queue-microtask: 1.2.3
 
-  rxjs@7.8.2:
-    dependencies:
-      tslib: 2.8.1
-
   safe-array-concat@1.1.3:
     dependencies:
       call-bind: 1.0.8
@@ -13651,6 +13633,12 @@ snapshots:
   serialize-javascript@6.0.2:
     dependencies:
       randombytes: 2.1.0
+
+  seroval-plugins@1.3.3(seroval@1.3.2):
+    dependencies:
+      seroval: 1.3.2
+
+  seroval@1.3.2: {}
 
   set-function-length@1.2.2:
     dependencies:
@@ -14154,6 +14142,8 @@ snapshots:
 
   tiny-invariant@1.3.3: {}
 
+  tiny-warning@1.0.3: {}
+
   tinybench@2.9.0: {}
 
   tinyexec@0.3.2: {}
@@ -14625,8 +14615,6 @@ snapshots:
       graceful-fs: 4.2.11
 
   web-namespaces@2.0.1: {}
-
-  web-vitals@5.0.3: {}
 
   webidl-conversions@4.0.2: {}
 

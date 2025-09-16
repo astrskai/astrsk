@@ -1010,6 +1010,10 @@ const UserInputs = ({
     useAppStore.use.isGroupButtonDonNotShowAgain();
   const setIsGroupButtonDonNotShowAgain =
     useAppStore.use.setIsGroupButtonDonNotShowAgain();
+  
+  // Session onboarding for inference button
+  const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
+  const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
 
   // Shuffle
   const handleShuffle = useCallback(() => {
@@ -1025,16 +1029,23 @@ const UserInputs = ({
 
   // Guide: Select to prompt a response
   const [isOpenGuide, setIsOpenGuide] = useState(false);
+  
+  // Show tooltip if either the old guide is open OR the inference button onboarding is not completed
+  const shouldShowTooltip = isOpenGuide || !sessionOnboardingSteps.inferenceButton;
+  
   const onFocusUserInput = useCallback(() => {
     if (isGroupButtonDonNotShowAgain) {
       return;
     }
     setIsOpenGuide(true);
   }, [isGroupButtonDonNotShowAgain]);
+  
   const onCharacterButtonClicked = useCallback(() => {
     setIsOpenGuide(false);
     setIsGroupButtonDonNotShowAgain(true);
-  }, []);
+    // Mark inference button onboarding step as completed
+    setSessionOnboardingStep('inferenceButton', true);
+  }, [setSessionOnboardingStep, setIsGroupButtonDonNotShowAgain]);
 
   return (
     <div className="sticky bottom-0 inset-x-0 pb-[80px] px-[56px]">
@@ -1050,7 +1061,7 @@ const UserInputs = ({
         )}
       >
         <TooltipProvider delayDuration={0}>
-          <Tooltip open={isOpenGuide}>
+          <Tooltip open={shouldShowTooltip}>
             <TooltipTrigger asChild>
               <div className="p-0 flex flex-row justify-between">
                 <div
@@ -1067,7 +1078,7 @@ const UserInputs = ({
                         onCharacterButtonClicked();
                       }}
                       isUser
-                      isHighLighted={isOpenGuide}
+                      isHighLighted={shouldShowTooltip}
                     />
                   )}
                   {aiCharacterCardIds.map((characterCardId) => (
@@ -1078,7 +1089,7 @@ const UserInputs = ({
                         generateCharacterMessage?.(characterCardId);
                         onCharacterButtonClicked();
                       }}
-                      isHighLighted={isOpenGuide}
+                      isHighLighted={shouldShowTooltip}
                     />
                   ))}
                   <UserInputCharacterButton
@@ -1088,7 +1099,7 @@ const UserInputs = ({
                       handleShuffle();
                       onCharacterButtonClicked();
                     }}
-                    isHighLighted={isOpenGuide}
+                    isHighLighted={shouldShowTooltip}
                   />
                   <div className="w-[1px] h-[48px] bg-border-normal mx-2" />
                   <UserInputCharacterButton
@@ -1159,7 +1170,7 @@ const UserInputs = ({
             <TooltipContent
               side="top"
               align="start"
-              className="py-[12px] px-[16px] ml-[-16px] mb-[12px] bg-background-surface-2 border-border-normal border-1"
+              className="py-[12px] px-[16px] ml-[-16px] mb-[12px] bg-background-surface-2 border-1 border-border-selected-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
             >
               <div className="font-[600] text-[14px] leading-[20px] text-text-primary">
                 Select to prompt a response
@@ -2287,6 +2298,12 @@ const SessionMessagesAndUserInputs = ({
   // Session data
   const [isOpenSessionData, setIsOpenSessionData] = useState(false);
   const { data: flow } = useQuery(flowQueries.detail(session?.flowId));
+  
+  // Session onboarding
+  const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
+  const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
+  // Show session data tooltip if helpVideo is done but sessionData is not done yet
+  const shouldShowSessionDataTooltip = sessionOnboardingSteps.helpVideo && !sessionOnboardingSteps.sessionData;
   const isDataSchemaUsed = useMemo(() => {
     if (!flow) {
       return false;
@@ -3011,7 +3028,13 @@ const SessionMessagesAndUserInputs = ({
           openned={isOpenSessionData}
           onClick={() => {
             setIsOpenSessionData((isOpen) => !isOpen);
+            // Complete the entire onboarding if on sessionData step
+            console.log("shouldShowSessionDataTooltip", shouldShowSessionDataTooltip);
+            setSessionOnboardingStep('sessionData', true);
           }}
+          onboarding={shouldShowSessionDataTooltip}
+          onboardingTooltip={shouldShowSessionDataTooltip ? "You can edit your session data" : undefined}
+          tooltipClassName="!top-[0px] !right-[50px]"
         />
         <div
           className={cn(

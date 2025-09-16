@@ -4,11 +4,13 @@ import { formatFail, logger, readFileToString } from "@/shared/utils";
 import JSZip from "jszip";
 import { Flow } from "@/modules/flow/domain/flow";
 import { isOldFlowFormat, migrateFlowToNewFormat } from "@/modules/flow/utils/migrate-flow-format";
+import { ModelTier } from "@/modules/agent/domain/agent";
 
 type ModelListItem = {
   agentId: string;
   agentName: string;
   modelName: string;
+  modelTier?: ModelTier;
 };
 
 export class GetModelsFromFlowFile
@@ -55,6 +57,7 @@ export class GetModelsFromFlowFile
               agentId: agentId,
               agentName: (agent as any).name || `Agent ${agentId.slice(0, 8)}`,
               modelName: (agent as any).modelName || "",
+              modelTier: (agent as any).modelTier,
             });
           }
         }

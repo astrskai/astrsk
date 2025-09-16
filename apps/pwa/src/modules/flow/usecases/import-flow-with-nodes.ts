@@ -4,7 +4,7 @@ import { readFileToString } from "@/shared/utils/file-utils";
 import { Flow } from "@/modules/flow/domain/flow";
 import { SaveFlowRepo } from "@/modules/flow/repos/save-flow-repo";
 import { ApiSource } from "@/modules/api/domain";
-import { Agent } from "@/modules/agent/domain";
+import { Agent, ModelTier } from "@/modules/agent/domain";
 import { SaveAgentRepo } from "@/modules/agent/repos";
 import { SaveDataStoreNodeRepo } from "@/modules/data-store-node/repos";
 import { SaveIfNodeRepo } from "@/modules/if-node/repos";
@@ -55,9 +55,9 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
   private isSillyTavernPrompt(json: any): json is STPrompt {
     if (
       "prompts" in json &&
-      typeof Array.isArray(json.prompts) &&
+      Array.isArray(json.prompts) &&
       "prompt_order" in json &&
-      typeof Array.isArray(json.prompt_order)
+      Array.isArray(json.prompt_order)
     ) {
       return true;
     }
@@ -140,7 +140,7 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
     }));
 
     // Generate a clean name from filename
-    const baseName = filename.replace(/\.(json|st)$/i, "").replace(/[^a-zA-Z0-9\s-_]/g, "");
+    const baseName = filename.replace(/\.(json|st)$/i, "").replace(/[^a-zA-Z0-9\s_-]/g, "");
     const flowName = baseName || "Imported SillyTavern Flow";
     const agentName = "New Agent";
     const agentId = `new_agent`;

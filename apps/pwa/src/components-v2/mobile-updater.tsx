@@ -1,6 +1,5 @@
 import { MobileNavItem } from "@/components-v2/left-navigation";
 import { logger } from "@/shared/utils/logger";
-import * as amplitude from "@amplitude/analytics-browser";
 import { Import } from "lucide-react";
 import { useCallback } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
@@ -73,9 +72,6 @@ const MobileUpdater = () => {
 
   // Restart and apply update
   const restartApp = useCallback(async () => {
-    amplitude.track("update_app", {
-      current_version: __APP_VERSION__,
-    });
     updateServiceWorker();
   }, [updateServiceWorker]);
 

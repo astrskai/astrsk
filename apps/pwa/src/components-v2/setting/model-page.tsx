@@ -38,7 +38,6 @@ import {
   OpenrouterProviderSort,
   openrouterProviderSortLabel,
 } from "@/modules/api/domain";
-import * as amplitude from "@amplitude/analytics-browser";
 
 const maskApiKey = (apiKey?: string) => {
   if (!apiKey) {
@@ -259,7 +258,7 @@ const renderProviderListItem = ({
 };
 
 const providerOrder: ApiSource[] = [
-  ApiSource.AstrskAi,
+  // ApiSource.AstrskAi,
   ApiSource.OpenAI,
   ApiSource.GoogleGenerativeAI,
   ApiSource.Anthropic,
@@ -302,10 +301,6 @@ export default function ModelPage({ className }: { className?: string }) {
       apiConnection?: ApiConnection;
       apiSource?: ApiSource;
     }) => {
-      //track
-      console.log("Tracking new provider creation button pressed");
-      amplitude.track("create_provider_initiate");
-
       // Get api connection
       let connection = apiConnection;
       if (!connection && apiSource) {
@@ -404,10 +399,6 @@ export default function ModelPage({ className }: { className?: string }) {
   const handleOnConnect = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log("Tracking create provider complete");
-      amplitude.track("create_provider_complete", {
-        source: editingApiConnection?.source,
-      });
 
       // Check if editingApiSource is null
       if (!editingApiConnection) {
@@ -538,13 +529,10 @@ export default function ModelPage({ className }: { className?: string }) {
             ?.filter((apiConnection: ApiConnection, index: number, array: ApiConnection[]) => {
               // For AstrskAi connections, only keep the first occurrence
               if (apiConnection.source === ApiSource.AstrskAi) {
-                return (
-                  array.findIndex(
-                    (conn: ApiConnection) => conn.source === ApiSource.AstrskAi,
-                  ) === index
-                );
+                return false;
+              } else {
+                return true;
               }
-              return true;
             })
             ?.map((apiConnection: ApiConnection) =>
               renderProviderListItem({

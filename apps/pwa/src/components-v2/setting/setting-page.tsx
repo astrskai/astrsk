@@ -6,6 +6,7 @@ import {
   SettingSubPageType,
   useAppStore,
 } from "@/app/stores/app-store";
+import { ConvexReady } from "@/components-v2/convex-ready";
 import { cn } from "@/components-v2/lib/utils";
 import { AccountPage } from "@/components-v2/setting/account-page";
 import ContentPolicy from "@/components-v2/setting/content-policy";
@@ -168,13 +169,6 @@ const MainPage = () => {
   const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
   const setSettingSubPage = useAppStore.use.setSettingSubPage();
 
-  // Telemetry
-  const isTelemetryEnabled = useAppStore.use.isTelemetryEnabled();
-  const setIsTelemetryEnabled = useAppStore.use.setIsTelemetryEnabled();
-
-  // Legal
-  const setSettingDetailPage = useAppStore.use.setSettingDetailPage();
-
   return (
     <ScrollArea className="h-full">
       <div className="mx-auto my-6 pb-6 w-full max-w-[587px] pt-[80px]">
@@ -187,20 +181,22 @@ const MainPage = () => {
             App Preferences
           </TypoXLarge>
 
-          <Authenticated>
-            <div
-              className="flex items-center justify-between cursor-pointer"
-              onClick={() => {
-                setSettingPageLevel(SettingPageLevel.sub);
-                setSettingSubPage(SettingSubPageType.account);
-              }}
-            >
-              <TypoBase className="font-semibold text-text-body">
-                Account and subscription
-              </TypoBase>
-              <ChevronRight className="h-5 w-5 text-text-secondary" />
-            </div>
-          </Authenticated>
+          <ConvexReady>
+            <Authenticated>
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => {
+                  setSettingPageLevel(SettingPageLevel.sub);
+                  setSettingSubPage(SettingSubPageType.account);
+                }}
+              >
+                <TypoBase className="font-semibold text-text-body">
+                  Account and subscription
+                </TypoBase>
+                <ChevronRight className="h-5 w-5 text-text-secondary" />
+              </div>
+            </Authenticated>
+          </ConvexReady>
 
           <div
             className="flex items-center justify-between cursor-pointer"
@@ -213,33 +209,6 @@ const MainPage = () => {
               Providers
             </TypoBase>
             <ChevronRight className="h-5 w-5 text-text-secondary" />
-          </div>
-
-          <div className="flex justify-between">
-            <div className="flex flex-col gap-[8px]">
-              <TypoBase className="font-semibold text-text-body">
-                Telemetry settings
-              </TypoBase>
-              <TypoBase className="text-text-placeholder">
-                Share usage data anonymously
-              </TypoBase>
-              <div className="font-[400] text-[12px] leading-[15px] text-text-info">
-                For detailed information about what data is being shared,{" "}
-                <span
-                  className="text-secondary-normal cursor-pointer"
-                  onClick={() => {
-                    setSettingPageLevel(SettingPageLevel.detail);
-                    setSettingDetailPage(SettingDetailPageType.privacyPolicy);
-                  }}
-                >
-                  [click here]
-                </span>
-              </div>
-            </div>
-            <Switch
-              checked={isTelemetryEnabled}
-              onCheckedChange={setIsTelemetryEnabled}
-            />
           </div>
         </div>
         <Separator />
@@ -394,7 +363,9 @@ export default function SettingPage({ className }: { className?: string }) {
           />
         )}
         {settingSubPage === SettingSubPageType.advanced && <AdvancedPage />}
-        {settingSubPage === SettingSubPageType.account && <AccountPage />}
+        <ConvexReady>
+          {settingSubPage === SettingSubPageType.account && <AccountPage />}
+        </ConvexReady>
       </div>
 
       {/* Page Level 3 */}
@@ -417,9 +388,11 @@ export default function SettingPage({ className }: { className?: string }) {
           <ContentPolicy />
         )}
         {settingDetailPage === SettingDetailPageType.ossNotice && <OssNotice />}
-        {settingDetailPage === SettingDetailPageType.creditUsage && (
-          <CreditUsagePage />
-        )}
+        <ConvexReady>
+          {settingDetailPage === SettingDetailPageType.creditUsage && (
+            <CreditUsagePage />
+          )}
+        </ConvexReady>
       </div>
       <ScrollBar orientation="vertical" className="w-1.5" />
     </ScrollArea>

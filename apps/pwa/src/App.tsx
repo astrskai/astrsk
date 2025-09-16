@@ -7,12 +7,14 @@ import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
 import { useGlobalErrorHandler } from "@/app/hooks/use-global-error-handler";
 import { queryClient } from "@/app/queries/query-client";
 import { Page, useAppStore } from "@/app/stores/app-store";
+import { useSessionStore } from "@/app/stores/session-store";
 import DesktopApp from "@/app/v2/desktop-app";
 import MobileApp from "@/app/v2/mobile-app";
 import {
   SidebarInset,
   SidebarLeftProvider,
 } from "@/components-v2/both-sidebar";
+import { GlobalDockView } from "@/components-v2/global-dockview";
 import { usePwa } from "@/components-v2/hooks/use-pwa";
 import { InstallPwa } from "@/components-v2/install-pwa";
 import { LeftNavigationMobile } from "@/components-v2/left-navigation";
@@ -20,7 +22,6 @@ import {
   LeftNavigation,
   LeftNavigationTrigger,
 } from "@/components-v2/left-navigation/left-navigation";
-import { GlobalDockView } from "@/components-v2/global-dockview";
 import { cn } from "@/components-v2/lib/utils";
 import { Loading } from "@/components-v2/loading";
 import { PaymentPage } from "@/components-v2/setting/payment-page";
@@ -30,24 +31,17 @@ import { ThemeProvider } from "@/components-v2/theme-provider";
 import { TopBar } from "@/components-v2/top-bar";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
 import { Toaster } from "@/components-v2/ui/sonner";
-import { logger } from "@/shared/utils/logger";
-import * as amplitude from "@amplitude/analytics-browser";
+import { UniqueEntityID } from "@/shared/domain";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-// Init amplitude
-if (import.meta.env.VITE_AMPLITUDE_API_KEY) {
-  amplitude.init(import.meta.env.VITE_AMPLITUDE_API_KEY, {
-    // Disable auto capture
-    autocapture: false,
-
-    // Disable optional tracking
-    trackingOptions: {
-      ipAddress: false,
-      language: false,
-      platform: false,
-    },
-  });
-}
+import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
+import {
+  Outlet,
+  RouterProvider,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from "@tanstack/react-router";
 
 // Mobile navigation context
 const MobileNavigationContext = createContext<{
@@ -76,6 +70,53 @@ function V2Layout({
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const { isStandalone, canInstall, install } = usePwa();
   const defaultInitialized = useDefaultInitialized();
+
+  // Onboarding-based sidebar control
+  const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
+  const onboardingSelectedSessionId =
+    useAppStore.use.onboardingSelectedSessionId();
+  const setActivePage = useAppStore.use.setActivePage();
+
+  // Session store for restoring selected session
+  const selectSession = useSessionStore.use.selectSession();
+
+  // Determine if sidebar should be closed based on onboarding state
+  // Close sidebar when genre is selected but session data step not complete (in onboarding flow)
+  const isInOnboardingFlow = !sessionOnboardingSteps.openResource;
+  const shouldCloseSidebar = isInOnboardingFlow;
+
+  // Initialize page based on onboarding state
+  useEffect(() => {
+    if (defaultInitialized) {
+      // If in onboarding flow, ensure we're on sessions page
+      if (isInOnboardingFlow) {
+        console.log("In onboarding session play state");
+        // Always navigate to sessions page when in session play state
+        setActivePage(Page.Sessions);
+
+        // If we have a stored session, select it
+        if (onboardingSelectedSessionId) {
+          console.log(
+            "Restoring onboarding session:",
+            onboardingSelectedSessionId,
+          );
+          setTimeout(() => {
+            selectSession(
+              new UniqueEntityID(onboardingSelectedSessionId),
+              "Onboarding Session",
+            );
+          }, 100);
+        }
+      }
+    }
+  }, [
+    defaultInitialized,
+    sessionOnboardingSteps,
+    onboardingSelectedSessionId,
+    setActivePage,
+    selectSession,
+    isInOnboardingFlow,
+  ]);
 
   // Initialize global error handler
   useGlobalErrorHandler();
@@ -182,15 +223,15 @@ function V2Layout({
         )}
       >
         <TopBar />
-        <SidebarLeftProvider defaultOpen={!isMobile}>
+        <SidebarLeftProvider defaultOpen={!isMobile && !shouldCloseSidebar}>
           <LeftNavigation />
           <LeftNavigationTrigger />
           <SidebarInset>
-            <main className="relative flex-1 overflow-hidden">
+            <main className="relative flex-1 overflow-hidden h-full w-full">
               <GlobalDockView>{children}</GlobalDockView>
             </main>
           </SidebarInset>
-          <Toaster expand className="!z-[100]" />
+          <Toaster expand className="!z-[9999]" />
         </SidebarLeftProvider>
       </div>
     </ThemeProvider>
@@ -199,38 +240,7 @@ function V2Layout({
 
 const AppInternal = () => {
   const activePage = useAppStore.use.activePage();
-
-  // Toggle telemetry
-  const isTelemetryEnabled = useAppStore.use.isTelemetryEnabled();
-  const [isTelemetryInitialized, setIsTelemetryInitialized] = useState(false);
-  useEffect(() => {
-    amplitude.setOptOut(!isTelemetryEnabled);
-    setIsTelemetryInitialized(true);
-    logger.debug(`Telemetry ${isTelemetryEnabled ? "enabled" : "disabled"}`);
-  }, [isTelemetryEnabled]);
-
-  // Track `start_app` event
   const isMobile = useIsMobile();
-  const [isStartAppSent, setIsStartAppSent] = useState(false);
-  useEffect(() => {
-    // Check telemetry initialized or already sent event
-    if (!isTelemetryInitialized || isStartAppSent) {
-      return;
-    }
-
-    // Set `app_platform`
-    const identifyEvent = new amplitude.Identify();
-    identifyEvent.set("app_platform", isMobile ? "mobile" : "desktop");
-    amplitude.identify(identifyEvent);
-
-    // Track `start_app` event
-    amplitude.track("start_app");
-    amplitude.flush();
-
-    // Set state
-    setIsStartAppSent(true);
-    logger.debug(`start_app:  ${isMobile ? "mobile" : "desktop"}`);
-  }, [isMobile, isStartAppSent, isTelemetryInitialized]);
 
   return isMobile ? (
     <V2Layout>
@@ -248,10 +258,36 @@ const AppInternal = () => {
   );
 };
 
+const rootRoute = createRootRoute({
+  component: () => <Outlet />,
+});
+
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: () => <AppInternal />,
+});
+
+const ssoCallbackRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/sso-callback",
+  component: () => <AuthenticateWithRedirectCallback />,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, ssoCallbackRoute]);
+
+const router = createRouter({ routeTree });
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppInternal />
+      <RouterProvider router={router} />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

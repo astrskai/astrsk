@@ -23,6 +23,8 @@ import { Button } from "@/components-v2/ui/button";
 import { Checkbox } from "@/components-v2/ui/checkbox";
 import { DeleteConfirm } from "@/components-v2/confirm";
 import { SessionImportDialog, type AgentModel } from "@/components-v2/session/components/session-import-dialog";
+import { SessionExportDialog, type AgentModelTierInfo } from "@/components-v2/session/components/session-export-dialog";
+import { ModelTier } from "@/modules/agent/domain/agent";
 import {
   Dialog,
   DialogClose,
@@ -78,17 +80,73 @@ const SessionItem = ({
 
   // Handle export
   const [isOpenExport, setIsOpenExport] = useState(false);
-  const [isExportHistory, setIsExportHistory] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const handleExport = useCallback(async () => {
-    try {
-      // Start export
-      setIsExporting(true);
+  const [exportAgents, setExportAgents] = useState<AgentModelTierInfo[]>([]);
 
-      // Export session to file
+  // Prepare export dialog
+  const handleExportClick = useCallback(async () => {
+    try {
+      if (!session || !session.flowId) {
+        toast.error("No flow associated with this session");
+        return;
+      }
+
+      // Get flow to find agents
+      const flowQuery = await queryClient.fetchQuery({
+        queryKey: ["flow", session.flowId.toString()],
+        queryFn: async () => {
+          const result = await FlowService.getFlow.execute(session.flowId!);
+          if (result.isFailure) throw new Error(result.getError());
+          return result.getValue();
+        },
+      });
+
+      if (!flowQuery) {
+        toast.error("Failed to load flow");
+        return;
+      }
+
+      // Get agents for this flow
+      const agents: AgentModelTierInfo[] = [];
+      for (const node of flowQuery.props.nodes) {
+        if (node.type === "agent") {
+          const agentId = node.id;
+          const agentQuery = await queryClient.fetchQuery({
+            queryKey: ["agent", agentId],
+            queryFn: async () => {
+              const result = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
+              if (result.isFailure) throw new Error(result.getError());
+              return result.getValue();
+            },
+          });
+
+          if (agentQuery) {
+            agents.push({
+              agentId: agentId,
+              agentName: agentQuery.props.name,
+              modelName: agentQuery.props.modelName || "",
+              recommendedTier: ModelTier.Light,
+              selectedTier: agentQuery.props.modelTier || ModelTier.Light,
+            });
+          }
+        }
+      }
+
+      setExportAgents(agents);
+      setIsOpenExport(true);
+    } catch (error) {
+      console.error("Failed to prepare export:", error);
+      toast.error("Failed to prepare export");
+    }
+  }, [session]);
+
+  // Handle export with tier selections
+  const handleExport = useCallback(async (modelTierSelections: Map<string, ModelTier>, includeHistory: boolean) => {
+    try {
+      // Export session to file with model tier selections
       const fileOrError = await SessionService.exportSessionToFile.execute({
         sessionId: sessionId,
-        includeHistory: isExportHistory,
+        includeHistory: includeHistory,
+        modelTierSelections: modelTierSelections,
       });
       if (fileOrError.isFailure) {
         throw new Error(fileOrError.getError());
@@ -97,10 +155,8 @@ const SessionItem = ({
 
       // Download session file
       downloadFile(file);
-
-      // Close dialog
+      toast.success("Session exported successfully");
       setIsOpenExport(false);
-      setIsExportHistory(false);
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {
@@ -108,11 +164,8 @@ const SessionItem = ({
           description: error.message,
         });
       }
-    } finally {
-      // End export
-      setIsExporting(false);
     }
-  }, [isExportHistory, sessionId]);
+  }, [sessionId]);
 
   // Handle copy
   const [isOpenCopy, setIsOpenCopy] = useState(false);
@@ -222,7 +275,7 @@ const SessionItem = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  setIsOpenExport(true);
+                  handleExportClick();
                 }}
               >
                 <Upload size={20} />
@@ -271,35 +324,12 @@ const SessionItem = ({
       </div>
 
       {/* Place dialog outside of session item to prevent selecting session */}
-      <Dialog open={isOpenExport} onOpenChange={setIsOpenExport}>
-        <DialogContent hideClose>
-          <DialogHeader>
-            <DialogTitle>Export session</DialogTitle>
-          </DialogHeader>
-          <Label className="mt-4 flex flex-row gap-2 items-center">
-            <Checkbox
-              defaultChecked={false}
-              checked={isExportHistory}
-              onCheckedChange={(checked) => {
-                setIsExportHistory(checked === true);
-              }}
-              disabled={isExporting}
-            />
-            Include history
-          </Label>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button disabled={isExporting} variant="ghost" size="lg">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button disabled={isExporting} onClick={handleExport} size="lg">
-              {isExporting && <Loader2 className="animate-spin" />}
-              Export
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SessionExportDialog
+        open={isOpenExport}
+        onOpenChange={setIsOpenExport}
+        agents={exportAgents}
+        onExport={handleExport}
+      />
       <Dialog open={isOpenCopy} onOpenChange={setIsOpenCopy}>
         <DialogContent hideClose>
           <DialogHeader>
@@ -342,7 +372,17 @@ const SessionItem = ({
   );
 };
 
-const SessionSection = ({ onClick }: { onClick?: () => void }) => {
+const SessionSection = ({ 
+  onClick, 
+  onboardingHighlight,
+  onHelpClick,
+  onboardingHelpGlow
+}: { 
+  onClick?: () => void; 
+  onboardingHighlight?: boolean; 
+  onHelpClick?: () => void;
+  onboardingHelpGlow?: boolean;
+}) => {
   // Handle expand
   const [expanded, setExpanded] = useState(true);
 
@@ -425,8 +465,9 @@ const SessionSection = ({ onClick }: { onClick?: () => void }) => {
       // For now, use agent ID as fallback name
       const enhancedModels = agentIdToModelNames.map((item) => ({
         agentId: item.agentId,
-        agentName: `Agent ${item.agentId.slice(0, 8)}`,
+        agentName: item.agentName || `Agent ${item.agentId.slice(0, 8)}`,
         modelName: item.modelName,
+        modelTier: item.modelTier,
       }));
 
       return enhancedModels;
@@ -438,7 +479,9 @@ const SessionSection = ({ onClick }: { onClick?: () => void }) => {
 
 
   return (
-    <>
+    <div className={cn(
+      onboardingHighlight && "border-1 border-border-selected-primary"
+    )}>
       <SectionHeader
         name="Sessions"
         icon={<SvgIcon name="sessions" size={20} />}
@@ -451,6 +494,8 @@ const SessionSection = ({ onClick }: { onClick?: () => void }) => {
             onClick?.();
           }, 50);
         }}
+        onHelpClick={onHelpClick}
+        onboardingHelpGlow={onboardingHelpGlow}
       />
       <div className={cn(!expanded && "hidden")}>
         <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center">
@@ -498,7 +543,7 @@ const SessionSection = ({ onClick }: { onClick?: () => void }) => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

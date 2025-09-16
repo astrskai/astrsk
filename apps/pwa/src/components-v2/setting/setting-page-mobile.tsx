@@ -191,13 +191,6 @@ const MainPageMobile = ({
 }) => {
   const { setIsOpen } = useMobileNavigation();
 
-  // Telemetry
-  const isTelemetryEnabled = useAppStore.use.isTelemetryEnabled();
-  const setIsTelemetryEnabled = useAppStore.use.setIsTelemetryEnabled();
-
-  // Legal
-  const setSettingDetailPage = useAppStore.use.setSettingDetailPage();
-
   return (
     <div className="flex flex-col h-dvh bg-background-surface-2">
       {/* Header */}
@@ -211,32 +204,6 @@ const MainPageMobile = ({
             </TypoXLarge>
 
             <div className="flex items-center justify-between">
-              <div className="flex flex-col gap-[8px]">
-                <div className="flex items-center justify-between">
-                  <TypoBase className="font-semibold text-text-muted-title">
-                    Telemetry settings
-                  </TypoBase>
-                  <Switch
-                    checked={isTelemetryEnabled}
-                    onCheckedChange={setIsTelemetryEnabled}
-                  />
-                </div>
-                <TypoBase className="text-text-placeholder">
-                  Share usage data anonymously
-                </TypoBase>
-                <div className="font-[400] text-[12px] leading-[15px] text-text-info">
-                  For detailed information about what data is being shared,{" "}
-                  <span
-                    className="text-secondary-normal cursor-pointer"
-                    onClick={() => {
-                      setSettingPageLevel(SettingPageLevel.detail);
-                      setSettingDetailPage(SettingDetailPageType.privacyPolicy);
-                    }}
-                  >
-                    [click here]
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
 

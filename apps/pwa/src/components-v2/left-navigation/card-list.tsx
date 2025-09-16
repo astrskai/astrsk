@@ -45,7 +45,6 @@ import { Card, CardType } from "@/modules/card/domain/card";
 import { Session } from "@/modules/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
-import * as amplitude from "@amplitude/analytics-browser";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import {
@@ -155,12 +154,6 @@ const CardItem = ({
         return;
       }
 
-      // Track event
-      amplitude.track("delete_card", {
-        card_type: card.props.type,
-        card_token_count: card.props.tokenCount,
-      });
-
       // Delete card
       const deleteResult = await CardService.deleteCard.execute(card.id);
       if (deleteResult.isFailure) {
@@ -261,7 +254,7 @@ const CardItem = ({
           />
           <div
             className={cn(
-              "absolute inset-0 left-[188px] right-[40px] bg-linear-to-r from-[#272727FF] to-[#27272700]",
+              "absolute inset-0 left-[185px] right-[40px] bg-linear-to-r from-[#272727FF] to-[#27272700]",
               selected && "from-[#414141FF]",
               !icon &&
                 card?.props.type === CardType.Character &&
@@ -439,9 +432,21 @@ const CardFilter = ({
   );
 };
 
-const CardSection = ({ onClick }: { onClick?: () => void }) => {
+const CardSection = ({ 
+  onClick, 
+  onboardingHighlight, 
+  onboardingCollapsed,
+  onHelpClick,
+  onboardingHelpGlow
+}: { 
+  onClick?: () => void; 
+  onboardingHighlight?: boolean; 
+  onboardingCollapsed?: boolean; 
+  onHelpClick?: () => void;
+  onboardingHelpGlow?: boolean;
+}) => {
   // Handle expand
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(onboardingCollapsed ? false : true);
 
   // Fetch cards
   const [keyword, setKeyword] = useState("");
@@ -524,7 +529,9 @@ const CardSection = ({ onClick }: { onClick?: () => void }) => {
   } = useCardImport(handleInvalidation);
 
   return (
-    <>
+    <div className={cn(
+      onboardingHighlight && "border-1 border-border-selected-primary"
+    )}>
       <SectionHeader
         name="Cards"
         icon={<SvgIcon name="cards" size={20} />}
@@ -538,9 +545,11 @@ const CardSection = ({ onClick }: { onClick?: () => void }) => {
             onClick?.();
           }, 50);
         }}
+        onHelpClick={onHelpClick}
+        onboardingHelpGlow={onboardingHelpGlow}
       />
       <div className={cn(!expanded && "hidden")}>
-        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center w-[320px]">
+        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center w-[315px]">
           <SearchInput
             className="grow"
             value={keyword}
@@ -637,7 +646,7 @@ const CardSection = ({ onClick }: { onClick?: () => void }) => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

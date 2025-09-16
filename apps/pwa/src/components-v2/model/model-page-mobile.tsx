@@ -44,7 +44,6 @@ import {
   OpenrouterProviderSort,
   openrouterProviderSortLabel,
 } from "@/modules/api/domain";
-import * as amplitude from "@amplitude/analytics-browser";
 
 const maskApiKey = (apiKey?: string) => {
   if (!apiKey) {
@@ -434,10 +433,6 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
       apiConnection?: ApiConnection;
       apiSource?: ApiSource;
     }) => {
-      //track
-      console.log("Tracking new provider creation button pressed");
-      amplitude.track("create_provider_initiate");
-
       // Get api connection
       let connection = apiConnection;
       if (!connection && apiSource) {
@@ -543,10 +538,6 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
   const handleOnConnect = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log("Tracking create provider complete");
-      amplitude.track("create_provider_complete", {
-        source: editingApiConnection?.source,
-      });
 
       // Check if editingApiSource is null
       if (!editingApiConnection) {
