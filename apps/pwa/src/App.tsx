@@ -214,11 +214,11 @@ function V2Layout({
           <LeftNavigation />
           <LeftNavigationTrigger />
           <SidebarInset>
-            <main className="relative flex-1 overflow-hidden">
+            <main className="relative flex-1 overflow-hidden h-full w-full">
               <GlobalDockView>{children}</GlobalDockView>
             </main>
           </SidebarInset>
-          <Toaster expand className="!z-[100]" />
+          <Toaster expand className="!z-[9999]" />
         </SidebarLeftProvider>
       </div>
     </ThemeProvider>

@@ -835,7 +835,7 @@ const UserInputs = ({
             <TooltipContent
               side="top"
               align="start"
-              className="py-[12px] px-[16px] ml-[-16px] mb-[12px] bg-background-surface-2 border-border-normal border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
+              className="py-[12px] px-[16px] ml-[-16px] mb-[12px] bg-background-surface-2 border-1 border-border-selected-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
             >
               <div className="font-[600] text-[14px] leading-[20px] text-text-primary">
                 Select to prompt a response

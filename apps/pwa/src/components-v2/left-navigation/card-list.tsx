@@ -246,7 +246,7 @@ const CardItem = ({
           />
           <div
             className={cn(
-              "absolute inset-0 left-[188px] right-[40px] bg-linear-to-r from-[#272727FF] to-[#27272700]",
+              "absolute inset-0 left-[185px] right-[40px] bg-linear-to-r from-[#272727FF] to-[#27272700]",
               selected && "from-[#414141FF]",
               !icon &&
                 card?.props.type === CardType.Character &&
@@ -522,7 +522,7 @@ const CardSection = ({
 
   return (
     <div className={cn(
-      onboardingHighlight && "border-1 border-border-selected-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
+      onboardingHighlight && "border-1 border-border-selected-primary"
     )}>
       <SectionHeader
         name="Cards"

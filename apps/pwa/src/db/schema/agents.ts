@@ -10,7 +10,7 @@ import {
 
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
-import { SchemaField } from "@/modules/agent/domain";
+import { SchemaField, ModelTier } from "@/modules/agent/domain";
 import { ApiSource } from "@/modules/api/domain";
 
 export const agents = pgTable(TableName.Agents, {
@@ -21,6 +21,7 @@ export const agents = pgTable(TableName.Agents, {
   api_source: jsonb().$type<ApiSource>(),
   model_id: varchar(),
   model_name: varchar(),
+  model_tier: varchar().$type<ModelTier>().default(ModelTier.Light),
   prompt_messages: text().notNull(),
   text_prompt: text().notNull().default(""),
   enabled_parameters: jsonb()

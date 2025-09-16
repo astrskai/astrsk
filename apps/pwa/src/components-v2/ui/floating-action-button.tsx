@@ -33,7 +33,7 @@ function FloatingActionButton({
         {/* Onboarding Tooltip */}
         <div 
           className={cn(
-            "absolute top-[16px] z-20 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] outline-1 outline-offset-[-1px] outline-border-normal whitespace-nowrap",
+            "absolute top-[16px] z-20 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary whitespace-nowrap",
             "transition-all ease-out duration-300",
             "group-hover/fab-parent:opacity-0",
             // Default tooltip positioning based on button position
@@ -65,7 +65,7 @@ function FloatingActionButton({
             "!transition-all ease-out duration-300",
             position === "top-left" && open && "left-[24px]",
             "min-w-[40px] h-[40px] p-0",
-            onboarding && "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)]",
+            onboarding && "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary",
             className,
           )}
           onClick={(event) => {

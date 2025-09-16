@@ -155,5 +155,13 @@
     "bps": true,
     "folderMillis": 1757433163764,
     "hash": "74254570fb10dfac4d8756889743f458bbc5c8939e8a67bc51f4089b00c5754a"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"agents\" ADD COLUMN \"model_tier\" varchar DEFAULT 'light';"
+    ],
+    "bps": true,
+    "folderMillis": 1757914033662,
+    "hash": "b9b8d48a1ac8368b81e94aa1b873fd9893bab7ebcf73d4680c59076c3dc7e65d"
   }
 ]

@@ -1,0 +1,1 @@
+ALTER TABLE "agents" ADD COLUMN "model_tier" varchar DEFAULT 'light';

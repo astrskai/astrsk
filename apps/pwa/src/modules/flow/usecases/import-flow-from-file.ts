@@ -47,9 +47,9 @@ export class ImportFlowFromFile implements UseCase<Command, Result<Flow>> {
   private isSillyTavernPrompt(json: any): json is STPrompt {
     if (
       "prompts" in json &&
-      typeof Array.isArray(json.prompts) &&
+      Array.isArray(json.prompts) &&
       "prompt_order" in json &&
-      typeof Array.isArray(json.prompt_order)
+      Array.isArray(json.prompt_order)
     ) {
       return true;
     }
@@ -93,7 +93,7 @@ export class ImportFlowFromFile implements UseCase<Command, Result<Flow>> {
     }));
 
     // Generate a clean name from filename
-    const baseName = filename.replace(/\.(json|st)$/i, "").replace(/[^a-zA-Z0-9\s-_]/g, "");
+    const baseName = filename.replace(/\.(json|st)$/i, "").replace(/[^a-zA-Z0-9\s_-]/g, "");
     const flowName = baseName || "Imported SillyTavern Flow";
     const agentName = "New Agent";
     const agentId = `new_agent`;
