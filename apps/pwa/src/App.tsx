@@ -35,6 +35,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import { OnboardingStepOnePage } from "@/components-v2/setting/onboarding-step-one-page";
+import { OnboardingStepTwoPage } from "@/components-v2/setting/onboarding-step-two-page";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import {
   Outlet,
@@ -253,6 +254,7 @@ const AppInternal = () => {
         <DesktopApp />
       </V2Layout>
       {activePage === Page.OnboardingStepOne && <OnboardingStepOnePage />}
+      {activePage === Page.OnboardingStepTwo && <OnboardingStepTwoPage />}
       {activePage === Page.Subscribe && <SubscribePage />}
       {activePage === Page.SignUp && <SignUpPage />}
       {activePage === Page.Payment && <PaymentPage />}
