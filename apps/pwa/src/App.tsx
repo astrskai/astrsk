@@ -34,6 +34,8 @@ import { Toaster } from "@/components-v2/ui/sonner";
 import { UniqueEntityID } from "@/shared/domain";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
+import { OnboardingStepOnePage } from "@/components-v2/setting/onboarding-step-one-page";
+import { OnboardingStepTwoPage } from "@/components-v2/setting/onboarding-step-two-page";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import {
   Outlet,
@@ -92,7 +94,7 @@ function V2Layout({
       if (isInOnboardingFlow) {
         console.log("In onboarding session play state");
         // Always navigate to sessions page when in session play state
-        setActivePage(Page.Sessions);
+        // setActivePage(Page.Sessions);
 
         // If we have a stored session, select it
         if (onboardingSelectedSessionId) {
@@ -251,6 +253,8 @@ const AppInternal = () => {
       <V2Layout>
         <DesktopApp />
       </V2Layout>
+      {activePage === Page.OnboardingStepOne && <OnboardingStepOnePage />}
+      {activePage === Page.OnboardingStepTwo && <OnboardingStepTwoPage />}
       {activePage === Page.Subscribe && <SubscribePage />}
       {activePage === Page.SignUp && <SignUpPage />}
       {activePage === Page.Payment && <PaymentPage />}
