@@ -44,7 +44,6 @@ export const useVideoGeneration = ({
     generateSeedanceVideo,
     generateSeedanceImageToVideo,
     checkVideoStatus,
-    generateImageThenVideo,
   } = useSeedanceGenerator();
 
   // Refs for polling management
@@ -458,6 +457,15 @@ export const useVideoGeneration = ({
               : "seedance-1-0-lite-t2v-250428"
             : "seedance-1-0-pro-250528"; // Pro model for both t2v and i2v
 
+        // Log the model being sent to backend
+        console.log("🎬 [VIDEO GENERATION] Sending to backend:", {
+          selectedModel: config.selectedModel,
+          modelId: modelId,
+          isImageToImage: config.imageToImage,
+          videoDuration: config.videoDuration,
+          timestamp: new Date().toISOString(),
+        });
+
         let taskResult;
         let inputImageFile: File | undefined;
         let generatedImageForThumbnail: File | undefined;
@@ -466,65 +474,7 @@ export const useVideoGeneration = ({
         const imagesToUse =
           config.imageUrls || (config.imageUrl ? [config.imageUrl] : []);
 
-        // NEW APPROACH: Use generateImageThenVideo for better quality
-        // This generates an image first, then uses it as the starting frame
-        // For reference mode, we should also use the new approach since reference images
-        // are used for style, not as starting frames
-        const useImageThenVideo =
-          !config.imageToImage || config.imageMode === "reference";
-
-        if (useImageThenVideo) {
-          // Convert reference images to base64 if provided
-          let referenceImages: string[] | undefined;
-          if (imagesToUse.length > 0) {
-            referenceImages = await Promise.all(
-              imagesToUse.map(async (url) => {
-                const { base64, mimeType } = await urlToBase64(url);
-                return `data:${mimeType};base64,${base64}`;
-              }),
-            );
-          }
-
-          // Call the new combined endpoint
-          // Always use Seedance Pro for the new approach since it handles single starting frame better
-          const result = await generateImageThenVideo({
-            imagePrompt: config.prompt,
-            referenceImages:
-              referenceImages?.length === 1
-                ? referenceImages[0]
-                : referenceImages,
-            videoPrompt: config.userPrompt || config.prompt, // Use original prompt for video
-            videoModel: "seedance-1-0-pro-250528", // Always use Pro for image-then-video
-            duration: config.videoDuration,
-            resolution: config.resolution || "720p",
-            ratio: config.ratio || "16:9",
-            // imageSize: "1280x720", // Optimal size for video
-            imageSize: "1920x1088", // 16:9 aspect ratio with reduced size
-            waitForVideo: false, // We'll handle polling ourselves
-          });
-
-          if (!result.success) {
-            throw new Error(
-              result.error || "Failed to generate image and video",
-            );
-          }
-
-          // Save the generated image as thumbnail
-          if (result.generatedImage) {
-            const imageResponse = await fetch(result.generatedImage.url);
-            const imageBlob = await imageResponse.blob();
-            generatedImageForThumbnail = new File(
-              [imageBlob],
-              `thumbnail-${result.generatedImage.id}.jpg`,
-              { type: result.generatedImage.mimeType || "image/jpeg" },
-            );
-          }
-
-          // Get the task ID for polling
-          taskResult = {
-            taskId: result.videoTask?.taskId,
-          };
-        } else if (config.imageToImage && imagesToUse.length > 0) {
+        if (config.imageToImage && imagesToUse.length > 0) {
           // Image-to-video generation - convert to base64 for blob URLs
           const imageMode = config.imageMode || "starting";
 
@@ -576,6 +526,17 @@ export const useVideoGeneration = ({
             i2vParams.resolution = config.resolution;
           }
 
+          // Log I2V params being sent
+          console.log("🎥 [I2V] Sending params to backend:", {
+            model: i2vParams.model,
+            imageMode: i2vParams.imageMode,
+            duration: i2vParams.duration,
+            imageCount: Array.isArray(i2vParams.images)
+              ? i2vParams.images.length
+              : 1,
+            timestamp: new Date().toISOString(),
+          });
+
           taskResult = await generateSeedanceImageToVideo(i2vParams);
         } else {
           // Text-to-video generation
@@ -599,6 +560,15 @@ export const useVideoGeneration = ({
           if (config.resolution) {
             t2vParams.resolution = config.resolution;
           }
+
+          // Log T2V params being sent
+          console.log("📹 [T2V] Sending params to backend:", {
+            model: t2vParams.model,
+            duration: t2vParams.duration,
+            ratio: t2vParams.ratio,
+            resolution: t2vParams.resolution,
+            timestamp: new Date().toISOString(),
+          });
 
           taskResult = await generateSeedanceVideo(t2vParams);
         }
@@ -633,7 +603,6 @@ export const useVideoGeneration = ({
     [
       generateSeedanceVideo,
       generateSeedanceImageToVideo,
-      generateImageThenVideo,
       pollVideoStatus,
       urlToBase64,
     ],

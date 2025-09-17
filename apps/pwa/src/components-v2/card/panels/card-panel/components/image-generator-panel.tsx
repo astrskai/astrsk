@@ -204,7 +204,9 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
         userPrompt: imagePrompt, // Pass original user prompt for display
         aspectRatio: selectedAspectRatio,
         imageToImage: useCardImage,
-        imageUrl: imageToUseForGeneration || undefined,
+        imageUrl: useCardImage
+          ? imageToUseForGeneration || undefined
+          : undefined, // Only pass image if toggle is on
         selectedModel,
         videoDuration,
       });
@@ -215,7 +217,9 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
         userPrompt: imagePrompt, // Pass original user prompt for display
         aspectRatio: selectedAspectRatio,
         imageToImage: useCardImage,
-        imageUrl: imageToUseForGeneration || undefined,
+        imageUrl: useCardImage
+          ? imageToUseForGeneration || undefined
+          : undefined, // Only pass image if toggle is on
         selectedModel,
       });
     }
