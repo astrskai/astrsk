@@ -27,6 +27,7 @@ const OnboardingDialog = () => {
   const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
   const setOnboardingSelectedSessionId = useAppStore.use.setOnboardingSelectedSessionId();
   const setActivePage = useAppStore.use.setActivePage();
+  const subscribed = useAppStore.use.subscribed();
   const [selectedGenre, setSelectedGenre] = useState<"romance" | "fantasy" | null>(null);
 
   // Session store
@@ -85,8 +86,7 @@ const OnboardingDialog = () => {
   // Show dialog only if:
   // 1. Old users: isPassedOnboarding is false (legacy check)
   // 2. New users: genreSelection step is not completed
-  // const shouldShowDialog = !sessionOnboardingSteps.genreSelection;
-  const shouldShowDialog = false;
+  const shouldShowDialog = !sessionOnboardingSteps.genreSelection && subscribed;
 
   return (
     <Dialog open={shouldShowDialog}>
