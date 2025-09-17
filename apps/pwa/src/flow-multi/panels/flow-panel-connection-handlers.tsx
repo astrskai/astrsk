@@ -21,19 +21,24 @@ type CustomEdgeType = {
 };
 
 // Helper function to generate unique agent name
-export const generateUniqueAgentName = async (flow: Flow | { props?: { nodes: any[] }, id: string }, baseName: string = "New Agent"): Promise<string> => {
+export const generateUniqueAgentName = async (
+  flow: Flow | { props?: { nodes: any[] }; id: string },
+  baseName: string = "New Agent",
+): Promise<string> => {
   const existingNames = new Set<string>();
-  
+
   // Collect existing agent names from current flow
   // Check if we have nodes in the flow
   const nodes = (flow as any)?.props?.nodes || [];
-  const agentNodes = nodes.filter((n: any) => n.type === 'agent');
-  
+  const agentNodes = nodes.filter((n: any) => n.type === "agent");
+
   for (const node of agentNodes) {
     // Agent nodes have agentId in their data
     const agentId = node.data?.agentId || node.id;
     try {
-      const agentOrError = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
+      const agentOrError = await AgentService.getAgent.execute(
+        new UniqueEntityID(agentId),
+      );
       if (agentOrError.isSuccess) {
         const agent = agentOrError.getValue();
         if (agent.props.name) {
@@ -44,12 +49,12 @@ export const generateUniqueAgentName = async (flow: Flow | { props?: { nodes: an
       // If we can't get the agent, skip it
     }
   }
-  
+
   // If base name is available, use it
   if (!existingNames.has(baseName)) {
     return baseName;
   }
-  
+
   // Otherwise, find the next available number
   let counter = 1;
   let candidateName: string;
@@ -57,7 +62,7 @@ export const generateUniqueAgentName = async (flow: Flow | { props?: { nodes: an
     candidateName = `${baseName} ${counter}`;
     counter++;
   } while (existingNames.has(candidateName));
-  
+
   return candidateName;
 };
 
@@ -67,22 +72,31 @@ export const createNodeWithConnection = async (
   sourceNodeId: string,
   sourceHandleId: string | undefined,
   position: { x: number; y: number },
-  flow: Flow | { props: { nodes: any[] }, id: string },
+  flow: Flow | { props: { nodes: any[] }; id: string },
   nodes: CustomNodeType[],
   edges: CustomEdgeType[],
-  filterExistingConnections: Function
+  filterExistingConnections: (
+    edges: CustomEdgeType[],
+    sourceNode: CustomNodeType | undefined,
+    targetNode: CustomNodeType | undefined,
+    connection: {
+      source?: string | null;
+      target?: string | null;
+      sourceHandle?: string | null;
+    },
+  ) => CustomEdgeType[],
 ): Promise<{
   updatedNodes: CustomNodeType[];
   updatedEdges: CustomEdgeType[];
 } | null> => {
   try {
-    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    const sourceNode = nodes.find((n) => n.id === sourceNodeId);
     const sourceNodePosition = sourceNode?.position || position;
-    
+
     // Position the new node to the right and slightly below the source node
     const newNodePosition = {
       x: sourceNodePosition.x + 400, // 400px to the right
-      y: sourceNodePosition.y + 50,  // 50px down
+      y: sourceNodePosition.y + 50, // 50px down
     };
 
     let newNode: CustomNodeType;
@@ -98,9 +112,12 @@ export const createNodeWithConnection = async (
       }).getValue();
 
       // Save the new agent
-      if (!AgentService.saveAgent || typeof AgentService.saveAgent.execute !== 'function') {
-        console.warn('⚠️ AgentService.saveAgent not initialized yet');
-        throw new Error('AgentService not initialized');
+      if (
+        !AgentService.saveAgent ||
+        typeof AgentService.saveAgent.execute !== "function"
+      ) {
+        console.warn("⚠️ AgentService.saveAgent not initialized yet");
+        throw new Error("AgentService not initialized");
       }
       const savedAgentResult = await AgentService.saveAgent.execute(newAgent);
       if (savedAgentResult.isFailure) {
@@ -120,22 +137,23 @@ export const createNodeWithConnection = async (
       // Use UniqueEntityID for node IDs instead of custom string patterns
       const nodeId = new UniqueEntityID().toString();
       const nextColor = await getNextAvailableColor(flow);
-      
+
       // Get flowId from flow object
       const flowId = (flow as any)?.props?.id || (flow as any)?.id;
       if (!flowId) {
-        throw new Error('Cannot create data store node: Flow ID not found');
+        throw new Error("Cannot create data store node: Flow ID not found");
       }
-      
+
       // 1. Create separate node data entry first
-      const createResult = await DataStoreNodeService.createDataStoreNode.execute({
-        flowId: flowId.toString(),
-        nodeId: nodeId,
-        name: "New Data Update",
-        color: nextColor,
-        dataStoreFields: [],
-      });
-      
+      const createResult =
+        await DataStoreNodeService.createDataStoreNode.execute({
+          flowId: flowId.toString(),
+          nodeId: nodeId,
+          name: "New Data Update",
+          color: nextColor,
+          dataStoreFields: [],
+        });
+
       if (createResult.isFailure) {
         throw new Error(createResult.getError());
       }
@@ -151,23 +169,23 @@ export const createNodeWithConnection = async (
       // Use UniqueEntityID for node IDs instead of custom string patterns
       const nodeId = new UniqueEntityID().toString();
       const nextColor = await getNextAvailableColor(flow);
-      
+
       // Get flowId from flow object
       const flowId = (flow as any)?.props?.id || (flow as any)?.id;
       if (!flowId) {
-        throw new Error('Cannot create if node: Flow ID not found');
+        throw new Error("Cannot create if node: Flow ID not found");
       }
-      
+
       // 1. Create separate node data entry first
       const createResult = await IfNodeService.createIfNode.execute({
         flowId: flowId.toString(),
         nodeId: nodeId,
         name: "New If",
-        logicOperator: 'AND',
+        logicOperator: "AND",
         conditions: [],
         color: nextColor,
       });
-      
+
       if (createResult.isFailure) {
         throw new Error(createResult.getError());
       }
@@ -185,11 +203,17 @@ export const createNodeWithConnection = async (
 
     // Create edge connecting source to new node
     // Add label for if-node edges based on the handle
-    const edgeLabel = sourceNode?.type === 'if' && sourceHandleId ? 
-      (sourceHandleId === 'true' ? 'True' : 'False') : undefined;
-    
+    const edgeLabel =
+      sourceNode?.type === "if" && sourceHandleId
+        ? sourceHandleId === "true"
+          ? "True"
+          : "False"
+        : undefined;
+
     const newEdge: CustomEdgeType = ensureEdgeSelectable({
-      id: sourceHandleId ? `${sourceNodeId}-${sourceHandleId}-${newNode.id}` : `${sourceNodeId}-${newNode.id}`,
+      id: sourceHandleId
+        ? `${sourceNodeId}-${sourceHandleId}-${newNode.id}`
+        : `${sourceNodeId}-${newNode.id}`,
       source: sourceNodeId,
       sourceHandle: sourceHandleId,
       target: newNode.id,
@@ -202,13 +226,13 @@ export const createNodeWithConnection = async (
       edges,
       sourceNode,
       undefined,
-      { source: sourceNodeId, sourceHandle: sourceHandleId }
+      { source: sourceNodeId, sourceHandle: sourceHandleId },
     );
 
     // Return updated state
     return {
       updatedNodes: [...nodes, newNode],
-      updatedEdges: [...filteredEdges, newEdge]
+      updatedEdges: [...filteredEdges, newEdge],
     };
   } catch (error) {
     console.error(`Error creating ${nodeType} node:`, error);

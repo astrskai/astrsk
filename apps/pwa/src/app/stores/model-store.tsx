@@ -5,15 +5,13 @@ import { immer } from "zustand/middleware/immer";
 import { createSelectors } from "@/shared/utils/zustand-utils";
 import { LocalPersistStorage } from "@/app/stores/local-persist-storage";
 
-// Language model options
+// Language model options - using provider/modelId format for AstrskAi backend
 export const LANGUAGE_MODELS = {
-  GEMINI_2_5_PRO: "gemini-2.5-pro",
-  GEMINI_2_5_FLASH: "gemini-2.5-flash",
-  GEMINI_2_5_FLASH_LITE: "gemini-2.5-flash-lite",
-  CLAUDE_SONNET_4: "claude-sonnet-4-20250514",
-  GPT_5_CHAT_LATEST: "gpt-5-chat-latest",
-  DEEPSEEK_V3: "deepseek-v3",
-  DEEPSEEK_R1: "deepseek-r1",
+  GEMINI_2_5_PRO: "google/gemini-2.5-pro",
+  GEMINI_2_5_FLASH: "google/gemini-2.5-flash",
+  GEMINI_2_5_FLASH_LITE: "google/gemini-2.5-flash-lite",
+  DEEPSEEK_V3: "deepseek/deepseek-chat-v3.1",
+  DEEPSEEK_V3_0324: "deepseek/deepseek-chat-v3-0324",
 } as const;
 
 export type LanguageModel =

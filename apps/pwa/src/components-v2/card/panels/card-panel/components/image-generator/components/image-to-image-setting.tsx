@@ -18,7 +18,7 @@ export const ImageToImageSetting = ({
   cardImageUrl,
   cardIsVideo = false,
   disabled = false,
-  isGeneratingVideo = false
+  isGeneratingVideo = false,
 }: ImageToImageSettingProps) => {
   // Three states: no image (disabled), image available (off), image available (on)
   const hasCardImage = !!cardImageUrl;
@@ -29,43 +29,49 @@ export const ImageToImageSetting = ({
       <div className="inline-flex flex-col justify-center items-center">
         <Switch
           checked={enabled && hasCardImage}
-          onCheckedChange={(checked) => hasCardImage && !disabled && onToggle(checked)}
+          onCheckedChange={(checked) =>
+            hasCardImage && !disabled && onToggle(checked)
+          }
           disabled={isDisabled}
           size="small"
           className={cn(
             // Override default off state background to match design
-            "data-[state=unchecked]:bg-alpha-80/20"
+            "data-[state=unchecked]:bg-alpha-80/20",
           )}
         />
       </div>
       <div className="flex-1 inline-flex flex-col justify-center items-start gap-2">
         <div className="inline-flex justify-start items-center gap-2">
-          <div className={`justify-center text-xs font-semibold leading-none ${
-            isDisabled 
-              ? 'text-text-info' 
-              : hasCardImage && !enabled 
-                ? 'text-text-primary opacity-60'
-                : 'text-text-primary'
-          }`}>
-            {isGeneratingVideo ? 'Image to video' : 'Image to image'}
+          <div
+            className={`justify-center text-xs font-semibold leading-none ${
+              isDisabled
+                ? "text-text-info"
+                : hasCardImage && !enabled
+                  ? "text-text-primary opacity-60"
+                  : "text-text-primary"
+            }`}
+          >
+            {isGeneratingVideo ? "Image to video" : "Image to image"}
           </div>
         </div>
         <div className="self-stretch justify-start text-text-info text-xs font-normal">
-          {isDisabled ? 
-            `Select an image to unlock ${isGeneratingVideo ? 'video generation' : 'transformation'}` : 
-            `${isGeneratingVideo ? 'Generate a video from' : 'Transform'} the selected image based on your prompt`}
+          {isDisabled
+            ? `Select an image to unlock ${isGeneratingVideo ? "video generation" : "transformation"}`
+            : `${isGeneratingVideo ? "Generate a video from" : "Transform"} the selected image based on your prompt`}
         </div>
       </div>
-      <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
-        hasCardImage ? 'overflow-hidden' : 'bg-background-surface-4'
-      } ${hasCardImage && !enabled ? 'opacity-60' : ''}`}>
+      <div
+        className={`w-16 h-16 rounded-lg flex items-center justify-center ${
+          hasCardImage ? "overflow-hidden" : "bg-background-surface-4"
+        } ${hasCardImage && !enabled ? "opacity-60" : ""}`}
+      >
         {hasCardImage ? (
           <MediaDisplay
             src={cardImageUrl}
             alt="Card media"
             className="w-full h-full object-cover"
-            isVideo={cardIsVideo}
-            showControls={true}
+            isVideo={false} // Always show as image since we're showing thumbnails
+            showControls={false}
             autoPlay={false}
             muted={true}
             loop={true}
