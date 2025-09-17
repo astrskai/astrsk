@@ -5,14 +5,12 @@ import {
   useAppStore,
 } from "@/app/stores/app-store";
 import { TypoBase, TypoXLarge } from "@/components-v2/typo";
-import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { api } from "@/convex";
-import { Datetime, logger } from "@/shared/utils";
+import { Datetime } from "@/shared/utils";
 import { useClerk } from "@clerk/clerk-react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { ChevronRight } from "lucide-react";
-import { useEffect } from "react";
 
 function formatCreditNumber(num: number): string {
   return num.toLocaleString();
@@ -25,24 +23,6 @@ const SubscriptionSection = () => {
 
   const subscription = useQuery(api.payment.public.getSubscription);
   const balance = useQuery(api.credit.public.getCreditBalance);
-
-  // Free subscription
-  const startFreeSubscription = useMutation(
-    api.payment.public.startFreeSubscription,
-  );
-  useEffect(() => {
-    if (subscription) {
-      return;
-    }
-    (async () => {
-      const result = await startFreeSubscription();
-      logger.debug(
-        result
-          ? "Success to start free subscription"
-          : "Failed to start free subscription",
-      );
-    })();
-  }, [startFreeSubscription, subscription]);
 
   return (
     <div className="mb-12 flex flex-col gap-8 text-text-primary">
@@ -61,7 +41,12 @@ const SubscriptionSection = () => {
                 {subscription.name}
               </div>
               <div className="text-[14px] leading-[20px] text-text-placeholder font-[500]">
-                Next billing date: {subscription.next_billing_date ? Datetime(subscription.next_billing_date).format("MMMM D, YYYY") : "-"}
+                Next billing date:{" "}
+                {subscription.next_billing_date
+                  ? Datetime(subscription.next_billing_date).format(
+                      "MMMM D, YYYY",
+                    )
+                  : "-"}
               </div>
               <div className="text-[12px] leading-[15px] text-text-placeholder font-[400]">
                 Plan renews every month - $15.00/month
@@ -87,9 +72,9 @@ const SubscriptionSection = () => {
                 <div className="text-text-primary font-[600]">
                   {formatCreditNumber(balance.additional_balance ?? 0)}
                 </div>
-                <Button size="sm" variant="secondary">
+                {/* <Button size="sm" variant="secondary">
                   Buy more credits
-                </Button>
+                </Button> */}
               </div>
               {balance.overdraft_amount !== 0 && (
                 <div className="flex flex-row gap-[8px] items-center text-[14px] leading-[20px] font-[500]">
