@@ -76,10 +76,17 @@ export type PublicApiType = {
           _creationTime: number;
           _id: Id<"payment_subscriptions">;
           name: string;
+          next_billing_date?: string;
           reserved_credits: number;
           transaction_id?: Id<"payment_transactions">;
           user_id: string;
         } | null
+      >;
+      startFreeSubscription: FunctionReference<
+        "mutation",
+        "public",
+        Record<string, never>,
+        boolean
       >;
     };
   };
@@ -163,6 +170,33 @@ export type PublicApiType = {
         { prompt?: string },
         any
       >;
+      generateSeedreamImage: FunctionReference<
+        "action",
+        "public",
+        {
+          imageId?: string;
+          prefilter?: string;
+          prompt: string;
+          sequentialImageGeneration?: "enabled" | "disabled";
+          size?: string;
+          watermark?: boolean;
+        },
+        any
+      >;
+      generateSeedreamImageToImage: FunctionReference<
+        "action",
+        "public",
+        {
+          image: string | Array<string>;
+          imageId?: string;
+          prefilter?: string;
+          prompt: string;
+          sequentialImageGeneration?: "enabled" | "disabled";
+          size?: string;
+          watermark?: boolean;
+        },
+        any
+      >;
       getEditingSession: FunctionReference<
         "query",
         "public",
@@ -206,6 +240,33 @@ export type PublicApiType = {
           "action",
           "public",
           { prompt?: string },
+          any
+        >;
+        generateSeedreamImage: FunctionReference<
+          "action",
+          "public",
+          {
+            imageId?: string;
+            prefilter?: string;
+            prompt: string;
+            sequentialImageGeneration?: "enabled" | "disabled";
+            size?: string;
+            watermark?: boolean;
+          },
+          any
+        >;
+        generateSeedreamImageToImage: FunctionReference<
+          "action",
+          "public",
+          {
+            image: string | Array<string>;
+            imageId?: string;
+            prefilter?: string;
+            prompt: string;
+            sequentialImageGeneration?: "enabled" | "disabled";
+            size?: string;
+            watermark?: boolean;
+          },
           any
         >;
         getImageOptions: FunctionReference<
@@ -260,6 +321,33 @@ export type PublicApiType = {
           { prompt?: string },
           any
         >;
+        generateSeedreamImage: FunctionReference<
+          "action",
+          "public",
+          {
+            imageId?: string;
+            prefilter?: string;
+            prompt: string;
+            sequentialImageGeneration?: "enabled" | "disabled";
+            size?: string;
+            watermark?: boolean;
+          },
+          any
+        >;
+        generateSeedreamImageToImage: FunctionReference<
+          "action",
+          "public",
+          {
+            image: string | Array<string>;
+            imageId?: string;
+            prefilter?: string;
+            prompt: string;
+            sequentialImageGeneration?: "enabled" | "disabled";
+            size?: string;
+            watermark?: boolean;
+          },
+          any
+        >;
         getEditingSession: FunctionReference<
           "query",
           "public",
@@ -311,6 +399,100 @@ export type PublicApiType = {
           "public",
           { sessionId: string },
           { message: string; success: boolean }
+        >;
+      };
+      videoMutations: {
+        generateSeedanceTextToVideo: FunctionReference<
+          "action",
+          "public",
+          {
+            callbackUrl?: string;
+            cameraFixed?: boolean;
+            duration?: number;
+            fps?: number;
+            model?: string;
+            prefilter?: string;
+            prompt: string;
+            ratio?: string;
+            resolution?: string;
+            seed?: number;
+            watermark?: boolean;
+          },
+          any
+        >;
+        checkVideoStatus: FunctionReference<
+          "action",
+          "public",
+          { taskId: string },
+          any
+        >;
+        generateSeedanceImageToVideo: FunctionReference<
+          "action",
+          "public",
+          {
+            callbackUrl?: string;
+            cameraFixed?: boolean;
+            duration?: number;
+            fps?: number;
+            imageMode?: "starting" | "reference";
+            images: string | Array<string>;
+            loop?: boolean;
+            model?: string;
+            prefilter?: string;
+            prompt?: string;
+            ratio?: string;
+            resolution?: string;
+            seed?: number;
+            watermark?: boolean;
+          },
+          any
+        >;
+        generateImageThenVideo: FunctionReference<
+          "action",
+          "public",
+          {
+            cameraFixed?: boolean;
+            duration?: number;
+            fps?: number;
+            imagePrompt: string;
+            imageSize?: string;
+            prefilter?: string;
+            ratio?: string;
+            referenceImages?: string | Array<string>;
+            resolution?: string;
+            seed?: number;
+            videoModel?: string;
+            videoPrompt?: string;
+            waitForVideo?: boolean;
+            watermark?: boolean;
+          },
+          any
+        >;
+        getVideoOptions: FunctionReference<
+          "action",
+          "public",
+          Record<string, never>,
+          any
+        >;
+      };
+      videoLockMutations: {
+        acquireVideoLock: FunctionReference<
+          "mutation",
+          "public",
+          { taskId: string },
+          any
+        >;
+        releaseVideoLock: FunctionReference<
+          "mutation",
+          "public",
+          { storageId: string; success: boolean; taskId: string },
+          any
+        >;
+        getVideoLock: FunctionReference<
+          "mutation",
+          "public",
+          { taskId: string },
+          any
         >;
       };
     };
