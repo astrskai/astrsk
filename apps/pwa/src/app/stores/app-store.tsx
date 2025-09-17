@@ -136,6 +136,8 @@ interface AppState {
   setJwt: (jwt: string | null) => void;
   subscribed: boolean;
   setSubscribed: (subscribed: boolean) => void;
+  isOpenSubscribeNudge: boolean;
+  setIsOpenSubscribeNudge: (open: boolean) => void;
 
   // Sync
   isSyncEnabled: boolean;
@@ -323,6 +325,11 @@ const useAppStoreBase = create<AppState>()(
       setSubscribed: (subscribed) =>
         set((state) => {
           state.subscribed = subscribed;
+        }),
+      isOpenSubscribeNudge: false,
+      setIsOpenSubscribeNudge: (open) =>
+        set((state) => {
+          state.isOpenSubscribeNudge = open;
         }),
 
       // Sync status

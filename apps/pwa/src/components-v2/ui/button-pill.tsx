@@ -1,9 +1,10 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/components-v2/lib/utils";
+import { SubscribeBadge } from "@/components-v2/subscribe-badge";
 
 const buttonPillVariants = cva(
-  "rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-center items-center transition-all",
+  "relative rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-center items-center transition-all",
   {
     variants: {
       variant: {
@@ -76,6 +77,7 @@ export interface ButtonPillProps
   iconClassName?: string;
   active?: boolean;
   onDoubleClick?: () => void;
+  isSubscribeBadge?: boolean;
 }
 
 const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
@@ -88,6 +90,7 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
       iconClassName,
       active,
       onDoubleClick,
+      isSubscribeBadge,
       children,
       ...props
     },
@@ -115,6 +118,8 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
           onMouseEnter={() => setIsHovered(true)}
           {...props}
         >
+          {isSubscribeBadge && <SubscribeBadge />}
+
           {/* Background gradient layer */}
           <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500" />
           
@@ -171,6 +176,8 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
         // onDoubleClick={onDoubleClick}
         {...props}
       >
+        {isSubscribeBadge && <SubscribeBadge />}
+
         {icon && (
           <div className={iconVariants({ size })}>
             {React.cloneElement(icon as React.ReactElement, {
