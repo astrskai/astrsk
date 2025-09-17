@@ -68,9 +68,11 @@ import { translate } from "@/shared/utils/translate-utils";
 import { ModelTier } from "@/modules/agent/domain";
 
 // Model mapping configuration for automatic fallback
+// When using AstrskAi, format must be "ApiSource:modelId"
+// where ApiSource is a valid value from ApiSource enum that makeProvider can handle
 const MODEL_TIER_MAPPING = {
-  [ModelTier.Light]: "google/gemini-2.5-flash",
-  [ModelTier.Heavy]: "google/gemini-2.5-pro",
+  [ModelTier.Light]: "openai-compatible:google/gemini-2.5-flash",
+  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat-v3-0324",
 } as const;
 
 // Helper function to check if user is logged in
