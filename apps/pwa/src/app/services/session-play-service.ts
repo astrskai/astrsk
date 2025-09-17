@@ -65,6 +65,35 @@ import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 import { Turn as MessageEntity } from "@/modules/turn/domain/turn";
 import { parseAiSdkErrorMessage, sanitizeFileName } from "@/shared/utils";
 import { translate } from "@/shared/utils/translate-utils";
+import { ModelTier } from "@/modules/agent/domain";
+
+// Model mapping configuration for automatic fallback
+const MODEL_TIER_MAPPING = {
+  [ModelTier.Light]: "google/gemini-2.5-flash",
+  [ModelTier.Heavy]: "google/gemini-2.5-pro",
+} as const;
+
+// Helper function to check if user is logged in
+const isUserLoggedIn = (): boolean => {
+  const jwt = useAppStore.getState().jwt;
+  return !!jwt;
+};
+
+// TODO: Add subscription check for automatic model mapping
+const isUserSubscribed = (): boolean => {
+  // For now, we just check if user is logged in
+  // Later, this should check actual subscription status
+  return isUserLoggedIn();
+};
+
+// Helper function to get fallback model based on tier
+const getFallbackModel = (modelTier?: ModelTier): string | null => {
+  if (!modelTier) {
+    // Default to light tier if not specified
+    return MODEL_TIER_MAPPING[ModelTier.Light];
+  }
+  return MODEL_TIER_MAPPING[modelTier] || null;
+};
 
 const makeContext = async ({
   session,
@@ -1561,15 +1590,51 @@ async function* executeAgentNode({
       .getValue();
 
     // Get API connection
-    const apiSource = agent.props.apiSource;
-    const apiModelId = agent.props.modelId;
+    let apiSource = agent.props.apiSource;
+    let apiModelId = agent.props.modelId;
     if (!apiSource || !apiModelId) {
       throw new Error("Agent does not have API source or model ID");
     }
-    const apiConnection = (await ApiService.listApiConnection.execute({}))
+
+    let apiConnection = (await ApiService.listApiConnection.execute({}))
       .throwOnFailure()
       .getValue()
       .find((connection) => connection.source === apiSource);
+
+    // Automatic model mapping for logged-in users
+    if (!apiConnection && isUserLoggedIn()) {
+      // Check if we should use automatic mapping (user is subscribed)
+      // TODO: Replace with actual subscription check when available
+      if (isUserSubscribed()) {
+        // Try to use AstrskAi connection with fallback model
+        const astrskConnection = (
+          await ApiService.listApiConnection.execute({})
+        )
+          .throwOnFailure()
+          .getValue()
+          .find((connection) => connection.source === ApiSource.AstrskAi);
+
+        if (astrskConnection) {
+          // Get fallback model based on agent's model tier
+          const fallbackModel = getFallbackModel(agent.props.modelTier);
+
+          if (fallbackModel) {
+            logger.info(
+              `[AutoModelMapping] No API connection found for ${apiSource}. ` +
+                `Automatically mapping to AstrskAi with model: ${fallbackModel} ` +
+                `(original: ${apiModelId}, tier: ${agent.props.modelTier || "not specified"})`,
+            );
+
+            // Update to use AstrskAi connection and fallback model
+            apiConnection = astrskConnection;
+            apiSource = ApiSource.AstrskAi;
+            apiModelId = fallbackModel;
+          }
+        }
+      }
+    }
+
+    // If still no connection, throw error
     if (!apiConnection) {
       throw new Error(`API connection not found for source: ${apiSource}`);
     }
