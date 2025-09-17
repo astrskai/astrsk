@@ -94,7 +94,7 @@ function V2Layout({
       if (isInOnboardingFlow) {
         console.log("In onboarding session play state");
         // Always navigate to sessions page when in session play state
-        setActivePage(Page.Sessions);
+        // setActivePage(Page.Sessions);
 
         // If we have a stored session, select it
         if (onboardingSelectedSessionId) {

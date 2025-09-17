@@ -85,7 +85,8 @@ const OnboardingDialog = () => {
   // Show dialog only if:
   // 1. Old users: isPassedOnboarding is false (legacy check)
   // 2. New users: genreSelection step is not completed
-  const shouldShowDialog = !sessionOnboardingSteps.genreSelection;
+  // const shouldShowDialog = !sessionOnboardingSteps.genreSelection;
+  const shouldShowDialog = false;
 
   return (
     <Dialog open={shouldShowDialog}>
