@@ -1,4 +1,9 @@
-import { Page, useAppStore } from "@/app/stores/app-store";
+import {
+  Page,
+  SettingPageLevel,
+  SettingSubPageType,
+  useAppStore,
+} from "@/app/stores/app-store";
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
@@ -66,6 +71,8 @@ function FloatingActionButton({
 const OnboardingStepTwoPage = () => {
   // Page navigation
   const setActivePage = useAppStore.use.setActivePage();
+  const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
+  const setSettingSubPage = useAppStore.use.setSettingSubPage();
 
   return (
     <div className={cn("z-40 absolute inset-0 top-[38px]")}>
@@ -170,7 +177,9 @@ const OnboardingStepTwoPage = () => {
               variant="secondary"
               className="w-[474px]"
               onClick={() => {
-                // TODO: to provider page
+                setActivePage(Page.Settings);
+                setSettingPageLevel(SettingPageLevel.sub);
+                setSettingSubPage(SettingSubPageType.providers);
               }}
             >
               Start astrsk
@@ -224,7 +233,7 @@ const OnboardingStepTwoPage = () => {
                 size="lg"
                 className="w-[474px]"
                 onClick={() => {
-                  // TODO: to subscribe page
+                  setActivePage(Page.Subscribe);
                 }}
               >
                 Learn more
