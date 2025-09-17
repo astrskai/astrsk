@@ -81,7 +81,8 @@ export const SettingDetailPageType = {
   creditUsage: "creditUsage",
 } as const;
 
-export type SettingDetailPageType = (typeof SettingDetailPageType)[keyof typeof SettingDetailPageType];
+export type SettingDetailPageType =
+  (typeof SettingDetailPageType)[keyof typeof SettingDetailPageType];
 
 interface AppState {
   // Default
@@ -101,28 +102,42 @@ interface AppState {
   // Onboarding (legacy - for existing users)
   isPassedOnboarding: boolean;
   setIsPassedOnboarding: (isPassedOnboarding: boolean) => void;
-  
+
   // Onboarding selected session
   onboardingSelectedSessionId: string | null;
   setOnboardingSelectedSessionId: (sessionId: string | null) => void;
 
   // Session Onboarding Steps (complete onboarding flow)
   sessionOnboardingSteps: {
-    genreSelection: boolean;      // Initial genre selection dialog
-    inferenceButton: boolean;      // Guide for using the inference button
-    sessionEdit: boolean;          // Guide for editing session
-    openResource: boolean;         // Guide for opening resources
-    resourceManagement: boolean;   // Guide for managing resources
-    helpVideo: boolean;            // Guide for help video
-    sessionData: boolean;          // Guide for session data
+    genreSelection: boolean; // Initial genre selection dialog
+    inferenceButton: boolean; // Guide for using the inference button
+    sessionEdit: boolean; // Guide for editing session
+    openResource: boolean; // Guide for opening resources
+    resourceManagement: boolean; // Guide for managing resources
+    helpVideo: boolean; // Guide for help video
+    sessionData: boolean; // Guide for session data
   };
-  setSessionOnboardingStep: (step: 'genreSelection' | 'inferenceButton' | 'sessionEdit' | 'openResource' | 'resourceManagement' | 'helpVideo' | 'sessionData', completed: boolean) => void;
+  setSessionOnboardingStep: (
+    step:
+      | "genreSelection"
+      | "inferenceButton"
+      | "sessionEdit"
+      | "openResource"
+      | "resourceManagement"
+      | "helpVideo"
+      | "sessionData",
+    completed: boolean,
+  ) => void;
 
   // Auth
   userId: string | null;
   setUserId: (userId: string | null) => void;
   jwt: string | null;
   setJwt: (jwt: string | null) => void;
+  subscribed: boolean;
+  setSubscribed: (subscribed: boolean) => void;
+  isOpenSubscribeNudge: boolean;
+  setIsOpenSubscribeNudge: (open: boolean) => void;
 
   // Sync
   isSyncEnabled: boolean;
@@ -279,14 +294,17 @@ const useAppStoreBase = create<AppState>()(
       setSessionOnboardingStep: (step, completed) =>
         set((state) => {
           state.sessionOnboardingSteps[step] = completed;
-          
+
           // Check if all onboarding steps are completed
           const allStepsCompleted = Object.entries(state.sessionOnboardingSteps)
-            .filter(([key]) => key !== 'genreSelection') // Exclude genre selection from completion check
+            .filter(([key]) => key !== "genreSelection") // Exclude genre selection from completion check
             .every(([, value]) => value === true);
-          
+
           // If all steps completed, mark legacy onboarding as passed
-          if (allStepsCompleted && state.sessionOnboardingSteps.genreSelection) {
+          if (
+            allStepsCompleted &&
+            state.sessionOnboardingSteps.genreSelection
+          ) {
             state.isPassedOnboarding = true;
             state.onboardingSelectedSessionId = null;
           }
@@ -302,6 +320,16 @@ const useAppStoreBase = create<AppState>()(
       setJwt: (jwt) =>
         set((state) => {
           state.jwt = jwt;
+        }),
+      subscribed: false,
+      setSubscribed: (subscribed) =>
+        set((state) => {
+          state.subscribed = subscribed;
+        }),
+      isOpenSubscribeNudge: false,
+      setIsOpenSubscribeNudge: (open) =>
+        set((state) => {
+          state.isOpenSubscribeNudge = open;
         }),
 
       // Sync status
@@ -440,7 +468,7 @@ const useAppStoreBase = create<AppState>()(
       // version: 2, // Increment version to trigger migration
       // migrate: (persistedState: any, version: number) => {
       //   if (version === 0 || version === 1) {
-      //     // For existing users who have passed onboarding, 
+      //     // For existing users who have passed onboarding,
       //     // automatically set new onboarding states to completed
       //     if (persistedState.isPassedOnboarding === true) {
       //       persistedState.onboardingStep = OnboardingStep.Completed;

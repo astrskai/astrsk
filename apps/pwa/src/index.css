@@ -684,6 +684,13 @@
     min-height: 171px;
   }
 
+  /* Onboarding screen carausel */
+  .embla-subscription-nudge .embla__slide {
+    flex: 0 0 284px;
+    min-width: 0;
+    min-height: 213px;
+  }
+
   /* Custom session scrollbar with transparent background */
   .session-scrollbar::-webkit-scrollbar {
     width: 8px;

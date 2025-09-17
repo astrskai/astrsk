@@ -109,6 +109,7 @@ import { DataStoreSchemaField } from "@/modules/flow/domain/flow";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
+import { SubscribeBadge } from "@/components-v2/subscribe-badge";
 
 const MessageItemInternal = ({
   messageId,
@@ -818,6 +819,7 @@ const UserInputCharacterButton = ({
   isUser = false,
   onClick = () => {},
   isHighLighted = false,
+  isSubscribeBadge = false,
 }: {
   characterCardId?: UniqueEntityID;
   icon?: React.ReactNode;
@@ -825,6 +827,7 @@ const UserInputCharacterButton = ({
   isUser?: boolean;
   onClick?: () => void;
   isHighLighted?: boolean;
+  isSubscribeBadge?: boolean;
 }) => {
   const [characterCard] = useCard<CharacterCard>(characterCardId);
   const [characterIcon, characterIconIsVideo] = useAsset(
@@ -840,6 +843,7 @@ const UserInputCharacterButton = ({
       className="group relative flex flex-col gap-[4px] items-center cursor-pointer"
       onClick={onClick}
     >
+      {isSubscribeBadge && <SubscribeBadge />}
       {characterCard ? (
         <>
           <Avatar
@@ -1010,6 +1014,8 @@ const UserInputs = ({
     useAppStore.use.isGroupButtonDonNotShowAgain();
   const setIsGroupButtonDonNotShowAgain =
     useAppStore.use.setIsGroupButtonDonNotShowAgain();
+  const subscribed = useAppStore.use.subscribed();
+  const setIsOpenSubscribeNudge = useAppStore.use.setIsOpenSubscribeNudge();
 
   // Session onboarding for inference button
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
@@ -1123,12 +1129,17 @@ const UserInputs = ({
                       )
                     }
                     onClick={() => {
+                      if (!subscribed) {
+                        setIsOpenSubscribeNudge(true);
+                        return;
+                      }
                       if (!isGeneratingGlobalImage) {
                         handleGenerateImageForLastTurn();
                         onCharacterButtonClicked();
                       }
                     }}
                     isHighLighted={false}
+                    isSubscribeBadge={!subscribed}
                   />
                   {/* Generate Video button - HIDDEN in user input */}
                   {/* <UserInputCharacterButton

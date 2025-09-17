@@ -423,6 +423,8 @@ const LeftNavigationFooter = memo(
     activePage: Page;
     setActivePage: (page: Page) => void;
   }) => {
+    const subscribed = useAppStore.use.subscribed();
+
     const handleDocsClick = useCallback(() => {
       openInNewTab("https://docs.astrsk.ai/");
     }, []);
@@ -441,7 +443,7 @@ const LeftNavigationFooter = memo(
       >
         <div className="min-h-[28px]">
           <ConvexReady>
-            <Unauthenticated>
+            {!subscribed && (
               <Button
                 size="sm"
                 className="bg-secondary-normal text-secondary-heavy font-[600]"
@@ -452,13 +454,13 @@ const LeftNavigationFooter = memo(
                 <SvgIcon name="astrsk_symbol_fit" size={12} />
                 Subscribe to astrsk+
               </Button>
-            </Unauthenticated>
-            <Authenticated>
+            )}
+            {/* <Authenticated>
               <Button size="sm" className="font-[600]">
                 <SvgIcon name="astrsk_symbol_fit" size={12} />
                 Add credits
               </Button>
-            </Authenticated>
+            </Authenticated> */}
           </ConvexReady>
         </div>
         <div className="w-full flex flex-row justify-end gap-[16px] text-text-primary">

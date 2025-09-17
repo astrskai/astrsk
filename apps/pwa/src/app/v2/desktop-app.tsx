@@ -11,6 +11,9 @@ import SessionPage from "@/components-v2/session/session-page";
 import { OnboardingDialog } from "@/components-v2/setting/onboarding-genre-dialog";
 import SettingPage from "@/components-v2/setting/setting-page";
 import FlowMultiPage from "@/flow-multi/pages/flow-multi-page";
+import { ConvexReady } from "@/components-v2/convex-ready";
+import { SubscribeChecker } from "@/components-v2/setting/subscribe-checker";
+import { SubscribeNudgeDialog } from "@/components-v2/setting/subscribe-nudge-dialog";
 
 const DesktopApp = () => {
   const selectedCardId = useAppStore.use.selectedCardId();
@@ -37,6 +40,10 @@ const DesktopApp = () => {
         <CardPanelMain cardId={selectedCardId} />
       )}
       <OnboardingDialog />
+      <SubscribeNudgeDialog />
+      <ConvexReady>
+        <SubscribeChecker />
+      </ConvexReady>
     </>
   );
 };

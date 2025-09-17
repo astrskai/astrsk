@@ -21,6 +21,7 @@ import { SvgIcon } from "@/components-v2/svg-icon";
 import { invalidateSingleCardQueries } from "@/components-v2/card/utils/invalidate-card-queries";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
 import { Avatar } from "@/components-v2/avatar";
+import { useAppStore } from "@/app/stores/app-store";
 
 interface CardPanelProps {
   cardId: string;
@@ -91,6 +92,8 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { openPanel, closePanel, panelVisibility } = useCardPanelContext();
   const queryClient = useQueryClient();
+  const subscribed = useAppStore.use.subscribed();
+  const setIsOpenSubscribeNudge = useAppStore.use.setIsOpenSubscribeNudge();
 
   // Use fine-grained mutation for title updates with optimistic updates
   const updateTitle = useUpdateCardTitle(cardId);
@@ -374,22 +377,33 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               Variables
             </ButtonPill>
             <ButtonPill
-              onClick={() => handleOpenPanel("imageGenerator")}
-              // onDoubleClick={() => handleClosePanel("imageGenerator")}
+              onClick={() => {
+                if (!subscribed) {
+                  setIsOpenSubscribeNudge(true);
+                  return;
+                }
+                handleOpenPanel("imageGenerator");
+              }}
               active={panelVisibility?.["imageGenerator"]}
               size="default"
               icon={<Image />}
               className="w-32 h-8"
+              isSubscribeBadge={!subscribed}
             >
               Image studio
             </ButtonPill>
             <ButtonPill
-              size="default"
-              variant="gradient"
               icon={<SvgIcon name="ai_assistant" />}
               active={panelVisibility?.["vibe"] || false}
-              onClick={handleVibeCodingToggle}
+              onClick={() => {
+                if (!subscribed) {
+                  setIsOpenSubscribeNudge(true);
+                  return;
+                }
+                handleVibeCodingToggle();
+              }}
               className="w-32 h-8"
+              isSubscribeBadge={!subscribed}
             >
               AI assistant  
             </ButtonPill>
