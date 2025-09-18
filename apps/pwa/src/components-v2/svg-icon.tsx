@@ -752,8 +752,8 @@ const SvgIcon = forwardRef<
               y2="30.3977"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint1_linear_29864_179733"
@@ -763,8 +763,8 @@ const SvgIcon = forwardRef<
               y2="30.3986"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint2_linear_29864_179733"
@@ -774,8 +774,8 @@ const SvgIcon = forwardRef<
               y2="30.3979"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint3_linear_29864_179733"
@@ -785,8 +785,8 @@ const SvgIcon = forwardRef<
               y2="30.3981"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint4_linear_29864_179733"
@@ -796,8 +796,8 @@ const SvgIcon = forwardRef<
               y2="30.3986"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint5_linear_29864_179733"
@@ -807,8 +807,8 @@ const SvgIcon = forwardRef<
               y2="30.3976"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint6_linear_29864_179733"
@@ -818,8 +818,8 @@ const SvgIcon = forwardRef<
               y2="30.3986"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint7_linear_29864_179733"
@@ -829,8 +829,8 @@ const SvgIcon = forwardRef<
               y2="30.3981"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint8_linear_29864_179733"
@@ -840,8 +840,8 @@ const SvgIcon = forwardRef<
               y2="30.3986"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint9_linear_29864_179733"
@@ -851,8 +851,8 @@ const SvgIcon = forwardRef<
               y2="30.3977"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint10_linear_29864_179733"
@@ -862,8 +862,8 @@ const SvgIcon = forwardRef<
               y2="30.3986"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint11_linear_29864_179733"
@@ -873,8 +873,8 @@ const SvgIcon = forwardRef<
               y2="30.3979"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint12_linear_29864_179733"
@@ -884,8 +884,8 @@ const SvgIcon = forwardRef<
               y2="30.3977"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
             <linearGradient
               id="paint13_linear_29864_179733"
@@ -895,8 +895,8 @@ const SvgIcon = forwardRef<
               y2="30.3977"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#D4D4D4" />
-              <stop offset="1" stop-color="white" />
+              <stop stopColor="#D4D4D4" />
+              <stop offset="1" stopColor="white" />
             </linearGradient>
           </defs>
         </>
