@@ -71,9 +71,8 @@ import { ModelTier } from "@/modules/agent/domain";
 // When using AstrskAi, format must be "ApiSource:modelId"
 // where ApiSource is a valid value from ApiSource enum that makeProvider can handle
 const MODEL_TIER_MAPPING = {
-  [ModelTier.Light]: "openai-compatible:-generative-ai:google/gemini-2.5-flash",
-  [ModelTier.Heavy]:
-    "openai-compatible:-generative-ai:deepseek/deepseek-chat-v3-0324",
+  [ModelTier.Light]: "openai-compatible:google/gemini-2.5-flash",
+  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat-v3-0324",
 } as const;
 
 // Helper function to check if user is logged in
