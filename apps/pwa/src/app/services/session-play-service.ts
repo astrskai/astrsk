@@ -75,6 +75,12 @@ const MODEL_TIER_MAPPING = {
   [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat-v3-0324",
 } as const;
 
+// Display names for the fallback models
+const MODEL_DISPLAY_NAMES: Record<string, string> = {
+  "openai-compatible:google/gemini-2.5-flash": "Gemini 2.5 Flash",
+  "openai-compatible:deepseek/deepseek-chat-v3-0324": "DeepSeek Chat v3",
+};
+
 // Helper function to check if user is logged in
 const isUserLoggedIn = (): boolean => {
   const jwt = useAppStore.getState().jwt;
@@ -1634,11 +1640,9 @@ async function* executeAgentNode({
             apiSource = ApiSource.AstrskAi;
             apiModelId = fallbackModel;
 
-            // Extract the actual model name from the fallback model format
-            // Format is "google-generative-ai:gemini-2.5-flash" -> "gemini-2.5-flash"
-            const modelParts = fallbackModel.split(":");
+            // Get the display name for the fallback model
             actualModelName =
-              modelParts.length > 1 ? modelParts[1] : fallbackModel;
+              MODEL_DISPLAY_NAMES[fallbackModel] || fallbackModel;
           }
         }
       }
