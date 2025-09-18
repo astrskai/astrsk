@@ -434,7 +434,7 @@ export type PublicApiType = {
             cameraFixed?: boolean;
             duration?: number;
             fps?: number;
-            imageMode?: "starting" | "reference";
+            imageMode?: "starting" | "ending" | "reference" | "start-end";
             images: string | Array<string>;
             loop?: boolean;
             model?: string;

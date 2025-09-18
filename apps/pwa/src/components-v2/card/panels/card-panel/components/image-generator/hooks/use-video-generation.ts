@@ -495,6 +495,12 @@ export const useVideoGeneration = ({
 
   const generateVideo = useCallback(
     async (config: VideoGenerationConfig) => {
+      // Check if a video is already being generated
+      if (isGeneratingVideo) {
+        toast.warning("A video is already generating. Please wait.");
+        return;
+      }
+
       // Generate a unique ID for this video generation
       const generationId = `video-${Date.now()}`;
       setGeneratingImageId(generationId);
