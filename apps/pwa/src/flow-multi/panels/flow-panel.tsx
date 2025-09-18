@@ -2090,11 +2090,11 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               icon={<SearchCheck />}
               active={isPanelOpen(PANEL_TYPES.VALIDATION)}
               onClick={() => openPanel(PANEL_TYPES.VALIDATION)}
-              className="w-32 h-8"
+              className="w-28 h-8"
             >
               Validation
             </ButtonPill>
-            <ButtonPill
+            {/*<ButtonPill
               size="default"
               variant="gradient"
               icon={<SvgIcon name="ai_assistant" />}
@@ -2103,7 +2103,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               className="w-32 h-8"
             >
               AI assistant
-            </ButtonPill>
+            </ButtonPill>*/}
           </div>
         </div>
       </div>
