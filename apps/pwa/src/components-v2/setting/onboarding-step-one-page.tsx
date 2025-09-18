@@ -33,9 +33,9 @@ const OnboardingStepOnePage = () => {
           <iframe
             width="100%"
             height="100%"
-            src="https://www.youtube.com/embed/vO6JFL6R_mc?autoplay=1&mute=1&cc_load_policy=1&start=0"
+            src="https://www.youtube.com/embed/vO6JFL6R_mc?mute=1&cc_load_policy=1&start=0"
             title="astrsk Tutorial"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
         </div>
