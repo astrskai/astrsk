@@ -49,16 +49,48 @@ export const useMultipleCharacterAssets = (
   const [char7AssetUrl, isChar7Video] = useAsset(char7Card?.props.iconAssetId);
   const [char8AssetUrl, isChar8Video] = useAsset(char8Card?.props.iconAssetId);
 
-  // Collect all character data
+  // Collect all character data (convert null to undefined)
   const characterData = [
-    { card: char1Card, assetUrl: char1AssetUrl, isVideo: isChar1Video },
-    { card: char2Card, assetUrl: char2AssetUrl, isVideo: isChar2Video },
-    { card: char3Card, assetUrl: char3AssetUrl, isVideo: isChar3Video },
-    { card: char4Card, assetUrl: char4AssetUrl, isVideo: isChar4Video },
-    { card: char5Card, assetUrl: char5AssetUrl, isVideo: isChar5Video },
-    { card: char6Card, assetUrl: char6AssetUrl, isVideo: isChar6Video },
-    { card: char7Card, assetUrl: char7AssetUrl, isVideo: isChar7Video },
-    { card: char8Card, assetUrl: char8AssetUrl, isVideo: isChar8Video },
+    {
+      card: char1Card,
+      assetUrl: char1AssetUrl || undefined,
+      isVideo: isChar1Video,
+    },
+    {
+      card: char2Card,
+      assetUrl: char2AssetUrl || undefined,
+      isVideo: isChar2Video,
+    },
+    {
+      card: char3Card,
+      assetUrl: char3AssetUrl || undefined,
+      isVideo: isChar3Video,
+    },
+    {
+      card: char4Card,
+      assetUrl: char4AssetUrl || undefined,
+      isVideo: isChar4Video,
+    },
+    {
+      card: char5Card,
+      assetUrl: char5AssetUrl || undefined,
+      isVideo: isChar5Video,
+    },
+    {
+      card: char6Card,
+      assetUrl: char6AssetUrl || undefined,
+      isVideo: isChar6Video,
+    },
+    {
+      card: char7Card,
+      assetUrl: char7AssetUrl || undefined,
+      isVideo: isChar7Video,
+    },
+    {
+      card: char8Card,
+      assetUrl: char8AssetUrl || undefined,
+      isVideo: isChar8Video,
+    },
   ];
 
   // Get all generated images for finding video thumbnails
@@ -95,14 +127,14 @@ export const useMultipleCharacterAssets = (
   const [thumb8Url] = useAsset(thumbnailAssetIds[7]);
 
   const thumbnailUrls = [
-    thumb1Url,
-    thumb2Url,
-    thumb3Url,
-    thumb4Url,
-    thumb5Url,
-    thumb6Url,
-    thumb7Url,
-    thumb8Url,
+    thumb1Url || undefined,
+    thumb2Url || undefined,
+    thumb3Url || undefined,
+    thumb4Url || undefined,
+    thumb5Url || undefined,
+    thumb6Url || undefined,
+    thumb7Url || undefined,
+    thumb8Url || undefined,
   ];
 
   // Build final character asset data
@@ -111,17 +143,32 @@ export const useMultipleCharacterAssets = (
       .map((data, index) => {
         if (!data.card) return null;
 
-        // For videos, use thumbnail URL; for images, use direct URL
-        const imageUrl = data.isVideo ? thumbnailUrls[index] : data.assetUrl;
+        // For videos, use thumbnail URL if available, otherwise skip
+        // For images, use direct URL
+        let imageUrl: string | undefined;
 
-        // Skip if it's a video but we don't have a thumbnail
-        if (data.isVideo && !imageUrl) return null;
+        if (data.isVideo) {
+          // For videos, we need a thumbnail
+          imageUrl = thumbnailUrls[index];
+          // If no thumbnail found in generated images, we can't use this video for image generation
+          // Log a warning to help debug
+          if (!imageUrl && data.assetUrl) {
+            console.warn(
+              `[useMultipleCharacterAssets] Video asset for character "${data.card.props.name}" has no thumbnail. ` +
+                `Video assets need to be generated through the app or have thumbnails extracted to be used in image generation.`,
+            );
+            return null; // Skip videos without thumbnails
+          }
+        } else {
+          // For regular images, use the asset URL directly
+          imageUrl = data.assetUrl;
+        }
 
         return {
           card: data.card,
-          assetUrl: data.assetUrl || undefined, // Convert null to undefined
+          assetUrl: data.assetUrl, // Already converted to undefined above
           isVideo: data.isVideo,
-          imageUrl: imageUrl || undefined, // Convert null to undefined
+          imageUrl: imageUrl, // Already undefined if not available
           characterName: data.card.props.name || `Character ${index + 1}`,
         };
       })
