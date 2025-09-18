@@ -1,1 +1,0 @@
-ALTER TABLE "vibe_sessions" ADD COLUMN "snapshots" jsonb DEFAULT '[]'::jsonb NOT NULL;
