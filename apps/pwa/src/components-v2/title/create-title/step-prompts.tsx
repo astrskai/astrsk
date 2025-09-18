@@ -176,7 +176,7 @@ export const isModelAvailable = (
 
   for (const apiConnectionWithModels of apiConnectionsWithModels) {
     const { apiConnection, models } = apiConnectionWithModels;
-    
+
     if (apiConnection.source === apiSource) {
       for (const model of models) {
         if (model.id === modelId && model.name === modelName) {
@@ -216,7 +216,7 @@ const PromptItem = ({
   // Get current zoom level from React Flow
   const reactFlow = useReactFlow();
   const zoomScale = reactFlow.getViewport().zoom;
-  
+
   const methods = useForm<StepPromptsSchemaType>({
     defaultValues: {
       aiResponse: {
@@ -245,6 +245,61 @@ const PromptItem = ({
   useEffect(() => {
     invalidate();
   }, []);
+
+  // Validate Astrsk API model when connections are loaded/changed
+  useEffect(() => {
+    if (
+      agent?.props.apiSource === ApiSource.AstrskAi &&
+      agent?.props.modelId &&
+      agent?.props.modelName &&
+      apiConnectionsWithModels &&
+      apiConnectionsWithModels.length > 0
+    ) {
+      // Check if Astrsk connection exists and has the model
+      const astrskConnection = apiConnectionsWithModels.find(
+        (conn: ApiConnectionWithModels) =>
+          conn.apiConnection.source === ApiSource.AstrskAi,
+      );
+
+      if (
+        astrskConnection &&
+        astrskConnection.models &&
+        astrskConnection.models.length > 0
+      ) {
+        // Check if the selected model exists in the available models
+        const modelExists = astrskConnection.models.some(
+          (model: ApiModel) =>
+            model.id === agent.props.modelId &&
+            model.name === agent.props.modelName,
+        );
+
+        if (!modelExists) {
+          // Model not available, clear the selection
+          console.log("Astrsk API model not available, clearing selection");
+          // Clear the model selection
+          modelChanged(undefined, false, {
+            apiSource: undefined,
+            modelId: undefined,
+          });
+        } else {
+          console.log("Astrsk API model validated successfully");
+        }
+      } else if (!astrskConnection) {
+        // No Astrsk connection at all, clear the selection
+        console.log("No Astrsk API connection found, clearing model selection");
+        modelChanged(undefined, false, {
+          apiSource: undefined,
+          modelId: undefined,
+        });
+      }
+    }
+  }, [
+    agent?.props.apiSource,
+    agent?.props.modelId,
+    agent?.props.modelName,
+    apiConnectionsWithModels,
+    modelChanged,
+  ]);
 
   // Helper to flatten option values
 
