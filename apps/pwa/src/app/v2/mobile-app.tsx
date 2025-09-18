@@ -8,7 +8,6 @@ import { LoadingOverlay } from "@/components-v2/loading-overlay";
 import ModelPageMobile from "@/components-v2/model/model-page-mobile";
 import CreateSessionPage from "@/components-v2/session/create-session-page";
 import SessionPageMobile from "@/components-v2/session/mobile/session-page-mobile";
-import { OnboardingMobile } from "@/components-v2/setting/onboarding-mobile";
 import SettingPageMobile from "@/components-v2/setting/setting-page-mobile";
 import FlowPageMobile from "@/components-v2/flow/flow-page-mobile";
 
@@ -46,7 +45,6 @@ const MobileApp = () => {
       <SettingPageMobile
         className={cn(activePage !== Page.Settings && "hidden")}
       />
-      <OnboardingMobile />
     </>
   );
 };

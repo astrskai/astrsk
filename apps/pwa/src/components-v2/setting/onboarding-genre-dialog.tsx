@@ -1,4 +1,4 @@
-import { useAppStore, Page } from "@/app/stores/app-store";
+import { Page, useAppStore } from "@/app/stores/app-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { useSidebarLeft } from "@/components-v2/both-sidebar";
 import { cn } from "@/components-v2/lib/utils";
@@ -13,7 +13,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { SessionService } from "@/app/services/session-service";
+import { sessionQueries } from "@/app/queries/session-queries";
+import { Session } from "@/modules/session/domain";
 
 // Map genres to session names
 const GENRE_SESSION_MAP = {
@@ -38,25 +39,13 @@ const OnboardingDialog = () => {
   // Sidebar control
   const { setOpen: setSidebarOpen } = useSidebarLeft();
 
-  // Telemetry
-  const setIsTelemetryEnabled = useAppStore.use.setIsTelemetryEnabled();
-
   // Get all sessions to find the matching session ID
-  const { data: sessions, isLoading: isLoadingSessions } = useQuery({
-    queryKey: ["sessions"],
-    queryFn: async () => {
-      const result = await SessionService.listSession.execute({});
-      if (result.isFailure) return [];
-      return result.getValue();
-    },
-    enabled: !sessionOnboardingSteps.genreSelection, // Only fetch if dialog is showing
-  });
+  const { data: sessions, isLoading: isLoadingSessions } = useQuery(
+    sessionQueries.list({}),
+  );
 
   const handleNext = () => {
     if (!selectedGenre || !sessions) return;
-
-    // Enable telemetry by default
-    setIsTelemetryEnabled(true);
 
     // Mark genre selection as completed - this will close the dialog
     setSessionOnboardingStep("genreSelection", true);
@@ -64,7 +53,7 @@ const OnboardingDialog = () => {
     // Find the session that matches the selected genre
     const targetSessionName = GENRE_SESSION_MAP[selectedGenre];
     const targetSession = sessions.find(
-      (session) => session.title === targetSessionName,
+      (session: Session) => session.title === targetSessionName,
     );
 
     if (targetSession) {
