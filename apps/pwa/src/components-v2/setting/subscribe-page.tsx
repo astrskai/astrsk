@@ -3,12 +3,48 @@ import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { logger } from "@/shared/utils/logger";
+import { useAuth, useSignUp } from "@clerk/clerk-react";
 import { Bot, ChevronDown, Coins, Zap } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
 const SubscribePage = () => {
   const setActivePage = useAppStore.use.setActivePage();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Sign up with SSO
+  const { userId } = useAuth();
+  const { isLoaded: isLoadedSignUp, signUp } = useSignUp();
+  const [isLoading, setIsLoading] = useState(false);
+  const signUpWithDiscord = useCallback(() => {
+    // Check sign up is loaded
+    if (!isLoadedSignUp) {
+      return;
+    }
+
+    // Check already signed in
+    if (userId) {
+      toast.info("You already signed in");
+      return;
+    }
+
+    try {
+      // Try to sign up with google
+      setIsLoading(true);
+      signUp.authenticateWithRedirect({
+        strategy: "oauth_discord",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/sso-callback",
+      });
+    } catch (error) {
+      setIsLoading(false);
+      logger.error(error);
+      toast.error("Failed to sign up", {
+        description: JSON.stringify(error),
+      });
+    }
+  }, [isLoadedSignUp, signUp, userId]);
 
   return (
     <div
@@ -150,20 +186,22 @@ const SubscribePage = () => {
                     <br />
                     - Gemini 2.5 Pro • Gemini 2.5 Flash • Gemini 2.5 Flash Lite
                     <br />
+                    - GPT-5 Chat • GPT-5 • GPT-5 Mini • GPT-5 Nano
+                    <br />
                     <br />
                     <b>Image Generation</b>
                     <br />
-                    - Gemini 2.5 Flash Images (Nano Banana) • SeeDream 4.0
+                    - Gemini 2.5 Flash Image (Nano Banana) • Seedream 4.0
                     <br />
                     <br />
                     <b>Video Generation</b>
                     <br />
-                    - SeeDance 1.0
+                    - Seedance 1.0
                     <br />
                     <br />
                     <b>Usage Estimates</b>
                     <br />
-                    - ~1,200 text outputs with DeepSeek R1
+                    - ~1,200 text outputs with DeepSeek V3
                     <br />- ~125 images with SeeDream 4.0
                   </div>
                 </div>
@@ -179,7 +217,7 @@ const SubscribePage = () => {
               >
                 <div className="flex flex-row gap-[4px] items-center line-through">
                   <div className="text-[24px] leading-[40px] font-[600] text-text-primary">
-                    $15.00 USD
+                    $18.00 USD
                   </div>
                   <div className="text-[16px] leading-[25.6px] font-[400] text-text-body">
                     / month
@@ -202,21 +240,26 @@ const SubscribePage = () => {
                       First Month Free
                     </div>
                   </div>
-                  <div className="text-[16px] leading-[25.6px] font-[400] text-text-body">
-                    Special Offer
+                  <div className="text-[16px] leading-[25.6px] font-[400] text-text-primary">
+                    (Early Access) Special Offer
                   </div>
                 </div>
                 <div className="text-[14px] leading-[20px] font-[500] text-text-body mb-[8px]">
-                  We are Only Accepting 100 Users to Our Early Access Phase;
-                  First Come First Access
+                  <ul className="list-disc pl-5">
+                    <li>Early access limited to first 100 users only</li>
+                    <li>Must be member of our Discord server to gain access</li>
+                  </ul>
                 </div>
                 <Button
                   size="lg"
                   onClick={() => {
-                    setActivePage(Page.SignUp);
+                    signUpWithDiscord();
                   }}
+                  disabled={!isLoadedSignUp || isLoading}
+                  loading={isLoading}
                 >
-                  Sign up and Start Now
+                  {!isLoading && <SvgIcon name="discord" size={16} />}
+                  Join our Discord server and start now
                 </Button>
               </div>
             </div>
