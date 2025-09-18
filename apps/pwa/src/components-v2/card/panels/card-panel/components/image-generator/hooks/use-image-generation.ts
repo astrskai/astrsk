@@ -1,10 +1,11 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { toast } from "sonner";
 import { useNanoBananaGenerator } from "@/app/hooks/use-nano-banana-generator";
 import { useSeedreamGenerator } from "@/app/hooks/use-seedream-generator";
 import { IMAGE_MODELS } from "@/app/stores/model-store";
+import { useAppStore } from "@/app/stores/app-store";
 
 interface ImageGenerationConfig {
   prompt: string;
@@ -33,7 +34,10 @@ export const useImageGeneration = ({
   cardId,
   onSuccess,
 }: UseImageGenerationProps): UseImageGenerationReturn => {
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  // Use global store for loading state
+  const generatingImageId = useAppStore.use.generatingImageId();
+  const setGeneratingImageId = useAppStore.use.setGeneratingImageId();
+  const isGeneratingImage = generatingImageId !== null;
 
   // Nano banana generator hook
   const { generateCustomImage, generateImageToImage } =
@@ -130,7 +134,9 @@ export const useImageGeneration = ({
 
   const generateImage = useCallback(
     async (config: ImageGenerationConfig) => {
-      setIsGeneratingImage(true);
+      // Generate a unique ID for this generation
+      const generationId = `gen-${Date.now()}`;
+      setGeneratingImageId(generationId);
 
       try {
         let result;
@@ -255,6 +261,8 @@ export const useImageGeneration = ({
         if (saveResult.isSuccess) {
           const savedImage = saveResult.getValue();
           onSuccess?.();
+          // Clear the loading state
+          setGeneratingImageId(null);
           // Return the asset ID of the saved image
           return savedImage.props.assetId?.toString();
         } else {
@@ -268,8 +276,8 @@ export const useImageGeneration = ({
         toast.error(
           error instanceof Error ? error.message : "Failed to generate image",
         );
-      } finally {
-        setIsGeneratingImage(false);
+        // Clear loading state on error
+        setGeneratingImageId(null);
       }
     },
     [
@@ -280,6 +288,7 @@ export const useImageGeneration = ({
       generateSeedreamImageToImage,
       onSuccess,
       urlToBase64,
+      setGeneratingImageId,
     ],
   );
 

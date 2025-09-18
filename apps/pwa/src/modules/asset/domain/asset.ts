@@ -138,26 +138,8 @@ export class Asset extends AggregateRoot<AssetProps> {
     id?: UniqueEntityID,
   ): Promise<Result<Asset>> {
     try {
-      console.log(
-        "📦 [ASSET] Creating asset from file:",
-        props.file.name,
-        "Type:",
-        props.file.type,
-        "Size:",
-        props.file.size,
-      );
-
       // Convert file to WebP format (only for images, videos are kept as-is)
       const webpFile = await convertToWebp(props.file);
-
-      console.log(
-        "📦 [ASSET] After conversion:",
-        webpFile.name,
-        "Type:",
-        webpFile.type,
-        "Size:",
-        webpFile.size,
-      );
 
       // Get hash
       const hash = await getFileHash(webpFile);

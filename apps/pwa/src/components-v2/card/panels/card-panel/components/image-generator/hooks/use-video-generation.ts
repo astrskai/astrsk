@@ -4,6 +4,7 @@ import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { toast } from "sonner";
 import { useSeedanceGenerator } from "@/app/hooks/use-seedance-generator";
 import { IMAGE_MODELS } from "@/app/stores/model-store";
+import { useAppStore } from "@/app/stores/app-store";
 
 interface VideoGenerationConfig {
   prompt: string;
@@ -36,7 +37,11 @@ export const useVideoGeneration = ({
   cardId,
   onSuccess,
 }: UseVideoGenerationProps): UseVideoGenerationReturn => {
-  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  // Use global store for loading state
+  const generatingImageId = useAppStore.use.generatingImageId();
+  const setGeneratingImageId = useAppStore.use.setGeneratingImageId();
+  const isGeneratingVideo =
+    generatingImageId !== null && generatingImageId.startsWith("video-");
   const [videoGenerationStatus, setVideoGenerationStatus] = useState("");
 
   // Seedance generator hook with all video generation methods
@@ -163,7 +168,7 @@ export const useVideoGeneration = ({
       return new Promise((resolve, reject) => {
         // Check if this task has already been processed
         if (processedTaskIds.current.has(taskId)) {
-          setIsGeneratingVideo(false);
+          setGeneratingImageId(null);
           resolve(undefined);
           return;
         }
@@ -231,7 +236,7 @@ export const useVideoGeneration = ({
                     // Resolve the promise with the asset ID
                     const assetId = savedVideo.props.assetId?.toString();
 
-                    setIsGeneratingVideo(false);
+                    setGeneratingImageId(null);
                     resolve(assetId);
                     return assetId;
                   } else {
@@ -242,7 +247,7 @@ export const useVideoGeneration = ({
                     toast.error("Failed to save video", {
                       description: saveResult.getError(),
                     });
-                    setIsGeneratingVideo(false);
+                    setGeneratingImageId(null);
                     reject(
                       new Error(
                         saveResult.getError() || "Failed to save video",
@@ -257,7 +262,7 @@ export const useVideoGeneration = ({
                         : "Unknown error occurred",
                   });
 
-                  setIsGeneratingVideo(false);
+                  setGeneratingImageId(null);
                   reject(videoError);
                 }
                 return; // Exit early, no need to poll - promise already resolved
@@ -265,7 +270,7 @@ export const useVideoGeneration = ({
             } else if (immediateResult.status === "failed") {
               processedTaskIds.current.add(taskId);
               setVideoGenerationStatus("");
-              setIsGeneratingVideo(false);
+              setGeneratingImageId(null);
 
               const errorMessage =
                 immediateResult.error || "Video generation failed";
@@ -292,7 +297,7 @@ export const useVideoGeneration = ({
               // Unknown status, don't poll
               console.warn(`Unknown video status: ${immediateResult.status}`);
               setVideoGenerationStatus("");
-              setIsGeneratingVideo(false);
+              setGeneratingImageId(null);
               resolve(undefined);
               return;
             }
@@ -318,7 +323,7 @@ export const useVideoGeneration = ({
                 clearInterval(pollingIntervalRef.current!);
                 pollingIntervalRef.current = null;
                 setVideoGenerationStatus("");
-                setIsGeneratingVideo(false);
+                setGeneratingImageId(null);
                 return;
               }
 
@@ -371,7 +376,7 @@ export const useVideoGeneration = ({
                   toast.success("Video generated and saved successfully!");
                   // Resolve the promise with the asset ID
                   const assetId = savedVideo.props.assetId?.toString();
-                  setIsGeneratingVideo(false);
+                  setGeneratingImageId(null);
                   resolve(assetId);
                   return assetId;
                 } else {
@@ -382,7 +387,7 @@ export const useVideoGeneration = ({
                   toast.error("Failed to save video", {
                     description: saveResult.getError(),
                   });
-                  setIsGeneratingVideo(false);
+                  setGeneratingImageId(null);
                   reject(
                     new Error(saveResult.getError() || "Failed to save video"),
                   );
@@ -398,7 +403,7 @@ export const useVideoGeneration = ({
                       ? videoError.message
                       : "Unknown error occurred",
                 });
-                setIsGeneratingVideo(false);
+                setGeneratingImageId(null);
                 reject(videoError);
               }
             } else if (statusResult.status === "failed") {
@@ -409,7 +414,7 @@ export const useVideoGeneration = ({
               clearInterval(pollingIntervalRef.current!);
               pollingIntervalRef.current = null;
               setVideoGenerationStatus("");
-              setIsGeneratingVideo(false);
+              setGeneratingImageId(null);
 
               const errorMessage =
                 statusResult.error || "Video generation failed";
@@ -432,12 +437,14 @@ export const useVideoGeneration = ({
         }, 5000);
       });
     },
-    [cardId, checkVideoStatus, onSuccess],
+    [cardId, checkVideoStatus, onSuccess, setGeneratingImageId],
   );
 
   const generateVideo = useCallback(
     async (config: VideoGenerationConfig) => {
-      setIsGeneratingVideo(true);
+      // Generate a unique ID for this video generation
+      const generationId = `video-${Date.now()}`;
+      setGeneratingImageId(generationId);
       setVideoGenerationStatus("Generating");
 
       try {
@@ -596,7 +603,7 @@ export const useVideoGeneration = ({
         toast.error(
           error instanceof Error ? error.message : "Failed to generate video",
         );
-        setIsGeneratingVideo(false);
+        setGeneratingImageId(null);
         setVideoGenerationStatus("");
       }
     },
@@ -605,6 +612,7 @@ export const useVideoGeneration = ({
       generateSeedanceImageToVideo,
       pollVideoStatus,
       urlToBase64,
+      setGeneratingImageId,
     ],
   );
 

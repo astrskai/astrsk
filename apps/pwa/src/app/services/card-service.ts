@@ -17,6 +17,7 @@ import {
   UpdateCardVersion,
   UpdateCardConceptualOrigin,
   UpdateCardIconAsset,
+  UpdateCardImagePrompt,
   UpdateCharacterName,
   UpdateCharacterDescription,
   UpdateCharacterExampleDialogue,
@@ -44,6 +45,7 @@ export class CardService {
   public static updateCardVersion: UpdateCardVersion;
   public static updateCardConceptualOrigin: UpdateCardConceptualOrigin;
   public static updateCardIconAsset: UpdateCardIconAsset;
+  public static updateCardImagePrompt: UpdateCardImagePrompt;
   public static updateCharacterName: UpdateCharacterName;
   public static updateCharacterDescription: UpdateCharacterDescription;
   public static updateCharacterExampleDialogue: UpdateCharacterExampleDialogue;
@@ -94,6 +96,10 @@ export class CardService {
       this.cardRepo,
     );
     this.updateCardIconAsset = new UpdateCardIconAsset(this.cardRepo);
+    this.updateCardImagePrompt = new UpdateCardImagePrompt(
+      this.cardRepo,
+      this.cardRepo,
+    );
     this.updateCharacterName = new UpdateCharacterName(
       this.cardRepo,
       this.cardRepo,

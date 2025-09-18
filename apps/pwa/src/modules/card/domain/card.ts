@@ -31,6 +31,9 @@ export interface CardProps {
   // Vibe Session Reference (AI Assistant)
   vibeSessionId?: string;
 
+  // Image Generation
+  imagePrompt?: string;
+
   // Set by System
   createdAt: Date;
   updatedAt: Date;
@@ -47,6 +50,7 @@ export const CardPropsKeys = [
   "version",
   "conceptualOrigin",
   "vibeSessionId",
+  "imagePrompt",
   "createdAt",
   "updatedAt",
   "tokenCount",

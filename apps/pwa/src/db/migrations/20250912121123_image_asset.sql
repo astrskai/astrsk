@@ -1,1 +1,0 @@
-ALTER TABLE "generated_images" ADD COLUMN "thumbnail_asset_id" uuid;
