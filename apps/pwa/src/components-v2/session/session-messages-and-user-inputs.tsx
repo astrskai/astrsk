@@ -1988,7 +1988,7 @@ const SessionMessagesAndUserInputs = ({
   const plotCardScenarioCount = plotCard?.props.scenarios?.length ?? 0;
   useEffect(() => {
     // Check scenario count
-    if (plotCardId === "") {
+    if (plotCardScenarioCount === 0) {
       setIsOpenSelectScenarioModal(false);
       return;
     }
