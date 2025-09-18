@@ -187,10 +187,6 @@ interface AppState {
   isGroupButtonDonNotShowAgain: boolean;
   setIsGroupButtonDonNotShowAgain: (isDonNotShowAgain: boolean) => void;
 
-  // Telemetry
-  isTelemetryEnabled: boolean;
-  setIsTelemetryEnabled: (isTelemetryEnabled: boolean) => void;
-
   // Settings
   settingPageLevel: SettingPageLevel;
   setSettingPageLevel: (settingPageLevel: SettingPageLevel) => void;
@@ -427,13 +423,6 @@ const useAppStoreBase = create<AppState>()(
       setIsGroupButtonDonNotShowAgain: (isDonNotShowAgain) =>
         set((state) => {
           state.isGroupButtonDonNotShowAgain = isDonNotShowAgain;
-        }),
-
-      // Telemetry
-      isTelemetryEnabled: false,
-      setIsTelemetryEnabled: (isTelemetryEnabled) =>
-        set((state) => {
-          state.isTelemetryEnabled = isTelemetryEnabled;
         }),
 
       // Settings
