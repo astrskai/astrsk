@@ -201,8 +201,8 @@ export const useVideoGeneration = ({
       return new Promise((resolve, reject) => {
         // Check if this task has already been processed
         if (processedTaskIds.current.has(taskId)) {
-          setGeneratingImageId(null);
-          setGeneratingContext(null);
+          useAppStore.getState().setGeneratingImageId(null);
+          useAppStore.getState().setGeneratingContext(null);
           resolve(undefined);
           return;
         }
@@ -273,10 +273,9 @@ export const useVideoGeneration = ({
                     const assetId = savedVideo.props.assetId?.toString();
 
                     // Only update state if still mounted
-                    if (isMountedRef.current) {
-                      setGeneratingImageId(null);
-                      setGeneratingContext(null); // Clear context on success
-                    }
+                    // Clear global state on success
+                    useAppStore.getState().setGeneratingImageId(null);
+                    useAppStore.getState().setGeneratingContext(null);
                     resolve(assetId);
                     return assetId;
                   } else {
@@ -287,10 +286,9 @@ export const useVideoGeneration = ({
                     toast.error("Failed to save video", {
                       description: saveResult.getError(),
                     });
-                    if (isMountedRef.current) {
-                      setGeneratingImageId(null);
-                      setGeneratingContext(null);
-                    }
+                    // Clear global state on error
+                    useAppStore.getState().setGeneratingImageId(null);
+                    useAppStore.getState().setGeneratingContext(null);
                     reject(
                       new Error(
                         saveResult.getError() || "Failed to save video",
@@ -305,10 +303,9 @@ export const useVideoGeneration = ({
                         : "Unknown error occurred",
                   });
 
-                  if (isMountedRef.current) {
-                    setGeneratingImageId(null);
-                    setGeneratingContext(null);
-                  }
+                  // Clear global state on error
+                  useAppStore.getState().setGeneratingImageId(null);
+                  useAppStore.getState().setGeneratingContext(null);
                   reject(videoError);
                 }
                 return; // Exit early, no need to poll - promise already resolved
@@ -316,14 +313,28 @@ export const useVideoGeneration = ({
             } else if (immediateResult.status === "failed") {
               addProcessedTaskId(taskId);
               setVideoGenerationStatus("");
-              setGeneratingImageId(null);
-              setGeneratingContext(null);
+              useAppStore.getState().setGeneratingImageId(null);
+              useAppStore.getState().setGeneratingContext(null);
 
-              const errorMessage =
-                immediateResult.error || "Video generation failed";
+              // Handle error object or string
+              let errorMessage: string;
+              if (
+                typeof immediateResult.error === "object" &&
+                immediateResult.error !== null
+              ) {
+                // Extract message from error object
+                errorMessage =
+                  (immediateResult.error as any).message ||
+                  (immediateResult.error as any).code ||
+                  JSON.stringify(immediateResult.error);
+              } else {
+                errorMessage =
+                  immediateResult.error || "Video generation failed";
+              }
+
               console.error(
                 "❌ [VIDEO-GENERATOR] Video generation failed:",
-                errorMessage,
+                immediateResult.error,
               );
               toast.error("Video generation failed", {
                 description: errorMessage,
@@ -336,7 +347,8 @@ export const useVideoGeneration = ({
             if (
               immediateResult.status === "processing" ||
               immediateResult.status === "pending" ||
-              immediateResult.status === "running"
+              immediateResult.status === "running" ||
+              immediateResult.status === "queued" // Add queued as a valid processing state
             ) {
               // Keep status as "Generating"
               setVideoGenerationStatus("Generating");
@@ -344,8 +356,8 @@ export const useVideoGeneration = ({
               // Unknown status, don't poll
               console.warn(`Unknown video status: ${immediateResult.status}`);
               setVideoGenerationStatus("");
-              setGeneratingImageId(null);
-              setGeneratingContext(null);
+              useAppStore.getState().setGeneratingImageId(null);
+              useAppStore.getState().setGeneratingContext(null);
               resolve(undefined);
               return;
             }
@@ -360,17 +372,10 @@ export const useVideoGeneration = ({
 
         // Start polling every 5 seconds only if needed
         const pollingCallback = async () => {
-          // Check if component is still mounted
-          if (!isMountedRef.current) {
-            pollingManager.stopPolling(taskId);
-            return;
-          }
+          // Don't check mount status - polling should continue globally
 
           try {
             const statusResult = await checkVideoStatus({ taskId });
-
-            // Check again if still mounted before updating state
-            if (!isMountedRef.current) return;
 
             // Keep status as "Generating" during polling
             setVideoGenerationStatus("Generating");
@@ -380,8 +385,9 @@ export const useVideoGeneration = ({
               if (processedTaskIds.current.has(taskId)) {
                 pollingManager.stopPolling(taskId);
                 setVideoGenerationStatus("");
-                setGeneratingImageId(null);
-                setGeneratingContext(null);
+                // Use global store directly
+                useAppStore.getState().setGeneratingImageId(null);
+                useAppStore.getState().setGeneratingContext(null);
                 return;
               }
 
@@ -391,10 +397,11 @@ export const useVideoGeneration = ({
               // Video is ready!
               pollingManager.stopPolling(taskId);
 
-              // Only update state if still mounted
-              if (isMountedRef.current) {
-                setVideoGenerationStatus("");
-              }
+              // Clear global state when done
+              setVideoGenerationStatus("");
+              // Use the global store methods directly to ensure state updates
+              useAppStore.getState().setGeneratingImageId(null);
+              useAppStore.getState().setGeneratingContext(null);
 
               // Process the video
               try {
@@ -434,8 +441,9 @@ export const useVideoGeneration = ({
                   toast.success("Video generated and saved successfully!");
                   // Resolve the promise with the asset ID
                   const assetId = savedVideo.props.assetId?.toString();
-                  setGeneratingImageId(null);
-                  setGeneratingContext(null);
+                  // Use global store directly
+                  useAppStore.getState().setGeneratingImageId(null);
+                  useAppStore.getState().setGeneratingContext(null);
                   resolve(assetId);
                   return assetId;
                 } else {
@@ -446,8 +454,9 @@ export const useVideoGeneration = ({
                   toast.error("Failed to save video", {
                     description: saveResult.getError(),
                   });
-                  setGeneratingImageId(null);
-                  setGeneratingContext(null);
+                  // Use global store directly
+                  useAppStore.getState().setGeneratingImageId(null);
+                  useAppStore.getState().setGeneratingContext(null);
                   reject(
                     new Error(saveResult.getError() || "Failed to save video"),
                   );
@@ -463,7 +472,7 @@ export const useVideoGeneration = ({
                       ? videoError.message
                       : "Unknown error occurred",
                 });
-                setGeneratingImageId(null);
+                useAppStore.getState().setGeneratingImageId(null);
                 reject(videoError);
               }
             } else if (statusResult.status === "failed") {
@@ -473,14 +482,28 @@ export const useVideoGeneration = ({
               // Video generation failed
               pollingManager.stopPolling(taskId);
               setVideoGenerationStatus("");
-              setGeneratingImageId(null);
-              setGeneratingContext(null);
+              // Use global store directly
+              useAppStore.getState().setGeneratingImageId(null);
+              useAppStore.getState().setGeneratingContext(null);
 
-              const errorMessage =
-                statusResult.error || "Video generation failed";
+              // Handle error object or string
+              let errorMessage: string;
+              if (
+                typeof statusResult.error === "object" &&
+                statusResult.error !== null
+              ) {
+                // Extract message from error object
+                errorMessage =
+                  (statusResult.error as any).message ||
+                  (statusResult.error as any).code ||
+                  JSON.stringify(statusResult.error);
+              } else {
+                errorMessage = statusResult.error || "Video generation failed";
+              }
+
               console.error(
                 "❌ [VIDEO-GENERATOR] Video generation failed:",
-                errorMessage,
+                statusResult.error,
               );
               toast.error("Video generation failed", {
                 description: errorMessage,
@@ -527,36 +550,79 @@ export const useVideoGeneration = ({
         setGeneratingContext(null);
         setGeneratingImageId(null);
       } else {
-        // Resume polling for the existing task
+        // First check if the video is already completed
         console.log(
-          "Resuming video generation polling for task:",
+          "Checking status before resuming polling for task:",
           generatingContext.taskId,
         );
 
-        // Resume the polling (will skip if already polling)
-        pollVideoStatus(
-          generatingContext.taskId,
-          generatingContext.prompt,
-          generatingContext.userPrompt,
-          generatingContext.style,
-          generatingContext.aspectRatio,
-          generatingContext.inputImageFile,
-          generatingContext.isSessionGenerated,
-        )
-          .then((assetId) => {
-            // Clear context after completion
-            setGeneratingContext(null);
+        // Do a status check first
+        checkVideoStatus({ taskId: generatingContext.taskId })
+          .then((statusResult) => {
+            if (statusResult.status === "succeeded" && statusResult.video) {
+              // Video is already done, clear context without polling
+              console.log(
+                "Video already completed, clearing context:",
+                generatingContext.taskId,
+              );
+              setGeneratingContext(null);
+              setGeneratingImageId(null);
+              // The video is already saved in backend, no need to reprocess
+            } else if (statusResult.status === "failed") {
+              // Task failed, clear context
+              console.log(
+                "Video generation failed, clearing context:",
+                generatingContext.taskId,
+              );
+              setGeneratingContext(null);
+              setGeneratingImageId(null);
+            } else {
+              // Still processing, resume polling
+              console.log(
+                "Resuming video generation polling for task:",
+                generatingContext.taskId,
+              );
+
+              // Resume the polling (will skip if already polling)
+              pollVideoStatus(
+                generatingContext.taskId,
+                generatingContext.prompt,
+                generatingContext.userPrompt,
+                generatingContext.style,
+                generatingContext.aspectRatio,
+                generatingContext.inputImageFile,
+                generatingContext.isSessionGenerated,
+              )
+                .then((assetId) => {
+                  // Clear context after completion
+                  setGeneratingContext(null);
+                })
+                .catch((error) => {
+                  console.error("Error resuming polling:", error);
+                  setGeneratingContext(null);
+                  setGeneratingImageId(null);
+                });
+            }
           })
           .catch((error) => {
-            console.error("Error resuming polling:", error);
-            setGeneratingContext(null);
-            setGeneratingImageId(null);
+            console.error("Error checking video status:", error);
+            // On error, try to resume polling anyway
+            pollVideoStatus(
+              generatingContext.taskId,
+              generatingContext.prompt,
+              generatingContext.userPrompt,
+              generatingContext.style,
+              generatingContext.aspectRatio,
+              generatingContext.inputImageFile,
+              generatingContext.isSessionGenerated,
+            );
           });
       }
     }
   }, [
     generatingContext,
     pollVideoStatus,
+    checkVideoStatus,
     setGeneratingContext,
     setGeneratingImageId,
   ]);
@@ -718,8 +784,8 @@ export const useVideoGeneration = ({
         toast.error(
           error instanceof Error ? error.message : "Failed to generate video",
         );
-        setGeneratingImageId(null);
-        setGeneratingContext(null);
+        useAppStore.getState().setGeneratingImageId(null);
+        useAppStore.getState().setGeneratingContext(null);
         setVideoGenerationStatus("");
       }
     },
