@@ -110,10 +110,13 @@ export class Pglite {
       // Wait for PGlite to load
       let waitCount = 0;
       while (true) {
-        sleep(100);
+        await sleep(100);
         waitCount += 1;
         await Pglite._instance.query(`SELECT 1;`);
-        logger.debug(`Check PGLite is ready (${waitCount}):`, Pglite._instance.ready);
+        logger.debug(
+          `Check PGLite is ready (${waitCount}):`,
+          Pglite._instance.ready,
+        );
         if (Pglite._instance.ready) {
           break;
         }

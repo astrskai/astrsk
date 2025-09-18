@@ -19,6 +19,7 @@ const useOpfsFile = (filePath?: string | null) => {
     }
 
     let mounted = true;
+    let currentUrl: string | null = null;
 
     const loadFile = async () => {
       try {
@@ -32,23 +33,29 @@ const useOpfsFile = (filePath?: string | null) => {
 
         // Create object URL
         const url = URL.createObjectURL(opfsFile);
-        if (mounted) setObjectUrl(url);
-
-        // Cleanup function will revoke the URL
-        return () => {
+        currentUrl = url; // Store URL for cleanup
+        if (mounted) {
+          setObjectUrl(url);
+        } else {
+          // If unmounted before setting, revoke immediately
           URL.revokeObjectURL(url);
-        };
+        }
       } catch (error) {
         logger.error("Failed to load OPFS file:", error);
         if (mounted) setObjectUrl(null);
       }
     };
 
-    const cleanup = loadFile();
+    loadFile();
 
+    // Cleanup: revoke the URL when component unmounts or filePath changes
     return () => {
       mounted = false;
-      cleanup?.then((fn) => fn?.());
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+        currentUrl = null;
+      }
+      setObjectUrl(null);
     };
   }, [filePath]);
 
@@ -60,17 +67,15 @@ const useAsset = (assetId?: UniqueEntityID) => {
   const { data: opfsFilePath, isFetching } = useQuery(
     assetQueries.detail(assetId),
   );
-  
+
   // Get full asset metadata including mime type
-  const { data: assetData } = useQuery(
-    assetQueries.fullDetail(assetId),
-  );
+  const { data: assetData } = useQuery(assetQueries.fullDetail(assetId));
 
   // Get OPFS file object URL
   const { data: opfsFileObjectURL } = useOpfsFile(opfsFilePath);
-  
+
   // Check if it's a video based on mime type
-  const isVideo = assetData?.mimeType?.startsWith('video/') || false;
+  const isVideo = assetData?.mimeType?.startsWith("video/") || false;
 
   return [isFetching ? SKELETON_PATH : opfsFileObjectURL, isVideo] as const;
 };
