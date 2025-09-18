@@ -6,6 +6,7 @@ import { useEffect } from "react";
 
 const SubscribeChecker = () => {
   const subscription = useQuery(api.payment.public.getSubscription);
+  const jwt = useAppStore.use.jwt();
   const setSubscribed = useAppStore.use.setSubscribed();
 
   // Update subscribed
@@ -14,22 +15,22 @@ const SubscribeChecker = () => {
   }, [setSubscribed, subscription]);
 
   // Free subscription
-  const startFreeSubscription = useMutation(
-    api.payment.public.startFreeSubscription,
+  const claimFreeSubscription = useMutation(
+    api.payment.public.claimFreeSubscription,
   );
   useEffect(() => {
-    if (subscription) {
+    if (!jwt || subscription) {
       return;
     }
     (async () => {
-      const result = await startFreeSubscription();
+      const result = await claimFreeSubscription();
       logger.debug(
         result
-          ? "Success to start free subscription"
-          : "Failed to start free subscription",
+          ? "Success to claim free subscription"
+          : "Failed to claim free subscription",
       );
     })();
-  }, [startFreeSubscription, subscription]);
+  }, [claimFreeSubscription, jwt, subscription]);
 
   return null;
 };

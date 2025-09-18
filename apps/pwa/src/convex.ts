@@ -65,6 +65,14 @@ export type PublicApiType = {
         }
       >;
     };
+    queries: {
+      getCreditLogByTaskId: FunctionReference<
+        "query",
+        "public",
+        { taskId: string; userId: string },
+        any
+      >;
+    };
   };
   payment: {
     public: {
@@ -82,7 +90,7 @@ export type PublicApiType = {
           user_id: string;
         } | null
       >;
-      startFreeSubscription: FunctionReference<
+      claimFreeSubscription: FunctionReference<
         "mutation",
         "public",
         Record<string, never>,
