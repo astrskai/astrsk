@@ -98,6 +98,8 @@ interface AppState {
   // Page
   activePage: Page;
   setActivePage: (activePage: Page) => void;
+  returnPage: Page;
+  backToReturnPage: () => void;
 
   // Onboarding (legacy - for existing users)
   isPassedOnboarding: boolean;
@@ -266,10 +268,24 @@ const useAppStoreBase = create<AppState>()(
               // Reset to main settings page when navigating to settings
               state.settingPageLevel = SettingPageLevel.main;
               break;
+            case Page.Subscribe:
+              if (
+                state.activePage === Page.OnboardingStepTwo ||
+                state.activePage === Page.OnboardingStepOne
+              ) {
+                break;
+              }
+              state.returnPage = state.activePage;
+              break;
           }
           state.activePage = activePage;
           lastPagePerMenu.set(state.activeMenu, activePage);
         }),
+      returnPage: Page.Init,
+      backToReturnPage: () => {
+        const returnPage = get().returnPage;
+        get().setActivePage(returnPage);
+      },
 
       // Onboarding (legacy - for existing users)
       isPassedOnboarding: false,

@@ -101,11 +101,12 @@ const OnboardingStepTwoPage = () => {
         <div className="flex flex-row gap-[37px]">
           {/* Left section */}
           <div className="w-[640px] h-[728px] bg-background-surface-0 rounded-[12px] flex flex-col items-center justify-center">
-            <div className="font-[600] text-[32px] leading-[40px] text-text-primary mb-[24px]">
-              Dive into astrsk
+            <div className="text-text-primary mb-[24px] flex flex-row gap-[8px] items-center">
+              <div className="font-[600] text-[32px] leading-[40px]">Dive into</div>
+              <SvgIcon name="astrsk_logo_typo" width={106} height={30} className="mb-[4px]"/>
             </div>
             <div className="font-[600] text-[20px] leading-[24px] text-text-body mb-[8px]">
-              The open source app is completely free to use
+              The Open Source App is Completely Free to Use
             </div>
             <div className="font-[500] text-[16px] leading-[25.6px] text-text-info mb-[50px]">
               Build and play powerful multi-agent roleplays without any

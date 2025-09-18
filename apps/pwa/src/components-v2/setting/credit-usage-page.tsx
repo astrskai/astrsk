@@ -1,8 +1,5 @@
-import { useFlow } from "@/app/hooks/use-flow";
-import { useSession } from "@/app/hooks/use-session";
 import { Button } from "@/components-v2/ui/button";
 import { api } from "@/convex";
-import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { Datetime } from "@/shared/utils";
 import { usePaginatedQuery } from "convex/react";
 
@@ -28,17 +25,12 @@ const CreditUsageItem = ({
     };
   };
 }) => {
-  const [session] = useSession(new UniqueEntityID(item.detail?.session_id));
-  const { data: flow } = useFlow(new UniqueEntityID(item.detail?.flow_id));
-
   return (
-    <div
-      className="flex flex-row *:p-2 *:w-[120px] *:h-[40px] *:truncate text-text-primary"
-    >
-      <div>{Datetime(item._creationTime).format("MMM D, h:mm A")}</div>
-      <div>{session?.props.title}</div>
-      <div>{flow?.props.name}</div>
-      <div>{item.detail?.model_id}</div>
+    <div className="flex flex-row *:p-2 *:w-[120px] *:h-[40px] *:truncate text-text-primary">
+      <div className="min-w-[160px]">
+        {Datetime(item._creationTime).format("MMM D, h:mm A")}
+      </div>
+      <div className="min-w-[240px]">{item.detail?.model_id}</div>
       <div>
         {formatNumberWithComma(item.detail?.input_tokens ?? 0)}
         {" -> "}
@@ -58,7 +50,7 @@ const CreditUsagePage = () => {
 
   return (
     <div className="fixed inset-0 left-0 z-40 overflow-y-auto py-[80px]">
-      <div className="max-w-[800px] mx-auto text-text-primary">
+      <div className="max-w-[640px] mx-auto text-text-primary">
         {/* Header with back button */}
         <div className="flex items-center mb-[54px]">
           <div className="flex items-center justify-center h-full">
@@ -69,10 +61,8 @@ const CreditUsagePage = () => {
         {/* Content */}
         <div className="flex flex-col text-[14px] leading-[20px] font-[500]">
           <div className="flex flex-row *:p-2 *:w-[120px] *:h-[40px] text-text-placeholder">
-            <div>Timestamp</div>
-            <div>Session</div>
-            <div>Flow</div>
-            <div>Model</div>
+            <div className="min-w-[160px]">Timestamp</div>
+            <div className="min-w-[240px]">Model</div>
             <div>Tokens</div>
             <div className="text-right">Cost</div>
           </div>
