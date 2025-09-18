@@ -120,11 +120,11 @@ const OnboardingDialog = () => {
               onClick={() => setSelectedGenre("romance")}
             >
               <img
-                className="w-[332px] h-[365px] left-0 top-0 absolute object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
                 src="/img/onboarding/romance.jpg"
                 alt="Romance genre"
               />
-              <div className="w-[332px] h-24 px-2 py-6 left-0 bottom-0 absolute bg-gradient-to-b from-black/0 to-black/80 flex flex-col justify-center items-center gap-2">
+              <div className="absolute inset-x-0 bottom-0 w-full h-24 px-2 py-6 bg-gradient-to-b from-black/0 to-black/80 flex flex-col justify-center items-center gap-2">
                 <div className="justify-start text-text-primary text-xl font-semibold leading-relaxed">
                   Sakura Blooms, hearts awaken
                 </div>
@@ -144,11 +144,11 @@ const OnboardingDialog = () => {
               onClick={() => setSelectedGenre("fantasy")}
             >
               <img
-                className="w-[332px] h-[365px] left-0 top-0 absolute object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
                 src="/img/onboarding/fantasy.jpg"
                 alt="Fantasy genre"
               />
-              <div className="w-[332px] h-24 px-2 py-6 left-0 bottom-0 absolute bg-gradient-to-b from-black/0 to-black/80 flex flex-col justify-center items-center gap-2">
+              <div className="absolute inset-x-0 bottom-0 w-full h-24 px-2 py-6 bg-gradient-to-b from-black/0 to-black/80 flex flex-col justify-center items-center gap-2">
                 <div className="justify-start text-text-primary text-xl font-semibold leading-relaxed">
                   Dice of Fate
                 </div>
