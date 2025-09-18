@@ -102,13 +102,17 @@ const OnboardingStepTwoPage = () => {
           {/* Left section */}
           <div className="w-[640px] h-[728px] bg-background-surface-0 rounded-[12px] flex flex-col items-center justify-center">
             <div className="text-text-primary mb-[24px] flex flex-row gap-[8px] items-center">
-              <div className="font-[600] text-[32px] leading-[40px]">Dive into</div>
-              <SvgIcon name="astrsk_logo_typo" width={106} height={30} className="mb-[4px]"/>
+              <SvgIcon
+                name="dive_into_astrsk"
+                width={241}
+                height={25}
+                className="mb-[4px]"
+              />
             </div>
-            <div className="font-[600] text-[20px] leading-[24px] text-text-body mb-[8px]">
+            <div className="font-semibold text-[20px] leading-[24px] text-text-body mb-[8px]">
               The Open Source App is Completely Free to Use
             </div>
-            <div className="font-[500] text-[16px] leading-[25.6px] text-text-info mb-[50px]">
+            <div className="font-medium text-[16px] leading-[25.6px] text-text-info mb-[50px]">
               Build and play powerful multi-agent roleplays without any
               limitations.
             </div>
@@ -118,10 +122,10 @@ const OnboardingStepTwoPage = () => {
                   <SvgIcon name="agents" size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
-                  <div className="font-[600] text-[16px] leading-[25.6px] text-text-primary">
+                  <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
                     AI Workflow and Agents Incorporated into Roleplay
                   </div>
-                  <div className="font-[600] text-[14px] leading-[20px] text-text-subtle">
+                  <div className="font-semibold text-[14px] leading-[20px] text-text-subtle">
                     Create as many AI agents as you need
                   </div>
                 </div>
@@ -131,10 +135,10 @@ const OnboardingStepTwoPage = () => {
                   <SvgIcon name="cards" size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
-                  <div className="font-[600] text-[16px] leading-[25.6px] text-text-primary">
+                  <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
                     Create and Manage Cards & Sessions
                   </div>
-                  <div className="font-[600] text-[14px] leading-[20px] text-text-subtle">
+                  <div className="font-semibold text-[14px] leading-[20px] text-text-subtle">
                     Build V2, V3 cards and play sessions in infinite
                     combinations
                   </div>
@@ -145,10 +149,10 @@ const OnboardingStepTwoPage = () => {
                   <Sparkles size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
-                  <div className="font-[600] text-[16px] leading-[25.6px] text-text-primary">
+                  <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
                     Structured Output and Data Management
                   </div>
-                  <div className="font-[600] text-[14px] leading-[20px] text-text-subtle">
+                  <div className="font-semibold text-[14px] leading-[20px] text-text-subtle">
                     Structure and manage data relevant to your session from AI
                     <br />
                     output, character output format to session environment stats
@@ -160,15 +164,15 @@ const OnboardingStepTwoPage = () => {
                   <Key size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
-                  <div className="font-[600] text-[16px] leading-[25.6px] text-text-primary">
+                  <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
                     Bring Your Own API Keys
                   </div>
-                  <div className="font-[600] text-[14px] leading-[20px] text-text-subtle">
+                  <div className="font-semibold text-[14px] leading-[20px] text-text-subtle">
                     Connect your own AI provider to power your roleplay
                   </div>
                 </div>
               </div>
-              <div className="font-[600] text-[12px] leading-[15px] text-text-body text-center">
+              <div className="font-semibold text-[12px] leading-[15px] text-text-body text-center">
                 .<br />
                 .<br />.
               </div>
@@ -191,40 +195,40 @@ const OnboardingStepTwoPage = () => {
           <div className="relative w-[768px] h-[728px] rounded-[12px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px]">
             <div className="w-full h-full bg-[#000] rounded-[12px] flex flex-col items-center justify-center">
               <div className="w-[532px] h-[320px] mt-[-114px] mb-[8px] bg-[url('/img/onboarding/step-two-main.png')] bg-contain" />
-              <div className="font-[900] text-[32px] leading-[50px] text-text-primary uppercase">
+              <div className="font-black text-[32px] leading-[50px] text-text-primary uppercase">
                 instant immersion with{" "}
                 <span className="text-[#B59EFF]">astrsk+</span>
               </div>
-              <div className="font-[500] text-[14px] leading-[20px] text-text-body mb-[20px]">
+              <div className="font-medium text-[14px] leading-[20px] text-text-body mb-[20px]">
                 Automatic Setup? Yes. Images & Videos? Yes!
               </div>
               <div className="flex flex-row gap-[8px] mb-[32px]">
                 <div className="relative size-[224px] rounded-[8px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px] overflow-hidden">
                   <div className="w-full h-full rounded-[8px] bg-[url('/img/onboarding/step-two-sub-1.jpg')] bg-contain text-center pb-[16px] flex flex-col justify-end">
-                    <div className="font-[600] text-[16px] leading-[25.6px] text-text-primary mb-[4px]">
+                    <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary mb-[4px]">
                       AI Image Generator
                     </div>
-                    <div className="font-[400] text-[12px] leading-[15px] text-text-body">
+                    <div className="font-normal text-[12px] leading-[15px] text-text-body">
                       Create stunning visuals
                     </div>
                   </div>
                 </div>
                 <div className="relative size-[224px] rounded-[8px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px] overflow-hidden">
                   <div className="w-full h-full rounded-[8px] bg-[url('/img/onboarding/step-two-sub-2.jpg')] bg-contain text-center pb-[16px] flex flex-col justify-end">
-                    <div className="font-[600] text-[16px] leading-[25.6px] text-text-primary mb-[4px]">
+                    <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary mb-[4px]">
                       AI Video Generator
                     </div>
-                    <div className="font-[400] text-[12px] leading-[15px] text-text-body">
+                    <div className="font-normal text-[12px] leading-[15px] text-text-body">
                       Bring sessions to life
                     </div>
                   </div>
                 </div>
                 <div className="relative size-[224px] rounded-[8px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px] overflow-hidden">
                   <div className="w-full h-full rounded-[8px] size-[224px] bg-[url('/img/onboarding/step-two-sub-3.jpg')] bg-contain text-center pb-[16px] flex flex-col justify-end">
-                    <div className="font-[600] text-[16px] leading-[25.6px] text-text-primary mb-[4px]">
+                    <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary mb-[4px]">
                       AI-Assisted Card Creation
                     </div>
-                    <div className="font-[400] text-[12px] leading-[15px] text-text-body">
+                    <div className="font-normal text-[12px] leading-[15px] text-text-body">
                       Write faster, easier, better
                     </div>
                   </div>
