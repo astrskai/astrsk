@@ -981,7 +981,6 @@ const UserInputs = ({
   onStopGenerate,
   autoReply,
   setAutoReply,
-  isOpenAddPlotCardModal,
   onSkip = () => {},
   onAdd = () => {},
   handleGenerateImageForLastTurn = () => {},
@@ -1000,7 +999,6 @@ const UserInputs = ({
   onStopGenerate?: () => void;
   autoReply: AutoReply;
   setAutoReply: (autoReply: AutoReply) => void;
-  isOpenAddPlotCardModal?: boolean;
   onSkip?: () => void;
   onAdd?: () => void;
   handleGenerateImageForLastTurn?: () => void;
@@ -1056,10 +1054,6 @@ const UserInputs = ({
 
   return (
     <div className="sticky bottom-0 inset-x-0 pb-[80px] px-[56px]">
-      {isOpenAddPlotCardModal && (
-        <AddPlotCardModal onSkip={onSkip} onAdd={onAdd} />
-      )}
-
       <div
         className={cn(
           "mx-auto w-full min-w-[400px] max-w-[892px] p-[24px] rounded-[40px] flex flex-col gap-[16px]",
@@ -1254,44 +1248,6 @@ const UserInputs = ({
             )}
           </div>
         </div>
-      </div>
-    </div>
-  );
-};
-
-const AddPlotCardModal = ({
-  onSkip,
-  onAdd,
-}: {
-  onSkip: () => void;
-  onAdd: () => void;
-}) => {
-  const isMobile = useIsMobile();
-
-  if (isMobile) {
-    return null; // Mobile uses Dialog component instead
-  }
-
-  return (
-    <div
-      className={cn(
-        "mx-auto mb-[40px] w-[600px] p-[24px] rounded-[8px]",
-        "bg-background-container",
-        "flex flex-col gap-[24px]",
-      )}
-    >
-      <div className="font-[400] text-[16px] leading-[24px] text-text-primary">
-        Would you like to start from a list of scenarios from the plot card?
-        <br />
-        Your choice will appear as the first message.
-      </div>
-      <div className="flex flex-row justify-end gap-[8px]">
-        <Button variant="outline" size="lg" onClick={onAdd}>
-          Add a Plot card
-        </Button>
-        <Button size="lg" onClick={onSkip}>
-          Skip and start
-        </Button>
       </div>
     </div>
   );
@@ -2022,27 +1978,9 @@ const SessionMessagesAndUserInputs = ({
 
   // Add plot card modal
   const [plotCard] = useCard<PlotCard>(session?.plotCard?.id);
-  const [isOpenAddPlotCardModal, setIsOpenAddPlotCardModal] = useState(false);
   const messageCount = session?.turnIds.length ?? 0;
   const plotCardId = session?.plotCard?.id.toString() ?? "";
   const sessionId = session?.id.toString() ?? "";
-
-  useEffect(() => {
-    // Check session has plot card
-    if (plotCardId !== "") {
-      setIsOpenAddPlotCardModal(false);
-      return;
-    }
-
-    // Check message ids
-    if (messageCount > 0) {
-      setIsOpenAddPlotCardModal(false);
-      return;
-    }
-
-    // Show add plot card modal
-    setIsOpenAddPlotCardModal(true);
-  }, [messageCount, plotCardId]);
 
   // Select scenario modal
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
@@ -2050,7 +1988,7 @@ const SessionMessagesAndUserInputs = ({
   const plotCardScenarioCount = plotCard?.props.scenarios?.length ?? 0;
   useEffect(() => {
     // Check scenario count
-    if (plotCardId === "") {
+    if (plotCardScenarioCount === 0) {
       setIsOpenSelectScenarioModal(false);
       return;
     }
@@ -2898,61 +2836,6 @@ const SessionMessagesAndUserInputs = ({
           </div>
         </div>
 
-        {/* Mobile Add Plot Card Dialog */}
-        <Dialog
-          open={isOpenAddPlotCardModal && isMobile}
-          onOpenChange={(open) => {
-            if (!open) {
-              setIsOpenAddPlotCardModal(false);
-            }
-          }}
-        >
-          <DialogContent
-            hideClose
-            className="w-80 p-6 bg-background-surface-2 rounded-lg outline-1 outline-border-light inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden"
-          >
-            <div className="self-stretch flex flex-col justify-start items-end gap-6">
-              <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
-                  Want to add a plot card?
-                </DialogTitle>
-                <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
-                  You will not be able to add a scenario, because you have not
-                  selected a plot card for this session.
-                </DialogDescription>
-              </div>
-              <div className="inline-flex justify-start items-center gap-2">
-                <DialogClose asChild>
-                  <Button
-                    variant="ghost"
-                    size="lg"
-                    onClick={() => {
-                      setIsOpenAddPlotCardModal(false);
-                    }}
-                  >
-                    <div className="justify-center text-button-background-primary text-sm font-medium leading-tight">
-                      Skip
-                    </div>
-                  </Button>
-                </DialogClose>
-                <Button
-                  size="lg"
-                  onClick={() => {
-                    setIsOpenAddPlotCardModal(false);
-                    onAddPlotCard();
-                  }}
-                >
-                  <div className="inline-flex justify-start items-center gap-2">
-                    <div className="justify-center text-button-foreground-primary text-sm font-semibold leading-tight">
-                      Add plot card
-                    </div>
-                  </div>
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
         {/* Mobile Select Scenario Prompt Dialog */}
         <Dialog
           open={isOpenSelectScenarioModal && isMobile}
@@ -3004,17 +2887,13 @@ const SessionMessagesAndUserInputs = ({
           generateCharacterMessage={generateCharacterMessage}
           addUserMessage={addUserMessage}
           isOpenSettings={isOpenSettings}
-          disabled={isOpenAddPlotCardModal || isOpenSelectScenarioModal}
+          disabled={isOpenSelectScenarioModal}
           streamingMessageId={streamingMessageId ?? undefined}
           onStopGenerate={() => {
             refStopGenerate.current?.abort("Stop generate by user");
           }}
           autoReply={session.autoReply}
           setAutoReply={setAutoReply}
-          isOpenAddPlotCardModal={isOpenAddPlotCardModal}
-          onSkip={() => {
-            setIsOpenAddPlotCardModal(false);
-          }}
           onAdd={() => {
             onAddPlotCard();
           }}
