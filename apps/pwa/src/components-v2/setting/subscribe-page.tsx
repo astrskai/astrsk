@@ -2,16 +2,29 @@ import { Page, useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components-v2/ui/dialog";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { api } from "@/convex";
 import { logger } from "@/shared/utils/logger";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
+import { useMutation } from "convex/react";
 import { Bot, ChevronDown, Coins, Zap } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+
+function openInNewTab(url: string) {
+  window.open(url, "_blank", "noopener,noreferrer");
+}
 
 const SubscribePage = () => {
   const setActivePage = useAppStore.use.setActivePage();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpenCreditDetail, setIsOpenCreditDetail] = useState(false);
 
   // Sign up with SSO
   const { userId } = useAuth();
@@ -45,6 +58,29 @@ const SubscribePage = () => {
       });
     }
   }, [isLoadedSignUp, signUp, userId]);
+
+  // Open join server dialog
+  const subscribed = useAppStore.use.subscribed();
+  const [isOpenJoinServer, setIsOpenJoinServer] = useState(false);
+  useEffect(() => {
+    if (userId && !subscribed) {
+      setIsOpenJoinServer(true);
+    }
+  }, [subscribed, userId]);
+
+  // Verify and Start
+  const claimFreeSubscription = useMutation(
+    api.payment.public.claimFreeSubscription,
+  );
+
+  // Check subscribed
+  useEffect(() => {
+    if (!subscribed) {
+      return;
+    }
+    toast.success("Welcome to astrsk+!");
+    setActivePage(Page.Init);
+  }, [setActivePage, subscribed]);
 
   return (
     <div
@@ -162,12 +198,12 @@ const SubscribePage = () => {
                     <button
                       className="text-text-body"
                       onClick={() => {
-                        setIsOpen((isOpen) => !isOpen);
+                        setIsOpenCreditDetail((isOpen) => !isOpen);
                       }}
                     >
                       <ChevronDown
                         size={20}
-                        className={cn(isOpen && "rotate-180")}
+                        className={cn(isOpenCreditDetail && "rotate-180")}
                       />
                     </button>
                   </div>
@@ -177,7 +213,7 @@ const SubscribePage = () => {
                   <div
                     className={cn(
                       "font-[600] text-[14px] leading-[20px] text-text-subtle",
-                      !isOpen && "hidden",
+                      !isOpenCreditDetail && "hidden",
                     )}
                   >
                     <b>Text Generation</b>
@@ -253,7 +289,11 @@ const SubscribePage = () => {
                 <Button
                   size="lg"
                   onClick={() => {
-                    signUpWithDiscord();
+                    if (userId) {
+                      setIsOpenJoinServer(true);
+                    } else {
+                      signUpWithDiscord();
+                    }
                   }}
                   disabled={!isLoadedSignUp || isLoading}
                   loading={isLoading}
@@ -266,6 +306,69 @@ const SubscribePage = () => {
           </div>
         </div>
       </ScrollArea>
+
+      {/* Join Server Dialog */}
+      <Dialog open={isOpenJoinServer}>
+        <DialogContent hideClose className="min-w-[720px] outline-none">
+          <DialogHeader>
+            <DialogTitle>
+              <div className="font-[500] text-[24px] leading-[40px] text-text-primary">
+                Join the Community and Start Now!
+              </div>
+            </DialogTitle>
+            <DialogDescription>
+              <div className="font-[400] text-[16px] leading-[25.6px] text-text-placeholder">
+                Join our Discord server, verify that you did, and enjoy astrsk+.
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-[8px]">
+            <div className="flex flex-row gap-[24px] items-center p-[24px] rounded-[8px] bg-gradient-to-r from-[#2D2B59] to-[#5E5ABC]">
+              <img
+                src="/img/subscription/subscribe-icon-1.png"
+                className="size-[48px]"
+              />
+              <div className="grow text-[20px] leading-[24px] font-[600]">
+                1. Be a Member of Our Discord Server
+              </div>
+              <Button
+                size="lg"
+                className="min-w-[139px]"
+                onClick={() => openInNewTab("https://discord.gg/J6ry7w8YCF")}
+              >
+                Join Server
+              </Button>
+            </div>
+            <div className="flex flex-row gap-[24px] items-center p-[24px] rounded-[8px] bg-gradient-to-r from-[#2B1B41] to-[#6C46A4]">
+              <img
+                src="/img/subscription/subscribe-icon-2.png"
+                className="size-[48px]"
+              />
+              <div className="grow text-[20px] leading-[24px] font-[600]">
+                2. Verify Membership and Start
+              </div>
+              <Button
+                size="lg"
+                className="min-w-[139px]"
+                onClick={() => claimFreeSubscription()}
+              >
+                Verify and Start
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-row justify-end gap-2">
+            <Button
+              size="lg"
+              variant="ghost"
+              onClick={() => {
+                setIsOpenJoinServer(false);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
