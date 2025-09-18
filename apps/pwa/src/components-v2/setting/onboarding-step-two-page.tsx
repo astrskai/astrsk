@@ -125,7 +125,7 @@ const OnboardingStepTwoPage = () => {
                   <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
                     AI Workflow and Agents Incorporated into Roleplay
                   </div>
-                  <div className="font-semibold text-[14px] leading-[20px] text-text-subtle">
+                  <div className="font-medium text-[14px] leading-[20px] text-text-subtle">
                     Create as many AI agents as you need
                   </div>
                 </div>
@@ -138,7 +138,7 @@ const OnboardingStepTwoPage = () => {
                   <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
                     Create and Manage Cards & Sessions
                   </div>
-                  <div className="font-semibold text-[14px] leading-[20px] text-text-subtle">
+                  <div className="font-medium text-[14px] leading-[20px] text-text-subtle">
                     Build V2, V3 cards and play sessions in infinite
                     combinations
                   </div>
@@ -152,7 +152,7 @@ const OnboardingStepTwoPage = () => {
                   <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
                     Structured Output and Data Management
                   </div>
-                  <div className="font-semibold text-[14px] leading-[20px] text-text-subtle">
+                  <div className="font-medium text-[14px] leading-[20px] text-text-subtle">
                     Structure and manage data relevant to your session from AI
                     <br />
                     output, character output format to session environment stats
@@ -167,7 +167,7 @@ const OnboardingStepTwoPage = () => {
                   <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
                     Bring Your Own API Keys
                   </div>
-                  <div className="font-semibold text-[14px] leading-[20px] text-text-subtle">
+                  <div className="font-medium text-[14px] leading-[20px] text-text-subtle">
                     Connect your own AI provider to power your roleplay
                   </div>
                 </div>
