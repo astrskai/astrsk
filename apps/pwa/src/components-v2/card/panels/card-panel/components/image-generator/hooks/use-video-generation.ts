@@ -14,7 +14,7 @@ interface VideoGenerationConfig {
   imageToImage: boolean;
   imageUrl?: string; // Single image URL for backward compatibility
   imageUrls?: string[]; // Array of image URLs for multiple reference images
-  imageMode?: "starting" | "reference"; // How to use the images (default: 'starting')
+  imageMode?: "starting" | "ending" | "reference" | "start-end"; // How to use the images (default: 'starting')
   selectedModel: string;
   videoDuration: number;
   ratio?: string; // Video aspect ratio (16:9, 4:3, etc.)
@@ -132,10 +132,6 @@ export const useVideoGeneration = ({
                 const base64 = result.split(",")[1];
                 const mimeType = "image/jpeg"; // Always return JPEG
 
-                console.log(
-                  "Video generation - converted to base64, mimeType:",
-                  mimeType,
-                );
                 resolve({ base64, mimeType });
               };
               reader.onerror = reject;
@@ -196,10 +192,7 @@ export const useVideoGeneration = ({
                 // Process the video
                 try {
                   const videoData = immediateResult.video;
-                  console.log(
-                    "Video already ready, fetching from Convex storage:",
-                    videoData.url,
-                  );
+
                   const response = await fetch(videoData.url);
                   if (!response.ok) {
                     throw new Error(
@@ -339,10 +332,7 @@ export const useVideoGeneration = ({
               try {
                 const videoData = statusResult.video;
                 // Fetch video from Convex storage URL
-                console.log(
-                  "Fetching video from Convex storage:",
-                  videoData.url,
-                );
+
                 const response = await fetch(videoData.url);
                 if (!response.ok) {
                   throw new Error(
@@ -464,15 +454,6 @@ export const useVideoGeneration = ({
               : "seedance-1-0-lite-t2v-250428"
             : "seedance-1-0-pro-250528"; // Pro model for both t2v and i2v
 
-        // Log the model being sent to backend
-        console.log("🎬 [VIDEO GENERATION] Sending to backend:", {
-          selectedModel: config.selectedModel,
-          modelId: modelId,
-          isImageToImage: config.imageToImage,
-          videoDuration: config.videoDuration,
-          timestamp: new Date().toISOString(),
-        });
-
         let taskResult;
         let inputImageFile: File | undefined;
         let generatedImageForThumbnail: File | undefined;
@@ -533,17 +514,6 @@ export const useVideoGeneration = ({
             i2vParams.resolution = config.resolution;
           }
 
-          // Log I2V params being sent
-          console.log("🎥 [I2V] Sending params to backend:", {
-            model: i2vParams.model,
-            imageMode: i2vParams.imageMode,
-            duration: i2vParams.duration,
-            imageCount: Array.isArray(i2vParams.images)
-              ? i2vParams.images.length
-              : 1,
-            timestamp: new Date().toISOString(),
-          });
-
           taskResult = await generateSeedanceImageToVideo(i2vParams);
         } else {
           // Text-to-video generation
@@ -567,15 +537,6 @@ export const useVideoGeneration = ({
           if (config.resolution) {
             t2vParams.resolution = config.resolution;
           }
-
-          // Log T2V params being sent
-          console.log("📹 [T2V] Sending params to backend:", {
-            model: t2vParams.model,
-            duration: t2vParams.duration,
-            ratio: t2vParams.ratio,
-            resolution: t2vParams.resolution,
-            timestamp: new Date().toISOString(),
-          });
 
           taskResult = await generateSeedanceVideo(t2vParams);
         }

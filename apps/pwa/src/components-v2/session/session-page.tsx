@@ -30,7 +30,9 @@ export default function SessionPage({ className }: { className?: string }) {
 
   // Session onboarding
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
-  const shouldShowSessionEditTooltip = sessionOnboardingSteps.inferenceButton && !sessionOnboardingSteps.sessionEdit;
+  const shouldShowSessionEditTooltip =
+    sessionOnboardingSteps.inferenceButton &&
+    !sessionOnboardingSteps.sessionEdit;
 
   // Background
   const { backgroundMap } = useBackgroundStore();
@@ -41,7 +43,7 @@ export default function SessionPage({ className }: { className?: string }) {
   const backgroundSrc =
     backgroundAsset ??
     (background && "src" in background ? background.src : "");
-  
+
   // Don't show background if it's still loading (skeleton path indicates loading)
   const isLoadingBackground = backgroundAsset === "/img/skeleton.svg";
   const shouldShowBackground = backgroundSrc && !isLoadingBackground;
@@ -123,7 +125,7 @@ export default function SessionPage({ className }: { className?: string }) {
               setIsOpenSettings(true);
             }}
             onboarding={shouldShowSessionEditTooltip && !isOpenSettings}
-            onboardingTooltip="Wanna edit this session?"
+            onboardingTooltip="Click to edit session details"
           />
           <FloatingActionButton
             icon={<ArrowLeft className="min-w-[24px] min-h-[24px]" />}

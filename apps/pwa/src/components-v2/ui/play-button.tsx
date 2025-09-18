@@ -28,7 +28,7 @@ const PlayButton = React.forwardRef<HTMLButtonElement, PlayButtonProps>(
     return (
       <button
         ref={ref}
-        className={cn(playButtonVariants({ size, className }))}
+        className={cn(playButtonVariants({ size }), className)}
         type="button"
         {...props}
       >
