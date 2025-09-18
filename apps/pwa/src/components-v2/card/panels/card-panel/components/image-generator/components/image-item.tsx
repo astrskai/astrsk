@@ -2,8 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImage } from "@/modules/generated-image/domain";
 import { useAsset } from "@/app/hooks/use-asset";
-import { Loader2, Download, Type, Copy, Play, Pause, Video } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components-v2/ui/tooltip";
+import { Loader2, Download, Type, Copy, Video } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components-v2/ui/tooltip";
+import { PlayButton } from "@/components-v2/ui/play-button";
 
 interface ImageItemProps {
   image: GeneratedImage;
@@ -18,7 +24,7 @@ export const ImageItem = ({
   isGenerating,
   isSelected,
   onDownload,
-  onSelect
+  onSelect,
 }: ImageItemProps) => {
   const [assetUrl] = useAsset(image.assetId);
   const [thumbnailUrl] = useAsset(image.thumbnailAssetId); // Load thumbnail for videos
@@ -30,20 +36,22 @@ export const ImageItem = ({
   // Check if the asset is a video based on mediaType or URL
   useEffect(() => {
     // First check if mediaType is explicitly set
-    if (image.mediaType === 'video') {
+    if (image.mediaType === "video") {
       setIsVideo(true);
       return;
     }
-    
+
     // Fallback to URL-based detection for older assets without mediaType
     if (assetUrl) {
       // Check common video extensions or mime types
-      const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
-      const hasVideoExtension = videoExtensions.some(ext => assetUrl.toLowerCase().includes(ext));
-      
+      const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+      const hasVideoExtension = videoExtensions.some((ext) =>
+        assetUrl.toLowerCase().includes(ext),
+      );
+
       // Check if it contains video mime type in URL (for blob URLs)
-      const hasVideoMime = assetUrl.includes('video/');
-      
+      const hasVideoMime = assetUrl.includes("video/");
+
       const detectedAsVideo = hasVideoExtension || hasVideoMime;
       setIsVideo(detectedAsVideo);
     }
@@ -51,7 +59,7 @@ export const ImageItem = ({
 
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     // If video hasn't been loaded yet, load it first
     if (!videoLoaded) {
       setVideoLoaded(true);
@@ -73,7 +81,7 @@ export const ImageItem = ({
   };
 
   return (
-    <div 
+    <div
       className="relative bg-background-surface-0 overflow-hidden w-16 h-32 cursor-pointer"
       onClick={() => {
         if (assetUrl) {
@@ -115,18 +123,14 @@ export const ImageItem = ({
                   <Video className="w-8 h-8 text-text-subtle" />
                 </div>
               )}
-              
+
               {/* Video play/pause button - always visible */}
-              <button
+              <PlayButton
+                size="small"
+                isPlaying={isPlaying}
                 onClick={handlePlayPause}
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2 hover:bg-white/90 transition-colors"
-              >
-                {isPlaying ? (
-                  <Pause className="w-4 h-4 text-black/80" />
-                ) : (
-                  <Play className="w-4 h-4 text-black/80" />
-                )}
-              </button>
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              />
             </>
           ) : (
             <img
@@ -135,7 +139,7 @@ export const ImageItem = ({
               className="w-full h-full object-cover"
             />
           )}
-          
+
           {/* Selected border overlay using inset */}
           {isSelected && (
             <div className="absolute inset-0 border-[3px] border-text-primary pointer-events-none" />
@@ -146,7 +150,7 @@ export const ImageItem = ({
           <div className="text-text-subtle text-xs">Failed to load</div>
         </div>
       )}
-      
+
       {/* Download button and Prompt tooltip */}
       <div className="absolute bottom-1 right-1 flex gap-1">
         {/* Download button (for all media types) */}
@@ -162,7 +166,7 @@ export const ImageItem = ({
             <Download className="w-3 h-3 text-text-primary" />
           </button>
         )}
-        
+
         {/* Media type indicator and prompt tooltip */}
         <TooltipProvider>
           <Tooltip>
@@ -189,7 +193,6 @@ export const ImageItem = ({
           </Tooltip>
         </TooltipProvider>
       </div>
-      
     </div>
   );
 };
