@@ -96,7 +96,7 @@ const SubscribeNudgeDialog = () => {
               setActivePage(Page.Subscribe);
             }}
           >
-            Try astrsk+ free
+            Learn more
           </Button>
         </div>
       </DialogContent>

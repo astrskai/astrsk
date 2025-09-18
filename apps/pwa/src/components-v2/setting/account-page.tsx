@@ -49,7 +49,7 @@ const SubscriptionSection = () => {
                   : "-"}
               </div>
               <div className="text-[12px] leading-[15px] text-text-placeholder font-[400]">
-                Plan renews every month - $15.00/month
+                Plan renews every month - $18.00/month
               </div>
             </div>
           </div>
