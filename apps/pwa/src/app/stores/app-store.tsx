@@ -84,6 +84,21 @@ export const SettingDetailPageType = {
 export type SettingDetailPageType =
   (typeof SettingDetailPageType)[keyof typeof SettingDetailPageType];
 
+// Polling context for image/video generation
+export interface PollingContext {
+  taskId: string;
+  generationType: "image" | "video";
+  prompt: string;
+  userPrompt?: string;
+  cardId?: string;
+  startedAt: number;
+  style?: string;
+  aspectRatio?: string;
+  videoDuration?: number;
+  inputImageFile?: File;
+  isSessionGenerated?: boolean;
+}
+
 interface AppState {
   // Default
   isDefaultInitialized: boolean;
@@ -189,6 +204,10 @@ interface AppState {
   // Image Generation Loading State
   generatingImageId: string | null; // Stores the ID of the currently generating image
   setGeneratingImageId: (id: string | null) => void;
+
+  // Polling context for active generation
+  generatingContext: PollingContext | null;
+  setGeneratingContext: (context: PollingContext | null) => void;
 
   // CardEditOpen
   cardEditOpen: CardType | null;
@@ -432,6 +451,13 @@ const useAppStoreBase = create<AppState>()(
           state.generatingImageId = id;
         }),
 
+      // Polling context for active generation
+      generatingContext: null,
+      setGeneratingContext: (context) =>
+        set((state) => {
+          state.generatingContext = context;
+        }),
+
       // CardEditOpen
       cardEditOpen: null,
       setCardEditOpen: (cardEditOpen) =>
@@ -513,6 +539,7 @@ const useAppStoreBase = create<AppState>()(
                 "isSyncSourceOpen",
                 "isMobile",
                 "generatingImageId", // Don't persist this state
+                "generatingContext", // Don't persist polling context (contains File objects)
               ].includes(key),
           ),
         ) as AppState,
