@@ -224,7 +224,7 @@ function V2Layout({
         )}
       >
         <TopBar />
-        <SidebarLeftProvider defaultOpen={!isMobile && !shouldCloseSidebar}>
+        <SidebarLeftProvider defaultOpen={!isMobile}>
           <LeftNavigation />
           <LeftNavigationTrigger />
           <SidebarInset>
