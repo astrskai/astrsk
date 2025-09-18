@@ -320,11 +320,11 @@ const useAppStoreBase = create<AppState>()(
       sessionOnboardingSteps: {
         genreSelection: false,
         inferenceButton: false,
-        sessionEdit: false,
-        openResource: false,
-        resourceManagement: false,
-        helpVideo: false,
-        sessionData: false,
+        sessionEdit: true,
+        openResource: true,
+        resourceManagement: true,
+        helpVideo: true,
+        sessionData: true,
       },
       setSessionOnboardingStep: (step, completed) =>
         set((state) => {
