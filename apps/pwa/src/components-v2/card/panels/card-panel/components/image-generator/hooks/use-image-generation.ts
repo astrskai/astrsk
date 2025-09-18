@@ -163,7 +163,7 @@ export const useImageGeneration = ({
         let result;
 
         // Check which model to use
-        if (config.selectedModel === IMAGE_MODELS.SEEDDREAM_4_0) {
+        if (config.selectedModel === IMAGE_MODELS.SEEDREAM_4_0) {
           // Use Seedream generator
           // Determine which images to use (prefer imageUrls array over single imageUrl)
           const imagesToUse =

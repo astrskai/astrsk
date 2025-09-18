@@ -54,16 +54,34 @@ export const useVideoGeneration = ({
   // Refs for polling management
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const processedTaskIds = useRef<Set<string>>(new Set());
+  const isMountedRef = useRef<boolean>(true);
+  const MAX_PROCESSED_IDS = 50; // Keep only last 50 task IDs to prevent memory leak
 
   // Cleanup on unmount
   useEffect(() => {
+    isMountedRef.current = true;
+
     return () => {
+      isMountedRef.current = false;
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
+      // Clear the processed task IDs on unmount
+      processedTaskIds.current.clear();
     };
   }, []);
+
+  // Helper to add task ID with size limit
+  const addProcessedTaskId = (taskId: string) => {
+    processedTaskIds.current.add(taskId);
+    // If set grows too large, remove oldest entries
+    if (processedTaskIds.current.size > MAX_PROCESSED_IDS) {
+      const idsArray = Array.from(processedTaskIds.current);
+      // Keep only the last MAX_PROCESSED_IDS entries
+      processedTaskIds.current = new Set(idsArray.slice(-MAX_PROCESSED_IDS));
+    }
+  };
 
   // Helper to convert URL to base64 with aggressive size reduction
   const urlToBase64 = useCallback(
@@ -207,7 +225,7 @@ export const useVideoGeneration = ({
               immediateResult.video
             ) {
               if (!processedTaskIds.current.has(taskId)) {
-                processedTaskIds.current.add(taskId);
+                addProcessedTaskId(taskId);
                 setVideoGenerationStatus("");
 
                 // Process the video
@@ -250,7 +268,10 @@ export const useVideoGeneration = ({
                     // Resolve the promise with the asset ID
                     const assetId = savedVideo.props.assetId?.toString();
 
-                    setGeneratingImageId(null);
+                    // Only update state if still mounted
+                    if (isMountedRef.current) {
+                      setGeneratingImageId(null);
+                    }
                     resolve(assetId);
                     return assetId;
                   } else {
@@ -261,7 +282,9 @@ export const useVideoGeneration = ({
                     toast.error("Failed to save video", {
                       description: saveResult.getError(),
                     });
-                    setGeneratingImageId(null);
+                    if (isMountedRef.current) {
+                      setGeneratingImageId(null);
+                    }
                     reject(
                       new Error(
                         saveResult.getError() || "Failed to save video",
@@ -276,13 +299,15 @@ export const useVideoGeneration = ({
                         : "Unknown error occurred",
                   });
 
-                  setGeneratingImageId(null);
+                  if (isMountedRef.current) {
+                    setGeneratingImageId(null);
+                  }
                   reject(videoError);
                 }
                 return; // Exit early, no need to poll - promise already resolved
               }
             } else if (immediateResult.status === "failed") {
-              processedTaskIds.current.add(taskId);
+              addProcessedTaskId(taskId);
               setVideoGenerationStatus("");
               setGeneratingImageId(null);
 
@@ -326,8 +351,21 @@ export const useVideoGeneration = ({
 
         // Start polling every 5 seconds only if needed
         pollingIntervalRef.current = setInterval(async () => {
+          // Check if component is still mounted
+          if (!isMountedRef.current) {
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
+            return;
+          }
+
           try {
             const statusResult = await checkVideoStatus({ taskId });
+
+            // Check again if still mounted before updating state
+            if (!isMountedRef.current) return;
+
             // Keep status as "Generating" during polling
             setVideoGenerationStatus("Generating");
 
@@ -342,12 +380,16 @@ export const useVideoGeneration = ({
               }
 
               // Mark as processed IMMEDIATELY to prevent duplicate saves
-              processedTaskIds.current.add(taskId);
+              addProcessedTaskId(taskId);
 
               // Video is ready!
               clearInterval(pollingIntervalRef.current!);
               pollingIntervalRef.current = null;
-              setVideoGenerationStatus("");
+
+              // Only update state if still mounted
+              if (isMountedRef.current) {
+                setVideoGenerationStatus("");
+              }
 
               // Process the video
               try {
@@ -419,7 +461,7 @@ export const useVideoGeneration = ({
               }
             } else if (statusResult.status === "failed") {
               // Mark as processed even on failure to prevent retrying
-              processedTaskIds.current.add(taskId);
+              addProcessedTaskId(taskId);
 
               // Video generation failed
               clearInterval(pollingIntervalRef.current!);

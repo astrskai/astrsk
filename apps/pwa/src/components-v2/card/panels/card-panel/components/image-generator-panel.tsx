@@ -377,8 +377,8 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
               <SelectValue placeholder="Select a model" />
             </SelectTrigger>
             <SelectContent side="top">
-              <SelectItem value={IMAGE_MODELS.SEEDDREAM_4_0}>
-                Seeddream 4.0 (Images)
+              <SelectItem value={IMAGE_MODELS.SEEDREAM_4_0}>
+                Seedream 4.0 (Images)
               </SelectItem>
               <SelectItem value={IMAGE_MODELS.NANO_BANANA}>
                 Nano Banana (Images)

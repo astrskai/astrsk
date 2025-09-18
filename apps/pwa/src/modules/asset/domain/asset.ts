@@ -65,6 +65,8 @@ async function convertToWebp(file: File, quality?: number): Promise<File> {
 
         const ctx = canvas.getContext("2d");
         if (!ctx) {
+          // Clean up image reference
+          img.src = "";
           return reject(new Error("Could not get canvas context"));
         }
 
@@ -72,6 +74,11 @@ async function convertToWebp(file: File, quality?: number): Promise<File> {
 
         canvas.toBlob(
           (blob) => {
+            // Clean up references after blob creation
+            img.src = "";
+            canvas.width = 0;
+            canvas.height = 0;
+
             if (!blob) {
               return reject(new Error("Failed to convert to WebP"));
             }
@@ -88,7 +95,11 @@ async function convertToWebp(file: File, quality?: number): Promise<File> {
         );
       };
 
-      img.onerror = () => reject(new Error("Failed to load image"));
+      img.onerror = () => {
+        // Clean up on error
+        img.src = "";
+        reject(new Error("Failed to load image"));
+      };
       img.src = event.target?.result as string;
     };
 

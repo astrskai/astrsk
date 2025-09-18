@@ -2461,7 +2461,7 @@ const SessionMessagesAndUserInputs = ({
       assetId = await generateImageBase({
         prompt: enhancedGenerationPrompt || currentOption.content,
         userPrompt: "",
-        selectedModel: IMAGE_MODELS.SEEDDREAM_4_0,
+        selectedModel: IMAGE_MODELS.SEEDREAM_4_0,
         imageToImage: currentImageUrls.length > 0,
         imageUrls: currentImageUrls,
         // size: "1280x720", // 16:9 aspect ratio, 720p resolution (921,600 pixels)
