@@ -149,12 +149,19 @@ const getIntendedModelValue = (
         const valueModelId = parts[3];
         const valueModelName = parts[4];
 
-        if (
-          valueApiSource === apiSource &&
-          valueModelId === actualModelId &&
-          valueModelName === modelName
-        ) {
-          return value;
+        // For Astrsk AI, compare by model name since modelId format varies
+        if (apiSource === ApiSource.AstrskAi) {
+          if (valueApiSource === apiSource && valueModelName === modelName) {
+            return value;
+          }
+        } else {
+          if (
+            valueApiSource === apiSource &&
+            valueModelId === actualModelId &&
+            valueModelName === modelName
+          ) {
+            return value;
+          }
         }
       }
     }
