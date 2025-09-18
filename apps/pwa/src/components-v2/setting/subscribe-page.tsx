@@ -1,4 +1,4 @@
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
@@ -23,7 +23,6 @@ function openInNewTab(url: string) {
 }
 
 const SubscribePage = () => {
-  const setActivePage = useAppStore.use.setActivePage();
   const [isOpenCreditDetail, setIsOpenCreditDetail] = useState(false);
 
   // Sign up with SSO
@@ -74,13 +73,14 @@ const SubscribePage = () => {
   );
 
   // Check subscribed
+  const backToReturnPage = useAppStore.use.backToReturnPage();
   useEffect(() => {
     if (!subscribed) {
       return;
     }
     toast.success("Welcome to astrsk+!");
-    setActivePage(Page.Init);
-  }, [setActivePage, subscribed]);
+    backToReturnPage();
+  }, [backToReturnPage, subscribed]);
 
   return (
     <div
@@ -93,7 +93,7 @@ const SubscribePage = () => {
       <button
         className="absolute top-[34px] right-[40px] text-text-subtle z-50"
         onClick={() => {
-          setActivePage(Page.Init);
+          backToReturnPage();
         }}
       >
         <SvgIcon name="window_close" size={40} />
