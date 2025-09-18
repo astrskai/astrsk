@@ -51,7 +51,6 @@ const SelectedBackground = ({
               src={asset}
               alt={background?.name ?? "Background"}
               className="pointer-events-none w-full h-full object-cover"
-
             />
           </div>
         )
@@ -81,9 +80,9 @@ const EditBackground = ({
 
   // Handle background click with auto-save
   const handleBackgroundClick = useCallback(
-    async (newBackgroundId: UniqueEntityID) => {
+    async (newBackgroundId?: UniqueEntityID) => {
       // Set form value
-      if (backgroundId === newBackgroundId.toString()) {
+      if (!newBackgroundId || backgroundId === newBackgroundId.toString()) {
         setValue("backgroundId", null);
         await onSave({
           backgroundId: undefined,
@@ -225,10 +224,9 @@ const EditBackground = ({
           <div className="grid grid-cols-2 gap-4">
             <BackgroundListItem
               isActive={!backgroundId}
-              onClick={() => {
-                setValue("backgroundId", null);
-              }}
+              onClick={() => handleBackgroundClick()}
             />
+
             {defaultBackgrounds.map((defaultBackground) => (
               <BackgroundListItem
                 key={defaultBackground.id.toString()}
