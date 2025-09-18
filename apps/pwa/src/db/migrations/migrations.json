@@ -106,65 +106,16 @@
   },
   {
     "sql": [
-      "CREATE TABLE \"vibe_sessions\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"session_id\" varchar NOT NULL,\n\t\"resource_id\" varchar NOT NULL,\n\t\"resource_type\" varchar NOT NULL,\n\t\"messages\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"applied_changes\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"ai_results\" jsonb,\n\t\"conversation_history\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"status\" varchar NOT NULL,\n\t\"version\" integer DEFAULT 1 NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL,\n\t\"last_active_at\" text NOT NULL,\n\tCONSTRAINT \"vibe_sessions_session_id_unique\" UNIQUE(\"session_id\")\n);\n",
+      "CREATE TABLE \"generated_images\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"asset_id\" uuid NOT NULL,\n\t\"prompt\" text NOT NULL,\n\t\"style\" varchar,\n\t\"aspect_ratio\" varchar,\n\t\"media_type\" varchar,\n\t\"thumbnail_asset_id\" uuid,\n\t\"associated_card_id\" uuid,\n\t\"is_session_generated\" boolean DEFAULT false,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE \"vibe_sessions\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"session_id\" varchar NOT NULL,\n\t\"resource_id\" varchar NOT NULL,\n\t\"resource_type\" varchar NOT NULL,\n\t\"messages\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"applied_changes\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"ai_results\" jsonb,\n\t\"conversation_history\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"snapshots\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"status\" varchar NOT NULL,\n\t\"version\" integer DEFAULT 1 NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL,\n\t\"last_active_at\" text NOT NULL,\n\tCONSTRAINT \"vibe_sessions_session_id_unique\" UNIQUE(\"session_id\")\n);\n",
+      "\nALTER TABLE \"agents\" ADD COLUMN \"model_tier\" varchar DEFAULT 'light';",
       "\nALTER TABLE \"cards\" ADD COLUMN \"vibe_session_id\" uuid;",
-      "\nALTER TABLE \"flows\" ADD COLUMN \"vibe_session_id\" uuid;"
-    ],
-    "bps": true,
-    "folderMillis": 1757064475506,
-    "hash": "c5ee483c443dfa9b3dd79580f6dbb9c604e5f461a6ad73794a024ba3d613fc2f"
-  },
-  {
-    "sql": [
-      "ALTER TABLE \"vibe_sessions\" ADD COLUMN \"snapshots\" jsonb DEFAULT '[]'::jsonb NOT NULL;"
-    ],
-    "bps": true,
-    "folderMillis": 1757149406985,
-    "hash": "ce2e6dfc13be71c2877b80483ed8feec26ae66f65485489570eb495be512384a"
-  },
-  {
-    "sql": [
-      "CREATE TABLE \"generated_images\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"asset_id\" uuid NOT NULL,\n\t\"prompt\" text NOT NULL,\n\t\"style\" varchar,\n\t\"aspect_ratio\" varchar,\n\t\"associated_card_id\" uuid,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nALTER TABLE \"cards\" ADD COLUMN \"image_prompt\" text;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"vibe_session_id\" uuid;",
       "\nCREATE UNIQUE INDEX \"unique_resource_session\" ON \"vibe_sessions\" USING btree (\"resource_id\",\"resource_type\");"
     ],
     "bps": true,
-    "folderMillis": 1757256794993,
-    "hash": "c133359a0ddd37aa54128e33e0da978ef55ddb39886655484792f0d42a9e3d58"
-  },
-  {
-    "sql": [
-      "ALTER TABLE \"flows\" ADD COLUMN \"is_coding_panel_open\" boolean DEFAULT false NOT NULL;"
-    ],
-    "bps": true,
-    "folderMillis": 1757398124448,
-    "hash": "b6cb754d1aa9e80d026f3bffba2a1bacc817f205d06ae36d45b844fc3e59d865"
-  },
-  {
-    "sql": [
-      "ALTER TABLE \"cards\" ADD COLUMN \"is_coding_panel_open\" boolean DEFAULT false NOT NULL;"
-    ],
-    "bps": true,
-    "folderMillis": 1757400281942,
-    "hash": "c9c017301f216f2b7a954f4dfc6cd741dad8678a07d3f9ab401ecfcfd99c50e1"
-  },
-  {
-    "sql": [
-      "ALTER TABLE \"cards\" DROP COLUMN \"is_coding_panel_open\";",
-      "\nALTER TABLE \"flows\" DROP COLUMN \"is_coding_panel_open\";"
-    ],
-    "folderMillis": 1757433163764,
-    "hash": "74254570fb10dfac4d8756889743f458bbc5c8939e8a67bc51f4089b00c5754a"
-  },
-  {
-    "sql": [
-      "ALTER TABLE \"agents\" ADD COLUMN \"model_tier\" varchar DEFAULT 'light';",
-      "\nALTER TABLE \"cards\" ADD COLUMN \"image_prompt\" text;",
-      "\nALTER TABLE \"generated_images\" ADD COLUMN \"media_type\" varchar;",
-      "\nALTER TABLE \"generated_images\" ADD COLUMN \"thumbnail_asset_id\" uuid;",
-      "\nALTER TABLE \"generated_images\" ADD COLUMN \"is_session_generated\" boolean DEFAULT false;"
-    ],
-    "bps": true,
-    "folderMillis": 1758171161578,
-    "hash": "0b6abd696973ea939213638ca26fbee5e481e1e1c3ddbcdc568a17003abbab2d"
+    "folderMillis": 1758216748714,
+    "hash": "b4e0d123a01e9ec664c53d5f7c6e284a150c464c422934d868a5770f8399f672"
   }
 ]
