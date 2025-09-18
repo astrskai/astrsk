@@ -820,6 +820,7 @@ const UserInputCharacterButton = ({
   onClick = () => {},
   isHighLighted = false,
   isSubscribeBadge = false,
+  isDisabled = false,
 }: {
   characterCardId?: UniqueEntityID;
   icon?: React.ReactNode;
@@ -828,6 +829,7 @@ const UserInputCharacterButton = ({
   onClick?: () => void;
   isHighLighted?: boolean;
   isSubscribeBadge?: boolean;
+  isDisabled?: boolean;
 }) => {
   const [characterCard] = useCard<CharacterCard>(characterCardId);
   const [characterIcon, characterIconIsVideo] = useAsset(
@@ -851,6 +853,7 @@ const UserInputCharacterButton = ({
             alt={characterCard.props.name?.at(0)?.toUpperCase() ?? ""}
             size={48}
             isVideo={characterIconIsVideo}
+            isDisabled={isDisabled}
             className={cn(
               isHighLighted &&
                 "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal",
@@ -1036,7 +1039,7 @@ const UserInputs = ({
 
   // Show tooltip if either the old guide is open OR the inference button onboarding is not completed
   const shouldShowTooltip =
-    isOpenGuide || !sessionOnboardingSteps.inferenceButton;
+    !disabled && (isOpenGuide || !sessionOnboardingSteps.inferenceButton);
 
   const onFocusUserInput = useCallback(() => {
     if (isGroupButtonDonNotShowAgain) {
@@ -1079,6 +1082,7 @@ const UserInputs = ({
                         onCharacterButtonClicked();
                       }}
                       isUser
+                      isDisabled={disabled}
                       isHighLighted={shouldShowTooltip}
                     />
                   )}
@@ -1090,6 +1094,7 @@ const UserInputs = ({
                         generateCharacterMessage?.(characterCardId);
                         onCharacterButtonClicked();
                       }}
+                      isDisabled={disabled}
                       isHighLighted={shouldShowTooltip}
                     />
                   ))}

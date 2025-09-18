@@ -7,12 +7,14 @@ const Avatar = ({
   size = 48,
   className,
   isVideo = false,
+  isDisabled = false,
 }: {
   src?: string | null;
   alt?: string;
   size?: number;
   className?: string;
   isVideo?: boolean;
+  isDisabled?: boolean;
 }) => {
   return (
     <div
@@ -32,7 +34,10 @@ const Avatar = ({
         alt={alt}
         width={size}
         height={size}
-        className="w-full h-full object-cover"
+        className={cn(
+          "w-full h-full object-cover",
+          isDisabled && "pointer-events-none",
+        )}
         isVideo={isVideo}
         showControls={false}
         autoPlay={false}
