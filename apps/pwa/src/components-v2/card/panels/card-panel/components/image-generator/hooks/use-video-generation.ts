@@ -4,7 +4,8 @@ import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { toast } from "sonner";
 import { useSeedanceGenerator } from "@/app/hooks/use-seedance-generator";
 import { IMAGE_MODELS } from "@/app/stores/model-store";
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore, PollingContext } from "@/app/stores/app-store";
+import { pollingManager } from "@/app/services/polling-manager";
 
 interface VideoGenerationConfig {
   prompt: string;
@@ -40,6 +41,8 @@ export const useVideoGeneration = ({
   // Use global store for loading state
   const generatingImageId = useAppStore.use.generatingImageId();
   const setGeneratingImageId = useAppStore.use.setGeneratingImageId();
+  const generatingContext = useAppStore.use.generatingContext();
+  const setGeneratingContext = useAppStore.use.setGeneratingContext();
   const isGeneratingVideo =
     generatingImageId !== null && generatingImageId.startsWith("video-");
   const [videoGenerationStatus, setVideoGenerationStatus] = useState("");
@@ -52,7 +55,6 @@ export const useVideoGeneration = ({
   } = useSeedanceGenerator();
 
   // Refs for polling management
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const processedTaskIds = useRef<Set<string>>(new Set());
   const isMountedRef = useRef<boolean>(true);
   const MAX_PROCESSED_IDS = 50; // Keep only last 50 task IDs to prevent memory leak
@@ -63,12 +65,8 @@ export const useVideoGeneration = ({
 
     return () => {
       isMountedRef.current = false;
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-      // Clear the processed task IDs on unmount
-      processedTaskIds.current.clear();
+      // Don't stop polling on unmount - let it continue in background
+      // The global polling manager will handle it
     };
   }, []);
 
@@ -204,15 +202,21 @@ export const useVideoGeneration = ({
         // Check if this task has already been processed
         if (processedTaskIds.current.has(taskId)) {
           setGeneratingImageId(null);
+          setGeneratingContext(null);
           resolve(undefined);
           return;
         }
 
-        // Clear any existing polling
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
+        // Check if already polling for this task
+        if (pollingManager.isPolling(taskId)) {
+          console.log(`Already polling for task ${taskId}, skipping duplicate`);
+          // Just resolve without starting new polling
+          resolve(undefined);
+          return;
         }
+
+        // Stop any existing polling for this task (shouldn't happen but just in case)
+        pollingManager.stopPolling(taskId);
 
         // Do an immediate check first
         (async () => {
@@ -271,6 +275,7 @@ export const useVideoGeneration = ({
                     // Only update state if still mounted
                     if (isMountedRef.current) {
                       setGeneratingImageId(null);
+                      setGeneratingContext(null); // Clear context on success
                     }
                     resolve(assetId);
                     return assetId;
@@ -284,6 +289,7 @@ export const useVideoGeneration = ({
                     });
                     if (isMountedRef.current) {
                       setGeneratingImageId(null);
+                      setGeneratingContext(null);
                     }
                     reject(
                       new Error(
@@ -301,6 +307,7 @@ export const useVideoGeneration = ({
 
                   if (isMountedRef.current) {
                     setGeneratingImageId(null);
+                    setGeneratingContext(null);
                   }
                   reject(videoError);
                 }
@@ -310,6 +317,7 @@ export const useVideoGeneration = ({
               addProcessedTaskId(taskId);
               setVideoGenerationStatus("");
               setGeneratingImageId(null);
+              setGeneratingContext(null);
 
               const errorMessage =
                 immediateResult.error || "Video generation failed";
@@ -337,6 +345,7 @@ export const useVideoGeneration = ({
               console.warn(`Unknown video status: ${immediateResult.status}`);
               setVideoGenerationStatus("");
               setGeneratingImageId(null);
+              setGeneratingContext(null);
               resolve(undefined);
               return;
             }
@@ -350,13 +359,10 @@ export const useVideoGeneration = ({
         })();
 
         // Start polling every 5 seconds only if needed
-        pollingIntervalRef.current = setInterval(async () => {
+        const pollingCallback = async () => {
           // Check if component is still mounted
           if (!isMountedRef.current) {
-            if (pollingIntervalRef.current) {
-              clearInterval(pollingIntervalRef.current);
-              pollingIntervalRef.current = null;
-            }
+            pollingManager.stopPolling(taskId);
             return;
           }
 
@@ -372,10 +378,10 @@ export const useVideoGeneration = ({
             if (statusResult.status === "succeeded" && statusResult.video) {
               // Check again if already processed (in case of race condition)
               if (processedTaskIds.current.has(taskId)) {
-                clearInterval(pollingIntervalRef.current!);
-                pollingIntervalRef.current = null;
+                pollingManager.stopPolling(taskId);
                 setVideoGenerationStatus("");
                 setGeneratingImageId(null);
+                setGeneratingContext(null);
                 return;
               }
 
@@ -383,8 +389,7 @@ export const useVideoGeneration = ({
               addProcessedTaskId(taskId);
 
               // Video is ready!
-              clearInterval(pollingIntervalRef.current!);
-              pollingIntervalRef.current = null;
+              pollingManager.stopPolling(taskId);
 
               // Only update state if still mounted
               if (isMountedRef.current) {
@@ -430,6 +435,7 @@ export const useVideoGeneration = ({
                   // Resolve the promise with the asset ID
                   const assetId = savedVideo.props.assetId?.toString();
                   setGeneratingImageId(null);
+                  setGeneratingContext(null);
                   resolve(assetId);
                   return assetId;
                 } else {
@@ -441,6 +447,7 @@ export const useVideoGeneration = ({
                     description: saveResult.getError(),
                   });
                   setGeneratingImageId(null);
+                  setGeneratingContext(null);
                   reject(
                     new Error(saveResult.getError() || "Failed to save video"),
                   );
@@ -464,10 +471,10 @@ export const useVideoGeneration = ({
               addProcessedTaskId(taskId);
 
               // Video generation failed
-              clearInterval(pollingIntervalRef.current!);
-              pollingIntervalRef.current = null;
+              pollingManager.stopPolling(taskId);
               setVideoGenerationStatus("");
               setGeneratingImageId(null);
+              setGeneratingContext(null);
 
               const errorMessage =
                 statusResult.error || "Video generation failed";
@@ -487,11 +494,72 @@ export const useVideoGeneration = ({
             );
             // Don't clear interval here - let it retry
           }
-        }, 5000);
+        };
+
+        // Start polling with global manager
+        pollingManager.startPolling(taskId, pollingCallback, 5000);
       });
     },
-    [cardId, checkVideoStatus, onSuccess, setGeneratingImageId],
+    [
+      cardId,
+      checkVideoStatus,
+      onSuccess,
+      setGeneratingImageId,
+      setGeneratingContext,
+    ],
   );
+
+  // Recovery logic - runs after pollVideoStatus is defined
+  useEffect(() => {
+    // Check if there's an active polling context to recover
+    if (
+      generatingContext &&
+      generatingContext.generationType === "video" &&
+      !pollingManager.isPolling(generatingContext.taskId) && // Check global manager
+      !processedTaskIds.current.has(generatingContext.taskId)
+    ) {
+      // Check if this context is too old (more than 5 minutes)
+      const ageInMinutes =
+        (Date.now() - generatingContext.startedAt) / 1000 / 60;
+      if (ageInMinutes > 5) {
+        // Context is too old, clear it
+        console.log("Clearing old polling context:", generatingContext.taskId);
+        setGeneratingContext(null);
+        setGeneratingImageId(null);
+      } else {
+        // Resume polling for the existing task
+        console.log(
+          "Resuming video generation polling for task:",
+          generatingContext.taskId,
+        );
+
+        // Resume the polling (will skip if already polling)
+        pollVideoStatus(
+          generatingContext.taskId,
+          generatingContext.prompt,
+          generatingContext.userPrompt,
+          generatingContext.style,
+          generatingContext.aspectRatio,
+          generatingContext.inputImageFile,
+          generatingContext.isSessionGenerated,
+        )
+          .then((assetId) => {
+            // Clear context after completion
+            setGeneratingContext(null);
+          })
+          .catch((error) => {
+            console.error("Error resuming polling:", error);
+            setGeneratingContext(null);
+            setGeneratingImageId(null);
+          });
+      }
+    }
+  }, [
+    generatingContext,
+    pollVideoStatus,
+    setGeneratingContext,
+    setGeneratingImageId,
+  ]);
 
   const generateVideo = useCallback(
     async (config: VideoGenerationConfig) => {
@@ -612,6 +680,23 @@ export const useVideoGeneration = ({
 
         if (taskResult && taskResult.taskId) {
           setVideoGenerationStatus("Generating");
+
+          // Save polling context for recovery
+          const pollingContext: PollingContext = {
+            taskId: taskResult.taskId,
+            generationType: "video",
+            prompt: config.prompt,
+            userPrompt: config.userPrompt,
+            cardId: cardId,
+            startedAt: Date.now(),
+            style: config.style,
+            aspectRatio: config.aspectRatio,
+            videoDuration: config.videoDuration,
+            inputImageFile: generatedImageForThumbnail || inputImageFile,
+            isSessionGenerated: config.isSessionGenerated,
+          };
+          setGeneratingContext(pollingContext);
+
           // Return the promise from polling
           // Use the generated image as thumbnail if available, otherwise use input image
           const thumbnailFile = generatedImageForThumbnail || inputImageFile;
@@ -634,6 +719,7 @@ export const useVideoGeneration = ({
           error instanceof Error ? error.message : "Failed to generate video",
         );
         setGeneratingImageId(null);
+        setGeneratingContext(null);
         setVideoGenerationStatus("");
       }
     },
@@ -643,6 +729,9 @@ export const useVideoGeneration = ({
       pollVideoStatus,
       urlToBase64,
       setGeneratingImageId,
+      setGeneratingContext,
+      cardId,
+      isGeneratingVideo,
     ],
   );
 
