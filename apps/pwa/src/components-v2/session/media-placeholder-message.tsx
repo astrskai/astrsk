@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Loader2, Trash2, Play } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/components-v2/lib/utils";
 import { useAsset } from "@/app/hooks/use-asset";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
+import { PlayButton } from "@/components-v2/ui/play-button";
 
 interface MediaPlaceholderMessageProps {
   content: string; // The loading message like "🖼️ Generating image..."
@@ -143,9 +144,7 @@ export const MediaPlaceholderMessage = ({
                     {/* Play button overlay - only show when thumbnail is loaded */}
                     {thumbnailLoaded && (
                       <div className="absolute inset-0 flex items-center justify-center rounded-[8px]">
-                        <div className="bg-black/60 rounded-full p-4 group-hover:bg-black/70 transition-colors">
-                          <Play className="w-12 h-12 text-white fill-white" />
-                        </div>
+                        <PlayButton size="large" isPlaying={false} />
                       </div>
                     )}
                   </div>

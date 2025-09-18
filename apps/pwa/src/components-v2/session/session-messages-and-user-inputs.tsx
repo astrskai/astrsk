@@ -691,14 +691,6 @@ const MessageItem = ({
       )
         return;
 
-      console.log("[VIDEO FROM IMAGE] Starting video generation:", {
-        assetId: selectedOption.assetId,
-        imageUrl: imageUrlForVideoGeneration,
-        isVideo: assetIsVideo,
-        usingThumbnail: !!thumbnailUrl,
-        content,
-      });
-
       setIsGeneratingVideoFromImage(true);
 
       try {
@@ -2292,6 +2284,17 @@ const SessionMessagesAndUserInputs = ({
 
   const [isGeneratingGlobalImage, setIsGeneratingGlobalImage] = useState(false);
 
+  // Use the new enhanced generation prompt hook that properly filters turns
+  const {
+    prompt: enhancedGenerationPrompt,
+    imageUrls: imageUrlsForGeneration,
+    // characterIds: involvedCharacterIds,
+    // lastGeneratedImageUrl,
+    // secondLastGeneratedImageUrl,
+  } = useEnhancedGenerationPrompt({
+    sessionId: session?.id,
+  });
+
   // Handler for generating video from an existing image in a message
   const handleGenerateVideoFromImage = useCallback(
     async (
@@ -2300,21 +2303,22 @@ const SessionMessagesAndUserInputs = ({
       prompt: string,
       userPrompt: string,
     ) => {
-      console.log("[VIDEO FROM IMAGE] Starting video generation:", {
-        messageId: messageId.toString(),
-        imageUrl,
-        prompt,
-        userPrompt,
-      });
+      // Always use "starting" mode with just the current image for video generation
+      // The backend will generate video starting from this frame
+      const imageUrls: string[] = [imageUrl];
+      const imageMode: "start-end" | "starting" | "reference" = "starting";
+
+      // Note: Character reference images are not included in video generation
 
       try {
-        // Generate video using only the generated image (not character images)
+        // Generate video using enhanced prompt and multiple images
         const assetId = await generateVideoBase({
-          prompt: prompt, // Use enhanced prompt
+          prompt: enhancedGenerationPrompt || prompt, // Use enhanced prompt
           userPrompt: userPrompt, // Keep original for display
-          selectedModel: IMAGE_MODELS.SEEDANCE_1_0, // Use Seedance Pro
-          imageToImage: true, // We're using the generated image as starting frame
-          imageUrl: imageUrl, // Use only the generated image
+          selectedModel: IMAGE_MODELS.SEEDANCE_1_0, // Use Pro model
+          imageToImage: true, // We're using images
+          imageUrls: imageUrls, // All images including previous, current, and characters
+          imageMode: imageMode, // Use appropriate mode based on available images
           videoDuration: 5, // 5 seconds video duration
           ratio: "16:9",
           resolution: "720p",
@@ -2352,17 +2356,13 @@ const SessionMessagesAndUserInputs = ({
         throw error; // Re-throw to let MessageItem handle the error
       }
     },
-    [generateVideoBase, queryClient],
+    [
+      generateVideoBase,
+      queryClient,
+      // secondLastGeneratedImageUrl,
+      enhancedGenerationPrompt,
+    ],
   );
-
-  // Use the new enhanced generation prompt hook that properly filters turns
-  const {
-    prompt: enhancedGenerationPrompt,
-    imageUrls: imageUrlsForGeneration,
-    characterIds: involvedCharacterIds,
-  } = useEnhancedGenerationPrompt({
-    sessionId: session?.id,
-  });
 
   // Generate image for last turn
   const handleGenerateImageForLastTurn = useCallback(async () => {
@@ -2403,8 +2403,8 @@ const SessionMessagesAndUserInputs = ({
     try {
       assetId = await generateImageBase({
         prompt: enhancedGenerationPrompt || currentOption.content,
-        userPrompt: currentOption.content,
-        selectedModel: IMAGE_MODELS.SEEDDREAM_4_0,
+        userPrompt: "",
+        selectedModel: IMAGE_MODELS.SEEDREAM_4_0,
         imageToImage: currentImageUrls.length > 0,
         imageUrls: currentImageUrls,
         // size: "1280x720", // 16:9 aspect ratio, 720p resolution (921,600 pixels)
@@ -2479,6 +2479,7 @@ const SessionMessagesAndUserInputs = ({
     generateImageBase,
     isGeneratingGlobalImage,
     queryClient,
+    scrollToBottom,
   ]);
 
   // Generate video for last turn
@@ -2490,31 +2491,6 @@ const SessionMessagesAndUserInputs = ({
       toast.error("No message content to generate video from");
       return;
     }
-
-    console.log("[VIDEO GEN] ========================================");
-    console.log("[VIDEO GEN] Starting video generation");
-    console.log("[VIDEO GEN] Image URLs to use:", {
-      count: imageUrlsForGeneration.length,
-      urls: imageUrlsForGeneration.map((url, i) => ({
-        index: i + 1,
-        type: url?.startsWith("blob:")
-          ? "blob"
-          : url?.startsWith("data:")
-            ? "base64"
-            : url?.startsWith("http")
-              ? "http"
-              : "unknown",
-        preview: url?.substring(0, 80) + "...",
-      })),
-      imageMode: "reference", // Use reference mode for style consistency
-      timestamp: new Date().toISOString(),
-    });
-    console.log(
-      "[VIDEO GEN] Prompt:",
-      enhancedGenerationPrompt?.substring(0, 200) + "...",
-    );
-    console.log("[VIDEO GEN] ========================================");
-
     // Create placeholder turn
     const placeholderResult = await TurnService.createPlaceholderTurn.execute({
       sessionId: session.id,
@@ -2538,13 +2514,29 @@ const SessionMessagesAndUserInputs = ({
     });
 
     try {
+      // Determine which mode to use based on available images
+      // For last turn generation, first image is previous scene, rest are character refs
+      const hasPreviousImage =
+        imageUrlsForGeneration.length > 0 && imageUrlsForGeneration[0];
+      let imageMode: "start-end" | "starting" | "reference";
+
+      // Note: For this function, we're generating a NEW image that will be the end frame
+      // So we need at least the previous image to use start-end mode
+      if (hasPreviousImage) {
+        // We have previous image and will generate current - can use start-end
+        imageMode = "start-end";
+      } else {
+        // No previous image, will generate from scratch
+        imageMode = "reference";
+      }
+
       const assetId = await generateVideoBase({
         prompt: enhancedGenerationPrompt || currentOption.content,
         userPrompt: currentOption.content,
-        selectedModel: IMAGE_MODELS.SEEDANCE_1_0, // Lite model supports multiple images
+        selectedModel: IMAGE_MODELS.SEEDANCE_LITE_1_0, // Lite model
         imageToImage: imageUrlsForGeneration.length > 0,
         imageUrls: imageUrlsForGeneration,
-        imageMode: "reference", // Use reference mode for style consistency
+        imageMode: imageMode, // Use appropriate mode based on available images
         videoDuration: 5,
         ratio: "16:9",
         resolution: "720p",
@@ -2935,7 +2927,7 @@ const SessionMessagesAndUserInputs = ({
           onboarding={shouldShowSessionDataTooltip}
           onboardingTooltip={
             shouldShowSessionDataTooltip
-              ? "You can edit your session data"
+              ? "Click to view and edit session stats"
               : undefined
           }
           tooltipClassName="!top-[0px] !right-[50px]"

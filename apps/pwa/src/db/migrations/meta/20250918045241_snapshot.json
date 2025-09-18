@@ -1,6 +1,6 @@
 {
-  "id": "d01f4997-aaad-4a90-a778-97ea53d7a28e",
-  "prevId": "2786b662-55b4-4925-b62a-8364bab55058",
+  "id": "476803e0-9a70-4af9-8229-dcf2052d585c",
+  "prevId": "74265539-a60d-4377-add8-6494960fe053",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -49,6 +49,13 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
+        },
+        "model_tier": {
+          "name": "model_tier",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'light'"
         },
         "prompt_messages": {
           "name": "prompt_messages",
@@ -390,6 +397,12 @@
         "vibe_session_id": {
           "name": "vibe_session_id",
           "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_prompt": {
+          "name": "image_prompt",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },

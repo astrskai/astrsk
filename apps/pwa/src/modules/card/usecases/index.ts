@@ -11,6 +11,7 @@ export * from "./update-card-summary";
 export * from "./update-card-version";
 export * from "./update-card-conceptual-origin";
 export * from "./update-card-icon-asset";
+export * from "./update-card-image-prompt";
 export * from "./update-character-name";
 export * from "./update-character-description";
 export * from "./update-character-example-dialogue";

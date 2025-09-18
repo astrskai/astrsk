@@ -14,7 +14,6 @@ import {
   SidebarInset,
   SidebarLeftProvider,
 } from "@/components-v2/both-sidebar";
-import { GlobalDockView } from "@/components-v2/global-dockview";
 import { usePwa } from "@/components-v2/hooks/use-pwa";
 import { InstallPwa } from "@/components-v2/install-pwa";
 import { LeftNavigationMobile } from "@/components-v2/left-navigation";
@@ -230,7 +229,7 @@ function V2Layout({
           <LeftNavigationTrigger />
           <SidebarInset>
             <main className="relative flex-1 overflow-hidden h-full w-full">
-              <GlobalDockView>{children}</GlobalDockView>
+              {children}
             </main>
           </SidebarInset>
           <Toaster expand className="!z-[9999]" />

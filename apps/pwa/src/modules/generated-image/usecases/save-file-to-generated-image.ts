@@ -80,8 +80,12 @@ export class SaveFileToGeneratedImage {
                 resolve(null);
               }
 
-              // Clean up
+              // Clean up video and canvas
               URL.revokeObjectURL(video.src);
+              video.src = "";
+              video.load();
+              canvas.width = 0;
+              canvas.height = 0;
             },
             "image/jpeg",
             0.9,
@@ -91,6 +95,9 @@ export class SaveFileToGeneratedImage {
         video.onerror = () => {
           resolve(null);
           URL.revokeObjectURL(video.src);
+          video.src = "";
+          canvas.width = 0;
+          canvas.height = 0;
         };
 
         // Load video

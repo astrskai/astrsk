@@ -1,10 +1,11 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { toast } from "sonner";
 import { useNanoBananaGenerator } from "@/app/hooks/use-nano-banana-generator";
 import { useSeedreamGenerator } from "@/app/hooks/use-seedream-generator";
 import { IMAGE_MODELS } from "@/app/stores/model-store";
+import { useAppStore } from "@/app/stores/app-store";
 
 interface ImageGenerationConfig {
   prompt: string;
@@ -33,7 +34,10 @@ export const useImageGeneration = ({
   cardId,
   onSuccess,
 }: UseImageGenerationProps): UseImageGenerationReturn => {
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  // Use global store for loading state
+  const generatingImageId = useAppStore.use.generatingImageId();
+  const setGeneratingImageId = useAppStore.use.setGeneratingImageId();
+  const isGeneratingImage = generatingImageId !== null;
 
   // Nano banana generator hook
   const { generateCustomImage, generateImageToImage } =
@@ -46,6 +50,8 @@ export const useImageGeneration = ({
   // Helper to convert URL to base64 with aggressive size reduction
   const urlToBase64 = useCallback(
     async (url: string): Promise<{ base64: string; mimeType: string }> => {
+      let tempBlobUrl: string | null = null;
+
       // If the URL is already a base64 data URL, extract and reprocess it
       if (url.startsWith("data:")) {
         // Extract the actual base64 data
@@ -60,7 +66,8 @@ export const useImageGeneration = ({
           }
           const byteArray = new Uint8Array(byteNumbers);
           const blob = new Blob([byteArray], { type: "image/jpeg" });
-          url = URL.createObjectURL(blob);
+          tempBlobUrl = URL.createObjectURL(blob);
+          url = tempBlobUrl;
         }
       }
 
@@ -72,6 +79,11 @@ export const useImageGeneration = ({
         const img = document.createElement("img");
 
         img.onload = () => {
+          // Clean up temporary blob URL if it was created
+          if (tempBlobUrl) {
+            URL.revokeObjectURL(tempBlobUrl);
+            tempBlobUrl = null;
+          }
           // Set small dimensions - max 256px for better quality while staying under token limit
           const MAX_SIZE = 256 * 4;
           let { width, height } = img;
@@ -120,9 +132,22 @@ export const useImageGeneration = ({
           );
         };
 
-        img.onerror = reject;
+        img.onerror = (error) => {
+          // Clean up temporary blob URL on error
+          if (tempBlobUrl) {
+            URL.revokeObjectURL(tempBlobUrl);
+            tempBlobUrl = null;
+          }
+          reject(error);
+        };
         img.crossOrigin = "anonymous"; // Handle CORS
-        img.src = url;
+
+        // Store reference to temp blob URL if we created one
+        if (url.startsWith("data:") && tempBlobUrl) {
+          img.src = tempBlobUrl;
+        } else {
+          img.src = url;
+        }
       });
     },
     [],
@@ -130,13 +155,15 @@ export const useImageGeneration = ({
 
   const generateImage = useCallback(
     async (config: ImageGenerationConfig) => {
-      setIsGeneratingImage(true);
+      // Generate a unique ID for this generation
+      const generationId = `gen-${Date.now()}`;
+      setGeneratingImageId(generationId);
 
       try {
         let result;
 
         // Check which model to use
-        if (config.selectedModel === IMAGE_MODELS.SEEDDREAM_4_0) {
+        if (config.selectedModel === IMAGE_MODELS.SEEDREAM_4_0) {
           // Use Seedream generator
           // Determine which images to use (prefer imageUrls array over single imageUrl)
           const imagesToUse =
@@ -255,6 +282,8 @@ export const useImageGeneration = ({
         if (saveResult.isSuccess) {
           const savedImage = saveResult.getValue();
           onSuccess?.();
+          // Clear the loading state
+          setGeneratingImageId(null);
           // Return the asset ID of the saved image
           return savedImage.props.assetId?.toString();
         } else {
@@ -268,8 +297,8 @@ export const useImageGeneration = ({
         toast.error(
           error instanceof Error ? error.message : "Failed to generate image",
         );
-      } finally {
-        setIsGeneratingImage(false);
+        // Clear loading state on error
+        setGeneratingImageId(null);
       }
     },
     [
@@ -280,6 +309,7 @@ export const useImageGeneration = ({
       generateSeedreamImageToImage,
       onSuccess,
       urlToBase64,
+      setGeneratingImageId,
     ],
   );
 

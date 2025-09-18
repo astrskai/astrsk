@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
-import { Play, Pause } from 'lucide-react';
-import { cn } from '@/shared/utils';
+import { useEffect, useState, useRef } from "react";
+import { cn } from "@/shared/utils";
+import { PlayButton } from "@/components-v2/ui/play-button";
 
 interface MediaDisplayProps {
   src: string | null;
@@ -20,8 +20,8 @@ interface MediaDisplayProps {
 
 export const MediaDisplay = ({
   src,
-  alt = '',
-  className = '',
+  alt = "",
+  className = "",
   width,
   height,
   fallbackSrc,
@@ -31,7 +31,7 @@ export const MediaDisplay = ({
   muted = true,
   loop = true,
   playOnHover = false,
-  clickToToggle = false
+  clickToToggle = false,
 }: MediaDisplayProps) => {
   const [isVideo, setIsVideo] = useState(forceIsVideo || false);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
@@ -46,28 +46,28 @@ export const MediaDisplay = ({
       setIsVideo(forceIsVideo);
       return;
     }
-    
+
     if (!src) {
       setIsVideo(false);
       return;
     }
 
     // Check for video extensions
-    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
-    const hasVideoExtension = videoExtensions.some(ext => 
-      src.toLowerCase().includes(ext)
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+    const hasVideoExtension = videoExtensions.some((ext) =>
+      src.toLowerCase().includes(ext),
     );
-    
+
     // Check for video mime type in blob URLs
-    const hasVideoMime = src.includes('video/');
-    
+    const hasVideoMime = src.includes("video/");
+
     setIsVideo(hasVideoExtension || hasVideoMime);
   }, [src, forceIsVideo]);
 
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     if (videoRef.current) {
       if (isPlaying || isClickPlaying) {
         videoRef.current.pause();
@@ -83,10 +83,10 @@ export const MediaDisplay = ({
   const handleClick = (e: React.MouseEvent) => {
     // Don't handle click if showControls is enabled (play button handles it)
     if (showControls || !clickToToggle || !videoRef.current) return;
-    
+
     e.stopPropagation();
     e.preventDefault();
-    
+
     if (isClickPlaying) {
       videoRef.current.pause();
       setIsClickPlaying(false);
@@ -108,7 +108,7 @@ export const MediaDisplay = ({
     videoRef.current.pause();
   };
 
-  const displaySrc = src || fallbackSrc || '';
+  const displaySrc = src || fallbackSrc || "";
 
   if (!displaySrc) {
     return null;
@@ -136,24 +136,18 @@ export const MediaDisplay = ({
           onPause={() => setIsPlaying(false)}
         />
         {showControls && (
-          <button
+          <PlayButton
+            size="large"
+            isPlaying={isPlaying || isClickPlaying}
             onClick={handlePlayPause}
             className={cn(
               "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
-              "bg-black/60 backdrop-blur-sm rounded-full p-3",
-              "hover:bg-black/70 transition-all duration-200",
               "z-10 pointer-events-auto",
               "opacity-0 group-hover:opacity-100",
-              isHovered && "opacity-100"
+              isHovered && "opacity-100",
             )}
-            style={{ pointerEvents: 'auto' }}
-          >
-            {(isPlaying || isClickPlaying) ? (
-              <Pause className="min-w-6 min-h-6 text-white" />
-            ) : (
-              <Play className="min-w-6 min-h-6 text-white ml-0.5" />
-            )}
-          </button>
+            style={{ pointerEvents: "auto" }}
+          />
         )}
       </div>
     );

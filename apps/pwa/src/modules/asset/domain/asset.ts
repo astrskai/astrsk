@@ -65,6 +65,8 @@ async function convertToWebp(file: File, quality?: number): Promise<File> {
 
         const ctx = canvas.getContext("2d");
         if (!ctx) {
+          // Clean up image reference
+          img.src = "";
           return reject(new Error("Could not get canvas context"));
         }
 
@@ -72,6 +74,11 @@ async function convertToWebp(file: File, quality?: number): Promise<File> {
 
         canvas.toBlob(
           (blob) => {
+            // Clean up references after blob creation
+            img.src = "";
+            canvas.width = 0;
+            canvas.height = 0;
+
             if (!blob) {
               return reject(new Error("Failed to convert to WebP"));
             }
@@ -88,7 +95,11 @@ async function convertToWebp(file: File, quality?: number): Promise<File> {
         );
       };
 
-      img.onerror = () => reject(new Error("Failed to load image"));
+      img.onerror = () => {
+        // Clean up on error
+        img.src = "";
+        reject(new Error("Failed to load image"));
+      };
       img.src = event.target?.result as string;
     };
 
@@ -138,26 +149,8 @@ export class Asset extends AggregateRoot<AssetProps> {
     id?: UniqueEntityID,
   ): Promise<Result<Asset>> {
     try {
-      console.log(
-        "📦 [ASSET] Creating asset from file:",
-        props.file.name,
-        "Type:",
-        props.file.type,
-        "Size:",
-        props.file.size,
-      );
-
       // Convert file to WebP format (only for images, videos are kept as-is)
       const webpFile = await convertToWebp(props.file);
-
-      console.log(
-        "📦 [ASSET] After conversion:",
-        webpFile.name,
-        "Type:",
-        webpFile.type,
-        "Size:",
-        webpFile.size,
-      );
 
       // Get hash
       const hash = await getFileHash(webpFile);

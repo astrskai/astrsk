@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { Button } from "@/components-v2/ui/button";
-import { Textarea } from "@/components-v2/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -31,6 +30,7 @@ import { toast } from "sonner";
 import { VIDEO_SETTINGS, GALLERY_LAYOUT } from "./image-generator/constants";
 import { ImageItem } from "./image-generator/components/image-item";
 import { ImageToImageSetting } from "./image-generator/components/image-to-image-setting";
+import { ImagePromptField } from "./image-generator/components/image-prompt-field";
 import { useVideoGeneration } from "./image-generator/hooks/use-video-generation";
 import { useImageGeneration } from "./image-generator/hooks/use-image-generation";
 import { enhancePromptWithCardContext } from "./image-generator/utils";
@@ -41,6 +41,7 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
 
   // Get app state for resource gathering
   const activePage = useAppStore((state) => state.activePage);
+  const generatingImageId = useAppStore((state) => state.generatingImageId);
   const isCardPage = activePage === Page.Cards || activePage === Page.CardPanel;
 
   // Resource data gathering (same pattern as AI panel)
@@ -122,7 +123,9 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
       : cardIconAssetUrl;
 
   // UI state
-  const isGenerating = isGeneratingVideo || isGeneratingImage;
+  // Check both hook-based loading and global store loading state
+  const isGenerating =
+    isGeneratingVideo || isGeneratingImage || generatingImageId !== null;
   const [selectedAspectRatio] = useState("2:3"); // Hidden but functional
 
   // Use global model store for persisted settings
@@ -326,26 +329,12 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
       {/* Dynamic Prompt Section */}
       <div className={`${promptSectionClass} flex flex-col gap-4`}>
         {/* Image Prompt */}
-        <div className="flex-1 flex flex-col justify-start items-start gap-2 min-h-0">
-          <div className="inline-flex justify-start items-center gap-2">
-            <div className="justify-start text-text-body text-[10px] font-medium leading-none">
-              Image prompt
-            </div>
-          </div>
-          <div className="flex-1 w-full flex flex-col justify-start items-start gap-1 min-h-0">
-            <Textarea
-              value={imagePrompt}
-              onChange={(e) => handlePromptChange(e.target.value)}
-              placeholder="Describe the image you want to generate..."
-              className="w-full flex-1 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal resize-none"
-            />
-            <div className="w-full px-4 inline-flex justify-center items-center gap-2">
-              <div className="flex-1 justify-start text-text-info text-[10px] font-medium leading-none">
-                Describe appearance, style, setting, and mood
-              </div>
-            </div>
-          </div>
-        </div>
+        <ImagePromptField
+          cardId={cardId}
+          value={imagePrompt}
+          onChange={handlePromptChange}
+          disabled={isGenerating}
+        />
 
         {/* Image to Image Setting */}
         <div className="flex-shrink-0">
@@ -388,8 +377,8 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
               <SelectValue placeholder="Select a model" />
             </SelectTrigger>
             <SelectContent side="top">
-              <SelectItem value={IMAGE_MODELS.SEEDDREAM_4_0}>
-                Seeddream 4.0 (Images)
+              <SelectItem value={IMAGE_MODELS.SEEDREAM_4_0}>
+                Seedream 4.0 (Images)
               </SelectItem>
               <SelectItem value={IMAGE_MODELS.NANO_BANANA}>
                 Nano Banana (Images)

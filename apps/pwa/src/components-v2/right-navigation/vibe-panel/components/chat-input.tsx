@@ -123,7 +123,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Ask, build anything about flow"
+            placeholder="Ask and/or build anything"
             disabled={!hasResource}
             className={cn(
               "w-full p-0 pt-[4.8px] border-0 outline-0 bg-transparent rounded-none no-resizer",

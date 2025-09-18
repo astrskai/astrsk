@@ -20,7 +20,7 @@ export type LanguageModel =
 // Image model options
 export const IMAGE_MODELS = {
   NANO_BANANA: "nano-banana",
-  SEEDDREAM_4_0: "seeddream-4.0",
+  SEEDREAM_4_0: "seedream-4.0",
   SEEDANCE_1_0: "seedance-1.0",
   SEEDANCE_LITE_1_0: "seedance-lite-1.0",
 } as const;
@@ -56,7 +56,7 @@ const useModelStoreBase = create<ModelState>()(
         }),
 
       // Default image model
-      selectedImageModel: IMAGE_MODELS.SEEDDREAM_4_0,
+      selectedImageModel: IMAGE_MODELS.SEEDREAM_4_0,
       setSelectedImageModel: (model) =>
         set((state) => {
           state.selectedImageModel = model;

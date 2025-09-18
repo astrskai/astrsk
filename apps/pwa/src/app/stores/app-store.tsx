@@ -186,6 +186,10 @@ interface AppState {
   isLoading: boolean;
   setIsLoading: (isLoading: boolean) => void;
 
+  // Image Generation Loading State
+  generatingImageId: string | null; // Stores the ID of the currently generating image
+  setGeneratingImageId: (id: string | null) => void;
+
   // CardEditOpen
   cardEditOpen: CardType | null;
   setCardEditOpen: (cardEditOpen: CardType | null) => void;
@@ -421,6 +425,13 @@ const useAppStoreBase = create<AppState>()(
           state.isLoading = isLoading;
         }),
 
+      // Image Generation Loading State
+      generatingImageId: null,
+      setGeneratingImageId: (id) =>
+        set((state) => {
+          state.generatingImageId = id;
+        }),
+
       // CardEditOpen
       cardEditOpen: null,
       setCardEditOpen: (cardEditOpen) =>
@@ -501,6 +512,7 @@ const useAppStoreBase = create<AppState>()(
                 "passphraseMode",
                 "isSyncSourceOpen",
                 "isMobile",
+                "generatingImageId", // Don't persist this state
               ].includes(key),
           ),
         ) as AppState,

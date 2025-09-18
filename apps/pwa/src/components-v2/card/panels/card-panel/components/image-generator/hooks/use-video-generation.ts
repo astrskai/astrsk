@@ -4,6 +4,7 @@ import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { toast } from "sonner";
 import { useSeedanceGenerator } from "@/app/hooks/use-seedance-generator";
 import { IMAGE_MODELS } from "@/app/stores/model-store";
+import { useAppStore } from "@/app/stores/app-store";
 
 interface VideoGenerationConfig {
   prompt: string;
@@ -13,7 +14,7 @@ interface VideoGenerationConfig {
   imageToImage: boolean;
   imageUrl?: string; // Single image URL for backward compatibility
   imageUrls?: string[]; // Array of image URLs for multiple reference images
-  imageMode?: "starting" | "reference"; // How to use the images (default: 'starting')
+  imageMode?: "starting" | "ending" | "reference" | "start-end"; // How to use the images (default: 'starting')
   selectedModel: string;
   videoDuration: number;
   ratio?: string; // Video aspect ratio (16:9, 4:3, etc.)
@@ -36,7 +37,11 @@ export const useVideoGeneration = ({
   cardId,
   onSuccess,
 }: UseVideoGenerationProps): UseVideoGenerationReturn => {
-  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  // Use global store for loading state
+  const generatingImageId = useAppStore.use.generatingImageId();
+  const setGeneratingImageId = useAppStore.use.setGeneratingImageId();
+  const isGeneratingVideo =
+    generatingImageId !== null && generatingImageId.startsWith("video-");
   const [videoGenerationStatus, setVideoGenerationStatus] = useState("");
 
   // Seedance generator hook with all video generation methods
@@ -49,20 +54,40 @@ export const useVideoGeneration = ({
   // Refs for polling management
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const processedTaskIds = useRef<Set<string>>(new Set());
+  const isMountedRef = useRef<boolean>(true);
+  const MAX_PROCESSED_IDS = 50; // Keep only last 50 task IDs to prevent memory leak
 
   // Cleanup on unmount
   useEffect(() => {
+    isMountedRef.current = true;
+
     return () => {
+      isMountedRef.current = false;
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
+      // Clear the processed task IDs on unmount
+      processedTaskIds.current.clear();
     };
   }, []);
+
+  // Helper to add task ID with size limit
+  const addProcessedTaskId = (taskId: string) => {
+    processedTaskIds.current.add(taskId);
+    // If set grows too large, remove oldest entries
+    if (processedTaskIds.current.size > MAX_PROCESSED_IDS) {
+      const idsArray = Array.from(processedTaskIds.current);
+      // Keep only the last MAX_PROCESSED_IDS entries
+      processedTaskIds.current = new Set(idsArray.slice(-MAX_PROCESSED_IDS));
+    }
+  };
 
   // Helper to convert URL to base64 with aggressive size reduction
   const urlToBase64 = useCallback(
     async (url: string): Promise<{ base64: string; mimeType: string }> => {
+      let tempBlobUrl: string | null = null;
+
       // If the URL is already a base64 data URL, extract and reprocess it
       if (url.startsWith("data:")) {
         // Extract the actual base64 data
@@ -77,7 +102,8 @@ export const useVideoGeneration = ({
           }
           const byteArray = new Uint8Array(byteNumbers);
           const blob = new Blob([byteArray], { type: "image/jpeg" });
-          url = URL.createObjectURL(blob);
+          tempBlobUrl = URL.createObjectURL(blob);
+          url = tempBlobUrl;
         }
       }
 
@@ -89,6 +115,11 @@ export const useVideoGeneration = ({
         const img = document.createElement("img");
 
         img.onload = () => {
+          // Clean up temporary blob URL if it was created
+          if (tempBlobUrl) {
+            URL.revokeObjectURL(tempBlobUrl);
+            tempBlobUrl = null;
+          }
           // Set reasonable dimensions - max 1280px to preserve quality while managing token usage
           const MAX_SIZE = 1280;
           let { width, height } = img;
@@ -127,10 +158,6 @@ export const useVideoGeneration = ({
                 const base64 = result.split(",")[1];
                 const mimeType = "image/jpeg"; // Always return JPEG
 
-                console.log(
-                  "Video generation - converted to base64, mimeType:",
-                  mimeType,
-                );
                 resolve({ base64, mimeType });
               };
               reader.onerror = reject;
@@ -141,9 +168,22 @@ export const useVideoGeneration = ({
           );
         };
 
-        img.onerror = reject;
+        img.onerror = (error) => {
+          // Clean up temporary blob URL on error
+          if (tempBlobUrl) {
+            URL.revokeObjectURL(tempBlobUrl);
+            tempBlobUrl = null;
+          }
+          reject(error);
+        };
         img.crossOrigin = "anonymous"; // Handle CORS
-        img.src = url;
+
+        // Store reference to temp blob URL if we created one
+        if (url.startsWith("data:") && tempBlobUrl) {
+          img.src = tempBlobUrl;
+        } else {
+          img.src = url;
+        }
       });
     },
     [],
@@ -163,7 +203,7 @@ export const useVideoGeneration = ({
       return new Promise((resolve, reject) => {
         // Check if this task has already been processed
         if (processedTaskIds.current.has(taskId)) {
-          setIsGeneratingVideo(false);
+          setGeneratingImageId(null);
           resolve(undefined);
           return;
         }
@@ -185,16 +225,13 @@ export const useVideoGeneration = ({
               immediateResult.video
             ) {
               if (!processedTaskIds.current.has(taskId)) {
-                processedTaskIds.current.add(taskId);
+                addProcessedTaskId(taskId);
                 setVideoGenerationStatus("");
 
                 // Process the video
                 try {
                   const videoData = immediateResult.video;
-                  console.log(
-                    "Video already ready, fetching from Convex storage:",
-                    videoData.url,
-                  );
+
                   const response = await fetch(videoData.url);
                   if (!response.ok) {
                     throw new Error(
@@ -231,7 +268,10 @@ export const useVideoGeneration = ({
                     // Resolve the promise with the asset ID
                     const assetId = savedVideo.props.assetId?.toString();
 
-                    setIsGeneratingVideo(false);
+                    // Only update state if still mounted
+                    if (isMountedRef.current) {
+                      setGeneratingImageId(null);
+                    }
                     resolve(assetId);
                     return assetId;
                   } else {
@@ -242,7 +282,9 @@ export const useVideoGeneration = ({
                     toast.error("Failed to save video", {
                       description: saveResult.getError(),
                     });
-                    setIsGeneratingVideo(false);
+                    if (isMountedRef.current) {
+                      setGeneratingImageId(null);
+                    }
                     reject(
                       new Error(
                         saveResult.getError() || "Failed to save video",
@@ -257,15 +299,17 @@ export const useVideoGeneration = ({
                         : "Unknown error occurred",
                   });
 
-                  setIsGeneratingVideo(false);
+                  if (isMountedRef.current) {
+                    setGeneratingImageId(null);
+                  }
                   reject(videoError);
                 }
                 return; // Exit early, no need to poll - promise already resolved
               }
             } else if (immediateResult.status === "failed") {
-              processedTaskIds.current.add(taskId);
+              addProcessedTaskId(taskId);
               setVideoGenerationStatus("");
-              setIsGeneratingVideo(false);
+              setGeneratingImageId(null);
 
               const errorMessage =
                 immediateResult.error || "Video generation failed";
@@ -292,7 +336,7 @@ export const useVideoGeneration = ({
               // Unknown status, don't poll
               console.warn(`Unknown video status: ${immediateResult.status}`);
               setVideoGenerationStatus("");
-              setIsGeneratingVideo(false);
+              setGeneratingImageId(null);
               resolve(undefined);
               return;
             }
@@ -307,8 +351,21 @@ export const useVideoGeneration = ({
 
         // Start polling every 5 seconds only if needed
         pollingIntervalRef.current = setInterval(async () => {
+          // Check if component is still mounted
+          if (!isMountedRef.current) {
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
+            return;
+          }
+
           try {
             const statusResult = await checkVideoStatus({ taskId });
+
+            // Check again if still mounted before updating state
+            if (!isMountedRef.current) return;
+
             // Keep status as "Generating" during polling
             setVideoGenerationStatus("Generating");
 
@@ -318,26 +375,27 @@ export const useVideoGeneration = ({
                 clearInterval(pollingIntervalRef.current!);
                 pollingIntervalRef.current = null;
                 setVideoGenerationStatus("");
-                setIsGeneratingVideo(false);
+                setGeneratingImageId(null);
                 return;
               }
 
               // Mark as processed IMMEDIATELY to prevent duplicate saves
-              processedTaskIds.current.add(taskId);
+              addProcessedTaskId(taskId);
 
               // Video is ready!
               clearInterval(pollingIntervalRef.current!);
               pollingIntervalRef.current = null;
-              setVideoGenerationStatus("");
+
+              // Only update state if still mounted
+              if (isMountedRef.current) {
+                setVideoGenerationStatus("");
+              }
 
               // Process the video
               try {
                 const videoData = statusResult.video;
                 // Fetch video from Convex storage URL
-                console.log(
-                  "Fetching video from Convex storage:",
-                  videoData.url,
-                );
+
                 const response = await fetch(videoData.url);
                 if (!response.ok) {
                   throw new Error(
@@ -371,7 +429,7 @@ export const useVideoGeneration = ({
                   toast.success("Video generated and saved successfully!");
                   // Resolve the promise with the asset ID
                   const assetId = savedVideo.props.assetId?.toString();
-                  setIsGeneratingVideo(false);
+                  setGeneratingImageId(null);
                   resolve(assetId);
                   return assetId;
                 } else {
@@ -382,7 +440,7 @@ export const useVideoGeneration = ({
                   toast.error("Failed to save video", {
                     description: saveResult.getError(),
                   });
-                  setIsGeneratingVideo(false);
+                  setGeneratingImageId(null);
                   reject(
                     new Error(saveResult.getError() || "Failed to save video"),
                   );
@@ -398,18 +456,18 @@ export const useVideoGeneration = ({
                       ? videoError.message
                       : "Unknown error occurred",
                 });
-                setIsGeneratingVideo(false);
+                setGeneratingImageId(null);
                 reject(videoError);
               }
             } else if (statusResult.status === "failed") {
               // Mark as processed even on failure to prevent retrying
-              processedTaskIds.current.add(taskId);
+              addProcessedTaskId(taskId);
 
               // Video generation failed
               clearInterval(pollingIntervalRef.current!);
               pollingIntervalRef.current = null;
               setVideoGenerationStatus("");
-              setIsGeneratingVideo(false);
+              setGeneratingImageId(null);
 
               const errorMessage =
                 statusResult.error || "Video generation failed";
@@ -432,12 +490,20 @@ export const useVideoGeneration = ({
         }, 5000);
       });
     },
-    [cardId, checkVideoStatus, onSuccess],
+    [cardId, checkVideoStatus, onSuccess, setGeneratingImageId],
   );
 
   const generateVideo = useCallback(
     async (config: VideoGenerationConfig) => {
-      setIsGeneratingVideo(true);
+      // Check if a video is already being generated
+      if (isGeneratingVideo) {
+        toast.warning("A video is already generating. Please wait.");
+        return;
+      }
+
+      // Generate a unique ID for this video generation
+      const generationId = `video-${Date.now()}`;
+      setGeneratingImageId(generationId);
       setVideoGenerationStatus("Generating");
 
       try {
@@ -456,15 +522,6 @@ export const useVideoGeneration = ({
               ? "seedance-1-0-lite-i2v-250428"
               : "seedance-1-0-lite-t2v-250428"
             : "seedance-1-0-pro-250528"; // Pro model for both t2v and i2v
-
-        // Log the model being sent to backend
-        console.log("🎬 [VIDEO GENERATION] Sending to backend:", {
-          selectedModel: config.selectedModel,
-          modelId: modelId,
-          isImageToImage: config.imageToImage,
-          videoDuration: config.videoDuration,
-          timestamp: new Date().toISOString(),
-        });
 
         let taskResult;
         let inputImageFile: File | undefined;
@@ -526,17 +583,6 @@ export const useVideoGeneration = ({
             i2vParams.resolution = config.resolution;
           }
 
-          // Log I2V params being sent
-          console.log("🎥 [I2V] Sending params to backend:", {
-            model: i2vParams.model,
-            imageMode: i2vParams.imageMode,
-            duration: i2vParams.duration,
-            imageCount: Array.isArray(i2vParams.images)
-              ? i2vParams.images.length
-              : 1,
-            timestamp: new Date().toISOString(),
-          });
-
           taskResult = await generateSeedanceImageToVideo(i2vParams);
         } else {
           // Text-to-video generation
@@ -560,15 +606,6 @@ export const useVideoGeneration = ({
           if (config.resolution) {
             t2vParams.resolution = config.resolution;
           }
-
-          // Log T2V params being sent
-          console.log("📹 [T2V] Sending params to backend:", {
-            model: t2vParams.model,
-            duration: t2vParams.duration,
-            ratio: t2vParams.ratio,
-            resolution: t2vParams.resolution,
-            timestamp: new Date().toISOString(),
-          });
 
           taskResult = await generateSeedanceVideo(t2vParams);
         }
@@ -596,7 +633,7 @@ export const useVideoGeneration = ({
         toast.error(
           error instanceof Error ? error.message : "Failed to generate video",
         );
-        setIsGeneratingVideo(false);
+        setGeneratingImageId(null);
         setVideoGenerationStatus("");
       }
     },
@@ -605,6 +642,7 @@ export const useVideoGeneration = ({
       generateSeedanceImageToVideo,
       pollVideoStatus,
       urlToBase64,
+      setGeneratingImageId,
     ],
   );
 
