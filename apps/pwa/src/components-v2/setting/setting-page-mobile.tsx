@@ -221,13 +221,13 @@ const MainPageMobile = ({
               }
             >
               <TypoBase className="font-semibold text-text-muted-title">
-                User manual
+                User documentation
               </TypoBase>
             </div>
 
             <div
               className="flex items-center text-text-muted-title justify-between cursor-pointer"
-              onClick={() => openInNewTab("https://join.astrsk.ai")}
+              onClick={() => openInNewTab("https://astrsk.ai")}
             >
               <TypoBase className="font-semibold text-text-muted-title">
                 About astrsk.ai
