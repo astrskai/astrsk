@@ -68,6 +68,8 @@ export const useVideoGeneration = ({
   // Helper to convert URL to base64 with aggressive size reduction
   const urlToBase64 = useCallback(
     async (url: string): Promise<{ base64: string; mimeType: string }> => {
+      let tempBlobUrl: string | null = null;
+
       // If the URL is already a base64 data URL, extract and reprocess it
       if (url.startsWith("data:")) {
         // Extract the actual base64 data
@@ -82,7 +84,8 @@ export const useVideoGeneration = ({
           }
           const byteArray = new Uint8Array(byteNumbers);
           const blob = new Blob([byteArray], { type: "image/jpeg" });
-          url = URL.createObjectURL(blob);
+          tempBlobUrl = URL.createObjectURL(blob);
+          url = tempBlobUrl;
         }
       }
 
@@ -94,6 +97,11 @@ export const useVideoGeneration = ({
         const img = document.createElement("img");
 
         img.onload = () => {
+          // Clean up temporary blob URL if it was created
+          if (tempBlobUrl) {
+            URL.revokeObjectURL(tempBlobUrl);
+            tempBlobUrl = null;
+          }
           // Set reasonable dimensions - max 1280px to preserve quality while managing token usage
           const MAX_SIZE = 1280;
           let { width, height } = img;
@@ -142,9 +150,22 @@ export const useVideoGeneration = ({
           );
         };
 
-        img.onerror = reject;
+        img.onerror = (error) => {
+          // Clean up temporary blob URL on error
+          if (tempBlobUrl) {
+            URL.revokeObjectURL(tempBlobUrl);
+            tempBlobUrl = null;
+          }
+          reject(error);
+        };
         img.crossOrigin = "anonymous"; // Handle CORS
-        img.src = url;
+
+        // Store reference to temp blob URL if we created one
+        if (url.startsWith("data:") && tempBlobUrl) {
+          img.src = tempBlobUrl;
+        } else {
+          img.src = url;
+        }
       });
     },
     [],
