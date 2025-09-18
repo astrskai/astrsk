@@ -71,8 +71,9 @@ import { ModelTier } from "@/modules/agent/domain";
 // When using AstrskAi, format must be "ApiSource:modelId"
 // where ApiSource is a valid value from ApiSource enum that makeProvider can handle
 const MODEL_TIER_MAPPING = {
-  [ModelTier.Light]: "openai-compatible:google/gemini-2.5-flash",
-  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat-v3-0324",
+  [ModelTier.Light]: "openai-compatible:-generative-ai:google/gemini-2.5-flash",
+  [ModelTier.Heavy]:
+    "openai-compatible:-generative-ai:deepseek/deepseek-chat-v3-0324",
 } as const;
 
 // Helper function to check if user is logged in
@@ -1594,6 +1595,8 @@ async function* executeAgentNode({
     // Get API connection
     let apiSource = agent.props.apiSource;
     let apiModelId = agent.props.modelId;
+    let actualModelName = agent.props.modelName; // Track the actual model name being used
+
     if (!apiSource || !apiModelId) {
       throw new Error("Agent does not have API source or model ID");
     }
@@ -1631,6 +1634,12 @@ async function* executeAgentNode({
             apiConnection = astrskConnection;
             apiSource = ApiSource.AstrskAi;
             apiModelId = fallbackModel;
+
+            // Extract the actual model name from the fallback model format
+            // Format is "google-generative-ai:gemini-2.5-flash" -> "gemini-2.5-flash"
+            const modelParts = fallbackModel.split(":");
+            actualModelName =
+              modelParts.length > 1 ? modelParts[1] : fallbackModel;
           }
         }
       }
@@ -1655,7 +1664,7 @@ async function* executeAgentNode({
     const result = {
       agentKey: agentKey,
       agentName: agent.props.name,
-      modelName: agent.props.modelName,
+      modelName: actualModelName, // Use the actual model name (may be different if auto-mapped)
       output: {},
     };
     yield result;
