@@ -83,7 +83,13 @@ interface TradingCardDisplayProps {
 
 const tagContainerWidth = 152;
 
-export const TradingCardDisplay = ({ card, imageUrl, isVideo = false, isLoading = false, onClick }: TradingCardDisplayProps) => {
+export const TradingCardDisplay = ({
+  card,
+  imageUrl,
+  isVideo = false,
+  isLoading = false,
+  onClick,
+}: TradingCardDisplayProps) => {
   const estimateTextWidth = (text: string): number => {
     const avgCharWidth = 5;
     return text.length * avgCharWidth;
@@ -169,11 +175,12 @@ export const TradingCardDisplay = ({ card, imageUrl, isVideo = false, isLoading 
             loop={true}
             playOnHover={false}
             clickToToggle={false}
+            playButtonSize="medium"
           />
 
           {card.props.tags && card.props.tags.length > 0 ? (
             <>
-              <div className="absolute bottom-0 left-0 right-0 h-[117px] bg-gradient-to-b from-[#22222201] to-[#222222] to-95%" />
+              <div className="absolute bottom-0 left-0 right-0 h-[117px] bg-gradient-to-b from-[#22222201] to-[#705e5e] to-95%" />
             </>
           ) : (
             <>
@@ -227,6 +234,7 @@ export const TradingCardDisplay = ({ card, imageUrl, isVideo = false, isLoading 
               loop={true}
               playOnHover={false}
               clickToToggle={false}
+              playButtonSize="medium"
             />
           </div>
           <div className="absolute top-2 right-2.5">
