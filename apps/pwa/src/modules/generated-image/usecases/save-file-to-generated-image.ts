@@ -33,7 +33,12 @@ export class SaveFileToGeneratedImage {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
 
-      if (!ctx) return null;
+      if (!ctx) {
+        console.error(
+          "[extractVideoThumbnail] Failed to get canvas 2D context",
+        );
+        return null;
+      }
 
       return new Promise((resolve) => {
         video.onloadedmetadata = () => {
@@ -75,8 +80,12 @@ export class SaveFileToGeneratedImage {
                   `thumb-${videoFile.name.replace(/\.[^/.]+$/, "")}.jpg`,
                   { type: "image/jpeg" },
                 );
+
                 resolve(thumbnailFile);
               } else {
+                console.error(
+                  "[extractVideoThumbnail] canvas.toBlob returned null",
+                );
                 resolve(null);
               }
 
@@ -92,7 +101,8 @@ export class SaveFileToGeneratedImage {
           ); // Higher quality for thumbnails
         };
 
-        video.onerror = () => {
+        video.onerror = (e) => {
+          console.error("[extractVideoThumbnail] Video error:", e);
           resolve(null);
           URL.revokeObjectURL(video.src);
           video.src = "";
@@ -101,7 +111,8 @@ export class SaveFileToGeneratedImage {
         };
 
         // Load video
-        video.src = URL.createObjectURL(videoFile);
+        const videoUrl = URL.createObjectURL(videoFile);
+        video.src = videoUrl;
         video.load();
       });
     } catch (error) {
@@ -157,8 +168,14 @@ export class SaveFileToGeneratedImage {
           const thumbnailAssetResult = await this.saveFileToAsset.execute({
             file: request.inputImageFile,
           });
+
           if (thumbnailAssetResult.isSuccess) {
             thumbnailAssetId = thumbnailAssetResult.getValue().id;
+          } else {
+            console.error(
+              `📸 [SaveFileToGeneratedImage] Failed to save input image as thumbnail:`,
+              thumbnailAssetResult.getError(),
+            );
           }
         } else {
           // Text-to-video: extract thumbnail from the generated video
@@ -170,6 +187,10 @@ export class SaveFileToGeneratedImage {
             if (thumbnailAssetResult.isSuccess) {
               thumbnailAssetId = thumbnailAssetResult.getValue().id;
             }
+          } else {
+            console.error(
+              `[SaveFileToGeneratedImage] Failed to extract thumbnail from video: ${request.file.name}`,
+            );
           }
         }
       }

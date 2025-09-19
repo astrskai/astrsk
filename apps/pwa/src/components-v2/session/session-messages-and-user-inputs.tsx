@@ -54,6 +54,7 @@ import { TemplateRenderer } from "@/shared/utils/template-renderer";
 import { cloneDeep } from "lodash-es";
 
 import { useAsset } from "@/app/hooks/use-asset";
+import { useAssetShared } from "@/app/hooks/use-asset-shared";
 import { useCard } from "@/app/hooks/use-card";
 import { useImageGeneration } from "@/components-v2/card/panels/card-panel/components/image-generator/hooks/use-image-generation";
 import { useVideoGeneration } from "@/components-v2/card/panels/card-panel/components/image-generator/hooks/use-video-generation";
@@ -824,7 +825,7 @@ const UserInputCharacterButton = ({
   isDisabled?: boolean;
 }) => {
   const [characterCard] = useCard<CharacterCard>(characterCardId);
-  const [characterIcon, characterIconIsVideo] = useAsset(
+  const [characterIcon, characterIconIsVideo] = useAssetShared(
     characterCard?.props.iconAssetId,
   );
 
