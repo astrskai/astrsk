@@ -72,13 +72,13 @@ import { ModelTier } from "@/modules/agent/domain";
 // where ApiSource is a valid value from ApiSource enum that makeProvider can handle
 const MODEL_TIER_MAPPING = {
   [ModelTier.Light]: "openai-compatible:google/gemini-2.5-flash",
-  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat-v3-0324",
+  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat-v3.1",
 } as const;
 
 // Display names for the fallback models
 const MODEL_DISPLAY_NAMES: Record<string, string> = {
   "openai-compatible:google/gemini-2.5-flash": "Gemini 2.5 Flash",
-  "openai-compatible:deepseek/deepseek-chat-v3-0324": "DeepSeek Chat v3",
+  "openai-compatible:deepseek/deepseek-chat-v3.1": "DeepSeek v3.1",
 };
 
 // Helper function to check if user is logged in
