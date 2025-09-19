@@ -13,8 +13,8 @@ import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { api } from "@/convex";
 import { logger } from "@/shared/utils/logger";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
-import { useMutation } from "convex/react";
-import { Bot, ChevronDown, Coins, Zap } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { Ban, Bot, ChevronDown, Coins, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -24,6 +24,10 @@ function openInNewTab(url: string) {
 
 const SubscribePage = () => {
   const [isOpenCreditDetail, setIsOpenCreditDetail] = useState(false);
+
+  // Check sign up available
+  const isSignUpAvailable =
+    useQuery(api.payment.public.getSignUpAvailable) ?? false;
 
   // Sign up with SSO
   const { userId } = useAuth();
@@ -263,45 +267,95 @@ const SubscribePage = () => {
                   Regular Pricing
                 </div>
               </div>
-              <div
-                className={cn(
-                  "px-[40px] py-[16px] bg-[#159BE2]/30 backdrop-blur-xl rounded-[12px]",
-                  "border-[1px] border-border-selected-secondary",
-                  "flex flex-col gap-[8px]",
-                )}
-              >
-                <div className="flex flex-row justify-between items-center">
-                  <div className="flex flex-row gap-[4px] items-center">
-                    <div className="text-[24px] leading-[40px] font-[600] text-text-primary">
-                      First Month Free
+              {isSignUpAvailable ? (
+                <div
+                  className={cn(
+                    "px-[40px] py-[16px] bg-[#159BE2]/30 backdrop-blur-xl rounded-[12px]",
+                    "border-[1px] border-border-selected-secondary",
+                    "flex flex-col gap-[8px]",
+                  )}
+                >
+                  <div className="flex flex-row justify-between items-center">
+                    <div className="flex flex-row gap-[4px] items-center">
+                      <div className="text-[24px] leading-[40px] font-[600] text-text-primary">
+                        First Month Free
+                      </div>
+                    </div>
+                    <div className="text-[16px] leading-[25.6px] font-[400] text-text-primary">
+                      (Early Access) Special Offer
                     </div>
                   </div>
-                  <div className="text-[16px] leading-[25.6px] font-[400] text-text-primary">
-                    (Early Access) Special Offer
+                  <div className="text-[14px] leading-[20px] font-[500] text-text-body mb-[8px]">
+                    <ul className="list-disc pl-5">
+                      <li>Early access limited to first 100 users only</li>
+                      <li>
+                        Must be member of our Discord server to gain access
+                      </li>
+                    </ul>
                   </div>
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      if (userId) {
+                        setIsOpenJoinServer(true);
+                      } else {
+                        signUpWithDiscord();
+                      }
+                    }}
+                    disabled={!isLoadedSignUp || isLoading}
+                    loading={isLoading}
+                  >
+                    {!isLoading && <SvgIcon name="discord" size={16} />}
+                    Join our Discord server and start now
+                  </Button>
                 </div>
-                <div className="text-[14px] leading-[20px] font-[500] text-text-body mb-[8px]">
-                  <ul className="list-disc pl-5">
-                    <li>Early access limited to first 100 users only</li>
-                    <li>Must be member of our Discord server to gain access</li>
-                  </ul>
-                </div>
-                <Button
-                  size="lg"
-                  onClick={() => {
-                    if (userId) {
-                      setIsOpenJoinServer(true);
-                    } else {
-                      signUpWithDiscord();
-                    }
-                  }}
-                  disabled={!isLoadedSignUp || isLoading}
-                  loading={isLoading}
+              ) : (
+                <div
+                  className={cn(
+                    "px-[40px] py-[16px] bg-[#B59EFF]/20 backdrop-blur-xl rounded-[12px]",
+                    "border-[1px] border-secondary-normal",
+                    "flex flex-col gap-[8px]",
+                  )}
                 >
-                  {!isLoading && <SvgIcon name="discord" size={16} />}
-                  Join our Discord server and start now
-                </Button>
-              </div>
+                  <div className="flex flex-row justify-between items-center">
+                    <div className="flex flex-row gap-[10px] items-center">
+                      <Ban size={24} />
+                      <div className="text-[24px] leading-[40px] font-[600] text-text-primary">
+                        Early Access FULL
+                      </div>
+                    </div>
+                    <div className="text-[16px] leading-[25.6px] font-[400] text-text-primary">
+                      Official Launch Waitlist
+                    </div>
+                  </div>
+                  <div className="text-[14px] leading-[20px] font-[500] text-text-body mb-[8px]">
+                    <ul className="list-disc pl-5">
+                      <li>
+                        Early access limited to first 100 users only{" "}
+                        <b>→ 100/100 SPOTS FILLED ✓</b>
+                      </li>
+                      <li>
+                        Join waitlist to receive notifications when new spots
+                        open
+                      </li>
+                    </ul>
+                  </div>
+                  <Button
+                    size="lg"
+                    className="bg-button-background-secondary text-button-foreground-secondary hover:bg-button-background-secondary hover:text-button-foreground-secondary hover:brightness-80"
+                    onClick={() => {
+                      openInNewTab(
+                        "https://docs.google.com/forms/d/e/1FAIpQLScgW_lXXSKd3WKy7ZJXmnFX4CGbukgZap0du6rCh1U2PHUfBw/viewform",
+                      );
+                    }}
+                    disabled={!isLoadedSignUp || isLoading}
+                    loading={isLoading}
+                  >
+                    {!isLoading && <SvgIcon name="discord" size={16} />}
+                    Join our Discord server and start now
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -96,6 +96,12 @@ export type PublicApiType = {
         Record<string, never>,
         boolean
       >;
+      getSignUpAvailable: FunctionReference<
+        "query",
+        "public",
+        Record<string, never>,
+        boolean
+      >;
     };
   };
   sessionMutations: {
