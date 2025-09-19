@@ -47,7 +47,7 @@ const SubscribePage = () => {
       signUp.authenticateWithRedirect({
         strategy: "oauth_discord",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/sso-callback",
+        redirectUrlComplete: "/",
       });
     } catch (error) {
       setIsLoading(false);
