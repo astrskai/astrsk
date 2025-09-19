@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { cn } from "@/shared/utils";
 import { PlayButton } from "@/components-v2/ui/play-button";
 
+export type PlayButtonIconSize = "small" | "medium" | "large";
+
 interface MediaDisplayProps {
   src: string | null;
   alt?: string;
@@ -16,6 +18,7 @@ interface MediaDisplayProps {
   loop?: boolean;
   playOnHover?: boolean; // Play when hovering
   clickToToggle?: boolean; // Click to play/pause
+  playButtonSize?: PlayButtonIconSize;
 }
 
 export const MediaDisplay = ({
@@ -32,6 +35,7 @@ export const MediaDisplay = ({
   loop = true,
   playOnHover = false,
   clickToToggle = false,
+  playButtonSize,
 }: MediaDisplayProps) => {
   const [isVideo, setIsVideo] = useState(forceIsVideo || false);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
@@ -137,7 +141,7 @@ export const MediaDisplay = ({
         />
         {showControls && (
           <PlayButton
-            size="large"
+            size={playButtonSize}
             isPlaying={isPlaying || isClickPlaying}
             onClick={handlePlayPause}
             className={cn(
