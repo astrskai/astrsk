@@ -103,5 +103,19 @@
     "bps": true,
     "folderMillis": 1755658008260,
     "hash": "7869d980df5f344abed43f89fd9199797935a0e14b2870405b650348353d8674"
+  },
+  {
+    "sql": [
+      "CREATE TABLE \"generated_images\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"asset_id\" uuid NOT NULL,\n\t\"prompt\" text NOT NULL,\n\t\"style\" varchar,\n\t\"aspect_ratio\" varchar,\n\t\"media_type\" varchar,\n\t\"thumbnail_asset_id\" uuid,\n\t\"associated_card_id\" uuid,\n\t\"is_session_generated\" boolean DEFAULT false,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE \"vibe_sessions\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"session_id\" varchar NOT NULL,\n\t\"resource_id\" varchar NOT NULL,\n\t\"resource_type\" varchar NOT NULL,\n\t\"messages\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"applied_changes\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"ai_results\" jsonb,\n\t\"conversation_history\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"snapshots\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"status\" varchar NOT NULL,\n\t\"version\" integer DEFAULT 1 NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL,\n\t\"last_active_at\" text NOT NULL,\n\tCONSTRAINT \"vibe_sessions_session_id_unique\" UNIQUE(\"session_id\")\n);\n",
+      "\nALTER TABLE \"agents\" ADD COLUMN \"model_tier\" varchar DEFAULT 'light';",
+      "\nALTER TABLE \"cards\" ADD COLUMN \"vibe_session_id\" uuid;",
+      "\nALTER TABLE \"cards\" ADD COLUMN \"image_prompt\" text;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"vibe_session_id\" uuid;",
+      "\nCREATE UNIQUE INDEX \"unique_resource_session\" ON \"vibe_sessions\" USING btree (\"resource_id\",\"resource_type\");"
+    ],
+    "bps": true,
+    "folderMillis": 1758216748714,
+    "hash": "b4e0d123a01e9ec664c53d5f7c6e284a150c464c422934d868a5770f8399f672"
   }
 ]

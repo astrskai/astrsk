@@ -5,10 +5,9 @@ import { Control, Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useReactFlow } from "@xyflow/react";
 
-import {
-  ApiConnectionWithModels,
-  useApiConnectionsWithModels,
-} from "@/app/hooks/use-api-connections-with-models";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
+import type { ApiConnectionWithModels } from "@/app/hooks/use-api-connections-with-models";
 import { useAgentStore } from "@/app/stores/agent-store";
 import { Combobox, ComboboxOption } from "@/components-v2/combobox";
 import { MobileOverrideProvider } from "@/components-v2/hooks/use-mobile-override";
@@ -150,12 +149,19 @@ const getIntendedModelValue = (
         const valueModelId = parts[3];
         const valueModelName = parts[4];
 
-        if (
-          valueApiSource === apiSource &&
-          valueModelId === actualModelId &&
-          valueModelName === modelName
-        ) {
-          return value;
+        // For Astrsk AI, compare by model name since modelId format varies
+        if (apiSource === ApiSource.AstrskAi) {
+          if (valueApiSource === apiSource && valueModelName === modelName) {
+            return value;
+          }
+        } else {
+          if (
+            valueApiSource === apiSource &&
+            valueModelId === actualModelId &&
+            valueModelName === modelName
+          ) {
+            return value;
+          }
         }
       }
     }
@@ -176,7 +182,7 @@ export const isModelAvailable = (
 
   for (const apiConnectionWithModels of apiConnectionsWithModels) {
     const { apiConnection, models } = apiConnectionWithModels;
-    
+
     if (apiConnection.source === apiSource) {
       for (const model of models) {
         if (model.id === modelId && model.name === modelName) {
@@ -216,7 +222,7 @@ const PromptItem = ({
   // Get current zoom level from React Flow
   const reactFlow = useReactFlow();
   const zoomScale = reactFlow.getViewport().zoom;
-  
+
   const methods = useForm<StepPromptsSchemaType>({
     defaultValues: {
       aiResponse: {
@@ -239,12 +245,22 @@ const PromptItem = ({
   const modelId = watch(`${field}.modelId`);
   const modelName = watch(`${field}.modelName`);
 
-  // API models
-  const [apiConnectionsWithModels, invalidate] = useApiConnectionsWithModels();
+  // API models - using React Query directly for better control
+  const queryClient = useQueryClient();
+  const {
+    data: apiConnectionsWithModels,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery(apiConnectionQueries.listWithModels());
 
   useEffect(() => {
-    invalidate();
+    refetch();
   }, []);
+
+  // NOTE: We're not automatically validating/clearing Astrsk API models
+  // because it's difficult to determine when models are actually loaded vs still loading.
+  // The dropdown will show available models and user can manually change if needed.
 
   // Helper to flatten option values
 
@@ -363,8 +379,10 @@ const ModelItem = ({
   const [modelId, setModelId] = useState<string>("");
   const [modelName, setModelName] = useState<string>("");
 
-  // API models
-  const [apiConnectionsWithModels] = useApiConnectionsWithModels();
+  // API models - using React Query directly
+  const { data: apiConnectionsWithModels } = useQuery(
+    apiConnectionQueries.listWithModels(),
+  );
 
   // Handle model change
   const handleModelChange = (

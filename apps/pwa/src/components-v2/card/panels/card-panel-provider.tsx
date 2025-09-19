@@ -99,6 +99,12 @@ export function CardPanelProvider({
         case "scenarios":
           title = "Scenarios";
           break;
+        case "imageGenerator":
+          title = "Image studio";
+          break;
+        case "vibe":
+          title = "AI assistant";
+          break;
       }
 
       // Check again with the actual panel type if it was mapped

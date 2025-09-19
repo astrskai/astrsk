@@ -25,6 +25,7 @@ import { ValidationPanel } from "@/flow-multi/panels/validation/validation-panel
 import { DataStoreSchemaPanel } from "@/flow-multi/panels/data-store-schema/data-store-schema-panel";
 import { IfNodePanel } from "@/flow-multi/panels/if-node/if-node-panel";
 import { DataStorePanel } from "@/flow-multi/panels/data-store/data-store-panel";
+import { FlowVibePanel } from "@/flow-multi/panels/vibe/vibe-panel";
 import { FlowService } from "@/app/services/flow-service";
 import { PanelStructure } from "@/modules/flow/domain";
 import { SvgIcon } from "@/components-v2/svg-icon";
@@ -137,6 +138,7 @@ const ValidationPanelComponent = createFlowPanelComponentStandalone(ValidationPa
 const DataStoreSchemaPanelComponent = createFlowPanelComponentStandalone(DataStoreSchemaPanel);
 const IfNodePanelComponent = createNodePanelComponent(IfNodePanel);
 const DataStorePanelComponent = createNodePanelComponent(DataStorePanel);
+const FlowVibePanelComponent = createFlowPanelComponentStandalone(FlowVibePanel);
 
 // Panel Components - must be defined outside component to avoid re-creation
 const components = {
@@ -151,6 +153,7 @@ const components = {
   dataStoreSchema: DataStoreSchemaPanelComponent,
   ifNode: IfNodePanelComponent,
   dataStore: DataStorePanelComponent,
+  vibe: FlowVibePanelComponent,
 };
 
 interface FlowPanelMainProps {
@@ -196,10 +199,6 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
         queryClient.removeQueries({ queryKey: flowKeys.detail(prevFlowIdRef.current) });
         queryClient.removeQueries({ queryKey: flowKeys.panelLayout(prevFlowIdRef.current) });
         queryClient.removeQueries({ queryKey: flowKeys.uiViewport(prevFlowIdRef.current) });
-        
-        // Invalidate all node-specific queries for the previous flow to prevent stale cache
-        queryClient.invalidateQueries({ queryKey: ifNodeKeys.byFlow(prevFlowIdRef.current) });
-        queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.byFlow(prevFlowIdRef.current) });
       }
       
       // Invalidate agents in both previous and current flows to force refetch
@@ -226,12 +225,6 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
           queryClient.invalidateQueries({ queryKey: agentKeys.detail(agentId) });
         }
       });
-      
-      // Also invalidate node queries for the new flow to ensure fresh data
-      if (flowId) {
-        queryClient.invalidateQueries({ queryKey: ifNodeKeys.byFlow(flowId) });
-        queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.byFlow(flowId) });
-      }
       
       prevFlowIdRef.current = flowId;
     }

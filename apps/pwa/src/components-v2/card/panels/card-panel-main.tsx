@@ -22,6 +22,8 @@ import { CharacterInfoPanel } from "./card-panel/components/character-info-panel
 import { PlotInfoPanel } from "./card-panel/components/plot-info-panel";
 import { VariablesPanel } from "./card-panel/components/variables-panel";
 import { ScenariosPanel } from "./card-panel/components/scenarios-panel";
+import { ImageGeneratorPanel } from "./card-panel/components/image-generator-panel";
+import { CardVibePanel } from "./card-panel/components/vibe-panel";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { cn } from "@/shared/utils";
 import CustomDockviewTab from "@/components-v2/dockview-default-tab";
@@ -83,6 +85,8 @@ const CARD_PANEL_COMPONENTS = {
   "lorebooks": createCardPanelComponent("lorebooks", LorebookPanel),
   "variables": createCardPanelComponent("variables", VariablesPanel),
   "scenarios": createCardPanelComponent("scenarios", ScenariosPanel),
+  "imageGenerator": createCardPanelComponent("imageGenerator", ImageGeneratorPanel),
+  "vibe": createCardPanelComponent("vibe", CardVibePanel),
 };
 
 // Constants

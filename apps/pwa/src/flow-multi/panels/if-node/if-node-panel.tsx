@@ -53,22 +53,9 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
   // Save conditions to node using targeted mutation
   const saveConditions = useCallback((newConditions: EditableCondition[], newOperator: 'AND' | 'OR') => {
-    // Filter out incomplete conditions (where dataType or operator is null)
-    // Only persist fully-formed conditions to prevent downstream issues
-    const validConditions = newConditions
-      .filter((c): c is EditableCondition & { dataType: ConditionDataType; operator: ConditionOperator } => 
-        c.dataType !== null && c.operator !== null
-      )
-      .map((c): IfCondition => ({
-        id: c.id,
-        dataType: c.dataType,
-        value1: c.value1,
-        operator: c.operator,
-        value2: c.value2
-      }));
 
     updateConditions.mutate({
-      conditions: validConditions,
+      conditions: newConditions,
       draftConditions: newConditions,
       logicOperator: newOperator
     }, {
@@ -95,7 +82,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
   // Initialize from if node data
   useEffect(() => {
-    if (nodeId && nodeId !== lastInitializedNodeId.current && ifNodeData && !updateConditions.isEditing) {
+    if (nodeId && ifNodeData) {
       // Load existing conditions or create default
       const existingConditions = ifNodeData.conditions || [];
       const existingOperator = ifNodeData.logicOperator || 'AND';
@@ -128,7 +115,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
       
       lastInitializedNodeId.current = nodeId;
     }
-  }, [nodeId, ifNodeData, updateConditions.isEditing]); // Depend on ifNodeData and editing state
+  }, [nodeId, ifNodeData]); // Sync whenever nodeId or ifNodeData changes
 
   const addCondition = useCallback(() => {
     const newCondition: EditableCondition = {

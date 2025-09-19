@@ -78,6 +78,13 @@
       "when": 1755658008260,
       "tag": "20250820024648_nodes",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1758216748714,
+      "tag": "20250918173228_v3.0.0",
+      "breakpoints": true
     }
   ]
 }

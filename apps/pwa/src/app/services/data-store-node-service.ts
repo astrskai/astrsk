@@ -7,6 +7,7 @@ import { UpdateDataStoreNodeFieldsUseCase } from "@/modules/data-store-node/usec
 import { UpdateDataStoreNodeColorUseCase } from "@/modules/data-store-node/usecases/update-data-store-node-color";
 import { DeleteDataStoreNodeUseCase } from "@/modules/data-store-node/usecases/delete-data-store-node";
 import { DeleteAllDataStoreNodesByFlowUseCase } from "@/modules/data-store-node/usecases/delete-all-data-store-nodes-by-flow";
+import { RestoreDataStoreNodeFromSnapshot } from "@/modules/data-store-node/usecases/restore-data-store-node-from-snapshot";
 
 export class DataStoreNodeService {
   public static dataStoreNodeRepo: DrizzleDataStoreNodeRepo;
@@ -19,6 +20,7 @@ export class DataStoreNodeService {
   public static updateDataStoreNodeColor: UpdateDataStoreNodeColorUseCase;
   public static deleteDataStoreNode: DeleteDataStoreNodeUseCase;
   public static deleteAllDataStoreNodesByFlow: DeleteAllDataStoreNodesByFlowUseCase;
+  public static restoreDataStoreNodeFromSnapshot: RestoreDataStoreNodeFromSnapshot;
 
   private constructor() {}
 
@@ -33,5 +35,6 @@ export class DataStoreNodeService {
     this.updateDataStoreNodeColor = new UpdateDataStoreNodeColorUseCase(this.dataStoreNodeRepo, this.dataStoreNodeRepo);
     this.deleteDataStoreNode = new DeleteDataStoreNodeUseCase(this.dataStoreNodeRepo);
     this.deleteAllDataStoreNodesByFlow = new DeleteAllDataStoreNodesByFlowUseCase(this.dataStoreNodeRepo);
+    this.restoreDataStoreNodeFromSnapshot = new RestoreDataStoreNodeFromSnapshot(this.dataStoreNodeRepo);
   }
 }

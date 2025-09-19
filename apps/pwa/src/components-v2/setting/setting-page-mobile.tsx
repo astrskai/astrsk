@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { useMobileNavigation } from "@/App";
 import {
-  LegalPageType,
+  SettingDetailPageType,
   SettingPageLevel,
   useAppStore,
 } from "@/app/stores/app-store";
@@ -28,7 +28,7 @@ const LegalPageMobile = ({
   setLegalPage,
 }: {
   setSettingPageLevel: (value: SettingPageLevel) => void;
-  setLegalPage: (value: LegalPageType) => void;
+  setLegalPage: (value: SettingDetailPageType) => void;
 }) => {
   return (
     <div className="flex flex-col h-dvh bg-background-surface-2">
@@ -54,7 +54,7 @@ const LegalPageMobile = ({
             <div
               className="flex items-center justify-between cursor-pointer"
               onClick={() => {
-                setLegalPage(LegalPageType.privacyPolicy);
+                setLegalPage(SettingDetailPageType.privacyPolicy);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
@@ -66,7 +66,7 @@ const LegalPageMobile = ({
             <div
               className="flex items-center justify-between cursor-pointer"
               onClick={() => {
-                setLegalPage(LegalPageType.termOfService);
+                setLegalPage(SettingDetailPageType.termOfService);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
@@ -78,7 +78,7 @@ const LegalPageMobile = ({
             <div
               className="flex items-center justify-between cursor-pointer"
               onClick={() => {
-                setLegalPage(LegalPageType.contentPolicy);
+                setLegalPage(SettingDetailPageType.contentPolicy);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
@@ -90,7 +90,7 @@ const LegalPageMobile = ({
             <div
               className="flex items-center justify-between cursor-pointer"
               onClick={() => {
-                setLegalPage(LegalPageType.refundPolicy);
+                setLegalPage(SettingDetailPageType.refundPolicy);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
@@ -102,7 +102,7 @@ const LegalPageMobile = ({
             <div
               className="flex items-center justify-between cursor-pointer"
               onClick={() => {
-                setLegalPage(LegalPageType.ossNotice);
+                setLegalPage(SettingDetailPageType.ossNotice);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
@@ -124,19 +124,19 @@ const LegalDetailPageMobile = ({
   legalPage,
 }: {
   setSettingPageLevel: (value: SettingPageLevel) => void;
-  legalPage: LegalPageType;
+  legalPage: SettingDetailPageType;
 }) => {
-  const getTitleByLegalPage = (type: LegalPageType) => {
+  const getTitleByLegalPage = (type: SettingDetailPageType) => {
     switch (type) {
-      case LegalPageType.privacyPolicy:
+      case SettingDetailPageType.privacyPolicy:
         return "Privacy Policy";
-      case LegalPageType.termOfService:
+      case SettingDetailPageType.termOfService:
         return "Term of Use";
-      case LegalPageType.contentPolicy:
+      case SettingDetailPageType.contentPolicy:
         return "Content Policy";
-      case LegalPageType.refundPolicy:
+      case SettingDetailPageType.refundPolicy:
         return "Refund Policy";
-      case LegalPageType.ossNotice:
+      case SettingDetailPageType.ossNotice:
         return "Open-source Software Notice";
       default:
         return "Legal";
@@ -163,15 +163,15 @@ const LegalDetailPageMobile = ({
       <ScrollArea className="flex-1">
         <div className="mx-auto my-6 w-full max-w-[587px] px-4">
           <div className="[&>div]:!static [&>div]:!inset-auto [&>div]:!z-auto [&>div]:!overflow-visible [&>div]:!pt-0 [&>div]:!max-w-none [&>div]:!mx-0">
-            {legalPage === LegalPageType.refundPolicy ? (
+            {legalPage === SettingDetailPageType.refundPolicy ? (
               <RefundPolicy />
-            ) : legalPage === LegalPageType.privacyPolicy ? (
+            ) : legalPage === SettingDetailPageType.privacyPolicy ? (
               <PrivacyPolicy />
-            ) : legalPage === LegalPageType.termOfService ? (
+            ) : legalPage === SettingDetailPageType.termOfService ? (
               <TermOfService />
-            ) : legalPage === LegalPageType.contentPolicy ? (
+            ) : legalPage === SettingDetailPageType.contentPolicy ? (
               <ContentPolicy />
-            ) : legalPage === LegalPageType.ossNotice ? (
+            ) : legalPage === SettingDetailPageType.ossNotice ? (
               <OssNotice />
             ) : (
               <div className="text-text-primary">Loading...</div>
@@ -191,13 +191,6 @@ const MainPageMobile = ({
 }) => {
   const { setIsOpen } = useMobileNavigation();
 
-  // Telemetry
-  const isTelemetryEnabled = useAppStore.use.isTelemetryEnabled();
-  const setIsTelemetryEnabled = useAppStore.use.setIsTelemetryEnabled();
-
-  // Legal
-  const setLegalPage = useAppStore.use.setLegalPage();
-
   return (
     <div className="flex flex-col h-dvh bg-background-surface-2">
       {/* Header */}
@@ -211,32 +204,6 @@ const MainPageMobile = ({
             </TypoXLarge>
 
             <div className="flex items-center justify-between">
-              <div className="flex flex-col gap-[8px]">
-                <div className="flex items-center justify-between">
-                  <TypoBase className="font-semibold text-text-muted-title">
-                    Telemetry settings
-                  </TypoBase>
-                  <Switch
-                    checked={isTelemetryEnabled}
-                    onCheckedChange={setIsTelemetryEnabled}
-                  />
-                </div>
-                <TypoBase className="text-text-placeholder">
-                  Share usage data anonymously
-                </TypoBase>
-                <div className="font-[400] text-[12px] leading-[15px] text-text-info">
-                  For detailed information about what data is being shared,{" "}
-                  <span
-                    className="text-secondary-normal cursor-pointer"
-                    onClick={() => {
-                      setSettingPageLevel(SettingPageLevel.detail);
-                      setLegalPage(LegalPageType.privacyPolicy);
-                    }}
-                  >
-                    [click here]
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -254,13 +221,13 @@ const MainPageMobile = ({
               }
             >
               <TypoBase className="font-semibold text-text-muted-title">
-                User manual
+                User documentation
               </TypoBase>
             </div>
 
             <div
               className="flex items-center text-text-muted-title justify-between cursor-pointer"
-              onClick={() => openInNewTab("https://join.astrsk.ai")}
+              onClick={() => openInNewTab("https://astrsk.ai")}
             >
               <TypoBase className="font-semibold text-text-muted-title">
                 About astrsk.ai
@@ -320,7 +287,7 @@ interface SettingPageMobileProps {
 export default function SettingPageMobile({
   className,
 }: SettingPageMobileProps) {
-  const { settingPageLevel, setSettingPageLevel, legalPage, setLegalPage } =
+  const { settingPageLevel, setSettingPageLevel, settingDetailPage, setSettingDetailPage } =
     useAppStore();
 
   const renderCurrentPage = () => {
@@ -329,14 +296,14 @@ export default function SettingPageMobile({
         return (
           <LegalDetailPageMobile
             setSettingPageLevel={setSettingPageLevel}
-            legalPage={legalPage}
+            legalPage={settingDetailPage}
           />
         );
       case SettingPageLevel.sub:
         return (
           <LegalPageMobile
             setSettingPageLevel={setSettingPageLevel}
-            setLegalPage={setLegalPage}
+            setLegalPage={setSettingDetailPage}
           />
         );
       case SettingPageLevel.main:

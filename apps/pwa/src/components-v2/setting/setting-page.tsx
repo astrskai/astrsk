@@ -1,13 +1,16 @@
 import { ArrowLeft, ChevronRight } from "lucide-react";
 
 import {
-  LegalPageType,
+  SettingDetailPageType,
   SettingPageLevel,
   SettingSubPageType,
   useAppStore,
 } from "@/app/stores/app-store";
+import { ConvexReady } from "@/components-v2/convex-ready";
 import { cn } from "@/components-v2/lib/utils";
+import { AccountPage } from "@/components-v2/setting/account-page";
 import ContentPolicy from "@/components-v2/setting/content-policy";
+import CreditUsagePage from "@/components-v2/setting/credit-usage-page";
 import ModelPage from "@/components-v2/setting/model-page";
 import OssNotice from "@/components-v2/setting/oss-notice";
 import PrivacyPolicy from "@/components-v2/setting/privacy-policy";
@@ -19,6 +22,7 @@ import { FloatingActionButton } from "@/components-v2/ui/floating-action-button"
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { Separator } from "@/components-v2/ui/separator";
 import { Switch } from "@/components-v2/ui/switch";
+import { Authenticated } from "convex/react";
 import { useEffect, useState } from "react";
 
 function openInNewTab(url: string) {
@@ -30,7 +34,7 @@ const LegalPage = ({
   setLegalPage,
 }: {
   setSettingPageLevel: (value: SettingPageLevel) => void;
-  setLegalPage: (value: LegalPageType) => void;
+  setLegalPage: (value: SettingDetailPageType) => void;
 }) => {
   return (
     <ScrollArea className="h-full">
@@ -39,7 +43,7 @@ const LegalPage = ({
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              setLegalPage(LegalPageType.privacyPolicy);
+              setLegalPage(SettingDetailPageType.privacyPolicy);
               setSettingPageLevel(SettingPageLevel.detail);
             }}
           >
@@ -51,7 +55,7 @@ const LegalPage = ({
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              setLegalPage(LegalPageType.termOfService);
+              setLegalPage(SettingDetailPageType.termOfService);
               setSettingPageLevel(SettingPageLevel.detail);
             }}
           >
@@ -63,7 +67,7 @@ const LegalPage = ({
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              setLegalPage(LegalPageType.contentPolicy);
+              setLegalPage(SettingDetailPageType.contentPolicy);
               setSettingPageLevel(SettingPageLevel.detail);
             }}
           >
@@ -75,7 +79,7 @@ const LegalPage = ({
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              setLegalPage(LegalPageType.refundPolicy);
+              setLegalPage(SettingDetailPageType.refundPolicy);
               setSettingPageLevel(SettingPageLevel.detail);
             }}
           >
@@ -87,7 +91,7 @@ const LegalPage = ({
           <div
             className="flex items-center  justify-between cursor-pointer"
             onClick={() => {
-              setLegalPage(LegalPageType.ossNotice);
+              setLegalPage(SettingDetailPageType.ossNotice);
               setSettingPageLevel(SettingPageLevel.detail);
             }}
           >
@@ -165,13 +169,6 @@ const MainPage = () => {
   const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
   const setSettingSubPage = useAppStore.use.setSettingSubPage();
 
-  // Telemetry
-  const isTelemetryEnabled = useAppStore.use.isTelemetryEnabled();
-  const setIsTelemetryEnabled = useAppStore.use.setIsTelemetryEnabled();
-
-  // Legal
-  const setSettingDetailPage = useAppStore.use.setSettingDetailPage();
-
   return (
     <ScrollArea className="h-full">
       <div className="mx-auto my-6 pb-6 w-full max-w-[587px] pt-[80px]">
@@ -184,6 +181,23 @@ const MainPage = () => {
             App Preferences
           </TypoXLarge>
 
+          <ConvexReady>
+            <Authenticated>
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => {
+                  setSettingPageLevel(SettingPageLevel.sub);
+                  setSettingSubPage(SettingSubPageType.account);
+                }}
+              >
+                <TypoBase className="font-semibold text-text-body">
+                  Account and subscription
+                </TypoBase>
+                <ChevronRight className="h-5 w-5 text-text-secondary" />
+              </div>
+            </Authenticated>
+          </ConvexReady>
+
           <div
             className="flex items-center justify-between cursor-pointer"
             onClick={() => {
@@ -195,33 +209,6 @@ const MainPage = () => {
               Providers
             </TypoBase>
             <ChevronRight className="h-5 w-5 text-text-secondary" />
-          </div>
-
-          <div className="flex justify-between">
-            <div className="flex flex-col gap-[8px]">
-              <TypoBase className="font-semibold text-text-body">
-                Telemetry settings
-              </TypoBase>
-              <TypoBase className="text-text-placeholder">
-                Share usage data anonymously
-              </TypoBase>
-              <div className="font-[400] text-[12px] leading-[15px] text-text-info">
-                For detailed information about what data is being shared,{" "}
-                <span
-                  className="text-secondary-normal cursor-pointer"
-                  onClick={() => {
-                    setSettingPageLevel(SettingPageLevel.detail);
-                    setSettingDetailPage(LegalPageType.privacyPolicy);
-                  }}
-                >
-                  [click here]
-                </span>
-              </div>
-            </div>
-            <Switch
-              checked={isTelemetryEnabled}
-              onCheckedChange={setIsTelemetryEnabled}
-            />
           </div>
         </div>
         <Separator />
@@ -267,9 +254,7 @@ const MainPage = () => {
 
           <div
             className="flex items-center text-text-body justify-between cursor-pointer"
-            onClick={() =>
-              openInNewTab("https://docs.astrsk.ai/")
-            }
+            onClick={() => openInNewTab("https://docs.astrsk.ai/")}
           >
             <TypoBase className="font-semibold text-text-body">
               User manual
@@ -328,7 +313,13 @@ export default function SettingPage({ className }: { className?: string }) {
     <ScrollArea className={cn("h-full bg-background-surface-1", className)}>
       <FloatingActionButton
         icon={<ArrowLeft className="min-w-[24px] min-h-[24px]" />}
-        label={settingPageLevel === SettingPageLevel.sub ? "Settings" : "Legal"}
+        label={
+          settingPageLevel === SettingPageLevel.sub
+            ? "Settings"
+            : settingDetailPage === SettingDetailPageType.creditUsage
+              ? "Account and subscription"
+              : "Legal"
+        }
         position="top-left"
         className={cn(
           "transition-opacity duration-[600ms] ease-in-out opacity-100",
@@ -372,6 +363,9 @@ export default function SettingPage({ className }: { className?: string }) {
           />
         )}
         {settingSubPage === SettingSubPageType.advanced && <AdvancedPage />}
+        <ConvexReady>
+          {settingSubPage === SettingSubPageType.account && <AccountPage />}
+        </ConvexReady>
       </div>
 
       {/* Page Level 3 */}
@@ -381,11 +375,24 @@ export default function SettingPage({ className }: { className?: string }) {
           settingPageLevel === SettingPageLevel.detail && "translate-x-0",
         )}
       >
-        {settingDetailPage === LegalPageType.refundPolicy && <RefundPolicy />}
-        {settingDetailPage === LegalPageType.privacyPolicy && <PrivacyPolicy />}
-        {settingDetailPage === LegalPageType.termOfService && <TermOfService />}
-        {settingDetailPage === LegalPageType.contentPolicy && <ContentPolicy />}
-        {settingDetailPage === LegalPageType.ossNotice && <OssNotice />}
+        {settingDetailPage === SettingDetailPageType.refundPolicy && (
+          <RefundPolicy />
+        )}
+        {settingDetailPage === SettingDetailPageType.privacyPolicy && (
+          <PrivacyPolicy />
+        )}
+        {settingDetailPage === SettingDetailPageType.termOfService && (
+          <TermOfService />
+        )}
+        {settingDetailPage === SettingDetailPageType.contentPolicy && (
+          <ContentPolicy />
+        )}
+        {settingDetailPage === SettingDetailPageType.ossNotice && <OssNotice />}
+        <ConvexReady>
+          {settingDetailPage === SettingDetailPageType.creditUsage && (
+            <CreditUsagePage />
+          )}
+        </ConvexReady>
       </div>
       <ScrollBar orientation="vertical" className="w-1.5" />
     </ScrollArea>

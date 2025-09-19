@@ -10,7 +10,7 @@ import { toast } from "sonner";
 export function useExportFlowWithNodes(flowId: string) {
   return useMutation({
     mutationFn: async () => {
-      const result = await FlowService.exportFlowWithNodes.execute(new UniqueEntityID(flowId));
+      const result = await FlowService.exportFlowWithNodes.execute({flowId: new UniqueEntityID(flowId)});
       if (result.isFailure) {
         throw new Error(result.getError());
       }

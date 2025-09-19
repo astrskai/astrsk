@@ -7,6 +7,7 @@ import { CardService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import useCardImport from "@/components-v2/card/hooks/useCardImport";
+import { MediaDisplay } from "@/components-v2/shared/media-display";
 import { SECTION_HEADER_HEIGHT } from "@/components-v2/left-navigation/constants";
 import { SectionHeader } from "@/components-v2/left-navigation/left-navigation";
 import { SearchInput, CreateButton, ImportButton } from "@/components-v2/left-navigation/shared-list-components";
@@ -44,7 +45,6 @@ import { Card, CardType } from "@/modules/card/domain/card";
 import { Session } from "@/modules/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
-import * as amplitude from "@amplitude/analytics-browser";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import {
@@ -69,7 +69,7 @@ const CardItem = ({
 }) => {
   // Fetch card data
   const { data: card } = useQuery(cardQueries.detail<Card>(cardId));
-  const [icon] = useAsset(card?.props.iconAssetId);
+  const [icon, isVideo] = useAsset(card?.props.iconAssetId);
 
   // Handle select
   const setSelectedCardId = useAppStore.use.setSelectedCardId();
@@ -154,12 +154,6 @@ const CardItem = ({
         return;
       }
 
-      // Track event
-      amplitude.track("delete_card", {
-        card_type: card.props.type,
-        card_token_count: card.props.tokenCount,
-      });
-
       // Delete card
       const deleteResult = await CardService.deleteCard.execute(card.id);
       if (deleteResult.isFailure) {
@@ -236,12 +230,12 @@ const CardItem = ({
             !disableHover && "group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden",
           )}
         >
-          <img
-            src={
-              icon ??
-              (card?.props.type === CardType.Character
+          <MediaDisplay
+            src={icon || null}
+            fallbackSrc={
+              card?.props.type === CardType.Character
                 ? "/img/placeholder/character-card-image.png"
-                : "/img/placeholder/plot-card-image.png")
+                : "/img/placeholder/plot-card-image.png"
             }
             alt="Card icon"
             className={cn(
@@ -250,10 +244,17 @@ const CardItem = ({
                 card?.props.type === CardType.Character &&
                 "w-[90px] translate-x-[0px] translate-y-[-30px]",
             )}
+            isVideo={isVideo}
+            showControls={false}
+            autoPlay={false}
+            muted={true}
+            loop={true}
+            playOnHover={true}
+            clickToToggle={false}
           />
           <div
             className={cn(
-              "absolute inset-0 left-[188px] right-[40px] bg-linear-to-r from-[#272727FF] to-[#27272700]",
+              "absolute inset-0 left-[185px] right-[40px] bg-linear-to-r from-[#272727FF] to-[#27272700]",
               selected && "from-[#414141FF]",
               !icon &&
                 card?.props.type === CardType.Character &&
@@ -431,9 +432,21 @@ const CardFilter = ({
   );
 };
 
-const CardSection = ({ onClick }: { onClick?: () => void }) => {
+const CardSection = ({ 
+  onClick, 
+  onboardingHighlight, 
+  onboardingCollapsed,
+  onHelpClick,
+  onboardingHelpGlow
+}: { 
+  onClick?: () => void; 
+  onboardingHighlight?: boolean; 
+  onboardingCollapsed?: boolean; 
+  onHelpClick?: () => void;
+  onboardingHelpGlow?: boolean;
+}) => {
   // Handle expand
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(onboardingCollapsed ? false : true);
 
   // Fetch cards
   const [keyword, setKeyword] = useState("");
@@ -516,7 +529,9 @@ const CardSection = ({ onClick }: { onClick?: () => void }) => {
   } = useCardImport(handleInvalidation);
 
   return (
-    <>
+    <div className={cn(
+      onboardingHighlight && "border-1 border-border-selected-primary"
+    )}>
       <SectionHeader
         name="Cards"
         icon={<SvgIcon name="cards" size={20} />}
@@ -530,9 +545,11 @@ const CardSection = ({ onClick }: { onClick?: () => void }) => {
             onClick?.();
           }, 50);
         }}
+        onHelpClick={onHelpClick}
+        onboardingHelpGlow={onboardingHelpGlow}
       />
       <div className={cn(!expanded && "hidden")}>
-        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center w-[320px]">
+        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center w-[315px]">
           <SearchInput
             className="grow"
             value={keyword}
@@ -629,7 +646,7 @@ const CardSection = ({ onClick }: { onClick?: () => void }) => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

@@ -30,9 +30,18 @@ export interface AssetProps {
  */
 async function convertToWebp(file: File, quality?: number): Promise<File> {
   return new Promise((resolve, reject) => {
-    // Only process image files
-    if (!file.type.startsWith("image/")) {
-      return resolve(file); // Return original file if not an image
+    // Check if file is a video
+    const isVideo =
+      file.type.startsWith("video/") ||
+      file.name.toLowerCase().endsWith(".mp4") ||
+      file.name.toLowerCase().endsWith(".webm") ||
+      file.name.toLowerCase().endsWith(".ogg") ||
+      file.name.toLowerCase().endsWith(".mov") ||
+      file.name.toLowerCase().endsWith(".avi");
+
+    // Only process image files, skip videos and other file types
+    if (!file.type.startsWith("image/") || isVideo) {
+      return resolve(file); // Return original file if not an image or if it's a video
     }
 
     // Set quality based on file type if not explicitly provided
@@ -56,6 +65,8 @@ async function convertToWebp(file: File, quality?: number): Promise<File> {
 
         const ctx = canvas.getContext("2d");
         if (!ctx) {
+          // Clean up image reference
+          img.src = "";
           return reject(new Error("Could not get canvas context"));
         }
 
@@ -63,6 +74,11 @@ async function convertToWebp(file: File, quality?: number): Promise<File> {
 
         canvas.toBlob(
           (blob) => {
+            // Clean up references after blob creation
+            img.src = "";
+            canvas.width = 0;
+            canvas.height = 0;
+
             if (!blob) {
               return reject(new Error("Failed to convert to WebP"));
             }
@@ -79,7 +95,11 @@ async function convertToWebp(file: File, quality?: number): Promise<File> {
         );
       };
 
-      img.onerror = () => reject(new Error("Failed to load image"));
+      img.onerror = () => {
+        // Clean up on error
+        img.src = "";
+        reject(new Error("Failed to load image"));
+      };
       img.src = event.target?.result as string;
     };
 
@@ -129,7 +149,7 @@ export class Asset extends AggregateRoot<AssetProps> {
     id?: UniqueEntityID,
   ): Promise<Result<Asset>> {
     try {
-      // Convert file to WebP format
+      // Convert file to WebP format (only for images, videos are kept as-is)
       const webpFile = await convertToWebp(props.file);
 
       // Get hash

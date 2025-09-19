@@ -39,7 +39,6 @@ import {
   PlotCard,
 } from "@/modules/card/domain";
 import { Session } from "@/modules/session/domain/session";
-import * as amplitude from "@amplitude/analytics-browser";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 
 export const ActiveTabType = {
@@ -274,15 +273,6 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
     // Toast
     toast("Saved!");
 
-    // Track event
-    if (isNewCard && source === "library") {
-      console.log("Tracking new card creation");
-      amplitude.track("create_card_complete", {
-        card_type: selectedCard.props.type,
-        card_token_count: tokenCount,
-      });
-    }
-
     return true;
   }, [
     cardService.saveCard,
@@ -374,14 +364,6 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
     // Check selected card
     if (!selectedCard) {
       return;
-    }
-
-    // Track event
-    if (source === "library") {
-      amplitude.track("delete_card", {
-        card_type: selectedCard.props.type,
-        card_token_count: tokenCount,
-      });
     }
 
     // Delete selected card

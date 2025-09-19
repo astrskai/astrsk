@@ -11,6 +11,8 @@ export interface CardPanelVisibility {
   lorebooks: boolean;
   variables: boolean;
   scenarios: boolean;
+  imageGenerator: boolean;
+  vibe: boolean;
 }
 
 interface LayoutState {
@@ -37,7 +39,7 @@ interface CardUIState {
   // Set panel visibility for a specific card type
   setCardTypePanelVisibility: (
     cardType: string,
-    panel: string,
+    panel: keyof CardPanelVisibility,
     visible: boolean,
   ) => void;
 
@@ -73,6 +75,8 @@ const defaultPanelVisibility: CardPanelVisibility = {
   lorebooks: false,
   variables: false,
   scenarios: false,
+  imageGenerator: false,
+  vibe: false,
 };
 
 // Helper function to validate layout
@@ -241,9 +245,7 @@ const useCardUIStoreBase = create<CardUIState>()(
                 ...defaultPanelVisibility,
               };
             }
-            state.cardTypePanelVisibility[cardType][
-              panel as keyof CardPanelVisibility
-            ] = visible;
+            state.cardTypePanelVisibility[cardType][panel] = visible;
           }),
 
         getCardTypeLayout: (cardType) => {

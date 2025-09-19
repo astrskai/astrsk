@@ -54,8 +54,14 @@ import { TemplateRenderer } from "@/shared/utils/template-renderer";
 import { cloneDeep } from "lodash-es";
 
 import { useAsset } from "@/app/hooks/use-asset";
+import { useAssetShared } from "@/app/hooks/use-asset-shared";
 import { useCard } from "@/app/hooks/use-card";
+import { useImageGeneration } from "@/components-v2/card/panels/card-panel/components/image-generator/hooks/use-image-generation";
+import { useVideoGeneration } from "@/components-v2/card/panels/card-panel/components/image-generator/hooks/use-video-generation";
+import { useEnhancedGenerationPrompt } from "@/components-v2/session/hooks/use-enhanced-generation-prompt";
+import { IMAGE_MODELS } from "@/app/stores/model-store";
 import { flowQueries } from "@/app/queries/flow-queries";
+import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { turnQueries } from "@/app/queries/turn-queries";
 import { CardService } from "@/app/services";
@@ -73,6 +79,7 @@ import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { cn } from "@/components-v2/lib/utils";
 import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
 import { InlineChatStyles } from "@/components-v2/session/inline-chat-styles";
+import { MediaPlaceholderMessage } from "@/components-v2/session/media-placeholder-message";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import {
@@ -98,12 +105,16 @@ import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 import { Turn } from "@/modules/turn/domain/turn";
+import { PlaceholderType } from "@/modules/turn/domain/placeholder-type";
 import { DataStoreSchemaField } from "@/modules/flow/domain/flow";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
+import { SubscribeBadge } from "@/components-v2/subscribe-badge";
 
 const MessageItemInternal = ({
+  messageId,
+  sessionId,
   characterCardId,
   isUser,
   content,
@@ -114,13 +125,17 @@ const MessageItemInternal = ({
   streaming,
   streamingAgentName,
   streamingModelName,
+  assetId,
   dataStoreFields,
   onEdit,
   onDelete,
   onPrevOption,
   onNextOption,
   onRegenerate,
+  onUpdateAssetId,
 }: {
+  messageId?: UniqueEntityID;
+  sessionId?: UniqueEntityID;
   characterCardId?: UniqueEntityID;
   isUser?: boolean;
   content?: string;
@@ -131,16 +146,23 @@ const MessageItemInternal = ({
   streaming?: boolean;
   streamingAgentName?: string;
   streamingModelName?: string;
+  assetId?: string;
   dataStoreFields?: DataStoreSavedField[];
   onEdit?: (content: string) => Promise<void>;
   onDelete?: () => Promise<void>;
   onPrevOption?: () => Promise<void>;
   onNextOption?: () => Promise<void>;
   onRegenerate?: () => Promise<void>;
+  onUpdateAssetId?: (assetId: string) => Promise<void>;
+  onGenerateVideoFromImage?: (
+    imageUrl: string,
+    prompt: string,
+    userPrompt: string,
+  ) => Promise<void>;
 }) => {
   // Character card
   const [characterCard] = useCard<CharacterCard>(characterCardId);
-  const [icon] = useAsset(characterCard?.props.iconAssetId);
+  const [icon, iconIsVideo] = useAsset(characterCard?.props.iconAssetId);
 
   // Edit message
   const [isEditing, setIsEditing] = useState(false);
@@ -153,6 +175,46 @@ const MessageItemInternal = ({
   // Toggle data store
   const [isShowDataStore, setIsShowDataStore] = useState(false);
 
+  // Asset URL for displaying generated media
+  const [assetUrl, assetIsVideo] = useAsset(
+    assetId ? new UniqueEntityID(assetId) : undefined,
+  );
+
+  // Shared hover state for avatar and generated video
+  const [isMediaHovered, setIsMediaHovered] = useState(false);
+  const avatarVideoRef = useRef<HTMLVideoElement>(null);
+  const generatedVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Handle media hover to play both videos
+  const handleMediaHover = useCallback(
+    (hovered: boolean) => {
+      setIsMediaHovered(hovered);
+
+      // Play/pause avatar video if it exists
+      if (iconIsVideo && avatarVideoRef.current) {
+        if (hovered) {
+          avatarVideoRef.current.play().catch(() => {
+            // Silently handle autoplay errors
+          });
+        } else {
+          avatarVideoRef.current.pause();
+        }
+      }
+
+      // Play/pause generated video if it exists
+      if (assetIsVideo && generatedVideoRef.current) {
+        if (hovered) {
+          generatedVideoRef.current.play().catch(() => {
+            // Silently handle autoplay errors
+          });
+        } else {
+          generatedVideoRef.current.pause();
+        }
+      }
+    },
+    [iconIsVideo, assetIsVideo],
+  );
+
   return (
     <div className="group/message relative px-[56px]" tabIndex={0}>
       <div
@@ -162,14 +224,46 @@ const MessageItemInternal = ({
           isUser ? "user-chat-style" : "ai-chat-style",
         )}
       >
-        <div className="flex flex-col gap-[8px] items-center">
+        <div
+          className="flex flex-col gap-[8px] items-center"
+          onMouseEnter={() => handleMediaHover(true)}
+          onMouseLeave={() => handleMediaHover(false)}
+        >
           {characterCardId ? (
             <>
-              <Avatar
-                src={icon}
-                alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
-                size={80}
-              />
+              <div
+                className={cn(
+                  "shrink-0 overflow-hidden rounded-full grid place-items-center select-none border-1 border-border-selected-inverse/50",
+                  !icon && "bg-background-surface-3",
+                )}
+                style={{
+                  width: 80,
+                  height: 80,
+                }}
+              >
+                {iconIsVideo ? (
+                  <video
+                    ref={avatarVideoRef}
+                    src={icon || undefined}
+                    className="w-full h-full object-cover"
+                    muted
+                    loop
+                    playsInline
+                  />
+                ) : icon ? (
+                  <img
+                    src={icon}
+                    alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src="/img/placeholder/avatar.png"
+                    alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
               <div className="max-w-[80px] truncate font-medium text-[16px] leading-[19px] text-text-primary">
                 {characterCard?.props.name}
               </div>
@@ -188,6 +282,8 @@ const MessageItemInternal = ({
             "flex flex-col gap-[8px]",
             isUser ? "items-end" : "items-start",
           )}
+          onMouseEnter={() => handleMediaHover(true)}
+          onMouseLeave={() => handleMediaHover(false)}
         >
           <div
             className={cn(
@@ -195,6 +291,26 @@ const MessageItemInternal = ({
               // !streaming && "min-w-[300px]",
             )}
           >
+            {/* Display generated image if exists */}
+            {assetUrl && (
+              <div className="mb-[12px] rounded-[8px] overflow-hidden">
+                {assetIsVideo ? (
+                  <video
+                    ref={generatedVideoRef}
+                    src={assetUrl}
+                    controls
+                    className="w-full h-auto rounded-[8px]"
+                  />
+                ) : (
+                  <img
+                    src={assetUrl}
+                    alt="Generated content"
+                    className="w-full h-auto rounded-[8px]"
+                  />
+                )}
+              </div>
+            )}
+
             {isEditing && !disabled ? (
               <TextareaAutosize
                 className={cn(
@@ -392,7 +508,10 @@ const ScenarioMessageItem = ({
             }}
           />
         ) : (
-          <Markdown className="markdown" rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+          <Markdown
+            className="markdown"
+            rehypePlugins={[rehypeRaw, rehypeSanitize]}
+          >
             {content}
           </Markdown>
         )}
@@ -458,6 +577,7 @@ const MessageItem = ({
   deleteMessage,
   selectOption,
   generateOption,
+  onGenerateVideoFromImage,
 }: {
   messageId: UniqueEntityID;
   userCharacterCardId?: UniqueEntityID;
@@ -476,7 +596,14 @@ const MessageItem = ({
     prevOrNext: "prev" | "next",
   ) => Promise<void>;
   generateOption: (messageId: UniqueEntityID) => Promise<void>;
+  onGenerateVideoFromImage?: (
+    messageId: UniqueEntityID,
+    imageUrl: string,
+    prompt: string,
+    userPrompt: string,
+  ) => Promise<void>;
 }) => {
+  const queryClient = useQueryClient();
   const { data: message } = useQuery(turnQueries.detail(messageId));
   const selectedOption = message?.options[message.selectedOptionIndex];
 
@@ -494,18 +621,112 @@ const MessageItem = ({
     return [
       // Fields in dataSchemaOrder come first, in order
       ...order
-        .map((name: string) => fields.find((f: DataStoreSavedField) => f.name === name))
-        .filter((f: DataStoreSavedField | undefined): f is NonNullable<typeof f> => f !== undefined),
+        .map((name: string) =>
+          fields.find((f: DataStoreSavedField) => f.name === name),
+        )
+        .filter(
+          (f: DataStoreSavedField | undefined): f is NonNullable<typeof f> =>
+            f !== undefined,
+        ),
       // Fields not in dataSchemaOrder come after, in original order
       ...fields.filter((f: DataStoreSavedField) => !order.includes(f.name)),
     ];
   }, [selectedOption?.dataStore, dataSchemaOrder]);
 
+  // State for video generation from image - must be before any returns
+  const [isGeneratingVideoFromImage, setIsGeneratingVideoFromImage] =
+    useState(false);
+
+  // Get asset URL for the generated image (using existing selectedOption variable)
+  const [assetUrl, assetIsVideo] = useAsset(
+    selectedOption?.assetId
+      ? new UniqueEntityID(selectedOption.assetId)
+      : undefined,
+  );
+
+  // Get thumbnail for video (original image)
+  const { data: generatedImageData } = useQuery({
+    ...generatedImageQueries.list(),
+    enabled: assetIsVideo && !!selectedOption?.assetId,
+    select: (images) => {
+      if (!images || !Array.isArray(images)) return null;
+      // Find the generated image with matching assetId
+      return (
+        images.find((img: any) => img.asset_id === selectedOption?.assetId) ||
+        null
+      );
+    },
+  });
+
+  // Get thumbnail URL if it's a video, otherwise use the image URL
+  const [thumbnailUrl] = useAsset(
+    assetIsVideo && generatedImageData?.thumbnail_asset_id
+      ? new UniqueEntityID(generatedImageData.thumbnail_asset_id)
+      : undefined,
+  );
+
+  // For video generation, use thumbnail if available (for videos), otherwise use the asset URL (for images)
+  const imageUrlForVideoGeneration = thumbnailUrl || assetUrl;
+
   if (!message) {
     return null;
   }
 
-  // Scenario message
+  // Check if it's a media placeholder message using the TurnService helper
+  const isMediaPlaceholder = TurnService.isPlaceholderTurn(message);
+  const placeholderType = isMediaPlaceholder
+    ? TurnService.getPlaceholderType(message)
+    : null;
+
+  // Media placeholder message (image or video generation)
+  if (isMediaPlaceholder && placeholderType) {
+    const isVideo = placeholderType === PlaceholderType.VIDEO;
+
+    // Video generation from existing image or regeneration from video
+    const handleGenerateVideoFromImage = async () => {
+      if (
+        !selectedOption?.assetId ||
+        !imageUrlForVideoGeneration ||
+        isGeneratingVideoFromImage ||
+        !onGenerateVideoFromImage
+      )
+        return;
+
+      setIsGeneratingVideoFromImage(true);
+
+      try {
+        // Call the parent's video generation function
+        // Use thumbnail for videos (regeneration) or original image for first generation
+        await onGenerateVideoFromImage(
+          messageId,
+          imageUrlForVideoGeneration,
+          content || "",
+          content || "",
+        );
+
+        toast.success("Video generated successfully!");
+      } catch (error) {
+        console.error("[VIDEO FROM IMAGE] Failed to generate video:", error);
+        toast.error("Failed to generate video from image");
+        // On failure, we keep the original image (no changes needed)
+      } finally {
+        setIsGeneratingVideoFromImage(false);
+      }
+    };
+
+    return (
+      <MediaPlaceholderMessage
+        content={content || ""}
+        assetId={selectedOption?.assetId}
+        isVideo={isVideo}
+        onDelete={() => deleteMessage(messageId)}
+        onGenerateVideo={handleGenerateVideoFromImage} // Always show button for regeneration
+        isGeneratingVideo={isGeneratingVideoFromImage}
+      />
+    );
+  }
+
+  // Scenario message (regular scenario without media)
   if (
     typeof message.characterCardId === "undefined" &&
     typeof message.characterName === "undefined"
@@ -525,6 +746,8 @@ const MessageItem = ({
 
   return (
     <MessageItemInternal
+      messageId={messageId}
+      sessionId={message.sessionId}
       characterCardId={message.characterCardId}
       isUser={isUser}
       content={content}
@@ -535,12 +758,49 @@ const MessageItem = ({
       streaming={typeof streaming !== "undefined"}
       streamingAgentName={streaming?.agentName}
       streamingModelName={streaming?.modelName}
+      assetId={selectedOption?.assetId}
       dataStoreFields={sortedDataStoreFields}
       onEdit={(content) => editMessage(messageId, content)}
       onDelete={() => deleteMessage(messageId)}
       onPrevOption={() => selectOption(messageId, "prev")}
       onNextOption={() => selectOption(messageId, "next")}
       onRegenerate={() => generateOption(messageId)}
+      onUpdateAssetId={async (assetId) => {
+        // Update the option with the new assetId
+        try {
+          const turn = (await TurnService.getTurn.execute(messageId))
+            .throwOnFailure()
+            .getValue();
+
+          // Update the selected option with the new assetId
+          turn.setAssetId(assetId);
+
+          // Save the updated turn
+          const result = await TurnService.updateTurn.execute(turn);
+          if (result.isFailure) {
+            console.error("Failed to update turn:", result.getError());
+          } else {
+            // Invalidate the turn query to trigger re-render
+            await queryClient.invalidateQueries({
+              queryKey: turnQueries.detail(messageId).queryKey,
+            });
+          }
+        } catch (error) {
+          console.error("Failed to update asset ID:", error);
+        }
+      }}
+      onGenerateVideoFromImage={
+        onGenerateVideoFromImage
+          ? async (imageUrl: string, prompt: string, userPrompt: string) => {
+              await onGenerateVideoFromImage(
+                messageId,
+                imageUrl,
+                prompt,
+                userPrompt,
+              );
+            }
+          : undefined
+      }
     />
   );
 };
@@ -552,16 +812,22 @@ const UserInputCharacterButton = ({
   isUser = false,
   onClick = () => {},
   isHighLighted = false,
+  isSubscribeBadge = false,
+  isDisabled = false,
 }: {
   characterCardId?: UniqueEntityID;
   icon?: React.ReactNode;
-  label?: string;
+  label?: string | React.ReactNode;
   isUser?: boolean;
   onClick?: () => void;
   isHighLighted?: boolean;
+  isSubscribeBadge?: boolean;
+  isDisabled?: boolean;
 }) => {
   const [characterCard] = useCard<CharacterCard>(characterCardId);
-  const [characterIcon] = useAsset(characterCard?.props.iconAssetId);
+  const [characterIcon, characterIconIsVideo] = useAssetShared(
+    characterCard?.props.iconAssetId,
+  );
 
   if (characterCardId && !characterCard) {
     return null;
@@ -572,12 +838,15 @@ const UserInputCharacterButton = ({
       className="group relative flex flex-col gap-[4px] items-center cursor-pointer"
       onClick={onClick}
     >
+      {isSubscribeBadge && <SubscribeBadge />}
       {characterCard ? (
         <>
           <Avatar
             src={characterIcon}
             alt={characterCard.props.name?.at(0)?.toUpperCase() ?? ""}
             size={48}
+            isVideo={characterIconIsVideo}
+            isDisabled={isDisabled}
             className={cn(
               isHighLighted &&
                 "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal",
@@ -616,8 +885,8 @@ const UserInputCharacterButton = ({
           </div>
           <div
             className={cn(
-              "truncate font-[500] text-[12px] leading-[15px] text-text-body",
-              "max-w-[48px]",
+              "font-[500] text-[12px] leading-[15px] text-text-body text-center",
+              "max-w-[72px]",
             )}
           >
             {label}
@@ -708,9 +977,13 @@ const UserInputs = ({
   onStopGenerate,
   autoReply,
   setAutoReply,
-  isOpenAddPlotCardModal,
   onSkip = () => {},
   onAdd = () => {},
+  handleGenerateImageForLastTurn = () => {},
+  handleGenerateVideoForLastTurn = () => {},
+  isGeneratingGlobalImage = false,
+  isGeneratingGlobalVideo = false,
+  globalVideoStatus = "",
 }: {
   userCharacterCardId?: UniqueEntityID;
   aiCharacterCardIds?: UniqueEntityID[];
@@ -722,15 +995,25 @@ const UserInputs = ({
   onStopGenerate?: () => void;
   autoReply: AutoReply;
   setAutoReply: (autoReply: AutoReply) => void;
-  isOpenAddPlotCardModal?: boolean;
   onSkip?: () => void;
   onAdd?: () => void;
+  handleGenerateImageForLastTurn?: () => void;
+  handleGenerateVideoForLastTurn?: () => void;
+  isGeneratingGlobalImage?: boolean;
+  isGeneratingGlobalVideo?: boolean;
+  globalVideoStatus?: string;
 }) => {
   const isMobile = useIsMobile();
   const isGroupButtonDonNotShowAgain =
     useAppStore.use.isGroupButtonDonNotShowAgain();
   const setIsGroupButtonDonNotShowAgain =
     useAppStore.use.setIsGroupButtonDonNotShowAgain();
+  const subscribed = useAppStore.use.subscribed();
+  const setIsOpenSubscribeNudge = useAppStore.use.setIsOpenSubscribeNudge();
+
+  // Session onboarding for inference button
+  const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
+  const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
 
   // Shuffle
   const handleShuffle = useCallback(() => {
@@ -746,23 +1029,27 @@ const UserInputs = ({
 
   // Guide: Select to prompt a response
   const [isOpenGuide, setIsOpenGuide] = useState(false);
+
+  // Show tooltip if either the old guide is open OR the inference button onboarding is not completed
+  const shouldShowTooltip =
+    !disabled && (isOpenGuide || !sessionOnboardingSteps.inferenceButton);
+
   const onFocusUserInput = useCallback(() => {
     if (isGroupButtonDonNotShowAgain) {
       return;
     }
     setIsOpenGuide(true);
   }, [isGroupButtonDonNotShowAgain]);
+
   const onCharacterButtonClicked = useCallback(() => {
     setIsOpenGuide(false);
     setIsGroupButtonDonNotShowAgain(true);
-  }, []);
+    // Mark inference button onboarding step as completed
+    setSessionOnboardingStep("inferenceButton", true);
+  }, [setSessionOnboardingStep, setIsGroupButtonDonNotShowAgain]);
 
   return (
     <div className="sticky bottom-0 inset-x-0 pb-[80px] px-[56px]">
-      {isOpenAddPlotCardModal && (
-        <AddPlotCardModal onSkip={onSkip} onAdd={onAdd} />
-      )}
-
       <div
         className={cn(
           "mx-auto w-full min-w-[400px] max-w-[892px] p-[24px] rounded-[40px] flex flex-col gap-[16px]",
@@ -771,7 +1058,7 @@ const UserInputs = ({
         )}
       >
         <TooltipProvider delayDuration={0}>
-          <Tooltip open={isOpenGuide}>
+          <Tooltip open={shouldShowTooltip}>
             <TooltipTrigger asChild>
               <div className="p-0 flex flex-row justify-between">
                 <div
@@ -788,7 +1075,8 @@ const UserInputs = ({
                         onCharacterButtonClicked();
                       }}
                       isUser
-                      isHighLighted={isOpenGuide}
+                      isDisabled={disabled}
+                      isHighLighted={shouldShowTooltip}
                     />
                   )}
                   {aiCharacterCardIds.map((characterCardId) => (
@@ -799,7 +1087,8 @@ const UserInputs = ({
                         generateCharacterMessage?.(characterCardId);
                         onCharacterButtonClicked();
                       }}
-                      isHighLighted={isOpenGuide}
+                      isDisabled={disabled}
+                      isHighLighted={shouldShowTooltip}
                     />
                   ))}
                   <UserInputCharacterButton
@@ -809,8 +1098,69 @@ const UserInputs = ({
                       handleShuffle();
                       onCharacterButtonClicked();
                     }}
-                    isHighLighted={isOpenGuide}
+                    isHighLighted={shouldShowTooltip}
                   />
+                  <div className="w-[1px] h-[48px] bg-border-normal mx-2" />
+                  <UserInputCharacterButton
+                    icon={
+                      isGeneratingGlobalImage ? (
+                        <Loader2 className="min-w-[24px] min-h-[24px] animate-spin" />
+                      ) : (
+                        <SvgIcon name="image_gen" size={24} />
+                      )
+                    }
+                    label={
+                      isGeneratingGlobalImage ? (
+                        "Generating"
+                      ) : (
+                        <>
+                          Generate
+                          <br />
+                          Image
+                        </>
+                      )
+                    }
+                    onClick={() => {
+                      if (!subscribed) {
+                        setIsOpenSubscribeNudge(true);
+                        return;
+                      }
+                      if (!isGeneratingGlobalImage) {
+                        handleGenerateImageForLastTurn();
+                        onCharacterButtonClicked();
+                      }
+                    }}
+                    isHighLighted={false}
+                    isSubscribeBadge={!subscribed}
+                  />
+                  {/* Generate Video button - HIDDEN in user input */}
+                  {/* <UserInputCharacterButton
+                    icon={
+                      isGeneratingGlobalVideo ? (
+                        <Loader2 className="min-w-[24px] min-h-[24px] animate-spin" />
+                      ) : (
+                        <SvgIcon name="video_gen" size={24} />
+                      )
+                    }
+                    label={
+                      isGeneratingGlobalVideo ? (
+                        "Generating"
+                      ) : (
+                        <>
+                          Generate
+                          <br />
+                          Video
+                        </>
+                      )
+                    }
+                    onClick={() => {
+                      if (!isGeneratingGlobalVideo) {
+                        handleGenerateVideoForLastTurn();
+                        onCharacterButtonClicked();
+                      }
+                    }}
+                    isHighLighted={false}
+                  /> */}
                 </div>
                 <div className="shrink-0">
                   <UserInputAutoReplyButton
@@ -824,7 +1174,7 @@ const UserInputs = ({
             <TooltipContent
               side="top"
               align="start"
-              className="py-[12px] px-[16px] ml-[-16px] mb-[12px] bg-background-surface-2 border-border-normal border-1"
+              className="py-[12px] px-[16px] ml-[-16px] mb-[12px] bg-background-surface-2 border-1 border-border-selected-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
             >
               <div className="font-[600] text-[14px] leading-[20px] text-text-primary">
                 Select to prompt a response
@@ -896,44 +1246,6 @@ const UserInputs = ({
             )}
           </div>
         </div>
-      </div>
-    </div>
-  );
-};
-
-const AddPlotCardModal = ({
-  onSkip,
-  onAdd,
-}: {
-  onSkip: () => void;
-  onAdd: () => void;
-}) => {
-  const isMobile = useIsMobile();
-
-  if (isMobile) {
-    return null; // Mobile uses Dialog component instead
-  }
-
-  return (
-    <div
-      className={cn(
-        "mx-auto mb-[40px] w-[600px] p-[24px] rounded-[8px]",
-        "bg-background-container",
-        "flex flex-col gap-[24px]",
-      )}
-    >
-      <div className="font-[400] text-[16px] leading-[24px] text-text-primary">
-        Would you like to start from a list of scenarios from the plot card?
-        <br />
-        Your choice will appear as the first message.
-      </div>
-      <div className="flex flex-row justify-end gap-[8px]">
-        <Button variant="outline" size="lg" onClick={onAdd}>
-          Add a Plot card
-        </Button>
-        <Button size="lg" onClick={onSkip}>
-          Skip and start
-        </Button>
       </div>
     </div>
   );
@@ -1147,8 +1459,8 @@ const SortableDataSchemaFieldItem = ({
           <div className="flex flex-row gap-[8px] items-center text-text-subtle group-hover/field-name:text-text-primary">
             {getSchemaTypeIcon(type)}
             <div className="font-[500] text-[14px] leading-[20px]">{name}</div>
-            {onEdit && (
-              isEditing ? (
+            {onEdit &&
+              (isEditing ? (
                 <>
                   <Check
                     size={20}
@@ -1173,8 +1485,7 @@ const SortableDataSchemaFieldItem = ({
                     setIsEditing(true);
                   }}
                 />
-              )
-            )}
+              ))}
           </div>
           {isClamped && (
             <div
@@ -1249,12 +1560,36 @@ const SessionMessagesAndUserInputs = ({
   const rowVirtualizer = useVirtualizer({
     count: session?.turnIds.length ?? 0,
     getScrollElement: () => effectiveParentRef.current,
-    estimateSize: () => 250, // Estimated average message height
-    overscan: 5,
+    estimateSize: useCallback(
+      (index) => {
+        // Check if this turn has media (image/video)
+        const turnId = session?.turnIds[index];
+        if (!turnId) return 250;
+
+        const turn = queryClient.getQueryData(
+          turnQueries.detail(turnId).queryKey,
+        ) as Turn | undefined;
+        const hasMedia =
+          turn?.options?.[turn?.selectedOptionIndex || 0]?.assetId;
+
+        if (hasMedia) {
+          // For media items with 16:9 aspect ratio
+          // Container max width is 890px, with 32px padding on each side
+          // So effective width is ~890px, height would be 890 * 9/16 = ~500px
+          // Add extra padding for controls, spacing, and margin
+          return 1000;
+        }
+
+        // Regular text messages
+        return 250;
+      },
+      [session?.turnIds, queryClient],
+    ),
+    overscan: 10, // Increase overscan for smoother scrolling
     getItemKey: (index) =>
       session?.turnIds[index]?.toString() ?? index.toString(),
     paddingStart: 100,
-    useAnimationFrameWithResizeObserver: true,
+    measureElement: (element) => element?.getBoundingClientRect().height,
   });
   const scrollToBottom = useCallback(
     (options?: { wait?: number; behavior?: ScrollBehavior }) => {
@@ -1323,11 +1658,11 @@ const SessionMessagesAndUserInputs = ({
       try {
         // Get dataStore for inheritance - prioritize regeneration context
         let lastDataStore: DataStoreSavedField[] = [];
-        
+
         if (regenerateMessageId) {
           // For regeneration, get dataStore from the turn before the regenerated message
           let dataStoreForRegeneration: DataStoreSavedField[] = [];
-          
+
           for (const turnId of session.turnIds) {
             if (turnId.equals(regenerateMessageId)) {
               break;
@@ -1336,19 +1671,23 @@ const SessionMessagesAndUserInputs = ({
               const turn = (await TurnService.getTurn.execute(turnId))
                 .throwOnFailure()
                 .getValue();
-              
+
               // Store dataStore from each processed turn
               if (turn.dataStore && turn.dataStore.length > 0) {
                 dataStoreForRegeneration = cloneDeep(turn.dataStore);
               }
             } catch (error) {
-              console.warn(`Failed to get turn for regeneration dataStore: ${error}`);
+              console.warn(
+                `Failed to get turn for regeneration dataStore: ${error}`,
+              );
               continue;
             }
           }
-          
+
           lastDataStore = dataStoreForRegeneration;
-          console.log(`Using dataStore from regeneration context (${lastDataStore.length} fields)`);
+          console.log(
+            `Using dataStore from regeneration context (${lastDataStore.length} fields)`,
+          );
         } else if (session.turnIds.length > 0) {
           // For new messages, use last turn's dataStore
           const lastTurnId = session.turnIds[session.turnIds.length - 1];
@@ -1628,7 +1967,8 @@ const SessionMessagesAndUserInputs = ({
 
       // Invalidate session query
       queryClient.invalidateQueries({
-        queryKey: sessionQueries.detail(selectedSessionId ?? undefined).queryKey,
+        queryKey: sessionQueries.detail(selectedSessionId ?? undefined)
+          .queryKey,
       });
     },
     [session, queryClient, selectedSessionId],
@@ -1636,38 +1976,17 @@ const SessionMessagesAndUserInputs = ({
 
   // Add plot card modal
   const [plotCard] = useCard<PlotCard>(session?.plotCard?.id);
-  const [isOpenAddPlotCardModal, setIsOpenAddPlotCardModal] = useState(false);
   const messageCount = session?.turnIds.length ?? 0;
   const plotCardId = session?.plotCard?.id.toString() ?? "";
   const sessionId = session?.id.toString() ?? "";
-
-  useEffect(() => {
-    logger.debug("[Hook] useEffect: Add plot card modal");
-
-    // Check session has plot card
-    if (plotCardId !== "") {
-      setIsOpenAddPlotCardModal(false);
-      return;
-    }
-
-    // Check message ids
-    if (messageCount > 0) {
-      setIsOpenAddPlotCardModal(false);
-      return;
-    }
-
-    // Show add plot card modal
-    setIsOpenAddPlotCardModal(true);
-  }, [messageCount, plotCardId]);
 
   // Select scenario modal
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState(false);
   const plotCardScenarioCount = plotCard?.props.scenarios?.length ?? 0;
   useEffect(() => {
-    console.log("sessionId", plotCardId);
     // Check scenario count
-    if (plotCardId === "") {
+    if (plotCardScenarioCount === 0) {
       setIsOpenSelectScenarioModal(false);
       return;
     }
@@ -1740,16 +2059,18 @@ const SessionMessagesAndUserInputs = ({
 
     // Render scenarios
     const renderedScenarios = await Promise.all(
-      plotCard.props.scenarios.map(async (scenario: { name: string; description: string }) => {
-        const renderedScenario = await TemplateRenderer.render(
-          scenario.description,
-          context,
-        );
-        return {
-          name: scenario.name,
-          description: renderedScenario,
-        };
-      }),
+      plotCard.props.scenarios.map(
+        async (scenario: { name: string; description: string }) => {
+          const renderedScenario = await TemplateRenderer.render(
+            scenario.description,
+            context,
+          );
+          return {
+            name: scenario.name,
+            description: renderedScenario,
+          };
+        },
+      ),
     );
     setRenderedScenarios(renderedScenarios);
   }, [sessionUserCardId, sessionAllCards, plotCardScenario]);
@@ -1830,7 +2151,31 @@ const SessionMessagesAndUserInputs = ({
         return;
       }
 
-      // Delete message from DB
+      // Check if this is a placeholder turn and handle special deletion
+      const turnResult = await TurnService.getTurn.execute(messageId);
+      if (turnResult.isSuccess) {
+        const turn = turnResult.getValue();
+        if (TurnService.isPlaceholderTurn(turn)) {
+          // Use special deletion for placeholder turns with assets
+          const deleteResult =
+            await TurnService.deletePlaceholderTurnWithAssets(
+              session.id,
+              messageId,
+            );
+          if (deleteResult.isFailure) {
+            logger.error(
+              "Failed to delete placeholder turn",
+              deleteResult.getError(),
+            );
+            return;
+          }
+          // Invalidate session query
+          invalidateSession();
+          return;
+        }
+      }
+
+      // Regular message deletion
       const deletedMessageOrError = await SessionService.deleteMessage.execute({
         sessionId: session.id,
         messageId: messageId,
@@ -1901,6 +2246,13 @@ const SessionMessagesAndUserInputs = ({
   // Session data
   const [isOpenSessionData, setIsOpenSessionData] = useState(false);
   const { data: flow } = useQuery(flowQueries.detail(session?.flowId));
+
+  // Session onboarding
+  const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
+  const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
+  // Show session data tooltip if helpVideo is done but sessionData is not done yet
+  const shouldShowSessionDataTooltip =
+    sessionOnboardingSteps.helpVideo && !sessionOnboardingSteps.sessionData;
   const isDataSchemaUsed = useMemo(() => {
     if (!flow) {
       return false;
@@ -1912,6 +2264,357 @@ const SessionMessagesAndUserInputs = ({
   const { data: lastTurn } = useQuery(
     turnQueries.detail(session?.turnIds[session?.turnIds.length - 1]),
   );
+
+  // Image generation hooks for global buttons
+  const { generateImage: generateImageBase } = useImageGeneration({
+    onSuccess: async () => {
+      // Refresh will be handled by updating the turn
+    },
+  });
+
+  // Video generation hooks for global buttons
+  const {
+    generateVideo: generateVideoBase,
+    isGeneratingVideo: isGeneratingGlobalVideo,
+    videoGenerationStatus: globalVideoStatus,
+  } = useVideoGeneration({
+    onSuccess: async () => {
+      // Refresh will be handled by updating the turn
+    },
+  });
+
+  const [isGeneratingGlobalImage, setIsGeneratingGlobalImage] = useState(false);
+
+  // Use the new enhanced generation prompt hook that properly filters turns
+  const {
+    prompt: enhancedGenerationPrompt,
+    imageUrls: imageUrlsForGeneration,
+    // characterIds: involvedCharacterIds,
+    // lastGeneratedImageUrl,
+    // secondLastGeneratedImageUrl,
+  } = useEnhancedGenerationPrompt({
+    sessionId: session?.id,
+  });
+
+  // Handler for generating video from an existing image in a message
+  const handleGenerateVideoFromImage = useCallback(
+    async (
+      messageId: UniqueEntityID,
+      imageUrl: string,
+      prompt: string,
+      userPrompt: string,
+    ) => {
+      // Always use "starting" mode with just the current image for video generation
+      // The backend will generate video starting from this frame
+      const imageUrls: string[] = [imageUrl];
+      const imageMode: "start-end" | "starting" | "reference" = "starting";
+
+      // Note: Character reference images are not included in video generation
+
+      try {
+        // Generate video using enhanced prompt and multiple images
+        const assetId = await generateVideoBase({
+          prompt: enhancedGenerationPrompt || prompt, // Use enhanced prompt
+          userPrompt: userPrompt, // Keep original for display
+          selectedModel: IMAGE_MODELS.SEEDANCE_1_0, // Use Pro model
+          imageToImage: true, // We're using images
+          imageUrls: imageUrls, // All images including previous, current, and characters
+          imageMode: imageMode, // Use appropriate mode based on available images
+          videoDuration: 5, // 5 seconds video duration
+          ratio: "16:9",
+          resolution: "720p",
+          isSessionGenerated: true,
+        });
+
+        if (assetId) {
+          // Update the turn with the video asset
+          const turn = (await TurnService.getTurn.execute(messageId))
+            .throwOnFailure()
+            .getValue();
+
+          // Update the selected option with the new assetId
+          turn.setAssetId(assetId);
+
+          // Save the updated turn
+          const result = await TurnService.updateTurn.execute(turn);
+          if (result.isFailure) {
+            console.error("Failed to update turn:", result.getError());
+            throw new Error(result.getError());
+          } else {
+            // Invalidate the turn query to trigger re-render
+            await queryClient.invalidateQueries({
+              queryKey: turnQueries.detail(messageId).queryKey,
+            });
+
+            console.log(
+              "[VIDEO FROM IMAGE] Video generated successfully:",
+              assetId,
+            );
+          }
+        }
+      } catch (error) {
+        console.error("[VIDEO FROM IMAGE] Failed to generate video:", error);
+        throw error; // Re-throw to let MessageItem handle the error
+      }
+    },
+    [
+      generateVideoBase,
+      queryClient,
+      // secondLastGeneratedImageUrl,
+      enhancedGenerationPrompt,
+    ],
+  );
+
+  // Generate image for last turn
+  const handleGenerateImageForLastTurn = useCallback(async () => {
+    if (!session || !lastTurn || isGeneratingGlobalImage) return;
+
+    const currentOption = lastTurn.options?.[lastTurn.selectedOptionIndex || 0];
+    if (!currentOption) {
+      toast.error("No message content to generate image from");
+      return;
+    }
+
+    // Capture the current image URLs at the moment of click
+    // This ensures we use the current valid blob URLs
+    const currentImageUrls = imageUrlsForGeneration;
+
+    setIsGeneratingGlobalImage(true);
+
+    // Create placeholder turn
+    const placeholderResult = await TurnService.createPlaceholderTurn.execute({
+      sessionId: session.id,
+      placeholderType: PlaceholderType.IMAGE,
+      baseTurnId: lastTurn?.id,
+    });
+
+    if (placeholderResult.isFailure) {
+      const errorMessage =
+        placeholderResult.getError() || "Failed to create placeholder";
+      console.error("Failed to create image placeholder:", errorMessage);
+      toast.error(errorMessage);
+      setIsGeneratingGlobalImage(false);
+      return;
+    }
+
+    const placeholderTurn = placeholderResult.getValue();
+
+    // Generate the image BEFORE invalidating queries to keep blob URL alive
+    let assetId;
+    try {
+      assetId = await generateImageBase({
+        prompt: enhancedGenerationPrompt || currentOption.content,
+        userPrompt: "",
+        selectedModel: IMAGE_MODELS.SEEDREAM_4_0,
+        imageToImage: currentImageUrls.length > 0,
+        imageUrls: currentImageUrls,
+        // size: "1280x720", // 16:9 aspect ratio, 720p resolution (921,600 pixels)
+        size: "1920x1088", // 16:9 aspect ratio with reduced size
+        isSessionGenerated: true, // Mark as session-generated
+      });
+
+      if (assetId) {
+        // Update placeholder with the actual image
+        const updateResult =
+          await TurnService.updatePlaceholderWithAsset.execute({
+            placeholderTurnId: placeholderTurn.id,
+            assetId,
+          });
+
+        if (updateResult.isFailure) {
+          console.error(
+            "Failed to update placeholder:",
+            updateResult.getError(),
+          );
+          toast.error("Failed to update placeholder with image");
+          return;
+        }
+
+        // Now invalidate the turn query to trigger re-render (same pattern as MessageItem)
+        await queryClient.invalidateQueries({
+          queryKey: turnQueries.detail(placeholderTurn.id).queryKey,
+        });
+
+        // Also invalidate session to ensure UI updates
+        await queryClient.invalidateQueries({
+          queryKey: sessionQueries.detail(session.id).queryKey,
+        });
+
+        toast.success("Image generated successfully!");
+      } else {
+        // Remove placeholder if no asset generated
+        await TurnService.deletePlaceholderTurnWithAssets(
+          session.id,
+          placeholderTurn.id,
+        );
+
+        // Invalidate to remove placeholder
+        queryClient.invalidateQueries({
+          queryKey: sessionQueries.detail(session.id).queryKey,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to generate image:", error);
+      toast.error("Failed to generate image");
+
+      // Remove placeholder on error
+      await TurnService.deletePlaceholderTurnWithAssets(
+        session.id,
+        placeholderTurn.id,
+      );
+
+      queryClient.invalidateQueries({
+        queryKey: sessionQueries.detail(session.id).queryKey,
+      });
+
+      // Scroll to bottom to show the newly generated image
+      scrollToBottom({ wait: 500, behavior: "smooth" });
+    } finally {
+      setIsGeneratingGlobalImage(false);
+    }
+  }, [
+    session,
+    lastTurn,
+    enhancedGenerationPrompt,
+    imageUrlsForGeneration,
+    generateImageBase,
+    isGeneratingGlobalImage,
+    queryClient,
+    scrollToBottom,
+  ]);
+
+  // Generate video for last turn
+  const handleGenerateVideoForLastTurn = useCallback(async () => {
+    if (!session || !lastTurn || isGeneratingGlobalVideo) return;
+
+    const currentOption = lastTurn.options?.[lastTurn.selectedOptionIndex || 0];
+    if (!currentOption) {
+      toast.error("No message content to generate video from");
+      return;
+    }
+    // Create placeholder turn
+    const placeholderResult = await TurnService.createPlaceholderTurn.execute({
+      sessionId: session.id,
+      placeholderType: PlaceholderType.VIDEO,
+      baseTurnId: lastTurn?.id,
+    });
+
+    if (placeholderResult.isFailure) {
+      const errorMessage =
+        placeholderResult.getError() || "Failed to create placeholder";
+      console.error("Failed to create video placeholder:", errorMessage);
+      toast.error(errorMessage);
+      return;
+    }
+
+    const placeholderTurn = placeholderResult.getValue();
+
+    // Invalidate to show placeholder and wait for it to complete
+    await queryClient.invalidateQueries({
+      queryKey: sessionQueries.detail(session.id).queryKey,
+    });
+
+    try {
+      // Determine which mode to use based on available images
+      // For last turn generation, first image is previous scene, rest are character refs
+      const hasPreviousImage =
+        imageUrlsForGeneration.length > 0 && imageUrlsForGeneration[0];
+      let imageMode: "start-end" | "starting" | "reference";
+
+      // Note: For this function, we're generating a NEW image that will be the end frame
+      // So we need at least the previous image to use start-end mode
+      if (hasPreviousImage) {
+        // We have previous image and will generate current - can use start-end
+        imageMode = "start-end";
+      } else {
+        // No previous image, will generate from scratch
+        imageMode = "reference";
+      }
+
+      const assetId = await generateVideoBase({
+        prompt: enhancedGenerationPrompt || currentOption.content,
+        userPrompt: currentOption.content,
+        selectedModel: IMAGE_MODELS.SEEDANCE_LITE_1_0, // Lite model
+        imageToImage: imageUrlsForGeneration.length > 0,
+        imageUrls: imageUrlsForGeneration,
+        imageMode: imageMode, // Use appropriate mode based on available images
+        videoDuration: 5,
+        ratio: "16:9",
+        resolution: "720p",
+        isSessionGenerated: true, // Mark as session-generated
+      });
+
+      if (assetId) {
+        // Update placeholder with the actual video
+        const updateResult =
+          await TurnService.updatePlaceholderWithAsset.execute({
+            placeholderTurnId: placeholderTurn.id,
+            assetId,
+          });
+
+        if (updateResult.isFailure) {
+          console.error(
+            "Failed to update placeholder:",
+            updateResult.getError(),
+          );
+          toast.error("Failed to update placeholder with video");
+          return;
+        }
+
+        // Clear the query cache for this turn first
+        queryClient.removeQueries({
+          queryKey: turnQueries.detail(placeholderTurn.id).queryKey,
+        });
+
+        // Force refetch the turn to get updated data
+        await queryClient.fetchQuery(turnQueries.detail(placeholderTurn.id));
+
+        // Also invalidate session to ensure UI updates
+        await queryClient.invalidateQueries({
+          queryKey: sessionQueries.detail(session.id).queryKey,
+        });
+
+        toast.success("Video generated successfully!");
+
+        // Scroll to bottom to show the newly generated video
+        scrollToBottom({ wait: 500, behavior: "smooth" });
+      } else {
+        // Remove placeholder if no asset generated
+        await TurnService.deletePlaceholderTurnWithAssets(
+          session.id,
+          placeholderTurn.id,
+        );
+
+        // Invalidate to remove placeholder
+        queryClient.invalidateQueries({
+          queryKey: sessionQueries.detail(session.id).queryKey,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to generate video:", error);
+      toast.error("Failed to generate video");
+
+      // Remove placeholder on error
+      await TurnService.deletePlaceholderTurnWithAssets(
+        session.id,
+        placeholderTurn.id,
+      );
+
+      queryClient.invalidateQueries({
+        queryKey: sessionQueries.detail(session.id).queryKey,
+      });
+    }
+  }, [
+    session,
+    lastTurn,
+    enhancedGenerationPrompt,
+    imageUrlsForGeneration,
+    generateVideoBase,
+    isGeneratingGlobalVideo,
+    queryClient,
+    scrollToBottom,
+  ]);
+
   const isInitialDataStore = useMemo(() => {
     if (!session || session.turnIds.length === 0) return true;
 
@@ -1919,7 +2622,8 @@ const SessionMessagesAndUserInputs = ({
     // 1. There's only one message
     // 2. That message is a scenario (no characterCardId and no characterName)
     if (session.turnIds.length === 1 && lastTurn) {
-      const isScenarioMessage = !lastTurn.characterCardId && !lastTurn.characterName;
+      const isScenarioMessage =
+        !lastTurn.characterCardId && !lastTurn.characterName;
       return isScenarioMessage;
     }
 
@@ -1931,7 +2635,10 @@ const SessionMessagesAndUserInputs = ({
       return {};
     }
     return Object.fromEntries(
-      lastTurn.dataStore.map((field: DataStoreSavedField) => [field.name, field.value]),
+      lastTurn.dataStore.map((field: DataStoreSavedField) => [
+        field.name,
+        field.value,
+      ]),
     );
   }, [lastTurn]);
 
@@ -1943,11 +2650,18 @@ const SessionMessagesAndUserInputs = ({
     return [
       // 1. Fields in dataSchemaOrder come first, in order
       ...dataSchemaOrder
-        .map((name: string) => fields.find((f: DataStoreSchemaField) => f.name === name))
-        .filter((f: DataStoreSchemaField | undefined): f is NonNullable<typeof f> => f !== undefined),
+        .map((name: string) =>
+          fields.find((f: DataStoreSchemaField) => f.name === name),
+        )
+        .filter(
+          (f: DataStoreSchemaField | undefined): f is NonNullable<typeof f> =>
+            f !== undefined,
+        ),
 
       // 2. Fields not in dataSchemaOrder come after, in original order
-      ...fields.filter((f: DataStoreSchemaField) => !dataSchemaOrder.includes(f.name)),
+      ...fields.filter(
+        (f: DataStoreSchemaField) => !dataSchemaOrder.includes(f.name),
+      ),
     ];
   }, [flow?.props.dataStoreSchema?.fields, session?.dataSchemaOrder]);
 
@@ -2009,8 +2723,9 @@ const SessionMessagesAndUserInputs = ({
 
       try {
         // Find the field to update
-        const updatedDataStore = lastTurn.dataStore.map((field: DataStoreSavedField) =>
-          field.name === name ? { ...field, value } : field,
+        const updatedDataStore = lastTurn.dataStore.map(
+          (field: DataStoreSavedField) =>
+            field.name === name ? { ...field, value } : field,
         );
 
         // Update the turn with new dataStore
@@ -2097,6 +2812,7 @@ const SessionMessagesAndUserInputs = ({
                     deleteMessage={deleteMessage}
                     selectOption={selectOption}
                     generateOption={generateOption}
+                    onGenerateVideoFromImage={handleGenerateVideoFromImage}
                   />
                 </div>
               );
@@ -2117,61 +2833,6 @@ const SessionMessagesAndUserInputs = ({
             )}
           </div>
         </div>
-
-        {/* Mobile Add Plot Card Dialog */}
-        <Dialog
-          open={isOpenAddPlotCardModal && isMobile}
-          onOpenChange={(open) => {
-            if (!open) {
-              setIsOpenAddPlotCardModal(false);
-            }
-          }}
-        >
-          <DialogContent
-            hideClose
-            className="w-80 p-6 bg-background-surface-2 rounded-lg outline-1 outline-border-light inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden"
-          >
-            <div className="self-stretch flex flex-col justify-start items-end gap-6">
-              <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
-                  Want to add a plot card?
-                </DialogTitle>
-                <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
-                  You will not be able to add a scenario, because you have not
-                  selected a plot card for this session.
-                </DialogDescription>
-              </div>
-              <div className="inline-flex justify-start items-center gap-2">
-                <DialogClose asChild>
-                  <Button
-                    variant="ghost"
-                    size="lg"
-                    onClick={() => {
-                      setIsOpenAddPlotCardModal(false);
-                    }}
-                  >
-                    <div className="justify-center text-button-background-primary text-sm font-medium leading-tight">
-                      Skip
-                    </div>
-                  </Button>
-                </DialogClose>
-                <Button
-                  size="lg"
-                  onClick={() => {
-                    setIsOpenAddPlotCardModal(false);
-                    onAddPlotCard();
-                  }}
-                >
-                  <div className="inline-flex justify-start items-center gap-2">
-                    <div className="justify-center text-button-foreground-primary text-sm font-semibold leading-tight">
-                      Add plot card
-                    </div>
-                  </div>
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Mobile Select Scenario Prompt Dialog */}
         <Dialog
@@ -2224,20 +2885,21 @@ const SessionMessagesAndUserInputs = ({
           generateCharacterMessage={generateCharacterMessage}
           addUserMessage={addUserMessage}
           isOpenSettings={isOpenSettings}
-          disabled={isOpenAddPlotCardModal || isOpenSelectScenarioModal}
+          disabled={isOpenSelectScenarioModal}
           streamingMessageId={streamingMessageId ?? undefined}
           onStopGenerate={() => {
             refStopGenerate.current?.abort("Stop generate by user");
           }}
           autoReply={session.autoReply}
           setAutoReply={setAutoReply}
-          isOpenAddPlotCardModal={isOpenAddPlotCardModal}
-          onSkip={() => {
-            setIsOpenAddPlotCardModal(false);
-          }}
           onAdd={() => {
             onAddPlotCard();
           }}
+          handleGenerateImageForLastTurn={handleGenerateImageForLastTurn}
+          handleGenerateVideoForLastTurn={handleGenerateVideoForLastTurn}
+          isGeneratingGlobalImage={isGeneratingGlobalImage}
+          isGeneratingGlobalVideo={isGeneratingGlobalVideo}
+          globalVideoStatus={globalVideoStatus}
         />
       </div>
 
@@ -2256,7 +2918,20 @@ const SessionMessagesAndUserInputs = ({
           openned={isOpenSessionData}
           onClick={() => {
             setIsOpenSessionData((isOpen) => !isOpen);
+            // Complete the entire onboarding if on sessionData step
+            console.log(
+              "shouldShowSessionDataTooltip",
+              shouldShowSessionDataTooltip,
+            );
+            setSessionOnboardingStep("sessionData", true);
           }}
+          onboarding={shouldShowSessionDataTooltip}
+          onboardingTooltip={
+            shouldShowSessionDataTooltip
+              ? "Click to view and edit session stats"
+              : undefined
+          }
+          tooltipClassName="!top-[0px] !right-[50px]"
         />
         <div
           className={cn(
@@ -2310,9 +2985,9 @@ const SessionMessagesAndUserInputs = ({
                       value={
                         isInitialDataStore
                           ? field.initialValue
-                          : (field.name in lastTurnDataStore
-                              ? lastTurnDataStore[field.name]
-                              : "--")
+                          : field.name in lastTurnDataStore
+                            ? lastTurnDataStore[field.name]
+                            : "--"
                       }
                       onEdit={isInitialDataStore ? undefined : updateDataStore}
                     />

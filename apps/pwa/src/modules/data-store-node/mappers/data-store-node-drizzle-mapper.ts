@@ -5,6 +5,7 @@ import { DataStoreNode } from "@/modules/data-store-node/domain/data-store-node"
 
 export class DataStoreNodeDrizzleMapper {
   public static toPersistence(dataStoreNode: DataStoreNode): any {
+    
     return {
       id: dataStoreNode.id.toString(),
       flow_id: dataStoreNode.props.flowId,
@@ -17,16 +18,56 @@ export class DataStoreNodeDrizzleMapper {
   }
 
   public static toDomain(data: any): DataStoreNode {
+
     const dataStoreNodeOrError = DataStoreNode.create(
       {
         flowId: data.flow_id || data.flowId,
         name: data.name.trim() || "Untitled Data Store Node",
         color: data.color || "#3b82f6",
-        dataStoreFields: data.data_store_fields 
-          ? (parse(data.data_store_fields) || [])
-          : data.dataStoreFields
-            ? (parse(data.dataStoreFields) || [])
-            : [],
+        dataStoreFields: (() => {
+          // Check if data_store_fields is already parsed by Drizzle (object) or needs parsing (string)
+          let rawFields;
+          
+          if (data.data_store_fields) {
+            if (typeof data.data_store_fields === 'string') {
+              // It's a string, needs parsing
+              rawFields = parse(data.data_store_fields) || [];
+            } else {
+              // It's already an object (parsed by Drizzle), check for json wrapper
+              if (data.data_store_fields && typeof data.data_store_fields === 'object' && data.data_store_fields.json) {
+                // Extract fields from SuperJSON wrapper: {json: [...]}
+                rawFields = data.data_store_fields.json || [];
+              } else {
+                rawFields = data.data_store_fields || [];
+              }
+            }
+          } else if (data.dataStoreFields) {
+            if (typeof data.dataStoreFields === 'string') {
+              // It's a string, needs parsing
+              rawFields = parse(data.dataStoreFields) || [];
+            } else {
+              // It's already an object, check for json wrapper
+              if (data.dataStoreFields && typeof data.dataStoreFields === 'object' && data.dataStoreFields.json) {
+                // Extract fields from SuperJSON wrapper: {json: [...]}
+                rawFields = data.dataStoreFields.json || [];
+              } else {
+                rawFields = data.dataStoreFields || [];
+              }
+            }
+          } else {
+            rawFields = [];
+          }
+          
+          // Ensure we have an array
+          const fields = Array.isArray(rawFields) ? rawFields : [];
+          
+          // Only keep defined DataStoreField properties
+          return fields.map((field: any) => ({
+            id: field.id,
+            schemaFieldId: field.schemaFieldId,
+            logic: field.logic
+          }));
+        })(),
       },
       new UniqueEntityID(data.id),
     );

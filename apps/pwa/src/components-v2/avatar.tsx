@@ -1,15 +1,20 @@
 import { cn } from "@/components-v2/lib/utils";
+import { MediaDisplay } from "@/components-v2/shared/media-display";
 
 const Avatar = ({
   src,
   alt = "Avatar",
   size = 48,
   className,
+  isVideo = false,
+  isDisabled = false,
 }: {
   src?: string | null;
   alt?: string;
   size?: number;
   className?: string;
+  isVideo?: boolean;
+  isDisabled?: boolean;
 }) => {
   return (
     <div
@@ -23,12 +28,23 @@ const Avatar = ({
         height: size,
       }}
     >
-      <img
-        src={src ?? "/img/placeholder/avatar.png"}
+      <MediaDisplay
+        src={src || null}
+        fallbackSrc="/img/placeholder/avatar.png"
         alt={alt}
         width={size}
         height={size}
-        className="pointer-events-none"
+        className={cn(
+          "w-full h-full object-cover",
+          isDisabled && "pointer-events-none",
+        )}
+        isVideo={isVideo}
+        showControls={false}
+        autoPlay={false}
+        muted={true}
+        loop={true}
+        playOnHover={true}
+        clickToToggle={false}
       />
     </div>
   );

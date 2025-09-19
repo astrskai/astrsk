@@ -82,9 +82,11 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
       });
       
       // 4. Update individual node queries for nodes that changed
-      nodes.forEach(node => {
-        queryClient.setQueryData(flowKeys.node(flowId, node.id), node);
-      });
+      if (nodes && Array.isArray(nodes)) {
+        nodes.forEach(node => {
+          queryClient.setQueryData(flowKeys.node(flowId, node.id), node);
+        });
+      }
       
       return { previousFlow, previousNodes, previousEdges, invalidateAgents };
     },

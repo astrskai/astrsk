@@ -72,9 +72,10 @@
 
 ## 🚀 Installation
 
-- **Download for Windows**: [Latest Release](https://github.com/astrskai/astrsk/releases/download/v2.1.3/astrsk-2.1.3.exe)
-- **Download for Mac**: [Latest Release](https://github.com/astrskai/astrsk/releases/download/v2.1.3/astrsk-2.1.3.dmg)
-- **Download for Linux** (Not tested): [Latest Release](https://github.com/astrskai/astrsk/releases/download/v2.1.3/astrsk-2.1.3.AppImage)
+- Download installation file on [latest release](https://github.com/astrskai/astrsk/releases/latest):
+  - **For Windows**: `astrsk-X.Y.Z.exe`
+  - **For Mac**: `astrsk-X.Y.Z.dmg`
+  - **For Linux** (Not tested): `astrsk-X.Y.Z.AppImage`
 
 ## 🛠️ Development
 
@@ -111,17 +112,16 @@ astrsk/
     │   │   ├── db/         # Database schema and migrations
     │   │   └── shared/     # Shared utilities
     │   └── public/
-    ├── electron/           # Electron wrapper (native desktop app)
-    │   ├── build/          # Build resources (icons, entitlements)
-    │   ├── resources/      # Application resources
-    │   ├── src/
-    │   │   ├── main/       # Main process (window management, IPC)
-    │   │   ├── preload/    # Preload scripts (secure bridge)
-    │   │   └── shared/     # Shared types and constants
-    │   ├── electron.vite.config.ts
-    │   ├── electron-builder.yml     # Production build config
-    │   └── tsconfig.*.json          # TypeScript configs
-    └── docs/               # Documatation
+    └── electron/           # Electron wrapper (native desktop app)
+        ├── build/          # Build resources (icons, entitlements)
+        ├── resources/      # Application resources
+        ├── src/
+        │   ├── main/       # Main process (window management, IPC)
+        │   ├── preload/    # Preload scripts (secure bridge)
+        │   └── shared/     # Shared types and constants
+        ├── electron.vite.config.ts
+        ├── electron-builder.yml     # Production build config
+        └── tsconfig.*.json          # TypeScript configs
 ```
 
 ### 📋 Scripts
@@ -141,12 +141,6 @@ $ pnpm dev:electron
 
 # Build electron application
 $ pnpm build:electron
-
-# Run docs dev server
-$ pnpm dev:docs
-
-# Build docs
-$ pnpm build:docs
 ```
 
 ## 🏠 Self-hosting
@@ -210,6 +204,7 @@ This project is licensed under the **AGPL-v3** License - see the [LICENSE](LICEN
 ## 🌐 References
 
 - **Website**: [astrsk.ai](https://astrsk.ai)
+- **User Documentation**: [docs.astrsk.ai](https://docs.astrsk.ai/)
 - **Discord**: [astrsk.ai](https://discord.com/invite/J6ry7w8YCF)
 - **Reddit**: [r/astrsk_ai](https://www.reddit.com/r/astrsk_ai/)
 - **Twitter/X**: [@astrskai](https://x.com/astrskai)

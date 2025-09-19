@@ -20,6 +20,10 @@ export const TableName = {
   Sessions: "sessions",
   Turns: "turns",
   Backgrounds: "backgrounds",
+  GeneratedImages: "generated_images",
+  
+  // Vibe Session
+  VibeSessions: "vibe_sessions",
 } as const;
 
 export type TableName = (typeof TableName)[keyof typeof TableName];

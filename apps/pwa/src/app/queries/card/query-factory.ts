@@ -84,6 +84,7 @@ export const cardKeys = {
   // Sub-queries for a specific card
   metadata: (id: string) => [...cardKeys.detail(id), "metadata"] as const,
   content: (id: string) => [...cardKeys.detail(id), "content"] as const,
+  imagePrompt: (id: string) => [...cardKeys.detail(id), "imagePrompt"] as const,
 
   // Lorebook queries
   lorebook: (id: string) => [...cardKeys.detail(id), "lorebook"] as const,
@@ -190,6 +191,23 @@ export const cardQueries = {
         return content;
       },
       staleTime: 1000 * 30, // 30 seconds
+    }),
+
+  // Image prompt
+  imagePrompt: (id: string) =>
+    queryOptions({
+      queryKey: cardKeys.imagePrompt(id),
+      queryFn: async () => {
+        const cardOrError = await CardService.getCard.execute(
+          new UniqueEntityID(id),
+        );
+        if (cardOrError.isFailure) return "";
+
+        const card = cardOrError.getValue();
+        return card.props.imagePrompt || "";
+      },
+      staleTime: 1000 * 5, // 5 seconds - shorter for prompt updates
+      gcTime: 1000 * 30, // 30 seconds
     }),
 
   // Lorebook

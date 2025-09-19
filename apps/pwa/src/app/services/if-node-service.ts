@@ -6,7 +6,9 @@ import { UpdateIfNodeNameUseCase } from "@/modules/if-node/usecases/update-if-no
 import { UpdateIfNodeConditionsUseCase } from "@/modules/if-node/usecases/update-if-node-conditions";
 import { UpdateIfNodeLogicOperatorUseCase } from "@/modules/if-node/usecases/update-if-node-logic-operator";
 import { UpdateIfNodeColorUseCase } from "@/modules/if-node/usecases/update-if-node-color";
+import { DeleteIfNodeUseCase } from "@/modules/if-node/usecases/delete-if-node";
 import { DeleteAllIfNodesByFlowUseCase } from "@/modules/if-node/usecases/delete-all-if-nodes-by-flow";
+import { RestoreIfNodeFromSnapshot } from "@/modules/if-node/usecases/restore-if-node-from-snapshot";
 
 export class IfNodeService {
   public static ifNodeRepo: DrizzleIfNodeRepo;
@@ -18,7 +20,9 @@ export class IfNodeService {
   public static updateIfNodeConditions: UpdateIfNodeConditionsUseCase;
   public static updateIfNodeLogicOperator: UpdateIfNodeLogicOperatorUseCase;
   public static updateIfNodeColor: UpdateIfNodeColorUseCase;
+  public static deleteIfNode: DeleteIfNodeUseCase;
   public static deleteAllIfNodesByFlow: DeleteAllIfNodesByFlowUseCase;
+  public static restoreIfNodeFromSnapshot: RestoreIfNodeFromSnapshot;
 
   private constructor() {}
 
@@ -32,6 +36,8 @@ export class IfNodeService {
     this.updateIfNodeConditions = new UpdateIfNodeConditionsUseCase(this.ifNodeRepo, this.ifNodeRepo);
     this.updateIfNodeLogicOperator = new UpdateIfNodeLogicOperatorUseCase(this.ifNodeRepo, this.ifNodeRepo);
     this.updateIfNodeColor = new UpdateIfNodeColorUseCase(this.ifNodeRepo, this.ifNodeRepo);
+    this.deleteIfNode = new DeleteIfNodeUseCase(this.ifNodeRepo);
     this.deleteAllIfNodesByFlow = new DeleteAllIfNodesByFlowUseCase(this.ifNodeRepo);
+    this.restoreIfNodeFromSnapshot = new RestoreIfNodeFromSnapshot(this.ifNodeRepo);
   }
 }

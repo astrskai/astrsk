@@ -11,6 +11,8 @@ import { useAgentStore } from "@/app/stores/agent-store";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { FlowDialog } from "@/components-v2/flow/flow-dialog";
 import { FlowImportDialog } from "@/components-v2/flow/components/flow-import-dialog";
+import { FlowExportDialog, AgentModelTierInfo } from "@/components-v2/flow/components/flow-export-dialog";
+import { ModelTier } from "@/modules/agent/domain/agent";
 import { SECTION_HEADER_HEIGHT } from "@/components-v2/left-navigation/constants";
 import { SectionHeader } from "@/components-v2/left-navigation/left-navigation";
 import { SearchInput, CreateButton, ImportButton } from "@/components-v2/left-navigation/shared-list-components";
@@ -30,7 +32,6 @@ import { ApiSource } from "@/modules/api/domain";
 import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
-import * as amplitude from "@amplitude/analytics-browser";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import {
@@ -61,9 +62,13 @@ const FlowItem = ({
 
   // Clone mutation
   const cloneFlowMutation = useCloneFlowWithNodes();
-  
-  // Delete mutation  
+
+  // Delete mutation
   const deleteFlowMutation = useDeleteFlowWithNodes();
+
+  // Export dialog state
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [exportAgents, setExportAgents] = useState<AgentModelTierInfo[]>([]);
 
   // Handle select
   const setActivePage = useAppStore.use.setActivePage();
@@ -87,8 +92,50 @@ const FlowItem = ({
     }, 800); // 800ms minimum loading screen duration
   }, [flow, selectFlowId, setActivePage, setIsLoading]);
 
-  // Handle export
-  const handleExport = useCallback(async () => {
+  // Handle export dialog open
+  const handleExportClick = useCallback(async () => {
+    try {
+      if (!flow) return;
+
+      // Get agents for this flow
+      const agents: AgentModelTierInfo[] = [];
+
+      // Get agent data from flow nodes
+      for (const node of flow.props.nodes) {
+        if (node.type === "agent") {
+          const agentId = node.id;
+          // Query agent data
+          const agentQuery = await queryClient.fetchQuery({
+            queryKey: ["agent", agentId],
+            queryFn: async () => {
+              const result = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
+              if (result.isFailure) throw new Error(result.getError());
+              return result.getValue();
+            },
+          });
+
+          if (agentQuery) {
+            agents.push({
+              agentId: agentId,
+              agentName: agentQuery.props.name,
+              modelName: agentQuery.props.modelName || "",
+              recommendedTier: ModelTier.Light,
+              selectedTier: agentQuery.props.modelTier || ModelTier.Light,
+            });
+          }
+        }
+      }
+
+      setExportAgents(agents);
+      setIsExportDialogOpen(true);
+    } catch (error) {
+      console.error("Failed to prepare export:", error);
+      toast.error("Failed to prepare export");
+    }
+  }, [flow]);
+
+  // Handle export with tier selections
+  const handleExport = useCallback(async (modelTierSelections: Map<string, ModelTier>) => {
     try {
       // Check if service is initialized
       if (
@@ -103,8 +150,11 @@ const FlowItem = ({
         return;
       }
 
-      // Export flow to file using enhanced export
-      const fileOrError = await FlowService.exportFlowWithNodes.execute(flowId);
+      // Export flow to file using enhanced export with model tier selections
+      const fileOrError = await FlowService.exportFlowWithNodes.execute({
+        flowId,
+        modelTierSelections,
+      });
       if (fileOrError.isFailure) {
         throw new Error(fileOrError.getError());
       }
@@ -117,6 +167,7 @@ const FlowItem = ({
       // Download flow file
       downloadFile(file);
       toast.success("Flow exported successfully");
+      setIsExportDialogOpen(false);
     } catch (error) {
       console.error("Export error:", error);
       logger.error(error);
@@ -236,7 +287,7 @@ const FlowItem = ({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleExport();
+                    handleExportClick();
                   }}
                 >
                   <Upload size={20} />
@@ -304,7 +355,14 @@ const FlowItem = ({
         </TooltipProvider>
       </div>
 
-      {/* Place dialog outside of flow item to prevent selecting flow */}
+      {/* Place dialogs outside of flow item to prevent selecting flow */}
+      <FlowExportDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+        agents={exportAgents}
+        onExport={handleExport}
+      />
+
       <DeleteConfirm
         open={isOpenDelete}
         onOpenChange={setIsOpenDelete}
@@ -325,9 +383,21 @@ const FlowItem = ({
   );
 };
 
-const FlowSection = ({ onClick }: { onClick?: () => void }) => {
+const FlowSection = ({ 
+  onClick, 
+  onboardingHighlight, 
+  onboardingCollapsed,
+  onHelpClick,
+  onboardingHelpGlow
+}: { 
+  onClick?: () => void; 
+  onboardingHighlight?: boolean; 
+  onboardingCollapsed?: boolean; 
+  onHelpClick?: () => void;
+  onboardingHelpGlow?: boolean;
+}) => {
   // Handle expand
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(onboardingCollapsed ? false : true);
 
   // Fetch flows
   const [keyword, setKeyword] = useState("");
@@ -347,7 +417,6 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
   const [isOpenCreate, setIsOpenCreate] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const handleClickCreate = useCallback(() => {
-    amplitude.track("create_flow_initiate");
     setIsOpenCreate(true);
   }, []);
   const handleDialogCreate = useCallback(
@@ -532,7 +601,9 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
   );
 
   return (
-    <>
+    <div className={cn(
+      onboardingHighlight && "border-1 border-border-selected-primary"
+    )}>
       <SectionHeader
         name="Flow & Agents"
         icon={<SvgIcon name="agents" size={20} />}
@@ -546,6 +617,8 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
             onClick?.();
           }, 50);
         }}
+        onHelpClick={onHelpClick}
+        onboardingHelpGlow={onboardingHelpGlow}
       />
       <div className={cn(!expanded && "hidden")}>
         <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center">
@@ -654,7 +727,7 @@ const FlowSection = ({ onClick }: { onClick?: () => void }) => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

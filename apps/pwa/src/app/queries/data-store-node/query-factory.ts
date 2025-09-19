@@ -24,7 +24,6 @@ const selectResultCache = new WeakMap<object, any>();
  * 
  * Hierarchical structure:
  * - all: ['data-store-nodes']
- * - byFlow: ['data-store-nodes', 'flow', flowId]
  * - detail: ['data-store-nodes', 'flow', flowId, nodeId]
  *   - name: ['data-store-nodes', 'flow', flowId, nodeId, 'name']
  *   - fields: ['data-store-nodes', 'flow', flowId, nodeId, 'fields']
@@ -34,11 +33,9 @@ export const dataStoreNodeKeys = {
   // Root key for all data store node queries
   all: ['data-store-nodes'] as const,
   
-  // Flow-based queries
-  byFlow: (flowId: string) => [...dataStoreNodeKeys.all, 'flow', flowId] as const,
   
   // Detail queries for specific node
-  detail: (flowId: string, nodeId: string) => [...dataStoreNodeKeys.byFlow(flowId), nodeId] as const,
+  detail: (flowId: string, nodeId: string) => [...dataStoreNodeKeys.all, 'flow', flowId, nodeId] as const,
   
   // Sub-queries for specific data
   name: (flowId: string, nodeId: string) => [...dataStoreNodeKeys.detail(flowId, nodeId), 'name'] as const,
@@ -69,6 +66,7 @@ export interface DataStoreNodeColorData {
 
 // Query Options Factory
 export const dataStoreNodeQueries = {
+
   // Full data store node detail
   detail: (flowId: string, nodeId: string) =>
     queryOptions({
@@ -180,7 +178,7 @@ export const dataStoreNodeQueries = {
  * 
  * // Invalidating queries
  * queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.all }); // All data store node queries
- * queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.byFlow(flowId) }); // All nodes in flow
+ * queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.detail(flowId, nodeId) }); // Specific node
  * queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.name(flowId, nodeId) }); // Just name
  * 
  * // Prefetching

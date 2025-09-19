@@ -40,20 +40,15 @@ export const Page = {
   CreatePrompt: "create_prompt",
   CreateResponseDesign: "create_response_design",
   CardPanel: "card_panel", // Card detail panel view
+  Subscribe: "subscribe",
+  AddCredits: "add_credits",
+  SignUp: "sign_up",
+  Payment: "payment",
+  OnboardingStepOne: "onboarding_step_one",
+  OnboardingStepTwo: "onboarding_step_two",
 } as const;
 
 export type Page = (typeof Page)[keyof typeof Page];
-
-export const AgreementType = {
-  Privacy: "privacy",
-  Terms: "terms",
-  Content: "content",
-  Refund: "refund",
-  Subscription: "subscription",
-  None: "none",
-} as const;
-
-export type AgreementType = (typeof AgreementType)[keyof typeof AgreementType];
 
 export const SettingPageLevel = {
   main: "main",
@@ -68,20 +63,41 @@ export const SettingSubPageType = {
   providers: "providers",
   legal: "legal",
   advanced: "advanced",
+  account: "account",
 } as const;
 
 export type SettingSubPageType =
   (typeof SettingSubPageType)[keyof typeof SettingSubPageType];
 
-export const LegalPageType = {
+export const SettingDetailPageType = {
+  // Legal
   refundPolicy: "refundPolicy",
   privacyPolicy: "privacyPolicy",
   termOfService: "termOfService",
   contentPolicy: "contentPolicy",
   ossNotice: "ossNotice",
+
+  // Payment
+  creditUsage: "creditUsage",
 } as const;
 
-export type LegalPageType = (typeof LegalPageType)[keyof typeof LegalPageType];
+export type SettingDetailPageType =
+  (typeof SettingDetailPageType)[keyof typeof SettingDetailPageType];
+
+// Polling context for image/video generation
+export interface PollingContext {
+  taskId: string;
+  generationType: "image" | "video";
+  prompt: string;
+  userPrompt?: string;
+  cardId?: string;
+  startedAt: number;
+  style?: string;
+  aspectRatio?: string;
+  videoDuration?: number;
+  inputImageFile?: File;
+  isSessionGenerated?: boolean;
+}
 
 interface AppState {
   // Default
@@ -97,14 +113,48 @@ interface AppState {
   // Page
   activePage: Page;
   setActivePage: (activePage: Page) => void;
+  returnPage: Page;
+  backToReturnPage: () => void;
 
-  // Onboarding
+  // Onboarding (legacy - for existing users)
   isPassedOnboarding: boolean;
   setIsPassedOnboarding: (isPassedOnboarding: boolean) => void;
+
+  // Onboarding selected session
+  onboardingSelectedSessionId: string | null;
+  setOnboardingSelectedSessionId: (sessionId: string | null) => void;
+
+  // Session Onboarding Steps (complete onboarding flow)
+  sessionOnboardingSteps: {
+    genreSelection: boolean; // Initial genre selection dialog
+    inferenceButton: boolean; // Guide for using the inference button
+    sessionEdit: boolean; // Guide for editing session
+    openResource: boolean; // Guide for opening resources
+    resourceManagement: boolean; // Guide for managing resources
+    helpVideo: boolean; // Guide for help video
+    sessionData: boolean; // Guide for session data
+  };
+  setSessionOnboardingStep: (
+    step:
+      | "genreSelection"
+      | "inferenceButton"
+      | "sessionEdit"
+      | "openResource"
+      | "resourceManagement"
+      | "helpVideo"
+      | "sessionData",
+    completed: boolean,
+  ) => void;
 
   // Auth
   userId: string | null;
   setUserId: (userId: string | null) => void;
+  jwt: string | null;
+  setJwt: (jwt: string | null) => void;
+  subscribed: boolean;
+  setSubscribed: (subscribed: boolean) => void;
+  isOpenSubscribeNudge: boolean;
+  setIsOpenSubscribeNudge: (open: boolean) => void;
 
   // Sync
   isSyncEnabled: boolean;
@@ -129,10 +179,6 @@ interface AppState {
   isDataManagementOpen: boolean;
   setIsDataManagementOpen: (isOpen: boolean) => void;
 
-  // Agreements
-  agreement: AgreementType;
-  setAgreement: (agreement: AgreementType) => void;
-
   // Card Import Don't Show Again
   isCardImportDonNotShowAgain: boolean;
   setIsCardImportDonNotShowAgain: (isDonNotShowAgain: boolean) => void;
@@ -141,23 +187,25 @@ interface AppState {
   isGroupButtonDonNotShowAgain: boolean;
   setIsGroupButtonDonNotShowAgain: (isDonNotShowAgain: boolean) => void;
 
-  // Telemetry
-  isTelemetryEnabled: boolean;
-  setIsTelemetryEnabled: (isTelemetryEnabled: boolean) => void;
-
   // Settings
   settingPageLevel: SettingPageLevel;
   setSettingPageLevel: (settingPageLevel: SettingPageLevel) => void;
   settingSubPage: SettingSubPageType;
   setSettingSubPage: (settingSubPage: SettingSubPageType) => void;
-  settingDetailPage: LegalPageType;
-  setSettingDetailPage: (settingDetailPage: LegalPageType) => void;
-  legalPage: LegalPageType; // TODO: remove this
-  setLegalPage: (legalPage: LegalPageType) => void; // TODO: remove this
+  settingDetailPage: SettingDetailPageType;
+  setSettingDetailPage: (settingDetailPage: SettingDetailPageType) => void;
 
   // Loading
   isLoading: boolean;
   setIsLoading: (isLoading: boolean) => void;
+
+  // Image Generation Loading State
+  generatingImageId: string | null; // Stores the ID of the currently generating image
+  setGeneratingImageId: (id: string | null) => void;
+
+  // Polling context for active generation
+  generatingContext: PollingContext | null;
+  setGeneratingContext: (context: PollingContext | null) => void;
 
   // CardEditOpen
   cardEditOpen: CardType | null;
@@ -187,7 +235,7 @@ const lastPagePerMenu = new Map<Menu, Page>([
 
 const useAppStoreBase = create<AppState>()(
   persist(
-    immer((set) => ({
+    immer((set, get) => ({
       // Default
       isDefaultInitialized: false,
       setIsDefaultInitialized: (isDefaultInitialized) =>
@@ -208,7 +256,7 @@ const useAppStoreBase = create<AppState>()(
           state.blockedMenu = blockedMenu;
         }),
 
-      activePage: Page.Init,
+      activePage: Page.OnboardingStepOne, // Will be updated by initialization logic
       setActivePage: (activePage) =>
         set((state) => {
           switch (activePage) {
@@ -235,16 +283,66 @@ const useAppStoreBase = create<AppState>()(
               // Reset to main settings page when navigating to settings
               state.settingPageLevel = SettingPageLevel.main;
               break;
+            case Page.Subscribe:
+              if (
+                state.activePage === Page.OnboardingStepTwo ||
+                state.activePage === Page.OnboardingStepOne
+              ) {
+                break;
+              }
+              state.returnPage = state.activePage;
+              break;
           }
           state.activePage = activePage;
           lastPagePerMenu.set(state.activeMenu, activePage);
         }),
+      returnPage: Page.Init,
+      backToReturnPage: () => {
+        const returnPage = get().returnPage;
+        get().setActivePage(returnPage);
+      },
 
-      // Onboarding
+      // Onboarding (legacy - for existing users)
       isPassedOnboarding: false,
       setIsPassedOnboarding: (isPassedOnboarding) =>
         set((state) => {
           state.isPassedOnboarding = isPassedOnboarding;
+        }),
+
+      // Onboarding selected session
+      onboardingSelectedSessionId: null,
+      setOnboardingSelectedSessionId: (sessionId) =>
+        set((state) => {
+          state.onboardingSelectedSessionId = sessionId;
+        }),
+
+      // Session Onboarding Steps
+      sessionOnboardingSteps: {
+        genreSelection: false,
+        inferenceButton: false,
+        sessionEdit: true,
+        openResource: true,
+        resourceManagement: true,
+        helpVideo: true,
+        sessionData: true,
+      },
+      setSessionOnboardingStep: (step, completed) =>
+        set((state) => {
+          state.sessionOnboardingSteps[step] = completed;
+
+          // Check if all onboarding steps are completed
+          const allStepsCompleted = Object.entries(state.sessionOnboardingSteps)
+            .filter(([key]) => key !== "genreSelection") // Exclude genre selection from completion check
+            .every(([, value]) => value === true);
+
+          // If all steps completed, mark legacy onboarding as passed
+          if (
+            allStepsCompleted &&
+            state.sessionOnboardingSteps.genreSelection
+          ) {
+            state.isPassedOnboarding = true;
+            state.onboardingSelectedSessionId = null;
+          }
         }),
 
       // Auth
@@ -252,6 +350,21 @@ const useAppStoreBase = create<AppState>()(
       setUserId: (userId) =>
         set((state) => {
           state.userId = userId;
+        }),
+      jwt: null,
+      setJwt: (jwt) =>
+        set((state) => {
+          state.jwt = jwt;
+        }),
+      subscribed: false,
+      setSubscribed: (subscribed) =>
+        set((state) => {
+          state.subscribed = subscribed;
+        }),
+      isOpenSubscribeNudge: false,
+      setIsOpenSubscribeNudge: (open) =>
+        set((state) => {
+          state.isOpenSubscribeNudge = open;
         }),
 
       // Sync status
@@ -298,13 +411,6 @@ const useAppStoreBase = create<AppState>()(
           state.isDataManagementOpen = isOpen;
         }),
 
-      // Agreements
-      agreement: AgreementType.None,
-      setAgreement: (agreement) =>
-        set((state) => {
-          state.agreement = agreement;
-        }),
-
       // Card Import Don't Show Again
       isCardImportDonNotShowAgain: false,
       setIsCardImportDonNotShowAgain: (isDonNotShowAgain) =>
@@ -319,13 +425,6 @@ const useAppStoreBase = create<AppState>()(
           state.isGroupButtonDonNotShowAgain = isDonNotShowAgain;
         }),
 
-      // Telemetry
-      isTelemetryEnabled: false,
-      setIsTelemetryEnabled: (isTelemetryEnabled) =>
-        set((state) => {
-          state.isTelemetryEnabled = isTelemetryEnabled;
-        }),
-
       // Settings
       settingPageLevel: SettingPageLevel.main,
       setSettingPageLevel: (settingPageLevel) =>
@@ -337,15 +436,10 @@ const useAppStoreBase = create<AppState>()(
         set((state) => {
           state.settingSubPage = settingSubPage;
         }),
-      settingDetailPage: LegalPageType.privacyPolicy,
+      settingDetailPage: SettingDetailPageType.privacyPolicy,
       setSettingDetailPage: (settingDetailPage) =>
         set((state) => {
           state.settingDetailPage = settingDetailPage;
-        }),
-      legalPage: LegalPageType.privacyPolicy,
-      setLegalPage: (legalPage) =>
-        set((state) => {
-          state.legalPage = legalPage;
         }),
 
       // Loading
@@ -353,6 +447,20 @@ const useAppStoreBase = create<AppState>()(
       setIsLoading: (isLoading) =>
         set((state) => {
           state.isLoading = isLoading;
+        }),
+
+      // Image Generation Loading State
+      generatingImageId: null,
+      setGeneratingImageId: (id) =>
+        set((state) => {
+          state.generatingImageId = id;
+        }),
+
+      // Polling context for active generation
+      generatingContext: null,
+      setGeneratingContext: (context) =>
+        set((state) => {
+          state.generatingContext = context;
         }),
 
       // CardEditOpen
@@ -385,6 +493,41 @@ const useAppStoreBase = create<AppState>()(
     {
       name: "app-store",
       storage: new LocalPersistStorage<AppState>(),
+      onRehydrateStorage: () => (state) => {
+        if (state && state.isPassedOnboarding === true) {
+          // For existing users who already passed onboarding, mark all steps as completed
+          state.sessionOnboardingSteps = {
+            genreSelection: true,
+            inferenceButton: true,
+            sessionEdit: true,
+            openResource: true,
+            resourceManagement: true,
+            helpVideo: true,
+            sessionData: true,
+          };
+        }
+      },
+      // version: 2, // Increment version to trigger migration
+      // migrate: (persistedState: any, version: number) => {
+      //   if (version === 0 || version === 1) {
+      //     // For existing users who have passed onboarding,
+      //     // automatically set new onboarding states to completed
+      //     if (persistedState.isPassedOnboarding === true) {
+      //       persistedState.onboardingStep = OnboardingStep.Completed;
+      //       persistedState.onboardingSelectedSessionId = null;
+      //       // Mark all session onboarding steps as completed for existing users
+      //       persistedState.sessionOnboardingSteps = {
+      //         inferenceButton: true,
+      //         sessionEdit: true,
+      //         openResource: true,
+      //         resourceManagement: true,
+      //         helpVideo: true,
+      //         sessionData: true,
+      //       };
+      //     }
+      //   }
+      //   return persistedState;
+      // },
       // Do not persist these states
       partialize: (state) =>
         Object.fromEntries(
@@ -392,6 +535,7 @@ const useAppStoreBase = create<AppState>()(
             ([key]) =>
               ![
                 "userId",
+                "jwt",
                 "activeSubscription",
                 "isSyncReady",
                 "isLoginOpen",
@@ -399,6 +543,8 @@ const useAppStoreBase = create<AppState>()(
                 "passphraseMode",
                 "isSyncSourceOpen",
                 "isMobile",
+                "generatingImageId", // Don't persist this state
+                "generatingContext", // Don't persist polling context (contains File objects)
               ].includes(key),
           ),
         ) as AppState,

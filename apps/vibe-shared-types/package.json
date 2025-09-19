@@ -1,0 +1,18 @@
+{
+  "name": "vibe-shared-types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript types for vibe backend and frontend",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist/"
+  ]
+}

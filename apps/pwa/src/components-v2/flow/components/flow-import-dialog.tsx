@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import { ImportDialog } from "@/components-v2/import-dialog";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { ModelItem } from "@/components-v2/title/create-title/step-prompts";
+import { AgentModelCard } from "@/components-v2/flow/components/agent-model-card";
 import { SvgIcon } from "@/components-v2/svg-icon";
+import { ModelTier } from "@/modules/agent/domain/agent";
 
 export interface AgentModel {
   agentId: string;
   agentName?: string;
   modelName: string;
+  modelTier?: ModelTier;
 }
 
 export interface FlowImportDialogProps {
@@ -86,58 +89,40 @@ export function FlowImportDialog({
     >
       {agentModels.length > 0 && (
         <div className="self-stretch max-h-96 flex flex-col justify-start items-start gap-4 overflow-hidden">
-          <ScrollArea className="w-full max-h-96">
+          <ScrollArea className="w-full max-h-96 overflow-y-auto">
             <div className="flex flex-col gap-4">
               {agentModels.map((agent) => (
-                <div
+                <AgentModelCard
                   key={agent.agentId}
-                  className="self-stretch p-4 bg-background-surface-3 rounded inline-flex flex-col justify-start items-start gap-2"
+                  agentName={agent.agentName || `Agent ${agent.agentId.slice(0, 8)}`}
+                  originalModel={agent.modelName}
+                  recommendedTier={agent.modelTier || ModelTier.Light}
                 >
-                  <div className="self-stretch flex flex-col justify-start items-start gap-4">
-                    <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                      <div className="self-stretch justify-start text-text-subtle text-base font-normal leading-relaxed">
-                        Agent : {agent.agentName}
-                      </div>
-                    </div>
-                    <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                      <div className="self-stretch flex-1 justify-start text-text-subtle text-base font-normal leading-relaxed">
-                        Flow original model
-                      </div>
-                      <div className="self-stretch flex-1 justify-start text-text-primary text-base font-normal leading-relaxed">
-                        {agent.modelName || "No model"}
-                      </div>
-                    </div>
-                    <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                      <div className="self-stretch justify-start text-text-subtle text-base font-medium leading-relaxed">
-                        Select model to connect
-                      </div>
-                      <div className="self-stretch">
-                        <ModelItem
-                          forceMobile={true}
-                          connectionChanged={(
+                  <div className="self-stretch">
+                    <ModelItem
+                      forceMobile={true}
+                      connectionChanged={(
+                        apiSource,
+                        modelId,
+                        modelName,
+                      ) => {
+                        const newOverrides = new Map(
+                          agentModelOverrides,
+                        );
+                        if (modelName) {
+                          newOverrides.set(agent.agentId, {
                             apiSource,
                             modelId,
                             modelName,
-                          ) => {
-                            const newOverrides = new Map(
-                              agentModelOverrides,
-                            );
-                            if (modelName) {
-                              newOverrides.set(agent.agentId, {
-                                apiSource,
-                                modelId,
-                                modelName,
-                              });
-                            } else {
-                              newOverrides.delete(agent.agentId);
-                            }
-                            setAgentModelOverrides(newOverrides);
-                          }}
-                        />
-                      </div>
-                    </div>
+                          });
+                        } else {
+                          newOverrides.delete(agent.agentId);
+                        }
+                        setAgentModelOverrides(newOverrides);
+                      }}
+                    />
                   </div>
-                </div>
+                </AgentModelCard>
               ))}
             </div>
           </ScrollArea>

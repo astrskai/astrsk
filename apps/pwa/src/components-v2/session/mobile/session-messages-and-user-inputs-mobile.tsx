@@ -8,7 +8,7 @@ import {
   Send,
   Shuffle,
   Trash2,
-  X
+  X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
@@ -222,7 +222,7 @@ const MessageItemInternalMobile = ({
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {  
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     onEditDone();
                   }
@@ -412,7 +412,10 @@ const ScenarioMessageItemMobile = ({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <Markdown className="markdown" rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+          <Markdown
+            className="markdown"
+            rehypePlugins={[rehypeRaw, rehypeSanitize]}
+          >
             {content}
           </Markdown>
         )}
@@ -532,7 +535,10 @@ const ScenarioMessageItem = ({
             }}
           />
         ) : (
-          <Markdown className="markdown" rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+          <Markdown
+            className="markdown"
+            rehypePlugins={[rehypeRaw, rehypeSanitize]}
+          >
             {content}
           </Markdown>
         )}
@@ -745,7 +751,7 @@ const UserInputAutoReplyButton = ({
   characterCount: number;
 }) => {
   const hasMultipleCharacters = characterCount > 1;
-  
+
   return (
     <div
       className="group relative flex flex-col gap-[4px] items-center cursor-pointer"
@@ -756,7 +762,9 @@ const UserInputAutoReplyButton = ({
             break;
           case AutoReply.Random:
             // Skip Rotate option if only one character
-            setAutoReply(hasMultipleCharacters ? AutoReply.Rotate : AutoReply.Off);
+            setAutoReply(
+              hasMultipleCharacters ? AutoReply.Rotate : AutoReply.Off,
+            );
             break;
           case AutoReply.Rotate:
             setAutoReply(AutoReply.Off);
@@ -785,15 +793,13 @@ const UserInputAutoReplyButton = ({
             Off
           </div>
         )}
-        {autoReply === AutoReply.Random && (
-          <Shuffle size={21} />
-        )}
-        {autoReply === AutoReply.Rotate && (
-          <SvgIcon name="rotate" size={21} />
-        )}
+        {autoReply === AutoReply.Random && <Shuffle size={21} />}
+        {autoReply === AutoReply.Rotate && <SvgIcon name="rotate" size={21} />}
       </div>
       <div
-        className={cn("w-[82px] font-[500] text-[12px] leading-[15px] text-text-body text-center select-none")}
+        className={cn(
+          "w-[82px] font-[500] text-[12px] leading-[15px] text-text-body text-center select-none",
+        )}
       >
         {autoReply === AutoReply.Off && "Auto-reply off"}
         {autoReply === AutoReply.Random && "Random-reply"}
@@ -942,10 +948,10 @@ const UserInputsMobile = ({
                     />
                   </div>
                   <div className="shrink-0">
-                    <UserInputAutoReplyButton 
-                      autoReply={autoReply} 
-                      setAutoReply={setAutoReply} 
-                      characterCount={aiCharacterCardIds?.length || 0} 
+                    <UserInputAutoReplyButton
+                      autoReply={autoReply}
+                      setAutoReply={setAutoReply}
+                      characterCount={aiCharacterCardIds?.length || 0}
                     />
                   </div>
                 </div>
@@ -1026,9 +1032,7 @@ const UserInputsMobile = ({
               ) : (
                 <button
                   ref={sendButtonRef}
-                  disabled={
-                    messageContent.trim() === ""
-                  }
+                  disabled={messageContent.trim() === ""}
                   onClick={() => {
                     addUserMessage?.(messageContent);
                     setMessageContent("");
@@ -1079,7 +1083,9 @@ const AddPlotCardModal = ({
         <Button variant="outline" size="lg" onClick={onAdd}>
           Add a Plot card
         </Button>
-        <Button size="lg" onClick={onSkip}>Skip and start</Button>
+        <Button size="lg" onClick={onSkip}>
+          Skip and start
+        </Button>
       </div>
     </div>
   );
@@ -1114,7 +1120,9 @@ const SelectScenarioModal = ({
         <Button variant="ghost" size="lg" onClick={onSkip}>
           Skip
         </Button>
-        <Button size="lg" onClick={onAdd}>Add</Button>
+        <Button size="lg" onClick={onAdd}>
+          Add
+        </Button>
       </div>
     </div>
   );
@@ -1393,20 +1401,24 @@ const SessionMessagesAndUserInputsMobile = ({
   );
 
   // Set auto reply
-  const setAutoReply = useCallback(async (autoReply: AutoReply) => {
-    if (!session) {
-      return;
-    }
-    session.update({
-      autoReply,
-    });
-    await SessionService.saveSession.execute({ session });
+  const setAutoReply = useCallback(
+    async (autoReply: AutoReply) => {
+      if (!session) {
+        return;
+      }
+      session.update({
+        autoReply,
+      });
+      await SessionService.saveSession.execute({ session });
 
-    // Invalidate session query
-    queryClient.invalidateQueries({
-      queryKey: sessionQueries.detail(selectedSessionId ?? undefined).queryKey,
-    });
-  }, [session, queryClient, selectedSessionId]);
+      // Invalidate session query
+      queryClient.invalidateQueries({
+        queryKey: sessionQueries.detail(selectedSessionId ?? undefined)
+          .queryKey,
+      });
+    },
+    [session, queryClient, selectedSessionId],
+  );
 
   // Add plot card modal
   const [plotCard] = useCard<PlotCard>(session?.plotCard?.id);
@@ -1414,8 +1426,6 @@ const SessionMessagesAndUserInputsMobile = ({
   const messageCount = session?.turnIds.length ?? 0;
   const plotCardId = session?.plotCard?.id.toString() ?? "";
   useEffect(() => {
-    logger.debug("[Hook] useEffect: Add plot card modal");
-
     // Check session has plot card
     if (plotCardId !== "") {
       setIsOpenAddPlotCardModal(false);
@@ -1507,16 +1517,18 @@ const SessionMessagesAndUserInputsMobile = ({
 
     // Render scenarios
     const renderedScenarios = await Promise.all(
-      plotCard.props.scenarios.map(async (scenario: { name: string; description: string }) => {
-        const renderedScenario = await TemplateRenderer.render(
-          scenario.description,
-          context,
-        );
-        return {
-          name: scenario.name,
-          description: renderedScenario,
-        };
-      }),
+      plotCard.props.scenarios.map(
+        async (scenario: { name: string; description: string }) => {
+          const renderedScenario = await TemplateRenderer.render(
+            scenario.description,
+            context,
+          );
+          return {
+            name: scenario.name,
+            description: renderedScenario,
+          };
+        },
+      ),
     );
     setRenderedScenarios(renderedScenarios);
   }, [sessionUserCardId, sessionAllCards, plotCardScenario]);
@@ -1810,7 +1822,8 @@ const SessionMessagesAndUserInputsMobile = ({
           <DialogHeader>
             <DialogTitle>Want to add a plot card?</DialogTitle>
             <p className="text-text-body">
-              You will not be able to add a scenario, because you have not selected a plot card for this session.
+              You will not be able to add a scenario, because you have not
+              selected a plot card for this session.
             </p>
           </DialogHeader>
           <DialogFooter>
@@ -1898,7 +1911,7 @@ const SessionMessagesAndUserInputsMobile = ({
                   {isAddingScenario && (
                     <Loader2 className="animate-spin h-4 w-4" />
                   )}
-                    Add
+                  Add
                 </div>
               </Button>
             </div>
@@ -1930,6 +1943,5 @@ const SessionMessagesAndUserInputsMobile = ({
 export {
   MessageItemInternalMobile,
   SessionMessagesAndUserInputsMobile,
-  UserInputsMobile
+  UserInputsMobile,
 };
-

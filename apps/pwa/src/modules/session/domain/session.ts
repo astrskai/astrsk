@@ -147,7 +147,7 @@ export class Session extends AggregateRoot<SessionProps> {
         }).getValue(),
       chatStyles: props.chatStyles,
       flowId: props.flowId!,
-      autoReply: props.autoReply ?? AutoReply.Off,
+      autoReply: props.autoReply ?? AutoReply.Random,
       dataSchemaOrder: props.dataSchemaOrder || [],
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date(),

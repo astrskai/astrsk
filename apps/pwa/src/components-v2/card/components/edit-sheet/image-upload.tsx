@@ -29,10 +29,22 @@ export const ImageUpload = ({
   // New icon
   const [newIconUrl, setNewIconUrl] = useState<string | null>(null);
   useEffect(() => {
+    let objectUrl: string | null = null;
+
     if (newIcon && newIcon.length > 0) {
       const file = newIcon[0];
-      setNewIconUrl(URL.createObjectURL(file));
+      objectUrl = URL.createObjectURL(file);
+      setNewIconUrl(objectUrl);
+    } else {
+      setNewIconUrl(null);
     }
+
+    // Cleanup function to revoke the object URL
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
   }, [newIcon]);
 
   return (

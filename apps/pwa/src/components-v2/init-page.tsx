@@ -1,6 +1,6 @@
+import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { cn } from "@/shared/utils";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 
 const InitialPage = ({ className }: { className?: string }) => {
   const isMobile = useIsMobile();
@@ -8,7 +8,7 @@ const InitialPage = ({ className }: { className?: string }) => {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-4 py-36 w-full h-full",
+        "flex flex-col items-center justify-center gap-6 py-20 w-full h-full",
         isMobile ? "bg-background-surface-2" : "bg-[#1B1B1B]",
         className,
       )}
@@ -23,6 +23,10 @@ const InitialPage = ({ className }: { className?: string }) => {
           <span>Your sessions are stored locally — </span>
           <span className="font-semibold">only on your device</span>
         </div>
+      </div>
+      <div className="text-[12px] leading-[15px] font-[400] text-text-info text-center">
+        Company Name: harpy chat(jejoon yoo) / Address: 7, Samseong-ro 58-gil, Gangnam-gu,  Seoul, Republic of Korea, 06282<br/>
+        Contact: +82-10-7490-1918 or cyoo@astrsk.ai / BRN: 299-88-02625
       </div>
     </div>
   );

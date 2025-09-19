@@ -1,13 +1,15 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/components-v2/lib/utils";
+import { SubscribeBadge } from "@/components-v2/subscribe-badge";
 
 const buttonPillVariants = cva(
-  "rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-center items-center transition-all",
+  "relative rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-center items-center transition-all",
   {
     variants: {
       variant: {
         default: "bg-background-surface-4 hover:bg-background-surface-5",
+        gradient: "relative",
       },
       size: {
         default: "px-3 py-2 gap-2",
@@ -75,6 +77,7 @@ export interface ButtonPillProps
   iconClassName?: string;
   active?: boolean;
   onDoubleClick?: () => void;
+  isSubscribeBadge?: boolean;
 }
 
 const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
@@ -87,6 +90,7 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
       iconClassName,
       active,
       onDoubleClick,
+      isSubscribeBadge,
       children,
       ...props
     },
@@ -95,6 +99,62 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
     const [isPressed, setIsPressed] = React.useState(false);
     const [isHovered, setIsHovered] = React.useState(false);
     const isActive = active || isPressed;
+
+    if (variant === "gradient") {
+      return (
+        <button
+          className={cn(
+            "w-28 relative inline-flex items-center justify-center transition-all rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_0px_10px_0px_rgba(181,158,255,0.50)] outline outline-2 outline-offset-[-2px] outline-status-required",
+            size === "default" ? "px-3 py-2 gap-2" : "px-6 py-3 gap-2",
+            className,
+          )}
+          ref={ref}
+          onMouseDown={() => setIsPressed(true)}
+          onMouseUp={() => setIsPressed(false)}
+          onMouseLeave={() => {
+            setIsPressed(false);
+            setIsHovered(false);
+          }}
+          onMouseEnter={() => setIsHovered(true)}
+          {...props}
+        >
+          {isSubscribeBadge && <SubscribeBadge />}
+
+          {/* Background gradient layer */}
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500" />
+          
+          {/* Foreground content layer */}
+          <div className={cn(
+            "relative flex items-center justify-center gap-2 bg-background-surface-4 rounded-[6px] px",
+            "absolute inset-[2px]",
+            isActive && "bg-background-surface-light",
+            isActive && isHovered && "opacity-70"
+          )}>
+            {icon && (
+              <div className={iconVariants({ size })}>
+                {React.cloneElement(icon as React.ReactElement, {
+                  className: cn(
+                    size === "lg"
+                      ? "min-w-5 min-h-4"
+                      : "max-w-4 max-h-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+                    isActive ? "text-text-contrast-text" : "text-text-primary",
+                    "stroke-2",
+                  ),
+                })}
+              </div>
+            )}
+            <span
+              className={textVariants({
+                size,
+                variant: isActive ? "active" : "default",
+              })}
+            >
+              {children}
+            </span>
+          </div>
+        </button>
+      );
+    }
 
     return (
       <button
@@ -116,6 +176,8 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
         // onDoubleClick={onDoubleClick}
         {...props}
       >
+        {isSubscribeBadge && <SubscribeBadge />}
+
         {icon && (
           <div className={iconVariants({ size })}>
             {React.cloneElement(icon as React.ReactElement, {

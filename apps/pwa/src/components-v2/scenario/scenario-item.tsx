@@ -23,8 +23,8 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
   return (
     <div
       className={cn(
-        "self-stretch p-4 bg-background-surface-4 rounded flex flex-col justify-start items-start gap-2 cursor-pointer",
-        active && "outline-2 outline-border-selected-primary",
+        "self-stretch p-4 bg-background-surface-4 rounded flex flex-col justify-start items-start gap-2 cursor-pointer border-2",
+        active ? "border-border-selected-primary" : "border-transparent",
       )}
       onClick={onClick}
     >

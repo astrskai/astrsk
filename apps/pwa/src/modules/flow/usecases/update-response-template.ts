@@ -3,15 +3,15 @@ import { DrizzleFlowRepo } from "@/modules/flow/repos/impl/drizzle-flow-repo";
 
 interface UpdateResponseTemplateRequest {
   flowId: string;
-  template: string;
+  responseTemplate: string;
 }
 
 export class UpdateResponseTemplate implements UseCase<UpdateResponseTemplateRequest, Result<void>> {
   private repo = new DrizzleFlowRepo();
 
-  async execute({ flowId, template }: UpdateResponseTemplateRequest): Promise<Result<void>> {
+  async execute({ flowId, responseTemplate }: UpdateResponseTemplateRequest): Promise<Result<void>> {
     try {
-      return await this.repo.updateResponseTemplate(flowId, template);
+      return await this.repo.updateResponseTemplate(flowId, responseTemplate);
     } catch (error) {
       return Result.fail(
         `Failed to update response template: ${

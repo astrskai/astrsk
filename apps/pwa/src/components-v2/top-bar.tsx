@@ -5,8 +5,10 @@ import { useCardsStore } from "@/app/stores/cards-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components-v2/svg-icon";
-import { SquareArrowUpRight } from "lucide-react";
+import { ButtonPill } from "@/components-v2/ui/button-pill";
+import { Code, SquareArrowUpRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+
 
 const NewWindowButton = () => {
   const handleNewWindow = useCallback(() => {
@@ -29,6 +31,7 @@ const NewWindowButton = () => {
     </button>
   );
 };
+
 
 export function TopBar() {
   // Detect Windows platform
@@ -129,6 +132,7 @@ export function TopBar() {
           <div className="absolute inset-x-[160px] inset-y-[6px] flex flex-row justify-center items-center gap-[8px] font-[500] text-[16px] leading-[20px]">
             <span className="text-text-body">{activeMenu}</span>
           </div>
+
 
           {/* Windows: Window controls */}
           {isWindows && (

@@ -6,10 +6,16 @@ import { LoadAgentRepo } from "@/modules/agent/repos";
 import { LoadDataStoreNodeRepo } from "@/modules/data-store-node/repos";
 import { LoadIfNodeRepo } from "@/modules/if-node/repos";
 import { NodeType } from "@/flow-multi/types/node-types";
+import { ModelTier } from "@/modules/agent/domain/agent";
 
 // Enhanced legacy format - extends flow structure with separate node data
 
-export class ExportFlowWithNodes implements UseCase<UniqueEntityID, Result<File>> {
+interface ExportCommand {
+  flowId: UniqueEntityID;
+  modelTierSelections?: Map<string, ModelTier>;
+}
+
+export class ExportFlowWithNodes implements UseCase<ExportCommand, Result<File>> {
   constructor(
     private loadFlowRepo: LoadFlowRepo,
     private loadAgentRepo: LoadAgentRepo,
@@ -17,7 +23,7 @@ export class ExportFlowWithNodes implements UseCase<UniqueEntityID, Result<File>
     private loadIfNodeRepo: LoadIfNodeRepo,
   ) {}
 
-  async execute(flowId: UniqueEntityID): Promise<Result<File>> {
+  async execute({ flowId, modelTierSelections }: ExportCommand): Promise<Result<File>> {
     try {
       // 1. Get flow data
       const flowOrError = await this.loadFlowRepo.getFlowById(flowId);
@@ -47,9 +53,12 @@ export class ExportFlowWithNodes implements UseCase<UniqueEntityID, Result<File>
               // For agent nodes, the agentId might be in node.data.agentId or just node.id
               const agentId = (node.data as any)?.agentId || node.id;
               const agentOrError = await this.loadAgentRepo.getAgentById(new UniqueEntityID(agentId));
-              
+
               if (agentOrError.isSuccess) {
-                agents[node.id] = agentOrError.getValue().toJSON();
+                const agentData = agentOrError.getValue().toJSON();
+                // Add model tier from selections or use agent's existing tier or default to Light
+                agentData.modelTier = modelTierSelections?.get(node.id) || agentData.modelTier || ModelTier.Light;
+                agents[node.id] = agentData;
                 processing.agents.exported++;
               } else {
                 console.warn(`Failed to export agent for node ${node.id}:`, agentOrError.getError());

@@ -14,6 +14,7 @@ export interface OptionProps {
   content: string;
   tokenSize: number;
   variables?: object;
+  assetId?: string;
 
   // Data Store
   dataStore: DataStoreSavedField[];
@@ -26,6 +27,7 @@ export interface OptionJSON {
   content: string;
   tokenSize: number;
   variables?: object;
+  assetId?: string;
   dataStore?: DataStoreSavedField[];
   translations: Record<string, string>;
 }
@@ -51,6 +53,10 @@ export class Option extends ValueObject<OptionProps> {
     return this.props.dataStore;
   }
 
+  get assetId(): string | undefined {
+    return this.props.assetId;
+  }
+
   public static create(props: Partial<OptionProps>): Result<Option> {
     const guardResult = Guard.againstNullOrUndefinedBulk([
       { argument: props.content, argumentName: "content" },
@@ -66,6 +72,7 @@ export class Option extends ValueObject<OptionProps> {
       translations: props.translations ?? new Map<string, string>(),
       variables: props.variables ?? {},
       dataStore: props.dataStore ?? [],
+      assetId: props.assetId,
     };
     const option = new Option(propsWithDefaults);
     return Result.ok(option);
@@ -96,11 +103,16 @@ export class Option extends ValueObject<OptionProps> {
     return Option.create({ ...this.props, translations: newTranslations });
   }
 
+  public withAssetId(assetId: string | undefined): Result<Option> {
+    return Option.create({ ...this.props, assetId });
+  }
+
   public toJSON(): OptionJSON {
     return {
       content: this.props.content,
       tokenSize: this.props.tokenSize,
       variables: this.props.variables,
+      assetId: this.props.assetId,
       dataStore: this.props.dataStore,
       translations: Object.fromEntries(
         this.props.translations?.entries() ?? [],
@@ -113,6 +125,7 @@ export class Option extends ValueObject<OptionProps> {
       content: json.content,
       tokenSize: json.tokenSize,
       variables: json.variables,
+      assetId: json.assetId,
       dataStore: json.dataStore ?? [],
       translations: new Map(Object.entries(json.translations)),
     });

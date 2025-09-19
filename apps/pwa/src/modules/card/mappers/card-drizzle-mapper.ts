@@ -27,6 +27,7 @@ export class CardDrizzleMapper {
       cardSummary: row.common.card_summary ?? undefined,
       version: row.common.version ?? undefined,
       conceptualOrigin: row.common.conceptual_origin ?? undefined,
+      imagePrompt: row.common.image_prompt ?? undefined,
       createdAt: row.common.created_at,
       updatedAt: row.common.updated_at,
     };
@@ -93,6 +94,7 @@ export class CardDrizzleMapper {
         card_summary: domain.props.cardSummary,
         version: domain.props.version,
         conceptual_origin: domain.props.conceptualOrigin,
+        image_prompt: domain.props.imagePrompt,
       },
     };
 

@@ -6,10 +6,12 @@ import { cards } from "@/db/schema/cards";
 import { characterCards } from "@/db/schema/character-cards";
 import { dataStoresNodes } from "@/db/schema/data-store-nodes";
 import { flows } from "@/db/schema/flows";
+import { generatedImages } from "@/db/schema/generated-images";
 import { ifNodes } from "@/db/schema/if-nodes";
 import { plotCards } from "@/db/schema/plot-cards";
 import { sessions } from "@/db/schema/sessions";
 import { turns } from "@/db/schema/turns";
+import { vibeSessions } from "@/db/schema/vibe-sessions";
 
 export const Schema = {
   // Common
@@ -33,4 +35,8 @@ export const Schema = {
   sessions,
   turns,
   backgrounds,
+  generatedImages,
+  
+  // Vibe Session
+  vibeSessions,
 } as const;

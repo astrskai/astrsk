@@ -1,4 +1,11 @@
-import { jsonb, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  jsonb,
+  pgTable,
+  text,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 import {
   InsertCharacterCard,
@@ -18,6 +25,8 @@ export const cards = pgTable(TableName.Cards, {
   card_summary: text(),
   version: varchar(),
   conceptual_origin: varchar(),
+  vibe_session_id: uuid(), // Reference to active vibe session
+  image_prompt: text(), // Prompt for image generation
   ...timestamps,
 });
 

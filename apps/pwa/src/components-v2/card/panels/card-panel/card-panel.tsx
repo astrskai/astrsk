@@ -4,6 +4,8 @@ import { CardType } from "@/modules/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardService } from "@/app/services/card-service";
 import { AssetService } from "@/app/services/asset-service";
+import { GeneratedImageService } from "@/app/services/generated-image-service";
+import { generatedImageKeys } from "@/app/queries/generated-image/query-factory";
 import { TradingCard } from "@/components-v2/card/components/trading-card";
 import { useCardPanelContext } from "@/components-v2/card/panels/card-panel-provider";
 import { CardItem } from "@/components-v2/left-navigation/card-list";
@@ -12,17 +14,28 @@ import { cn } from "@/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { cardQueries, useUpdateCardTitle } from "@/app/queries/card";
-import { BookOpen, Pencil, Check, X } from "lucide-react";
+import { BookOpen, Pencil, Check, X, Image } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { Button } from "@/components-v2/ui/button";
+import { SvgIcon } from "@/components-v2/svg-icon";
 import { invalidateSingleCardQueries } from "@/components-v2/card/utils/invalidate-card-queries";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
 import { Avatar } from "@/components-v2/avatar";
+import { useAppStore } from "@/app/stores/app-store";
 
 interface CardPanelProps {
   cardId: string;
   card?: Card | null;
 }
+
+type CardPanelType =
+  | "metadata"
+  | "content"
+  | "lorebooks"
+  | "scenarios"
+  | "variables"
+  | "imageGenerator"
+  | "vibe";
 
 // Trading card item component with proper scaling
 const TradingCardItem = ({
@@ -57,12 +70,17 @@ const TradingCardItem = ({
           </div>
         </div>
       )}
+      <div className="absolute inset-0 rounded-[19px] ring-2 ring-border-light pointer-events-none" />
+      {/*
+      todo: remove this 
+      */}
+      {/*
       {isActive ? (
         <div className="absolute inset-0 rounded-[19px] ring-2 ring-border-light pointer-events-none" />
       ) : (
         // Default border
         <div className="absolute inset-0 rounded-[19px] ring-2 ring-border-light pointer-events-none" />
-      )}
+      )} */}
     </div>
   );
 };
@@ -74,18 +92,28 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { openPanel, closePanel, panelVisibility } = useCardPanelContext();
   const queryClient = useQueryClient();
+  const subscribed = useAppStore.use.subscribed();
+  const setIsOpenSubscribeNudge = useAppStore.use.setIsOpenSubscribeNudge();
 
   // Use fine-grained mutation for title updates with optimistic updates
   const updateTitle = useUpdateCardTitle(cardId);
 
   // Get left navigation state for conditional margins
   const { isExpanded, isMobile } = useLeftNavigationWidth();
-
+  
   // Use React Query to get card data
   const { data: cardFromQuery } = useQuery(cardQueries.detail(cardId));
 
   // Use provided card or the one from query
   const card = providedCard || cardFromQuery;
+
+  // No longer need right sidebar state since vibe panel is now local
+
+  // Vibe Coding handler - opens the local vibe panel instead of global right panel
+  const handleVibeCodingToggle = () => {
+    if (!card) return;
+    handleOpenPanel("vibe");
+  };
 
   // Helper function to extract character name from card
   const getCharacterName = (card: Card): string => {
@@ -99,9 +127,9 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   };
 
   // Get the avatar image URL
-  const [avatarUrl] = useAsset(card?.props.iconAssetId);
+  const [avatarUrl, isAvatarVideo] = useAsset(card?.props.iconAssetId);
 
-  const handleOpenPanel = (panelType: string) => {
+  const handleOpenPanel = (panelType: CardPanelType) => {
     openPanel(panelType);
   };
 
@@ -138,29 +166,55 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
 
     setIsUploadingAvatar(true);
     try {
-      // Upload the file to create an asset
+      // Step 1: Create asset first
+      console.log("🖼️ [CARD-PANEL] Creating asset from uploaded file");
       const assetResult = await AssetService.saveFileToAsset.execute({ file });
 
       if (assetResult.isSuccess) {
         const asset = assetResult.getValue();
+        console.log("✅ [CARD-PANEL] Asset created:", asset.id.toString());
 
-        // Update the card with the new icon asset ID
-        const updateResult = card.update({ iconAssetId: asset.id });
+        // Step 2: Add to gallery FIRST (this becomes the source of truth)
+        console.log("🖼️ [CARD-PANEL] Adding image to gallery first");
+        const generatedImageResult = await GeneratedImageService.saveGeneratedImageFromAsset.execute({
+          assetId: asset.id,
+          name: file.name.replace(/\.[^/.]+$/, ""),
+          prompt: `Card avatar for ${card.props.title || "Untitled"}`,
+          style: "uploaded",
+          associatedCardId: card.id,
+        });
 
-        if (updateResult.isSuccess) {
-          // Save the card to the database
-          const saveResult = await CardService.saveCard.execute(card);
+        if (generatedImageResult.isSuccess) {
+          console.log("✅ [CARD-PANEL] Image added to gallery");
 
-          if (saveResult.isSuccess) {
-            // Invalidate all queries for this card
-            await invalidateSingleCardQueries(queryClient, card.id);
-
-            // Avatar updated successfully
+          // Step 3: Update card to reference the SAME asset (no separate asset creation)
+          const updateResult = card.update({ iconAssetId: asset.id });
+          
+          if (updateResult.isSuccess) {
+            const saveResult = await CardService.saveCard.execute(card);
+            
+            if (saveResult.isSuccess) {
+              // Invalidate all queries for this card
+              await invalidateSingleCardQueries(queryClient, card.id);
+              
+              // Also invalidate generated images for this card and global list
+              console.log("🔄 [CARD-PANEL] Invalidating generated images queries");
+              await queryClient.invalidateQueries({
+                queryKey: generatedImageKeys.cardImages(card.id.toString()),
+              });
+              // Also invalidate the global list so image generator gallery updates immediately
+              await queryClient.invalidateQueries({
+                queryKey: generatedImageKeys.lists(),
+              });
+              console.log("✅ [CARD-PANEL] Image added to gallery and set as card icon using same asset");
+            } else {
+              console.error("Failed to save card:", saveResult.getError());
+            }
           } else {
-            console.error("Failed to save card:", saveResult.getError());
+            console.error("Failed to update card:", updateResult.getError());
           }
         } else {
-          console.error("Failed to update card:", updateResult.getError());
+          console.error("Failed to add image to gallery:", generatedImageResult.getError());
         }
       } else {
         console.error("Failed to upload file:", assetResult.getError());
@@ -266,57 +320,94 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
         </div>
 
         {/* Panel control buttons */}
-        <div className="w-full flex flex-wrap justify-start items-start gap-2">
-          <ButtonPill
-            onClick={() => handleOpenPanel("metadata")}
-            // onDoubleClick={() => handleClosePanel("metadata")}
-            active={panelVisibility?.["metadata"]}
-            size="default"
-          >
-            Metadata
-          </ButtonPill>
-
-          <ButtonPill
-            onClick={() => handleOpenPanel("content")}
-            // onDoubleClick={() => handleClosePanel("content")}
-            active={panelVisibility?.["content"]}
-            size="default"
-            className="whitespace-nowrap"
-          >
-            {card.props.type === CardType.Plot ? "Plot info" : "Character info"}
-          </ButtonPill>
-
-          {/* Show Lore books button for both Character and Plot cards */}
-          <ButtonPill
-            onClick={() => handleOpenPanel("lorebooks")}
-            // onDoubleClick={() => handleClosePanel("lorebooks")}
-            active={panelVisibility?.["lorebooks"]}
-            size="default"
-          >
-            Lorebook
-          </ButtonPill>
-
-          {/* Show Scenarios button only for Plot cards */}
-          {card.props.type === CardType.Plot && (
+        <div className="w-full flex justify-between items-start gap-2">
+          {/* Left side buttons */}
+          <div className="flex flex-wrap gap-2">
             <ButtonPill
-              onClick={() => handleOpenPanel("scenarios")}
-              // onDoubleClick={() => handleClosePanel("scenarios")}
-              active={panelVisibility?.["scenarios"]}
+              onClick={() => handleOpenPanel("metadata")}
+              // onDoubleClick={() => handleClosePanel("metadata")}
+              active={panelVisibility?.["metadata"]}
               size="default"
             >
-              Scenarios
+              Metadata
             </ButtonPill>
-          )}
 
-          <ButtonPill
-            onClick={() => handleOpenPanel("variables")}
-            // onDoubleClick={() => handleClosePanel("variables")}
-            active={panelVisibility?.["variables"]}
-            size="default"
-            icon={<BookOpen />}
-          >
-            Variables
-          </ButtonPill>
+            <ButtonPill
+              onClick={() => handleOpenPanel("content")}
+              // onDoubleClick={() => handleClosePanel("content")}
+              active={panelVisibility?.["content"]}
+              size="default"
+              className="whitespace-nowrap"
+            >
+              {card.props.type === CardType.Plot ? "Plot info" : "Character info"}
+            </ButtonPill>
+
+            {/* Show Lore books button for both Character and Plot cards */}
+            <ButtonPill
+              onClick={() => handleOpenPanel("lorebooks")}
+              // onDoubleClick={() => handleClosePanel("lorebooks")}
+              active={panelVisibility?.["lorebooks"]}
+              size="default"
+            >
+              Lorebook
+            </ButtonPill>
+
+            {/* Show Scenarios button only for Plot cards */}
+            {card.props.type === CardType.Plot && (
+              <ButtonPill
+                onClick={() => handleOpenPanel("scenarios")}
+                // onDoubleClick={() => handleClosePanel("scenarios")}
+                active={panelVisibility?.["scenarios"]}
+                size="default"
+              >
+                Scenarios
+              </ButtonPill>
+            )}
+          </div>
+          
+          {/* Right side buttons */}
+          <div className="flex flex-wrap gap-2 justify-end">
+            <ButtonPill
+              onClick={() => handleOpenPanel("variables")}
+              // onDoubleClick={() => handleClosePanel("variables")}
+              active={panelVisibility?.["variables"]}
+              size="default"
+              icon={<BookOpen />}
+            >
+              Variables
+            </ButtonPill>
+            <ButtonPill
+              onClick={() => {
+                if (!subscribed) {
+                  setIsOpenSubscribeNudge(true);
+                  return;
+                }
+                handleOpenPanel("imageGenerator");
+              }}
+              active={panelVisibility?.["imageGenerator"]}
+              size="default"
+              icon={<Image />}
+              className="w-32 h-8"
+              isSubscribeBadge={!subscribed}
+            >
+              Image studio
+            </ButtonPill>
+            <ButtonPill
+              icon={<SvgIcon name="ai_assistant" />}
+              active={panelVisibility?.["vibe"] || false}
+              onClick={() => {
+                if (!subscribed) {
+                  setIsOpenSubscribeNudge(true);
+                  return;
+                }
+                handleVibeCodingToggle();
+              }}
+              className="w-32 h-8"
+              isSubscribeBadge={!subscribed}
+            >
+              AI assistant  
+            </ButtonPill>
+          </div>
         </div>
       </div>
 
@@ -332,6 +423,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
                     src={avatarUrl}
                     alt={getCharacterName(card)}
                     size={112}
+                    isVideo={isAvatarVideo}
                   />
                 </div>
                 <div className="w-28 text-center text-text-primary text-xl font-normal truncate">
@@ -363,6 +455,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
           </div>
         </div>
       </div>
+
     </div>
   );
 }
