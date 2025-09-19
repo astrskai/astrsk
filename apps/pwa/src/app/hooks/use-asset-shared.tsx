@@ -10,8 +10,19 @@ import { assetQueries } from "@/app/queries/asset-queries";
 const SKELETON_PATH = "/img/skeleton.svg";
 
 // Global cache for object URLs to share across components
-// Key: filePath, Value: { url: string, refCount: number }
-const globalObjectUrlCache = new Map<string, { url: string; refCount: number }>();
+// Key: filePath, Value: { url: string, refCount: number, keepAlive: boolean }
+const globalObjectUrlCache = new Map<
+  string,
+  {
+    url: string;
+    refCount: number;
+    keepAlive: boolean; // If true, URL won't be revoked even when refCount is 0
+  }
+>();
+
+// Cleanup old URLs periodically (after 5 minutes of non-use)
+const URL_CLEANUP_DELAY = 5 * 60 * 1000; // 5 minutes
+const cleanupTimers = new Map<string, NodeJS.Timeout>();
 
 // Create a shared object URL that's reused across components
 const useSharedOpfsFile = (filePath?: string | null) => {
@@ -22,13 +33,30 @@ const useSharedOpfsFile = (filePath?: string | null) => {
     // Cleanup function for previous path
     const cleanup = () => {
       if (currentPathRef.current) {
-        const cached = globalObjectUrlCache.get(currentPathRef.current);
+        const path = currentPathRef.current;
+        const cached = globalObjectUrlCache.get(path);
         if (cached) {
           cached.refCount--;
-          // Only revoke URL when no components are using it
-          if (cached.refCount <= 0) {
-            URL.revokeObjectURL(cached.url);
-            globalObjectUrlCache.delete(currentPathRef.current);
+
+          // Clear any existing cleanup timer
+          const existingTimer = cleanupTimers.get(path);
+          if (existingTimer) {
+            clearTimeout(existingTimer);
+            cleanupTimers.delete(path);
+          }
+
+          // Only schedule cleanup when no components are using it
+          if (cached.refCount <= 0 && !cached.keepAlive) {
+            // Schedule cleanup after delay to allow for navigation
+            const timer = setTimeout(() => {
+              const stillCached = globalObjectUrlCache.get(path);
+              if (stillCached && stillCached.refCount <= 0) {
+                URL.revokeObjectURL(stillCached.url);
+                globalObjectUrlCache.delete(path);
+                cleanupTimers.delete(path);
+              }
+            }, URL_CLEANUP_DELAY);
+            cleanupTimers.set(path, timer);
           }
         }
         currentPathRef.current = null;
@@ -44,6 +72,13 @@ const useSharedOpfsFile = (filePath?: string | null) => {
     // Check if we already have this URL cached
     const existingCache = globalObjectUrlCache.get(filePath);
     if (existingCache) {
+      // Clear any pending cleanup timer since we're reusing it
+      const existingTimer = cleanupTimers.get(filePath);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+        cleanupTimers.delete(filePath);
+      }
+
       // Reuse existing URL
       existingCache.refCount++;
       currentPathRef.current = filePath;
@@ -68,7 +103,11 @@ const useSharedOpfsFile = (filePath?: string | null) => {
 
         if (mounted) {
           // Cache the URL for reuse
-          globalObjectUrlCache.set(filePath, { url, refCount: 1 });
+          globalObjectUrlCache.set(filePath, {
+            url,
+            refCount: 1,
+            keepAlive: false,
+          });
           currentPathRef.current = filePath;
           setObjectUrl(url);
         } else {
