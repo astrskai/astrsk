@@ -22,8 +22,11 @@ import { FloatingActionButton } from "@/components-v2/ui/floating-action-button"
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { Separator } from "@/components-v2/ui/separator";
 import { Switch } from "@/components-v2/ui/switch";
-import { Authenticated } from "convex/react";
-import { useEffect, useState } from "react";
+import { Authenticated, Unauthenticated } from "convex/react";
+import { useAuth, useSignUp } from "@clerk/clerk-react";
+import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
+import { logger } from "@/shared/utils/logger";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -169,6 +172,39 @@ const MainPage = () => {
   const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
   const setSettingSubPage = useAppStore.use.setSettingSubPage();
 
+  // Sign up with SSO
+  const { userId } = useAuth();
+  const { isLoaded: isLoadedSignUp, signUp } = useSignUp();
+  const [isLoading, setIsLoading] = useState(false);
+  const signUpWithDiscord = useCallback(() => {
+    // Check sign up is loaded
+    if (!isLoadedSignUp) {
+      return;
+    }
+
+    // Check already signed in
+    if (userId) {
+      toast.info("You already signed in");
+      return;
+    }
+
+    try {
+      // Try to sign up with google
+      setIsLoading(true);
+      signUp.authenticateWithRedirect({
+        strategy: "oauth_discord",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/",
+      });
+    } catch (error) {
+      setIsLoading(false);
+      logger.error(error);
+      toast.error("Failed to sign up", {
+        description: JSON.stringify(error),
+      });
+    }
+  }, [isLoadedSignUp, signUp, userId]);
+
   return (
     <ScrollArea className="h-full">
       <div className="mx-auto my-6 pb-6 w-full max-w-[587px] pt-[80px]">
@@ -196,6 +232,19 @@ const MainPage = () => {
                 <ChevronRight className="h-5 w-5 text-text-secondary" />
               </div>
             </Authenticated>
+            <Unauthenticated>
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => {
+                  signUpWithDiscord();
+                }}
+              >
+                <TypoBase className="font-semibold text-text-body">
+                  Sign in
+                </TypoBase>
+                <ChevronRight className="h-5 w-5 text-text-secondary" />
+              </div>
+            </Unauthenticated>
           </ConvexReady>
 
           <div
