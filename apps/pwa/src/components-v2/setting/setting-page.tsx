@@ -24,7 +24,9 @@ import { Separator } from "@/components-v2/ui/separator";
 import { Switch } from "@/components-v2/ui/switch";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
+import { logger } from "@/shared/utils/logger";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
