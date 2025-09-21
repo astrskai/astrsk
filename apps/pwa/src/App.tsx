@@ -227,11 +227,7 @@ function V2Layout({
         <SidebarLeftProvider defaultOpen={!isMobile}>
           <LeftNavigation />
           <LeftNavigationTrigger />
-          <SidebarInset>
-            <main className="relative flex-1 overflow-hidden h-full w-full">
-              {children}
-            </main>
-          </SidebarInset>
+          <SidebarInset>{children}</SidebarInset>
           <Toaster expand className="!z-[9999]" />
         </SidebarLeftProvider>
       </div>
