@@ -1,7 +1,5 @@
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
-import { QueryClientProvider } from "@tanstack/react-query";
-
 import { createContext, useContext, useEffect, useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
 
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
 import { useGlobalErrorHandler } from "@/app/hooks/use-global-error-handler";
@@ -15,6 +13,7 @@ import {
   SidebarLeftProvider,
 } from "@/components-v2/both-sidebar";
 import { usePwa } from "@/components-v2/hooks/use-pwa";
+import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { InstallPwa } from "@/components-v2/install-pwa";
 import { LeftNavigationMobile } from "@/components-v2/left-navigation";
 import {
@@ -158,7 +157,7 @@ function V2Layout({
     return (
       <>
         <TopBar />
-        <div className="flex items-center justify-center h-[calc(100dvh-40px)] bg-background-screen">
+        <div className="bg-background-screen flex h-[calc(100dvh-40px)] items-center justify-center">
           <Loading isTimer />
         </div>
       </>
@@ -170,7 +169,7 @@ function V2Layout({
     return (
       <>
         <TopBar />
-        <div className="flex items-center justify-center h-[calc(100dvh-40px)] bg-background-screen">
+        <div className="bg-background-screen flex h-[calc(100dvh-40px)] items-center justify-center">
           <Loading />
         </div>
       </>
@@ -186,7 +185,7 @@ function V2Layout({
           >
             <div
               className={cn(
-                "antialiased h-dvh w-full text-foreground safe-area-all",
+                "text-foreground safe-area-all h-dvh w-full antialiased",
                 "flex flex-col",
                 "font-inter",
                 "bg-background-surface-2",
@@ -200,7 +199,7 @@ function V2Layout({
               <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
                 <SheetContent
                   side="left"
-                  className="w-[250px] p-0 bg-background-container"
+                  className="bg-background-container w-[250px] p-0"
                   hideClose
                 >
                   <LeftNavigationMobile
@@ -220,9 +219,9 @@ function V2Layout({
     <ThemeProvider>
       <div
         className={cn(
-          "h-dvh min-h-dvh max-h-dvh w-full overflow-hidden",
+          "h-dvh max-h-dvh min-h-dvh w-full overflow-hidden",
           "flex flex-col",
-          "antialiased font-inter text-foreground",
+          "font-inter text-foreground antialiased",
         )}
       >
         <TopBar />
