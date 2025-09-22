@@ -14,7 +14,7 @@ import { api } from "@/convex";
 import { logger } from "@/shared/utils/logger";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "convex/react";
-import { Ban, Bot, ChevronDown, Coins, Zap } from "lucide-react";
+import { Ban, Bot, ChevronDown, Coins, UserRoundPlus, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -394,8 +394,8 @@ const SubscribePage = () => {
                     disabled={!isLoadedSignUp || isLoading}
                     loading={isLoading}
                   >
-                    {!isLoading && <SvgIcon name="discord" size={16} />}
-                    Join our Discord server and start now
+                    {!isLoading && <UserRoundPlus size={16} />}
+                    Get on the Waitlist
                   </Button>
                 </div>
               )}
