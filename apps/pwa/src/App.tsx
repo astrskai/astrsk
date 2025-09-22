@@ -167,12 +167,14 @@ function V2Layout({
 
   // Real loading
   if (!defaultInitialized) {
-    <>
-      <TopBar />
-      <div className="flex items-center justify-center h-[calc(100dvh-40px)] bg-background-screen">
-        <Loading />
-      </div>
-    </>;
+    return (
+      <>
+        <TopBar />
+        <div className="flex items-center justify-center h-[calc(100dvh-40px)] bg-background-screen">
+          <Loading />
+        </div>
+      </>
+    );
   }
 
   if (isMobile) {
@@ -227,11 +229,7 @@ function V2Layout({
         <SidebarLeftProvider defaultOpen={!isMobile}>
           <LeftNavigation />
           <LeftNavigationTrigger />
-          <SidebarInset>
-            <main className="relative flex-1 overflow-hidden h-full w-full">
-              {children}
-            </main>
-          </SidebarInset>
+          <SidebarInset>{children}</SidebarInset>
           <Toaster expand className="!z-[9999]" />
         </SidebarLeftProvider>
       </div>
