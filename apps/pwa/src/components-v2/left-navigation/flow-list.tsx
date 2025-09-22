@@ -2,7 +2,10 @@
 
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { useCloneFlowWithNodes, useDeleteFlowWithNodes } from "@/app/queries/flow/mutations/flow-mutations";
+import {
+  useCloneFlowWithNodes,
+  useDeleteFlowWithNodes,
+} from "@/app/queries/flow/mutations/flow-mutations";
 import { queryClient } from "@/app/queries/query-client";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
@@ -11,11 +14,17 @@ import { useAgentStore } from "@/app/stores/agent-store";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { FlowDialog } from "@/components-v2/flow/flow-dialog";
 import { FlowImportDialog } from "@/components-v2/flow/components/flow-import-dialog";
-import { FlowExportDialog, AgentModelTierInfo } from "@/components-v2/flow/components/flow-export-dialog";
+import {
+  FlowExportDialog,
+  AgentModelTierInfo,
+} from "@/components-v2/flow/components/flow-export-dialog";
 import { ModelTier } from "@/modules/agent/domain/agent";
-import { SECTION_HEADER_HEIGHT } from "@/components-v2/left-navigation/constants";
 import { SectionHeader } from "@/components-v2/left-navigation/left-navigation";
-import { SearchInput, CreateButton, ImportButton } from "@/components-v2/left-navigation/shared-list-components";
+import {
+  SearchInput,
+  CreateButton,
+  ImportButton,
+} from "@/components-v2/left-navigation/shared-list-components";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { DeleteConfirm } from "@/components-v2/confirm";
@@ -108,7 +117,9 @@ const FlowItem = ({
           const agentQuery = await queryClient.fetchQuery({
             queryKey: ["agent", agentId],
             queryFn: async () => {
-              const result = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
+              const result = await AgentService.getAgent.execute(
+                new UniqueEntityID(agentId),
+              );
               if (result.isFailure) throw new Error(result.getError());
               return result.getValue();
             },
@@ -135,59 +146,62 @@ const FlowItem = ({
   }, [flow]);
 
   // Handle export with tier selections
-  const handleExport = useCallback(async (modelTierSelections: Map<string, ModelTier>) => {
-    try {
-      // Check if service is initialized
-      if (
-        !FlowService.exportFlowWithNodes ||
-        typeof FlowService.exportFlowWithNodes.execute !== "function"
-      ) {
-        console.error(
-          "FlowService.exportFlowWithNodes not initialized:",
-          FlowService.exportFlowWithNodes,
-        );
-        toast.error("Export service not initialized yet. Please try again.");
-        return;
-      }
+  const handleExport = useCallback(
+    async (modelTierSelections: Map<string, ModelTier>) => {
+      try {
+        // Check if service is initialized
+        if (
+          !FlowService.exportFlowWithNodes ||
+          typeof FlowService.exportFlowWithNodes.execute !== "function"
+        ) {
+          console.error(
+            "FlowService.exportFlowWithNodes not initialized:",
+            FlowService.exportFlowWithNodes,
+          );
+          toast.error("Export service not initialized yet. Please try again.");
+          return;
+        }
 
-      // Export flow to file using enhanced export with model tier selections
-      const fileOrError = await FlowService.exportFlowWithNodes.execute({
-        flowId,
-        modelTierSelections,
-      });
-      if (fileOrError.isFailure) {
-        throw new Error(fileOrError.getError());
-      }
-      const file = fileOrError.getValue();
-
-      if (!file) {
-        throw new Error("Export returned empty file");
-      }
-
-      // Download flow file
-      downloadFile(file);
-      toast.success("Flow exported successfully");
-      setIsExportDialogOpen(false);
-    } catch (error) {
-      console.error("Export error:", error);
-      logger.error(error);
-      if (error instanceof Error) {
-        toast.error("Failed to export flow", {
-          description: error.message,
+        // Export flow to file using enhanced export with model tier selections
+        const fileOrError = await FlowService.exportFlowWithNodes.execute({
+          flowId,
+          modelTierSelections,
         });
+        if (fileOrError.isFailure) {
+          throw new Error(fileOrError.getError());
+        }
+        const file = fileOrError.getValue();
+
+        if (!file) {
+          throw new Error("Export returned empty file");
+        }
+
+        // Download flow file
+        downloadFile(file);
+        toast.success("Flow exported successfully");
+        setIsExportDialogOpen(false);
+      } catch (error) {
+        console.error("Export error:", error);
+        logger.error(error);
+        if (error instanceof Error) {
+          toast.error("Failed to export flow", {
+            description: error.message,
+          });
+        }
       }
-    }
-  }, [flowId]);
+    },
+    [flowId],
+  );
 
   // Handle copy
   const handleCopy = useCallback(async () => {
     try {
       const copiedFlow = await cloneFlowMutation.mutateAsync(flowId.toString());
-      
+
       // Select copied flow after the clone operation is fully complete
       // The mutation's onSuccess has already populated the cache
       selectFlowId(copiedFlow.id.toString());
-      
+
       toast.success("Flow copied successfully");
     } catch (error) {
       logger.error(error);
@@ -224,7 +238,7 @@ const FlowItem = ({
         selectFlowId(null);
         setActivePage(Page.Init);
       }
-      
+
       toast.success("Flow deleted successfully");
     } catch (error) {
       logger.error(error);
@@ -262,19 +276,21 @@ const FlowItem = ({
           {flow?.props.name}
         </div>
         <div className="group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden shrink-0">
-          <div className={cn(
-            "px-2 py-0.5 font-[500] text-xs leading-[16px]",
-            flow?.props.readyState === ReadyState.Ready 
-              ? "text-status-ready-dark" 
+          <div
+            className={cn(
+              "px-2 py-0.5 font-[500] text-xs leading-[16px]",
+              flow?.props.readyState === ReadyState.Ready
+                ? "text-status-ready-dark"
+                : flow?.props.readyState === ReadyState.Error
+                  ? "text-status-destructive-light"
+                  : "text-text-placeholder",
+            )}
+          >
+            {flow?.props.readyState === ReadyState.Ready
+              ? "Ready"
               : flow?.props.readyState === ReadyState.Error
-              ? "text-status-destructive-light"
-              : "text-text-placeholder"
-          )}>
-            {flow?.props.readyState === ReadyState.Ready 
-              ? "Ready" 
-              : flow?.props.readyState === ReadyState.Error
-              ? "Error"
-              : "Draft"}
+                ? "Error"
+                : "Draft"}
           </div>
         </div>
 
@@ -308,7 +324,8 @@ const FlowItem = ({
                   }}
                   disabled={cloneFlowMutation.isPending}
                   className={cn(
-                    cloneFlowMutation.isPending && "opacity-50 cursor-not-allowed"
+                    cloneFlowMutation.isPending &&
+                      "opacity-50 cursor-not-allowed",
                   )}
                 >
                   {cloneFlowMutation.isPending ? (
@@ -336,7 +353,8 @@ const FlowItem = ({
                   }}
                   disabled={deleteFlowMutation.isPending}
                   className={cn(
-                    deleteFlowMutation.isPending && "opacity-50 cursor-not-allowed"
+                    deleteFlowMutation.isPending &&
+                      "opacity-50 cursor-not-allowed",
                   )}
                 >
                   {deleteFlowMutation.isPending ? (
@@ -383,16 +401,16 @@ const FlowItem = ({
   );
 };
 
-const FlowSection = ({ 
-  onClick, 
-  onboardingHighlight, 
+const FlowSection = ({
+  onClick,
+  onboardingHighlight,
   onboardingCollapsed,
   onHelpClick,
-  onboardingHelpGlow
-}: { 
-  onClick?: () => void; 
-  onboardingHighlight?: boolean; 
-  onboardingCollapsed?: boolean; 
+  onboardingHelpGlow,
+}: {
+  onClick?: () => void;
+  onboardingHighlight?: boolean;
+  onboardingCollapsed?: boolean;
   onHelpClick?: () => void;
   onboardingHelpGlow?: boolean;
 }) => {
@@ -423,14 +441,14 @@ const FlowSection = ({
     async (props: Partial<Flow["props"]>) => {
       try {
         setIsCreating(true);
-        
+
         // Create flow using the domain use case
         const flowOrError = await FlowService.createFlow.execute();
         if (flowOrError.isFailure) {
           throw new Error(flowOrError.getError());
         }
         const flow = flowOrError.getValue();
-        
+
         // Update the flow name if provided
         if (props.name && props.name !== "New Flow") {
           const updatedFlowOrError = flow.update({ name: props.name });
@@ -438,26 +456,27 @@ const FlowSection = ({
             throw new Error(updatedFlowOrError.getError());
           }
           const updatedFlow = updatedFlowOrError.getValue();
-          const savedFlowOrError = await FlowService.saveFlow.execute(updatedFlow);
+          const savedFlowOrError =
+            await FlowService.saveFlow.execute(updatedFlow);
           if (savedFlowOrError.isFailure) {
             throw new Error(savedFlowOrError.getError());
           }
           const savedFlow = savedFlowOrError.getValue();
-          
+
           // Select created flow
           selectFlowId(savedFlow.id.toString());
         } else {
           // Select created flow with default name
           selectFlowId(flow.id.toString());
         }
-        
+
         setActivePage(Page.Flow);
 
         // Invalidate flows
         queryClient.invalidateQueries({
           queryKey: flowQueries.lists(),
         });
-        
+
         toast.success("Flow created successfully");
       } catch (error) {
         logger.error(error);
@@ -538,7 +557,13 @@ const FlowSection = ({
     }
   }, []);
   const handleImport = useCallback(
-    async (file: File, overrides?: Map<string, { apiSource: string; modelId: string; modelName: string }>) => {
+    async (
+      file: File,
+      overrides?: Map<
+        string,
+        { apiSource: string; modelId: string; modelName: string }
+      >,
+    ) => {
       try {
         setIsImporting(true);
 
@@ -555,13 +580,13 @@ const FlowSection = ({
         // Use passed overrides or fall back to state
         const modelOverrides = overrides || agentModelOverrides;
 
-
         // Import flow from file using enhanced import
-        const importedFlowOrError = await FlowService.importFlowWithNodes.execute({
-          file,
-          agentModelOverrides:
-            modelOverrides.size > 0 ? modelOverrides : undefined,
-        });
+        const importedFlowOrError =
+          await FlowService.importFlowWithNodes.execute({
+            file,
+            agentModelOverrides:
+              modelOverrides.size > 0 ? modelOverrides : undefined,
+          });
         if (importedFlowOrError.isFailure) {
           toast.error(
             `Failed to import flow from file: ${importedFlowOrError.getError()}`,
@@ -601,14 +626,14 @@ const FlowSection = ({
   );
 
   return (
-    <div className={cn(
-      onboardingHighlight && "border-1 border-border-selected-primary"
-    )}>
+    <div
+      className={cn(
+        onboardingHighlight && "border-1 border-border-selected-primary",
+      )}
+    >
       <SectionHeader
         name="Flow & Agents"
         icon={<SvgIcon name="agents" size={20} />}
-        top={SECTION_HEADER_HEIGHT * 2}
-        bottom={0}
         expanded={expanded}
         onToggle={() => setExpanded((prev) => !prev)}
         onClick={() => {

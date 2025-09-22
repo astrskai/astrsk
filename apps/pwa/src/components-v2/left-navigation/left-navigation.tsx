@@ -5,7 +5,6 @@ import { SidebarLeft, useSidebarLeft } from "@/components-v2/both-sidebar";
 import { ConvexReady } from "@/components-v2/convex-ready";
 import { HelpVideoDialog } from "@/components-v2/help-video-dialog";
 import { CardSection } from "@/components-v2/left-navigation/card-list";
-import { SECTION_HEADER_HEIGHT } from "@/components-v2/left-navigation/constants";
 import { FlowSection } from "@/components-v2/left-navigation/flow-list";
 import { SessionSection } from "@/components-v2/left-navigation/session-list";
 import { cn } from "@/components-v2/lib/utils";
@@ -37,7 +36,7 @@ function openInNewTab(url: string) {
 const SectionHeader = ({
   name,
   icon,
-  top,
+  top = 0,
   bottom,
   expanded = true,
   onToggle = () => {},
@@ -115,11 +114,9 @@ const LeftNavigation = () => {
     const containerOffset = navigationRef.current.offsetTop;
     const section = document.getElementById(`nav-${to}`);
     const sectionOffset = section?.offsetTop ?? 0;
-    const headerHeightOffset =
-      SECTION_HEADER_HEIGHT * ["session", "card", "flow"].indexOf(to);
 
     navigationRef.current.scrollTo({
-      top: sectionOffset - containerOffset - headerHeightOffset,
+      top: sectionOffset - containerOffset,
       behavior: "smooth",
     });
   }, []);
