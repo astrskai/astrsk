@@ -167,12 +167,14 @@ function V2Layout({
 
   // Real loading
   if (!defaultInitialized) {
-    <>
-      <TopBar />
-      <div className="flex items-center justify-center h-[calc(100dvh-40px)] bg-background-screen">
-        <Loading />
-      </div>
-    </>;
+    return (
+      <>
+        <TopBar />
+        <div className="flex items-center justify-center h-[calc(100dvh-40px)] bg-background-screen">
+          <Loading />
+        </div>
+      </>
+    );
   }
 
   if (isMobile) {
