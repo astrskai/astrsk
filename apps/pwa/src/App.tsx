@@ -1,4 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { initializeEnvironment } from "@/utils/environment";
+
+// Initialize environment detection once at app startup
+initializeEnvironment();
+        
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
@@ -157,7 +162,7 @@ function V2Layout({
     return (
       <>
         <TopBar />
-        <div className="bg-background-screen flex h-[calc(100dvh-40px)] items-center justify-center">
+        <div className="bg-background-screen flex h-[calc(100dvh-var(--topbar-height))] items-center justify-center">
           <Loading isTimer />
         </div>
       </>
@@ -169,7 +174,7 @@ function V2Layout({
     return (
       <>
         <TopBar />
-        <div className="bg-background-screen flex h-[calc(100dvh-40px)] items-center justify-center">
+        <div className="bg-background-screen flex h-[calc(100dvh-var(--topbar-height))] items-center justify-center">
           <Loading />
         </div>
       </>

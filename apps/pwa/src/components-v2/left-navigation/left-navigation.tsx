@@ -303,7 +303,7 @@ const LeftNavigationTrigger = () => {
       {shouldShowSidebarTooltip && (
         <div
           className={cn(
-            "absolute top-[calc(38px+76px)] left-[16px] z-50 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary whitespace-nowrap",
+            "absolute top-[calc(var(--topbar-height)+76px)] left-[16px] z-50 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary whitespace-nowrap",
             "transition-all ease-out duration-300",
             "group-hover/trigger-parent:opacity-0",
           )}
@@ -316,7 +316,7 @@ const LeftNavigationTrigger = () => {
 
       <button
         className={cn(
-          "z-40 absolute top-[calc(38px+16px)] left-[16px] grid place-items-center",
+          "z-40 absolute top-[calc(var(--topbar-height)+16px)] left-[16px] grid place-items-center",
           "size-[40px] bg-[#313131] border-1 border-[#757575] rounded-full",
           open && "hidden",
           shouldShowSidebarTooltip &&

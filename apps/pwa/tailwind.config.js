@@ -101,6 +101,23 @@ module.exports = {
       },
     },
     extend: {
+      spacing: {
+        topbar: "var(--topbar-height)",
+      },
+      height: {
+        "screen-minus-topbar": "calc(100vh - var(--topbar-height))",
+        "screen-minus-topbar-dv": "calc(100dvh - var(--topbar-height))",
+        "screen-minus-topbar-sv": "calc(100svh - var(--topbar-height))",
+      },
+      inset: {
+        topbar: "var(--topbar-height)",
+      },
+      margin: {
+        topbar: "var(--topbar-height)",
+      },
+      padding: {
+        topbar: "var(--topbar-height)",
+      },
       screens: {
         mobile: "1440px",
         desktop: "1920px",
