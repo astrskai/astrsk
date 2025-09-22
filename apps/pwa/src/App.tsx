@@ -2,6 +2,10 @@ import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { initializeEnvironment } from "@/utils/environment";
+
+// Initialize environment detection once at app startup
+initializeEnvironment();
 
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
 import { useGlobalErrorHandler } from "@/app/hooks/use-global-error-handler";
@@ -158,7 +162,7 @@ function V2Layout({
     return (
       <>
         <TopBar />
-        <div className="flex items-center justify-center h-[calc(100dvh-40px)] bg-background-screen">
+        <div className="flex items-center justify-center h-[calc(100dvh-var(--topbar-height))] bg-background-screen">
           <Loading isTimer />
         </div>
       </>
@@ -169,7 +173,7 @@ function V2Layout({
   if (!defaultInitialized) {
     <>
       <TopBar />
-      <div className="flex items-center justify-center h-[calc(100dvh-40px)] bg-background-screen">
+      <div className="flex items-center justify-center h-[calc(100dvh-var(--topbar-height))] bg-background-screen">
         <Loading />
       </div>
     </>;

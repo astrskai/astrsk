@@ -89,7 +89,7 @@ const SubscribePage = () => {
   return (
     <div
       className={cn(
-        "z-40 absolute inset-0 top-[38px]",
+        "z-40 absolute inset-0 top-[var(--topbar-height)]",
         "bg-[url('/img/subscription/bg-subscribe.jpg')] bg-cover bg-center",
       )}
     >

@@ -160,7 +160,12 @@ export default function CreateSessionPage({
 
   return (
     <FormProvider {...methods}>
-      <div className={cn("z-30 absolute inset-0 mt-[38px]", className)}>
+      <div
+        className={cn(
+          "z-30 absolute inset-0 mt-[var(--topbar-height)]",
+          className,
+        )}
+      >
         <Stepper
           title="Create session"
           description={createSessionName}
