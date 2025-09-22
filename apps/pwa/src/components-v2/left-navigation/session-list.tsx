@@ -11,7 +11,11 @@ import { SessionService } from "@/app/services/session-service";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { SectionHeader } from "@/components-v2/left-navigation/left-navigation";
-import { SearchInput, CreateButton, ImportButton } from "@/components-v2/left-navigation/shared-list-components";
+import {
+  SearchInput,
+  CreateButton,
+  ImportButton,
+} from "@/components-v2/left-navigation/shared-list-components";
 import { StepName } from "@/components-v2/session/create-session/step-name";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import {
@@ -22,8 +26,14 @@ import {
 import { Button } from "@/components-v2/ui/button";
 import { Checkbox } from "@/components-v2/ui/checkbox";
 import { DeleteConfirm } from "@/components-v2/confirm";
-import { SessionImportDialog, type AgentModel } from "@/components-v2/session/components/session-import-dialog";
-import { SessionExportDialog, type AgentModelTierInfo } from "@/components-v2/session/components/session-export-dialog";
+import {
+  SessionImportDialog,
+  type AgentModel,
+} from "@/components-v2/session/components/session-import-dialog";
+import {
+  SessionExportDialog,
+  type AgentModelTierInfo,
+} from "@/components-v2/session/components/session-export-dialog";
 import { ModelTier } from "@/modules/agent/domain/agent";
 import {
   Dialog,
@@ -113,7 +123,9 @@ const SessionItem = ({
           const agentQuery = await queryClient.fetchQuery({
             queryKey: ["agent", agentId],
             queryFn: async () => {
-              const result = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
+              const result = await AgentService.getAgent.execute(
+                new UniqueEntityID(agentId),
+              );
               if (result.isFailure) throw new Error(result.getError());
               return result.getValue();
             },
@@ -140,32 +152,38 @@ const SessionItem = ({
   }, [session]);
 
   // Handle export with tier selections
-  const handleExport = useCallback(async (modelTierSelections: Map<string, ModelTier>, includeHistory: boolean) => {
-    try {
-      // Export session to file with model tier selections
-      const fileOrError = await SessionService.exportSessionToFile.execute({
-        sessionId: sessionId,
-        includeHistory: includeHistory,
-        modelTierSelections: modelTierSelections,
-      });
-      if (fileOrError.isFailure) {
-        throw new Error(fileOrError.getError());
-      }
-      const file = fileOrError.getValue();
-
-      // Download session file
-      downloadFile(file);
-      toast.success("Session exported successfully");
-      setIsOpenExport(false);
-    } catch (error) {
-      logger.error(error);
-      if (error instanceof Error) {
-        toast.error("Failed to export session", {
-          description: error.message,
+  const handleExport = useCallback(
+    async (
+      modelTierSelections: Map<string, ModelTier>,
+      includeHistory: boolean,
+    ) => {
+      try {
+        // Export session to file with model tier selections
+        const fileOrError = await SessionService.exportSessionToFile.execute({
+          sessionId: sessionId,
+          includeHistory: includeHistory,
+          modelTierSelections: modelTierSelections,
         });
+        if (fileOrError.isFailure) {
+          throw new Error(fileOrError.getError());
+        }
+        const file = fileOrError.getValue();
+
+        // Download session file
+        downloadFile(file);
+        toast.success("Session exported successfully");
+        setIsOpenExport(false);
+      } catch (error) {
+        logger.error(error);
+        if (error instanceof Error) {
+          toast.error("Failed to export session", {
+            description: error.message,
+          });
+        }
       }
-    }
-  }, [sessionId]);
+    },
+    [sessionId],
+  );
 
   // Handle copy
   const [isOpenCopy, setIsOpenCopy] = useState(false);
@@ -372,14 +390,14 @@ const SessionItem = ({
   );
 };
 
-const SessionSection = ({ 
-  onClick, 
+const SessionSection = ({
+  onClick,
   onboardingHighlight,
   onHelpClick,
-  onboardingHelpGlow
-}: { 
-  onClick?: () => void; 
-  onboardingHighlight?: boolean; 
+  onboardingHelpGlow,
+}: {
+  onClick?: () => void;
+  onboardingHighlight?: boolean;
   onHelpClick?: () => void;
   onboardingHelpGlow?: boolean;
 }) => {
@@ -397,7 +415,7 @@ const SessionSection = ({
   // Selected session
   const activePage = useAppStore.use.activePage();
   const selectedSessionId = useSessionStore.use.selectedSessionId();
-  
+
   // Handle create
   const setCreateSessionName = useSessionStore.use.setCreateSessionName();
   const setActivePage = useAppStore.use.setActivePage();
@@ -405,87 +423,102 @@ const SessionSection = ({
   // Handle import
   const selectSession = useSessionStore.use.selectSession();
   const [isOpenImportDialog, setIsOpenImportDialog] = useState(false);
-  const handleImport = useCallback(async (file: File, includeHistory: boolean, agentModelOverrides?: Map<string, { apiSource: string; modelId: string; modelName: string }>) => {
-    try {
-      // Import session from file
-      const importedSessionOrError =
-        await SessionService.importSessionFromFile.execute({
-          file: file,
-          includeHistory: includeHistory,
-          agentModelOverrides:
-            agentModelOverrides && agentModelOverrides.size > 0 ? agentModelOverrides : undefined,
+  const handleImport = useCallback(
+    async (
+      file: File,
+      includeHistory: boolean,
+      agentModelOverrides?: Map<
+        string,
+        { apiSource: string; modelId: string; modelName: string }
+      >,
+    ) => {
+      try {
+        // Import session from file
+        const importedSessionOrError =
+          await SessionService.importSessionFromFile.execute({
+            file: file,
+            includeHistory: includeHistory,
+            agentModelOverrides:
+              agentModelOverrides && agentModelOverrides.size > 0
+                ? agentModelOverrides
+                : undefined,
+          });
+        if (importedSessionOrError.isFailure) {
+          throw new Error(importedSessionOrError.getError());
+        }
+        const importedSession = importedSessionOrError.getValue();
+
+        // Invalidate quries
+        queryClient.invalidateQueries({
+          queryKey: sessionQueries.lists(),
         });
-      if (importedSessionOrError.isFailure) {
-        throw new Error(importedSessionOrError.getError());
+        queryClient.invalidateQueries({
+          queryKey: flowQueries.lists(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: cardQueries.lists(),
+        });
+
+        // Refetch backgrounds
+        fetchBackgrounds();
+
+        // Select imported session
+        selectSession(importedSession.id, importedSession.title);
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error("Failed to import session", {
+            description: error.message,
+          });
+        }
+        logger.error("Failed to import session", error);
       }
-      const importedSession = importedSessionOrError.getValue();
+    },
+    [selectSession],
+  );
 
-      // Invalidate quries
-      queryClient.invalidateQueries({
-        queryKey: sessionQueries.lists(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: flowQueries.lists(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: cardQueries.lists(),
-      });
-
-      // Refetch backgrounds
-      fetchBackgrounds();
-
-      // Select imported session
-      selectSession(importedSession.id, importedSession.title);
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error("Failed to import session", {
-          description: error.message,
-        });
-      }
-      logger.error("Failed to import session", error);
-    }
-  }, [selectSession]);
-
-  const handleFileSelect = useCallback(async (file: File): Promise<AgentModel[] | void> => {
-    if (!file) {
-      return;
-    }
-    try {
-      const modelNameOrError =
-        await SessionService.getModelsFromSessionFile.execute(file);
-      if (modelNameOrError.isFailure) {
-        toast.error("Failed to import session", {
-          description: modelNameOrError.getError(),
-        });
+  const handleFileSelect = useCallback(
+    async (file: File): Promise<AgentModel[] | void> => {
+      if (!file) {
         return;
       }
-      const agentIdToModelNames = modelNameOrError.getValue();
+      try {
+        const modelNameOrError =
+          await SessionService.getModelsFromSessionFile.execute(file);
+        if (modelNameOrError.isFailure) {
+          toast.error("Failed to import session", {
+            description: modelNameOrError.getError(),
+          });
+          return;
+        }
+        const agentIdToModelNames = modelNameOrError.getValue();
 
-      // TODO: Get agent names from the session file flows
-      // For now, use agent ID as fallback name
-      const enhancedModels = agentIdToModelNames.map((item) => ({
-        agentId: item.agentId,
-        agentName: item.agentName || `Agent ${item.agentId.slice(0, 8)}`,
-        modelName: item.modelName,
-        modelTier: item.modelTier,
-      }));
+        // TODO: Get agent names from the session file flows
+        // For now, use agent ID as fallback name
+        const enhancedModels = agentIdToModelNames.map((item) => ({
+          agentId: item.agentId,
+          agentName: item.agentName || `Agent ${item.agentId.slice(0, 8)}`,
+          modelName: item.modelName,
+          modelTier: item.modelTier,
+        }));
 
-      return enhancedModels;
-    } catch (error) {
-      console.error("Error reading session file:", error);
-      toast.error("Failed to read session file");
-    }
-  }, []);
-
+        return enhancedModels;
+      } catch (error) {
+        console.error("Error reading session file:", error);
+        toast.error("Failed to read session file");
+      }
+    },
+    [],
+  );
 
   return (
-    <div className={cn(
-      onboardingHighlight && "border-1 border-border-selected-primary"
-    )}>
+    <div
+      className={cn(
+        onboardingHighlight && "border-1 border-border-selected-primary",
+      )}
+    >
       <SectionHeader
         name="Sessions"
         icon={<SvgIcon name="sessions" size={20} />}
-        top={0}
         expanded={expanded}
         onToggle={() => setExpanded((prev) => !prev)}
         onClick={() => {
