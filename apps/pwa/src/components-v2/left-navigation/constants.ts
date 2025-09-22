@@ -1,3 +1,0 @@
-const SECTION_HEADER_HEIGHT = 68;
-
-export { SECTION_HEADER_HEIGHT };

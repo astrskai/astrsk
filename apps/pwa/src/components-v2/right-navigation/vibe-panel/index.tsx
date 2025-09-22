@@ -29,13 +29,8 @@ import { MessageList } from "./components/message-list";
 import { ChatInput } from "./components/chat-input";
 
 // Utilities
-import {
-  getResourceType,
-} from "./utils/resource-helpers";
-import {
-  formatStepPlan,
-  formatErrorMessage,
-} from "./utils/message-formatter";
+import { getResourceType } from "./utils/resource-helpers";
+import { formatStepPlan, formatErrorMessage } from "./utils/message-formatter";
 import { createSnapshotWithVerification } from "@/utils/snapshot-utils";
 import {
   mapCharacterEditsToUpdates,
@@ -44,9 +39,7 @@ import {
   applyPlotCardUpdates,
   applyOperationsToResource,
 } from "./utils/edit-mappers";
-import {
-  DataStoreFieldPipeline,
-} from "@/utils/data-store-field-pipeline";
+import { DataStoreFieldPipeline } from "@/utils/data-store-field-pipeline";
 
 // Types
 import { VibePanelProps, ReviewData, SimpleMessage } from "./types";
@@ -71,12 +64,24 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
   const activePage = useAppStore((state) => state.activePage);
 
   // Use override values for local panels, otherwise use global app state
-  const selectedCardId = isLocalPanel && overrideResourceType === 'card' ? overrideResourceId || null : globalSelectedCardId;
-  const selectedFlowId = isLocalPanel && overrideResourceType === 'flow' ? overrideResourceId || null : globalSelectedFlowId;
+  const selectedCardId =
+    isLocalPanel && overrideResourceType === "card"
+      ? overrideResourceId || null
+      : globalSelectedCardId;
+  const selectedFlowId =
+    isLocalPanel && overrideResourceType === "flow"
+      ? overrideResourceId || null
+      : globalSelectedFlowId;
 
   // Determine primary resource based on active page or local panel context
-  const isCardPage = isLocalPanel && overrideResourceType === 'card' ? true : (activePage === Page.Cards || activePage === Page.CardPanel);
-  const isFlowPage = isLocalPanel && overrideResourceType === 'flow' ? true : (activePage === Page.Flow || activePage === Page.Agents);
+  const isCardPage =
+    isLocalPanel && overrideResourceType === "card"
+      ? true
+      : activePage === Page.Cards || activePage === Page.CardPanel;
+  const isFlowPage =
+    isLocalPanel && overrideResourceType === "flow"
+      ? true
+      : activePage === Page.Flow || activePage === Page.Agents;
 
   const primaryResourceId = useMemo(() => {
     if (isCardPage && selectedCardId) return selectedCardId;
@@ -101,9 +106,11 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
   // Compute resource type based on current resource data
   const resourceType = useMemo(() => {
     if (isCardPage && selectedCard) {
-      return selectedCard.props.type === CardType.Character ? 'character_card' : 'plot_card';
+      return selectedCard.props.type === CardType.Character
+        ? "character_card"
+        : "plot_card";
     } else if (isFlowPage && selectedFlowId) {
-      return 'flow';
+      return "flow";
     }
     return null;
   }, [isCardPage, isFlowPage, selectedCard, selectedFlowId]);
@@ -121,9 +128,9 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
     clearSession,
     getConversationHistory,
     isRestored,
-  } = useMessageHistory({ 
-    resourceId: primaryResourceId || undefined, 
-    resourceType: resourceType || undefined
+  } = useMessageHistory({
+    resourceId: primaryResourceId || undefined,
+    resourceType: resourceType || undefined,
   });
 
   // Vibe session management
@@ -155,9 +162,13 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
           if (validationResult.dataStoreOperations.length > 0) {
             if (!validationResult.success) {
               // Show validation errors to user but don't block the operation
-              toast.error(`Data store validation warnings: ${validationResult.errors.join(", ")}`);
+              toast.error(
+                `Data store validation warnings: ${validationResult.errors.join(", ")}`,
+              );
             } else {
-              toast.success("Data store operations validated - UUID integrity maintained");
+              toast.success(
+                "Data store operations validated - UUID integrity maintained",
+              );
             }
           }
         } catch (error) {
@@ -221,8 +232,11 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
 
   // NEW: Handle analysis ready (analysis complete, operations still generating)
   const handleAnalysisReady = useCallback(
-    (analysis: VibeAnalysisResult, estimatedOps: number, processingTime: number) => {
-
+    (
+      analysis: VibeAnalysisResult,
+      estimatedOps: number,
+      processingTime: number,
+    ) => {
       // Create analysis-ready message content
       const analysisContent = `## Analysis Complete
 
@@ -241,7 +255,7 @@ Operations are being generated and will be ready for review shortly.`;
           analysis,
           estimatedOperations: estimatedOps,
           processingTime,
-          operationStatus: 'generating',
+          operationStatus: "generating",
         },
         primaryResourceId || undefined,
       );
@@ -273,7 +287,8 @@ Operations are being generated and will be ready for review shortly.`;
     cancelSession,
   } = useVibeSession({
     primaryResourceId,
-    resourceType: (resourceType as 'character_card' | 'plot_card' | 'flow') || undefined,
+    resourceType:
+      (resourceType as "character_card" | "plot_card" | "flow") || undefined,
     onAnalysisReady: handleAnalysisReady,
     onReviewReady: handleReviewReady,
     onSimpleAnswer: handleSimpleAnswer,
@@ -318,7 +333,6 @@ Operations are being generated and will be ready for review shortly.`;
 
       // Check if this is a flow request and detect data store field operations
       if (currentResourceType === "flow" && editableData) {
-
         try {
           const fieldPipelineResult =
             await DataStoreFieldPipeline.processFieldRequest(
@@ -328,7 +342,6 @@ Operations are being generated and will be ready for review shortly.`;
             );
 
           if (fieldPipelineResult.needsBackendAnalysis) {
-
             // Enhance context with data store analysis information
             enhancedContext = {
               ...enhancedContext,
@@ -365,7 +378,6 @@ Operations are being generated and will be ready for review shortly.`;
       }
 
       try {
-
         const result = await createSessionMutation.mutateAsync({
           originalRequest: prompt,
           context: enhancedContext,
@@ -403,7 +415,6 @@ Operations are being generated and will be ready for review shortly.`;
   // Handle approve action
   const handleApprove = useCallback(
     async (messageId: string, sessionId: string, resourceId: string) => {
-      
       const message = messages.find((m) => m.id === messageId);
       if (!message?.editData) {
         return;
@@ -413,10 +424,9 @@ Operations are being generated and will be ready for review shortly.`;
 
       try {
         if (resourceType === "flow") {
-          
           // Create snapshot before applying changes
-          await createSnapshotWithVerification(resourceId, 'flow', sessionId);
-          
+          await createSnapshotWithVerification(resourceId, "flow", sessionId);
+
           // Apply flow changes using modern operation system
           const result = await applyOperationsToResource(
             resourceId,
@@ -427,7 +437,9 @@ Operations are being generated and will be ready for review shortly.`;
           if (result.success) {
             // Query invalidation is already handled by applyOperationsToResource via invalidateSingleFlowQueries
             // No need to duplicate the invalidation here
-            toast.success(`Flow changes applied successfully (${message.editData.appliedChanges.length} operations)`);
+            toast.success(
+              `Flow changes applied successfully (${message.editData.appliedChanges.length} operations)`,
+            );
 
             // Update button state immediately after toast
             setAppliedChanges((prev) => [
@@ -442,14 +454,20 @@ Operations are being generated and will be ready for review shortly.`;
             });
           } else {
             // Show a summary toast
-            toast.error(`Failed to apply ${result.errors.length} operations out of ${message.editData.appliedChanges.length} total`);
+            toast.error(
+              `Failed to apply ${result.errors.length} operations out of ${message.editData.appliedChanges.length} total`,
+            );
           }
         } else {
           // Apply card changes using operations
           if (resourceType === "character_card") {
             // Create snapshot before applying changes
-            await createSnapshotWithVerification(resourceId, 'character_card', sessionId);
-            
+            await createSnapshotWithVerification(
+              resourceId,
+              "character_card",
+              sessionId,
+            );
+
             // Check if we have individual operations to apply
             if (
               message.editData.appliedChanges &&
@@ -479,7 +497,7 @@ Operations are being generated and will be ready for review shortly.`;
                 updateMessage(messageId, {
                   status: "approved",
                 });
-                
+
                 // Fire-and-forget card query invalidation
                 queryClient.invalidateQueries({
                   queryKey: cardKeys.detail(resourceId),
@@ -527,7 +545,7 @@ Operations are being generated and will be ready for review shortly.`;
                 updateMessage(messageId, {
                   status: "approved",
                 });
-                
+
                 // Fire-and-forget card query invalidation
                 queryClient.invalidateQueries({
                   queryKey: cardKeys.detail(resourceId),
@@ -562,7 +580,11 @@ Operations are being generated and will be ready for review shortly.`;
             });
 
             // Create snapshot before applying changes
-            await createSnapshotWithVerification(resourceId, 'plot_card', sessionId);
+            await createSnapshotWithVerification(
+              resourceId,
+              "plot_card",
+              sessionId,
+            );
 
             if (
               message.editData.appliedChanges &&
@@ -600,7 +622,7 @@ Operations are being generated and will be ready for review shortly.`;
                 updateMessage(messageId, {
                   status: "approved",
                 });
-                
+
                 // Fire-and-forget card query invalidation
                 queryClient.invalidateQueries({
                   queryKey: cardKeys.detail(resourceId),
@@ -643,7 +665,7 @@ Operations are being generated and will be ready for review shortly.`;
                 updateMessage(messageId, {
                   status: "approved",
                 });
-                
+
                 // Fire-and-forget card query invalidation
                 queryClient.invalidateQueries({
                   queryKey: cardKeys.detail(resourceId),
@@ -692,39 +714,42 @@ Operations are being generated and will be ready for review shortly.`;
       if (!message?.editData) return;
 
       const resourceType = getResourceType(message.editData.edited);
-      
-      try {
 
+      try {
         // Get the latest snapshot for this resource
-        if (resourceType === "character_card" || resourceType === "plot_card" || resourceType === "flow") {
+        if (
+          resourceType === "character_card" ||
+          resourceType === "plot_card" ||
+          resourceType === "flow"
+        ) {
           const snapshotsResult = await VibeSessionService.getResourceSnapshots(
-            resourceId, 
-            resourceType
+            resourceId,
+            resourceType,
           );
-          
-          
+
           if (snapshotsResult.isSuccess) {
             const snapshots = snapshotsResult.getValue();
-            
+
             if (snapshots.length > 0) {
               // Get the most recent snapshot
               const latestSnapshot = snapshots[0]; // Already sorted by timestamp desc
-              
+
               // Revert to the snapshot
               const revertResult = await VibeSessionService.revertToSnapshot(
                 resourceId,
                 resourceType,
-                latestSnapshot.id
+                latestSnapshot.id,
               );
-              
+
               if (revertResult.isSuccess) {
-                
                 // Show success toast immediately
                 toast.success(`Reverted to: ${latestSnapshot.description}`);
-                
+
                 // Invalidate queries to refresh UI in background (fire-and-forget)
-                if (resourceType === "character_card" || resourceType === "plot_card") {
-                  
+                if (
+                  resourceType === "character_card" ||
+                  resourceType === "plot_card"
+                ) {
                   // Fire-and-forget invalidations
                   queryClient.invalidateQueries({
                     queryKey: cardKeys.detail(resourceId),
@@ -736,74 +761,122 @@ Operations are being generated and will be ready for review shortly.`;
                     queryKey: cardKeys.detail(resourceId),
                   });
                 } else if (resourceType === "flow") {
-                  
                   // Fire-and-forget background invalidation
                   (async () => {
                     try {
-                      const { FlowService } = await import("@/app/services/flow-service");
-                      const flowResult = await FlowService.getFlow.execute(
-                        new UniqueEntityID(resourceId)
+                      const { FlowService } = await import(
+                        "@/app/services/flow-service"
                       );
-                      
+                      const flowResult = await FlowService.getFlow.execute(
+                        new UniqueEntityID(resourceId),
+                      );
+
                       if (flowResult.isSuccess) {
                         const flow = flowResult.getValue();
-                        const agentIds = flow.agentIds.map(id => id.toString());
-                        const dataStoreNodeIds = flow.dataStoreNodeIds.map(id => id.toString());
-                        const ifNodeIds = flow.ifNodeIds.map(id => id.toString());
-                        
+                        const agentIds = flow.agentIds.map((id) =>
+                          id.toString(),
+                        );
+                        const dataStoreNodeIds = flow.dataStoreNodeIds.map(
+                          (id) => id.toString(),
+                        );
+                        const ifNodeIds = flow.ifNodeIds.map((id) =>
+                          id.toString(),
+                        );
+
                         // Fire-and-forget invalidations
-                        queryClient.invalidateQueries({ queryKey: flowKeys.detail(resourceId) });
-                        queryClient.invalidateQueries({ queryKey: flowKeys.lists() });
-                      
+                        queryClient.invalidateQueries({
+                          queryKey: flowKeys.detail(resourceId),
+                        });
+                        queryClient.invalidateQueries({
+                          queryKey: flowKeys.lists(),
+                        });
+
                         // Fire-and-forget invalidations for related resources
                         if (agentIds.length > 0) {
-                          agentIds.forEach(agentId => {
-                            queryClient.invalidateQueries({ queryKey: agentKeys.detail(agentId) });
+                          agentIds.forEach((agentId) => {
+                            queryClient.invalidateQueries({
+                              queryKey: agentKeys.detail(agentId),
+                            });
                           });
-                          queryClient.invalidateQueries({ queryKey: agentKeys.lists() });
+                          queryClient.invalidateQueries({
+                            queryKey: agentKeys.lists(),
+                          });
                         }
-                        
+
                         if (dataStoreNodeIds.length > 0) {
-                          dataStoreNodeIds.forEach(nodeId => {
-                            queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.detail(resourceId, nodeId) });
+                          dataStoreNodeIds.forEach((nodeId) => {
+                            queryClient.invalidateQueries({
+                              queryKey: dataStoreNodeKeys.detail(
+                                resourceId,
+                                nodeId,
+                              ),
+                            });
                           });
-                          queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.all, exact: false });
+                          queryClient.invalidateQueries({
+                            queryKey: dataStoreNodeKeys.all,
+                            exact: false,
+                          });
                         }
-                        
+
                         if (ifNodeIds.length > 0) {
-                          ifNodeIds.forEach(nodeId => {
-                            queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(resourceId, nodeId) });
+                          ifNodeIds.forEach((nodeId) => {
+                            queryClient.invalidateQueries({
+                              queryKey: ifNodeKeys.detail(resourceId, nodeId),
+                            });
                           });
-                          queryClient.invalidateQueries({ queryKey: ifNodeKeys.all, exact: false });
+                          queryClient.invalidateQueries({
+                            queryKey: ifNodeKeys.all,
+                            exact: false,
+                          });
                         }
-                        
-                        queryClient.refetchQueries({ queryKey: flowKeys.detail(resourceId) });
-                        
-                        // Notify flow panel of nodes/edges update to ensure UI reflects reverted state
-                        const { notifyFlowNodesEdgesUpdate } = await import("@/utils/flow-local-state-sync");
-                        const flowNodes = flow.props.nodes || [];
-                        const flowEdges = (flow.props.edges || []).map((edge: any) => ({
-                          ...edge,
-                          type: edge.type || 'default'
-                        }));
-                        
-                        console.log('🔄 [VIBE-REVERT] Notifying flow panel of reverted flow state:', {
-                          flowId: resourceId.slice(0, 8) + '...',
-                          nodeCount: flowNodes.length,
-                          edgeCount: flowEdges.length
+
+                        queryClient.refetchQueries({
+                          queryKey: flowKeys.detail(resourceId),
                         });
-                        
-                        notifyFlowNodesEdgesUpdate(resourceId, flowNodes, flowEdges);
-                      
+
+                        // Notify flow panel of nodes/edges update to ensure UI reflects reverted state
+                        const { notifyFlowNodesEdgesUpdate } = await import(
+                          "@/utils/flow-local-state-sync"
+                        );
+                        const flowNodes = flow.props.nodes || [];
+                        const flowEdges = (flow.props.edges || []).map(
+                          (edge: any) => ({
+                            ...edge,
+                            type: edge.type || "default",
+                          }),
+                        );
+
+                        console.log(
+                          "🔄 [VIBE-REVERT] Notifying flow panel of reverted flow state:",
+                          {
+                            flowId: resourceId.slice(0, 8) + "...",
+                            nodeCount: flowNodes.length,
+                            edgeCount: flowEdges.length,
+                          },
+                        );
+
+                        notifyFlowNodesEdgesUpdate(
+                          resourceId,
+                          flowNodes,
+                          flowEdges,
+                        );
                       } else {
                         // Fallback invalidation
-                        queryClient.invalidateQueries({ queryKey: flowKeys.detail(resourceId) });
-                        queryClient.invalidateQueries({ queryKey: flowKeys.lists() });
+                        queryClient.invalidateQueries({
+                          queryKey: flowKeys.detail(resourceId),
+                        });
+                        queryClient.invalidateQueries({
+                          queryKey: flowKeys.lists(),
+                        });
                       }
                     } catch (error) {
                       // Fallback invalidation
-                      queryClient.invalidateQueries({ queryKey: flowKeys.detail(resourceId) });
-                      queryClient.invalidateQueries({ queryKey: flowKeys.lists() });
+                      queryClient.invalidateQueries({
+                        queryKey: flowKeys.detail(resourceId),
+                      });
+                      queryClient.invalidateQueries({
+                        queryKey: flowKeys.lists(),
+                      });
                     }
                   })();
                 }
@@ -814,10 +887,14 @@ Operations are being generated and will be ready for review shortly.`;
               toast.warning("No snapshots available to revert to");
             }
           } else {
-            toast.error(`Failed to get snapshots: ${snapshotsResult.getError()}`);
+            toast.error(
+              `Failed to get snapshots: ${snapshotsResult.getError()}`,
+            );
           }
         } else {
-          toast.warning("Revert is only supported for cards and flows currently");
+          toast.warning(
+            "Revert is only supported for cards and flows currently",
+          );
         }
       } catch (error) {
         toast.error(`Revert failed: ${formatErrorMessage(error)}`);
@@ -825,8 +902,6 @@ Operations are being generated and will be ready for review shortly.`;
     },
     [messages, updateMessage, queryClient],
   );
-
-
 
   // Close vibe coding panel when switching away from card/flow pages
   useEffect(() => {
@@ -846,15 +921,22 @@ Operations are being generated and will be ready for review shortly.`;
       onToggle?.();
       return;
     }
-    
+
     // Original global panel behavior
     const newCollapsed = !isCollapsed;
     setIsCollapsed(newCollapsed);
-    
-    
+
     // Always call onToggle after updating the specific state
     onToggle?.();
-  }, [isLocalPanel, isCollapsed, onToggle, isFlowPage, selectedFlowId, isCardPage, selectedCardId]);
+  }, [
+    isLocalPanel,
+    isCollapsed,
+    onToggle,
+    isFlowPage,
+    selectedFlowId,
+    isCardPage,
+    selectedCardId,
+  ]);
 
   // Handle reset
   const handleReset = useCallback(async () => {
@@ -863,13 +945,12 @@ Operations are being generated and will be ready for review shortly.`;
     cancelSession();
   }, [clearSession, cancelSession]);
 
-
   // Collapsed view (only for global panels, local panels are always expanded)
   if (isCollapsed && !isLocalPanel) {
     return (
       <div
         className={cn(
-          "w-12 h-[calc(100vh-40px)] border-l bg-background",
+          "w-12 h-[calc(100vh-var(--topbar-height))] border-l bg-background",
           className,
         )}
       >
@@ -885,9 +966,9 @@ Operations are being generated and will be ready for review shortly.`;
   return (
     <div
       className={cn(
-        isLocalPanel 
-          ? "h-full w-full bg-background-surface-2 flex flex-col" 
-          : "w-full h-[calc(100vh-40px)] min-w-80 bg-background-surface-1 rounded-lg flex flex-col",
+        isLocalPanel
+          ? "h-full w-full bg-background-surface-2 flex flex-col"
+          : "w-full h-[calc(100vh-var(--topbar-height))] min-w-80 bg-background-surface-1 rounded-lg flex flex-col",
         className,
       )}
     >
@@ -927,7 +1008,6 @@ Operations are being generated and will be ready for review shortly.`;
           hasMessages={messages.length > 0}
         />
       </div>
-      
     </div>
   );
 };

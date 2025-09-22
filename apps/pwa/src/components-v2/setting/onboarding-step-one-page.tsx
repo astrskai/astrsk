@@ -8,7 +8,7 @@ const OnboardingStepOnePage = () => {
   const setActivePage = useAppStore.use.setActivePage();
 
   return (
-    <div className={cn("z-40 absolute inset-0 top-[38px]")}>
+    <div className={cn("z-40 absolute inset-0 top-[var(--topbar-height)]")}>
       {/* Close */}
       <button
         className="z-50 absolute top-[34px] right-[40px] text-text-subtle"

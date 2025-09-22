@@ -8,7 +8,7 @@ import { SvgIcon } from "@/components-v2/svg-icon";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { Code, SquareArrowUpRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-
+import { isElectronEnvironment } from "@/utils/environment";
 
 const NewWindowButton = () => {
   const handleNewWindow = useCallback(() => {
@@ -32,8 +32,12 @@ const NewWindowButton = () => {
   );
 };
 
-
 export function TopBar() {
+  // Check if we're in Electron environment - hide topbar in web browsers
+  if (!isElectronEnvironment()) {
+    return null;
+  }
+
   // Detect Windows platform
   const isWindows = window.electron?.process?.platform === "win32";
 
@@ -132,7 +136,6 @@ export function TopBar() {
           <div className="absolute inset-x-[160px] inset-y-[6px] flex flex-row justify-center items-center gap-[8px] font-[500] text-[16px] leading-[20px]">
             <span className="text-text-body">{activeMenu}</span>
           </div>
-
 
           {/* Windows: Window controls */}
           {isWindows && (

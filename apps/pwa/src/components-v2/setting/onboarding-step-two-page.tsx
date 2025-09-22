@@ -75,7 +75,7 @@ const OnboardingStepTwoPage = () => {
   const setSettingSubPage = useAppStore.use.setSettingSubPage();
 
   return (
-    <div className={cn("z-40 absolute inset-0 top-[38px]")}>
+    <div className={cn("z-40 absolute inset-0 top-[var(--topbar-height)]")}>
       {/* Back */}
       <FloatingActionButton
         icon={<ArrowLeft className="min-w-[24px] min-h-[24px]" />}

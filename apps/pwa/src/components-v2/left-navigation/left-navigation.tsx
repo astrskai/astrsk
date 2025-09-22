@@ -5,7 +5,6 @@ import { SidebarLeft, useSidebarLeft } from "@/components-v2/both-sidebar";
 import { ConvexReady } from "@/components-v2/convex-ready";
 import { HelpVideoDialog } from "@/components-v2/help-video-dialog";
 import { CardSection } from "@/components-v2/left-navigation/card-list";
-import { SECTION_HEADER_HEIGHT } from "@/components-v2/left-navigation/constants";
 import { FlowSection } from "@/components-v2/left-navigation/flow-list";
 import { SessionSection } from "@/components-v2/left-navigation/session-list";
 import { cn } from "@/components-v2/lib/utils";
@@ -37,7 +36,7 @@ function openInNewTab(url: string) {
 const SectionHeader = ({
   name,
   icon,
-  top,
+  top = 0,
   bottom,
   expanded = true,
   onToggle = () => {},
@@ -59,7 +58,7 @@ const SectionHeader = ({
     <div
       className={cn(
         "z-20 sticky p-[16px] pt-[32px] bg-background-surface-2 text-text-primary",
-        "flex flex-row justify-between select-none",
+        "flex flex-row justify-between select-none cursor-pointer",
       )}
       style={{
         top,
@@ -88,6 +87,7 @@ const SectionHeader = ({
       </div>
       <div className="flex flex-row gap-[8px] items-center">
         <button
+          className="cursor-pointer hover:bg-background-surface-4 rounded-sm"
           onClick={(e) => {
             e.stopPropagation();
             onToggle();
@@ -114,10 +114,9 @@ const LeftNavigation = () => {
     const containerOffset = navigationRef.current.offsetTop;
     const section = document.getElementById(`nav-${to}`);
     const sectionOffset = section?.offsetTop ?? 0;
-    const headerHeightOffset =
-      SECTION_HEADER_HEIGHT * ["session", "card", "flow"].indexOf(to);
+
     navigationRef.current.scrollTo({
-      top: sectionOffset - containerOffset - headerHeightOffset,
+      top: sectionOffset - containerOffset,
       behavior: "smooth",
     });
   }, []);
@@ -304,7 +303,7 @@ const LeftNavigationTrigger = () => {
       {shouldShowSidebarTooltip && (
         <div
           className={cn(
-            "absolute top-[calc(38px+76px)] left-[16px] z-50 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary whitespace-nowrap",
+            "absolute top-[calc(var(--topbar-height)+76px)] left-[16px] z-50 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary whitespace-nowrap",
             "transition-all ease-out duration-300",
             "group-hover/trigger-parent:opacity-0",
           )}
@@ -317,7 +316,7 @@ const LeftNavigationTrigger = () => {
 
       <button
         className={cn(
-          "z-40 absolute top-[calc(38px+16px)] left-[16px] grid place-items-center",
+          "z-40 absolute top-[calc(var(--topbar-height)+16px)] left-[16px] grid place-items-center",
           "size-[40px] bg-[#313131] border-1 border-[#757575] rounded-full",
           open && "hidden",
           shouldShowSidebarTooltip &&

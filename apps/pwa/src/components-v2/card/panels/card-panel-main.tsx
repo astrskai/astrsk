@@ -2,7 +2,12 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardType } from "@/modules/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardService } from "@/app/services/card-service";
-import { DockviewReact, IDockviewPanelProps, DockviewReadyEvent, DockviewApi } from "dockview";
+import {
+  DockviewReact,
+  IDockviewPanelProps,
+  DockviewReadyEvent,
+  DockviewApi,
+} from "dockview";
 import type { IDockviewPanel, DockviewGroupPanel } from "dockview-core";
 import { queryClient } from "@/app/queries/query-client";
 import {
@@ -62,12 +67,15 @@ const CardPanelComponent: React.FC<IDockviewPanelProps> = ({ params }) => {
 // Panel component factory for sub-panels (with PanelWrapper and focus animation)
 const createCardPanelComponent = (
   panelType: string,
-  Component: React.FC<{ cardId: string }>
+  Component: React.FC<{ cardId: string }>,
 ): React.FC<IDockviewPanelProps> => {
   return (props) => {
     const { cardId } = props.params;
     return (
-      <PanelFocusAnimationWrapper api={props.api} containerApi={props.containerApi}>
+      <PanelFocusAnimationWrapper
+        api={props.api}
+        containerApi={props.containerApi}
+      >
         <PanelWrapper cardId={cardId} panelType={panelType}>
           <Component cardId={cardId} />
         </PanelWrapper>
@@ -79,14 +87,20 @@ const createCardPanelComponent = (
 // Panel component registry
 const CARD_PANEL_COMPONENTS = {
   "card-panel": CardPanelComponent,
-  "metadata": createCardPanelComponent("metadata", MetadataPanel),
-  "character-info": createCardPanelComponent("character-info", CharacterInfoPanel),
+  metadata: createCardPanelComponent("metadata", MetadataPanel),
+  "character-info": createCardPanelComponent(
+    "character-info",
+    CharacterInfoPanel,
+  ),
   "plot-info": createCardPanelComponent("plot-info", PlotInfoPanel),
-  "lorebooks": createCardPanelComponent("lorebooks", LorebookPanel),
-  "variables": createCardPanelComponent("variables", VariablesPanel),
-  "scenarios": createCardPanelComponent("scenarios", ScenariosPanel),
-  "imageGenerator": createCardPanelComponent("imageGenerator", ImageGeneratorPanel),
-  "vibe": createCardPanelComponent("vibe", CardVibePanel),
+  lorebooks: createCardPanelComponent("lorebooks", LorebookPanel),
+  variables: createCardPanelComponent("variables", VariablesPanel),
+  scenarios: createCardPanelComponent("scenarios", ScenariosPanel),
+  imageGenerator: createCardPanelComponent(
+    "imageGenerator",
+    ImageGeneratorPanel,
+  ),
+  vibe: createCardPanelComponent("vibe", CardVibePanel),
 };
 
 // Constants
@@ -111,7 +125,9 @@ const useCardLoader = (cardId: string) => {
         setIsLoading(true);
         setError(null);
 
-        const result = await CardService.getCard.execute(new UniqueEntityID(cardId));
+        const result = await CardService.getCard.execute(
+          new UniqueEntityID(cardId),
+        );
 
         if (result.isSuccess) {
           const loadedCard = result.getValue();
@@ -134,10 +150,13 @@ const useCardLoader = (cardId: string) => {
 
 // Custom hook for panel visibility management
 const usePanelVisibility = (card: Card | null) => {
-  const getCardTypePanelVisibility = useCardUIStore.use.getCardTypePanelVisibility();
-  const setCardTypePanelVisibilityStore = useCardUIStore.use.setCardTypePanelVisibility();
+  const getCardTypePanelVisibility =
+    useCardUIStore.use.getCardTypePanelVisibility();
+  const setCardTypePanelVisibilityStore =
+    useCardUIStore.use.setCardTypePanelVisibility();
   const defaultPanelVisibility = useCardUIStore.use.defaultPanelVisibility();
-  const [panelVisibility, setPanelVisibilityState] = useState<CardPanelVisibility>(defaultPanelVisibility);
+  const [panelVisibility, setPanelVisibilityState] =
+    useState<CardPanelVisibility>(defaultPanelVisibility);
 
   const cardType = useMemo(() => {
     return card?.props.type === CardType.Character ? "character" : "plot";
@@ -169,155 +188,170 @@ const usePanelVisibility = (card: Card | null) => {
 
 export function CardPanelMain({ cardId }: CardPanelMainProps) {
   const [api, setApi] = useState<DockviewApi | null>(null);
-  
+
   // Use custom hooks
   const { card, isLoading, error } = useCardLoader(cardId);
-  const { panelVisibility, setPanelVisibility, cardType } = usePanelVisibility(card);
-  
+  const { panelVisibility, setPanelVisibility, cardType } =
+    usePanelVisibility(card);
+
   // Layout management
   const getCardTypeLayout = useCardUIStore.use.getCardTypeLayout();
   const setCardTypeLayout = useCardUIStore.use.setCardTypeLayout();
   const defaultPanelVisibility = useCardUIStore.use.defaultPanelVisibility();
 
-
   // Handle dockview ready event
-  const handleReady = useCallback((event: DockviewReadyEvent) => {
-    const dockviewApi = event.api;
-    setApi(dockviewApi);
+  const handleReady = useCallback(
+    (event: DockviewReadyEvent) => {
+      const dockviewApi = event.api;
+      setApi(dockviewApi);
 
-    // Check if card panel already exists
-    const existingCardPanel = dockviewApi.getPanel(CARD_PANEL_ID);
-    if (existingCardPanel) {
-      return;
-    }
-
-    // Always create the main card panel first
-    const cardPanel = dockviewApi.addPanel({
-      id: CARD_PANEL_ID,
-      component: "card-panel",  
-      tabComponent: 'colored',
-      title: "Card",
-      params: { cardId },
-    });
-
-    // Make the card panel non-closeable
-    if (cardPanel) {
-      // Get the panel's group
-      const group = cardPanel.group;
-      if (group) {
-        // Lock this group completely - prevent any new panels from being added
-        group.model.locked = true;
+      // Check if card panel already exists
+      const existingCardPanel = dockviewApi.getPanel(CARD_PANEL_ID);
+      if (existingCardPanel) {
+        return;
       }
-    }
 
-    // Restore saved layout or use defaults
-    if (card) {
-      const savedLayout = getCardTypeLayout(cardType);
-      if (savedLayout) {
-        try {
-          // Validate the saved layout has the required structure
-          if (!savedLayout.grid || !savedLayout.panels) {
-            console.warn("Invalid saved layout structure, skipping restoration");
-            return;
-          }
-          
-          // Check if the saved layout contains the card panel
-          const hasCardPanel = savedLayout.panels[CARD_PANEL_ID] || 
-            (Array.isArray(savedLayout.panels) && 
-             savedLayout.panels.some((p: any) => p.id === CARD_PANEL_ID));
-          
-          if (!hasCardPanel) {
-            console.warn("Saved layout missing card panel, adding it before restoration");
-            // Modify the saved layout to include the card panel
-            if (typeof savedLayout.panels === 'object' && !Array.isArray(savedLayout.panels)) {
-              savedLayout.panels[CARD_PANEL_ID] = {
-                id: CARD_PANEL_ID,
-                component: "card-panel",
-                title: "Card",
-                params: { cardId }
-              };
+      // Always create the main card panel first
+      const cardPanel = dockviewApi.addPanel({
+        id: CARD_PANEL_ID,
+        component: "card-panel",
+        tabComponent: "colored",
+        title: "Card",
+        params: { cardId },
+      });
+
+      // Make the card panel non-closeable
+      if (cardPanel) {
+        // Get the panel's group
+        const group = cardPanel.group;
+        if (group) {
+          // Lock this group completely - prevent any new panels from being added
+          group.model.locked = true;
+        }
+      }
+
+      // Restore saved layout or use defaults
+      if (card) {
+        const savedLayout = getCardTypeLayout(cardType);
+        if (savedLayout) {
+          try {
+            // Validate the saved layout has the required structure
+            if (!savedLayout.grid || !savedLayout.panels) {
+              console.warn(
+                "Invalid saved layout structure, skipping restoration",
+              );
+              return;
             }
-          }
-          
-          // Restore the saved layout directly
-          dockviewApi.fromJSON(savedLayout);
-          
-          // Ensure card-panel-main exists after restoration
-          const restoredCardPanel = dockviewApi.getPanel(CARD_PANEL_ID);
-          if (!restoredCardPanel) {
-            // Card panel was not in the saved layout, recreate it
-            const newCardPanel = dockviewApi.addPanel({
-              id: CARD_PANEL_ID,
-              component: "card-panel",  
-              tabComponent: 'colored',
-              title: "Card",
-              params: { cardId },
-            });
-            
-            if (newCardPanel) {
-              // Lock the group
-              const group = newCardPanel.group;
-              if (group) {
-                group.model.locked = true;
+
+            // Check if the saved layout contains the card panel
+            const hasCardPanel =
+              savedLayout.panels[CARD_PANEL_ID] ||
+              (Array.isArray(savedLayout.panels) &&
+                savedLayout.panels.some((p: any) => p.id === CARD_PANEL_ID));
+
+            if (!hasCardPanel) {
+              console.warn(
+                "Saved layout missing card panel, adding it before restoration",
+              );
+              // Modify the saved layout to include the card panel
+              if (
+                typeof savedLayout.panels === "object" &&
+                !Array.isArray(savedLayout.panels)
+              ) {
+                savedLayout.panels[CARD_PANEL_ID] = {
+                  id: CARD_PANEL_ID,
+                  component: "card-panel",
+                  title: "Card",
+                  params: { cardId },
+                };
               }
             }
-          } else {
-            // Ensure the restored card panel's group is locked
-            const group = restoredCardPanel.group;
-            if (group) {
-              group.model.locked = true;
-            }
-          }
-          
-          // Update visibility state based on restored panels
-          const restoredPanels = Object.values(dockviewApi.panels);
-          const newVisibility = { ...defaultPanelVisibility };
-          
-          restoredPanels.forEach((panel: IDockviewPanel) => {
-            // Extract the panel type using utility function
-            const panelType = extractCardPanelType(panel.id);
-            
-            // Map panel types to visibility keys
-            if (panelType === 'plot-info' || panelType === 'character-info') {
-              newVisibility.content = true;
-            } else if (panelType in newVisibility) {
-              newVisibility[panelType as keyof CardPanelVisibility] = true;
-            }
-          });
-          
-          // Already handled by usePanelVisibility hook
-        } catch (error) {
-          console.warn("Failed to restore layout, ensuring card panel exists:", error);
-          
-          // Restoration failed, ensure we at least have the card panel
-          const fallbackCardPanel = dockviewApi.getPanel(CARD_PANEL_ID);
-          if (!fallbackCardPanel) {
-            // Try to create the card panel as a fallback
-            try {
+
+            // Restore the saved layout directly
+            dockviewApi.fromJSON(savedLayout);
+
+            // Ensure card-panel-main exists after restoration
+            const restoredCardPanel = dockviewApi.getPanel(CARD_PANEL_ID);
+            if (!restoredCardPanel) {
+              // Card panel was not in the saved layout, recreate it
               const newCardPanel = dockviewApi.addPanel({
                 id: CARD_PANEL_ID,
-                component: "card-panel",  
-                tabComponent: 'colored',
+                component: "card-panel",
+                tabComponent: "colored",
                 title: "Card",
                 params: { cardId },
               });
-              
+
               if (newCardPanel) {
+                // Lock the group
                 const group = newCardPanel.group;
                 if (group) {
                   group.model.locked = true;
                 }
               }
-            } catch (fallbackError) {
-              console.error("Failed to create fallback card panel:", fallbackError);
+            } else {
+              // Ensure the restored card panel's group is locked
+              const group = restoredCardPanel.group;
+              if (group) {
+                group.model.locked = true;
+              }
+            }
+
+            // Update visibility state based on restored panels
+            const restoredPanels = Object.values(dockviewApi.panels);
+            const newVisibility = { ...defaultPanelVisibility };
+
+            restoredPanels.forEach((panel: IDockviewPanel) => {
+              // Extract the panel type using utility function
+              const panelType = extractCardPanelType(panel.id);
+
+              // Map panel types to visibility keys
+              if (panelType === "plot-info" || panelType === "character-info") {
+                newVisibility.content = true;
+              } else if (panelType in newVisibility) {
+                newVisibility[panelType as keyof CardPanelVisibility] = true;
+              }
+            });
+
+            // Already handled by usePanelVisibility hook
+          } catch (error) {
+            console.warn(
+              "Failed to restore layout, ensuring card panel exists:",
+              error,
+            );
+
+            // Restoration failed, ensure we at least have the card panel
+            const fallbackCardPanel = dockviewApi.getPanel(CARD_PANEL_ID);
+            if (!fallbackCardPanel) {
+              // Try to create the card panel as a fallback
+              try {
+                const newCardPanel = dockviewApi.addPanel({
+                  id: CARD_PANEL_ID,
+                  component: "card-panel",
+                  tabComponent: "colored",
+                  title: "Card",
+                  params: { cardId },
+                });
+
+                if (newCardPanel) {
+                  const group = newCardPanel.group;
+                  if (group) {
+                    group.model.locked = true;
+                  }
+                }
+              } catch (fallbackError) {
+                console.error(
+                  "Failed to create fallback card panel:",
+                  fallbackError,
+                );
+              }
             }
           }
         }
       }
-    }
-  }, [card, cardId, cardType, getCardTypeLayout, defaultPanelVisibility]);
-
-
+    },
+    [card, cardId, cardType, getCardTypeLayout, defaultPanelVisibility],
+  );
 
   // Save layout when it changes
   const handleLayoutChange = useCallback(() => {
@@ -326,7 +360,8 @@ export function CardPanelMain({ cardId }: CardPanelMainProps) {
     try {
       const layout = api.toJSON();
       // Use the current card type from state
-      const currentCardType = card?.props.type === CardType.Character ? "character" : "plot";
+      const currentCardType =
+        card?.props.type === CardType.Character ? "character" : "plot";
       setCardTypeLayout(currentCardType, layout);
     } catch (error) {
       console.error("Failed to save layout:", error);
@@ -352,7 +387,7 @@ export function CardPanelMain({ cardId }: CardPanelMainProps) {
 
     const setGroupConstraints = () => {
       api.groups.forEach((group: DockviewGroupPanel) => {
-        if (group.api && typeof group.api.setConstraints === 'function') {
+        if (group.api && typeof group.api.setConstraints === "function") {
           group.api.setConstraints({
             minimumWidth: MIN_GROUP_WIDTH,
           });
@@ -376,21 +411,21 @@ export function CardPanelMain({ cardId }: CardPanelMainProps) {
     const syncPanelVisibility = () => {
       const openPanels = Object.values(api.panels);
       const newVisibility = { ...defaultPanelVisibility };
-      
+
       openPanels.forEach((panel: IDockviewPanel) => {
         if (panel.id === CARD_PANEL_ID) return; // Skip the main card panel
-        
+
         // Extract the panel type using utility function
         const panelType = extractCardPanelType(panel.id);
-        
+
         // Map panel types to visibility keys
-        if (panelType === 'plot-info' || panelType === 'character-info') {
+        if (panelType === "plot-info" || panelType === "character-info") {
           newVisibility.content = true;
         } else if (panelType in newVisibility) {
           newVisibility[panelType as keyof CardPanelVisibility] = true;
         }
       });
-      
+
       // Update the visibility state
       Object.entries(newVisibility).forEach(([key, value]) => {
         if (panelVisibility[key as keyof CardPanelVisibility] !== value) {
@@ -408,13 +443,13 @@ export function CardPanelMain({ cardId }: CardPanelMainProps) {
       api.onDidRemovePanel(() => syncPanelVisibility()),
     ];
 
-    return () => disposables.forEach(d => d.dispose());
+    return () => disposables.forEach((d) => d.dispose());
   }, [api, defaultPanelVisibility, panelVisibility, setPanelVisibility]);
 
   // Update panel params when cardId changes
   useEffect(() => {
     if (!api || !cardId) return;
-    
+
     // Update params for all panels with the new cardId
     Object.values(api.panels).forEach((panel: IDockviewPanel) => {
       panel.api.updateParameters({ cardId });
@@ -428,32 +463,33 @@ export function CardPanelMain({ cardId }: CardPanelMainProps) {
     }
   }, [card]);
 
-
   // Render loading or error states
   if (isLoading || error || !card) {
-    return     <div
-    className={cn(
-      "fixed inset-0 z-[120]",
-      "bg-screen/50 backdrop-blur-sm",
-      "transition-opacity duration-200",
-      "flex items-center justify-center",
-    )}
-  >
-    <div className="flex flex-col items-center justify-center gap-8 px-4">
+    return (
       <div
-        className="animate-spin-slow"
-        style={{
-          width: "120px",
-          height:   "120px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        className={cn(
+          "fixed inset-0 z-[120]",
+          "bg-screen/50 backdrop-blur-sm",
+          "transition-opacity duration-200",
+          "flex items-center justify-center",
+        )}
       >
-        <SvgIcon name="astrsk_symbol" size={  120} />
+        <div className="flex flex-col items-center justify-center gap-8 px-4">
+          <div
+            className="animate-spin-slow"
+            style={{
+              width: "120px",
+              height: "120px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <SvgIcon name="astrsk_symbol" size={120} />
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+    );
   }
 
   return (
@@ -465,14 +501,19 @@ export function CardPanelMain({ cardId }: CardPanelMainProps) {
       invalidateExternalQueries={invalidateExternalQueries}
       card={card}
     >
-      <div className="h-full w-full" style={{ height: "calc(100% - 40px)" }}>
+      <div
+        className="h-full w-full"
+        style={{ height: "calc(100% - var(--topbar-height))" }}
+      >
         <DockviewReact
           components={CARD_PANEL_COMPONENTS}
           tabComponents={{ colored: CustomDockviewTab }}
           onReady={(event) => {
             // Fix for tab overflow causing parent container scroll
             event.api.onDidLayoutChange(() => {
-              const container = document.querySelector('.dv-dockview') as HTMLElement;
+              const container = document.querySelector(
+                ".dv-dockview",
+              ) as HTMLElement;
               if (container) {
                 setTimeout(() => {
                   let parent = container.parentElement;
@@ -485,7 +526,7 @@ export function CardPanelMain({ cardId }: CardPanelMainProps) {
                 }, 0);
               }
             });
-            
+
             handleReady(event);
           }}
           className="dockview-theme-abyss"
