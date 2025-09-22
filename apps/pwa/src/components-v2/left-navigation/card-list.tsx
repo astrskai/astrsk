@@ -8,9 +8,12 @@ import { SessionService } from "@/app/services/session-service";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import useCardImport from "@/components-v2/card/hooks/useCardImport";
 import { MediaDisplay } from "@/components-v2/shared/media-display";
-import { SECTION_HEADER_HEIGHT } from "@/components-v2/left-navigation/constants";
 import { SectionHeader } from "@/components-v2/left-navigation/left-navigation";
-import { SearchInput, CreateButton, ImportButton } from "@/components-v2/left-navigation/shared-list-components";
+import {
+  SearchInput,
+  CreateButton,
+  ImportButton,
+} from "@/components-v2/left-navigation/shared-list-components";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { DeleteConfirm } from "@/components-v2/confirm";
@@ -47,14 +50,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
-import {
-  Copy,
-  Download,
-  Plus,
-  Settings2,
-  Trash2,
-  Upload,
-} from "lucide-react";
+import { Copy, Download, Plus, Settings2, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
@@ -183,11 +179,7 @@ const CardItem = ({
         });
         // Also invalidate the session detail query so it reloads and detects missing card
         queryClient.invalidateQueries({
-          queryKey: [
-            TableName.Sessions,
-            "detail",
-            usedSession.id.toString(),
-          ],
+          queryKey: [TableName.Sessions, "detail", usedSession.id.toString()],
         });
       }
     } catch (error) {
@@ -216,7 +208,8 @@ const CardItem = ({
         className={cn(
           "pl-8 pr-4 py-2 group/item h-12 border-b-1 border-b-[#313131]",
           "bg-[#272727]",
-          !disableHover && "hover:bg-[#313131] pointer-coarse:focus-within:bg-[#313131]",
+          !disableHover &&
+            "hover:bg-[#313131] pointer-coarse:focus-within:bg-[#313131]",
           "flex flex-row gap-1 items-center relative",
           selected && "bg-background-surface-4 rounded-[8px]",
         )}
@@ -227,7 +220,8 @@ const CardItem = ({
         <div
           className={cn(
             "absolute inset-0 overflow-hidden pointer-events-none",
-            !disableHover && "group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden",
+            !disableHover &&
+              "group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden",
           )}
         >
           <MediaDisplay
@@ -394,54 +388,54 @@ const CardFilter = ({
             <p>Card filters</p>
           </TooltipContent>
         </Tooltip>
-      <DropdownMenuContent
-        side="bottom"
-        align="end"
-        className="bg-background-surface-1 rounded-[8px] p-[4px]"
-      >
-        <DropdownMenuItem
-          onClick={() => setType(null)}
-          className={cn(
-            "justify-center rounded-[6px] text-text-subtle font-[400] text-[12px] leading-[15px]",
-            "focus:bg-background-surface-3 focus:text-text-primary focus:font-[600]",
-          )}
+        <DropdownMenuContent
+          side="bottom"
+          align="end"
+          className="bg-background-surface-1 rounded-[8px] p-[4px]"
         >
-          All
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setType(CardType.Character)}
-          className={cn(
-            "justify-center rounded-[6px] text-text-subtle font-[400] text-[12px] leading-[15px]",
-            "focus:bg-background-surface-3 focus:text-secondary-normal focus:font-[600]",
-          )}
-        >
-          Character
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setType(CardType.Plot)}
-          className={cn(
-            "justify-center rounded-[6px] text-text-subtle font-[400] text-[12px] leading-[15px]",
-            "focus:bg-background-surface-3 focus:text-button-background-primary focus:font-[600]",
-          )}
-        >
-          Plot
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuItem
+            onClick={() => setType(null)}
+            className={cn(
+              "justify-center rounded-[6px] text-text-subtle font-[400] text-[12px] leading-[15px]",
+              "focus:bg-background-surface-3 focus:text-text-primary focus:font-[600]",
+            )}
+          >
+            All
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setType(CardType.Character)}
+            className={cn(
+              "justify-center rounded-[6px] text-text-subtle font-[400] text-[12px] leading-[15px]",
+              "focus:bg-background-surface-3 focus:text-secondary-normal focus:font-[600]",
+            )}
+          >
+            Character
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setType(CardType.Plot)}
+            className={cn(
+              "justify-center rounded-[6px] text-text-subtle font-[400] text-[12px] leading-[15px]",
+              "focus:bg-background-surface-3 focus:text-button-background-primary focus:font-[600]",
+            )}
+          >
+            Plot
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </TooltipProvider>
   );
 };
 
-const CardSection = ({ 
-  onClick, 
-  onboardingHighlight, 
+const CardSection = ({
+  onClick,
+  onboardingHighlight,
   onboardingCollapsed,
   onHelpClick,
-  onboardingHelpGlow
-}: { 
-  onClick?: () => void; 
-  onboardingHighlight?: boolean; 
-  onboardingCollapsed?: boolean; 
+  onboardingHelpGlow,
+}: {
+  onClick?: () => void;
+  onboardingHighlight?: boolean;
+  onboardingCollapsed?: boolean;
   onHelpClick?: () => void;
   onboardingHelpGlow?: boolean;
 }) => {
@@ -529,14 +523,14 @@ const CardSection = ({
   } = useCardImport(handleInvalidation);
 
   return (
-    <div className={cn(
-      onboardingHighlight && "border-1 border-border-selected-primary"
-    )}>
+    <div
+      className={cn(
+        onboardingHighlight && "border-1 border-border-selected-primary",
+      )}
+    >
       <SectionHeader
         name="Cards"
         icon={<SvgIcon name="cards" size={20} />}
-        top={SECTION_HEADER_HEIGHT}
-        bottom={SECTION_HEADER_HEIGHT}
         expanded={expanded}
         onToggle={() => setExpanded((prev) => !prev)}
         onClick={() => {
