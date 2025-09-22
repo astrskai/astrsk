@@ -96,6 +96,33 @@ export type PublicApiType = {
         Record<string, never>,
         boolean
       >;
+      getClaimFreeSubscriptionProcess: FunctionReference<
+        "query",
+        "public",
+        Record<string, never>,
+        {
+          _creationTime: number;
+          _id: Id<"payment_claim_free_subscription_process">;
+          result:
+            | { status: "IN_PROCESS" }
+            | { status: "SUCCESS" }
+            | {
+                code:
+                  | "ALREADY_SUBSCRIBED"
+                  | "NO_DISCORD_ID"
+                  | "NO_SERVER_MEMBER";
+                status: "FAILED";
+              }
+            | { error: string; status: "ERROR" };
+          user_id: string;
+        } | null
+      >;
+      deleteClaimFreeSubscriptionProcess: FunctionReference<
+        "mutation",
+        "public",
+        Record<string, never>,
+        boolean
+      >;
       getSignUpAvailable: FunctionReference<
         "query",
         "public",
