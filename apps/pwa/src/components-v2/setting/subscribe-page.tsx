@@ -72,19 +72,62 @@ const SubscribePage = () => {
   }, [subscribed, userId]);
 
   // Verify and Start
+  const claimFreeSubscriptionProcess = useQuery(
+    api.payment.public.getClaimFreeSubscriptionProcess,
+  );
   const claimFreeSubscription = useMutation(
     api.payment.public.claimFreeSubscription,
   );
-
-  // Check subscribed
+  const deleteClaimFreeSubscriptionProcess = useMutation(
+    api.payment.public.deleteClaimFreeSubscriptionProcess,
+  );
   const backToReturnPage = useAppStore.use.backToReturnPage();
   useEffect(() => {
-    if (!subscribed) {
+    if (!claimFreeSubscriptionProcess) {
       return;
     }
-    toast.success("Welcome to astrsk+!");
-    backToReturnPage();
-  }, [backToReturnPage, subscribed]);
+    switch (claimFreeSubscriptionProcess.result.status) {
+      case "IN_PROCESS":
+        // Do nothing
+        break;
+
+      case "SUCCESS":
+        toast.success("Welcome aboard! Your subscription is now active.");
+        deleteClaimFreeSubscriptionProcess();
+        backToReturnPage();
+        break;
+
+      case "FAILED":
+        switch (claimFreeSubscriptionProcess.result.code) {
+          case "ALREADY_SUBSCRIBED":
+            toast.error("You are already signed in to astrsk+.");
+            break;
+          case "NO_DISCORD_ID":
+            toast.error("Please log in with Discord to access this feature.");
+            break;
+          case "NO_SERVER_MEMBER":
+            toast.error("Join our Discord server to join astrsk+.");
+            break;
+          default:
+            toast.error("Unknown code", {
+              description: claimFreeSubscriptionProcess.result.code,
+            });
+        }
+        deleteClaimFreeSubscriptionProcess();
+        break;
+
+      case "ERROR":
+        toast.error("Failed to start free subscription", {
+          description: claimFreeSubscriptionProcess.result.error,
+        });
+        deleteClaimFreeSubscriptionProcess();
+        break;
+    }
+  }, [
+    backToReturnPage,
+    claimFreeSubscriptionProcess,
+    deleteClaimFreeSubscriptionProcess,
+  ]);
 
   return (
     <div
@@ -404,7 +447,17 @@ const SubscribePage = () => {
               <Button
                 size="lg"
                 className="min-w-[139px]"
-                onClick={() => claimFreeSubscription()}
+                onClick={async () => {
+                  const result = await claimFreeSubscription();
+                  if (!result) {
+                    toast.error(
+                      "Your session has expired. Please log in again to continue.",
+                    );
+                  }
+                }}
+                loading={
+                  claimFreeSubscriptionProcess?.result.status === "IN_PROCESS"
+                }
               >
                 Verify and Start
               </Button>
