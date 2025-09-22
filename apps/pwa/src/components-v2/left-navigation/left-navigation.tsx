@@ -59,7 +59,7 @@ const SectionHeader = ({
     <div
       className={cn(
         "z-20 sticky p-[16px] pt-[32px] bg-background-surface-2 text-text-primary",
-        "flex flex-row justify-between select-none",
+        "flex flex-row justify-between select-none cursor-pointer",
       )}
       style={{
         top,
@@ -88,6 +88,7 @@ const SectionHeader = ({
       </div>
       <div className="flex flex-row gap-[8px] items-center">
         <button
+          className="cursor-pointer hover:bg-background-surface-4 rounded-sm"
           onClick={(e) => {
             e.stopPropagation();
             onToggle();
@@ -116,6 +117,7 @@ const LeftNavigation = () => {
     const sectionOffset = section?.offsetTop ?? 0;
     const headerHeightOffset =
       SECTION_HEADER_HEIGHT * ["session", "card", "flow"].indexOf(to);
+
     navigationRef.current.scrollTo({
       top: sectionOffset - containerOffset - headerHeightOffset,
       behavior: "smooth",
