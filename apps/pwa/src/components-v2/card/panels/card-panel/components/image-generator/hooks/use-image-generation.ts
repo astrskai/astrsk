@@ -4,7 +4,9 @@ import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { toast } from "sonner";
 import { useNanoBananaGenerator } from "@/app/hooks/use-nano-banana-generator";
 import { useSeedreamGenerator } from "@/app/hooks/use-seedream-generator";
+import { useFallbackGenerator } from "@/app/hooks/use-fallback-generator";
 import { IMAGE_MODELS } from "@/app/stores/model-store";
+import type { ImageModel } from "@/app/stores/model-store";
 import { useAppStore } from "@/app/stores/app-store";
 
 interface ImageGenerationConfig {
@@ -18,6 +20,7 @@ interface ImageGenerationConfig {
   selectedModel: string;
   size?: string; // Custom size for Seeddream
   isSessionGenerated?: boolean; // True for images generated in sessions
+  modelPriority?: ImageModel[]; // Priority order for fallback - if provided, uses fallback mechanism
 }
 
 interface UseImageGenerationProps {
@@ -46,6 +49,9 @@ export const useImageGeneration = ({
   // Seedream generator hook
   const { generateSeedreamImage, generateSeedreamImageToImage } =
     useSeedreamGenerator();
+
+  // Fallback generator hook for session images
+  const { generateSessionImageWithFallback } = useFallbackGenerator();
 
   // Helper to convert URL to base64 with aggressive size reduction
   const urlToBase64 = useCallback(
@@ -162,8 +168,41 @@ export const useImageGeneration = ({
       try {
         let result;
 
-        // Check which model to use
-        if (config.selectedModel === IMAGE_MODELS.SEEDREAM_4_0) {
+        // For session images, always use fallback with default priority if not specified
+        const shouldUseFallback =
+          config.modelPriority && config.modelPriority.length > 0;
+        const isSessionImage = config.isSessionGenerated;
+
+        if (shouldUseFallback || isSessionImage) {
+          // Use fallback generator with specified model priority or default for sessions
+          const imagesToUse =
+            config.imageUrls || (config.imageUrl ? [config.imageUrl] : []);
+
+          // Convert blob URLs to base64 for fallback mechanism
+          let base64Images: string[] = [];
+          if (imagesToUse.length > 0) {
+            base64Images = await Promise.all(
+              imagesToUse.map(async (url) => {
+                const { base64, mimeType } = await urlToBase64(url);
+                return `data:${mimeType};base64,${base64}`;
+              }),
+            );
+          }
+
+          result = await generateSessionImageWithFallback({
+            prompt: config.prompt,
+            referenceImages: base64Images, // Pass base64 images instead of blob URLs
+            modelPriority: [
+              IMAGE_MODELS.NANO_BANANA, // 14 15
+              IMAGE_MODELS.SEEDREAM_4_0, // 27.
+            ],
+            timeout: 60000,
+            imageSize:
+              (config.size as "1368x2048" | "1024x1024" | "512x512") ||
+              "1368x2048",
+            watermark: false,
+          });
+        } else if (config.selectedModel === IMAGE_MODELS.SEEDREAM_4_0) {
           // Use Seedream generator
           // Determine which images to use (prefer imageUrls array over single imageUrl)
           const imagesToUse =
@@ -307,6 +346,7 @@ export const useImageGeneration = ({
       generateImageToImage,
       generateSeedreamImage,
       generateSeedreamImageToImage,
+      generateSessionImageWithFallback,
       onSuccess,
       urlToBase64,
       setGeneratingImageId,
