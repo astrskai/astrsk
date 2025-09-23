@@ -147,12 +147,33 @@ interface AppState {
   ) => void;
 
   // Auth
+  userId: string | null;
+  setUserId: (userId: string | null) => void;
   jwt: string | null;
   setJwt: (jwt: string | null) => void;
   subscribed: boolean;
   setSubscribed: (subscribed: boolean) => void;
   isOpenSubscribeNudge: boolean;
   setIsOpenSubscribeNudge: (open: boolean) => void;
+
+  // Sync
+  isSyncEnabled: boolean;
+  setIsSyncEnabled: (isSyncEnabled: boolean) => void;
+  isSyncReady: boolean;
+  setIsSyncReady: (isSyncReady: boolean) => void;
+  lastLocalUpdated: string | null;
+  lastRemoteUpdated: string | null;
+  lastSyncedAt: Date | null;
+
+  // New states
+  isLoginOpen: boolean;
+  setIsLoginOpen: (isOpen: boolean) => void;
+  isPassphraseOpen: boolean;
+  setIsPassphraseOpen: (isOpen: boolean) => void;
+  passphraseMode: "create" | "enter";
+  setPassphraseMode: (mode: "create" | "enter") => void;
+  isSyncSourceOpen: boolean;
+  setIsSyncSourceOpen: (isOpen: boolean) => void;
 
   // Data Management
   isDataManagementOpen: boolean;
@@ -325,6 +346,11 @@ const useAppStoreBase = create<AppState>()(
         }),
 
       // Auth
+      userId: null,
+      setUserId: (userId) =>
+        set((state) => {
+          state.userId = userId;
+        }),
       jwt: null,
       setJwt: (jwt) =>
         set((state) => {
@@ -339,6 +365,43 @@ const useAppStoreBase = create<AppState>()(
       setIsOpenSubscribeNudge: (open) =>
         set((state) => {
           state.isOpenSubscribeNudge = open;
+        }),
+
+      // Sync status
+      isSyncEnabled: true,
+      setIsSyncEnabled: (isSyncEnabled) =>
+        set((state) => {
+          state.isSyncEnabled = isSyncEnabled;
+        }),
+      isSyncReady: false,
+      setIsSyncReady: (isSyncReady) =>
+        set((state) => {
+          state.isSyncReady = isSyncReady;
+        }),
+      lastLocalUpdated: null,
+      lastRemoteUpdated: null,
+      lastSyncedAt: null,
+
+      // New states
+      isLoginOpen: false,
+      setIsLoginOpen: (isOpen) =>
+        set((state) => {
+          state.isLoginOpen = isOpen;
+        }),
+      isPassphraseOpen: false,
+      setIsPassphraseOpen: (isOpen) =>
+        set((state) => {
+          state.isPassphraseOpen = isOpen;
+        }),
+      passphraseMode: "create",
+      setPassphraseMode: (mode) =>
+        set((state) => {
+          state.passphraseMode = mode;
+        }),
+      isSyncSourceOpen: false,
+      setIsSyncSourceOpen: (isOpen) =>
+        set((state) => {
+          state.isSyncSourceOpen = isOpen;
         }),
 
       // Data Management
@@ -471,7 +534,14 @@ const useAppStoreBase = create<AppState>()(
           Object.entries(state).filter(
             ([key]) =>
               ![
+                "userId",
                 "jwt",
+                "activeSubscription",
+                "isSyncReady",
+                "isLoginOpen",
+                "isPassphraseOpen",
+                "passphraseMode",
+                "isSyncSourceOpen",
                 "isMobile",
                 "generatingImageId", // Don't persist this state
                 "generatingContext", // Don't persist polling context (contains File objects)
