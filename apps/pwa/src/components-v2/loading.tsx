@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { SvgIcon } from "@/components-v2/svg-icon";
-import { Progress } from "@/components-v2/ui/progress";
 
 const titles = [
   "Getting things ready — locally",
@@ -120,10 +119,6 @@ export const Loading = ({ isTimer }: { isTimer?: boolean }) => {
                 </div>
               </div>
             </div>
-            <Progress
-              className={`mt-10 ${isMobile ? "w-[280px]" : "w-[326px]"}`}
-              value={progress}
-            />
           </>
         )}
       </div>
