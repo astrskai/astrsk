@@ -87,7 +87,7 @@ const UpdaterNew = () => {
   }, []);
 
   // PWA(service worker) updater
-  const pwaUpdatePeriodMs = 10 * 60 * 1000; // 10 minutes, minimum 1 minute
+  const pwaUpdatePeriodMs = 1 * 60 * 1000; // 1 minutes, minimum 1 minute
   const {
     needRefresh: [isUpdateReadyPWA],
   } = useRegisterSW({
