@@ -53,7 +53,8 @@ const UpdaterNew = () => {
   // Electron updater
   const [isUpdateReadyElectron, setIsUpdateReadyElectron] = useState(false);
   const isDownloading = useRef<boolean>(false);
-  const downloadProgressPercent = useRef<number>(0);
+  const [downloadProgressPercent, setDownloadProgressPercent] =
+    useState<number>(0);
   useEffect(() => {
     // Check updater is available
     if (!window.api || !window.api.updater) {
@@ -73,7 +74,7 @@ const UpdaterNew = () => {
     });
     window.api.updater.onDownloadProgress((info) => {
       logger.info(`Download progress: ${info.percent}%`);
-      downloadProgressPercent.current = Math.round(info.percent);
+      setDownloadProgressPercent(Math.round(info.percent));
       isDownloading.current = true;
     });
     window.api.updater.onUpdateDownloaded(() => {
@@ -161,7 +162,7 @@ const UpdaterNew = () => {
                 </TypoTiny>
               ) : (
                 <TypoTiny className="p-0 leading-tight">
-                  Downloading update... {downloadProgressPercent.current}%
+                  Downloading update... {downloadProgressPercent}%
                 </TypoTiny>
               )}
             </div>
