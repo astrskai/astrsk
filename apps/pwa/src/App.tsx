@@ -70,8 +70,7 @@ function V2Layout({
   children: React.ReactNode;
 }>) {
   const isMobile = useIsMobile();
-  const { isLoading, setIsLoading } = useAppStore();
-  const [isLoadingScreen, setIsLoadingScreen] = useState(isLoading);
+  const setIsLoading = useAppStore.use.setIsLoading();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const { isStandalone, canInstall, install } = usePwa();
   const defaultInitialized = useDefaultInitialized();
@@ -126,22 +125,6 @@ function V2Layout({
   // Initialize global error handler
   useGlobalErrorHandler();
 
-  // Effect to handle loading state
-  useEffect(() => {
-    // If loading is already false in storage, don't show loading screen
-    if (!isLoading) {
-      setIsLoadingScreen(false);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setIsLoadingScreen(false);
-      setIsLoading(false);
-    }, 20000);
-
-    return () => clearTimeout(timer);
-  }, [isLoading, setIsLoading]);
-
   // Show InstallPwa screen only in production for mobile non-standalone users
   if (isMobile && !isStandalone && !import.meta.env.DEV) {
     return <InstallPwa canInstall={canInstall} install={install} />;
@@ -157,8 +140,9 @@ function V2Layout({
     });
   }
 
-  // Fake loading
-  if (isLoadingScreen) {
+  // Loading PWA
+  const isOfflineReady = useAppStore.use.isOfflineReady();
+  if (!isOfflineReady) {
     return (
       <>
         <TopBar />
@@ -169,7 +153,7 @@ function V2Layout({
     );
   }
 
-  // Real loading
+  // Loading default
   if (!defaultInitialized) {
     return (
       <>
@@ -180,6 +164,7 @@ function V2Layout({
       </>
     );
   }
+  setIsLoading(false);
 
   if (isMobile) {
     return (

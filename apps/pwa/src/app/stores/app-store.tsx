@@ -100,6 +100,18 @@ export interface PollingContext {
 }
 
 interface AppState {
+  // PWA (service worker)
+  isOfflineReady: boolean;
+  setIsOfflineReady: (isOfflineReady: boolean) => void;
+  isUpdateReadyPWA: boolean;
+  setIsUpdateReadyPWA: (isUpdateReadyPWA: boolean) => void;
+  updateServiceWorker:
+    | ((reloadPage?: boolean | undefined) => Promise<void>)
+    | null;
+  setUpdateServiceWorker: (
+    fn: (reloadPage?: boolean | undefined) => Promise<void>,
+  ) => void;
+
   // Default
   isDefaultInitialized: boolean;
   setIsDefaultInitialized: (isDefaultInitialized: boolean) => void;
@@ -215,6 +227,23 @@ const lastPagePerMenu = new Map<Menu, Page>([
 const useAppStoreBase = create<AppState>()(
   persist(
     immer((set, get) => ({
+      // PWA (service worker)
+      isOfflineReady: false,
+      setIsOfflineReady: (isOfflineReady) =>
+        set((state) => {
+          state.isOfflineReady = isOfflineReady;
+        }),
+      isUpdateReadyPWA: false,
+      setIsUpdateReadyPWA: (isUpdateReadyPWA) =>
+        set((state) => {
+          state.isUpdateReadyPWA = isUpdateReadyPWA;
+        }),
+      updateServiceWorker: null,
+      setUpdateServiceWorker: (fn) =>
+        set((state) => {
+          state.updateServiceWorker = fn;
+        }),
+
       // Default
       isDefaultInitialized: false,
       setIsDefaultInitialized: (isDefaultInitialized) =>
@@ -380,7 +409,7 @@ const useAppStoreBase = create<AppState>()(
         }),
 
       // Loading
-      isLoading: true,
+      isLoading: false,
       setIsLoading: (isLoading) =>
         set((state) => {
           state.isLoading = isLoading;
@@ -471,7 +500,11 @@ const useAppStoreBase = create<AppState>()(
           Object.entries(state).filter(
             ([key]) =>
               ![
+                "isOfflineReady",
+                "isUpdateReadyPWA",
+                "updateServiceWorker",
                 "jwt",
+                "isLoading",
                 "isMobile",
                 "generatingImageId", // Don't persist this state
                 "generatingContext", // Don't persist polling context (contains File objects)

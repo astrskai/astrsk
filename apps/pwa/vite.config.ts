@@ -131,7 +131,7 @@ This project uses the following third-party software. The full text of each lice
       },
 
       devOptions: {
-        enabled: false,
+        enabled: true,
         navigateFallback: "index.html",
         suppressWarnings: true,
         type: "module",
