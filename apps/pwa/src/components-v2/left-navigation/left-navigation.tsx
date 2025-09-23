@@ -17,7 +17,6 @@ import {
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
 import { UpdaterNew } from "@/components-v2/updater-new";
-import { isElectronEnvironment } from "@/utils/environment";
 import {
   ArrowLeftFromLine,
   ArrowRightFromLine,
@@ -27,7 +26,7 @@ import {
   PlayCircle,
   Settings,
 } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -423,9 +422,6 @@ const LeftNavigationFooter = memo(
     setActivePage: (page: Page) => void;
   }) => {
     const subscribed = useAppStore.use.subscribed();
-    const isElectron = useMemo(() => {
-      return isElectronEnvironment();
-    }, []);
 
     const handleDocsClick = useCallback(() => {
       openInNewTab("https://docs.astrsk.ai/");
@@ -467,7 +463,7 @@ const LeftNavigationFooter = memo(
         </div>
         <div className="text-text-primary flex w-full flex-row justify-end gap-[16px]">
           <div className="flex flex-row gap-[16px]">
-            {isElectron && <UpdaterNew />}
+            <UpdaterNew />
             <Tooltip>
               <TooltipTrigger asChild>
                 <button onClick={handleDocsClick}>
