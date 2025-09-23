@@ -1049,7 +1049,7 @@ const UserInputs = ({
   }, [setSessionOnboardingStep, setIsGroupButtonDonNotShowAgain]);
 
   return (
-    <div className="sticky inset-x-0 bottom-0 px-[56px] pb-[80px]">
+    <div className="sticky inset-x-0 bottom-0 px-[56px] pb-[calc(40px+var(--topbar-height))]">
       <div
         className={cn(
           "mx-auto flex w-full max-w-[892px] min-w-[400px] flex-col gap-[16px] rounded-[40px] p-[24px]",
