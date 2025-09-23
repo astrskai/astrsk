@@ -1,9 +1,9 @@
-import { initializeEnvironment } from "@/utils/environment";
 import { createContext, useContext, useEffect, useState } from "react";
+import { initializeEnvironment } from "@/utils/environment";
 
 // Initialize environment detection once at app startup
 initializeEnvironment();
-
+        
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
@@ -17,8 +17,8 @@ import {
   SidebarInset,
   SidebarLeftProvider,
 } from "@/components-v2/both-sidebar";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { usePwa } from "@/components-v2/hooks/use-pwa";
+import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { InstallPwa } from "@/components-v2/install-pwa";
 import { LeftNavigationMobile } from "@/components-v2/left-navigation";
 import {
@@ -70,6 +70,7 @@ function V2Layout({
   children: React.ReactNode;
 }>) {
   const isMobile = useIsMobile();
+  const setIsLoading = useAppStore.use.setIsLoading();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const { isStandalone, canInstall, install } = usePwa();
   const defaultInitialized = useDefaultInitialized();
@@ -163,6 +164,7 @@ function V2Layout({
       </>
     );
   }
+  setIsLoading(false);
 
   if (isMobile) {
     return (

@@ -409,7 +409,7 @@ const useAppStoreBase = create<AppState>()(
         }),
 
       // Loading
-      isLoading: true,
+      isLoading: false,
       setIsLoading: (isLoading) =>
         set((state) => {
           state.isLoading = isLoading;
@@ -504,6 +504,7 @@ const useAppStoreBase = create<AppState>()(
                 "isUpdateReadyPWA",
                 "updateServiceWorker",
                 "jwt",
+                "isLoading",
                 "isMobile",
                 "generatingImageId", // Don't persist this state
                 "generatingContext", // Don't persist polling context (contains File objects)
