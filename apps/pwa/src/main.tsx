@@ -1,5 +1,6 @@
 import { initServices } from "@/app/services/init-services.ts";
 import { initStores } from "@/app/stores/init-stores.ts";
+import { JwtUpdater } from "@/components-v2/convex/jwt-updater.tsx";
 import { Loading } from "@/components-v2/loading.tsx";
 import { migrate } from "@/db/migrate.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
@@ -62,6 +63,7 @@ async function initializeApp() {
         >
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <App />
+            <JwtUpdater />
           </ConvexProviderWithClerk>
         </ClerkProvider>
       </StrictMode>,
