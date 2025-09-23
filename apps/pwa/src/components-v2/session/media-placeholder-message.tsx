@@ -62,7 +62,7 @@ export const MediaPlaceholderMessage = ({
   }, [assetId]);
 
   return (
-    <div className="group/media-placeholder px-[32px] relative">
+    <div className="group/media-placeholder relative px-[32px]">
       <div
         className={cn(
           "relative mx-auto w-full max-w-[890px] rounded-[8px]",
@@ -71,9 +71,9 @@ export const MediaPlaceholderMessage = ({
       >
         {isLoading ? (
           // Loading state
-          <div className="relative flex flex-col items-center justify-center p-[48px] gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-text-body" />
-            <div className="font-[400] text-[16px] leading-[19px] text-text-placeholder">
+          <div className="relative flex flex-col items-center justify-center gap-4 p-[48px]">
+            <Loader2 className="text-text-body h-8 w-8 animate-spin" />
+            <div className="text-text-placeholder text-[16px] leading-[19px] font-[400]">
               {content}
             </div>
 
@@ -82,12 +82,12 @@ export const MediaPlaceholderMessage = ({
               <div
                 className={cn(
                   "absolute top-[0px] -right-[42px] flex items-center gap-[8px]",
-                  "bg-background-container/90 backdrop-blur-sm rounded-[6px] p-[6px]",
+                  "bg-background-container/90 rounded-[6px] p-[6px] backdrop-blur-sm",
                   "shadow-lg",
                 )}
               >
                 <button
-                  className="cursor-pointer text-text-body hover:text-text-primary transition-colors"
+                  className="text-text-body hover:text-text-primary cursor-pointer transition-colors"
                   onClick={onDelete}
                   title="Cancel generation"
                 >
@@ -106,7 +106,7 @@ export const MediaPlaceholderMessage = ({
                   src={assetUrl}
                   controls
                   autoPlay
-                  className="w-full h-auto rounded-[8px]"
+                  className="h-auto w-full rounded-[8px]"
                   style={{ maxHeight: "600px" }}
                 >
                   Your browser does not support the video tag.
@@ -114,12 +114,12 @@ export const MediaPlaceholderMessage = ({
               ) : (
                 // Show thumbnail with play button overlay
                 <div
-                  className="relative cursor-pointer group"
+                  className="group relative cursor-pointer"
                   onClick={() => setShowVideo(true)}
                 >
                   {/* Aspect ratio container 16:9 */}
                   <div
-                    className="relative w-full bg-background-container rounded-[8px] overflow-hidden"
+                    className="bg-background-container relative w-full overflow-hidden rounded-[8px]"
                     style={{
                       paddingBottom: "56.25%",
                       contain: "layout style paint",
@@ -127,13 +127,13 @@ export const MediaPlaceholderMessage = ({
                   >
                     {/* Loading placeholder */}
                     {!thumbnailLoaded && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-background-container to-background-normal rounded-[8px]" />
+                      <div className="from-background-container to-background-normal absolute inset-0 rounded-[8px] bg-gradient-to-br" />
                     )}
                     <img
                       src={thumbnailUrl || assetUrl}
                       alt="Video thumbnail"
                       className={cn(
-                        "absolute inset-0 w-full h-full rounded-[8px] object-cover",
+                        "absolute inset-0 h-full w-full rounded-[8px] object-cover",
                         thumbnailLoaded ? "opacity-100" : "opacity-0",
                         "transition-opacity duration-300",
                       )}
@@ -153,7 +153,7 @@ export const MediaPlaceholderMessage = ({
             ) : (
               // Regular image with 16:9 aspect ratio container
               <div
-                className="relative w-full bg-background-container rounded-[8px] overflow-hidden"
+                className="bg-background-container relative w-full overflow-hidden rounded-[8px]"
                 style={{
                   paddingBottom: "56.25%",
                   contain: "layout style paint",
@@ -161,13 +161,13 @@ export const MediaPlaceholderMessage = ({
               >
                 {/* Loading placeholder */}
                 {!imageLoaded && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-background-container to-background-normal rounded-[8px]" />
+                  <div className="from-background-container to-background-normal absolute inset-0 rounded-[8px] bg-gradient-to-br" />
                 )}
                 <img
                   src={assetUrl}
                   alt="Generated image"
                   className={cn(
-                    "absolute inset-0 w-full h-full rounded-[8px] object-cover",
+                    "absolute inset-0 h-full w-full rounded-[8px] object-cover",
                     imageLoaded ? "opacity-100" : "opacity-0",
                     "transition-opacity duration-300",
                   )}
@@ -195,8 +195,8 @@ export const MediaPlaceholderMessage = ({
                 {onDelete && (
                   <button
                     className={cn(
-                      "cursor-pointer text-text-body hover:text-text-primary transition-colors",
-                      "bg-background-container/90 backdrop-blur-sm rounded-[6px] p-[6px]",
+                      "text-text-body hover:text-text-primary cursor-pointer transition-colors",
+                      "bg-background-container/90 rounded-[6px] p-[6px] backdrop-blur-sm",
                       "shadow-lg",
                     )}
                     onClick={onDelete}
@@ -210,8 +210,8 @@ export const MediaPlaceholderMessage = ({
                 {onGenerateVideo && (
                   <button
                     className={cn(
-                      "cursor-pointer text-text-body hover:text-text-primary transition-colors",
-                      "bg-background-container/90 backdrop-blur-sm rounded-[6px] p-[6px]",
+                      "text-text-body hover:text-text-primary cursor-pointer transition-colors",
+                      "bg-background-container/90 rounded-[6px] p-[6px] backdrop-blur-sm",
                       "shadow-lg",
                       isGeneratingVideo && "pointer-events-none opacity-50",
                     )}
@@ -228,7 +228,7 @@ export const MediaPlaceholderMessage = ({
                     ) : (
                       <SvgIcon
                         name="video_gen"
-                        className="max-w-5 max-h-5 opacity-70"
+                        className="max-h-5 max-w-5 opacity-70"
                       />
                     )}
                   </button>
