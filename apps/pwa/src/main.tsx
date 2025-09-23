@@ -1,14 +1,13 @@
 import { initServices } from "@/app/services/init-services.ts";
-import { useAppStore } from "@/app/stores/app-store.tsx";
 import { initStores } from "@/app/stores/init-stores.ts";
 import { Loading } from "@/components-v2/loading.tsx";
 import { migrate } from "@/db/migrate.ts";
-import { logger } from "@/shared/utils/logger.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
-import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
+import { ConvexReactClient } from "convex/react";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { enableMapSet } from "immer";
-import { StrictMode, useCallback, useMemo } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
@@ -30,38 +29,7 @@ if (!window.Buffer) {
   window.Buffer = Buffer;
 }
 
-function useConvexAuthWithClerk() {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-  const setJwt = useAppStore.use.setJwt();
-
-  const fetchAccessToken = useCallback(
-    async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
-      try {
-        const jwt = await getToken({
-          template: "convex",
-          skipCache: forceRefreshToken,
-        });
-        setJwt(jwt);
-        return jwt;
-      } catch (error) {
-        logger.error("Failed to fetch access token", error);
-        setJwt(null);
-        return null;
-      }
-    },
-    [getToken, setJwt],
-  );
-
-  return useMemo(
-    () => ({
-      isLoading: !isLoaded,
-      isAuthenticated: !!isSignedIn,
-      fetchAccessToken,
-    }),
-    [isLoaded, isSignedIn, fetchAccessToken],
-  );
-}
-
+// Init app
 async function initializeApp() {
   // Create root
   const root = createRoot(document.getElementById("root")!);
@@ -69,7 +37,7 @@ async function initializeApp() {
   // Render loading
   root.render(
     <StrictMode>
-      <div className="flex items-center justify-center h-dvh bg-background-screen">
+      <div className="bg-background-screen flex h-dvh items-center justify-center">
         <Loading />
       </div>
     </StrictMode>,
@@ -92,12 +60,9 @@ async function initializeApp() {
         <ClerkProvider
           publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
         >
-          <ConvexProviderWithAuth
-            client={convex}
-            useAuth={useConvexAuthWithClerk}
-          >
+          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <App />
-          </ConvexProviderWithAuth>
+          </ConvexProviderWithClerk>
         </ClerkProvider>
       </StrictMode>,
     );
