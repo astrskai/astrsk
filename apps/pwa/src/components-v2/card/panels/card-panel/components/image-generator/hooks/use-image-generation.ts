@@ -193,8 +193,8 @@ export const useImageGeneration = ({
             prompt: config.prompt,
             referenceImages: base64Images, // Pass base64 images instead of blob URLs
             modelPriority: [
-              IMAGE_MODELS.NANO_BANANA, // 14 15
-              IMAGE_MODELS.SEEDREAM_4_0, // 27.
+              IMAGE_MODELS.NANO_BANANA,
+              IMAGE_MODELS.SEEDREAM_4_0,
             ],
             timeout: 60000,
             imageSize:
