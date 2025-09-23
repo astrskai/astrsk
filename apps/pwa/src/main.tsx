@@ -2,6 +2,7 @@ import { initServices } from "@/app/services/init-services.ts";
 import { useAppStore } from "@/app/stores/app-store.tsx";
 import { initStores } from "@/app/stores/init-stores.ts";
 import { Loading } from "@/components-v2/loading.tsx";
+import { PwaRegister } from "@/components-v2/pwa-register.tsx";
 import { migrate } from "@/db/migrate.ts";
 import { logger } from "@/shared/utils/logger.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
@@ -69,7 +70,7 @@ async function initializeApp() {
   // Render loading
   root.render(
     <StrictMode>
-      <div className="flex items-center justify-center h-dvh bg-background-screen">
+      <div className="bg-background-screen flex h-dvh items-center justify-center">
         <Loading />
       </div>
     </StrictMode>,
@@ -96,6 +97,7 @@ async function initializeApp() {
             client={convex}
             useAuth={useConvexAuthWithClerk}
           >
+            <PwaRegister />
             <App />
           </ConvexProviderWithAuth>
         </ClerkProvider>
