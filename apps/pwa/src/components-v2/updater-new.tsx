@@ -53,6 +53,7 @@ const UpdaterNew = () => {
   // Electron updater
   const [isUpdateReadyElectron, setIsUpdateReadyElectron] = useState(false);
   const isDownloading = useRef<boolean>(false);
+  const downloadProgressPercent = useRef<number>(0);
   useEffect(() => {
     // Check updater is available
     if (!window.api || !window.api.updater) {
@@ -72,6 +73,7 @@ const UpdaterNew = () => {
     });
     window.api.updater.onDownloadProgress((info) => {
       logger.info(`Download progress: ${info.percent}%`);
+      downloadProgressPercent.current = Math.round(info.percent);
       isDownloading.current = true;
     });
     window.api.updater.onUpdateDownloaded(() => {
@@ -90,6 +92,7 @@ const UpdaterNew = () => {
   const pwaUpdatePeriodMs = 1 * 60 * 1000; // 1 minutes, minimum 1 minute
   const {
     needRefresh: [isUpdateReadyPWA],
+    updateServiceWorker,
   } = useRegisterSW({
     onOfflineReady() {
       logger.info("Service worker is ready for offline use");
@@ -114,39 +117,53 @@ const UpdaterNew = () => {
 
   // Restart and apply update
   const restartApp = useCallback(async () => {
-    if (isUpdateReadyPWA) {
-      await window.api?.updater?.relaunch();
-    } else {
-      await window.api?.updater?.quitAndInstall();
-    }
-  }, [isUpdateReadyPWA]);
+    await updateServiceWorker();
+    await window.api?.updater?.quitAndInstall();
+  }, [updateServiceWorker]);
 
   // Get update readiness
-  const isUpdateReady = isUpdateReadyElectron || isUpdateReadyPWA;
+  const isUpdateReady = isUpdateReadyElectron && isUpdateReadyPWA;
 
   return (
-    isUpdateReady && (
+    (isDownloading.current || isUpdateReady) && (
       <TooltipProvider delayDuration={0}>
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              onClick={restartApp}
+              onClick={() => {
+                if (isUpdateReady) {
+                  restartApp();
+                }
+              }}
               className="relative data-[state=closed]:[&>.dot]:opacity-100"
             >
               <Import size={20} />
-              <div
-                className={cn(
-                  "absolute -top-[3px] -right-[4px] size-[5px] rounded-full bg-status-required",
-                  "dot opacity-0 transition-opacity",
-                )}
-              />
+              {isUpdateReady && (
+                <div
+                  className={cn(
+                    "bg-status-required absolute -top-[3px] -right-[4px] size-[5px] rounded-full",
+                    "dot opacity-0 transition-opacity",
+                  )}
+                />
+              )}
             </button>
           </TooltipTrigger>
-          <TooltipContent side="top" variant="button" sideOffset={14} className="z-[100]">
+          <TooltipContent
+            side="top"
+            variant="button"
+            sideOffset={14}
+            className="z-[100]"
+          >
             <div className="flex flex-col px-2 py-2">
-              <TypoTiny className="p-0 leading-tight">
-                Restart to update!
-              </TypoTiny>
+              {isUpdateReady ? (
+                <TypoTiny className="p-0 leading-tight">
+                  Restart to update!
+                </TypoTiny>
+              ) : (
+                <TypoTiny className="p-0 leading-tight">
+                  Downloading update... {downloadProgressPercent.current}%
+                </TypoTiny>
+              )}
             </div>
           </TooltipContent>
         </Tooltip>
