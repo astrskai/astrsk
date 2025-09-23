@@ -26,8 +26,8 @@ const SubscribePage = () => {
   const [isOpenCreditDetail, setIsOpenCreditDetail] = useState(false);
 
   // Check sign up available
-  const isSignUpAvailable =
-    useQuery(api.payment.public.getSignUpAvailable) ?? false;
+  const isSignUpAvailable = useQuery(api.payment.public.getSignUpAvailable);
+  const isSignUpAvailableLoading = typeof isSignUpAvailable === "undefined";
 
   // Sign up with SSO
   const { userId } = useAuth();
@@ -310,7 +310,7 @@ const SubscribePage = () => {
                   Regular Pricing
                 </div>
               </div>
-              {isSignUpAvailable ? (
+              {isSignUpAvailableLoading || isSignUpAvailable ? (
                 <div
                   className={cn(
                     "rounded-[12px] bg-[#159BE2]/30 px-[40px] py-[16px] backdrop-blur-xl",
@@ -346,7 +346,7 @@ const SubscribePage = () => {
                       }
                     }}
                     disabled={!isLoadedSignUp || isLoading}
-                    loading={isLoading}
+                    loading={isLoading || isSignUpAvailableLoading}
                   >
                     {!isLoading && <SvgIcon name="discord" size={16} />}
                     Join our Discord server and start now
