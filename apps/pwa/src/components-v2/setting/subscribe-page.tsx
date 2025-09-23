@@ -101,6 +101,8 @@ const SubscribePage = () => {
         switch (claimFreeSubscriptionProcess.result.code) {
           case "ALREADY_SUBSCRIBED":
             toast.error("You are already signed in to astrsk+.");
+            setIsOpenJoinServer(false);
+            backToReturnPage();
             break;
           case "NO_DISCORD_ID":
             toast.error("Please log in with Discord to access this feature.");

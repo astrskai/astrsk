@@ -3,7 +3,7 @@ import { initializeEnvironment } from "@/utils/environment";
 
 // Initialize environment detection once at app startup
 initializeEnvironment();
-        
+
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
@@ -261,7 +261,12 @@ const indexRoute = createRoute({
 const ssoCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sso-callback",
-  component: () => <AuthenticateWithRedirectCallback />,
+  component: () => (
+    <AuthenticateWithRedirectCallback
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
+    />
+  ),
 });
 
 const routeTree = rootRoute.addChildren([indexRoute, ssoCallbackRoute]);
