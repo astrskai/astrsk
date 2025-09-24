@@ -53,6 +53,11 @@ import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
 import { ApiSource } from "@/modules/api/domain";
 import {
+  storeConversationMemory,
+  retrieveSessionMemories,
+  formatMemoriesForPrompt,
+} from "@/modules/supermemory/memory-service";
+import {
   ApiConnection,
   OpenrouterProviderSort,
 } from "@/modules/api/domain/api-connection";
@@ -1585,11 +1590,13 @@ async function* executeAgentNode({
   fullContext,
   stopSignalByUser,
   creditLog,
+  sessionId,
 }: {
   agentId: UniqueEntityID;
   fullContext: any;
   stopSignalByUser?: AbortSignal;
   creditLog?: object;
+  sessionId?: UniqueEntityID;
 }): AsyncGenerator<AgentNodeResult, AgentNodeResult, void> {
   try {
     // Get agent
@@ -1653,12 +1660,75 @@ async function* executeAgentNode({
       throw new Error(`API connection not found for source: ${apiSource}`);
     }
 
+    // Check if agent has history messages and retrieve memories from Supermemory
+    let injectedMemories = "";
+    const hasHistoryMessages = agent.props.promptMessages?.some(
+      (msg: any) => msg.type === "history",
+    );
+
+    console.log(
+      `🎯 [Supermemory] Agent ${agentId} has history messages:`,
+      hasHistoryMessages,
+    );
+
+    if (hasHistoryMessages) {
+      try {
+        const sessionIdStr = sessionId?.toString() || "unknown";
+        console.log(
+          `🎯 [Supermemory] Starting memory retrieval for session ${sessionIdStr}...`,
+        );
+        const memories = await retrieveSessionMemories(
+          sessionIdStr,
+          undefined,
+          3, // Retrieve top 3 memories
+        );
+        injectedMemories = formatMemoriesForPrompt(memories);
+        console.log(
+          `✨ [Supermemory] Formatted memories for injection (${memories.length} memories)`,
+        );
+        if (injectedMemories) {
+          console.log(
+            `✨ [Supermemory] Memory preview:`,
+            injectedMemories.substring(0, 200) + "...",
+          );
+        }
+        logger.info(
+          `[Supermemory] Injected ${memories.length} memories for agent ${agentId}`,
+        );
+      } catch (error) {
+        console.error("❌ [Supermemory] Failed to retrieve memories:", error);
+        logger.error("[Supermemory] Failed to retrieve memories:", error);
+      }
+    } else {
+      console.log(
+        `⏭️ [Supermemory] Agent ${agentId} does not have history messages, skipping memory operations`,
+      );
+    }
+
     // Render messages
     const messages = await renderMessages({
       renderable: agent,
       context: fullContext,
       parameters: agent.parameters,
     });
+
+    // Inject memories into the first system message if we have any
+    if (injectedMemories && messages.length > 0) {
+      console.log(`💉 [Supermemory] Injecting memories into messages...`);
+      const firstSystemMessage = messages.find((msg) => msg.role === "system");
+      if (firstSystemMessage) {
+        firstSystemMessage.content =
+          injectedMemories + "\n\n" + firstSystemMessage.content;
+        console.log(`💉 [Supermemory] Injected memories into system message`);
+      } else if (messages[0]) {
+        // If no system message, prepend to the first message
+        messages[0].content = injectedMemories + "\n\n" + messages[0].content;
+        console.log(
+          `💉 [Supermemory] Injected memories into first message (role: ${messages[0].role})`,
+        );
+      }
+    }
+
     const transformedMessages = transformMessagesForModel(messages, apiModelId);
     validateMessages(transformedMessages, apiConnection.source);
 
@@ -1714,6 +1784,52 @@ async function* executeAgentNode({
         response += chunk;
         merge(result, { output: { response } });
         yield result;
+      }
+    }
+
+    // Store conversation to Supermemory if agent has history messages
+    if (hasHistoryMessages && result.output) {
+      try {
+        // Extract conversation from messages and response
+        const conversationTurns = [];
+
+        // Add the last user message
+        const userMessage = messages.find((msg) => msg.role === "user");
+        if (userMessage) {
+          conversationTurns.push({
+            role: "user",
+            content: userMessage.content,
+          });
+        }
+
+        // Add the assistant response
+        const responseContent =
+          typeof result.output === "object" && "response" in result.output
+            ? (result.output as any).response
+            : JSON.stringify(result.output);
+
+        if (responseContent) {
+          conversationTurns.push({
+            role: "assistant",
+            content: responseContent,
+          });
+        }
+
+        // Store to Supermemory
+        if (conversationTurns.length >= 2) {
+          const sessionIdStr = sessionId?.toString() || "unknown";
+          await storeConversationMemory(
+            sessionIdStr,
+            conversationTurns,
+            agentId.toString(),
+          );
+          logger.info(
+            `[Supermemory] Stored conversation for session ${sessionIdStr}`,
+          );
+        }
+      } catch (error) {
+        logger.error("[Supermemory] Failed to store conversation:", error);
+        // Don't throw - graceful degradation
       }
     }
 
@@ -1901,6 +2017,7 @@ async function* executeFlow({
             session_id: sessionId.toString(),
             flow_id: flowId.toString(),
           },
+          sessionId: sessionId,
         });
 
         for await (const result of executeAgentNodeResult) {
