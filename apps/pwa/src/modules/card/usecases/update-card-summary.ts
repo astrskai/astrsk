@@ -1,12 +1,11 @@
 import { Result } from "@/shared/core";
 import { UseCase } from "@/shared/core/use-case";
 import { UniqueEntityID } from "@/shared/domain";
-import { Card } from "@/modules/card/domain";
 import { LoadCardRepo, SaveCardRepo } from "@/modules/card/repos";
 
 interface UpdateCardSummaryRequest {
   cardId: string;
-  summary: string;
+  cardSummary: string;
 }
 
 type UpdateCardSummaryResponse = Result<void>;
@@ -29,12 +28,14 @@ export class UpdateCardSummary
       if (this.saveCardRepo.updateCardSummary) {
         const result = await this.saveCardRepo.updateCardSummary(
           new UniqueEntityID(request.cardId),
-          request.summary
+          request.cardSummary,
         );
         return result;
       }
 
-      const cardOrError = await this.loadCardRepo.getCardById(new UniqueEntityID(request.cardId));
+      const cardOrError = await this.loadCardRepo.getCardById(
+        new UniqueEntityID(request.cardId),
+      );
 
       if (cardOrError.isFailure) {
         return Result.fail<void>(cardOrError.getError());
@@ -46,7 +47,7 @@ export class UpdateCardSummary
         return Result.fail<void>("Card not found");
       }
 
-      const updateResult = card.update({ cardSummary: request.summary });
+      const updateResult = card.update({ cardSummary: request.cardSummary });
       if (updateResult.isFailure) {
         return Result.fail<void>(updateResult.getError());
       }

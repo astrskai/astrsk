@@ -183,7 +183,7 @@ export const useUpdateCardSummary = (cardId: string) => {
     mutationFn: async (cardSummary: string) => {
       const result = await CardService.updateCardSummary.execute({
         cardId,
-        summary: cardSummary,
+        cardSummary: cardSummary,
       });
 
       if (result.isFailure) {
