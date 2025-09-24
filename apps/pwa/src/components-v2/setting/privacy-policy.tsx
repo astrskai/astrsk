@@ -1,6 +1,6 @@
 const PrivacyPolicy = () => {
   return (
-    <div className="fixed inset-0 left-0 z-40 overflow-y-auto py-[80px]">
+    <div className="overflow-y-auto py-[80px] h-full">
       <div className="max-w-[587px] mx-auto text-text-primary">
         {/* Header with back button */}
         <div className="flex items-center mb-4">

@@ -22,6 +22,7 @@ import { invalidateSingleCardQueries } from "@/components-v2/card/utils/invalida
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
 import { Avatar } from "@/components-v2/avatar";
 import { useAppStore } from "@/app/stores/app-store";
+import { getSelectedIdFromPath } from "@/utils/url-utils";
 
 interface CardPanelProps {
   cardId: string;
@@ -54,9 +55,9 @@ const TradingCardItem = ({
   return (
     <div
       className={cn(
-        "relative w-full max-w-[320px] aspect-[196/289] rounded-[8px]",
+        "relative aspect-[196/289] w-full max-w-[320px] rounded-[8px]",
         !cardId && "bg-background-input",
-        disabled && "opacity-50 pointer-events-none",
+        disabled && "pointer-events-none opacity-50",
       )}
       onClick={disabled ? undefined : onClick}
       aria-disabled={disabled}
@@ -65,12 +66,12 @@ const TradingCardItem = ({
         <TradingCard cardId={cardId} />
       ) : (
         <div className="flex h-full w-full items-center justify-center">
-          <div className="text-center text-background-dialog px-4">
+          <div className="text-background-dialog px-4 text-center">
             {placeholder}
           </div>
         </div>
       )}
-      <div className="absolute inset-0 rounded-[19px] ring-2 ring-border-light pointer-events-none" />
+      <div className="ring-border-light pointer-events-none absolute inset-0 rounded-[19px] ring-2" />
       {/*
       todo: remove this 
       */}
@@ -100,7 +101,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
 
   // Get left navigation state for conditional margins
   const { isExpanded, isMobile } = useLeftNavigationWidth();
-  
+
   // Use React Query to get card data
   const { data: cardFromQuery } = useQuery(cardQueries.detail(cardId));
 
@@ -176,29 +177,32 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
 
         // Step 2: Add to gallery FIRST (this becomes the source of truth)
         console.log("🖼️ [CARD-PANEL] Adding image to gallery first");
-        const generatedImageResult = await GeneratedImageService.saveGeneratedImageFromAsset.execute({
-          assetId: asset.id,
-          name: file.name.replace(/\.[^/.]+$/, ""),
-          prompt: `Card avatar for ${card.props.title || "Untitled"}`,
-          style: "uploaded",
-          associatedCardId: card.id,
-        });
+        const generatedImageResult =
+          await GeneratedImageService.saveGeneratedImageFromAsset.execute({
+            assetId: asset.id,
+            name: file.name.replace(/\.[^/.]+$/, ""),
+            prompt: `Card avatar for ${card.props.title || "Untitled"}`,
+            style: "uploaded",
+            associatedCardId: card.id,
+          });
 
         if (generatedImageResult.isSuccess) {
           console.log("✅ [CARD-PANEL] Image added to gallery");
 
           // Step 3: Update card to reference the SAME asset (no separate asset creation)
           const updateResult = card.update({ iconAssetId: asset.id });
-          
+
           if (updateResult.isSuccess) {
             const saveResult = await CardService.saveCard.execute(card);
-            
+
             if (saveResult.isSuccess) {
               // Invalidate all queries for this card
               await invalidateSingleCardQueries(queryClient, card.id);
-              
+
               // Also invalidate generated images for this card and global list
-              console.log("🔄 [CARD-PANEL] Invalidating generated images queries");
+              console.log(
+                "🔄 [CARD-PANEL] Invalidating generated images queries",
+              );
               await queryClient.invalidateQueries({
                 queryKey: generatedImageKeys.cardImages(card.id.toString()),
               });
@@ -206,7 +210,9 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               await queryClient.invalidateQueries({
                 queryKey: generatedImageKeys.lists(),
               });
-              console.log("✅ [CARD-PANEL] Image added to gallery and set as card icon using same asset");
+              console.log(
+                "✅ [CARD-PANEL] Image added to gallery and set as card icon using same asset",
+              );
             } else {
               console.error("Failed to save card:", saveResult.getError());
             }
@@ -214,7 +220,10 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
             console.error("Failed to update card:", updateResult.getError());
           }
         } else {
-          console.error("Failed to add image to gallery:", generatedImageResult.getError());
+          console.error(
+            "Failed to add image to gallery:",
+            generatedImageResult.getError(),
+          );
         }
       } else {
         console.error("Failed to upload file:", assetResult.getError());
@@ -237,14 +246,14 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
 
   if (!card) {
     return (
-      <div className="h-full w-full p-4 text-text-subtle bg-background-surface-2">
+      <div className="text-text-subtle bg-background-surface-2 h-full w-full p-4">
         Card not found
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full bg-background-surface-1 flex flex-col">
+    <div className="bg-background-surface-1 flex h-full w-full flex-col">
       {/* Hidden file input for avatar upload */}
       <input
         ref={fileInputRef}
@@ -255,18 +264,15 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
       />
 
       {/* Header section with card title and panel buttons */}
-      <div className="flex flex-col gap-4 p-4 w-full">
+      <div className="flex w-full flex-col gap-4 p-4">
         {/* Card name header */}
         <div
           className={cn(
-            "px-4 py-2 bg-background-surface-3 rounded-lg flex justify-between items-center gap-2 transition-all duration-200",
-            {
-              "w-full": isMobile || isExpanded, // Full width when mobile or navigation expanded
-              "w-[calc(100%-48px)] ml-12": !isMobile && !isExpanded, // Narrower width with left margin when navigation collapsed
-            },
+            "bg-background-surface-3 flex items-center justify-between gap-2 rounded-lg px-4 py-2 transition-all duration-200",
+            `w-${isMobile || isExpanded ? "full" : "calc(100%-48px)"} ml-${isMobile || isExpanded ? "0" : "12"}`,
           )}
         >
-          <div className="flex justify-start items-center gap-2 min-w-0 flex-1">
+          <div className="flex min-w-0 flex-1 items-center justify-start gap-2">
             <div className="text-text-body text-xs font-normal whitespace-nowrap">
               Card title
             </div>
@@ -280,7 +286,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
                     if (e.key === "Enter") handleSaveTitle();
                     if (e.key === "Escape") handleCancelEdit();
                   }}
-                  className="text-text-primary text-xs font-semibold bg-transparent border-b border-text-primary outline-none min-w-[80px] max-w-full"
+                  className="text-text-primary border-text-primary max-w-full min-w-[80px] border-b bg-transparent text-xs font-semibold outline-none"
                   style={{
                     width: `${Math.max(editedTitle.length * 6 + 16, 80)}px`,
                   }}
@@ -289,20 +295,20 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
                 <button
                   onClick={handleSaveTitle}
                   disabled={updateTitle.isPending || updateTitle.isEditing}
-                  className="p-1 hover:bg-background-surface-4 rounded transition-colors flex-shrink-0"
+                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <Check className="w-3 h-3 text-status-success" />
+                  <Check className="text-status-success h-3 w-3" />
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="p-1 hover:bg-background-surface-4 rounded transition-colors flex-shrink-0"
+                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="h-3 w-3" />
                 </button>
               </>
             ) : (
               <>
-                <div className="text-text-primary text-xs font-semibold truncate">
+                <div className="text-text-primary truncate text-xs font-semibold">
                   {card.props.title || "Untitled Card"}
                 </div>
                 <button
@@ -310,9 +316,9 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
                     setEditedTitle(card.props.title || "");
                     setIsEditingTitle(true);
                   }}
-                  className="p-1 hover:bg-background-surface-4 rounded transition-colors flex-shrink-0"
+                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <Pencil className="w-3 h-3 text-text-subtle hover:text-text-primary transition-colors" />
+                  <Pencil className="text-text-subtle hover:text-text-primary h-3 w-3 transition-colors" />
                 </button>
               </>
             )}
@@ -320,7 +326,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
         </div>
 
         {/* Panel control buttons */}
-        <div className="w-full flex justify-between items-start gap-2">
+        <div className="flex w-full items-start justify-between gap-2">
           {/* Left side buttons */}
           <div className="flex flex-wrap gap-2">
             <ButtonPill
@@ -339,7 +345,9 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               size="default"
               className="whitespace-nowrap"
             >
-              {card.props.type === CardType.Plot ? "Plot info" : "Character info"}
+              {card.props.type === CardType.Plot
+                ? "Plot info"
+                : "Character info"}
             </ButtonPill>
 
             {/* Show Lore books button for both Character and Plot cards */}
@@ -364,9 +372,9 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               </ButtonPill>
             )}
           </div>
-          
+
           {/* Right side buttons */}
-          <div className="flex flex-wrap gap-2 justify-end">
+          <div className="flex flex-wrap justify-end gap-2">
             <ButtonPill
               onClick={() => handleOpenPanel("variables")}
               // onDoubleClick={() => handleClosePanel("variables")}
@@ -387,7 +395,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
               active={panelVisibility?.["imageGenerator"]}
               size="default"
               icon={<Image />}
-              className="w-32 h-8"
+              className="h-8 w-32"
               isSubscribeBadge={!subscribed}
             >
               Image studio
@@ -402,22 +410,22 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
                 }
                 handleVibeCodingToggle();
               }}
-              className="w-32 h-8"
+              className="h-8 w-32"
               isSubscribeBadge={!subscribed}
             >
-              AI assistant  
+              AI assistant
             </ButtonPill>
           </div>
         </div>
       </div>
 
       {/* Main content area with avatar and trading card - takes remaining space */}
-      <div className="flex-1 flex justify-center items-center">
-        <div className="inline-flex justify-center items-center gap-12">
+      <div className="flex flex-1 items-center justify-center">
+        <div className="inline-flex items-center justify-center gap-12">
           {/* Avatar section */}
           {card?.props.type !== CardType.Plot && (
-            <div className="w-28 inline-flex flex-col justify-center items-center">
-              <div className="flex flex-col justify-center items-center gap-1.5">
+            <div className="inline-flex w-28 flex-col items-center justify-center">
+              <div className="flex flex-col items-center justify-center gap-1.5">
                 <div className="relative">
                   <Avatar
                     src={avatarUrl}
@@ -426,7 +434,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
                     isVideo={isAvatarVideo}
                   />
                 </div>
-                <div className="w-28 text-center text-text-primary text-xl font-normal truncate">
+                <div className="text-text-primary w-28 truncate text-center text-xl font-normal">
                   {getCharacterName(card)}
                 </div>
               </div>
@@ -434,10 +442,10 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
           )}
 
           {/* Trading card and card list item section */}
-          <div className="w-80 inline-flex flex-col justify-center items-center gap-6">
+          <div className="inline-flex w-80 flex-col items-center justify-center gap-6">
             {/* Card list item from left navigation */}
-            <div className="self-stretch flex flex-col justify-center items-center">
-              <div className="w-[320px] h-16">
+            <div className="flex flex-col items-center justify-center self-stretch">
+              <div className="h-16 w-[320px]">
                 <CardItem cardId={card.id} disableHover />
               </div>
             </div>
@@ -455,7 +463,6 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

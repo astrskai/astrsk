@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { useMobileNavigation } from "@/App";
+import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import {
   SettingDetailPageType,
   SettingPageLevel,
@@ -31,7 +31,7 @@ const LegalPageMobile = ({
   setLegalPage: (value: SettingDetailPageType) => void;
 }) => {
   return (
-    <div className="flex flex-col h-dvh bg-background-surface-2">
+    <div className="bg-background-surface-2 flex h-dvh flex-col">
       {/* Header */}
       <TopNavigation
         title="Legal"
@@ -49,67 +49,66 @@ const LegalPageMobile = ({
 
       <ScrollArea className="flex-1">
         <div className="mx-auto my-4 w-full max-w-[587px] px-4">
-
-          <div className="mb-12 flex flex-col gap-8 text-text-muted-title">
+          <div className="text-text-muted-title mb-12 flex flex-col gap-8">
             <div
-              className="flex items-center justify-between cursor-pointer"
+              className="flex cursor-pointer items-center justify-between"
               onClick={() => {
                 setLegalPage(SettingDetailPageType.privacyPolicy);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
-              <TypoBase className="font-semibold text-text-muted-title">
+              <TypoBase className="text-text-muted-title font-semibold">
                 Privacy Policy
               </TypoBase>
-              <ChevronRight className="h-5 w-5 text-text-secondary" />
+              <ChevronRight className="text-text-secondary h-5 w-5" />
             </div>
             <div
-              className="flex items-center justify-between cursor-pointer"
+              className="flex cursor-pointer items-center justify-between"
               onClick={() => {
                 setLegalPage(SettingDetailPageType.termOfService);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
-              <TypoBase className="font-semibold text-text-muted-title">
+              <TypoBase className="text-text-muted-title font-semibold">
                 Term of Use
               </TypoBase>
-              <ChevronRight className="h-5 w-5 text-text-secondary" />
+              <ChevronRight className="text-text-secondary h-5 w-5" />
             </div>
             <div
-              className="flex items-center justify-between cursor-pointer"
+              className="flex cursor-pointer items-center justify-between"
               onClick={() => {
                 setLegalPage(SettingDetailPageType.contentPolicy);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
-              <TypoBase className="font-semibold text-text-muted-title">
+              <TypoBase className="text-text-muted-title font-semibold">
                 Content Policy
               </TypoBase>
-              <ChevronRight className="h-5 w-5 text-text-secondary" />
+              <ChevronRight className="text-text-secondary h-5 w-5" />
             </div>
             <div
-              className="flex items-center justify-between cursor-pointer"
+              className="flex cursor-pointer items-center justify-between"
               onClick={() => {
                 setLegalPage(SettingDetailPageType.refundPolicy);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
-              <TypoBase className="font-semibold text-text-muted-title">
+              <TypoBase className="text-text-muted-title font-semibold">
                 Refund Policy
               </TypoBase>
-              <ChevronRight className="h-5 w-5 text-text-secondary" />
+              <ChevronRight className="text-text-secondary h-5 w-5" />
             </div>
             <div
-              className="flex items-center justify-between cursor-pointer"
+              className="flex cursor-pointer items-center justify-between"
               onClick={() => {
                 setLegalPage(SettingDetailPageType.ossNotice);
                 setSettingPageLevel(SettingPageLevel.detail);
               }}
             >
-              <TypoBase className="font-semibold text-text-muted-title">
+              <TypoBase className="text-text-muted-title font-semibold">
                 Open-source Software Notice
               </TypoBase>
-              <ChevronRight className="h-5 w-5 text-text-secondary" />
+              <ChevronRight className="text-text-secondary h-5 w-5" />
             </div>
           </div>
         </div>
@@ -144,7 +143,7 @@ const LegalDetailPageMobile = ({
   };
 
   return (
-    <div className="flex flex-col h-dvh bg-background-surface-2">
+    <div className="bg-background-surface-2 flex h-dvh flex-col">
       {/* Header */}
       <TopNavigation
         title={getTitleByLegalPage(legalPage)}
@@ -162,7 +161,7 @@ const LegalDetailPageMobile = ({
 
       <ScrollArea className="flex-1">
         <div className="mx-auto my-6 w-full max-w-[587px] px-4">
-          <div className="[&>div]:!static [&>div]:!inset-auto [&>div]:!z-auto [&>div]:!overflow-visible [&>div]:!pt-0 [&>div]:!max-w-none [&>div]:!mx-0">
+          <div className="[&>div]:!static [&>div]:!inset-auto [&>div]:!z-auto [&>div]:!mx-0 [&>div]:!max-w-none [&>div]:!overflow-visible [&>div]:!pt-0">
             {legalPage === SettingDetailPageType.refundPolicy ? (
               <RefundPolicy />
             ) : legalPage === SettingDetailPageType.privacyPolicy ? (
@@ -192,72 +191,69 @@ const MainPageMobile = ({
   const { setIsOpen } = useMobileNavigation();
 
   return (
-    <div className="flex flex-col h-dvh bg-background-surface-2">
+    <div className="bg-background-surface-2 flex h-dvh flex-col">
       {/* Header */}
       <TopNavigation title="Settings" onMenuClick={() => setIsOpen(true)} />
 
       <ScrollArea className="flex-1">
         <div className="mx-auto my-6 w-full max-w-[587px] px-4">
-          <div className="mb-[32px] flex flex-col gap-8 text-text-muted-title">
-            <TypoXLarge className="font-semibold text-text-muted-title">
+          <div className="text-text-muted-title mb-[32px] flex flex-col gap-8">
+            <TypoXLarge className="text-text-muted-title font-semibold">
               App Preferences
             </TypoXLarge>
 
-            <div className="flex items-center justify-between">
-            </div>
+            <div className="flex items-center justify-between"></div>
           </div>
 
           <Separator />
 
-          <div className="my-[32px] flex flex-col gap-8 text-text-muted-title">
-            <TypoXLarge className="font-semibold text-text-muted-title">
+          <div className="text-text-muted-title my-[32px] flex flex-col gap-8">
+            <TypoXLarge className="text-text-muted-title font-semibold">
               Support & Community
             </TypoXLarge>
 
             <div
-              className="flex items-center text-text-muted-title justify-between cursor-pointer"
-              onClick={() =>
-                openInNewTab("https://docs.astrsk.ai/")
-              }
+              className="text-text-muted-title flex cursor-pointer items-center justify-between"
+              onClick={() => openInNewTab("https://docs.astrsk.ai/")}
             >
-              <TypoBase className="font-semibold text-text-muted-title">
+              <TypoBase className="text-text-muted-title font-semibold">
                 User documentation
               </TypoBase>
             </div>
 
             <div
-              className="flex items-center text-text-muted-title justify-between cursor-pointer"
+              className="text-text-muted-title flex cursor-pointer items-center justify-between"
               onClick={() => openInNewTab("https://astrsk.ai")}
             >
-              <TypoBase className="font-semibold text-text-muted-title">
+              <TypoBase className="text-text-muted-title font-semibold">
                 About astrsk.ai
               </TypoBase>
             </div>
 
             <div
-              className="flex items-center justify-between cursor-pointer"
+              className="flex cursor-pointer items-center justify-between"
               onClick={() => setSettingPageLevel(SettingPageLevel.sub)}
             >
-              <TypoBase className="font-semibold text-text-muted-title">
+              <TypoBase className="text-text-muted-title font-semibold">
                 Legal
               </TypoBase>
-              <ChevronRight className="h-5 w-5 text-text-secondary" />
+              <ChevronRight className="text-text-secondary h-5 w-5" />
             </div>
 
             <div
-              className="flex items-center text-text-muted-title justify-between cursor-pointer"
+              className="text-text-muted-title flex cursor-pointer items-center justify-between"
               onClick={() => openInNewTab("https://discord.gg/J6ry7w8YCF")}
             >
               <div className="flex items-center gap-2">
                 <SvgIcon name="discord" className="h-5 w-5 text-[#5865F2]" />
-                <TypoBase className="font-semibold text-text-muted-title">
+                <TypoBase className="text-text-muted-title font-semibold">
                   Join our Discord
                 </TypoBase>
               </div>
             </div>
 
             <div
-              className="flex items-center text-text-muted-title justify-between cursor-pointer"
+              className="text-text-muted-title flex cursor-pointer items-center justify-between"
               onClick={() => {
                 openInNewTab("https://www.reddit.com/r/astrsk_ai/");
               }}
@@ -267,7 +263,7 @@ const MainPageMobile = ({
                   name="reddit_color"
                   className="h-5 w-5 text-orange-500"
                 />
-                <TypoBase className="font-semibold text-text-muted-title">
+                <TypoBase className="text-text-muted-title font-semibold">
                   Visit our Reddit
                 </TypoBase>
               </div>
@@ -287,8 +283,12 @@ interface SettingPageMobileProps {
 export default function SettingPageMobile({
   className,
 }: SettingPageMobileProps) {
-  const { settingPageLevel, setSettingPageLevel, settingDetailPage, setSettingDetailPage } =
-    useAppStore();
+  const {
+    settingPageLevel,
+    setSettingPageLevel,
+    settingDetailPage,
+    setSettingDetailPage,
+  } = useAppStore();
 
   const renderCurrentPage = () => {
     switch (settingPageLevel) {

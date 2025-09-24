@@ -23,11 +23,11 @@ const OssNotice = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 left-0 z-40 overflow-y-auto py-[80px]">
-      <div className="max-w-[587px] mx-auto text-text-primary">
+    <div className="h-full overflow-y-auto py-[80px]">
+      <div className="text-text-primary mx-auto max-w-[587px]">
         {/* Header with back button */}
-        <div className="flex items-center mb-4">
-          <div className="flex items-center justify-center h-full">
+        <div className="mb-4 flex items-center">
+          <div className="flex h-full items-center justify-center">
             <h1 className="text-2xl font-semibold">
               Open-source Software Notice
             </h1>
@@ -37,7 +37,7 @@ const OssNotice = () => {
         {/* Content */}
         <div className="pr-8">
           {/* Notice header */}
-          <div className="text-text-placeholder text-base font-normal mb-6">
+          <div className="text-text-placeholder mb-6 text-base font-normal">
             <p className="mb-6">
               This application is Copyright © astrsk.ai All right reserved.
             </p>
@@ -65,8 +65,8 @@ const OssNotice = () => {
           <div className="text-text-primary prose prose-invert max-w-none">
             {Object.entries(licenses).map(([nameWithVersion, info]) => (
               <div key={nameWithVersion} className="w-full">
-                <h3 className="font-semibold mb-1">{nameWithVersion}</h3>
-                <h4 className="mb-1 text-sm text-text-placeholder">
+                <h3 className="mb-1 font-semibold">{nameWithVersion}</h3>
+                <h4 className="text-text-placeholder mb-1 text-sm">
                   <a
                     href={info.repository}
                     className="text-primary-strong hover:text-primary-strong/80"
@@ -76,14 +76,14 @@ const OssNotice = () => {
                     {info.repository}
                   </a>
                 </h4>
-                <h5 className="mb-2 text-sm text-text-placeholder">
+                <h5 className="text-text-placeholder mb-2 text-sm">
                   {info.copyright}
                 </h5>
                 <details className="w-full">
                   <summary className="text-text-placeholder">
                     {info.licenses}
                   </summary>
-                  <pre className="overflow-y-auto border-1 p-2 border-border-divider whitespace-pre-line">
+                  <pre className="border-border-divider overflow-y-auto border-1 p-2 whitespace-pre-line">
                     {info.licenseText}
                   </pre>
                 </details>

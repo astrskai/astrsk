@@ -1,6 +1,8 @@
 // TODO: apply color palette
 
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Page, useAppStore } from "@/app/stores/app-store";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { SidebarLeft, useSidebarLeft } from "@/components-v2/both-sidebar";
 import { ConvexReady } from "@/components-v2/convex-ready";
 import { HelpVideoDialog } from "@/components-v2/help-video-dialog";
@@ -17,7 +19,6 @@ import {
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
 import { UpdaterNew } from "@/components-v2/updater-new";
-import { Authenticated, Unauthenticated } from "convex/react";
 import {
   ArrowLeftFromLine,
   ArrowRightFromLine,
@@ -27,7 +28,6 @@ import {
   PlayCircle,
   Settings,
 } from "lucide-react";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -57,8 +57,8 @@ const SectionHeader = ({
   return (
     <div
       className={cn(
-        "z-20 sticky p-[16px] pt-[32px] bg-background-surface-2 text-text-primary",
-        "flex flex-row justify-between select-none cursor-pointer",
+        "bg-background-surface-2 text-text-primary sticky z-20 p-[16px] pt-[32px]",
+        "flex cursor-pointer flex-row justify-between select-none",
       )}
       style={{
         top,
@@ -68,7 +68,7 @@ const SectionHeader = ({
     >
       <div className="flex flex-row gap-[8px]">
         {icon}
-        <div className="font-[600] text-[14px] leading-[20px]">{name}</div>
+        <div className="text-[14px] leading-[20px] font-[600]">{name}</div>
         {onHelpClick && (
           <button
             onClick={(e) => {
@@ -78,16 +78,16 @@ const SectionHeader = ({
             className={cn(
               "text-text-info hover:text-text-primary transition-colors",
               onboardingHelpGlow &&
-                "text-button-background-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary rounded-full",
+                "text-button-background-primary border-border-selected-primary rounded-full border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
             )}
           >
             <PlayCircle size={16} />
           </button>
         )}
       </div>
-      <div className="flex flex-row gap-[8px] items-center">
+      <div className="flex flex-row items-center gap-[8px]">
         <button
-          className="cursor-pointer hover:bg-background-surface-4 rounded-sm"
+          className="hover:bg-background-surface-4 cursor-pointer rounded-sm"
           onClick={(e) => {
             e.stopPropagation();
             onToggle();
@@ -102,7 +102,6 @@ const SectionHeader = ({
 
 const LeftNavigation = () => {
   const { setOpen, open } = useSidebarLeft();
-  const activePage = useAppStore.use.activePage();
   const setActivePage = useAppStore.use.setActivePage();
 
   // Scroll navigation
@@ -170,7 +169,7 @@ const LeftNavigation = () => {
   return (
     <div className="relative">
       <SidebarLeft className="border-r-text-contrast-text z-20">
-        <div className="h-full max-h-full flex flex-col bg-background-surface-2">
+        <div className="bg-background-surface-2 flex h-full max-h-full flex-col">
           {/* Header */}
           <LeftNavigationHeader
             setActivePage={setActivePage}
@@ -179,7 +178,7 @@ const LeftNavigation = () => {
           />
 
           {/* Navigation */}
-          <ScrollArea viewportRef={navigationRef} className="flex-1 min-h-0">
+          <ScrollArea viewportRef={navigationRef} className="min-h-0 flex-1">
             <div id="nav-session" />
             <SessionSection
               onClick={() => scrollNavigation("session")}
@@ -207,34 +206,31 @@ const LeftNavigation = () => {
           </ScrollArea>
 
           {/* Footer */}
-          <LeftNavigationFooter
-            activePage={activePage}
-            setActivePage={setActivePage}
-          />
+          <LeftNavigationFooter setActivePage={setActivePage} />
         </div>
       </SidebarLeft>
 
       {/* Resource Management Onboarding Tooltip */}
       {shouldShowResourceManagementTooltip && (
         <div className="absolute top-[40px] left-[340px] z-50">
-          <div className="w-80 max-w-80 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary inline-flex flex-col justify-center items-end gap-2">
-            <div className="self-stretch justify-start text-text-primary text-sm font-semibold leading-tight">
+          <div className="bg-background-surface-2 border-border-selected-primary inline-flex w-80 max-w-80 flex-col items-end justify-center gap-2 rounded-2xl border-1 px-4 py-3 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]">
+            <div className="text-text-primary justify-start self-stretch text-sm leading-tight font-semibold">
               Global resource management
             </div>
-            <div className="self-stretch justify-start text-text-primary text-xs font-normal">
+            <div className="text-text-primary justify-start self-stretch text-xs font-normal">
               This area manages global resources shared across all sessions. You
               can use Cards and Flows here are available in all your sessions
             </div>
-            <div className="inline-flex justify-start items-start gap-2">
+            <div className="inline-flex items-start justify-start gap-2">
               <button
-                className="min-w-20 px-3 py-1.5 bg-background-surface-light rounded-[20px] inline-flex flex-col justify-center items-center gap-2"
+                className="bg-background-surface-light inline-flex min-w-20 flex-col items-center justify-center gap-2 rounded-[20px] px-3 py-1.5"
                 onClick={() => {
                   // Mark resourceManagement step as completed
                   setSessionOnboardingStep("resourceManagement", true);
                 }}
               >
-                <div className="inline-flex justify-start items-center gap-2">
-                  <div className="justify-center text-text-contrast-text text-xs font-semibold">
+                <div className="inline-flex items-center justify-start gap-2">
+                  <div className="text-text-contrast-text justify-center text-xs font-semibold">
                     Got it
                   </div>
                 </div>
@@ -247,23 +243,23 @@ const LeftNavigation = () => {
       {/* Help Video Tooltip - 4th step, next to Sessions HelpCircle */}
       {shouldShowHelpVideoTooltip && (
         <div className="absolute top-[40px] left-[140px] z-50">
-          <div className="w-60 max-w-60 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary inline-flex flex-col justify-center items-end gap-2">
-            <div className="self-stretch justify-start text-text-primary text-sm font-semibold leading-tight">
+          <div className="bg-background-surface-2 border-border-selected-primary inline-flex w-60 max-w-60 flex-col items-end justify-center gap-2 rounded-2xl border-1 px-4 py-3 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]">
+            <div className="text-text-primary justify-start self-stretch text-sm leading-tight font-semibold">
               Not sure how it works?
             </div>
-            <div className="self-stretch justify-start text-text-primary text-xs font-medium">
+            <div className="text-text-primary justify-start self-stretch text-xs font-medium">
               Click here for a 30-second guide.
             </div>
-            <div className="inline-flex justify-start items-start gap-2">
+            <div className="inline-flex items-start justify-start gap-2">
               <button
-                className="min-w-20 px-3 py-1.5 bg-background-surface-light rounded-[20px] inline-flex flex-col justify-center items-center gap-2"
+                className="bg-background-surface-light inline-flex min-w-20 flex-col items-center justify-center gap-2 rounded-[20px] px-3 py-1.5"
                 onClick={() => {
                   // Mark helpVideo step as completed
                   setSessionOnboardingStep("helpVideo", true);
                 }}
               >
-                <div className="inline-flex justify-start items-center gap-2">
-                  <div className="justify-center text-text-contrast-text text-xs font-semibold">
+                <div className="inline-flex items-center justify-start gap-2">
+                  <div className="text-text-contrast-text justify-center text-xs font-semibold">
                     Got it
                   </div>
                 </div>
@@ -303,8 +299,8 @@ const LeftNavigationTrigger = () => {
       {shouldShowSidebarTooltip && (
         <div
           className={cn(
-            "absolute top-[calc(var(--topbar-height)+76px)] left-[16px] z-50 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary whitespace-nowrap",
-            "transition-all ease-out duration-300",
+            "bg-background-surface-2 border-border-selected-primary absolute top-[calc(var(--topbar-height)+76px)] left-[16px] z-50 rounded-2xl border-1 px-4 py-3 whitespace-nowrap shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+            "transition-all duration-300 ease-out",
             "group-hover/trigger-parent:opacity-0",
           )}
         >
@@ -316,11 +312,11 @@ const LeftNavigationTrigger = () => {
 
       <button
         className={cn(
-          "z-40 absolute top-[calc(var(--topbar-height)+16px)] left-[16px] grid place-items-center",
-          "size-[40px] bg-[#313131] border-1 border-[#757575] rounded-full",
+          "absolute top-[calc(var(--topbar-height)+16px)] left-[16px] z-40 grid place-items-center",
+          "size-[40px] rounded-full border-1 border-[#757575] bg-[#313131]",
           open && "hidden",
           shouldShowSidebarTooltip &&
-            "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary",
+            "border-border-selected-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)]",
         )}
         onClick={() => {
           setOpen(true);
@@ -340,7 +336,6 @@ const LeftNavigationTrigger = () => {
 // Memoized sub-components to prevent unnecessary re-renders
 const LeftNavigationHeader = memo(
   ({
-    setActivePage,
     setClickCount,
     setOpen,
   }: {
@@ -348,10 +343,12 @@ const LeftNavigationHeader = memo(
     setClickCount: React.Dispatch<React.SetStateAction<number>>;
     setOpen: (open: boolean) => void;
   }) => {
+    const navigate = useNavigate();
+
     const handleLogoClick = useCallback(() => {
-      setActivePage(Page.Init);
+      navigate({ to: "/" });
       setClickCount((prev) => prev + 1);
-    }, [setActivePage, setClickCount]);
+    }, [navigate, setClickCount]);
 
     const handleCollapseClick = useCallback(() => {
       setOpen(false);
@@ -360,17 +357,17 @@ const LeftNavigationHeader = memo(
     return (
       <div
         className={cn(
-          "shrink-0 p-4 border-b-[1px] border-text-contrast-text",
-          "flex flex-row justify-between items-center",
+          "border-text-contrast-text shrink-0 border-b-[1px] p-4",
+          "flex flex-row items-center justify-between",
           "bg-background-surface-2 text-text-primary",
         )}
       >
         <button
           onClick={handleLogoClick}
-          className="hover:opacity-80 transition-opacity flex flex-row items-center gap-2"
+          className="flex cursor-pointer flex-row items-center gap-2 transition-opacity hover:opacity-80"
         >
           <SvgIcon name="astrsk_logo_full" width={68} height={16} />
-          <div className="font-[400] text-[12px] leading-[15px] text-text-body">
+          <div className="text-text-body text-[12px] leading-[15px] font-[400]">
             v{__APP_VERSION__}
           </div>
         </button>
@@ -397,15 +394,15 @@ const DocumentationButton = memo(() => {
   }, []);
 
   return (
-    <div className="shrink-0 bg-background-surface-2">
+    <div className="bg-background-surface-2 shrink-0">
       <button
         onClick={handleClick}
         className={cn(
-          "w-full h-12 py-2 bg-background-surface-2 inline-flex justify-start items-center gap-2",
+          "bg-background-surface-2 inline-flex h-12 w-full items-center justify-start gap-2 py-2",
         )}
       >
         <Book size={20} />
-        <div className="justify-start text-text-primary text-sm font-semibold font-['Inter'] leading-tight">
+        <div className="text-text-primary justify-start font-['Inter'] text-sm leading-tight font-semibold">
           Documentation
         </div>
       </button>
@@ -415,28 +412,29 @@ const DocumentationButton = memo(() => {
 DocumentationButton.displayName = "DocumentationButton";
 
 const LeftNavigationFooter = memo(
-  ({
-    activePage,
-    setActivePage,
-  }: {
-    activePage: Page;
-    setActivePage: (page: Page) => void;
-  }) => {
+  ({ setActivePage }: { setActivePage: (page: Page) => void }) => {
     const subscribed = useAppStore.use.subscribed();
+    const location = useLocation();
+
+    const handleSubscribeClick = useCallback(() => {
+      setActivePage(Page.Subscribe);
+    }, [setActivePage]);
 
     const handleDocsClick = useCallback(() => {
       openInNewTab("https://docs.astrsk.ai/");
     }, []);
 
+    const navigate = useNavigate();
+
     const handleSettingsClick = useCallback(() => {
-      setActivePage(Page.Settings);
-    }, [setActivePage]);
+      navigate({ to: "/settings" });
+    }, [navigate]);
 
     return (
       <div
         className={cn(
           "shrink-0 p-4 pt-2",
-          "flex flex-row justify-between items-center",
+          "flex flex-row items-center justify-between",
           "bg-background-surface-2 text-text-primary",
         )}
       >
@@ -446,9 +444,7 @@ const LeftNavigationFooter = memo(
               <Button
                 size="sm"
                 className="bg-secondary-normal text-secondary-heavy font-[600]"
-                onClick={() => {
-                  setActivePage(Page.Subscribe);
-                }}
+                onClick={handleSubscribeClick}
               >
                 <SvgIcon name="astrsk_symbol_fit" size={12} />
                 Subscribe to astrsk+
@@ -462,12 +458,12 @@ const LeftNavigationFooter = memo(
             </Authenticated> */}
           </ConvexReady>
         </div>
-        <div className="w-full flex flex-row justify-end gap-[16px] text-text-primary">
+        <div className="text-text-primary flex w-full flex-row justify-end gap-[16px]">
           <div className="flex flex-row gap-[16px]">
             <UpdaterNew />
             <Tooltip>
               <TooltipTrigger asChild>
-                <button onClick={handleDocsClick}>
+                <button className="cursor-pointer" onClick={handleDocsClick}>
                   <Book size={20} />
                   <span className="sr-only">Docs</span>
                 </button>
@@ -478,8 +474,11 @@ const LeftNavigationFooter = memo(
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button onClick={handleSettingsClick}>
-                  {activePage === Page.Settings ? (
+                <button
+                  className="cursor-pointer"
+                  onClick={handleSettingsClick}
+                >
+                  {location.pathname.startsWith("/settings") ? (
                     <SvgIcon name="settings_solid" size={20} />
                   ) : (
                     <Settings size={20} />

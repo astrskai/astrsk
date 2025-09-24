@@ -2,6 +2,7 @@
 
 import { ChevronLeft, Import, Menu, Plus } from "lucide-react";
 import { RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 import { UniqueEntityID } from "@/shared/domain";
 import { downloadFile } from "@/shared/utils";
@@ -556,13 +557,14 @@ const SessionListMobile = ({
     selectSession(null, "");
   }, [selectSession]);
 
-  // Handle create session name and open stepper
+  // Handle create session name and navigate to create page
+  const navigate = useNavigate();
   const handleCreateSessionWithName = useCallback(
     async (name: string) => {
       setCreateSessionName(name);
-      setIsOpenCreateSessionMobile(true);
+      navigate({ to: "/sessions/create" });
     },
-    [setCreateSessionName],
+    [setCreateSessionName, navigate],
   );
 
   // Handle session created - open the newly created session

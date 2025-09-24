@@ -11,7 +11,8 @@ import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { useAgentStore } from "@/app/stores/agent-store";
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/app/stores/app-store";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { FlowDialog } from "@/components-v2/flow/flow-dialog";
 import { FlowImportDialog } from "@/components-v2/flow/components/flow-import-dialog";
 import {
@@ -26,34 +27,23 @@ import {
   ImportButton,
 } from "@/components-v2/left-navigation/shared-list-components";
 import { SvgIcon } from "@/components-v2/svg-icon";
-import { Button } from "@/components-v2/ui/button";
 import { DeleteConfirm } from "@/components-v2/confirm";
-import { Label } from "@/components-v2/ui/label";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
-import { Agent } from "@/modules/agent/domain/agent";
 import { Session } from "@/modules/session/domain/session";
-import { ApiSource } from "@/modules/api/domain";
 import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
-import {
-  CircleAlert,
-  Copy,
-  Download,
-  Loader2,
-  Plus,
-  Trash2,
-  Upload,
-} from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { CircleAlert, Copy, Loader2, Trash2, Upload } from "lucide-react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { getSelectedIdFromPath } from "@/utils/url-utils";
 
 const FlowItem = ({
   flowId,
@@ -80,26 +70,31 @@ const FlowItem = ({
   const [exportAgents, setExportAgents] = useState<AgentModelTierInfo[]>([]);
 
   // Handle select
-  const setActivePage = useAppStore.use.setActivePage();
+  const navigate = useNavigate();
+  const { selectFlowId } = useAgentStore();
   const setIsLoading = useAppStore.use.setIsLoading();
-  const selectFlowId = useAgentStore.use.selectFlowId();
+
   const handleSelect = useCallback(() => {
     if (!flow) {
       return;
     }
 
     // Set loading state
+    console.log("Setting isLoading to true...");
     setIsLoading(true);
+    console.log("setIsLoading called");
 
     // Start loading the flow immediately in the background
     selectFlowId(flow.id.toString());
-    setActivePage(Page.Flow);
+
+    // Navigate to the flow
+    navigate({ to: "/flows/$flowId", params: { flowId: flow.id.toString() } });
 
     // Keep the loading screen visible for a minimum duration
     setTimeout(() => {
       setIsLoading(false);
     }, 800); // 800ms minimum loading screen duration
-  }, [flow, selectFlowId, setActivePage, setIsLoading]);
+  }, [flow, selectFlowId, setIsLoading, navigate]);
 
   // Handle export dialog open
   const handleExportClick = useCallback(async () => {
@@ -202,6 +197,11 @@ const FlowItem = ({
       // The mutation's onSuccess has already populated the cache
       selectFlowId(copiedFlow.id.toString());
 
+      navigate({
+        to: "/flows/$flowId",
+        params: { flowId: copiedFlow.id.toString() },
+      });
+
       toast.success("Flow copied successfully");
     } catch (error) {
       logger.error(error);
@@ -211,7 +211,7 @@ const FlowItem = ({
         });
       }
     }
-  }, [flowId, selectFlowId, cloneFlowMutation]);
+  }, [flowId, navigate, cloneFlowMutation, selectFlowId]);
 
   // Handle delete
   const [isOpenDelete, setIsOpenDelete] = useState(false);
@@ -233,10 +233,10 @@ const FlowItem = ({
       // Delete flow with all nodes
       await deleteFlowMutation.mutateAsync(flowId.toString());
 
-      // Unselect deleted flow
+      // Navigate away from deleted flow if currently viewing it
       if (selectedFlowId === flowId.toString()) {
         selectFlowId(null);
-        setActivePage(Page.Init);
+        navigate({ to: "/" });
       }
 
       toast.success("Flow deleted successfully");
@@ -251,16 +251,16 @@ const FlowItem = ({
       // Close delete dialog
       setIsOpenDelete(false);
     }
-  }, [flowId, selectFlowId, selectedFlowId, setActivePage, deleteFlowMutation]);
+  }, [flowId, navigate, deleteFlowMutation, selectFlowId, selectedFlowId]);
 
   return (
     <>
       {/* Flow Item */}
       <div
         className={cn(
-          "pl-8 pr-4 py-2 group/item h-12 border-b-1 border-b-[#313131]",
+          "group/item h-12 border-b-1 border-b-[#313131] py-2 pr-4 pl-8",
           "bg-[#272727] hover:bg-[#313131] pointer-coarse:focus-within:bg-[#313131]",
-          "flex flex-row gap-1 items-center",
+          "flex flex-row items-center gap-1",
           selected && "bg-background-surface-4 rounded-[8px]",
         )}
         tabIndex={0}
@@ -272,13 +272,13 @@ const FlowItem = ({
             <CircleAlert size={16} />
           </div>
         )}
-        <div className="grow line-clamp-1 break-all font-[500] text-[12px] leading-[15px] text-[#F1F1F1]">
+        <div className="line-clamp-1 grow text-[12px] leading-[15px] font-[500] break-all text-[#F1F1F1]">
           {flow?.props.name}
         </div>
-        <div className="group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden shrink-0">
+        <div className="shrink-0 group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden">
           <div
             className={cn(
-              "px-2 py-0.5 font-[500] text-xs leading-[16px]",
+              "px-2 py-0.5 text-xs leading-[16px] font-[500]",
               flow?.props.readyState === ReadyState.Ready
                 ? "text-status-ready-dark"
                 : flow?.props.readyState === ReadyState.Error
@@ -296,7 +296,7 @@ const FlowItem = ({
 
         {/* Actions */}
         <TooltipProvider>
-          <div className="hidden group-hover/item:flex pointer-coarse:group-focus-within/item:flex shrink-0 text-[#9D9D9D] flex-row gap-2">
+          <div className="hidden shrink-0 flex-row gap-2 text-[#9D9D9D] group-hover/item:flex pointer-coarse:group-focus-within/item:flex">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -325,7 +325,7 @@ const FlowItem = ({
                   disabled={cloneFlowMutation.isPending}
                   className={cn(
                     cloneFlowMutation.isPending &&
-                      "opacity-50 cursor-not-allowed",
+                      "cursor-not-allowed opacity-50",
                   )}
                 >
                   {cloneFlowMutation.isPending ? (
@@ -354,7 +354,7 @@ const FlowItem = ({
                   disabled={deleteFlowMutation.isPending}
                   className={cn(
                     deleteFlowMutation.isPending &&
-                      "opacity-50 cursor-not-allowed",
+                      "cursor-not-allowed opacity-50",
                   )}
                 >
                   {deleteFlowMutation.isPending ? (
@@ -417,6 +417,8 @@ const FlowSection = ({
   // Handle expand
   const [expanded, setExpanded] = useState(onboardingCollapsed ? false : true);
 
+  const navigate = useNavigate();
+
   // Fetch flows
   const [keyword, setKeyword] = useState("");
   const { data: flows } = useQuery(
@@ -425,15 +427,15 @@ const FlowSection = ({
     }),
   );
 
-  // Selected flow
-  const activePage = useAppStore.use.activePage();
-  const selectedFlowId = useAgentStore.use.selectedFlowId();
+  // Selected flow - check current URL
+  const selectFlowId = useAgentStore.use.selectFlowId();
+  const location = useLocation();
+  const currentFlowId = getSelectedIdFromPath(location.pathname, "flows");
 
   // Handle create
-  const selectFlowId = useAgentStore.use.selectFlowId();
-  const setActivePage = useAppStore.use.setActivePage();
   const [isOpenCreate, setIsOpenCreate] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+
   const handleClickCreate = useCallback(() => {
     setIsOpenCreate(true);
   }, []);
@@ -465,12 +467,22 @@ const FlowSection = ({
 
           // Select created flow
           selectFlowId(savedFlow.id.toString());
-        } else {
-          // Select created flow with default name
-          selectFlowId(flow.id.toString());
-        }
 
-        setActivePage(Page.Flow);
+          // Navigate to created flow
+          navigate({
+            to: "/flows/$flowId",
+            params: { flowId: savedFlow.id.toString() },
+          });
+        } else {
+          // Select created flow
+          selectFlowId(flow.id.toString());
+
+          // Navigate to created flow with default name
+          navigate({
+            to: "/flows/$flowId",
+            params: { flowId: flow.id.toString() },
+          });
+        }
 
         // Invalidate flows
         queryClient.invalidateQueries({
@@ -487,7 +499,7 @@ const FlowSection = ({
         setIsCreating(false);
       }
     },
-    [selectFlowId, setActivePage],
+    [navigate, selectFlowId],
   );
   const handleDialogClose = useCallback(() => {
     setIsOpenCreate(false);
@@ -513,6 +525,7 @@ const FlowSection = ({
     agentName: string;
     modelName: string;
   };
+
   const handleModelNameClick = useCallback(async (file: File) => {
     if (!file) {
       return;
@@ -556,6 +569,7 @@ const FlowSection = ({
       toast.error("Failed to read flow file");
     }
   }, []);
+
   const handleImport = useCallback(
     async (
       file: File,
@@ -594,6 +608,7 @@ const FlowSection = ({
           return;
         }
         const importedFlow = importedFlowOrError.getValue();
+        const importedFlowId = importedFlow.id.toString();
         toast.success("Flow Imported!");
 
         // Invalidate flows
@@ -601,10 +616,14 @@ const FlowSection = ({
           queryKey: flowQueries.lists(),
         });
 
-        // Wait a bit for queries to settle, then select the flow and navigate
+        // Wait a bit for queries to settle, then navigate to the flow
         setTimeout(() => {
-          selectFlowId(importedFlow.id.toString());
-          setActivePage(Page.Flow);
+          selectFlowId(importedFlowId);
+
+          navigate({
+            to: "/flows/$flowId",
+            params: { flowId: importedFlowId },
+          });
         }, 100);
 
         // Close popup
@@ -622,13 +641,13 @@ const FlowSection = ({
         setIsImporting(false);
       }
     },
-    [selectFlowId, setActivePage],
+    [navigate, selectFlowId],
   );
 
   return (
     <div
       className={cn(
-        onboardingHighlight && "border-1 border-border-selected-primary",
+        onboardingHighlight && "border-border-selected-primary border-1",
       )}
     >
       <SectionHeader
@@ -646,7 +665,7 @@ const FlowSection = ({
         onboardingHelpGlow={onboardingHelpGlow}
       />
       <div className={cn(!expanded && "hidden")}>
-        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center">
+        <div className="flex flex-row items-center gap-2 py-2 pr-4 pl-8">
           <SearchInput
             className="grow"
             value={keyword}
@@ -655,7 +674,7 @@ const FlowSection = ({
             }}
           />
         </div>
-        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center">
+        <div className="flex flex-row items-center gap-2 py-2 pr-4 pl-8">
           <CreateButton onClick={handleClickCreate} />
           <FlowDialog
             open={isOpenCreate}
@@ -738,15 +757,12 @@ const FlowSection = ({
             <FlowItem
               key={flow.id.toString()}
               flowId={flow.id}
-              selected={
-                activePage === Page.Flow &&
-                flow.id.toString() === selectedFlowId
-              }
+              selected={flow.id.toString() === currentFlowId}
             />
           ))
         ) : (
-          <div className="pl-8 pr-4 py-4 border-b-1 border-b-[#313131] grid place-items-center">
-            <div className="font-[400] text-[12px] leading-[15px] text-[#9D9D9D]">
+          <div className="grid place-items-center border-b-1 border-b-[#313131] py-4 pr-4 pl-8">
+            <div className="text-[12px] leading-[15px] font-[400] text-[#9D9D9D]">
               No Flows
             </div>
           </div>

@@ -1,9 +1,4 @@
-import {
-  Page,
-  SettingDetailPageType,
-  SettingPageLevel,
-  useAppStore,
-} from "@/app/stores/app-store";
+import { Page, useAppStore } from "@/app/stores/app-store";
 import { TypoBase, TypoXLarge } from "@/components-v2/typo";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { api } from "@/convex";
@@ -11,6 +6,7 @@ import { Datetime } from "@/shared/utils";
 import { useClerk } from "@clerk/clerk-react";
 import { useQuery } from "convex/react";
 import { ChevronRight } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
 function formatCreditNumber(num: number): string {
   return num.toLocaleString();
@@ -18,29 +14,28 @@ function formatCreditNumber(num: number): string {
 
 const SubscriptionSection = () => {
   const setActivePage = useAppStore.use.setActivePage();
-  const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
-  const setSettingDetailPage = useAppStore.use.setSettingDetailPage();
+  const navigate = useNavigate();
 
   const subscription = useQuery(api.payment.public.getSubscription);
   const balance = useQuery(api.credit.public.getCreditBalance);
 
   return (
-    <div className="mb-12 flex flex-col gap-8 text-text-primary">
-      <TypoXLarge className="font-semibold text-text-primary">
+    <div className="text-text-primary mb-12 flex flex-col gap-8">
+      <TypoXLarge className="text-text-primary font-semibold">
         Subscription
       </TypoXLarge>
 
       {subscription && balance ? (
         <>
           <div className="flex flex-col gap-[16px]">
-            <div className="text-[16px] leading-[25.6px] text-text-body font-[600]">
+            <div className="text-text-body text-[16px] leading-[25.6px] font-[600]">
               Current plan
             </div>
             <div className="flex flex-col gap-[8px]">
-              <div className="text-[14px] leading-[20px] text-text-placeholder font-[700]">
+              <div className="text-text-placeholder text-[14px] leading-[20px] font-[700]">
                 {subscription.name}
               </div>
-              <div className="text-[14px] leading-[20px] text-text-placeholder font-[500]">
+              <div className="text-text-placeholder text-[14px] leading-[20px] font-[500]">
                 Next billing date:{" "}
                 {subscription.next_billing_date
                   ? Datetime(subscription.next_billing_date).format(
@@ -48,17 +43,17 @@ const SubscriptionSection = () => {
                     )
                   : "-"}
               </div>
-              <div className="text-[12px] leading-[15px] text-text-placeholder font-[400]">
+              <div className="text-text-placeholder text-[12px] leading-[15px] font-[400]">
                 Plan renews every month - $18.00/month
               </div>
             </div>
           </div>
           <div className="flex flex-col gap-[16px]">
-            <div className="text-[16px] leading-[25.6px] text-text-body font-[600]">
+            <div className="text-text-body text-[16px] leading-[25.6px] font-[600]">
               Credits remaining
             </div>
             <div className="flex flex-col gap-[8px]">
-              <div className="flex flex-row gap-[8px] items-center text-[14px] leading-[20px] font-[500]">
+              <div className="flex flex-row items-center gap-[8px] text-[14px] leading-[20px] font-[500]">
                 <div className="text-text-placeholder">Subscription</div>
                 <div className="text-text-primary font-[600]">
                   {formatCreditNumber(balance.subscription_balance ?? 0)}
@@ -67,7 +62,7 @@ const SubscriptionSection = () => {
                   / {formatCreditNumber(subscription.reserved_credits)}
                 </div>
               </div>
-              <div className="flex flex-row gap-[8px] items-center text-[14px] leading-[20px] font-[500]">
+              <div className="flex flex-row items-center gap-[8px] text-[14px] leading-[20px] font-[500]">
                 <div className="text-text-placeholder">Additional</div>
                 <div className="text-text-primary font-[600]">
                   {formatCreditNumber(balance.additional_balance ?? 0)}
@@ -77,7 +72,7 @@ const SubscriptionSection = () => {
                 </Button> */}
               </div>
               {balance.overdraft_amount !== 0 && (
-                <div className="flex flex-row gap-[8px] items-center text-[14px] leading-[20px] font-[500]">
+                <div className="flex flex-row items-center gap-[8px] text-[14px] leading-[20px] font-[500]">
                   <div className="text-text-placeholder">Overdraft</div>
                   <div className="text-text-primary font-[600]">
                     {formatCreditNumber(balance.overdraft_amount)}
@@ -87,22 +82,21 @@ const SubscriptionSection = () => {
             </div>
           </div>
           <div
-            className="flex items-center  justify-between cursor-pointer"
+            className="flex cursor-pointer items-center justify-between"
             onClick={() => {
-              setSettingPageLevel(SettingPageLevel.detail);
-              setSettingDetailPage(SettingDetailPageType.creditUsage);
+              navigate({ to: "/settings/account/credit-usage" });
             }}
           >
-            <TypoBase className="font-semibold text-text-body">
+            <TypoBase className="text-text-body font-semibold">
               Credit usage history
             </TypoBase>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
+            <ChevronRight className="text-text-secondary h-5 w-5" />
           </div>
         </>
       ) : (
         <>
           <button
-            className="text-left py-[4px] text-button-background-primary text-[16px] leading-[25.6px] font-[600]"
+            className="text-button-background-primary py-[4px] text-left text-[16px] leading-[25.6px] font-[600]"
             onClick={() => {
               setActivePage(Page.Subscribe);
             }}
@@ -117,48 +111,48 @@ const SubscriptionSection = () => {
 
 const AccountPage = () => {
   const { signOut, user } = useClerk();
-  const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
+  const navigate = useNavigate();
 
   return (
     <ScrollArea className="h-full">
       <div className="mx-auto my-6 w-full max-w-[587px] pt-[80px]">
-        <div className="mb-[54px] font-600 text-[24px] leading-[40px] text-text-body">
+        <div className="font-600 text-text-body mb-[54px] text-[24px] leading-[40px]">
           Account and subscription
         </div>
 
-        <div className="mb-12 flex flex-col gap-8 text-text-primary">
-          <TypoXLarge className="font-semibold text-text-primary">
+        <div className="text-text-primary mb-12 flex flex-col gap-8">
+          <TypoXLarge className="text-text-primary font-semibold">
             Account
           </TypoXLarge>
 
           <div className="flex flex-row items-center gap-[8px]">
-            <div className="size-[40px] rounded-full grid place-items-center overflow-hidden">
+            <div className="grid size-[40px] place-items-center overflow-hidden rounded-full">
               {user?.hasImage ? (
                 <div
-                  className="w-full h-full bg-center bg-cover"
+                  className="h-full w-full bg-cover bg-center"
                   style={{ backgroundImage: `url('${user.imageUrl}')` }}
                 ></div>
               ) : (
-                <div className="w-full h-full bg-[url(/img/placeholder/avatar.png)] bg-center bg-size-[60px]" />
+                <div className="h-full w-full bg-[url(/img/placeholder/avatar.png)] bg-size-[60px] bg-center" />
               )}
             </div>
-            <div className="text-[14px] leading-[20px] font-[500] text-text-placeholder">
+            <div className="text-text-placeholder text-[14px] leading-[20px] font-[500]">
               {user?.primaryEmailAddress?.emailAddress}
             </div>
           </div>
 
           <button
-            className="text-left py-[4px] text-status-destructive-light text-[16px] leading-[25.6px] font-[600]"
+            className="text-status-destructive-light py-[4px] text-left text-[16px] leading-[25.6px] font-[600]"
             onClick={() => {
               signOut();
-              setSettingPageLevel(SettingPageLevel.main);
+              navigate({ to: "/settings", replace: true });
             }}
           >
             Sign out
           </button>
         </div>
 
-        <div className="my-[40px] border-b border-border-dark" />
+        <div className="border-border-dark my-[40px] border-b" />
 
         <SubscriptionSection />
       </div>

@@ -50,20 +50,20 @@ const CardListItem = ({
   return (
     <CarouselItem
       className={cn(
-        "basis-1/5 lg:basis-1/6 pl-[24px] py-[24px] relative",
+        "relative basis-1/5 py-[24px] pl-[24px] lg:basis-1/6",
         separator && "mr-[25px]",
       )}
     >
-      <div className="min-w-[154px] flex flex-col gap-[8px] justify-start items-center">
+      <div className="flex min-w-[154px] flex-col items-center justify-start gap-[8px]">
         {cardId && <TradingCard cardId={cardId?.toString()} />}
         {label && (
-          <div className="font-[500] text-[16px] leading-[19px] text-text-input-subtitle">
+          <div className="text-text-input-subtitle text-[16px] leading-[19px] font-[500]">
             {label}
           </div>
         )}
       </div>
       {separator && (
-        <div className="absolute top-[49px] -right-[30px] w-[1px] h-[160px] bg-border-container" />
+        <div className="bg-border-container absolute top-[49px] -right-[30px] h-[160px] w-[1px]" />
       )}
     </CarouselItem>
   );
@@ -81,31 +81,31 @@ const EmptyCard = ({
   return (
     <CarouselItem
       className={cn(
-        "basis-1/6 pl-[24px] py-[24px] relative",
+        "relative basis-1/6 py-[24px] pl-[24px]",
         separator && "mr-[36px]",
       )}
     >
-      <div className="flex flex-col gap-[8px] justify-start items-center">
+      <div className="flex flex-col items-center justify-start gap-[8px]">
         <div
           className={cn(
-            "w-[154px] h-[230px] rounded-[8px] grid place-content-center",
+            "grid h-[230px] w-[154px] place-content-center rounded-[8px]",
             "bg-background-input",
           )}
         >
-          <div className="flex flex-col gap-[13px] items-center text-background-dialog text-center">
-            <div className="font-[500] text-[12px] leading-[15px]">
+          <div className="text-background-dialog flex flex-col items-center gap-[13px] text-center">
+            <div className="text-[12px] leading-[15px] font-[500]">
               {description}
             </div>
           </div>
         </div>
         {label && (
-          <div className="font-[500] text-[16px] leading-[19px] text-text-input-subtitle">
+          <div className="text-text-input-subtitle text-[16px] leading-[19px] font-[500]">
             {label}
           </div>
         )}
       </div>
       {separator && (
-        <div className="absolute top-[49px] -right-[30px] w-[1px] h-[160px] bg-border-container" />
+        <div className="bg-border-container absolute top-[49px] -right-[30px] h-[160px] w-[1px]" />
       )}
     </CarouselItem>
   );
@@ -197,58 +197,74 @@ const EditCards = ({
   ]);
 
   // Handle card click with auto-save
-  const handleCardClick = useCallback(async (cardId: string) => {
-    let newValues: Partial<StepCardsSchemaType> = {};
-    
-    switch (activeTab) {
-      case "user":
-        if (userCharacterCardId === cardId) {
-          setValue("userCharacterCardId", "");
-          newValues.userCharacterCardId = "";
-        } else {
-          setValue("userCharacterCardId", cardId);
-          newValues.userCharacterCardId = cardId;
-          if (aiCharacterCardIds?.includes(cardId)) {
-            const newAiCardIds = aiCharacterCardIds.filter((id) => id !== cardId);
-            setValue("aiCharacterCardIds", newAiCardIds);
-            newValues.aiCharacterCardIds = newAiCardIds;
-          }
-        }
-        break;
-      case "ai":
-        if (aiCharacterCardIds?.includes(cardId)) {
-          const newAiCardIds = aiCharacterCardIds.filter((id) => id !== cardId);
-          setValue("aiCharacterCardIds", newAiCardIds);
-          newValues.aiCharacterCardIds = newAiCardIds;
-        } else {
-          const newAiCardIds = [...(aiCharacterCardIds ?? []), cardId];
-          setValue("aiCharacterCardIds", newAiCardIds);
-          newValues.aiCharacterCardIds = newAiCardIds;
+  const handleCardClick = useCallback(
+    async (cardId: string) => {
+      let newValues: Partial<StepCardsSchemaType> = {};
+
+      switch (activeTab) {
+        case "user":
           if (userCharacterCardId === cardId) {
             setValue("userCharacterCardId", "");
             newValues.userCharacterCardId = "";
+          } else {
+            setValue("userCharacterCardId", cardId);
+            newValues.userCharacterCardId = cardId;
+            if (aiCharacterCardIds?.includes(cardId)) {
+              const newAiCardIds = aiCharacterCardIds.filter(
+                (id) => id !== cardId,
+              );
+              setValue("aiCharacterCardIds", newAiCardIds);
+              newValues.aiCharacterCardIds = newAiCardIds;
+            }
           }
-        }
-        break;
-      case "plot":
-        if (plotCardId === cardId) {
-          setValue("plotCardId", null);
-          newValues.plotCardId = null;
-        } else {
-          setValue("plotCardId", cardId);
-          newValues.plotCardId = cardId;
-        }
-        break;
-    }
-    
-    trigger();
-    
-    // Auto-save the changes
-    const formValues = { ...getValues(), ...newValues };
-    await onSave({
-      ...convertCardsFormToSessionProps(formValues),
-    });
-  }, [activeTab, userCharacterCardId, aiCharacterCardIds, plotCardId, setValue, trigger, getValues, onSave]);
+          break;
+        case "ai":
+          if (aiCharacterCardIds?.includes(cardId)) {
+            const newAiCardIds = aiCharacterCardIds.filter(
+              (id) => id !== cardId,
+            );
+            setValue("aiCharacterCardIds", newAiCardIds);
+            newValues.aiCharacterCardIds = newAiCardIds;
+          } else {
+            const newAiCardIds = [...(aiCharacterCardIds ?? []), cardId];
+            setValue("aiCharacterCardIds", newAiCardIds);
+            newValues.aiCharacterCardIds = newAiCardIds;
+            if (userCharacterCardId === cardId) {
+              setValue("userCharacterCardId", "");
+              newValues.userCharacterCardId = "";
+            }
+          }
+          break;
+        case "plot":
+          if (plotCardId === cardId) {
+            setValue("plotCardId", null);
+            newValues.plotCardId = null;
+          } else {
+            setValue("plotCardId", cardId);
+            newValues.plotCardId = cardId;
+          }
+          break;
+      }
+
+      trigger();
+
+      // Auto-save the changes
+      const formValues = { ...getValues(), ...newValues };
+      await onSave({
+        ...convertCardsFormToSessionProps(formValues),
+      });
+    },
+    [
+      activeTab,
+      userCharacterCardId,
+      aiCharacterCardIds,
+      plotCardId,
+      setValue,
+      trigger,
+      getValues,
+      onSave,
+    ],
+  );
 
   // Handle save
   const handleSave = useCallback(async () => {
@@ -294,13 +310,16 @@ const EditCards = ({
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as CardTab)}
       >
-        <TabsList variant="dark-mobile" className="grid w-full grid-cols-3 mb-4">
+        <TabsList
+          variant="dark-mobile"
+          className="mb-4 grid w-full grid-cols-3"
+        >
           <TabsTrigger value="ai">AI characters</TabsTrigger>
           <TabsTrigger value="user">User character</TabsTrigger>
           <TabsTrigger value="plot">Plot</TabsTrigger>
         </TabsList>
         <TabsContent value="ai">
-          <div className="bg-background-surface-2 px-[24px] py-[16px] rounded-[16px] flex flex-row justify-center gap-4 flex-wrap">
+          <div className="bg-background-surface-2 flex flex-row flex-wrap justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
             {aiCharacterCardIds &&
               aiCharacterCardIds.map((cardId) => (
                 <CardItem
@@ -314,7 +333,7 @@ const EditCards = ({
           </div>
         </TabsContent>
         <TabsContent value="user">
-          <div className="bg-background-surface-2 px-[24px] py-[16px] rounded-[16px] flex flex-row justify-center gap-4">
+          <div className="bg-background-surface-2 flex flex-row justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
             {userCharacterCardId ? (
               <CardItem
                 cardId={userCharacterCardId}
@@ -327,7 +346,7 @@ const EditCards = ({
           </div>
         </TabsContent>
         <TabsContent value="plot">
-          <div className="bg-background-surface-2 px-[24px] py-[16px] rounded-[16px] flex flex-row justify-center gap-4">
+          <div className="bg-background-surface-2 flex flex-row justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
             {plotCardId ? (
               <CardItem
                 cardId={plotCardId}
@@ -350,11 +369,10 @@ const EditCards = ({
       <div className="px-8 py-4">
         {activeTab === "plot"
           ? plotCards?.length === 0 && (
-              <div className="flex flex-col items-top w-full">
+              <div className="items-top flex w-full flex-col">
                 <NoCardsFound
                   cardType={CardType.Plot}
                   onCreate={() => {
-                    setActivePage(Page.Cards);
                     setCardEditOpen(CardType.Plot);
                   }}
                   variant="edit"
@@ -362,11 +380,10 @@ const EditCards = ({
               </div>
             )
           : characterCards?.length === 0 && (
-              <div className="flex flex-col items-top w-full">
+              <div className="items-top flex w-full flex-col">
                 <NoCardsFound
                   cardType={CardType.Character}
                   onCreate={() => {
-                    setActivePage(Page.Cards);
                     setCardEditOpen(CardType.Character);
                   }}
                   variant="edit"
@@ -374,15 +391,17 @@ const EditCards = ({
               </div>
             )}
         <div className="grid grid-cols-4 gap-[24px]">
-          {(activeTab === "plot" ? plotCards : characterCards)?.map((card: Card) => (
-            <CardItem
-              key={card.id.toString()}
-              cardId={card.id.toString()}
-              isActive={activeCardIdMap.get(card.id.toString())}
-              disabled={disabledCardIdMap.get(card.id.toString())}
-              onClick={() => handleCardClick(card.id.toString())}
-            />
-          ))}
+          {(activeTab === "plot" ? plotCards : characterCards)?.map(
+            (card: Card) => (
+              <CardItem
+                key={card.id.toString()}
+                cardId={card.id.toString()}
+                isActive={activeCardIdMap.get(card.id.toString())}
+                disabled={disabledCardIdMap.get(card.id.toString())}
+                onClick={() => handleCardClick(card.id.toString())}
+              />
+            ),
+          )}
         </div>
       </div>
     </CustomSheet>

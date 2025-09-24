@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -55,6 +56,7 @@ export default function CreateSessionPage({
   className?: string;
 }) {
   const { createSessionName } = useSessionStore();
+  const navigate = useNavigate();
 
   // Use form
   const methods = useForm<SessionSchemaType>({
@@ -152,17 +154,20 @@ export default function CreateSessionPage({
       queryKey: [TableName.Sessions],
     });
 
-    // Close stepper
-    setActivePage(Page.Sessions);
+    // Navigate to created session page
+    navigate({
+      to: "/sessions/$sessionId",
+      params: { sessionId: savedSession.id.toString() },
+    });
 
     return true;
-  }, [createSessionName, methods, selectSession, setActivePage]);
+  }, [createSessionName, methods, selectSession, navigate]);
 
   return (
     <FormProvider {...methods}>
       <div
         className={cn(
-          "z-30 absolute inset-0 mt-[var(--topbar-height)]",
+          "absolute inset-0 z-30 mt-[var(--topbar-height)]",
           className,
         )}
       >
@@ -206,7 +211,7 @@ export default function CreateSessionPage({
             },
           ]}
           validation={validation}
-          onCancel={() => setActivePage(Page.Sessions)}
+          onCancel={() => setActivePage(Page.Init)}
           onFinish={handleFinish}
         />
       </div>

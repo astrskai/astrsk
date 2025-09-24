@@ -1,11 +1,11 @@
 // TODO: apply color palette
-
 import { useAsset } from "@/app/hooks/use-asset";
 import { cardQueries } from "@/app/queries/card-queries";
 import { queryClient } from "@/app/queries/query-client";
 import { CardService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/app/stores/app-store";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import useCardImport from "@/components-v2/card/hooks/useCardImport";
 import { MediaDisplay } from "@/components-v2/shared/media-display";
 import { SectionHeader } from "@/components-v2/left-navigation/left-navigation";
@@ -28,7 +28,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -50,9 +49,10 @@ import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
-import { Copy, Download, Plus, Settings2, Trash2, Upload } from "lucide-react";
+import { Copy, Settings2, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { getSelectedIdFromPath } from "@/utils/url-utils";
 
 const CardItem = ({
   cardId,
@@ -67,13 +67,14 @@ const CardItem = ({
   const { data: card } = useQuery(cardQueries.detail<Card>(cardId));
   const [icon, isVideo] = useAsset(card?.props.iconAssetId);
 
+  const navigate = useNavigate();
+
   // Handle select
   const setSelectedCardId = useAppStore.use.setSelectedCardId();
-  const setActivePage = useAppStore.use.setActivePage();
   const handleSelect = useCallback(() => {
     setSelectedCardId(cardId.toString());
-    setActivePage(Page.CardPanel);
-  }, [cardId, setActivePage, setSelectedCardId]);
+    navigate({ to: "/cards/$cardId", params: { cardId: cardId.toString() } });
+  }, [cardId, navigate, setSelectedCardId]);
 
   // Handle export
   const handleExport = useCallback(async () => {
@@ -112,9 +113,13 @@ const CardItem = ({
       }
       const clonedCard = clonedCardOrError.getValue();
 
-      // Select cloned card
       setSelectedCardId(clonedCard.id.toString());
-      setActivePage(Page.CardPanel);
+
+      // Navigate to cloned card
+      navigate({
+        to: "/cards/$cardId",
+        params: { cardId: clonedCard.id.toString() },
+      });
 
       // Invalidate card queries
       queryClient.invalidateQueries({
@@ -128,12 +133,14 @@ const CardItem = ({
         });
       }
     }
-  }, [cardId, setActivePage, setSelectedCardId]);
+  }, [cardId, navigate, setSelectedCardId]);
 
   // Handle delete
   const selectedCardId = useAppStore.use.selectedCardId();
+
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [usedSessions, setUsedSessions] = useState<Session[]>([]);
+
   const getUsedSessions = useCallback(async () => {
     const sessionsOrError = await SessionService.listSessionByCard.execute({
       cardId: cardId,
@@ -143,6 +150,7 @@ const CardItem = ({
     }
     setUsedSessions(sessionsOrError.getValue());
   }, [cardId]);
+
   const handleDelete = useCallback(async () => {
     try {
       // Check card
@@ -156,10 +164,10 @@ const CardItem = ({
         throw new Error(deleteResult.getError());
       }
 
-      // Unselect deleted card
+      // Navigate away from deleted card if currently viewing it
       if (selectedCardId === cardId.toString()) {
         setSelectedCardId(null);
-        setActivePage(Page.Init);
+        navigate({ to: "/" });
       }
 
       // Invalidate card queries
@@ -192,25 +200,18 @@ const CardItem = ({
     } finally {
       setIsOpenDelete(false);
     }
-  }, [
-    card,
-    cardId,
-    selectedCardId,
-    setActivePage,
-    setSelectedCardId,
-    usedSessions,
-  ]);
+  }, [card, cardId, selectedCardId, navigate, usedSessions, setSelectedCardId]);
 
   return (
     <>
       {/* Card Item */}
       <div
         className={cn(
-          "pl-8 pr-4 py-2 group/item h-12 border-b-1 border-b-[#313131]",
+          "group/item h-12 border-b-1 border-b-[#313131] py-2 pr-4 pl-8",
           "bg-[#272727]",
           !disableHover &&
             "hover:bg-[#313131] pointer-coarse:focus-within:bg-[#313131]",
-          "flex flex-row gap-1 items-center relative",
+          "relative flex flex-row items-center gap-1",
           selected && "bg-background-surface-4 rounded-[8px]",
         )}
         tabIndex={!disableHover ? 0 : undefined}
@@ -219,7 +220,7 @@ const CardItem = ({
         {/* Card Info */}
         <div
           className={cn(
-            "absolute inset-0 overflow-hidden pointer-events-none",
+            "pointer-events-none absolute inset-0 overflow-hidden",
             !disableHover &&
               "group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden",
           )}
@@ -233,7 +234,7 @@ const CardItem = ({
             }
             alt="Card icon"
             className={cn(
-              "absolute w-[160px] right-0 translate-x-[30px] translate-y-[-40px]",
+              "absolute right-0 w-[160px] translate-x-[30px] translate-y-[-40px]",
               !icon &&
                 card?.props.type === CardType.Character &&
                 "w-[90px] translate-x-[0px] translate-y-[-30px]",
@@ -248,7 +249,7 @@ const CardItem = ({
           />
           <div
             className={cn(
-              "absolute inset-0 left-[185px] right-[40px] bg-linear-to-r from-[#272727FF] to-[#27272700]",
+              "absolute inset-0 right-[40px] left-[185px] bg-linear-to-r from-[#272727FF] to-[#27272700]",
               selected && "from-[#414141FF]",
               !icon &&
                 card?.props.type === CardType.Character &&
@@ -258,7 +259,7 @@ const CardItem = ({
         </div>
         <div
           className={cn(
-            "z-0 size-[20px] mr-1 shrink-0 rounded-full grid place-items-center",
+            "z-0 mr-1 grid size-[20px] shrink-0 place-items-center rounded-full",
             card?.props.type === CardType.Character && "bg-[#B59EFF]",
             card?.props.type === CardType.Plot && "bg-[#98D7F9]",
           )}
@@ -270,14 +271,14 @@ const CardItem = ({
             <SvgIcon name="plot_icon" size={12} />
           )}
         </div>
-        <div className="z-0 grow line-clamp-1 break-all font-[600] text-[12px] leading-[15px] text-[#F1F1F1]">
+        <div className="z-0 line-clamp-1 grow text-[12px] leading-[15px] font-[600] break-all text-[#F1F1F1]">
           {card?.props.title}
         </div>
 
         {/* Actions */}
         {!disableHover && (
           <TooltipProvider>
-            <div className="z-0 hidden group-hover/item:flex pointer-coarse:group-focus-within/item:flex shrink-0 text-[#9D9D9D] flex-row gap-2">
+            <div className="z-0 hidden shrink-0 flex-row gap-2 text-[#9D9D9D] group-hover/item:flex pointer-coarse:group-focus-within/item:flex">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -371,7 +372,7 @@ const CardFilter = ({
         <Tooltip>
           <DropdownMenuTrigger asChild>
             <TooltipTrigger asChild>
-              <button className="size-[24px] grid place-items-center relative">
+              <button className="relative grid size-[24px] place-items-center">
                 <Settings2 size={24} className="text-text-subtle" />
                 <span className="sr-only">Filter</span>
                 <div
@@ -396,7 +397,7 @@ const CardFilter = ({
           <DropdownMenuItem
             onClick={() => setType(null)}
             className={cn(
-              "justify-center rounded-[6px] text-text-subtle font-[400] text-[12px] leading-[15px]",
+              "text-text-subtle justify-center rounded-[6px] text-[12px] leading-[15px] font-[400]",
               "focus:bg-background-surface-3 focus:text-text-primary focus:font-[600]",
             )}
           >
@@ -405,7 +406,7 @@ const CardFilter = ({
           <DropdownMenuItem
             onClick={() => setType(CardType.Character)}
             className={cn(
-              "justify-center rounded-[6px] text-text-subtle font-[400] text-[12px] leading-[15px]",
+              "text-text-subtle justify-center rounded-[6px] text-[12px] leading-[15px] font-[400]",
               "focus:bg-background-surface-3 focus:text-secondary-normal focus:font-[600]",
             )}
           >
@@ -414,7 +415,7 @@ const CardFilter = ({
           <DropdownMenuItem
             onClick={() => setType(CardType.Plot)}
             className={cn(
-              "justify-center rounded-[6px] text-text-subtle font-[400] text-[12px] leading-[15px]",
+              "text-text-subtle justify-center rounded-[6px] text-[12px] leading-[15px] font-[400]",
               "focus:bg-background-surface-3 focus:text-button-background-primary focus:font-[600]",
             )}
           >
@@ -452,18 +453,18 @@ const CardSection = ({
     }),
   );
 
-  // Selected card
-  const activePage = useAppStore.use.activePage();
-  const selectedCardId = useAppStore.use.selectedCardId();
+  const location = useLocation();
+  const currentCardId = getSelectedIdFromPath(location.pathname, "cards");
+  const navigate = useNavigate();
 
   // Handle create
   const setSelectedCardId = useAppStore.use.setSelectedCardId();
-  const setActivePage = useAppStore.use.setActivePage();
   const [isOpenCreate, setIsOpenCreate] = useState(false);
   const [createCardType, setCreateCardType] = useState<CardType>(
     CardType.Character,
   );
   const [createCardName, setCreateCardName] = useState("New card");
+
   const handleCreate = useCallback(async () => {
     try {
       // Create card
@@ -493,9 +494,12 @@ const CardSection = ({
         queryKey: cardQueries.lists(),
       });
 
-      // Select created card
       setSelectedCardId(savedCard.id.toString());
-      setActivePage(Page.CardPanel);
+
+      navigate({
+        to: "/cards/$cardId",
+        params: { cardId: savedCard.id.toString() },
+      });
     } catch (error) {
       logger.error("Failed to create card", error);
       if (error instanceof Error) {
@@ -508,7 +512,7 @@ const CardSection = ({
       setCreateCardType(CardType.Character);
       setCreateCardName("New card");
     }
-  }, [createCardName, createCardType, setActivePage, setSelectedCardId]);
+  }, [createCardName, createCardType, navigate, setSelectedCardId]);
 
   // Handle import
   const handleInvalidation = useCallback(() => {
@@ -516,6 +520,7 @@ const CardSection = ({
       queryKey: cardQueries.lists(),
     });
   }, []);
+
   const {
     isOpenImportCardPopup,
     setIsOpenImportCardPopup,
@@ -525,7 +530,7 @@ const CardSection = ({
   return (
     <div
       className={cn(
-        onboardingHighlight && "border-1 border-border-selected-primary",
+        onboardingHighlight && "border-border-selected-primary border-1",
       )}
     >
       <SectionHeader
@@ -543,7 +548,7 @@ const CardSection = ({
         onboardingHelpGlow={onboardingHelpGlow}
       />
       <div className={cn(!expanded && "hidden")}>
-        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center w-[315px]">
+        <div className="flex w-[315px] flex-row items-center gap-2 py-2 pr-4 pl-8">
           <SearchInput
             className="grow"
             value={keyword}
@@ -553,7 +558,7 @@ const CardSection = ({
           />
           <CardFilter type={type} setType={setType} />
         </div>
-        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center">
+        <div className="flex flex-row items-center gap-2 py-2 pr-4 pl-8">
           <CreateButton onClick={() => setIsOpenCreate(true)} />
           <Dialog
             open={isOpenCreate}
@@ -564,7 +569,7 @@ const CardSection = ({
                 <DialogTitle>Create Card</DialogTitle>
               </DialogHeader>
               <div className="flex flex-col gap-2">
-                <div className="font-[400] text-[16px] leading-[25.6px] text-[#9D9D9D]">
+                <div className="text-[16px] leading-[25.6px] font-[400] text-[#9D9D9D]">
                   Card type :{" "}
                   <span className="capitalize">{createCardType}</span>
                 </div>
@@ -626,15 +631,12 @@ const CardSection = ({
             <CardItem
               key={card.id.toString()}
               cardId={card.id}
-              selected={
-                activePage === Page.CardPanel &&
-                card.id.toString() === selectedCardId
-              }
+              selected={card.id.toString() === currentCardId}
             />
           ))
         ) : (
-          <div className="pl-8 pr-4 py-2 border-b-1 border-b-[#313131] grid place-items-center">
-            <div className="font-[400] text-[12px] leading-[15px] text-[#9D9D9D]">
+          <div className="grid place-items-center border-b-1 border-b-[#313131] py-2 pr-4 pl-8">
+            <div className="text-[12px] leading-[15px] font-[400] text-[#9D9D9D]">
               No cards
             </div>
           </div>
