@@ -6,5 +6,10 @@ export const Route = createFileRoute("/_layout/sso-callback")({
 });
 
 function SSOCallback() {
-  return <AuthenticateWithRedirectCallback />;
+  return (
+    <AuthenticateWithRedirectCallback
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
+    />
+  );
 }

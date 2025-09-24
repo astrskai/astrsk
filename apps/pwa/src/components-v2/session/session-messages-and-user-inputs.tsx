@@ -219,13 +219,13 @@ const MessageItemInternal = ({
     <div className="group/message relative px-[56px]" tabIndex={0}>
       <div
         className={cn(
-          "flex gap-[16px] items-start",
+          "flex items-start gap-[16px]",
           isUser ? "flex-row-reverse" : "flex-row",
           isUser ? "user-chat-style" : "ai-chat-style",
         )}
       >
         <div
-          className="flex flex-col gap-[8px] items-center"
+          className="flex flex-col items-center gap-[8px]"
           onMouseEnter={() => handleMediaHover(true)}
           onMouseLeave={() => handleMediaHover(false)}
         >
@@ -233,7 +233,7 @@ const MessageItemInternal = ({
             <>
               <div
                 className={cn(
-                  "shrink-0 overflow-hidden rounded-full grid place-items-center select-none border-1 border-border-selected-inverse/50",
+                  "border-border-selected-inverse/50 grid shrink-0 place-items-center overflow-hidden rounded-full border-1 select-none",
                   !icon && "bg-background-surface-3",
                 )}
                 style={{
@@ -245,7 +245,7 @@ const MessageItemInternal = ({
                   <video
                     ref={avatarVideoRef}
                     src={icon || undefined}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                     muted
                     loop
                     playsInline
@@ -254,24 +254,24 @@ const MessageItemInternal = ({
                   <img
                     src={icon}
                     alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                   />
                 ) : (
                   <img
                     src="/img/placeholder/avatar.png"
                     alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                   />
                 )}
               </div>
-              <div className="max-w-[80px] truncate font-medium text-[16px] leading-[19px] text-text-primary">
+              <div className="text-text-primary max-w-[80px] truncate text-[16px] leading-[19px] font-medium">
                 {characterCard?.props.name}
               </div>
             </>
           ) : (
             <>
               <Avatar src="/img/message-avatar-default.svg" size={80} />
-              <div className="max-w-[80px] truncate font-medium text-[16px] leading-[19px] text-text-primary">
+              <div className="text-text-primary max-w-[80px] truncate text-[16px] leading-[19px] font-medium">
                 User
               </div>
             </>
@@ -287,25 +287,25 @@ const MessageItemInternal = ({
         >
           <div
             className={cn(
-              "max-w-[600px] p-[16px] rounded-[8px] chat-style-chat-bubble",
+              "chat-style-chat-bubble max-w-[600px] rounded-[8px] p-[16px]",
               // !streaming && "min-w-[300px]",
             )}
           >
             {/* Display generated image if exists */}
             {assetUrl && (
-              <div className="mb-[12px] rounded-[8px] overflow-hidden">
+              <div className="mb-[12px] overflow-hidden rounded-[8px]">
                 {assetIsVideo ? (
                   <video
                     ref={generatedVideoRef}
                     src={assetUrl}
                     controls
-                    className="w-full h-auto rounded-[8px]"
+                    className="h-auto w-full rounded-[8px]"
                   />
                 ) : (
                   <img
                     src={assetUrl}
                     alt="Generated content"
-                    className="w-full h-auto rounded-[8px]"
+                    className="h-auto w-full rounded-[8px]"
                   />
                 )}
               </div>
@@ -314,7 +314,7 @@ const MessageItemInternal = ({
             {isEditing && !disabled ? (
               <TextareaAutosize
                 className={cn(
-                  "w-[568px] p-0 border-0 outline-0 bg-transparent rounded-none no-resizer",
+                  "no-resizer w-[568px] rounded-none border-0 bg-transparent p-0 outline-0",
                   "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
                 )}
                 autoFocus
@@ -336,7 +336,7 @@ const MessageItemInternal = ({
                     pre: ({ children }) => (
                       <pre
                         tabIndex={0}
-                        className="overflow-x-auto max-w-full my-2 p-3 rounded-md"
+                        className="my-2 max-w-full overflow-x-auto rounded-md p-3"
                       >
                         {children}
                       </pre>
@@ -344,11 +344,11 @@ const MessageItemInternal = ({
                     code: ({ children, className }) => {
                       const isInlineCode = !className;
                       return isInlineCode ? (
-                        <code className="px-1 py-0.5 rounded text-sm">
+                        <code className="rounded px-1 py-0.5 text-sm">
                           {children}
                         </code>
                       ) : (
-                        <code className="text-sm whitespace-pre-wrap break-words">
+                        <code className="text-sm break-words whitespace-pre-wrap">
                           {children}
                         </code>
                       );
@@ -358,10 +358,10 @@ const MessageItemInternal = ({
                   {translation ?? content}
                 </Markdown>
                 {!streaming && isShowDataStore && (
-                  <div className="mt-[10px] p-[16px] border-[1px] rounded-[12px] bg-background-surface-0/5 data-history">
-                    <div className="mb-[16px] flex flex-row gap-[8px] items-center text-text-subtle">
+                  <div className="bg-background-surface-0/5 data-history mt-[10px] rounded-[12px] border-[1px] p-[16px]">
+                    <div className="text-text-subtle mb-[16px] flex flex-row items-center gap-[8px]">
                       <History size={20} />
-                      <div className="font-[500] text-[14px] leading-[20px]">
+                      <div className="text-[14px] leading-[20px] font-[500]">
                         Data history
                       </div>
                     </div>
@@ -381,8 +381,8 @@ const MessageItemInternal = ({
           </div>
           <div
             className={cn(
-              "px-[16px] py-[8px] rounded-[8px] flex flex-row items-center",
-              "transition-opacity duration-200 ease-in-out opacity-0",
+              "flex flex-row items-center rounded-[8px] px-[16px] py-[8px]",
+              "opacity-0 transition-opacity duration-200 ease-in-out",
               "group-hover/message:opacity-100 pointer-coarse:group-focus-within/message:opacity-100",
               "chat-style-chat-bubble message-buttons",
               !streaming && disabled && "!opacity-0",
@@ -394,12 +394,12 @@ const MessageItemInternal = ({
                 <SvgIcon
                   name="astrsk_symbol"
                   size={28}
-                  className="mr-[2px] animate-spin chat-style-text"
+                  className="chat-style-text mr-[2px] animate-spin"
                 />
-                <div className="mr-[8px] font-[400] text-[16px] leading-[25.6px]">
+                <div className="mr-[8px] text-[16px] leading-[25.6px] font-[400]">
                   {streamingAgentName}
                 </div>
-                <div className="font-[600] text-[16px] leading-[25.6px]">
+                <div className="text-[16px] leading-[25.6px] font-[600]">
                   {streamingModelName}
                 </div>
               </div>
@@ -442,11 +442,11 @@ const MessageItemInternal = ({
                 <button className="cursor-pointer" onClick={onDelete}>
                   <Trash2 size={20} />
                 </button>
-                <div className="flex flex-row gap-[2px] items-center">
+                <div className="flex flex-row items-center gap-[2px]">
                   <button className="cursor-pointer" onClick={onPrevOption}>
                     <ChevronLeft size={16} />
                   </button>
-                  <div className="min-w-[24px] text-center font-[600] text-[10px] leading-[12px] select-none">{`${selectedOptionIndex + 1} / ${optionsLength}`}</div>
+                  <div className="min-w-[24px] text-center text-[10px] leading-[12px] font-[600] select-none">{`${selectedOptionIndex + 1} / ${optionsLength}`}</div>
                   <button className="cursor-pointer" onClick={onNextOption}>
                     <ChevronRight size={16} />
                   </button>
@@ -484,17 +484,17 @@ const ScenarioMessageItem = ({
     <div className="group/scenario px-[56px]">
       <div
         className={cn(
-          "relative mx-auto w-full min-w-[400px] max-w-[890px] p-[24px] rounded-[4px]",
-          "bg-background-container font-[400] text-[16px] leading-[19px] text-text-placeholder",
+          "relative mx-auto w-full max-w-[890px] min-w-[400px] rounded-[4px] p-[24px]",
+          "bg-background-container text-text-placeholder text-[16px] leading-[19px] font-[400]",
           "transition-all duration-200 ease-in-out",
-          "group-hover/scenario:inset-ring-1 group-hover/scenario:inset-ring-text-primary",
-          isEditing && "inset-ring-1 inset-ring-text-primary",
+          "group-hover/scenario:inset-ring-text-primary group-hover/scenario:inset-ring-1",
+          isEditing && "inset-ring-text-primary inset-ring-1",
         )}
       >
         {isEditing ? (
           <TextareaAutosize
             className={cn(
-              "w-full p-0 -mb-[4px] border-0 outline-0 bg-transparent rounded-none no-resizer",
+              "no-resizer -mb-[4px] w-full rounded-none border-0 bg-transparent p-0 outline-0",
               "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
             )}
             autoFocus
@@ -518,9 +518,9 @@ const ScenarioMessageItem = ({
         <div className="absolute top-0 right-[-45px] flex flex-col gap-2">
           <div
             className={cn(
-              "p-[8px] rounded-[8px] cursor-pointer",
+              "cursor-pointer rounded-[8px] p-[8px]",
               "bg-background-container text-text-input-subtitle",
-              "hover:text-text-primary hover:inset-ring-1 hover:inset-ring-text-primary",
+              "hover:text-text-primary hover:inset-ring-text-primary hover:inset-ring-1",
               "transition-all duration-200 ease-in-out",
               "opacity-0 group-hover/scenario:block group-hover/scenario:opacity-100",
               isEditing && "opacity-100",
@@ -541,9 +541,9 @@ const ScenarioMessageItem = ({
           </div>
           <div
             className={cn(
-              "p-[8px] rounded-[8px] cursor-pointer",
+              "cursor-pointer rounded-[8px] p-[8px]",
               "bg-background-container text-text-input-subtitle",
-              "hover:text-text-primary hover:inset-ring-1 hover:inset-ring-text-primary",
+              "hover:text-text-primary hover:inset-ring-text-primary hover:inset-ring-1",
               "transition-all duration-200 ease-in-out",
               "opacity-0 group-hover/scenario:block group-hover/scenario:opacity-100",
               isEditing && "opacity-100",
@@ -835,7 +835,7 @@ const UserInputCharacterButton = ({
 
   return (
     <div
-      className="group relative flex flex-col gap-[4px] items-center cursor-pointer"
+      className="group relative flex cursor-pointer flex-col items-center gap-[4px]"
       onClick={onClick}
     >
       {isSubscribeBadge && <SubscribeBadge />}
@@ -849,12 +849,12 @@ const UserInputCharacterButton = ({
             isDisabled={isDisabled}
             className={cn(
               isHighLighted &&
-                "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal",
+                "border-primary-normal border-2 shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)]",
             )}
           />
           <div
             className={cn(
-              "truncate text-[12px] leading-[15px] font-[500] text-text-primary",
+              "text-text-primary truncate text-[12px] leading-[15px] font-[500]",
               "max-w-[48px]",
             )}
           >
@@ -862,30 +862,30 @@ const UserInputCharacterButton = ({
           </div>
           <div
             className={cn(
-              "absolute top-0 left-0 size-[48px] pointer-events-none",
-              "border-[3px] border-border-selected-inverse rounded-full",
-              "opacity-0 group-hover:opacity-100 transition-opacity ease-out duration-300",
+              "pointer-events-none absolute top-0 left-0 size-[48px]",
+              "border-border-selected-inverse rounded-full border-[3px]",
+              "opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100",
             )}
           />
           {isUser && (
-            <div className="absolute top-0 right-0 border-[2px] rounded-full size-[12px] bg-status-optional" />
+            <div className="bg-status-optional absolute top-0 right-0 size-[12px] rounded-full border-[2px]" />
           )}
         </>
       ) : (
         <>
           <div
             className={cn(
-              "grid place-items-center size-[48px] rounded-full text-text-primary",
-              "bg-background-surface-4 group-hover:bg-background-surface-5 transition-colors ease-out duration-300 border-1 border-border-normal",
+              "text-text-primary grid size-[48px] place-items-center rounded-full",
+              "bg-background-surface-4 group-hover:bg-background-surface-5 border-border-normal border-1 transition-colors duration-300 ease-out",
               isHighLighted &&
-                "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal",
+                "border-primary-normal border-2 shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)]",
             )}
           >
             {icon}
           </div>
           <div
             className={cn(
-              "font-[500] text-[12px] leading-[15px] text-text-body text-center",
+              "text-text-body text-center text-[12px] leading-[15px] font-[500]",
               "max-w-[72px]",
             )}
           >
@@ -910,7 +910,7 @@ const UserInputAutoReplyButton = ({
 
   return (
     <div
-      className="group relative flex flex-col gap-[4px] items-center cursor-pointer"
+      className="group relative flex cursor-pointer flex-col items-center gap-[4px]"
       onClick={() => {
         switch (autoReply) {
           case AutoReply.Off:
@@ -932,8 +932,8 @@ const UserInputAutoReplyButton = ({
     >
       <div
         className={cn(
-          "m-[2px] grid place-items-center size-[44px] rounded-[5.25px]",
-          "transition-colors ease-out duration-300 border-1 border-border-normal",
+          "m-[2px] grid size-[44px] place-items-center rounded-[5.25px]",
+          "border-border-normal border-1 transition-colors duration-300 ease-out",
           autoReply === AutoReply.Off
             ? "bg-background-surface-4 group-hover:bg-background-surface-3"
             : "bg-background-surface-5 group-hover:bg-background-surface-4",
@@ -942,8 +942,8 @@ const UserInputAutoReplyButton = ({
         {autoReply === AutoReply.Off && (
           <div
             className={cn(
-              "text-[15.75px] text-text-subtle leading-[19px] font-[600]",
-              "transition-colors group-hover:text-text-primary",
+              "text-text-subtle text-[15.75px] leading-[19px] font-[600]",
+              "group-hover:text-text-primary transition-colors",
             )}
           >
             Off
@@ -954,11 +954,11 @@ const UserInputAutoReplyButton = ({
       </div>
       <div
         className={cn(
-          "w-[105px] font-[600] text-[12px] leading-[15px] text-text-body text-center select-none",
+          "text-text-body w-[105px] text-center text-[12px] leading-[15px] font-[600] select-none",
         )}
       >
         {autoReply === AutoReply.Off ? "Auto-reply off" : "Auto-reply on"}
-        <div className="min-h-[15px] font-[400] mt-1">
+        <div className="mt-1 min-h-[15px] font-[400]">
           {autoReply === AutoReply.Random && "Random character"}
           {autoReply === AutoReply.Rotate && "All characters"}
         </div>
@@ -1049,18 +1049,18 @@ const UserInputs = ({
   }, [setSessionOnboardingStep, setIsGroupButtonDonNotShowAgain]);
 
   return (
-    <div className="sticky bottom-0 inset-x-0 pb-[80px] px-[56px]">
+    <div className="sticky inset-x-0 bottom-0 px-[56px] pb-[calc(40px+var(--topbar-height))]">
       <div
         className={cn(
-          "mx-auto w-full min-w-[400px] max-w-[892px] p-[24px] rounded-[40px] flex flex-col gap-[16px]",
-          "bg-[#3b3b3b]/50 backdrop-blur-xl border border-text-primary/10",
+          "mx-auto flex w-full max-w-[892px] min-w-[400px] flex-col gap-[16px] rounded-[40px] p-[24px]",
+          "border-text-primary/10 border bg-[#3b3b3b]/50 backdrop-blur-xl",
           disabled && "pointer-events-none opacity-50",
         )}
       >
         <TooltipProvider delayDuration={0}>
           <Tooltip open={shouldShowTooltip}>
             <TooltipTrigger asChild>
-              <div className="p-0 flex flex-row justify-between">
+              <div className="flex flex-row justify-between p-0">
                 <div
                   className={cn(
                     "flex flex-row gap-[16px]",
@@ -1092,7 +1092,7 @@ const UserInputs = ({
                     />
                   ))}
                   <UserInputCharacterButton
-                    icon={<Shuffle className="min-w-[24px] min-h-[24px]" />}
+                    icon={<Shuffle className="min-h-[24px] min-w-[24px]" />}
                     label="Shuffle"
                     onClick={() => {
                       handleShuffle();
@@ -1100,11 +1100,11 @@ const UserInputs = ({
                     }}
                     isHighLighted={shouldShowTooltip}
                   />
-                  <div className="w-[1px] h-[48px] bg-border-normal mx-2" />
+                  <div className="bg-border-normal mx-2 h-[48px] w-[1px]" />
                   <UserInputCharacterButton
                     icon={
                       isGeneratingGlobalImage ? (
-                        <Loader2 className="min-w-[24px] min-h-[24px] animate-spin" />
+                        <Loader2 className="min-h-[24px] min-w-[24px] animate-spin" />
                       ) : (
                         <SvgIcon name="image_gen" size={24} />
                       )
@@ -1174,9 +1174,9 @@ const UserInputs = ({
             <TooltipContent
               side="top"
               align="start"
-              className="py-[12px] px-[16px] ml-[-16px] mb-[12px] bg-background-surface-2 border-1 border-border-selected-primary shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
+              className="bg-background-surface-2 border-border-selected-primary mb-[12px] ml-[-16px] border-1 px-[16px] py-[12px] shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
             >
-              <div className="font-[600] text-[14px] leading-[20px] text-text-primary">
+              <div className="text-text-primary text-[14px] leading-[20px] font-[600]">
                 Select to prompt a response
               </div>
             </TooltipContent>
@@ -1186,9 +1186,9 @@ const UserInputs = ({
         <div className="p-0">
           <div
             className={cn(
-              "rounded-[28px] p-[8px] pl-[32px] flex flex-row gap-[16px] items-center",
-              "bg-background-surface-2 border border-border-dark",
-              !isMobile && "border-1 border-border-selected-inverse/30", // Add border with 50% opacity for desktop only
+              "flex flex-row items-center gap-[16px] rounded-[28px] p-[8px] pl-[32px]",
+              "bg-background-surface-2 border-border-dark border",
+              !isMobile && "border-border-selected-inverse/30 border-1", // Add border with 50% opacity for desktop only
             )}
           >
             <div className="grow">
@@ -1196,7 +1196,7 @@ const UserInputs = ({
                 maxRows={5}
                 placeholder="Type a message"
                 className={cn(
-                  "w-full p-0 pt-[4.8px] border-0 outline-0 bg-transparent rounded-none no-resizer",
+                  "no-resizer w-full rounded-none border-0 bg-transparent p-0 pt-[4.8px] outline-0",
                   "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
                   "h-[25.6px] min-h-[25.6px]",
                   "text-[16px] leading-[1.6] font-normal",
@@ -1219,12 +1219,12 @@ const UserInputs = ({
                   onStopGenerate?.();
                 }}
                 className={cn(
-                  "h-[40px] bg-background-surface-3 text-text-primary",
+                  "bg-background-surface-3 text-text-primary h-[40px]",
                   "hover:bg-background-card hover:text-text-primary",
                   "disabled:bg-background-surface-3 disabled:text-text-primary",
                 )}
               >
-                <div className="size-[10px] bg-text-primary rounded-[1px]" />
+                <div className="bg-text-primary size-[10px] rounded-[1px]" />
               </Button>
             ) : (
               <Button
@@ -1235,7 +1235,7 @@ const UserInputs = ({
                   setMessageContent("");
                 }}
                 className={cn(
-                  "h-[40px] bg-background-surface-3 text-text-primary",
+                  "bg-background-surface-3 text-text-primary h-[40px]",
                   "hover:bg-background-card hover:text-text-primary",
                   "disabled:bg-background-surface-3 disabled:text-text-primary",
                 )}
@@ -1302,18 +1302,18 @@ const SelectScenarioModal = ({
   if (renderedScenarios) {
     // Scenario selection view
     return (
-      <div className="mx-auto w-[600px] p-6 bg-background-surface-2 rounded-lg outline-1 outline-border-light inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden">
-        <div className="self-stretch flex flex-col justify-start items-end gap-6">
-          <div className="self-stretch flex flex-col justify-start items-start gap-2">
-            <div className="self-stretch justify-start text-text-primary text-2xl font-semibold">
+      <div className="bg-background-surface-2 outline-border-light mx-auto inline-flex w-[600px] flex-col items-start justify-start gap-2.5 overflow-hidden rounded-lg p-6 outline-1">
+        <div className="flex flex-col items-end justify-start gap-6 self-stretch">
+          <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+            <div className="text-text-primary justify-start self-stretch text-2xl font-semibold">
               Scenario
             </div>
-            <div className="self-stretch justify-start text-text-body text-base font-medium leading-tight">
+            <div className="text-text-body justify-start self-stretch text-base leading-tight font-medium">
               Select a scenario for your new session.
             </div>
           </div>
-          <div className="self-stretch relative">
-            <ScrollAreaSimple className="max-h-[600px] flex flex-col justify-start items-start gap-4">
+          <div className="relative self-stretch">
+            <ScrollAreaSimple className="flex max-h-[600px] flex-col items-start justify-start gap-4">
               {renderedScenarios.length > 0 ? (
                 renderedScenarios.map((scenario, index) => (
                   <ScenarioItem
@@ -1327,11 +1327,11 @@ const SelectScenarioModal = ({
                   />
                 ))
               ) : (
-                <div className="w-full self-stretch inline-flex flex-col justify-start items-start gap-4 py-6">
-                  <div className="self-stretch text-center justify-start text-text-body text-2xl font-bold">
+                <div className="inline-flex w-full flex-col items-start justify-start gap-4 self-stretch py-6">
+                  <div className="text-text-body justify-start self-stretch text-center text-2xl font-bold">
                     No scenarios yet
                   </div>
-                  <div className="self-stretch text-center justify-start text-background-surface-5 text-base font-medium leading-normal">
+                  <div className="text-background-surface-5 justify-start self-stretch text-center text-base leading-normal font-medium">
                     Start by adding a scenario to your plot card.
                     <br />
                     Scenarios set the opening scene for your session <br />—
@@ -1341,26 +1341,26 @@ const SelectScenarioModal = ({
               )}
             </ScrollAreaSimple>
           </div>
-          <div className="inline-flex justify-start items-center gap-2">
+          <div className="inline-flex items-center justify-start gap-2">
             <Button
               variant="ghost"
-              className="min-w-20 px-3 py-2.5 rounded-[20px] flex justify-center items-center gap-2 h-auto"
+              className="flex h-auto min-w-20 items-center justify-center gap-2 rounded-[20px] px-3 py-2.5"
               onClick={onSkip}
             >
-              <div className="justify-center text-button-background-primary text-sm font-medium leading-tight">
+              <div className="text-button-background-primary justify-center text-sm leading-tight font-medium">
                 Skip
               </div>
             </Button>
             <Button
               disabled={selectedScenarioIndex === null || isAddingScenario}
               onClick={handleAddScenario}
-              className="h-10 min-w-20 px-4 py-2.5 bg-button-background-primary rounded-[20px] inline-flex flex-col justify-center items-center gap-2.5"
+              className="bg-button-background-primary inline-flex h-10 min-w-20 flex-col items-center justify-center gap-2.5 rounded-[20px] px-4 py-2.5"
             >
-              <div className="inline-flex justify-start items-center gap-2">
+              <div className="inline-flex items-center justify-start gap-2">
                 {isAddingScenario && (
-                  <Loader2 className="animate-spin h-4 w-4" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 )}
-                <div className="justify-center text-button-foreground-primary text-sm font-semibold leading-tight">
+                <div className="text-button-foreground-primary justify-center text-sm leading-tight font-semibold">
                   Add
                 </div>
               </div>
@@ -1443,22 +1443,22 @@ const SortableDataSchemaFieldItem = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="pl-[8px] pr-[24px] flex flex-row gap-[8px] my-[24px]"
+      className="my-[24px] flex flex-row gap-[8px] pr-[24px] pl-[8px]"
     >
       <div className="shrink-0">
         <div
-          className="size-[24px] grid place-items-center cursor-grab active:cursor-grabbing"
+          className="grid size-[24px] cursor-grab place-items-center active:cursor-grabbing"
           {...attributes}
           {...listeners}
         >
           <GripVertical size={16} className="text-text-info" />
         </div>
       </div>
-      <div className="grow flex flex-col gap-[8px]">
-        <div className="group/field-name flex flex-row justify-between items-center">
-          <div className="flex flex-row gap-[8px] items-center text-text-subtle group-hover/field-name:text-text-primary">
+      <div className="flex grow flex-col gap-[8px]">
+        <div className="group/field-name flex flex-row items-center justify-between">
+          <div className="text-text-subtle group-hover/field-name:text-text-primary flex flex-row items-center gap-[8px]">
             {getSchemaTypeIcon(type)}
-            <div className="font-[500] text-[14px] leading-[20px]">{name}</div>
+            <div className="text-[14px] leading-[20px] font-[500]">{name}</div>
             {onEdit &&
               (isEditing ? (
                 <>
@@ -1505,7 +1505,7 @@ const SortableDataSchemaFieldItem = ({
         {isEditing ? (
           <TextareaAutosize
             className={cn(
-              "w-full p-0 border-0 outline-0 bg-transparent rounded-none no-resizer",
+              "no-resizer w-full rounded-none border-0 bg-transparent p-0 outline-0",
               "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
             )}
             autoFocus
@@ -1810,10 +1810,14 @@ const SessionMessagesAndUserInputs = ({
         // Notify error to user
         const parsedError = parseAiSdkErrorMessage(error);
         if (parsedError) {
-          toastError({
-            title: "Failed to generate message",
-            details: parsedError.message,
-          });
+          if (parsedError.level === "error") {
+            toastError({
+              title: "Failed to generate message",
+              details: parsedError.message,
+            });
+          } else {
+            toast.info(parsedError.message);
+          }
         } else if (error instanceof Error) {
           if (error.message.includes("Stop generate by user")) {
             toast.info("Generation stopped.");
@@ -2758,13 +2762,13 @@ const SessionMessagesAndUserInputs = ({
         ref={effectiveParentRef}
         id={`session-${session.id}`}
         className={cn(
-          "z-10 relative w-full h-full overflow-auto contain-strict session-scrollbar",
-          "transition-[padding-right] duration-200 pr-0",
+          "session-scrollbar relative z-10 h-full w-full overflow-auto contain-strict",
+          "pr-0 transition-[padding-right] duration-200",
           isDataSchemaUsed && isOpenSessionData && "pr-[320px]",
         )}
       >
         <div
-          className="w-full min-h-[calc(100dvh-270px)] relative"
+          className="relative min-h-[calc(100dvh-270px)] w-full"
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
           }}
@@ -2774,7 +2778,7 @@ const SessionMessagesAndUserInputs = ({
             chatStyles={session.props.chatStyles}
           />
 
-          <div className="relative max-w-[1196px] mx-auto">
+          <div className="relative mx-auto max-w-[1196px]">
             {virtualItems.map((virtualItem) => {
               const messageId = session.turnIds[virtualItem.index];
               const isLastMessage = virtualItem.index === messageCount - 1;
@@ -2818,7 +2822,7 @@ const SessionMessagesAndUserInputs = ({
               );
             })}
             {isOpenSelectScenarioModal && (
-              <div className="z-[20] absolute w-full flex flex-row py-[100px]">
+              <div className="absolute z-[20] flex w-full flex-row py-[100px]">
                 <SelectScenarioModal
                   onSkip={() => {
                     setIsOpenSelectScenarioModal(false);
@@ -2906,7 +2910,7 @@ const SessionMessagesAndUserInputs = ({
       {/* Data schema toggle & list */}
       <div
         className={cn(
-          "absolute top-[72px] bottom-[80px] right-[32px] flex flex-col items-end gap-[16px]",
+          "absolute top-[72px] right-[32px] bottom-[80px] flex flex-col items-end gap-[16px]",
           !isDataSchemaUsed && "hidden",
         )}
       >
@@ -2935,38 +2939,38 @@ const SessionMessagesAndUserInputs = ({
         />
         <div
           className={cn(
-            "z-10 relative w-[320px] mt-[48px] rounded-[12px]",
-            "bg-[#3b3b3b]/50 backdrop-blur-xl border border-text-primary/10",
+            "relative z-10 mt-[48px] w-[320px] rounded-[12px]",
+            "border-text-primary/10 border bg-[#3b3b3b]/50 backdrop-blur-xl",
             "flex flex-col overflow-hidden",
             "transition-opacity duration-200",
             isOpenSessionData
-              ? "opacity-100 visible"
-              : "opacity-0 invisible pointer-events-none",
+              ? "visible opacity-100"
+              : "pointer-events-none invisible opacity-0",
           )}
         >
-          <div className="shrink-0 h-[72px] p-[16px] border-b-1 border-text-primary/10 flex flex-row items-center text-text-primary">
+          <div className="border-text-primary/10 text-text-primary flex h-[72px] shrink-0 flex-row items-center border-b-1 p-[16px]">
             {streamingMessageId ? (
               <>
                 <SvgIcon
                   name="astrsk_symbol"
                   size={40}
-                  className="animate-spin mr-[2px]"
+                  className="mr-[2px] animate-spin"
                 />
-                <div className="font-[400] text-[16px] leading-[25.6px] mr-[4px]">
+                <div className="mr-[4px] text-[16px] leading-[25.6px] font-[400]">
                   {streamingAgentName}
                 </div>
-                <div className="font-[600] text-[16px] leading-[25.6px]">
+                <div className="text-[16px] leading-[25.6px] font-[600]">
                   {streamingModelName}
                 </div>
               </>
             ) : (
-              <div className="font-[600] text-[16px] leading-[25.6px]">
+              <div className="text-[16px] leading-[25.6px] font-[600]">
                 Session data
               </div>
             )}
           </div>
           <div className="relative overflow-hidden">
-            <ScrollArea className="w-full h-full">
+            <ScrollArea className="h-full w-full">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
