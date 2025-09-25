@@ -253,7 +253,7 @@ describe("Card Query Factory", () => {
         );
 
         const options = cardQueries.detail("test-id");
-        const result = await options.queryFn({
+        const result = await options.queryFn?.({
           signal: new AbortController().signal,
         } as any);
 
@@ -311,7 +311,7 @@ describe("Card Query Factory", () => {
         );
 
         const options = cardQueries.imagePrompt("test-id");
-        const result = await options.queryFn({
+        const result = await options.queryFn?.({
           signal: new AbortController().signal,
         } as any);
 
@@ -388,7 +388,7 @@ describe("Card Query Factory", () => {
         );
 
         const options = cardQueries.scenarios("test-id");
-        const result = await options.queryFn({
+        const result = await options.queryFn?.({
           signal: new AbortController().signal,
         } as any);
 
@@ -401,7 +401,7 @@ describe("Card Query Factory", () => {
         );
 
         const options = cardQueries.scenarios("test-id");
-        const result = await options.queryFn({
+        const result = await options.queryFn?.({
           signal: new AbortController().signal,
         } as any);
 
