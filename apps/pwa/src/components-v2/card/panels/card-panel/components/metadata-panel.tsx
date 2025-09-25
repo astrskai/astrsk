@@ -124,7 +124,11 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
       const newOrigin = card.props.conceptualOrigin || "";
 
       // Select result caching handles object stability
-      setTags(newTags);
+      // Only update tags if they actually changed (compare array contents)
+      const tagsChanged = JSON.stringify(tags) !== JSON.stringify(newTags);
+      if (tagsChanged) {
+        setTags(newTags);
+      }
       if (creator !== newCreator) {
         setCreator(newCreator);
       }

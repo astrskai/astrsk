@@ -55,59 +55,49 @@ export const useUpdateCardTitle = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.metadata(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.content(cardId) });
       await queryClient.cancelQueries({ queryKey: cardKeys.lists() });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousMetadata = queryClient.getQueryData(
-        cardKeys.metadata(cardId),
-      );
-      const previousContent = queryClient.getQueryData(
-        cardKeys.content(cardId),
-      );
       const previousLists = queryClient.getQueriesData({
         queryKey: cardKeys.lists(),
       });
 
-      // Optimistic updates - metadata
-      queryClient.setQueryData(cardKeys.metadata(cardId), (old: any) => {
+      // Optimistic update - detail (in persistence format)
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          name: title,
-          updatedAt: new Date(),
+          common: {
+            ...old.common,
+            title: title,
+            updated_at: new Date(),
+          },
         };
       });
 
-      // Optimistic update - content
-      queryClient.setQueryData(cardKeys.content(cardId), (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          name: title,
-        };
-      });
+      // Optimistic update - all list queries
+      queryClient.setQueriesData(
+        { queryKey: cardKeys.lists() },
+        (oldData: any) => {
+          if (!oldData || !Array.isArray(oldData)) return oldData;
 
-      return { previousCard, previousMetadata, previousContent, previousLists };
+          // Find and update the specific card in the list
+          return oldData.map((card) =>
+            card.id === cardId || card.id?.toString() === cardId
+              ? { ...card, title: title, updatedAt: new Date() }
+              : card,
+          );
+        },
+      );
+
+      return { previousCard, previousLists };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
       }
-      if (context?.previousMetadata) {
-        queryClient.setQueryData(
-          cardKeys.metadata(cardId),
-          context.previousMetadata,
-        );
-      }
-      if (context?.previousContent) {
-        queryClient.setQueryData(
-          cardKeys.content(cardId),
-          context.previousContent,
-        );
-      }
+
       if (context?.previousLists) {
         context.previousLists.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
@@ -125,16 +115,10 @@ export const useUpdateCardTitle = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.metadata(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.content(cardId),
-      });
-      await queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
+      // await queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
     },
   });
 
@@ -197,46 +181,27 @@ export const useUpdateCardSummary = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.metadata(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.content(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousMetadata = queryClient.getQueryData(
-        cardKeys.metadata(cardId),
-      );
-      const previousContent = queryClient.getQueryData(
-        cardKeys.content(cardId),
-      );
 
-      // Optimistic updates
-      queryClient.setQueryData(cardKeys.metadata(cardId), (old: any) => {
+      // Optimistic updates - metadata
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
-        return { ...old, description: cardSummary, updatedAt: new Date() };
+        return {
+          ...old,
+          common: {
+            ...old.common,
+            card_summary: cardSummary,
+            updated_at: new Date(),
+          },
+        };
       });
-
-      queryClient.setQueryData(cardKeys.content(cardId), (old: any) => {
-        if (!old) return old;
-        return { ...old, description: cardSummary };
-      });
-
-      return { previousCard, previousMetadata, previousContent };
+      return { previousCard };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
-      }
-      if (context?.previousMetadata) {
-        queryClient.setQueryData(
-          cardKeys.metadata(cardId),
-          context.previousMetadata,
-        );
-      }
-      if (context?.previousContent) {
-        queryClient.setQueryData(
-          cardKeys.content(cardId),
-          context.previousContent,
-        );
       }
 
       setIsEditing(false);
@@ -250,15 +215,9 @@ export const useUpdateCardSummary = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.metadata(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.content(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
     },
   });
 
@@ -323,33 +282,32 @@ export const useUpdateCharacterName = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.content(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousContent = queryClient.getQueryData(
-        cardKeys.content(cardId),
-      );
 
       // Optimistic update - content
-      queryClient.setQueryData(cardKeys.content(cardId), (old: any) => {
-        if (!old) return old;
-        return { ...old, greeting: name };
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
+        if (!old || !old.character) return old;
+        return {
+          ...old,
+          character: {
+            ...old.character,
+            name: name,
+          },
+          common: {
+            ...old.common,
+            updated_at: new Date(),
+          },
+        };
       });
 
-      return { previousCard, previousContent };
+      return { previousCard };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
       }
-      if (context?.previousContent) {
-        queryClient.setQueryData(
-          cardKeys.content(cardId),
-          context.previousContent,
-        );
-      }
-
       setIsEditing(false);
       if (editEndTimerRef.current) {
         clearTimeout(editEndTimerRef.current);
@@ -361,12 +319,9 @@ export const useUpdateCharacterName = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.content(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
     },
   });
 
@@ -431,31 +386,31 @@ export const useUpdateCharacterDescription = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.content(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousContent = queryClient.getQueryData(
-        cardKeys.content(cardId),
-      );
 
       // Optimistic update
-      queryClient.setQueryData(cardKeys.content(cardId), (old: any) => {
-        if (!old) return old;
-        return { ...old, systemPrompt: description };
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
+        if (!old || !old.character) return old;
+        return {
+          ...old,
+          character: {
+            ...old.character,
+            description: description,
+          },
+          common: {
+            ...old.common,
+            updated_at: new Date(),
+          },
+        };
       });
 
-      return { previousCard, previousContent };
+      return { previousCard };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
-      }
-      if (context?.previousContent) {
-        queryClient.setQueryData(
-          cardKeys.content(cardId),
-          context.previousContent,
-        );
       }
 
       setIsEditing(false);
@@ -469,12 +424,9 @@ export const useUpdateCharacterDescription = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.content(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
     },
   });
 
@@ -539,36 +491,31 @@ export const useUpdateCharacterExampleDialogue = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.content(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousContent = queryClient.getQueryData(
-        cardKeys.content(cardId),
-      );
 
       // Optimistic update
-      queryClient.setQueryData(cardKeys.content(cardId), (old: any) => {
-        if (!old) return old;
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
+        if (!old || !old.character) return old;
         return {
           ...old,
-          exampleMessages: exampleDialogue
-            ? [{ user: "Example", assistant: exampleDialogue }]
-            : [],
+          character: {
+            ...old.character,
+            example_dialogue: exampleDialogue,
+          },
+          common: {
+            ...old.common,
+            updated_at: new Date(),
+          },
         };
       });
 
-      return { previousCard, previousContent };
+      return { previousCard };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
-      }
-      if (context?.previousContent) {
-        queryClient.setQueryData(
-          cardKeys.content(cardId),
-          context.previousContent,
-        );
       }
 
       setIsEditing(false);
@@ -582,12 +529,9 @@ export const useUpdateCharacterExampleDialogue = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.content(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
     },
   });
 
@@ -652,31 +596,28 @@ export const useUpdateCardTags = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.metadata(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousMetadata = queryClient.getQueryData(
-        cardKeys.metadata(cardId),
-      );
 
       // Optimistic update
-      queryClient.setQueryData(cardKeys.metadata(cardId), (old: any) => {
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
-        return { ...old, tags };
+        return {
+          ...old,
+          common: {
+            ...old.common,
+            tags: tags,
+            updated_at: new Date(),
+          },
+        };
       });
 
-      return { previousCard, previousMetadata };
+      return { previousCard };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
-      }
-      if (context?.previousMetadata) {
-        queryClient.setQueryData(
-          cardKeys.metadata(cardId),
-          context.previousMetadata,
-        );
       }
 
       setIsEditing(false);
@@ -690,12 +631,9 @@ export const useUpdateCardTags = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.metadata(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
     },
   });
 
@@ -760,31 +698,28 @@ export const useUpdateCardVersion = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.metadata(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousMetadata = queryClient.getQueryData(
-        cardKeys.metadata(cardId),
-      );
 
       // Optimistic update
-      queryClient.setQueryData(cardKeys.metadata(cardId), (old: any) => {
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
-        return { ...old, version };
+        return {
+          ...old,
+          common: {
+            ...old.common,
+            version: version,
+            updated_at: new Date(),
+          },
+        };
       });
 
-      return { previousCard, previousMetadata };
+      return { previousCard };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
-      }
-      if (context?.previousMetadata) {
-        queryClient.setQueryData(
-          cardKeys.metadata(cardId),
-          context.previousMetadata,
-        );
       }
 
       setIsEditing(false);
@@ -798,12 +733,9 @@ export const useUpdateCardVersion = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.metadata(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
     },
   });
 
@@ -868,31 +800,28 @@ export const useUpdateCardConceptualOrigin = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.metadata(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousMetadata = queryClient.getQueryData(
-        cardKeys.metadata(cardId),
-      );
 
       // Optimistic update
-      queryClient.setQueryData(cardKeys.metadata(cardId), (old: any) => {
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
-        return { ...old, conceptualOrigin };
+        return {
+          ...old,
+          common: {
+            ...old.common,
+            conceptual_origin: conceptualOrigin,
+            updated_at: new Date(),
+          },
+        };
       });
 
-      return { previousCard, previousMetadata };
+      return { previousCard };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
-      }
-      if (context?.previousMetadata) {
-        queryClient.setQueryData(
-          cardKeys.metadata(cardId),
-          context.previousMetadata,
-        );
       }
 
       setIsEditing(false);
@@ -906,12 +835,9 @@ export const useUpdateCardConceptualOrigin = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.metadata(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
     },
   });
 
@@ -976,25 +902,28 @@ export const useUpdateCardCreator = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.metadata(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousMetadata = queryClient.getQueryData(
-        cardKeys.metadata(cardId),
-      );
 
-      return { previousCard, previousMetadata };
+      // Optimistic update
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          common: {
+            ...old.common,
+            creator: creator,
+            updated_at: new Date(),
+          },
+        };
+      });
+
+      return { previousCard };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
-      }
-      if (context?.previousMetadata) {
-        queryClient.setQueryData(
-          cardKeys.metadata(cardId),
-          context.previousMetadata,
-        );
       }
 
       setIsEditing(false);
@@ -1008,12 +937,9 @@ export const useUpdateCardCreator = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.metadata(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
     },
   });
 
@@ -1087,8 +1013,68 @@ export const useUpdateCardLorebook = (cardId: string) => {
 
       // Optimistic update for lorebook queries
       if (lorebook) {
+        queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
+          if (!old) return old;
+          // Lorebook can be in either character or plot
+          if (old.character) {
+            return {
+              ...old,
+              character: {
+                ...old.character,
+                lorebook: lorebook,
+              },
+              common: {
+                ...old.common,
+                updated_at: new Date(),
+              },
+            };
+          } else if (old.plot) {
+            return {
+              ...old,
+              plot: {
+                ...old.plot,
+                lorebook: lorebook,
+              },
+              common: {
+                ...old.common,
+                updated_at: new Date(),
+              },
+            };
+          }
+          return old;
+        });
         queryClient.setQueryData(cardKeys.lorebook(cardId), lorebook);
       } else {
+        queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
+          if (!old) return old;
+          // Clear lorebook from either character or plot
+          if (old.character) {
+            return {
+              ...old,
+              character: {
+                ...old.character,
+                lorebook: null,
+              },
+              common: {
+                ...old.common,
+                updated_at: new Date(),
+              },
+            };
+          } else if (old.plot) {
+            return {
+              ...old,
+              plot: {
+                ...old.plot,
+                lorebook: null,
+              },
+              common: {
+                ...old.common,
+                updated_at: new Date(),
+              },
+            };
+          }
+          return old;
+        });
         queryClient.setQueryData(cardKeys.lorebook(cardId), null);
       }
 
@@ -1117,15 +1103,12 @@ export const useUpdateCardLorebook = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.lorebook(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.lorebook(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.lorebook(cardId),
+      // });
     },
   });
 
@@ -1198,6 +1181,20 @@ export const useUpdateCardScenarios = (cardId: string) => {
       );
 
       // Optimistic update for scenarios queries
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          plot: {
+            ...old.plot,
+            scenarios: scenarios,
+          },
+          common: {
+            ...old.common,
+            updated_at: new Date(),
+          },
+        };
+      });
       queryClient.setQueryData(cardKeys.scenarios(cardId), scenarios || []);
 
       return { previousCard, previousScenarios };
@@ -1225,12 +1222,12 @@ export const useUpdateCardScenarios = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.scenarios(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.scenarios(cardId),
+      // });
     },
   });
 
@@ -1295,25 +1292,30 @@ export const useUpdatePlotDescription = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.content(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousContent = queryClient.getQueryData(
-        cardKeys.content(cardId),
-      );
 
-      return { previousCard, previousContent };
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
+        if (!old || !old.plot) return old;
+        return {
+          ...old,
+          plot: {
+            ...old.plot,
+            description: description,
+          },
+          common: {
+            ...old.common,
+            updated_at: new Date(),
+          },
+        };
+      });
+
+      return { previousCard };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
-      }
-      if (context?.previousContent) {
-        queryClient.setQueryData(
-          cardKeys.content(cardId),
-          context.previousContent,
-        );
       }
 
       setIsEditing(false);
@@ -1327,12 +1329,9 @@ export const useUpdatePlotDescription = (cardId: string) => {
         endEditing();
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.content(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
     },
   });
 
@@ -1368,8 +1367,6 @@ export const useDeleteCard = () => {
     onSuccess: (cardId) => {
       // Remove from all caches
       queryClient.removeQueries({ queryKey: cardKeys.detail(cardId) });
-      queryClient.removeQueries({ queryKey: cardKeys.metadata(cardId) });
-      queryClient.removeQueries({ queryKey: cardKeys.content(cardId) });
       queryClient.removeQueries({ queryKey: cardKeys.lorebook(cardId) });
       queryClient.removeQueries({ queryKey: cardKeys.scenarios(cardId) });
 
@@ -1425,44 +1422,34 @@ export const useUpdateCardIconAsset = (cardId: string) => {
 
     onMutate: async (iconAssetId) => {
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.metadata(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
-      const previousMetadata = queryClient.getQueryData(
-        cardKeys.metadata(cardId),
-      );
 
       // Optimistic update - metadata
-      queryClient.setQueryData(cardKeys.metadata(cardId), (old: any) => {
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          iconAssetId,
-          updatedAt: new Date(),
+          common: {
+            ...old.common,
+            icon_asset_id: iconAssetId,
+            updated_at: new Date(),
+          },
         };
       });
 
-      return { previousCard, previousMetadata };
+      return { previousCard };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
       }
-      if (context?.previousMetadata) {
-        queryClient.setQueryData(
-          cardKeys.metadata(cardId),
-          context.previousMetadata,
-        );
-      }
     },
 
     onSettled: async () => {
       await queryClient.invalidateQueries({
         queryKey: cardKeys.detail(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.metadata(cardId),
       });
       await queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
     },
@@ -1535,9 +1522,20 @@ export const useUpdateCardImagePrompt = (cardId: string) => {
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
       // Optimistic update
+      queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          common: {
+            ...old.common,
+            image_prompt: imagePrompt,
+            updated_at: new Date(),
+          },
+        };
+      });
       queryClient.setQueryData(cardKeys.imagePrompt(cardId), imagePrompt);
 
-      return { previousPrompt, previousCard };
+      return { previousCard, previousPrompt };
     },
 
     onError: (_err, _variables, context) => {
@@ -1563,12 +1561,12 @@ export const useUpdateCardImagePrompt = (cardId: string) => {
       }
 
       // Always invalidate - the query itself is disabled during editing/cursor
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.imagePrompt(cardId),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: cardKeys.detail(cardId),
-      });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.imagePrompt(cardId),
+      // });
+      // await queryClient.invalidateQueries({
+      //   queryKey: cardKeys.detail(cardId),
+      // });
     },
   });
 
