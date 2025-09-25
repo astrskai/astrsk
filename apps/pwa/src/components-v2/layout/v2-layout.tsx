@@ -84,6 +84,13 @@ export function V2Layout({
   // Initialize global error handler
   useGlobalErrorHandler();
 
+  // Set loading to false when everything is initialized
+  useEffect(() => {
+    if (defaultInitialized) {
+      setIsLoading(false);
+    }
+  }, [defaultInitialized, setIsLoading]);
+
   // Show InstallPwa screen only in production for mobile non-standalone users
   if (isMobile && !isStandalone && !import.meta.env.DEV) {
     return <InstallPwa canInstall={canInstall} install={install} />;
@@ -123,7 +130,6 @@ export function V2Layout({
       </>
     );
   }
-  setIsLoading(false);
 
   if (isMobile) {
     return (
