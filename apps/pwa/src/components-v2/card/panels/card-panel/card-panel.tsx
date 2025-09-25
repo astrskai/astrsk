@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Card, CharacterCard } from "@/modules/card/domain";
 import { CardType } from "@/modules/card/domain";
-import { UniqueEntityID } from "@/shared/domain";
-import { CardService } from "@/app/services/card-service";
 import { AssetService } from "@/app/services/asset-service";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { generatedImageKeys } from "@/app/queries/generated-image/query-factory";
@@ -14,15 +12,14 @@ import { cn } from "@/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { cardQueries, useUpdateCardTitle } from "@/app/queries/card";
+import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { BookOpen, Pencil, Check, X, Image } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { Button } from "@/components-v2/ui/button";
 import { SvgIcon } from "@/components-v2/svg-icon";
-import { invalidateSingleCardQueries } from "@/components-v2/card/utils/invalidate-card-queries";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
 import { Avatar } from "@/components-v2/avatar";
 import { useAppStore } from "@/app/stores/app-store";
-import { getSelectedIdFromPath } from "@/utils/url-utils";
 
 interface CardPanelProps {
   cardId: string;
@@ -73,7 +70,7 @@ const TradingCardItem = ({
       )}
       <div className="ring-border-light pointer-events-none absolute inset-0 rounded-[19px] ring-2" />
       {/*
-      todo: remove this 
+      todo: remove this
       */}
       {/*
       {isActive ? (
@@ -86,18 +83,19 @@ const TradingCardItem = ({
   );
 };
 
-export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
+export function CardPanel({ cardId }: CardPanelProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { openPanel, closePanel, panelVisibility } = useCardPanelContext();
+  const { openPanel, panelVisibility } = useCardPanelContext();
   const queryClient = useQueryClient();
   const subscribed = useAppStore.use.subscribed();
   const setIsOpenSubscribeNudge = useAppStore.use.setIsOpenSubscribeNudge();
 
   // Use fine-grained mutation for title updates with optimistic updates
   const updateTitle = useUpdateCardTitle(cardId);
+  const updateIconAsset = useUpdateCardIconAsset(cardId);
 
   // Get left navigation state for conditional margins
   const { isExpanded, isMobile } = useLeftNavigationWidth();
@@ -106,9 +104,7 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
   const { data: cardFromQuery } = useQuery(cardQueries.detail(cardId));
 
   // Use provided card or the one from query
-  const card = providedCard || cardFromQuery;
-
-  // No longer need right sidebar state since vibe panel is now local
+  const card = cardFromQuery;
 
   // Vibe Coding handler - opens the local vibe panel instead of global right panel
   const handleVibeCodingToggle = () => {
@@ -132,10 +128,6 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
 
   const handleOpenPanel = (panelType: CardPanelType) => {
     openPanel(panelType);
-  };
-
-  const handleClosePanel = (panelType: string) => {
-    closePanel(panelType);
   };
 
   const handleSaveTitle = async () => {
@@ -168,15 +160,12 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
     setIsUploadingAvatar(true);
     try {
       // Step 1: Create asset first
-      console.log("🖼️ [CARD-PANEL] Creating asset from uploaded file");
       const assetResult = await AssetService.saveFileToAsset.execute({ file });
 
       if (assetResult.isSuccess) {
         const asset = assetResult.getValue();
-        console.log("✅ [CARD-PANEL] Asset created:", asset.id.toString());
 
         // Step 2: Add to gallery FIRST (this becomes the source of truth)
-        console.log("🖼️ [CARD-PANEL] Adding image to gallery first");
         const generatedImageResult =
           await GeneratedImageService.saveGeneratedImageFromAsset.execute({
             assetId: asset.id,
@@ -187,37 +176,19 @@ export function CardPanel({ cardId, card: providedCard }: CardPanelProps) {
           });
 
         if (generatedImageResult.isSuccess) {
-          console.log("✅ [CARD-PANEL] Image added to gallery");
+          // Step 3: Update card icon using mutation (handles all card cache invalidation)
+          try {
+            await updateIconAsset.mutateAsync(asset.id.toString());
 
-          // Step 3: Update card to reference the SAME asset (no separate asset creation)
-          const updateResult = card.update({ iconAssetId: asset.id });
-
-          if (updateResult.isSuccess) {
-            const saveResult = await CardService.saveCard.execute(card);
-
-            if (saveResult.isSuccess) {
-              // Invalidate all queries for this card
-              await invalidateSingleCardQueries(queryClient, card.id);
-
-              // Also invalidate generated images for this card and global list
-              console.log(
-                "🔄 [CARD-PANEL] Invalidating generated images queries",
-              );
-              await queryClient.invalidateQueries({
-                queryKey: generatedImageKeys.cardImages(card.id.toString()),
-              });
-              // Also invalidate the global list so image generator gallery updates immediately
-              await queryClient.invalidateQueries({
-                queryKey: generatedImageKeys.lists(),
-              });
-              console.log(
-                "✅ [CARD-PANEL] Image added to gallery and set as card icon using same asset",
-              );
-            } else {
-              console.error("Failed to save card:", saveResult.getError());
-            }
-          } else {
-            console.error("Failed to update card:", updateResult.getError());
+            // Only need to invalidate generated images - card queries handled by mutation
+            await queryClient.invalidateQueries({
+              queryKey: generatedImageKeys.cardImages(card.id.toString()),
+            });
+            await queryClient.invalidateQueries({
+              queryKey: generatedImageKeys.lists(),
+            });
+          } catch (error) {
+            console.error("Failed to update card icon:", error);
           }
         } else {
           console.error(

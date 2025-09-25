@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Card, CardType } from "@/modules/card/domain";
+import { Card } from "@/modules/card/domain";
 import { Session } from "@/modules/session/domain/session";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
@@ -10,7 +10,8 @@ export type SelectionAction = "copy" | "export" | "delete";
 export function useCardSelection() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedCards, setSelectedCards] = useState<Set<string>>(new Set());
-  const [selectionAction, setSelectionAction] = useState<SelectionAction>("copy");
+  const [selectionAction, setSelectionAction] =
+    useState<SelectionAction>("copy");
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [usedSessions, setUsedSessions] = useState<Session[]>([]);
 
@@ -51,35 +52,43 @@ export function useCardSelection() {
       const allCards = [...(characterCards || []), ...(plotCards || [])];
       return allCards.filter((card) => selectedCards.has(card.id.toString()));
     },
-    [selectedCards]
+    [selectedCards],
   );
 
   const handleCopyCards = useCallback(
     async (selectedCardsData: Card[], onInvalidation: () => void) => {
       try {
         const results = await Promise.allSettled(
-          selectedCardsData.map((card) => CardService.cloneCard.execute({cardId: card.id}))
+          selectedCardsData.map((card) =>
+            CardService.cloneCard.execute({ cardId: card.id }),
+          ),
         );
-        
-        const successCount = results.filter((r) => r.status === "fulfilled").length;
+
+        const successCount = results.filter(
+          (r) => r.status === "fulfilled",
+        ).length;
         const failCount = results.filter((r) => r.status === "rejected").length;
-        
+
         if (successCount > 0) {
-          toast.success(`${successCount} card${successCount > 1 ? "s" : ""} copied successfully`);
+          toast.success(
+            `${successCount} card${successCount > 1 ? "s" : ""} copied successfully`,
+          );
           onInvalidation();
         }
-        
+
         if (failCount > 0) {
-          toast.error(`Failed to copy ${failCount} card${failCount > 1 ? "s" : ""}`);
+          toast.error(
+            `Failed to copy ${failCount} card${failCount > 1 ? "s" : ""}`,
+          );
         }
-        
+
         exitSelectionMode();
       } catch (error) {
         console.error("Error copying cards:", error);
         toast.error("Failed to copy cards");
       }
     },
-    [exitSelectionMode]
+    [exitSelectionMode],
   );
 
   const handleExportCards = useCallback(
@@ -87,7 +96,7 @@ export function useCardSelection() {
       try {
         let successCount = 0;
         let failCount = 0;
-        
+
         for (const card of selectedCardsData) {
           try {
             // Export each card individually using the proper export service
@@ -95,14 +104,14 @@ export function useCardSelection() {
               cardId: card.id,
               options: { format: "png" },
             });
-            
+
             if (fileOrError.isFailure) {
               failCount++;
               continue;
             }
-            
+
             const file = fileOrError.getValue();
-            
+
             // Download the file
             const url = URL.createObjectURL(file);
             const a = document.createElement("a");
@@ -112,29 +121,33 @@ export function useCardSelection() {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
+
             successCount++;
           } catch (error) {
             console.error(`Error exporting card ${card.id.toString()}:`, error);
             failCount++;
           }
         }
-        
+
         if (successCount > 0) {
-          toast.success(`${successCount} card${successCount > 1 ? "s" : ""} exported successfully`);
+          toast.success(
+            `${successCount} card${successCount > 1 ? "s" : ""} exported successfully`,
+          );
         }
-        
+
         if (failCount > 0) {
-          toast.error(`Failed to export ${failCount} card${failCount > 1 ? "s" : ""}`);
+          toast.error(
+            `Failed to export ${failCount} card${failCount > 1 ? "s" : ""}`,
+          );
         }
-        
+
         exitSelectionMode();
       } catch (error) {
         console.error("Error exporting cards:", error);
         toast.error("Failed to export cards");
       }
     },
-    [exitSelectionMode]
+    [exitSelectionMode],
   );
 
   const checkDeleteDependencies = useCallback(
@@ -145,19 +158,22 @@ export function useCardSelection() {
           throw new Error(sessionsResult.getError());
         }
         const sessions = sessionsResult.getValue();
-        
+
         const usedInSessions: Session[] = [];
         selectedCardsData.forEach((card) => {
           sessions.forEach((session) => {
-            const isUsed = session.allCards.some(
-              (sessionCard) => sessionCard.id.equals(card.id)
+            const isUsed = session.allCards.some((sessionCard) =>
+              sessionCard.id.equals(card.id),
             );
-            if (isUsed && !usedInSessions.find((s) => s.id.equals(session.id))) {
+            if (
+              isUsed &&
+              !usedInSessions.find((s) => s.id.equals(session.id))
+            ) {
               usedInSessions.push(session);
             }
           });
         });
-        
+
         setUsedSessions(usedInSessions);
         setIsDeleteConfirmOpen(true);
       } catch (error) {
@@ -165,28 +181,36 @@ export function useCardSelection() {
         toast.error("Failed to check card dependencies");
       }
     },
-    []
+    [],
   );
 
   const handleDeleteCards = useCallback(
     async (selectedCardsData: Card[], onInvalidation: () => void) => {
       try {
         const results = await Promise.allSettled(
-          selectedCardsData.map((card) => CardService.deleteCard.execute(card.id))
+          selectedCardsData.map((card) =>
+            CardService.deleteCard.execute(card.id),
+          ),
         );
-        
-        const successCount = results.filter((r) => r.status === "fulfilled").length;
+
+        const successCount = results.filter(
+          (r) => r.status === "fulfilled",
+        ).length;
         const failCount = results.filter((r) => r.status === "rejected").length;
-        
+
         if (successCount > 0) {
-          toast.success(`${successCount} card${successCount > 1 ? "s" : ""} deleted successfully`);
+          toast.success(
+            `${successCount} card${successCount > 1 ? "s" : ""} deleted successfully`,
+          );
           onInvalidation();
         }
-        
+
         if (failCount > 0) {
-          toast.error(`Failed to delete ${failCount} card${failCount > 1 ? "s" : ""}`);
+          toast.error(
+            `Failed to delete ${failCount} card${failCount > 1 ? "s" : ""}`,
+          );
         }
-        
+
         setIsDeleteConfirmOpen(false);
         exitSelectionMode();
       } catch (error) {
@@ -194,7 +218,7 @@ export function useCardSelection() {
         toast.error("Failed to delete cards");
       }
     },
-    [exitSelectionMode]
+    [exitSelectionMode],
   );
 
   return {
@@ -204,7 +228,7 @@ export function useCardSelection() {
     selectionAction,
     isDeleteConfirmOpen,
     usedSessions,
-    
+
     // Actions
     toggleSelection,
     selectAll,

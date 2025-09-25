@@ -1,21 +1,20 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Card } from "@/modules/card/domain";
 import { Input } from "@/components-v2/ui/input";
 import { X } from "lucide-react";
 import { debounce } from "lodash-es";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  cardQueries, 
+import {
+  cardQueries,
   useUpdateCardTags,
   useUpdateCardCreator,
   useUpdateCardSummary,
   useUpdateCardVersion,
-  useUpdateCardConceptualOrigin
+  useUpdateCardConceptualOrigin,
 } from "@/app/queries/card";
-import { 
-  CardPanelProps, 
-  CardPanelLoading, 
-  CardPanelError 
+import {
+  CardPanelProps,
+  CardPanelLoading,
+  CardPanelError,
 } from "@/components-v2/card/panels/hooks/use-card-panel";
 
 interface MetadataPanelProps extends CardPanelProps {}
@@ -27,18 +26,13 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
   const updateSummary = useUpdateCardSummary(cardId);
   const updateVersion = useUpdateCardVersion(cardId);
   const updateConceptualOrigin = useUpdateCardConceptualOrigin(cardId);
-  
+
   // Track editing state in refs to avoid triggering effects
-  const isEditingTagsRef = useRef(updateTags.isEditing);
   const isEditingCreatorRef = useRef(updateCreator.isEditing);
   const isEditingSummaryRef = useRef(updateSummary.isEditing);
   const isEditingVersionRef = useRef(updateVersion.isEditing);
   const isEditingOriginRef = useRef(updateConceptualOrigin.isEditing);
-  
-  useEffect(() => {
-    isEditingTagsRef.current = updateTags.isEditing;
-  }, [updateTags.isEditing]);
-  
+
   useEffect(() => {
     isEditingCreatorRef.current = updateCreator.isEditing;
   }, [updateCreator.isEditing]);
@@ -56,26 +50,29 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
   }, [updateConceptualOrigin.isEditing]);
 
   // Load card data - disable refetching while editing or cursor is active
-  const isAnyEditing = updateTags.isEditing || updateCreator.isEditing || 
-                      updateSummary.isEditing || updateVersion.isEditing || 
-                      updateConceptualOrigin.isEditing;
-  const hasCursor = updateTags.hasCursor || updateCreator.hasCursor || 
-                   updateSummary.hasCursor || updateVersion.hasCursor || 
-                   updateConceptualOrigin.hasCursor;
+  const isAnyEditing =
+    updateCreator.isEditing ||
+    updateSummary.isEditing ||
+    updateVersion.isEditing ||
+    updateConceptualOrigin.isEditing;
+  const hasCursor =
+    updateCreator.hasCursor ||
+    updateSummary.hasCursor ||
+    updateVersion.hasCursor ||
+    updateConceptualOrigin.hasCursor;
   const queryEnabled = !!cardId && !isAnyEditing && !hasCursor;
-  
+
   const { data: card, isLoading } = useQuery({
     ...cardQueries.detail(cardId),
     enabled: queryEnabled,
     refetchOnWindowFocus: !isAnyEditing && !hasCursor,
     refetchOnMount: false,
   });
-  
+
   // UI state
   const [tagError, setTagError] = useState(false);
-  
-  // Local form state
-  const [tags, setTags] = useState<string[]>([]);
+
+  // Local form state - removed tags state, will use card.props.tags directly
   const [creator, setCreator] = useState("");
   const [cardSummary, setCardSummary] = useState("");
   const [version, setVersion] = useState("");
@@ -84,7 +81,7 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
 
   // Track initialization
   const lastCardIdRef = useRef<string | null>(null);
-  
+
   // Track current card in ref to avoid recreating debounced functions
   const cardRef = useRef(card);
   useEffect(() => {
@@ -95,7 +92,6 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
   useEffect(() => {
     // Initialize when card changes
     if (cardId && cardId !== lastCardIdRef.current && card) {
-      setTags(card.props.tags || []);
       setCreator(card.props.creator || "");
       setCardSummary(card.props.cardSummary || "");
       setVersion(card.props.version || "");
@@ -103,17 +99,19 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
       lastCardIdRef.current = cardId;
     }
     // Sync when card changes externally (but not during editing or cursor active) - only if values actually differ
-    else if (card && !isEditingTagsRef.current && !isEditingCreatorRef.current && 
-             !isEditingSummaryRef.current && !isEditingVersionRef.current && 
-             !isEditingOriginRef.current && !hasCursor) {
-      const newTags = card.props.tags || [];
+    else if (
+      card &&
+      !isEditingCreatorRef.current &&
+      !isEditingSummaryRef.current &&
+      !isEditingVersionRef.current &&
+      !isEditingOriginRef.current &&
+      !hasCursor
+    ) {
       const newCreator = card.props.creator || "";
       const newSummary = card.props.cardSummary || "";
       const newVersion = card.props.version || "";
       const newOrigin = card.props.conceptualOrigin || "";
-      
-      // Select result caching handles object stability
-      setTags(newTags);
+
       if (creator !== newCreator) {
         setCreator(newCreator);
       }
@@ -127,100 +125,127 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
         setConceptualOrigin(newOrigin);
       }
     }
-  }, [cardId, card, tags, creator, cardSummary, version, conceptualOrigin, hasCursor]);
+  }, [
+    cardId,
+    card,
+    creator,
+    cardSummary,
+    version,
+    conceptualOrigin,
+    hasCursor,
+  ]);
 
   // Debounced save using fine-grained mutations
   const debouncedSaveCreator = useMemo(
-    () => debounce((creator: string) => {
-      const card = cardRef.current;
-      if (!card) return;
-      const currentCreator = card.props.creator || "";
-      if (creator !== currentCreator) {
-        updateCreator.mutate(creator);
-      }
-    }, 300),
-    [updateCreator]
+    () =>
+      debounce((creator: string) => {
+        const card = cardRef.current;
+        if (!card) return;
+        const currentCreator = card.props.creator || "";
+        if (creator !== currentCreator) {
+          updateCreator.mutate(creator);
+        }
+      }, 300),
+    [updateCreator],
   );
 
   const debouncedSaveSummary = useMemo(
-    () => debounce((summary: string) => {
-      const card = cardRef.current;
-      if (!card) return;
-      const currentSummary = card.props.cardSummary || "";
-      if (summary !== currentSummary) {
-        updateSummary.mutate(summary);
-      }
-    }, 300),
-    [updateSummary]
+    () =>
+      debounce((summary: string) => {
+        const card = cardRef.current;
+        if (!card) return;
+        const currentSummary = card.props.cardSummary || "";
+        if (summary !== currentSummary) {
+          updateSummary.mutate(summary);
+        }
+      }, 300),
+    [updateSummary],
   );
 
   const debouncedSaveVersion = useMemo(
-    () => debounce((version: string) => {
-      const card = cardRef.current;
-      if (!card) return;
-      const currentVersion = card.props.version || "";
-      if (version !== currentVersion) {
-        updateVersion.mutate(version);
-      }
-    }, 300),
-    [updateVersion]
+    () =>
+      debounce((version: string) => {
+        const card = cardRef.current;
+        if (!card) return;
+        const currentVersion = card.props.version || "";
+        if (version !== currentVersion) {
+          updateVersion.mutate(version);
+        }
+      }, 300),
+    [updateVersion],
   );
 
   const debouncedSaveConceptualOrigin = useMemo(
-    () => debounce((origin: string) => {
-      const card = cardRef.current;
-      if (!card) return;
-      const currentOrigin = card.props.conceptualOrigin || "";
-      if (origin !== currentOrigin) {
-        updateConceptualOrigin.mutate(origin);
-      }
-    }, 300),
-    [updateConceptualOrigin]
+    () =>
+      debounce((origin: string) => {
+        const card = cardRef.current;
+        if (!card) return;
+        const currentOrigin = card.props.conceptualOrigin || "";
+        if (origin !== currentOrigin) {
+          updateConceptualOrigin.mutate(origin);
+        }
+      }, 300),
+    [updateConceptualOrigin],
   );
 
   // Change handlers for individual fields
-  const handleCreatorChange = useCallback((value: string) => {
-    setCreator(value);
-    debouncedSaveCreator(value);
-  }, [debouncedSaveCreator]);
+  const handleCreatorChange = useCallback(
+    (value: string) => {
+      setCreator(value);
+      debouncedSaveCreator(value);
+    },
+    [debouncedSaveCreator],
+  );
 
-  const handleCardSummaryChange = useCallback((value: string) => {
-    setCardSummary(value);
-    debouncedSaveSummary(value);
-  }, [debouncedSaveSummary]);
+  const handleCardSummaryChange = useCallback(
+    (value: string) => {
+      setCardSummary(value);
+      debouncedSaveSummary(value);
+    },
+    [debouncedSaveSummary],
+  );
 
-  const handleVersionChange = useCallback((value: string) => {
-    setVersion(value);
-    debouncedSaveVersion(value);
-  }, [debouncedSaveVersion]);
+  const handleVersionChange = useCallback(
+    (value: string) => {
+      setVersion(value);
+      debouncedSaveVersion(value);
+    },
+    [debouncedSaveVersion],
+  );
 
-  const handleConceptualOriginChange = useCallback((value: string) => {
-    setConceptualOrigin(value);
-    debouncedSaveConceptualOrigin(value);
-  }, [debouncedSaveConceptualOrigin]);
+  const handleConceptualOriginChange = useCallback(
+    (value: string) => {
+      setConceptualOrigin(value);
+      debouncedSaveConceptualOrigin(value);
+    },
+    [debouncedSaveConceptualOrigin],
+  );
 
   // Tag management functions
   const handleAddTag = useCallback(() => {
-    if (tags.length >= 5) {
+    const currentTags = card?.props.tags || [];
+    if (currentTags.length >= 5) {
       setTagError(true);
       return;
     }
 
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      const newTags = [...tags, newTag.trim()];
-      setTags(newTags);
+    if (newTag.trim() && !currentTags.includes(newTag.trim())) {
+      const newTags = [...currentTags, newTag.trim()];
       setNewTag("");
       setTagError(false);
       updateTags.mutate(newTags);
     }
-  }, [newTag, tags, updateTags]);
+  }, [newTag, card, updateTags]);
 
-  const handleRemoveTag = useCallback((tagToRemove: string) => {
-    const newTags = tags.filter(tag => tag !== tagToRemove);
-    setTags(newTags);
-    setTagError(false);
-    updateTags.mutate(newTags);
-  }, [tags, updateTags]);
+  const handleRemoveTag = useCallback(
+    (tagToRemove: string) => {
+      const currentTags = card?.props.tags || [];
+      const newTags = currentTags.filter((tag) => tag !== tagToRemove);
+      setTagError(false);
+      updateTags.mutate(newTags);
+    },
+    [card, updateTags],
+  );
 
   // 7. Early returns using abstraction components
   if (isLoading) {
@@ -233,16 +258,15 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
 
   // 8. Render
   return (
-    <div className="h-full w-full p-4 bg-background-surface-2 flex flex-col gap-4 overflow-auto relative">
-
+    <div className="bg-background-surface-2 relative flex h-full w-full flex-col gap-4 overflow-auto p-4">
       {/* Tags */}
-      <div className="self-stretch flex flex-col justify-start items-end gap-1">
-        <div className="self-stretch flex flex-col justify-center items-start gap-2">
-          <div className="justify-start text-text-body text-[10px] font-medium leading-none">
+      <div className="flex flex-col items-end justify-start gap-1 self-stretch">
+        <div className="flex flex-col items-start justify-center gap-2 self-stretch">
+          <div className="text-text-body justify-start text-[10px] leading-none font-medium">
             Tags
           </div>
-          <div className="self-stretch flex flex-col justify-start items-start gap-1">
-            <div className="self-stretch inline-flex justify-start items-center gap-1">
+          <div className="flex flex-col items-start justify-start gap-1 self-stretch">
+            <div className="inline-flex items-center justify-start gap-1 self-stretch">
               <Input
                 value={newTag}
                 onChange={(e) => {
@@ -253,7 +277,7 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
                 onFocus={() => updateTags.setCursorActive(true)}
                 onBlur={() => updateTags.setCursorActive(false)}
                 placeholder="Add a tag"
-                className={`flex-1 h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] ${
+                className={`bg-background-surface-0 h-8 flex-1 rounded-md px-4 py-2 outline-1 outline-offset-[-1px] ${
                   tagError
                     ? "outline-status-destructive"
                     : "outline-border-normal"
@@ -261,16 +285,16 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
               />
               <button
                 onClick={handleAddTag}
-                className="h-8 px-3 py-2 bg-background-surface-4 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-light flex justify-center items-center gap-2 cursor-pointer hover:bg-background-surface-3 transition-colors"
+                className="bg-background-surface-4 outline-border-light hover:bg-background-surface-3 flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
               >
-                <div className="justify-center text-text-primary text-xs font-semibold leading-none">
+                <div className="text-text-primary justify-center text-xs leading-none font-semibold">
                   Add
                 </div>
               </button>
             </div>
-            <div className="self-stretch px-4 inline-flex justify-center items-center gap-2">
+            <div className="inline-flex items-center justify-center gap-2 self-stretch px-4">
               <div
-                className={`flex-1 justify-start text-[10px] font-medium leading-none ${
+                className={`flex-1 justify-start text-[10px] leading-none font-medium ${
                   tagError ? "text-status-destructive" : "text-text-subtle"
                 }`}
               >
@@ -281,20 +305,20 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
             </div>
           </div>
         </div>
-        <div className="self-stretch inline-flex justify-start items-end gap-1 flex-wrap content-end">
-          {tags.map((tag, index) => (
+        <div className="inline-flex flex-wrap content-end items-end justify-start gap-1 self-stretch">
+          {(card.props.tags || []).map((tag, index) => (
             <div
               key={index}
-              className="px-2 py-1 bg-button-chips rounded-md flex justify-center items-center gap-2.5"
+              className="bg-button-chips flex items-center justify-center gap-2.5 rounded-md px-2 py-1"
             >
-              <div className="justify-start text-text-body text-xs font-normal">
+              <div className="text-text-body justify-start text-xs font-normal">
                 {tag}
               </div>
               <button
-                className="opacity-50 hover:opacity-100 transition-opacity cursor-pointer"
+                className="cursor-pointer opacity-50 transition-opacity hover:opacity-100"
                 onClick={() => handleRemoveTag(tag)}
               >
-                <X className="w-3 h-3 text-text-body" />
+                <X className="text-text-body h-3 w-3" />
               </button>
             </div>
           ))}
@@ -302,43 +326,43 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
       </div>
 
       {/* Creator */}
-      <div className="self-stretch flex flex-col justify-start items-start gap-2">
-        <div className="self-stretch inline-flex justify-start items-center gap-2">
-          <div className="justify-start text-text-body text-[10px] font-medium leading-none">
+      <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+        <div className="inline-flex items-center justify-start gap-2 self-stretch">
+          <div className="text-text-body justify-start text-[10px] leading-none font-medium">
             Creator
           </div>
         </div>
-        <div className="self-stretch flex flex-col justify-start items-start gap-1">
+        <div className="flex flex-col items-start justify-start gap-1 self-stretch">
           <Input
             value={creator}
             onChange={(e) => handleCreatorChange(e.target.value)}
             onFocus={() => updateCreator.setCursorActive(true)}
             onBlur={() => updateCreator.setCursorActive(false)}
             placeholder="Creator name"
-            className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+            className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
           />
         </div>
       </div>
 
       {/* Card Summary */}
-      <div className="self-stretch flex flex-col justify-start items-start gap-2">
-        <div className="self-stretch inline-flex justify-start items-center gap-2">
-          <div className="justify-start text-text-body text-[10px] font-medium leading-none">
+      <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+        <div className="inline-flex items-center justify-start gap-2 self-stretch">
+          <div className="text-text-body justify-start text-[10px] leading-none font-medium">
             Card summary
           </div>
         </div>
-        <div className="self-stretch flex flex-col justify-start items-start gap-1">
+        <div className="flex flex-col items-start justify-start gap-1 self-stretch">
           <Input
             value={cardSummary}
             onChange={(e) => handleCardSummaryChange(e.target.value)}
             onFocus={() => updateSummary.setCursorActive(true)}
             onBlur={() => updateSummary.setCursorActive(false)}
             placeholder="Brief summary of the card"
-            className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+            className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
             maxLength={40}
           />
-          <div className="self-stretch px-4 inline-flex justify-center items-center gap-2">
-            <div className="flex-1 text-right justify-start text-text-info text-[10px] font-medium leading-none">
+          <div className="inline-flex items-center justify-center gap-2 self-stretch px-4">
+            <div className="text-text-info flex-1 justify-start text-right text-[10px] leading-none font-medium">
               {cardSummary.length}/40
             </div>
           </div>
@@ -346,39 +370,39 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
       </div>
 
       {/* Version */}
-      <div className="self-stretch flex flex-col justify-start items-start gap-2">
-        <div className="self-stretch inline-flex justify-start items-center gap-2">
-          <div className="justify-start text-text-body text-[10px] font-medium leading-none">
+      <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+        <div className="inline-flex items-center justify-start gap-2 self-stretch">
+          <div className="text-text-body justify-start text-[10px] leading-none font-medium">
             Version
           </div>
         </div>
-        <div className="self-stretch flex flex-col justify-start items-start gap-1">
+        <div className="flex flex-col items-start justify-start gap-1 self-stretch">
           <Input
             value={version}
             onChange={(e) => handleVersionChange(e.target.value)}
             onFocus={() => updateVersion.setCursorActive(true)}
             onBlur={() => updateVersion.setCursorActive(false)}
             placeholder="e.g. V1"
-            className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+            className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
           />
         </div>
       </div>
 
       {/* Conceptual Origin */}
-      <div className="self-stretch flex flex-col justify-start items-start gap-2">
-        <div className="self-stretch inline-flex justify-start items-center gap-2">
-          <div className="justify-start text-text-body text-[10px] font-medium leading-none">
+      <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+        <div className="inline-flex items-center justify-start gap-2 self-stretch">
+          <div className="text-text-body justify-start text-[10px] leading-none font-medium">
             Conceptual origin
           </div>
         </div>
-        <div className="self-stretch flex flex-col justify-start items-start gap-1">
+        <div className="flex flex-col items-start justify-start gap-1 self-stretch">
           <Input
             value={conceptualOrigin}
             onChange={(e) => handleConceptualOriginChange(e.target.value)}
             onFocus={() => updateConceptualOrigin.setCursorActive(true)}
             onBlur={() => updateConceptualOrigin.setCursorActive(false)}
             placeholder="e.g. Book, Movie, Original, etc."
-            className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+            className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
           />
         </div>
       </div>

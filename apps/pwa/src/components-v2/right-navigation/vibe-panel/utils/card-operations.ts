@@ -1,9 +1,5 @@
-import {
-  EditableCharacterCard,
-  EditablePlotCard,
-} from "vibe-shared-types";
+import { EditableCharacterCard, EditablePlotCard } from "vibe-shared-types";
 import { Lorebook } from "@/modules/card/domain/lorebook";
-import { Entry } from "@/modules/card/domain/entry";
 import { CardService } from "@/app/services/card-service";
 import { Operation } from "@/utils/operation-processor";
 
@@ -275,11 +271,12 @@ export async function processCardOperations(
           errors.push(`Failed to update description: ${result.getError()}`);
         }
       } else if (operation.path.includes("character.example_dialogue")) {
-        const result =
-          await CardService.updateCharacterExampleDialogue.execute({
+        const result = await CardService.updateCharacterExampleDialogue.execute(
+          {
             cardId: resourceId,
             exampleDialogue: operation.value,
-          });
+          },
+        );
         if (!result.isSuccess) {
           errors.push(
             `Failed to update example dialogue: ${result.getError()}`,

@@ -1,11 +1,7 @@
 import { UniqueEntityID } from "@/shared/domain";
 
 // Import operation-based processing
-import {
-  applyOperations,
-  Operation,
-  OperationError,
-} from "@/utils/operation-processor";
+import { applyOperations, Operation } from "@/utils/operation-processor";
 import { CardService } from "@/app/services/card-service";
 
 // Import separated operation modules
@@ -56,7 +52,6 @@ export async function applyOperationsToResource(
   const errors: string[] = [];
 
   try {
-
     // Get the current resource data
     let currentResource: any;
 
@@ -118,17 +113,20 @@ export async function applyOperationsToResource(
       errors: operationErrors,
       successCount,
     } = await applyOperations(
-      currentResource, 
-      operations, 
-      resourceType === 'flow' ? resourceId : undefined // Pass resourceId as flowId for flow operations
+      currentResource,
+      operations,
+      resourceType === "flow" ? resourceId : undefined, // Pass resourceId as flowId for flow operations
     );
 
     // Process operations SEQUENTIALLY - one at a time to avoid timing issues
     // Skip operations that were successfully handled by the factory system
     if (resourceType === "flow") {
-      const operationsNeedingSequentialProcessing = operations.filter(op => {
+      const operationsNeedingSequentialProcessing = operations.filter((op) => {
         // Skip dataStoreNodes operations if factory processing was successful
-        if (op.path.startsWith("dataStoreNodes.") && operationErrors.length === 0) {
+        if (
+          op.path.startsWith("dataStoreNodes.") &&
+          operationErrors.length === 0
+        ) {
           return false;
         }
         // Skip ifNodes operations if factory processing was successful
@@ -137,10 +135,10 @@ export async function applyOperationsToResource(
         }
         return true;
       });
-      
+
       for (let i = 0; i < operationsNeedingSequentialProcessing.length; i++) {
         const operation = operationsNeedingSequentialProcessing[i];
-        
+
         try {
           // Route each operation to appropriate processor and wait for completion
           if (operation.path.startsWith("flow.")) {
@@ -172,11 +170,10 @@ export async function applyOperationsToResource(
             );
             errors.push(...operationErrors);
           }
-          
+
           // If there was an error with this operation, we could choose to:
           // - Continue with remaining operations (current behavior)
           // - Stop processing (add: if (errors.length > previousErrorCount) break;)
-          
         } catch (error) {
           const errorMessage = `Failed to process operation ${operation.path}: ${error}`;
           errors.push(errorMessage);
@@ -199,14 +196,19 @@ export async function applyOperationsToResource(
       // Direct service call logic commented out
     }
     */
-    
+
     // *** Standard query invalidation for all operations ***
     if (errors.length === 0 && resourceId && resourceType === "flow") {
       try {
-        const { invalidateSingleFlowQueries } = await import('@/flow-multi/utils/invalidate-flow-queries');
+        const { invalidateSingleFlowQueries } = await import(
+          "@/flow-multi/utils/invalidate-flow-queries"
+        );
         await invalidateSingleFlowQueries(resourceId);
       } catch (invalidationError) {
-        console.warn(`⚠️ [EDIT-MAPPERS] Query invalidation failed for resource ${resourceId}:`, invalidationError);
+        console.warn(
+          `⚠️ [EDIT-MAPPERS] Query invalidation failed for resource ${resourceId}:`,
+          invalidationError,
+        );
         // Don't fail the entire operation due to invalidation error
       }
     }

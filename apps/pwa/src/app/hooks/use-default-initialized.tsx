@@ -1,6 +1,4 @@
 import { ApiService } from "@/app/services";
-import { CardService } from "@/app/services/card-service";
-import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { fetchBackgrounds } from "@/app/stores/background-store";
@@ -22,7 +20,7 @@ export const plotFilePath = [
 
 export const useDefaultInitialized = () => {
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
-  
+
   const { data } = useQuery({
     queryKey: ["init-default", sessionOnboardingSteps.genreSelection],
     queryFn: async () => {
@@ -124,20 +122,29 @@ export const useDefaultInitialized = () => {
             "/default/session/dice_of_fate.astrsk.session",
             "/default/session/sakura_blooms,_hearts_awaken.astrsk.session",
           ];
-          
+
           for (const path of sessionFilePaths) {
             try {
               const response = await fetch(path);
-              const file = new File([await response.blob()], path.split('/').pop() || path, {
-                type: "application/octet-stream",
-              });
-              
-              const importResult = await SessionService.importSessionFromFile.execute({
-                file: file,
-                includeHistory: true,
-              });
+              const file = new File(
+                [await response.blob()],
+                path.split("/").pop() || path,
+                {
+                  type: "application/octet-stream",
+                },
+              );
+
+              const importResult =
+                await SessionService.importSessionFromFile.execute({
+                  file: file,
+                  includeHistory: true,
+                });
               if (importResult.isFailure) {
-                console.log("Failed to import session:", path, importResult.getError());
+                console.log(
+                  "Failed to import session:",
+                  path,
+                  importResult.getError(),
+                );
                 continue;
               }
             } catch (error) {
