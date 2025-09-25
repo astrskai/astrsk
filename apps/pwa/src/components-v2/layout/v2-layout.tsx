@@ -123,7 +123,7 @@ export function V2Layout({
       </>
     );
   }
-  // setIsLoading(false);
+  setIsLoading(false);
 
   if (isMobile) {
     return (

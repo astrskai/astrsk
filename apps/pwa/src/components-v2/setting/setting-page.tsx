@@ -32,7 +32,7 @@ const SettingsMain = () => {
   const { isLoaded: isLoadedSignUp, signUp } = useSignUp();
   const [isLoading, setIsLoading] = useState(false);
 
-  const signUpWithDiscord = useCallback(() => {
+  const signUpWithDiscord = useCallback(async () => {
     // Check sign up is loaded
     if (!isLoadedSignUp) {
       return;
@@ -47,7 +47,8 @@ const SettingsMain = () => {
     try {
       // Try to sign up with google
       setIsLoading(true);
-      signUp.authenticateWithRedirect({
+
+      await signUp.authenticateWithRedirect({
         strategy: "oauth_discord",
         redirectUrl: "/sso-callback",
         redirectUrlComplete: "/",
