@@ -7,6 +7,7 @@ import license from "rollup-plugin-license";
 import path from "path";
 import { version } from "./package.json";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import svgr from "vite-plugin-svgr";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -110,6 +111,9 @@ This project uses the following third-party software. The full text of each lice
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
+    }),
+    svgr({
+      include: "**/*.svg?react",
     }),
     tsconfigPaths(),
     tailwindcss(),
