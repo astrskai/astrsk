@@ -119,6 +119,7 @@ export default function CreateSessionPage({
   // Handle finish
   const { setActivePage } = useAppStore();
   const { selectSession } = useSessionStore();
+
   const handleFinish = useCallback(async () => {
     // Create session
     const formValues = methods.getValues();
@@ -154,6 +155,8 @@ export default function CreateSessionPage({
       queryKey: [TableName.Sessions],
     });
 
+    setActivePage(Page.Init);
+
     // Navigate to created session page
     navigate({
       to: "/sessions/$sessionId",
@@ -161,7 +164,7 @@ export default function CreateSessionPage({
     });
 
     return true;
-  }, [createSessionName, methods, selectSession, navigate]);
+  }, [createSessionName, methods, selectSession, navigate, setActivePage]);
 
   return (
     <FormProvider {...methods}>

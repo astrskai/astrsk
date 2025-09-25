@@ -80,7 +80,7 @@ const MobileSidebarContent = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "bg-[#2A313A] group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-xs",
+        "group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col bg-[#2A313A] group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-xs",
         className,
       )}
       data-sidebar="sidebar"
@@ -339,7 +339,7 @@ const Sidebar = React.forwardRef<
         />
         <div
           className={cn(
-            "absolute inset-y-0 z-30 h-[calc(100svh-var(--topbar-height))] w-(--sidebar-width) transition-[left,right,width] duration-300 ease-out flex",
+            "absolute inset-y-0 z-30 flex h-[calc(100svh-var(--topbar-height))] w-(--sidebar-width) transition-[left,right,width] duration-300 ease-out",
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -427,7 +427,7 @@ function SidebarOpenTrigger({
       }}
       ref={ref}
       position={side === "left" ? "top-left" : "top-right"}
-      icon={icon ?? <List className="min-w-[24px] min-h-[24px]" />}
+      icon={icon ?? <List className="min-h-[24px] min-w-[24px]" />}
       label={label}
       {...props}
     />
@@ -463,9 +463,9 @@ function SidebarCloseTrigger({
       icon={
         icon ??
         (side === "left" ? (
-          <ArrowLeftFromLine className="min-w-[24px] min-h-[24px]" />
+          <ArrowLeftFromLine className="min-h-[24px] min-w-[24px]" />
         ) : (
-          <ArrowRightFromLine className="min-w-[24px] min-h-[24px]" />
+          <ArrowRightFromLine className="min-h-[24px] min-w-[24px]" />
         ))
       }
       label={label}
@@ -531,7 +531,7 @@ const SidebarRail = React.forwardRef<
     <button
       aria-label="Toggle Sidebar"
       className={cn(
-        "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
+        "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "group-data-[collapsible=offcanvas]:hover:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
@@ -571,7 +571,7 @@ const SidebarInset = React.forwardRef<
     <main
       className={cn(
         "bg-background relative flex flex-1 flex-col overflow-hidden",
-        "peer-data-[variant=inset]:rounded-xl peer-data-[variant=inset]:shadow-xs",
+        "z-0 peer-data-[variant=inset]:rounded-xl peer-data-[variant=inset]:shadow-xs",
         className,
       )}
       ref={ref}
@@ -707,7 +707,7 @@ const SidebarGroupAction = React.forwardRef<
   return (
     <Comp
       className={cn(
-        "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground absolute right-3 top-3.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "group-data-[collapsible=icon]:hidden",
         className,
       )}
@@ -867,13 +867,13 @@ const SidebarMenuAction = React.forwardRef<
   return (
     <Comp
       className={cn(
-        "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer-hover/menu-button:text-sidebar-accent-foreground absolute right-1 top-1.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer-hover/menu-button:text-sidebar-accent-foreground absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "peer-data-[size=sm]/menu-button:top-1",
         "peer-data-[size=default]/menu-button:top-1.5",
         "peer-data-[size=lg]/menu-button:top-2.5",
         "group-data-[collapsible=icon]:hidden",
         showOnHover &&
-          "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 opacity-0",
+          "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground opacity-0 group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100",
         className,
       )}
       data-sidebar="menu-action"
@@ -890,7 +890,7 @@ const SidebarMenuBadge = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     className={cn(
-      "text-sidebar-foreground pointer-events-none absolute right-1 flex h-5 min-w-5 select-none items-center justify-center rounded-md px-1 text-xs font-medium tabular-nums",
+      "text-sidebar-foreground pointer-events-none absolute right-1 flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-medium tabular-nums select-none",
       "peer-hover/menu-button:text-sidebar-accent-foreground peer-data-[active=true]/menu-button:text-sidebar-accent-foreground",
       "peer-data-[size=sm]/menu-button:top-1",
       "peer-data-[size=default]/menu-button:top-1.5",
