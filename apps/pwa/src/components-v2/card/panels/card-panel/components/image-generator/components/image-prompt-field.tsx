@@ -26,10 +26,15 @@ export function ImagePromptField({
   // Track editing state in ref to avoid triggering effects
   const isEditingRef = useRef(updateImagePrompt.isEditing);
   const hasCursorRef = useRef(updateImagePrompt.hasCursor);
+  const lastSavedValueRef = useRef<string | null>(null);
 
   useEffect(() => {
     isEditingRef.current = updateImagePrompt.isEditing;
   }, [updateImagePrompt.isEditing]);
+
+  useEffect(() => {
+    hasCursorRef.current = updateImagePrompt.hasCursor;
+  }, [updateImagePrompt.hasCursor]);
 
   // Disable query refetching while editing or cursor is active
   const queryEnabled =
@@ -75,9 +80,14 @@ export function ImagePromptField({
     ) {
       const dbPrompt = card.props.imagePrompt || "";
       // Only update if the database value is different from local
-      if (dbPrompt !== localValue) {
+      // AND we didn't just save this value (avoid overwriting optimistic updates)
+      if (dbPrompt !== localValue && lastSavedValueRef.current !== localValue) {
         setLocalValue(dbPrompt);
         onChange(dbPrompt);
+      }
+      // Clear the last saved value if the database has caught up
+      if (dbPrompt === lastSavedValueRef.current) {
+        lastSavedValueRef.current = null;
       }
     }
   }, [cardId, card]); // Removed onChange and localValue from deps to prevent loops
@@ -93,6 +103,7 @@ export function ImagePromptField({
 
         // Only save if the value actually changed from what's in the card
         if (newValue !== currentPrompt) {
+          lastSavedValueRef.current = newValue;
           updateImagePrompt.mutate(newValue);
         }
       }, 500),
@@ -119,24 +130,24 @@ export function ImagePromptField({
   }, [updateImagePrompt]);
 
   return (
-    <div className="flex-1 flex flex-col justify-start items-start gap-2 min-h-0">
-      <div className="inline-flex justify-start items-center gap-2">
-        <div className="justify-start text-text-body text-[10px] font-medium leading-none">
+    <div className="flex min-h-0 flex-1 flex-col items-start justify-start gap-2">
+      <div className="inline-flex items-center justify-start gap-2">
+        <div className="text-text-body justify-start text-[10px] leading-none font-medium">
           Image prompt
         </div>
       </div>
-      <div className="flex-1 w-full flex flex-col justify-start items-start gap-1 min-h-0">
+      <div className="flex min-h-0 w-full flex-1 flex-col items-start justify-start gap-1">
         <Textarea
           value={localValue}
           onChange={handleChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder="Describe the image you want to generate..."
-          className="w-full flex-1 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal resize-none"
+          className="bg-background-surface-0 outline-border-normal text-text-primary w-full flex-1 resize-none rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
           disabled={disabled}
         />
-        <div className="w-full px-4 inline-flex justify-center items-center gap-2">
-          <div className="flex-1 justify-start text-text-info text-[10px] font-medium leading-none">
+        <div className="inline-flex w-full items-center justify-center gap-2 px-4">
+          <div className="text-text-info flex-1 justify-start text-[10px] leading-none font-medium">
             Describe appearance, style, setting, and mood
           </div>
         </div>

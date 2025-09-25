@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardType } from "@/modules/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
-import { CardService } from "@/app/services/card-service";
+import { useQuery } from "@tanstack/react-query";
+import { cardQueries } from "@/app/queries/card";
 import {
   DockviewReact,
   IDockviewPanelProps,
@@ -109,43 +110,21 @@ const MIN_GROUP_WIDTH = 384;
 
 // Custom hook for card loading
 const useCardLoader = (cardId: string) => {
-  const [card, setCard] = useState<Card | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use React Query to fetch card data
+  const {
+    data: card,
+    isLoading,
+    error,
+  } = useQuery({
+    ...cardQueries.detail(cardId),
+    enabled: !!cardId,
+  });
 
-  useEffect(() => {
-    const loadCard = async () => {
-      if (!cardId) {
-        setError("No card ID provided");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const result = await CardService.getCard.execute(
-          new UniqueEntityID(cardId),
-        );
-
-        if (result.isSuccess) {
-          const loadedCard = result.getValue();
-          setCard(loadedCard);
-        } else {
-          setError(`Failed to load card: ${result.getError()}`);
-        }
-      } catch (err) {
-        setError(`Error loading card: ${err}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadCard();
-  }, [cardId]);
-
-  return { card, isLoading, error };
+  return {
+    card: card || null,
+    isLoading,
+    error: error ? `Failed to load card: ${error}` : null,
+  };
 };
 
 // Custom hook for panel visibility management

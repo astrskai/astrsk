@@ -44,7 +44,9 @@ interface STPrompt {
   }[];
 }
 
-export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>> {
+export class ImportFlowWithNodes
+  implements UseCase<ImportCommand, Result<Flow>>
+{
   constructor(
     private saveFlowRepo: SaveFlowRepo,
     private saveAgentRepo: SaveAgentRepo,
@@ -69,17 +71,7 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
     const hasDataStoreNodes = data.dataStoreNodes !== undefined;
     const hasIfNodes = data.ifNodes !== undefined;
     const isEnhanced = hasDataStoreNodes || hasIfNodes;
-    
-    console.info('🔍 Enhanced Format Detection:', {
-      hasDataStoreNodes,
-      hasIfNodes,
-      isEnhanced,
-      dataStoreNodesType: typeof data.dataStoreNodes,
-      ifNodesType: typeof data.ifNodes,
-      dataStoreNodesKeys: hasDataStoreNodes ? Object.keys(data.dataStoreNodes) : 'N/A',
-      ifNodesKeys: hasIfNodes ? Object.keys(data.ifNodes) : 'N/A'
-    });
-    
+
     return isEnhanced;
   }
 
@@ -89,17 +81,7 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
     const noDataStoreNodes = data.dataStoreNodes === undefined;
     const noIfNodes = data.ifNodes === undefined;
     const isLegacy = hasAgents && noDataStoreNodes && noIfNodes;
-    
-    console.info('🔍 Legacy Format Detection:', {
-      hasAgents,
-      noDataStoreNodes,
-      noIfNodes,
-      isLegacy,
-      agentsType: typeof data.agents,
-      agentsKeys: hasAgents ? Object.keys(data.agents) : 'N/A',
-      topLevelKeys: Object.keys(data)
-    });
-    
+
     return isLegacy;
   }
 
@@ -112,35 +94,39 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
 
     // Create a map of prompts by identifier for easy lookup
     const promptMap = new Map();
-    prompt.prompts.forEach(p => {
+    prompt.prompts.forEach((p) => {
       promptMap.set(p.identifier, p);
     });
 
     // Filter and order prompts based on the order configuration
     const orderedPrompts = orderConfig.order
-      .filter(order => order.enabled && promptMap.has(order.identifier))
-      .map(order => promptMap.get(order.identifier))
-      .filter(p => p.content && p.content.trim() !== "");
+      .filter((order) => order.enabled && promptMap.has(order.identifier))
+      .map((order) => promptMap.get(order.identifier))
+      .filter((p) => p.content && p.content.trim() !== "");
 
     // Convert orderedPrompts to plain promptMessages with single text block
-    const promptMessages = orderedPrompts.map(p => ({
+    const promptMessages = orderedPrompts.map((p) => ({
       type: "plain",
       enabled: true,
       role: p.role || "user",
-      promptBlocks: [{
-        name: p.name || "Imported Block",
-        template: p.content,
-        isDeleteUnnecessaryCharacters: false,
-        type: "plain",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }],
+      promptBlocks: [
+        {
+          name: p.name || "Imported Block",
+          template: p.content,
+          isDeleteUnnecessaryCharacters: false,
+          type: "plain",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }));
 
     // Generate a clean name from filename
-    const baseName = filename.replace(/\.(json|st)$/i, "").replace(/[^a-zA-Z0-9\s_-]/g, "");
+    const baseName = filename
+      .replace(/\.(json|st)$/i, "")
+      .replace(/[^a-zA-Z0-9\s_-]/g, "");
     const flowName = baseName || "Imported SillyTavern Flow";
     const agentName = "New Agent";
     const agentId = `new_agent`;
@@ -164,7 +150,7 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
       tokenCount: 0,
       color: "#A5B4FC",
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     // Create flow structure with a single agent node
@@ -178,7 +164,7 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
           position: { x: 0, y: 0 },
           data: {},
           deletable: false,
-          zIndex: 1000
+          zIndex: 1000,
         },
         {
           id: "end",
@@ -186,7 +172,7 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
           position: { x: 870, y: 0 },
           data: {},
           deletable: false,
-          zIndex: 1000
+          zIndex: 1000,
         },
         {
           id: agentId,
@@ -200,49 +186,51 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
           id: "start-to-agent",
           source: "start",
           target: agentId,
-          label: ""
+          label: "",
         },
         {
           id: "agent-to-end",
           source: agentId,
           target: "end",
-          label: ""
-        }
+          label: "",
+        },
       ],
       responseTemplate: "{{new_agent.response}}",
       agents: {
-        [agentId]: agent
+        [agentId]: agent,
       },
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     return flow;
   }
 
-  private async importEnhancedFormat(data: any, agentModelOverrides?: Map<string, any>): Promise<Result<Flow>> {
+  private async importEnhancedFormat(
+    data: any,
+    agentModelOverrides?: Map<string, any>,
+  ): Promise<Result<Flow>> {
     try {
       // Enhanced format: extract separate node data while keeping flow structure
-      const { agents, dataStoreNodes, ifNodes, exportedAt, exportedBy, metadata, ...flowData } = data;
-      
-      console.info('🔧 Enhanced Format Import Started:', {
-        agentsCount: agents ? Object.keys(agents).length : 0,
-        dataStoreNodesCount: dataStoreNodes ? Object.keys(dataStoreNodes).length : 0,
-        ifNodesCount: ifNodes ? Object.keys(ifNodes).length : 0,
-        flowNodesCount: flowData.nodes ? flowData.nodes.length : 0,
+      const {
+        agents,
+        dataStoreNodes,
+        ifNodes,
         exportedAt,
-        exportedBy
-      });
+        exportedBy,
+        metadata,
+        ...flowData
+      } = data;
 
       // Create node ID mapping for all node types to prevent conflicts
       const nodeIdMap = new Map<string, string>();
       const agentIdMap = new Map<string, string>();
-      
+
       // Generate new UUIDs for all nodes to prevent conflicts
       for (const node of flowData.nodes) {
         const newNodeId = new UniqueEntityID().toString();
         nodeIdMap.set(node.id, newNodeId);
-        
+
         // For agent nodes, also track agent ID mapping
         if (node.type === NodeType.AGENT) {
           const oldAgentId = (node.data as any)?.agentId || node.id;
@@ -274,26 +262,36 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
         }
 
         // Create agent with new ID using the create method
-        const agentWithNewId = Agent.create(agent.getValue().props, new UniqueEntityID(newNodeId));
+        const agentWithNewId = Agent.create(
+          agent.getValue().props,
+          new UniqueEntityID(newNodeId),
+        );
         if (agentWithNewId.isSuccess) {
           await this.saveAgentRepo.saveAgent(agentWithNewId.getValue());
         }
       }
 
       // Import data store nodes with new IDs
-      for (const [oldNodeId, nodeData] of Object.entries(dataStoreNodes || {})) {
+      for (const [oldNodeId, nodeData] of Object.entries(
+        dataStoreNodes || {},
+      )) {
         const newNodeId = nodeIdMap.get(oldNodeId);
         if (!newNodeId) continue;
 
-        const dataStoreNode = DataStoreNode.create({
-          flowId: newFlowId,
-          name: (nodeData as any).name,
-          color: (nodeData as any).color,
-          dataStoreFields: (nodeData as any).dataStoreFields || [],
-        }, new UniqueEntityID(newNodeId));
+        const dataStoreNode = DataStoreNode.create(
+          {
+            flowId: newFlowId,
+            name: (nodeData as any).name,
+            color: (nodeData as any).color,
+            dataStoreFields: (nodeData as any).dataStoreFields || [],
+          },
+          new UniqueEntityID(newNodeId),
+        );
 
         if (dataStoreNode.isSuccess) {
-          await this.saveDataStoreNodeRepo.saveDataStoreNode(dataStoreNode.getValue());
+          await this.saveDataStoreNodeRepo.saveDataStoreNode(
+            dataStoreNode.getValue(),
+          );
         }
       }
 
@@ -302,13 +300,16 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
         const newNodeId = nodeIdMap.get(oldNodeId);
         if (!newNodeId) continue;
 
-        const ifNode = IfNode.create({
-          flowId: newFlowId,
-          name: (nodeData as any).name,
-          color: (nodeData as any).color,
-          logicOperator: (nodeData as any).logicOperator,
-          conditions: (nodeData as any).conditions || [],
-        }, new UniqueEntityID(newNodeId));
+        const ifNode = IfNode.create(
+          {
+            flowId: newFlowId,
+            name: (nodeData as any).name,
+            color: (nodeData as any).color,
+            logicOperator: (nodeData as any).logicOperator,
+            conditions: (nodeData as any).conditions || [],
+          },
+          new UniqueEntityID(newNodeId),
+        );
 
         if (ifNode.isSuccess) {
           await this.saveIfNodeRepo.saveIfNode(ifNode.getValue());
@@ -318,17 +319,17 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
       // Update flow nodes and edges with new IDs
       const newNodes = flowData.nodes.map((node: any) => {
         const newId = nodeIdMap.get(node.id) || node.id;
-        
+
         // For dataStore nodes, update the flowId in data if present
         let nodeData = {};
-        if (node.type === 'dataStore' && node.data && node.data.flowId) {
+        if (node.type === "dataStore" && node.data && node.data.flowId) {
           nodeData = { flowId: newFlowId };
         }
-        
+
         return {
           ...node,
           id: newId,
-          data: nodeData
+          data: nodeData,
         };
       });
 
@@ -338,8 +339,10 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
       let updatedPanelStructure = flowData.panelStructure;
       if (updatedPanelStructure) {
         // Deep clone to avoid mutations
-        updatedPanelStructure = JSON.parse(JSON.stringify(updatedPanelStructure));
-        
+        updatedPanelStructure = JSON.parse(
+          JSON.stringify(updatedPanelStructure),
+        );
+
         // Update flow IDs in panel metadata
         if (updatedPanelStructure.panelMetadata) {
           for (const key in updatedPanelStructure.panelMetadata) {
@@ -349,7 +352,7 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
             }
           }
         }
-        
+
         // Update flow IDs in serialized layout panels
         if (updatedPanelStructure.serializedLayout?.panels) {
           for (const key in updatedPanelStructure.serializedLayout.panels) {
@@ -362,41 +365,41 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
       }
 
       // Create and save flow
-      const flow = Flow.create({
-        ...flowData,
-        nodes: newNodes,
-        edges: newEdges,
-        panelStructure: updatedPanelStructure,
-      }, new UniqueEntityID(newFlowId));
+      const flow = Flow.create(
+        {
+          ...flowData,
+          nodes: newNodes,
+          edges: newEdges,
+          panelStructure: updatedPanelStructure,
+        },
+        new UniqueEntityID(newFlowId),
+      );
 
       if (flow.isFailure) {
         return Result.fail(flow.getError());
       }
 
       const savedFlow = await this.saveFlowRepo.saveFlow(flow.getValue());
-      
+
       if (savedFlow.isFailure) {
         return Result.fail(savedFlow.getError());
       }
-      
-      return savedFlow;
 
+      return savedFlow;
     } catch (error) {
-      return Result.fail(`Failed to import new format flow: ${error instanceof Error ? error.message : String(error)}`);
+      return Result.fail(
+        `Failed to import new format flow: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
-  private async importLegacyFormat(data: any, agentModelOverrides?: Map<string, any>): Promise<Result<Flow>> {
+  private async importLegacyFormat(
+    data: any,
+    agentModelOverrides?: Map<string, any>,
+  ): Promise<Result<Flow>> {
     try {
       // Use existing legacy import logic for current user flows
       const { agents, panelStructure, viewport, ...flowJson } = data;
-      
-      console.info('🔧 Legacy Format Import Started:', {
-        agentsCount: agents ? Object.keys(agents).length : 0,
-        flowNodesCount: flowJson.nodes ? flowJson.nodes.length : 0,
-        hasPanelStructure: !!panelStructure,
-        hasViewport: !!viewport
-      });
 
       // Import agent with new id
       const agentIdMap = new Map<string, string>();
@@ -411,17 +414,19 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
         // Override model
         if (agentModelOverrides && agentModelOverrides.has(oldId)) {
           const modelOverride = agentModelOverrides.get(oldId);
-          
+
           const updateResult = agent.update({
             apiSource: modelOverride?.apiSource as ApiSource,
             modelId: modelOverride?.modelId,
             modelName: modelOverride?.modelName,
           });
-          
+
           if (updateResult.isFailure) {
-            throw new Error(`Failed to update agent model: ${updateResult.getError()}`);
+            throw new Error(
+              `Failed to update agent model: ${updateResult.getError()}`,
+            );
           }
-          
+
           // Update the agent reference to use the updated version
           agent = updateResult.getValue();
         }
@@ -452,7 +457,7 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
             id: newId ?? node.id,
           };
         }
-        
+
         // For data store and if nodes, preserve the existing data in node.data
         // This handles the current embedded data structure
         return node;
@@ -479,20 +484,21 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
       }
 
       return savedFlowOrError;
-
     } catch (error) {
-      return Result.fail(`Failed to import legacy format flow: ${error instanceof Error ? error.message : String(error)}`);
+      return Result.fail(
+        `Failed to import legacy format flow: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   private remapEdgeIds(edges: any[], nodeIdMap: Map<string, string>): any[] {
-    return edges.map(edge => {
+    return edges.map((edge) => {
       const newSource = nodeIdMap.get(edge.source) || edge.source;
       const newTarget = nodeIdMap.get(edge.target) || edge.target;
-      
+
       // Generate new edge ID to prevent conflicts
       const newEdgeId = new UniqueEntityID().toString();
-      
+
       return {
         ...edge,
         id: newEdgeId,
@@ -502,45 +508,24 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
     });
   }
 
-  async execute({ file, agentModelOverrides }: ImportCommand): Promise<Result<Flow>> {
+  async execute({
+    file,
+    agentModelOverrides,
+  }: ImportCommand): Promise<Result<Flow>> {
     try {
       // Read file to string
       const text = await readFileToString(file);
-      console.info('📄 Import File Content Sample:', {
-        fileName: file.name,
-        fileSize: file.size,
-        contentLength: text.length,
-        contentSample: text.substring(0, 500) + '...',
-        hasDataStoreNodesInText: text.includes('"dataStoreNodes"'),
-        hasIfNodesInText: text.includes('"ifNodes"'),
-        hasExportedAtInText: text.includes('"exportedAt"')
-      });
 
       // Parse text to json
       let parsedData = JSON.parse(text);
 
-      // Debug: Log the parsed data structure immediately after JSON.parse
-      console.info('📋 Raw Parsed JSON Data Structure:', {
-        topLevelKeys: Object.keys(parsedData),
-        hasAgents: 'agents' in parsedData,
-        hasDataStoreNodes: 'dataStoreNodes' in parsedData,
-        hasIfNodes: 'ifNodes' in parsedData,
-        hasExportedAt: 'exportedAt' in parsedData,
-        hasExportedBy: 'exportedBy' in parsedData,
-        hasMetadata: 'metadata' in parsedData,
-        dataStoreNodesValue: parsedData.dataStoreNodes,
-        ifNodesValue: parsedData.ifNodes
-      });
-
       // Convert ST prompt
       if (this.isSillyTavernPrompt(parsedData)) {
-        console.info('🔄 Converting SillyTavern prompt format');
         parsedData = this.convertSillyTavernPrompt(parsedData, file.name);
       }
 
       // Check if this is old format and migrate if needed
       if (isOldFlowFormat(parsedData)) {
-        console.info('🔄 Migrating old flow format');
         const migrationResult = migrateFlowToNewFormat(parsedData);
         if (migrationResult.isFailure) {
           throw new Error(migrationResult.getError());
@@ -548,35 +533,21 @@ export class ImportFlowWithNodes implements UseCase<ImportCommand, Result<Flow>>
         parsedData = migrationResult.getValue();
       }
 
-      // Debug: Log the parsed data structure after all transformations
-      console.info('📋 Final Parsed Flow Data Structure:', {
-        topLevelKeys: Object.keys(parsedData),
-        hasAgents: 'agents' in parsedData,
-        hasDataStoreNodes: 'dataStoreNodes' in parsedData,
-        hasIfNodes: 'ifNodes' in parsedData,
-        hasExportedAt: 'exportedAt' in parsedData,
-        hasExportedBy: 'exportedBy' in parsedData,
-        hasMetadata: 'metadata' in parsedData,
-        dataStoreNodesValue: parsedData.dataStoreNodes,
-        ifNodesValue: parsedData.ifNodes
-      });
-
       // Route to appropriate import method based on format
       if (this.isEnhancedFormat(parsedData)) {
-        console.info('✅ Importing enhanced format flow with separate node data');
         return this.importEnhancedFormat(parsedData, agentModelOverrides);
       } else if (this.isLegacyFormat(parsedData)) {
-        console.info('✅ Importing legacy format flow (current user flows)');
         return this.importLegacyFormat(parsedData, agentModelOverrides);
       } else {
-        console.error('❌ Unknown flow format detected:', {
+        console.error("❌ Unknown flow format detected:", {
           isEnhanced: this.isEnhancedFormat(parsedData),
           isLegacy: this.isLegacyFormat(parsedData),
-          dataKeys: Object.keys(parsedData)
+          dataKeys: Object.keys(parsedData),
         });
-        return Result.fail('Unknown flow format. This file may be corrupted or from an unsupported version.');
+        return Result.fail(
+          "Unknown flow format. This file may be corrupted or from an unsupported version.",
+        );
       }
-
     } catch (error) {
       return Result.fail(
         `Failed to import flow from file: ${
