@@ -28,15 +28,10 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
   const updateConceptualOrigin = useUpdateCardConceptualOrigin(cardId);
 
   // Track editing state in refs to avoid triggering effects
-  const isEditingTagsRef = useRef(updateTags.isEditing);
   const isEditingCreatorRef = useRef(updateCreator.isEditing);
   const isEditingSummaryRef = useRef(updateSummary.isEditing);
   const isEditingVersionRef = useRef(updateVersion.isEditing);
   const isEditingOriginRef = useRef(updateConceptualOrigin.isEditing);
-
-  useEffect(() => {
-    isEditingTagsRef.current = updateTags.isEditing;
-  }, [updateTags.isEditing]);
 
   useEffect(() => {
     isEditingCreatorRef.current = updateCreator.isEditing;
@@ -56,13 +51,11 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
 
   // Load card data - disable refetching while editing or cursor is active
   const isAnyEditing =
-    updateTags.isEditing ||
     updateCreator.isEditing ||
     updateSummary.isEditing ||
     updateVersion.isEditing ||
     updateConceptualOrigin.isEditing;
   const hasCursor =
-    updateTags.hasCursor ||
     updateCreator.hasCursor ||
     updateSummary.hasCursor ||
     updateVersion.hasCursor ||
@@ -79,8 +72,7 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
   // UI state
   const [tagError, setTagError] = useState(false);
 
-  // Local form state
-  const [tags, setTags] = useState<string[]>([]);
+  // Local form state - removed tags state, will use card.props.tags directly
   const [creator, setCreator] = useState("");
   const [cardSummary, setCardSummary] = useState("");
   const [version, setVersion] = useState("");
@@ -100,7 +92,6 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
   useEffect(() => {
     // Initialize when card changes
     if (cardId && cardId !== lastCardIdRef.current && card) {
-      setTags(card.props.tags || []);
       setCreator(card.props.creator || "");
       setCardSummary(card.props.cardSummary || "");
       setVersion(card.props.version || "");
@@ -110,25 +101,17 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
     // Sync when card changes externally (but not during editing or cursor active) - only if values actually differ
     else if (
       card &&
-      !isEditingTagsRef.current &&
       !isEditingCreatorRef.current &&
       !isEditingSummaryRef.current &&
       !isEditingVersionRef.current &&
       !isEditingOriginRef.current &&
       !hasCursor
     ) {
-      const newTags = card.props.tags || [];
       const newCreator = card.props.creator || "";
       const newSummary = card.props.cardSummary || "";
       const newVersion = card.props.version || "";
       const newOrigin = card.props.conceptualOrigin || "";
 
-      // Select result caching handles object stability
-      // Only update tags if they actually changed (compare array contents)
-      const tagsChanged = JSON.stringify(tags) !== JSON.stringify(newTags);
-      if (tagsChanged) {
-        setTags(newTags);
-      }
       if (creator !== newCreator) {
         setCreator(newCreator);
       }
@@ -145,7 +128,6 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
   }, [
     cardId,
     card,
-    tags,
     creator,
     cardSummary,
     version,
@@ -241,28 +223,28 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
 
   // Tag management functions
   const handleAddTag = useCallback(() => {
-    if (tags.length >= 5) {
+    const currentTags = card?.props.tags || [];
+    if (currentTags.length >= 5) {
       setTagError(true);
       return;
     }
 
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      const newTags = [...tags, newTag.trim()];
-      setTags(newTags);
+    if (newTag.trim() && !currentTags.includes(newTag.trim())) {
+      const newTags = [...currentTags, newTag.trim()];
       setNewTag("");
       setTagError(false);
       updateTags.mutate(newTags);
     }
-  }, [newTag, tags, updateTags]);
+  }, [newTag, card, updateTags]);
 
   const handleRemoveTag = useCallback(
     (tagToRemove: string) => {
-      const newTags = tags.filter((tag) => tag !== tagToRemove);
-      setTags(newTags);
+      const currentTags = card?.props.tags || [];
+      const newTags = currentTags.filter((tag) => tag !== tagToRemove);
       setTagError(false);
       updateTags.mutate(newTags);
     },
-    [tags, updateTags],
+    [card, updateTags],
   );
 
   // 7. Early returns using abstraction components
@@ -324,7 +306,7 @@ export function MetadataPanel({ cardId }: MetadataPanelProps) {
           </div>
         </div>
         <div className="inline-flex flex-wrap content-end items-end justify-start gap-1 self-stretch">
-          {tags.map((tag, index) => (
+          {(card.props.tags || []).map((tag, index) => (
             <div
               key={index}
               className="bg-button-chips flex items-center justify-center gap-2.5 rounded-md px-2 py-1"
