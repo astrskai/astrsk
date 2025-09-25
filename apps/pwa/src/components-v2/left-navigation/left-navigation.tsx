@@ -1,6 +1,8 @@
 // TODO: apply color palette
 
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Page, useAppStore } from "@/app/stores/app-store";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { SidebarLeft, useSidebarLeft } from "@/components-v2/both-sidebar";
 import { ConvexReady } from "@/components-v2/convex-ready";
 import { HelpVideoDialog } from "@/components-v2/help-video-dialog";
@@ -26,7 +28,6 @@ import {
   PlayCircle,
   Settings,
 } from "lucide-react";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -101,7 +102,6 @@ const SectionHeader = ({
 
 const LeftNavigation = () => {
   const { setOpen, open } = useSidebarLeft();
-  const activePage = useAppStore.use.activePage();
   const setActivePage = useAppStore.use.setActivePage();
 
   // Scroll navigation
@@ -206,10 +206,7 @@ const LeftNavigation = () => {
           </ScrollArea>
 
           {/* Footer */}
-          <LeftNavigationFooter
-            activePage={activePage}
-            setActivePage={setActivePage}
-          />
+          <LeftNavigationFooter setActivePage={setActivePage} />
         </div>
       </SidebarLeft>
 
@@ -339,7 +336,6 @@ const LeftNavigationTrigger = () => {
 // Memoized sub-components to prevent unnecessary re-renders
 const LeftNavigationHeader = memo(
   ({
-    setActivePage,
     setClickCount,
     setOpen,
   }: {
@@ -347,10 +343,12 @@ const LeftNavigationHeader = memo(
     setClickCount: React.Dispatch<React.SetStateAction<number>>;
     setOpen: (open: boolean) => void;
   }) => {
+    const navigate = useNavigate();
+
     const handleLogoClick = useCallback(() => {
-      setActivePage(Page.Init);
+      navigate({ to: "/" });
       setClickCount((prev) => prev + 1);
-    }, [setActivePage, setClickCount]);
+    }, [navigate, setClickCount]);
 
     const handleCollapseClick = useCallback(() => {
       setOpen(false);
@@ -366,7 +364,7 @@ const LeftNavigationHeader = memo(
       >
         <button
           onClick={handleLogoClick}
-          className="flex flex-row items-center gap-2 transition-opacity hover:opacity-80"
+          className="flex cursor-pointer flex-row items-center gap-2 transition-opacity hover:opacity-80"
         >
           <SvgIcon name="astrsk_logo_full" width={68} height={16} />
           <div className="text-text-body text-[12px] leading-[15px] font-[400]">
@@ -414,22 +412,23 @@ const DocumentationButton = memo(() => {
 DocumentationButton.displayName = "DocumentationButton";
 
 const LeftNavigationFooter = memo(
-  ({
-    activePage,
-    setActivePage,
-  }: {
-    activePage: Page;
-    setActivePage: (page: Page) => void;
-  }) => {
+  ({ setActivePage }: { setActivePage: (page: Page) => void }) => {
     const subscribed = useAppStore.use.subscribed();
+    const location = useLocation();
+
+    const handleSubscribeClick = useCallback(() => {
+      setActivePage(Page.Subscribe);
+    }, [setActivePage]);
 
     const handleDocsClick = useCallback(() => {
       openInNewTab("https://docs.astrsk.ai/");
     }, []);
 
+    const navigate = useNavigate();
+
     const handleSettingsClick = useCallback(() => {
-      setActivePage(Page.Settings);
-    }, [setActivePage]);
+      navigate({ to: "/settings" });
+    }, [navigate]);
 
     return (
       <div
@@ -445,9 +444,7 @@ const LeftNavigationFooter = memo(
               <Button
                 size="sm"
                 className="bg-secondary-normal text-secondary-heavy font-[600]"
-                onClick={() => {
-                  setActivePage(Page.Subscribe);
-                }}
+                onClick={handleSubscribeClick}
               >
                 <SvgIcon name="astrsk_symbol_fit" size={12} />
                 Subscribe to astrsk+
@@ -466,7 +463,7 @@ const LeftNavigationFooter = memo(
             <UpdaterNew />
             <Tooltip>
               <TooltipTrigger asChild>
-                <button onClick={handleDocsClick}>
+                <button className="cursor-pointer" onClick={handleDocsClick}>
                   <Book size={20} />
                   <span className="sr-only">Docs</span>
                 </button>
@@ -477,8 +474,11 @@ const LeftNavigationFooter = memo(
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button onClick={handleSettingsClick}>
-                  {activePage === Page.Settings ? (
+                <button
+                  className="cursor-pointer"
+                  onClick={handleSettingsClick}
+                >
+                  {location.pathname.startsWith("/settings") ? (
                     <SvgIcon name="settings_solid" size={20} />
                   ) : (
                     <Settings size={20} />

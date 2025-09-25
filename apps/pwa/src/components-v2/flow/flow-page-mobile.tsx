@@ -17,7 +17,7 @@ import { useValidationStore } from "@/app/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { useQuery } from "@tanstack/react-query";
-import { useMobileNavigation } from "@/App";
+import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import { DeleteConfirm } from "@/components-v2/confirm";
 import { FlowDialog } from "@/components-v2/flow/flow-dialog";
 import { cn } from "@/components-v2/lib/utils";
@@ -79,36 +79,37 @@ const FlowListItemMobile = ({
   };
 
   const name = flow?.props?.name || "Unnamed Flow";
-  const agentCount = flow.props.nodes?.filter(node => node.type === 'agent').length || 0;
+  const agentCount =
+    flow.props.nodes?.filter((node) => node.type === "agent").length || 0;
 
   return (
     <div
       onClick={handleClick}
       className={cn(
-        "w-full py-[16px] bg-background-surface-2 text-left transition-colors flex items-center cursor-pointer",
+        "bg-background-surface-2 flex w-full cursor-pointer items-center py-[16px] text-left transition-colors",
         "hover:bg-background-card-hover active:bg-background-card-hover",
         isActive && !isSelectionMode && "bg-background-card-hover",
         isSelected && "bg-background-card",
-        isInvalid && "border-l-4 border-status-destructive-light",
+        isInvalid && "border-status-destructive-light border-l-4",
       )}
     >
       {/* Checkbox for selection mode */}
-      <div className="flex flex-col items-start h-full pl-[16px]">
+      <div className="flex h-full flex-col items-start pl-[16px]">
         {isSelectionMode && (
-            <CheckboxMobile
-              checked={isSelected}
-              onCheckedChange={() => onToggleSelection?.()}
-              onClick={(e) => e.stopPropagation()}
-            />
+          <CheckboxMobile
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelection?.()}
+            onClick={(e) => e.stopPropagation()}
+          />
         )}
       </div>
 
-      <div className="flex-1 px-[8px] min-w-0 pr-[24px]">
-        <div className="w-full flex items-center justify-between gap-2">
-          <div className="text-text-primary text-base font-semibold leading-relaxed truncate min-w-0">
+      <div className="min-w-0 flex-1 px-[8px] pr-[24px]">
+        <div className="flex w-full items-center justify-between gap-2">
+          <div className="text-text-primary min-w-0 truncate text-base leading-relaxed font-semibold">
             {name}
           </div>
-          <div className="text-text-body text-xs font-medium whitespace-nowrap flex-shrink-0">
+          <div className="text-text-body flex-shrink-0 text-xs font-medium whitespace-nowrap">
             {agentCount} Agent{agentCount !== 1 ? "s" : ""}
           </div>
         </div>
@@ -117,11 +118,7 @@ const FlowListItemMobile = ({
   );
 };
 
-export default function FlowPageMobile({
-  className,
-}: {
-  className?: string;
-}) {
+export default function FlowPageMobile({ className }: { className?: string }) {
   const { setIsOpen } = useMobileNavigation();
   const [keyword, setKeyword] = useState<string>("");
   const selectedFlowId = useAgentStore.use.selectedFlowId();
@@ -175,17 +172,18 @@ export default function FlowPageMobile({
 
   const { data: flows, invalidate } = useFlows({ keyword });
   const { setInvalid } = useValidationStore();
-  
+
   // Get selected flow data
   const { data: selectedFlow } = useQuery({
-    ...flowQueries.detail(selectedFlowId ? new UniqueEntityID(selectedFlowId) : undefined),
+    ...flowQueries.detail(
+      selectedFlowId ? new UniqueEntityID(selectedFlowId) : undefined,
+    ),
     enabled: !!selectedFlowId,
   });
 
   const filteredFlows = flows?.filter((flow: any) =>
     flow?.props?.name?.toLowerCase().includes(keyword.toLowerCase()),
   );
-
 
   // Selection mode functions
   const exitSelectionMode = useCallback(() => {
@@ -261,7 +259,9 @@ export default function FlowPageMobile({
         const newAgents = new Map();
 
         try {
-          const agentNodes = flow.props.nodes.filter((node: Node) => node.type === 'agent');
+          const agentNodes = flow.props.nodes.filter(
+            (node: Node) => node.type === "agent",
+          );
           for (const node of agentNodes) {
             const resultOrError = await AgentService.cloneAgent.execute(
               new UniqueEntityID(node.id),
@@ -281,9 +281,11 @@ export default function FlowPageMobile({
         }
 
         // Update flow nodes with new agent IDs
-        const updatedNodes = newFlow.props.nodes.map(node => {
-          if (node.type === 'agent') {
-            const agentId = Array.from(newAgents.keys()).find(id => newAgents.get(id));
+        const updatedNodes = newFlow.props.nodes.map((node) => {
+          if (node.type === "agent") {
+            const agentId = Array.from(newAgents.keys()).find((id) =>
+              newAgents.get(id),
+            );
             if (agentId) {
               return { ...node, id: agentId };
             }
@@ -306,7 +308,9 @@ export default function FlowPageMobile({
         if (!flow) continue;
 
         // Delete agents first
-        const agentNodes = flow.props.nodes.filter((node: any) => node.type === 'agent');
+        const agentNodes = flow.props.nodes.filter(
+          (node: any) => node.type === "agent",
+        );
         for (const node of agentNodes) {
           const resultOrError = await AgentService.deleteAgent.execute(
             new UniqueEntityID(node.id),
@@ -423,12 +427,12 @@ export default function FlowPageMobile({
           return;
         }
 
-
-        const importedFlowOrError = await FlowService.importFlowFromFile.execute({
-          file,
-          agentModelOverrides:
-            agentModelOverrides.size > 0 ? agentModelOverrides : undefined,
-        });
+        const importedFlowOrError =
+          await FlowService.importFlowFromFile.execute({
+            file,
+            agentModelOverrides:
+              agentModelOverrides.size > 0 ? agentModelOverrides : undefined,
+          });
         if (importedFlowOrError.isFailure) {
           toast.error(
             `Failed to import flow from file: ${importedFlowOrError.getError()}`,
@@ -441,7 +445,7 @@ export default function FlowPageMobile({
         await queryClient.invalidateQueries({
           queryKey: flowQueries.lists(),
         });
-        
+
         await FlowService.saveFlow.execute(importedFlow);
 
         toast.success("Flow imported successfully!");
@@ -477,7 +481,7 @@ export default function FlowPageMobile({
         throw new Error(flowOrError.getError());
       }
       const flow = flowOrError.getValue();
-      
+
       // Update flow name if provided
       if (props.name && props.name !== "New Flow") {
         const updatedFlowOrError = flow.update({ name: props.name });
@@ -485,7 +489,7 @@ export default function FlowPageMobile({
           await FlowService.saveFlow.execute(updatedFlowOrError.getValue());
         }
       }
-      
+
       selectFlowId(flow.id.toString());
       queryClient.invalidateQueries({
         queryKey: [TableName.Flows],
@@ -493,7 +497,9 @@ export default function FlowPageMobile({
       setDialogOpen(false);
       toast.success("Flow created successfully");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create flow");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create flow",
+      );
     } finally {
       setDialogLoading(false);
     }
@@ -544,8 +550,8 @@ export default function FlowPageMobile({
   }, [isDragging, currentY, dragStartY]);
 
   return (
-    <div className={cn("flex flex-col h-dvh bg-background-screen", className)}>
-      <div className="flex flex-col h-full bg-background-surface-2">
+    <div className={cn("bg-background-screen flex h-dvh flex-col", className)}>
+      <div className="bg-background-surface-2 flex h-full flex-col">
         {/* Mobile Header */}
         <TopNavigation
           title={
@@ -610,7 +616,7 @@ export default function FlowPageMobile({
         />
 
         {/* Search and Create */}
-        <div className="px-4 pt-2 pb-4 space-y-4 bg-background-surface-2">
+        <div className="bg-background-surface-2 space-y-4 px-4 pt-2 pb-4">
           <SearchInput
             variant="mobile"
             value={keyword}
@@ -622,18 +628,18 @@ export default function FlowPageMobile({
         </div>
 
         {/* Flow List */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-background-surface-2">
+        <div className="bg-background-surface-2 flex-1 overflow-x-hidden overflow-y-auto">
           <div className="pb-4">
             {!filteredFlows || filteredFlows.length === 0 ? (
-              <div className="absolute inset-x-0 top-[35%] -translate-y-1/2 flex items-center justify-center h-[400px]">
-                <div className="w-80 inline-flex flex-col justify-start items-center gap-8">
-                  <div className="flex flex-col justify-start items-center gap-4">
-                    <div className="text-center justify-start text-text-body text-xl font-semibold">
+              <div className="absolute inset-x-0 top-[35%] flex h-[400px] -translate-y-1/2 items-center justify-center">
+                <div className="inline-flex w-80 flex-col items-center justify-start gap-8">
+                  <div className="flex flex-col items-center justify-start gap-4">
+                    <div className="text-text-body justify-start text-center text-xl font-semibold">
                       {keyword
                         ? `No results for '${keyword}'`
                         : "No flows available"}
                     </div>
-                    <div className="self-stretch text-center justify-start text-background-surface-5 text-base font-medium leading-relaxed">
+                    <div className="text-background-surface-5 justify-start self-stretch text-center text-base leading-relaxed font-medium">
                       {keyword ? (
                         <>
                           Try a different name or keyword to
@@ -666,12 +672,12 @@ export default function FlowPageMobile({
                       onSelect={() => setIsMobileEditDialogOpen(true)}
                     />
                     {index < filteredFlows.length - 1 && (
-                      <div className="border-b border-border-dark mx-[16px]" />
+                      <div className="border-border-dark mx-[16px] border-b" />
                     )}
                   </div>
                 ))}
                 {/* Bottom divider */}
-                <div className="border-b border-border-dark mx-[16px]" />
+                <div className="border-border-dark mx-[16px] border-b" />
               </div>
             )}
           </div>
@@ -693,34 +699,34 @@ export default function FlowPageMobile({
         <div
           ref={drawerRef}
           className={cn(
-            "fixed bottom-0 left-0 right-0 z-50",
+            "fixed right-0 bottom-0 left-0 z-50",
             "bg-background-surface-2 rounded-t-xl",
-            "h-[90vh] flex flex-col",
+            "flex h-[90vh] flex-col",
             "transform transition-transform duration-300 ease-in-out",
             isOpenImportFlowPopup ? "translate-y-0" : "translate-y-full",
           )}
         >
           {/* Handle for dragging */}
           <div
-            className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+            className="flex cursor-grab justify-center pt-3 pb-2 active:cursor-grabbing"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            <div className="h-1.5 w-12 rounded-full bg-gray-300" />
           </div>
 
           <div className="px-6 pb-4">
-            <h1 className="text-xl font-semibold text-left">Import flow</h1>
+            <h1 className="text-left text-xl font-semibold">Import flow</h1>
           </div>
 
           {/* Content */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto px-6">
               {importingFile === null ? (
-                <div className="flex-1 flex items-center justify-center min-h-[400px]">
+                <div className="flex min-h-[400px] flex-1 items-center justify-center">
                   <div
-                    className="border-dashed border-2 border-border-container bg-background-card hover:bg-background-input rounded-2xl flex flex-col justify-center items-center p-8 cursor-pointer w-full max-w-md"
+                    className="border-border-container bg-background-card hover:bg-background-input flex w-full max-w-md cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8"
                     onClick={() => refImportFileInput.current?.click()}
                     onDragOver={(e) => {
                       e.preventDefault();
@@ -740,7 +746,7 @@ export default function FlowPageMobile({
                     <TypoBase className="text-text-input-subtitle text-center">
                       Choose a file or drag it here
                     </TypoBase>
-                    <TypoBase className="text-xs text-text-input-subtitle text-center mt-2">
+                    <TypoBase className="text-text-input-subtitle mt-2 text-center text-xs">
                       Importing a flow will create a new flow with all its
                       agents.
                     </TypoBase>
@@ -748,14 +754,14 @@ export default function FlowPageMobile({
                 </div>
               ) : (
                 <div className="flex flex-col gap-6 pb-4">
-                  <div className="flex items-center gap-2 p-3 bg-background-card rounded text-text-primary border border-border-container">
+                  <div className="bg-background-card text-text-primary border-border-container flex items-center gap-2 rounded border p-3">
                     <SvgIcon
                       name="agents"
                       size={20}
                       className="flex-shrink-0"
                     />
                     <div className="w-full min-w-0">
-                      <div className="text-base text-text-primary truncate">
+                      <div className="text-text-primary truncate text-base">
                         {importingFile.name} (
                         {humanizeBytes(importingFile.size)})
                       </div>
@@ -764,29 +770,29 @@ export default function FlowPageMobile({
 
                   {agentModels.length > 0 && (
                     <div className="flex flex-col gap-4">
-                      <ScrollArea className="w-full h-full">
+                      <ScrollArea className="h-full w-full">
                         <div className="flex flex-col gap-4">
                           {agentModels.map((agent) => (
                             <div
                               key={agent.agentId}
-                              className="p-4 bg-background-surface-3 rounded inline-flex flex-col justify-start items-start gap-2"
+                              className="bg-background-surface-3 inline-flex flex-col items-start justify-start gap-2 rounded p-4"
                             >
-                              <div className="self-stretch flex flex-col justify-start items-start gap-4">
-                                <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                                  <div className="self-stretch justify-start text-text-subtle text-base font-normal leading-relaxed">
+                              <div className="flex flex-col items-start justify-start gap-4 self-stretch">
+                                <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+                                  <div className="text-text-subtle justify-start self-stretch text-base leading-relaxed font-normal">
                                     Agent : {agent.agentName}
                                   </div>
                                 </div>
-                                <div className="self-stretch h-11 flex flex-col justify-start items-start gap-2">
-                                  <div className="self-stretch flex-1 justify-start text-text-subtle text-base font-normal leading-relaxed">
+                                <div className="flex h-11 flex-col items-start justify-start gap-2 self-stretch">
+                                  <div className="text-text-subtle flex-1 justify-start self-stretch text-base leading-relaxed font-normal">
                                     Flow original model
                                   </div>
-                                  <div className="self-stretch flex-1 justify-start text-text-primary text-base font-normal leading-relaxed">
+                                  <div className="text-text-primary flex-1 justify-start self-stretch text-base leading-relaxed font-normal">
                                     {agent.modelName || "No model"}
                                   </div>
                                 </div>
-                                <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                                  <div className="self-stretch justify-start text-text-subtle text-base font-medium leading-relaxed">
+                                <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+                                  <div className="text-text-subtle justify-start self-stretch text-base leading-relaxed font-medium">
                                     Select model to connect
                                   </div>
                                   <div className="self-stretch">
@@ -825,7 +831,7 @@ export default function FlowPageMobile({
             </div>
 
             {/* Footer */}
-            <div className="px-6 pt-6 pb-6 bg-background-surface-2">
+            <div className="bg-background-surface-2 px-6 pt-6 pb-6">
               <div className="flex flex-col items-center gap-6">
                 {importingFile && (
                   <Button

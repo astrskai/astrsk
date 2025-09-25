@@ -34,15 +34,17 @@ import { ImagePromptField } from "./image-generator/components/image-prompt-fiel
 import { useVideoGeneration } from "./image-generator/hooks/use-video-generation";
 import { useImageGeneration } from "./image-generator/hooks/use-image-generation";
 import { enhancePromptWithCardContext } from "./image-generator/utils";
+import { useLocation } from "@tanstack/react-router";
 
 export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
   // Card data hook
   const { card } = useCardPanel({ cardId });
 
+  const location = useLocation();
+
   // Get app state for resource gathering
-  const activePage = useAppStore((state) => state.activePage);
   const generatingImageId = useAppStore((state) => state.generatingImageId);
-  const isCardPage = activePage === Page.Cards || activePage === Page.CardPanel;
+  const isCardPage = location.pathname.includes("/cards/");
 
   // Resource data gathering (same pattern as AI panel)
   const { selectedCard } = useResourceData({
@@ -325,7 +327,7 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
   }
 
   return (
-    <div className="h-full w-full p-4 bg-background-surface-2 flex flex-col gap-4">
+    <div className="bg-background-surface-2 flex h-full w-full flex-col gap-4 p-4">
       {/* Dynamic Prompt Section */}
       <div className={`${promptSectionClass} flex flex-col gap-4`}>
         {/* Image Prompt */}
@@ -354,8 +356,8 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
         {/* Duration Slider - Show only for Seedance models */}
         {(selectedModel === IMAGE_MODELS.SEEDANCE_1_0 ||
           selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0) && (
-          <div className="flex flex-col gap-3 flex-shrink-0">
-            <label className="text-sm font-medium text-text-primary">
+          <div className="flex flex-shrink-0 flex-col gap-3">
+            <label className="text-text-primary text-sm font-medium">
               Duration
             </label>
             <Slider
@@ -370,10 +372,10 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
         )}
 
         {/* Model Selection */}
-        <div className="flex flex-col gap-2 flex-shrink-0">
-          <label className="text-sm font-medium text-text-primary">Model</label>
+        <div className="flex flex-shrink-0 flex-col gap-2">
+          <label className="text-text-primary text-sm font-medium">Model</label>
           <Select value={selectedModel} onValueChange={setSelectedModel}>
-            <SelectTrigger className="h-9 bg-background-surface-0 border-border-normal">
+            <SelectTrigger className="bg-background-surface-0 border-border-normal h-9">
               <SelectValue placeholder="Select a model" />
             </SelectTrigger>
             <SelectContent side="top">
@@ -394,7 +396,7 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex flex-shrink-0 gap-2">
           <Button
             onClick={handleGenerateImage}
             disabled={isGenerating || !imagePrompt.trim()}
@@ -402,7 +404,7 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
             variant="secondary"
             size="lg"
           >
-            <Sparkles className="w-4 h-4 mr-2" />
+            <Sparkles className="mr-2 h-4 w-4" />
             {isGenerating
               ? "Generating..."
               : selectedModel === IMAGE_MODELS.SEEDANCE_1_0 ||
@@ -434,21 +436,21 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
         style={imagesSectionStyle}
       >
         {isLoading ? (
-          <div className="flex items-center justify-center h-32">
-            <Loader2 className="w-6 h-6 animate-spin text-text-subtle" />
-            <span className="ml-2 text-text-subtle text-sm">
+          <div className="flex h-32 items-center justify-center">
+            <Loader2 className="text-text-subtle h-6 w-6 animate-spin" />
+            <span className="text-text-subtle ml-2 text-sm">
               Loading images...
             </span>
           </div>
         ) : (
           <ScrollArea className="h-full w-full">
-            <div className="flex flex-wrap gap-0 h-fit justify-start">
+            <div className="flex h-fit flex-wrap justify-start gap-0">
               {/* Loading placeholder when generating */}
               {isGenerating && (
-                <div className="w-16 h-32 relative">
-                  <div className="w-16 h-32 left-0 top-[-0.25px] absolute bg-background-surface-4"></div>
-                  <div className="w-6 h-6 left-[23.25px] top-[53.25px] absolute overflow-hidden">
-                    <Loader2 className="w-4 h-4 left-[3px] top-[3px] absolute animate-spin text-text-primary" />
+                <div className="relative h-32 w-16">
+                  <div className="bg-background-surface-4 absolute top-[-0.25px] left-0 h-32 w-16"></div>
+                  <div className="absolute top-[53.25px] left-[23.25px] h-6 w-6 overflow-hidden">
+                    <Loader2 className="text-text-primary absolute top-[3px] left-[3px] h-4 w-4 animate-spin" />
                   </div>
                 </div>
               )}

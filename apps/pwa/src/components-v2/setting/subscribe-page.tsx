@@ -140,7 +140,7 @@ const SubscribePage = () => {
     >
       {/* Close */}
       <button
-        className="text-text-subtle absolute top-[34px] right-[40px] z-50"
+        className="text-text-subtle absolute top-[34px] right-[40px] z-50 cursor-pointer"
         onClick={() => {
           backToReturnPage();
         }}

@@ -1883,27 +1883,27 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   if (!flow) {
     return (
-      <div className="h-full w-full p-4 text-text-subtle bg-background-surface-2">
+      <div className="text-text-subtle bg-background-surface-2 h-full w-full p-4">
         Flow not found
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="h-full w-full relative">
+    <div ref={containerRef} className="relative h-full w-full">
       {/* Header section with flow name */}
-      <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-4">
+      <div className="absolute top-4 right-4 left-4 z-10 flex flex-col gap-4">
         {/* Flow header - conditional left margin */}
         <div
           className={cn(
-            "px-4 py-2 bg-background-surface-3 rounded-lg inline-flex justify-start items-center gap-2 transition-all duration-200",
+            "bg-background-surface-3 inline-flex items-center justify-start gap-2 rounded-lg px-4 py-2 transition-all duration-200",
             {
               "ml-0": isMobile || isExpanded, // Normal left margin when mobile or navigation expanded
               "ml-12": !isMobile && !isExpanded, // Larger left margin when navigation collapsed
             },
           )}
         >
-          <div className="flex justify-start items-center gap-2 min-w-0 flex-1">
+          <div className="flex min-w-0 flex-1 items-center justify-start gap-2">
             <div className="text-text-body text-xs font-normal whitespace-nowrap">
               Flow name
             </div>
@@ -1917,7 +1917,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                     if (e.key === "Enter") handleSaveTitle();
                     if (e.key === "Escape") handleCancelEdit();
                   }}
-                  className="text-text-primary text-xs font-semibold bg-transparent outline-none min-w-[80px] max-w-full"
+                  className="text-text-primary max-w-full min-w-[80px] bg-transparent text-xs font-semibold outline-none"
                   style={{
                     width: `${Math.max(editedTitle.length * 6 + 16, 80)}px`,
                   }}
@@ -1926,20 +1926,20 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 <button
                   onClick={handleSaveTitle}
                   disabled={isSavingTitle}
-                  className="p-1 hover:bg-background-surface-4 rounded transition-colors flex-shrink-0"
+                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <Check className="w-3 h-3 text-status-success" />
+                  <Check className="text-status-success h-3 w-3" />
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="p-1 hover:bg-background-surface-4 rounded transition-colors flex-shrink-0"
+                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="h-3 w-3" />
                 </button>
               </>
             ) : (
               <>
-                <div className="text-text-primary text-xs font-semibold truncate">
+                <div className="text-text-primary truncate text-xs font-semibold">
                   {flow.props.name || "Untitled Flow"}
                 </div>
                 <button
@@ -1947,20 +1947,20 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                     setEditedTitle(flow.props.name || "");
                     setIsEditingTitle(true);
                   }}
-                  className="p-1 hover:bg-background-surface-4 rounded transition-colors flex-shrink-0"
+                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <Pencil className="w-3 h-3 text-text-subtle hover:text-text-primary transition-colors" />
+                  <Pencil className="text-text-subtle hover:text-text-primary h-3 w-3 transition-colors" />
                 </button>
               </>
             )}
           </div>
 
           {/* Select preview session */}
-          <div className="flex flex-row gap-2 items-center">
+          <div className="flex flex-row items-center gap-2">
             <TooltipProvider>
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <HelpCircle className="w-4 h-4 text-text-info cursor-help" />
+                  <HelpCircle className="text-text-info min-h-4 min-w-4 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent variant="button" side="bottom">
                   <p className="max-w-xs text-xs">
@@ -1975,7 +1975,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               value={previewSessionId || "none"}
               onValueChange={handleSessionChange}
             >
-              <SelectTrigger className="w-[242px] min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal">
+              <SelectTrigger className="bg-background-surface-0 outline-border-normal min-h-8 w-[242px] rounded-md px-4 py-2 outline-1 outline-offset-[-1px]">
                 <SelectValue placeholder="Select session" />
               </SelectTrigger>
               <SelectContent>
@@ -2005,7 +2005,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         </div>
 
         {/* Flow panel buttons - new layout */}
-        <div className="w-full flex justify-between items-start gap-2">
+        <div className="flex w-full items-start justify-between gap-2">
           {/* Left side buttons */}
           <div className="flex flex-wrap gap-2">
             {/* Agent button - creates agent node directly */}
@@ -2025,13 +2025,13 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               <DropdownMenuContent
                 align="center"
                 sideOffset={16}
-                className="!min-w-[92px] !w-[92px] p-0 rounded-lg overflow-hidden"
+                className="!w-[92px] !min-w-[92px] overflow-hidden rounded-lg p-0"
               >
                 <button
                   onClick={() => openPanel(PANEL_TYPES.DATA_STORE_SCHEMA)}
-                  className="w-[92px] h-[31px] bg-background-surface-4 border-b border-border-normal inline-flex justify-center items-center hover:bg-background-surface-5 transition-colors"
+                  className="bg-background-surface-4 border-border-normal hover:bg-background-surface-5 inline-flex h-[31px] w-[92px] items-center justify-center border-b transition-colors"
                 >
-                  <div className="text-center text-text-primary text-xs font-normal whitespace-nowrap">
+                  <div className="text-text-primary text-center text-xs font-normal whitespace-nowrap">
                     Schema
                   </div>
                 </button>
@@ -2060,7 +2060,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               <DropdownMenuContent
                 align="center"
                 sideOffset={16}
-                className="!min-w-[92px] !w-[92px] p-0 rounded-lg overflow-hidden"
+                className="!w-[92px] !min-w-[92px] overflow-hidden rounded-lg p-0"
               >
                 <NodeSelectionMenuItems
                   onSelectNodeType={(type) => {
@@ -2076,7 +2076,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           </div>
 
           {/* Right side buttons */}
-          <div className="flex flex-wrap gap-2 justify-end">
+          <div className="flex flex-wrap justify-end gap-2">
             <ButtonPill
               size="default"
               icon={<BookOpen />}
@@ -2090,7 +2090,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               icon={<SearchCheck />}
               active={isPanelOpen(PANEL_TYPES.VALIDATION)}
               onClick={() => openPanel(PANEL_TYPES.VALIDATION)}
-              className="w-28 h-8"
+              className="h-8 w-28"
             >
               Validation
             </ButtonPill>
@@ -2110,10 +2110,10 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
       {/* Main flow canvas */}
       <Card className="h-full w-full overflow-hidden rounded-none border-0">
-        <div className="w-full h-full relative" style={{ minHeight: "200px" }}>
+        <div className="relative h-full w-full" style={{ minHeight: "200px" }}>
           {!isReady && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
             </div>
           )}
           {isReady && (

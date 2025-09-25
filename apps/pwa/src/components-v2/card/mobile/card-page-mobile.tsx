@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Plus, Copy, Download, Import, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useAppStore } from "@/app/stores/app-store";
@@ -10,7 +10,10 @@ import {
   useCardImport,
   useCardManagement,
 } from "@/components-v2/card/hooks";
-import { useCardSelection, type SelectionAction } from "./hooks/use-card-selection-mobile";
+import {
+  useCardSelection,
+  type SelectionAction,
+} from "./hooks/use-card-selection-mobile";
 import { CardGridMobile } from "./components/card-grid-mobile";
 import { cn } from "@/components-v2/lib/utils";
 import { SearchInput } from "@/components-v2/search-input";
@@ -32,13 +35,12 @@ import {
 } from "@/components-v2/ui/dialog";
 import { Card, CardType } from "@/modules/card/domain";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMobileNavigation } from "@/App";
+import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import { DeleteConfirm } from "@/components-v2/confirm";
 import { SearchCardsSort } from "@/modules/card/repos";
 import { ListEditDialog } from "@/components-v2/list-edit-dialog";
 import { TopNavigation } from "@/components-v2/top-navigation";
 import { SortDialog } from "@/components-v2/sort-dialog";
-
 
 interface CardPageMobileProps {
   className?: string;
@@ -70,8 +72,6 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
     isDeleteConfirmOpen,
     usedSessions,
     toggleSelection,
-    selectAll,
-    clearSelection,
     enterSelectionMode,
     exitSelectionMode,
     getSelectedCardsData,
@@ -81,8 +81,6 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
     handleDeleteCards,
     setIsDeleteConfirmOpen,
   } = useCardSelection();
-
-  const queryClient = useQueryClient();
 
   // Use the card management hook
   const {
@@ -100,25 +98,14 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
     useCardEditor();
 
   // Use the card import hook
-  const {
-    isOpenImportCardPopup,
-    refImportFileInput,
-    setIsOpenImportCardPopup,
-    onClickImportCard,
-    onImportCardFromFile,
-  } = useCardImport(handleInvalidation);
+  const { refImportFileInput, onClickImportCard, onImportCardFromFile } =
+    useCardImport(handleInvalidation);
 
   // Get current search query for active tab
   const currentSearchQuery =
     activeTab === "character"
       ? keywordsByType[CardType.Character]
       : keywordsByType[CardType.Plot];
-
-  // Get current sort for active tab
-  const currentSort =
-    activeTab === "character"
-      ? sortsByType[CardType.Character]
-      : sortsByType[CardType.Plot];
 
   // Sort options for the sort dialog
   const sortOptions = [
@@ -165,9 +152,6 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
     }
   };
 
-
-
-
   const handleSelectionAction = async () => {
     if (selectedCards.size === 0) return;
 
@@ -212,7 +196,7 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
 
   return (
     <div
-      className={cn("flex flex-col h-dvh bg-background-surface-2", className)}
+      className={cn("bg-background-surface-2 flex h-dvh flex-col", className)}
     >
       {/* Mobile Header */}
       <TopNavigation
@@ -274,19 +258,19 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as "character" | "plot")}
-        className="flex-1 flex flex-col min-h-0"
+        className="flex min-h-0 flex-1 flex-col"
       >
         <div className="shrink-0">
           <TabsList
             variant="dark-mobile"
-            className="mt-4 mx-4 flex w-[calc(100%-2rem)] overflow-x-auto"
+            className="mx-4 mt-4 flex w-[calc(100%-2rem)] overflow-x-auto"
           >
             <TabsTrigger value="character">Characters</TabsTrigger>
             <TabsTrigger value="plot">Plots</TabsTrigger>
           </TabsList>
 
           {/* Search and Create */}
-          <div className="px-4 pt-4 pb-4 space-y-4">
+          <div className="space-y-4 px-4 pt-4 pb-4">
             <SearchInput
               key={activeTab}
               variant="mobile"
@@ -298,10 +282,10 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
           </div>
         </div>
 
-        <TabsContent value="character" className="mt-0 flex-1 min-h-0">
+        <TabsContent value="character" className="mt-0 min-h-0 flex-1">
           <ScrollArea className="h-full">
             {characterCards && characterCards.length > 0 && (
-              <div className="w-full flex flex-col items-center justify-center pb-2">
+              <div className="flex w-full flex-col items-center justify-center pb-2">
                 <Button
                   onClick={() => {
                     handleCreateCard(
@@ -313,22 +297,22 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
                   size="lg"
                   disabled={isSelectionMode}
                 >
-                  <Plus className="min-w-4 min-h-4" />
+                  <Plus className="min-h-4 min-w-4" />
                   Create new {activeTab === "character" ? "character" : "plot"}
                 </Button>
               </div>
             )}
-            <div className="pt-1 pb-4 px-4">
+            <div className="px-4 pt-1 pb-4">
               {!characterCards || characterCards.length === 0 ? (
-                <div className="absolute inset-x-0 top-[35%] -translate-y-1/2 flex items-center justify-center h-[400px]">
-                  <div className="w-80 inline-flex flex-col justify-start items-center gap-8">
-                    <div className="flex flex-col justify-start items-center gap-4">
-                      <div className="text-center justify-start text-text-body text-xl font-semibold">
+                <div className="absolute inset-x-0 top-[35%] flex h-[400px] -translate-y-1/2 items-center justify-center">
+                  <div className="inline-flex w-80 flex-col items-center justify-start gap-8">
+                    <div className="flex flex-col items-center justify-start gap-4">
+                      <div className="text-text-body justify-start text-center text-xl font-semibold">
                         {keywordsByType[CardType.Character]
                           ? `No results for '${keywordsByType[CardType.Character]}'`
                           : "No character cards available"}
                       </div>
-                      <div className="self-stretch text-center justify-start text-background-surface-5 text-base font-medium leading-relaxed">
+                      <div className="text-background-surface-5 justify-start self-stretch text-center text-base leading-relaxed font-medium">
                         {keywordsByType[CardType.Character] ? (
                           <>
                             Try a different name, tag, or keyword to
@@ -351,7 +335,7 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
                         disabled={isSelectionMode}
                         size="lg"
                       >
-                        <Plus className="min-w-4 min-h-4" />
+                        <Plus className="min-h-4 min-w-4" />
                         Create new character
                       </Button>
                     )}
@@ -366,11 +350,11 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="plot" className="mt-0 flex-1 min-h-0">
+        <TabsContent value="plot" className="mt-0 min-h-0 flex-1">
           <ScrollArea className="h-full">
             {/* Only show create button if there are plot cards */}
             {plotCards && plotCards.length > 0 && (
-              <div className="w-full flex flex-col items-center justify-center pb-2">
+              <div className="flex w-full flex-col items-center justify-center pb-2">
                 <Button
                   onClick={() => {
                     handleCreateCard(CardType.Plot);
@@ -378,22 +362,22 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
                   size="lg"
                   disabled={isSelectionMode}
                 >
-                  <Plus className="min-w-4 min-h-4" />
+                  <Plus className="min-h-4 min-w-4" />
                   Create new plot
                 </Button>
               </div>
             )}
-            <div className="pt-1 pb-4 px-4">
+            <div className="px-4 pt-1 pb-4">
               {!plotCards || plotCards.length === 0 ? (
-                <div className="absolute inset-x-0 top-[35%] -translate-y-1/2 flex items-center justify-center h-[400px]">
-                  <div className="w-80 inline-flex flex-col justify-start items-center gap-8">
-                    <div className="flex flex-col justify-start items-center gap-4">
-                      <div className="text-center justify-start text-text-body text-xl font-semibold">
+                <div className="absolute inset-x-0 top-[35%] flex h-[400px] -translate-y-1/2 items-center justify-center">
+                  <div className="inline-flex w-80 flex-col items-center justify-start gap-8">
+                    <div className="flex flex-col items-center justify-start gap-4">
+                      <div className="text-text-body justify-start text-center text-xl font-semibold">
                         {keywordsByType[CardType.Plot]
                           ? `No results for '${keywordsByType[CardType.Plot]}'`
                           : "No plot cards available"}
                       </div>
-                      <div className="self-stretch text-center justify-start text-background-surface-5 text-base font-medium leading-relaxed">
+                      <div className="text-background-surface-5 justify-start self-stretch text-center text-base leading-relaxed font-medium">
                         {keywordsByType[CardType.Plot] ? (
                           <>
                             Try a different name, tag, or keyword to
@@ -412,7 +396,7 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
                         disabled={isSelectionMode}
                         size="lg"
                       >
-                        <Plus className="min-w-4 min-h-4" />
+                        <Plus className="min-h-4 min-w-4" />
                         Create new plot
                       </Button>
                     )}
@@ -505,10 +489,10 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
           <DialogHeader hidden>
             <DialogTitle className="text-left">Import card tip!</DialogTitle>
           </DialogHeader>
-          <div className="py-2 flex flex-col gap-4">
+          <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
-                <div className="text-xl  text-text-primary font-semibold text-left">
+                <div className="text-text-primary text-left text-xl font-semibold">
                   Import card tip!
                 </div>
               </div>
@@ -525,7 +509,7 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
                 }
                 className="h-6 w-6"
               />
-              <span className="text-base text-text-primary">
+              <span className="text-text-primary text-base">
                 Don't show this again
               </span>
             </div>

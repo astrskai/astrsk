@@ -2,34 +2,37 @@ import { Page, useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
+import { useNavigate } from "@tanstack/react-router";
 
 const OnboardingStepOnePage = () => {
   // Page navigation
   const setActivePage = useAppStore.use.setActivePage();
+  const navigate = useNavigate();
 
   return (
-    <div className={cn("z-40 absolute inset-0 top-[var(--topbar-height)]")}>
+    <div className={cn("absolute inset-0 top-[var(--topbar-height)] z-40")}>
       {/* Close */}
       <button
-        className="z-50 absolute top-[34px] right-[40px] text-text-subtle"
+        className="text-text-subtle absolute top-[34px] right-[40px] z-50"
         onClick={() => {
           setActivePage(Page.Init);
+          navigate({ to: "/", replace: true });
         }}
       >
         <SvgIcon name="window_close" size={40} />
       </button>
 
       {/* Main */}
-      <div className="absolute inset-0 bg-linear-to-b from-background-surface-0 to-background-surface-3 grid place-content-center gap-[49px]">
-        <div className="flex flex-col gap-[8px] items-center">
-          <div className="font-[600] text-[32px] leading-[40px] text-text-primary">
+      <div className="from-background-surface-0 to-background-surface-3 absolute inset-0 grid place-content-center gap-[49px] bg-linear-to-b">
+        <div className="flex flex-col items-center gap-[8px]">
+          <div className="text-text-primary text-[32px] leading-[40px] font-[600]">
             Two short minutes to understand how astrsk works!
           </div>
-          <div className="font-[400] text-[16px] leading-[25.6px] text-text-placeholder">
+          <div className="text-text-placeholder text-[16px] leading-[25.6px] font-[400]">
             Get a sense of the overall structure of astrsk
           </div>
         </div>
-        <div className="w-[1000px] aspect-video rounded-[12px] overflow-hidden">
+        <div className="aspect-video w-[1000px] overflow-hidden rounded-[12px]">
           <iframe
             width="100%"
             height="100%"
@@ -41,7 +44,7 @@ const OnboardingStepOnePage = () => {
         </div>
         <Button
           size="lg"
-          className="place-self-center min-w-[80px] py-[10px]"
+          className="min-w-[80px] place-self-center py-[10px]"
           onClick={() => {
             setActivePage(Page.OnboardingStepTwo);
           }}

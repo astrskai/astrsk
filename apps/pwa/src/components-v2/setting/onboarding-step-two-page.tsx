@@ -1,9 +1,5 @@
-import {
-  Page,
-  SettingPageLevel,
-  SettingSubPageType,
-  useAppStore,
-} from "@/app/stores/app-store";
+import { useNavigate } from "@tanstack/react-router";
+import { Page, useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Button } from "@/components-v2/ui/button";
@@ -27,12 +23,12 @@ function FloatingActionButton({
   return (
     <Button
       className={cn(
-        "group/fab z-10 absolute top-[24px] rounded-full cursor-pointer",
-        "bg-button-background-floating border-[1px] border-border-light text-text-primary",
+        "group/fab absolute top-[24px] z-10 cursor-pointer rounded-full",
+        "bg-button-background-floating border-border-light text-text-primary border-[1px]",
         "hover:bg-background-card hover:text-text-primary",
         position === "top-left" ? "left-[40px]" : "right-[40px]",
-        "!transition-all ease-out duration-300",
-        "min-w-[40px] h-[40px] p-0",
+        "!transition-all duration-300 ease-out",
+        "h-[40px] min-w-[40px] p-0",
         className,
       )}
       onClick={(event) => {
@@ -43,8 +39,8 @@ function FloatingActionButton({
     >
       <div
         className={cn(
-          "h-full flex flex-row items-center",
-          "transition-[margin-inline] ease-out duration-300",
+          "flex h-full flex-row items-center",
+          "transition-[margin-inline] duration-300 ease-out",
           "mx-[7px] group-hover/fab:mx-[16px]",
           openned && "mx-[16px]",
         )}
@@ -52,13 +48,13 @@ function FloatingActionButton({
         {icon}
         <div
           className={cn(
-            "grid transition-[margin-left,grid-template-columns,opacity] ease-out duration-300",
+            "grid transition-[margin-left,grid-template-columns,opacity] duration-300 ease-out",
             "ml-0 grid-cols-[0fr] opacity-0",
             "group-hover/fab:ml-2 group-hover/fab:grid-cols-[1fr] group-hover/fab:opacity-100",
             openned && "ml-2 grid-cols-[1fr] opacity-100",
           )}
         >
-          <span className="overflow-hidden font-medium text-[14px] leading-[20px]">
+          <span className="overflow-hidden text-[14px] leading-[20px] font-medium">
             {label}
           </span>
         </div>
@@ -71,14 +67,13 @@ function FloatingActionButton({
 const OnboardingStepTwoPage = () => {
   // Page navigation
   const setActivePage = useAppStore.use.setActivePage();
-  const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
-  const setSettingSubPage = useAppStore.use.setSettingSubPage();
+  const navigate = useNavigate();
 
   return (
-    <div className={cn("z-40 absolute inset-0 top-[var(--topbar-height)]")}>
+    <div className={cn("absolute inset-0 top-[var(--topbar-height)] z-40")}>
       {/* Back */}
       <FloatingActionButton
-        icon={<ArrowLeft className="min-w-[24px] min-h-[24px]" />}
+        icon={<ArrowLeft className="min-h-[24px] min-w-[24px]" />}
         label="Back"
         position="top-left"
         onClick={() => {
@@ -88,20 +83,21 @@ const OnboardingStepTwoPage = () => {
 
       {/* Close */}
       <button
-        className="z-50 absolute top-[34px] right-[40px] text-text-subtle"
+        className="text-text-subtle absolute top-[34px] right-[40px] z-50"
         onClick={() => {
           setActivePage(Page.Init);
+          navigate({ to: "/", replace: true });
         }}
       >
         <SvgIcon name="window_close" size={40} />
       </button>
 
       {/* Main */}
-      <div className="absolute inset-0 bg-linear-to-b from-background-surface-0 to-background-surface-3 grid place-content-center">
+      <div className="from-background-surface-0 to-background-surface-3 absolute inset-0 grid place-content-center bg-gradient-to-b">
         <div className="flex flex-row gap-[37px]">
           {/* Left section */}
-          <div className="w-[640px] h-[728px] bg-background-surface-0 rounded-[12px] flex flex-col items-center justify-center">
-            <div className="text-text-primary mb-[24px] flex flex-row gap-[8px] items-center">
+          <div className="bg-background-surface-0 flex h-[728px] w-[640px] flex-col items-center justify-center rounded-[12px]">
+            <div className="text-text-primary mb-[24px] flex flex-row items-center gap-[8px]">
               <SvgIcon
                 name="dive_into_astrsk"
                 width={241}
@@ -109,50 +105,50 @@ const OnboardingStepTwoPage = () => {
                 className="mb-[4px]"
               />
             </div>
-            <div className="font-semibold text-[20px] leading-[24px] text-text-body mb-[8px]">
+            <div className="text-text-body mb-[8px] text-[20px] leading-[24px] font-semibold">
               The Open Source App is Completely Free to Use
             </div>
-            <div className="font-medium text-[16px] leading-[25.6px] text-text-info mb-[50px]">
+            <div className="text-text-info mb-[50px] text-[16px] leading-[25.6px] font-medium">
               Build and play powerful multi-agent roleplays without any
               limitations.
             </div>
-            <div className="flex flex-col gap-4 mb-[46px]">
+            <div className="mb-[46px] flex flex-col gap-4">
               <div className="flex flex-row gap-[16px]">
-                <div className="size-[32px] rounded-[8px] bg-background-surface-3 grid place-content-center">
+                <div className="bg-background-surface-3 grid size-[32px] place-content-center rounded-[8px]">
                   <SvgIcon name="agents" size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
-                  <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
+                  <div className="text-text-primary text-[16px] leading-[25.6px] font-semibold">
                     AI Workflow and Agents Incorporated into Roleplay
                   </div>
-                  <div className="font-medium text-[14px] leading-[20px] text-text-subtle">
+                  <div className="text-text-subtle text-[14px] leading-[20px] font-medium">
                     Create as many AI agents as you need
                   </div>
                 </div>
               </div>
               <div className="flex flex-row gap-[16px]">
-                <div className="size-[32px] rounded-[8px] bg-background-surface-3 grid place-content-center">
+                <div className="bg-background-surface-3 grid size-[32px] place-content-center rounded-[8px]">
                   <SvgIcon name="cards" size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
-                  <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
+                  <div className="text-text-primary text-[16px] leading-[25.6px] font-semibold">
                     Create and Manage Cards & Sessions
                   </div>
-                  <div className="font-medium text-[14px] leading-[20px] text-text-subtle">
+                  <div className="text-text-subtle text-[14px] leading-[20px] font-medium">
                     Build V2, V3 cards and play sessions in infinite
                     combinations
                   </div>
                 </div>
               </div>
               <div className="flex flex-row gap-[16px]">
-                <div className="size-[32px] rounded-[8px] bg-background-surface-3 grid place-content-center">
+                <div className="bg-background-surface-3 grid size-[32px] place-content-center rounded-[8px]">
                   <Sparkles size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
-                  <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
+                  <div className="text-text-primary text-[16px] leading-[25.6px] font-semibold">
                     Structured Output and Data Management
                   </div>
-                  <div className="font-medium text-[14px] leading-[20px] text-text-subtle">
+                  <div className="text-text-subtle text-[14px] leading-[20px] font-medium">
                     Structure and manage data relevant to your session from AI
                     <br />
                     output, character output format to session environment stats
@@ -160,19 +156,19 @@ const OnboardingStepTwoPage = () => {
                 </div>
               </div>
               <div className="flex flex-row gap-[16px]">
-                <div className="size-[32px] rounded-[8px] bg-background-surface-3 grid place-content-center">
+                <div className="bg-background-surface-3 grid size-[32px] place-content-center rounded-[8px]">
                   <Key size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
-                  <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary">
+                  <div className="text-text-primary text-[16px] leading-[25.6px] font-semibold">
                     Bring Your Own API Keys
                   </div>
-                  <div className="font-medium text-[14px] leading-[20px] text-text-subtle">
+                  <div className="text-text-subtle text-[14px] leading-[20px] font-medium">
                     Connect your own AI provider to power your roleplay
                   </div>
                 </div>
               </div>
-              <div className="font-semibold text-[12px] leading-[15px] text-text-body text-center">
+              <div className="text-text-body text-center text-[12px] leading-[15px] font-semibold">
                 .<br />
                 .<br />.
               </div>
@@ -182,9 +178,8 @@ const OnboardingStepTwoPage = () => {
               variant="secondary"
               className="w-[474px]"
               onClick={() => {
-                setActivePage(Page.Settings);
-                setSettingPageLevel(SettingPageLevel.sub);
-                setSettingSubPage(SettingSubPageType.providers);
+                setActivePage(Page.Init);
+                navigate({ to: "/settings/providers", replace: true });
               }}
             >
               Start astrsk
@@ -192,43 +187,43 @@ const OnboardingStepTwoPage = () => {
           </div>
 
           {/* Right section */}
-          <div className="relative w-[768px] h-[728px] rounded-[12px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px]">
-            <div className="w-full h-full bg-[#000] rounded-[12px] flex flex-col items-center justify-center">
-              <div className="w-[532px] h-[320px] mt-[-114px] mb-[8px] bg-[url('/img/onboarding/step-two-main.png')] bg-contain" />
-              <div className="font-black text-[32px] leading-[50px] text-text-primary uppercase">
+          <div className="relative h-[728px] w-[768px] rounded-[12px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px]">
+            <div className="flex h-full w-full flex-col items-center justify-center rounded-[12px] bg-[#000]">
+              <div className="mt-[-114px] mb-[8px] h-[320px] w-[532px] bg-[url('/img/onboarding/step-two-main.png')] bg-contain" />
+              <div className="text-text-primary text-[32px] leading-[50px] font-black uppercase">
                 instant immersion with{" "}
                 <span className="text-[#B59EFF]">astrsk+</span>
               </div>
-              <div className="font-medium text-[14px] leading-[20px] text-text-body mb-[20px]">
+              <div className="text-text-body mb-[20px] text-[14px] leading-[20px] font-medium">
                 Automatic Setup? Yes. Images & Videos? Yes!
               </div>
-              <div className="flex flex-row gap-[8px] mb-[32px]">
-                <div className="relative size-[224px] rounded-[8px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px] overflow-hidden">
-                  <div className="w-full h-full rounded-[8px] bg-[url('/img/onboarding/step-two-sub-1.jpg')] bg-contain text-center pb-[16px] flex flex-col justify-end">
-                    <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary mb-[4px]">
+              <div className="mb-[32px] flex flex-row gap-[8px]">
+                <div className="relative size-[224px] overflow-hidden rounded-[8px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px]">
+                  <div className="flex h-full w-full flex-col justify-end rounded-[8px] bg-[url('/img/onboarding/step-two-sub-1.jpg')] bg-contain pb-[16px] text-center">
+                    <div className="text-text-primary mb-[4px] text-[16px] leading-[25.6px] font-semibold">
                       AI Image Generator
                     </div>
-                    <div className="font-normal text-[12px] leading-[15px] text-text-body">
+                    <div className="text-text-body text-[12px] leading-[15px] font-normal">
                       Create stunning visuals
                     </div>
                   </div>
                 </div>
-                <div className="relative size-[224px] rounded-[8px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px] overflow-hidden">
-                  <div className="w-full h-full rounded-[8px] bg-[url('/img/onboarding/step-two-sub-2.jpg')] bg-contain text-center pb-[16px] flex flex-col justify-end">
-                    <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary mb-[4px]">
+                <div className="relative size-[224px] overflow-hidden rounded-[8px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px]">
+                  <div className="flex h-full w-full flex-col justify-end rounded-[8px] bg-[url('/img/onboarding/step-two-sub-2.jpg')] bg-contain pb-[16px] text-center">
+                    <div className="text-text-primary mb-[4px] text-[16px] leading-[25.6px] font-semibold">
                       AI Video Generator
                     </div>
-                    <div className="font-normal text-[12px] leading-[15px] text-text-body">
+                    <div className="text-text-body text-[12px] leading-[15px] font-normal">
                       Bring sessions to life
                     </div>
                   </div>
                 </div>
-                <div className="relative size-[224px] rounded-[8px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px] overflow-hidden">
-                  <div className="w-full h-full rounded-[8px] size-[224px] bg-[url('/img/onboarding/step-two-sub-3.jpg')] bg-contain text-center pb-[16px] flex flex-col justify-end">
-                    <div className="font-semibold text-[16px] leading-[25.6px] text-text-primary mb-[4px]">
+                <div className="relative size-[224px] overflow-hidden rounded-[8px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px]">
+                  <div className="flex size-[224px] h-full w-full flex-col justify-end rounded-[8px] bg-[url('/img/onboarding/step-two-sub-3.jpg')] bg-contain pb-[16px] text-center">
+                    <div className="text-text-primary mb-[4px] text-[16px] leading-[25.6px] font-semibold">
                       AI-Assisted Card Creation
                     </div>
-                    <div className="font-normal text-[12px] leading-[15px] text-text-body">
+                    <div className="text-text-body text-[12px] leading-[15px] font-normal">
                       Write faster, easier, better
                     </div>
                   </div>

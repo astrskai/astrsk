@@ -1,30 +1,21 @@
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 
 import {
   SettingDetailPageType,
   SettingPageLevel,
-  SettingSubPageType,
   useAppStore,
 } from "@/app/stores/app-store";
 import { ConvexReady } from "@/components-v2/convex-ready";
 import { cn } from "@/components-v2/lib/utils";
-import { AccountPage } from "@/components-v2/setting/account-page";
-import ContentPolicy from "@/components-v2/setting/content-policy";
-import CreditUsagePage from "@/components-v2/setting/credit-usage-page";
-import ModelPage from "@/components-v2/setting/model-page";
-import OssNotice from "@/components-v2/setting/oss-notice";
-import PrivacyPolicy from "@/components-v2/setting/privacy-policy";
-import RefundPolicy from "@/components-v2/setting/refund-policy";
-import TermOfService from "@/components-v2/setting/terms-of-service";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { Typo2XLarge, TypoBase, TypoXLarge } from "@/components-v2/typo";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { Separator } from "@/components-v2/ui/separator";
-import { Switch } from "@/components-v2/ui/switch";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 
@@ -32,151 +23,16 @@ function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-const LegalPage = ({
-  setSettingPageLevel,
-  setLegalPage,
-}: {
-  setSettingPageLevel: (value: SettingPageLevel) => void;
-  setLegalPage: (value: SettingDetailPageType) => void;
-}) => {
-  return (
-    <ScrollArea className="h-full">
-      <div className="mx-auto my-6 w-full max-w-[587px] pt-[80px]">
-        <div className="mb-12 flex flex-col gap-8 text-text-body">
-          <div
-            className="flex items-center  justify-between cursor-pointer"
-            onClick={() => {
-              setLegalPage(SettingDetailPageType.privacyPolicy);
-              setSettingPageLevel(SettingPageLevel.detail);
-            }}
-          >
-            <TypoBase className="font-semibold text-text-body">
-              Privacy Policy
-            </TypoBase>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
-          </div>
-          <div
-            className="flex items-center  justify-between cursor-pointer"
-            onClick={() => {
-              setLegalPage(SettingDetailPageType.termOfService);
-              setSettingPageLevel(SettingPageLevel.detail);
-            }}
-          >
-            <TypoBase className="font-semibold text-text-body">
-              Term of Use
-            </TypoBase>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
-          </div>
-          <div
-            className="flex items-center  justify-between cursor-pointer"
-            onClick={() => {
-              setLegalPage(SettingDetailPageType.contentPolicy);
-              setSettingPageLevel(SettingPageLevel.detail);
-            }}
-          >
-            <TypoBase className="font-semibold text-text-body">
-              Content Policy
-            </TypoBase>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
-          </div>
-          <div
-            className="flex items-center  justify-between cursor-pointer"
-            onClick={() => {
-              setLegalPage(SettingDetailPageType.refundPolicy);
-              setSettingPageLevel(SettingPageLevel.detail);
-            }}
-          >
-            <TypoBase className="font-semibold text-text-body">
-              Refund Policy
-            </TypoBase>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
-          </div>
-          <div
-            className="flex items-center  justify-between cursor-pointer"
-            onClick={() => {
-              setLegalPage(SettingDetailPageType.ossNotice);
-              setSettingPageLevel(SettingPageLevel.detail);
-            }}
-          >
-            <TypoBase className="font-semibold text-text-body">
-              Open-source Software Notice
-            </TypoBase>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
-          </div>
-        </div>
-      </div>
-      <ScrollBar orientation="vertical" className="w-1.5" />
-    </ScrollArea>
-  );
-};
-
-const AdvancedPage = () => {
-  const [allowInsecureContent, setAllowInsecureContent] = useState(false);
-
-  useEffect(() => {
-    const getConfigs = async () => {
-      if (!window.api?.config) {
-        return;
-      }
-      setAllowInsecureContent(
-        await window.api.config.getConfig("allowInsecureContent"),
-      );
-    };
-    getConfigs();
-  }, []);
-
-  return (
-    <ScrollArea className="h-full">
-      <div className="mx-auto my-6 w-full max-w-[587px] pt-[80px]">
-        <div className="mb-12 flex flex-col gap-8 text-text-primary">
-          <TypoXLarge className="font-semibold text-text-primary">
-            Advanced Preferences
-          </TypoXLarge>
-
-          <div className="flex justify-between">
-            <div className="flex flex-col gap-[8px]">
-              <TypoBase className="font-semibold text-text-body">
-                Allow HTTP connection
-              </TypoBase>
-              <div className="font-[400] text-[12px] leading-[15px] text-text-info">
-                Enable this option if you want to connect providers serving on
-                non-local devices via HTTP.
-                <br />
-                This option will take effect after the app restarts.
-                <br />
-                <span className="text-status-destructive-light">
-                  Allowing HTTP connection lowers the security level of the app.
-                </span>
-              </div>
-            </div>
-            <Switch
-              checked={allowInsecureContent}
-              onCheckedChange={(checked) => {
-                setAllowInsecureContent(checked);
-                if (!window.api?.config) {
-                  return;
-                }
-                window.api.config.setConfig("allowInsecureContent", checked);
-              }}
-            />
-          </div>
-        </div>
-      </div>
-      <ScrollBar orientation="vertical" className="w-1.5" />
-    </ScrollArea>
-  );
-};
-
-const MainPage = () => {
+const SettingsMain = () => {
   // Providers
-  const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
-  const setSettingSubPage = useAppStore.use.setSettingSubPage();
+  const navigate = useNavigate();
 
   // Sign up with SSO
   const { userId } = useAuth();
   const { isLoaded: isLoadedSignUp, signUp } = useSignUp();
   const [isLoading, setIsLoading] = useState(false);
-  const signUpWithDiscord = useCallback(() => {
+
+  const signUpWithDiscord = useCallback(async () => {
     // Check sign up is loaded
     if (!isLoadedSignUp) {
       return;
@@ -191,7 +47,8 @@ const MainPage = () => {
     try {
       // Try to sign up with google
       setIsLoading(true);
-      signUp.authenticateWithRedirect({
+
+      await signUp.authenticateWithRedirect({
         strategy: "oauth_discord",
         redirectUrl: "/sso-callback",
         redirectUrlComplete: "/",
@@ -205,81 +62,91 @@ const MainPage = () => {
     }
   }, [isLoadedSignUp, signUp, userId]);
 
+  const onClickAccount = () => {
+    navigate({ to: "/settings/account" });
+  };
+
+  const onClickProviders = () => {
+    navigate({ to: "/settings/providers" });
+  };
+
+  const onClickLegal = () => {
+    navigate({ to: "/settings/legal" });
+  };
+
+  const onClickAdvanced = () => {
+    navigate({ to: "/settings/advanced" });
+  };
+
   return (
     <ScrollArea className="h-full">
-      <div className="mx-auto my-6 pb-6 w-full max-w-[587px] pt-[80px]">
-        <Typo2XLarge className="mb-12 text-text-primary font-semibold">
+      <div className="mx-auto my-6 w-full max-w-[587px] pt-[80px] pb-6">
+        <Typo2XLarge className="text-text-primary mb-12 font-semibold">
           Settings
         </Typo2XLarge>
 
-        <div className="mb-12 flex flex-col gap-8 text-text-primary">
-          <TypoXLarge className="font-semibold text-text-primary">
+        <div className="text-text-primary mb-12 flex flex-col gap-8">
+          <TypoXLarge className="text-text-primary font-semibold">
             App Preferences
           </TypoXLarge>
 
           <ConvexReady>
             <Authenticated>
               <div
-                className="flex items-center justify-between cursor-pointer"
-                onClick={() => {
-                  setSettingPageLevel(SettingPageLevel.sub);
-                  setSettingSubPage(SettingSubPageType.account);
-                }}
+                className="flex cursor-pointer items-center justify-between"
+                onClick={onClickAccount}
               >
-                <TypoBase className="font-semibold text-text-body">
+                <TypoBase className="text-text-body font-semibold">
                   Account and subscription
                 </TypoBase>
-                <ChevronRight className="h-5 w-5 text-text-secondary" />
+                <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
               </div>
             </Authenticated>
             <Unauthenticated>
               <div
-                className="flex items-center justify-between cursor-pointer"
+                className="flex cursor-pointer items-center justify-between"
                 onClick={() => {
                   signUpWithDiscord();
                 }}
               >
-                <TypoBase className="font-semibold text-text-body">
+                <TypoBase className="text-text-body font-semibold">
                   Sign in
                 </TypoBase>
-                <ChevronRight className="h-5 w-5 text-text-secondary" />
+                <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
               </div>
             </Unauthenticated>
           </ConvexReady>
 
           <div
-            className="flex items-center justify-between cursor-pointer"
-            onClick={() => {
-              setSettingPageLevel(SettingPageLevel.sub);
-              setSettingSubPage(SettingSubPageType.providers);
-            }}
+            className="flex cursor-pointer items-center justify-between"
+            onClick={onClickProviders}
           >
-            <TypoBase className="font-semibold text-text-body">
+            <TypoBase className="text-text-body font-semibold">
               Providers
             </TypoBase>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
+            <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
           </div>
         </div>
         <Separator />
-        <div className="my-13 flex flex-col gap-8 text-text-primary">
-          <TypoXLarge className="font-semibold text-text-primary">
+        <div className="text-text-primary my-13 flex flex-col gap-8">
+          <TypoXLarge className="text-text-primary font-semibold">
             Community
           </TypoXLarge>
 
           <div
-            className="flex items-center text-text-body justify-between cursor-pointer"
+            className="text-text-body flex cursor-pointer items-center justify-between"
             onClick={() => openInNewTab("https://discord.gg/J6ry7w8YCF")}
           >
             <div className="flex items-center gap-2">
               <SvgIcon name="discord" className="h-5 w-5 text-[#5865F2]" />
-              <TypoBase className="font-semibold text-text-body">
+              <TypoBase className="text-text-body font-semibold">
                 Join our Discord
               </TypoBase>
             </div>
           </div>
 
           <div
-            className="flex items-center text-text-body justify-between cursor-pointer"
+            className="text-text-body flex cursor-pointer items-center justify-between"
             onClick={() => {
               openInNewTab("https://www.reddit.com/r/astrsk_ai/");
             }}
@@ -289,60 +156,54 @@ const MainPage = () => {
                 name="reddit_color"
                 className="h-5 w-5 text-orange-500"
               />
-              <TypoBase className="font-semibold text-text-body">
+              <TypoBase className="text-text-body font-semibold">
                 Visit our Reddit
               </TypoBase>
             </div>
           </div>
         </div>
         <Separator />
-        <div className="my-13 flex flex-col gap-8 text-text-primary">
-          <TypoXLarge className="font-semibold text-text-primary">
+        <div className="text-text-primary my-13 flex flex-col gap-8">
+          <TypoXLarge className="text-text-primary font-semibold">
             Support
           </TypoXLarge>
 
           <div
-            className="flex items-center text-text-body justify-between cursor-pointer"
+            className="text-text-body flex cursor-pointer items-center justify-between"
             onClick={() => openInNewTab("https://docs.astrsk.ai/")}
           >
-            <TypoBase className="font-semibold text-text-body">
+            <TypoBase className="text-text-body font-semibold">
               User manual
             </TypoBase>
           </div>
 
           <div
-            className="flex items-center text-text-body justify-between cursor-pointer"
+            className="text-text-body flex cursor-pointer items-center justify-between"
             onClick={() => openInNewTab("https://join.astrsk.ai")}
           >
-            <TypoBase className="font-semibold text-text-body">
+            <TypoBase className="text-text-body font-semibold">
               About astrsk.ai
             </TypoBase>
           </div>
 
           <div
-            className="flex items-center justify-between cursor-pointer"
-            onClick={() => {
-              setSettingPageLevel(SettingPageLevel.sub);
-              setSettingSubPage(SettingSubPageType.legal);
-            }}
+            className="flex cursor-pointer items-center justify-between"
+            onClick={onClickLegal}
           >
-            <TypoBase className="font-semibold text-text-body">Legal</TypoBase>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
+            <TypoBase className="text-text-body font-semibold">Legal</TypoBase>
+            <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
           </div>
         </div>
         <Separator />
-        <div className="my-13 flex flex-col gap-8 text-text-primary">
+        <div className="text-text-primary my-13 flex flex-col gap-8">
           <div
-            className="flex items-center justify-between cursor-pointer"
-            onClick={() => {
-              setSettingPageLevel(SettingPageLevel.sub);
-              setSettingSubPage(SettingSubPageType.advanced);
-            }}
+            className="flex cursor-pointer items-center justify-between"
+            onClick={onClickAdvanced}
           >
-            <TypoBase className="font-semibold text-text-body">
+            <TypoBase className="text-text-body font-semibold">
               Advanced Preferences
             </TypoBase>
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
+            <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
           </div>
         </div>
       </div>
@@ -354,14 +215,15 @@ const MainPage = () => {
 export default function SettingPage({ className }: { className?: string }) {
   const settingPageLevel = useAppStore.use.settingPageLevel();
   const setSettingPageLevel = useAppStore.use.setSettingPageLevel();
-  const settingSubPage = useAppStore.use.settingSubPage();
   const settingDetailPage = useAppStore.use.settingDetailPage();
-  const setSettingDetailPage = useAppStore.use.setSettingDetailPage();
+
+  const location = useLocation();
+  const isSettingsMainPage = location.pathname === "/settings";
 
   return (
-    <ScrollArea className={cn("h-full bg-background-surface-1", className)}>
+    <ScrollArea className={cn("bg-background-surface-1 h-full", className)}>
       <FloatingActionButton
-        icon={<ArrowLeft className="min-w-[24px] min-h-[24px]" />}
+        icon={<ArrowLeft className="min-h-[24px] min-w-[24px]" />}
         label={
           settingPageLevel === SettingPageLevel.sub
             ? "Settings"
@@ -371,9 +233,8 @@ export default function SettingPage({ className }: { className?: string }) {
         }
         position="top-left"
         className={cn(
-          "transition-opacity duration-[600ms] ease-in-out opacity-100",
-          settingPageLevel === SettingPageLevel.main &&
-            "opacity-0 pointer-events-none",
+          "opacity-100 transition-opacity duration-[600ms] ease-in-out",
+          isSettingsMainPage && "pointer-events-none opacity-0",
         )}
         onClick={() => {
           if (settingPageLevel === SettingPageLevel.detail) {
@@ -384,65 +245,14 @@ export default function SettingPage({ className }: { className?: string }) {
         }}
       />
 
-      {/* Page Level 1 */}
       <div
         className={cn(
           "absolute inset-0 transition-transform duration-[600ms] ease-in-out",
-          settingPageLevel !== SettingPageLevel.main && "-translate-x-full",
         )}
       >
-        <MainPage />
+        <SettingsMain />
       </div>
 
-      {/* Page Level 2 */}
-      <div
-        className={cn(
-          "absolute inset-0 transition-transform duration-[600ms] ease-in-out translate-x-full",
-          settingPageLevel === SettingPageLevel.sub
-            ? "translate-x-0"
-            : settingPageLevel === SettingPageLevel.detail &&
-                "-translate-x-full",
-        )}
-      >
-        {settingSubPage === SettingSubPageType.providers && <ModelPage />}
-        {settingSubPage === SettingSubPageType.legal && (
-          <LegalPage
-            setSettingPageLevel={setSettingPageLevel}
-            setLegalPage={setSettingDetailPage}
-          />
-        )}
-        {settingSubPage === SettingSubPageType.advanced && <AdvancedPage />}
-        <ConvexReady>
-          {settingSubPage === SettingSubPageType.account && <AccountPage />}
-        </ConvexReady>
-      </div>
-
-      {/* Page Level 3 */}
-      <div
-        className={cn(
-          "absolute inset-0 transition-transform duration-[600ms] ease-in-out translate-x-full",
-          settingPageLevel === SettingPageLevel.detail && "translate-x-0",
-        )}
-      >
-        {settingDetailPage === SettingDetailPageType.refundPolicy && (
-          <RefundPolicy />
-        )}
-        {settingDetailPage === SettingDetailPageType.privacyPolicy && (
-          <PrivacyPolicy />
-        )}
-        {settingDetailPage === SettingDetailPageType.termOfService && (
-          <TermOfService />
-        )}
-        {settingDetailPage === SettingDetailPageType.contentPolicy && (
-          <ContentPolicy />
-        )}
-        {settingDetailPage === SettingDetailPageType.ossNotice && <OssNotice />}
-        <ConvexReady>
-          {settingDetailPage === SettingDetailPageType.creditUsage && (
-            <CreditUsagePage />
-          )}
-        </ConvexReady>
-      </div>
       <ScrollBar orientation="vertical" className="w-1.5" />
     </ScrollArea>
   );
