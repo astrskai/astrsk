@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_layout/cards/$cardId")({
 
 function CardDetailPage() {
   const { cardId } = Route.useParams();
-  const { setSelectedCardId } = useAppStore();
+  const setSelectedCardId = useAppStore.use.setSelectedCardId();
   const isMobile = useIsMobile();
 
   useEffect(() => {

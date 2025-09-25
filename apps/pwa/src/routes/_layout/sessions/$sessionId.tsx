@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_layout/sessions/$sessionId")({
 
 function SessionDetailPage() {
   const { sessionId } = Route.useParams();
-  const { selectSession } = useSessionStore();
+  const selectSession = useSessionStore.use.selectSession();
   const isMobile = useIsMobile();
 
   useEffect(() => {
