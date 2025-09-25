@@ -52,7 +52,7 @@ import { delay } from "lodash-es";
 import { Copy, Settings2, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { getSelectedIdFromPath } from "@/utils/url-utils";
+import { getUniqueEntityIDFromPath } from "@/utils/url-utils";
 
 const CardItem = ({
   cardId,
@@ -454,7 +454,7 @@ const CardSection = ({
   );
 
   const location = useLocation();
-  const currentCardId = getSelectedIdFromPath(location.pathname, "cards");
+  const currentCardId = getUniqueEntityIDFromPath(location.pathname, "cards");
   const navigate = useNavigate();
 
   // Handle create

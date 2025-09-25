@@ -43,7 +43,7 @@ import { delay } from "lodash-es";
 import { CircleAlert, Copy, Loader2, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { getSelectedIdFromPath } from "@/utils/url-utils";
+import { getUniqueEntityIDFromPath } from "@/utils/url-utils";
 
 const FlowItem = ({
   flowId,
@@ -80,9 +80,7 @@ const FlowItem = ({
     }
 
     // Set loading state
-    console.log("Setting isLoading to true...");
     setIsLoading(true);
-    console.log("setIsLoading called");
 
     // Start loading the flow immediately in the background
     selectFlowId(flow.id.toString());
@@ -429,7 +427,7 @@ const FlowSection = ({
 
   // Selected flow
   const location = useLocation();
-  const currentFlowId = getSelectedIdFromPath(location.pathname, "flows");
+  const currentFlowId = getUniqueEntityIDFromPath(location.pathname, "flows");
 
   // Handle create
   const selectFlowId = useAgentStore.use.selectFlowId();

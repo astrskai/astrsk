@@ -1,8 +1,16 @@
-export const isPathWithId = (path: string, basePath: string) => {
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+
+export const isPathWithBasePath = (path: string, basePath: string) => {
   const pattern = new RegExp(`^/${basePath}/[^/]+$`);
   return pattern.test(path);
 };
 
-export const getSelectedIdFromPath = (path: string, key: string) => {
-  return isPathWithId(path, key) ? path.split(`/${key}/`)[1] : "";
+export const getUniqueEntityIDFromPath = (path: string, key: string) => {
+  if (isPathWithBasePath(path, key)) {
+    const id = path.split(`/${key}/`)[1];
+
+    return UniqueEntityID.isValidUUID(id) ? id : "";
+  }
+
+  return "";
 };

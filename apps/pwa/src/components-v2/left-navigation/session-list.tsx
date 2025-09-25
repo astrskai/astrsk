@@ -54,7 +54,7 @@ import { CircleAlert, Copy, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { fetchBackgrounds } from "@/app/stores/background-store";
-import { getSelectedIdFromPath } from "@/utils/url-utils";
+import { getUniqueEntityIDFromPath } from "@/utils/url-utils";
 
 const SessionItem = ({
   sessionId,
@@ -413,7 +413,10 @@ const SessionSection = ({
   );
 
   const location = useLocation();
-  const currentSessionId = getSelectedIdFromPath(location.pathname, "sessions");
+  const currentSessionId = getUniqueEntityIDFromPath(
+    location.pathname,
+    "sessions",
+  );
   const navigate = useNavigate();
 
   // Handle create

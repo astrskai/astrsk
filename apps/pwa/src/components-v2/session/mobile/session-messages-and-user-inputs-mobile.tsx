@@ -65,7 +65,7 @@ import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
-import { isPathWithId } from "@/utils/url-utils";
+import { isPathWithBasePath } from "@/utils/url-utils";
 
 interface ScrollToBottomOptions {
   wait?: number;
@@ -863,7 +863,7 @@ const UserInputsMobile = ({
     setIsOpenTooltip(
       !isGroupButtonDonNotShowAgain &&
         messageContent.length > 0 &&
-        isPathWithId(location.pathname, "sessions") &&
+        isPathWithBasePath(location.pathname, "sessions") &&
         !isOpenSettings &&
         !isOkayButtonClicked,
     );
@@ -897,7 +897,7 @@ const UserInputsMobile = ({
               open={
                 !isGroupButtonDonNotShowAgain &&
                 messageContent.length > 0 &&
-                isPathWithId(location.pathname, "sessions") &&
+                isPathWithBasePath(location.pathname, "sessions") &&
                 !isOpenSettings
               }
             >
@@ -919,7 +919,7 @@ const UserInputsMobile = ({
                         isHighLighted={
                           !isGroupButtonDonNotShowAgain &&
                           messageContent.length > 0 &&
-                          isPathWithId(location.pathname, "sessions") &&
+                          isPathWithBasePath(location.pathname, "sessions") &&
                           !isOpenSettings
                         }
                       />
@@ -934,7 +934,7 @@ const UserInputsMobile = ({
                         isHighLighted={
                           !isGroupButtonDonNotShowAgain &&
                           messageContent.length > 0 &&
-                          isPathWithId(location.pathname, "sessions") &&
+                          isPathWithBasePath(location.pathname, "sessions") &&
                           !isOpenSettings
                         }
                       />
@@ -948,7 +948,7 @@ const UserInputsMobile = ({
                       isHighLighted={
                         !isGroupButtonDonNotShowAgain &&
                         messageContent.length > 0 &&
-                        isPathWithId(location.pathname, "sessions") &&
+                        isPathWithBasePath(location.pathname, "sessions") &&
                         !isOpenSettings
                       }
                     />
