@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_layout/flows/$flowId")({
 
 function FlowDetailPage() {
   const { flowId } = Route.useParams();
-  const { selectFlowId } = useAgentStore();
+  const selectFlowId = useAgentStore.use.selectFlowId();
   const isMobile = useIsMobile();
 
   useEffect(() => {

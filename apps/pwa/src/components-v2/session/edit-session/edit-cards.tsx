@@ -204,8 +204,8 @@ const EditCards = ({
       switch (activeTab) {
         case "user":
           if (userCharacterCardId === cardId) {
-            setValue("userCharacterCardId", "");
-            newValues.userCharacterCardId = "";
+            setValue("userCharacterCardId", null);
+            newValues.userCharacterCardId = null;
           } else {
             setValue("userCharacterCardId", cardId);
             newValues.userCharacterCardId = cardId;
@@ -230,8 +230,8 @@ const EditCards = ({
             setValue("aiCharacterCardIds", newAiCardIds);
             newValues.aiCharacterCardIds = newAiCardIds;
             if (userCharacterCardId === cardId) {
-              setValue("userCharacterCardId", "");
-              newValues.userCharacterCardId = "";
+              setValue("userCharacterCardId", null);
+              newValues.userCharacterCardId = null;
             }
           }
           break;

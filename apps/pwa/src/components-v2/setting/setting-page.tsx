@@ -98,7 +98,7 @@ const SettingsMain = () => {
                 <TypoBase className="text-text-body font-semibold">
                   Account and subscription
                 </TypoBase>
-                <ChevronRight className="text-text-secondary h-5 w-5" />
+                <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
               </div>
             </Authenticated>
             <Unauthenticated>
@@ -111,7 +111,7 @@ const SettingsMain = () => {
                 <TypoBase className="text-text-body font-semibold">
                   Sign in
                 </TypoBase>
-                <ChevronRight className="text-text-secondary h-5 w-5" />
+                <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
               </div>
             </Unauthenticated>
           </ConvexReady>
@@ -123,7 +123,7 @@ const SettingsMain = () => {
             <TypoBase className="text-text-body font-semibold">
               Providers
             </TypoBase>
-            <ChevronRight className="text-text-secondary h-5 w-5" />
+            <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
           </div>
         </div>
         <Separator />
@@ -190,7 +190,7 @@ const SettingsMain = () => {
             onClick={onClickLegal}
           >
             <TypoBase className="text-text-body font-semibold">Legal</TypoBase>
-            <ChevronRight className="text-text-secondary h-5 w-5" />
+            <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
           </div>
         </div>
         <Separator />
@@ -202,7 +202,7 @@ const SettingsMain = () => {
             <TypoBase className="text-text-body font-semibold">
               Advanced Preferences
             </TypoBase>
-            <ChevronRight className="text-text-secondary h-5 w-5" />
+            <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
           </div>
         </div>
       </div>

@@ -93,7 +93,7 @@ const OnboardingStepTwoPage = () => {
       </button>
 
       {/* Main */}
-      <div className="from-background-surface-0 to-background-surface-3 absolute inset-0 grid place-content-center bg-linear-to-b">
+      <div className="from-background-surface-0 to-background-surface-3 absolute inset-0 grid place-content-center bg-gradient-to-b">
         <div className="flex flex-row gap-[37px]">
           {/* Left section */}
           <div className="bg-background-surface-0 flex h-[728px] w-[640px] flex-col items-center justify-center rounded-[12px]">

@@ -1,9 +1,8 @@
-export const isExactPath = (path: string, exactPath: string) => {
-  const pathSegments = path.split("/");
-
-  return pathSegments[1] === exactPath;
+export const isPathWithId = (path: string, basePath: string) => {
+  const pattern = new RegExp(`^/${basePath}/[^/]+$`);
+  return pattern.test(path);
 };
 
 export const getSelectedIdFromPath = (path: string, key: string) => {
-  return isExactPath(path, key) ? path.split(`/${key}/`)[1] : null;
+  return isPathWithId(path, key) ? path.split(`/${key}/`)[1] : "";
 };

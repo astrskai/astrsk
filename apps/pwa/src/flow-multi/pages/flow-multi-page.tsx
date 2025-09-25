@@ -6,12 +6,10 @@ import { FlowPanelMain } from "../panels/flow-panel-main";
 
 export default function FlowMultiPage({ className }: { className?: string }) {
   const selectedFlowId = useAgentStore.use.selectedFlowId();
-  
+
   return (
     <div className={cn("h-full w-full", className)}>
-      <FlowPanelMain
-        flowId={selectedFlowId}
-      />
+      <FlowPanelMain flowId={selectedFlowId} />
     </div>
   );
 }

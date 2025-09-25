@@ -71,7 +71,7 @@ const FlowItem = ({
 
   // Handle select
   const navigate = useNavigate();
-  const { selectFlowId } = useAgentStore();
+  const selectFlowId = useAgentStore.use.selectFlowId();
   const setIsLoading = useAppStore.use.setIsLoading();
 
   const handleSelect = useCallback(() => {
@@ -427,18 +427,19 @@ const FlowSection = ({
     }),
   );
 
-  // Selected flow - check current URL
-  const selectFlowId = useAgentStore.use.selectFlowId();
+  // Selected flow
   const location = useLocation();
   const currentFlowId = getSelectedIdFromPath(location.pathname, "flows");
 
   // Handle create
+  const selectFlowId = useAgentStore.use.selectFlowId();
   const [isOpenCreate, setIsOpenCreate] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   const handleClickCreate = useCallback(() => {
     setIsOpenCreate(true);
   }, []);
+
   const handleDialogCreate = useCallback(
     async (props: Partial<Flow["props"]>) => {
       try {
@@ -608,7 +609,7 @@ const FlowSection = ({
           return;
         }
         const importedFlow = importedFlowOrError.getValue();
-        const importedFlowId = importedFlow.id.toString();
+
         toast.success("Flow Imported!");
 
         // Invalidate flows
@@ -618,11 +619,11 @@ const FlowSection = ({
 
         // Wait a bit for queries to settle, then navigate to the flow
         setTimeout(() => {
-          selectFlowId(importedFlowId);
+          selectFlowId(importedFlow.id.toString());
 
           navigate({
             to: "/flows/$flowId",
-            params: { flowId: importedFlowId },
+            params: { flowId: importedFlow.id.toString() },
           });
         }, 100);
 

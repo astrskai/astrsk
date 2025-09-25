@@ -65,7 +65,7 @@ import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
-import { isExactPath } from "@/utils/url-utils";
+import { isPathWithId } from "@/utils/url-utils";
 
 interface ScrollToBottomOptions {
   wait?: number;
@@ -863,7 +863,7 @@ const UserInputsMobile = ({
     setIsOpenTooltip(
       !isGroupButtonDonNotShowAgain &&
         messageContent.length > 0 &&
-        isExactPath(location.pathname, "sessions") &&
+        isPathWithId(location.pathname, "sessions") &&
         !isOpenSettings &&
         !isOkayButtonClicked,
     );
@@ -897,7 +897,7 @@ const UserInputsMobile = ({
               open={
                 !isGroupButtonDonNotShowAgain &&
                 messageContent.length > 0 &&
-                isExactPath(location.pathname, "sessions") &&
+                isPathWithId(location.pathname, "sessions") &&
                 !isOpenSettings
               }
             >
@@ -905,7 +905,7 @@ const UserInputsMobile = ({
                 <div className="flex flex-row justify-between p-0">
                   <div
                     className={cn(
-                      "justify-left flex flex-row gap-[16px] overflow-auto",
+                      "flex flex-row justify-start gap-[16px] overflow-auto",
                       streamingMessageId && "pointer-events-none opacity-50",
                     )}
                   >
@@ -919,7 +919,7 @@ const UserInputsMobile = ({
                         isHighLighted={
                           !isGroupButtonDonNotShowAgain &&
                           messageContent.length > 0 &&
-                          isExactPath(location.pathname, "sessions") &&
+                          isPathWithId(location.pathname, "sessions") &&
                           !isOpenSettings
                         }
                       />
@@ -934,7 +934,7 @@ const UserInputsMobile = ({
                         isHighLighted={
                           !isGroupButtonDonNotShowAgain &&
                           messageContent.length > 0 &&
-                          isExactPath(location.pathname, "sessions") &&
+                          isPathWithId(location.pathname, "sessions") &&
                           !isOpenSettings
                         }
                       />
@@ -948,7 +948,7 @@ const UserInputsMobile = ({
                       isHighLighted={
                         !isGroupButtonDonNotShowAgain &&
                         messageContent.length > 0 &&
-                        isExactPath(location.pathname, "sessions") &&
+                        isPathWithId(location.pathname, "sessions") &&
                         !isOpenSettings
                       }
                     />
@@ -998,7 +998,7 @@ const UserInputsMobile = ({
           <div
             className={cn(
               "flex w-full flex-row items-center gap-3 rounded-full py-[8px]",
-              "bg-background-container border-border-diver border backdrop-blur-sm",
+              "bg-background-container border-border-divider border backdrop-blur-sm",
             )}
           >
             <div className="flex w-full flex-row items-center justify-between pr-[10px] pl-[10px]">
@@ -1915,7 +1915,7 @@ const SessionMessagesAndUserInputsMobile = ({
               >
                 <div className="inline-flex items-center justify-start gap-2">
                   {isAddingScenario && (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="min-h-4 min-w-4 animate-spin" />
                   )}
                   Add
                 </div>

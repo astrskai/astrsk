@@ -359,7 +359,6 @@ const SessionItem = ({
           </DialogHeader>
           <Label className="flex flex-row items-center gap-[8px]">
             <Checkbox
-              defaultChecked={false}
               checked={isCopyHistory}
               onCheckedChange={(checked) => {
                 setIsCopyHistory(checked === true);
