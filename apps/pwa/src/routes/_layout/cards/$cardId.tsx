@@ -5,20 +5,13 @@ import { useEffect } from "react";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import CardPanelMainMobile from "@/components-v2/card/mobile/card-page-mobile";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { CardService } from "@/app/services";
 
 export const Route = createFileRoute("/_layout/cards/$cardId")({
   component: CardDetailPage,
   beforeLoad: async ({ params }) => {
     const { cardId } = params;
 
-    if (UniqueEntityID.isValidUUID(cardId)) {
-      const result = await CardService.getCard.execute(
-        new UniqueEntityID(cardId),
-      );
-
-      if (result.isFailure) throw redirect({ to: "/", replace: true });
-    } else {
+    if (!UniqueEntityID.isValidUUID(cardId)) {
       throw redirect({ to: "/", replace: true });
     }
   },
