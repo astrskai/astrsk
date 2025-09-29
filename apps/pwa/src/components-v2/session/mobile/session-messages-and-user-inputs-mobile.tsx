@@ -64,6 +64,8 @@ import { Option } from "@/modules/turn/domain/option";
 import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "@tanstack/react-router";
+import { isPathWithBasePath } from "@/utils/url-utils";
 
 interface ScrollToBottomOptions {
   wait?: number;
@@ -167,7 +169,7 @@ const MessageItemInternalMobile = ({
     >
       <div
         className={cn(
-          "flex gap-[8px] items-start",
+          "flex items-start gap-[8px]",
           isUser ? "flex-row-reverse" : "flex-row",
           isUser ? "user-chat-style" : "ai-chat-style",
         )}
@@ -185,14 +187,14 @@ const MessageItemInternalMobile = ({
         </div>
         <div
           className={cn(
-            "flex flex-col gap-[4px] flex-1 min-w-0", // Add min-w-0 to prevent flex shrinking issues
+            "flex min-w-0 flex-1 flex-col gap-[4px]", // Add min-w-0 to prevent flex shrinking issues
             isUser ? "items-end" : "items-start",
           )}
         >
           {/* Character name on top */}
           <div
             className={cn(
-              "text-[12px] leading-[15px] text-text-primary px-[8px]",
+              "text-text-primary px-[8px] text-[12px] leading-[15px]",
               isUser && "text-right",
             )}
           >
@@ -201,7 +203,7 @@ const MessageItemInternalMobile = ({
 
           <div
             className={cn(
-              "relative p-[12px] rounded-[8px] chat-style-chat-bubble",
+              "chat-style-chat-bubble relative rounded-[8px] p-[12px]",
               isEditing && !disabled && "w-full",
               !isMobile && "max-w-[280px]",
             )}
@@ -215,7 +217,7 @@ const MessageItemInternalMobile = ({
             {isEditing && !disabled ? (
               <TextareaAutosize
                 className={cn(
-                  "w-full p-0 border-0 outline-0 bg-transparent rounded-none no-resizer",
+                  "no-resizer w-full rounded-none border-0 bg-transparent p-0 outline-0",
                   "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
                 )}
                 autoFocus
@@ -235,7 +237,7 @@ const MessageItemInternalMobile = ({
                   <SvgIcon
                     name="astrsk_symbol"
                     size={24}
-                    className={cn("animate-spin chat-style-text")}
+                    className={cn("chat-style-text animate-spin")}
                   />
                 )}
                 <Markdown
@@ -245,7 +247,7 @@ const MessageItemInternalMobile = ({
                     pre: ({ children }) => (
                       <pre
                         tabIndex={0}
-                        className="overflow-x-auto max-w-full my-2 p-3 rounded-md"
+                        className="my-2 max-w-full overflow-x-auto rounded-md p-3"
                       >
                         {children}
                       </pre>
@@ -253,11 +255,11 @@ const MessageItemInternalMobile = ({
                     code: ({ children, className }) => {
                       const isInlineCode = !className;
                       return isInlineCode ? (
-                        <code className="px-1 py-0.5 rounded text-sm">
+                        <code className="rounded px-1 py-0.5 text-sm">
                           {children}
                         </code>
                       ) : (
-                        <code className="text-sm whitespace-pre-wrap break-words">
+                        <code className="text-sm break-words whitespace-pre-wrap">
                           {children}
                         </code>
                       );
@@ -275,7 +277,7 @@ const MessageItemInternalMobile = ({
             <div
               ref={editButtonsRef}
               className={cn(
-                "px-[12px] py-[6px] rounded-[8px] flex flex-row items-center gap-[8px]",
+                "flex flex-row items-center gap-[8px] rounded-[8px] px-[12px] py-[6px]",
                 "chat-style-chat-bubble message-buttons",
                 "mt-[4px]",
               )}
@@ -292,7 +294,7 @@ const MessageItemInternalMobile = ({
                 <SvgIcon
                   name="edit"
                   size={24}
-                  className="cursor-pointer min-h-[24px] min-w-[24px]"
+                  className="min-h-[24px] min-w-[24px] cursor-pointer"
                   onClick={() => {
                     setEditedContent(content ?? "");
                     setIsEditing(true);
@@ -306,7 +308,7 @@ const MessageItemInternalMobile = ({
                   onDelete?.();
                 }}
               />
-              <div className="flex flex-row gap-[2px] items-center">
+              <div className="flex flex-row items-center gap-[2px]">
                 <ChevronLeft
                   className="size-[16px] cursor-pointer"
                   onClick={(e) => {
@@ -314,7 +316,7 @@ const MessageItemInternalMobile = ({
                     onPrevOption?.();
                   }}
                 />
-                <div className="min-w-[20px] text-center font-[600] text-xs leading-[11px] select-none">{`${selectedOptionIndex + 1} / ${optionsLength}`}</div>
+                <div className="min-w-[20px] text-center text-xs leading-[11px] font-[600] select-none">{`${selectedOptionIndex + 1} / ${optionsLength}`}</div>
                 <ChevronRight
                   className="size-[16px] cursor-pointer"
                   onClick={(e) => {
@@ -387,17 +389,17 @@ const ScenarioMessageItemMobile = ({
     >
       <div
         className={cn(
-          "relative mx-auto w-full p-[16px] rounded-[8px]",
-          "bg-background-container font-[400] text-[14px] leading-[17px] text-text-placeholder",
+          "relative mx-auto w-full rounded-[8px] p-[16px]",
+          "bg-background-container text-text-placeholder text-[14px] leading-[17px] font-[400]",
           "transition-all duration-200 ease-in-out",
-          isEditing && "inset-ring-1 inset-ring-text-primary",
+          isEditing && "inset-ring-text-primary inset-ring-1",
         )}
         onClick={() => !isEditing && setShowEditButtons(!showEditButtons)}
       >
         {isEditing ? (
           <TextareaAutosize
             className={cn(
-              "w-full p-0 -mb-[4px] border-0 outline-0 bg-transparent rounded-none no-resizer",
+              "no-resizer -mb-[4px] w-full rounded-none border-0 bg-transparent p-0 outline-0",
               "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
             )}
             autoFocus
@@ -424,7 +426,7 @@ const ScenarioMessageItemMobile = ({
         {(showEditButtons || isEditing) && (
           <div
             ref={editButtonsRef}
-            className="absolute bottom-[-42px] right-2 flex gap-2"
+            className="absolute right-2 bottom-[-42px] flex gap-2"
             onClick={(e) => e.stopPropagation()}
           >
             {!isEditing ? (
@@ -432,9 +434,9 @@ const ScenarioMessageItemMobile = ({
                 {/* Edit button */}
                 <div
                   className={cn(
-                    "p-[8px] rounded-[8px] cursor-pointer",
+                    "cursor-pointer rounded-[8px] p-[8px]",
                     "bg-background-container text-text-input-subtitle",
-                    "hover:text-text-primary hover:inset-ring-1 hover:inset-ring-text-primary",
+                    "hover:text-text-primary hover:inset-ring-text-primary hover:inset-ring-1",
                     "transition-all duration-200 ease-in-out",
                   )}
                   onClick={() => setIsEditing(true)}
@@ -444,9 +446,9 @@ const ScenarioMessageItemMobile = ({
                 {/* Delete button */}
                 <div
                   className={cn(
-                    "p-[8px] rounded-[8px] cursor-pointer",
+                    "cursor-pointer rounded-[8px] p-[8px]",
                     "bg-background-container text-text-input-subtitle",
-                    "hover:text-text-primary hover:inset-ring-1 hover:inset-ring-text-primary",
+                    "hover:text-text-primary hover:inset-ring-text-primary hover:inset-ring-1",
                     "transition-all duration-200 ease-in-out",
                   )}
                   onClick={() => onDelete?.()}
@@ -459,9 +461,9 @@ const ScenarioMessageItemMobile = ({
                 {/* Save button */}
                 <div
                   className={cn(
-                    "p-[8px] rounded-[8px] cursor-pointer",
+                    "cursor-pointer rounded-[8px] p-[8px]",
                     "bg-background-container text-text-input-subtitle",
-                    "hover:text-text-primary hover:inset-ring-1 hover:inset-ring-text-primary",
+                    "hover:text-text-primary hover:inset-ring-text-primary hover:inset-ring-1",
                     "transition-all duration-200 ease-in-out",
                   )}
                   onClick={onEditDone}
@@ -471,9 +473,9 @@ const ScenarioMessageItemMobile = ({
                 {/* Cancel button */}
                 <div
                   className={cn(
-                    "p-[8px] rounded-[8px] cursor-pointer",
+                    "cursor-pointer rounded-[8px] p-[8px]",
                     "bg-background-container text-text-input-subtitle",
-                    "hover:text-text-primary hover:inset-ring-1 hover:inset-ring-text-primary",
+                    "hover:text-text-primary hover:inset-ring-text-primary hover:inset-ring-1",
                     "transition-all duration-200 ease-in-out",
                   )}
                   onClick={() => {
@@ -511,17 +513,17 @@ const ScenarioMessageItem = ({
     <div className="group/scenario px-[56px]">
       <div
         className={cn(
-          "relative mx-auto w-full min-w-[400px] max-w-[890px] p-[24px] rounded-[4px]",
-          "bg-background-container font-[400] text-[16px] leading-[19px] text-text-placeholder",
+          "relative mx-auto w-full max-w-[890px] min-w-[400px] rounded-[4px] p-[24px]",
+          "bg-background-container text-text-placeholder text-[16px] leading-[19px] font-[400]",
           "transition-all duration-200 ease-in-out",
-          "group-hover/scenario:inset-ring-1 group-hover/scenario:inset-ring-text-primary",
-          isEditing && "inset-ring-1 inset-ring-text-primary",
+          "group-hover/scenario:inset-ring-text-primary group-hover/scenario:inset-ring-1",
+          isEditing && "inset-ring-text-primary inset-ring-1",
         )}
       >
         {isEditing ? (
           <TextareaAutosize
             className={cn(
-              "w-full p-0 -mb-[4px] border-0 outline-0 bg-transparent rounded-none no-resizer",
+              "no-resizer -mb-[4px] w-full rounded-none border-0 bg-transparent p-0 outline-0",
               "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
             )}
             autoFocus
@@ -545,9 +547,9 @@ const ScenarioMessageItem = ({
         <div className="absolute top-0 right-[-16px]">
           <div
             className={cn(
-              "absolute top-0 left-0 p-[8px] rounded-[8px] cursor-pointer",
+              "absolute top-0 left-0 cursor-pointer rounded-[8px] p-[8px]",
               "bg-background-container text-text-input-subtitle",
-              "hover:text-text-primary hover:inset-ring-1 hover:inset-ring-text-primary",
+              "hover:text-text-primary hover:inset-ring-text-primary hover:inset-ring-1",
               "transition-all duration-200 ease-in-out",
               "opacity-0 group-hover/scenario:block group-hover/scenario:opacity-100",
               isEditing && "opacity-100",
@@ -680,7 +682,7 @@ const UserInputCharacterButton = ({
 
   return (
     <div
-      className="group relative flex flex-col gap-[4px] items-center cursor-pointer"
+      className="group relative flex cursor-pointer flex-col items-center gap-[4px]"
       onClick={onClick}
     >
       {characterCard ? (
@@ -691,7 +693,7 @@ const UserInputCharacterButton = ({
             size={48}
             className={cn(
               isHighLighted
-                ? "shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)] border-2 border-primary-normal"
+                ? "border-primary-normal border-2 shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)]"
                 : "",
             )}
           />
@@ -699,8 +701,8 @@ const UserInputCharacterButton = ({
             className={cn(
               "truncate text-[12px] leading-[15px]",
               isUser
-                ? "font-[500] text-text-primary"
-                : "font-[400] text-text-secondary",
+                ? "text-text-primary font-[500]"
+                : "text-text-secondary font-[400]",
               "max-w-[48px]",
             )}
           >
@@ -708,28 +710,28 @@ const UserInputCharacterButton = ({
           </div>
           <div
             className={cn(
-              "absolute top-0 left-0 size-[48px] pointer-events-none",
-              "border-[3px] border-border-selected-inverse rounded-full",
-              "opacity-0 group-hover:opacity-100 transition-opacity ease-out duration-300",
+              "pointer-events-none absolute top-0 left-0 size-[48px]",
+              "border-border-selected-inverse rounded-full border-[3px]",
+              "opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100",
             )}
           />
           {isUser && (
-            <div className="absolute top-0 right-0 border-[2px] rounded-full size-[12px] bg-status-optional" />
+            <div className="bg-status-optional absolute top-0 right-0 size-[12px] rounded-full border-[2px]" />
           )}
         </>
       ) : (
         <>
           <div
             className={cn(
-              "grid place-items-center size-[48px] rounded-full text-text-primary",
-              "bg-background-surface-4 group-hover:bg-background-surface-5 transition-colors ease-out duration-300",
+              "text-text-primary grid size-[48px] place-items-center rounded-full",
+              "bg-background-surface-4 group-hover:bg-background-surface-5 transition-colors duration-300 ease-out",
             )}
           >
             {icon}
           </div>
           <div
             className={cn(
-              "truncate font-[500] text-[12px] leading-[15px] text-text-primary",
+              "text-text-primary truncate text-[12px] leading-[15px] font-[500]",
               "max-w-[48px]",
             )}
           >
@@ -754,7 +756,7 @@ const UserInputAutoReplyButton = ({
 
   return (
     <div
-      className="group relative flex flex-col gap-[4px] items-center cursor-pointer"
+      className="group relative flex cursor-pointer flex-col items-center gap-[4px]"
       onClick={() => {
         switch (autoReply) {
           case AutoReply.Off:
@@ -776,8 +778,8 @@ const UserInputAutoReplyButton = ({
     >
       <div
         className={cn(
-          "m-[2px] grid place-items-center size-[44px] rounded-[5.25px]",
-          "transition-colors ease-out duration-300 border-1 border-border-normal",
+          "m-[2px] grid size-[44px] place-items-center rounded-[5.25px]",
+          "border-border-normal border-1 transition-colors duration-300 ease-out",
           autoReply === AutoReply.Off
             ? "bg-background-surface-4 group-hover:bg-background-surface-3"
             : "bg-background-surface-5 group-hover:bg-background-surface-4",
@@ -786,8 +788,8 @@ const UserInputAutoReplyButton = ({
         {autoReply === AutoReply.Off && (
           <div
             className={cn(
-              "text-[15.75px] text-text-subtle leading-[19px] font-[600]",
-              "transition-colors group-hover:text-text-primary",
+              "text-text-subtle text-[15.75px] leading-[19px] font-[600]",
+              "group-hover:text-text-primary transition-colors",
             )}
           >
             Off
@@ -798,7 +800,7 @@ const UserInputAutoReplyButton = ({
       </div>
       <div
         className={cn(
-          "w-[82px] font-[500] text-[12px] leading-[15px] text-text-body text-center select-none",
+          "text-text-body w-[82px] text-center text-[12px] leading-[15px] font-[500] select-none",
         )}
       >
         {autoReply === AutoReply.Off && "Auto-reply off"}
@@ -853,16 +855,20 @@ const UserInputsMobile = ({
   // Tooltip
   const [isOpenTooltip, setIsOpenTooltip] = useState(false);
   const [isOkayButtonClicked, setIsOkayButtonClicked] = useState(false);
+
+  const location = useLocation();
+  const isSessionsPage = location.pathname.startsWith("/sessions");
+
   useEffect(() => {
     setIsOpenTooltip(
       !isGroupButtonDonNotShowAgain &&
         messageContent.length > 0 &&
-        activePage === Page.Sessions &&
+        isPathWithBasePath(location.pathname, "sessions") &&
         !isOpenSettings &&
         !isOkayButtonClicked,
     );
   }, [
-    activePage,
+    location.pathname,
     isGroupButtonDonNotShowAgain,
     isOkayButtonClicked,
     isOpenSettings,
@@ -872,14 +878,14 @@ const UserInputsMobile = ({
   return (
     <div
       className={cn(
-        "absolute bottom-0 inset-x-0 z-10 rounded-t-xl",
+        "absolute inset-x-0 bottom-0 z-10 rounded-t-xl",
         disabled && "pointer-events-none opacity-50",
       )}
     >
       {/* Transparent background with blur */}
       <div
         className={cn(
-          "w-full flex flex-col gap-[16px] rounded-t-xl",
+          "flex w-full flex-col gap-[16px] rounded-t-xl",
           "bg-background-screen/50 backdrop-blur-md",
           "border-t border-white/10",
         )}
@@ -891,15 +897,15 @@ const UserInputsMobile = ({
               open={
                 !isGroupButtonDonNotShowAgain &&
                 messageContent.length > 0 &&
-                activePage === Page.Sessions &&
+                isPathWithBasePath(location.pathname, "sessions") &&
                 !isOpenSettings
               }
             >
               <TooltipTrigger asChild>
-                <div className="p-0 flex flex-row justify-between">
+                <div className="flex flex-row justify-between p-0">
                   <div
                     className={cn(
-                      "flex flex-row gap-[16px] justify-left overflow-auto",
+                      "flex flex-row justify-start gap-[16px] overflow-auto",
                       streamingMessageId && "pointer-events-none opacity-50",
                     )}
                   >
@@ -913,7 +919,7 @@ const UserInputsMobile = ({
                         isHighLighted={
                           !isGroupButtonDonNotShowAgain &&
                           messageContent.length > 0 &&
-                          activePage === Page.Sessions &&
+                          isPathWithBasePath(location.pathname, "sessions") &&
                           !isOpenSettings
                         }
                       />
@@ -928,13 +934,13 @@ const UserInputsMobile = ({
                         isHighLighted={
                           !isGroupButtonDonNotShowAgain &&
                           messageContent.length > 0 &&
-                          activePage === Page.Sessions &&
+                          isPathWithBasePath(location.pathname, "sessions") &&
                           !isOpenSettings
                         }
                       />
                     ))}
                     <UserInputCharacterButton
-                      icon={<Shuffle className="min-w-[24px] min-h-[24px]" />}
+                      icon={<Shuffle className="min-h-[24px] min-w-[24px]" />}
                       label=""
                       onClick={() => {
                         handleShuffle();
@@ -942,7 +948,7 @@ const UserInputsMobile = ({
                       isHighLighted={
                         !isGroupButtonDonNotShowAgain &&
                         messageContent.length > 0 &&
-                        activePage === Page.Sessions &&
+                        isPathWithBasePath(location.pathname, "sessions") &&
                         !isOpenSettings
                       }
                     />
@@ -991,17 +997,17 @@ const UserInputsMobile = ({
         <div className="px-[16px] pb-[32px]">
           <div
             className={cn(
-              "w-full rounded-full py-[8px] flex flex-row gap-3 items-center",
-              "bg-background-container border border-border-diver backdrop-blur-sm",
+              "flex w-full flex-row items-center gap-3 rounded-full py-[8px]",
+              "bg-background-container border-border-divider border backdrop-blur-sm",
             )}
           >
-            <div className="flex flex-row items-center justify-between w-full pl-[10px] pr-[10px]">
-              <div className="pt-[8px] w-full">
+            <div className="flex w-full flex-row items-center justify-between pr-[10px] pl-[10px]">
+              <div className="w-full pt-[8px]">
                 <TextareaAutosize
                   maxRows={3}
                   placeholder="Type a message"
                   className={cn(
-                    "w-full p-0 pl-[10px] border-0 outline-0 bg-transparent rounded-none no-resizer",
+                    "no-resizer w-full rounded-none border-0 bg-transparent p-0 pl-[10px] outline-0",
                     "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
                     "h-[21px] min-h-[21px]",
                     "text-[14px] leading-[1.5] font-normal",
@@ -1023,11 +1029,11 @@ const UserInputsMobile = ({
                     onStopGenerate?.();
                   }}
                   className={cn(
-                    "w-[50px] h-[40px] rounded-full flex items-center justify-center bg-background-card text-text-primary",
+                    "bg-background-card text-text-primary flex h-[40px] w-[50px] items-center justify-center rounded-full",
                     "hover:bg-background-card hover:text-text-primary",
                   )}
                 >
-                  <div className="size-[10px] bg-text-primary rounded-[1px]" />
+                  <div className="bg-text-primary size-[10px] rounded-[1px]" />
                 </button>
               ) : (
                 <button
@@ -1038,11 +1044,11 @@ const UserInputsMobile = ({
                     setMessageContent("");
                   }}
                   className={cn(
-                    "w-[50px] h-[40px] rounded-full flex items-center justify-center bg-background-card text-text-primary",
+                    "bg-background-card text-text-primary flex h-[40px] w-[50px] items-center justify-center rounded-full",
                     "hover:bg-background-card hover:text-text-primary",
                   )}
                 >
-                  <Send className="max-w-[18px] max-h-[18px]" />
+                  <Send className="max-h-[18px] max-w-[18px]" />
                 </button>
               )}
             </div>
@@ -1069,12 +1075,12 @@ const AddPlotCardModal = ({
   return (
     <div
       className={cn(
-        "mx-auto w-[600px] p-[24px] rounded-[8px]",
+        "mx-auto w-[600px] rounded-[8px] p-[24px]",
         "bg-background-container",
         "flex flex-col gap-[24px]",
       )}
     >
-      <div className="font-[400] text-[16px] leading-[24px] text-text-primary">
+      <div className="text-text-primary text-[16px] leading-[24px] font-[400]">
         Would you like to start from a list of scenarios from the plot card?
         <br />
         Your choice will appear as the first message.
@@ -1107,12 +1113,12 @@ const SelectScenarioModal = ({
   return (
     <div
       className={cn(
-        "mx-auto w-fit p-[24px] rounded-[8px]",
+        "mx-auto w-fit rounded-[8px] p-[24px]",
         "bg-background-container",
         "flex flex-col gap-[24px]",
       )}
     >
-      <div className="font-[400] text-[16px] leading-[24px] text-text-primary">
+      <div className="text-text-primary text-[16px] leading-[24px] font-[400]">
         Do you want to choose a scenario to use as your session&apos;s first
         message?
       </div>
@@ -1692,7 +1698,7 @@ const SessionMessagesAndUserInputsMobile = ({
     <div
       id={`session-${session.id}`}
       className={cn(
-        "max-w-[1196px] mx-auto flex flex-col gap-[10px] justify-end",
+        "mx-auto flex max-w-[1196px] flex-col justify-end gap-[10px]",
         isMobile ? "min-h-dvh pt-[20px]" : "min-h-dvh pt-[54px]",
       )}
     >
@@ -1765,19 +1771,19 @@ const SessionMessagesAndUserInputsMobile = ({
       >
         <DialogContent
           hideClose
-          className="w-80 p-6 bg-background-surface-2 rounded-lg outline-1 outline-border-light inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden"
+          className="bg-background-surface-2 outline-border-light inline-flex w-80 flex-col items-start justify-start gap-2.5 overflow-hidden rounded-lg p-6 outline-1"
         >
-          <div className="self-stretch flex flex-col justify-start items-end gap-6">
-            <div className="self-stretch flex flex-col justify-start items-start gap-2">
-              <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
+          <div className="flex flex-col items-end justify-start gap-6 self-stretch">
+            <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+              <DialogTitle className="text-text-primary justify-start self-stretch text-xl font-semibold">
                 Want to add a plot card?
               </DialogTitle>
-              <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
+              <DialogDescription className="text-text-body justify-start self-stretch text-sm leading-tight font-medium">
                 You will not be able to add a scenario, because you have not
                 selected a plot card for this session.
               </DialogDescription>
             </div>
-            <div className="inline-flex justify-start items-center gap-2">
+            <div className="inline-flex items-center justify-start gap-2">
               <DialogClose asChild>
                 <Button
                   variant="ghost"
@@ -1786,7 +1792,7 @@ const SessionMessagesAndUserInputsMobile = ({
                     setIsOpenAddPlotCardModal(false);
                   }}
                 >
-                  <div className="justify-center text-button-background-primary text-sm font-medium leading-tight">
+                  <div className="text-button-background-primary justify-center text-sm leading-tight font-medium">
                     Skip
                   </div>
                 </Button>
@@ -1798,8 +1804,8 @@ const SessionMessagesAndUserInputsMobile = ({
                   onAddPlotCard();
                 }}
               >
-                <div className="inline-flex justify-start items-center gap-2">
-                  <div className="justify-center text-button-foreground-primary text-sm font-semibold leading-tight">
+                <div className="inline-flex items-center justify-start gap-2">
+                  <div className="text-button-foreground-primary justify-center text-sm leading-tight font-semibold">
                     Add plot card
                   </div>
                 </div>
@@ -1863,18 +1869,18 @@ const SessionMessagesAndUserInputsMobile = ({
       >
         <DialogContent
           hideClose
-          className="w-80 p-6 bg-background-surface-2 rounded-lg outline-1 outline-border-light inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden"
+          className="bg-background-surface-2 outline-border-light inline-flex w-80 flex-col items-start justify-start gap-2.5 overflow-hidden rounded-lg p-6 outline-1"
         >
-          <div className="self-stretch flex flex-col justify-start items-end gap-6">
-            <div className="self-stretch flex flex-col justify-start items-start gap-2">
-              <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
+          <div className="flex flex-col items-end justify-start gap-6 self-stretch">
+            <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+              <DialogTitle className="text-text-primary justify-start self-stretch text-xl font-semibold">
                 Scenario
               </DialogTitle>
-              <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
+              <DialogDescription className="text-text-body justify-start self-stretch text-sm leading-tight font-medium">
                 Select a scenario for your new session.
               </DialogDescription>
             </div>
-            <div className="self-stretch flex flex-col justify-start items-start gap-4">
+            <div className="flex flex-col items-start justify-start gap-4 self-stretch">
               {renderedScenarios &&
                 renderedScenarios.map((scenario, index) => (
                   <ScenarioItem
@@ -1888,14 +1894,14 @@ const SessionMessagesAndUserInputsMobile = ({
                   />
                 ))}
             </div>
-            <div className="inline-flex justify-start items-center gap-2">
+            <div className="inline-flex items-center justify-start gap-2">
               <DialogClose asChild>
                 <Button
                   size="lg"
                   variant="ghost"
-                  className="min-w-20 px-3 py-2.5 rounded-[20px] flex justify-center items-center gap-2 h-auto"
+                  className="flex h-auto min-w-20 items-center justify-center gap-2 rounded-[20px] px-3 py-2.5"
                 >
-                  <div className="justify-center text-button-background-primary text-sm font-medium leading-tight">
+                  <div className="text-button-background-primary justify-center text-sm leading-tight font-medium">
                     Cancel
                   </div>
                 </Button>
@@ -1907,9 +1913,9 @@ const SessionMessagesAndUserInputsMobile = ({
                 }
                 onClick={addScenario}
               >
-                <div className="inline-flex justify-start items-center gap-2">
+                <div className="inline-flex items-center justify-start gap-2">
                   {isAddingScenario && (
-                    <Loader2 className="animate-spin h-4 w-4" />
+                    <Loader2 className="min-h-4 min-w-4 animate-spin" />
                   )}
                   Add
                 </div>

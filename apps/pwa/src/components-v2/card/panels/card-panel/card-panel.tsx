@@ -240,10 +240,9 @@ export function CardPanel({ cardId }: CardPanelProps) {
         <div
           className={cn(
             "bg-background-surface-3 flex items-center justify-between gap-2 rounded-lg px-4 py-2 transition-all duration-200",
-            {
-              "w-full": isMobile || isExpanded, // Full width when mobile or navigation expanded
-              "ml-12 w-[calc(100%-48px)]": !isMobile && !isExpanded, // Narrower width with left margin when navigation collapsed
-            },
+            isMobile || isExpanded
+              ? "ml-0 w-full"
+              : "ml-12 w-[calc(100%-48px)]",
           )}
         >
           <div className="flex min-w-0 flex-1 items-center justify-start gap-2">

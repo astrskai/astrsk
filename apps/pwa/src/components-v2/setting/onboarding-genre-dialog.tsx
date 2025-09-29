@@ -15,6 +15,7 @@ import { useState } from "react";
 
 import { sessionQueries } from "@/app/queries/session-queries";
 import { Session } from "@/modules/session/domain";
+import { useNavigate } from "@tanstack/react-router";
 
 // Map genres to session names
 const GENRE_SESSION_MAP = {
@@ -35,6 +36,7 @@ const OnboardingDialog = () => {
 
   // Session store
   const selectSession = useSessionStore.use.selectSession();
+  const navigate = useNavigate();
 
   // Sidebar control
   const { setOpen: setSidebarOpen } = useSidebarLeft();
@@ -60,20 +62,27 @@ const OnboardingDialog = () => {
       // Store the selected session ID for persistence during onboarding
       setOnboardingSelectedSessionId(targetSession.id.toString());
 
-      // Navigate to sessions page
-      setActivePage(Page.Sessions);
-
       // Select the appropriate session
       selectSession(targetSession.id, targetSession.title);
+
+      navigate({
+        to: "/sessions/$sessionId",
+        params: { sessionId: targetSession.id.toString() },
+      });
 
       // Collapse the left sidebar for a focused experience
       setSidebarOpen(false);
     } else {
       console.warn(`Could not find session with title: ${targetSessionName}`);
-      // Fallback: just navigate to sessions page if session not found
-      setActivePage(Page.Sessions);
+
+      navigate({
+        to: "/",
+      });
+
       setSidebarOpen(false);
     }
+
+    setActivePage(Page.Init);
   };
 
   // Show dialog only if:
@@ -87,37 +96,37 @@ const OnboardingDialog = () => {
         <>
           <DialogHeader>
             <DialogTitle>
-              <div className="font-[500] text-[24px] leading-[40px] text-[#F1F1F1]">
+              <div className="text-[24px] leading-[40px] font-[500] text-[#F1F1F1]">
                 Dive right in!
               </div>
             </DialogTitle>
             <DialogDescription>
-              <div className="font-[400] text-[16px] leading-[25.6px] text-[#A1A1A1]">
+              <div className="text-[16px] leading-[25.6px] font-[400] text-[#A1A1A1]">
                 Select a genre to experience our pre-built roleplay session
               </div>
             </DialogDescription>
           </DialogHeader>
 
-          <div className="self-stretch h-[365px] inline-flex justify-start items-start gap-2">
+          <div className="inline-flex h-[365px] items-start justify-start gap-2 self-stretch">
             <div
               className={cn(
-                "flex-1 self-stretch relative rounded-lg overflow-hidden cursor-pointer transition-all",
+                "relative flex-1 cursor-pointer self-stretch overflow-hidden rounded-lg transition-all",
                 selectedGenre === "romance"
-                  ? "outline-[3px] outline-offset-0 outline-border-selected-primary hover:outline-[4px]"
+                  ? "outline-border-selected-primary outline-[3px] outline-offset-0 hover:outline-[4px]"
                   : "hover:opacity-80",
               )}
               onClick={() => setSelectedGenre("romance")}
             >
               <img
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
                 src="/img/onboarding/romance.jpg"
                 alt="Romance genre"
               />
-              <div className="absolute inset-x-0 bottom-0 w-full h-24 px-2 py-6 bg-gradient-to-b from-black/0 to-black/80 flex flex-col justify-center items-center gap-2">
-                <div className="justify-start text-text-primary text-xl font-semibold leading-relaxed">
+              <div className="absolute inset-x-0 bottom-0 flex h-24 w-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-black/0 to-black/80 px-2 py-6">
+                <div className="text-text-primary justify-start text-xl leading-relaxed font-semibold">
                   Sakura Blooms, hearts awaken
                 </div>
-                <div className="text-text-subtle font-semibold text-sm">
+                <div className="text-text-subtle text-sm font-semibold">
                   Romance
                 </div>
               </div>
@@ -125,23 +134,23 @@ const OnboardingDialog = () => {
 
             <div
               className={cn(
-                "flex-1 self-stretch relative rounded-lg overflow-hidden cursor-pointer transition-all",
+                "relative flex-1 cursor-pointer self-stretch overflow-hidden rounded-lg transition-all",
                 selectedGenre === "fantasy"
-                  ? "outline-[3px] outline-offset-0 outline-border-selected-primary hover:outline-[4px]"
+                  ? "outline-border-selected-primary outline-[3px] outline-offset-0 hover:outline-[4px]"
                   : "hover:opacity-80",
               )}
               onClick={() => setSelectedGenre("fantasy")}
             >
               <img
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
                 src="/img/onboarding/fantasy.jpg"
                 alt="Fantasy genre"
               />
-              <div className="absolute inset-x-0 bottom-0 w-full h-24 px-2 py-6 bg-gradient-to-b from-black/0 to-black/80 flex flex-col justify-center items-center gap-2">
-                <div className="justify-start text-text-primary text-xl font-semibold leading-relaxed">
+              <div className="absolute inset-x-0 bottom-0 flex h-24 w-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-black/0 to-black/80 px-2 py-6">
+                <div className="text-text-primary justify-start text-xl leading-relaxed font-semibold">
                   Dice of Fate
                 </div>
-                <div className="text-text-subtle font-semibold text-sm">
+                <div className="text-text-subtle text-sm font-semibold">
                   Fantasy TRPG
                 </div>
               </div>

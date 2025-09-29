@@ -16,7 +16,7 @@ import { PanelFocusAnimationWrapper } from "@/components-v2/dockview-panel-focus
 // import "dockview/dist/styles/dockview.css";
 import { Flow } from "@/modules/flow/domain";
 import { debounce } from "lodash-es";
-import { cn } from "@/shared/utils";
+import { cn, logger } from "@/shared/utils";
 import { FlowPanelProvider } from "@/flow-multi/components/flow-panel-provider";
 import { getPanelTitle, PanelType } from "@/flow-multi/components/panel-types";
 import {
@@ -48,6 +48,9 @@ import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
 import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-mutations";
 import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
 import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
+import { useAgentStore } from "@/app/stores/agent-store";
+import "../../components-v2/card/panels/card-panel-dockview.css";
+import { useNavigate } from "@tanstack/react-router";
 
 // Watermark component with restore button
 const Watermark = React.memo<{ onRestore?: () => void }>(({ onRestore }) => (
@@ -180,21 +183,30 @@ const components = {
 };
 
 interface FlowPanelMainProps {
-  flowId: string | null;
   className?: string;
 }
 
-export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
+export function FlowPanelMain({ className }: FlowPanelMainProps) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const selectedFlowId = useAgentStore.use.selectedFlowId();
 
   // Fetch flow data when flowId changes
-  const { data: flow } = useQuery({
-    ...flowQueries.detail(flowId || ""),
-    enabled: !!flowId,
+  const { data: flow, isLoading } = useQuery({
+    ...flowQueries.detail(selectedFlowId || ""),
+    enabled: !!selectedFlowId,
   });
 
+  // Check flow exists
+  useEffect(() => {
+    if (!isLoading && !flow) {
+      logger.error("Flow not found");
+      navigate({ to: "/", replace: true });
+    }
+  }, [flow, isLoading, navigate]);
+
   // Panel layout mutation
-  const updatePanelLayoutMutation = useUpdatePanelLayout(flowId || "");
+  const updatePanelLayoutMutation = useUpdatePanelLayout(selectedFlowId || "");
 
   const [dockviewApi, setDockviewApi] = useState<DockviewApi>();
   const isFlowSwitchingRef = useRef<boolean>(false);
@@ -210,13 +222,13 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
 
   // Update refs when flow data changes
   // Update refs directly without useEffect to avoid re-renders
-  flowIdRef.current = flowId;
+  flowIdRef.current = selectedFlowId;
   flowRef.current = flow;
   agentsRef.current = agents;
 
   // Invalidate all flow-related queries when flow ID changes
   useEffect(() => {
-    if (flowId && flowId !== prevFlowIdRef.current) {
+    if (selectedFlowId && selectedFlowId !== prevFlowIdRef.current) {
       // Clear previous flow's cached data to prevent UI state conflicts
       if (prevFlowIdRef.current) {
         queryClient.removeQueries({
@@ -254,7 +266,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
 
       // Get agent IDs from current flow and invalidate their queries
       const currentFlow = queryClient.getQueryData(
-        flowKeys.detail(flowId),
+        flowKeys.detail(selectedFlowId),
       ) as any;
       const currentAgentNodes =
         currentFlow?.props?.nodes?.filter(
@@ -269,9 +281,9 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
         }
       });
 
-      prevFlowIdRef.current = flowId;
+      prevFlowIdRef.current = selectedFlowId;
     }
-  }, [flowId, queryClient]);
+  }, [selectedFlowId, queryClient]);
 
   // Track agent node IDs to detect actual changes
   const agentNodeIds = useMemo(() => {
@@ -287,7 +299,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
   useEffect(() => {
     // Enhanced race condition protection
     if (
-      !flowId ||
+      !selectedFlowId ||
       !flow ||
       !flow.props?.nodes ||
       !Array.isArray(flow.props.nodes)
@@ -297,7 +309,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
 
     // Ensure we're loading agents for the correct flow
     const currentFlowId = flow.id.toString();
-    if (currentFlowId !== flowId) {
+    if (currentFlowId !== selectedFlowId) {
       return;
     }
 
@@ -495,7 +507,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
 
   // Function to restore only the flow panel (recovery mode)
   const restoreFlowPanelOnly = useCallback(() => {
-    if (!dockviewApi || !flowId) {
+    if (!dockviewApi || !selectedFlowId) {
       console.error("Cannot restore layout: dockviewApi or flowId missing");
       return;
     }
@@ -511,13 +523,13 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     });
 
     // Create only the flow panel
-    createFlowPanel(dockviewApi, flowId);
+    createFlowPanel(dockviewApi, selectedFlowId);
 
     // Save the clean layout
     setTimeout(() => {
       savePanelLayout(dockviewApi);
     }, 100);
-  }, [dockviewApi, flowId, createFlowPanel, savePanelLayout]);
+  }, [dockviewApi, selectedFlowId, createFlowPanel, savePanelLayout]);
 
   // Panel operations
   const openPanel = useCallback(
@@ -635,7 +647,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
             tabComponent: "colored",
             title,
             params: {
-              flowId,
+              flowId: selectedFlowId,
               title,
               ...(agentId && { agentId }),
               // For node panels, also pass nodeId
@@ -667,7 +679,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
             title,
             initialWidth: panelWidth,
             params: {
-              flowId,
+              flowId: selectedFlowId,
               title,
               ...(agentId && { agentId }),
               // For node panels, also pass nodeId
@@ -701,7 +713,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
           title,
           initialWidth: panelWidth,
           params: {
-            flowId,
+            flowId: selectedFlowId,
             title,
             ...(agentId && { agentId }),
             // For node panels, also pass nodeId
@@ -731,7 +743,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
         console.log(`[openPanel] Failed to create panel!`);
       }
     },
-    [dockviewApi, flowId, debouncedSaveLayout],
+    [dockviewApi, selectedFlowId, debouncedSaveLayout],
   ); // Removed agents dependency to prevent re-renders
 
   // Initialize dockview when flowId changes (not flow object)
@@ -808,7 +820,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     };
 
     initializeDockview();
-  }, [dockviewApi, flowId, restorePanelLayout]);
+  }, [dockviewApi, selectedFlowId, restorePanelLayout]);
 
   // Cleanup: flush any pending saves when component unmounts or flowId changes
   useEffect(() => {
@@ -817,7 +829,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
         debouncedSaveLayout.flush();
       }
     };
-  }, [debouncedSaveLayout, flowId]);
+  }, [debouncedSaveLayout, selectedFlowId]);
 
   // Set minimum width constraints for non-flow panel groups
   useEffect(() => {
@@ -912,7 +924,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
 
   return (
     <FlowPanelProvider
-      flowId={flowId || ""}
+      flowId={selectedFlowId || ""}
       api={dockviewApi || null}
       openPanel={openPanel}
     >

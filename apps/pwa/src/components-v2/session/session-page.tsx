@@ -1,6 +1,6 @@
 import { useAsset } from "@/app/hooks/use-asset";
-import { useSession } from "@/app/hooks/use-session";
 import { useSessions } from "@/app/hooks/use-sessions-v2";
+import { sessionQueries } from "@/app/queries/session-queries";
 import { useAppStore } from "@/app/stores/app-store";
 import { useBackgroundStore } from "@/app/stores/background-store";
 import { useSessionStore } from "@/app/stores/session-store";
@@ -16,17 +16,31 @@ import { SessionSettings } from "@/components-v2/session/session-settings";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { logger } from "@/shared/utils";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function SessionPage({ className }: { className?: string }) {
+  const navigate = useNavigate();
   const [isOpenSettings, setIsOpenSettings] = useState(false);
   const { isFirstTimeSidebarOpen, setIsFirstTimeSidebarOpen } = useAppStore();
   const { selectedSessionId } = useSessionStore();
-  const [session] = useSession(selectedSessionId);
+  const { data: session, isLoading } = useQuery(
+    sessionQueries.detail(selectedSessionId ?? undefined),
+  );
   const { data: sessions } = useSessions({
     keyword: "",
   });
+
+  // Check session exists
+  useEffect(() => {
+    if (!isLoading && !session) {
+      logger.error("Session not found");
+      navigate({ to: "/", replace: true });
+    }
+  }, [isLoading, navigate, session])
 
   // Session onboarding
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
@@ -60,7 +74,7 @@ export default function SessionPage({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative min-h-dvh max-h-dvh bg-background-screen",
+        "bg-background-screen relative max-h-dvh min-h-dvh",
         className,
       )}
     >
@@ -105,7 +119,7 @@ export default function SessionPage({ className }: { className?: string }) {
       {/* Session top gradient */}
       <div
         className={cn(
-          "absolute top-0 inset-x-0 h-[100px] pointer-events-none",
+          "pointer-events-none absolute inset-x-0 top-0 h-[100px]",
           "bg-gradient-to-b from-[#0E0E0EB2] to-[#0E0E0E00]",
         )}
       />
@@ -118,8 +132,8 @@ export default function SessionPage({ className }: { className?: string }) {
             label="Session settings"
             position="top-right"
             className={cn(
-              "transition-opacity duration-[600ms] ease-in-out opacity-100",
-              isOpenSettings && "opacity-0 pointer-events-none",
+              "opacity-100 transition-opacity duration-[600ms] ease-in-out",
+              isOpenSettings && "pointer-events-none opacity-0",
             )}
             onClick={() => {
               setIsOpenSettings(true);
@@ -128,12 +142,12 @@ export default function SessionPage({ className }: { className?: string }) {
             onboardingTooltip="Click to edit session details"
           />
           <FloatingActionButton
-            icon={<ArrowLeft className="min-w-[24px] min-h-[24px]" />}
+            icon={<ArrowLeft className="min-h-[24px] min-w-[24px]" />}
             label="Back to session"
             position="top-left"
             className={cn(
-              "transition-opacity duration-[600ms] ease-in-out opacity-100",
-              !isOpenSettings && "opacity-0 pointer-events-none",
+              "opacity-100 transition-opacity duration-[600ms] ease-in-out",
+              !isOpenSettings && "pointer-events-none opacity-0",
             )}
             onClick={() => {
               setIsOpenSettings(false);
@@ -141,7 +155,7 @@ export default function SessionPage({ className }: { className?: string }) {
           />
           <div
             className={cn(
-              "absolute inset-0 transition-transform duration-[600ms] ease-in-out translate-x-full overflow-hidden overflow-y-auto",
+              "absolute inset-0 translate-x-full overflow-hidden overflow-y-auto transition-transform duration-[600ms] ease-in-out",
               isOpenSettings && "translate-x-0",
             )}
           >

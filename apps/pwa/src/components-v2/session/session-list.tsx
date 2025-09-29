@@ -3,6 +3,7 @@
 import { AlertTriangleIcon, Ellipsis, Menu, Plus, Search } from "lucide-react";
 import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Tooltip,
   TooltipContent,
@@ -73,6 +74,7 @@ const SessionListMobile = ({
     setCreateSessionName,
   } = useSessionStore();
   const { setActivePage, isMobile } = useAppStore();
+  const navigate = useNavigate();
   const { data: sessions } = useSessions({
     keyword,
   });
@@ -365,7 +367,7 @@ const SessionListMobile = ({
           defaultValue="New session"
           onNext={async (name) => {
             setCreateSessionName(name);
-            setIsOpenCreateSessionMobile(true);
+            navigate({ to: "/sessions/create" });
           }}
           trigger={
             <div className="w-full flex flex-col items-center justify-center">

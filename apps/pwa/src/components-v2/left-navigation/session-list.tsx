@@ -1,5 +1,5 @@
 // TODO: apply color palette
-
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useSessionValidation } from "@/app/hooks/use-session-validation";
 import { cardQueries } from "@/app/queries/card-queries";
 import { flowQueries } from "@/app/queries/flow-queries";
@@ -45,26 +45,16 @@ import {
   DialogTitle,
 } from "@/components-v2/ui/dialog";
 import { Label } from "@/components-v2/ui/label";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { Agent } from "@/modules/agent/domain/agent";
 import { Session } from "@/modules/session/domain/session";
-import { ApiSource } from "@/modules/api/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn, downloadFile, logger } from "@/shared/utils";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
-import {
-  CircleAlert,
-  Copy,
-  Download,
-  Loader2,
-  Plus,
-  Trash2,
-  Upload,
-} from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { CircleAlert, Copy, Trash2, Upload } from "lucide-react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { fetchBackgrounds } from "@/app/stores/background-store";
+import { getUniqueEntityIDFromPath } from "@/utils/url-utils";
 
 const SessionItem = ({
   sessionId,
@@ -81,12 +71,17 @@ const SessionItem = ({
   const isInvalid = isFetched && !isValid;
 
   // Handle select
-  const setActivePage = useAppStore.use.setActivePage();
+  const navigate = useNavigate();
   const selectSession = useSessionStore.use.selectSession();
   const handleSelect = useCallback(() => {
     selectSession(sessionId, session?.title ?? "");
-    setActivePage(Page.Sessions);
-  }, [selectSession, session?.title, sessionId, setActivePage]);
+
+    // Navigate to session
+    navigate({
+      to: "/sessions/$sessionId",
+      params: { sessionId: sessionId.toString() },
+    });
+  }, [navigate, sessionId, selectSession, session]);
 
   // Handle export
   const [isOpenExport, setIsOpenExport] = useState(false);
@@ -200,8 +195,13 @@ const SessionItem = ({
       }
       const copiedSession = copiedSessionOrError.getValue();
 
-      // Select copied session
       selectSession(copiedSession.id, copiedSession.title);
+
+      // Navigate to copied session
+      navigate({
+        to: "/sessions/$sessionId",
+        params: { sessionId: copiedSession.id.toString() },
+      });
 
       // Invalidate sessions
       queryClient.invalidateQueries({
@@ -219,11 +219,12 @@ const SessionItem = ({
       setIsOpenCopy(false);
       setIsCopyHistory(false);
     }
-  }, [isCopyHistory, selectSession, sessionId]);
+  }, [isCopyHistory, navigate, sessionId, selectSession]);
 
   // Handle delete
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const selectedSessionId = useSessionStore.use.selectedSessionId();
+
   const handleDelete = useCallback(async () => {
     try {
       // Delete session
@@ -233,10 +234,10 @@ const SessionItem = ({
         throw new Error(deleteSessionOrError.getError());
       }
 
-      // Unselect deleted session
+      // Navigate away from deleted session if currently viewing it
       if (selectedSessionId?.equals(sessionId)) {
         selectSession(null, "");
-        setActivePage(Page.Init);
+        navigate({ to: "/" });
       }
 
       // Invalidate sessions
@@ -257,16 +258,16 @@ const SessionItem = ({
       // Close delete dialog
       setIsOpenDelete(false);
     }
-  }, [selectSession, selectedSessionId, sessionId, setActivePage]);
+  }, [navigate, sessionId, selectSession, selectedSessionId]);
 
   return (
     <>
       {/* Session Item */}
       <div
         className={cn(
-          "pl-8 pr-4 py-2 group/item h-12 border-b-1 border-b-[#313131]",
+          "group/item h-12 border-b-1 border-b-[#313131] py-2 pr-4 pl-8",
           "bg-[#272727] hover:bg-[#313131] pointer-coarse:focus-within:bg-[#313131]",
-          "flex flex-row gap-1 items-center",
+          "flex flex-row items-center gap-1",
           selected && "bg-background-surface-4 rounded-[8px]",
         )}
         tabIndex={0}
@@ -278,15 +279,15 @@ const SessionItem = ({
             <CircleAlert size={16} />
           </div>
         )}
-        <div className="grow line-clamp-1 break-all font-[500] text-[12px] leading-[15px] text-[#F1F1F1]">
+        <div className="line-clamp-1 grow text-[12px] leading-[15px] font-[500] break-all text-[#F1F1F1]">
           {session?.title}
         </div>
-        <div className="group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden shrink-0 font-[500] text-[10px] leading-[16px] text-[#9D9D9D]">
+        <div className="shrink-0 text-[10px] leading-[16px] font-[500] text-[#9D9D9D] group-hover/item:hidden pointer-coarse:group-focus-within/item:hidden">
           {session?.turnIds.length} Messages
         </div>
 
         {/* Actions */}
-        <div className="hidden group-hover/item:flex pointer-coarse:group-focus-within/item:flex shrink-0 text-[#9D9D9D] flex-row gap-2">
+        <div className="hidden shrink-0 flex-row gap-2 text-[#9D9D9D] group-hover/item:flex pointer-coarse:group-focus-within/item:flex">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -356,15 +357,14 @@ const SessionItem = ({
               Do you want to include chat history?
             </DialogDescription>
           </DialogHeader>
-          <Label className="flex flex-row gap-[8px] items-center">
+          <Label className="flex flex-row items-center gap-[8px]">
             <Checkbox
-              defaultChecked={false}
               checked={isCopyHistory}
               onCheckedChange={(checked) => {
                 setIsCopyHistory(checked === true);
               }}
             />
-            <span className="font-[400] text-[16px] leading-[19px]">
+            <span className="text-[16px] leading-[19px] font-[400]">
               Include chat messages in the duplicated session
             </span>
           </Label>
@@ -412,9 +412,12 @@ const SessionSection = ({
     }),
   );
 
-  // Selected session
-  const activePage = useAppStore.use.activePage();
-  const selectedSessionId = useSessionStore.use.selectedSessionId();
+  const location = useLocation();
+  const currentSessionId = getUniqueEntityIDFromPath(
+    location.pathname,
+    "sessions",
+  );
+  const navigate = useNavigate();
 
   // Handle create
   const setCreateSessionName = useSessionStore.use.setCreateSessionName();
@@ -423,6 +426,7 @@ const SessionSection = ({
   // Handle import
   const selectSession = useSessionStore.use.selectSession();
   const [isOpenImportDialog, setIsOpenImportDialog] = useState(false);
+
   const handleImport = useCallback(
     async (
       file: File,
@@ -462,8 +466,13 @@ const SessionSection = ({
         // Refetch backgrounds
         fetchBackgrounds();
 
-        // Select imported session
+        // Navigate to imported session
         selectSession(importedSession.id, importedSession.title);
+
+        navigate({
+          to: "/sessions/$sessionId",
+          params: { sessionId: importedSession.id.toString() },
+        });
       } catch (error) {
         if (error instanceof Error) {
           toast.error("Failed to import session", {
@@ -473,7 +482,7 @@ const SessionSection = ({
         logger.error("Failed to import session", error);
       }
     },
-    [selectSession],
+    [navigate, selectSession],
   );
 
   const handleFileSelect = useCallback(
@@ -513,7 +522,7 @@ const SessionSection = ({
   return (
     <div
       className={cn(
-        onboardingHighlight && "border-1 border-border-selected-primary",
+        onboardingHighlight && "border-border-selected-primary border-1",
       )}
     >
       <SectionHeader
@@ -531,7 +540,7 @@ const SessionSection = ({
         onboardingHelpGlow={onboardingHelpGlow}
       />
       <div className={cn(!expanded && "hidden")}>
-        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center">
+        <div className="flex flex-row items-center gap-2 py-2 pr-4 pl-8">
           <SearchInput
             className="grow"
             value={keyword}
@@ -540,7 +549,7 @@ const SessionSection = ({
             }}
           />
         </div>
-        <div className="pl-8 pr-4 py-2 flex flex-row gap-2 items-center">
+        <div className="flex flex-row items-center gap-2 py-2 pr-4 pl-8">
           <StepName
             defaultValue="New Session"
             onNext={async (name) => {
@@ -562,15 +571,12 @@ const SessionSection = ({
             <SessionItem
               key={session.id.toString()}
               sessionId={session.id}
-              selected={
-                activePage === Page.Sessions &&
-                session.id.equals(selectedSessionId)
-              }
+              selected={session.id.toString() === currentSessionId}
             />
           ))
         ) : (
-          <div className="pl-8 pr-4 py-2 border-b-1 border-b-[#313131] grid place-items-center">
-            <div className="font-[400] text-[12px] leading-[15px] text-[#9D9D9D]">
+          <div className="grid place-items-center border-b-1 border-b-[#313131] py-2 pr-4 pl-8">
+            <div className="text-[12px] leading-[15px] font-[400] text-[#9D9D9D]">
               No Sessions
             </div>
           </div>

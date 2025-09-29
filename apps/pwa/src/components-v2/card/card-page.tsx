@@ -3,7 +3,8 @@
 import { Import } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/app/stores/app-store";
+import { useNavigate } from "@tanstack/react-router";
 import CardList from "@/components-v2/card/card-list";
 import CardFormSheet from "@/components-v2/card/components/edit-sheet/card-form-sheet";
 import {
@@ -28,8 +29,8 @@ export default function CardPage({ className }: { className?: string }) {
   const [activeCardType, setActiveCardType] = useState<CardType>(
     CardType.Character,
   );
-  const [isLoading, setIsLoading] = useState(false);
-  const { cardEditOpen, setSelectedCardId, setActivePage } = useAppStore();
+
+  const { cardEditOpen } = useAppStore();
 
   // Get responsive layout configuration from the custom hook
   const { characterWidth, plotWidth, isVertical } = useResponsiveLayout();
@@ -38,6 +39,8 @@ export default function CardPage({ className }: { className?: string }) {
   const [charWidth, setCharWidth] = useState(characterWidth);
   const [pltWidth, setPltWidth] = useState(plotWidth);
   const [vertical, setVertical] = useState(isVertical);
+
+  const navigate = useNavigate();
 
   // Update local state when the hook values change
   useEffect(() => {
@@ -111,9 +114,8 @@ export default function CardPage({ className }: { className?: string }) {
 
   // Handle card click to navigate to CardPanel
   const handleCardClick = (id: string) => {
-    console.log("Navigate to CardPanel for card:", id);
-    setSelectedCardId(id);
-    setActivePage(Page.CardPanel);
+    console.log("Navigate to card detail page for card:", id);
+    navigate({ to: "/cards/$cardId", params: { cardId: id } });
   };
 
   useEffect(() => {
@@ -130,7 +132,7 @@ export default function CardPage({ className }: { className?: string }) {
   return (
     <div className={cn(className)}>
       <div
-        className="flex flex-col h-screen bg-background-screen relative overflow-hidden"
+        className="bg-background-screen relative flex h-screen flex-col overflow-hidden"
         // style={{
         //   backgroundImage: "url('/img/message-view-background.png')",
         //   backgroundSize: "cover",
@@ -141,7 +143,7 @@ export default function CardPage({ className }: { className?: string }) {
         <div
           ref={containerRef}
           className={cn(
-            "relative flex justify-center gap-4 p-4 h-full",
+            "relative flex h-full justify-center gap-4 p-4",
             "flex-row",
             "pb-8",
             "z-10",
@@ -150,11 +152,13 @@ export default function CardPage({ className }: { className?: string }) {
         >
           <div
             // style={{ width: charWidth }}
-            className="w-[50%] transition-all duration-300 overflow-hidden max-w-[1000px] min-w-[426px]"
+            className="w-[50%] max-w-[1000px] min-w-[426px] overflow-hidden transition-all duration-300"
           >
             <CardList
               title="Characters"
-              cards={characterCards?.map((card: Card) => card.id.toValue()) || []}
+              cards={
+                characterCards?.map((card: Card) => card.id.toValue()) || []
+              }
               cardType={CardType.Character}
               maxColumns={4} // Character grids have 5 max columns
               onSearch={(query) => {
@@ -180,7 +184,7 @@ export default function CardPage({ className }: { className?: string }) {
 
           <div
             // style={{ width: pltWidth }}
-            className="w-[50%] transition-all duration-300 overflow-hidden max-w-[1000px] min-w-[426px]"
+            className="w-[50%] max-w-[1000px] min-w-[426px] overflow-hidden transition-all duration-300"
           >
             <CardList
               title="Plots"
@@ -236,7 +240,7 @@ export default function CardPage({ className }: { className?: string }) {
               </div>
             </DialogDescription>
             <div
-              className="border-dashed bg-background-card hover:bg-background-input rounded-2xl flex flex-col justify-center items-center p-8 cursor-pointer"
+              className="bg-background-card hover:bg-background-input flex cursor-pointer flex-col items-center justify-center rounded-2xl border-dashed p-8"
               onClick={onClickImportCard}
               onDragOver={(e) => {
                 e.preventDefault();

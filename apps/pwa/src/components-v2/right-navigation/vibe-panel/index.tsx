@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils";
 import type {
@@ -61,7 +62,7 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
   // Get selected resource from app stores or use overrides for local panels
   const globalSelectedCardId = useAppStore((state) => state.selectedCardId);
   const globalSelectedFlowId = useAgentStore((state) => state.selectedFlowId);
-  const activePage = useAppStore((state) => state.activePage);
+  const location = useLocation();
 
   // Use override values for local panels, otherwise use global app state
   const selectedCardId =
@@ -77,11 +78,11 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
   const isCardPage =
     isLocalPanel && overrideResourceType === "card"
       ? true
-      : activePage === Page.Cards || activePage === Page.CardPanel;
+      : location.pathname.includes("/cards/");
   const isFlowPage =
     isLocalPanel && overrideResourceType === "flow"
       ? true
-      : activePage === Page.Flow || activePage === Page.Agents;
+      : location.pathname.includes("/flows/");
 
   const primaryResourceId = useMemo(() => {
     if (isCardPage && selectedCardId) return selectedCardId;

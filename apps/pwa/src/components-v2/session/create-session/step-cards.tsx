@@ -49,9 +49,9 @@ const CardItem = ({
   return (
     <div
       className={cn(
-        "relative w-full max-w-[154px] aspect-154/230 rounded-[8px]",
+        "relative aspect-154/230 w-full max-w-[154px] rounded-[8px]",
         !cardId && "bg-background-surface-4",
-        disabled && "opacity-50 pointer-events-none",
+        disabled && "pointer-events-none opacity-50",
         className,
       )}
       onClick={disabled ? undefined : onClick}
@@ -61,16 +61,16 @@ const CardItem = ({
         <TradingCard cardId={cardId} />
       ) : (
         <div className="flex h-full w-full items-center justify-center">
-          <div className="text-center font-[500] text-[12px] leading-[15px] text-background-surface-5">
+          <div className="text-background-surface-5 text-center text-[12px] leading-[15px] font-[500]">
             {placeholder}
           </div>
         </div>
       )}
       {isActive ? (
-        <div className="absolute inset-0 rounded-[8px] inset-ring-2 inset-ring-primary-normal pointer-events-none" />
+        <div className="inset-ring-primary-normal pointer-events-none absolute inset-0 rounded-[8px] inset-ring-2" />
       ) : (
         // Placeholder for size matching
-        <div className="absolute inset-0 rounded-[8px] inset-ring-2 inset-ring-transparent pointer-events-none" />
+        <div className="pointer-events-none absolute inset-0 rounded-[8px] inset-ring-2 inset-ring-transparent" />
       )}
     </div>
   );
@@ -188,8 +188,8 @@ const StepCards = () => {
   };
 
   return (
-    <div className="w-full flex flex-row gap-8 items-start justify-center px-[40px] min-h-[600px]">
-      <div className="w-1/2 min-w-[440px] max-w-[744px] min-h-[600px]">
+    <div className="flex min-h-[600px] w-full flex-row items-start justify-center gap-8 px-[40px]">
+      <div className="min-h-[600px] w-1/2 max-w-[744px] min-w-[440px]">
         <Accordion
           type="single"
           defaultValue="ai"
@@ -205,18 +205,18 @@ const StepCards = () => {
             setShowAiCardError(false);
           }}
         >
-          <AccordionItem value="ai" className="border-b-0 mb-[16px]">
+          <AccordionItem value="ai" className="mb-[16px] border-b-0">
             <AccordionTrigger className="py-0 hover:no-underline">
               <div
                 className={cn(
-                  "w-full p-[24px] bg-background-surface-3 rounded-[16px]",
+                  "bg-background-surface-3 w-full rounded-[16px] p-[24px]",
                   activeTab === "ai"
-                    ? "inset-ring-2 inset-ring-primary-normal"
+                    ? "inset-ring-primary-normal inset-ring-2"
                     : "hover:bg-background-surface-4 cursor-pointer",
                 )}
               >
-                <div className="flex flex-row gap-[12px] items-center">
-                  <div className="font-[500] text-[20px] leading-[32px] text-text-primary">
+                <div className="flex flex-row items-center gap-[12px]">
+                  <div className="text-text-primary text-[20px] leading-[32px] font-[500]">
                     1. AI character cards{" "}
                     <span className="text-status-required">(Minimum 1)*</span>
                   </div>
@@ -225,12 +225,12 @@ const StepCards = () => {
                   )}
                 </div>
                 <AccordionContent className="py-0">
-                  <div className="flex flex-col items-start h-[calc(100vh-610px)] min-h-[320px]">
-                    <div className="my-[16px] font-[400] text-[16px] leading-[24px] text-text-input-subtitle">
+                  <div className="flex h-[calc(100vh-610px)] min-h-[320px] flex-col items-start">
+                    <div className="text-text-input-subtitle my-[16px] text-[16px] leading-[24px] font-[400]">
                       Choose one or more AI characters to add to your session.
                     </div>
                     <ScrollArea className="w-full flex-1 overflow-y-auto">
-                      <div className="flex flex-wrap gap-[24px] w-full justify-start pr-2">
+                      <div className="flex w-full flex-wrap justify-start gap-[24px] pr-2">
                         {aiCharacterCardIds.map((cardId) => (
                           <CardItem
                             key={cardId}
@@ -243,7 +243,7 @@ const StepCards = () => {
                           className={cn(
                             showAiCardError &&
                               aiCharacterCardIds.length === 0 &&
-                              "inset-ring-2 inset-ring-status-destructive-light",
+                              "inset-ring-status-destructive-light inset-ring-2",
                           )}
                         />
                       </div>
@@ -254,18 +254,18 @@ const StepCards = () => {
               </div>
             </AccordionTrigger>
           </AccordionItem>
-          <AccordionItem value="user" className="border-b-0 mb-[16px]">
+          <AccordionItem value="user" className="mb-[16px] border-b-0">
             <AccordionTrigger className="py-0 hover:no-underline">
               <div
                 className={cn(
-                  "w-full p-[24px] bg-background-surface-3 rounded-[16px]",
+                  "bg-background-surface-3 w-full rounded-[16px] p-[24px]",
                   activeTab === "user"
-                    ? "inset-ring-2 inset-ring-primary-normal"
+                    ? "inset-ring-primary-normal inset-ring-2"
                     : "hover:bg-background-surface-4 cursor-pointer",
                 )}
               >
-                <div className="flex flex-row gap-[12px] items-center">
-                  <div className="font-[500] text-[20px] leading-[32px] text-text-primary">
+                <div className="flex flex-row items-center gap-[12px]">
+                  <div className="text-text-primary text-[20px] leading-[32px] font-[500]">
                     2. User character card
                   </div>
                   {userCharacterCardId && (
@@ -274,12 +274,12 @@ const StepCards = () => {
                 </div>
 
                 <AccordionContent className="py-0">
-                  <div className="flex flex-col items-start h-[calc(100vh-610px)] min-h-[320px]">
-                    <div className="my-[16px] font-[400] text-[16px] leading-[24px] text-text-input-subtitle">
+                  <div className="flex h-[calc(100vh-610px)] min-h-[320px] flex-col items-start">
+                    <div className="text-text-input-subtitle my-[16px] text-[16px] leading-[24px] font-[400]">
                       Choose your character role for this session.
                     </div>
                     <ScrollArea className="w-full flex-1 overflow-y-auto">
-                      <div className="w-full flex flex-wrap gap-[24px] justify-start pr-2">
+                      <div className="flex w-full flex-wrap justify-start gap-[24px] pr-2">
                         {userCharacterCardId ? (
                           <CardItem
                             cardId={userCharacterCardId}
@@ -296,18 +296,18 @@ const StepCards = () => {
               </div>
             </AccordionTrigger>
           </AccordionItem>
-          <AccordionItem value="plot" className="border-b-0 mb-[16px]">
-            <AccordionTrigger className="py-0 hover:no-underline ">
+          <AccordionItem value="plot" className="mb-[16px] border-b-0">
+            <AccordionTrigger className="py-0 hover:no-underline">
               <div
                 className={cn(
-                  "w-full p-[24px] bg-background-surface-3 rounded-[16px]",
+                  "bg-background-surface-3 w-full rounded-[16px] p-[24px]",
                   activeTab === "plot"
-                    ? "inset-ring-2 inset-ring-primary-normal"
+                    ? "inset-ring-primary-normal inset-ring-2"
                     : "hover:bg-background-surface-4 cursor-pointer",
                 )}
               >
-                <div className="flex flex-row gap-[12px] items-center">
-                  <div className="font-[500] text-[20px] leading-[32px] text-text-primary">
+                <div className="flex flex-row items-center gap-[12px]">
+                  <div className="text-text-primary text-[20px] leading-[32px] font-[500]">
                     3. Plot card
                   </div>
                   {plotCardId && (
@@ -315,14 +315,14 @@ const StepCards = () => {
                   )}
                 </div>
                 <AccordionContent className="py-0">
-                  <div className="flex flex-col items-start h-[calc(100vh-610px)] min-h-[320px]">
-                    <div className="my-[16px] font-[400] text-[16px] leading-[24px] text-text-input-subtitle">
+                  <div className="flex h-[calc(100vh-610px)] min-h-[320px] flex-col items-start">
+                    <div className="text-text-input-subtitle my-[16px] text-[16px] leading-[24px] font-[400]">
                       Pick a plot to frame your session. The chosen card will
                       define the background context and provide a list of first
                       messages to choose from.
                     </div>
                     <ScrollArea className="w-full flex-1 overflow-y-auto">
-                      <div className="w-full flex flex-row justify-start pr-2">
+                      <div className="flex w-full flex-row justify-start pr-2">
                         {plotCardId ? (
                           <CardItem
                             cardId={plotCardId}
@@ -341,10 +341,10 @@ const StepCards = () => {
           </AccordionItem>
         </Accordion>
       </div>
-      <div className="w-1/2 min-w-[440px] max-w-[746px] h-[calc(100vh-340px)] min-h-[600px]">
-        <div className="p-[24px] rounded-[24px] bg-background-surface-3 flex flex-col gap-[24px] h-full">
+      <div className="h-[calc(100vh-340px)] min-h-[600px] w-1/2 max-w-[746px] min-w-[440px]">
+        <div className="bg-background-surface-3 flex h-full flex-col gap-[24px] rounded-[24px] p-[24px]">
           <div className="flex flex-col gap-[8px]">
-            <div className="font-[500] text-[20px] leading-[32px] text-text-primary">
+            <div className="text-text-primary text-[20px] leading-[32px] font-[500]">
               {activeTab === "plot" ? "Plot" : "Character"} cards
             </div>
             {/* <div className="font-[400] text-[16px] leading-[19px] text-text-input-subtitle">
@@ -358,11 +358,10 @@ const StepCards = () => {
           <ScrollArea className="flex-1 pr-2">
             {activeTab === "plot"
               ? plotCards?.length === 0 && (
-                  <div className="flex flex-col items-top w-full">
+                  <div className="items-top flex w-full flex-col">
                     <NoCardsFound
                       cardType={CardType.Plot}
                       onCreate={() => {
-                        setActivePage(Page.Cards);
                         setCardEditOpen(CardType.Plot);
                       }}
                       variant="edit"
@@ -370,18 +369,17 @@ const StepCards = () => {
                   </div>
                 )
               : characterCards?.length === 0 && (
-                  <div className="flex flex-col items-top w-full">
+                  <div className="items-top flex w-full flex-col">
                     <NoCardsFound
                       cardType={CardType.Character}
                       onCreate={() => {
-                        setActivePage(Page.Cards);
                         setCardEditOpen(CardType.Character);
                       }}
                       variant="edit"
                     />
                   </div>
                 )}
-            <div className="flex flex-wrap gap-[24px] justify-start">
+            <div className="flex flex-wrap justify-start gap-[24px]">
               {(activeTab === "plot" ? plotCards : characterCards)?.map(
                 (card: Card) => (
                   <CardItem

@@ -35,7 +35,7 @@ import {
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
-import { useMobileNavigation } from "@/App";
+import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import { TableName } from "@/db/schema/table-name";
 import {
   ApiConnection,
@@ -73,7 +73,9 @@ const showBaseUrl = new Map<ApiSource, boolean>([
   [ApiSource.OpenAICompatible, true],
 ]);
 
-const showModelUrl = new Map<ApiSource, boolean>([[ApiSource.OpenAICompatible, true]]);
+const showModelUrl = new Map<ApiSource, boolean>([
+  [ApiSource.OpenAICompatible, true],
+]);
 
 const showApiKey = new Map<ApiSource, boolean>([
   [ApiSource.OpenAI, true],
@@ -190,7 +192,8 @@ const descriptionBySource = new Map<ApiSource, React.ReactNode>([
   [
     ApiSource.OpenAICompatible,
     <>
-      Please note that you can only connect to endpoints that provide inference API (<code>/v1/chat/completions</code>).
+      Please note that you can only connect to endpoints that provide inference
+      API (<code>/v1/chat/completions</code>).
     </>,
   ],
 ]);
@@ -261,25 +264,25 @@ const renderProviderListItem = ({
         <Card
           key={source.toString()}
           className={cn(
-            "group/card relative rounded-[8px] overflow-hidden cursor-pointer",
-            "border border-border-container",
+            "group/card relative cursor-pointer overflow-hidden rounded-[8px]",
+            "border-border-container border",
             source === ApiSource.AstrskAi &&
               "bg-button-foreground-primary border-border-light",
           )}
           onClick={onOpenEdit}
         >
-          <CardContent className="p-4 bg-background-surface-3">
+          <CardContent className="bg-background-surface-3 p-4">
             <div className="flex items-center gap-3">
               {logo && <SvgIcon name={logo} size={32} />}
-              <div className="font-[600] text-[20px] leading-[24px] text-text-primary">
+              <div className="text-text-primary text-[20px] leading-[24px] font-[600]">
                 {providerName}
               </div>
             </div>
           </CardContent>
           <div
             className={cn(
-              "absolute inset-0 rounded-[8px] pointer-events-none",
-              "inset-ring-2 inset-ring-primary-normal",
+              "pointer-events-none absolute inset-0 rounded-[8px]",
+              "inset-ring-primary-normal inset-ring-2",
               "hidden group-hover/card:block",
             )}
           />
@@ -292,27 +295,35 @@ const renderProviderListItem = ({
       <Card
         key={apiConnection.id.toString()}
         className={cn(
-          "group/card relative rounded-[8px] overflow-hidden cursor-pointer",
-          "border border-border-container",
+          "group/card relative cursor-pointer overflow-hidden rounded-[8px]",
+          "border-border-container border",
           "bg-background-surface-3",
           source === ApiSource.AstrskAi &&
             "bg-button-foreground-primary border-border-light",
         )}
         onClick={onOpenEdit}
       >
-        <CardContent className="p-0 flex flex-row ">
+        <CardContent className="flex flex-row p-0">
           {/* Left panel - main content */}
           <div className="flex-1 p-4">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="mb-3 flex items-center gap-3">
               {logo && <SvgIcon name={logo} size={32} />}
-              <div className="font-[600] text-[20px] leading-[24px] text-text-primary">
-                {source === ApiSource.AstrskAi ? <SvgIcon name="astrsk_logo_typo" width={63.24} height={17.8} /> : providerName}
+              <div className="text-text-primary text-[20px] leading-[24px] font-[600]">
+                {source === ApiSource.AstrskAi ? (
+                  <SvgIcon
+                    name="astrsk_logo_typo"
+                    width={63.24}
+                    height={17.8}
+                  />
+                ) : (
+                  providerName
+                )}
               </div>
             </div>
 
             {/* Show details for non-astrsk providers or promotional text for astrsk */}
             {source === ApiSource.AstrskAi ? (
-              <div className="font-[600] text-[12px] leading-[15.6px] text-text-input-subtitle">
+              <div className="text-text-input-subtitle text-[12px] leading-[15.6px] font-[600]">
                 To mark our v1.0 release,
                 <br />
                 <span className="text-text-muted-title">
@@ -342,21 +353,21 @@ const renderProviderListItem = ({
           {/* Right panel - indicator/status */}
           <div
             className={cn(
-              "min-w-[40px] flex flex-col justify-center items-center",
+              "flex min-w-[40px] flex-col items-center justify-center",
               "bg-background-surface-2",
               source === ApiSource.AstrskAi && "bg-primary-dark",
             )}
           >
             <div
-              className="w-2 h-2 rounded-full bg-green-500"
+              className="h-2 w-2 rounded-full bg-green-500"
               title="Connected"
             />
           </div>
         </CardContent>
         <div
           className={cn(
-            "absolute inset-0 rounded-[8px] pointer-events-none",
-            "inset-ring-2 inset-ring-primary-normal",
+            "pointer-events-none absolute inset-0 rounded-[8px]",
+            "inset-ring-primary-normal inset-ring-2",
             "hidden group-hover/card:block",
           )}
         />
@@ -657,14 +668,14 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
 
   return (
     <div
-      className={cn("flex flex-col h-dvh bg-background-surface-2", className)}
+      className={cn("bg-background-surface-2 flex h-dvh flex-col", className)}
     >
       {/* Mobile Header */}
       <TopNavigation title="Providers" onMenuClick={() => setIsOpen(true)} />
 
       {/* Content */}
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-3">
+        <div className="space-y-3 p-4">
           {/* Active Connections */}
           {apiConnections && apiConnections.length > 0 && (
             <>
@@ -716,12 +727,12 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
           })}
 
           {/* Request Provider Card */}
-          <div className="w-full bg-background-surface-3 rounded-[8px] p-8">
+          <div className="bg-background-surface-3 w-full rounded-[8px] p-8">
             <div className="flex flex-col gap-2 text-center">
-              <div className="font-[600] text-[16px] leading-[20px] text-text-secondary">
+              <div className="text-text-secondary text-[16px] leading-[20px] font-[600]">
                 Don&apos;t see your favorite provider?
               </div>
-              <div className="font-[400] text-[12px] leading-[15px] text-text-input-subtitle [&>a]:text-secondary-normal">
+              <div className="text-text-input-subtitle [&>a]:text-secondary-normal text-[12px] leading-[15px] font-[400]">
                 Drop a request in our{" "}
                 <a href="https://discord.gg/J6ry7w8YCF" target="_blank">
                   Discord!
@@ -737,7 +748,7 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
       <Sheet open={showConnectPage} onOpenChange={setShowConnectPage}>
         <SheetContent
           side="right"
-          className="w-full h-full p-0 flex flex-col bg-background-surface-2"
+          className="bg-background-surface-2 flex h-full w-full flex-col p-0"
           hideClose
         >
           {editingApiConnection && (
@@ -761,8 +772,8 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
               />
 
               {/* Connect Form Content - Scrollable */}
-              <div className="flex-1 flex flex-col justify-center overflow-y-auto">
-                <div className="p-6 space-y-6">
+              <div className="flex flex-1 flex-col justify-center overflow-y-auto">
+                <div className="space-y-6 p-6">
                   {/* Description */}
                   {editingApiConnection.source &&
                     descriptionBySource.get(editingApiConnection.source) && (
@@ -790,11 +801,12 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
                         onChange={(e) => setBaseUrl(e.target.value)}
                       />
                     )}
-                  {editingApiConnection.source === ApiSource.OpenAICompatible && (
+                  {editingApiConnection.source ===
+                    ApiSource.OpenAICompatible && (
                     <div
                       className={cn(
-                        "flex flex-row gap-[4px] items-start",
-                        "font-[400] text-[14px] leading-[17px] text-text-secondary",
+                        "flex flex-row items-start gap-[4px]",
+                        "text-text-secondary text-[14px] leading-[17px] font-[400]",
                         "[&>a]:text-secondary-normal [&>a]:underline",
                       )}
                     >
@@ -802,7 +814,8 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
                         <Info size={16} />
                       </div>
                       <div>
-                        If the Base URL with <code>/v1</code> doesn't work, try without <code>/v1</code>, or vice versa.
+                        If the Base URL with <code>/v1</code> doesn't work, try
+                        without <code>/v1</code>, or vice versa.
                       </div>
                     </div>
                   )}
@@ -844,8 +857,8 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
                       />
                       <div
                         className={cn(
-                          "flex flex-row gap-[4px] items-center",
-                          "font-[400] text-[14px] leading-[17px] text-text-secondary",
+                          "flex flex-row items-center gap-[4px]",
+                          "text-text-secondary text-[14px] leading-[17px] font-[400]",
                           "[&>a]:text-secondary-normal [&>a]:underline",
                         )}
                       >
@@ -862,8 +875,8 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
                   {editingApiConnection.source === ApiSource.Mistral && (
                     <div
                       className={cn(
-                        "flex flex-row gap-[4px] items-start",
-                        "font-[400] text-[14px] leading-[17px] text-text-secondary",
+                        "flex flex-row items-start gap-[4px]",
+                        "text-text-secondary text-[14px] leading-[17px] font-[400]",
                         "[&>a]:text-secondary-normal [&>a]:underline",
                       )}
                     >
@@ -880,18 +893,19 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
               </div>
 
               {/* Buttons at Bottom */}
-              <div className="shrink-0 p-6 pt-0 bg-background-surface-2">
+              <div className="bg-background-surface-2 shrink-0 p-6 pt-0">
                 {/* Check if this is a new connection (no existing connection with this source) */}
                 {!apiConnections?.find(
-                  (conn: ApiConnection) => conn.source === editingApiConnection.source,
+                  (conn: ApiConnection) =>
+                    conn.source === editingApiConnection.source,
                 ) ? (
                   // New connection - only show Connect button
                   <Button
-                    className="w-full h-12"
+                    className="h-12 w-full"
                     disabled={!validateEditForm() || isLoading}
                     onClick={handleOnConnect}
                   >
-                    {isLoading && <Loader2 className="animate-spin mr-2" />}
+                    {isLoading && <Loader2 className="mr-2 animate-spin" />}
                     Connect
                   </Button>
                 ) : (
@@ -899,10 +913,11 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
                   <div className="flex gap-3">
                     <Button
                       variant="outline"
-                      className="flex-1 h-12"
+                      className="h-12 flex-1"
                       onClick={() => {
                         const existingConnection = apiConnections?.find(
-                          (conn: ApiConnection) => conn.source === editingApiConnection.source,
+                          (conn: ApiConnection) =>
+                            conn.source === editingApiConnection.source,
                         );
                         if (existingConnection) {
                           handleOnDisconnect(existingConnection, {
@@ -917,11 +932,11 @@ export default function ModelPageMobile({ className }: ModelPageMobileProps) {
                       Disconnect
                     </Button>
                     <Button
-                      className="flex-1 h-12"
+                      className="h-12 flex-1"
                       disabled={!validateEditForm() || isLoading}
                       onClick={handleOnConnect}
                     >
-                      {isLoading && <Loader2 className="animate-spin mr-2" />}
+                      {isLoading && <Loader2 className="mr-2 animate-spin" />}
                       Save
                     </Button>
                   </div>

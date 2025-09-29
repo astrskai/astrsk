@@ -1620,7 +1620,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             <TooltipProvider>
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <HelpCircle className="text-text-info h-4 w-4 cursor-help" />
+                  <HelpCircle className="text-text-info min-h-4 min-w-4 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent variant="button" side="bottom">
                   <p className="max-w-xs text-xs">
