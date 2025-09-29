@@ -806,10 +806,7 @@ Operations are being generated and will be ready for review shortly.`;
                         if (dataStoreNodeIds.length > 0) {
                           dataStoreNodeIds.forEach((nodeId) => {
                             queryClient.invalidateQueries({
-                              queryKey: dataStoreNodeKeys.detail(
-                                resourceId,
-                                nodeId,
-                              ),
+                              queryKey: dataStoreNodeKeys.detail(nodeId),
                             });
                           });
                           queryClient.invalidateQueries({
@@ -821,7 +818,7 @@ Operations are being generated and will be ready for review shortly.`;
                         if (ifNodeIds.length > 0) {
                           ifNodeIds.forEach((nodeId) => {
                             queryClient.invalidateQueries({
-                              queryKey: ifNodeKeys.detail(resourceId, nodeId),
+                              queryKey: ifNodeKeys.detail(nodeId),
                             });
                           });
                           queryClient.invalidateQueries({
@@ -950,7 +947,7 @@ Operations are being generated and will be ready for review shortly.`;
     return (
       <div
         className={cn(
-          "w-12 h-[calc(100vh-var(--topbar-height))] border-l bg-background",
+          "bg-background h-[calc(100vh-var(--topbar-height))] w-12 border-l",
           className,
         )}
       >
@@ -967,8 +964,8 @@ Operations are being generated and will be ready for review shortly.`;
     <div
       className={cn(
         isLocalPanel
-          ? "h-full w-full bg-background-surface-2 flex flex-col"
-          : "w-full h-[calc(100vh-var(--topbar-height))] min-w-80 bg-background-surface-1 rounded-lg flex flex-col",
+          ? "bg-background-surface-2 flex h-full w-full flex-col"
+          : "bg-background-surface-1 flex h-[calc(100vh-var(--topbar-height))] w-full min-w-80 flex-col rounded-lg",
         className,
       )}
     >

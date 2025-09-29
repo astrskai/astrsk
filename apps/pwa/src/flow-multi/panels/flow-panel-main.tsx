@@ -42,7 +42,6 @@ import { Button } from "@/components-v2/ui/button";
 import { UniqueEntityID } from "@/shared/domain";
 import { Agent } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
-import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentKeys } from "@/app/queries/agent/query-factory";
 import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
@@ -52,7 +51,7 @@ import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
 
 // Watermark component with restore button
 const Watermark = React.memo<{ onRestore?: () => void }>(({ onRestore }) => (
-  <div className="flex flex-col items-center justify-center h-full text-text-subtle opacity-30 gap-4">
+  <div className="text-text-subtle flex h-full flex-col items-center justify-center gap-4 opacity-30">
     <span className="text-2xl font-light">astrsk</span>
     {onRestore && (
       <Button
@@ -523,18 +522,37 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
   // Panel operations
   const openPanel = useCallback(
     (panelType: PanelType, agentId?: string) => {
-      if (!dockviewApi || !flow) return;
+      console.log(
+        `[openPanel] Called with panelType: ${panelType}, agentId: ${agentId}`,
+      );
+
+      const currentFlow = flowRef.current;
+      console.log(
+        `[openPanel] currentFlow exists: ${!!currentFlow}, dockviewApi exists: ${!!dockviewApi}`,
+      );
+
+      if (!dockviewApi || !currentFlow) {
+        console.log(
+          `[openPanel] Returning early - missing dockviewApi or currentFlow`,
+        );
+        return;
+      }
 
       const panelId = agentId
         ? `${panelType}-${agentId}`
         : `${panelType}-standalone`;
 
+      console.log(`[openPanel] Panel ID: ${panelId}`);
+
       // Check if panel already exists
       const existingPanel = dockviewApi.getPanel(panelId);
       if (existingPanel) {
+        console.log(`[openPanel] Panel already exists, focusing it`);
         existingPanel.focus();
         return;
       }
+
+      console.log(`[openPanel] Panel doesn't exist, creating new panel`);
 
       // Get agent name, color, and inactive state if applicable
       let agentColor: string | undefined;
@@ -551,7 +569,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
         const agent = agentId ? agentsRef.current.get(agentId) : null;
         title = getPanelTitle(panelType, agent?.props.name);
         agentColor = agent ? getAgentHexColor(agent) : undefined;
-        agentInactive = agent && flow ? getAgentState(agent, flow) : undefined;
+        agentInactive =
+          agent && currentFlow ? getAgentState(agent, currentFlow) : undefined;
       }
       // Check if this is an if-node or data-store-node panel
       else if (
@@ -560,9 +579,18 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
           panelType === "dataStoreSchema") &&
         agentId
       ) {
+        console.log(
+          `[openPanel] Creating ${panelType} panel for node: ${agentId}`,
+        );
+
         // Get node from flow to get its name (color will be queried by tab component)
-        let node = flow.props.nodes.find((n) => n.id === agentId);
+        let node = currentFlow.props.nodes.find((n) => n.id === agentId);
+        console.log(
+          `[openPanel] Found node: ${!!node}, node.id: ${node?.id}, node.type: ${node?.type}`,
+        );
+
         let nodeData = node?.data as any;
+        console.log(`[openPanel] Node data:`, nodeData);
 
         // Color will be queried by the tab component, so we don't set it here
         agentColor = undefined;
@@ -576,7 +604,9 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
         } else {
           nodeName = nodeData?.label || nodeData?.name || "Unnamed";
         }
+        console.log(`[openPanel] Node name for title: ${nodeName}`);
         title = getPanelTitle(panelType, nodeName);
+        console.log(`[openPanel] Panel title: ${title}`);
       }
       // Default case
       else {
@@ -691,7 +721,14 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
       }
 
       if (newPanel) {
+        console.log(
+          `[openPanel] Panel created successfully with ID: ${panelId}`,
+        );
+        console.log(`[openPanel] Panel component: ${panelType}`);
+        console.log(`[openPanel] Panel params:`, newPanel.params);
         debouncedSaveLayout(dockviewApi);
+      } else {
+        console.log(`[openPanel] Failed to create panel!`);
       }
     },
     [dockviewApi, flowId, debouncedSaveLayout],
@@ -825,9 +862,15 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
       };
 
       const disposables = [
-        api.onDidAddPanel(handlePanelChange),
-        api.onDidRemovePanel(handlePanelChange),
-        api.onDidLayoutChange(handlePanelChange),
+        api.onDidAddPanel((panel) => {
+          handlePanelChange();
+        }),
+        api.onDidRemovePanel((panel) => {
+          handlePanelChange();
+        }),
+        api.onDidLayoutChange(() => {
+          handlePanelChange();
+        }),
       ];
 
       return () => {
@@ -848,15 +891,15 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
     return (
       <div
         className={cn(
-          "flex flex-col items-center justify-center gap-4 py-36 w-full h-full bg-background-surface-0",
+          "bg-background-surface-0 flex h-full w-full flex-col items-center justify-center gap-4 py-36",
           className,
         )}
       >
-        <div className="flex flex-col gap-[58px] grow items-center justify-center w-full text-[#757575]">
+        <div className="flex w-full grow flex-col items-center justify-center gap-[58px] text-[#757575]">
           <SvgIcon name="astrsk_symbol_fit" width={88} height={93} />
           <SvgIcon name="astrsk_logo_full" width={231} height={48} />
         </div>
-        <div className="flex gap-2 items-center text-[#BFBFBF]">
+        <div className="flex items-center gap-2 text-[#BFBFBF]">
           <SvgIcon name="lock_solid" size={20} />
           <div className="text-[16px] select-none">
             <span>Your flows are stored locally — </span>
@@ -874,7 +917,7 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
       openPanel={openPanel}
     >
       <div
-        className={cn("h-full w-full relative", className)}
+        className={cn("relative h-full w-full", className)}
         style={{ height: "calc(100% - var(--topbar-height))" }}
       >
         <DockviewReact

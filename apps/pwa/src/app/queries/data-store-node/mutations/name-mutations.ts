@@ -31,31 +31,40 @@ export function useUpdateDataStoreNodeName(flowId: string, nodeId: string) {
 
   const mutation = useMutation({
     mutationFn: async (name: string) => {
-      const result = await DataStoreNodeService.updateDataStoreNodeName.execute({
-        flowId,
-        nodeId,
-        name,
-      });
+      const result = await DataStoreNodeService.updateDataStoreNodeName.execute(
+        {
+          flowId,
+          nodeId,
+          name,
+        },
+      );
       if (result.isFailure) {
         throw new Error(result.getError());
       }
     },
     onMutate: async (name) => {
       startEditing();
-      
+
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: dataStoreNodeKeys.name(flowId, nodeId) });
-      
+      await queryClient.cancelQueries({
+        queryKey: dataStoreNodeKeys.name(nodeId),
+      });
+
       // Optimistically update the cache
-      const previousName = queryClient.getQueryData(dataStoreNodeKeys.name(flowId, nodeId));
-      queryClient.setQueryData(dataStoreNodeKeys.name(flowId, nodeId), { name });
-      
+      const previousName = queryClient.getQueryData(
+        dataStoreNodeKeys.name(nodeId),
+      );
+      queryClient.setQueryData(dataStoreNodeKeys.name(nodeId), { name });
+
       return { previousName };
     },
     onError: (err, name, context) => {
       // Revert optimistic update on error
       if (context?.previousName) {
-        queryClient.setQueryData(dataStoreNodeKeys.name(flowId, nodeId), context.previousName);
+        queryClient.setQueryData(
+          dataStoreNodeKeys.name(nodeId),
+          context.previousName,
+        );
       }
       setIsEditing(false);
       if (editTimeoutRef.current) {
@@ -66,9 +75,13 @@ export function useUpdateDataStoreNodeName(flowId: string, nodeId: string) {
       endEditing();
       // Invalidate to ensure consistency after delay
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.name(flowId, nodeId) });
+        queryClient.invalidateQueries({
+          queryKey: dataStoreNodeKeys.name(nodeId),
+        });
         // Also invalidate detail query to keep it in sync
-        queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.detail(flowId, nodeId) });
+        queryClient.invalidateQueries({
+          queryKey: dataStoreNodeKeys.detail(nodeId),
+        });
       }, 600);
     },
   });

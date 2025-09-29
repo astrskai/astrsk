@@ -202,10 +202,10 @@ export const useApplyFlowChanges = ({
         if (result.isSuccess) {
           changes.push("conditions", "logicOperator");
           await queryClient.invalidateQueries({
-            queryKey: ifNodeKeys.conditions(flowId, nodeId),
+            queryKey: ifNodeKeys.conditions(nodeId),
           });
           await queryClient.invalidateQueries({
-            queryKey: ifNodeKeys.detail(flowId, nodeId),
+            queryKey: ifNodeKeys.detail(nodeId),
           });
         } else {
           throw new Error(
@@ -224,10 +224,10 @@ export const useApplyFlowChanges = ({
         if (result.isSuccess) {
           changes.push("name");
           await queryClient.invalidateQueries({
-            queryKey: ifNodeKeys.name(flowId, nodeId),
+            queryKey: ifNodeKeys.name(nodeId),
           });
           await queryClient.invalidateQueries({
-            queryKey: ifNodeKeys.detail(flowId, nodeId),
+            queryKey: ifNodeKeys.detail(nodeId),
           });
         } else {
           throw new Error(
@@ -259,10 +259,10 @@ export const useApplyFlowChanges = ({
         if (result.isSuccess) {
           changes.push("dataStoreFields");
           await queryClient.invalidateQueries({
-            queryKey: dataStoreNodeKeys.fields(flowId, nodeId),
+            queryKey: dataStoreNodeKeys.fields(nodeId),
           });
           await queryClient.invalidateQueries({
-            queryKey: dataStoreNodeKeys.detail(flowId, nodeId),
+            queryKey: dataStoreNodeKeys.detail(nodeId),
           });
         }
       }
@@ -278,10 +278,10 @@ export const useApplyFlowChanges = ({
         if (result.isSuccess) {
           changes.push("name");
           await queryClient.invalidateQueries({
-            queryKey: dataStoreNodeKeys.name(flowId, nodeId),
+            queryKey: dataStoreNodeKeys.name(nodeId),
           });
           await queryClient.invalidateQueries({
-            queryKey: dataStoreNodeKeys.detail(flowId, nodeId),
+            queryKey: dataStoreNodeKeys.detail(nodeId),
           });
         }
       }

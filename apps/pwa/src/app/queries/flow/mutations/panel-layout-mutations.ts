@@ -1,6 +1,6 @@
 /**
  * Panel Layout Mutations
- * 
+ *
  * Efficient mutations for updating panel layout without full flow save.
  * These mutations only update the panel structure, which is UI state
  * that doesn't affect flow logic or validation.
@@ -43,10 +43,14 @@ export function useUpdatePanelLayout(flowId: string) {
     // Optimistic update for instant UI feedback
     onMutate: async (panelStructure) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: flowKeys.panelLayout(flowId) });
+      await queryClient.cancelQueries({
+        queryKey: flowKeys.panelLayout(flowId),
+      });
 
       // Snapshot the previous value
-      const previousLayout = queryClient.getQueryData(flowKeys.panelLayout(flowId));
+      const previousLayout = queryClient.getQueryData(
+        flowKeys.panelLayout(flowId),
+      );
 
       // Optimistically update to the new value
       queryClient.setQueryData(flowKeys.panelLayout(flowId), panelStructure);
@@ -58,9 +62,12 @@ export function useUpdatePanelLayout(flowId: string) {
     // If the mutation fails, use the context returned from onMutate to roll back
     onError: (err, panelStructure, context) => {
       if (context?.previousLayout) {
-        queryClient.setQueryData(flowKeys.panelLayout(flowId), context.previousLayout);
+        queryClient.setQueryData(
+          flowKeys.panelLayout(flowId),
+          context.previousLayout,
+        );
       }
-      
+
       // Silent failure for layout saves - they're not critical
       console.error("Failed to save panel layout:", err);
     },

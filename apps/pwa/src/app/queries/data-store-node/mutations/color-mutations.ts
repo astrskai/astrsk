@@ -31,31 +31,39 @@ export function useUpdateDataStoreNodeColor(flowId: string, nodeId: string) {
 
   const mutation = useMutation({
     mutationFn: async (color: string) => {
-      const result = await DataStoreNodeService.updateDataStoreNodeColor.execute({
-        flowId,
-        nodeId,
-        color,
-      });
+      const result =
+        await DataStoreNodeService.updateDataStoreNodeColor.execute({
+          flowId,
+          nodeId,
+          color,
+        });
       if (result.isFailure) {
         throw new Error(result.getError());
       }
     },
     onMutate: async (color) => {
       startEditing();
-      
+
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: dataStoreNodeKeys.color(flowId, nodeId) });
-      
+      await queryClient.cancelQueries({
+        queryKey: dataStoreNodeKeys.color(nodeId),
+      });
+
       // Optimistically update the cache
-      const previousColor = queryClient.getQueryData(dataStoreNodeKeys.color(flowId, nodeId));
-      queryClient.setQueryData(dataStoreNodeKeys.color(flowId, nodeId), { color });
-      
+      const previousColor = queryClient.getQueryData(
+        dataStoreNodeKeys.color(nodeId),
+      );
+      queryClient.setQueryData(dataStoreNodeKeys.color(nodeId), { color });
+
       return { previousColor };
     },
     onError: (err, color, context) => {
       // Revert optimistic update on error
       if (context?.previousColor) {
-        queryClient.setQueryData(dataStoreNodeKeys.color(flowId, nodeId), context.previousColor);
+        queryClient.setQueryData(
+          dataStoreNodeKeys.color(nodeId),
+          context.previousColor,
+        );
       }
       setIsEditing(false);
       if (editTimeoutRef.current) {
@@ -66,9 +74,13 @@ export function useUpdateDataStoreNodeColor(flowId: string, nodeId: string) {
       endEditing();
       // Invalidate to ensure consistency after delay
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.color(flowId, nodeId) });
+        queryClient.invalidateQueries({
+          queryKey: dataStoreNodeKeys.color(nodeId),
+        });
         // Also invalidate detail query to keep it in sync
-        queryClient.invalidateQueries({ queryKey: dataStoreNodeKeys.detail(flowId, nodeId) });
+        queryClient.invalidateQueries({
+          queryKey: dataStoreNodeKeys.detail(nodeId),
+        });
       }, 600);
     },
   });

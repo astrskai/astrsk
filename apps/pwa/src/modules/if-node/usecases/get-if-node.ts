@@ -1,24 +1,17 @@
 import { Result, UseCase } from "@/shared/core";
+import { UniqueEntityID } from "@/shared/domain";
 import { IfNode } from "../domain";
 import { LoadIfNodeRepo } from "../repos";
 
-export interface GetIfNodeRequest {
-  flowId: string;
-  nodeId: string;
-}
+export class GetIfNodeUseCase
+  implements UseCase<UniqueEntityID, Result<IfNode | null>>
+{
+  constructor(private loadIfNodeRepo: LoadIfNodeRepo) {}
 
-export class GetIfNodeUseCase implements UseCase<GetIfNodeRequest, Result<IfNode | null>> {
-  constructor(
-    private loadIfNodeRepo: LoadIfNodeRepo,
-  ) {}
-
-  async execute(request: GetIfNodeRequest): Promise<Result<IfNode | null>> {
+  async execute(nodeId: UniqueEntityID): Promise<Result<IfNode | null>> {
     try {
-      const result = await this.loadIfNodeRepo.getIfNodeByFlowAndNodeId(
-        request.flowId, 
-        request.nodeId
-      );
-      
+      const result = await this.loadIfNodeRepo.getIfNode(nodeId);
+
       if (result.isFailure) {
         return Result.fail(result.getError());
       }

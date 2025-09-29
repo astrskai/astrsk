@@ -10,11 +10,14 @@ export async function processIfNodeOperations(
 ): Promise<string[]> {
   const errors: string[] = [];
 
-  console.log(`🔄 [IF-NODE-OPERATIONS] Starting IF node operations processing:`, {
-    resourceId,
-    operationCount: operations.length,
-    operationPaths: operations.map(op => op.path)
-  });
+  console.log(
+    `🔄 [IF-NODE-OPERATIONS] Starting IF node operations processing:`,
+    {
+      resourceId,
+      operationCount: operations.length,
+      operationPaths: operations.map((op) => op.path),
+    },
+  );
 
   for (const operation of operations) {
     try {
@@ -32,37 +35,56 @@ export async function processIfNodeOperations(
           const nodeId = nodeIdMatch[1];
 
           // Handle SET operations on indexed conditions (e.g., conditions[0])
-          if (operation.operation === 'set' && operation.path.match(/\.conditions\[\d+\]$/)) {
+          if (
+            operation.operation === "set" &&
+            operation.path.match(/\.conditions\[\d+\]$/)
+          ) {
             // Import IfNodeService
-            const { IfNodeService } = await import("@/app/services/if-node-service");
+            const { IfNodeService } = await import(
+              "@/app/services/if-node-service"
+            );
 
             // Extract the index from the path
             const indexMatch = operation.path.match(/\.conditions\[(\d+)\]$/);
             if (!indexMatch) {
               errors.push(`Invalid condition index in path: ${operation.path}`);
-              console.error(`❌ [IF-NODE-OPERATIONS] Invalid condition index in path: ${operation.path}`);
+              console.error(
+                `❌ [IF-NODE-OPERATIONS] Invalid condition index in path: ${operation.path}`,
+              );
               continue;
             }
 
             const conditionIndex = parseInt(indexMatch[1]);
             const existingNode = updatedResource.ifNodes?.[nodeId];
-            
+
             console.log(`🔍 [IF-NODE-OPERATIONS] Node lookup debug for SET:`, {
               nodeId,
               conditionIndex,
               hasIfNodes: !!updatedResource.ifNodes,
-              ifNodeKeys: updatedResource.ifNodes ? Object.keys(updatedResource.ifNodes) : [],
-              existingNode: existingNode ? { id: existingNode.id, name: existingNode.name, conditionsCount: existingNode.conditions?.length || 0 } : null
+              ifNodeKeys: updatedResource.ifNodes
+                ? Object.keys(updatedResource.ifNodes)
+                : [],
+              existingNode: existingNode
+                ? {
+                    id: existingNode.id,
+                    name: existingNode.name,
+                    conditionsCount: existingNode.conditions?.length || 0,
+                  }
+                : null,
             });
-            
+
             if (!existingNode) {
-              errors.push(`IF node ${nodeId} not found in updatedResource.ifNodes`);
-              console.error(`❌ [IF-NODE-OPERATIONS] IF node ${nodeId} not found in updatedResource.ifNodes`);
+              errors.push(
+                `IF node ${nodeId} not found in updatedResource.ifNodes`,
+              );
+              console.error(
+                `❌ [IF-NODE-OPERATIONS] IF node ${nodeId} not found in updatedResource.ifNodes`,
+              );
               continue;
             }
-            
+
             let conditions = [...(existingNode?.conditions || [])];
-            
+
             // Ensure the array is large enough for the index
             while (conditions.length <= conditionIndex) {
               conditions.push({
@@ -70,10 +92,10 @@ export async function processIfNodeOperations(
                 dataType: null,
                 value1: "",
                 operator: null,
-                value2: ""
+                value2: "",
               });
             }
-            
+
             // Set the condition at the specific index
             if (operation.value) {
               conditions[conditionIndex] = {
@@ -81,26 +103,30 @@ export async function processIfNodeOperations(
                 dataType: operation.value.dataType,
                 value1: operation.value.value1 || "",
                 operator: operation.value.operator,
-                value2: operation.value.value2 || ""
+                value2: operation.value.value2 || "",
               };
             }
-            
-            console.log(`🔄 [IF-NODE-OPERATIONS] Processing IF node condition SET at index ${conditionIndex}:`, {
-              nodeId,
-              conditionIndex,
-              conditionsCount: conditions.length,
-              conditions,
-              path: operation.path,
-              operation: operation.operation,
-              newCondition: operation.value
-            });
+
+            console.log(
+              `🔄 [IF-NODE-OPERATIONS] Processing IF node condition SET at index ${conditionIndex}:`,
+              {
+                nodeId,
+                conditionIndex,
+                conditionsCount: conditions.length,
+                conditions,
+                path: operation.path,
+                operation: operation.operation,
+                newCondition: operation.value,
+              },
+            );
 
             // Update the IF node conditions
-            const updateResult = await IfNodeService.updateIfNodeConditions.execute({
-              flowId: resourceId,
-              nodeId: nodeId,
-              conditions: conditions,
-            });
+            const updateResult =
+              await IfNodeService.updateIfNodeConditions.execute({
+                flowId: resourceId,
+                nodeId: nodeId,
+                conditions: conditions,
+              });
 
             if (!updateResult.isSuccess) {
               errors.push(
@@ -129,11 +155,18 @@ export async function processIfNodeOperations(
 
               // Invalidate queries to refresh UI
               try {
-                const { queryClient } = await import("@/app/queries/query-client");
-                const { ifNodeKeys } = await import("@/app/queries/if-node/query-factory");
+                const { queryClient } = await import(
+                  "@/app/queries/query-client"
+                );
+                const { ifNodeKeys } = await import(
+                  "@/app/queries/if-node/query-factory"
+                );
 
-                const queryKey = ifNodeKeys.detail(resourceId, nodeId);
-                console.log(`🔍 [IF-NODE-OPERATIONS] About to invalidate query key:`, queryKey);
+                const queryKey = ifNodeKeys.detail(nodeId);
+                console.log(
+                  `🔍 [IF-NODE-OPERATIONS] About to invalidate query key:`,
+                  queryKey,
+                );
 
                 // Invalidate IF node queries
                 await queryClient.invalidateQueries({
@@ -142,7 +175,7 @@ export async function processIfNodeOperations(
 
                 console.log(
                   `✅ [IF-NODE-OPERATIONS] Invalidated IF node queries: ${nodeId}`,
-                  { queryKey }
+                  { queryKey },
                 );
               } catch (invalidationError) {
                 console.warn(
@@ -153,58 +186,82 @@ export async function processIfNodeOperations(
             }
           }
           // For PUT operations on conditions, use the operation value directly as the new condition
-          else if (operation.operation === 'put' && operation.path.endsWith('.conditions')) {
+          else if (
+            operation.operation === "put" &&
+            operation.path.endsWith(".conditions")
+          ) {
             // Import IfNodeService
-            const { IfNodeService } = await import("@/app/services/if-node-service");
+            const { IfNodeService } = await import(
+              "@/app/services/if-node-service"
+            );
 
             // Get current conditions from the existing node in updatedResource
             const existingNode = updatedResource.ifNodes?.[nodeId];
-            
+
             console.log(`🔍 [IF-NODE-OPERATIONS] Node lookup debug:`, {
               nodeId,
               hasIfNodes: !!updatedResource.ifNodes,
-              ifNodeKeys: updatedResource.ifNodes ? Object.keys(updatedResource.ifNodes) : [],
-              existingNode: existingNode ? { id: existingNode.id, name: existingNode.name, conditionsCount: existingNode.conditions?.length || 0 } : null
+              ifNodeKeys: updatedResource.ifNodes
+                ? Object.keys(updatedResource.ifNodes)
+                : [],
+              existingNode: existingNode
+                ? {
+                    id: existingNode.id,
+                    name: existingNode.name,
+                    conditionsCount: existingNode.conditions?.length || 0,
+                  }
+                : null,
             });
-            
+
             if (!existingNode) {
-              errors.push(`IF node ${nodeId} not found in updatedResource.ifNodes`);
-              console.error(`❌ [IF-NODE-OPERATIONS] IF node ${nodeId} not found in updatedResource.ifNodes`);
+              errors.push(
+                `IF node ${nodeId} not found in updatedResource.ifNodes`,
+              );
+              console.error(
+                `❌ [IF-NODE-OPERATIONS] IF node ${nodeId} not found in updatedResource.ifNodes`,
+              );
               continue;
             }
-            
+
             let conditions = [...(existingNode?.conditions || [])];
-            
+
             // Add the new condition from the operation
             if (operation.value) {
               conditions.push(operation.value);
             }
-            
+
             // Defensive programming: ensure conditions is always an array
             if (!Array.isArray(conditions)) {
-              console.warn(`⚠️ [IF-NODE-OPERATIONS] Conditions is not an array, converting:`, {
-                nodeId,
-                conditionsType: typeof conditions,
-                conditions
-              });
+              console.warn(
+                `⚠️ [IF-NODE-OPERATIONS] Conditions is not an array, converting:`,
+                {
+                  nodeId,
+                  conditionsType: typeof conditions,
+                  conditions,
+                },
+              );
               conditions = [];
             }
-            
-            console.log(`🔄 [IF-NODE-OPERATIONS] Processing IF node conditions update:`, {
-              nodeId,
-              conditionsCount: conditions.length,
-              conditions,
-              path: operation.path,
-              operation: operation.operation,
-              newCondition: operation.value
-            });
+
+            console.log(
+              `🔄 [IF-NODE-OPERATIONS] Processing IF node conditions update:`,
+              {
+                nodeId,
+                conditionsCount: conditions.length,
+                conditions,
+                path: operation.path,
+                operation: operation.operation,
+                newCondition: operation.value,
+              },
+            );
 
             // Update the IF node conditions
-            const updateResult = await IfNodeService.updateIfNodeConditions.execute({
-              flowId: resourceId,
-              nodeId: nodeId,
-              conditions: conditions,
-            });
+            const updateResult =
+              await IfNodeService.updateIfNodeConditions.execute({
+                flowId: resourceId,
+                nodeId: nodeId,
+                conditions: conditions,
+              });
 
             if (!updateResult.isSuccess) {
               errors.push(
@@ -232,11 +289,18 @@ export async function processIfNodeOperations(
 
               // Invalidate queries to refresh UI
               try {
-                const { queryClient } = await import("@/app/queries/query-client");
-                const { ifNodeKeys } = await import("@/app/queries/if-node/query-factory");
+                const { queryClient } = await import(
+                  "@/app/queries/query-client"
+                );
+                const { ifNodeKeys } = await import(
+                  "@/app/queries/if-node/query-factory"
+                );
 
-                const queryKey = ifNodeKeys.detail(resourceId, nodeId);
-                console.log(`🔍 [IF-NODE-OPERATIONS] About to invalidate query key:`, queryKey);
+                const queryKey = ifNodeKeys.detail(nodeId);
+                console.log(
+                  `🔍 [IF-NODE-OPERATIONS] About to invalidate query key:`,
+                  queryKey,
+                );
 
                 // Invalidate IF node queries
                 await queryClient.invalidateQueries({
@@ -245,7 +309,7 @@ export async function processIfNodeOperations(
 
                 console.log(
                   `✅ [IF-NODE-OPERATIONS] Invalidated IF node queries: ${nodeId}`,
-                  { queryKey }
+                  { queryKey },
                 );
               } catch (invalidationError) {
                 console.warn(
@@ -255,7 +319,9 @@ export async function processIfNodeOperations(
               }
             }
           } else {
-            errors.push(`Unsupported IF node conditions operation: ${operation.operation} on ${operation.path}`);
+            errors.push(
+              `Unsupported IF node conditions operation: ${operation.operation} on ${operation.path}`,
+            );
             console.error(
               `❌ [IF-NODE-OPERATIONS] Unsupported operation: ${operation.operation} on ${operation.path}`,
             );
@@ -266,7 +332,9 @@ export async function processIfNodeOperations(
         const nodeIdMatch = operation.path.match(/^ifNodes\.([^.]+)\.name$/);
         if (nodeIdMatch) {
           const nodeId = nodeIdMatch[1];
-          const { IfNodeService } = await import("@/app/services/if-node-service");
+          const { IfNodeService } = await import(
+            "@/app/services/if-node-service"
+          );
 
           const result = await IfNodeService.updateIfNodeName.execute({
             flowId: resourceId,
@@ -295,7 +363,9 @@ export async function processIfNodeOperations(
         const nodeIdMatch = operation.path.match(/^ifNodes\.([^.]+)\.color$/);
         if (nodeIdMatch) {
           const nodeId = nodeIdMatch[1];
-          const { IfNodeService } = await import("@/app/services/if-node-service");
+          const { IfNodeService } = await import(
+            "@/app/services/if-node-service"
+          );
 
           const result = await IfNodeService.updateIfNodeColor.execute({
             flowId: resourceId,
@@ -321,10 +391,14 @@ export async function processIfNodeOperations(
         }
       } else if (operation.path.includes(".logicOperator")) {
         // Handle IF node logic operator updates
-        const nodeIdMatch = operation.path.match(/^ifNodes\.([^.]+)\.logicOperator$/);
+        const nodeIdMatch = operation.path.match(
+          /^ifNodes\.([^.]+)\.logicOperator$/,
+        );
         if (nodeIdMatch) {
           const nodeId = nodeIdMatch[1];
-          const { IfNodeService } = await import("@/app/services/if-node-service");
+          const { IfNodeService } = await import(
+            "@/app/services/if-node-service"
+          );
 
           const result = await IfNodeService.updateIfNodeLogicOperator.execute({
             flowId: resourceId,
@@ -333,7 +407,9 @@ export async function processIfNodeOperations(
           });
 
           if (!result.isSuccess) {
-            errors.push(`Failed to update IF node logic operator: ${result.getError()}`);
+            errors.push(
+              `Failed to update IF node logic operator: ${result.getError()}`,
+            );
             console.error(
               `❌ [IF-NODE-OPERATIONS] IF node logic operator update failed:`,
               result.getError(),
@@ -355,23 +431,28 @@ export async function processIfNodeOperations(
           {
             path: operation.path,
             operation: operation.operation,
-            status: 'OPERATION_SKIPPED',
-            reason: 'Operation type not handled in if-node-operations.ts'
+            status: "OPERATION_SKIPPED",
+            reason: "Operation type not handled in if-node-operations.ts",
           },
         );
       }
     } catch (error) {
-      errors.push(`Failed to apply if-node operation ${operation.path}: ${error}`);
+      errors.push(
+        `Failed to apply if-node operation ${operation.path}: ${error}`,
+      );
     }
   }
 
-  console.log(`🏁 [IF-NODE-OPERATIONS] IF node operations processing complete:`, {
-    resourceId,
-    totalOperations: operations.length,
-    errorCount: errors.length,
-    successCount: operations.length - errors.length,
-    successRate: `${Math.round(((operations.length - errors.length) / operations.length) * 100)}%`
-  });
+  console.log(
+    `🏁 [IF-NODE-OPERATIONS] IF node operations processing complete:`,
+    {
+      resourceId,
+      totalOperations: operations.length,
+      errorCount: errors.length,
+      successCount: operations.length - errors.length,
+      successRate: `${Math.round(((operations.length - errors.length) / operations.length) * 100)}%`,
+    },
+  );
 
   return errors;
 }

@@ -8,10 +8,11 @@ import { UpdateDataStoreNodeColorUseCase } from "@/modules/data-store-node/useca
 import { DeleteDataStoreNodeUseCase } from "@/modules/data-store-node/usecases/delete-data-store-node";
 import { DeleteAllDataStoreNodesByFlowUseCase } from "@/modules/data-store-node/usecases/delete-all-data-store-nodes-by-flow";
 import { RestoreDataStoreNodeFromSnapshot } from "@/modules/data-store-node/usecases/restore-data-store-node-from-snapshot";
+import { CloneDataStoreNodeUseCase } from "@/modules/data-store-node/usecases/clone-data-store-node";
 
 export class DataStoreNodeService {
   public static dataStoreNodeRepo: DrizzleDataStoreNodeRepo;
-  
+
   public static createDataStoreNode: CreateDataStoreNodeUseCase;
   public static getDataStoreNode: GetDataStoreNodeUseCase;
   public static getAllDataStoreNodesByFlow: GetAllDataStoreNodesByFlowUseCase;
@@ -21,20 +22,42 @@ export class DataStoreNodeService {
   public static deleteDataStoreNode: DeleteDataStoreNodeUseCase;
   public static deleteAllDataStoreNodesByFlow: DeleteAllDataStoreNodesByFlowUseCase;
   public static restoreDataStoreNodeFromSnapshot: RestoreDataStoreNodeFromSnapshot;
+  public static cloneDataStoreNode: CloneDataStoreNodeUseCase;
 
   private constructor() {}
 
   public static init() {
     this.dataStoreNodeRepo = new DrizzleDataStoreNodeRepo();
-    
-    this.createDataStoreNode = new CreateDataStoreNodeUseCase(this.dataStoreNodeRepo);
+
+    this.createDataStoreNode = new CreateDataStoreNodeUseCase(
+      this.dataStoreNodeRepo,
+    );
     this.getDataStoreNode = new GetDataStoreNodeUseCase(this.dataStoreNodeRepo);
-    this.getAllDataStoreNodesByFlow = new GetAllDataStoreNodesByFlowUseCase(this.dataStoreNodeRepo);
-    this.updateDataStoreNodeName = new UpdateDataStoreNodeNameUseCase(this.dataStoreNodeRepo, this.dataStoreNodeRepo);
-    this.updateDataStoreNodeFields = new UpdateDataStoreNodeFieldsUseCase(this.dataStoreNodeRepo, this.dataStoreNodeRepo);
-    this.updateDataStoreNodeColor = new UpdateDataStoreNodeColorUseCase(this.dataStoreNodeRepo, this.dataStoreNodeRepo);
-    this.deleteDataStoreNode = new DeleteDataStoreNodeUseCase(this.dataStoreNodeRepo);
-    this.deleteAllDataStoreNodesByFlow = new DeleteAllDataStoreNodesByFlowUseCase(this.dataStoreNodeRepo);
-    this.restoreDataStoreNodeFromSnapshot = new RestoreDataStoreNodeFromSnapshot(this.dataStoreNodeRepo);
+    this.getAllDataStoreNodesByFlow = new GetAllDataStoreNodesByFlowUseCase(
+      this.dataStoreNodeRepo,
+    );
+    this.updateDataStoreNodeName = new UpdateDataStoreNodeNameUseCase(
+      this.dataStoreNodeRepo,
+      this.dataStoreNodeRepo,
+    );
+    this.updateDataStoreNodeFields = new UpdateDataStoreNodeFieldsUseCase(
+      this.dataStoreNodeRepo,
+      this.dataStoreNodeRepo,
+    );
+    this.updateDataStoreNodeColor = new UpdateDataStoreNodeColorUseCase(
+      this.dataStoreNodeRepo,
+      this.dataStoreNodeRepo,
+    );
+    this.deleteDataStoreNode = new DeleteDataStoreNodeUseCase(
+      this.dataStoreNodeRepo,
+    );
+    this.deleteAllDataStoreNodesByFlow =
+      new DeleteAllDataStoreNodesByFlowUseCase(this.dataStoreNodeRepo);
+    this.restoreDataStoreNodeFromSnapshot =
+      new RestoreDataStoreNodeFromSnapshot(this.dataStoreNodeRepo);
+    this.cloneDataStoreNode = new CloneDataStoreNodeUseCase(
+      this.dataStoreNodeRepo,
+      this.dataStoreNodeRepo,
+    );
   }
 }
