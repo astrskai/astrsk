@@ -16,7 +16,7 @@ import { PanelFocusAnimationWrapper } from "@/components-v2/dockview-panel-focus
 // import "dockview/dist/styles/dockview.css";
 import { Flow } from "@/modules/flow/domain";
 import { debounce } from "lodash-es";
-import { cn } from "@/shared/utils";
+import { cn, logger } from "@/shared/utils";
 import { FlowPanelProvider } from "@/flow-multi/components/flow-panel-provider";
 import { getPanelTitle, PanelType } from "@/flow-multi/components/panel-types";
 import {
@@ -51,6 +51,7 @@ import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
 import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
 import { useAgentStore } from "@/app/stores/agent-store";
 import "../../components-v2/card/panels/card-panel-dockview.css";
+import { useNavigate } from "@tanstack/react-router";
 
 // Watermark component with restore button
 const Watermark = React.memo<{ onRestore?: () => void }>(({ onRestore }) => (
@@ -187,14 +188,23 @@ interface FlowPanelMainProps {
 }
 
 export function FlowPanelMain({ className }: FlowPanelMainProps) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const selectedFlowId = useAgentStore.use.selectedFlowId();
 
   // Fetch flow data when flowId changes
-  const { data: flow } = useQuery({
+  const { data: flow, isLoading } = useQuery({
     ...flowQueries.detail(selectedFlowId || ""),
     enabled: !!selectedFlowId,
   });
+
+  // Check flow exists
+  useEffect(() => {
+    if (!isLoading && !flow) {
+      logger.error("Flow not found");
+      navigate({ to: "/", replace: true });
+    }
+  }, [flow, isLoading, navigate]);
 
   // Panel layout mutation
   const updatePanelLayoutMutation = useUpdatePanelLayout(selectedFlowId || "");

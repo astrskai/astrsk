@@ -31,9 +31,10 @@ import { ScenariosPanel } from "./card-panel/components/scenarios-panel";
 import { ImageGeneratorPanel } from "./card-panel/components/image-generator-panel";
 import { CardVibePanel } from "./card-panel/components/vibe-panel";
 import { SvgIcon } from "@/components-v2/svg-icon";
-import { cn } from "@/shared/utils";
+import { cn, logger } from "@/shared/utils";
 import CustomDockviewTab from "@/components-v2/dockview-default-tab";
 import { PanelFocusAnimationWrapper } from "@/components-v2/dockview-panel-focus-animation";
+import { useNavigate } from "@tanstack/react-router";
 
 interface CardPanelMainProps {
   cardId: string;
@@ -166,12 +167,21 @@ const usePanelVisibility = (card: Card | null) => {
 };
 
 export function CardPanelMain({ cardId }: CardPanelMainProps) {
+  const navigate = useNavigate();
   const [api, setApi] = useState<DockviewApi | null>(null);
 
   // Use custom hooks
   const { card, isLoading, error } = useCardLoader(cardId);
   const { panelVisibility, setPanelVisibility, cardType } =
     usePanelVisibility(card);
+
+  // Check card exists
+  useEffect(() => {
+    if (!isLoading && !card) {
+      logger.error("Card not found");
+      navigate({ to: "/", replace: true });
+    }
+  }, [card, isLoading, navigate]);
 
   // Layout management
   const getCardTypeLayout = useCardUIStore.use.getCardTypeLayout();
