@@ -63,7 +63,7 @@ import { IMAGE_MODELS } from "@/app/stores/model-store";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
 import { sessionQueries } from "@/app/queries/session-queries";
-import { turnQueries } from "@/app/queries/turn-queries";
+import { fetchTurn, fetchTurnOptional, turnQueries } from "@/app/queries/turn-queries";
 import { CardService } from "@/app/services";
 import {
   addMessage,
@@ -768,9 +768,7 @@ const MessageItem = ({
       onUpdateAssetId={async (assetId) => {
         // Update the option with the new assetId
         try {
-          const turn = (await TurnService.getTurn.execute(messageId))
-            .throwOnFailure()
-            .getValue();
+          const turn = await fetchTurn(messageId);
 
           // Update the selected option with the new assetId
           turn.setAssetId(assetId);
@@ -1668,9 +1666,7 @@ const SessionMessagesAndUserInputs = ({
               break;
             }
             try {
-              const turn = (await TurnService.getTurn.execute(turnId))
-                .throwOnFailure()
-                .getValue();
+              const turn = await fetchTurn(turnId);
 
               // Store dataStore from each processed turn
               if (turn.dataStore && turn.dataStore.length > 0) {
@@ -1692,9 +1688,7 @@ const SessionMessagesAndUserInputs = ({
           // For new messages, use last turn's dataStore
           const lastTurnId = session.turnIds[session.turnIds.length - 1];
           try {
-            const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
-              .throwOnFailure()
-              .getValue();
+            const lastTurn = await fetchTurn(lastTurnId);
             lastDataStore = cloneDeep(lastTurn.dataStore);
           } catch (error) {
             console.warn(`Failed to get last turn's dataStore: ${error}`);
@@ -1704,12 +1698,7 @@ const SessionMessagesAndUserInputs = ({
         // Get streaming message
         if (regenerateMessageId) {
           // Get message from database
-          const messageOrError =
-            await TurnService.getTurn.execute(regenerateMessageId);
-          if (messageOrError.isFailure) {
-            throw new Error("Message not found");
-          }
-          streamingMessage = messageOrError.getValue();
+          streamingMessage = await fetchTurn(regenerateMessageId);
         } else {
           // Get character name
           const character = (await CardService.getCard.execute(characterCardId))
@@ -2122,12 +2111,7 @@ const SessionMessagesAndUserInputs = ({
   const editMessage = useCallback(
     async (messageId: UniqueEntityID, content: string) => {
       // Get message from DB
-      const messageOrError = await TurnService.getTurn.execute(messageId);
-      if (messageOrError.isFailure) {
-        logger.error("Failed to fetch message", messageOrError.getError());
-        return;
-      }
-      const message = messageOrError.getValue();
+      const message = await fetchTurn(messageId);
 
       // Set content
       message.setContent(content);
@@ -2156,9 +2140,9 @@ const SessionMessagesAndUserInputs = ({
       }
 
       // Check if this is a placeholder turn and handle special deletion
-      const turnResult = await TurnService.getTurn.execute(messageId);
-      if (turnResult.isSuccess) {
-        const turn = turnResult.getValue();
+      const turnOrNull = await fetchTurnOptional(messageId);
+      if (turnOrNull) {
+        const turn = turnOrNull;
         if (TurnService.isPlaceholderTurn(turn)) {
           // Use special deletion for placeholder turns with assets
           const deleteResult =
@@ -2202,12 +2186,7 @@ const SessionMessagesAndUserInputs = ({
   const selectOption = useCallback(
     async (messageId: UniqueEntityID, prevOrNext: "prev" | "next") => {
       // Get message from DB
-      const messageOrError = await TurnService.getTurn.execute(messageId);
-      if (messageOrError.isFailure) {
-        logger.error("Failed to fetch message", messageOrError.getError());
-        return;
-      }
-      const message = messageOrError.getValue();
+      const message = await fetchTurn(messageId);
 
       // Update selected option
       if (prevOrNext === "prev") {
@@ -2234,14 +2213,8 @@ const SessionMessagesAndUserInputs = ({
   // Generate option
   const generateOption = useCallback(
     async (messageId: UniqueEntityID) => {
-      // Get message from database
-      const messageOrError = await TurnService.getTurn.execute(messageId);
-      if (messageOrError.isFailure) {
-        throw new Error(messageOrError.getError());
-      }
-
       // Generate option
-      const message = messageOrError.getValue();
+      const message = await fetchTurn(messageId);
       await generateCharacterMessage(message.characterCardId!, messageId);
     },
     [generateCharacterMessage],
@@ -2332,9 +2305,7 @@ const SessionMessagesAndUserInputs = ({
 
         if (assetId) {
           // Update the turn with the video asset
-          const turn = (await TurnService.getTurn.execute(messageId))
-            .throwOnFailure()
-            .getValue();
+          const turn = await fetchTurn(messageId);
 
           // Update the selected option with the new assetId
           turn.setAssetId(assetId);
