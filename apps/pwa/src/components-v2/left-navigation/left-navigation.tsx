@@ -1,8 +1,6 @@
 // TODO: apply color palette
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Page, useAppStore } from "@/app/stores/app-store";
-import { useNavigate, useLocation } from "@tanstack/react-router";
 import { SidebarLeft, useSidebarLeft } from "@/components-v2/both-sidebar";
 import { ConvexReady } from "@/components-v2/convex-ready";
 import { HelpVideoDialog } from "@/components-v2/help-video-dialog";
@@ -19,6 +17,8 @@ import {
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
 import { UpdaterNew } from "@/components-v2/updater-new";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import { Authenticated, Unauthenticated } from "convex/react";
 import {
   ArrowLeftFromLine,
   ArrowRightFromLine,
@@ -28,6 +28,7 @@ import {
   PlayCircle,
   Settings,
 } from "lucide-react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -440,7 +441,26 @@ const LeftNavigationFooter = memo(
       >
         <div className="min-h-[28px]">
           <ConvexReady>
-            {!subscribed && (
+            <Authenticated>
+              {subscribed ? (
+                <>
+                  {/* <Button size="sm" className="font-[600]">
+                    <SvgIcon name="astrsk_symbol_fit" size={12} />
+                    Add credits
+                  </Button> */}
+                </>
+              ) : (
+                <Button
+                  size="sm"
+                  className="bg-secondary-normal text-secondary-heavy font-[600]"
+                  onClick={handleSubscribeClick}
+                >
+                  <SvgIcon name="astrsk_symbol_fit" size={12} />
+                  Subscribe to astrsk+
+                </Button>
+              )}
+            </Authenticated>
+            <Unauthenticated>
               <Button
                 size="sm"
                 className="bg-secondary-normal text-secondary-heavy font-[600]"
@@ -449,13 +469,7 @@ const LeftNavigationFooter = memo(
                 <SvgIcon name="astrsk_symbol_fit" size={12} />
                 Subscribe to astrsk+
               </Button>
-            )}
-            {/* <Authenticated>
-              <Button size="sm" className="font-[600]">
-                <SvgIcon name="astrsk_symbol_fit" size={12} />
-                Add credits
-              </Button>
-            </Authenticated> */}
+            </Unauthenticated>
           </ConvexReady>
         </div>
         <div className="text-text-primary flex w-full flex-row justify-end gap-[16px]">
