@@ -2,6 +2,8 @@ import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { TurnService } from "@/app/services/turn-service";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
+import { queryClient } from "@/app/queries/query-client";
+import { Turn } from "@/modules/turn/domain/turn";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection
@@ -35,3 +37,27 @@ export const turnQueries = {
       enabled: !!id,
     }),
 };
+
+/**
+ * Helper functions to fetch turns from cache and convert to domain objects
+ * Note: queryClient.fetchQuery returns persistence objects, not domain objects
+ * The select function only works in useQuery hooks, so we need to manually convert
+ */
+
+export async function fetchTurn(id: UniqueEntityID): Promise<Turn> {
+  const data = await queryClient.fetchQuery(turnQueries.detail(id));
+  if (!data) {
+    throw new Error(`Turn not found: ${id.toString()}`);
+  }
+  return TurnDrizzleMapper.toDomain(data as any);
+}
+
+export async function fetchTurnOptional(
+  id: UniqueEntityID,
+): Promise<Turn | null> {
+  try {
+    return await fetchTurn(id);
+  } catch {
+    return null;
+  }
+}

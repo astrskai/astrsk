@@ -10,10 +10,12 @@
  */
 
 import { queryOptions } from "@tanstack/react-query";
+import { UniqueEntityID } from "@/shared/domain";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { DataStoreNodeDrizzleMapper } from "@/modules/data-store-node/mappers/data-store-node-drizzle-mapper";
 import { DataStoreNode } from "@/modules/data-store-node/domain/data-store-node";
 import { parse, stringify } from "superjson";
+import { queryClient } from "@/app/queries/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection
@@ -190,3 +192,24 @@ export const dataStoreNodeQueries = {
  * // Getting query data
  * const cachedNode = queryClient.getQueryData<DataStoreNodeData>(dataStoreNodeKeys.detail(flowId, nodeId));
  */
+
+/**
+ * Helper functions to fetch data store nodes from cache and convert to domain objects
+ * Note: queryClient.fetchQuery returns persistence objects, not domain objects
+ * The select function only works in useQuery hooks, so we need to manually convert
+ */
+
+export async function fetchDataStoreNode(
+  flowId: UniqueEntityID,
+  nodeId: string,
+): Promise<DataStoreNode> {
+  const data = await queryClient.fetchQuery(
+    dataStoreNodeQueries.detail(flowId.toString(), nodeId),
+  );
+  if (!data) {
+    throw new Error(
+      `DataStoreNode not found: ${flowId.toString()}/${nodeId}`,
+    );
+  }
+  return DataStoreNodeDrizzleMapper.toDomain(data as any);
+}

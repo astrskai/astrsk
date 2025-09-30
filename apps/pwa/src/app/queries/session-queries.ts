@@ -4,6 +4,7 @@ import { SessionService } from "@/app/services/session-service";
 import { SessionDrizzleMapper } from "@/modules/session/mappers/session-drizzle-mapper";
 import { SearchSessionsQuery } from "@/modules/session/repos";
 import { queryClient } from "@/app/queries/query-client";
+import { Session } from "@/modules/session/domain/session";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection
@@ -81,3 +82,17 @@ export const sessionQueries = {
       enabled: !!id,
     }),
 };
+
+/**
+ * Helper functions to fetch sessions from cache and convert to domain objects
+ * Note: queryClient.fetchQuery returns persistence objects, not domain objects
+ * The select function only works in useQuery hooks, so we need to manually convert
+ */
+
+export async function fetchSession(id: UniqueEntityID): Promise<Session> {
+  const data = await queryClient.fetchQuery(sessionQueries.detail(id));
+  if (!data) {
+    throw new Error(`Session not found: ${id.toString()}`);
+  }
+  return SessionDrizzleMapper.toDomain(data as any);
+}

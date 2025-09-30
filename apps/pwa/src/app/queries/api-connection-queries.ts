@@ -151,3 +151,27 @@ export const apiConnectionQueries = {
       enabled: !!id,
     }),
 };
+
+/**
+ * Helper functions to fetch api connections from cache and convert to domain objects
+ * Note: queryClient.fetchQuery returns persistence objects, not domain objects
+ * The select function only works in useQuery hooks, so we need to manually convert
+ */
+
+export async function fetchApiConnections(params: {
+  keyword?: string;
+  limit?: number;
+} = {}): Promise<ApiConnection[]> {
+  const data = await queryClient.fetchQuery(
+    apiConnectionQueries.list({
+      keyword: params.keyword || "",
+      limit: params.limit || 100,
+    })
+  );
+
+  if (!data || !Array.isArray(data)) return [];
+
+  return data.map((conn) =>
+    ApiConnectionDrizzleMapper.toDomain(conn as any)
+  );
+}

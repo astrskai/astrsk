@@ -14,8 +14,9 @@ import { UniqueEntityID } from "@/shared/domain";
 import { CardService } from "@/app/services/card-service";
 import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
 import { LorebookDrizzleMapper } from "@/modules/card/mappers/lorebook-drizzle-mapper";
-import { Card, CardType, PlotCard } from "@/modules/card/domain";
+import { Card, CardType, CharacterCard, PlotCard } from "@/modules/card/domain";
 import { SearchCardsSort } from "@/modules/card/repos";
+import { queryClient } from "@/app/queries/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection
@@ -240,3 +241,55 @@ export const cardQueries = {
  * // Getting query data
  * const cachedCard = client.getQueryData<Card>(cardKeys.detail(cardId));
  */
+
+/**
+ * Helper functions to fetch cards from cache and convert to domain objects
+ * Note: queryClient.fetchQuery returns persistence objects, not domain objects
+ * The select function only works in useQuery hooks, so we need to manually convert
+ */
+
+export async function fetchCard(id: UniqueEntityID): Promise<Card> {
+  const data = await queryClient.fetchQuery(cardQueries.detail(id.toString()));
+  if (!data) {
+    throw new Error(`Card not found: ${id.toString()}`);
+  }
+  return CardDrizzleMapper.toDomain(data as any);
+}
+
+export async function fetchPlotCard(id: UniqueEntityID): Promise<PlotCard> {
+  const card = await fetchCard(id);
+  if (!(card instanceof PlotCard)) {
+    throw new Error(`Card is not a PlotCard: ${id.toString()}`);
+  }
+  return card;
+}
+
+export async function fetchPlotCardOptional(
+  id: UniqueEntityID,
+): Promise<PlotCard | null> {
+  try {
+    return await fetchPlotCard(id);
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchCharacterCard(
+  id: UniqueEntityID,
+): Promise<CharacterCard> {
+  const card = await fetchCard(id);
+  if (!(card instanceof CharacterCard)) {
+    throw new Error(`Card is not a CharacterCard: ${id.toString()}`);
+  }
+  return card;
+}
+
+export async function fetchCharacterCardOptional(
+  id: UniqueEntityID,
+): Promise<CharacterCard | null> {
+  try {
+    return await fetchCharacterCard(id);
+  } catch {
+    return null;
+  }
+}

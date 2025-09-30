@@ -10,11 +10,13 @@
  */
 
 import { queryOptions } from "@tanstack/react-query";
+import { UniqueEntityID } from "@/shared/domain";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { IfCondition } from "@/flow-multi/nodes/if-node";
 import { IfNodeDrizzleMapper } from "@/modules/if-node/mappers/if-node-drizzle-mapper";
 import { IfNode } from "@/modules/if-node/domain/if-node";
 import { parse, stringify } from "superjson";
+import { queryClient } from "@/app/queries/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection
@@ -225,3 +227,22 @@ export const ifNodeQueries = {
  * // Getting query data
  * const cachedNode = queryClient.getQueryData<IfNodeData>(ifNodeKeys.detail(flowId, nodeId));
  */
+
+/**
+ * Helper functions to fetch if nodes from cache and convert to domain objects
+ * Note: queryClient.fetchQuery returns persistence objects, not domain objects
+ * The select function only works in useQuery hooks, so we need to manually convert
+ */
+
+export async function fetchIfNode(
+  flowId: UniqueEntityID,
+  nodeId: string,
+): Promise<IfNode> {
+  const data = await queryClient.fetchQuery(
+    ifNodeQueries.detail(flowId.toString(), nodeId),
+  );
+  if (!data) {
+    throw new Error(`IfNode not found: ${flowId.toString()}/${nodeId}`);
+  }
+  return IfNodeDrizzleMapper.toDomain(data as any);
+}
