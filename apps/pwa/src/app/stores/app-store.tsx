@@ -504,6 +504,7 @@ const useAppStoreBase = create<AppState>()(
                 "isUpdateReadyPWA",
                 "updateServiceWorker",
                 "jwt",
+                "subscribed",
                 "isLoading",
                 "isMobile",
                 "generatingImageId", // Don't persist this state
