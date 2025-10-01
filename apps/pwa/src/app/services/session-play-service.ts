@@ -1031,6 +1031,9 @@ const createMessage = async ({
   );
 };
 
+/**
+ * @deprecated use mutation `useAddMessage()`
+ */
 const addMessage = async ({
   sessionId,
   characterCardId,

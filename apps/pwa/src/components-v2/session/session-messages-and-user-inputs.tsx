@@ -62,11 +62,11 @@ import { useEnhancedGenerationPrompt } from "@/components-v2/session/hooks/use-e
 import { IMAGE_MODELS } from "@/app/stores/model-store";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries, useAddMessage } from "@/app/queries/session-queries";
 import { fetchTurn, fetchTurnOptional, turnQueries } from "@/app/queries/turn-queries";
 import { CardService } from "@/app/services";
 import {
-  addMessage,
+  createMessage,
   executeFlow,
   makeContext,
 } from "@/app/services/session-play-service";
@@ -111,6 +111,7 @@ import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
 import { SubscribeBadge } from "@/components-v2/subscribe-badge";
+import { fetchCharacterCard } from "@/app/queries/card/query-factory";
 
 const MessageItemInternal = ({
   messageId,
@@ -1552,6 +1553,9 @@ const SessionMessagesAndUserInputs = ({
     });
   }, [queryClient, selectedSessionId]);
 
+  // Mutations
+  const addMessage = useAddMessage(selectedSessionId!);
+
   // Virtualizer setup
   const parentRefInternal = useRef<HTMLDivElement>(null);
   const effectiveParentRef = parentRef || parentRefInternal;
@@ -1701,9 +1705,7 @@ const SessionMessagesAndUserInputs = ({
           streamingMessage = await fetchTurn(regenerateMessageId);
         } else {
           // Get character name
-          const character = (await CardService.getCard.execute(characterCardId))
-            .throwOnFailure()
-            .getValue() as CharacterCard;
+          const character = await fetchCharacterCard(characterCardId);
 
           // Create new empty message
           const messageOrError = Turn.create({
@@ -1737,11 +1739,10 @@ const SessionMessagesAndUserInputs = ({
 
         // Add new empty message to session
         if (!regenerateMessageId) {
-          await SessionService.addMessage.execute({
+          addMessageMutation.mutate({
             sessionId: session.id,
             message: streamingMessage,
           });
-          invalidateSession();
         }
 
         // Set streaming message id
@@ -1880,20 +1881,19 @@ const SessionMessagesAndUserInputs = ({
           throw new Error("Session not found");
         }
 
-        // Add user message
-        const userMessageOrError = await addMessage({
+        // Create user message
+        const userMessage = (await createMessage({
           sessionId: session.id,
           characterCardId: session.userCharacterCardId,
           defaultCharacterName: "User",
           messageContent: messageContent,
-          isUser: true,
-        });
-        if (userMessageOrError.isFailure) {
-          throw new Error(userMessageOrError.getError());
-        }
+        })).throwOnFailure().getValue();
 
-        // Invalidate session query
-        invalidateSession();
+        // Add user message
+        (await addMessage.mutateAsync({
+          sessionId: session.id,
+          message: userMessage,
+        })).throwOnFailure();
 
         // Scroll to bottom
         scrollToBottom({ behavior: "smooth" });
@@ -2081,11 +2081,16 @@ const SessionMessagesAndUserInputs = ({
         return;
       }
       try {
-        // Add scenario
-        const scenarioMessageOrError = await addMessage({
+        // Create scenario message
+        const scenarioMessage = (await createMessage({
           sessionId: session.id,
           messageContent: scenario.description,
-          isUser: true,
+        })).throwOnFailure().getValue();
+
+        // Add scenario
+        const scenarioMessageOrError = await addMessage.mutateAsync({
+          sessionId: session.id,
+          message: scenarioMessage,
         });
         if (scenarioMessageOrError.isFailure) {
           toastError({
@@ -2094,9 +2099,6 @@ const SessionMessagesAndUserInputs = ({
           });
           return;
         }
-
-        // Invalidate session
-        invalidateSession();
 
         // Close modal
         setIsOpenSelectScenarioModal(false);

@@ -1,9 +1,11 @@
-import { queryOptions } from "@tanstack/react-query";
-import { UniqueEntityID } from "@/shared/domain";
-import { TurnService } from "@/app/services/turn-service";
-import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { queryClient } from "@/app/queries/query-client";
+import { TurnService } from "@/app/services/turn-service";
+import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { Turn } from "@/modules/turn/domain/turn";
+import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
+import { UniqueEntityID } from "@/shared/domain";
+import { logger } from "@/shared/utils/logger";
+import { queryOptions, useMutation } from "@tanstack/react-query";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection
@@ -26,10 +28,10 @@ export const turnQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        
+
         const cached = selectResultCache.get(data as object);
         if (cached) return cached;
-        
+
         const result = TurnDrizzleMapper.toDomain(data as any);
         selectResultCache.set(data as object, result);
         return result;
@@ -61,3 +63,50 @@ export async function fetchTurnOptional(
     return null;
   }
 }
+
+/**
+ * Mutations
+ */
+
+export const useTranslateTurn = () => {
+  return useMutation({
+    mutationFn: async ({
+      turnId,
+      config,
+    }: {
+      turnId: UniqueEntityID;
+      config: TranslationConfig;
+    }) => {
+      const result = await TurnService.translateTurn.execute({
+        turnId,
+        config,
+      });
+      return result;
+    },
+
+    onMutate: async (variables, context) => {
+      // Get query key
+      const turnQueryKey = turnQueries.detail(variables.turnId).queryKey;
+
+      // Cancel queries
+      await context.client.cancelQueries({
+        queryKey: turnQueryKey,
+      });
+
+      // Save previous data
+      const previousTurn = context.client.getQueryData(turnQueryKey);
+
+      return { previousTurn };
+    },
+
+    onError: (error, variables, onMutateResult, context) => {
+      logger.error("Failed to mutate translateTurn", error);
+
+      // Get query key
+      const turnQueryKey = turnQueries.detail(variables.turnId).queryKey;
+
+      // Rollback data
+      context.client.setQueryData(turnQueryKey, onMutateResult?.previousTurn);
+    },
+  });
+};
