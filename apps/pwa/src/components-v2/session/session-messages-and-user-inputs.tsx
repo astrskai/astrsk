@@ -1557,7 +1557,7 @@ const SessionMessagesAndUserInputs = ({
   }, [queryClient, selectedSessionId]);
 
   // Mutations
-  const saveSessionMutation = useSaveSession(selectedSessionId!);
+  const saveSessionMutation = useSaveSession();
   const addMessageMutation = useAddMessage(selectedSessionId!);
   const deleteMessageMutation = useDeleteMessage(selectedSessionId!);
   const updateTurnMutation = useUpdateTurn();

@@ -16,7 +16,7 @@ export const useAutoSaveSession = ({
   onSave,
   debounceMs = 500,
 }: UseAutoSaveSessionOptions) => {
-  const saveSessionMutation = useSaveSession(session!.id);
+  const saveSessionMutation = useSaveSession();
 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isSavingRef = useRef(false);

@@ -106,9 +106,9 @@ export async function fetchSession(id: UniqueEntityID): Promise<Session> {
  * Mutations
  */
 
-export const useSaveSession = (sessionId: UniqueEntityID) => {
+export const useSaveSession = () => {
   return useMutation({
-    mutationKey: ["session", sessionId.toString(), "saveSession"],
+    mutationKey: ["session", "saveSession"],
     mutationFn: async ({ session }: { session: Session }) => {
       const result = await SessionService.saveSession.execute({
         session,
@@ -118,7 +118,9 @@ export const useSaveSession = (sessionId: UniqueEntityID) => {
 
     onMutate: async (variables, context) => {
       // Get query key
-      const sessionQueryKey = sessionQueries.detail(sessionId).queryKey;
+      const sessionQueryKey = sessionQueries.detail(
+        variables.session.id,
+      ).queryKey;
 
       // Cancel queries
       await context.client.cancelQueries({
@@ -141,7 +143,9 @@ export const useSaveSession = (sessionId: UniqueEntityID) => {
       logger.error("Failed to mutate saveSession", error);
 
       // Get query key
-      const sessionQueryKey = sessionQueries.detail(sessionId).queryKey;
+      const sessionQueryKey = sessionQueries.detail(
+        variables.session.id,
+      ).queryKey;
 
       // Rollback data
       context.client.setQueryData(
