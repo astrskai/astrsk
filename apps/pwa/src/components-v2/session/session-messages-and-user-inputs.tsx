@@ -62,7 +62,7 @@ import { useEnhancedGenerationPrompt } from "@/components-v2/session/hooks/use-e
 import { IMAGE_MODELS } from "@/app/stores/model-store";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
-import { sessionQueries, useAddMessage } from "@/app/queries/session-queries";
+import { sessionQueries, useAddMessage, useDeleteMessage } from "@/app/queries/session-queries";
 import { fetchTurn, fetchTurnOptional, turnQueries } from "@/app/queries/turn-queries";
 import { CardService } from "@/app/services";
 import {
@@ -1555,6 +1555,7 @@ const SessionMessagesAndUserInputs = ({
 
   // Mutations
   const addMessage = useAddMessage(selectedSessionId!);
+  const deleteMessageMutation = useDeleteMessage(selectedSessionId!);
 
   // Virtualizer setup
   const parentRefInternal = useRef<HTMLDivElement>(null);
@@ -1839,13 +1840,10 @@ const SessionMessagesAndUserInputs = ({
               });
             } else {
               // Delete empty message
-              await SessionService.deleteMessage.execute({
+              await deleteMessageMutation.mutateAsync({
                 sessionId: session.id,
                 messageId: streamingMessage.id,
               });
-
-              // Invalidate session query
-              invalidateSession();
             }
           } else {
             // Update message to database
@@ -2166,20 +2164,17 @@ const SessionMessagesAndUserInputs = ({
       }
 
       // Regular message deletion
-      const deletedMessageOrError = await SessionService.deleteMessage.execute({
-        sessionId: session.id,
-        messageId: messageId,
-      });
-      if (deletedMessageOrError.isFailure) {
-        logger.error(
-          "Failed to delete message",
-          deletedMessageOrError.getError(),
-        );
-        return;
-      }
-
-      // Invalidate session query
-      invalidateSession();
+      deleteMessageMutation.mutate(
+        {
+          sessionId: session.id,
+          messageId: messageId,
+        },
+        {
+          onError: (error) => {
+            logger.error("Failed to delete message", error);
+          },
+        },
+      );
     },
     [invalidateSession, session],
   );

@@ -191,3 +191,71 @@ export const useAddMessage = (sessionId: UniqueEntityID) => {
     },
   });
 };
+
+export const useDeleteMessage = (sessionId: UniqueEntityID) => {
+  return useMutation({
+    mutationKey: ["session", sessionId.toString(), "deleteMessage"],
+    mutationFn: async ({
+      sessionId,
+      messageId,
+    }: {
+      sessionId: UniqueEntityID;
+      messageId: UniqueEntityID;
+    }) => {
+      // Delete message
+      const result = await SessionService.deleteMessage.execute({
+        sessionId: sessionId,
+        messageId: messageId,
+      });
+      return result;
+    },
+
+    onMutate: async (variables, context) => {
+      // Get query key
+      const sessionQueryKey = sessionQueries.detail(sessionId).queryKey;
+
+      // Cancel queries
+      await context.client.cancelQueries({
+        queryKey: sessionQueryKey,
+      });
+
+      // Save previous data
+      const previousSession = context.client.getQueryData(sessionQueryKey);
+
+      // Optimistic update
+      const deletedTurnId = variables.messageId.toString();
+      context.client.setQueryData(sessionQueryKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          turn_ids: old.turn_ids.filter((id) => id !== deletedTurnId),
+        };
+      });
+
+      return { previousSession };
+    },
+
+    onError: (error, variables, onMutateResult, context) => {
+      logger.error("Failed to mutate deleteMessage", error);
+
+      // Get query key
+      const sessionQueryKey = sessionQueries.detail(sessionId).queryKey;
+
+      // Rollback data
+      context.client.setQueryData(
+        sessionQueryKey,
+        onMutateResult?.previousSession,
+      );
+    },
+
+    onSuccess: (data, variables, onMutateResult, context) => {
+      // Get query key
+      const turnQueryKey = turnQueries.detail(variables.messageId).queryKey;
+
+      // Delete turn cache
+      context.client.removeQueries({
+        queryKey: turnQueryKey,
+      });
+    },
+  });
+};
