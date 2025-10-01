@@ -68,6 +68,46 @@ export async function fetchTurnOptional(
  * Mutations
  */
 
+export const useUpdateTurn = () => {
+  return useMutation({
+    mutationFn: async ({ turn }: { turn: Turn }) => {
+      const result = await TurnService.updateTurn.execute(turn);
+      return result;
+    },
+
+    onMutate: async (variables, context) => {
+      // Get query key
+      const turnQueryKey = turnQueries.detail(variables.turn.id).queryKey;
+
+      // Cancel queries
+      await context.client.cancelQueries({
+        queryKey: turnQueryKey,
+      });
+
+      // Save previous data
+      const previousTurn = context.client.getQueryData(turnQueryKey);
+
+      // Optimistic update
+      context.client.setQueryData(
+        turnQueryKey,
+        TurnDrizzleMapper.toPersistence(variables.turn),
+      );
+
+      return { previousTurn };
+    },
+
+    onError: (error, variables, onMutateResult, context) => {
+      logger.error("Failed to mutate updateTurn", error);
+
+      // Get query key
+      const turnQueryKey = turnQueries.detail(variables.turn.id).queryKey;
+
+      // Rollback data
+      context.client.setQueryData(turnQueryKey, onMutateResult?.previousTurn);
+    },
+  });
+};
+
 export const useTranslateTurn = () => {
   return useMutation({
     mutationFn: async ({

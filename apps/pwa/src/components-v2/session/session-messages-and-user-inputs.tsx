@@ -63,7 +63,7 @@ import { IMAGE_MODELS } from "@/app/stores/model-store";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
 import { sessionQueries, useAddMessage, useDeleteMessage } from "@/app/queries/session-queries";
-import { fetchTurn, fetchTurnOptional, turnQueries } from "@/app/queries/turn-queries";
+import { fetchTurn, fetchTurnOptional, turnQueries, useUpdateTurn } from "@/app/queries/turn-queries";
 import { CardService } from "@/app/services";
 import {
   createMessage,
@@ -608,6 +608,9 @@ const MessageItem = ({
   const { data: message } = useQuery(turnQueries.detail(messageId));
   const selectedOption = message?.options[message.selectedOptionIndex];
 
+  // Mutations
+  const updateTurnMutation = useUpdateTurn();
+
   // Display language
   const content = selectedOption?.content;
   const language = translationConfig?.displayLanguage ?? "none";
@@ -775,7 +778,9 @@ const MessageItem = ({
           turn.setAssetId(assetId);
 
           // Save the updated turn
-          const result = await TurnService.updateTurn.execute(turn);
+          const result = await updateTurnMutation.mutateAsync({
+            turn: turn
+          });
           if (result.isFailure) {
             console.error("Failed to update turn:", result.getError());
           } else {
@@ -1554,8 +1559,9 @@ const SessionMessagesAndUserInputs = ({
   }, [queryClient, selectedSessionId]);
 
   // Mutations
-  const addMessage = useAddMessage(selectedSessionId!);
+  const addMessageMutation = useAddMessage(selectedSessionId!);
   const deleteMessageMutation = useDeleteMessage(selectedSessionId!);
+  const updateTurnMutation = useUpdateTurn();
 
   // Virtualizer setup
   const parentRefInternal = useRef<HTMLDivElement>(null);
@@ -1791,11 +1797,8 @@ const SessionMessagesAndUserInputs = ({
         }
 
         // Update message to database
-        await TurnService.updateTurn.execute(streamingMessage);
-
-        // Invalidate turn query
-        queryClient.invalidateQueries({
-          queryKey: turnQueries.detail(streamingMessage.id).queryKey,
+        updateTurnMutation.mutate({
+          turn: streamingMessage
         });
       } catch (error) {
         // Notify error to user
@@ -1847,11 +1850,8 @@ const SessionMessagesAndUserInputs = ({
             }
           } else {
             // Update message to database
-            await TurnService.updateTurn.execute(streamingMessage);
-
-            // Invalidate turn query
-            queryClient.invalidateQueries({
-              queryKey: turnQueries.detail(streamingMessage.id).queryKey,
+            updateTurnMutation.mutate({
+              turn: streamingMessage
             });
           }
         }
@@ -1888,7 +1888,7 @@ const SessionMessagesAndUserInputs = ({
         })).throwOnFailure().getValue();
 
         // Add user message
-        (await addMessage.mutateAsync({
+        (await addMessageMutation.mutateAsync({
           sessionId: session.id,
           message: userMessage,
         })).throwOnFailure();
@@ -2086,7 +2086,7 @@ const SessionMessagesAndUserInputs = ({
         })).throwOnFailure().getValue();
 
         // Add scenario
-        const scenarioMessageOrError = await addMessage.mutateAsync({
+        const scenarioMessageOrError = await addMessageMutation.mutateAsync({
           sessionId: session.id,
           message: scenarioMessage,
         });
@@ -2117,18 +2117,11 @@ const SessionMessagesAndUserInputs = ({
       message.setContent(content);
 
       // Save message to DB
-      const savedMessageOrError = await TurnService.updateTurn.execute(message);
-      if (savedMessageOrError.isFailure) {
-        logger.error("Failed to save message", savedMessageOrError.getError());
-        return;
-      }
-
-      // Invalidate message
-      queryClient.invalidateQueries({
-        queryKey: turnQueries.detail(messageId).queryKey,
+      updateTurnMutation.mutate({
+        turn: message
       });
     },
-    [queryClient],
+    [updateTurnMutation],
   );
 
   // Delete message
@@ -2193,18 +2186,11 @@ const SessionMessagesAndUserInputs = ({
       }
 
       // Save message to DB
-      const savedMessageOrError = await TurnService.updateTurn.execute(message);
-      if (savedMessageOrError.isFailure) {
-        logger.error("Failed to save message", savedMessageOrError.getError());
-        return;
-      }
-
-      // Invalidate message
-      queryClient.invalidateQueries({
-        queryKey: turnQueries.detail(messageId).queryKey,
+      updateTurnMutation.mutate({
+        turn: message
       });
     },
-    [queryClient],
+    [updateTurnMutation],
   );
 
   // Generate option
@@ -2308,7 +2294,9 @@ const SessionMessagesAndUserInputs = ({
           turn.setAssetId(assetId);
 
           // Save the updated turn
-          const result = await TurnService.updateTurn.execute(turn);
+          const result = await updateTurnMutation.mutateAsync({
+            turn: turn
+          });
           if (result.isFailure) {
             console.error("Failed to update turn:", result.getError());
             throw new Error(result.getError());
@@ -2330,6 +2318,7 @@ const SessionMessagesAndUserInputs = ({
       }
     },
     [
+      updateTurnMutation,
       generateVideoBase,
       queryClient,
       // secondLastGeneratedImageUrl,
@@ -2704,18 +2693,15 @@ const SessionMessagesAndUserInputs = ({
         lastTurn.setDataStore(updatedDataStore);
 
         // Save to database
-        await TurnService.updateTurn.execute(lastTurn);
-
-        // Invalidate turn query
-        queryClient.invalidateQueries({
-          queryKey: turnQueries.detail(lastTurn.id).queryKey,
+        updateTurnMutation.mutate({
+          turn: lastTurn
         });
       } catch (error) {
         logger.error("Failed to update data store", error);
         toast.error("Failed to update data store field");
       }
     },
-    [lastTurn, queryClient],
+    [updateTurnMutation, lastTurn],
   );
 
   if (!session) {
