@@ -1088,56 +1088,6 @@ const addMessage = async ({
   return Result.ok(sessionAndMessage.message);
 };
 
-const addOptionToMessage = async ({
-  messageId,
-  option,
-  isUser = false,
-}: {
-  messageId: UniqueEntityID;
-  option: Option;
-  isUser?: boolean;
-}) => {
-  // Get message
-  let message;
-  try {
-    message = await fetchTurn(messageId);
-  } catch (error) {
-    return;
-  }
-
-  // Get session
-  let session;
-  try {
-    session = await fetchSession(message.sessionId);
-  } catch (error) {
-    return;
-  }
-
-  // Add option
-  message.addOption(option);
-
-  // Update message
-  try {
-    (await TurnService.updateTurn.execute(message)).throwOnFailure();
-  } catch (error) {
-    return;
-  }
-
-  // Translate message
-  if (option.content.trim() !== "" && session.translation) {
-    try {
-      (
-        await TurnService.translateTurn.execute({
-          turnId: message.id,
-          config: session.translation,
-        })
-      ).throwOnFailure();
-    } catch (error) {
-      return;
-    }
-  }
-};
-
 async function renderMessages({
   renderable,
   context,
@@ -2524,7 +2474,6 @@ function convertToDataStoreType(
 
 export {
   addMessage,
-  addOptionToMessage,
   createMessage,
   evaluateConditionOperator,
   executeFlow,
