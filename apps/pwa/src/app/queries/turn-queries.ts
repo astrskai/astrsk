@@ -148,5 +148,18 @@ export const useTranslateTurn = () => {
       // Rollback data
       context.client.setQueryData(turnQueryKey, onMutateResult?.previousTurn);
     },
+
+    onSuccess: (data, variables, onMutateResult, context) => {
+      // Get query key
+      const turnQueryKey = turnQueries.detail(variables.turnId).queryKey;
+
+      // Update cache
+      if (data.isSuccess) {
+        context.client.setQueryData(
+          turnQueryKey,
+          TurnDrizzleMapper.toPersistence(data.getValue()),
+        );
+      }
+    },
   });
 };
