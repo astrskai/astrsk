@@ -106,6 +106,52 @@ export async function fetchSession(id: UniqueEntityID): Promise<Session> {
  * Mutations
  */
 
+export const useSaveSession = (sessionId: UniqueEntityID) => {
+  return useMutation({
+    mutationKey: ["session", sessionId.toString(), "saveSession"],
+    mutationFn: async ({ session }: { session: Session }) => {
+      const result = await SessionService.saveSession.execute({
+        session,
+      });
+      return result;
+    },
+
+    onMutate: async (variables, context) => {
+      // Get query key
+      const sessionQueryKey = sessionQueries.detail(sessionId).queryKey;
+
+      // Cancel queries
+      await context.client.cancelQueries({
+        queryKey: sessionQueryKey,
+      });
+
+      // Save previous data
+      const previousSession = context.client.getQueryData(sessionQueryKey);
+
+      // Optimistic update
+      context.client.setQueryData(
+        sessionQueryKey,
+        SessionDrizzleMapper.toPersistence(variables.session),
+      );
+
+      return { previousSession };
+    },
+
+    onError: (error, variables, onMutateResult, context) => {
+      logger.error("Failed to mutate saveSession", error);
+
+      // Get query key
+      const sessionQueryKey = sessionQueries.detail(sessionId).queryKey;
+
+      // Rollback data
+      context.client.setQueryData(
+        sessionQueryKey,
+        onMutateResult?.previousSession,
+      );
+    },
+  });
+};
+
 export const useAddMessage = (sessionId: UniqueEntityID) => {
   const translateTurn = useTranslateTurn();
 

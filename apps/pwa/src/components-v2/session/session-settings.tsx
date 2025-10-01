@@ -197,8 +197,7 @@ const SessionSettings = ({
   // Auto-save functionality
   const { autoSave } = useAutoSaveSession({
     session: session ?? null,
-    onSave: invalidateSession,
-    debounceMs: 300,
+    debounceMs: 0,
   });
   
   // Title editing state

@@ -62,15 +62,13 @@ import { useEnhancedGenerationPrompt } from "@/components-v2/session/hooks/use-e
 import { IMAGE_MODELS } from "@/app/stores/model-store";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
-import { sessionQueries, useAddMessage, useDeleteMessage } from "@/app/queries/session-queries";
+import { sessionQueries, useAddMessage, useDeleteMessage, useSaveSession } from "@/app/queries/session-queries";
 import { fetchTurn, fetchTurnOptional, turnQueries, useUpdateTurn } from "@/app/queries/turn-queries";
-import { CardService } from "@/app/services";
 import {
   createMessage,
   executeFlow,
   makeContext,
 } from "@/app/services/session-play-service";
-import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { AutoReply, useSessionStore } from "@/app/stores/session-store";
@@ -1559,6 +1557,7 @@ const SessionMessagesAndUserInputs = ({
   }, [queryClient, selectedSessionId]);
 
   // Mutations
+  const saveSessionMutation = useSaveSession(selectedSessionId!);
   const addMessageMutation = useAddMessage(selectedSessionId!);
   const deleteMessageMutation = useDeleteMessage(selectedSessionId!);
   const updateTurnMutation = useUpdateTurn();
@@ -1954,15 +1953,11 @@ const SessionMessagesAndUserInputs = ({
       session.update({
         autoReply,
       });
-      await SessionService.saveSession.execute({ session });
-
-      // Invalidate session query
-      queryClient.invalidateQueries({
-        queryKey: sessionQueries.detail(selectedSessionId ?? undefined)
-          .queryKey,
+      saveSessionMutation.mutate({
+        session
       });
     },
-    [session, queryClient, selectedSessionId],
+    [session, saveSessionMutation],
   );
 
   // Add plot card modal
@@ -2662,15 +2657,15 @@ const SessionMessagesAndUserInputs = ({
 
       try {
         session.setDataSchemaOrder(newOrder);
-        await SessionService.saveSession.execute({ session });
-        // Invalidate session cache to reflect the change immediately
-        invalidateSession();
+        saveSessionMutation.mutate({
+          session
+        });
       } catch (error) {
         logger.error("Failed to update data schema order", error);
         toast.error("Failed to update field order");
       }
     },
-    [sortedDataSchemaFields, session, invalidateSession],
+    [sortedDataSchemaFields, session, saveSessionMutation],
   );
 
   // Update last turn data store
