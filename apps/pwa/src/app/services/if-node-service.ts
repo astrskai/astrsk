@@ -9,10 +9,11 @@ import { UpdateIfNodeColorUseCase } from "@/modules/if-node/usecases/update-if-n
 import { DeleteIfNodeUseCase } from "@/modules/if-node/usecases/delete-if-node";
 import { DeleteAllIfNodesByFlowUseCase } from "@/modules/if-node/usecases/delete-all-if-nodes-by-flow";
 import { RestoreIfNodeFromSnapshot } from "@/modules/if-node/usecases/restore-if-node-from-snapshot";
+import { CloneIfNodeUseCase } from "@/modules/if-node/usecases/clone-if-node";
 
 export class IfNodeService {
   public static ifNodeRepo: DrizzleIfNodeRepo;
-  
+
   public static createIfNode: CreateIfNodeUseCase;
   public static getIfNode: GetIfNodeUseCase;
   public static getAllIfNodesByFlow: GetAllIfNodesByFlowUseCase;
@@ -23,21 +24,39 @@ export class IfNodeService {
   public static deleteIfNode: DeleteIfNodeUseCase;
   public static deleteAllIfNodesByFlow: DeleteAllIfNodesByFlowUseCase;
   public static restoreIfNodeFromSnapshot: RestoreIfNodeFromSnapshot;
+  public static cloneIfNode: CloneIfNodeUseCase;
 
   private constructor() {}
 
   public static init() {
     this.ifNodeRepo = new DrizzleIfNodeRepo();
-    
+
     this.createIfNode = new CreateIfNodeUseCase(this.ifNodeRepo);
     this.getIfNode = new GetIfNodeUseCase(this.ifNodeRepo);
     this.getAllIfNodesByFlow = new GetAllIfNodesByFlowUseCase(this.ifNodeRepo);
-    this.updateIfNodeName = new UpdateIfNodeNameUseCase(this.ifNodeRepo, this.ifNodeRepo);
-    this.updateIfNodeConditions = new UpdateIfNodeConditionsUseCase(this.ifNodeRepo, this.ifNodeRepo);
-    this.updateIfNodeLogicOperator = new UpdateIfNodeLogicOperatorUseCase(this.ifNodeRepo, this.ifNodeRepo);
-    this.updateIfNodeColor = new UpdateIfNodeColorUseCase(this.ifNodeRepo, this.ifNodeRepo);
+    this.updateIfNodeName = new UpdateIfNodeNameUseCase(
+      this.ifNodeRepo,
+      this.ifNodeRepo,
+    );
+    this.updateIfNodeConditions = new UpdateIfNodeConditionsUseCase(
+      this.ifNodeRepo,
+      this.ifNodeRepo,
+    );
+    this.updateIfNodeLogicOperator = new UpdateIfNodeLogicOperatorUseCase(
+      this.ifNodeRepo,
+      this.ifNodeRepo,
+    );
+    this.updateIfNodeColor = new UpdateIfNodeColorUseCase(
+      this.ifNodeRepo,
+      this.ifNodeRepo,
+    );
     this.deleteIfNode = new DeleteIfNodeUseCase(this.ifNodeRepo);
-    this.deleteAllIfNodesByFlow = new DeleteAllIfNodesByFlowUseCase(this.ifNodeRepo);
-    this.restoreIfNodeFromSnapshot = new RestoreIfNodeFromSnapshot(this.ifNodeRepo);
+    this.deleteAllIfNodesByFlow = new DeleteAllIfNodesByFlowUseCase(
+      this.ifNodeRepo,
+    );
+    this.restoreIfNodeFromSnapshot = new RestoreIfNodeFromSnapshot(
+      this.ifNodeRepo,
+    );
+    this.cloneIfNode = new CloneIfNodeUseCase(this.ifNodeRepo, this.ifNodeRepo);
   }
 }

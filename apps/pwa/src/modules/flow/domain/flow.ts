@@ -75,7 +75,7 @@ export type FlowViewport = {
 };
 
 // Data Store Schema types
-export type DataStoreFieldType = 'string' | 'number' | 'boolean' | 'integer';
+export type DataStoreFieldType = "string" | "number" | "boolean" | "integer";
 
 // Schema definition - defines the structure
 export interface DataStoreSchemaField {
@@ -200,33 +200,39 @@ export class Flow extends AggregateRoot<FlowProps> {
   public update(props: Partial<UpdateFlowProps>): Result<Flow> {
     try {
       // Determine if structural changes are being made
-      const hasStructuralChanges = 
-        props.nodes !== undefined || 
-        props.edges !== undefined || 
+      const hasStructuralChanges =
+        props.nodes !== undefined ||
+        props.edges !== undefined ||
         props.responseTemplate !== undefined;
-      
+
       // Determine the new ready state
       let newReadyState = this.props.readyState;
-      
+
       // If readyState is explicitly provided, use it
       if (props.readyState !== undefined) {
         newReadyState = props.readyState;
-      } else if (hasStructuralChanges && this.props.readyState === ReadyState.Ready) {
+      } else if (
+        hasStructuralChanges &&
+        this.props.readyState === ReadyState.Ready
+      ) {
         // Only reset from Ready to Draft on structural changes
         // Error state persists through structural changes
         newReadyState = ReadyState.Draft;
       }
-      
+
       // Update flow props - only update properties that are explicitly passed
       // Filter out undefined values to avoid overwriting existing properties
-      const filteredProps = Object.entries(props).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as any);
-      
-      Object.assign(this.props, { 
+      const filteredProps = Object.entries(props).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as any,
+      );
+
+      Object.assign(this.props, {
         ...filteredProps,
         readyState: newReadyState,
       });

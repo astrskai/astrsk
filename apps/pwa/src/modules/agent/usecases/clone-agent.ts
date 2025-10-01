@@ -5,8 +5,13 @@ import { formatError } from "@/shared/utils";
 import { Agent } from "@/modules/agent/domain";
 import { LoadAgentRepo, SaveAgentRepo } from "@/modules/agent/repos";
 
+interface CloneAgentParams {
+  sourceAgentId: UniqueEntityID;
+  targetAgentId?: UniqueEntityID;
+}
+
 export class CloneAgent
-  implements UseCase<UniqueEntityID, Promise<Result<Agent>>>
+  implements UseCase<CloneAgentParams | UniqueEntityID, Promise<Result<Agent>>>
 {
   constructor(
     private loadAgentRepo: LoadAgentRepo,
@@ -21,8 +26,23 @@ export class CloneAgent
     return agentOrError.getValue();
   }
 
-  private cloneAgent(agent: Agent): Agent {
+  private cloneAgent(agent: Agent, targetId?: UniqueEntityID): Agent {
     const { _id, createdAt, updatedAt, ...agentJson } = agent.toJSON();
+    // If targetId is provided, create the agent with that ID
+    if (targetId) {
+      const clonedAgentOrError = Agent.fromJSON({
+        ...agentJson,
+        _id: targetId.toString(),
+      });
+      if (clonedAgentOrError.isFailure) {
+        throw formatError(
+          "Failed to clone agent",
+          clonedAgentOrError.getError(),
+        );
+      }
+      return clonedAgentOrError.getValue();
+    }
+    // Otherwise create with auto-generated ID
     const clonedAgentOrError = Agent.fromJSON(agentJson);
     if (clonedAgentOrError.isFailure) {
       throw formatError("Failed to clone agent", clonedAgentOrError.getError());
@@ -56,12 +76,27 @@ export class CloneAgent
     return this.saveAgentRepo.saveAgent(agent);
   }
 
-  async execute(agentId: UniqueEntityID): Promise<Result<Agent>> {
-    // Get agent
-    const agent = await this.getAgent(agentId);
+  async execute(
+    params: CloneAgentParams | UniqueEntityID,
+  ): Promise<Result<Agent>> {
+    // Handle both old (UniqueEntityID) and new (CloneAgentParams) parameter formats
+    let sourceAgentId: UniqueEntityID;
+    let targetAgentId: UniqueEntityID | undefined;
 
-    // Clone agent
-    const clonedAgent = this.cloneAgent(agent);
+    if (params instanceof UniqueEntityID) {
+      // Legacy format - just source agent ID
+      sourceAgentId = params;
+    } else {
+      // New format with optional target ID
+      sourceAgentId = params.sourceAgentId;
+      targetAgentId = params.targetAgentId;
+    }
+
+    // Get agent
+    const agent = await this.getAgent(sourceAgentId);
+
+    // Clone agent with optional target ID
+    const clonedAgent = this.cloneAgent(agent, targetAgentId);
 
     // Change name
     const changedAgent = await this.changeAgentName(clonedAgent);

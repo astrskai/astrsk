@@ -44,18 +44,18 @@ export function useUpdateIfNodeColor(flowId: string, nodeId: string) {
       startEditing();
       
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ifNodeKeys.color(flowId, nodeId) });
+      await queryClient.cancelQueries({ queryKey: ifNodeKeys.color(nodeId) });
       
       // Optimistically update the cache
-      const previousColor = queryClient.getQueryData(ifNodeKeys.color(flowId, nodeId));
-      queryClient.setQueryData(ifNodeKeys.color(flowId, nodeId), { color });
+      const previousColor = queryClient.getQueryData(ifNodeKeys.color(nodeId));
+      queryClient.setQueryData(ifNodeKeys.color(nodeId), { color });
       
       return { previousColor };
     },
     onError: (err, color, context) => {
       // Revert optimistic update on error
       if (context?.previousColor) {
-        queryClient.setQueryData(ifNodeKeys.color(flowId, nodeId), context.previousColor);
+        queryClient.setQueryData(ifNodeKeys.color(nodeId), context.previousColor);
       }
       setIsEditing(false);
       if (editTimeoutRef.current) {
@@ -66,9 +66,9 @@ export function useUpdateIfNodeColor(flowId: string, nodeId: string) {
       endEditing();
       // Invalidate to ensure consistency after delay
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ifNodeKeys.color(flowId, nodeId) });
+        queryClient.invalidateQueries({ queryKey: ifNodeKeys.color(nodeId) });
         // Also invalidate detail query to keep it in sync
-        queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
+        queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(nodeId) });
       }, 600);
     },
   });

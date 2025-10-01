@@ -16,7 +16,7 @@ export type EndNode = Node<EndNodeData>;
 
 export default function EndNode({ id }: NodeProps<EndNode>) {
   const { openPanel, closePanel, isPanelOpen } = useFlowPanelContext();
-  
+
   const handleOpenResponseDesign = useCallback(() => {
     openPanel(PANEL_TYPES.RESPONSE_DESIGN);
   }, [openPanel]);
@@ -30,20 +30,24 @@ export default function EndNode({ id }: NodeProps<EndNode>) {
   const isResponseDesignOpen = isPanelOpen(PANEL_TYPES.RESPONSE_DESIGN);
 
   return (
-    <div className="relative group/node">
-      <div className="w-56 px-4 py-3.5 bg-background-surface-2 rounded-lg shadow-[0px_1px_12px_0px_rgba(125,125,125,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-background-surface-2 inline-flex flex-col justify-center items-start gap-2">
-        <div className="justify-start text-text-primary text-2xl font-medium leading-10">End</div>
-        <div className="self-stretch p-2 bg-background-surface-3 rounded-lg flex flex-col justify-start items-start gap-4">
+    <div className="group/node relative">
+      <div className="bg-background-surface-2 outline-background-surface-2 inline-flex w-56 flex-col items-start justify-center gap-2 rounded-lg px-4 py-3.5 shadow-[0px_1px_12px_0px_rgba(125,125,125,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px]">
+        <div className="text-text-primary justify-start text-2xl leading-10 font-medium">
+          End
+        </div>
+        <div className="bg-background-surface-3 flex flex-col items-start justify-start gap-4 self-stretch rounded-lg p-2">
           <ButtonPill
             onClick={handleOpenResponseDesign}
             // onDoubleClick={handleCloseResponseDesign}
             active={isResponseDesignOpen}
-            className="self-stretch justify-center"
+            className="justify-center self-stretch"
             size="default"
           >
             Response design
           </ButtonPill>
-          <div className="self-stretch justify-start text-text-placeholder text-xs font-normal">Design the exact format and structure of AI responses</div>
+          <div className="text-text-placeholder justify-start self-stretch text-xs font-normal">
+            Design the exact format and structure of AI responses
+          </div>
         </div>
       </div>
       {/* React Flow Handle */}

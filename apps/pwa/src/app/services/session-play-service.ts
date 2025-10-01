@@ -1930,10 +1930,9 @@ async function* executeFlow({
       } else if (currentNode.type === "dataStore") {
         // Get datastore node
         const dataStoreNode = (
-          await DataStoreNodeService.getDataStoreNode.execute({
-            flowId: flowId.toString(),
-            nodeId: currentNode.id,
-          })
+          await DataStoreNodeService.getDataStoreNode.execute(
+            new UniqueEntityID(currentNode.id),
+          )
         )
           .throwOnFailure()
           .getValue();
@@ -2014,10 +2013,9 @@ async function* executeFlow({
       } else if (currentNode.type === "if") {
         // Get if node
         const ifNode = (
-          await IfNodeService.getIfNode.execute({
-            flowId: flowId.toString(),
-            nodeId: currentNode.id,
-          })
+          await IfNodeService.getIfNode.execute(
+            new UniqueEntityID(currentNode.id),
+          )
         )
           .throwOnFailure()
           .getValue();

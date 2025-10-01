@@ -807,10 +807,7 @@ Operations are being generated and will be ready for review shortly.`;
                         if (dataStoreNodeIds.length > 0) {
                           dataStoreNodeIds.forEach((nodeId) => {
                             queryClient.invalidateQueries({
-                              queryKey: dataStoreNodeKeys.detail(
-                                resourceId,
-                                nodeId,
-                              ),
+                              queryKey: dataStoreNodeKeys.detail(nodeId),
                             });
                           });
                           queryClient.invalidateQueries({
@@ -822,7 +819,7 @@ Operations are being generated and will be ready for review shortly.`;
                         if (ifNodeIds.length > 0) {
                           ifNodeIds.forEach((nodeId) => {
                             queryClient.invalidateQueries({
-                              queryKey: ifNodeKeys.detail(resourceId, nodeId),
+                              queryKey: ifNodeKeys.detail(nodeId),
                             });
                           });
                           queryClient.invalidateQueries({

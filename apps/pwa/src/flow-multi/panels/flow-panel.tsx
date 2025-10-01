@@ -1,10 +1,21 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { UniqueEntityID } from "@/shared/domain";
-import { AgentService } from "@/app/services/agent-service";
-import { DataStoreNodeService } from "@/app/services/data-store-node-service";
-import { IfNodeService } from "@/app/services/if-node-service";
 import { PANEL_TYPES } from "@/flow-multi/components/panel-types";
-import { Agent, ApiType } from "@/modules/agent/domain/agent";
+import {
+  closeNodePanels,
+  getNodeDisplayName,
+} from "@/flow-multi/utils/panel-utils";
+import {
+  filterExistingConnections,
+  createDataHash,
+} from "@/flow-multi/utils/flow-helpers";
+import {
+  calculateViewportCenter,
+  generateNodeId,
+  generateUniqueNodeName,
+  getExistingNodeNames,
+  getNodeBaseName,
+} from "@/flow-multi/utils/node-helpers";
+import { getNextAvailableColor } from "@/flow-multi/utils/node-color-assignment";
 import {
   Node as FlowNode,
   Edge as FlowEdge,
@@ -13,17 +24,12 @@ import {
 } from "@/modules/flow/domain/flow";
 import { Session } from "@/modules/session/domain/session";
 import { NodeType } from "@/flow-multi/types/node-types";
-import { getNextAvailableColor } from "@/flow-multi/utils/node-color-assignment";
-import {
-  ensureNodeSafety,
-  ensureNodesSafety,
-} from "@/flow-multi/utils/ensure-node-safety";
+import { ensureNodesSafety } from "@/flow-multi/utils/ensure-node-safety";
 import {
   ensureEdgeSelectable,
   ensureEdgesSelectable,
 } from "@/flow-multi/utils/ensure-edge-selectable";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
-import { invalidateAllAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
 import { useFlowLocalStateSync } from "@/utils/flow-local-state-sync";
 import { cn } from "@/shared/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -34,6 +40,17 @@ import {
   useUpdateFlowViewport,
 } from "@/app/queries/flow/mutations/flow-mutations";
 import { useUpdateNodesAndEdges } from "@/app/queries/flow/mutations/nodes-edges-mutations";
+import {
+  useCreateAgentNode,
+  useDeleteAgentNode,
+  useCloneAgentNode,
+  useCreateDataStoreNode,
+  useDeleteDataStoreNode,
+  useCloneDataStoreNode,
+  useCreateIfNode,
+  useDeleteIfNode,
+  useCloneIfNode,
+} from "@/app/queries/flow/mutations/composite-node-mutations";
 import {
   BookOpen,
   Pencil,
@@ -47,7 +64,6 @@ import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
-import { SvgIcon } from "@/components-v2/svg-icon";
 import { Card } from "@/components-v2/ui/card";
 import {
   Select,
@@ -87,7 +103,6 @@ import {
   NodeSelectionMenu,
   NodeSelectionMenuItems,
 } from "@/flow-multi/components/node-selection-menu";
-import { createNodeWithConnection } from "./flow-panel-connection-handlers";
 import { edgeTypes, type CustomEdgeType } from "@/flow-multi/edges/index";
 import { nodeTypes, type CustomNodeType } from "@/flow-multi/nodes/index";
 import { CustomReactFlowControls } from "@/flow-multi/components/custom-controls";
@@ -99,55 +114,6 @@ interface FlowPanelProps {
 }
 
 const proOptions = { hideAttribution: true };
-
-// Helper function to filter existing connections
-function filterExistingConnections(
-  edges: CustomEdgeType[],
-  sourceNode: CustomNodeType | undefined,
-  targetNode: CustomNodeType | undefined, // Kept for backwards compatibility but not used
-  connection: {
-    source?: string | null;
-    target?: string | null;
-    sourceHandle?: string | null;
-  },
-): CustomEdgeType[] {
-  let filteredEdges = [...edges];
-
-  // Remove existing outgoing connections based on source node type
-  // Output handles can only connect to one node (applies to all node types with source handles)
-  if (connection.source && sourceNode) {
-    // For all node types, remove existing edges from the same source handle
-    // This ensures each output can only connect to one input
-    filteredEdges = filteredEdges.filter((edge) => {
-      // For If nodes with multiple source handles, check both source and sourceHandle
-      if (sourceNode.type === "if" && edge.source === connection.source) {
-        // Only remove if it's from the same handle (true/false)
-        return edge.sourceHandle !== connection.sourceHandle;
-      }
-      // For other nodes, remove any edge from the same source
-      return edge.source !== connection.source;
-    });
-  }
-
-  // Input handles can now accept multiple connections - no filtering needed for targets
-  // Previously removed: filtering for agent and end node targets
-
-  return filteredEdges;
-}
-
-// Helper to create a hash of flow data for comparison
-function createDataHash(nodes: any[], edges: any[]) {
-  // Create a hash that ignores position changes
-  const nodeHash = nodes
-    .map((n) => `${n.id}:${n.type}:${JSON.stringify(n.data)}`)
-    .sort()
-    .join("|");
-  const edgeHash = edges
-    .map((e) => `${e.id}:${e.source}:${e.target}`)
-    .sort()
-    .join("|");
-  return `${nodeHash}::${edgeHash}`;
-}
 
 // Main flow panel component
 function FlowPanelInner({ flowId }: FlowPanelProps) {
@@ -192,8 +158,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const skipNextSyncRef = useRef<boolean>(false);
 
   // 3. Context hooks
-  const { openPanel, closePanel, isPanelOpen, registerFlowActions } =
-    useFlowPanelContext();
+  const { openPanel, closePanel, isPanelOpen } = useFlowPanelContext();
   const { isExpanded, isMobile } = useLeftNavigationWidth();
   const queryClient = useQueryClient();
 
@@ -209,39 +174,29 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const updateFlowViewportMutation = useUpdateFlowViewport(flowId);
   const updateNodesAndEdges = useUpdateNodesAndEdges(flowId);
 
-  // Vibe Coding handler - opens the local vibe panel instead of global right panel
-  const handleVibeCodingToggle = useCallback(() => {
-    if (!flow) return;
+  // Agent mutations
+  const createAgentNode = useCreateAgentNode(flowId);
+  const deleteAgentNode = useDeleteAgentNode(flowId);
+  const cloneAgentNode = useCloneAgentNode(flowId);
 
-    // Open the local vibe panel tab instead of the global right panel
-    openPanel(PANEL_TYPES.VIBE);
-  }, [flow, openPanel]);
+  // DataStore mutations
+  const createDataStoreNode = useCreateDataStoreNode(flowId);
+  const deleteDataStoreNode = useDeleteDataStoreNode(flowId);
+  const cloneDataStoreNode = useCloneDataStoreNode(flowId);
+
+  // Initialize the IfNode mutation hooks
+  const createIfNode = useCreateIfNode(flowId);
+  const deleteIfNode = useDeleteIfNode(flowId);
+  const cloneIfNode = useCloneIfNode(flowId);
 
   // 6. Window-based local state sync for preview operations
   useFlowLocalStateSync(
     flowId,
     // Handle nodes/edges update from operations (preview)
     useCallback(
-      (localNodes?: any[], localEdges?: any[]) => {
-        console.log(
-          "🔄 [FLOW-PANEL] Received local nodes/edges update from operation:",
-          {
-            nodeCount: localNodes?.length || 0,
-            edgeCount: localEdges?.length || 0,
-            hasNodes: !!localNodes,
-            hasEdges: !!localEdges,
-          },
-        );
-
+      (localNodes?: CustomNodeType[], localEdges?: CustomEdgeType[]) => {
         // Apply the local changes to the flow panel immediately
         if (localNodes) {
-          console.log(
-            "🔄 [FLOW-PANEL] Updating nodes:",
-            localNodes.map((n) => ({
-              id: n.id.slice(0, 8) + "...",
-              type: n.type,
-            })),
-          );
           setNodes(localNodes);
 
           // Mark as local change so the sync logic doesn't overwrite these changes
@@ -249,14 +204,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         }
 
         if (localEdges) {
-          console.log(
-            "🔄 [FLOW-PANEL] Updating edges:",
-            localEdges.map((e) => ({
-              source: e.source?.slice(0, 8) + "...",
-              target: e.target?.slice(0, 8) + "...",
-            })),
-          );
-
           // Ensure all edges have the required 'type' field for ReactFlow
           const edgesWithType = localEdges.map((edge: any) => ({
             ...edge,
@@ -271,11 +218,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     // Handle individual node updates (if needed)
     useCallback(
       (nodeId: string, nodeData: any) => {
-        console.log("🔄 [FLOW-PANEL] Received individual node update:", {
-          nodeId: nodeId.slice(0, 8) + "...",
-          nodeType: nodeData?.type,
-        });
-
         // Update the specific node in the local state
         setNodes((currentNodes) => {
           const updatedNodes = currentNodes.map((node) =>
@@ -323,12 +265,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     setEditedTitle("");
   }, []);
 
-  // Handle double-click to close variables panel
-  const handleCloseVariablesPanel = useCallback(() => {
-    const panelId = `${PANEL_TYPES.VARIABLE}-standalone`;
-    closePanel(panelId);
-  }, [closePanel]);
-
   // Use ref to always have the latest flow
   const flowRef = useRef(flow);
   useEffect(() => {
@@ -361,15 +297,14 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       );
 
       // Use nodes and edges from the enhanced flow query (no separate cache needed)
-      let cachedNodes = (cachedFlow?.props?.nodes ||
+      const cachedNodes = (cachedFlow?.props?.nodes ||
         nodesRef.current ||
         []) as CustomNodeType[];
-      let cachedEdges = (cachedFlow?.props?.edges ||
+      const cachedEdges = (cachedFlow?.props?.edges ||
         edgesRef.current ||
         []) as CustomEdgeType[];
 
       let updatedNodes: CustomNodeType[];
-      let updatedEdges: CustomEdgeType[];
 
       if (providedNodes) {
         // Specific nodes provided - use them as-is since they represent the current state
@@ -382,7 +317,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       }
 
       // For edges, use provided or cached or refs as fallback
-      updatedEdges =
+      const updatedEdges =
         providedEdges ||
         (cachedEdges.length > 0 ? cachedEdges : edgesRef.current || []);
 
@@ -449,11 +384,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         zoom: newViewport.zoom,
       };
 
-      updateFlowViewportMutation.mutate(flowViewport, {
-        onError: (error) => {
-          console.error("Failed to save viewport:", error);
-        },
-      });
+      updateFlowViewportMutation.mutate(flowViewport);
     },
     [updateFlowViewportMutation],
   );
@@ -601,17 +532,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           return localPos ? { ...extNode, position: localPos } : extNode;
         });
 
-        console.log("[FLOW-SYNC] Merging nodes with local positions:", {
-          externalCount: externalNodes.length,
-          mergedCount: mergedNodes.length,
-          dataStoreNodes: mergedNodes
-            .filter((n) => n.type === "dataStore")
-            .map((n) => ({
-              id: n.id,
-              fieldCount: (n.data as any)?.dataStoreFields?.length || 0,
-            })),
-        });
-
         setNodes(mergedNodes);
         setEdges(externalEdges);
         // Update refs with the merged data so they have latest content
@@ -658,465 +578,112 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     };
   }, []);
 
-  // Copy agent handler
-  const copyAgent = useCallback(
-    async (agentId: string) => {
+  // Unified addNode function for all node types
+  const addNode = useCallback(
+    async (
+      nodeType: "agent" | "dataStore" | "if",
+      position?: { x: number; y: number },
+    ) => {
       const currentFlow = flowRef.current;
-      if (!currentFlow) return;
+      if (!currentFlow) return null;
 
       try {
-        // First check if the agent exists
-        const agentCheckResult = await AgentService.getAgent.execute(
-          new UniqueEntityID(agentId),
+        // Pre-compute all values that will be used in both onMutate and mutationFn
+        const nodeId = generateNodeId();
+
+        // Use provided position or calculate viewport center
+        const nodePosition =
+          position ||
+          calculateViewportCenter(currentViewportRef.current, containerRef);
+
+        // Get existing names using the helper function (properly typed)
+        // If flow is not loaded yet, use empty set
+        const existingNames = flow
+          ? await getExistingNodeNames(nodeType, flow)
+          : new Set<string>();
+
+        // Generate unique name using helper
+        const baseName = getNodeBaseName(nodeType);
+        const nodeName = await generateUniqueNodeName(baseName, existingNames);
+
+        // Get next available color for the node
+        const nodeColor = await getNextAvailableColor(
+          flow || { props: { nodes: [] }, id: flowId },
         );
-        if (agentCheckResult.isFailure) {
-          toast.error("Cannot copy agent", {
-            description:
-              "This agent no longer exists. It may have been deleted.",
-          });
-          return;
+
+        let result: any;
+
+        // Create node with all pre-computed values
+        switch (nodeType) {
+          case "agent":
+            result = await createAgentNode.mutateAsync({
+              nodeId,
+              position: nodePosition,
+              nodeName,
+              nodeColor,
+            });
+            break;
+          case "dataStore":
+            result = await createDataStoreNode.mutateAsync({
+              nodeId,
+              position: nodePosition,
+              nodeName,
+              nodeColor,
+            });
+            break;
+          case "if":
+            result = await createIfNode.mutateAsync({
+              nodeId,
+              position: nodePosition,
+              nodeName,
+              nodeColor,
+            });
+            break;
         }
 
-        // Use the cloneAgent use case for cleaner implementation
-        const clonedAgentResult = await AgentService.cloneAgent.execute(
-          new UniqueEntityID(agentId),
-        );
-        if (clonedAgentResult.isFailure) {
-          throw new Error(clonedAgentResult.getError());
+        // Only proceed if mutation succeeded
+        if (!result || !result.node) {
+          throw new Error("Failed to create node");
         }
-        const clonedAgent = clonedAgentResult.getValue();
 
-        // Update the cloned agent with a new color
-        const nextColor = await getNextAvailableColor(currentFlow);
-        const updatedAgentResult = clonedAgent.update({ color: nextColor });
-        if (updatedAgentResult.isFailure) {
-          throw new Error(updatedAgentResult.getError());
-        }
-        const updatedAgent = updatedAgentResult.getValue();
+        // The mutation returns the new node
+        const newNode = result.node as CustomNodeType;
 
-        // Save the updated agent with new color
-        const savedAgentResult =
-          await AgentService.saveAgent.execute(updatedAgent);
-        if (savedAgentResult.isFailure) {
-          throw new Error(savedAgentResult.getError());
-        }
-        const savedAgent = savedAgentResult.getValue();
+        // Update local state only after successful mutation
+        // This ensures flow-panel state stays in sync with React Query cache
+        setNodes((prevNodes) => {
+          const updatedNodes = [...prevNodes, newNode];
 
-        // Calculate position for copied agent node (below original)
-        const currentNode = (currentFlow.props.nodes as CustomNodeType[]).find(
-          (n) => n.id === agentId,
-        );
-        const newNodePosition = currentNode
-          ? { x: currentNode.position.x + 100, y: currentNode.position.y + 200 }
-          : { x: 400, y: 200 };
+          // Mark as local change and save with the updated nodes directly
+          isLocalChangeRef.current = true;
+          setTimeout(() => {
+            // Pass updatedNodes directly to ensure we save what we just set
+            saveFlowChanges(updatedNodes, undefined);
+          }, 0);
 
-        // Create new agent node
-        const newAgentNode: CustomNodeType = ensureNodeSafety({
-          id: savedAgent.id.toString(),
-          type: "agent",
-          position: newNodePosition,
-          data: {
-            agentId: savedAgent.id.toString(),
-          },
+          return updatedNodes;
         });
 
-        // Use current flow ref which has the most up-to-date data
-        const currentNodes =
-          (currentFlow.props.nodes as CustomNodeType[]) || [];
-
-        const updatedNodes = [...currentNodes, newAgentNode];
-        setNodes(updatedNodes);
-
-        // Mark as local change
-        isLocalChangeRef.current = true;
-
-        // Save the flow changes - pass updatedNodes explicitly, let edges come from refs
-        // Set invalidateAgents to true when adding new agents
-        setTimeout(() => {
-          saveFlowChanges(updatedNodes, undefined, true, true);
-        }, 0);
-
-        // Invalidate agent queries for color updates
-        invalidateAllAgentQueries();
-
-        toast.success("Agent copied successfully");
+        // Return the new node so callers can use it (e.g., for edge creation)
+        return newNode;
       } catch (error) {
-        toast.error("Failed to copy agent", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
+        // Mutation already handles error toasts
+        // Error already handled by mutation
+        return null;
       }
     },
-    [nodes, edges, setNodes, saveFlowChanges, queryClient, flowId],
-  );
-
-  // Add node functions
-  const addDataStoreNode = useCallback(async () => {
-    const currentFlow = flowRef.current;
-    if (!currentFlow) {
-      return;
-    }
-
-    // Calculate position at viewport center
-    // Node dimensions (approximate): width 320px, height 140px
-    const nodeWidth = 320;
-    const nodeHeight = 140;
-
-    // Get the actual React Flow container dimensions
-    const containerWidth =
-      containerRef.current?.clientWidth || window.innerWidth;
-    const containerHeight =
-      containerRef.current?.clientHeight || window.innerHeight;
-
-    const viewport = currentViewportRef.current;
-    const viewportCenter = {
-      x: (-viewport.x + containerWidth / 2) / viewport.zoom - nodeWidth / 2,
-      y: (-viewport.y + containerHeight / 2) / viewport.zoom - nodeHeight / 2,
-    };
-
-    const newPosition = viewportCenter;
-
-    // Use UniqueEntityID for node IDs instead of custom string patterns
-    const nodeId = new UniqueEntityID().toString();
-
-    // Get next available color
-    const nextColor = await getNextAvailableColor(currentFlow);
-
-    const createResult = await DataStoreNodeService.createDataStoreNode.execute(
-      {
-        flowId: flowId,
-        nodeId: nodeId,
-        name: "New Data Update",
-        color: nextColor,
-        dataStoreFields: [],
-      },
-    );
-
-    if (createResult.isFailure) {
-      toast.error(
-        `Failed to create data store node: ${createResult.getError()}`,
-      );
-      return;
-    }
-
-    // 2. Create flow node with only flowId (nodeId comes from node.id)
-    const newNode: CustomNodeType = ensureNodeSafety({
-      id: nodeId,
-      type: NodeType.DATA_STORE, // Use enum instead of string
-      position: newPosition,
-      data: {
-        flowId: flowId, // Query key for TanStack Query (nodeId = node.id)
-      },
-    });
-
-    // Use current flow ref which has the most up-to-date data
-    let currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
-    let currentEdges = (currentFlow.props.edges as CustomEdgeType[]) || [];
-
-    const updatedNodes = [...currentNodes, newNode];
-
-    try {
-      setNodes(updatedNodes);
-    } catch (error) {
-      return; // Exit early if setNodes fails
-    }
-
-    // Mark as local change and save
-    isLocalChangeRef.current = true;
-    setTimeout(() => {
-      try {
-        // Pass updatedNodes explicitly, edges will come from refs
-        saveFlowChanges(updatedNodes, undefined, true);
-      } catch (error) {
-        console.error("❌ [DEBUG] saveFlowChanges failed:", error);
-      }
-    }, 0);
-
-    // Invalidate data store node queries to ensure vibe panel sees the new node
-    const { dataStoreNodeKeys } = await import(
-      "@/app/queries/data-store-node/query-factory"
-    );
-    await queryClient.invalidateQueries({
-      queryKey: dataStoreNodeKeys.detail(flowId, nodeId),
-    });
-
-    toast.success("Data Update node added");
-  }, [setNodes, saveFlowChanges, queryClient, flowId]);
-
-  const addIfNode = useCallback(async () => {
-    const currentFlow = flowRef.current;
-    if (!currentFlow) return;
-
-    // Calculate position at viewport center
-    // Node dimensions (approximate): width 320px, height 140px
-    const nodeWidth = 320;
-    const nodeHeight = 140;
-
-    // Get the actual React Flow container dimensions
-    const containerWidth =
-      containerRef.current?.clientWidth || window.innerWidth;
-    const containerHeight =
-      containerRef.current?.clientHeight || window.innerHeight;
-
-    const viewport = currentViewportRef.current;
-    const viewportCenter = {
-      x: (-viewport.x + containerWidth / 2) / viewport.zoom - nodeWidth / 2,
-      y: (-viewport.y + containerHeight / 2) / viewport.zoom - nodeHeight / 2,
-    };
-
-    const newPosition = viewportCenter;
-
-    // Use UniqueEntityID for node IDs instead of custom string patterns
-    const nodeId = new UniqueEntityID().toString();
-
-    // Get next available color
-    const nextColor = await getNextAvailableColor(currentFlow);
-
-    // 1. Create separate node data entry first
-    console.log("🔄 [ADD-IF-NODE] Creating if-node in database:", {
+    [
+      createAgentNode,
+      createDataStoreNode,
+      createIfNode,
+      flow,
       flowId,
-      nodeId,
-      name: "New If",
-      color: nextColor,
-    });
-
-    const createResult = await IfNodeService.createIfNode.execute({
-      flowId: flowId,
-      nodeId: nodeId,
-      name: "New If",
-      logicOperator: "AND",
-      conditions: [],
-      color: nextColor,
-    });
-
-    if (createResult.isFailure) {
-      console.error(
-        "❌ [ADD-IF-NODE] If-node creation failed:",
-        createResult.getError(),
-      );
-      toast.error(`Failed to create if node: ${createResult.getError()}`);
-      return;
-    }
-
-    console.log("✅ [ADD-IF-NODE] If-node created successfully in database");
-
-    // 2. Create flow node with only flowId (nodeId comes from node.id)
-    const newNode: CustomNodeType = ensureNodeSafety({
-      id: nodeId,
-      type: NodeType.IF, // Use enum instead of string
-      position: newPosition,
-      data: {
-        flowId: flowId, // Query key for TanStack Query (nodeId = node.id)
-      },
-    });
-
-    // Use current flow ref which has the most up-to-date data
-    let currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
-    let currentEdges = (currentFlow.props.edges as CustomEdgeType[]) || [];
-
-    const updatedNodes = [...currentNodes, newNode];
-    setNodes(updatedNodes);
-
-    // Mark as local change and save
-    isLocalChangeRef.current = true;
-    setTimeout(() => {
-      // Pass updatedNodes explicitly, edges will come from refs
-      saveFlowChanges(updatedNodes, undefined, true);
-    }, 0);
-
-    // Invalidate if node queries to ensure vibe panel sees the new node
-    const { ifNodeKeys } = await import("@/app/queries/if-node/query-factory");
-    await queryClient.invalidateQueries({
-      queryKey: ifNodeKeys.detail(flowId, nodeId),
-    });
-
-    toast.success("If node added");
-  }, [setNodes, saveFlowChanges, queryClient, flowId]);
-
-  const addAgentNode = useCallback(async () => {
-    const currentFlow = flowRef.current;
-    if (!currentFlow) return;
-
-    try {
-      // Generate unique agent name using existing logic
-      const generateUniqueAgentName = async (
-        baseName: string = "New Agent",
-      ): Promise<string> => {
-        const existingNames = new Set<string>();
-
-        // Collect existing agent names from current flow
-        if (currentFlow?.agentIds) {
-          for (const agentId of currentFlow.agentIds) {
-            const agentOrError = await AgentService.getAgent.execute(agentId);
-            if (agentOrError.isFailure) {
-              throw new Error(agentOrError.getError());
-            }
-            const agent = agentOrError.getValue();
-            if (agent.props.name) {
-              existingNames.add(agent.props.name);
-            }
-          }
-        }
-
-        // If base name is available, use it
-        if (!existingNames.has(baseName)) {
-          return baseName;
-        }
-
-        // Otherwise, find the next available number
-        let counter = 1;
-        let candidateName: string;
-        do {
-          candidateName = `${baseName} ${counter}`;
-          counter++;
-        } while (existingNames.has(candidateName));
-
-        return candidateName;
-      };
-
-      // Create a new agent with unique name and color (using same pattern as drag-to-create)
-      const uniqueName = await generateUniqueAgentName();
-      const nextColor = await getNextAvailableColor(currentFlow);
-
-      const newAgent = Agent.create({
-        name: uniqueName,
-        targetApiType: ApiType.Chat,
-        color: nextColor,
-      }).getValue();
-
-      // Save the new agent
-      const savedAgentResult = await AgentService.saveAgent.execute(newAgent);
-      if (savedAgentResult.isFailure) {
-        throw new Error(savedAgentResult.getError());
-      }
-      const savedAgent = savedAgentResult.getValue();
-
-      // Calculate position at viewport center
-      // Node dimensions (approximate): width 320px, height 140px
-      const nodeWidth = 320;
-      const nodeHeight = 140;
-
-      // Get the actual React Flow container dimensions
-      const containerWidth =
-        containerRef.current?.clientWidth || window.innerWidth;
-      const containerHeight =
-        containerRef.current?.clientHeight || window.innerHeight;
-
-      const viewport = currentViewportRef.current;
-      const viewportCenter = {
-        x: (-viewport.x + containerWidth / 2) / viewport.zoom - nodeWidth / 2,
-        y: (-viewport.y + containerHeight / 2) / viewport.zoom - nodeHeight / 2,
-      };
-
-      const newPosition = viewportCenter;
-
-      // Create new agent node
-      const newAgentNode: CustomNodeType = ensureNodeSafety({
-        id: savedAgent.id.toString(),
-        type: "agent",
-        position: newPosition,
-        data: {
-          agentId: savedAgent.id.toString(),
-        },
-      });
-
-      // Use current flow ref which has the most up-to-date data
-      const currentNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
-
-      const updatedNodes = [...currentNodes, newAgentNode];
-      setNodes(updatedNodes);
-
-      // Mark as local change and save
-      isLocalChangeRef.current = true;
-      setTimeout(() => {
-        // Pass updatedNodes explicitly, edges will come from refs
-        saveFlowChanges(updatedNodes, undefined);
-      }, 0);
-
-      // Invalidate agent queries for color updates
-      invalidateAllAgentQueries();
-
-      toast.success("Agent node added");
-    } catch (error) {
-      toast.error("Failed to create agent", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  }, [nodes, edges, setNodes, saveFlowChanges, queryClient, flowId]);
-
-  // Delete agent handler
-  const deleteAgent = useCallback(
-    async (agentId: string) => {
-      const currentFlow = flowRef.current;
-      if (!currentFlow) return;
-
-      try {
-        // Check if this is the only agent node in the flow
-        const agentNodes = (currentFlow.props.nodes as CustomNodeType[]).filter(
-          (n) => n.type === "agent",
-        );
-        if (agentNodes.length <= 1) {
-          toast.error("Cannot delete the last agent in the flow");
-          return;
-        }
-
-        // Remove the agent node from current flow nodes
-        const updatedNodes = (
-          currentFlow.props.nodes as CustomNodeType[]
-        ).filter((n) => n.id !== agentId);
-
-        // Remove all edges connected to this agent
-        const updatedEdges = edges.filter(
-          (e) => e.source !== agentId && e.target !== agentId,
-        );
-
-        // Update local state immediately
-        setNodes(updatedNodes);
-        setEdges(updatedEdges);
-
-        // Mark as local change
-        isLocalChangeRef.current = true;
-
-        // Delete the agent from database
-        const deleteResult = await AgentService.deleteAgent.execute(
-          new UniqueEntityID(agentId),
-        );
-        if (deleteResult.isFailure) {
-          console.error(
-            "Failed to delete agent from database:",
-            deleteResult.getError(),
-          );
-        }
-
-        // Save the flow changes - pass both explicitly as they're newly calculated
-        setTimeout(() => {
-          saveFlowChanges(updatedNodes, updatedEdges);
-        }, 0);
-
-        // Close all panels associated with this agent
-        const agentPanelTypes = [
-          "prompt",
-          "parameter",
-          "structuredOutput",
-          "preview",
-        ];
-        agentPanelTypes.forEach((panelType) => {
-          const panelId = `${panelType}-${agentId}`;
-          closePanel(panelId);
-        });
-
-        // Invalidate flow and agent queries
-        invalidateSingleFlowQueries(currentFlow.id);
-        invalidateAllAgentQueries();
-      } catch (error) {
-        toast.error("Failed to delete agent", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
-    },
-    [nodes, edges, setNodes, setEdges, saveFlowChanges],
+      setNodes,
+      saveFlowChanges,
+    ],
   );
 
-  // Copy non-agent node handler
+  // Unified copy node handler for all node types
   const copyNode = useCallback(
     async (nodeId: string) => {
       const currentFlow = flowRef.current;
@@ -1132,70 +699,99 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           return;
         }
 
+        // Don't allow copying start or end nodes
+        if (nodeToCopy.type === "start" || nodeToCopy.type === "end") {
+          toast.error(`Cannot copy ${nodeToCopy.type} node`);
+          return;
+        }
+
+        // Pre-compute all values for the clone
+        const newNodeId = generateNodeId();
+
         // Calculate position for copied node (below and to the right of original)
         const newPosition = {
           x: nodeToCopy.position.x + 100,
           y: nodeToCopy.position.y + 200,
         };
 
-        // Use UniqueEntityID for copied node IDs
-        const newNodeId = new UniqueEntityID().toString();
+        // Determine node type for name generation
+        const nodeTypeForName =
+          nodeToCopy.type === NodeType.AGENT
+            ? "agent"
+            : nodeToCopy.type === NodeType.DATA_STORE
+              ? "dataStore"
+              : nodeToCopy.type === NodeType.IF
+                ? "if"
+                : null;
 
-        // Get next available color
-        const nextColor = await getNextAvailableColor(currentFlow);
-
-        // Handle copying based on node type
-        const nodeType = nodeToCopy.type as string;
-        let copyResult: any = null;
-
-        if (nodeType === NodeType.DATA_STORE) {
-          // For data store nodes, copy the separate data entry
-          const originalData = nodeToCopy.data as any;
-          copyResult = await DataStoreNodeService.createDataStoreNode.execute({
-            flowId: flowId,
-            nodeId: newNodeId,
-            name: originalData.name
-              ? `${originalData.name} (Copy)`
-              : "Data Update (Copy)",
-            color: nextColor,
-            dataStoreFields: originalData.dataStoreFields || [],
-          });
-        } else if (nodeType === NodeType.IF) {
-          // For if nodes, copy the separate data entry
-          const originalData = nodeToCopy.data as any;
-          copyResult = await IfNodeService.createIfNode.execute({
-            flowId: flowId,
-            nodeId: newNodeId,
-            name: originalData.name
-              ? `${originalData.name} (Copy)`
-              : "If (Copy)",
-            logicOperator: originalData.logicOperator || "AND",
-            conditions: originalData.conditions || [],
-            color: nextColor,
-          });
-        }
-
-        if (copyResult && copyResult.isFailure) {
-          toast.error(`Failed to copy node: ${copyResult.getError()}`);
+        if (!nodeTypeForName) {
+          toast.error(`Cannot copy node type: ${nodeToCopy.type}`);
           return;
         }
 
-        // Create new flow node
-        const newNode: CustomNodeType = ensureNodeSafety({
-          ...nodeToCopy,
-          id: newNodeId,
-          position: newPosition,
-          data:
-            nodeType === NodeType.DATA_STORE || nodeType === NodeType.IF
-              ? { flowId: flowId } // Use new data structure for supported nodes
-              : { ...nodeToCopy.data }, // Keep original data for other node types
-        } as any); // Type assertion needed for transition period
+        // Get existing names and generate unique name
+        const existingNames = flow
+          ? await getExistingNodeNames(nodeTypeForName, flow)
+          : new Set<string>();
+        const baseName = getNodeBaseName(nodeTypeForName);
+        const nodeName = await generateUniqueNodeName(baseName, existingNames);
+
+        // Get next available color
+        const nodeColor = await getNextAvailableColor(
+          flow || { props: { nodes: [] }, id: flowId },
+        );
+
+        // Handle copying based on node type using unified mutations
+        const nodeType = nodeToCopy.type as string;
+        let result: any;
+
+        switch (nodeType) {
+          case NodeType.AGENT:
+            // For agent nodes, use agentId from data
+            result = await cloneAgentNode.mutateAsync({
+              copyNodeId: nodeId,
+              nodeId: newNodeId,
+              position: newPosition,
+              nodeName,
+              nodeColor,
+            });
+            break;
+
+          case NodeType.DATA_STORE:
+            result = await cloneDataStoreNode.mutateAsync({
+              copyNodeId: nodeId,
+              nodeId: newNodeId,
+              position: newPosition,
+              nodeName,
+              nodeColor,
+            });
+            break;
+
+          case NodeType.IF:
+            result = await cloneIfNode.mutateAsync({
+              copyNodeId: nodeId,
+              nodeId: newNodeId,
+              position: newPosition,
+              nodeName,
+              nodeColor,
+            });
+            break;
+
+          default:
+            toast.error(`Cannot copy node type: ${nodeType}`);
+            return;
+        }
+
+        if (!result?.node) {
+          toast.error("Failed to copy node");
+          return;
+        }
 
         // Use current flow ref which has the most up-to-date data
         const currentNodes =
           (currentFlow.props.nodes as CustomNodeType[]) || [];
 
-        const updatedNodes = [...currentNodes, newNode];
+        const updatedNodes = [...currentNodes, result.node];
         setNodes(updatedNodes);
 
         // Mark as local change and save
@@ -1205,19 +801,27 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           saveFlowChanges(updatedNodes, undefined, true);
         }, 0);
 
-        toast.success(
-          `${nodeType === "if" ? "If" : "Data Update"} node copied`,
-        );
+        // Get node display name for success message
+        const nodeDisplayName = getNodeDisplayName(nodeType);
+        toast.success(`${nodeDisplayName} copied successfully`);
       } catch (error) {
         toast.error("Failed to copy node", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
     },
-    [nodes, edges, setNodes, saveFlowChanges, queryClient, flowId],
+    [
+      flow,
+      flowId,
+      setNodes,
+      saveFlowChanges,
+      cloneAgentNode,
+      cloneDataStoreNode,
+      cloneIfNode,
+    ],
   );
 
-  // Delete non-agent node handler
+  // Unified delete node handler for all node types
   const deleteNode = useCallback(
     async (nodeId: string) => {
       const currentFlow = flowRef.current;
@@ -1256,43 +860,42 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         // Mark as local change
         isLocalChangeRef.current = true;
 
-        // Delete the node from database based on type
-        if (nodeToDelete.type === NodeType.DATA_STORE) {
-          const deleteResult =
-            await DataStoreNodeService.deleteDataStoreNode.execute({
+        // Delete the node from database based on type using unified mutations
+        const nodeType = nodeToDelete.type as string;
+
+        switch (nodeType) {
+          case NodeType.AGENT:
+            // For agent nodes, use agentId from data or nodeId
+            await deleteAgentNode.mutateAsync({
               nodeId: nodeId,
             });
-          if (deleteResult.isFailure) {
-            console.error(
-              "Failed to delete data store node from database:",
-              deleteResult.getError(),
-            );
-          }
-          // Invalidate data store node queries
-          const { dataStoreNodeKeys } = await import(
-            "@/app/queries/data-store-node/query-factory"
-          );
-          await queryClient.invalidateQueries({
-            queryKey: dataStoreNodeKeys.detail(flowId, nodeId),
-          });
-        } else if (nodeToDelete.type === NodeType.IF) {
-          const deleteResult = await IfNodeService.deleteIfNode.execute({
-            nodeId: nodeId,
-          });
-          if (deleteResult.isFailure) {
-            console.error(
-              "Failed to delete if node from database:",
-              deleteResult.getError(),
-            );
-          }
-          // Invalidate if node queries
-          const { ifNodeKeys } = await import(
-            "@/app/queries/if-node/query-factory"
-          );
-          await queryClient.invalidateQueries({
-            queryKey: ifNodeKeys.detail(flowId, nodeId),
-          });
+            // Close all panels associated with this agent
+            closeNodePanels(nodeId, nodeType, closePanel);
+            break;
+
+          case NodeType.DATA_STORE:
+            // For data store nodes, use dataStoreNodeId from data or nodeId
+            await deleteDataStoreNode.mutateAsync({
+              nodeId: nodeId,
+            });
+            // Close all panels associated with this data store node
+            closeNodePanels(nodeId, nodeType, closePanel);
+            break;
+
+          case NodeType.IF:
+            // For if nodes, use ifNodeId from data or nodeId
+            await deleteIfNode.mutateAsync({
+              nodeId: nodeId,
+            });
+            // Close all panels associated with this if node
+            closeNodePanels(nodeId, nodeType, closePanel);
+            break;
+
+          default:
+            toast.error(`Cannot delete node type: ${nodeType}`);
+            return;
         }
+
         // Ensure flow consumers update after structural delete
         await invalidateSingleFlowQueries(flowId);
 
@@ -1301,16 +904,26 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           saveFlowChanges(updatedNodes, updatedEdges);
         }, 0);
 
-        toast.success(
-          `${nodeToDelete.type === "if" ? "If" : "Data Update"} node deleted`,
-        );
+        // Get node display name for success message
+        const nodeDisplayName = getNodeDisplayName(nodeType);
+        toast.success(`${nodeDisplayName} deleted successfully`);
       } catch (error) {
         toast.error("Failed to delete node", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
     },
-    [nodes, edges, setNodes, setEdges, saveFlowChanges, queryClient, flowId],
+    [
+      edges,
+      setNodes,
+      setEdges,
+      closePanel,
+      saveFlowChanges,
+      deleteAgentNode,
+      deleteDataStoreNode,
+      deleteIfNode,
+      flowId,
+    ],
   );
 
   // Handle click on node handle to show node creation menu
@@ -1371,7 +984,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       // Show the node selection menu
       setShowNodeSelection(true);
     },
-    [nodes],
+    [],
   );
 
   // Method to update node data directly with validation
@@ -1424,29 +1037,23 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // Effect 3: Register flow panel methods for all nodes - use ref to avoid re-renders
   const methodsRef = useRef<{
-    copyAgent: typeof copyAgent;
-    deleteAgent: typeof deleteAgent;
     copyNode: typeof copyNode;
     deleteNode: typeof deleteNode;
     handleHandleClick: typeof handleHandleClick;
     updateNodeData: typeof updateNodeData;
+    addNode: typeof addNode;
   }>();
 
   methodsRef.current = {
-    copyAgent,
-    deleteAgent,
     copyNode,
     deleteNode,
     handleHandleClick,
     updateNodeData,
+    addNode,
   };
 
   useEffect(() => {
     // Register methods so nodes can trigger operations
-    (window as any).flowPanelCopyAgent = (agentId: string) =>
-      methodsRef.current?.copyAgent(agentId);
-    (window as any).flowPanelDeleteAgent = (agentId: string) =>
-      methodsRef.current?.deleteAgent(agentId);
     (window as any).flowPanelCopyNode = (nodeId: string) =>
       methodsRef.current?.copyNode(nodeId);
     (window as any).flowPanelDeleteNode = (nodeId: string) =>
@@ -1458,6 +1065,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     ) => methodsRef.current?.handleHandleClick(nodeId, handleType, handleId);
     (window as any).flowPanelUpdateNodeData = (nodeId: string, newData: any) =>
       methodsRef.current?.updateNodeData(nodeId, newData);
+    (window as any).flowPanelAddNode = (
+      nodeType: "agent" | "dataStore" | "if",
+    ) => methodsRef.current?.addNode(nodeType);
 
     // Add method to get node from React Flow (for when flow data is stale)
     (window as any).flowPanelGetNode = (nodeId: string) => {
@@ -1469,23 +1079,16 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     };
 
     return () => {
-      delete (window as any).flowPanelCopyAgent;
-      delete (window as any).flowPanelDeleteAgent;
       delete (window as any).flowPanelCopyNode;
       delete (window as any).flowPanelDeleteNode;
       delete (window as any).flowPanelHandleClick;
       delete (window as any).flowPanelUpdateNodeData;
+      delete (window as any).flowPanelAddNode;
       delete (window as any).flowPanelGetNode;
     };
   }, [nodes]); // Update when nodes change
 
-  // Effect 4: Register flow actions with context for use in other panels
-  useEffect(() => {
-    registerFlowActions({
-      addDataStoreNode,
-      addIfNode,
-    });
-  }, [registerFlowActions]); // Removed addDataStoreNode and addIfNode - they cause infinite loop
+  // Effect 4: Register flow actions - removed, using window methods instead
 
   const onConnect: OnConnect = useCallback(
     (connection) => {
@@ -1576,54 +1179,111 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     [],
   );
 
+  // Helper function to create edge from pending connection
+  const createEdgeFromPending = useCallback(
+    (
+      sourceNodeId: string,
+      sourceHandleId: string | undefined,
+      targetNodeId: string,
+      sourceNode?: CustomNodeType,
+    ) => {
+      const edgeLabel =
+        sourceNode?.type === "if" && sourceHandleId
+          ? sourceHandleId === "true"
+            ? "True"
+            : "False"
+          : undefined;
+
+      return ensureEdgeSelectable({
+        id: sourceHandleId
+          ? `${sourceNodeId}-${sourceHandleId}-${targetNodeId}`
+          : `${sourceNodeId}-${targetNodeId}`,
+        source: sourceNodeId,
+        sourceHandle: sourceHandleId,
+        target: targetNodeId,
+        type: undefined,
+        label: edgeLabel,
+      } as CustomEdgeType);
+    },
+    [],
+  );
+
   // Create node with specific type
   const handleNodeTypeSelection = useCallback(
     async (nodeType: "agent" | "dataStore" | "if") => {
       const currentFlow = flowRef.current;
       if (pendingConnectionRef.current && currentFlow) {
-        // Use current flow ref which has the most up-to-date data
-        const latestNodes = (currentFlow.props.nodes as CustomNodeType[]) || [];
-        const latestEdges = (currentFlow.props.edges as CustomEdgeType[]) || [];
+        const sourceNodeId = pendingConnectionRef.current.sourceNodeId;
+        const sourceHandleId = pendingConnectionRef.current.sourceHandleId;
+        const pendingPosition = pendingConnectionRef.current.position;
 
-        const result = await createNodeWithConnection(
-          nodeType,
-          pendingConnectionRef.current.sourceNodeId,
-          pendingConnectionRef.current.sourceHandleId,
-          pendingConnectionRef.current.position,
-          currentFlow,
-          latestNodes,
-          latestEdges,
-          filterExistingConnections,
-        );
+        // Find source node to calculate position
+        const sourceNode = nodes.find((n) => n.id === sourceNodeId);
+        const sourceNodePosition = sourceNode?.position || pendingPosition;
 
-        if (result) {
-          setNodes(result.updatedNodes);
-          setEdges(result.updatedEdges);
-          isLocalChangeRef.current = true;
+        // Position the new node to the right and slightly below the source node
+        const newNodePosition = {
+          x: sourceNodePosition.x + 400,
+          y: sourceNodePosition.y + 50,
+        };
 
-          setTimeout(() => {
-            // Pass both explicitly as they're the result of the operation
-            saveFlowChanges(result.updatedNodes, result.updatedEdges, true);
-          }, 0);
+        try {
+          // Use the unified addNode function with specific position
+          const newNode = await addNode(nodeType, newNodePosition);
 
-          toast.success(
-            `${nodeType === "agent" ? "Agent" : nodeType === "dataStore" ? "Data Update" : "If"} node created`,
-          );
+          if (newNode) {
+            // Create edge connecting source to new node
+            const newEdge = createEdgeFromPending(
+              sourceNodeId,
+              sourceHandleId,
+              newNode.id,
+              sourceNode,
+            );
+
+            setEdges((prevEdges) => {
+              // Remove existing connections from same source handle
+              const filteredEdges = filterExistingConnections(
+                prevEdges,
+                sourceNode,
+                undefined,
+                {
+                  source: sourceNodeId,
+                  sourceHandle: sourceHandleId,
+                },
+              );
+              const updatedEdges = [...filteredEdges, newEdge];
+
+              // Save changes with updated edges
+              isLocalChangeRef.current = true;
+              setTimeout(() => {
+                // Get the latest nodes from ref after addNode has updated them
+                const latestNodes =
+                  (flowRef.current?.props.nodes as CustomNodeType[]) || nodes;
+                saveFlowChanges(latestNodes, updatedEdges);
+              }, 0);
+
+              return updatedEdges;
+            });
+
+            toast.success(
+              `${nodeType === "agent" ? "Agent" : nodeType === "dataStore" ? "Data Update" : "If"} node created with connection`,
+            );
+          }
+        } catch (error) {
+          console.error(`Failed to create ${nodeType} node:`, error);
+          toast.error(`Failed to create ${nodeType} node`);
         }
       }
       setShowNodeSelection(false);
       pendingConnectionRef.current = null;
     },
     [
-      flow,
       nodes,
-      edges,
-      setNodes,
       setEdges,
       saveFlowChanges,
       filterExistingConnections,
-      queryClient,
-      flowId,
+      addNode,
+      createEdgeFromPending,
     ],
   );
 
@@ -2009,7 +1669,11 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           {/* Left side buttons */}
           <div className="flex flex-wrap gap-2">
             {/* Agent button - creates agent node directly */}
-            <ButtonPill size="default" onClick={addAgentNode} className="w-32">
+            <ButtonPill
+              size="default"
+              onClick={() => addNode("agent")}
+              className="w-32"
+            >
               Agent (node)
             </ButtonPill>
 
@@ -2038,7 +1702,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 <NodeSelectionMenuItems
                   onSelectNodeType={(type) => {
                     if (type === "dataStore") {
-                      addDataStoreNode();
+                      addNode("dataStore");
                     }
                   }}
                   variant="dropdown"
@@ -2065,7 +1729,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 <NodeSelectionMenuItems
                   onSelectNodeType={(type) => {
                     if (type === "if") {
-                      addIfNode();
+                      addNode("if");
                     }
                   }}
                   variant="dropdown"

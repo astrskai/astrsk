@@ -210,162 +210,222 @@ export async function processFlowOperations(
             );
           }
         }
-      } else if (operation.path === "flow.nodes" && operation.operation === "put") {
+      } else if (
+        operation.path === "flow.nodes" &&
+        operation.operation === "put"
+      ) {
         // Handle node creation during approval - backend persistence with proper color assignment
-        console.log(`🔄 [FLOW-OPERATIONS] Processing flow nodes operation (APPROVAL):`, {
-          path: operation.path,
-          operation: operation.operation,
-          nodeId: operation.value?.id,
-          nodeType: operation.value?.nodeType
-        });
+        console.log(
+          `🔄 [FLOW-OPERATIONS] Processing flow nodes operation (APPROVAL):`,
+          {
+            path: operation.path,
+            operation: operation.operation,
+            nodeId: operation.value?.id,
+            nodeType: operation.value?.nodeType,
+          },
+        );
 
         const { id: nodeId, nodeType, name, position } = operation.value;
         const { FlowService } = await import("@/app/services/flow-service");
 
         try {
           // Step 0: Get proper color assignment
-          const { getNextAvailableColor } = await import("@/flow-multi/utils/node-color-assignment");
-          const nodeColor = await getNextAvailableColor({ 
+          const { getNextAvailableColor } = await import(
+            "@/flow-multi/utils/node-color-assignment"
+          );
+          const nodeColor = await getNextAvailableColor({
             props: { nodes: updatedResource.nodes || [] },
-            id: resourceId
+            id: resourceId,
           });
-          
-          console.log(`🎨 [FLOW-OPERATIONS] Assigned color for ${nodeType} node:`, {
-            nodeId,
-            assignedColor: nodeColor
-          });
+
+          console.log(
+            `🎨 [FLOW-OPERATIONS] Assigned color for ${nodeType} node:`,
+            {
+              nodeId,
+              assignedColor: nodeColor,
+            },
+          );
 
           // Step 1: Create the actual node in the resource (was skipped during preview)
           if (!updatedResource.nodes) updatedResource.nodes = [];
-          
+
           const newNode = {
             id: nodeId,
             type: nodeType,
             position,
-            name: name || `${nodeType.charAt(0).toUpperCase() + nodeType.slice(1)} ${nodeId.slice(-8)}`,
+            name:
+              name ||
+              `${nodeType.charAt(0).toUpperCase() + nodeType.slice(1)} ${nodeId.slice(-8)}`,
             // For data store and if nodes, include flowId in data for UI component compatibility
-            data: (nodeType === 'dataStore' || nodeType === 'if') 
-              ? { flowId: resourceId }
-              : undefined,
+            data:
+              nodeType === "dataStore" || nodeType === "if"
+                ? { flowId: resourceId }
+                : undefined,
           };
-          
+
           // Add node to resource
           updatedResource.nodes.push(newNode);
-          
-          console.log('✅ [FLOW-OPERATIONS] Node added to resource during approval:', {
-            id: newNode.id,
-            type: newNode.type,
-            name: newNode.name,
-            color: nodeColor
-          });
+
+          console.log(
+            "✅ [FLOW-OPERATIONS] Node added to resource during approval:",
+            {
+              id: newNode.id,
+              type: newNode.type,
+              name: newNode.name,
+              color: nodeColor,
+            },
+          );
 
           // Step 2: Create the domain entity in backend with proper color
-          if (nodeType === 'dataStore') {
-            console.log(`🚨🚨🚨 [FLOW-OPERATIONS] DATA STORE NODE CREATION CALLED - VIBE CODING PATH`, {
-              nodeId,
-              nodeType,
-              name,
-              color: nodeColor
-            });
-            const { DataStoreNodeService } = await import("@/app/services/data-store-node-service");
-            const result = await DataStoreNodeService.createDataStoreNode.execute({
-              nodeId: nodeId,
-              flowId: resourceId,
-              name: name || `Data Store ${nodeId.slice(-8)}`,
-              color: nodeColor, // Use proper color assignment
-              dataStoreFields: []
-            });
+          if (nodeType === "dataStore") {
+            console.log(
+              `🚨🚨🚨 [FLOW-OPERATIONS] DATA STORE NODE CREATION CALLED - VIBE CODING PATH`,
+              {
+                nodeId,
+                nodeType,
+                name,
+                color: nodeColor,
+              },
+            );
+            const { DataStoreNodeService } = await import(
+              "@/app/services/data-store-node-service"
+            );
+            const result =
+              await DataStoreNodeService.createDataStoreNode.execute({
+                nodeId: nodeId,
+                flowId: resourceId,
+                name: name || `Data Store ${nodeId.slice(-8)}`,
+                color: nodeColor, // Use proper color assignment
+                dataStoreFields: [],
+              });
 
             if (!result.isSuccess) {
-              errors.push(`Failed to create data store node: ${result.getError()}`);
-              console.error(`❌ [FLOW-OPERATIONS] Data store node creation failed:`, result.getError());
+              errors.push(
+                `Failed to create data store node: ${result.getError()}`,
+              );
+              console.error(
+                `❌ [FLOW-OPERATIONS] Data store node creation failed:`,
+                result.getError(),
+              );
               continue;
             } else {
               // Verify the node was actually created by querying it back
-              console.log(`✅ [FLOW-OPERATIONS] Data Store node created successfully, verifying database persistence...`);
-              const { DataStoreNodeService } = await import("@/app/services/data-store-node-service");
-              const verifyResult = await DataStoreNodeService.getDataStoreNode.execute({
-                flowId: resourceId,
-                nodeId: nodeId
-              });
-              
+              console.log(
+                `✅ [FLOW-OPERATIONS] Data Store node created successfully, verifying database persistence...`,
+              );
+              const { DataStoreNodeService } = await import(
+                "@/app/services/data-store-node-service"
+              );
+              const { UniqueEntityID } = await import("@/shared/domain");
+              const verifyResult =
+                await DataStoreNodeService.getDataStoreNode.execute(
+                  new UniqueEntityID(nodeId),
+                );
+
               if (!verifyResult.isSuccess) {
-                console.warn(`⚠️ [FLOW-OPERATIONS] Data Store node creation verification failed, retrying once...`);
+                console.warn(
+                  `⚠️ [FLOW-OPERATIONS] Data Store node creation verification failed, retrying once...`,
+                );
                 // Retry verification once after small delay
-                await new Promise(resolve => setTimeout(resolve, 50));
-                const retryResult = await DataStoreNodeService.getDataStoreNode.execute({
-                  flowId: resourceId,
-                  nodeId: nodeId
-                });
-                
+                await new Promise((resolve) => setTimeout(resolve, 50));
+                const retryResult =
+                  await DataStoreNodeService.getDataStoreNode.execute(
+                    new UniqueEntityID(nodeId),
+                  );
+
                 if (!retryResult.isSuccess) {
-                  errors.push(`Data Store node created but not immediately queryable: ${retryResult.getError()}`);
-                  console.error(`❌ [FLOW-OPERATIONS] Data Store node verification failed after retry`);
+                  errors.push(
+                    `Data Store node created but not immediately queryable: ${retryResult.getError()}`,
+                  );
+                  console.error(
+                    `❌ [FLOW-OPERATIONS] Data Store node verification failed after retry`,
+                  );
                   continue;
                 }
               }
-              
-              console.log(`✅ [FLOW-OPERATIONS] Data Store node verified in database, ready for next operation`);
+
+              console.log(
+                `✅ [FLOW-OPERATIONS] Data Store node verified in database, ready for next operation`,
+              );
             }
-          } else if (nodeType === 'if') {
-            console.log(`🚨🚨🚨 [FLOW-OPERATIONS] IF NODE CREATION CALLED - VIBE CODING PATH`, {
-              nodeId,
-              nodeType,
-              name,
-              color: nodeColor,
-              timestamp: new Date().toISOString()
-            });
-            const { IfNodeService } = await import("@/app/services/if-node-service");
+          } else if (nodeType === "if") {
+            console.log(
+              `🚨🚨🚨 [FLOW-OPERATIONS] IF NODE CREATION CALLED - VIBE CODING PATH`,
+              {
+                nodeId,
+                nodeType,
+                name,
+                color: nodeColor,
+                timestamp: new Date().toISOString(),
+              },
+            );
+            const { IfNodeService } = await import(
+              "@/app/services/if-node-service"
+            );
             const result = await IfNodeService.createIfNode.execute({
               nodeId: nodeId,
               flowId: resourceId,
               name: name || `If Node ${nodeId.slice(-8)}`,
               color: nodeColor, // Use proper color assignment
               conditions: [],
-              logicOperator: 'AND'
+              logicOperator: "AND",
             });
 
             if (!result.isSuccess) {
               errors.push(`Failed to create if node: ${result.getError()}`);
-              console.error(`❌ [FLOW-OPERATIONS] If node creation failed:`, result.getError());
+              console.error(
+                `❌ [FLOW-OPERATIONS] If node creation failed:`,
+                result.getError(),
+              );
               continue;
             } else {
               // Verify the node was actually created by querying it back
-              console.log(`✅ [FLOW-OPERATIONS] IF node created successfully, verifying database persistence...`);
-              const verifyResult = await IfNodeService.getIfNode.execute({
-                flowId: resourceId,
-                nodeId: nodeId
-              });
-              
+              console.log(
+                `✅ [FLOW-OPERATIONS] IF node created successfully, verifying database persistence...`,
+              );
+              const verifyResult = await IfNodeService.getIfNode.execute(
+                new UniqueEntityID(nodeId),
+              );
+
               if (!verifyResult.isSuccess) {
-                console.warn(`⚠️ [FLOW-OPERATIONS] IF node creation verification failed, retrying once...`);
+                console.warn(
+                  `⚠️ [FLOW-OPERATIONS] IF node creation verification failed, retrying once...`,
+                );
                 // Retry verification once after small delay
-                await new Promise(resolve => setTimeout(resolve, 50));
-                const retryResult = await IfNodeService.getIfNode.execute({
-                  flowId: resourceId,
-                  nodeId: nodeId
-                });
-                
+                await new Promise((resolve) => setTimeout(resolve, 50));
+                const retryResult = await IfNodeService.getIfNode.execute(
+                  new UniqueEntityID(nodeId),
+                );
+
                 if (!retryResult.isSuccess) {
-                  errors.push(`IF node created but not immediately queryable: ${retryResult.getError()}`);
-                  console.error(`❌ [FLOW-OPERATIONS] IF node verification failed after retry`);
+                  errors.push(
+                    `IF node created but not immediately queryable: ${retryResult.getError()}`,
+                  );
+                  console.error(
+                    `❌ [FLOW-OPERATIONS] IF node verification failed after retry`,
+                  );
                   continue;
                 }
               }
-              
-              console.log(`✅ [FLOW-OPERATIONS] IF node verified in database, ready for next operation`);
+
+              console.log(
+                `✅ [FLOW-OPERATIONS] IF node verified in database, ready for next operation`,
+              );
             }
-          } else if (nodeType === 'agent') {
-            console.log(`🚨🚨🚨 [FLOW-OPERATIONS] AGENT NODE CREATION CALLED - VIBE CODING PATH`, {
-              nodeId,
-              nodeType,
-              name,
-              color: nodeColor
-            });
-            
+          } else if (nodeType === "agent") {
+            console.log(
+              `🚨🚨🚨 [FLOW-OPERATIONS] AGENT NODE CREATION CALLED - VIBE CODING PATH`,
+              {
+                nodeId,
+                nodeType,
+                name,
+                color: nodeColor,
+              },
+            );
+
             // Step 1: Create the actual node in the resource (same pattern as other nodes)
             if (!updatedResource.nodes) updatedResource.nodes = [];
-            
+
             const agentName = name || `Agent ${nodeId.slice(-8)}`;
             const newNode = {
               id: nodeId,
@@ -374,83 +434,115 @@ export async function processFlowOperations(
               name: agentName,
               color: nodeColor,
             };
-            
+
             // Add node to resource for frontend display
             updatedResource.nodes.push(newNode);
-            
-            console.log('✅ [FLOW-OPERATIONS] Agent node added to resource during approval:', {
-              id: newNode.id,
-              type: newNode.type,
-              name: newNode.name,
-              color: nodeColor
-            });
-            
+
+            console.log(
+              "✅ [FLOW-OPERATIONS] Agent node added to resource during approval:",
+              {
+                id: newNode.id,
+                type: newNode.type,
+                name: newNode.name,
+                color: nodeColor,
+              },
+            );
+
             // Step 2: Create the agent configuration data in frontend resource
             if (!updatedResource.agents) updatedResource.agents = {};
-            
+
             updatedResource.agents[nodeId] = {
               id: nodeId,
               name: agentName,
               targetApiType: "chat",
               enabledStructuredOutput: false,
               promptMessages: [],
-              textPrompt: ""
+              textPrompt: "",
             };
-            
-            console.log(`✅ [FLOW-OPERATIONS] Agent data created in frontend resource:`, {
-              nodeId,
-              agentName: agentName,
-              targetApiType: updatedResource.agents[nodeId].targetApiType
-            });
-            
+
+            console.log(
+              `✅ [FLOW-OPERATIONS] Agent data created in frontend resource:`,
+              {
+                nodeId,
+                agentName: agentName,
+                targetApiType: updatedResource.agents[nodeId].targetApiType,
+              },
+            );
+
             // Step 3: Create the agent in database via service layer
-            const { Agent, ApiType } = await import('@/modules/agent/domain');
-            const { UniqueEntityID } = await import('@/shared/domain');
-            const { AgentService } = await import("@/app/services/agent-service");
-            
+            const { Agent, ApiType } = await import("@/modules/agent/domain");
+            const { UniqueEntityID } = await import("@/shared/domain");
+            const { AgentService } = await import(
+              "@/app/services/agent-service"
+            );
+
             // Create agent domain entity
-            const agentOrError = Agent.create({
-              name: agentName,
-              description: '',
-              targetApiType: ApiType.Chat,
-              color: nodeColor,
-              promptMessages: [],
-              schemaFields: [],
-            }, new UniqueEntityID(nodeId));
-            
+            const agentOrError = Agent.create(
+              {
+                name: agentName,
+                description: "",
+                targetApiType: ApiType.Chat,
+                color: nodeColor,
+                promptMessages: [],
+                schemaFields: [],
+              },
+              new UniqueEntityID(nodeId),
+            );
+
             if (agentOrError.isFailure) {
               errors.push(`Agent creation failed: ${agentOrError.getError()}`);
-              console.error(`❌ [FLOW-OPERATIONS] Agent domain entity creation failed:`, agentOrError.getError());
+              console.error(
+                `❌ [FLOW-OPERATIONS] Agent domain entity creation failed:`,
+                agentOrError.getError(),
+              );
               continue;
             }
-            
+
             const agent = agentOrError.getValue();
             const result = await AgentService.saveAgent.execute(agent);
-            
 
             if (!result.isSuccess) {
-              errors.push(`Failed to create agent in database: ${result.getError()}`);
-              console.error(`❌ [FLOW-OPERATIONS] Agent database creation failed:`, result.getError());
+              errors.push(
+                `Failed to create agent in database: ${result.getError()}`,
+              );
+              console.error(
+                `❌ [FLOW-OPERATIONS] Agent database creation failed:`,
+                result.getError(),
+              );
               continue;
             } else {
               // Verify the agent was actually created by querying it back
-              console.log(`✅ [FLOW-OPERATIONS] Agent created in database successfully, verifying persistence...`);
-              const verifyResult = await AgentService.getAgent.execute(new UniqueEntityID(nodeId));
-              
+              console.log(
+                `✅ [FLOW-OPERATIONS] Agent created in database successfully, verifying persistence...`,
+              );
+              const verifyResult = await AgentService.getAgent.execute(
+                new UniqueEntityID(nodeId),
+              );
+
               if (!verifyResult.isSuccess) {
-                console.warn(`⚠️ [FLOW-OPERATIONS] Agent creation verification failed, retrying once...`);
+                console.warn(
+                  `⚠️ [FLOW-OPERATIONS] Agent creation verification failed, retrying once...`,
+                );
                 // Retry verification once after small delay
-                await new Promise(resolve => setTimeout(resolve, 50));
-                const retryResult = await AgentService.getAgent.execute(new UniqueEntityID(nodeId));
-                
+                await new Promise((resolve) => setTimeout(resolve, 50));
+                const retryResult = await AgentService.getAgent.execute(
+                  new UniqueEntityID(nodeId),
+                );
+
                 if (!retryResult.isSuccess) {
-                  errors.push(`Agent created but not immediately queryable: ${retryResult.getError()}`);
-                  console.error(`❌ [FLOW-OPERATIONS] Agent verification failed after retry`);
+                  errors.push(
+                    `Agent created but not immediately queryable: ${retryResult.getError()}`,
+                  );
+                  console.error(
+                    `❌ [FLOW-OPERATIONS] Agent verification failed after retry`,
+                  );
                   continue;
                 }
               }
-              
-              console.log(`✅ [FLOW-OPERATIONS] Agent verified in database, ready for next operation`);
+
+              console.log(
+                `✅ [FLOW-OPERATIONS] Agent verified in database, ready for next operation`,
+              );
             }
           }
 
@@ -458,44 +550,68 @@ export async function processFlowOperations(
           const flowResult = await FlowService.updateNodesAndEdges.execute({
             flowId: resourceId,
             nodes: updatedResource.nodes || [],
-            edges: updatedResource.edges || []
+            edges: updatedResource.edges || [],
           });
 
           if (!flowResult.isSuccess) {
-            errors.push(`Failed to update flow nodes and edges: ${flowResult.getError()}`);
-            console.error(`❌ [FLOW-OPERATIONS] Flow update failed:`, flowResult.getError());
+            errors.push(
+              `Failed to update flow nodes and edges: ${flowResult.getError()}`,
+            );
+            console.error(
+              `❌ [FLOW-OPERATIONS] Flow update failed:`,
+              flowResult.getError(),
+            );
           } else {
             // Step 4: Notify UI of the changes (now that everything is persisted)
-            const { notifyFlowNodesEdgesUpdate } = await import("@/utils/flow-local-state-sync");
-            
+            const { notifyFlowNodesEdgesUpdate } = await import(
+              "@/utils/flow-local-state-sync"
+            );
+
             // Ensure all edges have the required 'type' field for ReactFlow
-            const edgesWithType = (updatedResource.edges || []).map((edge: any) => ({
-              ...edge,
-              type: edge.type || 'default'
-            }));
-            
-            notifyFlowNodesEdgesUpdate(resourceId, updatedResource.nodes || [], edgesWithType);
-            
-            console.log(`✅ [FLOW-OPERATIONS] Node created and flow updated successfully:`, {
-              nodeId,
-              nodeType,
-              name,
-              color: nodeColor
-            });
+            const edgesWithType = (updatedResource.edges || []).map(
+              (edge: any) => ({
+                ...edge,
+                type: edge.type || "default",
+              }),
+            );
+
+            notifyFlowNodesEdgesUpdate(
+              resourceId,
+              updatedResource.nodes || [],
+              edgesWithType,
+            );
+
+            console.log(
+              `✅ [FLOW-OPERATIONS] Node created and flow updated successfully:`,
+              {
+                nodeId,
+                nodeType,
+                name,
+                color: nodeColor,
+              },
+            );
           }
         } catch (nodeError) {
-          errors.push(`Failed to create ${nodeType} node ${nodeId}: ${nodeError}`);
+          errors.push(
+            `Failed to create ${nodeType} node ${nodeId}: ${nodeError}`,
+          );
           console.error(`❌ [FLOW-OPERATIONS] Node creation error:`, nodeError);
         }
-      } else if (operation.path === "flow.edges" && operation.operation === "put") {
+      } else if (
+        operation.path === "flow.edges" &&
+        operation.operation === "put"
+      ) {
         // Handle edge creation during approval - backend persistence
-        console.log(`🔄 [FLOW-OPERATIONS] Processing flow edges operation (APPROVAL):`, {
-          path: operation.path,
-          operation: operation.operation,
-          edgeId: operation.value?.id,
-          source: operation.value?.source,
-          target: operation.value?.target
-        });
+        console.log(
+          `🔄 [FLOW-OPERATIONS] Processing flow edges operation (APPROVAL):`,
+          {
+            path: operation.path,
+            operation: operation.operation,
+            edgeId: operation.value?.id,
+            source: operation.value?.source,
+            target: operation.value?.target,
+          },
+        );
 
         const { id, source, target, sourceHandle } = operation.value;
         const { FlowService } = await import("@/app/services/flow-service");
@@ -503,84 +619,105 @@ export async function processFlowOperations(
         try {
           // Step 1: Create the actual edge in the resource (was skipped during preview)
           if (!updatedResource.edges) updatedResource.edges = [];
-          
+
           // Use provided ID or generate one
           const edgeId = id || `edge-${source}-${target}-${Date.now()}`;
-          
+
           // Convert sourceHandle boolean to string and label for frontend
           let label;
           let sourceHandleString;
           if (sourceHandle === true) {
-            label = 'True';
-            sourceHandleString = 'true';
+            label = "True";
+            sourceHandleString = "true";
           } else if (sourceHandle === false) {
-            label = 'False';
-            sourceHandleString = 'false';
+            label = "False";
+            sourceHandleString = "false";
           }
           // If sourceHandle is undefined, both label and sourceHandleString remain undefined
-          
+
           const newEdge = {
             id: edgeId,
             source,
             target,
             sourceHandle: sourceHandleString, // Use string version for ReactFlow
             label,
-            type: 'default'
+            type: "default",
           };
-          
+
           // Check for duplicate edges (same source/target)
-          const existingEdge = updatedResource.edges.find((edge: any) => 
-            edge.source === source && edge.target === target
+          const existingEdge = updatedResource.edges.find(
+            (edge: any) => edge.source === source && edge.target === target,
           );
-          
+
           if (!existingEdge) {
             // Add edge to resource
             updatedResource.edges.push(newEdge);
-            
-            console.log('✅ [FLOW-OPERATIONS] Edge added to resource during approval:', {
-              id: newEdge.id,
-              source: newEdge.source,
-              target: newEdge.target,
-              label: newEdge.label
-            });
+
+            console.log(
+              "✅ [FLOW-OPERATIONS] Edge added to resource during approval:",
+              {
+                id: newEdge.id,
+                source: newEdge.source,
+                target: newEdge.target,
+                label: newEdge.label,
+              },
+            );
 
             // Step 2: Update flow nodes and edges via FlowService
             const flowResult = await FlowService.updateNodesAndEdges.execute({
               flowId: resourceId,
               nodes: updatedResource.nodes || [],
-              edges: updatedResource.edges || []
+              edges: updatedResource.edges || [],
             });
 
             if (!flowResult.isSuccess) {
-              errors.push(`Failed to update flow nodes and edges: ${flowResult.getError()}`);
-              console.error(`❌ [FLOW-OPERATIONS] Flow update failed:`, flowResult.getError());
+              errors.push(
+                `Failed to update flow nodes and edges: ${flowResult.getError()}`,
+              );
+              console.error(
+                `❌ [FLOW-OPERATIONS] Flow update failed:`,
+                flowResult.getError(),
+              );
             } else {
               // Step 3: Notify UI of the changes (now that everything is persisted)
-              const { notifyFlowNodesEdgesUpdate } = await import("@/utils/flow-local-state-sync");
-              
+              const { notifyFlowNodesEdgesUpdate } = await import(
+                "@/utils/flow-local-state-sync"
+              );
+
               // Ensure all edges have the required 'type' field for ReactFlow
-              const edgesWithType = (updatedResource.edges || []).map((edge: any) => ({
-                ...edge,
-                type: edge.type || 'default'
-              }));
-              
-              notifyFlowNodesEdgesUpdate(resourceId, updatedResource.nodes || [], edgesWithType);
-              
-              console.log(`✅ [FLOW-OPERATIONS] Edge created and flow updated successfully:`, {
-                edgeId,
-                source,
-                target,
-                label
-              });
+              const edgesWithType = (updatedResource.edges || []).map(
+                (edge: any) => ({
+                  ...edge,
+                  type: edge.type || "default",
+                }),
+              );
+
+              notifyFlowNodesEdgesUpdate(
+                resourceId,
+                updatedResource.nodes || [],
+                edgesWithType,
+              );
+
+              console.log(
+                `✅ [FLOW-OPERATIONS] Edge created and flow updated successfully:`,
+                {
+                  edgeId,
+                  source,
+                  target,
+                  label,
+                },
+              );
             }
           } else {
             console.log(`ℹ️ [FLOW-OPERATIONS] Edge already exists, skipping:`, {
               source,
-              target
+              target,
             });
           }
         } catch (edgeError) {
-          errors.push(`Failed to create edge ${source}->${target}: ${edgeError}`);
+          errors.push(
+            `Failed to create edge ${source}->${target}: ${edgeError}`,
+          );
           console.error(`❌ [FLOW-OPERATIONS] Edge creation error:`, edgeError);
         }
       }

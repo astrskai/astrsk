@@ -23,8 +23,8 @@ export class IfNodeDrizzleMapper {
         flowId: data.flow_id || data.flowId,
         name: data.name.trim() || "Untitled If Node",
         color: data.color || "#3b82f6",
-        logicOperator: data.logic_operator || data.logicOperator || 'AND',
-        conditions: data.conditions ? (parse(data.conditions) || []) : [],
+        logicOperator: data.logic_operator || data.logicOperator || "AND",
+        conditions: data.conditions ? parse(data.conditions) || [] : [],
       },
       new UniqueEntityID(data.id),
     );
@@ -35,7 +35,7 @@ export class IfNodeDrizzleMapper {
     }
 
     const ifNode = ifNodeOrError.getValue();
-    
+
     // Set timestamps if they exist
     if (data.created_at || data.createdAt) {
       ifNode.props.createdAt = new Date(data.created_at || data.createdAt);

@@ -2,8 +2,7 @@
   "debug.javascript.autoAttachFilter": "disabled",
   "debug.terminal.clearBeforeReusing": true,
   "debug.javascript.terminalOptions": {
-    "skipFiles": [
-      "<node_internals>/**"
-    ]
-  }
+    "skipFiles": ["<node_internals>/**"]
+  },
+  "format_on_save": false
 }

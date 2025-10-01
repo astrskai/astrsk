@@ -74,12 +74,12 @@ export function useUpdateIfNodeConditions(flowId: string, nodeId: string) {
       startEditing();
       
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
+      await queryClient.cancelQueries({ queryKey: ifNodeKeys.detail(nodeId) });
       
       // Optimistically update the cache
-      const previousData = queryClient.getQueryData(ifNodeKeys.detail(flowId, nodeId));
+      const previousData = queryClient.getQueryData(ifNodeKeys.detail(nodeId));
       if (previousData) {
-        queryClient.setQueryData(ifNodeKeys.detail(flowId, nodeId), {
+        queryClient.setQueryData(ifNodeKeys.detail(nodeId), {
           ...previousData,
           conditions: data.conditions,
           draftConditions: data.draftConditions,
@@ -92,7 +92,7 @@ export function useUpdateIfNodeConditions(flowId: string, nodeId: string) {
     onError: (err, data, context) => {
       // Revert optimistic update on error
       if (context?.previousData) {
-        queryClient.setQueryData(ifNodeKeys.detail(flowId, nodeId), context.previousData);
+        queryClient.setQueryData(ifNodeKeys.detail(nodeId), context.previousData);
       }
       setIsEditing(false);
       if (editTimeoutRef.current) {
@@ -104,7 +104,7 @@ export function useUpdateIfNodeConditions(flowId: string, nodeId: string) {
       
       // Immediate invalidation for if node queries
       await queryClient.invalidateQueries({ 
-        queryKey: ifNodeKeys.detail(flowId, nodeId),
+        queryKey: ifNodeKeys.detail(nodeId),
         refetchType: 'inactive'
       });
       
@@ -168,12 +168,12 @@ export function useUpdateIfNodeLogicOperator(flowId: string, nodeId: string) {
       startEditing();
       
       // Cancel any outgoing refetches for detail query (no specific logic operator query)
-      await queryClient.cancelQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
+      await queryClient.cancelQueries({ queryKey: ifNodeKeys.detail(nodeId) });
       
       // Optimistically update the detail query cache
-      const previousData = queryClient.getQueryData(ifNodeKeys.detail(flowId, nodeId));
+      const previousData = queryClient.getQueryData(ifNodeKeys.detail(nodeId));
       if (previousData) {
-        queryClient.setQueryData(ifNodeKeys.detail(flowId, nodeId), {
+        queryClient.setQueryData(ifNodeKeys.detail(nodeId), {
           ...previousData,
           logicOperator,
         });
@@ -184,7 +184,7 @@ export function useUpdateIfNodeLogicOperator(flowId: string, nodeId: string) {
     onError: (err, logicOperator, context) => {
       // Revert optimistic update on error
       if (context?.previousData) {
-        queryClient.setQueryData(ifNodeKeys.detail(flowId, nodeId), context.previousData);
+        queryClient.setQueryData(ifNodeKeys.detail(nodeId), context.previousData);
       }
       setIsEditing(false);
       if (editTimeoutRef.current) {
@@ -196,7 +196,7 @@ export function useUpdateIfNodeLogicOperator(flowId: string, nodeId: string) {
       
       // Immediate invalidation for if node queries
       await queryClient.invalidateQueries({ 
-        queryKey: ifNodeKeys.detail(flowId, nodeId),
+        queryKey: ifNodeKeys.detail(nodeId),
         refetchType: 'inactive'
       });
       

@@ -35,9 +35,13 @@ export interface PromptMessageProps {
 export function parsePromptMessage(doc: any): Result<PromptMessage> {
   try {
     let doc_type;
-    if (!(doc instanceof PlainPromptMessage || doc instanceof HistoryPromptMessage)) {
+    if (
+      !(
+        doc instanceof PlainPromptMessage || doc instanceof HistoryPromptMessage
+      )
+    ) {
       doc_type = doc.type;
-    }else{
+    } else {
       doc_type = doc.props.type;
     }
     switch (doc_type) {
@@ -46,7 +50,7 @@ export function parsePromptMessage(doc: any): Result<PromptMessage> {
       case PromptMessageType.History:
         return HistoryPromptMessage.fromJSON(doc);
       default:
-        return formatFail("Unknown prompt message type", doc.type);
+        return formatFail("Unknown prompt message type", doc_type);
     }
   } catch (error) {
     return formatFail("Failed to parse prompt message", error);
