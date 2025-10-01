@@ -894,6 +894,12 @@ export async function runMemoryPerformanceTest() {
   console.log(`📝 Test Session ID: ${testSessionId}\n`);
   const testResults: any[] = [];
 
+  // Timing statistics
+  const addTimings: number[] = [];
+  const searchTimings: number[] = [];
+  // Track search timings by limit count (1-10)
+  const searchTimingsByLimit: Record<number, number[]> = {};
+
   // Process messages and run checkpoints
   for (let i = 0; i < storyMessages.length; i++) {
     // Store each message individually
@@ -903,7 +909,8 @@ export async function runMemoryPerformanceTest() {
     const memoryContent = `Message ${i}:\n[${message.role}]: ${message.content}`;
 
     try {
-      // Store directly to Supermemory
+      // Store directly to Supermemory with timing
+      const addStartTime = performance.now();
       const response = await memoryClient.memories.add({
         content: memoryContent,
         containerTag: testSessionId, // Use unique session ID as container tag
@@ -914,8 +921,13 @@ export async function runMemoryPerformanceTest() {
           timestamp: Date.now(),
         },
       });
+      const addEndTime = performance.now();
+      const addDuration = addEndTime - addStartTime;
+      addTimings.push(addDuration);
 
-      console.log(`✅ Stored message ${i}, ID: ${response.id}`);
+      console.log(
+        `✅ Stored message ${i}, ID: ${response.id} (${addDuration.toFixed(2)}ms)`,
+      );
 
       // Small delay to allow indexing
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -948,12 +960,25 @@ export async function runMemoryPerformanceTest() {
           // Wait longer for indexing to complete
           await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          // Search directly with Supermemory API - filter by session using containerTag
+          // Random limit between 1 and 10
+          const randomLimit = Math.floor(Math.random() * 10) + 1;
+
+          // Search directly with Supermemory API - filter by session using containerTag with timing
+          const searchStartTime = performance.now();
           const searchResults = await memoryClient.search.memories({
             q: queryTest.query, // Just the query, no session ID in text
             containerTag: testSessionId, // Filter by session using containerTag
-            limit: 5, // Only get the most relevant memory
+            limit: randomLimit, // Random limit between 1-10
           });
+          const searchEndTime = performance.now();
+          const searchDuration = searchEndTime - searchStartTime;
+          searchTimings.push(searchDuration);
+
+          // Track timing by limit count
+          if (!searchTimingsByLimit[randomLimit]) {
+            searchTimingsByLimit[randomLimit] = [];
+          }
+          searchTimingsByLimit[randomLimit].push(searchDuration);
 
           const memories = (searchResults.results || [])
             .map((result: any) => result.memory || "")
@@ -967,7 +992,10 @@ export async function runMemoryPerformanceTest() {
 
           const success = foundExpectations.length > 0;
 
-          console.log(`   Retrieved: ${memories.length} memory`);
+          console.log(
+            `   ⏱️  Search time: ${searchDuration.toFixed(2)}ms (limit: ${randomLimit})`,
+          );
+          console.log(`   Retrieved: ${memories.length} memories`);
           console.log(`   Status: ${success ? "✅ PASS" : "❌ FAIL"}`);
 
           if (memories.length > 0) {
@@ -986,6 +1014,8 @@ export async function runMemoryPerformanceTest() {
             retrieved: memories,
             foundExpectations,
             success,
+            searchTime: searchDuration,
+            limit: randomLimit,
           });
         } catch (error) {
           console.error(`   ❌ Query failed:`, error);
@@ -1034,6 +1064,46 @@ export async function runMemoryPerformanceTest() {
   );
   console.log("=".repeat(80));
 
+  // Calculate timing statistics
+  const calculateStats = (timings: number[]) => {
+    if (timings.length === 0) return { avg: 0, min: 0, max: 0, total: 0 };
+    const total = timings.reduce((sum, t) => sum + t, 0);
+    const avg = total / timings.length;
+    const min = Math.min(...timings);
+    const max = Math.max(...timings);
+    return { avg, min, max, total };
+  };
+
+  const addStats = calculateStats(addTimings);
+  const searchStats = calculateStats(searchTimings);
+
+  console.log("\n" + "=".repeat(80));
+  console.log("⏱️  TIMING STATISTICS");
+  console.log("=".repeat(80));
+  console.log(`\n📝 Memory Add Operations (${addTimings.length} total):`);
+  console.log(`   Average: ${addStats.avg.toFixed(2)}ms`);
+  console.log(`   Min: ${addStats.min.toFixed(2)}ms`);
+  console.log(`   Max: ${addStats.max.toFixed(2)}ms`);
+  console.log(`   Total: ${addStats.total.toFixed(2)}ms`);
+
+  console.log(`\n🔍 Memory Search Operations (${searchTimings.length} total):`);
+  console.log(`   Average: ${searchStats.avg.toFixed(2)}ms`);
+  console.log(`   Min: ${searchStats.min.toFixed(2)}ms`);
+  console.log(`   Max: ${searchStats.max.toFixed(2)}ms`);
+  console.log(`   Total: ${searchStats.total.toFixed(2)}ms`);
+
+  console.log(`\n📊 Search Times by Limit Count:`);
+  for (let limit = 1; limit <= 10; limit++) {
+    const timings = searchTimingsByLimit[limit];
+    if (timings && timings.length > 0) {
+      const stats = calculateStats(timings);
+      console.log(
+        `   Limit ${limit}: ${timings.length} queries, avg ${stats.avg.toFixed(2)}ms (min: ${stats.min.toFixed(2)}ms, max: ${stats.max.toFixed(2)}ms)`,
+      );
+    }
+  }
+  console.log("=".repeat(80));
+
   return {
     sessionId: testSessionId,
     totalMessages: storyMessages.length,
@@ -1042,6 +1112,28 @@ export async function runMemoryPerformanceTest() {
       totalQueries,
       successfulQueries,
       successRate,
+    },
+    timing: {
+      add: {
+        count: addTimings.length,
+        ...addStats,
+        timings: addTimings,
+      },
+      search: {
+        count: searchTimings.length,
+        ...searchStats,
+        timings: searchTimings,
+      },
+      searchByLimit: Object.fromEntries(
+        Object.entries(searchTimingsByLimit).map(([limit, timings]) => [
+          limit,
+          {
+            count: timings.length,
+            ...calculateStats(timings),
+            timings,
+          },
+        ]),
+      ),
     },
   };
 }
