@@ -16,7 +16,9 @@
     "postbuild": "npm run check:licenses",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "convex": "npx convex-helpers ts-api-spec --output-file src/convex"
+    "convex": "npx convex-helpers ts-api-spec --output-file src/convex",
+    "test": "vitest",
+    "test:entities": "vitest run src/app/queries/card src/app/queries/flow"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.0",

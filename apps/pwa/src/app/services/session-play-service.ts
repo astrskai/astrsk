@@ -1858,7 +1858,7 @@ async function* executeFlow({
         currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
       } else if (currentNode.type === "dataStore") {
         // Get datastore node
-        const dataStoreNode = await fetchDataStoreNode(flowId, currentNode.id);
+        const dataStoreNode = await fetchDataStoreNode(currentNode.id);
 
         // Execute datastore node
         const dataStoreFields = dataStoreNode?.dataStoreFields || [];
@@ -1935,7 +1935,7 @@ async function* executeFlow({
         currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
       } else if (currentNode.type === "if") {
         // Get if node
-        const ifNode = await fetchIfNode(flowId, currentNode.id);
+        const ifNode = await fetchIfNode(currentNode.id);
 
         // Handle if node - evaluate condition and choose branch
         currentNode = await handleIfNode(

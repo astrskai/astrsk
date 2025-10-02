@@ -78,7 +78,7 @@ export const ifNodeProcessors = {
 
                 // Invalidate if-node queries
                 queryClient.invalidateQueries({
-                  queryKey: ifNodeKeys.detail(flowId, nodeId),
+                  queryKey: ifNodeKeys.detail(nodeId),
                 });
               } catch (invalidationError) {
                 console.warn('⚠️ [IF-NODE-PROCESSOR] Could not invalidate if-node queries:', invalidationError);
@@ -244,7 +244,7 @@ export const ifNodeProcessors = {
 
                 // Invalidate if-node queries
                 queryClient.invalidateQueries({
-                  queryKey: ifNodeKeys.detail(flowId, nodeId),
+                  queryKey: ifNodeKeys.detail(nodeId),
                 });
               } catch (invalidationError) {
                 console.warn('⚠️ [IF-NODE-PROCESSOR] Could not invalidate if-node queries:', invalidationError);

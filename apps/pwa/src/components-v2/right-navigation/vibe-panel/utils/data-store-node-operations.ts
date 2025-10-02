@@ -1,5 +1,6 @@
 import { Operation } from "@/utils/operation-processor";
 import { DataStoreNode } from "@/modules/data-store-node/domain/data-store-node";
+import { UniqueEntityID } from "@/shared/domain";
 
 /**
  * Pre-load existing data store node data into the resource to ensure deep merge operations
@@ -10,7 +11,6 @@ export async function preloadExistingDataStoreNodeData(
   dataStoreNodeOperations: Operation[],
   flowId: string,
 ): Promise<void> {
-  
   // Extract unique node IDs from operations
   const nodeIds = new Set<string>();
   for (const op of dataStoreNodeOperations) {
@@ -33,10 +33,9 @@ export async function preloadExistingDataStoreNodeData(
       );
 
       // Try to get the specific node data
-      const nodeResult = await DataStoreNodeService.getDataStoreNode.execute({
-        flowId,
-        nodeId,
-      });
+      const nodeResult = await DataStoreNodeService.getDataStoreNode.execute(
+        new UniqueEntityID(nodeId),
+      );
       if (nodeResult.isSuccess) {
         const node = nodeResult.getValue();
         if (node) {
@@ -51,7 +50,6 @@ export async function preloadExistingDataStoreNodeData(
           };
         }
       }
-
     } catch (error) {
       // Node not found or error - start with empty array
       resource.dataStoreNodes[nodeId] = {
@@ -73,7 +71,6 @@ export async function processDataStoreNodeOperations(
 
   for (const operation of operations) {
     try {
-
       const { DataStoreNodeService } = await import(
         "@/app/services/data-store-node-service"
       );
@@ -84,65 +81,78 @@ export async function processDataStoreNodeOperations(
         if (nodeIdMatch) {
           const nodeId = nodeIdMatch[1];
           // Get the current data store node
-          const getResult =
-            await DataStoreNodeService.getDataStoreNode.execute({
-              flowId: resourceId,
-              nodeId: nodeId,
-            });
+          const getResult = await DataStoreNodeService.getDataStoreNode.execute(
+            new UniqueEntityID(nodeId),
+          );
 
           if (getResult.isSuccess) {
             const node = getResult.getValue();
-            
+
             console.log(`🔍 [DEBUG] Retrieved node:`, {
               nodeId,
-              nodeProps: node ? Object.keys((node as any).props || {}) : 'NO PROPS',
-              dataStoreFields: (node as any)?.props?.dataStoreFields || 'NOT FOUND',
-              fields: (node as any)?.props?.fields || 'NOT FOUND'
+              nodeProps: node
+                ? Object.keys((node as any).props || {})
+                : "NO PROPS",
+              dataStoreFields:
+                (node as any)?.props?.dataStoreFields || "NOT FOUND",
+              fields: (node as any)?.props?.fields || "NOT FOUND",
             });
-            
+
             // Get current fields from the node - try both property names
-            const currentFields = (node as any).props.dataStoreFields || (node as any).props.fields || [];
-            
+            const currentFields =
+              (node as any).props.dataStoreFields ||
+              (node as any).props.fields ||
+              [];
+
             console.log(`🔍 [DEBUG] Current fields retrieved:`, {
               currentFields,
               fieldCount: currentFields.length,
               operationValue: operation.value,
               operationType: operation.operation,
-              fullPath: operation.path
+              fullPath: operation.path,
             });
-            
+
             // Add the new field from the operation value
             let updatedFields = [...currentFields];
-            
-            if (operation.operation === 'put' && operation.path.endsWith('.dataStoreFields')) {
+
+            if (
+              operation.operation === "put" &&
+              operation.path.endsWith(".dataStoreFields")
+            ) {
               // This is adding a new field - append it to existing fields
               updatedFields.push(operation.value);
-              console.log(`🔄 [DATA-STORE-NODE-OPERATIONS] Adding new field to node ${nodeId}:`, {
-                newField: operation.value,
-                previousFieldCount: currentFields.length,
-                newFieldCount: updatedFields.length,
-                allUpdatedFields: updatedFields
-              });
+              console.log(
+                `🔄 [DATA-STORE-NODE-OPERATIONS] Adding new field to node ${nodeId}:`,
+                {
+                  newField: operation.value,
+                  previousFieldCount: currentFields.length,
+                  newFieldCount: updatedFields.length,
+                  allUpdatedFields: updatedFields,
+                },
+              );
             } else {
               console.log(`🔍 [DEBUG] Operation condition not met:`, {
                 operation: operation.operation,
-                expectedOperation: 'put',
-                pathEndsWith: operation.path.endsWith('.dataStoreFields'),
-                actualPath: operation.path
+                expectedOperation: "put",
+                pathEndsWith: operation.path.endsWith(".dataStoreFields"),
+                actualPath: operation.path,
               });
             }
-            
+
             if (updatedFields) {
               // Update the node's fields with the processed data
               (node as any).props.dataStoreFields = updatedFields;
-              
-              console.log(`🔍 [DEBUG] About to call updateDataStoreNodeFields with:`, {
-                flowId: resourceId,
-                nodeId: nodeId,
-                fieldsToSave: updatedFields,
-                fieldsCount: updatedFields.length
-              });
-              
+
+              console.log(
+                `🔍 [DEBUG] About to call updateDataStoreNodeFields with:`,
+                {
+                  flowId: resourceId,
+                  nodeId: nodeId,
+                  fieldsToSave: updatedFields,
+                  fieldsCount: updatedFields.length,
+                },
+              );
+
               // Save the updated node (this uses the existing updateFields use case internally)
               const updateResult =
                 await DataStoreNodeService.updateDataStoreNodeFields.execute({
@@ -153,11 +163,14 @@ export async function processDataStoreNodeOperations(
 
               console.log(`🔍 [DEBUG] UpdateDataStoreNodeFields result:`, {
                 success: updateResult.isSuccess,
-                error: updateResult.isSuccess ? null : updateResult.getError()
+                error: updateResult.isSuccess ? null : updateResult.getError(),
               });
 
               if (!updateResult.isSuccess) {
-                console.error(`❌ [DEBUG] Field update failed:`, updateResult.getError());
+                console.error(
+                  `❌ [DEBUG] Field update failed:`,
+                  updateResult.getError(),
+                );
                 errors.push(
                   `Failed to update data store node fields: ${updateResult.getError()}`,
                 );
@@ -170,37 +183,37 @@ export async function processDataStoreNodeOperations(
                   },
                 );
 
-                  // Invalidate queries to refresh UI
-                  try {
-                    const { queryClient } = await import(
-                      "@/app/queries/query-client"
-                    );
-                    const { dataStoreNodeKeys } = await import(
-                      "@/app/queries/data-store-node/query-factory"
-                    );
+                // Invalidate queries to refresh UI
+                try {
+                  const { queryClient } = await import(
+                    "@/app/queries/query-client"
+                  );
+                  const { dataStoreNodeKeys } = await import(
+                    "@/app/queries/data-store-node/query-factory"
+                  );
 
-                    // Invalidate data store node queries
-                    queryClient.invalidateQueries({
-                      queryKey: dataStoreNodeKeys.detail(resourceId, nodeId),
-                    });
+                  // Invalidate data store node queries
+                  queryClient.invalidateQueries({
+                    queryKey: dataStoreNodeKeys.detail(nodeId),
+                  });
 
-                    console.log(
-                      `✅ [DATA-STORE-NODE-OPERATIONS] Invalidated data store node queries: ${nodeId}`,
-                    );
-                  } catch (invalidationError) {
-                    console.warn(
-                      `⚠️ [DATA-STORE-NODE-OPERATIONS] Could not invalidate data store node queries:`,
-                      invalidationError,
-                    );
-                  }
+                  console.log(
+                    `✅ [DATA-STORE-NODE-OPERATIONS] Invalidated data store node queries: ${nodeId}`,
+                  );
+                } catch (invalidationError) {
+                  console.warn(
+                    `⚠️ [DATA-STORE-NODE-OPERATIONS] Could not invalidate data store node queries:`,
+                    invalidationError,
+                  );
                 }
               }
-            } else {
-              errors.push(
-                `Failed to get data store node for update: ${getResult.getError()}`,
-              );
             }
+          } else {
+            errors.push(
+              `Failed to get data store node for update: ${getResult.getError()}`,
+            );
           }
+        }
       } else if (operation.path.includes(".name")) {
         // Handle data store node name updates
         const nodeIdMatch = operation.path.match(

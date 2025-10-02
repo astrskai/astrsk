@@ -42,7 +42,6 @@ import { Button } from "@/components-v2/ui/button";
 import { UniqueEntityID } from "@/shared/domain";
 import { Agent } from "@/modules/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
-import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentKeys } from "@/app/queries/agent/query-factory";
 import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
@@ -535,18 +534,37 @@ export function FlowPanelMain({ className }: FlowPanelMainProps) {
   // Panel operations
   const openPanel = useCallback(
     (panelType: PanelType, agentId?: string) => {
-      if (!dockviewApi || !flow) return;
+      console.log(
+        `[openPanel] Called with panelType: ${panelType}, agentId: ${agentId}`,
+      );
+
+      const currentFlow = flowRef.current;
+      console.log(
+        `[openPanel] currentFlow exists: ${!!currentFlow}, dockviewApi exists: ${!!dockviewApi}`,
+      );
+
+      if (!dockviewApi || !currentFlow) {
+        console.log(
+          `[openPanel] Returning early - missing dockviewApi or currentFlow`,
+        );
+        return;
+      }
 
       const panelId = agentId
         ? `${panelType}-${agentId}`
         : `${panelType}-standalone`;
 
+      console.log(`[openPanel] Panel ID: ${panelId}`);
+
       // Check if panel already exists
       const existingPanel = dockviewApi.getPanel(panelId);
       if (existingPanel) {
+        console.log(`[openPanel] Panel already exists, focusing it`);
         existingPanel.focus();
         return;
       }
+
+      console.log(`[openPanel] Panel doesn't exist, creating new panel`);
 
       // Get agent name, color, and inactive state if applicable
       let agentColor: string | undefined;
@@ -563,7 +581,8 @@ export function FlowPanelMain({ className }: FlowPanelMainProps) {
         const agent = agentId ? agentsRef.current.get(agentId) : null;
         title = getPanelTitle(panelType, agent?.props.name);
         agentColor = agent ? getAgentHexColor(agent) : undefined;
-        agentInactive = agent && flow ? getAgentState(agent, flow) : undefined;
+        agentInactive =
+          agent && currentFlow ? getAgentState(agent, currentFlow) : undefined;
       }
       // Check if this is an if-node or data-store-node panel
       else if (
@@ -572,9 +591,18 @@ export function FlowPanelMain({ className }: FlowPanelMainProps) {
           panelType === "dataStoreSchema") &&
         agentId
       ) {
+        console.log(
+          `[openPanel] Creating ${panelType} panel for node: ${agentId}`,
+        );
+
         // Get node from flow to get its name (color will be queried by tab component)
-        let node = flow.props.nodes.find((n) => n.id === agentId);
+        let node = currentFlow.props.nodes.find((n) => n.id === agentId);
+        console.log(
+          `[openPanel] Found node: ${!!node}, node.id: ${node?.id}, node.type: ${node?.type}`,
+        );
+
         let nodeData = node?.data as any;
+        console.log(`[openPanel] Node data:`, nodeData);
 
         // Color will be queried by the tab component, so we don't set it here
         agentColor = undefined;
@@ -588,7 +616,9 @@ export function FlowPanelMain({ className }: FlowPanelMainProps) {
         } else {
           nodeName = nodeData?.label || nodeData?.name || "Unnamed";
         }
+        console.log(`[openPanel] Node name for title: ${nodeName}`);
         title = getPanelTitle(panelType, nodeName);
+        console.log(`[openPanel] Panel title: ${title}`);
       }
       // Default case
       else {
@@ -703,7 +733,14 @@ export function FlowPanelMain({ className }: FlowPanelMainProps) {
       }
 
       if (newPanel) {
+        console.log(
+          `[openPanel] Panel created successfully with ID: ${panelId}`,
+        );
+        console.log(`[openPanel] Panel component: ${panelType}`);
+        console.log(`[openPanel] Panel params:`, newPanel.params);
         debouncedSaveLayout(dockviewApi);
+      } else {
+        console.log(`[openPanel] Failed to create panel!`);
       }
     },
     [dockviewApi, selectedFlowId, debouncedSaveLayout],
@@ -837,9 +874,15 @@ export function FlowPanelMain({ className }: FlowPanelMainProps) {
       };
 
       const disposables = [
-        api.onDidAddPanel(handlePanelChange),
-        api.onDidRemovePanel(handlePanelChange),
-        api.onDidLayoutChange(handlePanelChange),
+        api.onDidAddPanel((panel) => {
+          handlePanelChange();
+        }),
+        api.onDidRemovePanel((panel) => {
+          handlePanelChange();
+        }),
+        api.onDidLayoutChange(() => {
+          handlePanelChange();
+        }),
       ];
 
       return () => {
