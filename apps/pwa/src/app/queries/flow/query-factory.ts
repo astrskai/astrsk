@@ -9,20 +9,17 @@
  * - Co-location of keys and query functions
  */
 
-import { queryOptions } from "@tanstack/react-query";
-import { UniqueEntityID } from "@/shared/domain";
+import { queryClient } from "@/app/queries/query-client";
 import { FlowService } from "@/app/services/flow-service";
-import { FlowDrizzleMapper } from "@/modules/flow/mappers/flow-drizzle-mapper";
-import {
-  Flow,
-  Node,
-  Edge,
-  DataStoreSchema,
-  DataStoreSchemaField,
-  PanelStructure,
-  FlowViewport,
-} from "@/modules/flow/domain/flow";
 import { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
+import {
+  Edge,
+  Flow,
+  Node
+} from "@/modules/flow/domain/flow";
+import { FlowDrizzleMapper } from "@/modules/flow/mappers/flow-drizzle-mapper";
+import { UniqueEntityID } from "@/shared/domain";
+import { queryOptions } from "@tanstack/react-query";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection
@@ -557,3 +554,19 @@ export const flowQueries = {
  * // Getting query data
  * const cachedFlow = client.getQueryData<Flow>(flowKeys.detail(flowId));
  */
+
+/**
+ * Helper functions to fetch flows from cache and convert to domain objects
+ * Note: queryClient.fetchQuery returns persistence objects, not domain objects
+ * The select function only works in useQuery hooks, so we need to manually convert
+ */
+
+export async function fetchFlow(id: UniqueEntityID): Promise<Flow> {
+  const data = await queryClient.fetchQuery(
+    flowQueries.detail(id.toString()),
+  );
+  if (!data) {
+    throw new Error(`Flow not found: ${id.toString()}`);
+  }
+  return FlowDrizzleMapper.toDomain(data as any);
+}

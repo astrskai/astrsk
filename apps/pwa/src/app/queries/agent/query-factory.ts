@@ -355,3 +355,19 @@ export const agentQueries = {
  * // Getting query data
  * const cachedAgent = queryClient.getQueryData<Agent>(agentKeys.detail(agentId));
  */
+
+/**
+ * Helper functions to fetch agents from cache and convert to domain objects
+ * Note: queryClient.fetchQuery returns persistence objects, not domain objects
+ * The select function only works in useQuery hooks, so we need to manually convert
+ */
+
+export async function fetchAgent(id: UniqueEntityID): Promise<Agent> {
+  const data = await queryClient.fetchQuery(
+    agentQueries.detail(id.toString()),
+  );
+  if (!data) {
+    throw new Error(`Agent not found: ${id.toString()}`);
+  }
+  return AgentDrizzleMapper.toDomain(data as any);
+}

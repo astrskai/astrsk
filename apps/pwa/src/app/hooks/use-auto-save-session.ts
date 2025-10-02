@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { SessionService } from "@/app/services/session-service";
 import { SessionProps } from "@/modules/session/domain/session";
 import { Session } from "@/modules/session/domain/session";
+import { useSaveSession } from "@/app/queries/session-queries";
 
 interface UseAutoSaveSessionOptions {
   session: Session | null;
@@ -16,6 +16,8 @@ export const useAutoSaveSession = ({
   onSave,
   debounceMs = 500,
 }: UseAutoSaveSessionOptions) => {
+  const saveSessionMutation = useSaveSession();
+
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isSavingRef = useRef(false);
 
@@ -42,7 +44,7 @@ export const useAutoSaveSession = ({
           }
 
           // Save session
-          const saveResult = await SessionService.saveSession.execute({
+          const saveResult = await saveSessionMutation.mutateAsync({
             session: session,
           });
           if (saveResult.isFailure) {

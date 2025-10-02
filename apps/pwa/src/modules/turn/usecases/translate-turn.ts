@@ -4,6 +4,7 @@ import { formatFail } from "@/shared/utils";
 import { translate } from "@/shared/utils/translate-utils";
 
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
+import { Turn } from "@/modules/turn/domain/turn";
 import { LoadTurnRepo } from "@/modules/turn/repos/load-turn-repo";
 import { SaveTurnRepo } from "@/modules/turn/repos/save-turn-repo";
 
@@ -12,14 +13,14 @@ type Command = {
   config: TranslationConfig;
 };
 
-export class TranslateTurn implements UseCase<Command, Result<void>> {
+export class TranslateTurn implements UseCase<Command, Result<Turn>> {
   constructor(
     private loadTurnRepo: LoadTurnRepo,
     private saveTurnRepo: SaveTurnRepo,
   ) {}
 
   // TODO: refactor, split to private methods (https://github.com/harpychat/h2o-app-nextjs/pull/33#discussion_r1801640359)
-  async execute(command: Command): Promise<Result<void>> {
+  async execute(command: Command): Promise<Result<Turn>> {
     try {
       // Get turn
       const turnOrError = await this.loadTurnRepo.getTurnById(command.turnId);
@@ -52,9 +53,7 @@ export class TranslateTurn implements UseCase<Command, Result<void>> {
 
       // Save turn
       const savedTurnOrError = await this.saveTurnRepo.saveTurn(turn);
-      return savedTurnOrError.isSuccess
-        ? Result.ok()
-        : formatFail("Failed to save turn", savedTurnOrError.getError());
+      return savedTurnOrError;
     } catch (error) {
       return formatFail("Failed to translate turn", error);
     }

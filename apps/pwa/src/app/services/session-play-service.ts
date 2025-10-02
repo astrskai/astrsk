@@ -24,33 +24,25 @@ import { JSONSchema7 } from "json-schema";
 import { cloneDeep, merge } from "lodash-es";
 import { createOllama } from "ollama-ai-provider";
 
-import { Result } from "@/shared/core/result";
-import { UniqueEntityID } from "@/shared/domain";
+import { fetchAgent } from "@/app/queries/agent/query-factory";
+import { fetchApiConnections } from "@/app/queries/api-connection-queries";
 import {
-  Character,
-  HistoryItem,
-  Message,
-  Renderable,
-  RenderContext,
-} from "@/shared/prompt/domain/renderable";
-import { parameterList } from "@/shared/task/domain/parameter";
-import { Datetime } from "@/shared/utils/datetime";
-import { logger } from "@/shared/utils/logger";
-import { TemplateRenderer } from "@/shared/utils/template-renderer";
-import { getTokenizer } from "@/shared/utils/tokenizer/tokenizer";
-
-import { AgentService } from "@/app/services/agent-service";
-import { ApiService } from "@/app/services/api-service";
-import { CardService } from "@/app/services/card-service";
-import { DataStoreNodeService } from "@/app/services/data-store-node-service";
-import { FlowService } from "@/app/services/flow-service";
-import { IfNodeService } from "@/app/services/if-node-service";
+  fetchCharacterCard,
+  fetchCharacterCardOptional,
+  fetchPlotCardOptional,
+} from "@/app/queries/card/query-factory";
+import { fetchDataStoreNode } from "@/app/queries/data-store-node/query-factory";
+import { fetchFlow } from "@/app/queries/flow/query-factory";
+import { fetchIfNode } from "@/app/queries/if-node/query-factory";
+import { fetchSession } from "@/app/queries/session-queries";
+import { fetchTurn, fetchTurnOptional } from "@/app/queries/turn-queries";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { useWllamaStore } from "@/app/stores/wllama-store";
 import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
+import { ModelTier } from "@/modules/agent/domain";
 import { ApiSource } from "@/modules/api/domain";
 import {
   ApiConnection,
@@ -63,9 +55,22 @@ import { IfNode } from "@/modules/if-node/domain";
 import { Session } from "@/modules/session/domain/session";
 import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
 import { Turn as MessageEntity } from "@/modules/turn/domain/turn";
+import { Result } from "@/shared/core/result";
+import { UniqueEntityID } from "@/shared/domain";
+import {
+  Character,
+  HistoryItem,
+  Message,
+  Renderable,
+  RenderContext,
+} from "@/shared/prompt/domain/renderable";
+import { parameterList } from "@/shared/task/domain/parameter";
 import { parseAiSdkErrorMessage, sanitizeFileName } from "@/shared/utils";
+import { Datetime } from "@/shared/utils/datetime";
+import { logger } from "@/shared/utils/logger";
+import { TemplateRenderer } from "@/shared/utils/template-renderer";
+import { getTokenizer } from "@/shared/utils/tokenizer/tokenizer";
 import { translate } from "@/shared/utils/translate-utils";
-import { ModelTier } from "@/modules/agent/domain";
 
 // Model mapping configuration for automatic fallback
 // When using AstrskAi, format must be "ApiSource:modelId"
@@ -136,14 +141,7 @@ const makeContext = async ({
   // Get plot card
   let plotCard: PlotCard | null = null;
   if (session.plotCard && session.plotCard.enabled) {
-    // Check if CardService is initialized
-    if (!CardService.getCard) {
-      console.warn("CardService not initialized yet, skipping plot card");
-    } else {
-      plotCard = (await CardService.getCard.execute(session.plotCard.id))
-        .throwOnFailure()
-        .getValue() as PlotCard;
-    }
+    plotCard = await fetchPlotCardOptional(session.plotCard.id);
   }
 
   // Set `{{session.scenario}}`
@@ -163,9 +161,7 @@ const makeContext = async ({
       }
       let message;
       try {
-        message = (await TurnService.getTurn.execute(messageId))
-          .throwOnFailure()
-          .getValue();
+        message = await fetchTurn(messageId);
       } catch (error) {
         logger.error(
           `Failed to get message by id ${messageId.toString()}: ${error}`,
@@ -222,16 +218,15 @@ const makeContext = async ({
     }
 
     // Get character card
-    // Check if CardService is initialized
-    if (!CardService.getCard) {
-      console.warn("CardService not initialized yet, skipping character card");
+    let characterCard: CharacterCard;
+    try {
+      characterCard = await fetchCharacterCard(allCharCardItem.id);
+    } catch (error) {
+      console.warn(
+        `Character card not found: ${allCharCardItem.id.toString()}`,
+      );
       continue;
     }
-    const characterCard = (
-      await CardService.getCard.execute(allCharCardItem.id)
-    )
-      .throwOnFailure()
-      .getValue() as CharacterCard;
 
     // Scan lorebook
     let activatedEntries: string[] = [];
@@ -992,20 +987,18 @@ const createMessage = async ({
   messageId?: UniqueEntityID;
 }): Promise<Result<MessageEntity>> => {
   // Get session to access last turn's dataStore
-  const session = (await SessionService.getSession.execute(sessionId))
-    .throwOnFailure()
-    .getValue();
+  const session = await fetchSession(sessionId);
 
   // Get last turn's dataStore if exists
   let dataStore: DataStoreSavedField[] = [];
   if (session.turnIds.length > 0) {
     const lastTurnId = session.turnIds[session.turnIds.length - 1];
     try {
-      const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
-        .throwOnFailure()
-        .getValue();
-      // Clone the dataStore to avoid mutations
-      dataStore = cloneDeep(lastTurn.dataStore);
+      const lastTurn = await fetchTurnOptional(lastTurnId);
+      if (lastTurn) {
+        // Clone the dataStore to avoid mutations
+        dataStore = cloneDeep(lastTurn.dataStore);
+      }
     } catch (error) {
       logger.warn(`Failed to get last turn's dataStore: ${error}`);
     }
@@ -1014,15 +1007,8 @@ const createMessage = async ({
   // Get character name
   let characterName: string | null = defaultCharacterName || null;
   if (characterCardId) {
-    // Check if CardService is initialized
-    if (!CardService.getCard) {
-      console.warn(
-        "CardService not initialized yet, using default character name",
-      );
-    } else {
-      const characterCard = (await CardService.getCard.execute(characterCardId))
-        .throwOnFailure()
-        .getValue() as CharacterCard;
+    const characterCard = await fetchCharacterCardOptional(characterCardId);
+    if (characterCard) {
       characterName = characterCard.props.name || characterCard.props.title;
     }
   }
@@ -1045,6 +1031,9 @@ const createMessage = async ({
   );
 };
 
+/**
+ * @deprecated use mutation `useAddMessage()`
+ */
 const addMessage = async ({
   sessionId,
   characterCardId,
@@ -1063,9 +1052,7 @@ const addMessage = async ({
   messageId?: UniqueEntityID;
 }): Promise<Result<MessageEntity>> => {
   // Get session
-  const session = (await SessionService.getSession.execute(sessionId))
-    .throwOnFailure()
-    .getValue();
+  const session = await fetchSession(sessionId);
 
   // Create message
   const message = (
@@ -1102,55 +1089,6 @@ const addMessage = async ({
   }
 
   return Result.ok(sessionAndMessage.message);
-};
-
-const addOptionToMessage = async ({
-  messageId,
-  option,
-  isUser = false,
-}: {
-  messageId: UniqueEntityID;
-  option: Option;
-  isUser?: boolean;
-}) => {
-  // Get message
-  let message;
-  try {
-    message = (await TurnService.getTurn.execute(messageId))
-      .throwOnFailure()
-      .getValue();
-  } catch (error) {
-    return;
-  }
-
-  // Get session
-  const session = (await SessionService.getSession.execute(message.sessionId))
-    .throwOnFailure()
-    .getValue();
-
-  // Add option
-  message.addOption(option);
-
-  // Update message
-  try {
-    (await TurnService.updateTurn.execute(message)).throwOnFailure();
-  } catch (error) {
-    return;
-  }
-
-  // Translate message
-  if (option.content.trim() !== "" && session.translation) {
-    try {
-      (
-        await TurnService.translateTurn.execute({
-          turnId: message.id,
-          config: session.translation,
-        })
-      ).throwOnFailure();
-    } catch (error) {
-      return;
-    }
-  }
 };
 
 async function renderMessages({
@@ -1593,9 +1531,7 @@ async function* executeAgentNode({
 }): AsyncGenerator<AgentNodeResult, AgentNodeResult, void> {
   try {
     // Get agent
-    const agent = (await AgentService.getAgent.execute(agentId))
-      .throwOnFailure()
-      .getValue();
+    const agent = await fetchAgent(agentId);
 
     // Get API connection
     let apiSource = agent.props.apiSource;
@@ -1606,10 +1542,10 @@ async function* executeAgentNode({
       throw new Error("Agent does not have API source or model ID");
     }
 
-    let apiConnection = (await ApiService.listApiConnection.execute({}))
-      .throwOnFailure()
-      .getValue()
-      .find((connection) => connection.source === apiSource);
+    const apiConnections = await fetchApiConnections();
+    let apiConnection = apiConnections.find(
+      (connection) => connection.source === apiSource,
+    );
 
     // Automatic model mapping for logged-in users
     if (!apiConnection && isUserLoggedIn()) {
@@ -1617,12 +1553,9 @@ async function* executeAgentNode({
       // TODO: Replace with actual subscription check when available
       if (isUserSubscribed()) {
         // Try to use AstrskAi connection with fallback model
-        const astrskConnection = (
-          await ApiService.listApiConnection.execute({})
-        )
-          .throwOnFailure()
-          .getValue()
-          .find((connection) => connection.source === ApiSource.AstrskAi);
+        const astrskConnection = apiConnections.find(
+          (connection) => connection.source === ApiSource.AstrskAi,
+        );
 
         if (astrskConnection) {
           // Get fallback model based on agent's model tier
@@ -1760,9 +1693,7 @@ async function* executeFlow({
 
   try {
     // Get flow
-    const flow = (await FlowService.getFlow.execute(flowId))
-      .throwOnFailure()
-      .getValue();
+    const flow = await fetchFlow(flowId);
 
     // Find start node
     const startNode = flow.props.nodes.find((node) => node.type === "start");
@@ -1788,9 +1719,7 @@ async function* executeFlow({
     });
 
     // Get session
-    const session = (await SessionService.getSession.execute(sessionId))
-      .throwOnFailure()
-      .getValue();
+    const session = await fetchSession(sessionId);
 
     // Make context
     const context = (
@@ -1814,10 +1743,10 @@ async function* executeFlow({
       // Use last turn's dataStore as fallback
       const lastTurnId = session.turnIds[session.turnIds.length - 1];
       try {
-        const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
-          .throwOnFailure()
-          .getValue();
-        dataStore = cloneDeep(lastTurn.dataStore);
+        const lastTurn = await fetchTurnOptional(lastTurnId);
+        if (lastTurn) {
+          dataStore = cloneDeep(lastTurn.dataStore);
+        }
       } catch (error) {
         logger.warn(`Failed to get last turn's dataStore: ${error}`);
       }
@@ -1929,13 +1858,7 @@ async function* executeFlow({
         currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
       } else if (currentNode.type === "dataStore") {
         // Get datastore node
-        const dataStoreNode = (
-          await DataStoreNodeService.getDataStoreNode.execute(
-            new UniqueEntityID(currentNode.id),
-          )
-        )
-          .throwOnFailure()
-          .getValue();
+        const dataStoreNode = await fetchDataStoreNode(currentNode.id);
 
         // Execute datastore node
         const dataStoreFields = dataStoreNode?.dataStoreFields || [];
@@ -2012,16 +1935,7 @@ async function* executeFlow({
         currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
       } else if (currentNode.type === "if") {
         // Get if node
-        const ifNode = (
-          await IfNodeService.getIfNode.execute(
-            new UniqueEntityID(currentNode.id),
-          )
-        )
-          .throwOnFailure()
-          .getValue();
-        if (!ifNode) {
-          throw new Error(`No node: ${currentNode.id}`);
-        }
+        const ifNode = await fetchIfNode(currentNode.id);
 
         // Handle if node - evaluate condition and choose branch
         currentNode = await handleIfNode(
@@ -2563,11 +2477,11 @@ function convertToDataStoreType(
 
 export {
   addMessage,
-  addOptionToMessage,
   createMessage,
   evaluateConditionOperator,
   executeFlow,
   makeContext,
   renderMessages,
-  transformMessagesForModel,
+  transformMessagesForModel
 };
+
