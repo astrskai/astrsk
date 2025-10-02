@@ -48,8 +48,8 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(react@18.3.1)
       '@electric-sql/pglite':
-        specifier: ^0.3.7
-        version: 0.3.7
+        specifier: ^0.3.10
+        version: 0.3.10
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@18.3.23)(react@18.3.1)
@@ -196,7 +196,7 @@ importers:
         version: 4.5.0(react@18.3.1)
       drizzle-orm:
         specifier: ^0.44.5
-        version: 0.44.5(@electric-sql/pglite@0.3.7)(@opentelemetry/api@1.9.0)(postgres@3.4.7)
+        version: 0.44.5(@electric-sql/pglite@0.3.10)(@opentelemetry/api@1.9.0)(postgres@3.4.7)
       embla-carousel-auto-scroll:
         specifier: ^8.6.0
         version: 8.6.0(embla-carousel@8.6.0)
@@ -1299,8 +1299,8 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@electric-sql/pglite@0.3.7':
-    resolution: {integrity: sha512-5c3mybVrhxu5s47zFZtIGdG8YHkKCBENOmqxnNBjY53ZoDhADY/c5UqBDl159b7qtkzNPtbbb893wL9zi1kAuw==}
+  '@electric-sql/pglite@0.3.10':
+    resolution: {integrity: sha512-1XtXXprd848aR4hvjNqBc3Gc86zNGmd60x+MgOUShbHYxt+J76N8A81DqTEl275T8xBD0vdTgqR/dJ4yJyz0NQ==}
 
   '@emnapi/core@1.4.5':
     resolution: {integrity: sha512-XsLw1dEOpkSX/WucdqUhPWP7hDxSvZiY+fsUC14h+FtQ2Ifni4znbBt8punRX+Uj2JG/uDb8nEHVKvrVlvdZ5Q==}
@@ -8996,7 +8996,7 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@electric-sql/pglite@0.3.7': {}
+  '@electric-sql/pglite@0.3.10': {}
 
   '@emnapi/core@1.4.5':
     dependencies:
@@ -12218,9 +12218,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.5(@electric-sql/pglite@0.3.7)(@opentelemetry/api@1.9.0)(postgres@3.4.7):
+  drizzle-orm@0.44.5(@electric-sql/pglite@0.3.10)(@opentelemetry/api@1.9.0)(postgres@3.4.7):
     optionalDependencies:
-      '@electric-sql/pglite': 0.3.7
+      '@electric-sql/pglite': 0.3.10
       '@opentelemetry/api': 1.9.0
       postgres: 3.4.7
 
