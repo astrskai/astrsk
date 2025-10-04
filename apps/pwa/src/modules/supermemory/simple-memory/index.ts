@@ -1,7 +1,8 @@
-// Main exports for the Supermemory module
-export { memoryClient, isMemoryClientConfigured } from "./client";
+// Main exports for the simple memory module
+export { memoryClient, isMemoryClientConfigured } from "../shared/client";
 export { testSupermemory } from "./test-memory";
 export { runMemoryPerformanceTest } from "./test-memory-performance";
+export { memoryService } from "./memory-service";
 
 // Domain exports (will be added as they are created)
 // export * from './domain/memory-entry';

@@ -4,7 +4,7 @@ import {
   retrieveSessionMemories,
   formatMemoriesForPrompt,
   isMemoryServiceEnabled,
-} from "../memory-service";
+} from "../simple-memory/memory-service";
 
 // Mock the Supermemory client
 vi.mock("supermemory", () => ({

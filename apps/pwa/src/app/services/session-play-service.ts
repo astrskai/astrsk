@@ -56,7 +56,7 @@ import {
   storeConversationMemory,
   retrieveSessionMemories,
   formatMemoriesForPrompt,
-} from "@/modules/supermemory/memory-service";
+} from "@/modules/supermemory/simple-memory/memory-service";
 import {
   ApiConnection,
   OpenrouterProviderSort,

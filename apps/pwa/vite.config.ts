@@ -16,6 +16,24 @@ export default defineConfig({
   worker: {
     format: "es",
   },
+  // Proxy configuration for Supermemory API (development only)
+  server: {
+    proxy: {
+      '/api/supermemory': {
+        target: 'https://api.supermemory.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/supermemory/, ''),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Proxying request:', req.method, req.url, '→', proxyReq.path);
+          });
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       buffer: "buffer",

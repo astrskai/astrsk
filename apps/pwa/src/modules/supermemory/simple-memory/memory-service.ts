@@ -1,10 +1,5 @@
-import Supermemory from "supermemory";
 import { logger } from "@/shared/utils/logger";
-
-// Initialize Supermemory client
-const memoryClient = new Supermemory({
-  apiKey: import.meta.env.VITE_SUPERMEMORY_API_KEY,
-});
+import { memoryClient } from "../shared/client";
 
 // Check if memory service is configured
 export const isMemoryServiceEnabled = (): boolean => {
@@ -193,7 +188,7 @@ export async function retrieveSessionMemories(
     console.log(
       `📚 [Supermemory] Retrieved ${memories.length} memories for session ${sessionId}`,
     );
-    memories.forEach((memory, index) => {
+    memories.forEach((memory: string, index: number) => {
       console.log(
         `📚 [Supermemory] Memory ${index + 1}:`,
         memory.substring(0, 100) + "...",
@@ -211,6 +206,14 @@ export async function retrieveSessionMemories(
     return [];
   }
 }
+
+// Export as a service object for easier mocking/testing
+export const memoryService = {
+  storeConversationMemory,
+  retrieveSessionMemories,
+  formatMemoriesForPrompt,
+  isMemoryServiceEnabled,
+};
 
 /**
  * Format memories for injection into agent prompt
