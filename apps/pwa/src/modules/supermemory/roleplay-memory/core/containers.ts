@@ -62,5 +62,5 @@ export function extractCharacterId(containerTag: string): string | null {
   if (containerTag.endsWith('::world')) return null
   const sep = '::'
   const idx = containerTag.indexOf(sep)
-  return idx >= 0 ? containerTag.slice(idx + sep.length) : null
+  return idx > 0 ? containerTag.slice(idx + sep.length) : null
 }

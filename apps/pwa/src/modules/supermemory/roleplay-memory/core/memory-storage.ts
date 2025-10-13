@@ -7,13 +7,17 @@
  * Based on contracts/memory-storage.contract.md
  */
 
-import { memoryClient } from '../../shared/client'
-import type { MemoryMetadata, EnrichedMessageSections, StorageResult } from '../../shared/types'
+import { memoryClient } from "../../shared/client";
+import type {
+  MemoryMetadata,
+  EnrichedMessageSections,
+  StorageResult,
+} from "../../shared/types";
 import {
   validateCharacterContainer,
-  validateWorldContainer
-} from './containers'
-import { logger } from '@/shared/utils/logger'
+  validateWorldContainer,
+} from "./containers";
+import { logger } from "@/shared/utils/logger";
 
 /**
  * Build enriched message content from sections
@@ -22,21 +26,23 @@ import { logger } from '@/shared/utils/logger'
  * @param sections - Message sections (currentTime, message, worldContext)
  * @returns Formatted enriched message string
  */
-export function buildEnrichedMessage(sections: EnrichedMessageSections): string {
-  const parts: string[] = []
+export function buildEnrichedMessage(
+  sections: EnrichedMessageSections,
+): string {
+  const parts: string[] = [];
 
   // Section 1: Current time (required)
-  parts.push(sections.currentTime)
+  parts.push(sections.currentTime);
 
   // Section 2: Message (required)
-  parts.push(sections.message)
+  parts.push(sections.message);
 
   // Section 3: World context (optional - omit if empty)
   if (sections.worldContext && sections.worldContext.trim()) {
-    parts.push(sections.worldContext)
+    parts.push(sections.worldContext);
   }
 
-  return parts.join('\n\n')
+  return parts.join("\n\n");
 }
 
 /**
@@ -53,17 +59,20 @@ export function buildEnrichedMessage(sections: EnrichedMessageSections): string 
 export async function storeWorldMessage(
   containerTag: string,
   content: string,
-  metadata: MemoryMetadata
+  metadata: MemoryMetadata,
 ): Promise<StorageResult> {
   try {
     // Validate world container tag
     if (!validateWorldContainer(containerTag)) {
-      logger.error('[Memory Storage] Invalid world container tag:', containerTag)
+      logger.error(
+        "[Memory Storage] Invalid world container tag:",
+        containerTag,
+      );
       return {
         id: null,
         success: false,
-        error: 'Invalid world container tag format'
-      }
+        error: "Invalid world container tag format",
+      };
     }
 
     // Validate required metadata fields
@@ -71,16 +80,16 @@ export async function storeWorldMessage(
       !metadata.speaker ||
       !metadata.participants ||
       metadata.participants.length === 0 ||
-      typeof metadata.gameTime !== 'number' ||
+      typeof metadata.gameTime !== "number" ||
       !metadata.gameTimeInterval ||
       !metadata.type
     ) {
-      logger.error('[Memory Storage] Missing required metadata fields')
+      logger.error("[Memory Storage] Missing required metadata fields");
       return {
         id: null,
         success: false,
-        error: 'Missing required metadata fields'
-      }
+        error: "Missing required metadata fields",
+      };
     }
 
     // Store in Supermemory
@@ -93,24 +102,28 @@ export async function storeWorldMessage(
         gameTime: metadata.gameTime,
         gameTimeInterval: metadata.gameTimeInterval,
         type: metadata.type,
-        ...(metadata.isSpeaker !== undefined && { isSpeaker: metadata.isSpeaker }),
-        ...(metadata.permanent !== undefined && { permanent: metadata.permanent }),
-        ...(metadata.lorebookKey && { lorebookKey: metadata.lorebookKey })
-      }
-    })
+        ...(metadata.isSpeaker !== undefined && {
+          isSpeaker: metadata.isSpeaker,
+        }),
+        ...(metadata.permanent !== undefined && {
+          permanent: metadata.permanent,
+        }),
+        ...(metadata.lorebookKey && { lorebookKey: metadata.lorebookKey }),
+      },
+    });
 
-    logger.info('[Memory Storage] Stored world message:', result.id)
+    logger.info("[Memory Storage] Stored world message:", result.id);
     return {
       id: result.id,
-      success: true
-    }
+      success: true,
+    };
   } catch (error) {
-    logger.error('[Memory Storage] Failed to store world message:', error)
+    logger.error("[Memory Storage] Failed to store world message:", error);
     return {
       id: null,
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
@@ -128,20 +141,20 @@ export async function storeWorldMessage(
 export async function storeCharacterMessage(
   containerTag: string,
   enrichedContent: string,
-  metadata: MemoryMetadata
+  metadata: MemoryMetadata,
 ): Promise<StorageResult> {
   try {
     // Validate character container tag
     if (!validateCharacterContainer(containerTag)) {
       logger.error(
-        '[Memory Storage] Invalid character container tag:',
-        containerTag
-      )
+        "[Memory Storage] Invalid character container tag:",
+        containerTag,
+      );
       return {
         id: null,
         success: false,
-        error: 'Invalid character container tag format'
-      }
+        error: "Invalid character container tag format",
+      };
     }
 
     // Validate required metadata fields
@@ -149,17 +162,17 @@ export async function storeCharacterMessage(
       !metadata.speaker ||
       !metadata.participants ||
       metadata.participants.length === 0 ||
-      typeof metadata.gameTime !== 'number' ||
+      typeof metadata.gameTime !== "number" ||
       !metadata.gameTimeInterval ||
       !metadata.type ||
       metadata.isSpeaker === undefined
     ) {
-      logger.error('[Memory Storage] Missing required metadata fields')
+      logger.error("[Memory Storage] Missing required metadata fields");
       return {
         id: null,
         success: false,
-        error: 'Missing required metadata fields'
-      }
+        error: "Missing required metadata fields",
+      };
     }
 
     // Store in Supermemory
@@ -173,23 +186,25 @@ export async function storeCharacterMessage(
         gameTimeInterval: metadata.gameTimeInterval,
         type: metadata.type,
         isSpeaker: metadata.isSpeaker,
-        ...(metadata.permanent !== undefined && { permanent: metadata.permanent }),
-        ...(metadata.lorebookKey && { lorebookKey: metadata.lorebookKey })
-      }
-    })
+        ...(metadata.permanent !== undefined && {
+          permanent: metadata.permanent,
+        }),
+        ...(metadata.lorebookKey && { lorebookKey: metadata.lorebookKey }),
+      },
+    });
 
-    logger.info('[Memory Storage] Stored character message:', result.id)
+    logger.info("[Memory Storage] Stored character message:", result.id);
     return {
       id: result.id,
-      success: true
-    }
+      success: true,
+    };
   } catch (error) {
-    logger.error('[Memory Storage] Failed to store character message:', error)
+    logger.error("[Memory Storage] Failed to store character message:", error);
     return {
       id: null,
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
@@ -207,40 +222,42 @@ export async function storeCharacterMessage(
 export async function storeInitContent(
   containerTag: string,
   content: string,
-  metadata: MemoryMetadata
+  metadata: MemoryMetadata,
 ): Promise<StorageResult> {
   try {
     // Validate character container tag
     if (!validateCharacterContainer(containerTag)) {
       logger.error(
-        '[Memory Storage] Invalid character container tag:',
-        containerTag
-      )
+        "[Memory Storage] Invalid character container tag:",
+        containerTag,
+      );
       return {
         id: null,
         success: false,
-        error: 'Invalid character container tag format'
-      }
+        error: "Invalid character container tag format",
+      };
     }
 
     // Validate metadata for init content
     if (!metadata.type || !metadata.permanent) {
-      logger.error('[Memory Storage] Init content must have type and permanent=true')
+      logger.error(
+        "[Memory Storage] Init content must have type and permanent=true",
+      );
       return {
         id: null,
         success: false,
-        error: 'Init content requires type and permanent flag'
-      }
+        error: "Init content requires type and permanent flag",
+      };
     }
 
     // Validate type-specific requirements
-    if (metadata.type === 'lorebook' && !metadata.lorebookKey) {
-      logger.error('[Memory Storage] Lorebook entries require lorebookKey')
+    if (metadata.type === "lorebook" && !metadata.lorebookKey) {
+      logger.error("[Memory Storage] Lorebook entries require lorebookKey");
       return {
         id: null,
         success: false,
-        error: 'Lorebook entries require lorebookKey'
-      }
+        error: "Lorebook entries require lorebookKey",
+      };
     }
 
     // Store in Supermemory
@@ -253,23 +270,23 @@ export async function storeInitContent(
         ...(metadata.lorebookKey && { lorebookKey: metadata.lorebookKey }),
         ...(metadata.gameTime !== undefined && { gameTime: metadata.gameTime }),
         ...(metadata.gameTimeInterval && {
-          gameTimeInterval: metadata.gameTimeInterval
-        })
-      }
-    })
+          gameTimeInterval: metadata.gameTimeInterval,
+        }),
+      },
+    });
 
-    logger.info('[Memory Storage] Stored init content:', result.id)
+    logger.info("[Memory Storage] Stored init content:", result.id);
     return {
       id: result.id,
-      success: true
-    }
+      success: true,
+    };
   } catch (error) {
-    logger.error('[Memory Storage] Failed to store init content:', error)
+    logger.error("[Memory Storage] Failed to store init content:", error);
     return {
       id: null,
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
@@ -288,31 +305,34 @@ export async function storeInitContent(
 export async function storeWorldStateUpdate(
   containerTag: string,
   update: string,
-  metadata: MemoryMetadata
+  metadata: MemoryMetadata,
 ): Promise<StorageResult> {
   try {
     // Validate world container tag
     if (!validateWorldContainer(containerTag)) {
-      logger.error('[Memory Storage] Invalid world container tag:', containerTag)
+      logger.error(
+        "[Memory Storage] Invalid world container tag:",
+        containerTag,
+      );
       return {
         id: null,
         success: false,
-        error: 'Invalid world container tag format'
-      }
+        error: "Invalid world container tag format",
+      };
     }
 
     // Validate metadata
     if (
-      metadata.type !== 'world_state_update' ||
-      typeof metadata.gameTime !== 'number' ||
+      metadata.type !== "world_state_update" ||
+      typeof metadata.gameTime !== "number" ||
       !metadata.gameTimeInterval
     ) {
-      logger.error('[Memory Storage] Invalid world state update metadata')
+      logger.error("[Memory Storage] Invalid world state update metadata");
       return {
         id: null,
         success: false,
-        error: 'Invalid world state update metadata'
-      }
+        error: "Invalid world state update metadata",
+      };
     }
 
     // Store in Supermemory
@@ -322,21 +342,21 @@ export async function storeWorldStateUpdate(
       metadata: {
         type: metadata.type,
         gameTime: metadata.gameTime,
-        gameTimeInterval: metadata.gameTimeInterval
-      }
-    })
+        gameTimeInterval: metadata.gameTimeInterval,
+      },
+    });
 
-    logger.info('[Memory Storage] Stored world state update:', result.id)
+    logger.info("[Memory Storage] Stored world state update:", result.id);
     return {
       id: result.id,
-      success: true
-    }
+      success: true,
+    };
   } catch (error) {
-    logger.error('[Memory Storage] Failed to store world state update:', error)
+    logger.error("[Memory Storage] Failed to store world state update:", error);
     return {
       id: null,
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
