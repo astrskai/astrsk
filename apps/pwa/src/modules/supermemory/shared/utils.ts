@@ -7,17 +7,17 @@
  * Format a message with embedded game time
  * @param characterName - Character who spoke
  * @param content - Message content
- * @param gameTime - Current game time
+ * @param game_time - Current game time
  * @param interval - Time interval unit (default: "Day")
  * @returns Formatted message string
  */
 export function formatMessageWithGameTime(
   characterName: string,
   content: string,
-  gameTime: number,
+  game_time: number,
   interval: string = 'Day'
 ): string {
-  return `Message: ${characterName}: ${content} GameTime: ${gameTime} ${interval}`
+  return `Message: ${characterName}: ${content} GameTime: ${game_time} ${interval}`
 }
 
 /**

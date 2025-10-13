@@ -31,8 +31,8 @@ export interface MemoryMetadata {
   // Required fields
   speaker: string           // Character ID who spoke/acted (or 'system' for world events)
   participants: string[]    // Character IDs who participated (or all characters for world events)
-  gameTime: number         // Temporal marker (numeric for filtering)
-  gameTimeInterval: string // Interval unit (default: "Day", can be customized later)
+  game_time: number         // Temporal marker (numeric for filtering)
+  game_time_interval: string // Interval unit (default: "Day", can be customized later)
   type: MemoryType         // Memory category
 
   // Optional fields (context-dependent)
@@ -65,7 +65,7 @@ export interface WorldAgentInput {
   recentMessages: Array<{
     role: string // Character name or ID
     content: string
-    gameTime: number
+    game_time: number
   }>
 
   // Session State
@@ -93,7 +93,7 @@ export interface WorldAgentOutput {
   }>
 
   // Time Progression
-  deltaTime: number // How much time passed (0 = no time change, 1 = one interval, etc.)
+  delta_time: number // How much time passed (0 = no time change, 1 = one interval, etc.)
 
   // Optional: Future optimization
   confidence?: number // 0-1 scale for detection confidence
@@ -122,8 +122,8 @@ export interface CharacterMemoryQueryInput {
   containerTag: string // Format: {sessionId}::{characterId}
 
   // Temporal Context
-  currentGameTime: number
-  currentGameTimeInterval: string // Default: "Day"
+  current_game_time: number
+  current_game_time_interval: string // Default: "Day"
 
   // Conversation Context
   recentMessages: string[] // Last 1-3 messages (formatted)
@@ -136,7 +136,7 @@ export interface CharacterMemoryQueryInput {
 
   // Optional Filters
   filters?: {
-    gameTime?: {
+    game_time?: {
       gte?: number
       lte?: number
     }
@@ -156,7 +156,7 @@ export interface WorldMemoryQueryInput {
 
   // Optional Filters
   filters?: {
-    gameTime?: {
+    game_time?: {
       gte?: number
       lte?: number
     }
@@ -173,7 +173,7 @@ export interface WorldMemoryQueryOutput {
   memories: string[]
   count: number
   metadata?: Array<{
-    gameTime: number
+    game_time: number
     type: string
     participants?: string[]
   }>
@@ -188,8 +188,8 @@ export interface SessionDataStore {
   sessionId: string
   currentScene: string // Location/scene name
   participants: string[] // All character IDs in session
-  gameTime: number // Current game time (numeric)
-  gameTimeInterval: string // Time interval unit (default: "Day")
+  game_time: number // Current game time (numeric)
+  game_time_interval: string // Time interval unit (default: "Day")
 
   // Optional State
   timeOfDay?: string // Morning, evening, night
@@ -262,12 +262,12 @@ export interface MemoryRecallInput {
   sessionId: string
   characterId: string
   characterName: string
-  currentGameTime: number
-  currentGameTimeInterval: string
+  current_game_time: number
+  current_game_time_interval: string
   recentMessages: Array<{
     role: string
     content: string
-    gameTime: number
+    game_time: number
   }>
   limit?: number
   worldContext?: string // Accumulated world context from dataStore
@@ -278,8 +278,8 @@ export interface MemoryDistributionInput {
   speakerCharacterId: string
   speakerName: string
   message: string
-  gameTime: number
-  gameTimeInterval: string
+  game_time: number
+  game_time_interval: string
   dataStore: SessionDataStore
   worldMemoryContext?: string
   // World Agent output (already executed)

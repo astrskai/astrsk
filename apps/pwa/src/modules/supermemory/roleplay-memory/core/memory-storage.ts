@@ -80,8 +80,8 @@ export async function storeWorldMessage(
       !metadata.speaker ||
       !metadata.participants ||
       metadata.participants.length === 0 ||
-      typeof metadata.gameTime !== "number" ||
-      !metadata.gameTimeInterval ||
+      typeof metadata.game_time !== "number" ||
+      !metadata.game_time_interval ||
       !metadata.type
     ) {
       logger.error("[Memory Storage] Missing required metadata fields");
@@ -99,8 +99,8 @@ export async function storeWorldMessage(
       metadata: {
         speaker: metadata.speaker,
         participants: metadata.participants,
-        gameTime: metadata.gameTime,
-        gameTimeInterval: metadata.gameTimeInterval,
+        game_time: metadata.game_time,
+        game_time_interval: metadata.game_time_interval,
         type: metadata.type,
         ...(metadata.isSpeaker !== undefined && {
           isSpeaker: metadata.isSpeaker,
@@ -162,8 +162,8 @@ export async function storeCharacterMessage(
       !metadata.speaker ||
       !metadata.participants ||
       metadata.participants.length === 0 ||
-      typeof metadata.gameTime !== "number" ||
-      !metadata.gameTimeInterval ||
+      typeof metadata.game_time !== "number" ||
+      !metadata.game_time_interval ||
       !metadata.type ||
       metadata.isSpeaker === undefined
     ) {
@@ -182,8 +182,8 @@ export async function storeCharacterMessage(
       metadata: {
         speaker: metadata.speaker,
         participants: metadata.participants,
-        gameTime: metadata.gameTime,
-        gameTimeInterval: metadata.gameTimeInterval,
+        game_time: metadata.game_time,
+        game_time_interval: metadata.game_time_interval,
         type: metadata.type,
         isSpeaker: metadata.isSpeaker,
         ...(metadata.permanent !== undefined && {
@@ -268,9 +268,9 @@ export async function storeInitContent(
         type: metadata.type,
         permanent: metadata.permanent,
         ...(metadata.lorebookKey && { lorebookKey: metadata.lorebookKey }),
-        ...(metadata.gameTime !== undefined && { gameTime: metadata.gameTime }),
-        ...(metadata.gameTimeInterval && {
-          gameTimeInterval: metadata.gameTimeInterval,
+        ...(metadata.game_time !== undefined && { game_time: metadata.game_time }),
+        ...(metadata.game_time_interval && {
+          game_time_interval: metadata.game_time_interval,
         }),
       },
     });
@@ -294,7 +294,7 @@ export async function storeInitContent(
  * Store world state update in world container
  *
  * Contract: Store world events/changes
- * Format: "{description}. GameTime: {gameTime} {interval}"
+ * Format: "{description}. GameTime: {game_time} {interval}"
  * Type: 'world_state_update'
  *
  * @param containerTag - World container tag
@@ -324,8 +324,8 @@ export async function storeWorldStateUpdate(
     // Validate metadata
     if (
       metadata.type !== "world_state_update" ||
-      typeof metadata.gameTime !== "number" ||
-      !metadata.gameTimeInterval
+      typeof metadata.game_time !== "number" ||
+      !metadata.game_time_interval
     ) {
       logger.error("[Memory Storage] Invalid world state update metadata");
       return {
@@ -341,8 +341,8 @@ export async function storeWorldStateUpdate(
       content: update,
       metadata: {
         type: metadata.type,
-        gameTime: metadata.gameTime,
-        gameTimeInterval: metadata.gameTimeInterval,
+        game_time: metadata.game_time,
+        game_time_interval: metadata.game_time_interval,
       },
     });
 

@@ -1814,7 +1814,7 @@ async function* executeAgentNode({
 
       // Roleplay Memory: Execute World Agent and distribute memories (END node)
       // Run asynchronously in background (don't block message creation)
-      console.log("[Roleplay Memory Debug] Agent for World Agent:", {
+      logger.debug("[Roleplay Memory Debug] Agent for World Agent:", {
         id: agent.id.toString(),
         name: agent.props.name,
         apiSource: agent.props.apiSource,
@@ -1827,10 +1827,7 @@ async function* executeAgentNode({
         agent,
         dataStore || [], // Pass dataStore to update worldContext field
       ).catch((error) => {
-        console.error(
-          "❌ [Roleplay Memory] Background execution failed:",
-          error,
-        );
+        logger.error("[Roleplay Memory] Background execution failed:", error);
       });
 
       // Return agent result immediately (World Agent runs in background)
@@ -2778,8 +2775,8 @@ async function trackWorldStateUpdate(
       speaker,
       participants,
       type: "world_state_update",
-      gameTime,
-      gameTimeInterval,
+      game_time: gameTime,
+      game_time_interval: gameTimeInterval,
     });
 
     logger.info(`[Roleplay Memory] Tracked world state update: ${description}`);
@@ -2812,8 +2809,8 @@ async function injectRoleplayMemories(
     // Check if message contains ONLY the tag (exact match after trimming)
     if (trimmedContent === "###ROLEPLAY_MEMORY###") {
       try {
-        console.log(
-          `🎭 [Roleplay Memory] Found ###ROLEPLAY_MEMORY### tag in message ${i} (role: ${message.role})`,
+        logger.info(
+          `[Roleplay Memory] Found ###ROLEPLAY_MEMORY### tag in message ${i} (role: ${message.role})`,
         );
 
         // Extract gameTime and gameTimeInterval from dataStore (using snake_case field names)
@@ -2836,8 +2833,8 @@ async function injectRoleplayMemories(
           sessionId: sessionIdStr,
           characterId,
           characterName,
-          currentGameTime: gameTime,
-          currentGameTimeInterval: gameTimeInterval,
+          current_game_time: gameTime,
+          current_game_time_interval: gameTimeInterval,
           recentMessages,
           limit: 5,
           worldContext: fullContext.world_context, // Pass accumulated world context (snake_case field name)
@@ -2846,13 +2843,14 @@ async function injectRoleplayMemories(
         // Inject formatted memories (already formatted by recallCharacterMemories)
         message.content = roleplayMemories;
 
-        console.log(`\n📖 [MEMORY RECALL] ${characterName}`);
-        console.log(`Content injected:\n${roleplayMemories}\n`);
+        logger.info(`[MEMORY RECALL] Character: ${characterName}`);
+        logger.debug(
+          `[Roleplay Memory] Content injected:\n${roleplayMemories}`,
+        );
 
         // Only replace the first occurrence, then break
         break;
       } catch (error) {
-        console.error("❌ [Roleplay Memory] Failed to inject memories:", error);
         logger.error("[Roleplay Memory] Failed to inject memories:", error);
         // Replace with error message (graceful degradation)
         message.content = "(Memory system unavailable)";
@@ -2875,11 +2873,11 @@ function applyRoleplayMemoryDataStoreUpdates(
     const gameTimeIndex = dataStore.findIndex((f) => f.name === "game_time");
     if (gameTimeIndex >= 0) {
       dataStore[gameTimeIndex].value = String(suggestedUpdates.gameTime);
-      console.log(
-        `⏰ [Roleplay Memory] Auto-updated game_time: ${dataStore[gameTimeIndex].value}`,
+      logger.info(
+        `[Roleplay Memory] Auto-updated game_time: ${dataStore[gameTimeIndex].value}`,
       );
     } else {
-      console.warn("[Roleplay Memory] game_time field not found in data store");
+      logger.warn("[Roleplay Memory] game_time field not found in data store");
     }
   }
 
@@ -2892,11 +2890,11 @@ function applyRoleplayMemoryDataStoreUpdates(
       dataStore[participantsIndex].value = JSON.stringify(
         suggestedUpdates.participants,
       );
-      console.log(
-        `👥 [Roleplay Memory] Auto-updated participants: ${suggestedUpdates.participants.join(", ")}`,
+      logger.info(
+        `[Roleplay Memory] Auto-updated participants: ${suggestedUpdates.participants.join(", ")}`,
       );
     } else {
-      console.warn(
+      logger.warn(
         "[Roleplay Memory] participants field not found in data store",
       );
     }
@@ -2924,7 +2922,7 @@ async function executeWorldAgentAndDistributeMemories(
 
     if (!responseContent || !sessionId) return null;
 
-    console.log(`🌍 [Roleplay Memory] Executing World Agent for END node`);
+    logger.info("[Roleplay Memory] Executing World Agent for END node");
 
     // Extract data store fields (using snake_case field names)
     const gameTime = fullContext.game_time || fullContext.game_day || 0;
@@ -2990,8 +2988,8 @@ async function executeWorldAgentAndDistributeMemories(
       currentScene:
         fullContext.currentScene || fullContext.location || "Unknown",
       participants: allParticipantIds,
-      gameTime,
-      gameTimeInterval,
+      game_time: gameTime,
+      game_time_interval: gameTimeInterval,
       worldContext: fullContext.world_context || "", // Pass accumulated world context (snake_case)
     };
 
@@ -3054,8 +3052,8 @@ async function executeWorldAgentAndDistributeMemories(
       speakerCharacterId: characterId,
       speakerName: characterName,
       message: responseContent,
-      gameTime,
-      gameTimeInterval,
+      game_time: gameTime,
+      game_time_interval: gameTimeInterval,
       dataStore: dataStoreForWorldAgent,
       worldMemoryContext: fullContext.worldMemoryContext,
       worldAgentOutput, // Pass the World Agent output we already got
@@ -3065,10 +3063,10 @@ async function executeWorldAgentAndDistributeMemories(
       `[Roleplay Memory] Distributed memories to ${worldAgentOutput.actualParticipants.length} participants`,
     );
 
-    // Calculate new gameTime if deltaTime > 0
+    // Calculate new gameTime if delta_time > 0
     const newGameTime =
-      worldAgentOutput.deltaTime > 0
-        ? gameTime + worldAgentOutput.deltaTime
+      worldAgentOutput.delta_time > 0
+        ? gameTime + worldAgentOutput.delta_time
         : undefined;
 
     // Return suggested updates
@@ -3080,7 +3078,6 @@ async function executeWorldAgentAndDistributeMemories(
 
     return updates;
   } catch (error) {
-    console.error("❌ [Roleplay Memory] Failed to execute World Agent:", error);
     logger.error("[Roleplay Memory] Failed to execute World Agent:", error);
     // Don't throw - graceful degradation (memory distribution is enhancement, not requirement)
     return null;

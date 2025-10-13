@@ -55,10 +55,8 @@ export async function initializeRoleplayMemory(
     const worldContainer = createWorldContainer(sessionId);
     logger.info(`[Session Init] Created world container: ${worldContainer}`);
 
-    // Initialize each character's memory container
-    const initPromises: Promise<any>[] = [];
-
-    for (const character of characters) {
+    // Initialize each character's memory container and collect all storage operations
+    const initPromises = characters.flatMap((character) => {
       const characterContainer = createCharacterContainer(
         sessionId,
         character.characterId,
@@ -67,30 +65,32 @@ export async function initializeRoleplayMemory(
         `[Session Init] Created character container: ${characterContainer}`,
       );
 
+      const promises: Promise<any>[] = [];
+
       // Store scenario messages (if scenario exists)
       if (scenario?.messages && scenario.messages.length > 0) {
-        for (const message of scenario.messages) {
-          initPromises.push(
+        promises.push(
+          ...scenario.messages.map((message) =>
             storeInitContent(characterContainer, message.content, {
               speaker: character.characterId,
               participants: participants,
-              gameTime: 0,
-              gameTimeInterval: "Day",
+              game_time: 0,
+              game_time_interval: "Day",
               type: "scenario",
               permanent: true,
             }),
-          );
-        }
+          ),
+        );
       }
 
       // Store character card
       if (character.characterCard) {
-        initPromises.push(
+        promises.push(
           storeInitContent(characterContainer, character.characterCard, {
             speaker: character.characterId,
             participants: participants,
-            gameTime: 0,
-            gameTimeInterval: "Day",
+            game_time: 0,
+            game_time_interval: "Day",
             type: "character_card",
             permanent: true,
           }),
@@ -99,21 +99,23 @@ export async function initializeRoleplayMemory(
 
       // Store lorebook entries
       if (character.lorebook && character.lorebook.length > 0) {
-        for (const loreEntry of character.lorebook) {
-          initPromises.push(
+        promises.push(
+          ...character.lorebook.map((loreEntry) =>
             storeInitContent(characterContainer, loreEntry.content, {
               speaker: character.characterId,
               participants: participants,
-              gameTime: 0,
-              gameTimeInterval: "Day",
+              game_time: 0,
+              game_time_interval: "Day",
               type: "lorebook",
               permanent: true,
               lorebookKey: loreEntry.key,
             }),
-          );
-        }
+          ),
+        );
       }
-    }
+
+      return promises;
+    });
 
     // Execute all storage operations in parallel
     await Promise.all(initPromises);
@@ -145,8 +147,8 @@ export async function recallCharacterMemories(
       sessionId,
       characterId,
       characterName,
-      currentGameTime,
-      currentGameTimeInterval,
+      current_game_time,
+      current_game_time_interval,
       recentMessages,
       limit = 20,
       worldContext,
@@ -157,8 +159,8 @@ export async function recallCharacterMemories(
       formatMessageWithGameTime(
         msg.role,
         msg.content,
-        msg.gameTime,
-        currentGameTimeInterval,
+        msg.game_time,
+        current_game_time_interval,
       ),
     );
 
@@ -166,8 +168,8 @@ export async function recallCharacterMemories(
     const containerTag = createCharacterContainer(sessionId, characterId);
     const result = await retrieveCharacterMemories({
       containerTag,
-      currentGameTime,
-      currentGameTimeInterval,
+      current_game_time,
+      current_game_time_interval,
       recentMessages: formattedMessages,
       characterName,
       limit,
@@ -239,14 +241,14 @@ export async function distributeMemories(
       speakerCharacterId,
       speakerName,
       message,
-      gameTime,
-      gameTimeInterval,
+      game_time,
+      game_time_interval,
       dataStore,
       worldAgentOutput,
     } = input;
 
     logger.info(
-      `[Memory Distribution] Processing message from ${speakerName} at GameTime: ${gameTime}`,
+      `[Memory Distribution] Processing message from ${speakerName} at GameTime: ${game_time}`,
     );
 
     // Use the provided World Agent output (already executed in session-play-service)
@@ -298,15 +300,15 @@ export async function distributeMemories(
     const worldMessageContent = formatMessageWithGameTime(
       speakerName,
       message,
-      gameTime,
-      gameTimeInterval,
+      game_time,
+      game_time_interval,
     );
 
     await storeWorldMessage(worldContainer, worldMessageContent, {
       speaker: speakerCharacterId,
       participants: participantIds,
-      gameTime,
-      gameTimeInterval,
+      game_time,
+      game_time_interval,
       type: "message",
     });
 
@@ -327,7 +329,7 @@ export async function distributeMemories(
     // Distribute enriched memories to participants in parallel
     const distributionPromises = participantIds.map((participantId) => {
       // Build enriched message sections
-      const currentTimeSection = `###Current time###\nGameTime: ${gameTime} ${gameTimeInterval}`;
+      const currentTimeSection = `###Current time###\nGameTime: ${game_time} ${game_time_interval}`;
       const messageSection = `###Message###\n${worldMessageContent}`;
 
       // Get participant-specific world context by name
@@ -358,8 +360,8 @@ export async function distributeMemories(
         speaker: speakerCharacterId,
         participants: participantIds,
         isSpeaker: participantId === speakerCharacterId,
-        gameTime,
-        gameTimeInterval,
+        game_time,
+        game_time_interval,
         type: "message",
       });
     });

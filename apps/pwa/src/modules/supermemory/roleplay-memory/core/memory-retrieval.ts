@@ -24,7 +24,7 @@ import { logger } from "@/shared/utils/logger";
 type MemoryResultItem = {
   memory?: string;
   content?: string;
-  metadata?: { gameTime?: number; type?: string; participants?: string[] };
+  metadata?: { game_time?: number; type?: string; participants?: string[] };
 };
 
 type MemorySearchResponse = {
@@ -35,18 +35,18 @@ type MemorySearchResponse = {
  * Format character memory query with current time and recent messages
  *
  * Contract: Query format with three sections
- * 1. Current time: "###Current time###\nGameTime: {gameTime} {interval}"
+ * 1. Current time: "###Current time###\nGameTime: {game_time} {interval}"
  * 2. Recent messages: "###Recent messages###\n{formatted messages}"
  * 3. Query instruction: "What are relevant memories..."
  *
- * @param gameTime - Current game time
+ * @param game_time - Current game time
  * @param interval - Time interval (default: "Day")
  * @param recentMessages - Recent message strings
  * @param characterName - Character name for context
  * @returns Formatted query string
  */
 export function formatCharacterQuery(
-  gameTime: number,
+  game_time: number,
   interval: string,
   recentMessages: string[],
   characterName: string,
@@ -55,7 +55,7 @@ export function formatCharacterQuery(
 
   // Section 1: Current time
   parts.push("###Current time###");
-  parts.push(`GameTime: ${gameTime} ${interval}`);
+  parts.push(`GameTime: ${game_time} ${interval}`);
   parts.push("");
 
   // Section 2: Recent messages
@@ -99,8 +99,8 @@ export async function retrieveCharacterMemories(
 
     // Format query with current time and recent messages
     const query = formatCharacterQuery(
-      input.currentGameTime,
-      input.currentGameTimeInterval,
+      input.current_game_time,
+      input.current_game_time_interval,
       input.recentMessages,
       input.characterName,
     );
@@ -175,7 +175,7 @@ export async function retrieveWorldMemories(
 
     // Extract metadata if requested
     const metadata = typed.results.map((r) => ({
-      gameTime: r.metadata?.gameTime ?? 0,
+      game_time: r.metadata?.game_time ?? 0,
       type: r.metadata?.type ?? '',
       participants: r.metadata?.participants ?? [],
     }));

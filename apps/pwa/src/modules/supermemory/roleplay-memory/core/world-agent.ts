@@ -202,7 +202,7 @@ const worldAgentSchema = z.object({
     .describe(
       "Brief context updates for each participant describing what they learned or experienced",
     ),
-  deltaTime: z
+  delta_time: z
     .number()
     .describe(
       "How much time passed: 0 = no time change, 1 = one time interval passed, 2 = two intervals, etc.",
@@ -235,7 +235,7 @@ function buildWorldAgentPrompt(input: WorldAgentInput): string {
                 : msg.role === "assistant"
                   ? speakerName
                   : msg.role;
-            return `${speaker}: ${msg.content} (GameTime: ${msg.gameTime})`;
+            return `${speaker}: ${msg.content} (GameTime: ${msg.game_time})`;
           })
           .join("\n")
       : "No recent messages";
@@ -262,7 +262,7 @@ function buildWorldAgentPrompt(input: WorldAgentInput): string {
   return `You are the World Agent for a multi-character roleplay session. Your task is to:
 1. Analyze the message and determine which characters participated in this conversation
 2. Update character-specific world context based on what happened
-3. Determine if time has passed (deltaTime)
+3. Determine if time has passed (delta_time)
 
 IMPORTANT: Look at recent messages to understand the conversation context. If the previous message was from another character, and the current message is a response, BOTH characters are participants.
 
@@ -284,7 +284,7 @@ Content: ${generatedMessage}
 - Current Scene: ${dataStore.currentScene}
 - All Participants: ${allParticipantsText}
 - Total Participant Count: ${dataStore.participants.length}
-- Game Time: ${dataStore.gameTime} ${dataStore.gameTimeInterval}
+- Game Time: ${dataStore.game_time} ${dataStore.game_time_interval}
 
 ## Task
 Determine:
@@ -299,9 +299,9 @@ Determine:
    - Use character NAMES (not IDs) - e.g., "Alice", "Bob"
    - Focus on actions, decisions, and relationship changes
    - These updates will accumulate over the session
-3. deltaTime: How much time passed?
+3. delta_time: How much time passed?
    - 0 = no time change (most common - use this unless explicitly stated)
-   - 1 = one ${dataStore.gameTimeInterval} passed
+   - 1 = one ${dataStore.game_time_interval} passed
    - 2+ = multiple intervals passed
    - Only set if message explicitly mentions time passing (e.g., "the next day", "3 hours later")
 
@@ -317,7 +317,7 @@ Output:
     {"characterName": "Alice", "contextUpdate": "You agreed with Bob to search for the Sacred Sword together"},
     {"characterName": "Bob", "contextUpdate": "You agreed with Alice to search for the Sacred Sword"}
   ],
-  "deltaTime": 0
+  "delta_time": 0
 }
 
 Example 2 (Character speaking alone):
@@ -330,7 +330,7 @@ Output:
   "worldContextUpdates": [
     {"characterName": "Charlie", "contextUpdate": "You decided to go to the tavern alone to reflect on things"}
   ],
-  "deltaTime": 0
+  "delta_time": 0
 }
 
 Example 3 (Direct dialogue between two characters):
@@ -344,7 +344,7 @@ Output:
     {"characterName": "Yui", "contextUpdate": "You thanked Ren for the compliment and complimented their observation skills"},
     {"characterName": "Ren", "contextUpdate": "Yui thanked you for your compliment and acknowledged your observation skills"}
   ],
-  "deltaTime": 0
+  "delta_time": 0
 }
 
 Example 4 (Time progression with multiple characters):
@@ -359,7 +359,7 @@ Output:
     {"characterName": "Bob", "contextUpdate": "You met Alice and Charlie at the Dragon's Lair the next morning"},
     {"characterName": "Charlie", "contextUpdate": "You joined Alice and Bob at the Dragon's Lair the next morning"}
   ],
-  "deltaTime": 1
+  "delta_time": 1
 }
 
 Example 5 (Multiple days passing):
@@ -374,14 +374,14 @@ Output:
     {"characterName": "Bob", "contextUpdate": "You led the party through three days of desert travel"},
     {"characterName": "Charlie", "contextUpdate": "You traveled with the group through the desert for three days"}
   ],
-  "deltaTime": 3
+  "delta_time": 3
 }
 
 IMPORTANT:
 - Use exact character NAMES from the participants list (not IDs!)
 - actualParticipants MUST include at least the speaker name
 - worldContextUpdates must have entries for each participant
-- deltaTime is 0 unless message explicitly mentions time passing`;
+- delta_time is 0 unless message explicitly mentions time passing`;
 }
 
 /**
@@ -414,7 +414,7 @@ function createFallbackOutput(
   return {
     actualParticipants: [speakerName], // Use speaker name
     worldContextUpdates,
-    deltaTime: 0,
+    delta_time: 0,
   };
 }
 
@@ -429,7 +429,7 @@ function validateWorldAgentOutput(
   if (!output || typeof output !== "object") return false;
   if (!Array.isArray(output.actualParticipants)) return false;
   if (!Array.isArray(output.worldContextUpdates)) return false;
-  if (typeof output.deltaTime !== "number") return false;
+  if (typeof output.delta_time !== "number") return false;
 
   // actualParticipants must be non-empty
   if (output.actualParticipants.length === 0) return false;
@@ -437,8 +437,8 @@ function validateWorldAgentOutput(
   // actualParticipants must include speaker name
   if (!output.actualParticipants.includes(speakerName)) return false;
 
-  // deltaTime must be non-negative
-  if (output.deltaTime < 0) return false;
+  // delta_time must be non-negative
+  if (output.delta_time < 0) return false;
 
   return true;
 }
@@ -549,7 +549,7 @@ export async function executeWorldAgent(
       const output: WorldAgentOutput = {
         actualParticipants: typedObject.actualParticipants || [], // Character names
         worldContextUpdates,
-        deltaTime: typedObject.deltaTime || 0,
+        delta_time: typedObject.delta_time || 0,
       };
 
       // Validate output structure
