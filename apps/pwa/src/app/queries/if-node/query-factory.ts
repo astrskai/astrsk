@@ -1,6 +1,6 @@
 /**
  * If Node Query Factory
- * 
+ *
  * Based on TkDodo's query factory pattern and TanStack Query v5 best practices.
  * This factory provides:
  * - Centralized query key management
@@ -27,13 +27,14 @@ const selectResultCache = new WeakMap<object, any>();
  */
 function isOldNodeIdFormat(nodeId: string): boolean {
   // UUID regex pattern
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return !uuidPattern.test(nodeId);
 }
 
 /**
  * Query Key Factory
- * 
+ *
  * Hierarchical structure:
  * - all: ['if-nodes']
  * - detail: ['if-nodes', 'flow', flowId, nodeId]
@@ -44,16 +45,21 @@ function isOldNodeIdFormat(nodeId: string): boolean {
  */
 export const ifNodeKeys = {
   // Root key for all if node queries
-  all: ['if-nodes'] as const,
-  
+  all: ["if-nodes"] as const,
+
   // Detail queries for specific node
-  detail: (flowId: string, nodeId: string) => [...ifNodeKeys.all, 'flow', flowId, nodeId] as const,
-  
+  detail: (flowId: string, nodeId: string) =>
+    [...ifNodeKeys.all, "flow", flowId, nodeId] as const,
+
   // Sub-queries for specific data
-  name: (flowId: string, nodeId: string) => [...ifNodeKeys.detail(flowId, nodeId), 'name'] as const,
-  conditions: (flowId: string, nodeId: string) => [...ifNodeKeys.detail(flowId, nodeId), 'conditions'] as const,
-  color: (flowId: string, nodeId: string) => [...ifNodeKeys.detail(flowId, nodeId), 'color'] as const,
-  logicOperator: (flowId: string, nodeId: string) => [...ifNodeKeys.detail(flowId, nodeId), 'logicOperator'] as const,
+  name: (flowId: string, nodeId: string) =>
+    [...ifNodeKeys.detail(flowId, nodeId), "name"] as const,
+  conditions: (flowId: string, nodeId: string) =>
+    [...ifNodeKeys.detail(flowId, nodeId), "conditions"] as const,
+  color: (flowId: string, nodeId: string) =>
+    [...ifNodeKeys.detail(flowId, nodeId), "color"] as const,
+  logicOperator: (flowId: string, nodeId: string) =>
+    [...ifNodeKeys.detail(flowId, nodeId), "logicOperator"] as const,
 };
 
 // Types for query data
@@ -62,7 +68,7 @@ export interface IfNodeData {
   flowId: string;
   name: string;
   color: string;
-  logicOperator: 'AND' | 'OR';
+  logicOperator: "AND" | "OR";
   conditions: IfCondition[];
 }
 
@@ -79,7 +85,7 @@ export interface IfNodeColorData {
 }
 
 export interface IfNodeLogicOperatorData {
-  logicOperator: 'AND' | 'OR';
+  logicOperator: "AND" | "OR";
 }
 
 // Query Options Factory
@@ -89,23 +95,26 @@ export const ifNodeQueries = {
     queryOptions({
       queryKey: ifNodeKeys.detail(flowId, nodeId),
       queryFn: async () => {
-        const result = await IfNodeService.getIfNode.execute({ flowId, nodeId });
+        const result = await IfNodeService.getIfNode.execute({
+          flowId,
+          nodeId,
+        });
         if (result.isFailure) {
           throw new Error(result.getError());
         }
-        
+
         const ifNode = result.getValue();
         if (!ifNode) return null;
-        
+
         // Transform to persistence format for caching
         return IfNodeDrizzleMapper.toPersistence(ifNode);
       },
       select: (data): IfNode | null => {
         if (!data) return null;
-        
+
         const cached = selectResultCache.get(data as object);
         if (cached) return cached;
-        
+
         const result = IfNodeDrizzleMapper.toDomain(data as any);
         selectResultCache.set(data as object, result);
         return result;
@@ -118,14 +127,17 @@ export const ifNodeQueries = {
     queryOptions({
       queryKey: ifNodeKeys.name(flowId, nodeId),
       queryFn: async (): Promise<IfNodeNameData | null> => {
-        const result = await IfNodeService.getIfNode.execute({ flowId, nodeId });
+        const result = await IfNodeService.getIfNode.execute({
+          flowId,
+          nodeId,
+        });
         if (result.isFailure) {
           throw new Error(result.getError());
         }
-        
+
         const ifNode = result.getValue();
         if (!ifNode) return null;
-        
+
         return { name: ifNode.name };
       },
       staleTime: 1000 * 60, // 1 minute
@@ -136,30 +148,33 @@ export const ifNodeQueries = {
     queryOptions({
       queryKey: ifNodeKeys.conditions(flowId, nodeId),
       queryFn: async (): Promise<any> => {
-        const result = await IfNodeService.getIfNode.execute({ flowId, nodeId });
+        const result = await IfNodeService.getIfNode.execute({
+          flowId,
+          nodeId,
+        });
         if (result.isFailure) {
           throw new Error(result.getError());
         }
-        
+
         const ifNode = result.getValue();
         if (!ifNode) return null;
-        
+
         // Transform conditions array to serializable format for caching
         return {
-          conditions: stringify(ifNode.conditions)
+          conditions: stringify(ifNode.conditions),
         };
       },
       select: (data): IfNodeConditionsData | null => {
         if (!data) return null;
-        
+
         const cached = selectResultCache.get(data as object);
         if (cached) return cached;
-        
+
         // Transform new data - deserialize SuperJSON conditions
         const result: IfNodeConditionsData = {
-          conditions: parse(data.conditions) as IfCondition[] || []
+          conditions: (parse(data.conditions) as IfCondition[]) || [],
         };
-        
+
         selectResultCache.set(data as object, result);
         return result;
       },
@@ -171,14 +186,17 @@ export const ifNodeQueries = {
     queryOptions({
       queryKey: ifNodeKeys.color(flowId, nodeId),
       queryFn: async (): Promise<IfNodeColorData | null> => {
-        const result = await IfNodeService.getIfNode.execute({ flowId, nodeId });
+        const result = await IfNodeService.getIfNode.execute({
+          flowId,
+          nodeId,
+        });
         if (result.isFailure) {
           throw new Error(result.getError());
         }
-        
+
         const ifNode = result.getValue();
         if (!ifNode) return null;
-        
+
         return { color: ifNode.color };
       },
       staleTime: 1000 * 60, // 1 minute
@@ -189,14 +207,17 @@ export const ifNodeQueries = {
     queryOptions({
       queryKey: ifNodeKeys.logicOperator(flowId, nodeId),
       queryFn: async (): Promise<IfNodeLogicOperatorData | null> => {
-        const result = await IfNodeService.getIfNode.execute({ flowId, nodeId });
+        const result = await IfNodeService.getIfNode.execute({
+          flowId,
+          nodeId,
+        });
         if (result.isFailure) {
           throw new Error(result.getError());
         }
-        
+
         const ifNode = result.getValue();
         if (!ifNode) return null;
-        
+
         return { logicOperator: ifNode.logicOperator };
       },
       staleTime: 1000 * 60, // 1 minute
@@ -205,23 +226,23 @@ export const ifNodeQueries = {
 
 /**
  * Usage Examples:
- * 
+ *
  * // Using query options
  * const { data: ifNode } = useQuery(ifNodeQueries.detail(flowId, nodeId));
  * const { data: name } = useQuery(ifNodeQueries.name(flowId, nodeId));
  * const { data: conditions } = useQuery(ifNodeQueries.conditions(flowId, nodeId));
- * 
+ *
  * // Invalidating queries
  * queryClient.invalidateQueries({ queryKey: ifNodeKeys.all }); // All if node queries
  * queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) }); // Specific node
  * queryClient.invalidateQueries({ queryKey: ifNodeKeys.name(flowId, nodeId) }); // Just name
- * 
+ *
  * // Prefetching
  * await queryClient.prefetchQuery(ifNodeQueries.detail(flowId, nodeId));
- * 
+ *
  * // Setting query data
  * queryClient.setQueryData(ifNodeKeys.name(flowId, nodeId), { name: newName });
- * 
+ *
  * // Getting query data
  * const cachedNode = queryClient.getQueryData<IfNodeData>(ifNodeKeys.detail(flowId, nodeId));
  */

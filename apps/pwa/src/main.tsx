@@ -13,11 +13,6 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Load Supermemory test functions in development
-if (import.meta.env.DEV) {
-  import("@/modules/supermemory/expose-test");
-}
-
 // Convex
 const isConvexReady =
   import.meta.env.VITE_CONVEX_URL &&

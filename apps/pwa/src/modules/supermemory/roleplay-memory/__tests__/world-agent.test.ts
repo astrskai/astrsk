@@ -83,8 +83,8 @@ describe('World Agent - World Knowledge Extraction', () => {
     expect(true).toBe(false) // Force failure
   })
 
-  it('should match worldKnowledge keys to actualParticipants', async () => {
-    // Contract requirement: worldKnowledge keys MUST match actualParticipants
+  it('should provide worldContextUpdates for actualParticipants', async () => {
+    // Contract requirement: worldContextUpdates array should have entries for participants
 
     expect(true).toBe(false) // Force failure
   })
@@ -93,7 +93,7 @@ describe('World Agent - World Knowledge Extraction', () => {
 describe('World Agent - Error Handling', () => {
   it('should fallback to speaker-only on LLM timeout', async () => {
     // Simulate LLM timeout
-    // Expected: { actualParticipants: [speakerId], worldKnowledge: { [speakerId]: "" } }
+    // Expected: { actualParticipants: [speakerName], worldContextUpdates: [] }
 
     expect(true).toBe(false) // Force failure
   })

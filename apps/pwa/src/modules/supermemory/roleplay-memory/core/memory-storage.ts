@@ -8,8 +8,7 @@
  */
 
 import { memoryClient } from '../../shared/client'
-import type { MemoryMetadata } from '../../shared/types'
-import type { EnrichedMessageSections, StorageResult } from './types'
+import type { MemoryMetadata, EnrichedMessageSections, StorageResult } from '../../shared/types'
 import {
   validateCharacterContainer,
   validateWorldContainer
@@ -18,9 +17,9 @@ import { logger } from '@/shared/utils/logger'
 
 /**
  * Build enriched message content from sections
- * Format: Three-section structure with optional world knowledge
+ * Format: Three-section structure with optional world context
  *
- * @param sections - Message sections (currentTime, message, worldKnowledge)
+ * @param sections - Message sections (currentTime, message, worldContext)
  * @returns Formatted enriched message string
  */
 export function buildEnrichedMessage(sections: EnrichedMessageSections): string {
@@ -32,9 +31,9 @@ export function buildEnrichedMessage(sections: EnrichedMessageSections): string 
   // Section 2: Message (required)
   parts.push(sections.message)
 
-  // Section 3: World knowledge (optional - omit if empty)
-  if (sections.worldKnowledge && sections.worldKnowledge.trim()) {
-    parts.push(sections.worldKnowledge)
+  // Section 3: World context (optional - omit if empty)
+  if (sections.worldContext && sections.worldContext.trim()) {
+    parts.push(sections.worldContext)
   }
 
   return parts.join('\n\n')

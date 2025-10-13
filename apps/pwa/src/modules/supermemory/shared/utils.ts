@@ -1,6 +1,6 @@
 /**
  * Shared utility functions for Supermemory integration
- * Used by both simple-memory and roleplay-memory systems
+ * Used by roleplay-memory system
  */
 
 /**

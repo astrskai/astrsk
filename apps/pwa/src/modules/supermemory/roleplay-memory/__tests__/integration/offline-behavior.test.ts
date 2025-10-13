@@ -25,7 +25,7 @@ describe('Graceful Degradation - Offline Behavior', () => {
 
   it('should default World Agent to speaker-only on network error', async () => {
     // If World Agent LLM fails, return fallback:
-    // { actualParticipants: [speakerId], worldKnowledge: { [speakerId]: "" } }
+    // { actualParticipants: [speakerName], worldContextUpdates: [] }
 
     expect(true).toBe(false) // Force failure
   })

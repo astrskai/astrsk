@@ -41,6 +41,14 @@ export {
   formatCharacterQuery
 } from './core/memory-retrieval'
 
+// World context utilities
+export {
+  parseWorldContext,
+  formatWorldContext,
+  mergeWorldContext,
+  getCharacterContext
+} from './utils/world-context'
+
 // Public types
 export type {
   // Session integration types

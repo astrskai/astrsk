@@ -7,18 +7,18 @@
  * Based on contracts/memory-retrieval.contract.md
  */
 
-import { memoryClient } from '../../shared/client'
+import { memoryClient } from "../../shared/client";
 import type {
   CharacterMemoryQueryInput,
   CharacterMemoryQueryOutput,
   WorldMemoryQueryInput,
-  WorldMemoryQueryOutput
-} from './types'
+  WorldMemoryQueryOutput,
+} from "../../shared/types";
 import {
   validateCharacterContainer,
-  validateWorldContainer
-} from './containers'
-import { logger } from '@/shared/utils/logger'
+  validateWorldContainer,
+} from "./containers";
+import { logger } from "@/shared/utils/logger";
 
 /**
  * Format character memory query with current time and recent messages
@@ -38,28 +38,28 @@ export function formatCharacterQuery(
   gameTime: number,
   interval: string,
   recentMessages: string[],
-  characterName: string
+  characterName: string,
 ): string {
-  const parts: string[] = []
+  const parts: string[] = [];
 
   // Section 1: Current time
-  parts.push('###Current time###')
-  parts.push(`GameTime: ${gameTime} ${interval}`)
-  parts.push('')
+  parts.push("###Current time###");
+  parts.push(`GameTime: ${gameTime} ${interval}`);
+  parts.push("");
 
   // Section 2: Recent messages
   if (recentMessages.length > 0) {
-    parts.push('###Recent messages###')
-    parts.push(recentMessages.join('\n'))
-    parts.push('')
+    parts.push("###Recent messages###");
+    parts.push(recentMessages.join("\n"));
+    parts.push("");
   }
 
   // Section 3: Query instruction
   parts.push(
-    `What are the relevant memories that are not in the recent messages to construct ${characterName}'s next message?`
-  )
+    `What are the relevant memories that are not in the recent messages to construct ${characterName}'s next message?`,
+  );
 
-  return parts.join('\n')
+  return parts.join("\n");
 }
 
 /**
@@ -74,16 +74,16 @@ export function formatCharacterQuery(
  * @returns Character memory query output with memories and count
  */
 export async function retrieveCharacterMemories(
-  input: CharacterMemoryQueryInput
+  input: CharacterMemoryQueryInput,
 ): Promise<CharacterMemoryQueryOutput> {
   try {
     // Validate character container tag
     if (!validateCharacterContainer(input.containerTag)) {
       logger.error(
-        '[Memory Retrieval] Invalid character container tag:',
-        input.containerTag
-      )
-      return { memories: [], count: 0 }
+        "[Memory Retrieval] Invalid character container tag:",
+        input.containerTag,
+      );
+      return { memories: [], count: 0 };
     }
 
     // Format query with current time and recent messages
@@ -91,16 +91,16 @@ export async function retrieveCharacterMemories(
       input.currentGameTime,
       input.currentGameTimeInterval,
       input.recentMessages,
-      input.characterName
-    )
+      input.characterName,
+    );
 
     // Build filters if provided
-    const filters: any = {}
+    const filters: any = {};
     if (input.filters?.gameTime) {
-      filters.gameTime = input.filters.gameTime
+      filters.gameTime = input.filters.gameTime;
     }
     if (input.filters?.type) {
-      filters.type = input.filters.type
+      filters.type = input.filters.type;
     }
 
     // Query Supermemory
@@ -108,21 +108,20 @@ export async function retrieveCharacterMemories(
       q: query,
       containerTag: input.containerTag,
       limit: input.limit,
-      ...(Object.keys(filters).length > 0 && { filters })
-    })
-
-    logger.info(
-      `[Memory Retrieval] Retrieved ${results.results.length} character memories`
-    )
+      ...(Object.keys(filters).length > 0 && { filters }),
+    });
 
     return {
       memories: results.results.map((r: any) => r.memory || r.content),
-      count: results.results.length
-    }
+      count: results.results.length,
+    };
   } catch (error) {
-    logger.error('[Memory Retrieval] Failed to retrieve character memories:', error)
+    logger.error(
+      "[Memory Retrieval] Failed to retrieve character memories:",
+      error,
+    );
     // Graceful degradation: return empty array
-    return { memories: [], count: 0 }
+    return { memories: [], count: 0 };
   }
 }
 
@@ -139,25 +138,25 @@ export async function retrieveCharacterMemories(
  * @returns World memory query output with memories, count, and optional metadata
  */
 export async function retrieveWorldMemories(
-  input: WorldMemoryQueryInput
+  input: WorldMemoryQueryInput,
 ): Promise<WorldMemoryQueryOutput> {
   try {
     // Validate world container tag
     if (!validateWorldContainer(input.containerTag)) {
       logger.error(
-        '[Memory Retrieval] Invalid world container tag:',
-        input.containerTag
-      )
-      return { memories: [], count: 0 }
+        "[Memory Retrieval] Invalid world container tag:",
+        input.containerTag,
+      );
+      return { memories: [], count: 0 };
     }
 
     // Build filters if provided
-    const filters: any = {}
+    const filters: any = {};
     if (input.filters?.gameTime) {
-      filters.gameTime = input.filters.gameTime
+      filters.gameTime = input.filters.gameTime;
     }
     if (input.filters?.type) {
-      filters.type = input.filters.type
+      filters.type = input.filters.type;
     }
 
     // Query Supermemory
@@ -165,29 +164,32 @@ export async function retrieveWorldMemories(
       q: input.query,
       containerTag: input.containerTag,
       limit: input.limit,
-      ...(Object.keys(filters).length > 0 && { filters })
-    })
+      ...(Object.keys(filters).length > 0 && { filters }),
+    });
 
     logger.info(
-      `[Memory Retrieval] Retrieved ${results.results.length} world memories`
-    )
+      `[Memory Retrieval] Retrieved ${results.results.length} world memories`,
+    );
 
     // Extract metadata if requested
     const metadata = results.results.map((r: any) => ({
       gameTime: r.metadata?.gameTime,
       type: r.metadata?.type,
-      participants: r.metadata?.participants
-    }))
+      participants: r.metadata?.participants,
+    }));
 
     return {
       memories: results.results.map((r: any) => r.memory || r.content),
       count: results.results.length,
-      metadata
-    }
+      metadata,
+    };
   } catch (error) {
-    logger.error('[Memory Retrieval] Failed to retrieve world memories:', error)
+    logger.error(
+      "[Memory Retrieval] Failed to retrieve world memories:",
+      error,
+    );
     // Graceful degradation: return empty array
-    return { memories: [], count: 0 }
+    return { memories: [], count: 0 };
   }
 }
 
@@ -201,8 +203,10 @@ export async function retrieveWorldMemories(
  */
 export function formatMemoriesForPrompt(memories: string[]): string {
   if (memories.length === 0) {
-    return ''
+    return "";
   }
 
-  return memories.map((memory, index) => `[Memory ${index + 1}]\n${memory}`).join('\n\n---\n\n')
+  return memories
+    .map((memory, index) => `[Memory ${index + 1}]\n${memory}`)
+    .join("\n\n---\n\n");
 }

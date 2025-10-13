@@ -9,25 +9,26 @@
  * Based on quickstart.md integration guide
  */
 
-import { formatMessageWithGameTime } from '../../shared/utils'
+import { formatMessageWithGameTime } from "../../shared/utils";
 import type {
   SessionInitInput,
   MemoryRecallInput,
-  MemoryDistributionInput
-} from '../core/types'
+  MemoryDistributionInput,
+} from "../../shared/types";
 import {
   createCharacterContainer,
-  createWorldContainer
-} from '../core/containers'
+  createWorldContainer,
+} from "../core/containers";
 import {
   storeInitContent,
   storeWorldMessage,
   storeCharacterMessage,
-  buildEnrichedMessage
-} from '../core/memory-storage'
-import { retrieveCharacterMemories } from '../core/memory-retrieval'
-import { executeWorldAgent } from '../core/world-agent'
-import { logger } from '@/shared/utils/logger'
+  buildEnrichedMessage,
+} from "../core/memory-storage";
+import { retrieveCharacterMemories } from "../core/memory-retrieval";
+import { UniqueEntityID } from "@/shared/domain";
+import { executeWorldAgent } from "../core/world-agent";
+import { logger } from "@/shared/utils/logger";
 
 /**
  * Initialize roleplay memory system for a new session
@@ -41,30 +42,30 @@ import { logger } from '@/shared/utils/logger'
  * @param input - Session initialization input
  */
 export async function initializeRoleplayMemory(
-  input: SessionInitInput
+  input: SessionInitInput,
 ): Promise<void> {
   try {
-    const { sessionId, participants, characters, scenario } = input
+    const { sessionId, participants, characters, scenario } = input;
 
     logger.info(
-      `[Session Init] Initializing roleplay memory for session: ${sessionId}`
-    )
+      `[Session Init] Initializing roleplay memory for session: ${sessionId}`,
+    );
 
     // Create world container
-    const worldContainer = createWorldContainer(sessionId)
-    logger.info(`[Session Init] Created world container: ${worldContainer}`)
+    const worldContainer = createWorldContainer(sessionId);
+    logger.info(`[Session Init] Created world container: ${worldContainer}`);
 
     // Initialize each character's memory container
-    const initPromises: Promise<any>[] = []
+    const initPromises: Promise<any>[] = [];
 
     for (const character of characters) {
       const characterContainer = createCharacterContainer(
         sessionId,
-        character.characterId
-      )
+        character.characterId,
+      );
       logger.info(
-        `[Session Init] Created character container: ${characterContainer}`
-      )
+        `[Session Init] Created character container: ${characterContainer}`,
+      );
 
       // Store scenario messages (if scenario exists)
       if (scenario?.messages && scenario.messages.length > 0) {
@@ -74,11 +75,11 @@ export async function initializeRoleplayMemory(
               speaker: character.characterId,
               participants: participants,
               gameTime: 0,
-              gameTimeInterval: 'Day',
-              type: 'scenario',
-              permanent: true
-            })
-          )
+              gameTimeInterval: "Day",
+              type: "scenario",
+              permanent: true,
+            }),
+          );
         }
       }
 
@@ -89,11 +90,11 @@ export async function initializeRoleplayMemory(
             speaker: character.characterId,
             participants: participants,
             gameTime: 0,
-            gameTimeInterval: 'Day',
-            type: 'character_card',
-            permanent: true
-          })
-        )
+            gameTimeInterval: "Day",
+            type: "character_card",
+            permanent: true,
+          }),
+        );
       }
 
       // Store lorebook entries
@@ -104,25 +105,25 @@ export async function initializeRoleplayMemory(
               speaker: character.characterId,
               participants: participants,
               gameTime: 0,
-              gameTimeInterval: 'Day',
-              type: 'lorebook',
+              gameTimeInterval: "Day",
+              type: "lorebook",
               permanent: true,
-              lorebookKey: loreEntry.key
-            })
-          )
+              lorebookKey: loreEntry.key,
+            }),
+          );
         }
       }
     }
 
     // Execute all storage operations in parallel
-    await Promise.all(initPromises)
+    await Promise.all(initPromises);
 
     logger.info(
-      `[Session Init] Successfully initialized ${characters.length} character containers`
-    )
+      `[Session Init] Successfully initialized ${characters.length} character containers`,
+    );
   } catch (error) {
-    logger.error('[Session Init] Failed to initialize roleplay memory:', error)
-    throw error
+    logger.error("[Session Init] Failed to initialize roleplay memory:", error);
+    throw error;
   }
 }
 
@@ -131,13 +132,14 @@ export async function initializeRoleplayMemory(
  *
  * Queries character's private container and retrieves top N relevant memories
  * based on current time and recent conversation context.
+ * Returns formatted string with memories and current world context.
  *
  * @param input - Memory recall input
- * @returns Array of memory strings (empty array on error)
+ * @returns Formatted memory string (empty string on error)
  */
 export async function recallCharacterMemories(
-  input: MemoryRecallInput
-): Promise<string[]> {
+  input: MemoryRecallInput,
+): Promise<string> {
   try {
     const {
       sessionId,
@@ -146,8 +148,9 @@ export async function recallCharacterMemories(
       currentGameTime,
       currentGameTimeInterval,
       recentMessages,
-      limit = 5
-    } = input
+      limit = 5,
+      worldContext,
+    } = input;
 
     // Format recent messages
     const formattedMessages = recentMessages.map((msg) =>
@@ -155,50 +158,68 @@ export async function recallCharacterMemories(
         msg.role,
         msg.content,
         msg.gameTime,
-        currentGameTimeInterval
-      )
-    )
+        currentGameTimeInterval,
+      ),
+    );
 
     // Query character's private container
-    const containerTag = createCharacterContainer(sessionId, characterId)
+    const containerTag = createCharacterContainer(sessionId, characterId);
     const result = await retrieveCharacterMemories({
       containerTag,
       currentGameTime,
       currentGameTimeInterval,
       recentMessages: formattedMessages,
       characterName,
-      limit
-    })
+      limit,
+    });
 
     logger.info(
-      `[Memory Recall] Retrieved ${result.count} memories for character: ${characterName}`
-    )
+      `[Memory Recall] Retrieved ${result.count} memories for character: ${characterName}`,
+    );
 
-    return result.memories
+    // Format memories (simple sentences from Supermemory)
+    const { formatMemoriesForPrompt } = await import(
+      "../core/memory-retrieval"
+    );
+    let formattedMemories = formatMemoriesForPrompt(result.memories);
+
+    // Append character-specific world context if available
+    if (worldContext) {
+      const { getCharacterContext } = await import("../utils/world-context");
+      const characterWorldContext = getCharacterContext(
+        worldContext,
+        characterName,
+      );
+
+      if (characterWorldContext) {
+        // Add current character context once at the end
+        const contextSection = `###Current ${characterName}'s context###\n${characterWorldContext}`;
+
+        if (formattedMemories) {
+          formattedMemories = `${formattedMemories}\n\n---\n\n${contextSection}`;
+        } else {
+          formattedMemories = contextSection;
+        }
+
+        logger.info(
+          `[Memory Recall] Appended current world context for ${characterName}`,
+        );
+      }
+    }
+
+    return formattedMemories;
   } catch (error) {
-    logger.error('[Memory Recall] Failed to recall memories:', error)
-    // Graceful degradation: return empty array
-    return []
+    logger.error("[Memory Recall] Failed to recall memories:", error);
+    // Graceful degradation: return empty string
+    return "";
   }
 }
 
 /**
- * Format retrieved memories for prompt injection
- *
- * Joins memories with clear separators for agent prompt injection.
- *
- * @param memories - Array of memory strings
- * @returns Formatted string for prompt (empty string if no memories)
+ * Format memories for prompt injection
+ * Re-exported from memory-retrieval for convenience
  */
-export function formatMemoriesForPrompt(memories: string[]): string {
-  if (memories.length === 0) {
-    return '(No relevant memories found)'
-  }
-
-  return memories
-    .map((memory, index) => `[Memory ${index + 1}]\n${memory}`)
-    .join('\n\n---\n\n')
-}
+export { formatMemoriesForPrompt } from "../core/memory-retrieval";
 
 /**
  * Distribute memories after message generation (END node)
@@ -210,7 +231,7 @@ export function formatMemoriesForPrompt(memories: string[]): string {
  * @param input - Memory distribution input
  */
 export async function distributeMemories(
-  input: MemoryDistributionInput
+  input: MemoryDistributionInput,
 ): Promise<void> {
   try {
     const {
@@ -221,88 +242,135 @@ export async function distributeMemories(
       gameTime,
       gameTimeInterval,
       dataStore,
-      worldMemoryContext
-    } = input
+      worldAgentOutput,
+    } = input;
 
     logger.info(
-      `[Memory Distribution] Processing message from ${speakerName} at GameTime: ${gameTime}`
-    )
+      `[Memory Distribution] Processing message from ${speakerName} at GameTime: ${gameTime}`,
+    );
 
-    // Execute World Agent to detect participants
-    const worldAgentOutput = await executeWorldAgent({
-      sessionId,
-      speakerCharacterId,
-      generatedMessage: message,
-      recentMessages: [], // TODO: Pass recent messages if available
-      dataStore,
-      worldMemoryContext
-    })
-
-    const { actualParticipants, worldKnowledge } = worldAgentOutput
+    // Use the provided World Agent output (already executed in session-play-service)
+    const { actualParticipants, worldContextUpdates } = worldAgentOutput;
 
     logger.info(
-      `[Memory Distribution] Detected ${actualParticipants.length} participants`
-    )
+      `[Memory Distribution] Detected ${actualParticipants.length} participants (names)`,
+    );
+
+    // Map character names to IDs for storage
+    // actualParticipants contains NAMES, but we need IDs for container creation
+    // Get all character IDs from dataStore.participants
+    const allParticipantIds = dataStore.participants || [];
+
+    // Build name-to-ID mapping by fetching character names
+    const { CardService } = await import("@/app/services/card-service");
+    const { CharacterCard } = await import(
+      "@/modules/card/domain/character-card"
+    );
+    const nameToId: Record<string, string> = {};
+
+    for (const participantId of allParticipantIds) {
+      try {
+        const card = (
+          await CardService.getCard.execute(new UniqueEntityID(participantId))
+        )
+          .throwOnFailure()
+          .getValue() as typeof CharacterCard.prototype;
+        const name = card.props.name || card.props.title || "Unknown";
+        nameToId[name] = participantId;
+      } catch (error) {
+        logger.warn(
+          `[Memory Distribution] Failed to fetch card for ${participantId}`,
+        );
+      }
+    }
+
+    // Convert participant names to IDs
+    const participantIds = actualParticipants
+      .map((name) => nameToId[name])
+      .filter((id) => id !== undefined);
+
+    logger.info(
+      `[Memory Distribution] Mapped ${participantIds.length} participant IDs from names`,
+    );
 
     // Store raw message in world container
-    const worldContainer = createWorldContainer(sessionId)
+    const worldContainer = createWorldContainer(sessionId);
     const worldMessageContent = formatMessageWithGameTime(
       speakerName,
       message,
       gameTime,
-      gameTimeInterval
-    )
+      gameTimeInterval,
+    );
 
     await storeWorldMessage(worldContainer, worldMessageContent, {
       speaker: speakerCharacterId,
-      participants: actualParticipants,
+      participants: participantIds,
       gameTime,
       gameTimeInterval,
-      type: 'message'
-    })
+      type: "message",
+    });
+
+    // Build context update map by character name
+    const contextByName: Record<string, string> = {};
+    if (worldContextUpdates) {
+      for (const update of worldContextUpdates) {
+        contextByName[update.characterName] = update.contextUpdate;
+      }
+    }
+
+    // Get character name from ID helper
+    const idToName: Record<string, string> = {};
+    for (const [name, id] of Object.entries(nameToId)) {
+      idToName[id] = name;
+    }
 
     // Distribute enriched memories to participants in parallel
-    const distributionPromises = actualParticipants.map((participantId) => {
+    const distributionPromises = participantIds.map((participantId) => {
       // Build enriched message sections
-      const currentTimeSection = `###Current time###\nGameTime: ${gameTime} ${gameTimeInterval}`
-      const messageSection = `###Message###\n${worldMessageContent}`
+      const currentTimeSection = `###Current time###\nGameTime: ${gameTime} ${gameTimeInterval}`;
+      const messageSection = `###Message###\n${worldMessageContent}`;
 
-      // Get participant-specific world knowledge
-      const knowledge = worldKnowledge[participantId] || ''
-      const worldKnowledgeSection = knowledge
-        ? `###Newly discovered world knowledge###\n${knowledge}`
-        : undefined
+      // Get participant-specific world context by name
+      const participantName = idToName[participantId] || "Unknown";
+      const contextUpdate = contextByName[participantName] || "";
+
+      // Only use World Agent's character-specific context update
+      // If no update available, don't add world context section
+      // (accumulated context will be available on next turn via world_context in dataStore)
+      const worldContextSection = contextUpdate
+        ? `###World context###\n${contextUpdate}`
+        : undefined;
 
       // Build enriched message
       const enrichedContent = buildEnrichedMessage({
         currentTime: currentTimeSection,
         message: messageSection,
-        worldKnowledge: worldKnowledgeSection
-      })
+        worldContext: worldContextSection,
+      });
 
       // Store in participant's container
       const participantContainer = createCharacterContainer(
         sessionId,
-        participantId
-      )
+        participantId,
+      );
 
       return storeCharacterMessage(participantContainer, enrichedContent, {
         speaker: speakerCharacterId,
-        participants: actualParticipants,
+        participants: participantIds,
         isSpeaker: participantId === speakerCharacterId,
         gameTime,
         gameTimeInterval,
-        type: 'message'
-      })
-    })
+        type: "message",
+      });
+    });
 
-    await Promise.all(distributionPromises)
+    await Promise.all(distributionPromises);
 
     logger.info(
-      `[Memory Distribution] Successfully distributed memories to ${actualParticipants.length} participants`
-    )
+      `[Memory Distribution] Successfully distributed memories to ${actualParticipants.length} participants`,
+    );
   } catch (error) {
-    logger.error('[Memory Distribution] Failed to distribute memories:', error)
+    logger.error("[Memory Distribution] Failed to distribute memories:", error);
     // Don't throw - graceful degradation (memory distribution is enhancement, not requirement)
   }
 }
@@ -314,7 +382,7 @@ export async function distributeMemories(
  * @returns True if tag is present
  */
 export function hasRoleplayMemoryTag(prompt: string): boolean {
-  return prompt.includes('###ROLEPLAY_MEMORY###')
+  return prompt.includes("###ROLEPLAY_MEMORY###");
 }
 
 /**
@@ -326,7 +394,7 @@ export function hasRoleplayMemoryTag(prompt: string): boolean {
  */
 export function injectMemoriesIntoPrompt(
   prompt: string,
-  memories: string
+  memories: string,
 ): string {
-  return prompt.replace('###ROLEPLAY_MEMORY###', memories)
+  return prompt.replace("###ROLEPLAY_MEMORY###", memories);
 }
