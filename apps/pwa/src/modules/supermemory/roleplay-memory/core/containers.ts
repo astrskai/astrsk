@@ -9,7 +9,7 @@ import { buildContainerTag, validateCharacterContainer as validateCharTag, valid
 
 /**
  * Create a character container tag
- * Format: {sessionId}-{characterId}
+ * Format: {sessionId}::{characterId}
  */
 export function createCharacterContainer(sessionId: string, characterId: string): string {
   return buildContainerTag(sessionId, characterId)
@@ -17,7 +17,7 @@ export function createCharacterContainer(sessionId: string, characterId: string)
 
 /**
  * Create a world container tag
- * Format: {sessionId}-world
+ * Format: {sessionId}::world
  */
 export function createWorldContainer(sessionId: string): string {
   return buildContainerTag(sessionId, 'world')
@@ -25,8 +25,8 @@ export function createWorldContainer(sessionId: string): string {
 
 /**
  * Validate character container tag format
- * Must be: {sessionId}-{characterId}
- * Must NOT end with "-world"
+ * Must be: {sessionId}::{characterId}
+ * Must NOT end with "::world"
  */
 export function validateCharacterContainer(tag: string): boolean {
   return validateCharTag(tag)
@@ -34,7 +34,7 @@ export function validateCharacterContainer(tag: string): boolean {
 
 /**
  * Validate world container tag format
- * Must end with "-world"
+ * Must end with "::world"
  */
 export function validateWorldContainer(tag: string): boolean {
   return validateWorldTag(tag)
@@ -42,30 +42,25 @@ export function validateWorldContainer(tag: string): boolean {
 
 /**
  * Extract session ID from container tag
+ * Uses '::' delimiter to handle UUIDs with hyphens correctly
  */
 export function extractSessionId(containerTag: string): string | null {
-  const parts = containerTag.split('-')
-  if (parts.length < 2) return null
-
-  // For world container: session-uuid-world → session-uuid
-  // For character: session-uuid-char-uuid → session-uuid (take first part before last segment)
-  if (containerTag.endsWith('-world')) {
-    return containerTag.replace(/-world$/, '')
+  if (containerTag.endsWith('::world')) {
+    return containerTag.replace(/::world$/, '')
   }
-
-  // For character containers, session ID is everything except the last segment
-  return parts.slice(0, -1).join('-')
+  const sep = '::'
+  const idx = containerTag.indexOf(sep)
+  return idx > 0 ? containerTag.slice(0, idx) : null
 }
 
 /**
  * Extract character ID from character container tag
  * Returns null for world containers
+ * Uses '::' delimiter to handle UUIDs with hyphens correctly
  */
 export function extractCharacterId(containerTag: string): string | null {
-  if (containerTag.endsWith('-world')) return null
-
-  const parts = containerTag.split('-')
-  if (parts.length < 2) return null
-
-  return parts[parts.length - 1]
+  if (containerTag.endsWith('::world')) return null
+  const sep = '::'
+  const idx = containerTag.indexOf(sep)
+  return idx >= 0 ? containerTag.slice(idx + sep.length) : null
 }

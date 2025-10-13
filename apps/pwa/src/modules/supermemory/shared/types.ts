@@ -7,8 +7,8 @@
 // Container Tag Types
 // ============================================================================
 
-export type CharacterContainerTag = `${string}-${string}` // {sessionId}-{characterId}
-export type WorldContainerTag = `${string}-world` // {sessionId}-world
+export type CharacterContainerTag = `${string}::${string}` // {sessionId}::{characterId}
+export type WorldContainerTag = `${string}::world` // {sessionId}::world
 export type ContainerTag = CharacterContainerTag | WorldContainerTag
 
 // ============================================================================
@@ -119,7 +119,7 @@ export interface EnrichedMessage {
 
 export interface CharacterMemoryQueryInput {
   // Container
-  containerTag: string // Format: {sessionId}-{characterId}
+  containerTag: string // Format: {sessionId}::{characterId}
 
   // Temporal Context
   currentGameTime: number
@@ -146,7 +146,7 @@ export interface CharacterMemoryQueryInput {
 
 export interface WorldMemoryQueryInput {
   // Container
-  containerTag: string // Format: {sessionId}-world
+  containerTag: string // Format: {sessionId}::world
 
   // Search Query
   query: string

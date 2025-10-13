@@ -22,6 +22,7 @@ export function formatMessageWithGameTime(
 
 /**
  * Build a container tag from session ID and resource ID
+ * Uses '::' delimiter to avoid conflicts with UUIDs containing hyphens
  * @param sessionId - Session identifier
  * @param resourceId - Character ID or "world"
  * @returns Container tag string
@@ -30,7 +31,7 @@ export function buildContainerTag(
   sessionId: string,
   resourceId: string
 ): string {
-  return `${sessionId}-${resourceId}`
+  return `${sessionId}::${resourceId}`
 }
 
 /**
@@ -39,10 +40,9 @@ export function buildContainerTag(
  * @returns True if valid character container format
  */
 export function validateCharacterContainer(tag: string): boolean {
-  // Must have format: {sessionId}-{characterId}
-  // Must NOT end with "-world"
-  const pattern = /^[a-zA-Z0-9-]+-[a-zA-Z0-9-]+$/
-  return pattern.test(tag) && !tag.endsWith('-world')
+  // Must have format: {sessionId}::{characterId}
+  // Must NOT end with "::world"
+  return tag.includes('::') && !tag.endsWith('::world')
 }
 
 /**
@@ -51,8 +51,8 @@ export function validateCharacterContainer(tag: string): boolean {
  * @returns True if valid world container format
  */
 export function validateWorldContainer(tag: string): boolean {
-  // Must end with "-world"
-  return tag.endsWith('-world')
+  // Must end with "::world"
+  return tag.endsWith('::world')
 }
 
 /**
