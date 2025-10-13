@@ -51,7 +51,7 @@ export class ExportCardToFile
       return Result.fail<File>("Unsupported card type");
     }
 
-    if (options.format === "json") {
+    if (options.format === "png") {
       let iconAsset: Asset;
       if (card.props.iconAssetId) {
         // Get asset
