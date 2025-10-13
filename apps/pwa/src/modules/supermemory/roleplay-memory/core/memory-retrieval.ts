@@ -105,21 +105,15 @@ export async function retrieveCharacterMemories(
       input.characterName,
     );
 
-    // Build filters if provided
-    const filters: NonNullable<CharacterMemoryQueryInput['filters']> = {};
-    if (input.filters?.gameTime) {
-      filters.gameTime = input.filters.gameTime;
-    }
-    if (input.filters?.type) {
-      filters.type = input.filters.type;
-    }
+    // TODO: Implement proper filters once Supermemory API filter structure is documented
+    // Currently, filters are not supported in the query (Supermemory expects Or | And structure)
+    // For POC, we rely on semantic search and content filtering
 
     // Query Supermemory
     const results = await memoryClient.search.memories({
       q: query,
       containerTag: input.containerTag,
       limit: input.limit,
-      ...(Object.keys(filters).length > 0 && { filters }),
     });
 
     const typed = results as unknown as MemorySearchResponse;
@@ -162,21 +156,15 @@ export async function retrieveWorldMemories(
       return { memories: [], count: 0 };
     }
 
-    // Build filters if provided
-    const filters: NonNullable<WorldMemoryQueryInput['filters']> = {};
-    if (input.filters?.gameTime) {
-      filters.gameTime = input.filters.gameTime;
-    }
-    if (input.filters?.type) {
-      filters.type = input.filters.type;
-    }
+    // TODO: Implement proper filters once Supermemory API filter structure is documented
+    // Currently, filters are not supported in the query (Supermemory expects Or | And structure)
+    // For POC, we rely on semantic search and content filtering
 
     // Query Supermemory
     const results = await memoryClient.search.memories({
       q: input.query,
       containerTag: input.containerTag,
       limit: input.limit,
-      ...(Object.keys(filters).length > 0 && { filters }),
     });
 
     const typed = results as unknown as MemorySearchResponse;
