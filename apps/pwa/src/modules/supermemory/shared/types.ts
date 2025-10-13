@@ -208,7 +208,7 @@ export interface SessionDataStore {
 // ============================================================================
 
 export interface RetrievalConfig {
-  defaultCharacterLimit: number // Default: 5
+  defaultCharacterLimit: number // Default: 20
   defaultWorldLimit: number // Default: 10
   temporalWindowDays: number // Time window for filtering (default: 30)
   includePermanentMemories: boolean // Auto-include init content (future)

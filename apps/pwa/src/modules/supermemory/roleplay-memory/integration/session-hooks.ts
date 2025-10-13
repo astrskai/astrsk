@@ -148,7 +148,7 @@ export async function recallCharacterMemories(
       currentGameTime,
       currentGameTimeInterval,
       recentMessages,
-      limit = 5,
+      limit = 20,
       worldContext,
     } = input;
 
