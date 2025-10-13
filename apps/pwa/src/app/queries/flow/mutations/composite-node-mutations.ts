@@ -378,7 +378,7 @@ export const useCloneAgentNode = (flowId: string) => {
 
         const optimisticNode = {
           id: nodeId,
-          type: NodeType.AGENT,
+          type: NodeType.AGENT as const,
           position,
           deletable: false,
           draggable: true,

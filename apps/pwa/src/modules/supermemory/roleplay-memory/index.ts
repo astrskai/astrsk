@@ -70,4 +70,4 @@ export type {
   // Storage types
   EnrichedMessageSections,
   StorageResult
-} from './core/types'
+} from '../shared/types'

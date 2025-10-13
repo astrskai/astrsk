@@ -273,9 +273,6 @@ const makeContext = async ({
     // Set {{user}} and {{char}}
     if (characterCard.id.equals(characterCardId)) {
       context.char = character;
-      // Add characterName and characterId for roleplay memory system
-      context.characterName = character.name;
-      context.characterId = character.id;
     }
     if (characterCard.id.equals(session.userCharacterCardId)) {
       context.user = character;
@@ -2822,8 +2819,8 @@ async function injectRoleplayMemories(
         // Extract gameTime and gameTimeInterval from dataStore (using snake_case field names)
         const gameTime = fullContext.game_time || fullContext.game_day || 0;
         const gameTimeInterval = fullContext.game_time_interval || "Day";
-        const characterId = fullContext.characterId || agent.id.toString();
-        const characterName = fullContext.characterName || agent.props.name;
+        const characterId = fullContext.char?.id || agent.id.toString();
+        const characterName = fullContext.char?.name || agent.props.name;
         const sessionIdStr = sessionId?.toString() || "unknown";
 
         // Get recent messages for context (last 2 turns)
@@ -2932,8 +2929,8 @@ async function executeWorldAgentAndDistributeMemories(
     // Extract data store fields (using snake_case field names)
     const gameTime = fullContext.game_time || fullContext.game_day || 0;
     const gameTimeInterval = fullContext.game_time_interval || "Day";
-    const characterId = fullContext.characterId || agent.id.toString();
-    const characterName = fullContext.characterName || agent.props.name;
+    const characterId = fullContext.char?.id || agent.id.toString();
+    const characterName = fullContext.char?.name || agent.props.name;
     const sessionIdStr = sessionId.toString();
 
     // Get recent messages for World Agent context (last 2 turns)

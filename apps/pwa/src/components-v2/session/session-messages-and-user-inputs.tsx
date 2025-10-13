@@ -72,6 +72,7 @@ import {
   makeContext,
 } from "@/app/services/session-play-service";
 import { SessionService } from "@/app/services/session-service";
+import type { CardListItem } from "@/modules/session/domain/session";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { AutoReply, useSessionStore } from "@/app/stores/session-store";
@@ -650,7 +651,7 @@ const MessageItem = ({
   const { data: generatedImageData } = useQuery({
     ...generatedImageQueries.list(),
     enabled: assetIsVideo && !!selectedOption?.assetId,
-    select: (images) => {
+    select: (images: any[]) => {
       if (!images || !Array.isArray(images)) return null;
       // Find the generated image with matching assetId
       return (
@@ -2067,7 +2068,7 @@ const SessionMessagesAndUserInputs = ({
     const renderedScenarios = await Promise.all(
       plotCard.props.scenarios.map(
         async (scenario: { name: string; description: string }) => {
-          const renderedScenario = await TemplateRenderer.render(
+          const renderedScenario = TemplateRenderer.render(
             scenario.description,
             context,
           );
@@ -2110,30 +2111,37 @@ const SessionMessagesAndUserInputs = ({
 
         // Initialize roleplay memory containers
         // Fetch full character card data (allCards only has IDs) using CardService
-        const characterCardIds = session.characterCards.map(c => c.id);
+        const characterCardIds = session.characterCards.map(
+          (c: CardListItem) => c.id,
+        );
 
         const characterCardsData = await Promise.all(
-          characterCardIds.map(async (cardId) => {
+          characterCardIds.map(async (cardId: UniqueEntityID) => {
             try {
               // Use CardService directly to get domain objects
               const cardOrError = await CardService.getCard.execute(cardId);
               if (cardOrError.isFailure) {
-                logger.error('[Roleplay Memory] Failed to fetch card:', cardOrError.getError());
+                logger.error(
+                  "[Roleplay Memory] Failed to fetch card:",
+                  cardOrError.getError(),
+                );
                 return null;
               }
               return cardOrError.getValue();
             } catch (error) {
-              logger.error('[Roleplay Memory] Failed to fetch card:', error);
+              logger.error("[Roleplay Memory] Failed to fetch card:", error);
               return null;
             }
-          })
+          }),
         );
-        const validCharacterCards = characterCardsData.filter(c => c !== null);
+        const validCharacterCards = characterCardsData.filter(
+          (c: any): c is NonNullable<typeof c> => c !== null,
+        );
 
         await initializeRoleplayMemoryForSession(
           session.id.toString(),
           validCharacterCards,
-          scenario.description
+          scenario.description,
         );
 
         // Invalidate session
