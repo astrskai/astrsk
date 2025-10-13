@@ -4,7 +4,8 @@ import Supermemory from "supermemory";
 const getSupermemoryBaseUrl = () => {
   // In development, use Vite proxy to avoid CORS
   // Use full URL with current origin to make URL constructor happy
-  if (import.meta.env.DEV) {
+  // Guard window access for SSR/Vitest/Node environments
+  if (import.meta.env.DEV && typeof window !== "undefined") {
     return `${window.location.origin}/api/supermemory`;
   }
   // In production, use configured base URL or default

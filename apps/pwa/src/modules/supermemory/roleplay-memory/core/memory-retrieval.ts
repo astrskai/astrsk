@@ -20,6 +20,17 @@ import {
 } from "./containers";
 import { logger } from "@/shared/utils/logger";
 
+// Type definitions for Supermemory API responses
+type MemoryResultItem = {
+  memory?: string;
+  content?: string;
+  metadata?: { gameTime?: number; type?: string; participants?: string[] };
+};
+
+type MemorySearchResponse = {
+  results: MemoryResultItem[];
+};
+
 /**
  * Format character memory query with current time and recent messages
  *
@@ -95,7 +106,7 @@ export async function retrieveCharacterMemories(
     );
 
     // Build filters if provided
-    const filters: any = {};
+    const filters: NonNullable<CharacterMemoryQueryInput['filters']> = {};
     if (input.filters?.gameTime) {
       filters.gameTime = input.filters.gameTime;
     }
@@ -111,9 +122,10 @@ export async function retrieveCharacterMemories(
       ...(Object.keys(filters).length > 0 && { filters }),
     });
 
+    const typed = results as unknown as MemorySearchResponse;
     return {
-      memories: results.results.map((r: any) => r.memory || r.content),
-      count: results.results.length,
+      memories: typed.results.map((r) => r.memory ?? r.content ?? ''),
+      count: typed.results.length,
     };
   } catch (error) {
     logger.error(
@@ -151,7 +163,7 @@ export async function retrieveWorldMemories(
     }
 
     // Build filters if provided
-    const filters: any = {};
+    const filters: NonNullable<WorldMemoryQueryInput['filters']> = {};
     if (input.filters?.gameTime) {
       filters.gameTime = input.filters.gameTime;
     }
@@ -167,20 +179,22 @@ export async function retrieveWorldMemories(
       ...(Object.keys(filters).length > 0 && { filters }),
     });
 
+    const typed = results as unknown as MemorySearchResponse;
+
     logger.info(
-      `[Memory Retrieval] Retrieved ${results.results.length} world memories`,
+      `[Memory Retrieval] Retrieved ${typed.results.length} world memories`,
     );
 
     // Extract metadata if requested
-    const metadata = results.results.map((r: any) => ({
-      gameTime: r.metadata?.gameTime,
-      type: r.metadata?.type,
-      participants: r.metadata?.participants,
+    const metadata = typed.results.map((r) => ({
+      gameTime: r.metadata?.gameTime ?? 0,
+      type: r.metadata?.type ?? '',
+      participants: r.metadata?.participants ?? [],
     }));
 
     return {
-      memories: results.results.map((r: any) => r.memory || r.content),
-      count: results.results.length,
+      memories: typed.results.map((r) => r.memory ?? r.content ?? ''),
+      count: typed.results.length,
       metadata,
     };
   } catch (error) {
