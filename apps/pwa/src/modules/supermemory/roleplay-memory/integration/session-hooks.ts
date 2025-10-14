@@ -32,7 +32,6 @@ import { logger } from "@/shared/utils/logger";
 import {
   recordSessionInit,
   recordMemoryRecall,
-  recordMemoryDistribution,
   recordWorldMemoryAdd,
 } from "../debug/debug-helpers";
 import { memoryClient } from "../../shared/client";
@@ -539,15 +538,15 @@ export async function distributeMemories(
       `[Memory Distribution] Successfully distributed memories to ${actualParticipants.length} participants`,
     );
 
-    // Record debug event
-    recordMemoryDistribution({
-      speakerName,
-      message,
-      participantIds,
-      participantNames: actualParticipants,
-      worldMessageContent,
-      enrichedContents: enrichedContentsForDebug,
-    });
+    // Debug event removed - memory distribution info already shown in Character Memory Add events
+    // recordMemoryDistribution({
+    //   speakerName,
+    //   message,
+    //   participantIds,
+    //   participantNames: actualParticipants,
+    //   worldMessageContent,
+    //   enrichedContents: enrichedContentsForDebug,
+    // });
   } catch (error) {
     logger.error("[Memory Distribution] Failed to distribute memories:", error);
     // Don't throw - graceful degradation (memory distribution is enhancement, not requirement)

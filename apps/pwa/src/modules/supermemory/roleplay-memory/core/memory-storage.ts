@@ -314,11 +314,12 @@ export async function storeInitContent(
       },
     });
 
-    logger.info("[Memory Storage] Stored init content:", result.id);
+    logger.info(`[Memory Storage] Stored init content: ${result.id} | Type: ${metadata.type} | Container: ${containerTag}`);
 
     // Record debug event
     // Extract character ID from containerTag (format: sessionId::characterId)
     const characterId = containerTag.split("::")[1] || "unknown";
+    logger.info(`[Memory Storage] Recording debug event for character: ${characterId} | Type: ${metadata.type}`);
     recordCharacterMemoryAdd({
       characterId,
       characterName: `Character ${characterId}`, // Name not available here, will show by ID

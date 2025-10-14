@@ -231,7 +231,6 @@ function EventCard({ event }: { event: SupermemoryDebugEvent }) {
     world_memory_retrieval: "World Memory Retrieval",
     world_agent_prompt: "World Agent Prompt",
     world_agent_output: "World Agent Output",
-    memory_distribution: "Memory Distribution",
     character_memory_add: "Character Memory Add",
     world_memory_add: "World Memory Add",
     datastore_update: "DataStore Update",
@@ -244,7 +243,6 @@ function EventCard({ event }: { event: SupermemoryDebugEvent }) {
     world_memory_retrieval: "#EAB308", // yellow-500
     world_agent_prompt: "#F97316", // orange-500
     world_agent_output: "#EA580C", // orange-600
-    memory_distribution: "#22C55E", // green-500
     character_memory_add: "#06B6D4", // cyan-500
     world_memory_add: "#6366F1", // indigo-500
     datastore_update: "#EC4899", // pink-500
@@ -257,7 +255,6 @@ function EventCard({ event }: { event: SupermemoryDebugEvent }) {
     world_memory_retrieval: { bg: "rgba(234, 179, 8, 0.1)", border: "#EAB308" },
     world_agent_prompt: { bg: "rgba(249, 115, 22, 0.1)", border: "#F97316" },
     world_agent_output: { bg: "rgba(234, 88, 12, 0.1)", border: "#EA580C" },
-    memory_distribution: { bg: "rgba(34, 197, 94, 0.1)", border: "#22C55E" },
     character_memory_add: { bg: "rgba(6, 182, 212, 0.1)", border: "#06B6D4" },
     world_memory_add: { bg: "rgba(99, 102, 241, 0.1)", border: "#6366F1" },
     datastore_update: { bg: "rgba(236, 72, 153, 0.1)", border: "#EC4899" },
@@ -491,45 +488,6 @@ function WorldAgentOutputDetails({ data }: { data: any }) {
           {JSON.stringify(data, null, 2)}
         </pre>
       </details>
-    </div>
-  );
-}
-
-function MemoryDistributionDetails({ data }: { data: any }) {
-  return (
-    <div className="space-y-2">
-      <div>
-        <span className="text-text-secondary">Speaker:</span>{" "}
-        <span className="text-text-body">{data.speakerName}</span>
-      </div>
-      <div>
-        <span className="text-text-secondary">Participants:</span>{" "}
-        <span className="text-text-body">{data.participantNames.join(", ")}</span>
-      </div>
-      {data.enrichedContents && data.enrichedContents.length > 0 && (
-        <div className="mt-3">
-          <span className="text-text-secondary">Character-Specific Memories:</span>
-          <div className="ml-4 mt-2 space-y-3">
-            {data.enrichedContents.map((enriched: any, index: number) => (
-              <div key={index} className="border-l-2 border-border-primary pl-3">
-                <div className="text-text-body font-semibold">{enriched.characterName}</div>
-                {enriched.worldContext && (
-                  <div className="mt-1">
-                    <span className="text-text-secondary text-sm">Context:</span>
-                    <div className="text-text-info text-sm mt-1">{enriched.worldContext}</div>
-                  </div>
-                )}
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-text-link text-sm">View full enriched content</summary>
-                  <pre className="mt-2 text-text-info whitespace-pre-wrap text-xs bg-surface-secondary p-2 rounded max-h-48 overflow-y-auto">
-                    {enriched.content}
-                  </pre>
-                </details>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

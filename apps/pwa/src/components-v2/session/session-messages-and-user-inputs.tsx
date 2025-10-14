@@ -79,6 +79,7 @@ import type { CardListItem } from "@/modules/session/domain/session";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { AutoReply, useSessionStore } from  "@/app/stores/session-store";
+import { useSupermemoryDebugStore } from "@/app/stores/supermemory-debug-store";
 import { Avatar } from "@/components-v2/avatar";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { cn } from "@/components-v2/lib/utils";
@@ -1653,6 +1654,11 @@ const SessionMessagesAndUserInputs = ({
       characterCardId: UniqueEntityID,
       regenerateMessageId?: UniqueEntityID,
     ) => {
+      // Increment turn number for debug tracking (only for new messages, not regeneration)
+      if (!regenerateMessageId) {
+        useSupermemoryDebugStore.getState().incrementTurn();
+      }
+
       // Check session
       if (!session) {
         throw new Error("Session not found");
@@ -1892,6 +1898,9 @@ const SessionMessagesAndUserInputs = ({
   const addUserMessage = useCallback(
     async (messageContent: string) => {
       try {
+        // Increment turn number for debug tracking
+        useSupermemoryDebugStore.getState().incrementTurn();
+
         // Check session
         if (!session) {
           throw new Error("Session not found");

@@ -17,7 +17,6 @@ export type SupermemoryDebugEventType =
   | "world_memory_retrieval"
   | "world_agent_prompt"
   | "world_agent_output"
-  | "memory_distribution"
   | "character_memory_add"
   | "world_memory_add"
   | "datastore_update"
