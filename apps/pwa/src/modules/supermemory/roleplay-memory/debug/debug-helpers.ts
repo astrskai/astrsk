@@ -75,10 +75,12 @@ export function recordWorldAgentOutput(data: WorldAgentOutputEventData) {
 
 /**
  * Record memory distribution event
+ * DEPRECATED: Memory distribution events are no longer recorded.
+ * Information is shown in Character Memory Add events instead.
  */
-export function recordMemoryDistribution(data: MemoryDistributionEventData) {
-  addEvent("memory_distribution", data);
-}
+// export function recordMemoryDistribution(data: MemoryDistributionEventData) {
+//   addEvent("memory_distribution", data);
+// }
 
 /**
  * Record character memory add event
