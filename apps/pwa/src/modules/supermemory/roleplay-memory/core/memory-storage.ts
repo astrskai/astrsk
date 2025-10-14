@@ -18,6 +18,10 @@ import {
   validateWorldContainer,
 } from "./containers";
 import { logger } from "@/shared/utils/logger";
+import {
+  recordCharacterMemoryAdd,
+  recordWorldMemoryAdd,
+} from "../debug/debug-helpers";
 
 /**
  * Build enriched message content from sections
@@ -84,7 +88,7 @@ export async function storeWorldMessage(
       !metadata.game_time_interval ||
       !metadata.type
     ) {
-      logger.error("[Memory Storage] Missing required metadata fields");
+      logger.error("[Memory Storage] Invalid world message metadata - missing required fields");
       return {
         id: null,
         success: false,
@@ -113,6 +117,21 @@ export async function storeWorldMessage(
     });
 
     logger.info("[Memory Storage] Stored world message:", result.id);
+
+    // Record debug event
+    recordWorldMemoryAdd({
+      containerTag,
+      content,
+      metadata: {
+        speaker: metadata.speaker,
+        participants: metadata.participants,
+        game_time: metadata.game_time,
+        game_time_interval: metadata.game_time_interval,
+        type: metadata.type,
+      },
+      storageId: result.id,
+    });
+
     return {
       id: result.id,
       success: true,
@@ -194,6 +213,26 @@ export async function storeCharacterMessage(
     });
 
     logger.info("[Memory Storage] Stored character message:", result.id);
+
+    // Record debug event
+    // Extract character ID and name from containerTag (format: sessionId::characterId)
+    const characterId = containerTag.split("::")[1] || "unknown";
+    recordCharacterMemoryAdd({
+      characterId,
+      characterName: "Character", // Name not available here, will be shown in panel by ID
+      containerTag,
+      content: enrichedContent,
+      metadata: {
+        speaker: metadata.speaker,
+        participants: metadata.participants,
+        isSpeaker: metadata.isSpeaker,
+        game_time: metadata.game_time,
+        game_time_interval: metadata.game_time_interval,
+        type: metadata.type,
+      },
+      storageId: result.id,
+    });
+
     return {
       id: result.id,
       success: true,
@@ -276,6 +315,26 @@ export async function storeInitContent(
     });
 
     logger.info("[Memory Storage] Stored init content:", result.id);
+
+    // Record debug event
+    // Extract character ID from containerTag (format: sessionId::characterId)
+    const characterId = containerTag.split("::")[1] || "unknown";
+    recordCharacterMemoryAdd({
+      characterId,
+      characterName: `Character ${characterId}`, // Name not available here, will show by ID
+      containerTag,
+      content,
+      metadata: {
+        speaker: metadata.speaker || "system",
+        participants: metadata.participants || [],
+        isSpeaker: false,
+        game_time: metadata.game_time || 0,
+        game_time_interval: metadata.game_time_interval || "Day",
+        type: metadata.type,
+      },
+      storageId: result.id,
+    });
+
     return {
       id: result.id,
       success: true,

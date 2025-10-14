@@ -11,8 +11,10 @@ export {
   recallCharacterMemories,
   formatMemoriesForPrompt,
   distributeMemories,
+  processUserMessage,
   hasRoleplayMemoryTag,
-  injectMemoriesIntoPrompt
+  injectMemoriesIntoPrompt,
+  type UserMessageMemoryInput
 } from './integration/session-hooks'
 
 // World Agent execution

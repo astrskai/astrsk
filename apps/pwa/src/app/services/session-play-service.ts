@@ -49,6 +49,7 @@ import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { useWllamaStore } from "@/app/stores/wllama-store";
+import { useSupermemoryDebugStore } from "@/app/stores/supermemory-debug-store";
 import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
 import { ApiSource } from "@/modules/api/domain";
@@ -1710,7 +1711,27 @@ async function* executeAgentNode({
     }
 
     // Roleplay Memory: Inject character memories if tag is present (START node)
-    await injectRoleplayMemories(messages, fullContext, sessionId, agent);
+    logger.info(`[Roleplay Memory] Before injection, messages count: ${messages.length}`);
+    const memoryInjected = await injectRoleplayMemories(messages, fullContext, sessionId, agent);
+    logger.info(`[Roleplay Memory] After injection, messages count: ${messages.length}, injected: ${memoryInjected}`);
+
+    // Record debug event: Agent prompt with injected memories (only if memories were actually injected)
+    if (memoryInjected) {
+      logger.info(`[Debug Event] Recording agent prompt with memories for agent: ${agent.props.name}`);
+      useSupermemoryDebugStore.getState().addEvent("agent_prompt_with_memories", {
+        agentName: agent.props.name,
+        characterId: fullContext.character?.id,
+        characterName: fullContext.character?.name,
+        messages: messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        })),
+        fullContext: {
+          game_time: fullContext.game_time,
+          world_context: fullContext.world_context,
+        },
+      });
+    }
 
     const transformedMessages = transformMessagesForModel(messages, apiModelId);
     validateMessages(transformedMessages, apiConnection.source);
@@ -1812,25 +1833,7 @@ async function* executeAgentNode({
         // Don't throw - graceful degradation
       }
 
-      // Roleplay Memory: Execute World Agent and distribute memories (END node)
-      // Run asynchronously in background (don't block message creation)
-      logger.debug("[Roleplay Memory Debug] Agent for World Agent:", {
-        id: agent.id.toString(),
-        name: agent.props.name,
-        apiSource: agent.props.apiSource,
-        modelId: agent.props.modelId,
-      });
-      executeWorldAgentAndDistributeMemories(
-        result,
-        fullContext,
-        sessionId,
-        agent,
-        dataStore || [], // Pass dataStore to update worldContext field
-      ).catch((error) => {
-        logger.error("[Roleplay Memory] Background execution failed:", error);
-      });
-
-      // Return agent result immediately (World Agent runs in background)
+      // Return agent result (World Agent will run after flow completes)
       logger.debug("[Agent]", result);
       return result;
     }
@@ -1875,6 +1878,7 @@ async function* executeFlow({
   const variables: Record<string, any> = {};
   const translations: Map<string, string> = new Map();
   let dataStore: DataStoreSavedField[] = [];
+  let lastAgent: any = null; // Track last executed agent for World Agent
 
   try {
     // Get flow
@@ -2010,6 +2014,12 @@ async function* executeFlow({
     let currentNode = startNode;
     while (currentNode && currentNode.type !== "end") {
       if (currentNode.type === "agent") {
+        // Get agent for tracking (needed for World Agent later)
+        const agent = (await AgentService.getAgent.execute(new UniqueEntityID(currentNode.id)))
+          .throwOnFailure()
+          .getValue();
+        lastAgent = agent;
+
         // Execute agent node
         const executeAgentNodeResult = executeAgentNode({
           agentId: new UniqueEntityID(currentNode.id),
@@ -2183,6 +2193,22 @@ async function* executeFlow({
       variables: variables,
       dataStore: dataStore,
     };
+
+    // Roleplay Memory: Execute World Agent and distribute memories (END node reached)
+    // This runs ONCE after the entire flow completes
+    if (lastAgent && content) {
+      try {
+        await executeWorldAgentAndDistributeMemories(
+          { output: { response: content } }, // Wrap content in expected format
+          createFullContext(context, variables, dataStore),
+          sessionId,
+          lastAgent,
+          dataStore,
+        );
+      } catch (error) {
+        logger.error("[Roleplay Memory] World Agent execution failed:", error);
+      }
+    }
 
     // Translate variables
     const langs: string[] = [];
@@ -2798,19 +2824,23 @@ async function injectRoleplayMemories(
   fullContext: any,
   sessionId: UniqueEntityID | undefined,
   agent: any,
-): Promise<void> {
-  if (messages.length === 0) return;
+): Promise<boolean> {
+  if (messages.length === 0) return false;
+
+  logger.info(`[Roleplay Memory] Checking ${messages.length} messages for ###ROLEPLAY_MEMORY### tag`);
 
   // Loop through all messages to find the one with ONLY the tag
   for (let i = 0; i < messages.length; i++) {
     const message = messages[i];
     const trimmedContent = message.content?.trim();
 
+    logger.info(`[Roleplay Memory] Message ${i} (role: ${message.role}): "${trimmedContent?.substring(0, 50)}..."`);
+
     // Check if message contains ONLY the tag (exact match after trimming)
     if (trimmedContent === "###ROLEPLAY_MEMORY###") {
       try {
         logger.info(
-          `[Roleplay Memory] Found ###ROLEPLAY_MEMORY### tag in message ${i} (role: ${message.role})`,
+          `[Roleplay Memory] ✓ Found ###ROLEPLAY_MEMORY### tag in message ${i} (role: ${message.role})`,
         );
 
         // Extract gameTime and gameTimeInterval from dataStore (using snake_case field names)
@@ -2836,7 +2866,7 @@ async function injectRoleplayMemories(
           current_game_time: gameTime,
           current_game_time_interval: gameTimeInterval,
           recentMessages,
-          limit: 5,
+          limit: 20,
           worldContext: fullContext.world_context, // Pass accumulated world context (snake_case field name)
         });
 
@@ -2844,20 +2874,23 @@ async function injectRoleplayMemories(
         message.content = roleplayMemories;
 
         logger.info(`[MEMORY RECALL] Character: ${characterName}`);
+        logger.info(`[Roleplay Memory] ✓ Successfully injected ${roleplayMemories?.length || 0} characters of memory content`);
         logger.debug(
           `[Roleplay Memory] Content injected:\n${roleplayMemories}`,
         );
 
-        // Only replace the first occurrence, then break
-        break;
+        // Only replace the first occurrence, then return true
+        return true;
       } catch (error) {
         logger.error("[Roleplay Memory] Failed to inject memories:", error);
         // Replace with error message (graceful degradation)
         message.content = "(Memory system unavailable)";
-        break;
+        return false;
       }
     }
   }
+
+  return false; // No tag found
 }
 
 /**
@@ -2920,12 +2953,26 @@ async function executeWorldAgentAndDistributeMemories(
         ? (result.output as any).response
         : JSON.stringify(result.output);
 
-    if (!responseContent || !sessionId) return null;
+    // Enhanced validation: check for empty, whitespace, or empty object string
+    const isEmptyContent = !responseContent ||
+                          responseContent.trim() === "" ||
+                          responseContent.trim() === "{}" ||
+                          responseContent.trim() === "[]";
+
+    if (isEmptyContent || !sessionId) {
+      logger.warn("[World Agent] Skipping execution - no valid message content:", {
+        responseContent,
+        hasSessionId: !!sessionId,
+      });
+      return null;
+    }
 
     logger.info("[Roleplay Memory] Executing World Agent for END node");
 
     // Extract data store fields (using snake_case field names)
-    const gameTime = fullContext.game_time || fullContext.game_day || 0;
+    // DataStore values are strings, so convert game_time to number
+    const gameTimeRaw = fullContext.game_time || fullContext.game_day || 0;
+    const gameTime = typeof gameTimeRaw === "string" ? parseInt(gameTimeRaw, 10) : gameTimeRaw;
     const gameTimeInterval = fullContext.game_time_interval || "Day";
     const characterId = fullContext.char?.id || agent.id.toString();
     const characterName = fullContext.char?.name || agent.props.name;

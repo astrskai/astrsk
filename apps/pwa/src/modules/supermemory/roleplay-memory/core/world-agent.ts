@@ -28,6 +28,10 @@ import { ApiSource } from "@/modules/api/domain";
 import { OpenrouterProviderSort } from "@/modules/api/domain/api-connection";
 import { logger } from "@/shared/utils/logger";
 import { useAppStore } from "@/app/stores/app-store";
+import {
+  recordWorldAgentPrompt,
+  recordWorldAgentOutput,
+} from "../debug/debug-helpers";
 
 /**
  * Default World Agent configuration
@@ -242,14 +246,14 @@ function buildWorldAgentPrompt(input: WorldAgentInput): string {
 
   // Format all participants with names and IDs for clarity
   const allParticipantsText =
-    characterIdToName && Object.keys(characterIdToName).length > 0
+    characterIdToName && Object.keys(characterIdToName).length > 0 && dataStore.participants
       ? dataStore.participants
           .map((id) => {
             const name = characterIdToName[id] || "Unknown";
             return `${name} (ID: ${id})`;
           })
           .join(", ")
-      : dataStore.participants.join(", ");
+      : (dataStore.participants || []).join(", ");
 
   // Get world memory context if available
   const worldMemoryContext =
@@ -283,7 +287,7 @@ Content: ${generatedMessage}
 ### Session Data
 - Current Scene: ${dataStore.currentScene}
 - All Participants: ${allParticipantsText}
-- Total Participant Count: ${dataStore.participants.length}
+- Total Participant Count: ${dataStore.participants?.length || 0}
 - Game Time: ${dataStore.game_time} ${dataStore.game_time_interval}
 
 ## Task
@@ -461,6 +465,17 @@ export async function executeWorldAgent(
     // Build prompt with few-shot examples
     const prompt = buildWorldAgentPrompt(input);
 
+    // Record debug event - World Agent prompt
+    recordWorldAgentPrompt({
+      speakerName: input.speakerName,
+      generatedMessage: input.generatedMessage,
+      prompt,
+      recentMessages: input.recentMessages,
+      dataStore: input.dataStore,
+      worldMemoryContext: input.worldMemoryContext,
+      worldMemoryQuery: input.worldMemoryQuery,
+    });
+
     // Get model configuration from input (agent's API connection) or use default
     let provider: any;
     let model: any;
@@ -556,12 +571,30 @@ export async function executeWorldAgent(
       const isValid = validateWorldAgentOutput(output, input.speakerName);
 
       if (!isValid) {
-        return createFallbackOutput(
+        const fallbackOutput = createFallbackOutput(
           input.speakerCharacterId,
           input.speakerName,
           input.dataStore.worldContext,
         );
+
+        // Record debug event - World Agent output (fallback)
+        recordWorldAgentOutput({
+          actualParticipants: fallbackOutput.actualParticipants,
+          worldContextUpdates: fallbackOutput.worldContextUpdates,
+          delta_time: fallbackOutput.delta_time,
+          rawOutput: { fallback: true, reason: "validation_failed" },
+        });
+
+        return fallbackOutput;
       }
+
+      // Record debug event - World Agent output (success)
+      recordWorldAgentOutput({
+        actualParticipants: output.actualParticipants,
+        worldContextUpdates: output.worldContextUpdates,
+        delta_time: output.delta_time,
+        rawOutput: typedObject,
+      });
 
       return output;
     } catch (llmError) {
@@ -572,11 +605,31 @@ export async function executeWorldAgent(
         logger.warn("[World Agent] LLM timeout (>2s), using fallback");
       }
 
-      return createFallbackOutput(input.speakerCharacterId, input.speakerName, input.dataStore.worldContext);
+      const fallbackOutput = createFallbackOutput(input.speakerCharacterId, input.speakerName, input.dataStore.worldContext);
+
+      // Record debug event - World Agent output (timeout fallback)
+      recordWorldAgentOutput({
+        actualParticipants: fallbackOutput.actualParticipants,
+        worldContextUpdates: fallbackOutput.worldContextUpdates,
+        delta_time: fallbackOutput.delta_time,
+        rawOutput: { fallback: true, reason: "timeout" },
+      });
+
+      return fallbackOutput;
     }
   } catch (error) {
     // Catch-all for unexpected errors
     logger.error("[World Agent] Unexpected error:", error);
-    return createFallbackOutput(input.speakerCharacterId, input.speakerName, input.dataStore.worldContext);
+    const fallbackOutput = createFallbackOutput(input.speakerCharacterId, input.speakerName, input.dataStore.worldContext);
+
+    // Record debug event - World Agent output (error fallback)
+    recordWorldAgentOutput({
+      actualParticipants: fallbackOutput.actualParticipants,
+      worldContextUpdates: fallbackOutput.worldContextUpdates,
+      delta_time: fallbackOutput.delta_time,
+      rawOutput: { fallback: true, reason: "error", error: String(error) },
+    });
+
+    return fallbackOutput;
   }
 }

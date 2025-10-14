@@ -71,11 +71,14 @@ import {
   executeFlow,
   makeContext,
 } from "@/app/services/session-play-service";
+import {
+  processUserMessage,
+} from "@/modules/supermemory/roleplay-memory";
 import { SessionService } from "@/app/services/session-service";
 import type { CardListItem } from "@/modules/session/domain/session";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
-import { AutoReply, useSessionStore } from "@/app/stores/session-store";
+import { AutoReply, useSessionStore } from  "@/app/stores/session-store";
 import { Avatar } from "@/components-v2/avatar";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { cn } from "@/components-v2/lib/utils";
@@ -1909,6 +1912,15 @@ const SessionMessagesAndUserInputs = ({
         // Invalidate session query
         invalidateSession();
 
+        // Store user message in supermemory (no retrieval, no World Agent for direct messages)
+        // User messages sent directly (not through flows) are distributed to ALL participants
+        await processUserMessage({
+          sessionId: session.id.toString(),
+          messageContent,
+          session,
+          flow,
+        });
+
         // Scroll to bottom
         scrollToBottom({ behavior: "smooth" });
 
@@ -2138,11 +2150,14 @@ const SessionMessagesAndUserInputs = ({
           (c: any): c is NonNullable<typeof c> => c !== null,
         );
 
-        await initializeRoleplayMemoryForSession(
+        // Initialize roleplay memory in background (don't block UI)
+        initializeRoleplayMemoryForSession(
           session.id.toString(),
           validCharacterCards,
           scenario.description,
-        );
+        ).catch((error) => {
+          logger.error("[Roleplay Memory] Background initialization failed:", error);
+        });
 
         // Invalidate session
         invalidateSession();
