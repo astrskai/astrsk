@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
-import { TypoBase } from "@/components-v2/typo";
+import { TypoBase, TypoXLarge } from "@/components-v2/typo";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 
 export const Route = createFileRoute("/_layout/settings/legal/")({
@@ -15,6 +15,9 @@ function LegalPage() {
       <ScrollArea className="h-full">
         <div className="mx-auto my-6 w-full max-w-[587px] pt-[80px]">
           <div className="text-text-body mb-12 flex flex-col gap-8">
+            <TypoXLarge className="text-text-primary font-semibold">
+              Legal
+            </TypoXLarge>
             <div
               className="flex cursor-pointer items-center justify-between"
               onClick={() => {

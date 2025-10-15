@@ -78,8 +78,12 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
   // 3. Query for agent prompt data
   // With select result caching implemented, we can simplify query enabling
-  const queryEnabled = !!agentId && !updatePromptMessages.isEditing && !updateTextPrompt.isEditing &&
-                      !updatePromptMessages.hasCursor && !updateTextPrompt.hasCursor;
+  const queryEnabled =
+    !!agentId &&
+    !updatePromptMessages.isEditing &&
+    !updateTextPrompt.isEditing &&
+    !updatePromptMessages.hasCursor &&
+    !updateTextPrompt.hasCursor;
 
   const {
     data: promptData,
@@ -137,14 +141,17 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   // 7. Sync state when prompt data changes (for cross-tab sync)
   useEffect(() => {
     // Don't sync while editing or cursor is active to prevent conflicts
-    if (updatePromptMessages.isEditing || updateTextPrompt.isEditing ||
-        updatePromptMessages.hasCursor || updateTextPrompt.hasCursor ||
-        hasRecentlyEditedRef.current) {
+    if (
+      updatePromptMessages.isEditing ||
+      updateTextPrompt.isEditing ||
+      updatePromptMessages.hasCursor ||
+      updateTextPrompt.hasCursor ||
+      hasRecentlyEditedRef.current
+    ) {
       return;
     }
 
     if (promptData) {
-
       const mode = promptData.targetApiType === ApiType.Chat ? "chat" : "text";
 
       if (mode === "chat" && promptData.promptMessages) {
@@ -475,8 +482,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   // Early returns for loading/error states - only show when truly loading, not during editing
   if (isLoading && !promptData) {
     return (
-      <div className="h-full flex items-center justify-center bg-background-surface-2">
-        <div className="flex items-center gap-2 text-text-subtle">
+      <div className="bg-background-surface-2 flex h-full items-center justify-center">
+        <div className="text-text-subtle flex items-center gap-2">
           <span>Loading prompt panel...</span>
         </div>
       </div>
@@ -485,8 +492,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
   if (error && !promptData) {
     return (
-      <div className="h-full flex items-center justify-center bg-background-surface-2">
-        <div className="flex items-center gap-2 text-text-subtle">
+      <div className="bg-background-surface-2 flex h-full items-center justify-center">
+        <div className="text-text-subtle flex items-center gap-2">
           <span>Failed to load prompt data</span>
         </div>
       </div>
@@ -502,7 +509,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   return (
     <div
       ref={containerRef}
-      className="h-full flex flex-col bg-background-surface-2"
+      className="bg-background-surface-2 flex h-full flex-col"
     >
       <FormatSelectorAccordion
         value={completionMode === "chat" ? ApiType.Chat : ApiType.Text}
@@ -519,19 +526,19 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
       <div className="flex-1 overflow-hidden p-2">
         {completionMode === "chat" ? (
           !selectedItem && items.length === 0 ? (
-            <div className="h-full w-full flex items-center justify-center">
-              <div className="flex flex-col justify-center items-center gap-8">
-                <div className="flex flex-col justify-start items-center gap-2">
-                  <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">
+            <div className="flex h-full w-full items-center justify-center">
+              <div className="flex flex-col items-center justify-center gap-8">
+                <div className="flex flex-col items-center justify-start gap-2">
+                  <div className="text-text-body justify-start text-center text-base leading-relaxed font-semibold">
                     No Message
                   </div>
-                  <div className="w-44 text-center justify-start text-background-surface-5 text-xs font-normal">
+                  <div className="text-background-surface-5 w-44 justify-start text-center text-xs font-normal">
                     Guide how your agent responds, from tone to context
                   </div>
                 </div>
-                <div className="flex flex-col justify-start items-center gap-2">
+                <div className="flex flex-col items-center justify-start gap-2">
                   <Button onClick={addNewMessage} variant="secondary" size="sm">
-                    <Plus className="min-w-4 min-h-4" />
+                    <Plus className="min-h-4 min-w-4" />
                     Message
                   </Button>
                   <Button
@@ -539,32 +546,32 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                     variant="secondary"
                     size="sm"
                   >
-                    <Plus className="min-w-4 min-h-4" />
+                    <Plus className="min-h-4 min-w-4" />
                     History message
                   </Button>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="flex gap-2 h-full min-w-0">
+            <div className="flex h-full min-w-0 gap-2">
               {/* Left panel - Sortable list */}
-              <div className="flex flex-col gap-2 flex-1 min-w-[146px] max-w-[256px] overflow-hidden">
-                <div className="self-stretch inline-flex justify-start items-start gap-2 flex-wrap content-start mb-2">
+              <div className="flex max-w-[256px] min-w-[146px] flex-1 flex-col gap-2 overflow-hidden">
+                <div className="mb-2 inline-flex flex-wrap content-start items-start justify-start gap-2 self-stretch">
                   <button
                     onClick={addNewMessage}
-                    className="h-7 px-3 py-2 bg-background-surface-4 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-light flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
+                    className="bg-background-surface-4 outline-border-light hover:bg-background-surface-5 flex h-7 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
                   >
-                    <Plus className="w-4 h-4 text-text-body" />
-                    <div className="justify-center text-text-primary text-xs font-semibold leading-none">
+                    <Plus className="text-text-body h-4 w-4" />
+                    <div className="text-text-primary justify-center text-xs leading-none font-semibold">
                       Message
                     </div>
                   </button>
                   <button
                     onClick={addNewHistoryMessage}
-                    className="h-7 px-3 py-2 bg-background-surface-4 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-light flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
+                    className="bg-background-surface-4 outline-border-light hover:bg-background-surface-5 flex h-7 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
                   >
-                    <Plus className="w-4 h-4 text-text-body" />
-                    <div className="justify-center text-text-primary text-xs font-semibold leading-none">
+                    <Plus className="text-text-body h-4 w-4" />
+                    <div className="text-text-primary justify-center text-xs leading-none font-semibold">
                       History message
                     </div>
                   </button>
@@ -615,20 +622,20 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
               </div>
 
               {/* Divider */}
-              <div className="w-px self-stretch bg-border-dark"></div>
+              <div className="bg-border-dark w-px self-stretch"></div>
 
               {/* Right panel - Details */}
-              <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="@container min-w-0 flex-1 overflow-hidden">
                 {selectedItem && (
-                  <div className="w-full h-full flex flex-col justify-start items-start gap-4 min-w-0 relative p-1">
+                  <div className="relative flex h-full w-full min-w-0 flex-col items-start justify-start gap-4 p-1">
                     {items.length > 1 && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
                             onClick={() => deleteMessage(selectedItem.id)}
-                            className="absolute top-1 right-1 w-6 h-6 rounded-sm hover:opacity-80 transition-opacity z-10"
+                            className="absolute top-1 right-1 z-10 h-6 w-6 rounded-sm transition-opacity hover:opacity-80"
                           >
-                            <Trash2 className="min-w-3.5 min-h-4 text-text-subtle" />
+                            <Trash2 className="text-text-subtle min-h-4 min-w-3.5" />
                           </button>
                         </TooltipTrigger>
                         <TooltipContent variant="button">
@@ -638,9 +645,9 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                     )}
 
                     {/* Title header */}
-                    <div className="self-stretch inline-flex justify-start items-center gap-2">
-                      <div className="flex-1 flex justify-start items-center gap-4">
-                        <div className="justify-start text-text-body text-xs font-medium">
+                    <div className="inline-flex items-center justify-start gap-2 self-stretch">
+                      <div className="flex flex-1 items-center justify-start gap-4">
+                        <div className="text-text-body justify-start text-xs font-medium">
                           {selectedItem.type === "history"
                             ? "History message"
                             : "Message"}
@@ -648,48 +655,183 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                       </div>
                     </div>
 
-                    {/* Name and role fields */}
-                    {selectedItem.type === "history" ? (
-                      <div className="self-stretch inline-flex justify-start items-start gap-2">
-                        <div className="flex-1 inline-flex flex-col justify-start items-start gap-2">
-                          <div className="self-stretch inline-flex justify-start items-center gap-2">
-                            <div className="justify-start text-text-body text-[10px] font-medium leading-none">
-                              Name
+                    {selectedItem.type === "history" && (
+                      <div className="flex flex-col gap-4 @md:flex-row">
+                        <div className="inline-flex items-start justify-start gap-2 self-stretch">
+                          <div className="inline-flex flex-1 flex-col items-start justify-start gap-2">
+                            <div className="inline-flex items-center justify-start gap-2 self-stretch">
+                              <div className="text-text-body justify-start text-[10px] leading-none font-medium">
+                                Name
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-start justify-start gap-1 self-stretch">
+                              <Input
+                                value={selectedItem.label}
+                                onChange={(e) => {
+                                  const updatedItems = items.map((i) =>
+                                    i.id === selectedItem.id
+                                      ? { ...i, label: e.target.value }
+                                      : i,
+                                  );
+                                  setItems(updatedItems);
+                                  debouncedSaveMessages(updatedItems);
+                                }}
+                                onFocus={() =>
+                                  updatePromptMessages.setCursorActive(true)
+                                }
+                                onBlur={() =>
+                                  updatePromptMessages.setCursorActive(false)
+                                }
+                                className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px] @md:min-w-[200px]"
+                                placeholder="History message"
+                              />
                             </div>
                           </div>
-                          <div className="self-stretch flex flex-col justify-start items-start gap-1">
-                            <Input
-                              value={selectedItem.label}
-                              onChange={(e) => {
-                                const updatedItems = items.map((i) =>
-                                  i.id === selectedItem.id
-                                    ? { ...i, label: e.target.value }
-                                    : i,
-                                );
-                                setItems(updatedItems);
-                                debouncedSaveMessages(updatedItems);
-                              }}
-                              onFocus={() =>
-                                updatePromptMessages.setCursorActive(true)
-                              }
-                              onBlur={() =>
-                                updatePromptMessages.setCursorActive(false)
-                              }
-                              className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
-                              placeholder="History message"
-                            />
+                        </div>
+
+                        {/* History-specific fields */}
+                        <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+                          <div className="flex flex-col items-start justify-start gap-1 self-stretch">
+                            <div className="inline-flex items-start justify-start gap-1 self-stretch">
+                              <div className="text-text-body justify-start text-[10px] leading-none font-medium">
+                                History range
+                              </div>
+                              <TooltipProvider>
+                                <Tooltip delayDuration={0}>
+                                  <TooltipTrigger asChild>
+                                    <HelpCircle className="text-text-info h-4 w-4 cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent variant="button">
+                                    <p className="max-w-xs text-xs">
+                                      Choose how to index the message range:
+                                      <br />
+                                      "From start" counts from the first message
+                                      onward.
+                                      <br />
+                                      "From end" counts backward from the latest
+                                      message.
+                                      <br />
+                                      Count starts from 0.
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                            <div className="flex flex-col items-start justify-start gap-1 self-stretch">
+                              <button
+                                onClick={() => {
+                                  const updatedItems = items.map((i) =>
+                                    i.id === selectedItem.id
+                                      ? { ...i, countFromEnd: !i.countFromEnd }
+                                      : i,
+                                  );
+                                  setItems(updatedItems);
+                                  debouncedSaveMessages(updatedItems);
+                                }}
+                                className="inline-flex cursor-pointer items-center justify-start gap-2 self-stretch"
+                              >
+                                <div className="bg-background-surface-5 flex h-3 w-3 items-center justify-center gap-2 rounded-md p-0.5">
+                                  {selectedItem.countFromEnd !== false && (
+                                    <div className="bg-text-primary h-1.5 w-1.5 rounded-full"></div>
+                                  )}
+                                </div>
+                                <div className="text-text-primary justify-start text-[10px] leading-none font-medium">
+                                  Count from end (newest → oldest)
+                                </div>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const updatedItems = items.map((i) =>
+                                    i.id === selectedItem.id
+                                      ? { ...i, countFromEnd: false }
+                                      : i,
+                                  );
+                                  setItems(updatedItems);
+                                  debouncedSaveMessages(updatedItems);
+                                }}
+                                className="mt-1 inline-flex cursor-pointer items-center justify-start gap-2 self-stretch"
+                              >
+                                <div className="bg-background-surface-5 flex h-3 w-3 items-center justify-center gap-2 rounded-md p-0.5">
+                                  {selectedItem.countFromEnd === false && (
+                                    <div className="bg-text-primary h-1.5 w-1.5 rounded-full"></div>
+                                  )}
+                                </div>
+                                <div className="text-text-primary justify-start text-[10px] leading-none font-medium">
+                                  Count from start (oldest → newest)
+                                </div>
+                              </button>
+                            </div>
+                          </div>
+                          <div className="inline-flex items-center justify-start gap-2 self-stretch">
+                            <div className="text-text-subtle justify-start text-[10px] leading-none font-medium">
+                              Messages
+                            </div>
+                            <div className="inline-flex w-16 flex-col items-start justify-start gap-2">
+                              <Input
+                                type="number"
+                                value={selectedItem.start || 0}
+                                onChange={(e) => {
+                                  const start = parseInt(e.target.value) || 0;
+                                  const updatedItems = items.map((i) =>
+                                    i.id === selectedItem.id
+                                      ? { ...i, start }
+                                      : i,
+                                  );
+                                  setItems(updatedItems);
+                                  debouncedSaveMessages(updatedItems);
+                                }}
+                                onFocus={() =>
+                                  updatePromptMessages.setCursorActive(true)
+                                }
+                                onBlur={() =>
+                                  updatePromptMessages.setCursorActive(false)
+                                }
+                                className="bg-background-surface-0 outline-border-normal text-text-primary min-h-8 self-stretch rounded-md px-4 py-2 text-center text-xs font-normal outline-1 outline-offset-[-1px]"
+                                min="0"
+                              />
+                            </div>
+                            <div className="text-text-subtle justify-start text-[10px] leading-none font-medium">
+                              to
+                            </div>
+                            <div className="inline-flex w-16 flex-col items-start justify-start gap-2">
+                              <Input
+                                type="number"
+                                value={selectedItem.end || 8}
+                                onChange={(e) => {
+                                  const end = parseInt(e.target.value) || 8;
+                                  const updatedItems = items.map((i) =>
+                                    i.id === selectedItem.id
+                                      ? { ...i, end }
+                                      : i,
+                                  );
+                                  setItems(updatedItems);
+                                  debouncedSaveMessages(updatedItems);
+                                }}
+                                onFocus={() =>
+                                  updatePromptMessages.setCursorActive(true)
+                                }
+                                onBlur={() =>
+                                  updatePromptMessages.setCursorActive(false)
+                                }
+                                className="bg-background-surface-0 outline-border-normal text-text-primary min-h-8 self-stretch rounded-md px-4 py-2 text-center text-xs font-normal outline-1 outline-offset-[-1px]"
+                                min="1"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
-                    ) : (
-                      <div className="self-stretch inline-flex justify-start items-start gap-2">
-                        <div className="flex-1 inline-flex flex-col justify-start items-start gap-2">
-                          <div className="self-stretch inline-flex justify-start items-center gap-2">
-                            <div className="justify-start text-text-body text-[10px] font-medium leading-none">
+                    )}
+
+                    {/* Name and role fields */}
+                    {selectedItem.type !== "history" && (
+                      <div className="inline-flex items-start justify-start gap-2 self-stretch">
+                        <div className="inline-flex flex-1 flex-col items-start justify-start gap-2">
+                          <div className="inline-flex items-center justify-start gap-2 self-stretch">
+                            <div className="text-text-body justify-start text-[10px] leading-none font-medium">
                               Name
                             </div>
                           </div>
-                          <div className="self-stretch flex flex-col justify-start items-start gap-1">
+                          <div className="flex flex-col items-start justify-start gap-1 self-stretch">
                             <Input
                               value={selectedItem.label}
                               onChange={(e) => {
@@ -707,18 +849,18 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                               onBlur={() =>
                                 updatePromptMessages.setCursorActive(false)
                               }
-                              className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+                              className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
                               placeholder="Enter message name"
                             />
                           </div>
                         </div>
-                        <div className="flex-1 inline-flex flex-col justify-start items-start gap-2">
-                          <div className="self-stretch inline-flex justify-start items-center gap-2">
-                            <div className="justify-start text-text-body text-[10px] font-medium leading-none">
+                        <div className="inline-flex flex-1 flex-col items-start justify-start gap-2">
+                          <div className="inline-flex items-center justify-start gap-2 self-stretch">
+                            <div className="text-text-body justify-start text-[10px] leading-none font-medium">
                               Role
                             </div>
                           </div>
-                          <div className="self-stretch flex flex-col justify-start items-start gap-1">
+                          <div className="flex flex-col items-start justify-start gap-1 self-stretch">
                             <Select
                               value={selectedItem.role}
                               onValueChange={(role) =>
@@ -728,7 +870,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 )
                               }
                             >
-                              <SelectTrigger className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal">
+                              <SelectTrigger className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -744,155 +886,24 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                       </div>
                     )}
 
-                    {/* History-specific fields */}
-                    {selectedItem.type === "history" && (
-                      <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                        <div className="self-stretch flex flex-col justify-start items-start gap-1">
-                          <div className="self-stretch inline-flex justify-start items-start gap-1">
-                            <div className="justify-start text-text-body text-[10px] font-medium leading-none">
-                              History range
-                            </div>
-                            <TooltipProvider>
-                              <Tooltip delayDuration={0}>
-                                <TooltipTrigger asChild>
-                                  <HelpCircle className="w-4 h-4 text-text-info cursor-help" />
-                                </TooltipTrigger>
-                                <TooltipContent variant="button">
-                                  <p className="max-w-xs text-xs">
-                                    Choose how to index the message range:
-                                    <br />
-                                    "From start" counts from the first message
-                                    onward.
-                                    <br />
-                                    "From end" counts backward from the latest
-                                    message.
-                                    <br />
-                                    Count starts from 0.
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                          <div className="self-stretch flex flex-col justify-start items-start gap-1">
-                            <button
-                              onClick={() => {
-                                const updatedItems = items.map((i) =>
-                                  i.id === selectedItem.id
-                                    ? { ...i, countFromEnd: !i.countFromEnd }
-                                    : i,
-                                );
-                                setItems(updatedItems);
-                                debouncedSaveMessages(updatedItems);
-                              }}
-                              className="self-stretch inline-flex justify-start items-center gap-2 cursor-pointer"
-                            >
-                              <div className="w-3 h-3 p-0.5 bg-background-surface-5 rounded-md flex justify-center items-center gap-2">
-                                {selectedItem.countFromEnd !== false && (
-                                  <div className="w-1.5 h-1.5 bg-text-primary rounded-full"></div>
-                                )}
-                              </div>
-                              <div className="justify-start text-text-primary text-[10px] font-medium leading-none">
-                                Count from end (newest → oldest)
-                              </div>
-                            </button>
-                            <button
-                              onClick={() => {
-                                const updatedItems = items.map((i) =>
-                                  i.id === selectedItem.id
-                                    ? { ...i, countFromEnd: false }
-                                    : i,
-                                );
-                                setItems(updatedItems);
-                                debouncedSaveMessages(updatedItems);
-                              }}
-                              className="self-stretch inline-flex justify-start items-center gap-2 cursor-pointer mt-1"
-                            >
-                              <div className="w-3 h-3 p-0.5 bg-background-surface-5 rounded-md flex justify-center items-center gap-2">
-                                {selectedItem.countFromEnd === false && (
-                                  <div className="w-1.5 h-1.5 bg-text-primary rounded-full"></div>
-                                )}
-                              </div>
-                              <div className="justify-start text-text-primary text-[10px] font-medium leading-none">
-                                Count from start (oldest → newest)
-                              </div>
-                            </button>
-                          </div>
-                        </div>
-                        <div className="self-stretch inline-flex justify-start items-center gap-2">
-                          <div className="justify-start text-text-subtle text-[10px] font-medium leading-none">
-                            Messages
-                          </div>
-                          <div className="w-16 inline-flex flex-col justify-start items-start gap-2">
-                            <Input
-                              type="number"
-                              value={selectedItem.start || 0}
-                              onChange={(e) => {
-                                const start = parseInt(e.target.value) || 0;
-                                const updatedItems = items.map((i) =>
-                                  i.id === selectedItem.id
-                                    ? { ...i, start }
-                                    : i,
-                                );
-                                setItems(updatedItems);
-                                debouncedSaveMessages(updatedItems);
-                              }}
-                              onFocus={() =>
-                                updatePromptMessages.setCursorActive(true)
-                              }
-                              onBlur={() =>
-                                updatePromptMessages.setCursorActive(false)
-                              }
-                              className="self-stretch min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal text-center"
-                              min="0"
-                            />
-                          </div>
-                          <div className="justify-start text-text-subtle text-[10px] font-medium leading-none">
-                            to
-                          </div>
-                          <div className="w-16 inline-flex flex-col justify-start items-start gap-2">
-                            <Input
-                              type="number"
-                              value={selectedItem.end || 8}
-                              onChange={(e) => {
-                                const end = parseInt(e.target.value) || 8;
-                                const updatedItems = items.map((i) =>
-                                  i.id === selectedItem.id ? { ...i, end } : i,
-                                );
-                                setItems(updatedItems);
-                                debouncedSaveMessages(updatedItems);
-                              }}
-                              onFocus={() =>
-                                updatePromptMessages.setCursorActive(true)
-                              }
-                              onBlur={() =>
-                                updatePromptMessages.setCursorActive(false)
-                              }
-                              className="self-stretch min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal text-center"
-                              min="1"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                     {/* Description field */}
-                    <div className="self-stretch flex-1 flex flex-col justify-start items-start gap-2 min-w-0 overflow-hidden">
-                      <div className="self-stretch justify-start text-text-body text-[10px] font-medium leading-none">
+                    <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2 self-stretch overflow-hidden">
+                      <div className="text-text-body justify-start self-stretch text-[10px] leading-none font-medium">
                         Description
                       </div>
-                      <div className="self-stretch flex-1 flex flex-col justify-start items-start gap-1 min-w-0 overflow-hidden">
-                        <div className="self-stretch flex-1 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start overflow-hidden relative min-w-0">
+                      <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-1 self-stretch overflow-hidden">
+                        <div className="bg-background-surface-0 outline-border-normal relative flex min-w-0 flex-1 flex-col items-start justify-start self-stretch overflow-hidden rounded-md outline-1 outline-offset-[-1px]">
                           <button
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-background-surface-1 flex items-center justify-center transition-colors"
+                            className="hover:bg-background-surface-1 absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-sm transition-colors"
                           >
                             {isExpanded ? (
-                              <Minimize2 className="w-4 h-4 text-text-subtle" />
+                              <Minimize2 className="text-text-subtle h-4 w-4" />
                             ) : (
-                              <Maximize2 className="w-4 h-4 text-text-subtle" />
+                              <Maximize2 className="text-text-subtle h-4 w-4" />
                             )}
                           </button>
-                          <div className="w-full h-full">
+                          <div className="h-full w-full">
                             <Editor
                               key={selectedItem.id} // Force new editor instance for each message
                               value={localMessageContent}
@@ -920,15 +931,15 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
               {/* Expanded Editor View */}
               {isExpanded && selectedItem && (
-                <div className="absolute inset-0 z-20 bg-background-surface-2 p-4">
-                  <div className="w-full h-full bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start overflow-hidden relative">
+                <div className="bg-background-surface-2 absolute inset-0 z-20 p-4">
+                  <div className="bg-background-surface-0 outline-border-normal relative flex h-full w-full flex-col items-start justify-start overflow-hidden rounded-md outline-1 outline-offset-[-1px]">
                     <button
                       onClick={() => setIsExpanded(false)}
-                      className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-background-surface-1 flex items-center justify-center transition-colors"
+                      className="hover:bg-background-surface-1 absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-sm transition-colors"
                     >
-                      <Minimize2 className="w-4 h-4 text-text-subtle" />
+                      <Minimize2 className="text-text-subtle h-4 w-4" />
                     </button>
-                    <div className="w-full h-full">
+                    <div className="h-full w-full">
                       <Editor
                         key={selectedItem.id} // Force new editor instance for each message
                         value={localMessageContent}
@@ -955,7 +966,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
         ) : (
           // Text mode
           <>
-            <div className="w-full h-full">
+            <div className="h-full w-full">
               <Editor
                 value={editorContent}
                 onChange={handleEditorChange}
@@ -970,8 +981,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
             {/* Expanded Editor View for text mode */}
             {isExpanded && (
-              <div className="absolute inset-0 z-20 bg-background-surface-2 p-4">
-                <div className="w-full h-full">
+              <div className="bg-background-surface-2 absolute inset-0 z-20 p-4">
+                <div className="h-full w-full">
                   <Editor
                     value={editorContent}
                     onChange={handleEditorChange}

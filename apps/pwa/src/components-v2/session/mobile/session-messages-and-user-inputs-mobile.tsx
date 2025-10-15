@@ -205,7 +205,7 @@ const MessageItemInternalMobile = ({
             className={cn(
               "chat-style-chat-bubble relative rounded-[8px] p-[12px]",
               isEditing && !disabled && "w-full",
-              !isMobile && "max-w-[280px]",
+              !isMobile && "max-w-[600px] min-w-[300px]",
             )}
             onClick={() =>
               !isEditing &&

@@ -12,8 +12,8 @@ import { MediaDisplay } from "@/components-v2/shared/media-display";
 // Simple tag component for displaying card tags
 const Tag = ({ name }: { name: string }) => {
   return (
-    <div className="px-1.5 py-px bg-muted rounded-lg flex justify-center items-center">
-      <div className="text-center text-xs font-normal truncate max-w-[75px]">
+    <div className="bg-muted flex items-center justify-center rounded-lg px-1.5 py-px">
+      <div className="max-w-[75px] truncate text-center text-xs font-normal">
         {name}
       </div>
     </div>
@@ -63,7 +63,7 @@ const CardWrapper = ({ children }: PropsWithChildren<{}>) => {
     <div
       ref={refWrapper}
       className={cn(
-        "relative transition-opacity duration-300 w-full aspect-196/289 ease-in-out cursor-pointer",
+        "relative aspect-196/289 w-full cursor-pointer transition-opacity duration-300 ease-in-out",
         isVisible ? "opacity-100" : "opacity-0",
         zoom === null && "opacity-0",
       )}
@@ -140,7 +140,7 @@ export const TradingCardDisplay = ({
   if (isLoading || !card) {
     return (
       <CardWrapper>
-        <CardUI className="w-[196px] h-[289px] bg-background-input rounded-xl border border-secondary shadow-none overflow-hidden">
+        <CardUI className="bg-background-input border-secondary h-[289px] w-[196px] overflow-hidden rounded-xl border shadow-none">
           <Skeleton className="h-full w-full" />
         </CardUI>
       </CardWrapper>
@@ -150,10 +150,10 @@ export const TradingCardDisplay = ({
   // Render card
   return (
     <CardWrapper>
-      <div className="w-[196px] h-[289px] flex flex-row rounded-xl border border-border-container overflow-hidden">
+      <div className="border-border-container flex h-[289px] w-[196px] flex-row overflow-hidden rounded-xl border">
         <div
           className={cn(
-            "w-[164px] h-[289px] left-0 top-0 relative overflow-hidden",
+            "relative top-0 left-0 h-[289px] w-[164px] overflow-hidden",
           )}
           onClick={onClick}
         >
@@ -167,7 +167,7 @@ export const TradingCardDisplay = ({
                 : "/img/placeholder/plot-card-image.png"
             }
             alt={card.props.title}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
             isVideo={isVideo}
             showControls={true}
             autoPlay={false}
@@ -180,18 +180,18 @@ export const TradingCardDisplay = ({
 
           {card.props.tags && card.props.tags.length > 0 ? (
             <>
-              <div className="absolute bottom-0 left-0 right-0 h-[117px] bg-gradient-to-b from-[#22222201] to-[#705e5e] to-95%" />
+              <div className="absolute right-0 bottom-0 left-0 h-[117px] bg-gradient-to-b from-[#22222201] to-[#222222] to-95%" />
             </>
           ) : (
             <>
-              <div className="absolute bottom-0 left-0 right-0 h-[88px] bg-gradient-to-b from-[#22222201] to-[#222222] to-95%" />
+              <div className="absolute right-0 bottom-0 left-0 h-[88px] bg-gradient-to-b from-[#22222201] to-[#222222] to-95%" />
             </>
           )}
 
-          <div className="absolute bottom-3 left-3 right-3 h-28 flex flex-col justify-end">
+          <div className="absolute right-3 bottom-3 left-3 flex h-28 flex-col justify-end">
             <Typo3XLarge
               className={cn(
-                "font-[32px] truncate pb-[8px] text-left",
+                "truncate pb-[8px] text-left font-[32px]",
                 "font-pragati-narrow",
               )}
             >
@@ -201,21 +201,21 @@ export const TradingCardDisplay = ({
             </Typo3XLarge>
 
             {card.props.tags && card.props.tags.length > 0 && (
-              <div className="text-[9px] font-normal text-text-secondary pb-[8px] text-left">
+              <div className="text-text-secondary pb-[8px] text-left text-[9px] font-normal">
                 {getTagString(card.props.tags || [])}
               </div>
             )}
 
-            <div className="text-left text-[9px] font-normal text-text-placeholder">
+            <div className="text-text-placeholder text-left text-[9px] font-normal">
               {card.props.tokenCount || 0} Tokens
             </div>
           </div>
         </div>
         <div
-          className={cn("w-[32px] h-[289px] overflow-hidden")}
+          className={cn("h-[289px] w-[32px] overflow-hidden")}
           onClick={onClick}
         >
-          <div className="w-full h-full object-cover opacity-70 blur-lg">
+          <div className="h-full w-full object-cover opacity-70 blur-lg">
             <MediaDisplay
               width={164}
               height={289}
@@ -226,7 +226,7 @@ export const TradingCardDisplay = ({
                   : "/img/placeholder/plot-card-image.png"
               }
               alt={card.props.title}
-              className="w-full h-full object-cover object-right"
+              className="h-full w-full object-cover object-right"
               isVideo={isVideo}
               showControls={false}
               autoPlay={false}
@@ -240,7 +240,7 @@ export const TradingCardDisplay = ({
           <div className="absolute top-2 right-2.5">
             <div
               className={cn(
-                "w-3.5 h-3.5 rounded-full inline-flex items-center justify-center",
+                "inline-flex h-3.5 w-3.5 items-center justify-center rounded-full",
                 card.props.type === CardType.Character
                   ? "bg-secondary-normal"
                   : "bg-primary-normal",
@@ -253,11 +253,11 @@ export const TradingCardDisplay = ({
               )}
             </div>
           </div>
-          <div className={cn("absolute w-[260px] top-40 right-[-113px]")}>
-            <div className="transform rotate-90 flex flex-row items-center space-x-2">
+          <div className={cn("absolute top-40 right-[-113px] w-[260px]")}>
+            <div className="flex rotate-90 transform flex-row items-center space-x-2">
               <TypoSmall
                 className={cn(
-                  "font-[12px] font-nromal w-[250px] text-text-muted-title truncate text-left",
+                  "font-nromal text-text-muted-title w-[250px] truncate text-left font-[12px]",
                 )}
               >
                 {card.props.title}
