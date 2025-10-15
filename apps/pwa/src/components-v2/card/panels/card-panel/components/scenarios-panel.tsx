@@ -336,7 +336,7 @@ export function FirstMessagesPanel({ cardId }: CardPanelProps) {
                     onClick={handleAddFirstMessage}
                     className="bg-background-surface-4 outline-border-light hover:bg-background-surface-3 flex h-7 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
                   >
-                    <Plus className="text-text-body h-4 w-4 flex-shrink-0" />
+                    <Plus className="text-text-body min-h-4 min-w-4 flex-shrink-0" />
                     <div className="text-text-primary justify-center truncate text-xs leading-none font-semibold">
                       First Message
                     </div>
