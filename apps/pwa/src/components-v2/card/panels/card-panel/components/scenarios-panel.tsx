@@ -36,52 +36,49 @@ import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 
 // Import queries and mutations
-import { 
-  cardQueries, 
-  useUpdateCardScenarios 
-} from "@/app/queries/card";
+import { cardQueries, useUpdateCardScenarios } from "@/app/queries/card";
 
 // Import the sortable component
 import { SortableItem } from "@/components-v2/card/panels/card-panel/components/sortable-item";
 
 // Import our abstraction
-import { 
-  CardPanelProps, 
-  CardPanelLoading, 
-  CardPanelError, 
-  CardPanelEmpty 
+import {
+  CardPanelProps,
+  CardPanelLoading,
+  CardPanelError,
+  CardPanelEmpty,
 } from "@/components-v2/card/panels/hooks/use-card-panel";
 
-interface ScenariosPanelProps extends CardPanelProps {}
-
-interface Scenario {
+interface FirstMessage {
   id: string;
   name: string;
   description: string;
 }
 
-export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
-  // 1. Mutation for updating scenarios
-  const updateScenarios = useUpdateCardScenarios(cardId);
+export function FirstMessagesPanel({ cardId }: CardPanelProps) {
+  // 1. Mutation for updating first messages
+  const updateFirstMessages = useUpdateCardScenarios(cardId);
 
   // 2. Query for card data - disable refetching while mutation is pending
   const { data: card, isLoading } = useQuery({
     ...cardQueries.detail(cardId),
-    enabled: !!cardId && !updateScenarios.isPending,
+    enabled: !!cardId && !updateFirstMessages.isPending,
   });
-  
+
   // 3. UI state (expansion, errors, etc.)
-  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
+  const [selectedFirstMessageId, setSelectedFirstMessageId] = useState<
+    string | null
+  >(null);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  
+
   // 4. Local form state (for immediate UI feedback)
-  const [scenarios, setScenarios] = useState<Scenario[]>([]);
-  
+  const [firstMessages, setFirstMessages] = useState<FirstMessage[]>([]);
+
   // 5. Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const lastInitializedCardId = useRef<string | null>(null);
-  
+
   // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -93,177 +90,218 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
   // 5. Initialize and sync data (cross-tab synchronization)
   useEffect(() => {
     // Initialize when card changes
-    if (cardId && cardId !== lastInitializedCardId.current && card && card instanceof PlotCard) {
-      const scenarioList = card.props.scenarios?.map((scenario, index) => ({
-        id: `scenario-${index}`,
-        name: scenario.name || "",
-        description: scenario.description || "",
-      })) || [];
-      setScenarios(scenarioList);
-      if (scenarioList.length > 0 && !selectedScenarioId) {
-        setSelectedScenarioId(scenarioList[0].id);
+    if (
+      cardId &&
+      cardId !== lastInitializedCardId.current &&
+      card &&
+      card instanceof PlotCard
+    ) {
+      const firstMessageList =
+        card.props.scenarios?.map((message, index) => ({
+          id: `first-message-${index}`,
+          name: message.name || "",
+          description: message.description || "",
+        })) || [];
+      setFirstMessages(firstMessageList);
+      if (firstMessageList.length > 0 && !selectedFirstMessageId) {
+        setSelectedFirstMessageId(firstMessageList[0].id);
       }
       lastInitializedCardId.current = cardId;
     }
     // Sync when card changes externally (cross-tab sync) - but not during mutation
-    else if (card && card instanceof PlotCard && !updateScenarios.isPending && !updateScenarios.hasCursor) {
-      const newScenarios = card.props.scenarios?.map((scenario, index) => ({
-        id: `scenario-${index}`,
-        name: scenario.name || "",
-        description: scenario.description || "",
-      })) || [];
-      
+    else if (
+      card &&
+      card instanceof PlotCard &&
+      !updateFirstMessages.isPending &&
+      !updateFirstMessages.hasCursor
+    ) {
+      const newFirstMessages =
+        card.props.scenarios?.map((message, index) => ({
+          id: `first-message-${index}`,
+          name: message.name || "",
+          description: message.description || "",
+        })) || [];
+
       // Select result caching handles object stability
-      setScenarios(newScenarios);
-      // Keep selected scenario if it still exists
-      if (selectedScenarioId && !newScenarios.find(s => s.id === selectedScenarioId)) {
-        setSelectedScenarioId(newScenarios[0]?.id || null);
+      setFirstMessages(newFirstMessages);
+      // Keep selected first message if it still exists
+      if (
+        selectedFirstMessageId &&
+        !newFirstMessages.find(
+          (message) => message.id === selectedFirstMessageId,
+        )
+      ) {
+        setSelectedFirstMessageId(newFirstMessages[0]?.id || null);
       }
     }
-  }, [cardId, card, updateScenarios.isPending, updateScenarios.hasCursor]);
+  }, [
+    cardId,
+    card,
+    updateFirstMessages.isPending,
+    updateFirstMessages.hasCursor,
+    selectedFirstMessageId,
+  ]);
 
-  // Focus on name input when selected scenario changes
+  // Focus on name input when selected first message changes
   useEffect(() => {
-    if (selectedScenarioId && nameInputRef.current) {
+    if (selectedFirstMessageId && nameInputRef.current) {
       // Small delay to ensure the input is rendered
       setTimeout(() => {
         nameInputRef.current?.focus();
         nameInputRef.current?.select();
       }, 50);
     }
-  }, [selectedScenarioId]);
+  }, [selectedFirstMessageId]);
 
+  // 6. Helper function to save first messages using mutation
+  const saveFirstMessages = useCallback(
+    (newFirstMessages: FirstMessage[]) => {
+      if (!card || !(card instanceof PlotCard)) return;
 
-  // 6. Helper function to save scenarios using mutation
-  const saveScenarios = useCallback((newScenarios: Scenario[]) => {
-    if (!card || !(card instanceof PlotCard)) return;
+      // Check for actual changes inline
+      const currentFirstMessages = card.props.scenarios || [];
 
-    // Check for actual changes inline
-    const currentScenarios = card.props.scenarios || [];
-    
-    // Convert scenarios to domain objects
-    const scenariosData = newScenarios.map((scenario) => ({
-      name: scenario.name,
-      description: scenario.description,
-    }));
-    
-    // Check if scenarios count differs or content differs
-    const hasChanges = newScenarios.length !== currentScenarios.length ||
-      newScenarios.some((scenario, index) => {
-        const currentScenario = currentScenarios[index];
-        if (!currentScenario) return true;
-        return (
-          scenario.name !== (currentScenario.name || "") ||
-          scenario.description !== (currentScenario.description || "")
-        );
-      });
+      // Convert first messages to domain objects
+      const firstMessagesData = newFirstMessages.map((message) => ({
+        name: message.name,
+        description: message.description,
+      }));
 
-    if (hasChanges) {
-      updateScenarios.mutate(scenariosData);
-    }
-  }, [card, updateScenarios]);
+      // Check if first messages count differs or content differs
+      const hasChanges =
+        newFirstMessages.length !== currentFirstMessages.length ||
+        newFirstMessages.some((message, index) => {
+          const currentMessage = currentFirstMessages[index];
+          if (!currentMessage) return true;
+          return (
+            message.name !== (currentMessage.name || "") ||
+            message.description !== (currentMessage.description || "")
+          );
+        });
+
+      if (hasChanges) {
+        updateFirstMessages.mutate(firstMessagesData);
+      }
+    },
+    [card, updateFirstMessages],
+  );
 
   // 7. Debounced save with parameters (NOT closures!)
   const debouncedSave = useMemo(
-    () => debounce((newScenarios: Scenario[]) => {
-      saveScenarios(newScenarios);
-    }, 300),
-    [saveScenarios]
+    () =>
+      debounce((newFirstMessages: FirstMessage[]) => {
+        saveFirstMessages(newFirstMessages);
+      }, 300),
+    [saveFirstMessages],
   );
 
   // Common Monaco editor mount handler with cursor tracking
-  const handleEditorMount = useCallback((editor: any) => {
-    // Register editor for variable insertion
-    const position = editor.getPosition();
-    registerCardMonacoEditor(editor, position);
-
-    // Track focus - mark cursor as active
-    editor.onDidFocusEditorWidget(() => {
+  const handleEditorMount = useCallback(
+    (editor: any) => {
+      // Register editor for variable insertion
       const position = editor.getPosition();
       registerCardMonacoEditor(editor, position);
-      updateScenarios.setCursorActive(true);
-    });
-    
-    // Track blur - mark cursor as inactive
-    editor.onDidBlurEditorWidget(() => {
-      updateScenarios.setCursorActive(false);
-    });
 
-    // Track cursor changes
-    editor.onDidChangeCursorPosition((e: any) => {
-      registerCardMonacoEditor(editor, e.position);
-    });
+      // Track focus - mark cursor as active
+      editor.onDidFocusEditorWidget(() => {
+        const position = editor.getPosition();
+        registerCardMonacoEditor(editor, position);
+        updateFirstMessages.setCursorActive(true);
+      });
 
-    // Focus the editor when mounted (only for expanded views)
-    if (editor.getDomNode()?.closest('.absolute.inset-0')) {
-      editor.focus();
-    }
-  }, [updateScenarios]);
+      // Track blur - mark cursor as inactive
+      editor.onDidBlurEditorWidget(() => {
+        updateFirstMessages.setCursorActive(false);
+      });
 
-  const selectedScenario = scenarios.find((s) => s.id === selectedScenarioId);
+      // Track cursor changes
+      editor.onDidChangeCursorPosition((e: any) => {
+        registerCardMonacoEditor(editor, e.position);
+      });
+
+      // Focus the editor when mounted (only for expanded views)
+      if (editor.getDomNode()?.closest(".absolute.inset-0")) {
+        editor.focus();
+      }
+    },
+    [updateFirstMessages],
+  );
+
+  const selectedFirstMessage = firstMessages.find(
+    (message) => message.id === selectedFirstMessageId,
+  );
 
   // 8. Change handlers that pass current values
-  const handleAddScenario = useCallback(() => {
-    const newScenario: Scenario = {
-      id: `scenario-${Date.now()}`,
-      name: `Scenario ${scenarios.length + 1}`,
+  const handleAddFirstMessage = useCallback(() => {
+    const newFirstMessage: FirstMessage = {
+      id: `first-message-${Date.now()}`,
+      name: `First Message ${firstMessages.length + 1}`,
       description: "",
     };
-    const newScenarios = [...scenarios, newScenario];
-    setScenarios(newScenarios);
-    setSelectedScenarioId(newScenario.id);
-    // Save immediately for user-initiated actions like adding scenarios
-    saveScenarios(newScenarios);
-  }, [scenarios, saveScenarios]);
+    const newFirstMessages = [...firstMessages, newFirstMessage];
+    setFirstMessages(newFirstMessages);
+    setSelectedFirstMessageId(newFirstMessage.id);
+    // Save immediately for user-initiated actions like adding first messages
+    saveFirstMessages(newFirstMessages);
+  }, [firstMessages, saveFirstMessages]);
 
-  const handleDeleteScenario = useCallback(
-    (scenarioId: string) => {
-      const newScenarios = scenarios.filter((s) => s.id !== scenarioId);
-      setScenarios(newScenarios);
-      if (selectedScenarioId === scenarioId) {
-        setSelectedScenarioId(newScenarios.length > 0 ? newScenarios[0].id : null);
+  const handleDeleteFirstMessage = useCallback(
+    (firstMessageId: string) => {
+      const newFirstMessages = firstMessages.filter(
+        (message) => message.id !== firstMessageId,
+      );
+      setFirstMessages(newFirstMessages);
+      if (selectedFirstMessageId === firstMessageId) {
+        setSelectedFirstMessageId(
+          newFirstMessages.length > 0 ? newFirstMessages[0].id : null,
+        );
       }
-      // Save immediately for user-initiated actions like deleting scenarios
-      saveScenarios(newScenarios);
+      // Save immediately for user-initiated actions like deleting first messages
+      saveFirstMessages(newFirstMessages);
     },
-    [scenarios, selectedScenarioId, saveScenarios],
+    [firstMessages, selectedFirstMessageId, saveFirstMessages],
   );
 
-  const handleUpdateScenario = useCallback(
-    (scenarioId: string, updates: Partial<Scenario>) => {
-      const newScenarios = scenarios.map((scenario) =>
-        scenario.id === scenarioId ? { ...scenario, ...updates } : scenario,
+  const handleUpdateFirstMessage = useCallback(
+    (firstMessageId: string, updates: Partial<FirstMessage>) => {
+      const newFirstMessages = firstMessages.map((message) =>
+        message.id === firstMessageId ? { ...message, ...updates } : message,
       );
-      setScenarios(newScenarios);
-      debouncedSave(newScenarios);
+      setFirstMessages(newFirstMessages);
+      debouncedSave(newFirstMessages);
     },
-    [scenarios, debouncedSave],
+    [firstMessages, debouncedSave],
   );
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
 
-    if (over && active.id !== over.id) {
-      const oldIndex = scenarios.findIndex(
-        (scenario) => scenario.id === active.id,
-      );
-      const newIndex = scenarios.findIndex(
-        (scenario) => scenario.id === over.id,
-      );
-      const newScenarios = arrayMove(scenarios, oldIndex, newIndex);
-      setScenarios(newScenarios);
-      // Save immediately for user-initiated actions like reordering
-      saveScenarios(newScenarios);
-    }
-  }, [scenarios, saveScenarios]);
+      if (over && active.id !== over.id) {
+        const oldIndex = firstMessages.findIndex(
+          (message) => message.id === active.id,
+        );
+        const newIndex = firstMessages.findIndex(
+          (message) => message.id === over.id,
+        );
+        const newFirstMessages = arrayMove(firstMessages, oldIndex, newIndex);
+        setFirstMessages(newFirstMessages);
+        // Save immediately for user-initiated actions like reordering
+        saveFirstMessages(newFirstMessages);
+      }
+    },
+    [firstMessages, saveFirstMessages],
+  );
 
   // 9. Early returns
   if (isLoading) {
-    return <CardPanelLoading message="Loading scenarios..." />;
+    return <CardPanelLoading message="Loading first messages..." />;
   }
 
   if (!card) {
-    return <CardPanelError message="Scenarios are only available for plot cards" />;
+    return (
+      <CardPanelError message="First messages are only available for plot cards" />
+    );
   }
 
   // 10. Render
@@ -271,56 +309,57 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
     <TooltipProvider>
       <div
         ref={containerRef}
-        className="h-full flex flex-col bg-background-surface-2 relative"
+        className="bg-background-surface-2 relative flex h-full flex-col"
       >
-
         <div className="flex-1 overflow-hidden p-2">
-          {!selectedScenario && scenarios.length === 0 ? (
+          {!selectedFirstMessage && firstMessages.length === 0 ? (
             <CardPanelEmpty
-              title="No scenario"
-              description="Scenarios set the opening scene for your session"
+              title="No First Message"
+              description="First messages set the opening scene for your session"
               action={
                 <Button
-                  onClick={handleAddScenario}
+                  onClick={handleAddFirstMessage}
                   variant="secondary"
                   size="sm"
                 >
-                  <Plus className="min-w-4 min-h-4" />
-                  Create new scenario
+                  <Plus className="min-h-4 min-w-4" />
+                  Create new first message
                 </Button>
               }
             />
           ) : (
-            <div className="flex gap-2 h-full min-w-0">
-              {/* Left panel - Scenario list */}
-              <div className="flex flex-col gap-2 flex-1 min-w-[146px] max-w-[256px] overflow-hidden">
-                <div className="self-stretch pl-7 pr-2 inline-flex justify-start items-center gap-2 overflow-hidden">
+            <div className="flex h-full min-w-0 gap-2">
+              {/* Left panel - First Message list */}
+              <div className="flex max-w-[256px] min-w-[146px] flex-1 flex-col gap-2 overflow-hidden">
+                <div className="inline-flex items-center justify-start gap-2 self-stretch overflow-hidden pr-2 pl-7">
                   <button
-                    onClick={handleAddScenario}
-                    className="flex-1 h-7 px-3 py-2 bg-background-surface-4 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-light flex justify-center items-center gap-2 hover:bg-background-surface-3 transition-colors overflow-hidden"
+                    onClick={handleAddFirstMessage}
+                    className="bg-background-surface-4 outline-border-light hover:bg-background-surface-3 flex h-7 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
                   >
-                    <Plus className="w-4 h-4 text-text-body flex-shrink-0" />
-                    <div className="justify-center text-text-primary text-xs font-semibold leading-none truncate">
-                      Scenario
+                    <Plus className="text-text-body max-h-4 max-w-4 flex-shrink-0" />
+                    <div className="text-text-primary justify-center truncate text-xs leading-none font-semibold">
+                      First Message
                     </div>
                   </button>
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
-                      <HelpCircle className="max-w-[16px] max-h-[16px] text-text-info cursor-help flex-shrink-0" />
+                      <HelpCircle className="text-text-info max-h-[16px] max-w-[16px] flex-shrink-0 cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
                       <p>
-                        The scenarios in this list are <br/>available for selection as<br/> session opening messages.
+                        The first messages in this list are <br />
+                        available for selection as
+                        <br /> session opening messages.
                       </p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
 
-                {scenarios.length === 0 ? (
-                  <div className="text-center py-8">
+                {firstMessages.length === 0 ? (
+                  <div className="py-8 text-center">
                     <div className="text-text-subtle text-xs">
-                      No scenarios yet. Click "Scenario" to add your first
-                      scenario.
+                      No first messages yet. Click "First Message" to add your
+                      first message.
                     </div>
                   </div>
                 ) : (
@@ -335,16 +374,18 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
                       ]}
                     >
                       <SortableContext
-                        items={scenarios.map((scenario) => scenario.id)}
+                        items={firstMessages.map((message) => message.id)}
                         strategy={verticalListSortingStrategy}
                       >
                         <div className="flex flex-col gap-2 pr-2">
-                          {scenarios.map((scenario) => (
+                          {firstMessages.map((message) => (
                             <SortableItem
-                              key={scenario.id}
-                              item={scenario}
-                              isSelected={scenario.id === selectedScenarioId}
-                              onClick={() => setSelectedScenarioId(scenario.id)}
+                              key={message.id}
+                              item={message}
+                              isSelected={message.id === selectedFirstMessageId}
+                              onClick={() =>
+                                setSelectedFirstMessageId(message.id)
+                              }
                             />
                           ))}
                         </div>
@@ -355,19 +396,21 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
               </div>
 
               {/* Divider */}
-              <div className="w-px self-stretch bg-border-dark"></div>
+              <div className="bg-border-dark w-px self-stretch"></div>
 
-              {/* Right panel - Scenario details */}
-              <div className="flex-1 min-w-0 overflow-hidden">
-                {selectedScenario ? (
-                  <div className="w-full h-full flex flex-col justify-start items-start gap-4 min-w-0 relative p-1">
+              {/* Right panel - First Message details */}
+              <div className="min-w-0 flex-1 overflow-hidden">
+                {selectedFirstMessage ? (
+                  <div className="relative flex h-full w-full min-w-0 flex-col items-start justify-start gap-4 p-1">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => handleDeleteScenario(selectedScenario.id)}
-                          className="absolute top-1 right-1 w-6 h-6 rounded-sm hover:opacity-80 transition-opacity z-10"
+                          onClick={() =>
+                            handleDeleteFirstMessage(selectedFirstMessage.id)
+                          }
+                          className="absolute top-1 right-1 z-10 h-6 w-6 rounded-sm transition-opacity hover:opacity-80"
                         >
-                          <Trash2 className="min-w-3.5 min-h-4 text-text-subtle" />
+                          <Trash2 className="text-text-subtle min-h-4 min-w-3.5" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="bottom" variant="button">
@@ -375,43 +418,50 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
                       </TooltipContent>
                     </Tooltip>
 
-                    {/* Scenario name field */}
-                    <div className="self-stretch flex flex-col justify-start items-start gap-2 mt-8">
-                      <div className="self-stretch inline-flex justify-start items-center gap-2">
-                        <div className="justify-start text-text-body text-[10px] font-medium leading-none">
-                          Scenario name
+                    {/* First Message name field */}
+                    <div className="mt-8 flex flex-col items-start justify-start gap-2 self-stretch">
+                      <div className="inline-flex items-center justify-start gap-2 self-stretch">
+                        <div className="text-text-body justify-start text-[10px] leading-none font-medium">
+                          First Message name
                         </div>
                       </div>
-                      <div className="self-stretch flex flex-col justify-start items-start gap-1">
+                      <div className="flex flex-col items-start justify-start gap-1 self-stretch">
                         <Input
                           ref={nameInputRef}
-                          value={selectedScenario.name}
+                          value={selectedFirstMessage.name}
                           onChange={(e) =>
-                            handleUpdateScenario(selectedScenario.id, {
+                            handleUpdateFirstMessage(selectedFirstMessage.id, {
                               name: e.target.value,
                             })
                           }
-                          onFocus={() => updateScenarios.setCursorActive(true)}
-                          onBlur={() => updateScenarios.setCursorActive(false)}
-                          className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+                          onFocus={() =>
+                            updateFirstMessages.setCursorActive(true)
+                          }
+                          onBlur={() =>
+                            updateFirstMessages.setCursorActive(false)
+                          }
+                          className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
                           placeholder=""
                         />
                       </div>
                     </div>
 
                     {/* Description field */}
-                    <div className="self-stretch flex-1 flex flex-col justify-start items-start gap-2 min-w-0 overflow-hidden">
-                      <div className="self-stretch justify-start text-text-body text-[10px] font-medium leading-none">
+                    <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2 self-stretch overflow-hidden">
+                      <div className="text-text-body justify-start self-stretch text-[10px] leading-none font-medium">
                         Description
                       </div>
-                      <div className="self-stretch flex-1 flex flex-col justify-start items-start gap-1 min-w-0 overflow-hidden">
-                        <div className="self-stretch flex-1 min-w-0">
+                      <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-1 self-stretch overflow-hidden">
+                        <div className="min-w-0 flex-1 self-stretch">
                           <Editor
-                            value={selectedScenario.description}
+                            value={selectedFirstMessage.description}
                             onChange={(value) =>
-                              handleUpdateScenario(selectedScenario.id, {
-                                description: value || "",
-                              })
+                              handleUpdateFirstMessage(
+                                selectedFirstMessage.id,
+                                {
+                                  description: value || "",
+                                },
+                              )
                             }
                             language="markdown"
                             expandable={true}
@@ -425,9 +475,9 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full">
+                  <div className="flex h-full items-center justify-center">
                     <div className="text-text-subtle text-xs">
-                      Select a scenario to edit its details
+                      Select a first message to edit its details
                     </div>
                   </div>
                 )}
@@ -437,13 +487,13 @@ export function ScenariosPanel({ cardId }: ScenariosPanelProps) {
         </div>
 
         {/* Expanded Editor View */}
-        {isDescriptionExpanded && selectedScenario && (
-          <div className="absolute inset-0 z-20 bg-background-surface-2 p-4">
-            <div className="w-full h-full">
+        {isDescriptionExpanded && selectedFirstMessage && (
+          <div className="bg-background-surface-2 absolute inset-0 z-20 p-4">
+            <div className="h-full w-full">
               <Editor
-                value={selectedScenario.description}
+                value={selectedFirstMessage.description}
                 onChange={(value) =>
-                  handleUpdateScenario(selectedScenario.id, {
+                  handleUpdateFirstMessage(selectedFirstMessage.id, {
                     description: value || "",
                   })
                 }

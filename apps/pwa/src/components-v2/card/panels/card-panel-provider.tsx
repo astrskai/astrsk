@@ -9,7 +9,10 @@ interface CardPanelContextType {
   cardId: string;
   api: DockviewApi | null;
   panelVisibility: CardPanelVisibility;
-  setPanelVisibility: (panel: keyof CardPanelVisibility, visible: boolean) => void;
+  setPanelVisibility: (
+    panel: keyof CardPanelVisibility,
+    visible: boolean,
+  ) => void;
   openPanel: (panelType: string) => void;
   closePanel: (panelType: string) => void;
   invalidateExternalQueries: () => Promise<void>;
@@ -20,7 +23,9 @@ const CardPanelContext = createContext<CardPanelContextType | null>(null);
 export function useCardPanelContext() {
   const context = useContext(CardPanelContext);
   if (!context) {
-    throw new Error("useCardPanelContext must be used within CardPanelProvider");
+    throw new Error(
+      "useCardPanelContext must be used within CardPanelProvider",
+    );
   }
   return context;
 }
@@ -30,7 +35,10 @@ interface CardPanelProviderProps {
   cardId: string;
   api: DockviewApi | null;
   panelVisibility: CardPanelVisibility;
-  setPanelVisibility: (panel: keyof CardPanelVisibility, visible: boolean) => void;
+  setPanelVisibility: (
+    panel: keyof CardPanelVisibility,
+    visible: boolean,
+  ) => void;
   invalidateExternalQueries: () => Promise<void>;
   card?: Card | null;
 }
@@ -49,7 +57,7 @@ export function CardPanelProvider({
       if (!api) return;
 
       const panelId = `${panelType}-${cardId}`;
-      
+
       // Check if panel already exists
       const existingPanel = api.getPanel(panelId);
       if (existingPanel) {
@@ -65,7 +73,7 @@ export function CardPanelProvider({
         const pType = extractCardPanelType(panel.id, cardId);
         return pType === panelType && panel.params?.cardId === cardId;
       });
-      
+
       if (existingPanelByType) {
         // Panel is already open with a different ID, focus on it
         existingPanelByType.focus();
@@ -75,7 +83,7 @@ export function CardPanelProvider({
       // Determine panel title and handle type mapping
       let title = panelType;
       let actualPanelType = panelType;
-      
+
       switch (panelType) {
         case "metadata":
           title = "Metadata";
@@ -97,7 +105,7 @@ export function CardPanelProvider({
           title = "Variables";
           break;
         case "scenarios":
-          title = "Scenarios";
+          title = "First Message";
           break;
         case "imageGenerator":
           title = "Image studio";
@@ -113,7 +121,7 @@ export function CardPanelProvider({
           const pType = extractCardPanelType(panel.id, cardId);
           return pType === actualPanelType && panel.params?.cardId === cardId;
         });
-        
+
         if (existingMappedPanel) {
           existingMappedPanel.focus();
           return;
@@ -122,14 +130,16 @@ export function CardPanelProvider({
 
       // Check if there are any panels besides the card panel
       const panels = api.panels;
-      const hasOtherPanels = Object.values(panels).some((panel: IDockviewPanel) => panel.id !== 'card-panel-main');
-      
+      const hasOtherPanels = Object.values(panels).some(
+        (panel: IDockviewPanel) => panel.id !== "card-panel-main",
+      );
+
       // Check current groups
       const groups = api.groups;
-      
+
       // Use the actual panel type for the ID
       const actualPanelId = `${actualPanelType}-${cardId}`;
-      
+
       // Final check before adding - check if panel with actualPanelId already exists
       const finalCheck = api.getPanel(actualPanelId);
       if (finalCheck) {
@@ -137,17 +147,19 @@ export function CardPanelProvider({
         setPanelVisibility(panelType as keyof CardPanelVisibility, true);
         return;
       }
-      
+
       // Add new panel
       if (hasOtherPanels) {
         // Find a non-card panel group to add to
-        const nonCardGroup = groups.find((g: DockviewGroupPanel) => g.id !== '1' && !g.model?.locked);
+        const nonCardGroup = groups.find(
+          (g: DockviewGroupPanel) => g.id !== "1" && !g.model?.locked,
+        );
         if (nonCardGroup && nonCardGroup.panels.length > 0) {
           // Add to the first non-card group
           api.addPanel({
             id: actualPanelId,
             component: actualPanelType,
-            tabComponent: 'colored',
+            tabComponent: "colored",
             title,
             params: { cardId },
             position: {
@@ -157,36 +169,38 @@ export function CardPanelProvider({
         } else {
           // Fallback: open to the right of card panel with 25% width
           const containerWidth = api.width;
-          const panelWidth = containerWidth > 0 ? Math.floor(containerWidth * 0.25) : 384;
-          
+          const panelWidth =
+            containerWidth > 0 ? Math.floor(containerWidth * 0.25) : 384;
+
           api.addPanel({
             id: actualPanelId,
             component: actualPanelType,
-            tabComponent: 'colored',
+            tabComponent: "colored",
             title,
             initialWidth: panelWidth,
             params: { cardId },
             position: {
-              direction: 'right',
-              referencePanel: 'card-panel-main',
+              direction: "right",
+              referencePanel: "card-panel-main",
             },
           });
         }
       } else {
         // If only card panel exists, open to the right of it with 25% width
         const containerWidth = api.width;
-        const panelWidth = containerWidth > 0 ? Math.floor(containerWidth * 0.25) : 384;
-        
+        const panelWidth =
+          containerWidth > 0 ? Math.floor(containerWidth * 0.25) : 384;
+
         api.addPanel({
           id: actualPanelId,
           component: actualPanelType,
-          tabComponent: 'colored',
+          tabComponent: "colored",
           title,
           initialWidth: panelWidth,
           params: { cardId },
           position: {
-            direction: 'right',
-            referencePanel: 'card-panel-main',
+            direction: "right",
+            referencePanel: "card-panel-main",
           },
         });
       }
@@ -194,7 +208,7 @@ export function CardPanelProvider({
       // Update visibility state (use original panelType for visibility tracking)
       setPanelVisibility(panelType as keyof CardPanelVisibility, true);
     },
-    [api, cardId, setPanelVisibility, card]
+    [api, cardId, setPanelVisibility, card],
   );
 
   const closePanel = useCallback(
@@ -226,7 +240,7 @@ export function CardPanelProvider({
       // Update visibility state
       setPanelVisibility(panelType as keyof CardPanelVisibility, false);
     },
-    [api, cardId, setPanelVisibility, card]
+    [api, cardId, setPanelVisibility, card],
   );
 
   const contextValue: CardPanelContextType = {

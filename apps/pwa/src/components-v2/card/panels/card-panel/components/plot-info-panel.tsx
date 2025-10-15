@@ -7,15 +7,12 @@ import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 
 // Import queries and mutations
-import { 
-  cardQueries, 
-  useUpdatePlotDescription 
-} from "@/app/queries/card";
+import { cardQueries, useUpdatePlotDescription } from "@/app/queries/card";
 
-import { 
-  CardPanelProps, 
-  CardPanelLoading, 
-  CardPanelError 
+import {
+  CardPanelProps,
+  CardPanelLoading,
+  CardPanelError,
 } from "@/components-v2/card/panels/hooks/use-card-panel";
 
 interface PlotInfoPanelProps extends CardPanelProps {}
@@ -27,15 +24,18 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
   // 2. Query for card data - disable refetching while editing or cursor is active
   const { data: card, isLoading } = useQuery({
     ...cardQueries.detail(cardId),
-    enabled: !!cardId && !updatePlotDescription.isEditing && !updatePlotDescription.hasCursor,
+    enabled:
+      !!cardId &&
+      !updatePlotDescription.isEditing &&
+      !updatePlotDescription.hasCursor,
   });
-  
+
   // 3. UI state (expansion, errors, etc.)
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   // 4. Local form state (for immediate UI feedback)
   const [description, setDescription] = useState("");
-  
+
   // 5. Refs
   const lastInitializedCardId = useRef<string | null>(null);
 
@@ -51,7 +51,11 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
       lastInitializedCardId.current = cardId;
     }
     // Sync when card changes externally (cross-tab sync) - but not during editing
-    else if (card && !updatePlotDescription.isEditing && !updatePlotDescription.hasCursor) {
+    else if (
+      card &&
+      !updatePlotDescription.isEditing &&
+      !updatePlotDescription.hasCursor
+    ) {
       if (card instanceof PlotCard) {
         const newDescription = card.props.description || "";
         // Only update if description actually changed
@@ -62,67 +66,83 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
         setDescription("");
       }
     }
-  }, [cardId, card, updatePlotDescription.isEditing, updatePlotDescription.hasCursor, description]);
+  }, [
+    cardId,
+    card,
+    updatePlotDescription.isEditing,
+    updatePlotDescription.hasCursor,
+    description,
+  ]);
 
   // 7. Common Monaco editor mount handler with cursor tracking
-  const handleEditorMount = useCallback((editor: any) => {
-    // Register editor for variable insertion
-    const position = editor.getPosition();
-    registerCardMonacoEditor(editor, position);
-
-    // Track focus - mark cursor as active
-    editor.onDidFocusEditorWidget(() => {
+  const handleEditorMount = useCallback(
+    (editor: any) => {
+      // Register editor for variable insertion
       const position = editor.getPosition();
       registerCardMonacoEditor(editor, position);
-      updatePlotDescription.setCursorActive(true);
-    });
-    
-    // Track blur - mark cursor as inactive
-    editor.onDidBlurEditorWidget(() => {
-      updatePlotDescription.setCursorActive(false);
-    });
 
-    // Track cursor changes
-    editor.onDidChangeCursorPosition(
-      (e: editor.ICursorPositionChangedEvent) => {
-        registerCardMonacoEditor(editor, e.position);
-      },
-    );
+      // Track focus - mark cursor as active
+      editor.onDidFocusEditorWidget(() => {
+        const position = editor.getPosition();
+        registerCardMonacoEditor(editor, position);
+        updatePlotDescription.setCursorActive(true);
+      });
 
-    // Focus the editor when mounted (only for expanded views)
-    if (editor.getDomNode()?.closest('.absolute.inset-0')) {
-      editor.focus();
-    }
-  }, [updatePlotDescription]);
+      // Track blur - mark cursor as inactive
+      editor.onDidBlurEditorWidget(() => {
+        updatePlotDescription.setCursorActive(false);
+      });
+
+      // Track cursor changes
+      editor.onDidChangeCursorPosition(
+        (e: editor.ICursorPositionChangedEvent) => {
+          registerCardMonacoEditor(editor, e.position);
+        },
+      );
+
+      // Focus the editor when mounted (only for expanded views)
+      if (editor.getDomNode()?.closest(".absolute.inset-0")) {
+        editor.focus();
+      }
+    },
+    [updatePlotDescription],
+  );
 
   // 8. Helper function to save description using mutation
-  const saveDescription = useCallback((newDescription: string) => {
-    if (!card || !(card instanceof PlotCard)) return;
+  const saveDescription = useCallback(
+    (newDescription: string) => {
+      if (!card || !(card instanceof PlotCard)) return;
 
-    // Check for actual changes inline
-    const currentDescription = card.props.description || "";
-    
-    // If no changes, don't save
-    if (newDescription === currentDescription) {
-      return;
-    }
-    
-    updatePlotDescription.mutate(newDescription);
-  }, [card, updatePlotDescription]);
+      // Check for actual changes inline
+      const currentDescription = card.props.description || "";
+
+      // If no changes, don't save
+      if (newDescription === currentDescription) {
+        return;
+      }
+
+      updatePlotDescription.mutate(newDescription);
+    },
+    [card, updatePlotDescription],
+  );
 
   // 9. Debounced save with parameters (NOT closures!)
   const debouncedSave = useMemo(
-    () => debounce((desc: string) => {
-      saveDescription(desc);
-    }, 300),
-    [saveDescription]
+    () =>
+      debounce((desc: string) => {
+        saveDescription(desc);
+      }, 300),
+    [saveDescription],
   );
 
   // 10. Change handlers that pass current values
-  const handleDescriptionChange = useCallback((value: string) => {
-    setDescription(value);
-    debouncedSave(value);
-  }, [debouncedSave]);
+  const handleDescriptionChange = useCallback(
+    (value: string) => {
+      setDescription(value);
+      debouncedSave(value);
+    },
+    [debouncedSave],
+  );
 
   // 11. Early returns using abstraction components
   if (isLoading) {
@@ -134,20 +154,21 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
   }
 
   if (!(card instanceof PlotCard)) {
-    return <CardPanelError message="Plot info is only available for plot cards" />;
+    return (
+      <CardPanelError message="Plot info is only available for plot cards" />
+    );
   }
 
   // 12. Render
   return (
-    <div className="h-full w-full p-4 bg-background-surface-2 flex flex-col gap-4 overflow-hidden relative">
-
-      {/* Description */}
-      <div className="self-stretch flex-1 flex flex-col justify-start items-start gap-2 min-w-0 overflow-hidden">
-        <div className="self-stretch justify-start text-text-body text-[10px] font-medium leading-none">
-          Description
+    <div className="bg-background-surface-2 relative flex h-full w-full flex-col gap-4 overflow-hidden p-4">
+      {/* Scenario */}
+      <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2 self-stretch overflow-hidden">
+        <div className="text-text-body justify-start self-stretch text-[10px] leading-none font-medium">
+          Scenario
         </div>
-        <div className="self-stretch flex-1 flex flex-col justify-start items-start gap-1 min-w-0 overflow-hidden">
-          <div className="self-stretch flex-1 min-w-0">
+        <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-1 self-stretch overflow-hidden">
+          <div className="min-w-0 flex-1 self-stretch">
             <Editor
               value={description}
               onChange={(value) => handleDescriptionChange(value || "")}
@@ -159,8 +180,8 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
               containerClassName="h-full"
             />
           </div>
-          <div className="self-stretch px-4 inline-flex justify-center items-center gap-2">
-            <div className="flex-1 justify-start text-text-info text-[10px] font-medium leading-none">
+          <div className="inline-flex items-center justify-center gap-2 self-stretch px-4">
+            <div className="text-text-info flex-1 justify-start text-[10px] leading-none font-medium">
               {"{{session.scenario}}"}
             </div>
           </div>
@@ -169,8 +190,8 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
 
       {/* Expanded Editor View */}
       {isExpanded && (
-        <div className="absolute inset-0 z-20 bg-background-surface-2 p-4">
-          <div className="w-full h-full">
+        <div className="bg-background-surface-2 absolute inset-0 z-20 p-4">
+          <div className="h-full w-full">
             <Editor
               value={description}
               onChange={(value) => handleDescriptionChange(value || "")}
