@@ -1,0 +1,121 @@
+[
+  {
+    "sql": [
+      "CREATE TABLE IF NOT EXISTS \"agents\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"description\" text NOT NULL,\n\t\"target_api_type\" varchar NOT NULL,\n\t\"api_source\" jsonb,\n\t\"model_id\" varchar,\n\t\"model_name\" varchar,\n\t\"prompt_messages\" text NOT NULL,\n\t\"enabled_parameters\" jsonb NOT NULL,\n\t\"parameter_values\" jsonb NOT NULL,\n\t\"enabled_structured_output\" boolean DEFAULT false NOT NULL,\n\t\"schema_name\" varchar,\n\t\"schema_description\" text,\n\t\"schema_fields\" jsonb,\n\t\"token_count\" integer DEFAULT 0 NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE IF NOT EXISTS \"api_connections\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"title\" varchar NOT NULL,\n\t\"source\" varchar NOT NULL,\n\t\"base_url\" varchar,\n\t\"api_key\" varchar,\n\t\"model_urls\" jsonb,\n\t\"openrouter_provider_sort\" varchar,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE IF NOT EXISTS \"assets\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"hash\" varchar NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"size_byte\" integer NOT NULL,\n\t\"mime_type\" varchar NOT NULL,\n\t\"file_path\" varchar NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE IF NOT EXISTS \"backgrounds\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"asset_id\" uuid NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE IF NOT EXISTS \"cards\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"title\" varchar NOT NULL,\n\t\"icon_asset_id\" uuid,\n\t\"type\" varchar NOT NULL,\n\t\"tags\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"creator\" varchar,\n\t\"card_summary\" text,\n\t\"version\" varchar,\n\t\"conceptual_origin\" varchar,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE IF NOT EXISTS \"character_cards\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"description\" text,\n\t\"example_dialogue\" text,\n\t\"lorebook\" jsonb,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE IF NOT EXISTS \"configs\" (\n\t\"key\" varchar PRIMARY KEY NOT NULL,\n\t\"value\" text NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE IF NOT EXISTS \"flows\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"description\" text NOT NULL,\n\t\"nodes\" jsonb NOT NULL,\n\t\"edges\" jsonb NOT NULL,\n\t\"agents\" jsonb NOT NULL,\n\t\"response_template\" text NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE IF NOT EXISTS \"plot_cards\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"description\" text,\n\t\"scenarios\" jsonb,\n\t\"lorebook\" jsonb,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE IF NOT EXISTS \"sessions\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"title\" varchar NOT NULL,\n\t\"all_cards\" jsonb NOT NULL,\n\t\"user_character_card_id\" uuid,\n\t\"turn_ids\" jsonb NOT NULL,\n\t\"background_id\" uuid,\n\t\"translation\" jsonb,\n\t\"chat_styles\" jsonb,\n\t\"flow_id\" uuid NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE IF NOT EXISTS \"turns\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"session_id\" uuid NOT NULL,\n\t\"character_card_id\" uuid,\n\t\"character_name\" varchar,\n\t\"options\" jsonb NOT NULL,\n\t\"selected_option_index\" smallint NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n"
+    ],
+    "bps": true,
+    "folderMillis": 1749422277915,
+    "hash": "d69b1e98c14062152189adaccec8b373cf45c761dedd0ee9790eb1b676aaa5e2"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"agents\" ADD COLUMN IF NOT EXISTS \"text_prompt\" text DEFAULT '' NOT NULL;",
+      "\nALTER TABLE \"agents\" ADD COLUMN IF NOT EXISTS \"output_format\" varchar DEFAULT 'structured_output';",
+      "\nALTER TABLE \"agents\" ADD COLUMN IF NOT EXISTS \"color\" varchar DEFAULT '#3b82f6' NOT NULL;",
+      "\nALTER TABLE \"flows\" ADD COLUMN IF NOT EXISTS \"panel_structure\" jsonb;",
+      "\nALTER TABLE \"flows\" ADD COLUMN IF NOT EXISTS \"viewport\" jsonb;"
+    ],
+    "bps": true,
+    "folderMillis": 1751285506373,
+    "hash": "ab8f41bf98eb21e4b235f5465630f5d6fe76ce76b85ec18b69348bb665a012f7"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"agents\" ADD COLUMN IF NOT EXISTS \"output_streaming\" boolean DEFAULT true;"
+    ],
+    "bps": true,
+    "folderMillis": 1751540259329,
+    "hash": "ecbeaffe7966bcb1a9386ebbcd8ed4f70093e563a42e593f95cc603e37d9726f"
+  },
+  {
+    "sql": [
+      "DROP TABLE IF EXISTS \"configs\" CASCADE;",
+      "\nALTER TABLE \"sessions\" ADD COLUMN IF NOT EXISTS \"auto_reply\" varchar DEFAULT 'off' NOT NULL;",
+      "\nALTER TABLE \"flows\" DROP COLUMN IF EXISTS \"agents\" CASCADE;"
+    ],
+    "bps": true,
+    "folderMillis": 1753330227857,
+    "hash": "da44a5d26854274949f91db93dfeb5b81c0cfdbe9d006642c46070d226cbdc63"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"flows\" ADD COLUMN \"ready_state\" varchar DEFAULT 'draft' NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1754306945802,
+    "hash": "8afd6ad50d11399ee5e7de9309e35e108b7a2388c0d4b2dac7cc32e9cf44727c"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"flows\" ADD COLUMN \"validation_issues\" jsonb;"
+    ],
+    "bps": true,
+    "folderMillis": 1754365797778,
+    "hash": "ded584de8b0251c78e9c4ff46beadbc92eae366153c5371aac95fdfa75843c10"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"flows\" ADD COLUMN \"data_store_schema\" jsonb;"
+    ],
+    "bps": true,
+    "folderMillis": 1754544735855,
+    "hash": "87275ce7e4304c0401e1ad751f2f61d6e1df9618f76ca93944badfbe81dd9030"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" ADD COLUMN \"data_store\" jsonb DEFAULT '{}'::jsonb;"
+    ],
+    "bps": true,
+    "folderMillis": 1754962374495,
+    "hash": "338a246aa9bb69573911159c80b2b69388648e7a57d0cb9f29e063626c57048e"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" DROP COLUMN \"data_store\" CASCADE;"
+    ],
+    "bps": true,
+    "folderMillis": 1755498908780,
+    "hash": "210dff2deb7ae024c474eaeb50a58da3f818a61599a67e2b5c6276b0efbbdb13"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" ADD COLUMN \"data_schema_order\" jsonb DEFAULT '[]'::jsonb NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1755603532043,
+    "hash": "10d16f332ce852841ecd1922a18cf39ce468480388278f01d5ff5cc878f56941"
+  },
+  {
+    "sql": [
+      "CREATE TABLE \"data_store_nodes\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"flow_id\" uuid NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"color\" varchar DEFAULT '#3b82f6' NOT NULL,\n\t\"data_store_fields\" jsonb DEFAULT '[]'::jsonb,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE \"if_nodes\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"flow_id\" uuid NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"color\" varchar DEFAULT '#3b82f6' NOT NULL,\n\t\"logicOperator\" varchar,\n\t\"conditions\" jsonb DEFAULT '[]'::jsonb,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n"
+    ],
+    "bps": true,
+    "folderMillis": 1755658008260,
+    "hash": "7869d980df5f344abed43f89fd9199797935a0e14b2870405b650348353d8674"
+  },
+  {
+    "sql": [
+      "CREATE TABLE \"generated_images\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"name\" varchar NOT NULL,\n\t\"asset_id\" uuid NOT NULL,\n\t\"prompt\" text NOT NULL,\n\t\"style\" varchar,\n\t\"aspect_ratio\" varchar,\n\t\"media_type\" varchar,\n\t\"thumbnail_asset_id\" uuid,\n\t\"associated_card_id\" uuid,\n\t\"is_session_generated\" boolean DEFAULT false,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE \"vibe_sessions\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"session_id\" varchar NOT NULL,\n\t\"resource_id\" varchar NOT NULL,\n\t\"resource_type\" varchar NOT NULL,\n\t\"messages\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"applied_changes\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"ai_results\" jsonb,\n\t\"conversation_history\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"snapshots\" jsonb DEFAULT '[]'::jsonb NOT NULL,\n\t\"status\" varchar NOT NULL,\n\t\"version\" integer DEFAULT 1 NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL,\n\t\"last_active_at\" text NOT NULL,\n\tCONSTRAINT \"vibe_sessions_session_id_unique\" UNIQUE(\"session_id\")\n);\n",
+      "\nALTER TABLE \"agents\" ADD COLUMN \"model_tier\" varchar DEFAULT 'light';",
+      "\nALTER TABLE \"cards\" ADD COLUMN \"vibe_session_id\" uuid;",
+      "\nALTER TABLE \"cards\" ADD COLUMN \"image_prompt\" text;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"vibe_session_id\" uuid;",
+      "\nCREATE UNIQUE INDEX \"unique_resource_session\" ON \"vibe_sessions\" USING btree (\"resource_id\",\"resource_type\");"
+    ],
+    "bps": true,
+    "folderMillis": 1758216748714,
+    "hash": "b4e0d123a01e9ec664c53d5f7c6e284a150c464c422934d868a5770f8399f672"
+  }
+]

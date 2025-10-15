@@ -10,6 +10,7 @@
   "scripts": {
     "dev:pwa": "turbo dev --filter pwa",
     "dev:electron": "turbo dev --filter electron",
+    "build:drizzle": "turbo build --filter @astrsk/drizzle",
     "build:pwa": "turbo build --filter pwa",
     "build:electron:win": "turbo build:electron:win --filter electron",
     "build:electron:mac": "turbo build:electron:mac --filter electron",

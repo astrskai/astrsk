@@ -1,0 +1,23 @@
+{
+  "name": "@astrsk/drizzle",
+  "version": "3.0.4",
+  "type": "module",
+  "scripts": {
+    "export": "npx tsx src/export-to-json.ts",
+    "clean": "rimraf dist",
+    "prebuild": "pnpm clean",
+    "build": "tsc && cp -r src/migrations dist/migrations"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.5"
+  },
+  "devDependencies": {
+    "@astrsk/shared": "workspace:*",
+    "@types/node": "^24.7.2",
+    "drizzle-kit": "^0.31.5",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.3",
+    "typescript": "~5.7.2"
+  },
+  "packageManager": "pnpm@10.14.0"
+}

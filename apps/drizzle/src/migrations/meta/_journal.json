@@ -1,0 +1,90 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1749422277915,
+      "tag": "20250608223757_init",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1751285506373,
+      "tag": "20250630121146_v2.0.0",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751540259329,
+      "tag": "20250703105739_v2.0.1",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1753330227857,
+      "tag": "20250724041027_v2.1.0",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1754306945802,
+      "tag": "20250804112905_ready-state",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1754365797778,
+      "tag": "20250805034957_issue-field",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1754544735855,
+      "tag": "20250807053215_flow-schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1754962374495,
+      "tag": "20250812013254_data_store",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1755498908780,
+      "tag": "20250818063508_remove_data_store",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1755603532043,
+      "tag": "20250819113852_sessions_data_schema_order",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1755658008260,
+      "tag": "20250820024648_nodes",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1758216748714,
+      "tag": "20250918173228_v3.0.0",
+      "breakpoints": true
+    }
+  ]
+}
