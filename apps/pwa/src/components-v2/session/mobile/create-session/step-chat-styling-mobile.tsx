@@ -20,8 +20,13 @@ import {
 import { ChatStyles } from "@/modules/session/domain/chat-styles";
 
 // Re-export schema and converter from the shared step
-export { StepChatStylingSchema, convertChatStylingFormToSessionProps } from "@/components-v2/session/create-session/step-chat-styling";
-export type StepChatStylingSchemaType = z.infer<typeof import("@/components-v2/session/create-session/step-chat-styling").StepChatStylingSchema>;
+export {
+  StepChatStylingSchema,
+  convertChatStylingFormToSessionProps,
+} from "@/components-v2/session/create-session/step-chat-styling";
+export type StepChatStylingSchemaType = z.infer<
+  typeof import("@/components-v2/session/create-session/step-chat-styling").StepChatStylingSchema
+>;
 
 const valueAsInt = (value: any) => {
   const parsedValue = parseInt(value);
@@ -51,16 +56,13 @@ const StylingSetting = ({
 
   return (
     <div
-      className={cn(
-        "rounded-[16px] flex flex-col gap-[16px]",
-        className,
-      )}
+      className={cn("flex flex-col gap-[16px] rounded-[16px] p-4", className)}
     >
-      <div className="self-stretch justify-start text-text-primary text-base font-semibold leading-relaxed">
+      <div className="text-text-primary justify-start self-stretch text-base leading-relaxed font-semibold">
         {title}
       </div>
       <div className="flex flex-col gap-[8px]">
-        <div className="self-stretch justify-start text-text-primary text-base font-normal">
+        <div className="text-text-primary justify-start self-stretch text-base font-normal">
           Base font
         </div>
         <div className="flex flex-row gap-[8px]">
@@ -93,7 +95,7 @@ const StylingSetting = ({
         </div>
       </div>
       <div className="flex flex-col gap-[8px]">
-        <div className="self-stretch justify-start text-text-primary text-base font-normal">
+        <div className="text-text-primary justify-start self-stretch text-base font-normal">
           Italic font
         </div>
         <div className="flex flex-row gap-[8px]">
@@ -126,7 +128,7 @@ const StylingSetting = ({
         </div>
       </div>
       <div className="flex flex-col gap-[8px]">
-        <div className="self-stretch justify-start text-text-primary text-base font-normal">
+        <div className="text-text-primary justify-start self-stretch text-base font-normal">
           Bold font
         </div>
         <div className="flex flex-row gap-[8px]">
@@ -158,8 +160,8 @@ const StylingSetting = ({
           />
         </div>
       </div>
-      <div className="flex flex-col gap-[16px] items-end">
-        <div className="self-stretch justify-start text-text-primary text-base font-normal text-left">
+      <div className="flex flex-col items-end gap-[16px]">
+        <div className="text-text-primary justify-start self-stretch text-left text-base font-normal">
           Background color
         </div>
         <Controller
@@ -182,7 +184,7 @@ const StylingSetting = ({
 // Mobile Styling Settings
 export const StylingSettings = ({ className }: { className?: string }) => {
   return (
-    <div className={cn("grid gap-[32px] grid-cols-2")}>
+    <div className={cn("grid grid-cols-2 gap-[32px]")}>
       <StylingSetting
         title="AI message"
         field="chatStyles.ai"
@@ -230,8 +232,8 @@ export const StylingPreview = ({
   return (
     <div
       className={cn(
-        "rounded-xl bg-background-surface-3",
-        backgroundSrc && "bg-cover bg-center bg-blend-overlay bg-[#000000]/50",
+        "bg-background-surface-3 rounded-xl",
+        backgroundSrc && "bg-[#000000]/50 bg-cover bg-center bg-blend-overlay",
         className,
       )}
       style={{
@@ -240,7 +242,7 @@ export const StylingPreview = ({
     >
       <div
         id={container}
-        className="max-w-[1164px] mx-auto flex flex-col justify-center overflow-y-auto h-full py-[8px] gap-[16px]"
+        className="mx-auto flex h-full max-w-[1164px] flex-col justify-center gap-[16px] overflow-y-auto py-[8px]"
       >
         <InlineChatStyles container={`#${container}`} chatStyles={chatStyles} />
         <MessageItemInternalMobile
@@ -251,7 +253,7 @@ export const StylingPreview = ({
         <MessageItemInternalMobile
           content={testMarkdown}
           characterCardId={userCharacterCardId}
-          isUser 
+          isUser
           disabled
         />
       </div>
@@ -273,26 +275,32 @@ export const StepChatStylingMobile = ({
   const backgroundId = watch("backgroundId");
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="p-[16px] pb-0 flex-1 flex flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden p-[16px] pb-0">
         <Tabs
           defaultValue="styling"
-          className="w-full flex flex-col h-full overflow-hidden"
+          className="flex h-full w-full flex-col overflow-hidden"
         >
           <TabsList
             variant="mobile"
-            className="grid w-full grid-cols-2 flex-shrink-0"
+            className="grid w-full flex-shrink-0 grid-cols-2"
           >
             <TabsTrigger value="styling">Styling</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="styling" className="flex-1 overflow-y-auto mt-[16px]">
+          <TabsContent
+            value="styling"
+            className="mt-[16px] flex-1 overflow-y-auto"
+          >
             <StylingSettings />
           </TabsContent>
 
-          <TabsContent value="preview" className="flex-1 overflow-hidden mt-[16px]">
-            <p className="text-xs text-text-placeholder pb-[16px]">
+          <TabsContent
+            value="preview"
+            className="mt-[16px] flex-1 overflow-hidden"
+          >
+            <p className="text-text-placeholder pb-[16px] text-xs">
               View how your changes will affect the session experience.
             </p>
             <StylingPreview

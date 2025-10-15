@@ -25,7 +25,7 @@ import { SessionProps } from "@/modules/session/domain/session";
 const ColorItem = ({ color }: { color?: string | null }) => {
   return (
     <span
-      className="inline-block w-[32px] h-[16px] rounded-full border border-text-secondary align-middle"
+      className="border-text-secondary inline-block h-[16px] w-[32px] rounded-full border align-middle"
       style={{
         backgroundColor: color ?? undefined,
       }}
@@ -36,71 +36,71 @@ const ColorItem = ({ color }: { color?: string | null }) => {
 const ColorTable = ({ chatStyles }: { chatStyles?: ChatStyles }) => {
   return (
     <div className="flex flex-row items-end">
-      <div className="mr-[16px] flex flex-col gap-[16px] items-end text-text-primary">
-        <div className="font-[500] text-[16px] leading-[19px]">Base</div>
-        <div className="font-[500] text-[16px] leading-[19px]">Italic</div>
-        <div className="font-[500] text-[16px] leading-[19px]">Bold</div>
-        <div className="font-[500] text-[16px] leading-[19px] mt-[11px] mb-[8px]">
+      <div className="text-text-primary mr-[16px] flex flex-col items-end gap-[16px]">
+        <div className="text-[16px] leading-[19px] font-[500]">Base</div>
+        <div className="text-[16px] leading-[19px] font-[500]">Italic</div>
+        <div className="text-[16px] leading-[19px] font-[500]">Bold</div>
+        <div className="mt-[11px] mb-[8px] text-[16px] leading-[19px] font-[500]">
           Background
         </div>
       </div>
-      <div className="flex flex-col items-center mr-[12px]">
-        <div className="mb-[8px] font-[500] text-[12px] leading-[15px] text-text-input-subtitle">
+      <div className="mr-[12px] flex flex-col items-center">
+        <div className="text-text-input-subtitle mb-[8px] text-[12px] leading-[15px] font-[500]">
           AI character
         </div>
-        <div className="px-[8px] py-[8px] bg-background-surface-4 rounded-[14px] flex flex-row gap-[16px] text-text-primary">
-          <div className="flex flex-col gap-[17px] items-center">
-            <div className="font-[500] text-[12px] leading-[15px] whitespace-nowrap">
+        <div className="bg-background-surface-4 text-text-primary flex flex-row gap-[16px] rounded-[14px] px-[8px] py-[8px]">
+          <div className="flex flex-col items-center gap-[17px]">
+            <div className="text-[12px] leading-[15px] font-[500] whitespace-nowrap">
               Font size
             </div>
-            <div className="font-[500] text-[16px] leading-[19px]">
+            <div className="text-[16px] leading-[19px] font-[500]">
               {chatStyles?.ai?.text?.base?.fontSize}
             </div>
-            <div className="font-[500] text-[16px] leading-[19px]">
+            <div className="text-[16px] leading-[19px] font-[500]">
               {chatStyles?.ai?.text?.italic?.fontSize}
             </div>
-            <div className="font-[500] text-[16px] leading-[19px]">
+            <div className="text-[16px] leading-[19px] font-[500]">
               {chatStyles?.ai?.text?.bold?.fontSize}
             </div>
           </div>
           <div className="flex flex-col gap-[20px]">
-            <div className="font-[500] text-[12px] leading-[15px]">Color</div>
+            <div className="text-[12px] leading-[15px] font-[500]">Color</div>
             <ColorItem color={chatStyles?.ai?.text?.base?.color} />
             <ColorItem color={chatStyles?.ai?.text?.italic?.color} />
             <ColorItem color={chatStyles?.ai?.text?.bold?.color} />
           </div>
         </div>
-        <div className="self-end mt-[3px] px-[8px] py-[8px]">
+        <div className="mt-[3px] self-end px-[8px] py-[8px]">
           <ColorItem color={chatStyles?.ai?.chatBubble?.backgroundColor} />
         </div>
       </div>
       <div className="flex flex-col items-center">
-        <div className="mb-[8px] font-[500] text-[12px] leading-[15px] text-text-input-subtitle">
+        <div className="text-text-input-subtitle mb-[8px] text-[12px] leading-[15px] font-[500]">
           User character
         </div>
-        <div className="px-[8px] py-[8px] bg-background-surface-4 rounded-[14px] flex flex-row gap-[16px] text-text-primary">
-          <div className="flex flex-col gap-[17px] items-center">
-            <div className="font-[500] text-[12px] leading-[15px] whitespace-nowrap">
+        <div className="bg-background-surface-4 text-text-primary flex flex-row gap-[16px] rounded-[14px] px-[8px] py-[8px]">
+          <div className="flex flex-col items-center gap-[17px]">
+            <div className="text-[12px] leading-[15px] font-[500] whitespace-nowrap">
               Font size
             </div>
-            <div className="font-[500] text-[16px] leading-[19px]">
+            <div className="text-[16px] leading-[19px] font-[500]">
               {chatStyles?.user?.text?.base?.fontSize}
             </div>
-            <div className="font-[500] text-[16px] leading-[19px]">
+            <div className="text-[16px] leading-[19px] font-[500]">
               {chatStyles?.user?.text?.italic?.fontSize}
             </div>
-            <div className="font-[500] text-[16px] leading-[19px]">
+            <div className="text-[16px] leading-[19px] font-[500]">
               {chatStyles?.user?.text?.bold?.fontSize}
             </div>
           </div>
           <div className="flex flex-col gap-[20px]">
-            <div className="font-[500] text-[12px] leading-[15px]">Color</div>
+            <div className="text-[12px] leading-[15px] font-[500]">Color</div>
             <ColorItem color={chatStyles?.user?.text?.base?.color} />
             <ColorItem color={chatStyles?.user?.text?.italic?.color} />
             <ColorItem color={chatStyles?.user?.text?.bold?.color} />
           </div>
         </div>
-        <div className="self-end mt-[3px] px-[8px] py-[8px]">
+        <div className="mt-[3px] self-end px-[8px] py-[8px]">
           <ColorItem color={chatStyles?.user?.chatBubble?.backgroundColor} />
         </div>
       </div>
@@ -135,7 +135,9 @@ const EditChatStyling = ({
     const subscription = methods.watch(async (value) => {
       if (value.chatStyles) {
         await onSave({
-          ...convertChatStylingFormToSessionProps(value as StepChatStylingSchemaType),
+          ...convertChatStylingFormToSessionProps(
+            value as StepChatStylingSchemaType,
+          ),
         });
       }
     });

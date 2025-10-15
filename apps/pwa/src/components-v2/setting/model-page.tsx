@@ -17,7 +17,7 @@ import {
   ProviderListItem,
   ProviderListItemDetail,
 } from "@/components-v2/model/provider-list-item";
-import { TypoBase, TypoTiny } from "@/components-v2/typo";
+import { TypoBase, TypoTiny, TypoXLarge } from "@/components-v2/typo";
 import { Button } from "@/components-v2/ui/button";
 import {
   Dialog,
@@ -517,23 +517,28 @@ export default function ModelPage({ className }: { className?: string }) {
   );
 
   return (
-    <ScrollArea className={cn("h-full bg-background-surface-1", className)}>
-      <div
-        className={cn(
-          "mx-auto max-w-[1100px] my-[70px]",
-          "bg-background-surface-2 rounded-[8px]",
-        )}
-      >
-        <div className="flex flex-wrap justify-start p-[32px] pr-0 pb-[16px]">
+    <ScrollArea className={cn("bg-background-surface-1 h-full", className)}>
+      <div className={cn("mx-auto my-[70px] max-w-[1100px]")}>
+        <TypoXLarge className="text-text-primary font-semibold">
+          Providers
+        </TypoXLarge>
+
+        <div className="flex flex-wrap justify-start pt-[32px] pr-0 pb-[16px]">
           {apiConnections
-            ?.filter((apiConnection: ApiConnection, index: number, array: ApiConnection[]) => {
-              // For AstrskAi connections, only keep the first occurrence
-              if (apiConnection.source === ApiSource.AstrskAi) {
-                return false;
-              } else {
-                return true;
-              }
-            })
+            ?.filter(
+              (
+                apiConnection: ApiConnection,
+                index: number,
+                array: ApiConnection[],
+              ) => {
+                // For AstrskAi connections, only keep the first occurrence
+                if (apiConnection.source === ApiSource.AstrskAi) {
+                  return false;
+                } else {
+                  return true;
+                }
+              },
+            )
             ?.map((apiConnection: ApiConnection) =>
               renderProviderListItem({
                 apiConnection: apiConnection,
@@ -576,16 +581,16 @@ export default function ModelPage({ className }: { className?: string }) {
           })}
           <div
             className={cn(
-              "inline-block align-top relative",
-              "w-[335px] h-[186px] mr-[16px] mb-[calc(-6px+16px)]",
+              "relative inline-block align-top",
+              "mr-[16px] mb-[calc(-6px+16px)] h-[186px] w-[335px]",
               "bg-background-surface-3 rounded-[8px]",
             )}
           >
-            <div className="w-full h-full p-[32px] flex flex-col gap-[8px] justify-center">
-              <div className="font-[600] text-[16px] leading-[20px] text-text-secondary">
+            <div className="flex h-full w-full flex-col justify-center gap-[8px] p-[32px]">
+              <div className="text-text-secondary text-[16px] leading-[20px] font-[600]">
                 Don&apos;t see your favorite provider?
               </div>
-              <div className="font-[400] text-[12px] leading-[15px] text-text-input-subtitle [&>a]:text-secondary-normal">
+              <div className="text-text-input-subtitle [&>a]:text-secondary-normal text-[12px] leading-[15px] font-[400]">
                 Drop a request in our{" "}
                 <a href="https://discord.gg/J6ry7w8YCF" target="_blank">
                   Discord!
@@ -597,13 +602,13 @@ export default function ModelPage({ className }: { className?: string }) {
       </div>
       <Dialog open={isOpenEdit} onOpenChange={setIsOpenEdit}>
         <DialogContent
-          className="bg-background-surface-2 border border-border-light"
+          className="bg-background-surface-2 border-border-light border"
           hideClose
         >
           <DialogHeader>
             <DialogTitle>Connect provider</DialogTitle>
             <DialogDescription>
-              <TypoBase className="font-[400] text-text-subtle [&>a]:text-secondary-normal">
+              <TypoBase className="text-text-subtle [&>a]:text-secondary-normal font-[400]">
                 {editingApiConnection?.source &&
                   descriptionBySource.get(editingApiConnection.source)}
               </TypoBase>
@@ -627,8 +632,8 @@ export default function ModelPage({ className }: { className?: string }) {
           {editingApiConnection?.source === ApiSource.OpenAICompatible && (
             <div
               className={cn(
-                "mt-[-16px] flex flex-row gap-[4px] items-start",
-                "font-[400] text-[16px] leading-[19px] text-text-secondary",
+                "mt-[-16px] flex flex-row items-start gap-[4px]",
+                "text-text-secondary text-[16px] leading-[19px] font-[400]",
                 "[&>a]:text-secondary-normal",
               )}
             >
@@ -677,8 +682,8 @@ export default function ModelPage({ className }: { className?: string }) {
               />
               <div
                 className={cn(
-                  "flex flex-row gap-[4px] items-center",
-                  "font-[400] text-[16px] leading-[19px] text-text-secondary",
+                  "flex flex-row items-center gap-[4px]",
+                  "text-text-secondary text-[16px] leading-[19px] font-[400]",
                   "[&>a]:text-secondary-normal",
                 )}
               >
@@ -696,8 +701,8 @@ export default function ModelPage({ className }: { className?: string }) {
           {editingApiConnection?.source === ApiSource.Mistral && (
             <div
               className={cn(
-                "mt-[-16px] flex flex-row gap-[4px] items-start",
-                "font-[400] text-[16px] leading-[19px] text-text-secondary",
+                "mt-[-16px] flex flex-row items-start gap-[4px]",
+                "text-text-secondary text-[16px] leading-[19px] font-[400]",
                 "[&>a]:text-secondary-normal",
               )}
             >
