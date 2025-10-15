@@ -194,3 +194,6 @@ THIRD-PARTY-NOTICES.txt
 
 apps/vibe/
 specs
+
+# npm config
+.npmrc

@@ -6,7 +6,19 @@
     "export": "npx tsx src/export-to-json.ts",
     "clean": "rimraf dist",
     "prebuild": "pnpm clean",
-    "build": "tsc && cp -r src/migrations dist/migrations"
+    "build": "tsc && cp -r src/migrations dist/migrations",
+    "prepublishOnly": "pnpm build"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/astrskai/astrsk.git",
+    "directory": "apps/drizzle"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "drizzle-orm": "^0.44.5"
