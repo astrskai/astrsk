@@ -27,7 +27,7 @@ import { LorebookPanel } from "./card-panel/components/lorebook-panel";
 import { CharacterInfoPanel } from "./card-panel/components/character-info-panel";
 import { PlotInfoPanel } from "./card-panel/components/plot-info-panel";
 import { VariablesPanel } from "./card-panel/components/variables-panel";
-import { ScenariosPanel } from "./card-panel/components/scenarios-panel";
+import { FirstMessagesPanel } from "./card-panel/components/scenarios-panel";
 import { ImageGeneratorPanel } from "./card-panel/components/image-generator-panel";
 import { CardVibePanel } from "./card-panel/components/vibe-panel";
 import { SvgIcon } from "@/components-v2/svg-icon";
@@ -97,7 +97,7 @@ const CARD_PANEL_COMPONENTS = {
   "plot-info": createCardPanelComponent("plot-info", PlotInfoPanel),
   lorebooks: createCardPanelComponent("lorebooks", LorebookPanel),
   variables: createCardPanelComponent("variables", VariablesPanel),
-  scenarios: createCardPanelComponent("scenarios", ScenariosPanel),
+  scenarios: createCardPanelComponent("scenarios", FirstMessagesPanel),
   imageGenerator: createCardPanelComponent(
     "imageGenerator",
     ImageGeneratorPanel,

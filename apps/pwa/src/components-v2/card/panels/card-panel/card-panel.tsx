@@ -333,7 +333,7 @@ export function CardPanel({ cardId }: CardPanelProps) {
               Lorebook
             </ButtonPill>
 
-            {/* Show Scenarios button only for Plot cards */}
+            {/* Show First Message button only for Plot cards */}
             {card.props.type === CardType.Plot && (
               <ButtonPill
                 onClick={() => handleOpenPanel("scenarios")}
@@ -341,7 +341,7 @@ export function CardPanel({ cardId }: CardPanelProps) {
                 active={panelVisibility?.["scenarios"]}
                 size="default"
               >
-                Scenarios
+                First Message
               </ButtonPill>
             )}
           </div>
