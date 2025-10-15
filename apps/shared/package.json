@@ -1,0 +1,10 @@
+{
+  "name": "@astrsk/shared",
+  "version": "3.0.4",
+  "type": "module",
+  "exports": {
+    "./types": "./src/types/index.ts",
+    "./vibe-shared-types": "./src/types/vibe-shared-types.ts"
+  },
+  "packageManager": "pnpm@10.14.0"
+}
