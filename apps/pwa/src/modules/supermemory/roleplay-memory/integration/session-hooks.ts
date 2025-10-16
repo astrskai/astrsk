@@ -561,6 +561,7 @@ export interface UserMessageMemoryInput {
   messageContent: string;
   session: any; // Session entity
   flow?: any; // Flow entity (optional)
+  previousDataStore?: any[]; // Previous turn's dataStore to use as baseline
 }
 
 /**
@@ -571,16 +572,20 @@ export interface UserMessageMemoryInput {
  * - Executes World Agent to detect participants and extract context
  * - Distributes memories to all detected participants
  * - Stores in world container and character containers
+ * - Returns suggested dataStore updates (gameTime, participants, worldContext)
  *
  * @param input - User message memory input
+ * @returns Suggested dataStore updates or null
  */
 export async function processUserMessage(
   input: UserMessageMemoryInput,
-): Promise<void> {
+): Promise<{ gameTime?: number; participants?: string[]; worldContext?: string } | null> {
   try {
-    const { sessionId, messageContent, session, flow } = input;
+    const { sessionId, messageContent, session, flow, previousDataStore } = input;
 
-    const dataStore = session.dataStore || [];
+    // Use previousDataStore if provided, otherwise fall back to session.dataStore
+    const dataStore = previousDataStore || session.dataStore || [];
+
     const gameTimeField = dataStore.find((field: any) => field.name === "game_time");
     const gameTimeIntervalField = dataStore.find((field: any) => field.name === "game_time_interval");
 
@@ -793,14 +798,51 @@ export async function processUserMessage(
       message: messageContent,
       game_time: gameTime,
       game_time_interval: gameTimeInterval,
-      dataStore: dataStore,
+      dataStore: formattedDataStore, // Use formatted dataStore with participants array
       worldAgentOutput,
     });
 
     logger.info(`[User Message] Successfully stored in supermemory for ${allParticipantNames.length} participants`);
+
+    // Build suggested dataStore updates to return to caller
+    // Convert participant names to IDs (similar to executeWorldAgentAndDistributeMemories)
+    const nameToIdMap: Record<string, string> = {};
+    for (let i = 0; i < allParticipantIds.length; i++) {
+      nameToIdMap[allParticipantNames[i]] = allParticipantIds[i];
+    }
+
+    const participantIds = worldAgentOutput.actualParticipants
+      .map((name) => nameToIdMap[name])
+      .filter((id) => id !== undefined);
+
+    // Calculate new gameTime if delta_time > 0
+    const newGameTime = worldAgentOutput.delta_time > 0
+      ? gameTime + worldAgentOutput.delta_time
+      : undefined;
+
+    // Build updated world context (merge current with new updates)
+    let updatedWorldContext: string | undefined;
+    if (worldAgentOutput.worldContextUpdates && worldAgentOutput.worldContextUpdates.length > 0) {
+      const currentWorldContext = formattedDataStore.worldContext || "";
+      const newContextParts = worldAgentOutput.worldContextUpdates
+        .map((update) => `[${update.characterName}] ${update.contextUpdate}`)
+        .join("\n");
+
+      updatedWorldContext = currentWorldContext
+        ? `${currentWorldContext}\n${newContextParts}`
+        : newContextParts;
+    }
+
+    // Return suggested updates for caller to apply to latest Turn's dataStore
+    return {
+      ...(newGameTime !== undefined && { gameTime: newGameTime }),
+      ...(participantIds.length > 0 && { participants: participantIds }),
+      ...(updatedWorldContext && { worldContext: updatedWorldContext }),
+    };
   } catch (error) {
     // Don't fail the entire operation if supermemory fails
     logger.error("[User Message] Failed to store in supermemory:", error);
+    return null;
   }
 }
 

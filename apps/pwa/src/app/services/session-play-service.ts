@@ -2198,13 +2198,18 @@ async function* executeFlow({
     // This runs ONCE after the entire flow completes
     if (lastAgent && content) {
       try {
-        await executeWorldAgentAndDistributeMemories(
+        const suggestedUpdates = await executeWorldAgentAndDistributeMemories(
           { output: { response: content } }, // Wrap content in expected format
           createFullContext(context, variables, dataStore),
           sessionId,
           lastAgent,
           dataStore,
         );
+
+        // Apply suggested updates to dataStore (participants, gameTime)
+        if (suggestedUpdates) {
+          applyRoleplayMemoryDataStoreUpdates(dataStore, suggestedUpdates);
+        }
       } catch (error) {
         logger.error("[Roleplay Memory] World Agent execution failed:", error);
       }
@@ -2915,11 +2920,12 @@ function applyRoleplayMemoryDataStoreUpdates(
   }
 
   // Update participants field
-  if (suggestedUpdates.participants) {
+  if (suggestedUpdates.participants && suggestedUpdates.participants.length > 0) {
     const participantsIndex = dataStore.findIndex(
       (f) => f.name === "participants",
     );
     if (participantsIndex >= 0) {
+      // Update existing participants field
       dataStore[participantsIndex].value = JSON.stringify(
         suggestedUpdates.participants,
       );
@@ -2927,8 +2933,15 @@ function applyRoleplayMemoryDataStoreUpdates(
         `[Roleplay Memory] Auto-updated participants: ${suggestedUpdates.participants.join(", ")}`,
       );
     } else {
-      logger.warn(
-        "[Roleplay Memory] participants field not found in data store",
+      // Create participants field if it doesn't exist (same as world_context)
+      dataStore.push({
+        id: "participants",
+        name: "participants",
+        type: "string",
+        value: JSON.stringify(suggestedUpdates.participants),
+      });
+      logger.info(
+        `[Roleplay Memory] Created participants field: ${suggestedUpdates.participants.join(", ")}`,
       );
     }
   }
@@ -2994,6 +3007,50 @@ async function executeWorldAgentAndDistributeMemories(
     const allParticipantIds: string[] = [];
     const characterIdToName: Record<string, string> = {};
 
+    // Retrieve world memories for World Agent context
+    const { createWorldContainer } = await import("@/modules/supermemory/roleplay-memory/core/containers");
+    const { retrieveWorldMemories } = await import("@/modules/supermemory/roleplay-memory/core/memory-retrieval");
+    const worldContainer = createWorldContainer(sessionIdStr);
+
+    let worldMemoryContext = "";
+    let worldMemoryQuery = "";
+    try {
+      // Format world memory query
+      const queryParts = [
+        "###Current time###",
+        `GameTime: ${gameTime} ${gameTimeInterval}`,
+        ""
+      ];
+
+      // Add recent messages if available
+      if (recentMessagesForWorldAgent.length > 0) {
+        queryParts.push("###Recent messages###");
+        queryParts.push(recentMessagesForWorldAgent.map((msg: any) => `${msg.role}: ${msg.content} GameTime: ${msg.gameTime}`).join("\n"));
+        queryParts.push("");
+      }
+
+      // Add current AI message
+      queryParts.push("###AI message###");
+      queryParts.push(responseContent);
+      queryParts.push("");
+      queryParts.push("What are the character information, scenario details, and world context that would help understand this situation?");
+
+      worldMemoryQuery = queryParts.join("\n");
+
+      const worldMemoriesResult = await retrieveWorldMemories({
+        query: worldMemoryQuery,
+        containerTag: worldContainer,
+        limit: 20,
+      });
+
+      if (worldMemoriesResult.memories && worldMemoriesResult.memories.length > 0) {
+        worldMemoryContext = worldMemoriesResult.memories.join("\n\n");
+        logger.info(`[Roleplay Memory] Retrieved ${worldMemoriesResult.count} world memories for World Agent`);
+      }
+    } catch (error) {
+      logger.error("[Roleplay Memory] Failed to retrieve world memories:", error);
+    }
+
     // Add AI character IDs and names
     for (const id of session.aiCharacterCardIds) {
       const idStr = id.toString();
@@ -3050,7 +3107,8 @@ async function executeWorldAgentAndDistributeMemories(
       recentMessages: recentMessagesForWorldAgent,
       dataStore: dataStoreForWorldAgent,
       characterIdToName: characterIdToName,
-      worldMemoryContext: fullContext.worldMemoryContext,
+      worldMemoryContext, // Use retrieved world memories
+      worldMemoryQuery, // Pass query for debugging
       apiSource: agent.props.apiSource,
       modelId: agent.props.modelId,
     });
@@ -3102,7 +3160,7 @@ async function executeWorldAgentAndDistributeMemories(
       game_time: gameTime,
       game_time_interval: gameTimeInterval,
       dataStore: dataStoreForWorldAgent,
-      worldMemoryContext: fullContext.worldMemoryContext,
+      worldMemoryContext, // Use retrieved world memories (not from fullContext)
       worldAgentOutput, // Pass the World Agent output we already got
     });
 
@@ -3116,10 +3174,39 @@ async function executeWorldAgentAndDistributeMemories(
         ? gameTime + worldAgentOutput.delta_time
         : undefined;
 
+    // Convert participant NAMES to IDs before storing in datastore
+    // worldAgentOutput.actualParticipants contains character NAMES (e.g., ["Ren"])
+    // We need to convert them to IDs for datastore storage
+    const nameToIdMap: Record<string, string> = {};
+    for (const [id, name] of Object.entries(characterIdToName)) {
+      nameToIdMap[name] = id;
+    }
+
+    logger.info(
+      `[Roleplay Memory] Name-to-ID mapping available: ${JSON.stringify(nameToIdMap)}`,
+    );
+    logger.info(
+      `[Roleplay Memory] World Agent detected participant names: ${worldAgentOutput.actualParticipants.join(", ")}`,
+    );
+
+    const participantIds = worldAgentOutput.actualParticipants
+      .map((name) => nameToIdMap[name])
+      .filter((id) => id !== undefined);
+
+    logger.info(
+      `[Roleplay Memory] Mapped to participant IDs: ${participantIds.join(", ")}`,
+    );
+
+    if (participantIds.length === 0 && worldAgentOutput.actualParticipants.length > 0) {
+      logger.warn(
+        `[Roleplay Memory] Could not map participant names to IDs. Names: ${worldAgentOutput.actualParticipants.join(", ")}. Available mappings: ${JSON.stringify(nameToIdMap)}`,
+      );
+    }
+
     // Return suggested updates
     const updates = {
       ...(newGameTime !== undefined && { gameTime: newGameTime }),
-      participants: worldAgentOutput.actualParticipants,
+      ...(participantIds.length > 0 && { participants: participantIds }),
       ...(updatedWorldContext && { worldContext: updatedWorldContext }),
     };
 

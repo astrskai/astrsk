@@ -1918,17 +1918,119 @@ const SessionMessagesAndUserInputs = ({
           throw new Error(userMessageOrError.getError());
         }
 
-        // Invalidate session query
+        const userMessage = userMessageOrError.getValue();
+
+        // Invalidate session immediately to show the user message
         invalidateSession();
 
-        // Store user message in supermemory (no retrieval, no World Agent for direct messages)
-        // User messages sent directly (not through flows) are distributed to ALL participants
-        await processUserMessage({
-          sessionId: session.id.toString(),
-          messageContent,
-          session,
-          flow,
-        });
+        // Run supermemory processing in the background (async, non-blocking)
+        // This prevents UI delay when user types messages
+        (async () => {
+          try {
+            // Refetch session to get updated turnIds after adding message
+            const updatedSession = (await SessionService.getSession.execute(session.id))
+              .throwOnFailure()
+              .getValue();
+
+            // Get the previous turn's dataStore to use as baseline (before the user message)
+            let previousDataStore: any[] = [];
+            if (updatedSession.turnIds.length > 1) {
+              try {
+                // Get second-to-last turn (the turn before the user message we just added)
+                const previousTurnId = updatedSession.turnIds[updatedSession.turnIds.length - 2];
+                const previousTurnResult = await TurnService.getTurn.execute(previousTurnId);
+                if (previousTurnResult.isSuccess) {
+                  const previousTurn = previousTurnResult.getValue();
+                  previousDataStore = previousTurn.selectedOption?.dataStore || [];
+                }
+              } catch (error) {
+                logger.warn(`[User Message] Failed to get previous turn's dataStore: ${error}`);
+              }
+            }
+
+            // Store user message in supermemory and get suggested dataStore updates
+            const suggestedUpdates = await processUserMessage({
+              sessionId: session.id.toString(),
+              messageContent,
+              session: updatedSession,
+              flow,
+              previousDataStore,
+            });
+
+            // Apply suggested updates to the user message we just created
+            if (suggestedUpdates) {
+              const turnResult = await TurnService.getTurn.execute(userMessage.id);
+
+              if (turnResult.isSuccess) {
+                const turn = turnResult.getValue();
+                // Start with a copy of the previous turn's dataStore, then apply updates
+                const dataStore = [...previousDataStore];
+
+                // Apply gameTime update
+                if (suggestedUpdates.gameTime !== undefined) {
+                  const gameTimeIndex = dataStore.findIndex((f: any) => f.name === "game_time");
+                  if (gameTimeIndex >= 0) {
+                    dataStore[gameTimeIndex].value = String(suggestedUpdates.gameTime);
+                  } else {
+                    dataStore.push({
+                      id: "game_time",
+                      name: "game_time",
+                      type: "number",
+                      value: String(suggestedUpdates.gameTime),
+                    });
+                  }
+                }
+
+                // Apply participants update
+                if (suggestedUpdates.participants && suggestedUpdates.participants.length > 0) {
+                  const participantsIndex = dataStore.findIndex((f: any) => f.name === "participants");
+                  if (participantsIndex >= 0) {
+                    dataStore[participantsIndex].value = JSON.stringify(suggestedUpdates.participants);
+                  } else {
+                    dataStore.push({
+                      id: "participants",
+                      name: "participants",
+                      type: "string",
+                      value: JSON.stringify(suggestedUpdates.participants),
+                    });
+                  }
+                }
+
+                // Apply worldContext update
+                if (suggestedUpdates.worldContext) {
+                  const worldContextIndex = dataStore.findIndex((f: any) => f.name === "world_context");
+                  if (worldContextIndex >= 0) {
+                    dataStore[worldContextIndex].value = suggestedUpdates.worldContext;
+                  } else {
+                    dataStore.push({
+                      id: "world_context",
+                      name: "world_context",
+                      type: "string",
+                      value: suggestedUpdates.worldContext,
+                    });
+                  }
+                }
+
+                // Update turn with new dataStore using setDataStore method
+                turn.setDataStore(dataStore as any);
+
+                // Save to database
+                await TurnService.updateTurn.execute(turn);
+
+                // Invalidate turn query to refresh
+                queryClient.invalidateQueries({
+                  queryKey: turnQueries.detail(turn.id).queryKey,
+                });
+
+                // Invalidate session again to refresh with updated dataStore
+                invalidateSession();
+              }
+            }
+          } catch (error) {
+            logger.error("[User Message] Background supermemory processing failed:", error);
+            // Don't throw - this is an enhancement, not a critical failure
+          }
+        })();
 
         // Scroll to bottom
         scrollToBottom({ behavior: "smooth" });

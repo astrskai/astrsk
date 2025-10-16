@@ -38,7 +38,7 @@ import {
  * Uses AstrskAi provider with Gemini 2.5 Flash (lightweight, cost-efficient)
  */
 const DEFAULT_WORLD_AGENT_MODEL = "openai-compatible:google/gemini-2.5-flash";
-const WORLD_AGENT_TIMEOUT_MS = 2000; // 2 seconds per contract
+const WORLD_AGENT_TIMEOUT_MS = 20000; // 20 seconds (increased to account for API latency and structured output generation)
 
 /**
  * Create AI SDK provider from API connection
@@ -263,6 +263,19 @@ function buildWorldAgentPrompt(input: WorldAgentInput): string {
   const worldContextText =
     dataStore.worldContext || "No accumulated world context yet";
 
+  // Format recent game time changes (last 3 messages with their times)
+  const recentTimeChanges =
+    recentMessages.length > 0
+      ? recentMessages
+          .map((msg, i) => {
+            const timeChange = i > 0 && msg.game_time !== recentMessages[i - 1].game_time
+              ? ` (TIME CHANGED: ${recentMessages[i - 1].game_time} → ${msg.game_time})`
+              : "";
+            return `- Message ${i + 1}: GameTime ${msg.game_time}${timeChange}`;
+          })
+          .join("\n")
+      : "- No recent time changes";
+
   return `You are the World Agent for a multi-character roleplay session. Your task is to:
 1. Analyze the message and determine which characters participated in this conversation
 2. Update character-specific world context based on what happened
@@ -277,10 +290,13 @@ ${worldMemoryContext}
 ### Accumulated World Context (evolving character context)
 ${worldContextText}
 
-### Recent Messages (for context)
+### Recent Messages (for conversation context only)
 ${recentMessagesText}
 
-### Generated Message (analyze this)
+### Recent Game Time History
+${recentTimeChanges}
+
+### Generated Message (⚠️ ANALYZE ONLY THIS MESSAGE FOR TIME PROGRESSION ⚠️)
 Speaker: ${speakerName} (ID: ${speakerCharacterId})
 Content: ${generatedMessage}
 
@@ -288,7 +304,7 @@ Content: ${generatedMessage}
 - Current Scene: ${dataStore.currentScene}
 - All Participants: ${allParticipantsText}
 - Total Participant Count: ${dataStore.participants?.length || 0}
-- Game Time: ${dataStore.game_time} ${dataStore.game_time_interval}
+- **Current Game Time: ${dataStore.game_time} ${dataStore.game_time_interval}**
 
 ## Task
 Determine:
@@ -381,11 +397,32 @@ Output:
   "delta_time": 3
 }
 
+Example 6 (NO time progression despite recent time change):
+### Recent Game Time History
+- Message 1: GameTime 5 (TIME CHANGED: 4 → 5)
+- Message 2: GameTime 5
+
+Message: "That's a good observation! I didn't think of it that way."
+Speaker: Alice (ID: alice-id)
+All Participants: Alice (ID: alice-id), Bob (ID: bob-id)
+Current Game Time: 5 Day
+Output:
+{
+  "actualParticipants": ["Alice", "Bob"],
+  "worldContextUpdates": [
+    {"characterName": "Alice", "contextUpdate": "You acknowledged Bob's observation and admitted you hadn't considered that perspective"},
+    {"characterName": "Bob", "contextUpdate": "Alice appreciated your observation and acknowledged it helped her see things differently"}
+  ],
+  "delta_time": 0
+}
+⚠️ IMPORTANT: Even though Recent Game Time History shows time changed from 4→5, THIS message doesn't mention time passing, so delta_time = 0
+
 IMPORTANT:
 - Use exact character NAMES from the participants list (not IDs!)
 - actualParticipants MUST include at least the speaker name
 - worldContextUpdates must have entries for each participant
-- delta_time is 0 unless message explicitly mentions time passing`;
+- delta_time is 0 unless THE CURRENT MESSAGE EXPLICITLY mentions time passing (ignore past time changes in history)
+- Recent Game Time History is ONLY for context - do NOT increment time based on history alone`;
 }
 
 /**

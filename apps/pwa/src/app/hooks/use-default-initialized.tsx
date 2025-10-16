@@ -61,14 +61,13 @@ export const useDefaultInitialized = () => {
       }
 
       // Init default flows - COMMENTED OUT FOR SESSION-BASED INITIALIZATION
-      /*
       const flows = (await FlowService.searchFlow.execute({}))
         .throwOnFailure()
         .getValue();
       if (flows && flows.length === 0) {
         // Will display in reverse to this order (order by updateAt desc)
         const filePath = [
-          "/default/flow/SAGA (Sequential Analysis and Gaming Agent).json",
+          // "/default/flow/SAGA (Sequential Analysis and Gaming Agent).json",
           "/default/flow/Simple.json",
         ];
         for (const path of filePath) {
@@ -84,10 +83,9 @@ export const useDefaultInitialized = () => {
           }
         }
       }
-      */
 
       // Init default cards - COMMENTED OUT FOR SESSION-BASED INITIALIZATION
-      /*
+
       const cards = (await CardService.searchCard.execute({}))
         .throwOnFailure()
         .getValue();
@@ -111,7 +109,6 @@ export const useDefaultInitialized = () => {
           await CardService.importCardFromFile.execute(file);
         }
       }
-      */
 
       // Init default sessions - only for new users who haven't selected a genre yet
       if (!sessionOnboardingSteps.genreSelection) {
