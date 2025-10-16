@@ -357,7 +357,8 @@ export function CardPanel({ cardId }: CardPanelProps) {
             >
               Variables
             </ButtonPill>
-            <ButtonPill
+            {/** disabled subscribe */}
+            {/* <ButtonPill
               onClick={() => {
                 if (!subscribed) {
                   setIsOpenSubscribeNudge(true);
@@ -372,8 +373,8 @@ export function CardPanel({ cardId }: CardPanelProps) {
               isSubscribeBadge={!subscribed}
             >
               Image studio
-            </ButtonPill>
-            <ButtonPill
+            </ButtonPill> */}
+            {/* <ButtonPill
               icon={<SvgIcon name="ai_assistant" />}
               active={panelVisibility?.["vibe"] || false}
               onClick={() => {
@@ -387,7 +388,7 @@ export function CardPanel({ cardId }: CardPanelProps) {
               isSubscribeBadge={!subscribed}
             >
               AI assistant
-            </ButtonPill>
+            </ButtonPill> */}
           </div>
         </div>
       </div>
