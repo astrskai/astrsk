@@ -1112,8 +1112,8 @@ const UserInputs = ({
                     }}
                     isHighLighted={shouldShowTooltip}
                   />
-                  <div className="bg-border-normal mx-2 h-[48px] w-[1px]" />
                   {/** disabled subscribe */}
+                  {/* <div className="bg-border-normal mx-2 h-[48px] w-[1px]" /> */}
                   {/* <UserInputCharacterButton
                     icon={
                       isGeneratingGlobalImage ? (
