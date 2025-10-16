@@ -45,12 +45,12 @@ function FloatingActionButton({
   return (
     <Button
       className={cn(
-        "group/fab z-10 absolute top-[24px] rounded-full cursor-pointer",
-        "bg-button-background-floating border-[1px] border-border-light text-text-primary",
+        "group/fab absolute top-[24px] z-10 cursor-pointer rounded-full",
+        "bg-button-background-floating border-border-light text-text-primary border-[1px]",
         "hover:bg-background-card hover:text-text-primary",
         position === "top-left" ? "left-[40px]" : "right-[40px]",
-        "!transition-all ease-out duration-300",
-        "min-w-[40px] h-[40px] p-0",
+        "!transition-all duration-300 ease-out",
+        "h-[40px] min-w-[40px] p-0",
         className,
       )}
       onClick={(event) => {
@@ -61,8 +61,8 @@ function FloatingActionButton({
     >
       <div
         className={cn(
-          "h-full flex flex-row items-center",
-          "transition-[margin-inline] ease-out duration-300",
+          "flex h-full flex-row items-center",
+          "transition-[margin-inline] duration-300 ease-out",
           "mx-[7px] group-hover/fab:mx-[16px]",
           openned && "mx-[16px]",
         )}
@@ -70,13 +70,13 @@ function FloatingActionButton({
         {icon}
         <div
           className={cn(
-            "grid transition-[margin-left,grid-template-columns,opacity] ease-out duration-300",
+            "grid transition-[margin-left,grid-template-columns,opacity] duration-300 ease-out",
             "ml-0 grid-cols-[0fr] opacity-0",
             "group-hover/fab:ml-2 group-hover/fab:grid-cols-[1fr] group-hover/fab:opacity-100",
             openned && "ml-2 grid-cols-[1fr] opacity-100",
           )}
         >
-          <span className="overflow-hidden font-medium text-[14px] leading-[20px]">
+          <span className="overflow-hidden text-[14px] leading-[20px] font-medium">
             {label}
           </span>
         </div>
@@ -339,10 +339,10 @@ const SignUpPage = () => {
   ]);
 
   return (
-    <div className={cn("z-40 absolute inset-0 top-[var(--topbar-height)]")}>
+    <div className={cn("absolute inset-0 top-[var(--topbar-height)] z-40")}>
       {/* Close */}
       <button
-        className="z-50 absolute top-[34px] right-[40px] text-text-subtle"
+        className="text-text-subtle absolute top-[34px] right-[40px] z-50"
         onClick={() => {
           setActivePage(Page.Subscribe);
         }}
@@ -352,7 +352,7 @@ const SignUpPage = () => {
 
       {/* Back */}
       <FloatingActionButton
-        icon={<ArrowLeft className="min-w-[24px] min-h-[24px]" />}
+        icon={<ArrowLeft className="min-h-[24px] min-w-[24px]" />}
         label="Back"
         position="top-left"
         className={cn(step === SignUpStep.SignUp && "hidden")}
@@ -360,18 +360,18 @@ const SignUpPage = () => {
       />
 
       {/* Main */}
-      <div className="absolute inset-0 bg-background-surface-2">
+      <div className="bg-background-surface-2 absolute inset-0">
         {/* Form */}
         <div
           className={cn(
-            "absolute w-[50%] h-full grid place-content-center",
+            "absolute grid h-full w-[50%] place-content-center",
             step !== SignUpStep.SignUp && "left-[25%]",
           )}
         >
           {/* Sign Up */}
           <div
             className={cn(
-              "w-[384px] flex-col gap-4 items-center",
+              "w-[384px] flex-col items-center gap-4",
               step === SignUpStep.SignUp ? "flex" : "hidden",
             )}
           >
@@ -387,7 +387,7 @@ const SignUpPage = () => {
             <Button className="w-full" size="lg" onClick={signUpWithDiscord}>
               <SvgIcon name="discord" size={18} /> Continue with Discord
             </Button>
-            <div className="text-[16px] leading-[25.6px] font-[500] text-text-subtle">
+            <div className="text-text-subtle text-[16px] leading-[25.6px] font-[500]">
               or
             </div>
             <FloatingLabelInput
@@ -418,7 +418,7 @@ const SignUpPage = () => {
             >
               I already have an account
             </Button>
-            <div className="text-center text-[16px] leading-[25.6px] font-[400] text-text-subtle">
+            <div className="text-text-subtle text-center text-[16px] leading-[25.6px] font-[400]">
               By clicking the button above, you agree to our
               <br />
               <button
@@ -450,7 +450,7 @@ const SignUpPage = () => {
           {/* Sign Up with Email and Password */}
           <div
             className={cn(
-              "w-[384px] flex-col gap-4 items-center",
+              "w-[384px] flex-col items-center gap-4",
               step === SignUpStep.SignUpWithEmailAndPassword
                 ? "flex"
                 : "hidden",
@@ -463,10 +463,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="mb-[8px] text-[20px] leading-[24px] font-[600] text-text-primary">
+              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Create your password
               </div>
-              <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
+              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
                 Your password must be at least 8 characters long,
                 <br />
                 and include 1 symbol and 1 number.
@@ -491,27 +491,27 @@ const SignUpPage = () => {
               }}
             />
             <div className="flex flex-col gap-[8px]">
-              <div className="flex flex-row gap-[4px] items-center">
+              <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
                   Minimum 8 characters
                 </div>
               </div>
-              <div className="flex flex-row gap-[4px] items-center">
+              <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
                   At least one number
                 </div>
               </div>
-              <div className="flex flex-row gap-[4px] items-center">
+              <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
                   At least one symbol
                 </div>
               </div>
-              <div className="flex flex-row gap-[4px] items-center">
+              <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
                   Match password confirm
                 </div>
               </div>
@@ -528,7 +528,7 @@ const SignUpPage = () => {
           {/* Verify Sign Up Email */}
           <div
             className={cn(
-              "w-[384px] flex-col gap-4 items-center",
+              "w-[384px] flex-col items-center gap-4",
               step === SignUpStep.VerifySignUpEmail ? "flex" : "hidden",
             )}
           >
@@ -539,10 +539,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="mb-[8px] text-[20px] leading-[24px] font-[600] text-text-primary">
+              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Verify your email
               </div>
-              <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
+              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
                 We just sent a 6-digit code to
                 <br />
                 {email}, enter it below:
@@ -557,7 +557,7 @@ const SignUpPage = () => {
                 setEmailCode(e.target.value);
               }}
             />
-            <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
+            <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
               Don&apos;t see a code?{" "}
               <button
                 className="text-button-background-primary"
@@ -582,7 +582,7 @@ const SignUpPage = () => {
           {/* Sign In */}
           <div
             className={cn(
-              "w-[384px] flex-col gap-4 items-center",
+              "w-[384px] flex-col items-center gap-4",
               step === SignUpStep.SignIn ? "flex" : "hidden",
             )}
           >
@@ -592,7 +592,7 @@ const SignUpPage = () => {
               height={28}
               className="absolute top-[30px]"
             />
-            <div className="mb-[24px] text-[20px] leading-[24px] font-[600] text-text-primary">
+            <div className="text-text-primary mb-[24px] text-[20px] leading-[24px] font-[600]">
               Welcome back
             </div>
             <FloatingLabelInput
@@ -613,13 +613,14 @@ const SignUpPage = () => {
                 setPassword(e.target.value);
               }}
             />
-            <Button
+            {/** disabled subscribe */}
+            {/* <Button
               className="w-full"
               size="lg"
               onClick={signInWithEmailAndPassword}
             >
               Sign in
-            </Button>
+            </Button> */}
             <Button
               variant="ghost"
               className="w-full"
@@ -635,7 +636,7 @@ const SignUpPage = () => {
           {/* Forgot Password */}
           <div
             className={cn(
-              "w-[384px] flex-col gap-4 items-center",
+              "w-[384px] flex-col items-center gap-4",
               step === SignUpStep.ForgotPassword ? "flex" : "hidden",
             )}
           >
@@ -646,10 +647,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="mb-[8px] text-[20px] leading-[24px] font-[600] text-text-primary">
+              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Forgot password
               </div>
-              <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
+              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
                 Enter your email address. If it&apos;s correct, we&apos;ll send
                 <br />
                 you an email with password reset instructions.
@@ -672,7 +673,7 @@ const SignUpPage = () => {
           {/* New password */}
           <div
             className={cn(
-              "w-[384px] flex-col gap-4 items-center",
+              "w-[384px] flex-col items-center gap-4",
               step === SignUpStep.NewPassword ? "flex" : "hidden",
             )}
           >
@@ -683,10 +684,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="mb-[8px] text-[20px] leading-[24px] font-[600] text-text-primary">
+              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Create new password
               </div>
-              <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
+              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
                 Your password must be at least 8 characters long,
                 <br />
                 and include 1 symbol and 1 number.
@@ -720,32 +721,32 @@ const SignUpPage = () => {
               }}
             />
             <div className="flex flex-col gap-[8px]">
-              <div className="flex flex-row gap-[4px] items-center">
+              <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
                   Minimum 8 characters
                 </div>
               </div>
-              <div className="flex flex-row gap-[4px] items-center">
+              <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
                   At least one number
                 </div>
               </div>
-              <div className="flex flex-row gap-[4px] items-center">
+              <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
                   At least one symbol
                 </div>
               </div>
-              <div className="flex flex-row gap-[4px] items-center">
+              <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-[12px] leading-[15px] font-[400] text-text-subtle">
+                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
                   Match password confirm
                 </div>
               </div>
             </div>
-            <div className="text-[16px] leading-[25.6px] font-[400] text-text-subtle">
+            <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
               Don&apos;t see a code?{" "}
               <button
                 className="text-button-background-primary"
@@ -763,16 +764,16 @@ const SignUpPage = () => {
         {/* Visual */}
         <div
           className={cn(
-            "absolute top-0 right-0 w-[50%] h-full px-[71px] py-[127px]",
+            "absolute top-0 right-0 h-full w-[50%] px-[71px] py-[127px]",
             "bg-[url('/img/subscription/bg-signup.png')] bg-cover bg-bottom bg-no-repeat",
             "hidden",
             step === SignUpStep.SignUp && "block",
           )}
         >
-          <div className="mb-[16px] text-[32px] leading-[40px] font-[600] text-text-primary">
+          <div className="text-text-primary mb-[16px] text-[32px] leading-[40px] font-[600]">
             Customize Every Detail
           </div>
-          <div className="text-[20px] leading-[24px] font-[500] text-text-muted-title">
+          <div className="text-text-muted-title text-[20px] leading-[24px] font-[500]">
             Personalize LLMs, prompts, character, and plots to create a roleplay
             that&apos;s truly yours.
           </div>

@@ -62,8 +62,18 @@ import { useEnhancedGenerationPrompt } from "@/components-v2/session/hooks/use-e
 import { IMAGE_MODELS } from "@/app/stores/model-store";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
-import { sessionQueries, useAddMessage, useDeleteMessage, useSaveSession } from "@/app/queries/session-queries";
-import { fetchTurn, fetchTurnOptional, turnQueries, useUpdateTurn } from "@/app/queries/turn-queries";
+import {
+  sessionQueries,
+  useAddMessage,
+  useDeleteMessage,
+  useSaveSession,
+} from "@/app/queries/session-queries";
+import {
+  fetchTurn,
+  fetchTurnOptional,
+  turnQueries,
+  useUpdateTurn,
+} from "@/app/queries/turn-queries";
 import {
   createMessage,
   executeFlow,
@@ -777,7 +787,7 @@ const MessageItem = ({
 
           // Save the updated turn
           const result = await updateTurnMutation.mutateAsync({
-            turn: turn
+            turn: turn,
           });
           if (result.isFailure) {
             console.error("Failed to update turn:", result.getError());
@@ -1103,7 +1113,8 @@ const UserInputs = ({
                     isHighLighted={shouldShowTooltip}
                   />
                   <div className="bg-border-normal mx-2 h-[48px] w-[1px]" />
-                  <UserInputCharacterButton
+                  {/** disabled subscribe */}
+                  {/* <UserInputCharacterButton
                     icon={
                       isGeneratingGlobalImage ? (
                         <Loader2 className="min-h-[24px] min-w-[24px] animate-spin" />
@@ -1134,7 +1145,7 @@ const UserInputs = ({
                     }}
                     isHighLighted={false}
                     isSubscribeBadge={!subscribed}
-                  />
+                  /> */}
                   {/* Generate Video button - HIDDEN in user input */}
                   {/* <UserInputCharacterButton
                     icon={
@@ -1797,7 +1808,7 @@ const SessionMessagesAndUserInputs = ({
 
         // Update message to database
         updateTurnMutation.mutate({
-          turn: streamingMessage
+          turn: streamingMessage,
         });
       } catch (error) {
         // Notify error to user
@@ -1850,7 +1861,7 @@ const SessionMessagesAndUserInputs = ({
           } else {
             // Update message to database
             updateTurnMutation.mutate({
-              turn: streamingMessage
+              turn: streamingMessage,
             });
           }
         }
@@ -1879,18 +1890,24 @@ const SessionMessagesAndUserInputs = ({
         }
 
         // Create user message
-        const userMessage = (await createMessage({
-          sessionId: session.id,
-          characterCardId: session.userCharacterCardId,
-          defaultCharacterName: "User",
-          messageContent: messageContent,
-        })).throwOnFailure().getValue();
+        const userMessage = (
+          await createMessage({
+            sessionId: session.id,
+            characterCardId: session.userCharacterCardId,
+            defaultCharacterName: "User",
+            messageContent: messageContent,
+          })
+        )
+          .throwOnFailure()
+          .getValue();
 
         // Add user message
-        (await addMessageMutation.mutateAsync({
-          sessionId: session.id,
-          message: userMessage,
-        })).throwOnFailure();
+        (
+          await addMessageMutation.mutateAsync({
+            sessionId: session.id,
+            message: userMessage,
+          })
+        ).throwOnFailure();
 
         // Scroll to bottom
         scrollToBottom({ behavior: "smooth" });
@@ -1954,7 +1971,7 @@ const SessionMessagesAndUserInputs = ({
         autoReply,
       });
       saveSessionMutation.mutate({
-        session
+        session,
       });
     },
     [session, saveSessionMutation],
@@ -2075,10 +2092,14 @@ const SessionMessagesAndUserInputs = ({
       }
       try {
         // Create scenario message
-        const scenarioMessage = (await createMessage({
-          sessionId: session.id,
-          messageContent: scenario.description,
-        })).throwOnFailure().getValue();
+        const scenarioMessage = (
+          await createMessage({
+            sessionId: session.id,
+            messageContent: scenario.description,
+          })
+        )
+          .throwOnFailure()
+          .getValue();
 
         // Add scenario
         const scenarioMessageOrError = await addMessageMutation.mutateAsync({
@@ -2113,7 +2134,7 @@ const SessionMessagesAndUserInputs = ({
 
       // Save message to DB
       updateTurnMutation.mutate({
-        turn: message
+        turn: message,
       });
     },
     [updateTurnMutation],
@@ -2182,7 +2203,7 @@ const SessionMessagesAndUserInputs = ({
 
       // Save message to DB
       updateTurnMutation.mutate({
-        turn: message
+        turn: message,
       });
     },
     [updateTurnMutation],
@@ -2290,7 +2311,7 @@ const SessionMessagesAndUserInputs = ({
 
           // Save the updated turn
           const result = await updateTurnMutation.mutateAsync({
-            turn: turn
+            turn: turn,
           });
           if (result.isFailure) {
             console.error("Failed to update turn:", result.getError());
@@ -2658,7 +2679,7 @@ const SessionMessagesAndUserInputs = ({
       try {
         session.setDataSchemaOrder(newOrder);
         saveSessionMutation.mutate({
-          session
+          session,
         });
       } catch (error) {
         logger.error("Failed to update data schema order", error);
@@ -2689,7 +2710,7 @@ const SessionMessagesAndUserInputs = ({
 
         // Save to database
         updateTurnMutation.mutate({
-          turn: lastTurn
+          turn: lastTurn,
         });
       } catch (error) {
         logger.error("Failed to update data store", error);

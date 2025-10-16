@@ -397,7 +397,8 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
 
         {/* Action Buttons */}
         <div className="flex flex-shrink-0 gap-2">
-          <Button
+          {/** disabled subscribe */}
+          {/* <Button
             onClick={handleGenerateImage}
             disabled={isGenerating || !imagePrompt.trim()}
             className="w-full"
@@ -411,7 +412,7 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
                   selectedModel === IMAGE_MODELS.SEEDANCE_LITE_1_0
                 ? "Generate Video"
                 : "Generate Image"}
-          </Button>
+          </Button> */}
 
           {/* Hidden file input - keeping for future use */}
           <input

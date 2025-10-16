@@ -440,17 +440,19 @@ const LeftNavigationFooter = memo(
         )}
       >
         <div className="min-h-[28px]">
-          <ConvexReady>
+          {/** disabled subscribe */}
+          {/* <ConvexReady>
             <Authenticated>
               {subscribed ? (
                 <>
-                  {/* <Button size="sm" className="font-[600]">
+                  <Button size="sm" className="font-[600]">
                     <SvgIcon name="astrsk_symbol_fit" size={12} />
                     Add credits
-                  </Button> */}
+                  </Button>
                 </>
               ) : (
-                <Button
+                <>
+                  <Button
                   size="sm"
                   className="bg-secondary-normal text-secondary-heavy font-[600]"
                   onClick={handleSubscribeClick}
@@ -458,6 +460,7 @@ const LeftNavigationFooter = memo(
                   <SvgIcon name="astrsk_symbol_fit" size={12} />
                   Subscribe to astrsk+
                 </Button>
+                </>
               )}
             </Authenticated>
             <Unauthenticated>
@@ -470,22 +473,30 @@ const LeftNavigationFooter = memo(
                 Subscribe to astrsk+
               </Button>
             </Unauthenticated>
-          </ConvexReady>
+          </ConvexReady> */}
         </div>
-        <div className="text-text-primary flex w-full flex-row justify-end gap-[16px]">
-          <div className="flex flex-row gap-[16px]">
+        <div className="text-text-primary flex w-full flex-row justify-between gap-[16px]">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="flex cursor-pointer flex-row items-center gap-2"
+                onClick={handleDocsClick}
+              >
+                <Book size={20} />
+                <span className="text-text-primary text-[14px] font-semibold">
+                  Documentation
+                </span>
+                <span className="sr-only">Docs</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" variant="button">
+              <p>Docs</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <div className="flex flex-row items-center gap-[16px]">
             <UpdaterNew />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button className="cursor-pointer" onClick={handleDocsClick}>
-                  <Book size={20} />
-                  <span className="sr-only">Docs</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" variant="button">
-                <p>Docs</p>
-              </TooltipContent>
-            </Tooltip>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <button

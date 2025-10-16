@@ -13,10 +13,10 @@ const OnboardingStepOnePage = () => {
     <div className={cn("absolute inset-0 top-[var(--topbar-height)] z-40")}>
       {/* Close */}
       <button
-        className="text-text-subtle absolute top-[34px] right-[40px] z-50"
+        className="text-text-subtle absolute top-[34px] right-[40px] z-50 cursor-pointer"
         onClick={() => {
           setActivePage(Page.Init);
-          navigate({ to: "/", replace: true });
+          navigate({ to: "/settings/providers", replace: true });
         }}
       >
         <SvgIcon name="window_close" size={40} />
@@ -42,7 +42,8 @@ const OnboardingStepOnePage = () => {
             allowFullScreen
           />
         </div>
-        <Button
+        {/** disabled subscribe */}
+        {/* <Button
           size="lg"
           className="min-w-[80px] place-self-center py-[10px]"
           onClick={() => {
@@ -50,7 +51,7 @@ const OnboardingStepOnePage = () => {
           }}
         >
           Next
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

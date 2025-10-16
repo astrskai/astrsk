@@ -90,7 +90,8 @@ const SettingsMain = () => {
             App Preferences
           </TypoXLarge>
 
-          <ConvexReady>
+          {/** disabled subscribe */}
+          {/* <ConvexReady>
             <Authenticated>
               <div
                 className="flex cursor-pointer items-center justify-between"
@@ -115,7 +116,7 @@ const SettingsMain = () => {
                 <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
               </div>
             </Unauthenticated>
-          </ConvexReady>
+          </ConvexReady> */}
 
           <div
             className="flex cursor-pointer items-center justify-between"
