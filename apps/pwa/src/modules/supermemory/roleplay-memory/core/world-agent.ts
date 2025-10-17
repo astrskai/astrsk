@@ -612,12 +612,16 @@ export async function executeWorldAgent(
       const isValid = validateWorldAgentOutput(output, input.speakerName);
 
       if (!isValid) {
-        // Log validation failure details
-        logger.warn("[World Agent] Validation failed:", {
-          speakerName: input.speakerName,
+        // Log validation failure details (capture before TypeScript narrows the type)
+        const invalidOutput = {
           actualParticipants: output.actualParticipants,
           worldContextUpdates: output.worldContextUpdates,
           delta_time: output.delta_time,
+        };
+
+        logger.warn("[World Agent] Validation failed:", {
+          speakerName: input.speakerName,
+          ...invalidOutput,
           rawLLMOutput: typedObject,
         });
 
