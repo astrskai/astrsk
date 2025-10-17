@@ -26,14 +26,19 @@ export class ListAstrskaiModelStrategy implements ListApiModelStrategy {
         throw new Error("Failed to fetch model list");
       }
 
-      // Parse response and return
+      // Parse response, filter for Gemini Flash only, and return
       return Result.ok(
-        response.data.map((model: any) =>
-          ApiModel.create({
-            id: `${model.provider}:${model.model_id}`,
-            name: model.model_name,
-          }).getValue(),
-        ),
+        response.data
+          .filter((model: any) => {
+            const modelName = model.model_name.toLowerCase();
+            return modelName.includes('gemini') && modelName.includes('flash');
+          })
+          .map((model: any) =>
+            ApiModel.create({
+              id: `${model.provider}:${model.model_id}`,
+              name: model.model_name,
+            }).getValue(),
+          ),
       );
     } catch (error) {
       return formatFail("Failed to list astrsk model", error);

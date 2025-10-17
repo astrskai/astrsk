@@ -475,8 +475,12 @@ function validateWorldAgentOutput(
   // actualParticipants must be non-empty
   if (output.actualParticipants.length === 0) return false;
 
-  // actualParticipants must include speaker name
-  if (!output.actualParticipants.includes(speakerName)) return false;
+  // actualParticipants must include speaker name (case-insensitive, whitespace-trimmed)
+  const normalizedSpeakerName = speakerName.trim().toLowerCase();
+  const normalizedParticipants = output.actualParticipants.map((p: string) =>
+    p.trim().toLowerCase(),
+  );
+  if (!normalizedParticipants.includes(normalizedSpeakerName)) return false;
 
   // delta_time must be non-negative
   if (output.delta_time < 0) return false;
@@ -608,6 +612,15 @@ export async function executeWorldAgent(
       const isValid = validateWorldAgentOutput(output, input.speakerName);
 
       if (!isValid) {
+        // Log validation failure details
+        logger.warn("[World Agent] Validation failed:", {
+          speakerName: input.speakerName,
+          actualParticipants: output.actualParticipants,
+          worldContextUpdates: output.worldContextUpdates,
+          delta_time: output.delta_time,
+          rawLLMOutput: typedObject,
+        });
+
         const fallbackOutput = createFallbackOutput(
           input.speakerCharacterId,
           input.speakerName,
@@ -619,7 +632,11 @@ export async function executeWorldAgent(
           actualParticipants: fallbackOutput.actualParticipants,
           worldContextUpdates: fallbackOutput.worldContextUpdates,
           delta_time: fallbackOutput.delta_time,
-          rawOutput: { fallback: true, reason: "validation_failed" },
+          rawOutput: {
+            fallback: true,
+            reason: "validation_failed",
+            llmResponse: typedObject,
+          },
         });
 
         return fallbackOutput;
