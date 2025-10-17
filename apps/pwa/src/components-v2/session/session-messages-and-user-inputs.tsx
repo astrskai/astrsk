@@ -246,7 +246,7 @@ const MessageItemInternal = ({
                 `Session: ${sessionId.toString()}`,
                 `Turn: ${messageId.toString()}`,
                 `Option: ${selectedOptionIndex + 1}/${optionsLength}`,
-                `Character: ${characterName || (isUser ? "User" : "AI")}`,
+                `Character: ${characterCard?.props.name || (isUser ? "User" : "AI")}`,
                 ``,
                 `Message:`,
                 content || ""
