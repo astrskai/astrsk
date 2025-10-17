@@ -77,10 +77,6 @@ export interface WorldAgentInput {
   // Optional: World memory context (for knowledge extraction)
   worldMemoryContext?: string
   worldMemoryQuery?: string // Query used to retrieve world memories
-
-  // API Configuration (reuse agent's API source and model)
-  apiSource?: string
-  modelId?: string
 }
 
 export interface WorldAgentOutput {

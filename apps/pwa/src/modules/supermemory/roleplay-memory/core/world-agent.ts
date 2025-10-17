@@ -524,61 +524,28 @@ export async function executeWorldAgent(
       worldMemoryQuery: input.worldMemoryQuery,
     });
 
-    // Get model configuration from input (agent's API connection) or use default
-    let provider: any;
-    let model: any;
-    let headers: any;
+    // Always use Convex backend with JWT authentication
+    const [providerSource, modelId] = DEFAULT_WORLD_AGENT_MODEL.split(":");
+    const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/${providerSource}`;
 
-    if (input.apiSource && input.modelId) {
-      try {
-        const { ApiService } = await import("@/app/services/api-service");
+    const provider = createOpenAI({
+      apiKey: "DUMMY", // AstrskAi uses JWT from headers
+      baseURL: astrskBaseUrl,
+    });
 
-        // Get API connection by source
-        const apiConnection = (await ApiService.listApiConnection.execute({}))
-          .throwOnFailure()
-          .getValue()
-          .find((connection: any) => connection.source === input.apiSource);
+    const model = provider(modelId);
 
-        if (apiConnection) {
-          // Use makeProvider to create the provider (same as generateStructuredOutput)
-          provider = makeProvider({
-            source: apiConnection.source,
-            apiKey: apiConnection.apiKey,
-            baseUrl: apiConnection.baseUrl,
-            openrouterProviderSort: apiConnection.openrouterProviderSort,
-            isStructuredOutput: true,
-          });
-
-          model = provider(input.modelId);
+    // Get JWT for AstrskAi authentication
+    const jwt = useAppStore.getState().jwt;
+    const headers = jwt
+      ? {
+          Authorization: `Bearer ${jwt}`,
+          "x-astrsk-credit-log": JSON.stringify({
+            feature: "world-agent",
+            sessionId: input.sessionId,
+          }),
         }
-      } catch (error) {
-        logger.warn(`[World Agent] Error getting agent model: ${error}`);
-      }
-    }
-    // Fallback to default AstrskAi provider with Gemini Flash
-    if (!model) {
-      const [providerSource, modelId] = DEFAULT_WORLD_AGENT_MODEL.split(":");
-      const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/${providerSource}`;
-
-      provider = createOpenAI({
-        apiKey: "DUMMY", // AstrskAi uses JWT from headers
-        baseURL: astrskBaseUrl,
-      });
-
-      model = provider(modelId);
-
-      // Get JWT for AstrskAi authentication
-      const jwt = useAppStore.getState().jwt;
-      headers = jwt
-        ? {
-            Authorization: `Bearer ${jwt}`,
-            "x-astrsk-credit-log": JSON.stringify({
-              feature: "world-agent",
-              sessionId: input.sessionId,
-            }),
-          }
-        : undefined;
-    }
+      : undefined;
 
     // Execute LLM call with timeout (2 seconds max per contract)
     const abortController = new AbortController();

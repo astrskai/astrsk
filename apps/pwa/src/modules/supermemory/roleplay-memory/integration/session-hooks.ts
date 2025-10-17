@@ -632,25 +632,6 @@ export async function processUserMessage(
       }
     }
 
-    // Get agent's apiSource and modelId from flow to use for World Agent
-    let apiSource: any;
-    let modelId: string | undefined;
-
-    if (flow && flow.agentIds.length > 0) {
-      try {
-        const { AgentService } = await import("@/app/services/agent-service");
-        const firstAgentId = flow.agentIds[0];
-        const agentResult = await AgentService.getAgent.execute(firstAgentId);
-        if (agentResult.isSuccess) {
-          const agent = agentResult.getValue();
-          apiSource = agent.props.apiSource;
-          modelId = agent.props.modelId;
-        }
-      } catch (error) {
-        logger.warn(`[User Message] Failed to get agent for World Agent: ${error}`);
-      }
-    }
-
     // Build character ID to name mapping for World Agent
     const characterIdToName: Record<string, string> = {};
     for (let i = 0; i < allParticipantIds.length; i++) {
@@ -786,8 +767,6 @@ export async function processUserMessage(
       characterIdToName,
       worldMemoryContext, // Recent events from Supermemory world container
       worldMemoryQuery, // Query used to retrieve world memories
-      apiSource,
-      modelId,
     });
 
     // Distribute user message to all participants
