@@ -46,6 +46,8 @@ import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { toast } from "sonner";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 import { UniqueEntityID } from "@/shared/domain";
 import { parseAiSdkErrorMessage } from "@/shared/utils/error-utils";
@@ -222,8 +224,42 @@ const MessageItemInternal = ({
     [iconIsVideo, assetIsVideo],
   );
 
+  // Check if we should show tester labels
+  const isDevelopmentOrTestMode =
+    import.meta.env.DEV ||
+    import.meta.env.VITE_ENABLE_TESTER_LABELS === 'true';
+
   return (
     <div className="group/message relative px-[56px]" tabIndex={0}>
+      {/* Tester UI: Session ID and Turn ID labels */}
+      {isDevelopmentOrTestMode && messageId && sessionId && (
+        <div className="text-text-body select-text font-mono text-xs mb-2 px-2 py-1 rounded opacity-60 hover:opacity-100 transition-opacity">
+          <span className="mr-4">
+            📋 Session: {sessionId.toString().slice(-8)}
+          </span>
+          <span className="mr-4">
+            Turn: {messageId.toString().slice(-8)}
+          </span>
+          {optionsLength > 1 && (
+            <span className="mr-4">
+              Option: {selectedOptionIndex + 1}/{optionsLength}
+            </span>
+          )}
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(
+                `Session: ${sessionId.toString()}\nTurn: ${messageId.toString()}\nOption: ${selectedOptionIndex + 1}/${optionsLength}`
+              );
+              toast.success("IDs copied to clipboard!");
+            }}
+            className="text-blue-500 hover:text-blue-700 ml-2"
+            title="Copy IDs to clipboard"
+          >
+            📋 Copy
+          </button>
+        </div>
+      )}
+
       <div
         className={cn(
           "flex items-start gap-[16px]",
@@ -1561,6 +1597,11 @@ const SessionMessagesAndUserInputs = ({
     });
   }, [queryClient, selectedSessionId]);
 
+  // Convex mutations for message logging
+  const logMessageToConvex = useMutation(api.sessionMessages.public.addMessage);
+  const logMessageDeletionToConvex = useMutation(api.sessionMessages.public.deleteMessage);
+  const logMessageRerollToConvex = useMutation(api.sessionMessages.public.updateMessageOption);
+
   // Virtualizer setup
   const parentRefInternal = useRef<HTMLDivElement>(null);
   const effectiveParentRef = parentRef || parentRefInternal;
@@ -1814,6 +1855,47 @@ const SessionMessagesAndUserInputs = ({
         // Update message to database
         await TurnService.updateTurn.execute(streamingMessage);
 
+        // Log to Convex
+        if (!regenerateMessageId) {
+          // New AI message - log as addMessage
+          logMessageToConvex({
+            sessionId: session.id.toString(),
+            messageId: streamingMessage.id.toString(),
+            type: "ai",
+            content: streamingContent,
+            characterCardId: characterCardId.toString(),
+            characterName: streamingMessage.characterName,
+            dataStore: streamingMessage.dataStore,
+            supermemory: streamingMessage.dataStore ? {
+              participants: JSON.parse(streamingMessage.dataStore.find((f: any) => f.name === "participants")?.value || "[]"),
+              gameTime: parseInt(streamingMessage.dataStore.find((f: any) => f.name === "game_time")?.value || "0", 10),
+              gameTimeInterval: streamingMessage.dataStore.find((f: any) => f.name === "game_time_interval")?.value || "Day",
+              worldContext: streamingMessage.dataStore.find((f: any) => f.name === "world_context")?.value,
+            } : undefined,
+            agentId: streamingAgentName,
+            modelId: streamingModelName,
+            tokenCount: streamingMessage.tokenSize,
+          }).catch((error) => {
+            logger.error("[Convex Log] Failed to log AI message:", error);
+          });
+        } else {
+          // Regenerated message - log as updateMessageOption
+          logMessageRerollToConvex({
+            messageId: streamingMessage.id.toString(),
+            newContent: streamingContent,
+            optionIndex: streamingMessage.selectedOptionIndex,
+            dataStore: streamingMessage.dataStore,
+            supermemory: streamingMessage.dataStore ? {
+              participants: JSON.parse(streamingMessage.dataStore.find((f: any) => f.name === "participants")?.value || "[]"),
+              gameTime: parseInt(streamingMessage.dataStore.find((f: any) => f.name === "game_time")?.value || "0", 10),
+              gameTimeInterval: streamingMessage.dataStore.find((f: any) => f.name === "game_time_interval")?.value || "Day",
+              worldContext: streamingMessage.dataStore.find((f: any) => f.name === "world_context")?.value,
+            } : undefined,
+          }).catch((error) => {
+            logger.error("[Convex Log] Failed to log message reroll:", error);
+          });
+        }
+
         // Invalidate turn query
         queryClient.invalidateQueries({
           queryKey: turnQueries.detail(streamingMessage.id).queryKey,
@@ -2016,6 +2098,26 @@ const SessionMessagesAndUserInputs = ({
 
                 // Save to database
                 await TurnService.updateTurn.execute(turn);
+
+                // Log user message to Convex (after dataStore update)
+                logMessageToConvex({
+                  sessionId: session.id.toString(),
+                  messageId: userMessage.id.toString(),
+                  type: "user",
+                  content: messageContent,
+                  characterCardId: session.userCharacterCardId?.toString(),
+                  characterName: "User",
+                  dataStore: dataStore,
+                  supermemory: suggestedUpdates ? {
+                    participants: suggestedUpdates.participants || [],
+                    gameTime: suggestedUpdates.gameTime || 0,
+                    gameTimeInterval: dataStore.find((f: any) => f.name === "game_time_interval")?.value || "Day",
+                    worldContext: suggestedUpdates.worldContext,
+                  } : undefined,
+                }).catch((error) => {
+                  logger.error("[Convex Log] Failed to log user message:", error);
+                  // Don't throw - logging failures should not block user
+                });
 
                 // Invalidate turn query to refresh
                 queryClient.invalidateQueries({
@@ -2355,6 +2457,13 @@ const SessionMessagesAndUserInputs = ({
         );
         return;
       }
+
+      // Log message deletion to Convex
+      logMessageDeletionToConvex({
+        messageId: messageId.toString(),
+      }).catch((error) => {
+        logger.error("[Convex Log] Failed to log message deletion:", error);
+      });
 
       // Invalidate session query
       invalidateSession();

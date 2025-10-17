@@ -26,6 +26,14 @@ export declare const api: {
     commitSessionChanges: FunctionReference<"mutation", "public", any, any>;
     revertSession: FunctionReference<"mutation", "public", any, any>;
   };
+  sessionMessages: {
+    public: {
+      addMessage: FunctionReference<"mutation", "public", any, any>;
+      deleteMessage: FunctionReference<"mutation", "public", any, any>;
+      updateMessageOption: FunctionReference<"mutation", "public", any, any>;
+      selectOption: FunctionReference<"mutation", "public", any, any>;
+    }
+  };
   vibe_coding: {
     mutations: {
       imageMutations: {
