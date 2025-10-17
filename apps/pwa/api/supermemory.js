@@ -2,7 +2,7 @@
  * Vercel serverless function to proxy Supermemory API requests
  * This avoids CORS issues in production by making the API call from the server
  */
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Only allow requests from your domain in production
   const allowedOrigins = [
     'http://localhost:5173',
