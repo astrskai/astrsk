@@ -535,7 +535,10 @@ export async function executeWorldAgent(
       isStructuredOutput: true,
     });
 
-    const model = provider(parsedModelId);
+    // Create model using the same logic as session-play-service
+    const model = "chat" in provider
+      ? provider.chat(parsedModelId)
+      : provider.languageModel(parsedModelId);
 
     // Get JWT for AstrskAi authentication
     const jwt = useAppStore.getState().jwt;
