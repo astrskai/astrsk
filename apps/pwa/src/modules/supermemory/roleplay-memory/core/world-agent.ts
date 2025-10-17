@@ -525,15 +525,17 @@ export async function executeWorldAgent(
     });
 
     // Always use Convex backend with JWT authentication
-    const [providerSource, modelId] = DEFAULT_WORLD_AGENT_MODEL.split(":");
+    const [providerSource, parsedModelId] = DEFAULT_WORLD_AGENT_MODEL.split(":");
     const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/${providerSource}`;
 
-    const provider = createOpenAI({
-      apiKey: "DUMMY", // AstrskAi uses JWT from headers
-      baseURL: astrskBaseUrl,
+    const provider = makeProvider({
+      source: providerSource as ApiSource,
+      apiKey: "DUMMY",
+      baseUrl: astrskBaseUrl,
+      isStructuredOutput: true,
     });
 
-    const model = provider(modelId);
+    const model = provider(parsedModelId);
 
     // Get JWT for AstrskAi authentication
     const jwt = useAppStore.getState().jwt;
