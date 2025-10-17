@@ -48,9 +48,17 @@ export default async function handler(
       return res.status(500).json({ error: 'Supermemory API key not configured' });
     }
 
-    // Build the target URL
-    const path = req.url?.replace('/api/supermemory', '') || '/';
-    const targetUrl = `https://api.supermemory.ai${path}`;
+    // Extract the path from query params (catch-all route)
+    const { path } = req.query;
+    const apiPath = Array.isArray(path) ? `/${path.join('/')}` : `/${path || ''}`;
+
+    // Preserve query parameters
+    const url = new URL(req.url || '', 'http://dummy');
+    const queryString = url.search;
+
+    const targetUrl = `https://api.supermemory.ai${apiPath}${queryString}`;
+
+    console.log('[Supermemory Proxy] Forwarding:', req.method, targetUrl);
 
     // Forward the request to Supermemory API
     const response = await fetch(targetUrl, {

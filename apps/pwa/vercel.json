@@ -56,10 +56,6 @@
   ],
   "rewrites": [
     {
-      "source": "/api/supermemory/:path*",
-      "destination": "/api/supermemory"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
