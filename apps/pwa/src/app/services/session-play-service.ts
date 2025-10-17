@@ -3098,7 +3098,6 @@ async function executeWorldAgentAndDistributeMemories(
     };
 
     // Execute World Agent to detect participants
-    // Pass agent's API source and model ID for model reuse
     const worldAgentOutput = await executeWorldAgent({
       sessionId: sessionIdStr,
       speakerCharacterId: characterId,
@@ -3109,8 +3108,6 @@ async function executeWorldAgentAndDistributeMemories(
       characterIdToName: characterIdToName,
       worldMemoryContext, // Use retrieved world memories
       worldMemoryQuery, // Pass query for debugging
-      apiSource: agent.props.apiSource,
-      modelId: agent.props.modelId,
     });
 
     // Accumulate world context from World Agent output
