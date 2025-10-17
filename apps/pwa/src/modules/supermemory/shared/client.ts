@@ -1,13 +1,14 @@
 import Supermemory from "supermemory";
 
-// Determine base URL: use proxy in development, direct API in production
+// Determine base URL: use proxy in both development and production to avoid CORS
 const getSupermemoryBaseUrl = () => {
-  // In development, use Vite proxy to avoid CORS
+  // Always use proxy (Vite in dev, Vercel serverless in production) to avoid CORS
   // Use full URL with current origin to make URL constructor happy
-  if (import.meta.env.DEV) {
+  // Guard window access for SSR/Vitest/Node environments
+  if (typeof window !== "undefined") {
     return `${window.location.origin}/api/supermemory`;
   }
-  // In production, use configured base URL or default
+  // Fallback for SSR/Node environments (shouldn't normally be hit in browser)
   return import.meta.env.VITE_SUPERMEMORY_BASE_URL || "https://api.supermemory.ai";
 };
 
