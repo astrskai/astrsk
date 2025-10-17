@@ -224,15 +224,10 @@ const MessageItemInternal = ({
     [iconIsVideo, assetIsVideo],
   );
 
-  // Check if we should show tester labels
-  const isDevelopmentOrTestMode =
-    import.meta.env.DEV ||
-    import.meta.env.VITE_ENABLE_TESTER_LABELS === 'true';
-
   return (
     <div className="group/message relative px-[56px]" tabIndex={0}>
       {/* Tester UI: Session ID and Turn ID labels */}
-      {isDevelopmentOrTestMode && messageId && sessionId && (
+      {messageId && sessionId && (
         <div className="text-text-body select-text font-mono text-xs mb-2 px-2 py-1 rounded opacity-60 hover:opacity-100 transition-opacity">
           <span className="mr-4">
             📋 Session: {sessionId.toString().slice(-8)}
@@ -247,13 +242,20 @@ const MessageItemInternal = ({
           )}
           <button
             onClick={() => {
-              navigator.clipboard.writeText(
-                `Session: ${sessionId.toString()}\nTurn: ${messageId.toString()}\nOption: ${selectedOptionIndex + 1}/${optionsLength}`
-              );
-              toast.success("IDs copied to clipboard!");
+              const copyText = [
+                `Session: ${sessionId.toString()}`,
+                `Turn: ${messageId.toString()}`,
+                `Option: ${selectedOptionIndex + 1}/${optionsLength}`,
+                `Character: ${characterName || (isUser ? "User" : "AI")}`,
+                ``,
+                `Message:`,
+                content || ""
+              ].join('\n');
+              navigator.clipboard.writeText(copyText);
+              toast.success("Message and IDs copied to clipboard!");
             }}
             className="text-blue-500 hover:text-blue-700 ml-2"
-            title="Copy IDs to clipboard"
+            title="Copy message and IDs to clipboard"
           >
             📋 Copy
           </button>
