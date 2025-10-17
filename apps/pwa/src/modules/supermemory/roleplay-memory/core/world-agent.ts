@@ -173,6 +173,13 @@ const makeProvider = ({
       break;
     }
 
+    case ApiSource.AstrskAi:
+      provider = createOpenAI({
+        apiKey: apiKey || "DUMMY", // AstrskAi uses JWT from headers
+        baseURL: baseUrl,
+      });
+      break;
+
     default:
       throw new Error("Invalid API connection source");
   }
