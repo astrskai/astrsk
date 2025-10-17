@@ -40,7 +40,7 @@ const DesktopApp = () => {
       {activePage === Page.CardPanel && selectedCardId && (
         <CardPanelMain cardId={selectedCardId} />
       )}
-      <OnboardingDialog />
+      {/* <OnboardingDialog /> */}
       <SubscribeNudgeDialog />
       <ConvexReady>
         <SubscribeChecker />

@@ -111,39 +111,39 @@ export const useDefaultInitialized = () => {
       }
 
       // Init default sessions - only for new users who haven't selected a genre yet
-      if (!sessionOnboardingSteps.genreSelection) {
-        const sessions = (await SessionService.listSession.execute({}))
-          .throwOnFailure()
-          .getValue();
-        if (sessions && sessions.length === 0) {
-          // Import default sessions
-          const sessionFilePaths = [
-            "/default/session/dice_of_fate.astrsk.session",
-            "/default/session/sakura_blooms,_hearts_awaken.astrsk.session",
-          ];
+      // if (!sessionOnboardingSteps.genreSelection) {
+      //   const sessions = (await SessionService.listSession.execute({}))
+      //     .throwOnFailure()
+      //     .getValue();
+      //   if (sessions && sessions.length === 0) {
+      //     // Import default sessions
+      //     const sessionFilePaths = [
+      //       "/default/session/dice_of_fate.astrsk.session",
+      //       "/default/session/sakura_blooms,_hearts_awaken.astrsk.session",
+      //     ];
           
-          for (const path of sessionFilePaths) {
-            try {
-              const response = await fetch(path);
-              const file = new File([await response.blob()], path.split('/').pop() || path, {
-                type: "application/octet-stream",
-              });
+      //     for (const path of sessionFilePaths) {
+      //       try {
+      //         const response = await fetch(path);
+      //         const file = new File([await response.blob()], path.split('/').pop() || path, {
+      //           type: "application/octet-stream",
+      //         });
               
-              const importResult = await SessionService.importSessionFromFile.execute({
-                file: file,
-                includeHistory: true,
-              });
-              if (importResult.isFailure) {
-                console.log("Failed to import session:", path, importResult.getError());
-                continue;
-              }
-            } catch (error) {
-              console.log("Error fetching session file:", path, error);
-              continue;
-            }
-          }
-        }
-      }
+      //         const importResult = await SessionService.importSessionFromFile.execute({
+      //           file: file,
+      //           includeHistory: true,
+      //         });
+      //         if (importResult.isFailure) {
+      //           console.log("Failed to import session:", path, importResult.getError());
+      //           continue;
+      //         }
+      //       } catch (error) {
+      //         console.log("Error fetching session file:", path, error);
+      //         continue;
+      //       }
+      //     }
+      //   }
+      // }
 
       // Initialize backgrounds - Load all backgrounds into the store
       await fetchBackgrounds();
