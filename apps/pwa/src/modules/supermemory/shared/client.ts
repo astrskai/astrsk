@@ -1,22 +1,56 @@
-import Supermemory from "supermemory";
+// Simplified Supermemory client using direct API endpoints
 
-// Determine base URL: use proxy in both development and production to avoid CORS
-const getSupermemoryBaseUrl = () => {
-  // Always use proxy (Vite in dev, Vercel serverless in production) to avoid CORS
-  // Use full URL with current origin to make URL constructor happy
-  // Guard window access for SSR/Vitest/Node environments
-  if (typeof window !== "undefined") {
-    return `${window.location.origin}/api/supermemory`;
-  }
-  // Fallback for SSR/Node environments (shouldn't normally be hit in browser)
-  return import.meta.env.VITE_SUPERMEMORY_BASE_URL || "https://api.supermemory.ai";
+type SearchParams = {
+  q: string;
+  containerTag: string;
+  limit?: number;
 };
 
-// Initialize Supermemory client with configuration from environment
-export const memoryClient = new Supermemory({
-  apiKey: import.meta.env.VITE_SUPERMEMORY_API_KEY,
-  baseURL: getSupermemoryBaseUrl(),
-});
+type AddParams = {
+  containerTag: string;
+  content: string;
+  metadata?: Record<string, any>;
+};
+
+// Memory client with simplified API endpoints
+export const memoryClient = {
+  search: {
+    memories: async (params: SearchParams) => {
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(`Search failed: ${response.status} ${JSON.stringify(error)}`);
+      }
+
+      return response.json();
+    },
+  },
+  memories: {
+    add: async (params: AddParams) => {
+      const response = await fetch('/api/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(`Add failed: ${response.status} ${JSON.stringify(error)}`);
+      }
+
+      return response.json();
+    },
+  },
+};
 
 // Export a function to check if the client is configured
 export const isMemoryClientConfigured = (): boolean => {
