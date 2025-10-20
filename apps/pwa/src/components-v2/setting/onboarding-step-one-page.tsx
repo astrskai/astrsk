@@ -43,7 +43,8 @@ const OnboardingStepOnePage = () => {
           size="lg"
           className="place-self-center min-w-[80px] py-[10px]"
           onClick={() => {
-            setActivePage(Page.OnboardingStepTwo);
+            // setActivePage(Page.OnboardingStepTwo);
+            setActivePage(Page.Subscribe);
           }}
         >
           Next
