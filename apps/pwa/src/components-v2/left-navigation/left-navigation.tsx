@@ -450,7 +450,8 @@ const LeftNavigationFooter = memo(
                 }}
               >
                 <SvgIcon name="astrsk_symbol_fit" size={12} />
-                Subscribe to astrsk+
+                astrsk+
+                {/*Subscribe to astrsk+*/}
               </Button>
             )}
             {/* <Authenticated>

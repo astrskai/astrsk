@@ -23,6 +23,9 @@ function openInNewTab(url: string) {
 }
 
 const SubscribePage = () => {
+  // Toggle for tester version (set to true for simple view, false for full view)
+  const TESTER_MODE = true;
+
   const [isOpenCreditDetail, setIsOpenCreditDetail] = useState(false);
 
   // Check sign up available
@@ -152,29 +155,76 @@ const SubscribePage = () => {
       </button>
 
       <ScrollArea className="h-full">
-        <div className="flex min-h-full flex-col items-center gap-[48px] py-[100px]">
-          {/* Header */}
-          <div className="flex flex-col items-center gap-4">
-            <div
-              className={cn(
-                "px-[24px] py-[8px]",
-                "to-secondary-normal rounded-full bg-gradient-to-r from-[#755DC2]",
-                "text-text-primary text-[20px] leading-[24px] font-[600]",
-              )}
-            >
-              Start with astrsk+
-            </div>
-            <div className="text-[36px] leading-[36px] font-[600]">
-              The Easiest Way to Start a Truly Immersive Roleplay
-            </div>
-            <div className="text-text-body text-[20px] leading-[24px] font-[500]">
-              Go Straight to Creating Your Ultimate Roleplay with AI Images &
-              Videos!
+        {TESTER_MODE ? (
+          // TESTER VERSION - Simple centered signup
+          <div className="flex h-[calc(100vh-var(--topbar-height))] items-center justify-center">
+            {/* Centered Signup Section */}
+            <div className="flex w-[712px] flex-col gap-[16px]">
+              <div
+                className={cn(
+                  "rounded-[12px] bg-[#159BE2]/30 px-[40px] py-[16px] backdrop-blur-xl",
+                  "border-border-selected-secondary border-[1px]",
+                  "flex flex-col gap-[8px]",
+                )}
+              >
+                <div className="flex flex-row items-center justify-between">
+                  <div className="flex flex-row items-center gap-[4px]">
+                    <div className="text-text-primary text-[24px] leading-[40px] font-[600]">
+                      Tester login
+                    </div>
+                  </div>
+                </div>
+                {/* <div className="text-text-body mb-[8px] text-[14px] leading-[20px] font-[500]">
+                  <ul className="list-disc pl-5">
+                    <li>Tester gets free model to test</li>
+                    <li>
+                      Must be member of our Discord server to gain access
+                    </li>
+                  </ul>
+                </div> */}
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    if (userId) {
+                      setIsOpenJoinServer(true);
+                    } else {
+                      signUpWithDiscord();
+                    }
+                  }}
+                  disabled={!isLoadedSignUp || isLoading}
+                  loading={isLoading || isSignUpAvailableLoading}
+                >
+                  {!isLoading && <SvgIcon name="discord" size={16} />}
+                  Join our Discord server and start now
+                </Button>
+              </div>
             </div>
           </div>
+        ) : (
+          // ORIGINAL VERSION - Full feature showcase
+          <div className="flex min-h-full flex-col items-center gap-[48px] py-[100px]">
+            {/* Header */}
+            <div className="flex flex-col items-center gap-4">
+              <div
+                className={cn(
+                  "px-[24px] py-[8px]",
+                  "to-secondary-normal rounded-full bg-gradient-to-r from-[#755DC2]",
+                  "text-text-primary text-[20px] leading-[24px] font-[600]",
+                )}
+              >
+                Start with astrsk+
+              </div>
+              <div className="text-[36px] leading-[36px] font-[600]">
+                The Easiest Way to Start a Truly Immersive Roleplay
+              </div>
+              <div className="text-text-body text-[20px] leading-[24px] font-[500]">
+                Go Straight to Creating Your Ultimate Roleplay with AI Images &
+                Videos!
+              </div>
+            </div>
 
-          {/* Main */}
-          <div className="grid grid-cols-2 place-items-center items-start gap-4">
+            {/* Main */}
+            <div className="grid grid-cols-2 place-items-center items-start gap-4">
             <div className="relative h-[452px] w-[712px] overflow-hidden rounded-[12px] bg-gradient-to-br from-[#fff]/60 to-[#000] p-[1px]">
               <div className="flex h-full w-full flex-col justify-end rounded-[12px] bg-[url('/img/subscription/ai-image-gen.jpg')] bg-contain pb-[16px] text-center">
                 <div className="mb-[16px] text-[72px] leading-[45px] font-[900] text-[#fff] uppercase">
@@ -407,6 +457,7 @@ const SubscribePage = () => {
             </div>
           </div>
         </div>
+        )}
       </ScrollArea>
 
       {/* Join Server Dialog */}
