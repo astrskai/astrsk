@@ -53,10 +53,6 @@ const DialogContent = React.forwardRef<
       aria-describedby={undefined}
       {...props}
     >
-      <VisuallyHidden>
-        <DialogPrimitive.Title />
-      </VisuallyHidden>
-
       {children}
       {!hideClose && (
         <DialogPrimitive.Close className="text-text-primary absolute top-6 right-6 h-6 w-6 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none">

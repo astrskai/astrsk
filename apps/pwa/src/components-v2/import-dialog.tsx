@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, ReactNode } from "react";
+import { useRef, ReactNode } from "react";
 import { Import, X, Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -17,7 +17,7 @@ export const humanizeBytes = (bytes: number): string => {
   const sizes = ["Bytes", "KB", "MB", "GB"];
   if (bytes === 0) return "0 Bytes";
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + " " + sizes[i];
+  return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
 };
 
 export interface ImportDialogProps {
@@ -103,26 +103,26 @@ export function ImportDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={cn("pt-14 w-[624px]", file && "pt-[24px]", className)}
+        className={cn("w-[624px] pt-14", file && "pt-[24px]", className)}
         hideClose={hideCloseWhenFile && !!file}
       >
-        {/* Title outside of content wrapper for default layout */}
-        {!contentClassName && <DialogTitle>{title}</DialogTitle>}
+        {/* Always use DialogTitle for accessibility */}
+        {!file && !contentClassName && <DialogTitle>{title}</DialogTitle>}
 
         {!file ? (
           <div className={contentClassName}>
             {/* Title inside content wrapper when custom layout is used */}
             {contentClassName && (
-              <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                <div className="self-stretch h-9 justify-start text-text-primary text-2xl font-semibold leading-10">
+              <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+                <DialogTitle className="text-text-primary h-9 justify-start self-stretch text-2xl leading-10 font-semibold">
                   {title}
-                </div>
+                </DialogTitle>
                 {description && (
-                  <div className="self-stretch justify-start text-text-subtle text-base font-normal leading-relaxed">
-                    {description.split('\n').map((line, i) => (
+                  <div className="text-text-subtle justify-start self-stretch text-base leading-relaxed font-normal">
+                    {description.split("\n").map((line, i) => (
                       <span key={i}>
                         {line}
-                        {i < description.split('\n').length - 1 && <br />}
+                        {i < description.split("\n").length - 1 && <br />}
                       </span>
                     ))}
                   </div>
@@ -130,17 +130,22 @@ export function ImportDialog({
               </div>
             )}
             {/* Default description for non-custom layouts */}
-            {!contentClassName && description && <DialogDescription>{description}</DialogDescription>}
+            {!contentClassName && description && (
+              <DialogDescription>{description}</DialogDescription>
+            )}
             <div
               className={cn(
-                "border-dashed bg-background-surface-3 hover:bg-background-surface-4 rounded-2xl flex flex-col justify-center items-center p-8 cursor-pointer",
-                contentClassName && "self-stretch px-16 py-8"
+                "bg-background-surface-3 hover:bg-background-surface-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-dashed p-8",
+                contentClassName && "self-stretch px-16 py-8",
               )}
               onClick={handleClick}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              <Import size={contentClassName ? 64 : 72} className="text-muted-foreground" />
+              <Import
+                size={contentClassName ? 64 : 72}
+                className="text-muted-foreground"
+              />
               <div>
                 <TypoBase className="text-muted-foreground">
                   Choose a file or drag it here
@@ -158,27 +163,29 @@ export function ImportDialog({
         ) : (
           <div className={contentClassName || "flex flex-col gap-[24px]"}>
             {/* Title for file selected state */}
-            {contentClassName && (
-              <div className="self-stretch h-9 justify-start text-text-primary text-2xl font-semibold leading-10">
-                {title}
-              </div>
-            )}
-            {!contentClassName && <DialogTitle>{title}</DialogTitle>}
-            
-            <div className="self-stretch px-4 py-3 bg-background-surface-3 rounded outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-between items-center gap-2">
-              <div className="flex justify-start items-center gap-2">
+            <DialogTitle
+              className={cn(
+                contentClassName &&
+                  "text-text-primary h-9 justify-start self-stretch text-2xl leading-10 font-semibold",
+              )}
+            >
+              {title}
+            </DialogTitle>
+
+            <div className="bg-background-surface-3 outline-border-light inline-flex items-center justify-between gap-2 self-stretch rounded px-4 py-3 outline outline-offset-[-1px]">
+              <div className="flex items-center justify-start gap-2">
                 {fileIcon}
-                <div className="justify-start text-text-primary text-base font-medium leading-relaxed">
+                <div className="text-text-primary justify-start text-base leading-relaxed font-medium">
                   {file.name} {`(${humanizeBytes(file.size)})`}
                 </div>
               </div>
-              <div className="w-6 h-6 relative opacity-70 rounded-sm overflow-hidden">
+              <div className="relative h-6 w-6 overflow-hidden rounded-sm opacity-70">
                 <Button
                   variant="ghost_white"
                   onClick={handleRemoveFile}
-                  className="w-6 h-6 p-0"
+                  className="h-6 w-6 p-0"
                 >
-                  <X className="min-w-4 min-h-4" />
+                  <X className="min-h-4 min-w-4" />
                 </Button>
               </div>
             </div>
@@ -192,7 +199,11 @@ export function ImportDialog({
                     Cancel
                   </Button>
                 </DialogClose>
-                <Button size="lg" disabled={isImporting} onClick={handleImportClick}>
+                <Button
+                  size="lg"
+                  disabled={isImporting}
+                  onClick={handleImportClick}
+                >
                   {isImporting && <Loader2 className="animate-spin" />}
                   Import
                 </Button>
