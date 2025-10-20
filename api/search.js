@@ -12,9 +12,7 @@ module.exports = async function handler(req, res) {
   ];
 
   const origin = req.headers.origin || '';
-  const isAllowed = allowedOrigins.includes(origin) ||
-    origin.includes('.vercel.app') ||
-    origin.includes('astrsk');
+  const isAllowed = allowedOrigins.includes(origin);
 
   if (isAllowed && origin) {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -62,15 +60,14 @@ module.exports = async function handler(req, res) {
     const response = await fetch(targetUrl, fetchOptions);
     console.log('[Supermemory Search] Response status:', response.status);
 
-    let data;
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
+      const data = await response.json();
+      res.status(response.status).json(data);
     } else {
-      data = await response.text();
+      const data = await response.text();
+      res.status(response.status).send(data);
     }
-
-    res.status(response.status).json(data);
   } catch (error) {
     console.error('[Supermemory Search] Error:', error);
     res.status(500).json({
