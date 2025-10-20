@@ -1,6 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import tsconfigPaths from "vite-tsconfig-paths";
 import license from "rollup-plugin-license";
@@ -8,7 +8,11 @@ import path from "path";
 import { version } from "./package.json";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // Load env file based on `mode` in the current working directory.
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
   optimizeDeps: {
     exclude: ["@electric-sql/pglite", "minijinja-js"],
   },
@@ -19,6 +23,42 @@ export default defineConfig({
   // Proxy configuration for Supermemory API (development only)
   server: {
     proxy: {
+      '/api/search': {
+        target: 'https://api.supermemory.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/search/, '/v4/search'),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('[Supermemory Search] proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // Add API key from environment
+            const apiKey = env.VITE_SUPERMEMORY_API_KEY;
+            if (apiKey) {
+              proxyReq.setHeader('Authorization', `Bearer ${apiKey}`);
+            }
+            console.log('[Supermemory Search] Proxying:', req.method, req.url, '→', proxyReq.path);
+          });
+        },
+      },
+      '/api/documents': {
+        target: 'https://api.supermemory.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/documents/, '/v3/documents'),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('[Supermemory Documents] proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // Add API key from environment
+            const apiKey = env.VITE_SUPERMEMORY_API_KEY;
+            if (apiKey) {
+              proxyReq.setHeader('Authorization', `Bearer ${apiKey}`);
+            }
+            console.log('[Supermemory Documents] Proxying:', req.method, req.url, '→', proxyReq.path);
+          });
+        },
+      },
       '/api/supermemory': {
         target: 'https://api.supermemory.ai',
         changeOrigin: true,
@@ -156,4 +196,5 @@ This project uses the following third-party software. The full text of each lice
       },
     }),
   ],
+  };
 });

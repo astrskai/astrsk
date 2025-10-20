@@ -100,20 +100,25 @@ const SubscribePage = () => {
       case "FAILED":
         switch (claimFreeSubscriptionProcess.result.code) {
           case "ALREADY_SUBSCRIBED":
-            toast.error("You are already signed in to astrsk+.");
+            toast.success("You are already signed in to astrsk+.");
+            deleteClaimFreeSubscriptionProcess();
+            backToReturnPage();
             break;
           case "NO_DISCORD_ID":
             toast.error("Please log in with Discord to access this feature.");
+            deleteClaimFreeSubscriptionProcess();
             break;
           case "NO_SERVER_MEMBER":
             toast.error("Join our Discord server to join astrsk+.");
+            deleteClaimFreeSubscriptionProcess();
             break;
           default:
             toast.error("Unknown code", {
               description: claimFreeSubscriptionProcess.result.code,
             });
+            deleteClaimFreeSubscriptionProcess();
+            break;
         }
-        deleteClaimFreeSubscriptionProcess();
         break;
 
       case "ERROR":

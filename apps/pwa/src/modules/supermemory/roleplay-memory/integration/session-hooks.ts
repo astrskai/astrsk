@@ -301,9 +301,6 @@ export async function recallCharacterMemories(
       limit,
     });
 
-    logger.info(
-      `[Memory Recall] Retrieved ${result.count} memories for character: ${characterName}`,
-    );
 
     // Format memories (simple sentences from Supermemory)
     const { formatMemoriesForPrompt } = await import(
@@ -332,9 +329,6 @@ export async function recallCharacterMemories(
 
         appendedWorldContext = characterWorldContext;
 
-        logger.info(
-          `[Memory Recall] Appended current world context for ${characterName}`,
-        );
       }
     }
 
@@ -387,46 +381,62 @@ export async function distributeMemories(
       worldAgentOutput,
     } = input;
 
-    logger.info(
-      `[Memory Distribution] Processing message from ${speakerName} at GameTime: ${game_time}`,
-    );
-
     // Use the provided World Agent output (already executed in session-play-service)
     const { actualParticipants, worldContextUpdates } = worldAgentOutput;
 
-    logger.info(
-      `[Memory Distribution] Detected ${actualParticipants.length} participants (names)`,
-    );
+    // dataStore.participants now contains NAMES (not IDs)
+    // We need to get character IDs from session.characterCards for creating containers
+    const allParticipantNames = dataStore.participants || [];
 
-    // Map character names to IDs for storage
-    // actualParticipants contains NAMES, but we need IDs for container creation
-    // Get all character IDs from dataStore.participants
-    const allParticipantIds = dataStore.participants || [];
-
-    // Build name-to-ID mapping by fetching character names
+    // Build name-to-ID mapping by looking up session's character cards
     const { CardService } = await import("@/app/services/card-service");
     const { CharacterCard } = await import(
       "@/modules/card/domain/character-card"
     );
     const nameToId: Record<string, string> = {};
 
-    for (const participantId of allParticipantIds) {
-      try {
-        const card = (
-          await CardService.getCard.execute(new UniqueEntityID(participantId))
-        )
-          .throwOnFailure()
-          .getValue() as typeof CharacterCard.prototype;
-        const name = card.props.name || card.props.title || "Unknown";
-        nameToId[name] = participantId;
-      } catch (error) {
-        logger.warn(
-          `[Memory Distribution] Failed to fetch card for ${participantId}`,
-        );
+    // Get all character cards from session to build name-to-ID mapping
+    const { SessionService } = await import("@/app/services/session-service");
+    const sessionResult = await SessionService.getSession.execute(new UniqueEntityID(sessionId));
+    if (sessionResult.isSuccess) {
+      const session = sessionResult.getValue();
+
+      // Add user character if it exists
+      if (session.userCharacterCardId) {
+        try {
+          const userCard = (
+            await CardService.getCard.execute(session.userCharacterCardId)
+          )
+            .throwOnFailure()
+            .getValue() as typeof CharacterCard.prototype;
+          const userName = userCard.props.name || userCard.props.title || "User";
+          nameToId[userName] = session.userCharacterCardId.toString();
+        } catch (error) {
+          logger.warn(
+            `[Memory Distribution] Failed to fetch user card for ${session.userCharacterCardId.toString()}`,
+          );
+        }
+      }
+
+      // Add AI character cards
+      for (const charCardId of session.aiCharacterCardIds) {
+        try {
+          const card = (
+            await CardService.getCard.execute(charCardId)
+          )
+            .throwOnFailure()
+            .getValue() as typeof CharacterCard.prototype;
+          const name = card.props.name || card.props.title || "Unknown";
+          nameToId[name] = charCardId.toString();
+        } catch (error) {
+          logger.warn(
+            `[Memory Distribution] Failed to fetch card for ${charCardId.toString()}`,
+          );
+        }
       }
     }
 
-    // Convert participant names to IDs
+    // Convert participant names to IDs for container creation
     const participantIds = actualParticipants
       .map((name) => nameToId[name])
       .filter((id) => id !== undefined);
@@ -437,10 +447,6 @@ export async function distributeMemories(
         `[Memory Distribution] Could not map any participant names to IDs. Names: ${actualParticipants.join(", ")}`,
       );
     }
-
-    logger.info(
-      `[Memory Distribution] Mapped ${participantIds.length} participant IDs from names`,
-    );
 
     // Store raw message in world container
     const worldContainer = createWorldContainer(sessionId);
@@ -534,9 +540,6 @@ export async function distributeMemories(
 
     await Promise.all(distributionPromises);
 
-    logger.info(
-      `[Memory Distribution] Successfully distributed memories to ${actualParticipants.length} participants`,
-    );
 
     // Debug event removed - memory distribution info already shown in Character Memory Add events
     // recordMemoryDistribution({
@@ -748,7 +751,7 @@ export async function processUserMessage(
 
     const formattedDataStore = {
       sessionId,
-      participants: allParticipantIds, // All session characters (who COULD participate)
+      participants: allParticipantNames, // All session characters (who COULD participate) - now using names instead of IDs
       previousParticipants, // Who WAS participating before (from dataStore)
       game_time: gameTime,
       game_time_interval: gameTimeInterval,
@@ -784,15 +787,8 @@ export async function processUserMessage(
     logger.info(`[User Message] Successfully stored in supermemory for ${allParticipantNames.length} participants`);
 
     // Build suggested dataStore updates to return to caller
-    // Convert participant names to IDs (similar to executeWorldAgentAndDistributeMemories)
-    const nameToIdMap: Record<string, string> = {};
-    for (let i = 0; i < allParticipantIds.length; i++) {
-      nameToIdMap[allParticipantNames[i]] = allParticipantIds[i];
-    }
-
-    const participantIds = worldAgentOutput.actualParticipants
-      .map((name) => nameToIdMap[name])
-      .filter((id) => id !== undefined);
+    // Use participant names directly (no conversion to IDs)
+    const participantNames = worldAgentOutput.actualParticipants;
 
     // Calculate new gameTime if delta_time > 0
     const newGameTime = worldAgentOutput.delta_time > 0
@@ -815,7 +811,7 @@ export async function processUserMessage(
     // Return suggested updates for caller to apply to latest Turn's dataStore
     return {
       ...(newGameTime !== undefined && { gameTime: newGameTime }),
-      ...(participantIds.length > 0 && { participants: participantIds }),
+      ...(participantNames.length > 0 && { participants: participantNames }),
       ...(updatedWorldContext && { worldContext: updatedWorldContext }),
     };
   } catch (error) {

@@ -116,8 +116,6 @@ export async function storeWorldMessage(
       },
     });
 
-    logger.info("[Memory Storage] Stored world message:", result.id);
-
     // Record debug event
     recordWorldMemoryAdd({
       containerTag,
@@ -211,8 +209,6 @@ export async function storeCharacterMessage(
         ...(metadata.lorebookKey && { lorebookKey: metadata.lorebookKey }),
       },
     });
-
-    logger.info("[Memory Storage] Stored character message:", result.id);
 
     // Record debug event
     // Extract character ID and name from containerTag (format: sessionId::characterId)

@@ -3197,11 +3197,6 @@ const SessionMessagesAndUserInputs = ({
           openned={isOpenSessionData}
           onClick={() => {
             setIsOpenSessionData((isOpen) => !isOpen);
-            // Complete the entire onboarding if on sessionData step
-            console.log(
-              "shouldShowSessionDataTooltip",
-              shouldShowSessionDataTooltip,
-            );
             setSessionOnboardingStep("sessionData", true);
           }}
           onboarding={shouldShowSessionDataTooltip}

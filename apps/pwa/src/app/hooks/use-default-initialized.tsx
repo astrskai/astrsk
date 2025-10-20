@@ -61,28 +61,28 @@ export const useDefaultInitialized = () => {
       }
 
       // Init default flows - COMMENTED OUT FOR SESSION-BASED INITIALIZATION
-      const flows = (await FlowService.searchFlow.execute({}))
-        .throwOnFailure()
-        .getValue();
-      if (flows && flows.length === 0) {
-        // Will display in reverse to this order (order by updateAt desc)
-        const filePath = [
-          // "/default/flow/SAGA (Sequential Analysis and Gaming Agent).json",
-          "/default/flow/Simple.json",
-        ];
-        for (const path of filePath) {
-          const response = await fetch(path);
-          const file = new File([await response.blob()], path);
-          const importResult = await FlowService.importFlowFromFile.execute({
-            file: file,
-            // preserveOriginalModels: true, // Preserve models from the imported flow for default initialization
-          });
-          if (importResult.isFailure) {
-            console.log(importResult.getError());
-            continue;
-          }
-        }
-      }
+      // const flows = (await FlowService.searchFlow.execute({}))
+      //   .throwOnFailure()
+      //   .getValue();
+      // if (flows && flows.length === 0) {
+      //   // Will display in reverse to this order (order by updateAt desc)
+      //   const filePath = [
+      //     // "/default/flow/SAGA (Sequential Analysis and Gaming Agent).json",
+      //     "/default/flow/Simple.json",
+      //   ];
+      //   for (const path of filePath) {
+      //     const response = await fetch(path);
+      //     const file = new File([await response.blob()], path);
+      //     const importResult = await FlowService.importFlowFromFile.execute({
+      //       file: file,
+      //       // preserveOriginalModels: true, // Preserve models from the imported flow for default initialization
+      //     });
+      //     if (importResult.isFailure) {
+      //       console.log(importResult.getError());
+      //       continue;
+      //     }
+      //   }
+      // }
 
       // Init default cards - COMMENTED OUT FOR SESSION-BASED INITIALIZATION
 
@@ -111,39 +111,39 @@ export const useDefaultInitialized = () => {
       }
 
       // Init default sessions - only for new users who haven't selected a genre yet
-      // if (!sessionOnboardingSteps.genreSelection) {
-      //   const sessions = (await SessionService.listSession.execute({}))
-      //     .throwOnFailure()
-      //     .getValue();
-      //   if (sessions && sessions.length === 0) {
-      //     // Import default sessions
-      //     const sessionFilePaths = [
-      //       "/default/session/dice_of_fate.astrsk.session",
-      //       "/default/session/sakura_blooms,_hearts_awaken.astrsk.session",
-      //     ];
+      if (!sessionOnboardingSteps.genreSelection) {
+        const sessions = (await SessionService.listSession.execute({}))
+          .throwOnFailure()
+          .getValue();
+        if (sessions && sessions.length === 0) {
+          // Import default sessions
+          const sessionFilePaths = [
+            // "/default/session/dice_of_fate.astrsk.session",
+            "/default/session/sakura_blooms.astrsk.session",
+          ];
           
-      //     for (const path of sessionFilePaths) {
-      //       try {
-      //         const response = await fetch(path);
-      //         const file = new File([await response.blob()], path.split('/').pop() || path, {
-      //           type: "application/octet-stream",
-      //         });
+          for (const path of sessionFilePaths) {
+            try {
+              const response = await fetch(path);
+              const file = new File([await response.blob()], path.split('/').pop() || path, {
+                type: "application/octet-stream",
+              });
               
-      //         const importResult = await SessionService.importSessionFromFile.execute({
-      //           file: file,
-      //           includeHistory: true,
-      //         });
-      //         if (importResult.isFailure) {
-      //           console.log("Failed to import session:", path, importResult.getError());
-      //           continue;
-      //         }
-      //       } catch (error) {
-      //         console.log("Error fetching session file:", path, error);
-      //         continue;
-      //       }
-      //     }
-      //   }
-      // }
+              const importResult = await SessionService.importSessionFromFile.execute({
+                file: file,
+                includeHistory: true,
+              });
+              if (importResult.isFailure) {
+                console.log("Failed to import session:", path, importResult.getError());
+                continue;
+              }
+            } catch (error) {
+              console.log("Error fetching session file:", path, error);
+              continue;
+            }
+          }
+        }
+      }
 
       // Initialize backgrounds - Load all backgrounds into the store
       await fetchBackgrounds();

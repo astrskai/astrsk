@@ -184,7 +184,7 @@ export interface SessionDataStore {
   // Required State
   sessionId: string
   currentScene: string // Location/scene name
-  participants: string[] // All character IDs in session
+  participants: string[] // All character NAMES in session (e.g., ["Yui", "Ren"])
   game_time: number // Current game time (numeric)
   game_time_interval: string // Time interval unit (default: "Day")
 

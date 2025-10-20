@@ -251,16 +251,8 @@ function buildWorldAgentPrompt(input: WorldAgentInput): string {
           .join("\n")
       : "No recent messages";
 
-  // Format all participants with names and IDs for clarity
-  const allParticipantsText =
-    characterIdToName && Object.keys(characterIdToName).length > 0 && dataStore.participants
-      ? dataStore.participants
-          .map((id) => {
-            const name = characterIdToName[id] || "Unknown";
-            return `${name} (ID: ${id})`;
-          })
-          .join(", ")
-      : (dataStore.participants || []).join(", ");
+  // Format all participants - dataStore.participants now contains names directly
+  const allParticipantsText = (dataStore.participants || []).join(", ");
 
   // Get world memory context if available
   const worldMemoryContext =

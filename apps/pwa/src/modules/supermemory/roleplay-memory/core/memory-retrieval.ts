@@ -169,9 +169,6 @@ export async function retrieveWorldMemories(
 
     const typed = results as unknown as MemorySearchResponse;
 
-    logger.info(
-      `[Memory Retrieval] Retrieved ${typed.results.length} world memories`,
-    );
 
     // Extract metadata if requested
     const metadata = typed.results.map((r) => ({
