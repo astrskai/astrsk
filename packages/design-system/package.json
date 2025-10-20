@@ -1,10 +1,14 @@
 {
   "name": "@astrsk/design-system",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "astrsk Design System - Component library with Storybook",
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
