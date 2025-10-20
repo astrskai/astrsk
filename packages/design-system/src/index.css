@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+@import './components/Button/Button.css';
+
+@theme {
+  /* Button Primary Colors */
+  --color-btn-background-primary: #98d7f9;
+  --color-btn-background-primary-hover: #68c5f6;
+  --color-btn-text-primary: #0d4766;
+
+  /* Button Secondary Colors */
+  --color-btn-background-secondary: #414141;
+  --color-btn-text-secondary: #f1f1f1;
+}
