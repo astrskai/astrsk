@@ -100,10 +100,22 @@ export const IconOnly: Story = {
   tags: ['!dev'],
   render: () => (
     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-      <Button icon={<Download size={16} />} />
-      <Button icon={<Upload size={16} />} variant='secondary' />
-      <Button icon={<Plus size={16} />} variant='outline' />
-      <Button icon={<Trash2 size={16} />} variant='outline' />
+      <Button icon={<Download size={16} />} aria-label='Download' />
+      <Button
+        icon={<Upload size={16} />}
+        variant='secondary'
+        aria-label='Upload'
+      />
+      <Button
+        icon={<Plus size={16} />}
+        variant='outline'
+        aria-label='Add New'
+      />
+      <Button
+        icon={<Trash2 size={16} />}
+        variant='outline'
+        aria-label='Delete'
+      />
     </div>
   ),
 };

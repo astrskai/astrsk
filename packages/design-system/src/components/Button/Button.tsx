@@ -29,9 +29,19 @@ export const Button = ({
       )}
       {...props}
     >
-      {icon && iconPosition === 'left' && <span className="btn-icon">{icon}</span>}
+      {icon && iconPosition === 'left' && (
+        <span className='btn-icon' aria-hidden={!isIconOnly}>
+          {icon}
+        </span>
+      )}
+
       {children}
-      {icon && iconPosition === 'right' && <span className="btn-icon">{icon}</span>}
+
+      {icon && iconPosition === 'right' && (
+        <span className='btn-icon' aria-hidden={!isIconOnly}>
+          {icon}
+        </span>
+      )}
     </button>
   );
 };
