@@ -27,8 +27,8 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
   // Disable refetching while editing or cursor is active to prevent UI jumping
   const queryEnabled = !!flowId && !updateResponseTemplate.isEditing && !updateResponseTemplate.hasCursor;
   
-  const { 
-    data: responseTemplate, 
+  const {
+    data: responseTemplate,
     isLoading,
     error
   } = useQuery({
@@ -36,6 +36,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
     enabled: queryEnabled,
     refetchOnWindowFocus: queryEnabled,
     refetchOnMount: false, // Don't refetch on mount - only when needed
+    refetchOnReconnect: queryEnabled,
   });
 
   // 3. Get Monaco editor functions from flow context
@@ -57,11 +58,15 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
 
   // Initialize and sync template
   useEffect(() => {
-    // Don't sync while editing OR while cursor is active
-    if (updateResponseTemplate.isEditing || updateResponseTemplate.hasCursor) {
+    // Check if user is typing in an input field (fallback check)
+    const activeElement = document.activeElement;
+    const isTyping = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA';
+
+    // Don't sync while editing OR while cursor is active OR while typing
+    if (updateResponseTemplate.isEditing || updateResponseTemplate.hasCursor || isTyping) {
       return;
     }
-    
+
     // Initialize when flow changes
     if (flowId && flowId !== lastFlowIdRef.current && responseTemplate !== undefined) {
       setCurrentTemplate(responseTemplate);

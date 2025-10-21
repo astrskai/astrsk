@@ -67,8 +67,12 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   
   // 4. Initialize fields from schema
   useEffect(() => {
-    // Only update fields from schema if we have schema data and we're not editing
-    if (schema?.fields && !isEditingRef.current) {
+    // Check if user is typing in an input field
+    const activeElement = document.activeElement;
+    const isTyping = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA';
+
+    // Only update fields from schema if we have schema data and we're not editing and user is not typing
+    if (schema?.fields && !isEditingRef.current && !isTyping) {
       setFields(schema.fields);
       // Maintain selection if possible
       if (!selectedFieldId || !schema.fields.find(f => f.id === selectedFieldId)) {

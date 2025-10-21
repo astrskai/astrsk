@@ -82,13 +82,17 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
   // Initialize from if node data
   useEffect(() => {
-    if (nodeId && ifNodeData) {
-      // Load existing conditions or create default
+    // Check if user is typing in an input field
+    const activeElement = document.activeElement;
+    const isTyping = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA';
+
+    if (nodeId && ifNodeData && !isTyping) {
+      // Load existing conditions or create default (but not while typing)
       const existingConditions = ifNodeData.conditions || [];
       const existingOperator = ifNodeData.logicOperator || 'AND';
-      
+
       setLogicOperator(existingOperator);
-      
+
       // If there are existing conditions, use them
       if (existingConditions.length > 0) {
         // Convert to editable conditions format
@@ -112,7 +116,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
         setConditions([defaultCondition]);
         // Don't save here - let the user make changes first
       }
-      
+
       lastInitializedNodeId.current = nodeId;
     }
   }, [nodeId, ifNodeData]); // Sync whenever nodeId or ifNodeData changes

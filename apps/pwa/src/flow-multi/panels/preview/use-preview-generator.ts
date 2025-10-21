@@ -31,8 +31,7 @@ const createRenderContext = async (session: Session | null, lastTurn: Turn | nul
     logger.debug("[createRenderContext] Creating context with session data");
     
     // Get the first enabled character from session
-    const firstCharacterCard = session.characterCards?.find((card) => card.enabled);
-    const characterCardId = firstCharacterCard?.id;
+    const characterCardId = lastTurn?.characterCardId;
     
     logger.debug("[createRenderContext] Using characterCardId:", characterCardId?.toString());
     

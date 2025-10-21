@@ -100,8 +100,12 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
 
   // Initialize data store fields from node data
   useEffect(() => {
-    if (dataStoreNodeData && nodeId) {
-      // Always sync when data changes, regardless of editing state
+    // Check if user is typing in an input field
+    const activeElement = document.activeElement;
+    const isTyping = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA';
+
+    if (dataStoreNodeData && nodeId && !isTyping) {
+      // Sync when data changes, but not when user is typing
       if (dataStoreNodeData.dataStoreFields) {
         setDataStoreFields(dataStoreNodeData.dataStoreFields);
         if (
