@@ -49,3 +49,14 @@ export const Variants: Story = {
     </div>
   ),
 };
+
+export const Sizes: Story = {
+  tags: ['!dev'],
+  render: () => (
+    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+      <Button size='small'>Small</Button>
+      <Button size='medium'>Medium</Button>
+      <Button size='large'>Large</Button>
+    </div>
+  ),
+};
