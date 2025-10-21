@@ -31,51 +31,21 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Primary: Story = {
+export const Default: Story = {
+  tags: ['!dev'],
   args: {
     variant: 'primary',
-    children: 'Primary Button',
+    children: 'Button',
   },
 };
 
-export const Secondary: Story = {
-  args: {
-    variant: 'secondary',
-    children: 'Secondary Button',
-  },
-};
-
-export const Outline: Story = {
-  args: {
-    variant: 'outline',
-    children: 'Outline Button',
-  },
-};
-
-export const Small: Story = {
-  args: {
-    size: 'small',
-    children: 'Small Button',
-  },
-};
-
-export const Medium: Story = {
-  args: {
-    size: 'medium',
-    children: 'Medium Button',
-  },
-};
-
-export const Large: Story = {
-  args: {
-    size: 'large',
-    children: 'Large Button',
-  },
-};
-
-export const Disabled: Story = {
-  args: {
-    disabled: true,
-    children: 'Disabled Button',
-  },
+export const Variants: Story = {
+  tags: ['!dev'],
+  render: () => (
+    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+      <Button variant='primary'>Primary</Button>
+      <Button variant='secondary'>Secondary</Button>
+      <Button variant='outline'>Outline</Button>
+    </div>
+  ),
 };

@@ -2,7 +2,7 @@
   .btn {
     @apply inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm transition-colors;
     @apply disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed;
-    @apply rounded-lg font-semibold cursor-pointer;
+    @apply rounded-full font-semibold cursor-pointer;
     @apply [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0;
   }
 
@@ -18,6 +18,7 @@
   .btn-secondary {
     background-color: var(--color-btn-background-secondary);
     color: var(--color-btn-text-secondary);
+    border: 1px solid var(--color-btn-border-secondary);
 
     &:hover:not(:disabled) {
       opacity: 0.8;
@@ -36,14 +37,14 @@
   }
 
   .btn-small {
-    @apply px-4 py-2 text-sm;
+    @apply px-2 py-1 text-sm;
   }
 
   .btn-medium {
-    @apply px-6 py-3 text-base;
+    @apply px-4 py-2 text-base;
   }
 
   .btn-large {
-    @apply px-8 py-4 text-lg;
+    @apply px-6 py-3 text-lg;
   }
 }
