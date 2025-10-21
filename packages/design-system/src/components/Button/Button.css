@@ -37,7 +37,7 @@
   }
 
   .btn-small {
-    @apply px-2 py-1 text-sm;
+    @apply px-3 py-1 text-sm;
   }
 
   .btn-medium {
@@ -45,6 +45,6 @@
   }
 
   .btn-large {
-    @apply px-6 py-3 text-lg;
+    @apply px-6 py-2 text-lg;
   }
 }
