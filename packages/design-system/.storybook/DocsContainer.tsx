@@ -8,7 +8,9 @@ const ThemedDocsContainer = ({ children, ...props }) => {
 
   return (
     <DocsContainer
-      theme={isDarkMode ? themes.dark : themes.light}
+      theme={
+        isDarkMode === undefined || isDarkMode ? themes.dark : themes.light
+      }
       context={props.context}
     >
       {children}
