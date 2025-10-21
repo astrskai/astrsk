@@ -55,6 +55,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitest/browser": "^3.2.4",
     "@vitest/coverage-v8": "^3.2.4",
+    "@vueless/storybook-dark-mode": "^9.0.9",
     "playwright": "^1.56.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
