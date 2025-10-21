@@ -140,14 +140,11 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
 
   // 7. Sync display fields when output data changes (for cross-tab sync)
   useEffect(() => {
-    // Check if user is typing in an input field
-    const activeElement = document.activeElement;
-    const isTyping = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA';
-
-    // Don't sync while editing, cursor is active, typing, or recently edited to prevent feedback loops
+    // Don't sync while editing, cursor is active, or recently edited to prevent feedback loops
+    // Note: We don't check isTyping here because Monaco editor cursor tracking (hasCursor) handles that
     if (updateOutput.isEditing || updateSchemaFields.isEditing ||
         updateOutput.hasCursor || updateSchemaFields.hasCursor ||
-        hasRecentlyEditedRef.current || isTyping) {
+        hasRecentlyEditedRef.current) {
       return;
     }
 
@@ -214,7 +211,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
       pattern: field.pattern,
       enum: field.enum,
     }));
-    
+
     // Update using mutation
     updateSchemaFields.mutate(schemaFields);
   }, [updateSchemaFields]);
@@ -226,25 +223,25 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
   }, [displayFields]);
 
   // Debounced field update for description changes with stable reference
-  const debouncedUpdateFieldDescription = useMemo(() => 
+  const debouncedUpdateFieldDescription = useMemo(() =>
     debounce((fieldId: string, description: string) => {
       // Set flags for blocking and sync prevention
       pendingSaveRef.current = true;
-      
+
       hasRecentlyEditedRef.current = true;
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
       syncTimeoutRef.current = setTimeout(() => {
         hasRecentlyEditedRef.current = false;
       }, 1000);
-      
+
       // Use ref to get current fields without causing re-render
-      const updatedFields = fieldsRef.current.map(field => 
+      const updatedFields = fieldsRef.current.map(field =>
         field.id === fieldId ? { ...field, description } : field
       );
       fieldsRef.current = updatedFields; // Update ref
-      
+
       saveSchemaFields(updatedFields); // Save to database - this will trigger the mutation's isPending state
-      
+
       // Don't call setDisplayFields here to avoid re-render/jittering
     }, 300),
     [saveSchemaFields] // saveSchemaFields now has stable reference
@@ -274,7 +271,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
 
   // 11. Field management functions
   const addNewField = useCallback(() => {
-    const fieldName = `field_${displayFields.length + 1}`;
+    const fieldName = `field_${fieldsRef.current.length + 1}`;
     const newField: SchemaFieldItem = {
       id: fieldName, // Use field name as ID to match server behavior
       name: fieldName,
@@ -284,42 +281,58 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
       array: false,
       enabled: true,
     };
-    
-    const updatedFields = [...displayFields, newField];
+
+    const updatedFields = [...fieldsRef.current, newField];
     setDisplayFields(updatedFields);
-    
+    fieldsRef.current = updatedFields;
+
     // Use setTimeout to ensure state is updated before selection
     setTimeout(() => {
       setSelectedFieldId(fieldName);
     }, 0);
-    
+
     saveSchemaFields(updatedFields);
-  }, [displayFields, saveSchemaFields]);
+  }, [saveSchemaFields]);
 
   const deleteField = useCallback((fieldId: string) => {
-    const updatedFields = displayFields.filter(f => f.id !== fieldId);
+    // IMPORTANT: Use fieldsRef to get the latest field data (including pending description changes)
+    const updatedFields = fieldsRef.current.filter(f => f.id !== fieldId);
+
+    // Update both state and ref
     setDisplayFields(updatedFields);
-    
+    fieldsRef.current = updatedFields;
+
     if (selectedFieldId === fieldId) {
       setSelectedFieldId(updatedFields[0]?.id || "");
     }
-    
+
     saveSchemaFields(updatedFields);
-  }, [displayFields, selectedFieldId, saveSchemaFields]);
+  }, [selectedFieldId, saveSchemaFields]);
 
   const updateField = useCallback((fieldId: string, updates: Partial<SchemaFieldItem>) => {
-    const updatedFields = displayFields.map(field => 
+    // IMPORTANT: Use fieldsRef to get the latest field data (including pending description changes)
+    // then merge with the new updates to avoid overwriting debounced changes
+    const updatedFields = fieldsRef.current.map(field =>
       field.id === fieldId ? { ...field, ...updates } : field
     );
+
+    // Update both state and ref
     setDisplayFields(updatedFields);
+    fieldsRef.current = updatedFields;
+
     saveSchemaFields(updatedFields);
-  }, [displayFields, saveSchemaFields]);
+  }, [saveSchemaFields]);
 
   const reorderFields = useCallback((oldIndex: number, newIndex: number) => {
-    const reorderedFields = arrayMove(displayFields, oldIndex, newIndex);
+    // IMPORTANT: Use fieldsRef to get the latest field data (including pending description changes)
+    const reorderedFields = arrayMove(fieldsRef.current, oldIndex, newIndex);
+
+    // Update both state and ref
     setDisplayFields(reorderedFields);
+    fieldsRef.current = reorderedFields;
+
     saveSchemaFields(reorderedFields);
-  }, [displayFields, saveSchemaFields]);
+  }, [saveSchemaFields]);
 
   // 12. DnD sensors
   const sensors = useSensors(
