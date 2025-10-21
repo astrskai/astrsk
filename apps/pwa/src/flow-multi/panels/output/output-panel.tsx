@@ -62,11 +62,12 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
 
   // 3. Query for agent output data
   // Prevent query refetching while mutations are active (like agent-node.tsx pattern)
-  const queryEnabled = !!agentId && 
-    !updateOutput.isEditing && 
+  const queryEnabled = !!agentId &&
+    !updateOutput.isEditing &&
     !updateSchemaFields.isEditing &&
     !updateOutput.isPending &&
-    !updateOutputFormat.isPending;
+    !updateOutputFormat.isPending &&
+    !updateSchemaFields.isPending;
   
   const { 
     data: outputData, 
@@ -139,17 +140,21 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
 
   // 7. Sync display fields when output data changes (for cross-tab sync)
   useEffect(() => {
-    // Don't sync while editing, cursor is active, or recently edited to prevent feedback loops
-    if (updateOutput.isEditing || updateSchemaFields.isEditing || 
-        updateOutput.hasCursor || updateSchemaFields.hasCursor || 
-        hasRecentlyEditedRef.current) {
+    // Check if user is typing in an input field
+    const activeElement = document.activeElement;
+    const isTyping = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA';
+
+    // Don't sync while editing, cursor is active, typing, or recently edited to prevent feedback loops
+    if (updateOutput.isEditing || updateSchemaFields.isEditing ||
+        updateOutput.hasCursor || updateSchemaFields.hasCursor ||
+        hasRecentlyEditedRef.current || isTyping) {
       return;
     }
-    
+
     if (outputData?.schemaFields) {
       const fields = parseSchemaFields(outputData.schemaFields);
       setDisplayFields(fields);
-      
+
       // Keep selected field if it still exists - use callback to get latest selectedFieldId
       setSelectedFieldId(prevSelectedId => {
         if (prevSelectedId && !fields.find(f => f.id === prevSelectedId)) {
