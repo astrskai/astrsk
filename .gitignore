@@ -188,6 +188,9 @@ sketch
 *storybook.log
 storybook-static
 
+.claude/
+.specify/
+
 # Licenses
 public/licenses.json
 THIRD-PARTY-NOTICES.txt
