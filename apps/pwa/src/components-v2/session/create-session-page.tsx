@@ -170,7 +170,7 @@ export default function CreateSessionPage({
     <FormProvider {...methods}>
       <div
         className={cn(
-          "absolute inset-0 z-30 mt-[var(--topbar-height)]",
+          "absolute inset-0 z-50 mt-[var(--topbar-height)]",
           className,
         )}
       >

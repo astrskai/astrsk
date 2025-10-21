@@ -1,5 +1,3 @@
-"use client";
-
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import * as React from "react";
@@ -21,7 +19,10 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/80",
+      "data-[state=open]:animate-in data-[state=open]:fade-in-0",
+      "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+      "data-[state=closed]:duration-200 data-[state=open]:duration-200",
       className,
     )}
     {...props}
@@ -40,15 +41,19 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-100 grid w-[90vw] sm:w-full rounded-lg max-w-[600px] translate-x-[-50%] translate-y-[-50%] gap-6 bg-background-surface-2 p-6 shadow-[0px_10px_10px_-5px_rgba(0,0,0,0.10)] shadow-[0px_10px_25px_-5px_rgba(0,0,0,0.30)] outline outline-1 outline-offset-[-1px] outline-border-light duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 sm:rounded-lg",
+        "bg-background-surface-2 outline-border-light fixed top-[50%] left-[50%] z-100 grid w-[90vw] max-w-[600px] translate-x-[-50%] translate-y-[-50%] gap-6 rounded-lg p-6 shadow-[0px_10px_10px_-5px_rgba(0,0,0,0.10),0px_10px_25px_-5px_rgba(0,0,0,0.30)] outline-1 outline-offset-[-1px] sm:w-full sm:rounded-lg",
+        "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+        "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+        "data-[state=closed]:duration-200 data-[state=open]:duration-200",
         className,
       )}
+      aria-describedby={undefined}
       {...props}
     >
       {children}
       {!hideClose && (
-        <DialogPrimitive.Close className="absolute right-6 top-6 w-6 h-6 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none">
-          <X className="w-6 h-6" />
+        <DialogPrimitive.Close className="text-text-primary absolute top-6 right-6 h-6 w-6 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none">
+          <X className="h-6 w-6" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
       )}
@@ -73,7 +78,7 @@ const DialogFooter = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-row gap-2 justify-end", className)}
+    className={cn("flex flex-row justify-end gap-2", className)}
     {...props}
   />
 );
@@ -86,7 +91,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-10 text-text-primary",
+      "text-text-primary text-2xl leading-10 font-semibold",
       className,
     )}
     {...props}
@@ -101,7 +106,7 @@ const DialogDescription = React.forwardRef<
   <DialogPrimitive.Description
     ref={ref}
     className={cn(
-      "text-base font-normal leading-relaxed text-text-subtle",
+      "text-text-subtle text-base leading-relaxed font-normal",
       className,
     )}
     {...props}

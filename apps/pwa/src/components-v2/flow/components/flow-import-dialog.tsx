@@ -16,7 +16,13 @@ export interface AgentModel {
 export interface FlowImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImport: (file: File, agentModelOverrides?: Map<string, { apiSource: string; modelId: string; modelName: string }>) => Promise<void>;
+  onImport: (
+    file: File,
+    agentModelOverrides?: Map<
+      string,
+      { apiSource: string; modelId: string; modelName: string }
+    >,
+  ) => Promise<void>;
   onFileSelect?: (file: File) => Promise<AgentModel[] | void>;
   title?: string;
   description?: string;
@@ -32,7 +38,9 @@ export function FlowImportDialog({
 }: FlowImportDialogProps) {
   const [importingFile, setImportingFile] = useState<File | null>(null);
   const [agentModels, setAgentModels] = useState<AgentModel[]>([]);
-  const [agentModelOverrides, setAgentModelOverrides] = useState<Map<string, { apiSource: string; modelId: string; modelName: string }>>(new Map());
+  const [agentModelOverrides, setAgentModelOverrides] = useState<
+    Map<string, { apiSource: string; modelId: string; modelName: string }>
+  >(new Map());
   const [isImporting, setIsImporting] = useState(false);
 
   // Reset state when dialog closes
@@ -47,7 +55,7 @@ export function FlowImportDialog({
 
   const handleFileSelect = async (file: File) => {
     setImportingFile(file);
-    
+
     // If onFileSelect is provided, use it to get agent models
     if (onFileSelect) {
       const models = await onFileSelect(file);
@@ -59,10 +67,13 @@ export function FlowImportDialog({
 
   const handleImport = async () => {
     if (!importingFile) return;
-    
+
     setIsImporting(true);
     try {
-      await onImport(importingFile, agentModelOverrides.size > 0 ? agentModelOverrides : undefined);
+      await onImport(
+        importingFile,
+        agentModelOverrides.size > 0 ? agentModelOverrides : undefined,
+      );
       onOpenChange(false);
     } finally {
       setIsImporting(false);
@@ -78,7 +89,6 @@ export function FlowImportDialog({
       description={description}
       accept=".json"
       fileIcon={<SvgIcon name="agents_solid" size={24} />}
-      maxWidth="max-w-2xl"
       className="p-2 pt-8"
       contentClassName="px-4 pb-4 flex flex-col justify-start items-start gap-6"
       hideCloseWhenFile={true}
@@ -88,27 +98,23 @@ export function FlowImportDialog({
       isImporting={isImporting}
     >
       {agentModels.length > 0 && (
-        <div className="self-stretch max-h-96 flex flex-col justify-start items-start gap-4 overflow-hidden">
-          <ScrollArea className="w-full max-h-96 overflow-y-auto">
+        <div className="flex max-h-96 flex-col items-start justify-start gap-4 self-stretch overflow-hidden">
+          <ScrollArea className="max-h-96 w-full overflow-y-auto">
             <div className="flex flex-col gap-4">
               {agentModels.map((agent) => (
                 <AgentModelCard
                   key={agent.agentId}
-                  agentName={agent.agentName || `Agent ${agent.agentId.slice(0, 8)}`}
+                  agentName={
+                    agent.agentName || `Agent ${agent.agentId.slice(0, 8)}`
+                  }
                   originalModel={agent.modelName}
                   recommendedTier={agent.modelTier || ModelTier.Light}
                 >
                   <div className="self-stretch">
                     <ModelItem
                       forceMobile={true}
-                      connectionChanged={(
-                        apiSource,
-                        modelId,
-                        modelName,
-                      ) => {
-                        const newOverrides = new Map(
-                          agentModelOverrides,
-                        );
+                      connectionChanged={(apiSource, modelId, modelName) => {
+                        const newOverrides = new Map(agentModelOverrides);
                         if (modelName) {
                           newOverrides.set(agent.agentId, {
                             apiSource,
