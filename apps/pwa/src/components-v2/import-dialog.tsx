@@ -28,7 +28,6 @@ export interface ImportDialogProps {
   description?: string;
   accept?: string;
   fileIcon?: ReactNode;
-  maxWidth?: string;
   className?: string;
   contentClassName?: string;
   hideCloseWhenFile?: boolean;
@@ -50,7 +49,6 @@ export function ImportDialog({
   description = "",
   accept = ".json",
   fileIcon,
-  maxWidth = "max-w-2xl",
   className,
   contentClassName,
   hideCloseWhenFile = true,
