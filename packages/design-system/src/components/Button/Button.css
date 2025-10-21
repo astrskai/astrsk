@@ -37,14 +37,14 @@
   }
 
   .btn-small {
-    @apply px-4 py-2 text-sm;
+    @apply px-2 py-1 text-sm;
   }
 
   .btn-medium {
-    @apply px-6 py-3 text-base;
+    @apply px-4 py-2 text-base;
   }
 
   .btn-large {
-    @apply px-8 py-4 text-lg;
+    @apply px-6 py-3 text-lg;
   }
 }

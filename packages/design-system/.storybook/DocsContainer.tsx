@@ -1,9 +1,9 @@
 import React from 'react';
 import { DocsContainer } from '@storybook/addon-docs/blocks';
-import { useIsDarkMode } from './hooks/useIsDarkMode';
 import { themes } from 'storybook/theming';
+import { useIsDarkMode } from './hooks/useIsDarkMode';
 
-function ThemedDocsContainer(props) {
+const ThemedDocsContainer = ({ children, ...props }) => {
   const isDarkMode = useIsDarkMode();
 
   return (
@@ -11,13 +11,9 @@ function ThemedDocsContainer(props) {
       theme={isDarkMode ? themes.dark : themes.light}
       context={props.context}
     >
-      {props.children}
+      {children}
     </DocsContainer>
   );
-}
-
-export const parameters = {
-  docs: {
-    container: ThemedDocsContainer,
-  },
 };
+
+export default ThemedDocsContainer;

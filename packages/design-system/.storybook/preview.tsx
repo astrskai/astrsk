@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Preview } from '@storybook/react-vite';
 import { themes } from 'storybook/theming';
-import { parameters } from './DocsContainer';
+import ThemedDocsContainer from './DocsContainer';
 import '../src/index.css';
 
 const preview: Preview = {
@@ -13,7 +13,7 @@ const preview: Preview = {
       },
     },
     docs: {
-      ...parameters.docs,
+      container: ThemedDocsContainer,
     },
     a11y: {
       // 'todo' - show a11y violations in the test UI only
