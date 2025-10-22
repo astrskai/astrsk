@@ -16,7 +16,7 @@ import { useAsset } from "@/app/hooks/use-asset";
 import {
   CardPanelProps,
   useCardPanel,
-} from "@/components-v2/card/panels/hooks/use-card-panel";
+} from "@/features/card/panels/hooks/use-card-panel";
 import { useResourceData } from "@/components-v2/right-navigation/vibe-panel/hooks/use-resource-data";
 import { useAppStore, Page } from "@/app/stores/app-store";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";

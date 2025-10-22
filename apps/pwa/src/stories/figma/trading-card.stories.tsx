@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { TradingCardDisplay } from "@/components-v2/card/components/trading-card-display";
+import { TradingCardDisplay } from "@/features/card/components/trading-card-display";
 import { Card, CardType } from "@/modules/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
 

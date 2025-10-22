@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { ImageUpload } from "@/components-v2/card/components/edit-sheet/image-upload";
+import { ImageUpload } from "@/features/card/components/edit-sheet/image-upload";
 import { CardType } from "@/modules/card/domain";
 import { useForm } from "react-hook-form";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

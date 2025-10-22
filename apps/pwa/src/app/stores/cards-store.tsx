@@ -4,7 +4,7 @@ import { immer } from "zustand/middleware/immer";
 
 import { createSelectors } from "@/shared/utils/zustand-utils";
 
-import { CardFormValues } from "@/components-v1/card/(edit-card)/edit-card-dialog";
+import { CardFormValues } from "@/features/card/types/card-form";
 import { Card, CardType } from "@/modules/card/domain";
 import { SearchCardsSort } from "@/modules/card/repos";
 

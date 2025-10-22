@@ -7,8 +7,8 @@ import {
   plotFilePath,
 } from "@/app/hooks/use-default-initialized";
 import { CardService } from "@/app/services";
-import { HeaderBar, SortingBar } from "@/components-v2/card/components";
-import CardGrid from "@/components-v2/card/components/card-grid";
+import { HeaderBar, SortingBar } from "@/features/card/components";
+import CardGrid from "@/features/card/components/card-grid";
 import { SearchInput } from "@/components/ui/search-input";
 import { TypoBase, Typo3XLarge } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";

@@ -5,7 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import React from "react";
 
-import { EntryBlockV2 } from "@/components-v2/card/components/edit-sheet/entry-block-v2";
+import { EntryBlockV2 } from "@/features/card/components/edit-sheet/entry-block-v2";
 import { cn } from "@/components-v2/lib/utils";
 import { Button } from "@/components-v2/ui/button";
 import { Entry } from "@/modules/card/domain";

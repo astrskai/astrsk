@@ -4,12 +4,12 @@ import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useAppStore } from "@/app/stores/app-store";
-import CardFormSheet from "@/components-v2/card/components/edit-sheet/card-form-sheet";
+import CardFormSheet from "@/features/card/components/edit-sheet/card-form-sheet";
 import {
   useCardEditor,
   useCardImport,
   useCardManagement,
-} from "@/components-v2/card/hooks";
+} from "@/features/card/hooks";
 import {
   useCardSelection,
   type SelectionAction,

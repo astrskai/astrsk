@@ -6,7 +6,7 @@ import { CardService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { useNavigate, useLocation } from "@tanstack/react-router";
-import useCardImport from "@/components-v2/card/hooks/useCardImport";
+import useCardImport from "@/features/card/hooks/useCardImport";
 import { MediaDisplay } from "@/components-v2/shared/media-display";
 import { SectionHeader } from "./index";
 import {
@@ -17,7 +17,7 @@ import {
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { DeleteConfirm } from "@/components/dialogs/confirm";
-import { CardImportDialog } from "@/components-v2/card/components/card-import-dialog";
+import { CardImportDialog } from "@/features/card/components/card-import-dialog";
 import {
   Tooltip,
   TooltipContent,

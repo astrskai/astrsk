@@ -49,7 +49,7 @@ import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-
 import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
 import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
 import { useAgentStore } from "@/app/stores/agent-store";
-import "../../components-v2/card/panels/card-panel-dockview.css";
+import "../../features/card/panels/card-panel-dockview.css";
 import { useNavigate } from "@tanstack/react-router";
 
 // Watermark component with restore button

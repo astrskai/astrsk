@@ -21,16 +21,20 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
   - `components/system/` - 7 files (PWA, theme, updater infrastructure)
   - `features/session/components/` - 1 file (custom-sheet)
   - `features/card/mobile/` - 1 file (sort-dialog-mobile)
-- ✅ **Phase 2 Started** - Domain folder migrations:
+- ✅ **Phase 2 In Progress** - Domain folder migrations:
   - ✅ `features/settings/providers/` - 3 files (model-page, model-page-mobile, provider-list-item)
   - ✅ `components/layout/left-navigation/` - 7 files (index, mobile, card-list, flow-list, session-list, shared, hooks)
   - ✅ `features/flow/` - 5 files (dialog, page-mobile, components: agent-model-card, export-dialog, import-dialog)
+  - ✅ `features/card/` - 47 files complete! (components, hooks, mobile, panels, utils + types)
+    - Barrel exports maintained (components/index.ts, hooks/index.ts)
+    - Legacy cleanup: Removed components-v1/card/(edit-card)/edit-card-dialog.tsx
+    - Created features/card/types/card-form.ts for shared types
   - ⏳ `features/settings/` - 18 files remaining
-  - ⏳ `features/card/` - 46 files remaining
   - ⏳ `features/session/` - 46 files remaining
 - ✅ **Quality Findings**:
   - 3 UNUSED components identified (code-editor, json-viewer, tooltip-wrapper)
   - 5 Mobile duplication targets identified for Phase 3
+  - 1 Legacy file removed (edit-card-dialog.tsx)
   - All barrel exports created (index.ts)
 
 ### Migration Phases
@@ -78,6 +82,43 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
 ```
 apps/pwa/src/
 ├── features/                      # Business domains (Feature-based) [ACTIVE MIGRATION]
+│   ├── card/                     # ✅ Card domain COMPLETE (47 files)
+│   │   ├── card-list.tsx
+│   │   ├── card-page.tsx
+│   │   ├── components/          # UI components
+│   │   │   ├── edit-sheet/      # Card editing components
+│   │   │   ├── card-grid.tsx
+│   │   │   ├── card-import-dialog.tsx
+│   │   │   ├── header-bar.tsx
+│   │   │   ├── sorting-bar.tsx
+│   │   │   ├── trading-card.tsx
+│   │   │   ├── trading-card-display.tsx
+│   │   │   └── index.ts         # Barrel export
+│   │   ├── hooks/               # Custom hooks
+│   │   │   ├── useCardEditor.ts
+│   │   │   ├── useCardImport.ts
+│   │   │   ├── useCardManagement.ts
+│   │   │   ├── useEntryList.ts
+│   │   │   └── index.ts         # Barrel export
+│   │   ├── mobile/              # [Phase 3: Mobile removal target]
+│   │   │   ├── card-page-mobile.tsx
+│   │   │   ├── sort-dialog-mobile.tsx
+│   │   │   ├── components/
+│   │   │   └── hooks/
+│   │   ├── panels/              # Panel components
+│   │   │   ├── card-panel/
+│   │   │   │   └── components/
+│   │   │   │       └── image-generator/  # Complex feature
+│   │   │   ├── card-panel-main.tsx
+│   │   │   ├── card-panel-provider.tsx
+│   │   │   ├── card-panel-dockview.css
+│   │   │   └── hooks/
+│   │   ├── types/               # Type definitions
+│   │   │   └── card-form.ts     # CardFormValues type
+│   │   └── utils/               # Utilities
+│   │       ├── invalidate-card-queries.ts
+│   │       └── panel-id-utils.ts
+│   │
 │   ├── flow/                     # ✅ Flow domain (5 files)
 │   │   ├── flow-dialog.tsx
 │   │   ├── flow-page-mobile.tsx  # [Phase 3: Mobile removal target]
@@ -92,13 +133,9 @@ apps/pwa/src/
 │   │       ├── model-page-mobile.tsx  # [Phase 3: Mobile removal target]
 │   │       └── provider-list-item.tsx
 │   │
-│   ├── session/                  # Session domain (1 file, 46 pending)
-│   │   └── components/
-│   │       └── custom-sheet.tsx
-│   │
-│   └── card/                     # Card domain (1 file, 46 pending)
-│       └── mobile/
-│           └── sort-dialog-mobile.tsx  # [Phase 3: Mobile removal target]
+│   └── session/                  # Session domain (1 file, 46 pending)
+│       └── components/
+│           └── custom-sheet.tsx
 │
 ├── components/                    # Shared components (domain-independent) [REORGANIZED]
 │   ├── ui/                       # shadcn/ui + basic UI (15 files)
@@ -154,7 +191,6 @@ apps/pwa/src/
 │       └── updater-new.tsx
 │
 ├── components-v2/                 # Legacy structure (being migrated)
-│   ├── card/                     # [TODO: → features/card/] (46 files)
 │   ├── session/                  # [TODO: → features/session/] (46 files)
 │   ├── setting/                  # [TODO: → features/settings/] (18 files)
 │   ├── right-navigation/         # [TODO: → components/layout/]
@@ -281,8 +317,13 @@ Criteria for moving to `components/`:
 - ✅ `features/flow/` - 5 files migrated
   - flow-dialog.tsx, flow-page-mobile.tsx
   - components/: agent-model-card.tsx, flow-export-dialog.tsx, flow-import-dialog.tsx
+- ✅ `features/card/` - 47 files migrated (COMPLETE!)
+  - Full domain structure: components/, hooks/, mobile/, panels/, types/, utils/
+  - Maintained barrel exports (components/index.ts, hooks/index.ts)
+  - Legacy cleanup: Removed components-v1/card/(edit-card)/edit-card-dialog.tsx
+  - Created types/card-form.ts for shared CardFormValues type
+  - Updated 2 store files to use new type location
 - ⏳ `features/settings/` - 18 files remaining
-- ⏳ `features/card/` - 46 files remaining
 - ⏳ `features/session/` - 46 files remaining
 - ⏳ Merge remaining navigation folders → `components/layout/`
 

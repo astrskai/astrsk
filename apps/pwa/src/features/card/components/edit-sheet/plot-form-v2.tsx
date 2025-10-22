@@ -8,10 +8,10 @@ import {
   ActiveTabType,
   CardFormValues,
   CardStore,
-} from "@/components-v2/card/components/edit-sheet/card-form-sheet";
-import { ImageUpload } from "@/components-v2/card/components/edit-sheet/image-upload";
-import { SortableBlockListV2 } from "@/components-v2/card/components/edit-sheet/sortable-block-list-v2";
-import { useEntryList } from "@/components-v2/card/hooks/useEntryList";
+} from "@/features/card/components/edit-sheet/card-form-sheet";
+import { ImageUpload } from "@/features/card/components/edit-sheet/image-upload";
+import { SortableBlockListV2 } from "@/features/card/components/edit-sheet/sortable-block-list-v2";
+import { useEntryList } from "@/features/card/hooks/useEntryList";
 import { Typo2XLarge } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";

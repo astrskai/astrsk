@@ -4,8 +4,8 @@ import { z } from "zod";
 
 import { useCards } from "@/app/hooks/use-cards";
 import { Page, useAppStore } from "@/app/stores/app-store";
-import { NoCardsFound } from "@/components-v2/card/card-list";
-import { TradingCard } from "@/components-v2/card/components/trading-card";
+import { NoCardsFound } from "@/features/card/card-list";
+import { TradingCard } from "@/features/card/components/trading-card";
 import { cn } from "@/components-v2/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { TypoSmall } from "@/components/ui/typo";
