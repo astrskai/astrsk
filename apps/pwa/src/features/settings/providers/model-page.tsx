@@ -16,7 +16,7 @@ import { cn } from "@/components-v2/lib/utils";
 import {
   ProviderListItem,
   ProviderListItemDetail,
-} from "@/components-v2/model/provider-list-item";
+} from "@/features/settings/providers/provider-list-item";
 import { TypoBase, TypoTiny, TypoXLarge } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import {
