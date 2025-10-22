@@ -9,14 +9,19 @@ Maintained development guidelines. Last updated: 2025-10-21
 
 ### Objective
 
-Restructure PWA codebase to eliminate 40-50% code duplication, organize 40+ loose components into domain folders, decompose oversized components (max 2,979 lines - 300 line limit), remove 20+ duplicate mobile files, and establish automated quality gates. Enable 50% faster feature development and A/B testing cycles.
+Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loose components into domain folders, decompose oversized components (max 2,979 lines → 500 line limit), remove 20+ duplicate mobile files using Tailwind responsive design, and establish automated quality gates. Enable 50% faster feature development and A/B testing cycles.
+
+**Current Progress**:
+
+- ✅ Removed `useResponsiveLayout` hook (dead code, already using Tailwind)
+- ⏳ Analyzing 36 loose files in components-v2/ root for domain classification
 
 ### Migration Phases
 
-- **Phase 1 (Weeks 1-2)**: Foundation - breakpoint system, domain structure, feature flags, quality gates
-- **Phase 2 (Weeks 3-5)**: Component Decomposition - break large files into focused components (<300 lines)
-- **Phase 3 (Weeks 6-8)**: Mobile Duplication - eliminate `-mobile.tsx` files, adaptive components only
-- **Phase 4 (Weeks 9-10)**: Organization - move components to domain folders with barrel exports
+- **Phase 1 (Weeks 1-2)**: Foundation - domain structure organization, quality gates setup
+- **Phase 2 (Weeks 3-5)**: Component Decomposition - break large files into focused components (<500 lines enforced)
+- **Phase 3 (Weeks 6-8)**: Mobile Duplication - eliminate `-mobile.tsx` files, use Tailwind responsive classes
+- **Phase 4 (Weeks 9-10)**: Polish - move remaining loose components, create barrel exports, final cleanup
 
 ### Quality Gates (CI/CD Enforced)
 
@@ -29,10 +34,10 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 40+ loos
 
 ### Key Infrastructure
 
-- **Feature Flags**: Phase-level rollback capability (React Context + env vars)
-- **Progress Dashboard**: Component migration tracking (markdown file)
-- **Breakpoint System**: Centralized at `utils/breakpoints.ts` (no hardcoded values)
-- **Domain Folders**: session/, flow/, settings/, shared/ with barrel exports
+- **Tailwind CSS v4**: Responsive design with built-in breakpoints (sm, md, lg, xl, 2xl)
+- **Domain Folders**: session/, flow/, card/, setting/, shared/ with barrel exports
+- **Quality Gates**: CI/CD automation for size, duplication, coverage checks
+- **Incremental Approach**: Small, safe changes with frequent testing
 
 ---
 
@@ -146,7 +151,7 @@ pnpm build:pwa         # Build PWA (with feature flags)
 
 - Characterization tests before refactoring (capture current behavior)
 - Component tests for mobile AND desktop rendering
-- Test coverage e80% (enforced by CI/CD)
+- Test coverage ≥80% (enforced by CI/CD)
 - Tests must pass before and after migration
 
 ## Constitutional Principles (v2.0.0)
@@ -176,38 +181,16 @@ This cleanup project ENFORCES all 11 principles:
 
 **Phase 1 Deliverables** (Weeks 1-2):
 
-- [x] Breakpoint system (utils/breakpoints.ts, hooks/ui/useBreakpoint.ts)
-- [x] Feature flag system (app/feature-flags/FeatureFlagContext.tsx)
-- [x] Progress dashboard (specs/003-pwa-codebase-cleanup/migration/progress-dashboard.md)
-- [x] CI/CD quality gates (.github/workflows/quality-gates.yml)
-- [x] Domain folder structure (components-v2/session/, flow/, settings/, shared/)
-- [x] Organizational model and validation checklist
+- [x] Remove dead code (useResponsiveLayout hook - 100 lines saved)
+- [ ] Analyze and classify 36 loose components by domain
+- [ ] Move components to domain folders (session/, flow/, card/, setting/, shared/)
+- [ ] Create barrel exports (index.ts) for clean imports
+- [ ] Setup CI/CD quality gates (.github/workflows/quality-gates.yml)
+- [ ] Document component patterns (Tailwind-first responsive design)
 
 **Next Phase** (Weeks 3-5):
 
-- Phase 2: Component Decomposition (break 2,979-line file into 7 components)
-
-## Feature Flags (Rollback System)
-
-**Environment Variables**:
-
-```bash
-VITE_PHASE_1=true   # Enable Phase 1 (foundation)
-VITE_PHASE_2=false  # Disable Phase 2 (rollback decomposition)
-VITE_PHASE_3=true
-VITE_PHASE_4=true
-```
-
-**Usage in Components**:
-
-```typescript
-const flags = useFeatureFlags();
-if (flags[CleanupPhase.PHASE_2_DECOMPOSE]) {
-  return <SessionMessagesPanel />; // New decomposed component
-} else {
-  return <SessionMessagesAndUserInputs />; // Original fallback
-}
-```
+- Phase 2: Component Decomposition (break 2,979-line session-messages file into smaller components)
 
 ---
 
@@ -217,24 +200,56 @@ if (flags[CleanupPhase.PHASE_2_DECOMPOSE]) {
 
 ### Completed
 
-- [x] Specification and clarification
-- [x] Implementation plan
-- [x] Research decisions
-- [x] Organizational model
-- [x] Validation checklist
-- [x] Constitutional principles v2.0.0 ratified
+- [x] Specification and clarification (spec.md, plan.md, tasks.md)
+- [x] Constitutional principles v2.0.0 ratified (11 principles)
+- [x] Component size policy updated (300 recommended, 500 enforced)
+- [x] Dead code removal: useResponsiveLayout hook (~100 lines)
 
 ### In Progress
 
-- [ ] Phase 1: Foundation implementation
-- [ ] Breakpoint system development
-- [ ] Feature flag system development
-- [ ] CI/CD quality gates configuration
+- [x] Phase 1: Foundation - Domain structure organization
+  - ✅ Analyzed existing folder structure (session/, flow/, card/, setting/, shared/ exist)
+  - ⏳ Classifying 36 loose components by domain
+  - ⏳ Creating barrel exports (index.ts)
 
 ### Todo
 
-- [ ] Phase 2: Component decomposition (Weeks 3-5)
-- [ ] Phase 3: Mobile duplication elimination (Weeks 6-8)
-- [ ] Phase 4: Organization restructuring (Weeks 9-10)
-- [ ] Final validation and metrics verification
+- [ ] Complete Phase 1: Move all loose components to domain folders
+- [ ] Phase 2: Component decomposition (2,979-line file → smaller components)
+- [ ] Phase 3: Mobile duplication elimination (20+ \*-mobile.tsx files)
+- [ ] Phase 4: Final polish and validation
+- [ ] Setup CI/CD quality gates
+
+---
+
+## Future Enhancements (Post-Cleanup)
+
+### Feature Flags System (Optional)
+
+**Use Case**: When experimental features need gradual rollout or instant rollback capability
+
+**Implementation**: Custom React Context with environment variables
+
+```typescript
+// apps/pwa/src/app/feature-flags/FeatureFlagContext.tsx
+export const FEATURE_FLAGS = {
+  EXPERIMENTAL_FEATURE_X: 'feature.experimental.x',
+} as const;
+
+// Usage
+const isEnabled = useFeatureFlag(FEATURE_FLAGS.EXPERIMENTAL_FEATURE_X);
+```
+
+**Rollback**:
+
+```bash
+VITE_FEATURE_X=false pnpm build:pwa && pnpm deploy
+```
+
+**When to implement**:
+
+- After cleanup project completes
+- When introducing high-risk experimental features
+- When A/B testing is needed
+
 <!-- MANUAL ADDITIONS END -->
