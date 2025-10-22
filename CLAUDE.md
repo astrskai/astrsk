@@ -1,6 +1,6 @@
 # astrsk Development Guidelines
 
-Maintained development guidelines. Last updated: 2025-10-21
+Maintained development guidelines. Last updated: 2025-10-22
 
 ## Active Feature: PWA Codebase Cleanup & Quality Improvement
 
@@ -11,10 +11,21 @@ Maintained development guidelines. Last updated: 2025-10-21
 
 Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loose components into domain folders, decompose oversized components (max 2,979 lines → 500 line limit), remove 20+ duplicate mobile files using Tailwind responsive design, and establish automated quality gates. Enable 50% faster feature development and A/B testing cycles.
 
-**Current Progress**:
+**Current Progress** (Phase 1):
 
 - ✅ Removed `useResponsiveLayout` hook (dead code, already using Tailwind)
-- ⏳ Analyzing 36 loose files in components-v2/ root for domain classification
+- ✅ **Component Reclassification Complete** - 36 loose files reorganized into domain-based structure
+  - `components/ui/` - 15 files (shadcn/ui + basic UI components)
+  - `components/layout/` - 7 files (navigation, top-bar, sidebar components)
+  - `components/dialogs/` - 4 files (shared confirm, import dialogs)
+  - `components/system/` - 7 files (PWA, theme, updater infrastructure)
+  - `features/session/components/` - 1 file (custom-sheet)
+  - `features/card/mobile/` - 1 file (sort-dialog-mobile)
+- ✅ **Quality Findings**:
+  - 3 UNUSED components identified (code-editor, json-viewer, tooltip-wrapper)
+  - 5 Mobile duplication targets identified for Phase 3
+  - All barrel exports created (index.ts)
+- ⏳ Next: Migrate components-v2 domain folders → features/
 
 ### Migration Phases
 
@@ -55,48 +66,84 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
 ### **Approach: Feature-based + Colocation**
 > "Keep files as close as possible to where they are used" - Kent C. Dodds
 
-### **Current Structure** (components-v2 → will be renamed to components)
+### **Current Structure** (Phase 1 Progress)
 
 ```
 apps/pwa/src/
-├── features/                # Business domains (Feature-based)
-│   ├── session/            # Session management
-│   │   ├── components/     # SessionPanel, SessionList
-│   │   ├── hooks/          # useSession, useSessionMessages
-│   │   └── stores/         # sessionStore (if needed)
-│   ├── flow/               # Flow editor
-│   ├── card/               # Card management
-│   └── settings/           # Settings
+├── features/                      # Business domains (Feature-based) [NEW]
+│   ├── session/
+│   │   └── components/
+│   │       └── custom-sheet.tsx  # Session edit dialogs
+│   └── card/
+│       └── mobile/
+│           └── sort-dialog-mobile.tsx
 │
-├── app/                     # Global app configuration
-│   ├── queries/            # TanStack Query factories
-│   ├── services/           # Business logic services
-│   └── stores/             # Global state management
-│
-├── components/              # Shared components (domain-independent)
-│   ├── ui/                 # shadcn/ui + basic UI components
-│   │   ├── button.tsx      # (shadcn/ui)
-│   │   ├── avatar.tsx      # Additional UI
+├── components/                    # Shared components (domain-independent) [REORGANIZED]
+│   ├── ui/                       # shadcn/ui + basic UI (15 files)
+│   │   ├── avatar.tsx
+│   │   ├── banner.tsx
+│   │   ├── code-editor.tsx       # [UNUSED]
+│   │   ├── color-picker.tsx
+│   │   ├── combobox.tsx
+│   │   ├── json-viewer.tsx       # [UNUSED]
 │   │   ├── loading.tsx
-│   │   └── ...
-│   ├── layout/             # Layout/navigation
+│   │   ├── loading-overlay.tsx
+│   │   ├── search-input.tsx
+│   │   ├── stepper.tsx
+│   │   ├── stepper-mobile.tsx    # [Phase 3: Mobile removal target]
+│   │   ├── subscribe-badge.tsx
+│   │   ├── svg-icon.tsx
+│   │   ├── tooltip.tsx           # [UNUSED - tooltip-wrapper]
+│   │   ├── typo.tsx
+│   │   └── index.ts              # Barrel export
+│   │
+│   ├── layout/                   # Layout/navigation (7 files)
+│   │   ├── both-sidebar.tsx      # SidebarLeft, SidebarRight system
+│   │   ├── dockview-default-tab.tsx
+│   │   ├── dockview-hidden-tab.tsx  # [UNUSED]
+│   │   ├── dockview-panel-focus-animation.tsx
+│   │   ├── left-navigation-mobile.tsx  # [Phase 3: Mobile removal target]
 │   │   ├── top-bar.tsx
-│   │   ├── sidebar.tsx
-│   │   └── ...
-│   ├── dialogs/            # Shared dialogs/modals
-│   │   ├── confirm.tsx
-│   │   ├── import-dialog.tsx
-│   │   └── ...
-│   └── system/             # System/infrastructure
+│   │   ├── top-navigation.tsx
+│   │   └── index.ts              # Barrel export
+│   │
+│   ├── dialogs/                  # Shared dialogs (4 files)
+│   │   ├── confirm.tsx           # Used in 5 domains
+│   │   ├── help-video-dialog.tsx # left-navigation only
+│   │   ├── import-dialog.tsx     # Used in 3 domains
+│   │   ├── list-edit-dialog-mobile.tsx  # [Mobile only]
+│   │   └── index.ts              # Barrel export
+│   │
+│   └── system/                   # System/infrastructure (7 files, no index.ts)
+│       ├── convex-ready.tsx
+│       ├── init-page.tsx         # App initialization screen
+│       ├── install-pwa.tsx
+│       ├── mobile-updater.tsx    # [Mobile only]
 │       ├── pwa-register.tsx
 │       ├── theme-provider.tsx
-│       └── ...
+│       └── updater-new.tsx
 │
-├── lib/                     # Utilities
+├── components-v2/                 # Legacy structure (being migrated)
+│   ├── card/                     # [TODO: → features/card/]
+│   ├── flow/                     # [TODO: → features/flow/]
+│   ├── session/                  # [TODO: → features/session/]
+│   ├── model/                    # [TODO: → features/model/]
+│   ├── setting/                  # [TODO: → features/settings/]
+│   ├── left-navigation/          # [TODO: → components/layout/]
+│   ├── right-navigation/         # [TODO: → components/layout/]
+│   ├── layout/                   # [TODO: → components/layout/]
+│   └── editor/                   # [TODO: → features/editor/]
+│
+├── app/                          # Global app configuration
+│   ├── queries/                  # TanStack Query factories
+│   ├── services/                 # Business logic services
+│   └── stores/                   # Global state management
+│
+├── lib/                          # Utilities
 │   ├── utils/
-│   └── hooks/              # Shared hooks (domain-independent)
+│   └── hooks/                    # Shared hooks (domain-independent)
 │
-└── flow-multi/             # Legacy flow editor (incremental migration)
+└── flow-multi/                   # Legacy flow editor (incremental migration)
 ```
 
 ### **Organization Principles**
@@ -173,11 +220,29 @@ Criteria for moving to `components/`:
 
 ### **Migration Strategy**
 
-**Phase 1 (Current)**: Clean up root files
-- Classify 36 loose files into `ui/`, `layout/`, `dialogs/`, `system/`
+**Phase 1 (COMPLETED - 2025-10-22)**: Clean up root files ✅
+- ✅ Classified 36 loose files from `components-v2/` root
+  - 15 files → `components/ui/` (shadcn/ui + basic UI)
+  - 7 files → `components/layout/` (navigation, top-bar, sidebar)
+  - 4 files → `components/dialogs/` (shared confirm, import)
+  - 7 files → `components/system/` (PWA, theme, updater)
+  - 2 files → `features/` (session custom-sheet, card sort-dialog)
+- ✅ Created barrel exports (index.ts) for organized folders
+- ✅ Identified cleanup targets:
+  - 3 UNUSED components (code-editor, json-viewer, tooltip-wrapper)
+  - 5 Mobile duplication targets for Phase 3
+- ✅ Build verified successful after all migrations
 
-**Phase 2-3**: Structure domain internals
-- Organize `session/`, `flow/`, `card/` internals into `components/`, `hooks/`
+**Phase 2 (NEXT)**: Migrate components-v2 domain folders → features/
+- Move `components-v2/session/` → `features/session/`
+- Move `components-v2/flow/` → `features/flow/`
+- Move `components-v2/card/` → `features/card/`
+- Move `components-v2/model/` → `features/model/`
+- Move `components-v2/setting/` → `features/settings/`
+- Merge navigation folders → `components/layout/`
+
+**Phase 3**: Mobile Duplication Elimination
+- Remove `-mobile.tsx` files using Tailwind responsive design
 
 **Phase 4**: Feature modularization
 - Convert each feature into independent modules as needed (monorepo preparation)
