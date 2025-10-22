@@ -7,7 +7,7 @@ import { useSessionStore } from "@/app/stores/session-store";
 import {
   SidebarInset,
   SidebarLeftProvider,
-} from "@/components-v2/both-sidebar";
+} from "@/components/layout/both-sidebar";
 import { InitialPage } from "@/components-v2/init-page";
 import { cn } from "@/components-v2/lib/utils";
 import { CardTab } from "@/components-v2/session/create-session/step-cards";

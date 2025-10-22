@@ -44,7 +44,7 @@ import { ApiSource } from "@/modules/api/domain";
 import { Flow, Node } from "@/modules/flow/domain";
 import { Session } from "@/modules/session/domain/session";
 import { ListEditDialog } from "@/components-v2/list-edit-dialog";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 
 type SelectionAction = "copy" | "export" | "delete";
 

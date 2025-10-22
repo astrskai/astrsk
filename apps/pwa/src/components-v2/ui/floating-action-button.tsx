@@ -1,4 +1,4 @@
-import { useSidebarLeft } from "@/components-v2/both-sidebar";
+import { useSidebarLeft } from "@/components/layout/both-sidebar";
 import { cn } from "@/components-v2/lib/utils";
 import { Button } from "@/components-v2/ui/button";
 
@@ -31,22 +31,36 @@ function FloatingActionButton({
     return (
       <div className="group/fab-parent">
         {/* Onboarding Tooltip */}
-        <div 
+        <div
           className={cn(
-            "absolute top-[16px] z-20 px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary whitespace-nowrap",
-            "transition-all ease-out duration-300",
+            "bg-background-surface-2 border-border-selected-primary absolute top-[16px] z-20 rounded-2xl border-1 px-4 py-3 whitespace-nowrap shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+            "transition-all duration-300 ease-out",
             "group-hover/fab-parent:opacity-0",
             // Default tooltip positioning based on button position
             !tooltipSide && position === "top-left" && "left-[160px]",
             !tooltipSide && position === "top-left" && open && "left-[88px]",
             !tooltipSide && position === "top-right" && "right-[90px]",
             // Custom tooltip positioning when tooltipSide is specified
-            tooltipSide === "right" && position === "top-left" && "left-[160px]",
-            tooltipSide === "right" && position === "top-left" && open && "left-[88px]",
-            tooltipSide === "right" && position === "top-right" && "left-[90px]",
-            tooltipSide === "left" && position === "top-left" && "right-[160px]",
-            tooltipSide === "left" && position === "top-left" && open && "right-[88px]",
-            tooltipSide === "left" && position === "top-right" && "right-[90px]",
+            tooltipSide === "right" &&
+              position === "top-left" &&
+              "left-[160px]",
+            tooltipSide === "right" &&
+              position === "top-left" &&
+              open &&
+              "left-[88px]",
+            tooltipSide === "right" &&
+              position === "top-right" &&
+              "left-[90px]",
+            tooltipSide === "left" &&
+              position === "top-left" &&
+              "right-[160px]",
+            tooltipSide === "left" &&
+              position === "top-left" &&
+              open &&
+              "right-[88px]",
+            tooltipSide === "left" &&
+              position === "top-right" &&
+              "right-[90px]",
             // Allow custom positioning override
             tooltipClassName,
           )}
@@ -58,14 +72,15 @@ function FloatingActionButton({
 
         <Button
           className={cn(
-            "group/fab z-10 absolute top-[16px] rounded-full cursor-pointer",
-            "bg-button-background-floating border-[1px] border-border-light text-text-primary",
+            "group/fab absolute top-[16px] z-10 cursor-pointer rounded-full",
+            "bg-button-background-floating border-border-light text-text-primary border-[1px]",
             "hover:bg-background-card hover:text-text-primary",
             position === "top-left" ? "left-[96px]" : "right-[32px]",
-            "!transition-all ease-out duration-300",
+            "!transition-all duration-300 ease-out",
             position === "top-left" && open && "left-[24px]",
-            "min-w-[40px] h-[40px] p-0",
-            onboarding && "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary",
+            "h-[40px] min-w-[40px] p-0",
+            onboarding &&
+              "border-border-selected-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)]",
             className,
           )}
           onClick={(event) => {
@@ -76,8 +91,8 @@ function FloatingActionButton({
         >
           <div
             className={cn(
-              "h-full flex flex-row items-center",
-              "transition-[margin-inline] ease-out duration-300",
+              "flex h-full flex-row items-center",
+              "transition-[margin-inline] duration-300 ease-out",
               "mx-[7px] group-hover/fab:mx-[16px]",
               openned && "mx-[16px]",
             )}
@@ -85,13 +100,13 @@ function FloatingActionButton({
             {icon}
             <div
               className={cn(
-                "grid transition-[margin-left,grid-template-columns,opacity] ease-out duration-300",
+                "grid transition-[margin-left,grid-template-columns,opacity] duration-300 ease-out",
                 "ml-0 grid-cols-[0fr] opacity-0",
                 "group-hover/fab:ml-2 group-hover/fab:grid-cols-[1fr] group-hover/fab:opacity-100",
                 openned && "ml-2 grid-cols-[1fr] opacity-100",
               )}
             >
-              <span className="overflow-hidden font-medium text-[14px] leading-[20px]">
+              <span className="overflow-hidden text-[14px] leading-[20px] font-medium">
                 {label}
               </span>
             </div>
@@ -105,13 +120,13 @@ function FloatingActionButton({
   return (
     <Button
       className={cn(
-        "group/fab z-10 absolute top-[16px] rounded-full cursor-pointer",
-        "bg-button-background-floating border-[1px] border-border-light text-text-primary",
+        "group/fab absolute top-[16px] z-10 cursor-pointer rounded-full",
+        "bg-button-background-floating border-border-light text-text-primary border-[1px]",
         "hover:bg-background-card hover:text-text-primary",
         position === "top-left" ? "left-[96px]" : "right-[32px]",
-        "!transition-all ease-out duration-300",
+        "!transition-all duration-300 ease-out",
         position === "top-left" && open && "left-[24px]",
-        "min-w-[40px] h-[40px] p-0",
+        "h-[40px] min-w-[40px] p-0",
         className,
       )}
       onClick={(event) => {
@@ -122,8 +137,8 @@ function FloatingActionButton({
     >
       <div
         className={cn(
-          "h-full flex flex-row items-center",
-          "transition-[margin-inline] ease-out duration-300",
+          "flex h-full flex-row items-center",
+          "transition-[margin-inline] duration-300 ease-out",
           "mx-[7px] group-hover/fab:mx-[16px]",
           openned && "mx-[16px]",
         )}
@@ -131,13 +146,13 @@ function FloatingActionButton({
         {icon}
         <div
           className={cn(
-            "grid transition-[margin-left,grid-template-columns,opacity] ease-out duration-300",
+            "grid transition-[margin-left,grid-template-columns,opacity] duration-300 ease-out",
             "ml-0 grid-cols-[0fr] opacity-0",
             "group-hover/fab:ml-2 group-hover/fab:grid-cols-[1fr] group-hover/fab:opacity-100",
             openned && "ml-2 grid-cols-[1fr] opacity-100",
           )}
         >
-          <span className="overflow-hidden font-medium text-[14px] leading-[20px]">
+          <span className="overflow-hidden text-[14px] leading-[20px] font-medium">
             {label}
           </span>
         </div>

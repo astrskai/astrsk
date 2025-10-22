@@ -1,6 +1,6 @@
 import { Menu } from "lucide-react";
-import { Button } from "./ui/button";
-import { cn } from "./lib/utils";
+import { Button } from "../../components-v2/ui/button";
+import { cn } from "../../components-v2/lib/utils";
 import { ReactNode } from "react";
 
 interface TopNavigationProps {
@@ -34,7 +34,7 @@ export function TopNavigation({
   return (
     <div
       className={cn(
-        "relative flex items-center h-[46px] px-[8px] shrink-0 safe-area-top",
+        "safe-area-top relative flex h-[46px] shrink-0 items-center px-[8px]",
         getBackgroundClass(),
         className,
       )}
@@ -46,7 +46,7 @@ export function TopNavigation({
             <Button
               variant="ghost_white"
               size="icon"
-              className="h-[40px] w-[40px] p-0 text-text-primary hover:text-text-primary/80"
+              className="text-text-primary hover:text-text-primary/80 h-[40px] w-[40px] p-0"
               onClick={onMenuClick}
             >
               <Menu className="min-h-6 min-w-6" />
@@ -55,10 +55,10 @@ export function TopNavigation({
       </div>
 
       {/* Center - Title */}
-      <div className="absolute inset-x-0 inset-y-0 flex justify-center items-center pointer-events-none">
+      <div className="pointer-events-none absolute inset-x-0 inset-y-0 flex items-center justify-center">
         <span
           className={cn(
-            "font-semibold text-[17px] truncate max-w-[60%] text-text-primary",
+            "text-text-primary max-w-[60%] truncate text-[17px] font-semibold",
             titleClassName,
           )}
         >

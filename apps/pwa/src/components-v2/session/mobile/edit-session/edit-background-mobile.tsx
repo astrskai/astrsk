@@ -17,7 +17,7 @@ import {
   StepBackgroundSchema,
   StepBackgroundSchemaType,
 } from "@/components-v2/session/mobile/create-session/step-background-mobile";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import {
@@ -53,8 +53,8 @@ const BackgroundListItem = ({
     <div
       onClick={onClick}
       className={cn(
-        "rounded-lg relative overflow-hidden bg-background-surface-1 cursor-pointer w-full",
-        isActive && "ring-2 ring-primary-normal",
+        "bg-background-surface-1 relative w-full cursor-pointer overflow-hidden rounded-lg",
+        isActive && "ring-primary-normal ring-2",
       )}
     >
       <AspectRatio ratio={16 / 9}>
@@ -62,10 +62,10 @@ const BackgroundListItem = ({
           <img
             src={assetUrl || src}
             alt="Background"
-            className="object-cover w-full h-full"
+            className="h-full w-full object-cover"
           />
         ) : (
-          <div className="bg-background-input w-full h-full flex items-center justify-center">
+          <div className="bg-background-input flex h-full w-full items-center justify-center">
             <span className="text-muted-foreground">None</span>
           </div>
         )}
@@ -78,7 +78,7 @@ const BackgroundListItem = ({
             e.stopPropagation();
             onDelete?.();
           }}
-          className="absolute top-1 right-1 h-7 w-7 bg-background/80 hover:bg-background"
+          className="bg-background/80 hover:bg-background absolute top-1 right-1 h-7 w-7"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -91,13 +91,13 @@ const BackgroundListItem = ({
 const AddImageBackgroundItem = ({ onClick }: { onClick?: () => void }) => {
   return (
     <div
-      className="rounded-lg relative overflow-hidden bg-background-surface-4 cursor-pointer transition-colors w-full"
+      className="bg-background-surface-4 relative w-full cursor-pointer overflow-hidden rounded-lg transition-colors"
       onClick={onClick}
     >
       <AspectRatio ratio={16 / 9}>
-        <div className="w-full h-full flex flex-col items-center justify-center gap-1">
-          <Plus className="w-6 h-6 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Add Background</span>
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+          <Plus className="text-muted-foreground h-6 w-6" />
+          <span className="text-muted-foreground text-sm">Add Background</span>
         </div>
       </AspectRatio>
     </div>
@@ -198,7 +198,7 @@ export function EditBackgroundMobile({
 
   return (
     <FormProvider {...methods}>
-      <div className="fixed inset-0 z-50 bg-background-surface-2">
+      <div className="bg-background-surface-2 fixed inset-0 z-50">
         {/* Header */}
         <TopNavigation
           title="Background"
@@ -225,15 +225,15 @@ export function EditBackgroundMobile({
         />
 
         {/* Content - Mobile layout from StepBackground */}
-        <div className="h-[calc(100%-56px)] flex flex-col overflow-hidden">
-          <div className="w-full max-w-[600px] mx-auto px-4 pt-4 flex flex-col h-full">
+        <div className="flex h-[calc(100%-56px)] flex-col overflow-hidden">
+          <div className="mx-auto flex h-full w-full max-w-[600px] flex-col px-4 pt-4">
             <Tabs
               defaultValue={defaultTab}
-              className="w-full flex flex-col h-full overflow-hidden"
+              className="flex h-full w-full flex-col overflow-hidden"
             >
               <TabsList
                 variant="dark-mobile"
-                className="flex w-full overflow-x-auto flex-shrink-0"
+                className="flex w-full flex-shrink-0 overflow-x-auto"
               >
                 <TabsTrigger value="provided">astrsk provided</TabsTrigger>
                 <TabsTrigger value="custom">User added</TabsTrigger>

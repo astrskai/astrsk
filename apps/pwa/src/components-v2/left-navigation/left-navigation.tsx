@@ -1,7 +1,7 @@
 // TODO: apply color palette
 
 import { Page, useAppStore } from "@/app/stores/app-store";
-import { SidebarLeft, useSidebarLeft } from "@/components-v2/both-sidebar";
+import { SidebarLeft, useSidebarLeft } from "@/components/layout/both-sidebar";
 import { ConvexReady } from "@/components-v2/convex-ready";
 import { HelpVideoDialog } from "@/components-v2/help-video-dialog";
 import { CardSection } from "@/components-v2/left-navigation/card-list";

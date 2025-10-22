@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { SessionService } from "@/app/services/session-service";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/components-v2/ui/button";
 import {
   Tabs,
@@ -14,17 +14,11 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components-v2/ui/tabs";
-import {
-  StepCharacterCardsSchema,
-} from "@/components-v2/session/mobile/create-session/step-character-cards-mobile";
+import { StepCharacterCardsSchema } from "@/components-v2/session/mobile/create-session/step-character-cards-mobile";
 import { StepCharacterCardsMobile } from "@/components-v2/session/mobile/create-session/step-character-cards-mobile";
-import {
-  StepUserCardSchema,
-} from "@/components-v2/session/mobile/create-session/step-user-card-mobile";
+import { StepUserCardSchema } from "@/components-v2/session/mobile/create-session/step-user-card-mobile";
 import { StepUserCardMobile } from "@/components-v2/session/mobile/create-session/step-user-card-mobile";
-import {
-  StepPlotCardSchema,
-} from "@/components-v2/session/mobile/create-session/step-plot-card-mobile";
+import { StepPlotCardSchema } from "@/components-v2/session/mobile/create-session/step-plot-card-mobile";
 import { StepPlotCardMobile } from "@/components-v2/session/mobile/create-session/step-plot-card-mobile";
 import { convertCombinedCardsFormToSessionProps } from "@/components-v2/session/create-session/step-cards-combined";
 import { Session, SessionProps } from "@/modules/session/domain";
@@ -104,7 +98,7 @@ export function EditCardsMobile({
 
   return (
     <FormProvider {...methods}>
-      <div className="fixed inset-0 z-50 bg-background-surface-2">
+      <div className="bg-background-surface-2 fixed inset-0 z-50">
         {/* Header */}
         <TopNavigation
           title="Cards"
@@ -137,7 +131,7 @@ export function EditCardsMobile({
             onValueChange={(value) =>
               setActiveTab(value as "character" | "plot" | "user")
             }
-            className="flex flex-col h-full"
+            className="flex h-full flex-col"
           >
             {/* Tab Navigation */}
             <div className="mx-[16px] mt-[16px]">
@@ -155,22 +149,16 @@ export function EditCardsMobile({
             <div className="flex-1 overflow-hidden">
               <TabsContent
                 value="character"
-                className="h-full overflow-y-auto mt-0"
+                className="mt-0 h-full overflow-y-auto"
               >
                 <StepCharacterCardsMobile isEdit={true} />
               </TabsContent>
 
-              <TabsContent
-                value="user"
-                className="h-full overflow-y-auto mt-0"
-              >
+              <TabsContent value="user" className="mt-0 h-full overflow-y-auto">
                 <StepUserCardMobile isEdit={true} />
               </TabsContent>
 
-              <TabsContent
-                value="plot"
-                className="h-full overflow-y-auto mt-0"
-              >
+              <TabsContent value="plot" className="mt-0 h-full overflow-y-auto">
                 <StepPlotCardMobile isEdit={true} />
               </TabsContent>
             </div>

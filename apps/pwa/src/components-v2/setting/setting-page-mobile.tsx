@@ -11,7 +11,7 @@ import PrivacyPolicy from "@/components-v2/setting/privacy-policy";
 import RefundPolicy from "@/components-v2/setting/refund-policy";
 import TermOfService from "@/components-v2/setting/terms-of-service";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { Typo2XLarge, TypoBase, TypoXLarge } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";

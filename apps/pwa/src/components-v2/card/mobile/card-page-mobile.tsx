@@ -39,7 +39,7 @@ import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import { DeleteConfirm } from "@/components-v2/confirm";
 import { SearchCardsSort } from "@/modules/card/repos";
 import { ListEditDialog } from "@/components-v2/list-edit-dialog";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { SortDialog } from "@/components-v2/sort-dialog";
 
 interface CardPageMobileProps {

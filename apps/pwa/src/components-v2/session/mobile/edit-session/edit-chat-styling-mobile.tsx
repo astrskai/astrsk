@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { SessionService } from "@/app/services/session-service";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/components-v2/ui/button";
 import {
   Tabs,
@@ -83,7 +83,7 @@ export function EditChatStylingMobile({
 
   return (
     <FormProvider {...methods}>
-      <div className="fixed inset-0 z-50 bg-background-surface-2">
+      <div className="bg-background-surface-2 fixed inset-0 z-50">
         {/* Header */}
         <TopNavigation
           title="Message styling"
@@ -111,8 +111,8 @@ export function EditChatStylingMobile({
 
         {/* Content - Mobile layout from StepChatStyling */}
         <div className="h-[calc(100%-3.5rem)] overflow-y-auto">
-          <div className="w-full h-full max-w-[600px] mx-auto px-4 py-6 flex-1">
-            <Tabs defaultValue="styling" className="w-full h-full">
+          <div className="mx-auto h-full w-full max-w-[600px] flex-1 px-4 py-6">
+            <Tabs defaultValue="styling" className="h-full w-full">
               <TabsList
                 variant="dark-mobile"
                 className="flex w-full overflow-x-auto"
@@ -126,7 +126,7 @@ export function EditChatStylingMobile({
               </TabsContent>
 
               <TabsContent value="preview" className="h-[calc(100%-140px)]">
-                <p className="text-xs text-text-placeholder pb-[24px]">
+                <p className="text-text-placeholder pb-[24px] text-xs">
                   View how your changes will affect the session experience.
                 </p>
                 <StylingPreview

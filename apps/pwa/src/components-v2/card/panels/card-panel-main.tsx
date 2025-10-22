@@ -32,8 +32,8 @@ import { ImageGeneratorPanel } from "./card-panel/components/image-generator-pan
 import { CardVibePanel } from "./card-panel/components/vibe-panel";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { cn, logger } from "@/shared/utils";
-import CustomDockviewTab from "@/components-v2/dockview-default-tab";
-import { PanelFocusAnimationWrapper } from "@/components-v2/dockview-panel-focus-animation";
+import CustomDockviewTab from "@/components/layout/dockview-default-tab";
+import { PanelFocusAnimationWrapper } from "@/components/layout/dockview-panel-focus-animation";
 import { useNavigate } from "@tanstack/react-router";
 
 interface CardPanelMainProps {

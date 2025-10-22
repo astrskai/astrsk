@@ -19,7 +19,7 @@ import {
   StepFlowAndAgentsSchema,
   StepFlowAndAgentsSchemaType,
 } from "@/components-v2/session/mobile/create-session/step-flow-and-agents-mobile";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/components-v2/ui/button";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain/api-connection";
 import { Session, SessionProps } from "@/modules/session/domain";

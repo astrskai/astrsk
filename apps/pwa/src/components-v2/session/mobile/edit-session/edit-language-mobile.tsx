@@ -5,16 +5,14 @@ import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { SessionService } from "@/app/services/session-service";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/components-v2/ui/button";
 import {
   convertLanguageFormToSessionProps,
   StepLanguageSchema,
   StepLanguageSchemaType,
 } from "@/components-v2/session/mobile/create-session/step-language-mobile";
-import {
-  LanguageSettings,
-} from "@/components-v2/session/create-session/step-language";
+import { LanguageSettings } from "@/components-v2/session/create-session/step-language";
 import { Session, SessionProps } from "@/modules/session/domain";
 
 interface EditLanguageMobileProps {
@@ -62,7 +60,7 @@ export function EditLanguageMobile({
 
   return (
     <FormProvider {...methods}>
-      <div className="fixed inset-0 z-50 bg-background-surface-2">
+      <div className="bg-background-surface-2 fixed inset-0 z-50">
         {/* Header */}
         <TopNavigation
           title="Language & Translation"
@@ -85,7 +83,7 @@ export function EditLanguageMobile({
 
         {/* Content - Mobile layout from StepLanguage */}
         <div className="h-[calc(100%-3.5rem)] overflow-y-auto py-[24px]">
-          <div className="w-full max-w-[600px] mx-auto px-4 flex flex-col gap-[56px]">
+          <div className="mx-auto flex w-full max-w-[600px] flex-col gap-[56px] px-4">
             <LanguageSettings />
           </div>
         </div>
