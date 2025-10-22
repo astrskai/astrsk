@@ -14,7 +14,7 @@ import { useBackGesture } from "@/components-v2/hooks/use-back-gesture";
 import { cn } from "@/components-v2/lib/utils";
 import { SessionMessagesAndUserInputsMobile } from "@/components-v2/session/mobile/session-messages-and-user-inputs-mobile";
 import { SessionSettingsMobile } from "@/components-v2/session/mobile/session-settings-mobile";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
@@ -101,13 +101,13 @@ const SessionMainMobile = ({
   const content = (
     <div
       className={cn(
-        "relative min-h-dvh max-h-dvh overflow-hidden bg-background-screen flex flex-col",
+        "bg-background-screen relative flex max-h-dvh min-h-dvh flex-col overflow-hidden",
         className,
       )}
     >
       {/* Background */}
       {backgroundSrc && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <img
             src={backgroundSrc}
             alt="background"
@@ -146,7 +146,7 @@ const SessionMainMobile = ({
       />
 
       {/* Session main conten  t - adjusted for top bar */}
-      <div className="flex-1 overflow-hidden relative">
+      <div className="relative flex-1 overflow-hidden">
         <ScrollArea className="h-full" viewportRef={scrollAreaViewportRef}>
           <SessionMessagesAndUserInputsMobile
             scrollToBottom={scrollToBottom}
@@ -160,7 +160,7 @@ const SessionMainMobile = ({
       {/* Session top gradient */}
       <div
         className={cn(
-          "absolute top-0 inset-x-0 h-[100px] pointer-events-none",
+          "pointer-events-none absolute inset-x-0 top-0 h-[100px]",
           "bg-gradient-to-b from-[#0E0E0EB2] to-[#0E0E0E00]",
         )}
       />
@@ -169,7 +169,7 @@ const SessionMainMobile = ({
       <Sheet open={isOpenSettings} onOpenChange={setIsOpenSettings}>
         <SheetContent
           side="right"
-          className="w-[85vw] p-0 bg-background-container"
+          className="bg-background-container w-[85vw] p-0"
           hideClose
         >
           <SessionSettingsMobile
@@ -187,7 +187,7 @@ const SessionMainMobile = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full p-0 h-full flex flex-col"
+        className="flex h-full w-full flex-col p-0"
         hideClose
       >
         {content}

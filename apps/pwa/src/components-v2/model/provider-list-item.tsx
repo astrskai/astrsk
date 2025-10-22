@@ -7,7 +7,7 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
-import { DeleteConfirm } from "@/components-v2/confirm";
+import { DeleteConfirm } from "@/components/dialogs/confirm";
 import { cn } from "@/components-v2/lib/utils";
 import { IconName, SvgIcon } from "@/components/ui/svg-icon";
 import { TypoSmall, TypoTiny } from "@/components/ui/typo";

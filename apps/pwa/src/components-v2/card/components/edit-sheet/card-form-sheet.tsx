@@ -17,9 +17,12 @@ import { useCardsStore } from "@/app/stores/cards-store";
 import { useEditSessionDialogStore } from "@/app/stores/edit-session-dialog-store";
 import { CharacterForm } from "@/components-v2/card/components/edit-sheet/character-form-v2";
 import { PlotForm } from "@/components-v2/card/components/edit-sheet/plot-form-v2";
-import { DeleteConfirm, UnsavedChangesConfirm } from "@/components-v2/confirm";
+import {
+  DeleteConfirm,
+  UnsavedChangesConfirm,
+} from "@/components/dialogs/confirm";
 import { useBackGesture } from "@/components-v2/hooks/use-back-gesture";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import {
@@ -446,7 +449,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
       <SheetContent
         side="right"
         className={cn(
-          "w-full sm:max-w-xl md:max-w-3xl h-full flex flex-col bg-background-card border-l border-secondary p-0",
+          "bg-background-card border-secondary flex h-full w-full flex-col border-l p-0 sm:max-w-xl md:max-w-3xl",
           isMobile ? "bg-background-surface-2" : "pt-4",
         )}
         hideClose
@@ -512,8 +515,8 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
           />
         )}
 
-        <ScrollArea className="grow min-h-0 h-full">
-          <SheetBody className="px-5 text-foreground dark:text-foreground">
+        <ScrollArea className="h-full min-h-0 grow">
+          <SheetBody className="text-foreground dark:text-foreground px-5">
             {selectedCard && cardType === CardType.Character && (
               <CharacterForm
                 store={store}
@@ -545,9 +548,9 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
         {!isMobile && (
           <SheetFooter
             variant="edit"
-            className="flex justify-between w-full border-t border-border-container pt-4 bg-background-container"
+            className="border-border-container bg-background-container flex w-full justify-between border-t pt-4"
           >
-            <div className="flex justify-between w-full">
+            <div className="flex w-full justify-between">
               <SheetClose asChild>
                 <Button variant="ghost" size="sm">
                   Cancel
@@ -636,7 +639,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
                   disabled={isLoading || !isFormDirty}
                   size="sm"
                 >
-                  <Save className="h-4 w-4 mr-1" />
+                  <Save className="mr-1 h-4 w-4" />
                   {isNewCard ? "Create" : "Save"} {isLoading ? "..." : ""}
                 </Button>
               </div>

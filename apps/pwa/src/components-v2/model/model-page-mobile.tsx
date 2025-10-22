@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, Info, Loader2 } from "lucide-react";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 

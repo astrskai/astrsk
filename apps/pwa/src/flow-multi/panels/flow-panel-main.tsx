@@ -11,8 +11,8 @@ import {
   IDockviewPanelProps,
   DockviewReadyEvent,
 } from "dockview";
-import CustomDockviewTab from "@/components-v2/dockview-default-tab";
-import { PanelFocusAnimationWrapper } from "@/components-v2/dockview-panel-focus-animation";
+import CustomDockviewTab from "@/components/layout/dockview-default-tab";
+import { PanelFocusAnimationWrapper } from "@/components/layout/dockview-panel-focus-animation";
 // import "dockview/dist/styles/dockview.css";
 import { Flow } from "@/modules/flow/domain";
 import { debounce } from "lodash-es";

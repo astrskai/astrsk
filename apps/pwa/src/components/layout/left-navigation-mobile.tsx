@@ -1,6 +1,6 @@
 "use client";
 
-import { Book, CircleHelp, Settings } from "lucide-react";
+import { Book, Settings } from "lucide-react";
 import { forwardRef, ReactNode, useMemo } from "react";
 
 import { Menu, Page, useAppStore } from "@/app/stores/app-store";
@@ -93,17 +93,7 @@ const MobileNavItem = forwardRef<
   }
 >(
   (
-    {
-      name,
-      icon,
-      active,
-      activeIcon,
-      badge,
-      onClick,
-      className,
-      variant = "default",
-      ...props
-    },
+    { name, icon, active, activeIcon, badge, onClick, className, ...props },
     forwardedRef,
   ) => {
     return (
@@ -246,4 +236,4 @@ const LeftNavigationMobile = ({ onNavigate }: { onNavigate?: () => void }) => {
   );
 };
 
-export { LeftNavigationMobile, MobileNavItem, NavButton };
+export { LeftNavigationMobile, MobileNavItem };

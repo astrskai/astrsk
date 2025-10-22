@@ -1,4 +1,4 @@
-import { MobileNavItem } from "@/components-v2/left-navigation";
+import { MobileNavItem } from "@/components/layout/left-navigation-mobile";
 import { logger } from "@/shared/utils/logger";
 import { Import } from "lucide-react";
 import { useCallback } from "react";
@@ -80,7 +80,7 @@ const MobileUpdater = () => {
       <MobileNavItem
         active={false}
         name="Update"
-        icon={<Import className="min-w-6 min-h-6" />}
+        icon={<Import className="min-h-6 min-w-6" />}
         onClick={restartApp}
         className=""
       />

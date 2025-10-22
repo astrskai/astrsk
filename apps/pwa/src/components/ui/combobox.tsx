@@ -76,14 +76,6 @@ const renderComboboxOption = ({
               style={{
                 fontSize: `${isZoom ? zoomScale * 0.75 : 0.75}rem`,
               }}
-              onClick={() =>
-                console.log(
-                  `[Group Header] "${option.label}" fontSize:`,
-                  `${zoomScale * 0.75}rem`,
-                  "zoomScale:",
-                  zoomScale,
-                )
-              }
             >
               {option.label}
             </span>

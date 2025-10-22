@@ -1,7 +1,12 @@
 import { ArrowUpAZ } from "lucide-react";
-import { Button } from "./ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from "./ui/dialog";
-import { cn } from "./lib/utils";
+import { Button } from "../../components-v2/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTrigger,
+} from "../../components-v2/ui/dialog";
+import { cn } from "../../components-v2/lib/utils";
 
 export type SortOption = {
   value: string;
@@ -15,7 +20,7 @@ interface SortDialogProps {
   contentClassName?: string;
 }
 
-export function SortDialog({
+export function SortDialogMobile({
   options,
   onSort,
   triggerClassName,
@@ -34,7 +39,7 @@ export function SortDialog({
       </DialogTrigger>
       <DialogContent
         className={cn(
-          "w-[248px] p-0 bg-background-surface-4 border-0 outline-none rounded-[14px]",
+          "bg-background-surface-4 w-[248px] rounded-[14px] border-0 p-0 outline-none",
           contentClassName,
         )}
         hideClose
@@ -47,8 +52,8 @@ export function SortDialog({
               <DialogClose key={option.value} asChild>
                 <button
                   className={cn(
-                    "w-full text-center px-6 py-4 hover:bg-background-card-hover transition-colors text-text-primary text-base",
-                    !isLast && "border-b-[0.33px] border-border-light",
+                    "hover:bg-background-card-hover text-text-primary w-full px-6 py-4 text-center text-base transition-colors",
+                    !isLast && "border-border-light border-b-[0.33px]",
                   )}
                   onClick={() => onSort(option.value)}
                 >

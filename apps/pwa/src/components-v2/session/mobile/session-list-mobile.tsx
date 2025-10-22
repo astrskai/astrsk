@@ -50,8 +50,8 @@ import { Session } from "@/modules/session/domain/session";
 import { AgentService } from "@/app/services/agent-service";
 import { ApiSource } from "@/modules/api/domain";
 import { toast } from "sonner";
-import { ListEditDialog } from "@/components-v2/list-edit-dialog";
-import { TopNavigation } from "@/components-v2/top-navigation";
+import { ListEditDialogMobile } from "@/components/dialogs/list-edit-dialog-mobile";
+import { TopNavigation } from "@/components/layout/top-navigation";
 import { StepName } from "@/components-v2/session/create-session/step-name";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { sessionQueries } from "@/app/queries/session-queries";
@@ -666,7 +666,7 @@ const SessionListMobile = ({
                     : "Delete"}
               </Button>
             ) : (
-              <ListEditDialog
+              <ListEditDialogMobile
                 onAction={(action) => {
                   if (action === "import") {
                     handleImportClick();

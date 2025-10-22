@@ -1,12 +1,8 @@
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
-import { useAgentStore } from "@/app/stores/agent-store";
-import { Page, useAppStore } from "@/app/stores/app-store";
-import { useCardsStore } from "@/app/stores/cards-store";
-import { useSessionStore } from "@/app/stores/session-store";
+import { useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { ButtonPill } from "@/components-v2/ui/button-pill";
-import { Code, SquareArrowUpRight } from "lucide-react";
+import { SquareArrowUpRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { isElectronEnvironment } from "@/utils/environment";
 

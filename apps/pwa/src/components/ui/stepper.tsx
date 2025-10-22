@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { cn } from "@/shared/utils";
 
-import { UnsavedChangesConfirm } from "@/components-v2/confirm";
+import { UnsavedChangesConfirm } from "@/components/dialogs/confirm";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 
@@ -28,8 +28,8 @@ const Step = ({
     <>
       <button
         className={cn(
-          "inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-          "p-[16px] h-[72px] my-[-16px] gap-[16px] rounded-full",
+          "focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:ring-1 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50",
+          "my-[-16px] h-[72px] gap-[16px] rounded-full p-[16px]",
         )}
         disabled={disabled}
         onClick={onClick}
@@ -37,7 +37,7 @@ const Step = ({
         <div
           className={cn(
             "size-[40px] rounded-full",
-            "bg-text-placeholder font-[500] text-background-container",
+            "bg-text-placeholder text-background-container font-[500]",
             "grid place-content-center",
             (active || completed) && "bg-primary-normal",
             "hover:bg-background-surface-light",
@@ -53,7 +53,7 @@ const Step = ({
           {/* Hidden label for fixed width */}
           <div
             className={cn(
-              "text-[20px] leading-[24px] font-[500] invisible hidden xl:block",
+              "invisible hidden text-[20px] leading-[24px] font-[500] xl:block",
               active && "invisible block",
             )}
           >
@@ -65,8 +65,8 @@ const Step = ({
               "absolute top-0 left-1/2 -translate-x-1/2 text-[20px] leading-[24px] font-[400]",
               "xl:block",
               !active && "hidden xl:block",
-              completed && "font-[500] text-text-secondary",
-              active && "font-[500] text-text-primary",
+              completed && "text-text-secondary font-[500]",
+              active && "text-text-primary font-[500]",
               disabled && "text-text-secondary",
             )}
           >
@@ -75,7 +75,7 @@ const Step = ({
         </div>
       </button>
       {!last && (
-        <div className="w-[60px] border-b border-text-placeholder"></div>
+        <div className="border-text-placeholder w-[60px] border-b"></div>
       )}
     </>
   );
@@ -199,19 +199,19 @@ const Stepper = ({
   };
 
   return (
-    <div className="absolute inset-0 bg-background-surface-2 flex flex-col">
+    <div className="bg-background-surface-2 absolute inset-0 flex flex-col">
       <div
         className={cn(
           "w-full px-[40px] py-[24px]",
           "bg-background-surface-3",
-          "flex flex-row justify-between items-center",
+          "flex flex-row items-center justify-between",
         )}
       >
         <div className="flex flex-row gap-[16px]">
-          <div className="font-[500] text-[24px] leading-[40px] text-text-secondary">
+          <div className="text-text-secondary text-[24px] leading-[40px] font-[500]">
             {title}
           </div>
-          <div className="font-[600] text-[24px] leading-[40px] text-text-primary">
+          <div className="text-text-primary text-[24px] leading-[40px] font-[600]">
             {description}
           </div>
         </div>
@@ -279,9 +279,9 @@ const Stepper = ({
         </div>
       </div>
       <ScrollArea className={cn(className)}>
-        <div className="z-10 sticky top-0 py-[40px] pb-[60px] bg-background-surface-2">
+        <div className="bg-background-surface-2 sticky top-0 z-10 py-[40px] pb-[60px]">
           {steps.length > 1 && (
-            <div className="mx-auto flex flex-row justify-center items-center">
+            <div className="mx-auto flex flex-row items-center justify-center">
               {steps.map((step, index) => (
                 <Step
                   key={index}
@@ -299,7 +299,7 @@ const Stepper = ({
             </div>
           )}
         </div>
-        <div className="flex flex-row justify-center pb-8 min-h-full">
+        <div className="flex min-h-full flex-row justify-center pb-8">
           {steps.at(activeStep)?.content}
         </div>
         <ScrollBar orientation="vertical" />
