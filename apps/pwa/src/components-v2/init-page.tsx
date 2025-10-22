@@ -21,7 +21,7 @@ const InitialPage = ({ className }: { className?: string }) => {
         <SvgIcon name="lock_solid" size={20} />
         <div className="text-[16px] select-none">
           <span>Your sessions are stored locally — </span>
-          <span className="font-semibold">only on your device</span>
+          <span className="font-semibold">only on your device!</span>
         </div>
       </div>
       <div className="text-[12px] leading-[15px] font-[400] text-text-info text-center">
