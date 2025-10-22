@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, BrainCircuit, Import, Loader2 } from "lucide-react";
+import { Import } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,7 +18,7 @@ import { queryClient } from "@/app/queries/query-client";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { useQuery } from "@tanstack/react-query";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
-import { DeleteConfirm } from "@/components-v2/confirm";
+import { DeleteConfirm } from "@/components/dialogs/confirm";
 import { FlowDialog } from "@/components-v2/flow/flow-dialog";
 import { cn } from "@/components-v2/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
@@ -30,20 +30,17 @@ import { Button } from "@/components-v2/ui/button";
 import { CheckboxMobile } from "@/components-v2/ui/checkbox";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components-v2/ui/dialog";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { TableName } from "@/db/schema/table-name";
-import { Agent } from "@/modules/agent/domain";
-import { ApiSource } from "@/modules/api/domain";
 import { Flow, Node } from "@/modules/flow/domain";
 import { Session } from "@/modules/session/domain/session";
-import { ListEditDialog } from "@/components-v2/list-edit-dialog";
+import { ListEditDialogMobile } from "@/components/dialogs/list-edit-dialog-mobile";
 import { TopNavigation } from "@/components/layout/top-navigation";
 
 type SelectionAction = "copy" | "export" | "delete";
@@ -468,11 +465,6 @@ export default function FlowPageMobile({ className }: { className?: string }) {
     [agentModelOverrides],
   );
 
-  // Create flow handlers
-  const handleClickCreate = () => {
-    setDialogOpen(true);
-  };
-
   const handleDialogCreate = async (props: Partial<Flow["props"]>) => {
     setDialogLoading(true);
     try {
@@ -586,7 +578,7 @@ export default function FlowPageMobile({ className }: { className?: string }) {
                     : "Delete"}
               </Button>
             ) : (
-              <ListEditDialog
+              <ListEditDialogMobile
                 actions={["copy", "export", "import", "delete"]}
                 onAction={(action) => {
                   if (action === "import") {

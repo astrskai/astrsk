@@ -17,7 +17,10 @@ import { useCardsStore } from "@/app/stores/cards-store";
 import { useEditSessionDialogStore } from "@/app/stores/edit-session-dialog-store";
 import { CharacterForm } from "@/components-v2/card/components/edit-sheet/character-form-v2";
 import { PlotForm } from "@/components-v2/card/components/edit-sheet/plot-form-v2";
-import { DeleteConfirm, UnsavedChangesConfirm } from "@/components-v2/confirm";
+import {
+  DeleteConfirm,
+  UnsavedChangesConfirm,
+} from "@/components/dialogs/confirm";
 import { useBackGesture } from "@/components-v2/hooks/use-back-gesture";
 import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/components-v2/ui/button";

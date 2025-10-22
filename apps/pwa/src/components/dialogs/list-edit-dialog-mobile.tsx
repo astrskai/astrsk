@@ -1,7 +1,12 @@
 import { Ellipsis } from "lucide-react";
-import { Button } from "./ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from "./ui/dialog";
-import { cn } from "./lib/utils";
+import { Button } from "@/components-v2/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTrigger,
+} from "@/components-v2/ui/dialog";
+import { cn } from "@/components-v2/lib/utils";
 
 export type ListEditAction = "copy" | "export" | "import" | "delete";
 
@@ -18,7 +23,7 @@ interface ListEditDialogProps {
   contentClassName?: string;
 }
 
-export function ListEditDialog({
+export function ListEditDialogMobile({
   actions = ["copy", "export", "import", "delete"],
   onAction,
   disabled = {},
@@ -57,7 +62,7 @@ export function ListEditDialog({
       </DialogTrigger>
       <DialogContent
         className={cn(
-          "w-60 p-0 bg-background-surface-4 backdrop-blur-xl rounded-2xl border-0 outline-none shadow-none overflow-hidden",
+          "bg-background-surface-4 w-60 overflow-hidden rounded-2xl border-0 p-0 shadow-none backdrop-blur-xl outline-none",
           contentClassName,
         )}
         hideClose
@@ -71,7 +76,7 @@ export function ListEditDialog({
               <DialogClose key={action} asChild>
                 <button
                   className={cn(
-                    "w-full h-14 flex items-center justify-center hover:bg-background-card-hover transition-colors text-text-primary text-base font-normal leading-snug",
+                    "hover:bg-background-card-hover text-text-primary flex h-14 w-full items-center justify-center text-base leading-snug font-normal transition-colors",
                     config.className,
                     isDisabled && "text-text-placeholder",
                   )}

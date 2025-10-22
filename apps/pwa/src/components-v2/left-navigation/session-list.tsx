@@ -25,7 +25,7 @@ import {
 } from "@/components-v2/ui/tooltip";
 import { Button } from "@/components-v2/ui/button";
 import { Checkbox } from "@/components-v2/ui/checkbox";
-import { DeleteConfirm } from "@/components-v2/confirm";
+import { DeleteConfirm } from "@/components/dialogs/confirm";
 import {
   SessionImportDialog,
   type AgentModel,

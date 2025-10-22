@@ -2,14 +2,12 @@
 
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { SidebarLeft, useSidebarLeft } from "@/components/layout/both-sidebar";
-import { ConvexReady } from "@/components-v2/convex-ready";
-import { HelpVideoDialog } from "@/components-v2/help-video-dialog";
+import { HelpVideoDialog } from "@/components/dialogs/help-video-dialog";
 import { CardSection } from "@/components-v2/left-navigation/card-list";
 import { FlowSection } from "@/components-v2/left-navigation/flow-list";
 import { SessionSection } from "@/components-v2/left-navigation/session-list";
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import {
   Tooltip,
@@ -18,7 +16,6 @@ import {
 } from "@/components-v2/ui/tooltip";
 import { UpdaterNew } from "@/components-v2/updater-new";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { Authenticated, Unauthenticated } from "convex/react";
 import {
   ArrowLeftFromLine,
   ArrowRightFromLine,

@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 
 import { cn } from "@/shared/utils";
@@ -55,15 +53,15 @@ const CustomSheet = ({
     >
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
-        className="min-w-[780px] p-0 bg-background-surface-3"
+        className="bg-background-surface-3 min-w-[780px] p-0"
         hideClose
       >
-        <div className="w-full h-full relative flex flex-col">
+        <div className="relative flex h-full w-full flex-col">
           {/* Sheet header */}
           <div className={cn("shrink-0 px-8 py-6", hideHeader && "hidden")}>
             <div className="flex flex-row justify-between">
               <SheetTitle>
-                <div className="font-[600] text-[24px] leading-[32px] text-text-primary">
+                <div className="text-text-primary text-[24px] leading-[32px] font-[600]">
                   {title}
                 </div>
               </SheetTitle>
@@ -73,8 +71,8 @@ const CustomSheet = ({
           </div>
 
           {/* Sheet content main */}
-          <div className="grow relative overflow-hidden">
-            <ScrollArea className="w-full h-full">
+          <div className="relative grow overflow-hidden">
+            <ScrollArea className="h-full w-full">
               <div className={cn(!fill && "px-8 py-6")}>{children}</div>
               <ScrollBar orientation="vertical" />
             </ScrollArea>
@@ -82,7 +80,7 @@ const CustomSheet = ({
 
           {/* Sheet footer */}
           {!hideFooter && (
-            <div className="shrink-0 px-8 py-3 bg-background-surface-2 flex flex-row justify-end">
+            <div className="bg-background-surface-2 flex shrink-0 flex-row justify-end px-8 py-3">
               <SheetClose asChild>
                 <Button size="lg" variant="ghost">
                   Close
