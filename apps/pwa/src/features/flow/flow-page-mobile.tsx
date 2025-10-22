@@ -19,7 +19,7 @@ import { flowQueries } from "@/app/queries/flow-queries";
 import { useQuery } from "@tanstack/react-query";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import { DeleteConfirm } from "@/components/dialogs/confirm";
-import { FlowDialog } from "@/components-v2/flow/flow-dialog";
+import { FlowDialog } from "@/features/flow/flow-dialog";
 import { cn } from "@/components-v2/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { humanizeBytes } from "@/components-v2/session/session-list";

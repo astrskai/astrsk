@@ -13,12 +13,12 @@ import { SessionService } from "@/app/services/session-service";
 import { useAgentStore } from "@/app/stores/agent-store";
 import { useAppStore } from "@/app/stores/app-store";
 import { useNavigate, useLocation } from "@tanstack/react-router";
-import { FlowDialog } from "@/components-v2/flow/flow-dialog";
-import { FlowImportDialog } from "@/components-v2/flow/components/flow-import-dialog";
+import { FlowDialog } from "@/features/flow/flow-dialog";
+import { FlowImportDialog } from "@/features/flow/components/flow-import-dialog";
 import {
   FlowExportDialog,
   AgentModelTierInfo,
-} from "@/components-v2/flow/components/flow-export-dialog";
+} from "@/features/flow/components/flow-export-dialog";
 import { ModelTier } from "@/modules/agent/domain/agent";
 import { SectionHeader } from "./index";
 import {

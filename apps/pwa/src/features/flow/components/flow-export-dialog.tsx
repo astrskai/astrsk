@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,6 @@ import { Button } from "@/components-v2/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components-v2/ui/radio-group";
 import { Label } from "@/components-v2/ui/label";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { Checkbox } from "@/components-v2/ui/checkbox";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";
 import { ModelTier } from "@/modules/agent/domain/agent";
 
@@ -22,30 +21,26 @@ export interface AgentModelTierInfo {
   selectedTier: ModelTier;
 }
 
-export interface SessionExportDialogProps {
+export interface FlowExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onExport: (
-    modelTierSelections: Map<string, ModelTier>,
-    includeHistory: boolean,
-  ) => Promise<void>;
+  onExport: (modelTierSelections: Map<string, ModelTier>) => Promise<void>;
   agents: AgentModelTierInfo[];
   title?: string;
   description?: string;
 }
 
-export function SessionExportDialog({
+export function FlowExportDialog({
   open,
   onOpenChange,
   onExport,
   agents,
-  title = "Export session",
-  description,
-}: SessionExportDialogProps) {
+  title = "Export flow",
+  description = "Choose model tier for each agent. Light models are faster and cheaper, Heavy models are more powerful.",
+}: FlowExportDialogProps) {
   const [modelTierSelections, setModelTierSelections] = useState<
     Map<string, ModelTier>
   >(new Map());
-  const [includeHistory, setIncludeHistory] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   // Initialize selections with recommended tiers or Light by default
@@ -71,7 +66,7 @@ export function SessionExportDialog({
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      await onExport(modelTierSelections, includeHistory);
+      await onExport(modelTierSelections);
       onOpenChange(false);
     } finally {
       setIsExporting(false);
@@ -149,25 +144,6 @@ export function SessionExportDialog({
             </div>
           </ScrollArea>
         )}
-
-        {/* Include History Checkbox */}
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="include-history"
-            checked={includeHistory}
-            onCheckedChange={(checked) => {
-              if (typeof checked === "boolean") {
-                setIncludeHistory(checked);
-              }
-            }}
-          />
-          <Label
-            htmlFor="include-history"
-            className="text-text-primary cursor-pointer text-base leading-relaxed font-normal"
-          >
-            Include chat messages
-          </Label>
-        </div>
 
         <DialogFooter>
           <Button
