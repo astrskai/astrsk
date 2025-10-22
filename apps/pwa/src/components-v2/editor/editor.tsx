@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Editor as MonacoEditor } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
-import { useTheme } from "@/components-v2/theme-provider";
+import { useTheme } from "@/components/system/theme-provider";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/components-v2/lib/utils";
 
@@ -174,48 +174,52 @@ export function Editor({
   const isUserTypingRef = useRef(false);
   const isFocusedRef = useRef(false);
   const lastDisposeTimeRef = useRef(0);
-  
+
   useEffect(() => {
     // Add extra safety checks to prevent disposal during active use
     const now = Date.now();
     const timeSinceLastDispose = now - lastDisposeTimeRef.current;
     const hasRecentDispose = timeSinceLastDispose < 500; // Don't dispose within 500ms of last dispose
-    
-    if (clearUndoOnValueChange && 
-        editorRef.current && 
-        monacoRef.current && 
-        value !== prevValueRef.current && 
-        !isUserTypingRef.current && 
-        !isFocusedRef.current &&
-        !hasRecentDispose) {
-      
+
+    if (
+      clearUndoOnValueChange &&
+      editorRef.current &&
+      monacoRef.current &&
+      value !== prevValueRef.current &&
+      !isUserTypingRef.current &&
+      !isFocusedRef.current &&
+      !hasRecentDispose
+    ) {
       const editor = editorRef.current;
       const monaco = monacoRef.current;
       const currentModel = editor.getModel();
-      
+
       if (currentModel) {
         try {
           // Additional check: make sure editor is not busy with any operations
-          if (editor.hasTextFocus() || document.activeElement === editor.getDomNode()) {
+          if (
+            editor.hasTextFocus() ||
+            document.activeElement === editor.getDomNode()
+          ) {
             // Editor is still active, don't dispose
             prevValueRef.current = value;
             return;
           }
-          
+
           // Store current editor state
           const currentPosition = editor.getPosition();
-          
+
           // Dispose the old model and create a new one to completely clear undo history
           const oldUri = currentModel.uri;
           currentModel.dispose();
           lastDisposeTimeRef.current = now;
-          
+
           // Create a new model with the new content
           const newModel = monaco.editor.createModel(value, language, oldUri);
-          
+
           // Set the new model on the editor
           editor.setModel(newModel);
-          
+
           // Re-establish the onChange handler for the new model
           if (onChange) {
             newModel.onDidChangeContent((e) => {
@@ -228,12 +232,11 @@ export function Editor({
               }, 150);
             });
           }
-          
+
           // Restore cursor position if possible
           if (currentPosition && value.length >= currentPosition.lineNumber) {
             editor.setPosition(currentPosition);
           }
-          
         } catch (error) {
           // Silently handle disposal errors to prevent console spam
           // Fall back to just updating the value without clearing undo
@@ -314,7 +317,7 @@ export function Editor({
   return (
     <div
       className={cn(
-        "w-full h-full bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal relative",
+        "bg-background-surface-0 outline-border-normal relative h-full w-full rounded-md outline-1 outline-offset-[-1px]",
         containerClassName,
       )}
       onFocus={onFocus}
@@ -324,17 +327,17 @@ export function Editor({
       {expandable && (
         <button
           onClick={handleExpandToggle}
-          className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-background-surface-1 flex items-center justify-center transition-colors"
+          className="hover:bg-background-surface-1 absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-sm transition-colors"
           aria-label={isExpanded ? "Minimize editor" : "Maximize editor"}
         >
           {isExpanded ? (
-            <Minimize2 className="w-4 h-4 text-text-subtle" />
+            <Minimize2 className="text-text-subtle h-4 w-4" />
           ) : (
-            <Maximize2 className="w-4 h-4 text-text-subtle" />
+            <Maximize2 className="text-text-subtle h-4 w-4" />
           )}
         </button>
       )}
-      <div className={cn("w-full h-full relative", paddingClasses, className)}>
+      <div className={cn("relative h-full w-full", paddingClasses, className)}>
         <MonacoEditor
           height={height}
           width={width}
@@ -346,13 +349,15 @@ export function Editor({
           onChange={onChange}
           options={mergedOptions}
         />
-        
+
         {/* Loading overlay */}
         {isLoading && (
-          <div className="absolute inset-0 bg-background-surface-0/80 backdrop-blur-sm flex items-center justify-center z-20">
-            <div className="flex items-center gap-2 px-3 py-2 bg-background-surface-2 rounded-md shadow-sm">
-              <div className="w-4 h-4 border-2 border-border-normal border-t-text-primary rounded-full animate-spin"></div>
-              <span className="text-text-subtle text-xs font-medium">Saving...</span>
+          <div className="bg-background-surface-0/80 absolute inset-0 z-20 flex items-center justify-center backdrop-blur-sm">
+            <div className="bg-background-surface-2 flex items-center gap-2 rounded-md px-3 py-2 shadow-sm">
+              <div className="border-border-normal border-t-text-primary h-4 w-4 animate-spin rounded-full border-2"></div>
+              <span className="text-text-subtle text-xs font-medium">
+                Saving...
+              </span>
             </div>
           </div>
         )}

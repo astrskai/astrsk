@@ -39,7 +39,7 @@ import { DeleteConfirm } from "@/components/dialogs/confirm";
 import { SearchCardsSort } from "@/modules/card/repos";
 import { ListEditDialogMobile } from "@/components/dialogs/list-edit-dialog-mobile";
 import { TopNavigation } from "@/components/layout/top-navigation";
-import { SortDialogMobile } from "@/components/dialogs/sort-dialog-mobile";
+import { SortDialogMobile } from "@/features/card/mobile/sort-dialog-mobile";
 
 interface CardPageMobileProps {
   className?: string;

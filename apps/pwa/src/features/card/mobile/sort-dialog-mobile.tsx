@@ -1,12 +1,12 @@
 import { ArrowUpAZ } from "lucide-react";
-import { Button } from "../../components-v2/ui/button";
+import { Button } from "@/components-v2/ui/button";
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogTrigger,
-} from "../../components-v2/ui/dialog";
-import { cn } from "../../components-v2/lib/utils";
+} from "@/components-v2/ui/dialog";
+import { cn } from "@/components-v2/lib/utils";
 
 export type SortOption = {
   value: string;

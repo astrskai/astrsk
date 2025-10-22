@@ -14,7 +14,7 @@ import { useCards } from "@/app/hooks/use-cards";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { NoCardsFound } from "@/components-v2/card/card-list";
 import { TradingCard } from "@/components-v2/card/components/trading-card";
-import { CustomSheet } from "@/components/dialogs/custom-sheet";
+import { CustomSheet } from "@/features/session/components/custom-sheet";
 import { cn } from "@/components-v2/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import {
