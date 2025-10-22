@@ -45,7 +45,10 @@ export {
 } from "./dockview-panel-focus-animation";
 
 // Mobile Navigation
-export { LeftNavigationMobile, MobileNavItem } from "./left-navigation-mobile"; // Phase 3: Merge with LeftNavigation
+export {
+  LeftNavigationMobile,
+  MobileNavItem,
+} from "./left-navigation/left-navigation-mobile"; // Phase 3: Merge with LeftNavigation
 
 // Top Navigation Components
 export { TopBar } from "./top-bar";

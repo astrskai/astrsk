@@ -8,12 +8,12 @@ import { useAppStore } from "@/app/stores/app-store";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import useCardImport from "@/components-v2/card/hooks/useCardImport";
 import { MediaDisplay } from "@/components-v2/shared/media-display";
-import { SectionHeader } from "@/components-v2/left-navigation/left-navigation";
+import { SectionHeader } from "./index";
 import {
   SearchInput,
   CreateButton,
   ImportButton,
-} from "@/components-v2/left-navigation/shared-list-components";
+} from "./shared-list-components";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { DeleteConfirm } from "@/components/dialogs/confirm";

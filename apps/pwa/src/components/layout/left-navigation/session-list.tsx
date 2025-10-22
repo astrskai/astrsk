@@ -10,12 +10,12 @@ import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { useSessionStore } from "@/app/stores/session-store";
-import { SectionHeader } from "@/components-v2/left-navigation/left-navigation";
+import { SectionHeader } from "./index";
 import {
   SearchInput,
   CreateButton,
   ImportButton,
-} from "@/components-v2/left-navigation/shared-list-components";
+} from "./shared-list-components";
 import { StepName } from "@/components-v2/session/create-session/step-name";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import {

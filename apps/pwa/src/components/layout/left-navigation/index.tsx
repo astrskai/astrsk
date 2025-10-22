@@ -3,9 +3,9 @@
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { SidebarLeft, useSidebarLeft } from "@/components/layout/both-sidebar";
 import { HelpVideoDialog } from "@/components/dialogs/help-video-dialog";
-import { CardSection } from "@/components-v2/left-navigation/card-list";
-import { FlowSection } from "@/components-v2/left-navigation/flow-list";
-import { SessionSection } from "@/components-v2/left-navigation/session-list";
+import { CardSection } from "./card-list";
+import { FlowSection } from "./flow-list";
+import { SessionSection } from "./session-list";
 import { cn } from "@/components-v2/lib/utils";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
