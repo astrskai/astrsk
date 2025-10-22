@@ -1,6 +1,6 @@
 # astrsk Development Guidelines
 
-Auto-generated from feature plans. Last updated: 2025-10-21
+Maintained development guidelines. Last updated: 2025-10-21
 
 ## Active Feature: PWA Codebase Cleanup & Quality Improvement
 
@@ -9,7 +9,7 @@ Auto-generated from feature plans. Last updated: 2025-10-21
 
 ### Objective
 
-Restructure PWA codebase to eliminate 40-50% code duplication, organize 40+ loose components into domain folders, decompose oversized components (max 2,979 lines � 300 line limit), remove 20+ duplicate mobile files, and establish automated quality gates. Enable 50% faster feature development and A/B testing cycles.
+Restructure PWA codebase to eliminate 40-50% code duplication, organize 40+ loose components into domain folders, decompose oversized components (max 2,979 lines - 300 line limit), remove 20+ duplicate mobile files, and establish automated quality gates. Enable 50% faster feature development and A/B testing cycles.
 
 ### Migration Phases
 
