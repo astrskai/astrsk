@@ -82,13 +82,13 @@ import {
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { AutoReply, useSessionStore } from "@/app/stores/session-store";
-import { Avatar } from "@/components-v2/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { cn } from "@/components-v2/lib/utils";
 import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
 import { InlineChatStyles } from "@/components-v2/session/inline-chat-styles";
 import { MediaPlaceholderMessage } from "@/components-v2/session/media-placeholder-message";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import {
   Dialog,
@@ -118,7 +118,7 @@ import { DataStoreSchemaField } from "@/modules/flow/domain/flow";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
-import { SubscribeBadge } from "@/components-v2/subscribe-badge";
+import { SubscribeBadge } from "@/components/ui/subscribe-badge";
 import { fetchCharacterCard } from "@/app/queries/card/query-factory";
 
 const MessageItemInternal = ({

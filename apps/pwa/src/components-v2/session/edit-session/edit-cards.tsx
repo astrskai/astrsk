@@ -16,7 +16,7 @@ import { NoCardsFound } from "@/components-v2/card/card-list";
 import { TradingCard } from "@/components-v2/card/components/trading-card";
 import { CustomSheet } from "@/components-v2/custom-sheet";
 import { cn } from "@/components-v2/lib/utils";
-import { SearchInput } from "@/components-v2/search-input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   CardItem,
   CardTab,
@@ -24,7 +24,7 @@ import {
   StepCardsSchema,
   StepCardsSchemaType,
 } from "@/components-v2/session/create-session/step-cards";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { CarouselItem } from "@/components-v2/ui/carousel";
 import {

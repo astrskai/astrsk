@@ -8,8 +8,8 @@ import {
 } from "@/app/stores/app-store";
 import { ConvexReady } from "@/components-v2/convex-ready";
 import { cn } from "@/components-v2/lib/utils";
-import { SvgIcon } from "@/components-v2/svg-icon";
-import { Typo2XLarge, TypoBase, TypoXLarge } from "@/components-v2/typo";
+import { SvgIcon } from "@/components/ui/svg-icon";
+import { Typo2XLarge, TypoBase, TypoXLarge } from "@/components/ui/typo";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { Separator } from "@/components-v2/ui/separator";

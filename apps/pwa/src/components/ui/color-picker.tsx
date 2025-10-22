@@ -1,5 +1,3 @@
-"use client";
-
 // Source: https://github.com/nightspite/shadcn-color-picker
 
 import { forwardRef, useMemo, useState } from "react";
@@ -70,9 +68,9 @@ const ColorPicker = forwardRef<
             }}
             variant="ghost"
             className={cn(
-              "p-0 rounded-[8px] flex gap-[8px] hover:bg-transparent",
+              "flex gap-[8px] rounded-[8px] p-0 hover:bg-transparent",
               orientation === "vertical"
-                ? "w-[57px] h-[62px] flex-col gap-[8px] justify-center items-start"
+                ? "h-[62px] w-[57px] flex-col items-start justify-center gap-[8px]"
                 : "h-[16px] flex-row",
               className,
             )}
@@ -80,37 +78,37 @@ const ColorPicker = forwardRef<
             {orientation === "vertical" ? (
               <>
                 <div
-                  className="grow w-full rounded-[8px] border border-border-light"
+                  className="border-border-light w-full grow rounded-[8px] border"
                   style={{
                     backgroundColor: parsedValue ?? undefined,
                   }}
                 />
-                <div className="min-h-[15px] font-[400] text-[12px] leading-[15px] text-text-body ">
+                <div className="text-text-body min-h-[15px] text-[12px] leading-[15px] font-[400]">
                   {parsedValue}
                 </div>
               </>
             ) : (
               <>
                 <div
-                  className="min-w-[32px] min-h-[16px] rounded-full"
+                  className="min-h-[16px] min-w-[32px] rounded-full"
                   style={{
                     backgroundColor: parsedValue ?? undefined,
                   }}
                 />
-                <div className="min-w-[60px] min-h-[15px] font-[400] text-[12px] leading-[15px] text-text-input-subtitle text-left">
+                <div className="text-text-input-subtitle min-h-[15px] min-w-[60px] text-left text-[12px] leading-[15px] font-[400]">
                   {parsedValue}
                 </div>
               </>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-[4px] bg-text-primary rounded-[8px]">
+        <PopoverContent className="bg-text-primary w-full rounded-[8px] p-[4px]">
           <HexColorPicker
             color={parsedValue ?? undefined}
             onChange={handleOnChange}
           />
           <Input
-            className="bg-transparent font-[400] text-[12px] leading-[15px] text-background-card outline-none"
+            className="text-background-card bg-transparent text-[12px] leading-[15px] font-[400] outline-none"
             maxLength={7}
             onChange={(e) => {
               const inputValue = e?.currentTarget?.value;

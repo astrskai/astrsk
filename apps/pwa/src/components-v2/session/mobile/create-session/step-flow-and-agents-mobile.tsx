@@ -4,7 +4,7 @@ import { z } from "zod";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
-import { Combobox } from "@/components-v2/combobox";
+import { Combobox } from "@/components/ui/combobox";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
 import { Agent } from "@/modules/agent/domain";
 import { Flow, Node } from "@/modules/flow/domain";
@@ -12,11 +12,16 @@ import { useQuery, useQueries } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { AgentListItemMobile } from "../components/agent-list-item-mobile";
-import { TypoXLarge } from "@/components-v2/typo";
+import { TypoXLarge } from "@/components/ui/typo";
 
 // Re-export schema and converter from the shared step
-export { StepFlowAndAgentsSchema, convertFlowAndAgentsFormToSessionProps } from "@/components-v2/session/create-session/step-flow-and-agents";
-export type StepFlowAndAgentsSchemaType = z.infer<typeof import("@/components-v2/session/create-session/step-flow-and-agents").StepFlowAndAgentsSchema>;
+export {
+  StepFlowAndAgentsSchema,
+  convertFlowAndAgentsFormToSessionProps,
+} from "@/components-v2/session/create-session/step-flow-and-agents";
+export type StepFlowAndAgentsSchemaType = z.infer<
+  typeof import("@/components-v2/session/create-session/step-flow-and-agents").StepFlowAndAgentsSchema
+>;
 
 // Mobile Step Flow and Agents Component
 export const StepFlowAndAgentsMobile = () => {
@@ -36,9 +41,10 @@ export const StepFlowAndAgentsMobile = () => {
   const isInvalid = isFlowFetched && !isFlowValid;
 
   // Get agent IDs from flow nodes
-  const agentIds = selectedFlow?.props.nodes
-    .filter((node: Node) => node.type === 'agent')
-    .map((node: Node) => new UniqueEntityID(node.id)) || [];
+  const agentIds =
+    selectedFlow?.props.nodes
+      .filter((node: Node) => node.type === "agent")
+      .map((node: Node) => new UniqueEntityID(node.id)) || [];
 
   // Fetch agent data for all agents in the flow
   const agentQueries_ = useQueries({
@@ -50,8 +56,8 @@ export const StepFlowAndAgentsMobile = () => {
 
   // Extract loaded agents
   const agents = agentQueries_
-    .filter(q => q.data)
-    .map(q => q.data as Agent);
+    .filter((q) => q.data)
+    .map((q) => q.data as Agent);
 
   // Create a map of node ID to agent data for easy lookup
   const agentMap = new Map<string, Agent>();
@@ -60,14 +66,14 @@ export const StepFlowAndAgentsMobile = () => {
   });
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="p-[16px] pb-0 flex-1 flex flex-col overflow-y-auto gap-[40px]">
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col gap-[40px] overflow-y-auto p-[16px] pb-0">
         <div className="flex flex-col gap-[24px]">
           <div className="flex flex-col gap-[8px]">
-            <TypoXLarge className="font-semibold text-text-primary">
+            <TypoXLarge className="text-text-primary font-semibold">
               Flow
             </TypoXLarge>
-            <div className="text-text-body text-sm font-medium leading-tight">
+            <div className="text-text-body text-sm leading-tight font-medium">
               Choose a flow (a bundle of prompt preset and AI model) to use for
               your session.
             </div>
@@ -94,27 +100,27 @@ export const StepFlowAndAgentsMobile = () => {
             )}
           />
         </div>
-        
+
         {selectedFlow && (
           <div className="flex flex-col gap-[24px]">
             <div className="flex flex-col gap-[8px]">
-              <div className="font-[600] text-[18px] leading-[24px] text-text-primary">
+              <div className="text-text-primary text-[18px] leading-[24px] font-[600]">
                 Agents
               </div>
-              <div className="text-text-body text-sm font-medium leading-tight">
+              <div className="text-text-body text-sm leading-tight font-medium">
                 Listed below are the agents that make up this flow.
               </div>
             </div>
             <div className="flex flex-col gap-[16px]">
               {selectedFlow?.props.nodes
-                .filter((node: Node) => node.type === 'agent')
+                .filter((node: Node) => node.type === "agent")
                 .map((node: Node) => {
                   const agent = agentMap.get(node.id);
                   const agentName = agent?.props.name || "Loading...";
-                  const modelName = agent 
+                  const modelName = agent
                     ? `${apiSourceLabel.get((agent.props.apiSource as ApiSource) ?? "openai")} - ${agent.props.modelName}`
                     : "Loading...";
-                  
+
                   return (
                     <AgentListItemMobile
                       key={node.id}
@@ -123,8 +129,7 @@ export const StepFlowAndAgentsMobile = () => {
                       isModelInvalid={isInvalid}
                     />
                   );
-                })
-              }
+                })}
             </div>
           </div>
         )}

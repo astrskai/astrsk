@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 
 const titles = [
   "Getting things ready — locally",
@@ -56,8 +56,8 @@ export const Loading = ({ isTimer }: { isTimer?: boolean }) => {
     <div
       className={`z-120 flex items-center justify-center ${
         isMobile
-          ? "fixed inset-0 w-screen h-screen"
-          : "w-full h-full bg-background-screen"
+          ? "fixed inset-0 h-screen w-screen"
+          : "bg-background-screen h-full w-full"
       }`}
     >
       <div className="flex flex-col items-center justify-center gap-8 px-4">
@@ -81,7 +81,7 @@ export const Loading = ({ isTimer }: { isTimer?: boolean }) => {
                   isMobile
                     ? "w-full max-w-[320px] text-2xl"
                     : "w-[470px] text-3xl"
-                } font-semibold text-text-primary text-center`}
+                } text-text-primary text-center font-semibold`}
               >
                 {progress < 30
                   ? titles[0]
@@ -90,7 +90,7 @@ export const Loading = ({ isTimer }: { isTimer?: boolean }) => {
                     : titles[2]}
               </div>
 
-              <div className="flex flex-col gap-0 items-top h-auto min-h-[48px]">
+              <div className="items-top flex h-auto min-h-[48px] flex-col gap-0">
                 <div
                   className={`${
                     isMobile

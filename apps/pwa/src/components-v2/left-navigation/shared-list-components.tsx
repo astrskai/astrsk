@@ -37,4 +37,4 @@ export const ImportButton = memo(
 ImportButton.displayName = "ImportButton";
 
 // Re-export SearchInput which is already memoized
-export { SearchInput } from "@/components-v2/search-input";
+export { SearchInput } from "@/components/ui/search-input";

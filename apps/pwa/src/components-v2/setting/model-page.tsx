@@ -11,13 +11,13 @@ import { useApiConnections } from "@/app/hooks/use-api-connections";
 import { ApiService } from "@/app/services";
 import { queryClient } from "@/app/queries/query-client";
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
-import { Combobox } from "@/components-v2/combobox";
+import { Combobox } from "@/components/ui/combobox";
 import { cn } from "@/components-v2/lib/utils";
 import {
   ProviderListItem,
   ProviderListItemDetail,
 } from "@/components-v2/model/provider-list-item";
-import { TypoBase, TypoTiny, TypoXLarge } from "@/components-v2/typo";
+import { TypoBase, TypoTiny, TypoXLarge } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import {
   Dialog,

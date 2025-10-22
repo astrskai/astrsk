@@ -1,3 +1,10 @@
+/**
+ * [CLEANUP-TODO] UNUSED COMPONENT
+ * Last checked: 2025-10-22
+ * Usage: None (except stories)
+ * Action: Review for deletion
+ */
+
 import { useMemo } from "react";
 
 interface JsonViewerProps {
@@ -57,11 +64,11 @@ export function JsonViewer({ json, className = "" }: JsonViewerProps) {
   return (
     <div className={`${className}`}>
       <pre
-        className="p-4 m-0 bg-transparent"
+        className="m-0 bg-transparent p-4"
         style={{ color: "var(--text-body)" }}
       >
         <code
-          className="block font-mono text-xs leading-relaxed whitespace-pre-wrap break-words"
+          className="block font-mono text-xs leading-relaxed break-words whitespace-pre-wrap"
           dangerouslySetInnerHTML={{ __html: highlightedContent }}
         />
       </pre>

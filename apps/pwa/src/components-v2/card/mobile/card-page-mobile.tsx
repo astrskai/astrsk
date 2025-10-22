@@ -16,7 +16,7 @@ import {
 } from "./hooks/use-card-selection-mobile";
 import { CardGridMobile } from "./components/card-grid-mobile";
 import { cn } from "@/components-v2/lib/utils";
-import { SearchInput } from "@/components-v2/search-input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components-v2/ui/button";
 import { CheckboxMobile } from "@/components-v2/ui/checkbox";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";

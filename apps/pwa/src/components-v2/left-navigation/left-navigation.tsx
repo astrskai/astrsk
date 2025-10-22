@@ -8,7 +8,7 @@ import { CardSection } from "@/components-v2/left-navigation/card-list";
 import { FlowSection } from "@/components-v2/left-navigation/flow-list";
 import { SessionSection } from "@/components-v2/left-navigation/session-list";
 import { cn } from "@/components-v2/lib/utils";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import {

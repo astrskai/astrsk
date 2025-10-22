@@ -1,4 +1,3 @@
-"use client";
 // Source: https://ui.shadcn.com/docs/components/combobox
 
 import { Check, ChevronDown, Search } from "lucide-react";
@@ -57,11 +56,13 @@ const renderComboboxOption = ({
         heading={
           <div
             className={cn(
-              "flex flex-row justify-between items-center",
+              "flex flex-row items-center justify-between",
               isMobile && "h-12 px-0 py-2.5",
             )}
             style={{
-              height: isMobile ? `${isZoom ? zoomScale * 3 : 3}rem` : `${isZoom ? zoomScale * 2 : 2}rem`,
+              height: isMobile
+                ? `${isZoom ? zoomScale * 3 : 3}rem`
+                : `${isZoom ? zoomScale * 2 : 2}rem`,
               padding: `${isZoom ? zoomScale * 0.5 : 0.5}rem ${isZoom ? zoomScale * 0.5 : 0.5}rem`,
             }}
             onClick={() => toggleGroupIsOpen(option.value)}
@@ -69,19 +70,26 @@ const renderComboboxOption = ({
             <span
               className={cn(
                 isMobile
-                  ? "text-text-placeholder text-base font-normal leading-relaxed"
+                  ? "text-text-placeholder text-base leading-relaxed font-normal"
                   : "",
               )}
               style={{
                 fontSize: `${isZoom ? zoomScale * 0.75 : 0.75}rem`,
               }}
-              onClick={() => console.log(`[Group Header] "${option.label}" fontSize:`, `${zoomScale * 0.75}rem`, 'zoomScale:', zoomScale)}
+              onClick={() =>
+                console.log(
+                  `[Group Header] "${option.label}" fontSize:`,
+                  `${zoomScale * 0.75}rem`,
+                  "zoomScale:",
+                  zoomScale,
+                )
+              }
             >
               {option.label}
             </span>
             <ChevronDown
               className={cn(
-                isMobile ? "min-w-4 min-h-4 text-text-placeholder" : "size-4",
+                isMobile ? "text-text-placeholder min-h-4 min-w-4" : "size-4",
                 groupIsOpen && "rotate-180",
               )}
               style={{
@@ -120,19 +128,21 @@ const renderComboboxOption = ({
       keywords={[option.label, ...(option.keywords ?? [])]}
       className={cn(
         isMobile &&
-          "h-12 px-4 py-2.5 mb-1 rounded flex items-center bg-background-surface-4 justify-between text-left hover:bg-background-surface-3 data-[selected=true]:bg-background-surface-3",
+          "bg-background-surface-4 hover:bg-background-surface-3 data-[selected=true]:bg-background-surface-3 mb-1 flex h-12 items-center justify-between rounded px-4 py-2.5 text-left",
         option.value === selectedValue
           ? "bg-background-surface-2"
           : "bg-background-surface-4",
       )}
       style={{
-        height: isMobile ? `${isZoom ? zoomScale * 3 : 3}rem` : `${isZoom ? zoomScale * 2.5 : 2.5}rem`,
+        height: isMobile
+          ? `${isZoom ? zoomScale * 3 : 3}rem`
+          : `${isZoom ? zoomScale * 2.5 : 2.5}rem`,
         padding: `${isZoom ? zoomScale * 0.5 : 0.5}rem ${isZoom ? zoomScale * 1 : 1}rem`,
       }}
     >
       <span
         className={cn(
-          "flex-1 text-base font-normal leading-relaxed text-text-primary",
+          "text-text-primary flex-1 text-base leading-relaxed font-normal",
         )}
         style={{
           fontSize: `${zoomScale * 0.75}rem`,
@@ -141,8 +151,8 @@ const renderComboboxOption = ({
         {option.label}
       </span>
       {option.value === selectedValue && (
-        <Check 
-          className="text-text-primary" 
+        <Check
+          className="text-text-primary"
           style={{
             minWidth: `${isZoom ? zoomScale : 1}rem`,
             minHeight: `${isZoom ? zoomScale : 1}rem`,
@@ -274,20 +284,20 @@ const ComboboxInner = ({
             type="button"
             role="combobox"
             aria-expanded={open}
-            className="self-stretch px-4 py-2 bg-background-surface-4 rounded flex flex-col justify-start items-start gap-2 w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-background-surface-4 flex w-full flex-col items-start justify-start gap-2 self-stretch rounded px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={disabled}
           >
-            <div className="self-stretch inline-flex justify-between items-center">
-              <div className="flex-1 inline-flex flex-col justify-start items-start">
-                <div className="self-stretch text-left text-text-body text-xs font-normal">
+            <div className="inline-flex items-center justify-between self-stretch">
+              <div className="inline-flex flex-1 flex-col items-start justify-start">
+                <div className="text-text-body self-stretch text-left text-xs font-normal">
                   {label || "Flow"}
                 </div>
-                <div className="self-stretch text-left text-text-primary text-base font-normal leading-relaxed">
+                <div className="text-text-primary self-stretch text-left text-base leading-relaxed font-normal">
                   {optionsLabelMap.get(value ?? "") ?? triggerPlaceholder}
                 </div>
               </div>
-              <div className="w-6 h-6 relative overflow-hidden">
-                <ChevronDown className="min-w-4 min-h-4 absolute left-[4px] top-[4px] text-background-surface-5" />
+              <div className="relative h-6 w-6 overflow-hidden">
+                <ChevronDown className="text-background-surface-5 absolute top-[4px] left-[4px] min-h-4 min-w-4" />
               </div>
             </div>
           </button>
@@ -296,16 +306,16 @@ const ComboboxInner = ({
             type="button"
             role="combobox"
             aria-expanded={open}
-            className="self-stretch min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal inline-flex justify-between items-center overflow-hidden w-full hover:outline-1 hover:outline-border-selected-inverse focus:outline-1 focus:outline-border-selected-inverse transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-background-surface-0 outline-border-normal hover:outline-border-selected-inverse focus:outline-border-selected-inverse inline-flex min-h-8 w-full items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline-1 outline-offset-[-1px] transition-all hover:outline-1 focus:outline-1 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={disabled}
           >
-            <div className="flex-1 flex justify-start items-center gap-4">
-              <div className="text-left text-text-primary text-xs font-normal">
+            <div className="flex flex-1 items-center justify-start gap-4">
+              <div className="text-text-primary text-left text-xs font-normal">
                 {optionsLabelMap.get(value ?? "") ?? triggerPlaceholder}
               </div>
             </div>
-            <div className="w-4 h-4 relative">
-              <ChevronDown className="min-w-3 min-h-3 absolute left-[-1px] top-[-2px] text-background-surface-5" />
+            <div className="relative h-4 w-4">
+              <ChevronDown className="text-background-surface-5 absolute top-[-2px] left-[-1px] min-h-3 min-w-3" />
             </div>
           </button>
         )}
@@ -351,13 +361,13 @@ const ComboboxInner = ({
           {searchable &&
             searchPlaceholder !== "" &&
             (isMobile ? (
-              <div className="p-2 bg-background-surface-4">
-                <div className="h-12 px-4 py-3.5 bg-background-surface-4 rounded-lg flex items-center gap-4">
-                  <Search className="min-w-4 min-h-4 text-text-subtle" />
+              <div className="bg-background-surface-4 p-2">
+                <div className="bg-background-surface-4 flex h-12 items-center gap-4 rounded-lg px-4 py-3.5">
+                  <Search className="text-text-subtle min-h-4 min-w-4" />
                   <input
                     type="text"
                     placeholder={searchPlaceholder}
-                    className="flex-1 bg-transparent text-base font-normal placeholder:text-text-placeholder text-text-primary outline-none border-0"
+                    className="placeholder:text-text-placeholder text-text-primary flex-1 border-0 bg-transparent text-base font-normal outline-none"
                     value={searchValue}
                     onChange={(e) => {
                       setSearchValue(e.target.value);
@@ -387,15 +397,15 @@ const ComboboxInner = ({
                 </div>
               </div>
             ) : (
-              <div 
-                className="flex items-center border-b border-border-normal px-3 bg-background-surface-0"
+              <div
+                className="border-border-normal bg-background-surface-0 flex items-center border-b px-3"
                 style={{
                   height: `${isZoom ? zoomScale * 2.5 : 2.5}rem`,
                   padding: `0 ${isZoom ? zoomScale * 0.75 : 0.75}rem`,
                 }}
               >
-                <Search 
-                  className="mr-2 text-text-placeholder" 
+                <Search
+                  className="text-text-placeholder mr-2"
                   style={{
                     width: `${isZoom ? zoomScale : 1}rem`,
                     height: `${isZoom ? zoomScale : 1}rem`,
@@ -403,7 +413,7 @@ const ComboboxInner = ({
                   }}
                 />
                 <input
-                  className="flex h-10 w-full rounded-md bg-transparent py-2 text-xs outline-hidden text-text-primary placeholder:text-text-placeholder disabled:cursor-not-allowed disabled:opacity-50"
+                  className="text-text-primary placeholder:text-text-placeholder flex h-10 w-full rounded-md bg-transparent py-2 text-xs outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder={searchPlaceholder}
                   value={searchValue}
                   onChange={(e) => {
@@ -441,12 +451,14 @@ const ComboboxInner = ({
             </div>
           )}
           <CommandList
-            className={cn(isMobile && "px-2 pb-2 bg-background-surface-4")}
+            className={cn(isMobile && "bg-background-surface-4 px-2 pb-2")}
             style={
               {
                 scrollbarColor: "var(--border-container) transparent",
                 resize: "none",
-                padding: isMobile ? `0 ${isZoom ? zoomScale * 0.5 : 0.5}rem ${isZoom ? zoomScale * 0.5 : 0.5}rem` : `${isZoom ? zoomScale * 0.25 : 0.25}rem`,
+                padding: isMobile
+                  ? `0 ${isZoom ? zoomScale * 0.5 : 0.5}rem ${isZoom ? zoomScale * 0.5 : 0.5}rem`
+                  : `${isZoom ? zoomScale * 0.25 : 0.25}rem`,
                 ...(isMobile
                   ? { backgroundColor: "var(--background-surface-4)" }
                   : {}),
@@ -454,7 +466,7 @@ const ComboboxInner = ({
             }
           >
             <CommandEmpty
-              className={cn(isMobile && "px-4 py-2 text-text-placeholder")}
+              className={cn(isMobile && "text-text-placeholder px-4 py-2")}
               style={{
                 fontSize: `${isZoom ? zoomScale * 0.75 : 0.75}rem`,
               }}

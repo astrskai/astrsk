@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/components-v2/lib/utils";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { PlayButtonIconSize } from "@/components-v2/shared/media-display";
 
 export interface PlayButtonProps

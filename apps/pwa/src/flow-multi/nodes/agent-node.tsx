@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { PANEL_TYPES } from "@/flow-multi/components/panel-types";
 import { useAgentColor } from "@/flow-multi/hooks/use-agent-color";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { invalidateSingleAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
 import {
   Dialog,

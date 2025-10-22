@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/components-v2/lib/utils";
-import { SubscribeBadge } from "@/components-v2/subscribe-badge";
+import { SubscribeBadge } from "@/components/ui/subscribe-badge";
 
 const buttonPillVariants = cva(
   "relative rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-center items-center transition-all",
@@ -104,8 +104,8 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
       return (
         <button
           className={cn(
-            "w-28 relative inline-flex items-center justify-center transition-all rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_0px_10px_0px_rgba(181,158,255,0.50)] outline outline-2 outline-offset-[-2px] outline-status-required",
-            size === "default" ? "px-3 py-2 gap-2" : "px-6 py-3 gap-2",
+            "outline-status-required relative inline-flex w-28 items-center justify-center rounded-lg shadow-[0px_0px_10px_0px_rgba(181,158,255,0.50)] shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] outline outline-2 outline-offset-[-2px] transition-all",
+            size === "default" ? "gap-2 px-3 py-2" : "gap-2 px-6 py-3",
             className,
           )}
           ref={ref}
@@ -122,14 +122,16 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
 
           {/* Background gradient layer */}
           <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500" />
-          
+
           {/* Foreground content layer */}
-          <div className={cn(
-            "relative flex items-center justify-center gap-2 bg-background-surface-4 rounded-[6px] px",
-            "absolute inset-[2px]",
-            isActive && "bg-background-surface-light",
-            isActive && isHovered && "opacity-70"
-          )}>
+          <div
+            className={cn(
+              "bg-background-surface-4 px relative flex items-center justify-center gap-2 rounded-[6px]",
+              "absolute inset-[2px]",
+              isActive && "bg-background-surface-light",
+              isActive && isHovered && "opacity-70",
+            )}
+          >
             {icon && (
               <div className={iconVariants({ size })}>
                 {React.cloneElement(icon as React.ReactElement, {

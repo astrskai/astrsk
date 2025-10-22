@@ -6,15 +6,12 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { useAsset } from "@/app/hooks/use-asset";
 import { useBackgroundStore } from "@/app/stores/background-store";
-import { ColorPicker } from "@/components-v2/color-picker";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { cn } from "@/components-v2/lib/utils";
 import { StepBackgroundSchemaType } from "@/components-v2/session/create-session/step-background";
 import { InlineChatStyles } from "@/components-v2/session/inline-chat-styles";
-import {
-  MessageItemInternal,
-} from "@/components-v2/session/session-messages-and-user-inputs";
+import { MessageItemInternal } from "@/components-v2/session/session-messages-and-user-inputs";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import {
   Tabs,
   TabsContent,
@@ -27,7 +24,6 @@ import {
   defaultChatStyles,
 } from "@/modules/session/domain/chat-styles";
 import { SessionProps } from "@/modules/session/domain/session";
-import { isMobileSafari } from "react-device-detect";
 
 const ChatStyleSchema = z.object({
   // Font
@@ -100,18 +96,18 @@ const StylingSetting = ({
   return (
     <div
       className={cn(
-        "p-[16px] rounded-[16px] flex flex-col",
+        "flex flex-col rounded-[16px] p-[16px]",
         isMobile
           ? "gap-[16px]"
-          : "gap-[24px] border border-background-surface-3",
+          : "border-background-surface-3 gap-[24px] border",
         className,
       )}
     >
-      <div className="self-stretch justify-start text-text-primary text-base font-semibold leading-relaxed">
+      <div className="text-text-primary justify-start self-stretch text-base leading-relaxed font-semibold">
         {title}
       </div>
       <div className="flex flex-col gap-[8px]">
-        <div className="self-stretch justify-start text-text-primary text-base font-normal">
+        <div className="text-text-primary justify-start self-stretch text-base font-normal">
           Base font
         </div>
         <div className="flex flex-row gap-[8px]">
@@ -144,7 +140,7 @@ const StylingSetting = ({
         </div>
       </div>
       <div className="flex flex-col gap-[8px]">
-        <div className="self-stretch justify-start text-text-primary text-base font-normal">
+        <div className="text-text-primary justify-start self-stretch text-base font-normal">
           Italic font
         </div>
         <div className="flex flex-row gap-[8px]">
@@ -177,7 +173,7 @@ const StylingSetting = ({
         </div>
       </div>
       <div className="flex flex-col gap-[8px]">
-        <div className="self-stretch justify-start text-text-primary text-base font-normal">
+        <div className="text-text-primary justify-start self-stretch text-base font-normal">
           Bold font
         </div>
         <div className="flex flex-row gap-[8px]">
@@ -209,10 +205,10 @@ const StylingSetting = ({
           />
         </div>
       </div>
-      <div className="flex flex-row gap-[16px] items-center">
+      <div className="flex flex-row items-center gap-[16px]">
         <div
           className={cn(
-            "grow font-[400] text-text-primary",
+            "text-text-primary grow font-[400]",
             isMobile
               ? "text-[14px] leading-[17px]"
               : "text-[16px] leading-[19px]",
@@ -290,8 +286,8 @@ const StylingPreview = ({
   return (
     <div
       className={cn(
-        "rounded-xl bg-background-screen",
-        backgroundSrc && "bg-cover bg-center bg-blend-overlay bg-[#000000]/50",
+        "bg-background-screen rounded-xl",
+        backgroundSrc && "bg-[#000000]/50 bg-cover bg-center bg-blend-overlay",
         isMobile ? "bg-background-surface-3" : "",
         className,
       )}
@@ -302,10 +298,10 @@ const StylingPreview = ({
       <div
         id={container}
         className={cn(
-          "max-w-[1164px] mx-auto flex flex-col justify-center overflow-y-auto",
+          "mx-auto flex max-w-[1164px] flex-col justify-center overflow-y-auto",
           isMobile
-            ? "h-full py-[8px] gap-[16px]"
-            : "h-[calc(100%-120px)] py-[40px] gap-[40px]",
+            ? "h-full gap-[16px] py-[8px]"
+            : "h-[calc(100%-120px)] gap-[40px] py-[40px]",
         )}
       >
         <InlineChatStyles container={`#${container}`} chatStyles={chatStyles} />
@@ -340,7 +336,7 @@ const StepChatStyling = ({
 
   if (isMobile) {
     return (
-      <div className="w-full h-[calc(100%-3.5rem)] max-w-[600px] mx-auto px-4">
+      <div className="mx-auto h-[calc(100%-3.5rem)] w-full max-w-[600px] px-4">
         {/* <div className="text-center mb-6">
           <h2 className="text-2xl font-semibold text-text-primary mb-2">
             Message styling
@@ -352,11 +348,11 @@ const StepChatStyling = ({
 
         <Tabs
           defaultValue="settings"
-          className="w-full flex flex-col h-full overflow-hidden"
+          className="flex h-full w-full flex-col overflow-hidden"
         >
           <TabsList
             variant="dark-mobile"
-            className="grid w-full grid-cols-2 flex-shrink-0"
+            className="grid w-full flex-shrink-0 grid-cols-2"
           >
             <TabsTrigger value="settings">Settings</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
@@ -367,7 +363,7 @@ const StepChatStyling = ({
           </TabsContent>
 
           <TabsContent value="preview" className="h-[calc(100%-120px)]">
-            <p className="text-xs text-text-placeholder pb-[16px]">
+            <p className="text-text-placeholder pb-[16px] text-xs">
               View how your changes will affect the session experience.
             </p>
             <StylingPreview
@@ -388,32 +384,32 @@ const StepChatStyling = ({
 
   // Desktop layout
   return (
-    <div className="w-full flex flex-row max-w-[1526px] min-w-80 px-[40px] gap-[40px] justify-center">
+    <div className="flex w-full max-w-[1526px] min-w-80 flex-row justify-center gap-[40px] px-[40px]">
       <div
         className={cn(
-          "xl:w-[45%] min-w-[400px] max-w-[646px] px-[20px] py-[24px] rounded-[16px] flex flex-col gap-[32px]",
+          "flex max-w-[646px] min-w-[400px] flex-col gap-[32px] rounded-[16px] px-[20px] py-[24px] xl:w-[45%]",
           "bg-background-surface-3",
         )}
       >
         <div className="flex flex-col gap-[8px]">
           <div className="flex flex-col gap-[8px]">
-            <div className="font-[500] text-[20px] leading-[32px] text-text-primary">
+            <div className="text-text-primary text-[20px] leading-[32px] font-[500]">
               Message styling
             </div>
-            <div className="font-[400] text-[16px] leading-[19px] text-text-primary">
+            <div className="text-text-primary text-[16px] leading-[19px] font-[400]">
               Set the stage
             </div>
           </div>
         </div>
         <StylingSettings />
       </div>
-      <div className="xl:w-[55%] h-full min-w-[400px] max-w-[760px] rounded-[16px] bg-background-surface-3 overflow-hidden">
+      <div className="bg-background-surface-3 h-full max-w-[760px] min-w-[400px] overflow-hidden rounded-[16px] xl:w-[55%]">
         <div className="px-[16px] py-[24px]">
           <div className="flex flex-col gap-[8px]">
-            <div className="font-[500] text-[20px] leading-[32px] text-text-primary">
+            <div className="text-text-primary text-[20px] leading-[32px] font-[500]">
               Styling preview
             </div>
-            <div className="font-[400] text-[16px] leading-[19px] text-text-primary">
+            <div className="text-text-primary text-[16px] leading-[19px] font-[400]">
               View how your changes will affect the session experience.
             </div>
           </div>
@@ -424,7 +420,7 @@ const StepChatStyling = ({
           backgroundId={
             backgroundId ? new UniqueEntityID(backgroundId) : undefined
           }
-          className="rounded-none h-full items-center"
+          className="h-full items-center rounded-none"
           characterCardId={characterCardId}
           userCharacterCardId={userCharacterCardId}
         />

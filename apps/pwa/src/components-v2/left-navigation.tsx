@@ -7,7 +7,7 @@ import { Menu, Page, useAppStore } from "@/app/stores/app-store";
 import { useValidationStore } from "@/app/stores/validation-store";
 import { cn } from "@/components-v2/lib/utils";
 import { MobileUpdater } from "@/components-v2/mobile-updater";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 
 function openInNewTab(url: string) {
@@ -47,7 +47,7 @@ const NavButton = forwardRef<
         ref={forwardedRef}
         variant={variant}
         className={cn(
-          "relative w-[61px] h-[60px] px-[8px] py-[12px]",
+          "relative h-[60px] w-[61px] px-[8px] py-[12px]",
           "flex flex-col items-center gap-0",
           variant === "ghost" &&
             "text-text-input-subtitle hover:text-text-primary",
@@ -57,22 +57,22 @@ const NavButton = forwardRef<
         onClick={onClick}
       >
         {active && (
-          <div className="absolute left-0 inset-y-0 w-[3px] bg-primary-heavy" />
+          <div className="bg-primary-heavy absolute inset-y-0 left-0 w-[3px]" />
         )}
         {active && activeIcon ? activeIcon : icon}
         {!!badge && (
           <div
             className={cn(
               "absolute top-[6px] right-[11px] rounded-full",
-              "py-[2px] px-[5px] h-[15px] max-w-[16px] bg-status-destructive-light grid place-content-center",
+              "bg-status-destructive-light grid h-[15px] max-w-[16px] place-content-center px-[5px] py-[2px]",
             )}
           >
-            <div className="font-[400] text-[9px] leading-[8px] text-[#FFFFFF]">
+            <div className="text-[9px] leading-[8px] font-[400] text-[#FFFFFF]">
               {badge}
             </div>
           </div>
         )}
-        <div className="font-[400] text-[10px]">{name}</div>
+        <div className="text-[10px] font-[400]">{name}</div>
       </Button>
     );
   },
@@ -111,26 +111,26 @@ const MobileNavItem = forwardRef<
         {...props}
         ref={forwardedRef}
         className={cn(
-          "relative w-full h-9 px-4 py-0",
-          "flex items-center gap-1.5 justify-start",
+          "relative h-9 w-full px-4 py-0",
+          "flex items-center justify-start gap-1.5",
           "text-text-primary",
-          active && "border-l-[3px] border-primary-heavy",
+          active && "border-primary-heavy border-l-[3px]",
           className,
         )}
         onClick={onClick}
       >
-        <div className="flex items-center justify-center w-6 h-6 text-current">
+        <div className="flex h-6 w-6 items-center justify-center text-current">
           {active && activeIcon ? activeIcon : icon}
         </div>
-        <div className="text-base font-normal leading-relaxed">{name}</div>
+        <div className="text-base leading-relaxed font-normal">{name}</div>
         {!!badge && (
           <div
             className={cn(
               "ml-auto rounded-full",
-              "py-[2px] px-[6px] h-[20px] min-w-[20px] bg-status-destructive-light grid place-content-center",
+              "bg-status-destructive-light grid h-[20px] min-w-[20px] place-content-center px-[6px] py-[2px]",
             )}
           >
-            <div className="font-[500] text-[11px] leading-[14px] text-[#FFFFFF]">
+            <div className="text-[11px] leading-[14px] font-[500] text-[#FFFFFF]">
               {badge}
             </div>
           </div>
@@ -165,26 +165,26 @@ const LeftNavigationMobile = ({ onNavigate }: { onNavigate?: () => void }) => {
   };
 
   return (
-    <nav className="w-full h-full bg-background-surface-2 flex flex-col">
+    <nav className="bg-background-surface-2 flex h-full w-full flex-col">
       {/* Header */}
-      <div className="flex items-center px-3.5 py-6 border-b border-border-dark">
+      <div className="border-border-dark flex items-center border-b px-3.5 py-6">
         <button
           onClick={() => {
             setActiveMenu(Menu.Play);
             useAppStore.getState().setActivePage(Page.Init);
             onNavigate?.();
           }}
-          className="hover:opacity-80 transition-opacity flex flex-row items-center gap-[10px]"
+          className="flex flex-row items-center gap-[10px] transition-opacity hover:opacity-80"
         >
           <SvgIcon name="astrsk_logo_full" width={85} height={20} />
-          <div className="text-base font-normal leading-relaxed text-text-body">
+          <div className="text-text-body text-base leading-relaxed font-normal">
             v{__APP_VERSION__}
           </div>
         </button>
       </div>
 
       {/* Main menu items */}
-      <div className="flex flex-col py-6 border-b border-border-dark">
+      <div className="border-border-dark flex flex-col border-b py-6">
         <div className="flex flex-col gap-4">
           <MobileNavItem
             name="Sessions"
@@ -224,14 +224,14 @@ const LeftNavigationMobile = ({ onNavigate }: { onNavigate?: () => void }) => {
         <div className="flex flex-col gap-4">
           <MobileNavItem
             name="Settings"
-            icon={<Settings className="min-w-6 min-h-6" />}
+            icon={<Settings className="min-h-6 min-w-6" />}
             active={activeMenu === Menu.Settings}
             activeIcon={<SvgIcon name="settings_solid" />}
             onClick={() => handleNavigationClick(Menu.Settings)}
           />
           <MobileNavItem
             name="Documentation"
-            icon={<Book className="min-w-6 min-h-6" />}
+            icon={<Book className="min-h-6 min-w-6" />}
             onClick={() => openInNewTab("https://docs.astrsk.ai/")}
           />
           <MobileUpdater />
@@ -239,7 +239,7 @@ const LeftNavigationMobile = ({ onNavigate }: { onNavigate?: () => void }) => {
       </div>
 
       {/* Bottom section */}
-      <div className="flex-1 flex flex-col justify-end px-3 pt-3 pb-8">
+      <div className="flex flex-1 flex-col justify-end px-3 pt-3 pb-8">
         {/* TODO: subscription */}
       </div>
     </nav>

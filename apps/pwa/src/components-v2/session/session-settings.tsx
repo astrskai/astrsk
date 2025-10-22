@@ -41,8 +41,11 @@ import {
   EmptyFlow,
 } from "@/components-v2/session/edit-session/edit-flow-and-agents";
 import { EditLanguage } from "@/components-v2/session/edit-session/edit-language";
-import { SessionExportDialog, AgentModelTierInfo } from "@/components-v2/session/components/session-export-dialog";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import {
+  SessionExportDialog,
+  AgentModelTierInfo,
+} from "@/components-v2/session/components/session-export-dialog";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import {
   Tooltip,
   TooltipContent,
@@ -83,61 +86,69 @@ const Section = forwardRef<
     error?: boolean;
     onboarding?: boolean;
   }
->(({ title, subtitle, children, className, fill, error, onboarding, ...props }, ref) => {
-  return (
-    <div
-      ref={ref}
-      className={cn(
-        "group/section relative bg-background-surface-3 rounded-[8px] cursor-pointer",
-        "transition-all duration-200 ease-in-out",
-        "border border-border-normal hover:border-text-primary hover:ring hover:ring-text-primary",
-        onboarding && "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary",
-        className,
-      )}
-      {...props}
-    >
-      <div className="p-[16px] pb-0 flex flex-row justify-between items-center">
-        <div className="flex flex-row gap-[16px]">
-          <div className="font-[600] text-[20px] leading-[24px] text-text-primary break-words">
-            {title}
-          </div>
-          {subtitle && (
-            <div className="font-[500] text-[20px] leading-[24px] text-text-primary">
-              {subtitle}
+>(
+  (
+    { title, subtitle, children, className, fill, error, onboarding, ...props },
+    ref,
+  ) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "group/section bg-background-surface-3 relative cursor-pointer rounded-[8px]",
+          "transition-all duration-200 ease-in-out",
+          "border-border-normal hover:border-text-primary hover:ring-text-primary border hover:ring",
+          onboarding &&
+            "border-border-selected-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+          className,
+        )}
+        {...props}
+      >
+        <div className="flex flex-row items-center justify-between p-[16px] pb-0">
+          <div className="flex flex-row gap-[16px]">
+            <div className="text-text-primary text-[20px] leading-[24px] font-[600] break-words">
+              {title}
             </div>
-          )}
+            {subtitle && (
+              <div className="text-text-primary text-[20px] leading-[24px] font-[500]">
+                {subtitle}
+              </div>
+            )}
+          </div>
+          <div
+            className={cn(
+              "opacity-0 transition-opacity duration-200 ease-in-out group-hover/section:opacity-100",
+              onboarding && "opacity-100",
+            )}
+          >
+            <SvgIcon name="edit" size={24} />
+          </div>
         </div>
-        <div className={cn(
-          "transition-opacity duration-200 ease-in-out opacity-0 group-hover/section:opacity-100",
-          onboarding && "opacity-100"
-        )}>
-          <SvgIcon name="edit" size={24} />
-        </div>
+        <div className={cn(!fill && "m-[16px]", className)}>{children}</div>
+        {error && (
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-[-1px] rounded-[8px]",
+              "inset-ring-status-destructive-light inset-ring-2",
+            )}
+          />
+        )}
       </div>
-      <div className={cn(!fill && "m-[16px]", className)}>{children}</div>
-      {error && (
-        <div
-          className={cn(
-            "absolute inset-[-1px] rounded-[8px] pointer-events-none",
-            "inset-ring-2 inset-ring-status-destructive-light",
-          )}
-        />
-      )}
-    </div>
-  );
-});
+    );
+  },
+);
 Section.displayName = "Section";
 
 const SectionCarousel = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Carousel>
-      <CarouselContent className="ml-0 mr-4">{children}</CarouselContent>
+      <CarouselContent className="mr-4 ml-0">{children}</CarouselContent>
       <CarouselPrevious
-        className="disabled:hidden left-4 bg-background-card border border-border-container"
+        className="bg-background-card border-border-container left-4 border disabled:hidden"
         variant="ghost_white"
       />
       <CarouselNext
-        className="disabled:hidden right-4 bg-background-card border border-border-container"
+        className="bg-background-card border-border-container right-4 border disabled:hidden"
         variant="ghost_white"
       />
     </Carousel>
@@ -157,13 +168,14 @@ const SessionSettings = ({
 }) => {
   const { activePage } = useAppStore();
   const { selectedSessionId } = useSessionStore();
-  
+
   // Session onboarding
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
   const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
-  const shouldShowResourceManagementTooltip = !sessionOnboardingSteps.sessionEdit;
+  const shouldShowResourceManagementTooltip =
+    !sessionOnboardingSteps.sessionEdit;
   const [showSectionAnimation, setShowSectionAnimation] = useState(false);
-  
+
   // Detect if there's enough space for the tooltip on the left
   const [hasSpaceForTooltip, setHasSpaceForTooltip] = useState(false);
   useEffect(() => {
@@ -172,34 +184,34 @@ const SessionSettings = ({
       setHasSpaceForTooltip(window.innerWidth >= 1464);
     };
     checkSpace();
-    window.addEventListener('resize', checkSpace);
-    return () => window.removeEventListener('resize', checkSpace);
+    window.addEventListener("resize", checkSpace);
+    return () => window.removeEventListener("resize", checkSpace);
   }, []);
-  
+
   // Derive tooltip visibility directly from onboarding state (no useState needed!)
   const showResourceTooltip = shouldShowResourceManagementTooltip;
 
   // Handle completing the session edit onboarding step
   const handleResourceManagementGotIt = useCallback(() => {
     // Complete the onboarding step (this will hide the tooltip automatically)
-    setSessionOnboardingStep('sessionEdit', true);
-    
+    setSessionOnboardingStep("sessionEdit", true);
+
     // Trigger animation on "Got it!" press
     setShowSectionAnimation(true);
     setTimeout(() => {
       setShowSectionAnimation(false);
     }, 1500);
   }, [setSessionOnboardingStep, setIsOpenSettings]);
-  
+
   const [session, invalidateSession] = useSession(selectedSessionId);
   const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
-  
+
   // Auto-save functionality
   const { autoSave } = useAutoSaveSession({
     session: session ?? null,
     debounceMs: 0,
   });
-  
+
   // Title editing state
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
@@ -322,15 +334,16 @@ const SessionSettings = ({
   return (
     <div
       className={cn(
-        "w-full min-w-[873px] max-w-[1024px] mx-auto my-[80px] p-[16px] rounded-[16px] flex flex-col relative",
+        "relative mx-auto my-[80px] flex w-full max-w-[1024px] min-w-[873px] flex-col rounded-[16px] p-[16px]",
         "bg-background-surface-2",
-        shouldShowResourceManagementTooltip && "shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary",
+        shouldShowResourceManagementTooltip &&
+          "border-border-selected-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
       )}
     >
-      <div className="flex flex-col space-y-0 gap-[16px] justify-end">
+      <div className="flex flex-col justify-end gap-[16px] space-y-0">
         <div className="flex flex-row justify-between">
-          <div className="flex flex-row gap-[16px] pr-[16px] items-center">
-            <div className="font-[600] text-[16px] leading-[25.6px] text-text-secondary">
+          <div className="flex flex-row items-center gap-[16px] pr-[16px]">
+            <div className="text-text-secondary text-[16px] leading-[25.6px] font-[600]">
               Session
             </div>
             {isEditingTitle ? (
@@ -343,7 +356,7 @@ const SessionSettings = ({
                     if (e.key === "Enter") handleSaveTitle();
                     if (e.key === "Escape") handleCancelEdit();
                   }}
-                  className="font-[400] text-[16px] leading-[25.6px] text-text-primary bg-transparent border-b border-text-primary outline-none min-w-[200px] max-w-[820px]"
+                  className="text-text-primary border-text-primary max-w-[820px] min-w-[200px] border-b bg-transparent text-[16px] leading-[25.6px] font-[400] outline-none"
                   style={{
                     width: `${Math.max(editedTitle.length * 8 + 16, 200)}px`,
                   }}
@@ -351,20 +364,20 @@ const SessionSettings = ({
                 />
                 <button
                   onClick={handleSaveTitle}
-                  className="p-1 hover:bg-background-surface-4 rounded transition-colors flex-shrink-0"
+                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <Check className="w-4 h-4 text-status-success" />
+                  <Check className="text-status-success h-4 w-4" />
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="p-1 hover:bg-background-surface-4 rounded transition-colors flex-shrink-0"
+                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </button>
               </>
             ) : (
               <>
-                <div className="font-[400] text-[16px] leading-[25.6px] text-text-primary max-w-[870px] truncate">
+                <div className="text-text-primary max-w-[870px] truncate text-[16px] leading-[25.6px] font-[400]">
                   {session.title}
                 </div>
                 <button
@@ -372,9 +385,9 @@ const SessionSettings = ({
                     setEditedTitle(session.title || "");
                     setIsEditingTitle(true);
                   }}
-                  className="p-1 hover:bg-background-surface-4 rounded transition-colors flex-shrink-0"
+                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <Pencil className="w-4 h-4 text-text-subtle hover:text-text-primary transition-colors" />
+                  <Pencil className="text-text-subtle hover:text-text-primary h-4 w-4 transition-colors" />
                 </button>
               </>
             )}
@@ -415,13 +428,15 @@ const SessionSettings = ({
                   />
                 )}
                 {session?.aiCharacterCardIds.length > 0 ? (
-                  session?.aiCharacterCardIds.map((cardId: UniqueEntityID, index: number) => (
-                    <CardListItem
-                      key={cardId.toString()}
-                      cardId={cardId}
-                      {...(index === 0 && { label: "AI character" })}
-                    />
-                  ))
+                  session?.aiCharacterCardIds.map(
+                    (cardId: UniqueEntityID, index: number) => (
+                      <CardListItem
+                        key={cardId.toString()}
+                        cardId={cardId}
+                        {...(index === 0 && { label: "AI character" })}
+                      />
+                    ),
+                  )
                 ) : (
                   <EmptyCard
                     label="AI character"
@@ -479,24 +494,28 @@ const SessionSettings = ({
                 await updateSession(newValue);
               }}
               trigger={
-                <Section title="Language & Translation" className="h-full" onboarding={showSectionAnimation}>
+                <Section
+                  title="Language & Translation"
+                  className="h-full"
+                  onboarding={showSectionAnimation}
+                >
                   <div className="w-full">
                     <div className="flex flex-col gap-[16px]">
                       <div className="flex flex-col gap-[8px]">
-                        <div className="font-[400] text-[16px] leading-[19px] text-text-input-subtitle">
+                        <div className="text-text-input-subtitle text-[16px] leading-[19px] font-[400]">
                           Displayed language
                         </div>
-                        <div className="max-w-[150px] font-[600] text-[16px] leading-[19px] text-text-primary">
+                        <div className="text-text-primary max-w-[150px] text-[16px] leading-[19px] font-[600]">
                           {languagesLabelMap.get(
                             session?.translation?.displayLanguage ?? "",
                           )}
                         </div>
                       </div>
                       <div className="flex flex-col gap-[8px]">
-                        <div className="font-[400] text-[16px] leading-[19px] text-text-input-subtitle">
+                        <div className="text-text-input-subtitle text-[16px] leading-[19px] font-[400]">
                           AI understanding language
                         </div>
-                        <div className="max-w-[150px] font-[600] text-[16px] leading-[19px] text-text-primary">
+                        <div className="text-text-primary max-w-[150px] text-[16px] leading-[19px] font-[600]">
                           {languagesLabelMap.get(
                             session?.translation?.promptLanguage ?? "",
                           )}
@@ -517,7 +536,11 @@ const SessionSettings = ({
                 await updateSession(newValue);
               }}
               trigger={
-                <Section title="Background" className="h-full" onboarding={showSectionAnimation}>
+                <Section
+                  title="Background"
+                  className="h-full"
+                  onboarding={showSectionAnimation}
+                >
                   <div className="max-w-full">
                     <SelectedBackground backgroundId={session?.backgroundId} />
                   </div>
@@ -538,7 +561,7 @@ const SessionSettings = ({
               trigger={
                 <Section
                   title="Message styling"
-                  className="items-center h-full"
+                  className="h-full items-center"
                   onboarding={showSectionAnimation}
                 >
                   <ColorTable chatStyles={session?.chatStyles} />
@@ -553,26 +576,27 @@ const SessionSettings = ({
 
       {/* Resource Management Tooltip */}
       {showResourceTooltip && (
-        <div 
+        <div
           className={cn(
-            "absolute px-4 py-3 bg-background-surface-2 rounded-2xl shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] border-1 border-border-selected-primary flex flex-col justify-center items-end gap-2 z-10",
-            hasSpaceForTooltip 
-              ? "top-4 left-[-340px] w-80 max-w-80"  // Outside to the left when space available
-              : "top-4 left-4 w-80 max-w-80 right-4"  // Inside at the top when no space
+            "bg-background-surface-2 border-border-selected-primary absolute z-10 flex flex-col items-end justify-center gap-2 rounded-2xl border-1 px-4 py-3 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+            hasSpaceForTooltip
+              ? "top-4 left-[-340px] w-80 max-w-80" // Outside to the left when space available
+              : "top-4 right-4 left-4 w-80 max-w-80", // Inside at the top when no space
           )}
         >
-          <div className="self-stretch justify-start text-text-primary text-sm font-semibold leading-tight">
+          <div className="text-text-primary justify-start self-stretch text-sm leading-tight font-semibold">
             Local resource management
           </div>
-          <div className="self-stretch justify-start text-text-primary text-xs font-normal">
-            This area manages local resources specific to this session only. Session-specific assets & tools.
+          <div className="text-text-primary justify-start self-stretch text-xs font-normal">
+            This area manages local resources specific to this session only.
+            Session-specific assets & tools.
           </div>
-          <div className="inline-flex justify-start items-start gap-2">
+          <div className="inline-flex items-start justify-start gap-2">
             <button
               onClick={handleResourceManagementGotIt}
-              className="min-w-20 px-3 py-1.5 bg-background-surface-light rounded-[20px] inline-flex flex-col justify-center items-center gap-2 hover:bg-background-surface-4 transition-colors"
+              className="bg-background-surface-light hover:bg-background-surface-4 inline-flex min-w-20 flex-col items-center justify-center gap-2 rounded-[20px] px-3 py-1.5 transition-colors"
             >
-              <div className="justify-center text-text-contrast-text text-xs font-semibold">
+              <div className="text-text-contrast-text justify-center text-xs font-semibold">
                 Got it
               </div>
             </button>

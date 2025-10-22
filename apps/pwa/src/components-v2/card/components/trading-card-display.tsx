@@ -2,8 +2,8 @@ import { PropsWithChildren, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/shared/utils";
 
-import { SvgIcon } from "@/components-v2/svg-icon";
-import { Typo3XLarge, TypoSmall } from "@/components-v2/typo";
+import { SvgIcon } from "@/components/ui/svg-icon";
+import { Typo3XLarge, TypoSmall } from "@/components/ui/typo";
 import { Card as CardUI } from "@/components-v2/ui/card";
 import { Skeleton } from "@/components-v2/ui/skeleton";
 import { Card, CardType, CharacterCard } from "@/modules/card/domain";

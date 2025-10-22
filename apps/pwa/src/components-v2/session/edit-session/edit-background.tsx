@@ -19,8 +19,8 @@ import {
   StepBackgroundSchema,
   StepBackgroundSchemaType,
 } from "@/components-v2/session/create-session/step-background";
-import { SvgIcon } from "@/components-v2/svg-icon";
-import { TypoBase, TypoLarge } from "@/components-v2/typo";
+import { SvgIcon } from "@/components/ui/svg-icon";
+import { TypoBase, TypoLarge } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components-v2/ui/dialog";
 import { SessionProps } from "@/modules/session/domain/session";
@@ -35,13 +35,13 @@ const SelectedBackground = ({
   const [asset] = useAsset(background?.assetId);
 
   return (
-    <div className="h-[198px] rounded-[14px] overflow-hidden bg-background-screen">
+    <div className="bg-background-screen h-[198px] overflow-hidden rounded-[14px]">
       {background && isDefaultBackground(background) ? (
         <div style={{ height: "198px", position: "relative" }}>
           <img
             src={background.src}
             alt={background.name ?? "Background"}
-            className="pointer-events-none w-full h-full object-cover"
+            className="pointer-events-none h-full w-full object-cover"
           />
         </div>
       ) : (
@@ -50,7 +50,7 @@ const SelectedBackground = ({
             <img
               src={asset}
               alt={background?.name ?? "Background"}
-              className="pointer-events-none w-full h-full object-cover"
+              className="pointer-events-none h-full w-full object-cover"
             />
           </div>
         )
@@ -163,7 +163,7 @@ const EditBackground = ({
             <DialogContent className="pt-14">
               <DialogTitle>Add background</DialogTitle>
               <div
-                className="border-dashed bg-background-card hover:bg-background-input rounded-2xl flex flex-col justify-center items-center p-8 cursor-pointer"
+                className="bg-background-card hover:bg-background-input flex cursor-pointer flex-col items-center justify-center rounded-2xl border-dashed p-8"
                 onClick={() => refBackgroundFileInput.current?.click()}
                 onDragOver={(e) => {
                   e.preventDefault();

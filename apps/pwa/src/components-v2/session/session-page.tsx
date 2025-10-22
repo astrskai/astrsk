@@ -13,7 +13,7 @@ import { cn } from "@/components-v2/lib/utils";
 import { CardTab } from "@/components-v2/session/create-session/step-cards";
 import { SessionMain } from "@/components-v2/session/session-main";
 import { SessionSettings } from "@/components-v2/session/session-settings";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { logger } from "@/shared/utils";
@@ -40,7 +40,7 @@ export default function SessionPage({ className }: { className?: string }) {
       logger.error("Session not found");
       navigate({ to: "/", replace: true });
     }
-  }, [isLoading, navigate, session])
+  }, [isLoading, navigate, session]);
 
   // Session onboarding
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();

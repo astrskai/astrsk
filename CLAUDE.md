@@ -50,27 +50,142 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
 - Vite (Build tool)
 - Vitest (Testing)
 
-## Project Structure
+## Project Structure & Organization Principles
+
+### **Approach: Feature-based + Colocation**
+> "Keep files as close as possible to where they are used" - Kent C. Dodds
+
+### **Current Structure** (components-v2 → will be renamed to components)
 
 ```
 apps/pwa/src/
-├── components-v2/           # UI layer (CLEANUP TARGET)
-│   ├── session/            # NEW: Session domain (organized)
-│   ├── flow/               # NEW: Flow domain
-│   ├── settings/           # NEW: Settings domain
-│   └── shared/             # NEW: Shared components
-├── hooks/                   # NEW: Centralized hooks
-│   └── ui/
-│       └── useBreakpoint.ts  # NEW: Breakpoint hook
-├── utils/
-│   └── breakpoints.ts      # NEW: Single source of truth
-├── app/
-│   ├── queries/            # Query factories and mutations
+├── features/                # Business domains (Feature-based)
+│   ├── session/            # Session management
+│   │   ├── components/     # SessionPanel, SessionList
+│   │   ├── hooks/          # useSession, useSessionMessages
+│   │   └── stores/         # sessionStore (if needed)
+│   ├── flow/               # Flow editor
+│   ├── card/               # Card management
+│   └── settings/           # Settings
+│
+├── app/                     # Global app configuration
+│   ├── queries/            # TanStack Query factories
 │   ├── services/           # Business logic services
-│   ├── stores/             # State management
-│   └── feature-flags/      # NEW: Phase rollback system
-└── flow-multi/             # Flow editor components
+│   └── stores/             # Global state management
+│
+├── components/              # Shared components (domain-independent)
+│   ├── ui/                 # shadcn/ui + basic UI components
+│   │   ├── button.tsx      # (shadcn/ui)
+│   │   ├── avatar.tsx      # Additional UI
+│   │   ├── loading.tsx
+│   │   └── ...
+│   ├── layout/             # Layout/navigation
+│   │   ├── top-bar.tsx
+│   │   ├── sidebar.tsx
+│   │   └── ...
+│   ├── dialogs/            # Shared dialogs/modals
+│   │   ├── confirm.tsx
+│   │   ├── import-dialog.tsx
+│   │   └── ...
+│   └── system/             # System/infrastructure
+│       ├── pwa-register.tsx
+│       ├── theme-provider.tsx
+│       └── ...
+│
+├── lib/                     # Utilities
+│   ├── utils/
+│   └── hooks/              # Shared hooks (domain-independent)
+│
+└── flow-multi/             # Legacy flow editor (incremental migration)
 ```
+
+### **Organization Principles**
+
+#### **1. Feature-based Structure (Domain-based)**
+Group business logic by domain
+```typescript
+// ✅ GOOD: Related code together
+features/session/
+├── components/SessionPanel.tsx
+├── hooks/useSession.ts          // Used only by SessionPanel
+└── stores/sessionStore.ts       // Session domain only
+
+// ❌ BAD: Scattered across folders
+components/SessionPanel.tsx
+hooks/useSession.ts              // Far away
+stores/sessionStore.ts           // Even farther
+```
+
+#### **2. Colocation Principle**
+Place files close to where they are used
+```typescript
+// ✅ GOOD: Inside the feature
+features/session/hooks/useSessionMessages.ts
+
+// ❌ BAD: Global hooks folder (if not used in multiple places)
+lib/hooks/useSessionMessages.ts
+```
+
+#### **3. Progressive Disclosure**
+Create structure as needed
+```
+# Step 1: Start small
+session/
+└── SessionPanel.tsx
+
+# Step 2: Separate when it grows
+session/
+├── components/
+│   └── SessionPanel.tsx
+└── hooks/
+    └── useSession.ts
+
+# Step 3: Subdivide when it grows more
+session/
+├── components/
+│   ├── panel/
+│   │   ├── SessionPanel.tsx
+│   │   └── SessionHeader.tsx
+│   └── list/
+├── hooks/
+└── stores/
+```
+
+#### **4. Shared Components Criteria**
+Criteria for moving to `components/`:
+- ✅ Used in **3+ domains**
+- ✅ **Domain-independent** (no business logic)
+- ✅ Acts like a **UI library** (Button, Dialog, Loading, etc.)
+
+```typescript
+// ✅ components/ui/avatar.tsx
+// Reason: Used in session, flow, and card
+
+// ❌ features/session/components/SessionAvatar.tsx
+// Reason: Contains session-specific logic
+```
+
+#### **5. Naming Convention**
+- **Folder names**: kebab-case (`session-panel/`)
+- **File names**: kebab-case (`session-panel.tsx`)
+- **Component names**: PascalCase (`SessionPanel`)
+- **Functions/Variables**: camelCase (`useSession`, `sessionStore`)
+
+### **Migration Strategy**
+
+**Phase 1 (Current)**: Clean up root files
+- Classify 36 loose files into `ui/`, `layout/`, `dialogs/`, `system/`
+
+**Phase 2-3**: Structure domain internals
+- Organize `session/`, `flow/`, `card/` internals into `components/`, `hooks/`
+
+**Phase 4**: Feature modularization
+- Convert each feature into independent modules as needed (monorepo preparation)
+
+### **References**
+- [Kent C. Dodds - Colocation](https://kentcdodds.com/blog/colocation)
+- [Bulletproof React](https://github.com/alan2207/bulletproof-react)
+- [Next.js Project Structure](https://nextjs.org/docs/getting-started/project-structure)
 
 ## Component Patterns (Cleanup Project)
 
@@ -126,7 +241,7 @@ pnpm dev:pwa           # Start PWA dev server
 
 # Testing
 pnpm test              # Run all tests
-pnpm test --coverage   # Coverage report (must be e80%)
+pnpm test --coverage   # Coverage report (must be ≥80%)
 
 # Code Quality
 pnpm exec jscpd apps/pwa/src --threshold 5  # Duplication check (<5%)

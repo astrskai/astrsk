@@ -9,8 +9,8 @@ import {
 import { CardService } from "@/app/services";
 import { HeaderBar, SortingBar } from "@/components-v2/card/components";
 import CardGrid from "@/components-v2/card/components/card-grid";
-import { SearchInput } from "@/components-v2/search-input";
-import { TypoBase, Typo3XLarge } from "@/components-v2/typo";
+import { SearchInput } from "@/components/ui/search-input";
+import { TypoBase, Typo3XLarge } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { Card } from "@/components-v2/ui/card";
 import { CardType } from "@/modules/card/domain";
@@ -82,11 +82,11 @@ export const NoCardsFound: React.FC<NoCardsFoundProps> = ({
   };
 
   return (
-    <div className={`flex flex-col gap-8 items-center`}>
-      <div className="flex flex-col gap-4 items-center">
+    <div className={`flex flex-col items-center gap-8`}>
+      <div className="flex flex-col items-center gap-4">
         <Typo3XLarge
           className={cn(
-            "w-[600px] text-text-input-subtitle text-center truncate",
+            "text-text-input-subtitle w-[600px] truncate text-center",
             isMobile && "w-full text-base",
           )}
         >
@@ -97,7 +97,7 @@ export const NoCardsFound: React.FC<NoCardsFoundProps> = ({
               : "No plot cards available"}
         </Typo3XLarge>
         {keyword && keyword.length > 0 ? (
-          <TypoBase className="text-background-dialog text-center leading-normal truncate">
+          <TypoBase className="text-background-dialog truncate text-center leading-normal">
             Try a different name, tag, or keyword to <br />
             find the {cardType === CardType.Character
               ? "character"
@@ -163,8 +163,8 @@ const CardList: React.FC<CardListProps> = ({
   };
 
   return (
-    <Card className="px-3 rounded-5 bg-background-container backdrop-blur-xs text-card-foreground p-4 border-secondary shadow-lg flex flex-col h-[calc(100%-4rem)] min-h-0 overflow-hidden grow translate-y-4">
-      <div className="space-y-4 flex flex-col h-full min-h-0">
+    <Card className="rounded-5 bg-background-container text-card-foreground border-secondary flex h-[calc(100%-4rem)] min-h-0 grow translate-y-4 flex-col overflow-hidden p-4 px-3 shadow-lg backdrop-blur-xs">
+      <div className="flex h-full min-h-0 flex-col space-y-4">
         <HeaderBar
           title={title}
           onCreate={onCreate}
@@ -179,7 +179,7 @@ const CardList: React.FC<CardListProps> = ({
         />
         {cards.length === 0 ? (
           searchQuery.length > 0 ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex h-full items-center justify-center">
               <NoCardsFound
                 cardType={cardType}
                 onCreate={onCreate}
@@ -187,7 +187,7 @@ const CardList: React.FC<CardListProps> = ({
               />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex h-full items-center justify-center">
               <NoCardsFound cardType={cardType} onCreate={onCreate} />
             </div>
           )

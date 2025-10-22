@@ -1,53 +1,58 @@
 import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { SearchInput } from "@/components-v2/search-input";
+import { SearchInput } from "@/components/ui/search-input";
 import { ParameterSettingsFields } from "@/flow-multi/panels/parameter/parameter-settings/parameter-settings-fields";
 import { ParameterPanelProps } from "./parameter-panel-types";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { useUpdateAgentParametersQueue } from "@/app/queries/agent/mutations/parameter-mutations";
 import { toast } from "sonner";
 
-
-export function ParameterPanel({ 
-  flowId, 
-  agentId 
-}: ParameterPanelProps) {
+export function ParameterPanel({ flowId, agentId }: ParameterPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Get queue-based mutation hook for saving all changes
   const updateParameters = useUpdateAgentParametersQueue(agentId || "");
-  
+
   // Query only for agent parameters - not the entire agent
-  const { data: parameters, isLoading, error } = useQuery({
+  const {
+    data: parameters,
+    isLoading,
+    error,
+  } = useQuery({
     ...agentQueries.parameters(agentId),
     enabled: !!agentId && !updateParameters.isProcessing,
   });
-  
+
   // Handle parameter changes - save immediately without debouncing
-  const handleParameterChange = useCallback((parameterId: string, enabled: boolean, value?: any) => {
-    if (!parameters) return;
-    
-    // Create new Maps from the current parameters
-    const enabledParameters = new Map<string, boolean>(parameters.enabledParameters);
-    const parameterValues = new Map<string, any>(parameters.parameterValues);
-    
-    // Update the specific parameter
-    enabledParameters.set(parameterId, enabled);
-    if (enabled && value !== undefined) {
-      parameterValues.set(parameterId, value);
-    } else if (!enabled) {
-      parameterValues.delete(parameterId);
-    }
-    
-    // Queue the update - ensures all changes are saved
-    updateParameters.mutate(enabledParameters, parameterValues);
-  }, [parameters, updateParameters]);
+  const handleParameterChange = useCallback(
+    (parameterId: string, enabled: boolean, value?: any) => {
+      if (!parameters) return;
+
+      // Create new Maps from the current parameters
+      const enabledParameters = new Map<string, boolean>(
+        parameters.enabledParameters,
+      );
+      const parameterValues = new Map<string, any>(parameters.parameterValues);
+
+      // Update the specific parameter
+      enabledParameters.set(parameterId, enabled);
+      if (enabled && value !== undefined) {
+        parameterValues.set(parameterId, value);
+      } else if (!enabled) {
+        parameterValues.delete(parameterId);
+      }
+
+      // Queue the update - ensures all changes are saved
+      updateParameters.mutate(enabledParameters, parameterValues);
+    },
+    [parameters, updateParameters],
+  );
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center bg-background-surface-2">
-        <div className="flex items-center gap-2 text-text-subtle">
+      <div className="bg-background-surface-2 flex h-full items-center justify-center">
+        <div className="text-text-subtle flex items-center gap-2">
           <span>Loading parameters...</span>
         </div>
       </div>
@@ -57,20 +62,22 @@ export function ParameterPanel({
   // Empty state
   if (!parameters) {
     return (
-      <div className="h-full flex items-center justify-center bg-background-surface-2">
-        <div className="flex items-center gap-2 text-text-subtle">
+      <div className="bg-background-surface-2 flex h-full items-center justify-center">
+        <div className="text-text-subtle flex items-center gap-2">
           <span>Parameters not found</span>
         </div>
       </div>
     );
   }
-  
+
   // Parameters should already be Maps from the query select function
-  const initialEnabledParameters = parameters.enabledParameters || new Map<string, boolean>();
-  const initialParameterValues = parameters.parameterValues || new Map<string, any>();
+  const initialEnabledParameters =
+    parameters.enabledParameters || new Map<string, boolean>();
+  const initialParameterValues =
+    parameters.parameterValues || new Map<string, any>();
 
   return (
-    <div className="h-full flex flex-col bg-background-surface-2 p-4">
+    <div className="bg-background-surface-2 flex h-full flex-col p-4">
       <SearchInput
         placeholder="Search"
         value={searchTerm}

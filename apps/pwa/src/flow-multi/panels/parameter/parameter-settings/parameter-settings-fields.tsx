@@ -7,8 +7,8 @@ import { useState, useEffect } from "react";
 
 import { Parameter, parameterList } from "@/shared/task/domain/parameter";
 
-import { SearchInput } from "@/components-v2/search-input";
-import { Typo2XLarge, TypoBase } from "@/components-v2/typo";
+import { SearchInput } from "@/components/ui/search-input";
+import { Typo2XLarge, TypoBase } from "@/components/ui/typo";
 import { Card, CardContent } from "@/components-v2/ui/card";
 import { Input } from "@/components-v2/ui/input";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
@@ -134,14 +134,14 @@ const ParameterItem = ({
   // If disabled (collapsed state)
   if (!enabled) {
     return (
-      <div className="self-stretch inline-flex justify-start items-start gap-2 mb-2">
+      <div className="mb-2 inline-flex items-start justify-start gap-2 self-stretch">
         <Switch
           checked={enabled}
           onCheckedChange={handleEnabledChange}
           size="small"
         />
-        <div className="flex-1 p-2 bg-background-surface-2 rounded-lg outline outline-1 outline-offset-[-1px] outline-border-normal inline-flex justify-start items-center gap-2">
-          <div className="justify-start text-text-secondary text-xs font-normal">
+        <div className="bg-background-surface-2 outline-border-normal inline-flex flex-1 items-center justify-start gap-2 rounded-lg p-2 outline outline-1 outline-offset-[-1px]">
+          <div className="text-text-secondary justify-start text-xs font-normal">
             {parameter.label}
           </div>
         </div>
@@ -152,24 +152,24 @@ const ParameterItem = ({
   // For boolean parameters when enabled
   if (parameter.type === "boolean") {
     return (
-      <div className="self-stretch inline-flex justify-start items-start gap-2 mb-2">
+      <div className="mb-2 inline-flex items-start justify-start gap-2 self-stretch">
         <Switch
           checked={enabled}
           onCheckedChange={handleEnabledChange}
           size="small"
         />
-        <div className="flex-1 p-2 bg-background-surface-2 rounded-lg outline outline-1 outline-offset-[-1px] outline-border-normal inline-flex justify-start items-center gap-2">
+        <div className="bg-background-surface-2 outline-border-normal inline-flex flex-1 items-center justify-start gap-2 rounded-lg p-2 outline outline-1 outline-offset-[-1px]">
           <button
             onClick={() => handleValueChange(!value)}
-            className="p-[1.33px] bg-background-surface-3 rounded flex justify-start items-center gap-1.5"
+            className="bg-background-surface-3 flex items-center justify-start gap-1.5 rounded p-[1.33px]"
           >
-            <div className="w-3.5 h-3.5 relative rounded overflow-hidden flex items-center justify-center">
+            <div className="relative flex h-3.5 w-3.5 items-center justify-center overflow-hidden rounded">
               {Boolean(value) && (
-                <Check className="min-w-2.5 min-h-2.5 w-2.5 h-2.5 text-text-primary" />
+                <Check className="text-text-primary h-2.5 min-h-2.5 w-2.5 min-w-2.5" />
               )}
             </div>
           </button>
-          <div className="justify-start text-text-primary text-xs font-medium">
+          <div className="text-text-primary justify-start text-xs font-medium">
             {parameter.label}
           </div>
         </div>
@@ -179,23 +179,23 @@ const ParameterItem = ({
 
   // For other parameter types when enabled (expanded state)
   return (
-    <div className="self-stretch inline-flex justify-start items-start gap-2 mb-2">
+    <div className="mb-2 inline-flex items-start justify-start gap-2 self-stretch">
       <Switch
         checked={enabled}
         onCheckedChange={handleEnabledChange}
         size="small"
       />
-      <div className="flex-1 p-2 bg-background-surface-2 rounded-lg outline outline-1 outline-offset-[-1px] outline-border-normal inline-flex flex-col justify-start items-start gap-2">
-        <div className="self-stretch inline-flex justify-start items-center gap-2">
-          <div className="justify-start text-text-primary text-xs font-medium">
+      <div className="bg-background-surface-2 outline-border-normal inline-flex flex-1 flex-col items-start justify-start gap-2 rounded-lg p-2 outline outline-1 outline-offset-[-1px]">
+        <div className="inline-flex items-center justify-start gap-2 self-stretch">
+          <div className="text-text-primary justify-start text-xs font-medium">
             {parameter.label}
           </div>
         </div>
-        <div className="self-stretch flex flex-col justify-start items-start gap-1">
+        <div className="flex flex-col items-start justify-start gap-1 self-stretch">
           {parameter.type === "number" && (
             <>
-              <div className="self-stretch min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline outline-1 outline-offset-[-1px] outline-border-normal inline-flex justify-between items-center overflow-hidden">
-                <div className="flex-1 flex justify-start items-center gap-4">
+              <div className="bg-background-surface-0 outline-border-normal inline-flex min-h-8 items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline outline-1 outline-offset-[-1px]">
+                <div className="flex flex-1 items-center justify-start gap-4">
                   <input
                     type="number"
                     value={value as number}
@@ -203,18 +203,18 @@ const ParameterItem = ({
                     max={parameter.max}
                     step={parameter.step}
                     onChange={(e) => handleValueChange(Number(e.target.value))}
-                    className="justify-start text-text-primary text-xs font-normal bg-transparent outline-none w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="text-text-primary w-full [appearance:textfield] justify-start bg-transparent text-xs font-normal outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                 </div>
                 <div
-                  className="w-4 h-4 relative overflow-hidden cursor-pointer"
+                  className="relative h-4 w-4 cursor-pointer overflow-hidden"
                   onClick={() => handleValueChange(parameter.default)}
                 >
-                  <RefreshCcw className="w-3 h-3 absolute left-[2px] top-[2px] text-background-surface-5" />
+                  <RefreshCcw className="text-background-surface-5 absolute top-[2px] left-[2px] h-3 w-3" />
                 </div>
               </div>
-              <div className="self-stretch px-4 inline-flex justify-center items-center gap-2">
-                <div className="flex-1 justify-start text-text-info text-[10px] font-medium leading-none">
+              <div className="inline-flex items-center justify-center gap-2 self-stretch px-4">
+                <div className="text-text-info flex-1 justify-start text-[10px] leading-none font-medium">
                   {parameter.min !== undefined && parameter.max !== undefined
                     ? `Minimum is ${parameter.min}, maximum is ${parameter.max}`
                     : parameter.min !== undefined
@@ -235,7 +235,7 @@ const ParameterItem = ({
           )}
           {parameter.type === "logit_bias" && (
             <>
-              <div className="self-stretch pr-8 flex flex-col justify-start items-start gap-2">
+              <div className="flex flex-col items-start justify-start gap-2 self-stretch pr-8">
                 <button
                   onClick={() => {
                     const newLogitBiases = [...logitBiases];
@@ -244,22 +244,22 @@ const ParameterItem = ({
                     const fieldValue = JSON.stringify(newLogitBiases);
                     handleValueChange(fieldValue);
                   }}
-                  className="w-48 h-7 px-3 py-2 bg-background-surface-0 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px] outline-border-normal inline-flex justify-center items-center gap-2"
+                  className="bg-background-surface-0 outline-border-normal inline-flex h-7 w-48 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px]"
                 >
-                  <Plus className="min-w-4 min-h-4 text-text-primary" />
-                  <div className="justify-center text-text-primary text-xs font-semibold leading-none">
+                  <Plus className="text-text-primary min-h-4 min-w-4" />
+                  <div className="text-text-primary justify-center text-xs leading-none font-semibold">
                     Logit bias
                   </div>
                 </button>
               </div>
               {logitBiases.length > 0 && (
-                <div className="self-stretch flex flex-col gap-2">
+                <div className="flex flex-col gap-2 self-stretch">
                   {logitBiases.map((logitBias, index) => (
                     <div
                       key={index}
-                      className="self-stretch flex flex-col gap-1"
+                      className="flex flex-col gap-1 self-stretch"
                     >
-                      <div className="self-stretch inline-flex justify-start items-start gap-1.5">
+                      <div className="inline-flex items-start justify-start gap-1.5 self-stretch">
                         <Input
                           value={logitBias.token}
                           onChange={(e) => {
@@ -272,12 +272,12 @@ const ParameterItem = ({
                           placeholder="Token"
                           className="flex-1"
                         />
-                        <div className="w-28 inline-flex flex-col justify-start items-start">
-                          <div className="self-stretch min-h-8 px-4 py-2 bg-background-surface-0 rounded-md outline outline-1 outline-offset-[-1px] outline-border-normal inline-flex justify-between items-center overflow-hidden">
-                            <div className="flex-1 flex justify-start items-center gap-4">
+                        <div className="inline-flex w-28 flex-col items-start justify-start">
+                          <div className="bg-background-surface-0 outline-border-normal inline-flex min-h-8 items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline outline-1 outline-offset-[-1px]">
+                            <div className="flex flex-1 items-center justify-start gap-4">
                               <input
                                 type="number"
-                                className="justify-start text-text-primary text-xs font-normal bg-transparent outline-none w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="text-text-primary w-full [appearance:textfield] justify-start bg-transparent text-xs font-normal outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                 min={parameter.min}
                                 max={parameter.max}
                                 step={parameter.step}
@@ -295,8 +295,8 @@ const ParameterItem = ({
                                 placeholder="0"
                               />
                             </div>
-                            <div className="w-4 h-4 relative overflow-hidden">
-                              <div className="w-1.5 h-2.5 left-[4.67px] top-[2.67px] absolute outline outline-[1.33px] outline-offset-[-0.67px] outline-background-surface-5"></div>
+                            <div className="relative h-4 w-4 overflow-hidden">
+                              <div className="outline-background-surface-5 absolute top-[2.67px] left-[4.67px] h-2.5 w-1.5 outline outline-[1.33px] outline-offset-[-0.67px]"></div>
                             </div>
                           </div>
                         </div>
@@ -308,20 +308,20 @@ const ParameterItem = ({
                             const fieldValue = JSON.stringify(newLogitBiases);
                             handleValueChange(fieldValue);
                           }}
-                          className="w-6 h-6 relative rounded-sm flex-shrink-0"
+                          className="relative h-6 w-6 flex-shrink-0 rounded-sm"
                         >
-                          <X className="min-w-3.5 min-h-4 absolute left-[5px] top-[4px] text-text-subtle" />
+                          <X className="text-text-subtle absolute top-[4px] left-[5px] min-h-4 min-w-3.5" />
                         </button>
                       </div>
                       {parameter.min !== undefined &&
                         parameter.max !== undefined &&
                         index === logitBiases.length - 1 && (
-                          <div className="self-stretch inline-flex justify-center items-center gap-1.5">
-                            <div className="flex-1 h-2.5"></div>
-                            <div className="w-28 justify-start text-text-info text-[10px] font-medium leading-none">
+                          <div className="inline-flex items-center justify-center gap-1.5 self-stretch">
+                            <div className="h-2.5 flex-1"></div>
+                            <div className="text-text-info w-28 justify-start text-[10px] leading-none font-medium">
                               Min {parameter.min} / Max {parameter.max}
                             </div>
-                            <div className="w-6 h-2.5"></div>
+                            <div className="h-2.5 w-6"></div>
                           </div>
                         )}
                     </div>
@@ -332,7 +332,7 @@ const ParameterItem = ({
           )}
           {parameter.type === "safety_settings" && (
             <>
-              <div className="self-stretch pr-8 flex flex-col justify-start items-start gap-2">
+              <div className="flex flex-col items-start justify-start gap-2 self-stretch pr-8">
                 <button
                   onClick={() => {
                     const newSafetySettings = [...safetySettings];
@@ -341,22 +341,22 @@ const ParameterItem = ({
                     const fieldValue = JSON.stringify(newSafetySettings);
                     handleValueChange(fieldValue);
                   }}
-                  className="w-48 h-7 px-3 py-2 bg-background-surface-0 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px] outline-border-normal inline-flex justify-center items-center gap-2"
+                  className="bg-background-surface-0 outline-border-normal inline-flex h-7 w-48 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px]"
                 >
-                  <Plus className="min-w-4 min-h-4 text-text-primary" />
-                  <div className="justify-center text-text-primary text-xs font-semibold leading-none">
+                  <Plus className="text-text-primary min-h-4 min-w-4" />
+                  <div className="text-text-primary justify-center text-xs leading-none font-semibold">
                     Safety settings
                   </div>
                 </button>
               </div>
               {safetySettings.length > 0 && (
-                <div className="self-stretch flex flex-col gap-2">
+                <div className="flex flex-col gap-2 self-stretch">
                   {safetySettings.map((item, index) => (
                     <div
                       key={index}
-                      className="self-stretch flex flex-col gap-1"
+                      className="flex flex-col gap-1 self-stretch"
                     >
-                      <div className="self-stretch inline-flex justify-start items-start gap-1.5">
+                      <div className="inline-flex items-start justify-start gap-1.5 self-stretch">
                         <Input
                           value={item.category}
                           onChange={(e) => {
@@ -392,9 +392,9 @@ const ParameterItem = ({
                               JSON.stringify(newSafetySettings);
                             handleValueChange(fieldValue);
                           }}
-                          className="w-6 h-6 relative rounded-sm flex-shrink-0"
+                          className="relative h-6 w-6 flex-shrink-0 rounded-sm"
                         >
-                          <X className="min-w-3.5 min-h-4 absolute left-[5px] top-[4px] text-text-subtle" />
+                          <X className="text-text-subtle absolute top-[4px] left-[5px] min-h-4 min-w-3.5" />
                         </button>
                       </div>
                     </div>
@@ -408,7 +408,7 @@ const ParameterItem = ({
               value={value}
               onValueChange={(value) => handleValueChange(value)}
             >
-              <SelectTrigger className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal">
+              <SelectTrigger className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -466,7 +466,7 @@ export function ParameterSettingsPage({
   const [searchTerm, setSearchTerm] = useState("");
 
   return (
-    <div className="flex flex-col gap-6 w-[719px] h-[calc(100vh-300px)]">
+    <div className="flex h-[calc(100vh-300px)] w-[719px] flex-col gap-6">
       <div className="flex flex-col gap-2">
         <div className="flex flex-row items-center gap-2">
           <Typo2XLarge>Set Parameters</Typo2XLarge>
@@ -481,7 +481,7 @@ export function ParameterSettingsPage({
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
-      <Card className="w-full h-[calc(100vh-310px)] pt-6">
+      <Card className="h-[calc(100vh-310px)] w-full pt-6">
         <CardContent className="bg-background-card rounded-2xl">
           <ParameterSettingsFields
             searchTerm={searchTerm}

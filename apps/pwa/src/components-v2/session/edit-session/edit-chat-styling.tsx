@@ -13,8 +13,8 @@ import {
   StylingPreview,
   StylingSettings,
 } from "@/components-v2/session/mobile/create-session/step-chat-styling-mobile";
-import { SvgIcon } from "@/components-v2/svg-icon";
-import { TypoLarge } from "@/components-v2/typo";
+import { SvgIcon } from "@/components/ui/svg-icon";
+import { TypoLarge } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import {
   ChatStyles,

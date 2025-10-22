@@ -1,4 +1,12 @@
-import { Settings, ChevronRight, Download, Globe, Image, Check, X } from "lucide-react";
+import {
+  Settings,
+  ChevronRight,
+  Download,
+  Globe,
+  Image,
+  Check,
+  X,
+} from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
@@ -10,7 +18,7 @@ import { useSessionStore } from "@/app/stores/session-store";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/components-v2/lib/utils";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import {
   Dialog,
@@ -57,7 +65,7 @@ export function SessionSettingsMobile({
   const { selectedSessionId } = useSessionStore();
   const [session, invalidateSession] = useSession(selectedSessionId);
   const queryClient = useQueryClient();
-  
+
   // Update session function - same pattern as desktop
   const updateSession = useCallback(
     async (props: Partial<SessionProps>) => {
@@ -88,15 +96,16 @@ export function SessionSettingsMobile({
 
       // Invalidate session and wait for it to complete
       await invalidateSession();
-      
+
       // Also invalidate the sessionQueries.detail query key
       await queryClient.invalidateQueries({
-        queryKey: sessionQueries.detail(selectedSessionId ?? undefined).queryKey,
+        queryKey: sessionQueries.detail(selectedSessionId ?? undefined)
+          .queryKey,
       });
     },
     [invalidateSession, session, queryClient, selectedSessionId],
   );
-  
+
   // Inline edit state
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
@@ -114,7 +123,7 @@ export function SessionSettingsMobile({
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [includeHistory, setIncludeHistory] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  
+
   // Initialize title value when session changes
   useEffect(() => {
     if (session && titleValue !== session.props.title && !isEditingTitle) {
@@ -218,13 +227,13 @@ export function SessionSettingsMobile({
   }) => (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-between px-[12px] h-[36px] hover:bg-background-card-hover transition-colors"
+      className="hover:bg-background-card-hover flex h-[36px] w-full items-center justify-between px-[12px] transition-colors"
     >
       <div className="flex items-center gap-[8px]">
-        <div className="w-6 h-6 flex items-end justify-center text-text-body">
+        <div className="text-text-body flex h-6 w-6 items-end justify-center">
           {icon}
         </div>
-        <span className="text-base text-text-body">{title}</span>
+        <span className="text-text-body text-base">{title}</span>
       </div>
       {/* <ChevronRight className="w-5 h-5 text-text-secondary" /> */}
     </button>
@@ -233,12 +242,12 @@ export function SessionSettingsMobile({
   return (
     <>
       {/* Container - now using full height and width from Sheet */}
-      <div className="h-full flex flex-col bg-background-surface-2">
+      <div className="bg-background-surface-2 flex h-full flex-col">
         {/* Header */}
-        <div className="flex flex-col items-left h-[102px] py-[16px] px-[14px] border-b border-border-dark gap-[8px]">
-          <div className="flex items-center h-[46px] gap-[8px]">
+        <div className="items-left border-border-dark flex h-[102px] flex-col gap-[8px] border-b px-[14px] py-[16px]">
+          <div className="flex h-[46px] items-center gap-[8px]">
             <Settings className="min-h-6 min-w-6" />
-            <h2 className="text-lg font-medium truncate">
+            <h2 className="truncate text-lg font-medium">
               {currentSection === "main"
                 ? "Session settings"
                 : currentSection === "cards"
@@ -256,13 +265,13 @@ export function SessionSettingsMobile({
           </div>
           <div className="">
             {isEditingTitle ? (
-              <div className="flex items-center gap-2 rounded-lg p-2 -m-2">
+              <div className="-m-2 flex items-center gap-2 rounded-lg p-2">
                 <input
                   ref={titleInputRef}
                   value={titleValue}
                   onChange={(e) => setTitleValue(e.target.value)}
                   onKeyDown={handleTitleKeyDown}
-                  className="flex-1 text-sm font-medium text-text-body bg-transparent border-0 focus:outline-none focus:ring-0 leading-normal truncate text-left"
+                  className="text-text-body flex-1 truncate border-0 bg-transparent text-left text-sm leading-normal font-medium focus:ring-0 focus:outline-none"
                   disabled={isSavingTitle}
                 />
                 <Button
@@ -272,18 +281,18 @@ export function SessionSettingsMobile({
                   disabled={isSavingTitle || !titleValue.trim()}
                   className="h-5 w-5 p-0"
                 >
-                  <Check className="min-h-4 min-w-4 text-text-body" />
+                  <Check className="text-text-body min-h-4 min-w-4" />
                 </Button>
               </div>
             ) : (
               <button
                 onClick={handleStartEditTitle}
-                className="w-full flex items-center gap-2 hover:bg-background-card-hover transition-colors rounded-lg p-2 -m-2"
+                className="hover:bg-background-card-hover -m-2 flex w-full items-center gap-2 rounded-lg p-2 transition-colors"
               >
-                <h3 className="text-sm font-medium text-text-body truncate text-left">
+                <h3 className="text-text-body truncate text-left text-sm font-medium">
                   {session.props.title}
                 </h3>
-                <div className="flex-shrink-0 text-text-body">
+                <div className="text-text-body flex-shrink-0">
                   <SvgIcon name="edit" size={20} />
                 </div>
               </button>
@@ -291,11 +300,11 @@ export function SessionSettingsMobile({
           </div>
         </div>
         {/* Content */}
-        <div className="flex-1 flex flex-col overflow-hidden px-[12px] py-[12px] pb-[48px]">
+        <div className="flex flex-1 flex-col overflow-hidden px-[12px] py-[12px] pb-[48px]">
           {currentSection === "main" && (
             <>
               {/* Settings sections */}
-              <div className="flex flex-col gap-[16px] flex-1 overflow-y-auto">
+              <div className="flex flex-1 flex-col gap-[16px] overflow-y-auto">
                 <MenuItem
                   icon={<SvgIcon name="cards" size={24} />}
                   title="Cards"
@@ -307,12 +316,12 @@ export function SessionSettingsMobile({
                   onClick={() => handleSectionChange("flows")}
                 />
                 <MenuItem
-                  icon={<Globe className="min-w-6 min-h-6" />}
+                  icon={<Globe className="min-h-6 min-w-6" />}
                   title="Language & Translation"
                   onClick={() => handleSectionChange("language")}
                 />
                 <MenuItem
-                  icon={<Image className="min-w-6 min-h-6" />}
+                  icon={<Image className="min-h-6 min-w-6" />}
                   title="Background"
                   onClick={() => handleSectionChange("background")}
                 />

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
-import { Combobox } from "@/components-v2/combobox";
+import { Combobox } from "@/components/ui/combobox";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { cn } from "@/components-v2/lib/utils";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
@@ -37,34 +37,34 @@ const AgentListItem = ({
   return (
     <div
       className={cn(
-        "relative self-stretch p-6 bg-background-surface-3 rounded inline-flex flex-col justify-start items-start gap-6",
-        !isModelInvalid && "outline outline-offset-[-1px] outline-border-light",
+        "bg-background-surface-3 relative inline-flex flex-col items-start justify-start gap-6 self-stretch rounded p-6",
+        !isModelInvalid && "outline-border-light outline outline-offset-[-1px]",
       )}
     >
-      <div className="inline-flex justify-start items-center gap-6">
-        <div className="w-12 justify-start text-text-primary text-base font-medium">
+      <div className="inline-flex items-center justify-start gap-6">
+        <div className="text-text-primary w-12 justify-start text-base font-medium">
           Agent
         </div>
-        <div className="justify-start text-text-body text-base font-normal">
+        <div className="text-text-body justify-start text-base font-normal">
           {agent.props.name}
         </div>
       </div>
-      <div className="inline-flex justify-start items-center gap-6">
+      <div className="inline-flex items-center justify-start gap-6">
         {isModelInvalid && (
-          <CircleAlert className="min-w-4 min-h-4 text-status-destructive-light -mr-4" />
+          <CircleAlert className="text-status-destructive-light -mr-4 min-h-4 min-w-4" />
         )}
-        <div className="w-12 justify-start text-text-primary text-base font-medium">
+        <div className="text-text-primary w-12 justify-start text-base font-medium">
           Model
         </div>
-        <div className="justify-start text-text-body text-base font-normal">
+        <div className="text-text-body justify-start text-base font-normal">
           {`${apiSourceLabel.get((agent.props.apiSource as ApiSource) ?? "openai")} - ${agent.props.modelName}`}
         </div>
       </div>
       {isModelInvalid && (
         <div
           className={cn(
-            "absolute inset-[-1px] rounded-lg pointer-events-none",
-            "outline-2 outline-status-destructive-light",
+            "pointer-events-none absolute inset-[-1px] rounded-lg",
+            "outline-status-destructive-light outline-2",
           )}
         />
       )}
@@ -93,18 +93,18 @@ const StepFlowAndAgents = () => {
     <div
       className={cn(
         "flex flex-col gap-[40px]",
-        isMobile ? "w-full max-w-[600px] mx-auto px-4 pb-6" : "w-[720px]",
+        isMobile ? "mx-auto w-full max-w-[600px] px-4 pb-6" : "w-[720px]",
       )}
     >
       <div className="flex flex-col gap-[24px]">
         <div className="flex flex-col gap-[8px]">
-          <div className="font-[600] text-[20px] leading-[24px] text-text-primary">
+          <div className="text-text-primary text-[20px] leading-[24px] font-[600]">
             Flow
           </div>
           <div
             className={cn(
-              "font-[400] text-[16px] leading-[19px] text-text-primary",
-              isMobile && "text-text-body text-sm font-medium leading-tight",
+              "text-text-primary text-[16px] leading-[19px] font-[400]",
+              isMobile && "text-text-body text-sm leading-tight font-medium",
             )}
           >
             Choose a flow (a bundle of prompt preset and AI model) to use for
@@ -136,13 +136,13 @@ const StepFlowAndAgents = () => {
       {selectedFlow && (
         <div className="flex flex-col gap-[24px]">
           <div className="flex flex-col gap-[8px]">
-            <div className="font-[600] text-[20px] leading-[24px] text-text-primary">
+            <div className="text-text-primary text-[20px] leading-[24px] font-[600]">
               Agents
             </div>
             <div
               className={cn(
-                "font-[400] text-[16px] leading-[19px] text-text-primary",
-                isMobile && "text-text-body text-sm font-medium leading-tight",
+                "text-text-primary text-[16px] leading-[19px] font-[400]",
+                isMobile && "text-text-body text-sm leading-tight font-medium",
               )}
             >
               Listed below are the agents that make up this flow.

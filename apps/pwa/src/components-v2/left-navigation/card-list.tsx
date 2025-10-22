@@ -14,7 +14,7 @@ import {
   CreateButton,
   ImportButton,
 } from "@/components-v2/left-navigation/shared-list-components";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { DeleteConfirm } from "@/components-v2/confirm";
 import { CardImportDialog } from "@/components-v2/card/components/card-import-dialog";

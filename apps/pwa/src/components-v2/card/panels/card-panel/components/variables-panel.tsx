@@ -2,9 +2,13 @@ import { useCallback, useState, useEffect, useMemo } from "react";
 import { Target, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
-import { Variable, VariableLibrary, VariableGroupLabel } from "@/shared/prompt/domain/variable";
+import {
+  Variable,
+  VariableLibrary,
+  VariableGroupLabel,
+} from "@/shared/prompt/domain/variable";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { SearchInput } from "@/components-v2/search-input";
+import { SearchInput } from "@/components/ui/search-input";
 
 interface VariablesPanelProps {
   cardId: string; // Required by the panel system but not used
@@ -32,7 +36,9 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
   const [availableVariables, setAvailableVariables] = useState<Variable[]>([]);
   const [clickedVariable, setClickedVariable] = useState<string | null>(null);
   const [hasEditor, setHasEditor] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Load variables from library
   useEffect(() => {
@@ -67,24 +73,28 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
 
   // Group variables by their group property
   const groupedVariables = useMemo(() => {
-    const groups = availableVariables.reduce((acc, variable) => {
-      const group = variable.group;
-      if (!acc[group]) {
-        acc[group] = [];
-      }
-      acc[group].push(variable);
-      return acc;
-    }, {} as Record<string, Variable[]>);
+    const groups = availableVariables.reduce(
+      (acc, variable) => {
+        const group = variable.group;
+        if (!acc[group]) {
+          acc[group] = [];
+        }
+        acc[group].push(variable);
+        return acc;
+      },
+      {} as Record<string, Variable[]>,
+    );
 
     // Filter by search query if exists
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      Object.keys(groups).forEach(groupKey => {
+      Object.keys(groups).forEach((groupKey) => {
         groups[groupKey] = groups[groupKey].filter(
           (variable) =>
             variable.variable.toLowerCase().includes(query) ||
             variable.description.toLowerCase().includes(query) ||
-            (variable.template && variable.template.toLowerCase().includes(query)),
+            (variable.template &&
+              variable.template.toLowerCase().includes(query)),
         );
         // Remove empty groups after filtering
         if (groups[groupKey].length === 0) {
@@ -188,7 +198,7 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
 
   // Handle group collapse/expand
   const toggleGroupCollapse = useCallback((group: string) => {
-    setCollapsedGroups(prev => {
+    setCollapsedGroups((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(group)) {
         newSet.delete(group);
@@ -201,7 +211,7 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
 
   return (
     <div
-      className="h-full w-full p-4 bg-background-surface-2 flex flex-col gap-4 overflow-hidden"
+      className="bg-background-surface-2 flex h-full w-full flex-col gap-4 overflow-hidden p-4"
       onClick={handlePanelInteraction}
     >
       <SearchInput
@@ -214,7 +224,7 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
       <ScrollArea className="flex-1">
         <div className="flex flex-col pr-2">
           {Object.keys(groupedVariables).length === 0 ? (
-            <div className="text-center py-8">
+            <div className="py-8 text-center">
               <div className="text-text-subtle text-xs">
                 {searchQuery
                   ? "No variables found matching your search"
@@ -226,28 +236,32 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
               <div key={group} className="flex flex-col">
                 {/* Group Header */}
                 <div className="bg-[#272727] py-2.5">
-                  <div className="flex flex-row gap-4 items-center justify-start w-full">
-                    <div className="basis-0 flex flex-row gap-2 grow items-start justify-start text-xs text-left">
-                      <div className="text-[#bfbfbf] font-medium text-nowrap">
-                        {VariableGroupLabel[group as keyof typeof VariableGroupLabel]?.displayName || group}
+                  <div className="flex w-full flex-row items-center justify-start gap-4">
+                    <div className="flex grow basis-0 flex-row items-start justify-start gap-2 text-left text-xs">
+                      <div className="font-medium text-nowrap text-[#bfbfbf]">
+                        {VariableGroupLabel[
+                          group as keyof typeof VariableGroupLabel
+                        ]?.displayName || group}
                       </div>
-                      <div className="basis-0 grow min-h-px min-w-px text-[#696969] font-normal">
-                        {VariableGroupLabel[group as keyof typeof VariableGroupLabel]?.description || "Variables in this group"}
+                      <div className="min-h-px min-w-px grow basis-0 font-normal text-[#696969]">
+                        {VariableGroupLabel[
+                          group as keyof typeof VariableGroupLabel
+                        ]?.description || "Variables in this group"}
                       </div>
                     </div>
-                    <button 
+                    <button
                       className="flex items-center justify-center"
                       onClick={() => toggleGroupCollapse(group)}
                     >
                       {collapsedGroups.has(group) ? (
-                        <ChevronDown className="min-w-6 min-h-6 text-[#bfbfbf]" />
+                        <ChevronDown className="min-h-6 min-w-6 text-[#bfbfbf]" />
                       ) : (
-                        <ChevronUp className="min-w-6 min-h-6 text-[#bfbfbf]" />
+                        <ChevronUp className="min-h-6 min-w-6 text-[#bfbfbf]" />
                       )}
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Group Variables */}
                 {!collapsedGroups.has(group) && (
                   <div className="bg-[#272727] pb-0">
@@ -255,12 +269,12 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
                       {variables.map((variable) => (
                         <button
                           key={variable.variable}
-                          className={`w-full p-2 rounded-lg bg-[#313131] border border-[#525252] flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
+                          className={`relative flex w-full flex-col items-start justify-start gap-1 rounded-lg border border-[#525252] bg-[#313131] p-2 text-left transition-all duration-200 ${
                             clickedVariable === variable.variable
                               ? "bg-[#313131]"
                               : hasEditor
-                                ? "bg-[#313131] hover:bg-[#414141] cursor-pointer"
-                                : "bg-[#313131] opacity-50 cursor-not-allowed"
+                                ? "cursor-pointer bg-[#313131] hover:bg-[#414141]"
+                                : "cursor-not-allowed bg-[#313131] opacity-50"
                           }`}
                           onClick={(e) => handleVariableClick(variable, e)}
                           onMouseDown={handleMouseDown}
@@ -268,28 +282,28 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
                           tabIndex={-1}
                         >
                           {clickedVariable === variable.variable && (
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
+                            <div className="absolute right-0 bottom-0 left-0 h-[2px] bg-green-500" />
                           )}
-                          <div className="w-full flex flex-col justify-start items-start gap-1">
-                            <div className="flex justify-start items-center gap-2 w-full text-xs text-nowrap">
-                              <div className="text-[#f1f1f1] font-medium">
+                          <div className="flex w-full flex-col items-start justify-start gap-1">
+                            <div className="flex w-full items-center justify-start gap-2 text-xs text-nowrap">
+                              <div className="font-medium text-[#f1f1f1]">
                                 {`{{${variable.variable}}}`}
                               </div>
-                              <div className="text-[#bfbfbf] font-normal">
+                              <div className="font-normal text-[#bfbfbf]">
                                 {variable.dataType}
                               </div>
                               {hasEditor &&
                                 (clickedVariable === variable.variable ? (
-                                  <Check className="min-w-3 min-h-3 ml-auto text-green-500 transition-opacity" />
+                                  <Check className="ml-auto min-h-3 min-w-3 text-green-500 transition-opacity" />
                                 ) : (
-                                  <Target className="min-w-3 min-h-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
+                                  <Target className="text-primary ml-auto min-h-3 min-w-3 opacity-0 transition-opacity hover:opacity-100" />
                                 ))}
                             </div>
-                            <div className="text-[#9d9d9d] text-xs font-normal leading-normal text-left">
+                            <div className="text-left text-xs leading-normal font-normal text-[#9d9d9d]">
                               {variable.description}
                             </div>
                             {variable.template && (
-                              <div className="text-[#bfbfbf] text-[10px] font-medium leading-4 whitespace-pre-wrap">
+                              <div className="text-[10px] leading-4 font-medium whitespace-pre-wrap text-[#bfbfbf]">
                                 <span className="text-[#f1f1f1]">
                                   {variable.template}
                                 </span>

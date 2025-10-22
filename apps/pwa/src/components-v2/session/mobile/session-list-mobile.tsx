@@ -23,12 +23,12 @@ import { useSessionStore } from "@/app/stores/session-store";
 import { useValidationStore } from "@/app/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
 import { cn } from "@/components-v2/lib/utils";
-import { SearchInput } from "@/components-v2/search-input";
+import { SearchInput } from "@/components/ui/search-input";
 import { SessionMainMobile } from "@/components-v2/session/mobile/session-main-mobile";
 import CreateSessionPageMobile from "@/components-v2/session/mobile/create-session-page-mobile";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { ModelItem } from "@/components-v2/title/create-title/step-prompts";
-import { TypoBase } from "@/components-v2/typo";
+import { TypoBase } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { CheckboxMobile } from "@/components-v2/ui/checkbox";
 import {
@@ -74,7 +74,7 @@ const MobileCharacterAvatar = ({ cardId }: { cardId: UniqueEntityID }) => {
   if (!card) return null;
 
   return (
-    <div className="relative w-8 h-8 rounded-full border-2 border-background-surface-2 bg-background-input overflow-hidden">
+    <div className="border-background-surface-2 bg-background-input relative h-8 w-8 overflow-hidden rounded-full border-2">
       {asset ? (
         <img
           src={asset}
@@ -82,10 +82,10 @@ const MobileCharacterAvatar = ({ cardId }: { cardId: UniqueEntityID }) => {
             ((card as any)?.props?.name || (card as any)?.props?.title) ??
             "Character"
           }
-          className="w-full h-full object-cover"
+          className="h-full w-full object-cover"
         />
       ) : (
-        <div className="w-full h-full bg-background-input flex items-center justify-center">
+        <div className="bg-background-input flex h-full w-full items-center justify-center">
           <SvgIcon name="character_icon" size={32} />
         </div>
       )}
@@ -148,16 +148,16 @@ const SessionItemMobile = ({
     <button
       onClick={handleClick}
       className={cn(
-        "w-full bg-background-surface-2 flex items-center",
+        "bg-background-surface-2 flex w-full items-center",
         "hover:bg-background-card-hover active:bg-background-card-hover",
         isActive && !isSelectionMode && "bg-background-card-hover",
         isSelected && "bg-background-card",
-        isInvalid && "border-l-[3px] border-status-destrctive-light",
+        isInvalid && "border-status-destrctive-light border-l-[3px]",
       )}
       // disabled={!!streamingMessageId && !selectedSessionId?.equals(sessionId)}
     >
       {/* Checkbox for selection mode */}
-      <div className="flex flex-col items-start h-full py-[16px] pl-[16px]">
+      <div className="flex h-full flex-col items-start py-[16px] pl-[16px]">
         {isSelectionMode && (
           <div className="p-[8px]">
             <CheckboxMobile
@@ -168,46 +168,48 @@ const SessionItemMobile = ({
           </div>
         )}
       </div>
-      <div className="flex-1 p-4 flex flex-col justify-start items-start gap-2 pr-[24px] min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2 p-4 pr-[24px]">
         {/* Title and Time */}
-        <div className="w-full flex items-center justify-between gap-2">
-          <div className="text-text-primary text-base font-semibold leading-relaxed truncate min-w-0">
+        <div className="flex w-full items-center justify-between gap-2">
+          <div className="text-text-primary min-w-0 truncate text-base leading-relaxed font-semibold">
             {session.props.title}
           </div>
-          <div className="text-text-body text-xs font-medium whitespace-nowrap flex-shrink-0">
+          <div className="text-text-body flex-shrink-0 text-xs font-medium whitespace-nowrap">
             {lastMessage ? formatLastMessage(lastMessage.createdAt) : "0:00 AM"}
           </div>
         </div>
 
         {/* Message Count and Avatars */}
-        <div className="self-stretch inline-flex justify-between items-start">
-          <div className="flex justify-start items-center gap-3">
-            <div className="inline-flex flex-col justify-start items-start gap-1">
-              <div className="inline-flex justify-start items-center gap-1">
-                <div className="justify-start text-text-primary text-base font-normal leading-relaxed">
+        <div className="inline-flex items-start justify-between self-stretch">
+          <div className="flex items-center justify-start gap-3">
+            <div className="inline-flex flex-col items-start justify-start gap-1">
+              <div className="inline-flex items-center justify-start gap-1">
+                <div className="text-text-primary justify-start text-base leading-relaxed font-normal">
                   {messageCount.toLocaleString()}
                 </div>
-                <div className="justify-start text-text-body text-xs font-normal">
+                <div className="text-text-body justify-start text-xs font-normal">
                   Messages
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex justify-end items-center">
-            {session.characterCards.slice(0, 3).map((card: Card, index: number) => (
-              <div
-                key={card.id.toString()}
-                style={{ zIndex: session.characterCards.length - index }}
-              >
-                <MobileCharacterAvatar cardId={card.id} />
-              </div>
-            ))}
+          <div className="flex items-center justify-end">
+            {session.characterCards
+              .slice(0, 3)
+              .map((card: Card, index: number) => (
+                <div
+                  key={card.id.toString()}
+                  style={{ zIndex: session.characterCards.length - index }}
+                >
+                  <MobileCharacterAvatar cardId={card.id} />
+                </div>
+              ))}
             {session.characterCards.length > 3 && (
               <div
-                className="w-8 h-8 px-2 py-2 bg-background-surface-3 rounded-xl outline-2 outline-offset-[-2.17px] outline-background-surface-2 inline-flex flex-col justify-center items-center gap-1.5"
+                className="bg-background-surface-3 outline-background-surface-2 inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"
                 style={{ zIndex: 0 }}
               >
-                <div className="justify-start text-text-placeholder text-[10px] font-medium leading-none">
+                <div className="text-text-placeholder justify-start text-[10px] leading-none font-medium">
                   +{session.characterCards.length - 4}
                 </div>
               </div>
@@ -361,7 +363,6 @@ const SessionListMobile = ({
 
     try {
       setIsImporting(true);
-
 
       // Import session from file
       const importedSessionOrError =
@@ -542,7 +543,9 @@ const SessionListMobile = ({
       setCurrentSessionId(sessionId);
       setIsSessionOpen(true);
       // Also update the global session store if needed
-      const session = sessions?.find((s: Session) => s.id.toString() === sessionId);
+      const session = sessions?.find(
+        (s: Session) => s.id.toString() === sessionId,
+      );
       if (session) {
         selectSession(session.id, session.props.title);
       }
@@ -628,7 +631,7 @@ const SessionListMobile = ({
   return (
     <>
       {/* Session List */}
-      <div className="flex flex-col h-dvh bg-background-surface-2 overflow-hidden">
+      <div className="bg-background-surface-2 flex h-dvh flex-col overflow-hidden">
         {/* Mobile Header - Hide when searching */}
         <TopNavigation
           title={
@@ -692,7 +695,7 @@ const SessionListMobile = ({
         />
 
         {/* Search and Create - Hide when in search mode */}
-        <div className="px-4 py-2 space-y-4 bg-background-surface-2">
+        <div className="bg-background-surface-2 space-y-4 px-4 py-2">
           <SearchInput
             variant="mobile"
             value={keyword}
@@ -707,15 +710,15 @@ const SessionListMobile = ({
 
         {/* Session List */}
         {sessions?.length === 0 ? (
-          <div className="flex-1 relative bg-background-surface-2">
-            <div className="absolute inset-x-0 top-[40%] -translate-y-1/2 flex flex-col items-center justify-center px-4">
+          <div className="bg-background-surface-2 relative flex-1">
+            <div className="absolute inset-x-0 top-[40%] flex -translate-y-1/2 flex-col items-center justify-center px-4">
               <div className="text-center">
                 {keyword && keyword.trim() !== "" ? (
                   <>
-                    <h3 className="text-xl font-semibold text-text-body mb-4">
+                    <h3 className="text-text-body mb-4 text-xl font-semibold">
                       No results for '{keyword}'
                     </h3>
-                    <p className="text-base font-medium text-background-surface-5 leading-relaxed mb-8">
+                    <p className="text-background-surface-5 mb-8 text-base leading-relaxed font-medium">
                       Try a different search term or
                       <br />
                       create a new session.
@@ -723,10 +726,10 @@ const SessionListMobile = ({
                   </>
                 ) : (
                   <>
-                    <h3 className="text-xl font-semibold text-text-body mb-4">
+                    <h3 className="text-text-body mb-4 text-xl font-semibold">
                       No sessions yet
                     </h3>
-                    <p className="text-base font-medium text-background-surface-5 leading-relaxed mb-8">
+                    <p className="text-background-surface-5 mb-8 text-base leading-relaxed font-medium">
                       Create your first session with your <br />
                       favorite characters and plot.
                     </p>
@@ -737,11 +740,8 @@ const SessionListMobile = ({
                     defaultValue=""
                     onNext={handleCreateSessionWithName}
                     trigger={
-                      <Button
-                        size="lg"
-                        disabled={isSelectionMode}
-                      >
-                        <Plus className="w-4 h-4" />
+                      <Button size="lg" disabled={isSelectionMode}>
+                        <Plus className="h-4 w-4" />
                         <span className="text-sm font-semibold">
                           Create new session
                         </span>
@@ -753,21 +753,18 @@ const SessionListMobile = ({
             </div>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto bg-background-surface-2">
+          <div className="bg-background-surface-2 flex-1 overflow-y-auto">
             {!(
               (keyword && keyword.trim() !== "") ||
               sessions?.length === 0
             ) && (
-              <div className="w-full flex flex-col items-center justify-center py-4 bg-background-surface-2">
+              <div className="bg-background-surface-2 flex w-full flex-col items-center justify-center py-4">
                 <StepName
                   defaultValue=""
                   onNext={handleCreateSessionWithName}
                   trigger={
-                    <Button
-                      size="lg"
-                      disabled={isSelectionMode}
-                    >
-                      <Plus className="w-4 h-4" />
+                    <Button size="lg" disabled={isSelectionMode}>
+                      <Plus className="h-4 w-4" />
                       <span className="text-sm font-semibold">
                         Create new session
                       </span>
@@ -776,7 +773,7 @@ const SessionListMobile = ({
                 />
               </div>
             )}
-            <div className="pb-4 bg-background-surface-2">
+            <div className="bg-background-surface-2 pb-4">
               {sessions?.map((session: Session) => (
                 <>
                   <SessionItemMobile
@@ -790,7 +787,7 @@ const SessionListMobile = ({
                       toggleSessionSelection(session.id.toString())
                     }
                   />
-                  <div className="border-b border-border-dark mx-[16px]" />
+                  <div className="border-border-dark mx-[16px] border-b" />
                 </>
               ))}
             </div>
@@ -827,33 +824,33 @@ const SessionListMobile = ({
         <div
           ref={drawerRef}
           className={cn(
-            "fixed bottom-0 left-0 right-0 z-50",
+            "fixed right-0 bottom-0 left-0 z-50",
             "bg-background-surface-2 rounded-t-xl",
-            "h-[90vh] flex flex-col",
+            "flex h-[90vh] flex-col",
             "transform transition-transform duration-300 ease-in-out",
             isOpenImportDialog ? "translate-y-0" : "translate-y-full",
           )}
         >
           {/* Handle for dragging - only this area responds to touch */}
           <div
-            className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+            className="flex cursor-grab justify-center pt-3 pb-2 active:cursor-grabbing"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            <div className="h-1.5 w-12 rounded-full bg-gray-300" />
           </div>
 
           <div className="px-6 pb-4">
-            <h1 className="text-xl font-semibold text-left">Import session</h1>
+            <h1 className="text-left text-xl font-semibold">Import session</h1>
           </div>
           {/* Content */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto px-6">
               {importingFile === null ? (
-                <div className="flex-1 flex items-center justify-center min-h-[400px]">
+                <div className="flex min-h-[400px] flex-1 items-center justify-center">
                   <div
-                    className="border-dashed border-2 border-border-container bg-background-card hover:bg-background-input rounded-2xl flex flex-col justify-center items-center p-8 cursor-pointer w-full max-w-md"
+                    className="border-border-container bg-background-card hover:bg-background-input flex w-full max-w-md cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8"
                     onClick={() => refImportSessionFileInput.current?.click()}
                     onDragOver={(e) => {
                       e.preventDefault();
@@ -873,7 +870,7 @@ const SessionListMobile = ({
                     <TypoBase className="text-text-input-subtitle text-center">
                       Choose a file or drag it here
                     </TypoBase>
-                    <TypoBase className="text-xs text-text-input-subtitle text-center mt-2">
+                    <TypoBase className="text-text-input-subtitle mt-2 text-center text-xs">
                       Importing a session automatically imports all its related
                       cards and flows.
                     </TypoBase>
@@ -881,14 +878,14 @@ const SessionListMobile = ({
                 </div>
               ) : (
                 <div className="flex flex-col gap-6 pb-4">
-                  <div className="flex items-center gap-2 p-3 bg-background-card rounded text-text-primary border border-border-container">
+                  <div className="bg-background-card text-text-primary border-border-container flex items-center gap-2 rounded border p-3">
                     <SvgIcon
                       name="sessions_solid"
                       size={20}
                       className="flex-shrink-0"
                     />
                     <div className="w-full min-w-0">
-                      <div className="text-base text-text-primary truncate">
+                      <div className="text-text-primary truncate text-base">
                         {importingFile.name} (
                         {humanizeBytes(importingFile.size)})
                       </div>
@@ -899,29 +896,29 @@ const SessionListMobile = ({
                     {/* Agent Models Section */}
                     {agentModels.length > 0 && (
                       <div className="flex flex-col gap-4">
-                        <ScrollArea className="w-full h-full">
+                        <ScrollArea className="h-full w-full">
                           <div className="flex flex-col gap-4">
                             {agentModels.map((agent) => (
                               <div
                                 key={agent.agentId}
-                                className="p-4 bg-background-surface-3 rounded inline-flex flex-col justify-start items-start gap-2"
+                                className="bg-background-surface-3 inline-flex flex-col items-start justify-start gap-2 rounded p-4"
                               >
-                                <div className="self-stretch flex flex-col justify-start items-start gap-4">
-                                  <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                                    <div className="self-stretch justify-start text-text-subtle text-base font-normal leading-relaxed">
+                                <div className="flex flex-col items-start justify-start gap-4 self-stretch">
+                                  <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+                                    <div className="text-text-subtle justify-start self-stretch text-base leading-relaxed font-normal">
                                       Agent : {agent.agentName}
                                     </div>
                                   </div>
-                                  <div className="self-stretch h-11 flex flex-col justify-start items-start gap-2">
-                                    <div className="self-stretch flex-1 justify-start text-text-subtle text-base font-normal leading-relaxed">
+                                  <div className="flex h-11 flex-col items-start justify-start gap-2 self-stretch">
+                                    <div className="text-text-subtle flex-1 justify-start self-stretch text-base leading-relaxed font-normal">
                                       Session original model
                                     </div>
-                                    <div className="self-stretch flex-1 justify-start text-text-primary text-base font-normal leading-relaxed">
+                                    <div className="text-text-primary flex-1 justify-start self-stretch text-base leading-relaxed font-normal">
                                       {agent.modelName || "No model"}
                                     </div>
                                   </div>
-                                  <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                                    <div className="self-stretch justify-start text-text-subtle text-base font-medium leading-relaxed">
+                                  <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+                                    <div className="text-text-subtle justify-start self-stretch text-base leading-relaxed font-medium">
                                       Select model to connect
                                     </div>
                                     <div className="self-stretch">
@@ -962,7 +959,7 @@ const SessionListMobile = ({
 
             {/* Chat History - Fixed above footer */}
             {importingFile && (
-              <div className="px-6 py-3 ">
+              <div className="px-6 py-3">
                 <Label className="flex items-center gap-3">
                   <CheckboxMobile
                     checked={isIncludeHistory}
@@ -971,7 +968,7 @@ const SessionListMobile = ({
                     }}
                     disabled={isImporting}
                   />
-                  <span className="text-base text-text-primary">
+                  <span className="text-text-primary text-base">
                     Include chat messages
                   </span>
                 </Label>
@@ -979,7 +976,7 @@ const SessionListMobile = ({
             )}
 
             {/* Footer */}
-            <div className="px-6 pt-6 pb-6 bg-background-surface-2">
+            <div className="bg-background-surface-2 px-6 pt-6 pb-6">
               <div className="flex flex-col items-center gap-5">
                 {importingFile && (
                   <Button
@@ -1028,14 +1025,14 @@ const SessionListMobile = ({
               Do you want to include chat history?
             </DialogDescription>
           </DialogHeader>
-          <Label className="flex flex-row gap-[8px] items-center">
+          <Label className="flex flex-row items-center gap-[8px]">
             <CheckboxMobile
               checked={includeHistoryForBulk}
               onCheckedChange={(checked) => {
                 setIncludeHistoryForBulk(checked === true);
               }}
             />
-            <span className="font-[400] text-[16px] leading-[19px]">
+            <span className="text-[16px] leading-[19px] font-[400]">
               Include chat messages in the{" "}
               {selectionAction === "copy" ? "duplicated" : "exported"} session
               {selectedSessions.size !== 1 ? "s" : ""}

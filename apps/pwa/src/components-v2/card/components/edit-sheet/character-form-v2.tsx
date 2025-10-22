@@ -11,7 +11,7 @@ import {
 import { ImageUpload } from "@/components-v2/card/components/edit-sheet/image-upload";
 import { SortableBlockListV2 } from "@/components-v2/card/components/edit-sheet/sortable-block-list-v2";
 import { useEntryList } from "@/components-v2/card/hooks/useEntryList";
-import { Typo2XLarge } from "@/components-v2/typo";
+import { Typo2XLarge } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 import { FloatingLabelInputs } from "@/components-v2/ui/floating-label-inputs";
@@ -132,7 +132,7 @@ export const CharacterForm = ({
   return (
     <div className="w-full">
       {!isMobile && (
-        <div className="flex items-center gap-2 mt-2 mb-8">
+        <div className="mt-2 mb-8 flex items-center gap-2">
           <Typo2XLarge>
             {isNewCard ? "Create" : "Edit"} Character Card
           </Typo2XLarge>
@@ -175,10 +175,10 @@ export const CharacterForm = ({
 
         <TabsContent
           value="basic-info"
-          className={cn("space-y-4 mt-10", isMobile ? "space-y-[24px]" : "")}
+          className={cn("mt-10 space-y-4", isMobile ? "space-y-[24px]" : "")}
         >
-          <div className="flex flex-col items-center mb-10">
-            <div className="w-[200px] h-[200px]">
+          <div className="mb-10 flex flex-col items-center">
+            <div className="h-[200px] w-[200px]">
               <ImageUpload
                 type={CardType.Character}
                 title={card.props.title}
@@ -245,34 +245,34 @@ export const CharacterForm = ({
           </div>
           <div className="mt-8">
             {isMobile ? (
-              <div className="space-y-2 flex flex-row items-center gap-[16px]">
+              <div className="flex flex-row items-center gap-[16px] space-y-2">
                 <Typo2XLarge>Lorebook</Typo2XLarge>
                 <Button
                   type="button"
-                variant="outline"
-                size="lg"
-                className="w-full h-[40px]"
-                onClick={handleAddEntry}
-              >
-                + Add lorebook
-              </Button>
-            </div>
-          ) : (
-            <div className="mt-14">
-              <div className={cn("space-y-2 mb-4")}>
-                <Typo2XLarge>Lorebook</Typo2XLarge>
+                  variant="outline"
+                  size="lg"
+                  className="h-[40px] w-full"
+                  onClick={handleAddEntry}
+                >
+                  + Add lorebook
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="w-full mb-4"
-                onClick={handleAddEntry}
-              >
-                + Add lorebook
-              </Button>
-            </div>
-          )}
+            ) : (
+              <div className="mt-14">
+                <div className={cn("mb-4 space-y-2")}>
+                  <Typo2XLarge>Lorebook</Typo2XLarge>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="mb-4 w-full"
+                  onClick={handleAddEntry}
+                >
+                  + Add lorebook
+                </Button>
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <SortableBlockListV2
@@ -290,7 +290,7 @@ export const CharacterForm = ({
           </div>
         </TabsContent>
 
-        <TabsContent value="additional-info" className="space-y-4 mt-4">
+        <TabsContent value="additional-info" className="mt-4 space-y-4">
           <div className="space-y-4">
             <FloatingLabelInputs
               label="Tags"
