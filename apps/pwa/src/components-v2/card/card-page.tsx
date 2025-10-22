@@ -1,7 +1,7 @@
 "use client";
 
 import { Import } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 import { useAppStore } from "@/app/stores/app-store";
 import { useNavigate } from "@tanstack/react-router";
@@ -12,7 +12,6 @@ import {
   useCardImport,
   useCardManagement,
 } from "@/components-v2/card/hooks";
-import { useResponsiveLayout } from "@/components-v2/card/hooks/useResponsiveLayout";
 import { cn } from "@/components-v2/lib/utils";
 import { TypoBase } from "@/components-v2/typo";
 import {
@@ -32,22 +31,7 @@ export default function CardPage({ className }: { className?: string }) {
 
   const { cardEditOpen } = useAppStore();
 
-  // Get responsive layout configuration from the custom hook
-  const { characterWidth, plotWidth, isVertical } = useResponsiveLayout();
-
-  // Local state for the actual widths (for debugging and to ensure reactivity)
-  const [charWidth, setCharWidth] = useState(characterWidth);
-  const [pltWidth, setPltWidth] = useState(plotWidth);
-  const [vertical, setVertical] = useState(isVertical);
-
   const navigate = useNavigate();
-
-  // Update local state when the hook values change
-  useEffect(() => {
-    setCharWidth(characterWidth);
-    setPltWidth(plotWidth);
-    setVertical(isVertical);
-  }, [characterWidth, plotWidth, isVertical]);
 
   // Ref for container
   const containerRef = useRef<HTMLDivElement>(null);
@@ -56,23 +40,13 @@ export default function CardPage({ className }: { className?: string }) {
   const {
     characterCards,
     plotCards,
-    sortsByType,
-    keywordsByType,
     handleInvalidation,
     handleSort,
     handleSearchByType,
-    clearSearch,
   } = useCardManagement();
 
   // Use the card editor hook for creating and editing cards
-  const {
-    selectedCard,
-    isOpenCloseWithoutSaveConfirm,
-    createCard,
-    openCardForEdit,
-    handleDialogOpenChange,
-    handleConfirmDialogActions,
-  } = useCardEditor();
+  const { selectedCard, createCard, handleDialogOpenChange } = useCardEditor();
 
   // Use the card import hook
   const {
@@ -84,33 +58,20 @@ export default function CardPage({ className }: { className?: string }) {
   } = useCardImport(handleInvalidation);
 
   // Card creation functions
-  const handleCreateCard = (type: CardType) => {
-    if (type === CardType.Character) {
-      console.log("Tracking new character card creation button pressed");
-    } else if (type === CardType.Plot) {
-      console.log("Tracking new plot card creation button pressed");
-    }
-    setActiveCardType(type);
-    createCard(type);
-    setIsSheetOpen(true);
-  };
-
-  // Handle opening a card for editing
-  const handleEditCard = (id: string, type: CardType) => {
-    setActiveCardType(type);
-    // Find the card by ID
-    let card: Card | undefined;
-    if (type === CardType.Character) {
-      card = characterCards?.find((c: Card) => c.id.toString() === id);
-    } else if (type === CardType.Plot) {
-      card = plotCards?.find((c: Card) => c.id.toString() === id);
-    }
-
-    if (card) {
-      openCardForEdit(card);
+  const handleCreateCard = useCallback(
+    (type: CardType) => {
+      console.log("Creating card of type:", type);
+      if (type === CardType.Character) {
+        console.log("Tracking new character card creation button pressed");
+      } else if (type === CardType.Plot) {
+        console.log("Tracking new plot card creation button pressed");
+      }
+      setActiveCardType(type);
+      createCard(type);
       setIsSheetOpen(true);
-    }
-  };
+    },
+    [createCard, setActiveCardType, setIsSheetOpen],
+  );
 
   // Handle card click to navigate to CardPanel
   const handleCardClick = (id: string) => {
@@ -127,7 +88,7 @@ export default function CardPage({ className }: { className?: string }) {
     } else if (cardEditOpen === CardType.Character) {
       handleCreateCard(CardType.Character);
     }
-  }, [cardEditOpen]);
+  }, [cardEditOpen, handleCreateCard]);
 
   return (
     <div className={cn(className)}>
