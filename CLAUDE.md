@@ -11,9 +11,9 @@ Maintained development guidelines. Last updated: 2025-10-22
 
 Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loose components into domain folders, decompose oversized components (max 2,979 lines → 500 line limit), remove 20+ duplicate mobile files using Tailwind responsive design, and establish automated quality gates. Enable 50% faster feature development and A/B testing cycles.
 
-**Current Progress** (Phase 1):
+**Current Progress** (Phase 2):
 
-- ✅ Removed `useResponsiveLayout` hook (dead code, already using Tailwind)
+- ✅ **Phase 1 Complete** - Removed `useResponsiveLayout` hook (dead code, already using Tailwind)
 - ✅ **Component Reclassification Complete** - 36 loose files reorganized into domain-based structure
   - `components/ui/` - 15 files (shadcn/ui + basic UI components)
   - `components/layout/` - 7 files (navigation, top-bar, sidebar components)
@@ -21,11 +21,17 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
   - `components/system/` - 7 files (PWA, theme, updater infrastructure)
   - `features/session/components/` - 1 file (custom-sheet)
   - `features/card/mobile/` - 1 file (sort-dialog-mobile)
+- ✅ **Phase 2 Started** - Domain folder migrations:
+  - ✅ `features/settings/providers/` - 3 files (model-page, model-page-mobile, provider-list-item)
+  - ✅ `components/layout/left-navigation/` - 7 files (index, mobile, card-list, flow-list, session-list, shared, hooks)
+  - ✅ `features/flow/` - 5 files (dialog, page-mobile, components: agent-model-card, export-dialog, import-dialog)
+  - ⏳ `features/settings/` - 18 files remaining
+  - ⏳ `features/card/` - 46 files remaining
+  - ⏳ `features/session/` - 46 files remaining
 - ✅ **Quality Findings**:
   - 3 UNUSED components identified (code-editor, json-viewer, tooltip-wrapper)
   - 5 Mobile duplication targets identified for Phase 3
   - All barrel exports created (index.ts)
-- ⏳ Next: Migrate components-v2 domain folders → features/
 
 ### Migration Phases
 
@@ -64,19 +70,35 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
 ## Project Structure & Organization Principles
 
 ### **Approach: Feature-based + Colocation**
+
 > "Keep files as close as possible to where they are used" - Kent C. Dodds
 
-### **Current Structure** (Phase 1 Progress)
+### **Current Structure** (Phase 2 Progress)
 
 ```
 apps/pwa/src/
-├── features/                      # Business domains (Feature-based) [NEW]
-│   ├── session/
+├── features/                      # Business domains (Feature-based) [ACTIVE MIGRATION]
+│   ├── flow/                     # ✅ Flow domain (5 files)
+│   │   ├── flow-dialog.tsx
+│   │   ├── flow-page-mobile.tsx  # [Phase 3: Mobile removal target]
 │   │   └── components/
-│   │       └── custom-sheet.tsx  # Session edit dialogs
-│   └── card/
+│   │       ├── agent-model-card.tsx  # Shared with session import/export
+│   │       ├── flow-export-dialog.tsx
+│   │       └── flow-import-dialog.tsx
+│   │
+│   ├── settings/                 # ✅ Settings domain (3 files, 18 pending)
+│   │   └── providers/
+│   │       ├── model-page.tsx
+│   │       ├── model-page-mobile.tsx  # [Phase 3: Mobile removal target]
+│   │       └── provider-list-item.tsx
+│   │
+│   ├── session/                  # Session domain (1 file, 46 pending)
+│   │   └── components/
+│   │       └── custom-sheet.tsx
+│   │
+│   └── card/                     # Card domain (1 file, 46 pending)
 │       └── mobile/
-│           └── sort-dialog-mobile.tsx
+│           └── sort-dialog-mobile.tsx  # [Phase 3: Mobile removal target]
 │
 ├── components/                    # Shared components (domain-independent) [REORGANIZED]
 │   ├── ui/                       # shadcn/ui + basic UI (15 files)
@@ -97,14 +119,22 @@ apps/pwa/src/
 │   │   ├── typo.tsx
 │   │   └── index.ts              # Barrel export
 │   │
-│   ├── layout/                   # Layout/navigation (7 files)
-│   │   ├── both-sidebar.tsx      # SidebarLeft, SidebarRight system
+│   ├── layout/                   # Layout/navigation [UPDATED]
+│   │   ├── both-sidebar.tsx
 │   │   ├── dockview-default-tab.tsx
 │   │   ├── dockview-hidden-tab.tsx  # [UNUSED]
 │   │   ├── dockview-panel-focus-animation.tsx
-│   │   ├── left-navigation-mobile.tsx  # [Phase 3: Mobile removal target]
 │   │   ├── top-bar.tsx
 │   │   ├── top-navigation.tsx
+│   │   ├── left-navigation/      # ✅ Consolidated (7 files)
+│   │   │   ├── index.tsx         # Desktop main (barrel export)
+│   │   │   ├── left-navigation-mobile.tsx  # [Phase 3: Mobile removal target]
+│   │   │   ├── card-list.tsx
+│   │   │   ├── flow-list.tsx
+│   │   │   ├── session-list.tsx
+│   │   │   ├── shared-list-components.tsx
+│   │   │   └── hooks/
+│   │   │       └── use-left-navigation-width.ts
 │   │   └── index.ts              # Barrel export
 │   │
 │   ├── dialogs/                  # Shared dialogs (4 files)
@@ -124,12 +154,9 @@ apps/pwa/src/
 │       └── updater-new.tsx
 │
 ├── components-v2/                 # Legacy structure (being migrated)
-│   ├── card/                     # [TODO: → features/card/]
-│   ├── flow/                     # [TODO: → features/flow/]
-│   ├── session/                  # [TODO: → features/session/]
-│   ├── model/                    # [TODO: → features/model/]
-│   ├── setting/                  # [TODO: → features/settings/]
-│   ├── left-navigation/          # [TODO: → components/layout/]
+│   ├── card/                     # [TODO: → features/card/] (46 files)
+│   ├── session/                  # [TODO: → features/session/] (46 files)
+│   ├── setting/                  # [TODO: → features/settings/] (18 files)
 │   ├── right-navigation/         # [TODO: → components/layout/]
 │   ├── layout/                   # [TODO: → components/layout/]
 │   └── editor/                   # [TODO: → features/editor/]
@@ -149,7 +176,9 @@ apps/pwa/src/
 ### **Organization Principles**
 
 #### **1. Feature-based Structure (Domain-based)**
+
 Group business logic by domain
+
 ```typescript
 // ✅ GOOD: Related code together
 features/session/
@@ -164,17 +193,21 @@ stores/sessionStore.ts           // Even farther
 ```
 
 #### **2. Colocation Principle**
+
 Place files close to where they are used
+
 ```typescript
 // ✅ GOOD: Inside the feature
-features/session/hooks/useSessionMessages.ts
+features / session / hooks / useSessionMessages.ts;
 
 // ❌ BAD: Global hooks folder (if not used in multiple places)
-lib/hooks/useSessionMessages.ts
+lib / hooks / useSessionMessages.ts;
 ```
 
 #### **3. Progressive Disclosure**
+
 Create structure as needed
+
 ```
 # Step 1: Start small
 session/
@@ -199,7 +232,9 @@ session/
 ```
 
 #### **4. Shared Components Criteria**
+
 Criteria for moving to `components/`:
+
 - ✅ Used in **3+ domains**
 - ✅ **Domain-independent** (no business logic)
 - ✅ Acts like a **UI library** (Button, Dialog, Loading, etc.)
@@ -213,6 +248,7 @@ Criteria for moving to `components/`:
 ```
 
 #### **5. Naming Convention**
+
 - **Folder names**: kebab-case (`session-panel/`)
 - **File names**: kebab-case (`session-panel.tsx`)
 - **Component names**: PascalCase (`SessionPanel`)
@@ -221,6 +257,7 @@ Criteria for moving to `components/`:
 ### **Migration Strategy**
 
 **Phase 1 (COMPLETED - 2025-10-22)**: Clean up root files ✅
+
 - ✅ Classified 36 loose files from `components-v2/` root
   - 15 files → `components/ui/` (shadcn/ui + basic UI)
   - 7 files → `components/layout/` (navigation, top-bar, sidebar)
@@ -233,21 +270,32 @@ Criteria for moving to `components/`:
   - 5 Mobile duplication targets for Phase 3
 - ✅ Build verified successful after all migrations
 
-**Phase 2 (NEXT)**: Migrate components-v2 domain folders → features/
-- Move `components-v2/session/` → `features/session/`
-- Move `components-v2/flow/` → `features/flow/`
-- Move `components-v2/card/` → `features/card/`
-- Move `components-v2/model/` → `features/model/`
-- Move `components-v2/setting/` → `features/settings/`
-- Merge navigation folders → `components/layout/`
+**Phase 2 (IN PROGRESS - 2025-10-22)**: Migrate components-v2 domain folders → features/
+
+- ✅ `features/settings/providers/` - 3 files migrated
+  - model-page.tsx, model-page-mobile.tsx, provider-list-item.tsx
+- ✅ `components/layout/left-navigation/` - 7 files consolidated with barrel export
+  - index.tsx (renamed from left-navigation.tsx), left-navigation-mobile.tsx
+  - card-list.tsx, flow-list.tsx, session-list.tsx, shared-list-components.tsx
+  - hooks/use-left-navigation-width.ts
+- ✅ `features/flow/` - 5 files migrated
+  - flow-dialog.tsx, flow-page-mobile.tsx
+  - components/: agent-model-card.tsx, flow-export-dialog.tsx, flow-import-dialog.tsx
+- ⏳ `features/settings/` - 18 files remaining
+- ⏳ `features/card/` - 46 files remaining
+- ⏳ `features/session/` - 46 files remaining
+- ⏳ Merge remaining navigation folders → `components/layout/`
 
 **Phase 3**: Mobile Duplication Elimination
+
 - Remove `-mobile.tsx` files using Tailwind responsive design
 
 **Phase 4**: Feature modularization
+
 - Convert each feature into independent modules as needed (monorepo preparation)
 
 ### **References**
+
 - [Kent C. Dodds - Colocation](https://kentcdodds.com/blog/colocation)
 - [Bulletproof React](https://github.com/alan2207/bulletproof-react)
 - [Next.js Project Structure](https://nextjs.org/docs/getting-started/project-structure)
