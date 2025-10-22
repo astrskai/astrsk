@@ -63,7 +63,7 @@ import {
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
-import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
+import { useLeftNavigationWidth } from "@/components/layout/left-navigation/hooks/use-left-navigation-width";
 import { Card } from "@/components-v2/ui/card";
 import {
   Select,

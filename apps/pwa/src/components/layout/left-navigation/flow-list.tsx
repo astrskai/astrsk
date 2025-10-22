@@ -20,12 +20,12 @@ import {
   AgentModelTierInfo,
 } from "@/components-v2/flow/components/flow-export-dialog";
 import { ModelTier } from "@/modules/agent/domain/agent";
-import { SectionHeader } from "@/components-v2/left-navigation/left-navigation";
+import { SectionHeader } from "./index";
 import {
   SearchInput,
   CreateButton,
   ImportButton,
-} from "@/components-v2/left-navigation/shared-list-components";
+} from "./shared-list-components";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { DeleteConfirm } from "@/components/dialogs/confirm";
 import {

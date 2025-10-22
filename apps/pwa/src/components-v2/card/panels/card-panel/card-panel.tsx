@@ -6,7 +6,7 @@ import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { generatedImageKeys } from "@/app/queries/generated-image/query-factory";
 import { TradingCard } from "@/components-v2/card/components/trading-card";
 import { useCardPanelContext } from "@/components-v2/card/panels/card-panel-provider";
-import { CardItem } from "@/components-v2/left-navigation/card-list";
+import { CardItem } from "@/components/layout/left-navigation/card-list";
 import { useAsset } from "@/app/hooks/use-asset";
 import { cn } from "@/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,7 +17,7 @@ import { BookOpen, Pencil, Check, X, Image } from "lucide-react";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { Button } from "@/components-v2/ui/button";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { useLeftNavigationWidth } from "@/components-v2/left-navigation/hooks/use-left-navigation-width";
+import { useLeftNavigationWidth } from "@/components/layout/left-navigation/hooks/use-left-navigation-width";
 import { Avatar } from "@/components/ui";
 import { useAppStore } from "@/app/stores/app-store";
 

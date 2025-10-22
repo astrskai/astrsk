@@ -1,4 +1,4 @@
-import { MobileNavItem } from "@/components/layout/left-navigation-mobile";
+import { MobileNavItem } from "@/components/layout/left-navigation/left-navigation-mobile";
 import { logger } from "@/shared/utils/logger";
 import { Import } from "lucide-react";
 import { useCallback } from "react";

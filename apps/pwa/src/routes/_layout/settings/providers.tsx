@@ -10,5 +10,5 @@ export const Route = createFileRoute("/_layout/settings/providers")({
 function ProvidersPage() {
   const isMobile = useIsMobile();
 
-  return <>{isMobile ? <ModelPageMobile /> : <ModelPage />}</>;
+  return isMobile ? <ModelPageMobile /> : <ModelPage />;
 }
