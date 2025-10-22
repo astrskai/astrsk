@@ -1,6 +1,6 @@
 import { useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/components-v2/lib/utils";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import {
   Dialog,

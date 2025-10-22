@@ -9,8 +9,8 @@ import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { DeleteConfirm } from "@/components-v2/confirm";
 import { cn } from "@/components-v2/lib/utils";
-import { IconName, SvgIcon } from "@/components-v2/svg-icon";
-import { TypoSmall, TypoTiny } from "@/components-v2/typo";
+import { IconName, SvgIcon } from "@/components/ui/svg-icon";
+import { TypoSmall, TypoTiny } from "@/components/ui/typo";
 import { Card, CardContent } from "@/components-v2/ui/card";
 import {
   Tooltip,
@@ -118,19 +118,27 @@ const ProviderListItem = ({
   return (
     <Card
       className={cn(
-        "group/card inline-block mr-[16px] mb-[calc(-6px+16px)] relative w-[335px] h-[186px] shrink-0 rounded-[8px] overflow-hidden cursor-pointer",
+        "group/card relative mr-[16px] mb-[calc(-6px+16px)] inline-block h-[186px] w-[335px] shrink-0 cursor-pointer overflow-hidden rounded-[8px]",
         "bg-background-surface-3 border-border-light",
         apiSource === ApiSource.AstrskAi &&
           "bg-button-foreground-primary border-primary-semi-dark",
       )}
     >
       {isActive ? (
-        <CardContent className="h-full p-0 flex flex-row" onClick={onOpenEdit}>
-          <div className="grow px-4 py-6 flex flex-col gap-4 justify-between">
-            <div className="h-[52px] flex flex-row items-center">
+        <CardContent className="flex h-full flex-row p-0" onClick={onOpenEdit}>
+          <div className="flex grow flex-col justify-between gap-4 px-4 py-6">
+            <div className="flex h-[52px] flex-row items-center">
               {logo && <SvgIcon name={logo} size={40} />}
-              <div className="font-[600] text-[24px] leading-[29px] text-text-primary">
-                {apiSource === ApiSource.AstrskAi ? <SvgIcon name="astrsk_logo_typo" width={63.24} height={17.8} /> : providerName}
+              <div className="text-text-primary text-[24px] leading-[29px] font-[600]">
+                {apiSource === ApiSource.AstrskAi ? (
+                  <SvgIcon
+                    name="astrsk_logo_typo"
+                    width={63.24}
+                    height={17.8}
+                  />
+                ) : (
+                  providerName
+                )}
               </div>
             </div>
             <div className="flex flex-col gap-4">
@@ -145,7 +153,7 @@ const ProviderListItem = ({
                 </div>
               ))}
               {apiSource === ApiSource.AstrskAi && (
-                <div className="font-[600] text-[12px] leading-[15.6px] text-text-input-subtitle">
+                <div className="text-text-input-subtitle text-[12px] leading-[15.6px] font-[600]">
                   <span className="text-text-muted-title">
                     Free Gemini 2.5 Flash & GPT-5 mini
                   </span>
@@ -157,8 +165,8 @@ const ProviderListItem = ({
           </div>
           <div
             className={cn(
-              "min-w-[40px] bg-background-surface-2",
-              "flex flex-col space-y-3 py-4 px-2",
+              "bg-background-surface-2 min-w-[40px]",
+              "flex flex-col space-y-3 px-2 py-4",
               apiSource === ApiSource.AstrskAi && "bg-primary-dark",
             )}
           >
@@ -168,7 +176,7 @@ const ProviderListItem = ({
                   <TooltipTrigger asChild>
                     <Pencil
                       size={12}
-                      className="text-text-subtle w-5 h-5 cursor-pointer"
+                      className="text-text-subtle h-5 w-5 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         onOpenEdit?.();
@@ -183,7 +191,7 @@ const ProviderListItem = ({
                   <TooltipTrigger asChild>
                     <Unlink
                       size={12}
-                      className="text-text-subtle w-5 h-5"
+                      className="text-text-subtle h-5 w-5"
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsOpenDeleteConfirm(true);
@@ -232,12 +240,12 @@ const ProviderListItem = ({
         </CardContent>
       ) : (
         <CardContent
-          className="h-full p-0 grid place-content-center"
+          className="grid h-full place-content-center p-0"
           onClick={onOpenEdit}
         >
-          <div className="flex flex-row gap-[4px] items-center">
+          <div className="flex flex-row items-center gap-[4px]">
             {logo && <SvgIcon name={logo} size={52} className="self-start" />}
-            <div className="font-[600] text-[32px] leading-[39px] text-text-primary">
+            <div className="text-text-primary text-[32px] leading-[39px] font-[600]">
               {providerNameWithNewLine}
             </div>
           </div>
@@ -245,8 +253,8 @@ const ProviderListItem = ({
       )}
       <div
         className={cn(
-          "absolute inset-0 rounded-[8px] pointer-events-none",
-          "inset-ring-2 inset-ring-primary-normal",
+          "pointer-events-none absolute inset-0 rounded-[8px]",
+          "inset-ring-primary-normal inset-ring-2",
           "hidden group-hover/card:block",
         )}
       />

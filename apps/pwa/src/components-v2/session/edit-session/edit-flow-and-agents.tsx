@@ -13,7 +13,7 @@ import {
   StepFlowAndAgentsSchema,
   StepFlowAndAgentsSchemaType,
 } from "@/components-v2/session/create-session/step-flow-and-agents";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { CarouselItem } from "@/components-v2/ui/carousel";
 import { SessionProps } from "@/modules/session/domain";
@@ -21,11 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain/api-connection";
 
-const AgentListItem = ({
-  agentId,
-}: {
-  agentId: UniqueEntityID;
-}) => {
+const AgentListItem = ({ agentId }: { agentId: UniqueEntityID }) => {
   const { data: agent } = useQuery(agentQueries.detail(agentId));
 
   if (!agent) {
@@ -33,11 +29,11 @@ const AgentListItem = ({
   }
 
   return (
-    <CarouselItem className="basis-1/3 pl-4 py-4">
+    <CarouselItem className="basis-1/3 py-4 pl-4">
       <div
         className={cn(
-          "p-6 rounded-lg flex flex-col gap-6",
-          "bg-background-surface-3 outline-1 outline-border-light",
+          "flex flex-col gap-6 rounded-lg p-6",
+          "bg-background-surface-3 outline-border-light outline-1",
         )}
       >
         <div className="flex flex-col gap-2">
@@ -59,15 +55,15 @@ const AgentListItem = ({
 
 const EmptyFlow = () => {
   return (
-    <CarouselItem className="basis-1/3 pl-[24px] py-[24px]">
+    <CarouselItem className="basis-1/3 py-[24px] pl-[24px]">
       <div
         className={cn(
-          "relative w-[280px] h-[164px] rounded-[8px] grid place-content-center",
+          "relative grid h-[164px] w-[280px] place-content-center rounded-[8px]",
           "bg-background-input",
         )}
       >
-        <div className="flex flex-col gap-[16px] items-center text-background-dialog">
-          <div className="font-[500] text-[12px] leading-[15px]">
+        <div className="text-background-dialog flex flex-col items-center gap-[16px]">
+          <div className="text-[12px] leading-[15px] font-[500]">
             Connect a flow to drive your scene
           </div>
         </div>
@@ -101,7 +97,9 @@ const EditFlowAndAgents = ({
     const subscription = methods.watch(async (value) => {
       if (value.flowId) {
         await onSave({
-          ...convertFlowAndAgentsFormToSessionProps(value as StepFlowAndAgentsSchemaType),
+          ...convertFlowAndAgentsFormToSessionProps(
+            value as StepFlowAndAgentsSchemaType,
+          ),
         });
       }
     });

@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { languages } from "@/shared/utils/translate-utils";
 
-import { Combobox } from "@/components-v2/combobox";
+import { Combobox } from "@/components/ui/combobox";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { cn } from "@/components-v2/lib/utils";
 import { SessionProps } from "@/modules/session/domain";
@@ -27,7 +27,7 @@ const LanguageSettings = () => {
   return (
     <div className="flex flex-col gap-[40px]">
       <div className="flex flex-col gap-[24px]">
-        <div className="font-[600] text-[20px] leading-[24px] text-text-primary">
+        <div className="text-text-primary text-[20px] leading-[24px] font-[600]">
           {isMobile ? "" : "1."} Displayed language
         </div>
         <Controller
@@ -50,12 +50,12 @@ const LanguageSettings = () => {
         />
         <div
           className={cn(
-            "font-[400] text-[16px] leading-[19px] text-text-info",
-            isMobile ? "text-text-body text-sm font-medium leading-tight" : "",
+            "text-text-info text-[16px] leading-[19px] font-[400]",
+            isMobile ? "text-text-body text-sm leading-tight font-medium" : "",
           )}
         >
           <Info
-            className="inline-block mb-[4px] mr-[4px]"
+            className="mr-[4px] mb-[4px] inline-block"
             size={isMobile ? 12 : 16}
           />
           Choose the language of your session. All messages will automatically
@@ -63,7 +63,7 @@ const LanguageSettings = () => {
         </div>
       </div>
       <div className="flex flex-col gap-[24px]">
-        <div className="font-[600] text-[20px] leading-[24px]">
+        <div className="text-[20px] leading-[24px] font-[600]">
           {isMobile ? "" : "2."} AI understanding language
         </div>
         <Controller
@@ -86,12 +86,12 @@ const LanguageSettings = () => {
         />
         <div
           className={cn(
-            "font-[400] text-[16px] leading-[19px] text-text-info",
-            isMobile ? "text-text-body text-sm font-medium leading-tight" : "",
+            "text-text-info text-[16px] leading-[19px] font-[400]",
+            isMobile ? "text-text-body text-sm leading-tight font-medium" : "",
           )}
         >
           <Info
-            className="inline-block mb-[4px] mr-[4px]"
+            className="mr-[4px] mb-[4px] inline-block"
             size={isMobile ? 12 : 16}
           />
           Choose the AI input language. Selecting a specific language translates
@@ -108,17 +108,17 @@ const StepLanguage = () => {
   return (
     <div
       className={cn(
-        "flex flex-col ",
+        "flex flex-col",
         isMobile
-          ? "w-full max-w-[600px] mx-auto px-4 gap-[40px]"
+          ? "mx-auto w-full max-w-[600px] gap-[40px] px-4"
           : "w-[720px] gap-[56px]",
       )}
     >
       <div
         className={cn(
           isMobile
-            ? "text-text-body text-sm font-medium leading-tight"
-            : "font-[600] text-[20px] text-text-primary leading-[24px]",
+            ? "text-text-body text-sm leading-tight font-medium"
+            : "text-text-primary text-[20px] leading-[24px] font-[600]",
         )}
       >
         Session language & translation preferences

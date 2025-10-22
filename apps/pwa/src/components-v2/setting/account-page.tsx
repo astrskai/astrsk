@@ -1,5 +1,5 @@
 import { Page, useAppStore } from "@/app/stores/app-store";
-import { TypoBase, TypoXLarge } from "@/components-v2/typo";
+import { TypoBase, TypoXLarge } from "@/components/ui/typo";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { api } from "@/convex";
 import { Datetime } from "@/shared/utils";

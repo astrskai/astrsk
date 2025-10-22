@@ -12,17 +12,27 @@ import {
   useBackgroundStore,
 } from "@/app/stores/background-store";
 import { cn } from "@/components-v2/lib/utils";
-import { TypoBase } from "@/components-v2/typo";
+import { TypoBase } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components-v2/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components-v2/ui/tabs";
 import { AspectRatio } from "@/components-v2/ui/aspect-ratio";
 import { Background } from "@/modules/background/domain";
 
 // Re-export schema and converter from the shared step
-export { StepBackgroundSchema, convertBackgroundFormToSessionProps } from "@/components-v2/session/create-session/step-background";
+export {
+  StepBackgroundSchema,
+  convertBackgroundFormToSessionProps,
+} from "@/components-v2/session/create-session/step-background";
 
-export type StepBackgroundSchemaType = z.infer<typeof import("@/components-v2/session/create-session/step-background").StepBackgroundSchema>;
+export type StepBackgroundSchemaType = z.infer<
+  typeof import("@/components-v2/session/create-session/step-background").StepBackgroundSchema
+>;
 
 // Mobile Background List Item
 const BackgroundListItem = ({
@@ -46,24 +56,24 @@ const BackgroundListItem = ({
     <div
       onClick={onClick}
       className={cn(
-        "rounded-lg relative overflow-hidden bg-background-surface-1 cursor-pointer w-full",
-        isActive && "ring-2 ring-primary-normal",
+        "bg-background-surface-1 relative w-full cursor-pointer overflow-hidden rounded-lg",
+        isActive && "ring-primary-normal ring-2",
       )}
     >
       <AspectRatio ratio={16 / 9}>
-        {(src || asset) ? (
+        {src || asset ? (
           <img
             src={src || asset!}
             alt="Background"
-            className="object-cover w-full h-full"
+            className="h-full w-full object-cover"
           />
         ) : (
-          <div className="bg-background-input w-full h-full flex items-center justify-center">
+          <div className="bg-background-input flex h-full w-full items-center justify-center">
             <TypoBase className="text-muted-foreground">No background</TypoBase>
           </div>
         )}
       </AspectRatio>
-      
+
       {isEditable && (
         <Button
           variant="ghost_white"
@@ -72,7 +82,7 @@ const BackgroundListItem = ({
             e.stopPropagation();
             onDelete?.();
           }}
-          className="absolute top-1 right-1 h-7 w-7 bg-background/80 hover:bg-background"
+          className="bg-background/80 hover:bg-background absolute top-1 right-1 h-7 w-7"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -85,13 +95,13 @@ const BackgroundListItem = ({
 const AddImageBackgroundItem = ({ onClick }: { onClick?: () => void }) => {
   return (
     <div
-      className="rounded-lg relative overflow-hidden bg-background-surface-4 cursor-pointer transition-colors w-full"
+      className="bg-background-surface-4 relative w-full cursor-pointer overflow-hidden rounded-lg transition-colors"
       onClick={onClick}
     >
       <AspectRatio ratio={16 / 9}>
-        <div className="w-full h-full flex flex-col items-center justify-center gap-1">
-          <Plus className="w-6 h-6 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Add Background</span>
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+          <Plus className="text-muted-foreground h-6 w-6" />
+          <span className="text-muted-foreground text-sm">Add Background</span>
         </div>
       </AspectRatio>
     </div>
@@ -122,14 +132,15 @@ export const StepBackgroundMobile = ({
   };
 
   const handleDeleteBackground = async (id: UniqueEntityID) => {
-    const backgroundOrError = await BackgroundService.deleteBackground.execute(id);
+    const backgroundOrError =
+      await BackgroundService.deleteBackground.execute(id);
     if (backgroundOrError.isFailure) {
       return;
     }
 
     // Refresh backgrounds
     fetchBackgrounds();
-    
+
     // Clear selection if deleted background was selected
     if (backgroundId === id.toString()) {
       setValue("backgroundId", null);
@@ -137,20 +148,21 @@ export const StepBackgroundMobile = ({
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="p-[16px] pb-0 flex-1 flex flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden p-[16px] pb-0">
         <div className="flex flex-col gap-[24px]">
-          <div className="text-text-body text-sm font-medium leading-tight">
-            Choose a background for your session: import image or select from the ones provided.
+          <div className="text-text-body text-sm leading-tight font-medium">
+            Choose a background for your session: import image or select from
+            the ones provided.
           </div>
         </div>
         <Tabs
           defaultValue="provided"
-          className="w-full flex flex-col h-full overflow-hidden mt-[24px]"
+          className="mt-[24px] flex h-full w-full flex-col overflow-hidden"
         >
           <TabsList
             variant="mobile"
-            className="grid w-full grid-cols-2 flex-shrink-0"
+            className="grid w-full flex-shrink-0 grid-cols-2"
           >
             <TabsTrigger value="provided">astrsk provided</TabsTrigger>
             <TabsTrigger value="custom">User added</TabsTrigger>
@@ -158,7 +170,7 @@ export const StepBackgroundMobile = ({
 
           <TabsContent
             value="provided"
-            className="flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col mt-[16px]"
+            className="mt-[16px] flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
           >
             <ScrollArea className="flex-1">
               <div className="p-[2px]">
@@ -167,8 +179,12 @@ export const StepBackgroundMobile = ({
                     <BackgroundListItem
                       key={defaultBackground.id.toString()}
                       src={defaultBackground.src}
-                      isActive={backgroundId === defaultBackground.id.toString()}
-                      onClick={() => handleBackgroundClick(defaultBackground.id)}
+                      isActive={
+                        backgroundId === defaultBackground.id.toString()
+                      }
+                      onClick={() =>
+                        handleBackgroundClick(defaultBackground.id)
+                      }
                     />
                   ))}
                   <BackgroundListItem
@@ -183,7 +199,7 @@ export const StepBackgroundMobile = ({
 
           <TabsContent
             value="custom"
-            className="flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col mt-[16px]"
+            className="mt-[16px] flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
           >
             <ScrollArea className="flex-1">
               <div className="p-[2px]">

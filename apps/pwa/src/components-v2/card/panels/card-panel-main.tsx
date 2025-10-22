@@ -30,7 +30,7 @@ import { VariablesPanel } from "./card-panel/components/variables-panel";
 import { FirstMessagesPanel } from "./card-panel/components/scenarios-panel";
 import { ImageGeneratorPanel } from "./card-panel/components/image-generator-panel";
 import { CardVibePanel } from "./card-panel/components/vibe-panel";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { cn, logger } from "@/shared/utils";
 import CustomDockviewTab from "@/components-v2/dockview-default-tab";
 import { PanelFocusAnimationWrapper } from "@/components-v2/dockview-panel-focus-animation";

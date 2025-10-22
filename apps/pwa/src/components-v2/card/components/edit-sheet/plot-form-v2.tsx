@@ -12,7 +12,7 @@ import {
 import { ImageUpload } from "@/components-v2/card/components/edit-sheet/image-upload";
 import { SortableBlockListV2 } from "@/components-v2/card/components/edit-sheet/sortable-block-list-v2";
 import { useEntryList } from "@/components-v2/card/hooks/useEntryList";
-import { Typo2XLarge } from "@/components-v2/typo";
+import { Typo2XLarge } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 import { FloatingLabelInputs } from "@/components-v2/ui/floating-label-inputs";
@@ -176,7 +176,7 @@ export const PlotForm = ({
   return (
     <div className="w-full">
       {!isMobile && (
-        <div className="flex items-center gap-2 mt-2 mb-8">
+        <div className="mt-2 mb-8 flex items-center gap-2">
           <Typo2XLarge>{isNewCard ? "Create" : "Edit"} Plot Card</Typo2XLarge>
         </div>
       )}
@@ -218,10 +218,10 @@ export const PlotForm = ({
 
         <TabsContent
           value="basic-info"
-          className={cn("space-y-4 mt-10", isMobile ? "space-y-[24px]" : "")}
+          className={cn("mt-10 space-y-4", isMobile ? "space-y-[24px]" : "")}
         >
-          <div className="flex flex-col items-center mb-10">
-            <div className="w-[200px] h-[200px]">
+          <div className="mb-10 flex flex-col items-center">
+            <div className="h-[200px] w-[200px]">
               <ImageUpload
                 type={CardType.Plot}
                 title={card.props.title}
@@ -249,13 +249,13 @@ export const PlotForm = ({
           />
           <div className="mt-8">
             {isMobile ? (
-              <div className="space-y-2 flex flex-row items-center pb-[16px] gap-[16px]">
+              <div className="flex flex-row items-center gap-[16px] space-y-2 pb-[16px]">
                 <Typo2XLarge>Scenario</Typo2XLarge>
                 <Button
                   type="button"
                   variant="outline"
                   size="lg"
-                  className="w-full h-[40px]"
+                  className="h-[40px] w-full"
                   onClick={handleAddScenarios}
                 >
                   + Add scenario entry
@@ -263,14 +263,14 @@ export const PlotForm = ({
               </div>
             ) : (
               <div>
-                <div className={"space-y-2 mb-4"}>
+                <div className={"mb-4 space-y-2"}>
                   <Typo2XLarge>Scenario</Typo2XLarge>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="lg"
-                  className="w-full mb-4"
+                  className="mb-4 w-full"
                   onClick={handleAddScenarios}
                 >
                   + Add scenario entry
@@ -283,10 +283,10 @@ export const PlotForm = ({
                 return (
                   <div
                     key={index}
-                    className={`w-full ${isMobile ? "bg-background-surface-3" : "bg-background-card"} border border-border-light rounded-md overflow-hidden`}
+                    className={`w-full ${isMobile ? "bg-background-surface-3" : "bg-background-card"} border-border-light overflow-hidden rounded-md border`}
                   >
-                    <div className="flex justify-between items-center p-4">
-                      <div className="flex items-center gap-2 w-full">
+                    <div className="flex items-center justify-between p-4">
+                      <div className="flex w-full items-center gap-2">
                         <div className="w-full pr-4">
                           {isExpanded ? (
                             <FloatingLabelInput
@@ -304,7 +304,7 @@ export const PlotForm = ({
                             />
                           ) : (
                             <div
-                              className="flex items-center gap-2 cursor-pointer"
+                              className="flex cursor-pointer items-center gap-2"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleOpen(index);
@@ -347,7 +347,7 @@ export const PlotForm = ({
                               });
                             }}
                           >
-                            <Copy className="min-w-[24px] min-h-[24px]" />
+                            <Copy className="min-h-[24px] min-w-[24px]" />
                           </Button>
                           <Button
                             type="button"
@@ -362,7 +362,7 @@ export const PlotForm = ({
                               });
                             }}
                           >
-                            <Trash2 className="min-w-[24px] min-h-[24px]" />
+                            <Trash2 className="min-h-[24px] min-w-[24px]" />
                           </Button>
                           <Button
                             type="button"
@@ -376,9 +376,9 @@ export const PlotForm = ({
                             }}
                           >
                             {isExpanded ? (
-                              <ChevronUp className="min-w-[24px] min-h-[24px]" />
+                              <ChevronUp className="min-h-[24px] min-w-[24px]" />
                             ) : (
-                              <ChevronDown className="min-w-[24px] min-h-[24px]" />
+                              <ChevronDown className="min-h-[24px] min-w-[24px]" />
                             )}
                           </Button>
                         </div>
@@ -410,13 +410,13 @@ export const PlotForm = ({
 
           <div className="mt-8">
             {isMobile ? (
-              <div className="space-y-2 flex flex-row items-center pb-[16px] gap-[16px]">
+              <div className="flex flex-row items-center gap-[16px] space-y-2 pb-[16px]">
                 <Typo2XLarge>Lorebook</Typo2XLarge>
                 <Button
                   type="button"
                   variant="outline"
                   size="lg"
-                  className="w-full h-[40px]"
+                  className="h-[40px] w-full"
                   onClick={handleAddEntry}
                 >
                   + Add lorebook
@@ -424,14 +424,14 @@ export const PlotForm = ({
               </div>
             ) : (
               <div>
-                <div className={"space-y-2 mb-4"}>
+                <div className={"mb-4 space-y-2"}>
                   <Typo2XLarge>Lore book</Typo2XLarge>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="lg"
-                  className="w-full mb-4"
+                  className="mb-4 w-full"
                   onClick={handleAddEntry}
                 >
                   + Add lorebook
@@ -454,7 +454,7 @@ export const PlotForm = ({
           </div>
         </TabsContent>
 
-        <TabsContent value="additional-info" className="space-y-4 mt-4">
+        <TabsContent value="additional-info" className="mt-4 space-y-4">
           <div className="space-y-4">
             <FloatingLabelInputs
               label="Tags"

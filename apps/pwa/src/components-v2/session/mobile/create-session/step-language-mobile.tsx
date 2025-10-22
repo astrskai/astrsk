@@ -4,12 +4,17 @@ import { z } from "zod";
 
 import { languages } from "@/shared/utils/translate-utils";
 
-import { Combobox } from "@/components-v2/combobox";
+import { Combobox } from "@/components/ui/combobox";
 import { cn } from "@/components-v2/lib/utils";
 
 // Re-export schema and converter from the shared step
-export { StepLanguageSchema, convertLanguageFormToSessionProps } from "@/components-v2/session/create-session/step-language";
-export type StepLanguageSchemaType = z.infer<typeof import("@/components-v2/session/create-session/step-language").StepLanguageSchema>;
+export {
+  StepLanguageSchema,
+  convertLanguageFormToSessionProps,
+} from "@/components-v2/session/create-session/step-language";
+export type StepLanguageSchemaType = z.infer<
+  typeof import("@/components-v2/session/create-session/step-language").StepLanguageSchema
+>;
 
 // Mobile Language Settings
 const LanguageSettingsMobile = () => {
@@ -18,7 +23,7 @@ const LanguageSettingsMobile = () => {
   return (
     <div className="flex flex-col gap-[40px]">
       <div className="flex flex-col gap-[24px]">
-        <div className="font-[600] text-[18px] leading-[24px] text-text-primary">
+        <div className="text-text-primary text-[18px] leading-[24px] font-[600]">
           Displayed language
         </div>
         <div className="flex flex-col gap-[8px]">
@@ -41,18 +46,15 @@ const LanguageSettingsMobile = () => {
             )}
           />
           <div className="text-text-placeholder text-xs font-normal">
-            <Info
-              className="inline-block mb-[4px] mr-[4px]"
-              size={12}
-            />
+            <Info className="mr-[4px] mb-[4px] inline-block" size={12} />
             Choose the language of your session. All messages will automatically
             be translate to the chosen language.
           </div>
         </div>
       </div>
-      
+
       <div className="flex flex-col gap-[24px]">
-        <div className="font-[600] text-[18px] leading-[24px] text-text-primary">
+        <div className="text-text-primary text-[18px] leading-[24px] font-[600]">
           AI understanding language
         </div>
         <div className="flex flex-col gap-[8px]">
@@ -75,12 +77,10 @@ const LanguageSettingsMobile = () => {
             )}
           />
           <div className="text-text-placeholder text-xs font-normal">
-            <Info
-              className="inline-block mb-[4px] mr-[4px]"
-              size={12}
-            />
-            Choose the AI input language. Selecting a specific language translates
-            your prompts before it is sent to the AI model for inference.
+            <Info className="mr-[4px] mb-[4px] inline-block" size={12} />
+            Choose the AI input language. Selecting a specific language
+            translates your prompts before it is sent to the AI model for
+            inference.
           </div>
         </div>
       </div>
@@ -91,10 +91,10 @@ const LanguageSettingsMobile = () => {
 // Mobile Step Language Component
 export const StepLanguageMobile = () => {
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="p-[16px] pb-0 flex-1 flex flex-col overflow-y-auto">
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-y-auto p-[16px] pb-0">
         <div className="flex flex-col gap-[40px]">
-          <div className="text-text-body text-sm font-medium leading-tight">
+          <div className="text-text-body text-sm leading-tight font-medium">
             Session language & translation preferences
           </div>
           <LanguageSettingsMobile />

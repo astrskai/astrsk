@@ -5,7 +5,7 @@ import * as React from "react";
 
 import { cn } from "@/shared/utils/tailwind-utils";
 
-import { TypoTiny } from "@/components-v2/typo";
+import { TypoTiny } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import {
   Tooltip,
@@ -52,10 +52,10 @@ const FloatingLabelInput = React.forwardRef<
       <div className="relative">
         <div
           className={cn(
-            "relative flex w-full rounded-md bg-background-surface-4 px-3 py-2 text-sm ring-offset-background",
+            "bg-background-surface-4 ring-offset-background relative flex w-full rounded-md px-3 py-2 text-sm",
             "h-[57px]",
             error
-              ? "border border-status-destructive-primary "
+              ? "border-status-destructive-primary border"
               : "focus-within:border-primary",
             props.readOnly ? "cursor-pointer" : "",
             className,
@@ -66,15 +66,15 @@ const FloatingLabelInput = React.forwardRef<
             value={value}
             placeholder=""
             className={cn(
-              "peer flex w-full bg-transparent px-0 py-0 text-base text-text-primary placeholder:text-text-placeholder",
+              "peer text-text-primary placeholder:text-text-placeholder flex w-full bg-transparent px-0 py-0 text-base",
               "border-none focus:ring-0 focus:outline-hidden",
               "ring-offset-transparent file:border-0 file:bg-transparent file:text-base file:font-medium",
-              "focus-visible:outline-hidden focus-visible:ring-0",
+              "focus-visible:ring-0 focus-visible:outline-hidden",
               "disabled:cursor-not-allowed disabled:opacity-50",
               "no-value:pt-3 no-value:pb-3",
               "has-value:pt-5 has-value:pb-1",
               variant === "add" ? "pr-16" : "",
-              "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+              "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
             )}
             ref={ref}
             autoCorrect="off"
@@ -85,7 +85,7 @@ const FloatingLabelInput = React.forwardRef<
           />
           <label
             className={cn(
-              "absolute pointer-events-none transition-all duration-200 ease-in-out text-text-placeholder",
+              "text-text-placeholder pointer-events-none absolute transition-all duration-200 ease-in-out",
               "peer-no-value:text-base peer-no-value:translate-y-2.5",
               "peer-has-value:text-xs peer-has-value:translate-y-0",
             )}
@@ -96,7 +96,7 @@ const FloatingLabelInput = React.forwardRef<
             <Button
               onClick={onButtonClick}
               className={cn(
-                "absolute right-4 top-1/2 -translate-y-1/2 min-w-[80px]",
+                "absolute top-1/2 right-4 min-w-[80px] -translate-y-1/2",
               )}
             >
               {buttonLabel}
@@ -106,10 +106,10 @@ const FloatingLabelInput = React.forwardRef<
             <Button
               onClick={onButtonClick}
               className={cn(
-                "absolute right-2 top-1/2 -translate-y-1/2",
+                "absolute top-1/2 right-2 -translate-y-1/2",
                 "px-2 py-1 text-xs font-medium",
                 "bg-primary text-primary-foreground",
-                "rounded-md hover:bg-primary/90",
+                "hover:bg-primary/90 rounded-md",
                 "transition-colors",
                 "disabled:pointer-events-none disabled:opacity-50",
               )}
@@ -121,7 +121,7 @@ const FloatingLabelInput = React.forwardRef<
         {helpText && (
           <p
             className={cn(
-              "text-xs mt-1 ml-4 mr-4",
+              "mt-1 mr-4 ml-4 text-xs",
               error
                 ? "text-status-destructive-primary"
                 : "text-text-input-subtitle",
@@ -136,13 +136,13 @@ const FloatingLabelInput = React.forwardRef<
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 size-[24px] grid place-content-center text-text-input-subtitle hover:text-text-input-hover active:text-text-input-clicked cursor-pointer">
+                <div className="text-text-input-subtitle hover:text-text-input-hover active:text-text-input-clicked absolute top-1/2 right-2 grid size-[24px] -translate-y-1/2 cursor-pointer place-content-center">
                   <CircleHelp size={14} className="cursor-pointer" />
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={5} className="z-[100]">
                 <div className="flex flex-col px-2 py-2">
-                  <TypoTiny className="p-0 w-[186px] leading-tight">
+                  <TypoTiny className="w-[186px] p-0 leading-tight">
                     {tooltip}
                   </TypoTiny>
                 </div>

@@ -38,7 +38,7 @@ import {
   StepLanguage,
   StepLanguageSchema,
 } from "@/components-v2/session/create-session/step-language";
-import { Stepper } from "@/components-v2/stepper";
+import { Stepper } from "@/components/ui/stepper";
 import { TableName } from "@/db/schema/table-name";
 import { Session } from "@/modules/session/domain";
 import { defaultChatStyles } from "@/modules/session/domain/chat-styles";

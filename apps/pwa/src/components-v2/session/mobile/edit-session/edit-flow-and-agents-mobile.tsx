@@ -12,7 +12,7 @@ import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { useFlows } from "@/app/hooks/use-flows";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { SessionService } from "@/app/services/session-service";
-import { Combobox } from "@/components-v2/combobox";
+import { Combobox } from "@/components/ui/combobox";
 import { cn } from "@/components-v2/lib/utils";
 import {
   convertFlowAndAgentsFormToSessionProps,
@@ -34,18 +34,18 @@ const AgentListItem = ({ agentId }: { agentId: UniqueEntityID }) => {
 
   return (
     <div
-      className={cn("p-[24px] rounded-[4px] border", "border-border-container")}
+      className={cn("rounded-[4px] border p-[24px]", "border-border-container")}
     >
       <div className="space-y-[24px]">
         <div className="flex flex-row gap-[24px]">
-          <p className="text-base font-medium text-text-primary">Agent</p>
-          <p className="text-base font-normal text-text-secondary truncate">
+          <p className="text-text-primary text-base font-medium">Agent</p>
+          <p className="text-text-secondary truncate text-base font-normal">
             {agent.props.name || "Generate response"}
           </p>
         </div>
         <div className="flex flex-row gap-[24px]">
-          <p className="text-base font-medium text-text-primary">Model</p>
-          <p className="text-base font-normal text-text-secondary truncate">
+          <p className="text-text-primary text-base font-medium">Model</p>
+          <p className="text-text-secondary truncate text-base font-normal">
             {`${apiSourceLabel.get((agent.props.apiSource as ApiSource) ?? "openai")} - ${agent.props.modelName}`}
           </p>
         </div>
@@ -105,7 +105,7 @@ export function EditFlowAndAgentsMobile({
 
   return (
     <FormProvider {...methods}>
-      <div className="fixed inset-0 z-50 bg-background-surface-2">
+      <div className="bg-background-surface-2 fixed inset-0 z-50">
         {/* Header */}
         <TopNavigation
           title="Flow & Agent"
@@ -136,8 +136,8 @@ export function EditFlowAndAgentsMobile({
             {/* Flow selection */}
             <div className="space-y-[40px]">
               <div>
-                <h3 className="text-xl font-semibold pb-[8px]">Flow</h3>
-                <p className="text-base text-text-input-subtitle mb-[24px]">
+                <h3 className="pb-[8px] text-xl font-semibold">Flow</h3>
+                <p className="text-text-input-subtitle mb-[24px] text-base">
                   Choose a flow (a bundle of prompt preset and AI model) to use
                   for your session.
                 </p>
@@ -167,8 +167,8 @@ export function EditFlowAndAgentsMobile({
               {/* Agents list */}
               {selectedFlow && selectedFlow.agentIds.length > 0 && (
                 <div>
-                  <h3 className="text-xl font-medium mb-[8px]">Agents</h3>
-                  <p className="text-base text-text-input-subtitle mb-[24px]">
+                  <h3 className="mb-[8px] text-xl font-medium">Agents</h3>
+                  <p className="text-text-input-subtitle mb-[24px] text-base">
                     Listed below are the agents that make up this flow.
                   </p>
 

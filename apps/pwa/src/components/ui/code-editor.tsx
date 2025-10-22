@@ -1,4 +1,9 @@
-import path from "path";
+/**
+ * [CLEANUP-TODO] UNUSED COMPONENT
+ * Last checked: 2025-10-22
+ * Usage: None (except stories)
+ * Action: Review for deletion
+ */
 
 import MonacoEditor, {
   EditorProps,
@@ -12,12 +17,7 @@ import { useEffect, useRef } from "react";
 import { variableList } from "@/shared/prompt/domain/variable";
 import { cn } from "@/shared/utils";
 
-import { Banner } from "@/components-v2/banner";
-import { useTheme } from "@/components-v2/theme-provider";
-
-function ensureFirstBackSlash(str: string) {
-  return str.length > 0 && str.charAt(0) !== "/" ? "/" + str : str;
-}
+import { Banner } from "@/components/ui/banner";
 
 // Only configure Monaco in browser environment
 if (typeof window !== "undefined") {
@@ -142,7 +142,6 @@ const CodeEditor = ({
   className?: string;
   errorLines?: { error: string; line: number }[];
 }) => {
-  const { theme } = useTheme();
   const mergedOptions = merge({}, defaultOptions, options);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<any>(null);

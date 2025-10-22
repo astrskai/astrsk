@@ -4,7 +4,7 @@ import { Page, useAppStore } from "@/app/stores/app-store";
 import { useCardsStore } from "@/app/stores/cards-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { cn } from "@/components-v2/lib/utils";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { ButtonPill } from "@/components-v2/ui/button-pill";
 import { Code, SquareArrowUpRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -19,13 +19,13 @@ const NewWindowButton = () => {
     <button
       tabIndex={-1}
       type="button"
-      className="electron-no-drag min-h-[26px] flex flex-row gap-[8px] items-center text-text-subtle hover:text-text-primary transition-colors group"
+      className="electron-no-drag text-text-subtle hover:text-text-primary group flex min-h-[26px] flex-row items-center gap-[8px] transition-colors"
       onClick={handleNewWindow}
     >
-      <div className="w-5 h-5 relative overflow-hidden">
+      <div className="relative h-5 w-5 overflow-hidden">
         <SquareArrowUpRight size={20} />
       </div>
-      <span className="font-[600] text-[16px] leading-[25.6px]">
+      <span className="text-[16px] leading-[25.6px] font-[600]">
         New window
       </span>
     </button>
@@ -92,14 +92,14 @@ export function TopBar() {
     <div
       className={cn(
         "electron-drag-region",
-        "z-30 min-h-[38px] bg-background-surface-2",
-        "flex flex-row items-center justify-center gap-2 relative",
+        "bg-background-surface-2 z-30 min-h-[38px]",
+        "relative flex flex-row items-center justify-center gap-2",
       )}
     >
       {isLoading ? (
         <>
           {/* Window title */}
-          <div className="absolute inset-x-[160px] inset-y-[6px] flex flex-row justify-center items-center gap-[8px] font-[500] text-[16px] leading-[20px]">
+          <div className="absolute inset-x-[160px] inset-y-[6px] flex flex-row items-center justify-center gap-[8px] text-[16px] leading-[20px] font-[500]">
             <span className="text-text-primary truncate">astrsk.ai</span>
           </div>
 
@@ -107,8 +107,8 @@ export function TopBar() {
           {isWindows && (
             <div
               className={cn(
-                "electron-no-drag absolute right-[10px] inset-y-[7px]",
-                "flex flex-row gap-[30px] items-center text-text-body",
+                "electron-no-drag absolute inset-y-[7px] right-[10px]",
+                "text-text-body flex flex-row items-center gap-[30px]",
               )}
             >
               <button tabIndex={-1} onClick={handleMinimize}>
@@ -127,13 +127,13 @@ export function TopBar() {
         <>
           {/* Windows: New window */}
           {isWindows && (
-            <div className="absolute left-[16px] inset-y-[6px]">
+            <div className="absolute inset-y-[6px] left-[16px]">
               <NewWindowButton />
             </div>
           )}
 
           {/* Window title */}
-          <div className="absolute inset-x-[160px] inset-y-[6px] flex flex-row justify-center items-center gap-[8px] font-[500] text-[16px] leading-[20px]">
+          <div className="absolute inset-x-[160px] inset-y-[6px] flex flex-row items-center justify-center gap-[8px] text-[16px] leading-[20px] font-[500]">
             <span className="text-text-body">{activeMenu}</span>
           </div>
 
@@ -141,8 +141,8 @@ export function TopBar() {
           {isWindows && (
             <div
               className={cn(
-                "electron-no-drag absolute right-[10px] inset-y-[7px]",
-                "flex flex-row gap-[30px] items-center text-text-body",
+                "electron-no-drag absolute inset-y-[7px] right-[10px]",
+                "text-text-body flex flex-row items-center gap-[30px]",
               )}
             >
               <button tabIndex={-1} onClick={handleMinimize}>
@@ -158,7 +158,7 @@ export function TopBar() {
           )}
           {/* macOS: New window */}
           {!isWindows && (
-            <div className="absolute right-[16px] inset-y-[6px]">
+            <div className="absolute inset-y-[6px] right-[16px]">
               <NewWindowButton />
             </div>
           )}

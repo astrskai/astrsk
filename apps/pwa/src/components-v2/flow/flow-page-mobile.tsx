@@ -21,11 +21,11 @@ import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import { DeleteConfirm } from "@/components-v2/confirm";
 import { FlowDialog } from "@/components-v2/flow/flow-dialog";
 import { cn } from "@/components-v2/lib/utils";
-import { SearchInput } from "@/components-v2/search-input";
+import { SearchInput } from "@/components/ui/search-input";
 import { humanizeBytes } from "@/components-v2/session/session-list";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { ModelItem } from "@/components-v2/title/create-title/step-prompts";
-import { TypoBase } from "@/components-v2/typo";
+import { TypoBase } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { CheckboxMobile } from "@/components-v2/ui/checkbox";
 import {

@@ -9,7 +9,7 @@ import {
   StepLanguageSchema,
   StepLanguageSchemaType,
 } from "@/components-v2/session/create-session/step-language";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { SessionProps } from "@/modules/session/domain/session";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
@@ -33,7 +33,10 @@ const EditLanguage = ({
   // Auto-save on form changes
   useEffect(() => {
     const subscription = methods.watch(async (value) => {
-      if (value.translation?.displayLanguage && value.translation?.promptLanguage) {
+      if (
+        value.translation?.displayLanguage &&
+        value.translation?.promptLanguage
+      ) {
         await onSave({
           ...convertLanguageFormToSessionProps(value as StepLanguageSchemaType),
         });

@@ -3,7 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { MessageCircle, GripVertical } from "lucide-react";
 import { Switch } from "@/components-v2/ui/switch";
 import { cn } from "@/components-v2/lib/utils";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { PromptItem } from "./prompt-types";
 
 interface SortableItemProps {
@@ -16,8 +16,8 @@ interface SortableItemProps {
   canDelete: boolean;
 }
 
-export function SortableItem({ 
-  item, 
+export function SortableItem({
+  item,
   isSelected,
   onClick,
   onToggle,
@@ -44,35 +44,37 @@ export function SortableItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="self-stretch inline-flex justify-start items-center gap-2"
+      className="inline-flex items-center justify-start gap-2 self-stretch"
     >
-      <div 
-        className="w-6 h-6 relative cursor-grab active:cursor-grabbing"
+      <div
+        className="relative h-6 w-6 cursor-grab active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="w-4 h-4 text-text-info" />
+        <GripVertical className="text-text-info h-4 w-4" />
       </div>
-      <div className="flex-1 min-w-px inline-flex flex-col justify-start items-start gap-2">
-        <div 
+      <div className="inline-flex min-w-px flex-1 flex-col items-start justify-start gap-2">
+        <div
           className={cn(
-            "self-stretch px-4 py-2 bg-background-surface-3 rounded-md inline-flex justify-start items-center gap-2 overflow-hidden cursor-pointer",
-            isSelected ? "outline outline-2 outline-offset-[-2px] outline-border-selected-inverse" : ""
+            "bg-background-surface-3 inline-flex cursor-pointer items-center justify-start gap-2 self-stretch overflow-hidden rounded-md px-4 py-2",
+            isSelected
+              ? "outline-border-selected-inverse outline outline-2 outline-offset-[-2px]"
+              : "",
           )}
           onClick={onClick}
         >
           {item.type === "history" ? (
-            <SvgIcon name="history_message" className="max-w-4 max-h-4" />
+            <SvgIcon name="history_message" className="max-h-4 max-w-4" />
           ) : (
-            <MessageCircle className="w-4 h-4 text-text-body" />
+            <MessageCircle className="text-text-body h-4 w-4" />
           )}
-          <div className="flex-1 min-w-px justify-start text-text-body text-xs font-normal truncate">
+          <div className="text-text-body min-w-px flex-1 justify-start truncate text-xs font-normal">
             {item.label}
           </div>
         </div>
       </div>
-      <div className="inline-flex flex-col justify-center items-center">
-        <Switch 
+      <div className="inline-flex flex-col items-center justify-center">
+        <Switch
           checked={item.enabled}
           onCheckedChange={onToggle}
           size="small"

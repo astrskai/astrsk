@@ -13,7 +13,7 @@ import { useValidationStore } from "@/app/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
 import { BackgroundService } from "@/app/services/background-service";
 import { fetchBackgrounds } from "@/app/stores/background-store";
-import { StepperMobile } from "@/components-v2/stepper-mobile";
+import { StepperMobile } from "@/components/ui/stepper-mobile";
 import {
   convertBackgroundFormToSessionProps,
   StepBackgroundSchema,
@@ -240,7 +240,11 @@ export default function CreateSessionPageMobile({
           },
           {
             label: "Background",
-            content: <StepBackgroundMobile handleAddNewBackground={handleAddNewBackground} />,
+            content: (
+              <StepBackgroundMobile
+                handleAddNewBackground={handleAddNewBackground}
+              />
+            ),
           },
           {
             label: "Message Styling",

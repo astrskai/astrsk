@@ -1,13 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, CaseUpper, Hash, ToggleRight } from 'lucide-react';
-import { cn } from '@/shared/utils';
-import { SvgIcon } from '@/components-v2/svg-icon';
+import React, { useState, useRef, useEffect } from "react";
+import { ChevronDown, CaseUpper, Hash, ToggleRight } from "lucide-react";
+import { cn } from "@/shared/utils";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import {
   ConditionDataType,
   ConditionOperator,
   getOperatorsForDataType,
   OPERATOR_LABELS,
-} from '@/flow-multi/types/condition-types';
+} from "@/flow-multi/types/condition-types";
 
 interface OperatorComboboxProps {
   value: {
@@ -19,25 +19,38 @@ interface OperatorComboboxProps {
   placeholder?: string;
 }
 
-export function OperatorCombobox({ value, onChange, className, placeholder = "Select" }: OperatorComboboxProps) {
+export function OperatorCombobox({
+  value,
+  onChange,
+  className,
+  placeholder = "Select",
+}: OperatorComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [expandedType, setExpandedType] = useState<ConditionDataType | null>(null);
-  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
+  const [expandedType, setExpandedType] = useState<ConditionDataType | null>(
+    null,
+  );
+  const [dropdownPosition, setDropdownPosition] = useState<"bottom" | "top">(
+    "bottom",
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
         setExpandedType(null);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isOpen]);
 
@@ -52,9 +65,9 @@ export function OperatorCombobox({ value, onChange, className, placeholder = "Se
 
       // If not enough space below but enough space above, position on top
       if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-        setDropdownPosition('top');
+        setDropdownPosition("top");
       } else {
-        setDropdownPosition('bottom');
+        setDropdownPosition("bottom");
       }
     }
   }, [isOpen]);
@@ -77,21 +90,40 @@ export function OperatorCombobox({ value, onChange, className, placeholder = "Se
     }
   };
 
-  const handleOperatorClick = (dataType: ConditionDataType, operator: ConditionOperator) => {
+  const handleOperatorClick = (
+    dataType: ConditionDataType,
+    operator: ConditionOperator,
+  ) => {
     onChange(dataType, operator);
     setIsOpen(false);
     setExpandedType(null);
   };
 
-  const dataTypes: { type: ConditionDataType; label: string; icon: JSX.Element }[] = [
-    { type: 'string', label: 'String', icon: <CaseUpper className="w-4 h-4" /> },
-    { type: 'number', label: 'Number', icon: <Hash className="w-4 h-4" /> },
-    { type: 'integer', label: 'Integer', icon: <SvgIcon name="integer" size={16} /> },
-    { type: 'boolean', label: 'Boolean', icon: <ToggleRight className="w-4 h-4" /> },
+  const dataTypes: {
+    type: ConditionDataType;
+    label: string;
+    icon: JSX.Element;
+  }[] = [
+    {
+      type: "string",
+      label: "String",
+      icon: <CaseUpper className="h-4 w-4" />,
+    },
+    { type: "number", label: "Number", icon: <Hash className="h-4 w-4" /> },
+    {
+      type: "integer",
+      label: "Integer",
+      icon: <SvgIcon name="integer" size={16} />,
+    },
+    {
+      type: "boolean",
+      label: "Boolean",
+      icon: <ToggleRight className="h-4 w-4" />,
+    },
   ];
 
   const getIconForType = (type: ConditionDataType) => {
-    const dataType = dataTypes.find(dt => dt.type === type);
+    const dataType = dataTypes.find((dt) => dt.type === type);
     return dataType?.icon;
   };
 
@@ -101,103 +133,124 @@ export function OperatorCombobox({ value, onChange, className, placeholder = "Se
       <div
         ref={triggerRef}
         onClick={handleToggle}
-        className="w-full min-h-8 p-2 bg-background-surface-0 rounded-md outline outline-1 outline-offset-[-1px] outline-border-normal flex justify-between items-center overflow-hidden cursor-pointer hover:outline-border-selected-inverse focus:outline-border-selected-inverse transition-all"
+        className="bg-background-surface-0 outline-border-normal hover:outline-border-selected-inverse focus:outline-border-selected-inverse flex min-h-8 w-full cursor-pointer items-center justify-between overflow-hidden rounded-md p-2 outline outline-1 outline-offset-[-1px] transition-all"
       >
-        <div className="flex-1 flex justify-start items-center gap-1">
+        <div className="flex flex-1 items-center justify-start gap-1">
           {value.dataType && value.operator ? (
             <>
-              <div className="w-4 h-4 text-text-primary">
+              <div className="text-text-primary h-4 w-4">
                 {getIconForType(value.dataType)}
               </div>
-              <div className="flex-1 flex justify-start items-center gap-4">
-                <div className="flex-1 justify-start text-text-primary text-xs font-normal truncate">
+              <div className="flex flex-1 items-center justify-start gap-4">
+                <div className="text-text-primary flex-1 justify-start truncate text-xs font-normal">
                   {OPERATOR_LABELS[value.operator]}
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 justify-start text-text-placeholder text-xs font-normal">
+            <div className="text-text-placeholder flex-1 justify-start text-xs font-normal">
               {placeholder}
             </div>
           )}
         </div>
-        <div className="w-4 h-4 relative">
-          <ChevronDown className={cn(
-            "max-w-4 max-h-4 absolute left-[-1px] top-[-2px] text-background-surface-5 transition-transform",
-            isOpen && "rotate-180"
-          )} />
+        <div className="relative h-4 w-4">
+          <ChevronDown
+            className={cn(
+              "text-background-surface-5 absolute top-[-2px] left-[-1px] max-h-4 max-w-4 transition-transform",
+              isOpen && "rotate-180",
+            )}
+          />
         </div>
       </div>
 
       {/* Dropdown Content */}
       {isOpen && (
-        <div className={cn(
-          "absolute z-50 w-full",
-          dropdownPosition === 'bottom' ? "mt-1 top-full" : "mb-1 bottom-full"
-        )}>
-          <div className="p-1 bg-background-surface-1 rounded-lg shadow-lg inline-flex flex-col justify-start items-start w-full max-h-[650px] overflow-y-auto">
+        <div
+          className={cn(
+            "absolute z-50 w-full",
+            dropdownPosition === "bottom"
+              ? "top-full mt-1"
+              : "bottom-full mb-1",
+          )}
+        >
+          <div className="bg-background-surface-1 inline-flex max-h-[650px] w-full flex-col items-start justify-start overflow-y-auto rounded-lg p-1 shadow-lg">
             {dataTypes.map((dataType, index) => (
-              <div key={dataType.type} className="self-stretch flex flex-col justify-start items-start gap-1">
+              <div
+                key={dataType.type}
+                className="flex flex-col items-start justify-start gap-1 self-stretch"
+              >
                 {/* Data Type Header - Add border-t for all except first */}
                 <div
                   onClick={() => handleTypeClick(dataType.type)}
                   className={cn(
-                    "self-stretch p-2 inline-flex justify-between items-center cursor-pointer transition-colors group",
-                    index > 0 && "border-t border-border-dark",
+                    "group inline-flex cursor-pointer items-center justify-between self-stretch p-2 transition-colors",
+                    index > 0 && "border-border-dark border-t",
                     value.dataType === dataType.type && !expandedType
-                      ? "bg-background-surface-3 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] rounded-md" 
-                      : ""
+                      ? "bg-background-surface-3 rounded-md shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)]"
+                      : "",
                   )}
                 >
-                  <div className="flex justify-start items-center gap-1">
-                    <div className={cn(
-                      "w-4 h-4",
-                      value.dataType === dataType.type
-                        ? "text-text-primary"
-                        : "text-text-subtle group-hover:text-text-primary"
-                    )}>
+                  <div className="flex items-center justify-start gap-1">
+                    <div
+                      className={cn(
+                        "h-4 w-4",
+                        value.dataType === dataType.type
+                          ? "text-text-primary"
+                          : "text-text-subtle group-hover:text-text-primary",
+                      )}
+                    >
                       {dataType.icon}
                     </div>
-                    <div className={cn(
-                      "justify-start text-xs",
-                      value.dataType === dataType.type
-                        ? "text-text-primary font-semibold"
-                        : "text-text-subtle font-normal group-hover:text-text-primary"
-                    )}>
+                    <div
+                      className={cn(
+                        "justify-start text-xs",
+                        value.dataType === dataType.type
+                          ? "text-text-primary font-semibold"
+                          : "text-text-subtle group-hover:text-text-primary font-normal",
+                      )}
+                    >
                       {dataType.label}
                     </div>
                   </div>
-                  <div className="w-4 h-4 relative">
-                    <ChevronDown className={cn(
-                      "max-w-4 max-h-4 absolute left-[-1px] top-[-2px]",
-                      value.dataType === dataType.type
-                        ? "text-text-primary"
-                        : "text-background-surface-5 group-hover:text-text-primary",
-                      expandedType === dataType.type && "rotate-180"
-                    )} />
+                  <div className="relative h-4 w-4">
+                    <ChevronDown
+                      className={cn(
+                        "absolute top-[-2px] left-[-1px] max-h-4 max-w-4",
+                        value.dataType === dataType.type
+                          ? "text-text-primary"
+                          : "text-background-surface-5 group-hover:text-text-primary",
+                        expandedType === dataType.type && "rotate-180",
+                      )}
+                    />
                   </div>
                 </div>
 
                 {/* Operators List (shown when expanded) */}
                 {expandedType === dataType.type && (
-                  <div className="self-stretch flex flex-col justify-start items-start gap-1">
+                  <div className="flex flex-col items-start justify-start gap-1 self-stretch">
                     {getOperatorsForDataType(dataType.type).map((operator) => (
                       <div
                         key={operator}
-                        onClick={() => handleOperatorClick(dataType.type, operator)}
+                        onClick={() =>
+                          handleOperatorClick(dataType.type, operator)
+                        }
                         className={cn(
-                          "self-stretch p-2 rounded-md inline-flex justify-start items-center gap-2 cursor-pointer transition-colors group",
-                          value.operator === operator && value.dataType === dataType.type
+                          "group inline-flex cursor-pointer items-center justify-start gap-2 self-stretch rounded-md p-2 transition-colors",
+                          value.operator === operator &&
+                            value.dataType === dataType.type
                             ? "bg-background-surface-3 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)]"
-                            : ""
+                            : "",
                         )}
                       >
-                        <div className={cn(
-                          "justify-start text-xs",
-                          value.operator === operator && value.dataType === dataType.type
-                            ? "text-text-primary font-semibold"
-                            : "text-text-subtle font-normal group-hover:text-text-primary"
-                        )}>
+                        <div
+                          className={cn(
+                            "justify-start text-xs",
+                            value.operator === operator &&
+                              value.dataType === dataType.type
+                              ? "text-text-primary font-semibold"
+                              : "text-text-subtle group-hover:text-text-primary font-normal",
+                          )}
+                        >
                           {OPERATOR_LABELS[operator]}
                         </div>
                       </div>

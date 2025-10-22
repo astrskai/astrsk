@@ -13,7 +13,7 @@ import {
 } from "@/app/stores/background-store";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { cn } from "@/components-v2/lib/utils";
-import { TypoBase } from "@/components-v2/typo";
+import { TypoBase } from "@/components/ui/typo";
 import { AspectRatio } from "@/components-v2/ui/aspect-ratio";
 import { Button } from "@/components-v2/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components-v2/ui/dialog";
@@ -55,9 +55,9 @@ const BackgroundListItem = ({
   return (
     <div
       className={cn(
-        "rounded-lg relative overflow-hidden bg-background-surface-1 cursor-pointer",
+        "bg-background-surface-1 relative cursor-pointer overflow-hidden rounded-lg",
         isMobile ? "w-full" : "w-[338px]",
-        isActive && "ring-2 ring-primary-normal",
+        isActive && "ring-primary-normal ring-2",
       )}
       onClick={(e) => {
         e.stopPropagation();
@@ -69,14 +69,14 @@ const BackgroundListItem = ({
           <img
             src={src}
             alt={name}
-            className="object-cover pointer-events-none w-full h-full"
+            className="pointer-events-none h-full w-full object-cover"
           />
         )}
         {asset && (
           <img
             src={asset}
             alt={name}
-            className="object-cover pointer-events-none w-full h-full"
+            className="pointer-events-none h-full w-full object-cover"
           />
         )}
       </AspectRatio>
@@ -85,12 +85,12 @@ const BackgroundListItem = ({
           className={cn(
             "absolute",
             isMobile
-              ? "top-2 right-2 w-[24px] h-[24px]"
-              : "inset-y-0 right-0 w-[40px] px-[8px] py-[16px] flex flex-col gap-1 bg-[#09090B]/30",
+              ? "top-2 right-2 h-[24px] w-[24px]"
+              : "inset-y-0 right-0 flex w-[40px] flex-col gap-1 bg-[#09090B]/30 px-[8px] py-[16px]",
           )}
         >
           <Trash2
-            className="size-[24px] text-text-primary"
+            className="text-text-primary size-[24px]"
             onClick={(e) => {
               e.stopPropagation();
               onDelete?.();
@@ -108,7 +108,7 @@ const AddImageBackgroundItem = ({ onClick }: { onClick?: () => void }) => {
   return (
     <div
       className={cn(
-        "rounded-lg relative overflow-hidden bg-background-input cursor-pointer transition-colors",
+        "bg-background-input relative cursor-pointer overflow-hidden rounded-lg transition-colors",
         isMobile ? "w-full" : "w-[338px]",
       )}
       onClick={(e) => {
@@ -117,9 +117,9 @@ const AddImageBackgroundItem = ({ onClick }: { onClick?: () => void }) => {
       }}
     >
       <AspectRatio ratio={16 / 9}>
-        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-          <Plus className="h-8 w-8 text-text-secondary" />
-          <span className="text-sm text-text-secondary font-medium">
+        <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+          <Plus className="text-text-secondary h-8 w-8" />
+          <span className="text-text-secondary text-sm font-medium">
             Add Image
           </span>
         </div>
@@ -189,20 +189,20 @@ const StepBackground = () => {
 
   if (isMobile) {
     return (
-      <div className="h-full flex flex-col overflow-hidden">
-        <div className="w-full max-w-[600px] mx-auto px-4 flex flex-col h-full">
-          <p className="text-text-body text-sm font-medium leading-tight mb-[40px] flex-shrink-0">
+      <div className="flex h-full flex-col overflow-hidden">
+        <div className="mx-auto flex h-full w-full max-w-[600px] flex-col px-4">
+          <p className="text-text-body mb-[40px] flex-shrink-0 text-sm leading-tight font-medium">
             Choose a background for your session: import image or select from
             the ones provided.
           </p>
 
           <Tabs
             defaultValue="provided"
-            className="w-full flex flex-col h-full overflow-hidden"
+            className="flex h-full w-full flex-col overflow-hidden"
           >
             <TabsList
               variant="mobile"
-              className="grid w-full grid-cols-2 flex-shrink-0"
+              className="grid w-full flex-shrink-0 grid-cols-2"
             >
               <TabsTrigger value="provided">astrsk provided</TabsTrigger>
               <TabsTrigger value="custom">User added</TabsTrigger>
@@ -210,7 +210,7 @@ const StepBackground = () => {
 
             <TabsContent
               value="provided"
-              className="flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col mt-[16px]"
+              className="mt-[16px] flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
             >
               <ScrollArea className="flex-1">
                 <div className="p-[2px]">
@@ -241,7 +241,7 @@ const StepBackground = () => {
 
             <TabsContent
               value="custom"
-              className="flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col mt-6"
+              className="mt-6 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
             >
               <ScrollArea className="flex-1">
                 <div className="p-[2px]">
@@ -288,13 +288,13 @@ const StepBackground = () => {
 
   // Desktop layout
   return (
-    <div className="x-auto px-[40px] max-w-[1200px] min-w-80 flex flex-col gap-[48px]">
-      <div className="flex flex-row justify-between items-start">
-        <div className="w-[720px] flex flex-col gap-[8px]">
-          <div className="font-[600] text-[24px] leading-[32px] text-text-primary">
+    <div className="x-auto flex max-w-[1200px] min-w-80 flex-col gap-[48px] px-[40px]">
+      <div className="flex flex-row items-start justify-between">
+        <div className="flex w-[720px] flex-col gap-[8px]">
+          <div className="text-text-primary text-[24px] leading-[32px] font-[600]">
             Choose your setting
           </div>
-          <div className="font-[400] text-[16px] leading-[19px] text-text-primary">
+          <div className="text-text-primary text-[16px] leading-[19px] font-[400]">
             Choose a background for your session: import image or select from
             the ones provided.
           </div>
@@ -312,7 +312,7 @@ const StepBackground = () => {
             <DialogContent className="pt-14">
               <DialogTitle>Add background</DialogTitle>
               <div
-                className="border-dashed bg-background-card hover:bg-background-input rounded-2xl flex flex-col justify-center items-center p-8 cursor-pointer"
+                className="bg-background-card hover:bg-background-input flex cursor-pointer flex-col items-center justify-center rounded-2xl border-dashed p-8"
                 onClick={() => refBackgroundFileInput.current?.click()}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -351,7 +351,7 @@ const StepBackground = () => {
       </div>
       {backgrounds.length > 0 && (
         <div className="flex flex-col gap-[16px]">
-          <div className="font-[600] text-[16px] leading-[19px] text-text-primary">
+          <div className="text-text-primary text-[16px] leading-[19px] font-[600]">
             User added backgrounds
           </div>
           <div className="flex flex-wrap justify-start gap-[24px]">
@@ -369,7 +369,7 @@ const StepBackground = () => {
         </div>
       )}
       <div className="flex flex-col gap-[16px]">
-        <div className="font-[600] text-[16px] leading-[19px] text-text-primary">
+        <div className="text-text-primary text-[16px] leading-[19px] font-[600]">
           astrsk.ai provided backgrounds
         </div>
         <div className="flex flex-wrap justify-start gap-[24px]">

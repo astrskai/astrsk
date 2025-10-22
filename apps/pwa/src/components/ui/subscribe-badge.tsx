@@ -1,12 +1,12 @@
 import { cn } from "@/components-v2/lib/utils";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 
 const SubscribeBadge = ({ className }: { className?: string }) => {
   return (
     <div
       className={cn(
-        "absolute top-0 right-0 -translate-y-1/2 w-[26px] h-[16px] grid place-content-center",
-        "bg-background-surface-4 rounded-full border-[#B59EFF] border-[1px]",
+        "absolute top-0 right-0 grid h-[16px] w-[26px] -translate-y-1/2 place-content-center",
+        "bg-background-surface-4 rounded-full border-[1px] border-[#B59EFF]",
         "text-[#B59EFF]",
         className,
       )}

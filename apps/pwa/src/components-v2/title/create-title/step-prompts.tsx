@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
 import type { ApiConnectionWithModels } from "@/app/hooks/use-api-connections-with-models";
 import { useAgentStore } from "@/app/stores/agent-store";
-import { Combobox, ComboboxOption } from "@/components-v2/combobox";
+import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { MobileOverrideProvider } from "@/components-v2/hooks/use-mobile-override";
 import {
   Select,

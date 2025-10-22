@@ -1,5 +1,5 @@
 import { cn } from "@/components-v2/lib/utils";
-import { SvgIcon } from "@/components-v2/svg-icon";
+import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { Share, SquarePlus } from "lucide-react";
 
@@ -11,11 +11,11 @@ export function InstallPwa({
   install?: () => void;
 }) {
   return (
-    <div className="h-dvh bg-background-surface-1 flex flex-col justify-center p-[24px] gap-[32px] font-inter">
+    <div className="bg-background-surface-1 font-inter flex h-dvh flex-col justify-center gap-[32px] p-[24px]">
       <div
         className={cn(
-          "w-full font-[600] text-[48px] leading-[52.8px]",
-          "bg-radial-[at_40%_90%] from-primary-normal to-text-primary to-35% bg-clip-text text-transparent",
+          "w-full text-[48px] leading-[52.8px] font-[600]",
+          "from-primary-normal to-text-primary bg-radial-[at_40%_90%] to-35% bg-clip-text text-transparent",
         )}
       >
         Add astrsk.ai
@@ -32,26 +32,26 @@ export function InstallPwa({
       ) : (
         <div className="flex flex-col gap-[24px]">
           <div className="flex flex-col gap-[8px]">
-            <div className="font-[500] text-[14px] leading-[20px] text-text-input-subtitle">
+            <div className="text-text-input-subtitle text-[14px] leading-[20px] font-[500]">
               To install the app on iOS
             </div>
             <ol
               className={cn(
-                "list-decimal pl-[18px] space-y-[8px]",
-                "font-[500] text-[14px] leading-[20px] text-text-muted-title",
-                "[&>strong]:font-[600] [&>strong]:text-text-primary",
+                "list-decimal space-y-[8px] pl-[18px]",
+                "text-text-muted-title text-[14px] leading-[20px] font-[500]",
+                "[&>strong]:text-text-primary [&>strong]:font-[600]",
               )}
             >
               <li>
                 Tab
-                <span className="inline-block align-bottom p-[4px] mx-[8px] bg-background-card rounded-[8px]">
+                <span className="bg-background-card mx-[8px] inline-block rounded-[8px] p-[4px] align-bottom">
                   <Share size={16} />
                 </span>
                 <strong>share</strong> in the address bar
               </li>
               <li>
                 Swipe up and tap
-                <span className="inline-block align-bottom p-[4px] mx-[8px] bg-background-card rounded-[8px]">
+                <span className="bg-background-card mx-[8px] inline-block rounded-[8px] p-[4px] align-bottom">
                   <SquarePlus size={16} />
                 </span>
                 <strong>Add to Home Screen</strong>

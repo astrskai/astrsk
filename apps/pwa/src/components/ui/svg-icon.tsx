@@ -1,7 +1,6 @@
 import { forwardRef, memo } from "react";
 
 import { cn } from "@/shared/utils/tailwind-utils";
-import { view } from "drizzle-orm/sqlite-core";
 
 type IconName =
   | "sessions"

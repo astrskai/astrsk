@@ -10,7 +10,7 @@ import { Page, useAppStore } from "@/app/stores/app-store";
 import { NoCardsFound } from "@/components-v2/card/card-list";
 import { TradingCard } from "@/components-v2/card/components/trading-card";
 import { cn } from "@/components-v2/lib/utils";
-import { SearchInput } from "@/components-v2/search-input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Accordion,
   AccordionContent,

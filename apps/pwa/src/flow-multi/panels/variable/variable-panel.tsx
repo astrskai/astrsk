@@ -4,8 +4,8 @@ import { makeContext } from "@/app/services/session-play-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAgentStore } from "@/app/stores/agent-store";
-import { SearchInput } from "@/components-v2/search-input";
-import { TypoBase, TypoLarge } from "@/components-v2/typo";
+import { SearchInput } from "@/components/ui/search-input";
+import { TypoBase, TypoLarge } from "@/components/ui/typo";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import {
   Tabs,
@@ -92,7 +92,7 @@ const flattenObject = (
 export function VariablePanel({ flowId }: VariablePanelProps) {
   // Use the flow panel hook
   const { flow, isLoading } = useFlowPanel({ flowId });
-  
+
   // Query data store schema separately for real-time updates
   const { data: dataStoreSchema } = useQuery({
     ...flowQueries.dataStoreSchema(flowId),
@@ -168,11 +168,11 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
   }, [previewSessionId]);
 
   // Get last monaco editor, input field and insert functions from flow context
-  const { 
-    lastMonacoEditor, 
+  const {
+    lastMonacoEditor,
     insertVariableAtLastCursor,
     lastInputField,
-    insertVariableAtInputField
+    insertVariableAtInputField,
   } = useFlowPanelContext();
 
   // Local state
@@ -213,7 +213,9 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     if (!flow) return [];
 
     // Flow has agentIds array of UniqueEntityID objects, convert to strings
-    const ids = (flow.agentIds || []).map(id => id?.toString()).filter(id => !!id);
+    const ids = (flow.agentIds || [])
+      .map((id) => id?.toString())
+      .filter((id) => !!id);
     return ids;
   }, [flow]);
 
@@ -224,14 +226,14 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
       enabled: !!id,
     })),
   });
-  
+
   // Query agent names separately for real-time updates
   const agentNameQueries = useQueries({
     queries: agentIds.map((id) => ({
       ...agentQueries.name(id),
       enabled: !!id,
       refetchOnWindowFocus: true,
-      staleTime: 500 //TODO: Remove this for invalidations
+      staleTime: 500, //TODO: Remove this for invalidations
     })),
   });
 
@@ -245,8 +247,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     const agents = agentQueries_
       .filter((q) => q.data && !q.isLoading)
       .map((q) => q.data as Agent)
-      .filter(agent => agent != null); // Filter out any null/undefined agents
-    
+      .filter((agent) => agent != null); // Filter out any null/undefined agents
+
     // Get agent names from name queries
     const agentNames = new Map<string, string>();
     agentNameQueries.forEach((q, index) => {
@@ -263,25 +265,27 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
     }
 
     // Create a stable key from relevant agent properties
-    const agentDataKey = agents.map((agent) => {
-      if (!agent || !agent.props || !agent.id) {
-        return null;
-      }
-      const agentIdString = agent.id.toString();
-      return {
-        id: agentIdString,
-        name: agentNames.get(agentIdString) || agent.props.name, // Use name from name query
-        enabledStructuredOutput: agent.props.enabledStructuredOutput,
-        schemaFields:
-          agent.props.schemaFields?.map((field) => ({
-            name: field.name,
-            type: field.type,
-            description: field.description,
-            required: field.required,
-            array: field.array,
-          })) || [],
-      };
-    }).filter(data => data != null);
+    const agentDataKey = agents
+      .map((agent) => {
+        if (!agent || !agent.props || !agent.id) {
+          return null;
+        }
+        const agentIdString = agent.id.toString();
+        return {
+          id: agentIdString,
+          name: agentNames.get(agentIdString) || agent.props.name, // Use name from name query
+          enabledStructuredOutput: agent.props.enabledStructuredOutput,
+          schemaFields:
+            agent.props.schemaFields?.map((field) => ({
+              name: field.name,
+              type: field.type,
+              description: field.description,
+              required: field.required,
+              array: field.array,
+            })) || [],
+        };
+      })
+      .filter((data) => data != null);
 
     const currentAgentData = JSON.stringify(agentDataKey);
 
@@ -299,7 +303,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
       if (!agent || !agent.props || !agent.id) {
         return;
       }
-      
+
       const agentId = agent.id.toString();
       const nameFromQuery = agentNames.get(agentId);
       const agentName = nameFromQuery || agent.props.name || "Unnamed Agent"; // Use name from name query
@@ -506,12 +510,9 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
             if (lastTurn.dataStore && lastTurn.dataStore.length > 0) {
               // Convert DataStoreSavedField[] to object
               const dataStoreObject = Object.fromEntries(
-                lastTurn.dataStore.map(field => [field.name, field.value])
+                lastTurn.dataStore.map((field) => [field.name, field.value]),
               );
-              const flattenedDataStore = flattenObject(
-                dataStoreObject,
-                "",
-              );
+              const flattenedDataStore = flattenObject(dataStoreObject, "");
               Object.assign(flattenedContext, flattenedDataStore);
             }
           }
@@ -589,9 +590,12 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         // Copy to clipboard when no field is selected
         if (navigator.clipboard) {
           navigator.clipboard.writeText(variableValue);
-          toast.info(`No field selected. Copied ${variableValue} to clipboard.`, {
-            duration: 2000,
-          });
+          toast.info(
+            `No field selected. Copied ${variableValue} to clipboard.`,
+            {
+              duration: 2000,
+            },
+          );
         }
       }
 
@@ -599,7 +603,12 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         setClickedVariable(null);
       }, 1000);
     },
-    [lastMonacoEditor, insertVariableAtLastCursor, lastInputField, insertVariableAtInputField],
+    [
+      lastMonacoEditor,
+      insertVariableAtLastCursor,
+      lastInputField,
+      insertVariableAtInputField,
+    ],
   );
 
   // Handle variable click for insertion
@@ -629,9 +638,12 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         // Copy to clipboard when no field is selected
         if (navigator.clipboard) {
           navigator.clipboard.writeText(variableTemplate);
-          toast.info(`No field selected. Copied ${variableTemplate} to clipboard.`, {
-            duration: 2000,
-          });
+          toast.info(
+            `No field selected. Copied ${variableTemplate} to clipboard.`,
+            {
+              duration: 2000,
+            },
+          );
         }
       }
 
@@ -639,7 +651,12 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         setClickedVariable(null);
       }, 1000);
     },
-    [lastMonacoEditor, insertVariableAtLastCursor, lastInputField, insertVariableAtInputField],
+    [
+      lastMonacoEditor,
+      insertVariableAtLastCursor,
+      lastInputField,
+      insertVariableAtInputField,
+    ],
   );
 
   // Prevent focus steal on mouse down
@@ -678,7 +695,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
   return (
     <div
-      className="h-full p-4 bg-background-surface-2 flex flex-col justify-start items-center gap-4 overflow-hidden"
+      className="bg-background-surface-2 flex h-full flex-col items-center justify-start gap-4 overflow-hidden p-4"
       onClick={handlePanelInteraction}
     >
       <SearchInput
@@ -696,7 +713,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
           // Clear search when switching tabs
           setSearchQuery("");
         }}
-        className="w-full flex flex-col gap-4 flex-1 overflow-hidden"
+        className="flex w-full flex-1 flex-col gap-4 overflow-hidden"
       >
         <TabsList className="w-full flex-shrink-0">
           <TabsTrigger value="variables">Variables</TabsTrigger>
@@ -706,12 +723,12 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
         <TabsContent
           value="variables"
-          className="mt-0 flex-1 overflow-hidden h-0"
+          className="mt-0 h-0 flex-1 overflow-hidden"
         >
           <ScrollArea className="h-full pr-2">
             <div className="flex flex-col">
               {Object.keys(groupedVariables).length === 0 ? (
-                <div className="text-center py-8">
+                <div className="py-8 text-center">
                   <TypoBase className="text-[#A3A5A8]">
                     {searchQuery
                       ? "No variables found matching your search"
@@ -723,14 +740,14 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                   <div key={group} className="flex flex-col">
                     {/* Group Header */}
                     <div className="bg-[#272727] py-2.5">
-                      <div className="flex flex-row gap-4 items-center justify-start w-full">
-                        <div className="basis-0 flex flex-row gap-2 grow items-start justify-start text-xs text-left">
-                          <div className="text-[#bfbfbf] font-medium text-nowrap">
+                      <div className="flex w-full flex-row items-center justify-start gap-4">
+                        <div className="flex grow basis-0 flex-row items-start justify-start gap-2 text-left text-xs">
+                          <div className="font-medium text-nowrap text-[#bfbfbf]">
                             {VariableGroupLabel[
                               group as keyof typeof VariableGroupLabel
                             ]?.displayName || group}
                           </div>
-                          <div className="basis-0 grow min-h-px min-w-px text-[#696969] font-normal">
+                          <div className="min-h-px min-w-px grow basis-0 font-normal text-[#696969]">
                             {VariableGroupLabel[
                               group as keyof typeof VariableGroupLabel
                             ]?.description || "Variables in this group"}
@@ -741,9 +758,9 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                           onClick={() => toggleGroupCollapse(group)}
                         >
                           {collapsedGroups.has(group) ? (
-                            <ChevronDown className="min-w-6 min-h-6 text-[#bfbfbf]" />
+                            <ChevronDown className="min-h-6 min-w-6 text-[#bfbfbf]" />
                           ) : (
-                            <ChevronUp className="min-w-6 min-h-6 text-[#bfbfbf]" />
+                            <ChevronUp className="min-h-6 min-w-6 text-[#bfbfbf]" />
                           )}
                         </button>
                       </div>
@@ -756,38 +773,38 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                           {variables.map((variable) => (
                             <button
                               key={variable.variable}
-                              className={`w-full p-2 rounded-lg bg-[#313131] border border-[#525252] flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
+                              className={`relative flex w-full flex-col items-start justify-start gap-1 rounded-lg border border-[#525252] bg-[#313131] p-2 text-left transition-all duration-200 ${
                                 clickedVariable === variable.variable
                                   ? "bg-[#313131]"
-                                  : "bg-[#313131] hover:bg-[#414141] cursor-pointer"
+                                  : "cursor-pointer bg-[#313131] hover:bg-[#414141]"
                               }`}
                               onClick={(e) => handleVariableClick(variable, e)}
                               onMouseDown={handleMouseDown}
                               tabIndex={-1}
                             >
                               {clickedVariable === variable.variable && (
-                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
+                                <div className="absolute right-0 bottom-0 left-0 h-[2px] bg-green-500" />
                               )}
-                              <div className="w-full flex flex-col justify-start items-start gap-1">
-                                <div className="flex justify-start items-center gap-2 w-full text-xs text-nowrap">
-                                  <div className="text-[#f1f1f1] font-medium">
+                              <div className="flex w-full flex-col items-start justify-start gap-1">
+                                <div className="flex w-full items-center justify-start gap-2 text-xs text-nowrap">
+                                  <div className="font-medium text-[#f1f1f1]">
                                     {`{{${variable.variable}}}`}
                                   </div>
-                                  <div className="text-[#bfbfbf] font-normal">
+                                  <div className="font-normal text-[#bfbfbf]">
                                     {variable.dataType}
                                   </div>
                                   {hasEditor &&
                                     (clickedVariable === variable.variable ? (
-                                      <Check className="min-w-3 min-h-3 ml-auto text-green-500 transition-opacity" />
+                                      <Check className="ml-auto min-h-3 min-w-3 text-green-500 transition-opacity" />
                                     ) : (
-                                      <Target className="min-w-3 min-h-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
+                                      <Target className="text-primary ml-auto min-h-3 min-w-3 opacity-0 transition-opacity hover:opacity-100" />
                                     ))}
                                 </div>
-                                <div className="text-[#9d9d9d] text-xs font-normal leading-normal text-left">
+                                <div className="text-left text-xs leading-normal font-normal text-[#9d9d9d]">
                                   {variable.description}
                                 </div>
                                 {variable.template && (
-                                  <div className="text-[#bfbfbf] text-[10px] font-medium leading-4 whitespace-pre-wrap">
+                                  <div className="text-[10px] leading-4 font-medium whitespace-pre-wrap text-[#bfbfbf]">
                                     <span className="text-[#f1f1f1]">
                                       {variable.template}
                                     </span>
@@ -795,11 +812,11 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                 )}
                                 {contextValues[variable.variable] && (
                                   <div className="mt-2 w-full overflow-hidden">
-                                    <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
-                                      <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                    <div className="bg-background-surface-4 w-full max-w-full overflow-hidden rounded-md px-2 py-1">
+                                      <div className="text-text-subtle mb-1 text-[12px] leading-[15px] font-[500]">
                                         Data from session
                                       </div>
-                                      <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                      <div className="font-fira-code text-text-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
                                         {String(
                                           contextValues[variable.variable],
                                         )}
@@ -820,19 +837,16 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent
-          value="structured"
-          className="mt-0 flex-1 overflow-hidden"
-        >
+        <TabsContent value="structured" className="mt-0 flex-1 overflow-hidden">
           {aggregatedStructuredVariables.length === 0 ? (
             <div className="flex h-full items-center justify-center">
-              <div className="inline-flex flex-col justify-start items-center gap-2">
-                <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">
+              <div className="inline-flex flex-col items-center justify-start gap-2">
+                <div className="text-text-body justify-start text-center text-base leading-relaxed font-semibold">
                   {searchQuery
                     ? "No structured output variables found matching your search"
                     : "No structured output variables found"}
                 </div>
-                <div className="w-52 text-center justify-start text-background-surface-5 text-xs font-normal">
+                <div className="text-background-surface-5 w-52 justify-start text-center text-xs font-normal">
                   {searchQuery
                     ? "Try a different search term"
                     : "Enable structured output on agents to see variables here"}
@@ -863,11 +877,11 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         className="relative"
                       >
                         <div
-                          className="absolute left-0 top-0 bottom-0 w-[4px] rounded-l-lg"
+                          className="absolute top-0 bottom-0 left-0 w-[4px] rounded-l-lg"
                           style={{ backgroundColor: variable.agentColor }}
                         />
                         <button
-                          className={`w-full ml-[2px] p-2 rounded-lg flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
+                          className={`relative ml-[2px] flex w-full flex-col items-start justify-start gap-1 rounded-lg p-2 text-left transition-all duration-200 ${
                             clickedVariable === variableKey
                               ? "bg-background-surface-3"
                               : "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
@@ -882,10 +896,10 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                           tabIndex={-1}
                         >
                           {clickedVariable === variableKey && (
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
+                            <div className="absolute right-0 bottom-0 left-0 h-[2px] bg-green-500" />
                           )}
-                          <div className="w-full flex flex-col justify-start items-start gap-1">
-                            <div className="flex justify-start items-center gap-2 w-full">
+                          <div className="flex w-full flex-col items-start justify-start gap-1">
+                            <div className="flex w-full items-center justify-start gap-2">
                               <div
                                 className="text-xs font-normal"
                                 style={{ color: variable.agentColor }}
@@ -897,29 +911,29 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                 {variable.field.array && "[]"}
                               </div>
                               {variable.field.required && (
-                                <div className="text-red-500 text-xs font-normal">
+                                <div className="text-xs font-normal text-red-500">
                                   required
                                 </div>
                               )}
                               {hasEditor &&
                                 (clickedVariable === variableKey ? (
-                                  <Check className="h-3 w-3 ml-auto text-green-500 transition-opacity" />
+                                  <Check className="ml-auto h-3 w-3 text-green-500 transition-opacity" />
                                 ) : (
-                                  <Target className="h-3 w-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
+                                  <Target className="text-primary ml-auto h-3 w-3 opacity-0 transition-opacity hover:opacity-100" />
                                 ))}
                             </div>
                             {variable.field.description && (
-                              <div className="line-clamp-3 text-text-subtle text-xs font-medium leading-none text-left">
+                              <div className="text-text-subtle line-clamp-3 text-left text-xs leading-none font-medium">
                                 {variable.field.description}
                               </div>
                             )}
                             {contextValues[variable.variablePath] && (
                               <div className="mt-2 w-full overflow-hidden">
-                                <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
-                                  <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
+                                <div className="bg-background-surface-4 w-full max-w-full overflow-hidden rounded-md px-2 py-1">
+                                  <div className="text-text-subtle mb-1 text-[12px] leading-[15px] font-[500]">
                                     Data from session
                                   </div>
-                                  <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
+                                  <div className="font-fira-code text-text-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
                                     {String(
                                       contextValues[variable.variablePath],
                                     )}
@@ -939,10 +953,9 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
         <TabsContent
           value="datastore"
-          className="mt-0 flex-1 overflow-hidden h-0"
+          className="mt-0 h-0 flex-1 overflow-hidden"
         >
-          {dataStoreSchema?.fields &&
-          dataStoreSchema.fields.length > 0 ? (
+          {dataStoreSchema?.fields && dataStoreSchema.fields.length > 0 ? (
             <ScrollArea className="h-full pr-2">
               <div className="flex flex-col gap-2">
                 {dataStoreSchema.fields
@@ -959,14 +972,16 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                   .map((field) => {
                     // Get actual value from contextValues (which includes dataStore from last turn)
                     const hasValue = field.name in contextValues;
-                    const actualValue = hasValue ? contextValues[field.name] : "";
+                    const actualValue = hasValue
+                      ? contextValues[field.name]
+                      : "";
                     const displayValue = hasValue ? actualValue : "";
                     const variableName = `{{${field.name}}}`;
 
                     return (
                       <button
                         key={field.id}
-                        className={`w-full p-2 bg-background-surface-3 rounded-lg outline outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start gap-1 transition-all duration-200 text-left relative ${
+                        className={`bg-background-surface-3 outline-border-normal relative flex w-full flex-col items-start justify-start gap-1 rounded-lg p-2 text-left outline outline-1 outline-offset-[-1px] transition-all duration-200 ${
                           clickedVariable === variableName
                             ? "bg-background-surface-3"
                             : "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
@@ -992,9 +1007,12 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                             // Copy to clipboard when no field is selected
                             if (navigator.clipboard) {
                               navigator.clipboard.writeText(variableName);
-                              toast.info(`No field selected. Copied ${variableName} to clipboard.`, {
-                                duration: 2000,
-                              });
+                              toast.info(
+                                `No field selected. Copied ${variableName} to clipboard.`,
+                                {
+                                  duration: 2000,
+                                },
+                              );
                             }
                           }
 
@@ -1004,39 +1022,42 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         tabIndex={-1}
                       >
                         {clickedVariable === variableName && (
-                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500" />
+                          <div className="absolute right-0 bottom-0 left-0 h-[2px] bg-green-500" />
                         )}
-                        <div className="self-stretch flex flex-col justify-start items-start gap-4">
-                          <div className="self-stretch flex flex-col justify-start items-start gap-1">
-                            <div className="flex justify-start items-center gap-2 w-full">
-                              <div className="justify-start text-text-primary text-xs font-medium">
+                        <div className="flex flex-col items-start justify-start gap-4 self-stretch">
+                          <div className="flex flex-col items-start justify-start gap-1 self-stretch">
+                            <div className="flex w-full items-center justify-start gap-2">
+                              <div className="text-text-primary justify-start text-xs font-medium">
                                 {variableName}
                               </div>
-                              <div className="justify-start text-text-body text-xs font-normal">
+                              <div className="text-text-body justify-start text-xs font-normal">
                                 {field.type}
                               </div>
                               {hasEditor &&
                                 (clickedVariable === variableName ? (
-                                  <Check className="min-w-3 min-h-3 ml-auto text-green-500 transition-opacity" />
+                                  <Check className="ml-auto min-h-3 min-w-3 text-green-500 transition-opacity" />
                                 ) : (
-                                  <Target className="min-w-3 min-h-3 ml-auto text-primary opacity-0 hover:opacity-100 transition-opacity" />
+                                  <Target className="text-primary ml-auto min-h-3 min-w-3 opacity-0 transition-opacity hover:opacity-100" />
                                 ))}
                             </div>
                           </div>
-                          {hasValue && displayValue !== "" && displayValue !== null && displayValue !== undefined && (
-                            <div className="mt-2 w-full overflow-hidden">
-                              <div className="bg-background-surface-4 rounded-md px-2 py-1 w-full max-w-full overflow-hidden">
-                                <div className="text-text-subtle text-[12px] leading-[15px] font-[500] mb-1">
-                                  Most recent data from session
-                                </div>
-                                <div className="font-fira-code text-text-subtle text-[12px] leading-[16px] font-[400] line-clamp-2 break-all overflow-hidden">
-                                  {typeof displayValue === "object"
-                                    ? JSON.stringify(displayValue)
-                                    : String(displayValue)}
+                          {hasValue &&
+                            displayValue !== "" &&
+                            displayValue !== null &&
+                            displayValue !== undefined && (
+                              <div className="mt-2 w-full overflow-hidden">
+                                <div className="bg-background-surface-4 w-full max-w-full overflow-hidden rounded-md px-2 py-1">
+                                  <div className="text-text-subtle mb-1 text-[12px] leading-[15px] font-[500]">
+                                    Most recent data from session
+                                  </div>
+                                  <div className="font-fira-code text-text-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
+                                    {typeof displayValue === "object"
+                                      ? JSON.stringify(displayValue)
+                                      : String(displayValue)}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                       </button>
                     );
@@ -1045,9 +1066,13 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
             </ScrollArea>
           ) : (
             <div className="flex h-full items-center justify-center">
-              <div className="inline-flex flex-col justify-start items-center gap-2">
-                <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">No data fields defined</div>
-                <div className="w-52 text-center justify-start text-background-surface-5 text-xs font-normal">Define fields in the Data Schema to see them here</div>
+              <div className="inline-flex flex-col items-center justify-start gap-2">
+                <div className="text-text-body justify-start text-center text-base leading-relaxed font-semibold">
+                  No data fields defined
+                </div>
+                <div className="text-background-surface-5 w-52 justify-start text-center text-xs font-normal">
+                  Define fields in the Data Schema to see them here
+                </div>
               </div>
             </div>
           )}

@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { InstallPwa } from "@/components-v2/install-pwa";
 import { TopBar } from "@/components-v2/top-bar";
-import { Loading } from "@/components-v2/loading";
+import { Loading } from "@/components/ui/loading";
 import { ThemeProvider } from "@/components-v2/theme-provider";
 import { SidebarLeftProvider } from "@/components-v2/both-sidebar";
 import { LeftNavigationMobile } from "@/components-v2/left-navigation";
@@ -20,7 +20,7 @@ import { LeftNavigation } from "@/components-v2/left-navigation/left-navigation"
 import { LeftNavigationTrigger } from "@/components-v2/left-navigation/left-navigation";
 import { SidebarInset } from "@/components-v2/both-sidebar";
 import { MobileNavigationContext } from "@/contexts/mobile-navigation-context";
-import { LoadingOverlay } from "@/components-v2/loading-overlay";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import CreateSessionPage from "../session/create-session-page";
 import { createPortal } from "react-dom";
 
