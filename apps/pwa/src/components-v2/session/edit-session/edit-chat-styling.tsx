@@ -5,7 +5,7 @@ import { FormProvider, useForm } from "react-hook-form";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { CustomSheet } from "@/components/dialogs/custom-sheet";
+import { CustomSheet } from "@/features/session/components/custom-sheet";
 import {
   convertChatStylingFormToSessionProps,
   StepChatStylingSchema,

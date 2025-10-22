@@ -8,7 +8,7 @@ import {
   SidebarInset,
   SidebarLeftProvider,
 } from "@/components/layout/both-sidebar";
-import { InitialPage } from "@/components-v2/init-page";
+import { InitialPage } from "@/components/system/init-page";
 import { cn } from "@/components-v2/lib/utils";
 import { CardTab } from "@/components-v2/session/create-session/step-cards";
 import { SessionMain } from "@/components-v2/session/session-main";

@@ -12,7 +12,7 @@ import {
   isDefaultBackground,
   useBackgroundStore,
 } from "@/app/stores/background-store";
-import { CustomSheet } from "@/components/dialogs/custom-sheet";
+import { CustomSheet } from "@/features/session/components/custom-sheet";
 import {
   BackgroundListItem,
   convertBackgroundFormToSessionProps,

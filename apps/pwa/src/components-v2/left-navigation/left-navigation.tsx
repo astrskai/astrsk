@@ -14,7 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
-import { UpdaterNew } from "@/components-v2/updater-new";
+import { UpdaterNew } from "@/components/system/updater-new";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeftFromLine,
