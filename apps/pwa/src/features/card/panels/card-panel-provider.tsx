@@ -3,7 +3,7 @@ import { Card } from "@/modules/card/domain";
 import { DockviewApi } from "dockview";
 import type { IDockviewPanel, DockviewGroupPanel } from "dockview-core";
 import { CardPanelVisibility } from "@/app/stores/card-ui-store";
-import { extractCardPanelType } from "@/components-v2/card/utils/panel-id-utils";
+import { extractCardPanelType } from "@/features/card/utils/panel-id-utils";
 
 interface CardPanelContextType {
   cardId: string;

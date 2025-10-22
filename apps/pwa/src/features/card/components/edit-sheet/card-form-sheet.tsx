@@ -15,8 +15,8 @@ import { SessionService } from "@/app/services/session-service";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { useCardsStore } from "@/app/stores/cards-store";
 import { useEditSessionDialogStore } from "@/app/stores/edit-session-dialog-store";
-import { CharacterForm } from "@/components-v2/card/components/edit-sheet/character-form-v2";
-import { PlotForm } from "@/components-v2/card/components/edit-sheet/plot-form-v2";
+import { CharacterForm } from "@/features/card/components/edit-sheet/character-form-v2";
+import { PlotForm } from "@/features/card/components/edit-sheet/plot-form-v2";
 import {
   DeleteConfirm,
   UnsavedChangesConfirm,

@@ -16,7 +16,7 @@ import {
   CardPanelProps,
   CardPanelLoading,
   CardPanelError,
-} from "@/components-v2/card/panels/hooks/use-card-panel";
+} from "@/features/card/panels/hooks/use-card-panel";
 
 interface CharacterInfoPanelProps extends CardPanelProps {}
 

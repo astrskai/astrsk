@@ -23,7 +23,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useEffect, useState, useMemo } from "react";
 
-import { SortableBlockListItemV2 } from "@/components-v2/card/components/edit-sheet/sortable-block-list-item-v2";
+import { SortableBlockListItemV2 } from "@/features/card/components/edit-sheet/sortable-block-list-item-v2";
 import { Entry } from "@/modules/card/domain";
 
 interface SortableBlockListV2Props {

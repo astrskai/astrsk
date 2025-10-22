@@ -1,6 +1,6 @@
 import { cn } from "@/components-v2/lib/utils";
 import { CheckboxMobile } from "@/components-v2/ui/checkbox";
-import { TradingCard } from "@/components-v2/card/components/trading-card";
+import { TradingCard } from "@/features/card/components/trading-card";
 import { Card, CardType } from "@/modules/card/domain";
 
 interface CardGridMobileProps {

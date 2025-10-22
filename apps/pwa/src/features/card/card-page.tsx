@@ -5,13 +5,13 @@ import { useEffect, useRef, useState, useCallback } from "react";
 
 import { useAppStore } from "@/app/stores/app-store";
 import { useNavigate } from "@tanstack/react-router";
-import CardList from "@/components-v2/card/card-list";
-import CardFormSheet from "@/components-v2/card/components/edit-sheet/card-form-sheet";
+import CardList from "@/features/card/card-list";
+import CardFormSheet from "@/features/card/components/edit-sheet/card-form-sheet";
 import {
   useCardEditor,
   useCardImport,
   useCardManagement,
-} from "@/components-v2/card/hooks";
+} from "@/features/card/hooks";
 import { cn } from "@/components-v2/lib/utils";
 import { TypoBase } from "@/components/ui/typo";
 import {

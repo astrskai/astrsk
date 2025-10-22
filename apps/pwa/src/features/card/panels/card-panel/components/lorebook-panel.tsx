@@ -51,7 +51,7 @@ import {
 } from "@/app/queries/card";
 
 // Import the sortable component
-import { SortableItem } from "@/components-v2/card/panels/card-panel/components/sortable-item";
+import { SortableItem } from "@/features/card/panels/card-panel/components/sortable-item";
 
 // Import our abstraction
 import { 
@@ -59,7 +59,7 @@ import {
   CardPanelLoading, 
   CardPanelError,
   CardPanelEmpty 
-} from "@/components-v2/card/panels/hooks/use-card-panel";
+} from "@/features/card/panels/hooks/use-card-panel";
 
 interface LorebookPanelProps extends CardPanelProps {}
 
