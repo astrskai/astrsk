@@ -31,7 +31,7 @@ export class ListAstrskaiModelStrategy implements ListApiModelStrategy {
         response.data
           .filter((model: any) => {
             const modelName = model.model_name.toLowerCase();
-            return modelName.includes('gemini') && modelName.includes('flash');
+            return modelName.includes('gemini');
           })
           .map((model: any) =>
             ApiModel.create({
