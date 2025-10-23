@@ -4,8 +4,8 @@ import { makeContext } from "@/app/services/session-play-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAgentStore } from "@/app/stores/agent-store";
-import { SearchInput } from "@/components/ui/search-input";
-import { TypoBase, TypoLarge } from "@/components/ui/typo";
+import { SearchInput } from "@/shared/ui/search-input";
+import { TypoBase, TypoLarge } from "@/shared/ui/typo";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import {
   Tabs,

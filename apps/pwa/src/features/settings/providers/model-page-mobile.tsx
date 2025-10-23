@@ -12,15 +12,15 @@ import { useApiConnections } from "@/app/hooks/use-api-connections";
 import { ApiService } from "@/app/services";
 import { queryClient } from "@/app/queries/query-client";
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
-import { Combobox } from "@/components/ui/combobox";
+import { Combobox } from "@/shared/ui/combobox";
 import { cn } from "@/shared/lib";
 import {
   ProviderListItem,
   ProviderListItemDetail,
   apiSourceLogo,
 } from "@/features/settings/providers/provider-list-item";
-import { SvgIcon } from "@/components/ui/svg-icon";
-import { TypoBase, TypoSmall, TypoTiny } from "@/components/ui/typo";
+import { SvgIcon } from "@/shared/ui/svg-icon";
+import { TypoBase, TypoSmall, TypoTiny } from "@/shared/ui/typo";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Sheet, SheetContent } from "@/shared/ui/sheet";

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/lib";
-import { SubscribeBadge } from "@/components/ui/subscribe-badge";
+import { SubscribeBadge } from "@/shared/ui/subscribe-badge";
 
 const buttonPillVariants = cva(
   "relative rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-center items-center transition-all",

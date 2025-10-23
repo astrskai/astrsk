@@ -3,7 +3,7 @@ import { ImportDialog } from "@/components/dialogs/import-dialog";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { ModelItem } from "@/flow-multi/components/model-selection";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import { ModelTier } from "@/modules/agent/domain/agent";
 
 export interface AgentModel {

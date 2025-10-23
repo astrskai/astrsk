@@ -23,12 +23,12 @@ import { useSessionStore } from "@/app/stores/session-store";
 import { useValidationStore } from "@/app/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
 import { cn } from "@/shared/lib";
-import { SearchInput } from "@/components/ui/search-input";
+import { SearchInput } from "@/shared/ui/search-input";
 import { SessionMainMobile } from "@/features/session/mobile/session-main-mobile";
 import CreateSessionPageMobile from "@/features/session/mobile/create-session-page-mobile";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import { ModelItem } from "@/flow-multi/components/model-selection";
-import { TypoBase } from "@/components/ui/typo";
+import { TypoBase } from "@/shared/ui/typo";
 import { Button } from "@/shared/ui/button";
 import { CheckboxMobile } from "@/shared/ui/checkbox";
 import {

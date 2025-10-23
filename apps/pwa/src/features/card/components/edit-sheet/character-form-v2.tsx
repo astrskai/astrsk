@@ -11,7 +11,7 @@ import { CardFormValues } from "@/features/card/types/card-form";
 import { ImageUpload } from "@/features/card/components/edit-sheet/image-upload";
 import { SortableBlockListV2 } from "@/features/card/components/edit-sheet/sortable-block-list-v2";
 import { useEntryList } from "@/features/card/hooks/useEntryList";
-import { Typo2XLarge } from "@/components/ui/typo";
+import { Typo2XLarge } from "@/shared/ui/typo";
 import { Button } from "@/shared/ui/button";
 import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
 import { FloatingLabelInputs } from "@/shared/ui/floating-label-inputs";

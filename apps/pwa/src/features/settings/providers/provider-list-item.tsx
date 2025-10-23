@@ -9,8 +9,8 @@ import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { DeleteConfirm } from "@/components/dialogs/confirm";
 import { cn } from "@/shared/lib";
-import { IconName, SvgIcon } from "@/components/ui/svg-icon";
-import { TypoSmall, TypoTiny } from "@/components/ui/typo";
+import { IconName, SvgIcon } from "@/shared/ui/svg-icon";
+import { TypoSmall, TypoTiny } from "@/shared/ui/typo";
 import { Card, CardContent } from "@/shared/ui/card";
 import {
   Tooltip,

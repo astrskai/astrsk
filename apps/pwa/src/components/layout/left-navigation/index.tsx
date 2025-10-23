@@ -7,7 +7,7 @@ import { CardSection } from "./card-list";
 import { FlowSection } from "./flow-list";
 import { SessionSection } from "./session-list";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {
   Tooltip,

@@ -7,7 +7,7 @@ import { Menu, Page, useAppStore } from "@/app/stores/app-store";
 import { useValidationStore } from "@/app/stores/validation-store";
 import { cn } from "@/shared/lib";
 import { MobileUpdater } from "@/components/system/mobile-updater";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import { Button } from "@/shared/ui/button";
 
 function openInNewTab(url: string) {

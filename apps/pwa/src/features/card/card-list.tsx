@@ -9,8 +9,8 @@ import {
 import { CardService } from "@/app/services";
 import { HeaderBar, SortingBar } from "@/features/card/components";
 import CardGrid from "@/features/card/components/card-grid";
-import { SearchInput } from "@/components/ui/search-input";
-import { TypoBase, Typo3XLarge } from "@/components/ui/typo";
+import { SearchInput } from "@/shared/ui/search-input";
+import { TypoBase, Typo3XLarge } from "@/shared/ui/typo";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { CardType } from "@/modules/card/domain";

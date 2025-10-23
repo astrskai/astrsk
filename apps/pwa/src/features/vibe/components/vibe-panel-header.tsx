@@ -9,7 +9,7 @@ import {
   Loader2,
   TestTube,
 } from "lucide-react";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import { cn } from "@/shared/lib";
 
 interface VibePanelHeaderProps {

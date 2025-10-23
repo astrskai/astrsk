@@ -45,7 +45,7 @@ import {
   SessionExportDialog,
   AgentModelTierInfo,
 } from "@/features/session/components/session-export-dialog";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import {
   Tooltip,
   TooltipContent,

@@ -1,5 +1,5 @@
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 
 const SubscribeBadge = ({ className }: { className?: string }) => {
   return (

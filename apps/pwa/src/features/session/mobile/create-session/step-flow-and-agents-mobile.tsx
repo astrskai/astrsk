@@ -4,7 +4,7 @@ import { z } from "zod";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
-import { Combobox } from "@/components/ui/combobox";
+import { Combobox } from "@/shared/ui/combobox";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
 import { Agent } from "@/modules/agent/domain";
 import { Flow, Node } from "@/modules/flow/domain";
@@ -12,7 +12,7 @@ import { useQuery, useQueries } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { AgentListItemMobile } from "../components/agent-list-item-mobile";
-import { TypoXLarge } from "@/components/ui/typo";
+import { TypoXLarge } from "@/shared/ui/typo";
 
 // Re-export schema and converter from the shared step
 export {

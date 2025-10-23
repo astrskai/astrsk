@@ -6,7 +6,7 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { useAsset } from "@/app/hooks/use-asset";
 import { useBackgroundStore } from "@/app/stores/background-store";
-import { ColorPicker } from "@/components/ui/color-picker";
+import { ColorPicker } from "@/shared/ui/color-picker";
 import { cn } from "@/shared/lib";
 import { StepBackgroundSchemaType } from "@/features/session/create-session/step-background";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";

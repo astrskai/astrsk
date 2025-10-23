@@ -4,7 +4,7 @@ import { Card } from "@/modules/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { cardQueries } from "@/app/queries/card-queries";
 import { debounce } from "lodash-es";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 
 interface UseCardPanelOptions {
   cardId: string;

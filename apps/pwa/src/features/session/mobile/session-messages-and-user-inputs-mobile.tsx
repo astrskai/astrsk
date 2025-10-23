@@ -35,13 +35,13 @@ import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { AutoReply, useSessionStore } from "@/app/stores/session-store";
-import { Avatar } from "@/components/ui";
+import { Avatar } from "@/shared/ui/avatar";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
-import { SvgIcon } from "@/components/ui/svg-icon";
-import { TypoSmall, TypoTiny } from "@/components/ui/typo";
+import { SvgIcon } from "@/shared/ui/svg-icon";
+import { TypoSmall, TypoTiny } from "@/shared/ui/typo";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,

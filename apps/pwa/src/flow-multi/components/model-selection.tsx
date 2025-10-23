@@ -8,7 +8,7 @@ import { useReactFlow } from "@xyflow/react";
 import { useQuery } from "@tanstack/react-query";
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
 import type { ApiConnectionWithModels } from "@/app/hooks/use-api-connections-with-models";
-import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { Combobox, ComboboxOption } from "@/shared/ui/combobox";
 import { MobileOverrideProvider } from "@/shared/hooks/use-mobile-override";
 
 import { Agent } from "@/modules/agent/domain/agent";
