@@ -1,7 +1,7 @@
 import { Result } from "@/shared/core/result";
 import { UseCase } from "@/shared/core/use-case";
 import { HttpClient } from "@/shared/infra/http-client";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { ApiConnection, ApiSource } from "@/modules/api/domain";
 import { ListAIHordeModelStrategy } from "@/modules/api/usecases/list-api-model/list-aihorde-model-strategy";

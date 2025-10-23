@@ -1,5 +1,5 @@
 import { Result } from "@/shared/core/result";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 export type GuardResponse = string;
 

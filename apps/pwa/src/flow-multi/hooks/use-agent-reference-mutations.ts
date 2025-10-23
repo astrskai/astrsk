@@ -6,7 +6,7 @@
 import { Agent } from "@/modules/agent/domain";
 import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";
-import { sanitizeFileName } from "@/shared/utils/file-utils";
+import { sanitizeFileName } from "@/shared/lib/file-utils";
 import { replaceAgentReferences, hasAgentReferences } from "@/flow-multi/utils/extract-agent-variables";
 
 interface UpdateResult {

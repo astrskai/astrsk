@@ -1,7 +1,7 @@
 import { Switch } from "@/components-v2/ui/switch";
 import { MediaDisplay } from "@/shared/ui/media-display";
 import { Image } from "lucide-react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 
 interface ImageToImageSettingProps {
   enabled: boolean;

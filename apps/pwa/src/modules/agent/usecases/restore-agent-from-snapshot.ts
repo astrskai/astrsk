@@ -1,5 +1,5 @@
 import { Result, UseCase } from "@/shared/core";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { Agent } from "@/modules/agent/domain";
 import { SaveAgentRepo } from "@/modules/agent/repos/save-agent-repo";

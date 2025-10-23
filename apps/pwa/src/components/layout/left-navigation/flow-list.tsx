@@ -37,7 +37,8 @@ import {
 import { Session } from "@/modules/session/domain/session";
 import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 import { UniqueEntityID } from "@/shared/domain";
-import { cn, downloadFile, logger } from "@/shared/utils";
+import { cn } from "@/shared/lib";
+import { downloadFile, logger } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import { CircleAlert, Copy, Loader2, Trash2, Upload } from "lucide-react";

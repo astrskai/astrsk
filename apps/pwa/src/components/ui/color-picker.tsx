@@ -3,7 +3,7 @@
 import { forwardRef, useMemo, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 
-import { cn } from "@/shared/utils/tailwind-utils";
+import { cn } from "@/shared/lib";
 
 import { useForwardedRef } from "@/shared/hooks/use-forwarded-ref";
 import type { ButtonProps } from "@/components-v2/ui/button";

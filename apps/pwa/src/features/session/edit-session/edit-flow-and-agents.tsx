@@ -6,7 +6,7 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { CustomSheet } from "@/features/session/components/custom-sheet";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import {
   convertFlowAndAgentsFormToSessionProps,
   StepFlowAndAgents,

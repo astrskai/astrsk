@@ -1,6 +1,6 @@
 import { Menu } from "lucide-react";
 import { Button } from "../../components-v2/ui/button";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { ReactNode } from "react";
 
 interface TopNavigationProps {

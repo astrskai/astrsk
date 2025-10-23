@@ -1,6 +1,6 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { Drizzle } from "@/db/drizzle";
 import { DeleteAsset } from "@/modules/asset/usecases/delete-asset";

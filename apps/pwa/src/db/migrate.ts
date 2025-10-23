@@ -2,7 +2,7 @@
 
 import { Drizzle } from "@/db/drizzle";
 import migrations from "@/db/migrations/migrations.json";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 
 const MIGRATION_TABLE = "__drizzle_migrations";
 const MIGRATION_SCHEMA = "drizzle";

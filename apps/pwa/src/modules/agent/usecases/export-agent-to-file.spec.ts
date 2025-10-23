@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createMemoryDB } from "@/shared/infra";
-import { readFileToString } from "@/shared/utils";
+import { readFileToString } from "@/shared/lib";
 
 import { PouchdbAgentRepo } from "@/modules/agent/repos/impl";
 import { ExportAgentToFile } from "@/modules/agent/usecases";

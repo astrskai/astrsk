@@ -8,7 +8,7 @@ import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 import { queryOptions, useMutation } from "@tanstack/react-query";
 
 // WeakMap cache for preventing unnecessary re-renders

@@ -15,7 +15,7 @@ import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 
 import { useAgentStore } from "@/app/stores/agent-store";
 import { ApiType, OutputFormat } from "@/modules/agent/domain/agent";
-import { AgentModels } from "@/components-v2/title/create-title/step-prompts";
+import { AgentModels } from "@/flow-multi/components/model-selection";
 import { Input } from "@/components-v2/ui/input";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";

@@ -10,7 +10,7 @@ export interface Tokenizer {
 export const getTokenizer = async (
   tokenizerType: TokenizerType = TokenizerType.OpenAI,
 ) => {
-  const tokenizer = (await import("@/shared/utils/tokenizer/openai-tokenizer"))
+  const tokenizer = (await import("@/shared/lib/tokenizer/openai-tokenizer"))
     .OpenAITokenizer.instance;
   return tokenizer;
 };

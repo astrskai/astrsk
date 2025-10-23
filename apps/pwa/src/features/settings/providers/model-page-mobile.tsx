@@ -6,14 +6,14 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 
 import { useApiConnections } from "@/app/hooks/use-api-connections";
 import { ApiService } from "@/app/services";
 import { queryClient } from "@/app/queries/query-client";
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
 import { Combobox } from "@/components/ui/combobox";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import {
   ProviderListItem,
   ProviderListItemDetail,

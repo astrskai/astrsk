@@ -12,7 +12,7 @@ import {
   useCardImport,
   useCardManagement,
 } from "@/features/card/hooks";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { TypoBase } from "@/components/ui/typo";
 import {
   Dialog,

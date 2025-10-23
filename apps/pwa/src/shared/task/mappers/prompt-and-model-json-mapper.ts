@@ -5,7 +5,7 @@ import {
   PromptAndModel,
   TokenizerType,
 } from "@/shared/task/domain/prompt-and-model";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 
 import { ApiSource } from "@/modules/api/domain";
 

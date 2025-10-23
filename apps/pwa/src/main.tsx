@@ -4,7 +4,7 @@ import { initStores } from "@/app/stores/init-stores.ts";
 import { Loading } from "@/components/ui/loading.tsx";
 import { PwaRegister } from "@/components/system/pwa-register.tsx";
 import { migrate } from "@/db/migrate.ts";
-import { logger } from "@/shared/utils/logger.ts";
+import { logger } from "@/shared/lib/logger.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
 import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";

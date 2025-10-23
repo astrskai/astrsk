@@ -2,7 +2,7 @@ import { asc, eq, gt } from "drizzle-orm";
 
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { formatFail } from "@/shared/utils/error-utils";
+import { formatFail } from "@/shared/lib/error-utils";
 
 import { Drizzle } from "@/db/drizzle";
 import { getOneOrThrow } from "@/db/helpers/get-one-or-throw";

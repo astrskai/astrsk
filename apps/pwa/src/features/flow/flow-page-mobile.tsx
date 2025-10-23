@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { useFlows } from "@/app/hooks/use-flows";
@@ -20,11 +20,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import { DeleteConfirm } from "@/components/dialogs/confirm";
 import { FlowDialog } from "@/features/flow/flow-dialog";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { SearchInput } from "@/components/ui/search-input";
 import { humanizeBytes } from "@/features/session/session-list";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { ModelItem } from "@/components-v2/title/create-title/step-prompts";
+import { ModelItem } from "@/flow-multi/components/model-selection";
 import { TypoBase } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { CheckboxMobile } from "@/components-v2/ui/checkbox";

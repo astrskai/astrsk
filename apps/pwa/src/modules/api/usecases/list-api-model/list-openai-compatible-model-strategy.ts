@@ -1,11 +1,11 @@
 import { Result } from "@/shared/core/result";
-import { formatFail } from "@/shared/utils/error-utils";
+import { formatFail } from "@/shared/lib/error-utils";
 
 import { ApiConnection, ApiModel } from "@/modules/api/domain";
 import { ListApiModelStrategy } from "@/modules/api/usecases/list-api-model/list-api-model-strategy";
 import { OpenAIComptableEndpoint } from "@/shared/endpoints";
 import { HttpClient } from "@/shared/infra/http-client";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 
 export class ListOpenaiCompatibleModelStrategy implements ListApiModelStrategy {
   constructor(private httpClient: HttpClient) {}

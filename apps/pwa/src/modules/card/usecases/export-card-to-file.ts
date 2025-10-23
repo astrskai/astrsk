@@ -1,6 +1,6 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { PNGMetadata } from "@/shared/utils/png-metadata";
+import { PNGMetadata } from "@/shared/lib/png-metadata";
 
 import { Asset } from "@/modules/asset/domain/asset";
 import { LoadAssetRepo } from "@/modules/asset/repos/load-asset-repo";

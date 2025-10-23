@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { PlayButton } from "./play-button";
 
 export type PlayButtonIconSize = "small" | "medium" | "large";

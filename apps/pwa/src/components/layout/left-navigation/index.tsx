@@ -6,7 +6,7 @@ import { HelpVideoDialog } from "@/components/dialogs/help-video-dialog";
 import { CardSection } from "./card-list";
 import { FlowSection } from "./flow-list";
 import { SessionSection } from "./session-list";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import {

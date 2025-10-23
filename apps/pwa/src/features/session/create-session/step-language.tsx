@@ -2,11 +2,11 @@ import { Info } from "lucide-react";
 import { Controller, useFormContext } from "react-hook-form";
 import { z } from "zod";
 
-import { languages } from "@/shared/utils/translate-utils";
+import { languages } from "@/shared/lib/translate-utils";
 
 import { Combobox } from "@/components/ui/combobox";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { SessionProps } from "@/modules/session/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 

@@ -1,6 +1,6 @@
 import { PropsWithChildren, useEffect, useRef, useState } from "react";
 
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Typo3XLarge, TypoSmall } from "@/components/ui/typo";

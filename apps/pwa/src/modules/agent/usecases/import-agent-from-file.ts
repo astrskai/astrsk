@@ -1,5 +1,5 @@
 import { Result, UseCase } from "@/shared/core";
-import { readFileToString } from "@/shared/utils";
+import { readFileToString } from "@/shared/lib";
 
 import { Agent } from "@/modules/agent/domain";
 import { SaveAgentRepo } from "@/modules/agent/repos";

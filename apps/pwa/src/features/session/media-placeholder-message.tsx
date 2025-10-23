@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Loader2, Trash2 } from "lucide-react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { useAsset } from "@/app/hooks/use-asset";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { UniqueEntityID } from "@/shared/domain";

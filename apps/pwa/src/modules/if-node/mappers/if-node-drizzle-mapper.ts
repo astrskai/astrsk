@@ -1,6 +1,6 @@
 import { parse, stringify } from "superjson";
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 import { IfNode } from "@/modules/if-node/domain/if-node";
 
 export class IfNodeDrizzleMapper {

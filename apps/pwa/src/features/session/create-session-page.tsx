@@ -5,14 +5,14 @@ import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 
 import { SessionService } from "@/app/services/session-service";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { useValidationStore } from "@/app/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import {
   convertBackgroundFormToSessionProps,
   StepBackground,

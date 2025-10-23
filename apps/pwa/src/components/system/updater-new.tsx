@@ -6,8 +6,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
-import { cn } from "@/shared/utils";
-import { logger } from "@/shared/utils/logger";
+import { cn } from "@/shared/lib";
+import { logger } from "@/shared/lib/logger";
 import { Import } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 

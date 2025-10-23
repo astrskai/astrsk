@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { cn } from "@/shared/utils/tailwind-utils";
+import { cn } from "@/shared/lib";
 
 import { Textarea } from "@/components-v2/ui/textarea";
 

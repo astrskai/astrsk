@@ -1,7 +1,7 @@
 import { Result } from "@/shared/core/result";
 import { HttpClient } from "@/shared/infra";
-import { formatFail } from "@/shared/utils";
-import { logger } from "@/shared/utils/logger";
+import { formatFail } from "@/shared/lib";
+import { logger } from "@/shared/lib/logger";
 
 import { ApiConnection, ApiModel } from "@/modules/api/domain";
 import { ListApiModelStrategy } from "@/modules/api/usecases/list-api-model/list-api-model-strategy";

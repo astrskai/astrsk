@@ -8,7 +8,7 @@ import {
   exportSymmetricKey,
   importSymmetricKey,
   generateIV,
-} from "@/shared/utils/crypto-utils";
+} from "@/shared/lib/crypto-utils";
 
 describe("Crypto Utilities", () => {
   // Mock crypto keys

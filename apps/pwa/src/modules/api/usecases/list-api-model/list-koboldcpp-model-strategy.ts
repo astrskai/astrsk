@@ -1,7 +1,7 @@
 import { Result } from "@/shared/core/result";
 import { KoboldCPPEndpoint } from "@/shared/endpoints/koboldcpp";
 import { HttpClient } from "@/shared/infra";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { ApiConnection, ApiModel } from "@/modules/api/domain";
 import { ListApiModelStrategy } from "@/modules/api/usecases/list-api-model/list-api-model-strategy";

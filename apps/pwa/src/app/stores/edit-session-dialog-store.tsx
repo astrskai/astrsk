@@ -7,7 +7,7 @@ import { immer } from "zustand/middleware/immer";
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain";
 import { PromptAndModel } from "@/shared/task/domain/prompt-and-model";
-import { createSelectors } from "@/shared/utils/zustand-utils";
+import { createSelectors } from "@/shared/lib/zustand-utils";
 
 import { CardFormValues } from "@/features/card/types/card-form";
 import { Card, CardType } from "@/modules/card/domain/card";

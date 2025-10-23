@@ -32,8 +32,8 @@ import {
   VariableGroupLabel,
   VariableLibrary,
 } from "@/shared/prompt/domain/variable";
-import { Datetime, logger } from "@/shared/utils";
-import { sanitizeFileName } from "@/shared/utils/file-utils";
+import { Datetime, logger } from "@/shared/lib";
+import { sanitizeFileName } from "@/shared/lib/file-utils";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { isObject } from "lodash-es";
 import { Check, ChevronDown, ChevronUp, Database, Target } from "lucide-react";

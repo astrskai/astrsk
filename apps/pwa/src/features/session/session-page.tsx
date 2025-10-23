@@ -9,14 +9,14 @@ import {
   SidebarLeftProvider,
 } from "@/components/layout/both-sidebar";
 import { InitialPage } from "@/components/system/init-page";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { CardTab } from "@/features/session/create-session/step-cards";
 import { SessionMain } from "@/features/session/session-main";
 import { SessionSettings } from "@/features/session/session-settings";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";

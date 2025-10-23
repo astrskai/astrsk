@@ -2,9 +2,9 @@ import { isArray } from "lodash-es";
 
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { readFileToString } from "@/shared/utils/file-utils";
-import { PNGMetadata } from "@/shared/utils/png-metadata";
-import { getTokenizer } from "@/shared/utils/tokenizer/tokenizer";
+import { readFileToString } from "@/shared/lib/file-utils";
+import { PNGMetadata } from "@/shared/lib/png-metadata";
+import { getTokenizer } from "@/shared/lib/tokenizer/tokenizer";
 
 import { SaveFileToAsset } from "@/modules/asset/usecases/save-file-to-asset";
 import {

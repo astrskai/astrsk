@@ -1,6 +1,6 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { Transaction } from "@/db/transaction";
 import { CloneAsset } from "@/modules/asset/usecases/clone-asset";

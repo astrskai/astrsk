@@ -1,6 +1,6 @@
 import { Changes, Result, UseCase, WithChanges } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { ApiConnection, ApiSource } from "@/modules/api/domain";
 import {

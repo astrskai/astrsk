@@ -3,7 +3,7 @@
 import { CircleHelp } from "lucide-react";
 import * as React from "react";
 
-import { cn } from "@/shared/utils/tailwind-utils";
+import { cn } from "@/shared/lib";
 
 import { TypoTiny } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";

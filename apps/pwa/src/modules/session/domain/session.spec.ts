@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { OpenAITokenizer } from "@/shared/utils";
+import { OpenAITokenizer } from "@/shared/lib";
 
 import { Session } from "@/modules/session/domain/session";
 import { Option } from "@/modules/turn/domain/option";

@@ -1,5 +1,5 @@
 import { Result } from "@/shared/core";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import {
   CreatePlainPromptMessageProps,

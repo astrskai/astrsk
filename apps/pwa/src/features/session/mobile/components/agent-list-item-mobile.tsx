@@ -1,5 +1,5 @@
 import { CircleAlert } from "lucide-react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 
 interface AgentListItemMobileProps {
   agentName: string;

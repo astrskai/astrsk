@@ -1,4 +1,4 @@
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 import { useEffect, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 

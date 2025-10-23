@@ -1,18 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components-v2/ui/dialog';
-import { Button } from '@/components-v2/ui/button';
-import { ScrollArea } from '@/components-v2/ui/scroll-area';
-import { Badge } from '@/components-v2/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components-v2/ui/tabs';
-import { Check, X, Code, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
-import { ReviewData } from '../types';
-import { cn } from '@/shared/utils';
+} from "@/components-v2/ui/dialog";
+import { Button } from "@/components-v2/ui/button";
+import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { Badge } from "@/components-v2/ui/badge";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components-v2/ui/tabs";
+import { Check, X, Code, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { ReviewData } from "../types";
 
 interface ReviewDialogProps {
   open: boolean;
@@ -30,17 +34,17 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
   onReject,
 }) => {
   const [currentChangeIndex, setCurrentChangeIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'changes' | 'full'>('changes');
+  const [viewMode, setViewMode] = useState<"changes" | "full">("changes");
 
   if (!reviewData) return null;
 
   const totalChanges = reviewData.appliedChanges.length;
   const currentChange = reviewData.appliedChanges[currentChangeIndex];
 
-  const navigateChange = (direction: 'prev' | 'next') => {
-    if (direction === 'prev' && currentChangeIndex > 0) {
+  const navigateChange = (direction: "prev" | "next") => {
+    if (direction === "prev" && currentChangeIndex > 0) {
       setCurrentChangeIndex(currentChangeIndex - 1);
-    } else if (direction === 'next' && currentChangeIndex < totalChanges - 1) {
+    } else if (direction === "next" && currentChangeIndex < totalChanges - 1) {
       setCurrentChangeIndex(currentChangeIndex + 1);
     }
   };
@@ -50,9 +54,9 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Badge variant="outline">
-            {change.operation === 'set' && '✏️ Edit'}
-            {change.operation === 'put' && '➕ Add'}
-            {change.operation === 'remove' && '🗑️ Remove'}
+            {change.operation === "set" && "✏️ Edit"}
+            {change.operation === "put" && "➕ Add"}
+            {change.operation === "remove" && "🗑️ Remove"}
           </Badge>
           <Badge variant="secondary">
             Confidence: {Math.round((change.confidence || 0) * 100)}%
@@ -62,7 +66,7 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
         <div className="space-y-2">
           <div>
             <span className="text-sm font-medium">Path:</span>
-            <code className="ml-2 text-xs bg-muted px-1 py-0.5 rounded">
+            <code className="bg-muted ml-2 rounded px-1 py-0.5 text-xs">
               {change.path}
             </code>
           </div>
@@ -70,7 +74,7 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
           {change.changeReason && (
             <div>
               <span className="text-sm font-medium">Reason:</span>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {change.changeReason}
               </p>
             </div>
@@ -79,7 +83,7 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
           {change.value !== undefined && (
             <div>
               <span className="text-sm font-medium">New Value:</span>
-              <pre className="mt-1 text-xs bg-muted p-2 rounded overflow-x-auto">
+              <pre className="bg-muted mt-1 overflow-x-auto rounded p-2 text-xs">
                 {JSON.stringify(change.value, null, 2)}
               </pre>
             </div>
@@ -93,17 +97,17 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
     return (
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <h4 className="text-sm font-semibold mb-2">Original</h4>
-          <ScrollArea className="h-[400px] border rounded-lg">
-            <pre className="text-xs p-2">
+          <h4 className="mb-2 text-sm font-semibold">Original</h4>
+          <ScrollArea className="h-[400px] rounded-lg border">
+            <pre className="p-2 text-xs">
               {JSON.stringify(reviewData.original, null, 2)}
             </pre>
           </ScrollArea>
         </div>
         <div>
-          <h4 className="text-sm font-semibold mb-2">Modified</h4>
-          <ScrollArea className="h-[400px] border rounded-lg">
-            <pre className="text-xs p-2">
+          <h4 className="mb-2 text-sm font-semibold">Modified</h4>
+          <ScrollArea className="h-[400px] rounded-lg border">
+            <pre className="p-2 text-xs">
               {JSON.stringify(reviewData.edited, null, 2)}
             </pre>
           </ScrollArea>
@@ -114,12 +118,12 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-h-[90vh] max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Review Changes</span>
             <Badge variant="outline">
-              {totalChanges} change{totalChanges !== 1 && 's'}
+              {totalChanges} change{totalChanges !== 1 && "s"}
             </Badge>
           </DialogTitle>
         </DialogHeader>
@@ -127,11 +131,11 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="changes">
-              <Code className="w-4 h-4 mr-2" />
+              <Code className="mr-2 h-4 w-4" />
               Changes
             </TabsTrigger>
             <TabsTrigger value="full">
-              <Eye className="w-4 h-4 mr-2" />
+              <Eye className="mr-2 h-4 w-4" />
               Full Comparison
             </TabsTrigger>
           </TabsList>
@@ -142,37 +146,35 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => navigateChange('prev')}
+                  onClick={() => navigateChange("prev")}
                   disabled={currentChangeIndex === 0}
                 >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  <ChevronLeft className="mr-1 h-4 w-4" />
                   Previous
                 </Button>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   Change {currentChangeIndex + 1} of {totalChanges}
                 </span>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => navigateChange('next')}
+                  onClick={() => navigateChange("next")}
                   disabled={currentChangeIndex === totalChanges - 1}
                 >
                   Next
-                  <ChevronRight className="w-4 h-4 ml-1" />
+                  <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             )}
 
             {currentChange && (
-              <ScrollArea className="h-[400px] border rounded-lg p-4">
+              <ScrollArea className="h-[400px] rounded-lg border p-4">
                 {renderChangeDetails(currentChange)}
               </ScrollArea>
             )}
           </TabsContent>
 
-          <TabsContent value="full">
-            {renderFullComparison()}
-          </TabsContent>
+          <TabsContent value="full">{renderFullComparison()}</TabsContent>
         </Tabs>
 
         <DialogFooter>
@@ -183,7 +185,7 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
               onOpenChange(false);
             }}
           >
-            <X className="w-4 h-4 mr-2" />
+            <X className="mr-2 h-4 w-4" />
             Reject Changes
           </Button>
           <Button
@@ -192,7 +194,7 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
               onOpenChange(false);
             }}
           >
-            <Check className="w-4 h-4 mr-2" />
+            <Check className="mr-2 h-4 w-4" />
             Apply Changes
           </Button>
         </DialogFooter>

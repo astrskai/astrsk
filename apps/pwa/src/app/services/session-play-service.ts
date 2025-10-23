@@ -65,12 +65,12 @@ import {
   RenderContext,
 } from "@/shared/prompt/domain/renderable";
 import { parameterList } from "@/shared/task/domain/parameter";
-import { parseAiSdkErrorMessage, sanitizeFileName } from "@/shared/utils";
-import { Datetime } from "@/shared/utils/datetime";
-import { logger } from "@/shared/utils/logger";
-import { TemplateRenderer } from "@/shared/utils/template-renderer";
-import { getTokenizer } from "@/shared/utils/tokenizer/tokenizer";
-import { translate } from "@/shared/utils/translate-utils";
+import { parseAiSdkErrorMessage, sanitizeFileName } from "@/shared/lib";
+import { Datetime } from "@/shared/lib/datetime";
+import { logger } from "@/shared/lib/logger";
+import { TemplateRenderer } from "@/shared/lib/template-renderer";
+import { getTokenizer } from "@/shared/lib/tokenizer/tokenizer";
+import { translate } from "@/shared/lib/translate-utils";
 
 // Model mapping configuration for automatic fallback
 // When using AstrskAi, format must be "ApiSource:modelId"

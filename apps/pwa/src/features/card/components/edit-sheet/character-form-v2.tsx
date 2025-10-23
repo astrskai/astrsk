@@ -23,7 +23,7 @@ import {
   TabsTrigger,
 } from "@/components-v2/ui/tabs";
 import { CardType, CharacterCard } from "@/modules/card/domain";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 interface CharacterFormProps {
   store: CardStore;

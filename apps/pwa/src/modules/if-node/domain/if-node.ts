@@ -1,6 +1,6 @@
 import { Result } from "@/shared/core/result";
 import { AggregateRoot, UniqueEntityID } from "@/shared/domain";
-import { PartialOmit } from "@/shared/utils";
+import { PartialOmit } from "@/shared/lib";
 import { IfCondition } from "vibe-shared-types";
 
 export interface IfNodeProps {

@@ -1,6 +1,6 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { Turn } from "@/modules/turn/domain/turn";
 import { LoadTurnRepo } from "@/modules/turn/repos/load-turn-repo";

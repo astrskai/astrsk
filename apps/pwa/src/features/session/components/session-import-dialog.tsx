@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ImportDialog } from "@/components/dialogs/import-dialog";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
-import { ModelItem } from "@/components-v2/title/create-title/step-prompts";
+import { ModelItem } from "@/flow-multi/components/model-selection";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Label } from "@/components-v2/ui/label";

@@ -1,5 +1,5 @@
 import { Result, UseCase } from "@/shared/core";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { ApiConnection } from "@/modules/api/domain";
 import { SaveApiConnectionRepo } from "@/modules/api/repos";

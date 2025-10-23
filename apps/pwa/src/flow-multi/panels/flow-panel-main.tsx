@@ -16,7 +16,8 @@ import { PanelFocusAnimationWrapper } from "@/components/layout/dockview-panel-f
 // import "dockview/dist/styles/dockview.css";
 import { Flow } from "@/modules/flow/domain";
 import { debounce } from "lodash-es";
-import { cn, logger } from "@/shared/utils";
+import { cn } from "@/shared/lib";
+import { logger } from "@/shared/lib";
 import { FlowPanelProvider } from "@/flow-multi/components/flow-panel-provider";
 import { getPanelTitle, PanelType } from "@/flow-multi/components/panel-types";
 import {

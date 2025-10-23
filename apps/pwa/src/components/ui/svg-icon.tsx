@@ -1,6 +1,6 @@
 import { forwardRef, memo } from "react";
 
-import { cn } from "@/shared/utils/tailwind-utils";
+import { cn } from "@/shared/lib";
 
 type IconName =
   | "sessions"

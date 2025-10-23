@@ -3,8 +3,8 @@ import { write } from "opfs-tools";
 import { Result } from "@/shared/core/result";
 import { AggregateRoot } from "@/shared/domain/aggregate-root";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { getFileHash } from "@/shared/utils";
-import { formatFail } from "@/shared/utils/error-utils";
+import { getFileHash } from "@/shared/lib";
+import { formatFail } from "@/shared/lib/error-utils";
 
 import { TableName } from "@/db/schema/table-name";
 

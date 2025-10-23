@@ -10,14 +10,14 @@ import {
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
-import { downloadFile } from "@/shared/utils";
+import { downloadFile } from "@/shared/lib";
 
 import { useSession } from "@/app/hooks/use-session";
 import { SessionService } from "@/app/services/session-service";
 import { useSessionStore } from "@/app/stores/session-store";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import {

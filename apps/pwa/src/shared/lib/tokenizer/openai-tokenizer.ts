@@ -2,7 +2,7 @@
 
 import { getEncoding } from "js-tiktoken";
 
-import { Tokenizer } from "@/shared/utils/tokenizer/tokenizer";
+import { Tokenizer } from "@/shared/lib/tokenizer/tokenizer";
 
 export class OpenAITokenizer implements Tokenizer {
   private static _instance: OpenAITokenizer;

@@ -10,7 +10,7 @@ import {
   Renderable,
   RenderContext,
 } from "@/shared/prompt/domain";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import {
   PromptBlock,

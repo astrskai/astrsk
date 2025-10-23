@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Card, CardContent } from "@/components-v2/ui/card";
 import { SvgIcon, IconName } from "@/components-v2/svg-icon";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 import React from "react";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
 

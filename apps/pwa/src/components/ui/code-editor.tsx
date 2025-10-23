@@ -15,7 +15,7 @@ import type { editor } from "monaco-editor";
 import { useEffect, useRef } from "react";
 
 import { variableList } from "@/shared/prompt/domain/variable";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 import { Banner } from "@/components/ui/banner";
 

@@ -1,6 +1,6 @@
 import { Result } from "@/shared/core/result";
 import { UseCase } from "@/shared/core/use-case";
-import { formatFail, logger, readFileToString } from "@/shared/utils";
+import { formatFail, logger, readFileToString } from "@/shared/lib";
 import JSZip from "jszip";
 import { Flow } from "@/modules/flow/domain/flow";
 import { isOldFlowFormat, migrateFlowToNewFormat } from "@/modules/flow/utils/migrate-flow-format";

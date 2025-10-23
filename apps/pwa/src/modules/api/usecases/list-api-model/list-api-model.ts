@@ -1,7 +1,7 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
 import { HttpClient } from "@/shared/infra";
-import { formatFail, logger } from "@/shared/utils";
+import { formatFail, logger } from "@/shared/lib";
 
 import { ApiConnection, ApiModel, ApiSource } from "@/modules/api/domain";
 import { LoadApiConnectionRepo } from "@/modules/api/repos/load-api-connection-repo";

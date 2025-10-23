@@ -11,7 +11,7 @@ import { useSession } from "@/app/hooks/use-session";
 import { useBackgroundStore } from "@/app/stores/background-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { useBackGesture } from "@/shared/hooks/use-back-gesture";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { SessionMessagesAndUserInputsMobile } from "@/features/session/mobile/session-messages-and-user-inputs-mobile";
 import { SessionSettingsMobile } from "@/features/session/mobile/session-settings-mobile";
 import { TopNavigation } from "@/components/layout/top-navigation";

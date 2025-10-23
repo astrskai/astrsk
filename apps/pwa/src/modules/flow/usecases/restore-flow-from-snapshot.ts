@@ -1,5 +1,5 @@
 import { Result, UseCase } from "@/shared/core";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { Flow } from "@/modules/flow/domain";
 import { SaveFlowRepo } from "@/modules/flow/repos/save-flow-repo";

@@ -7,7 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import { UseFormGetValues, UseFormTrigger } from "react-hook-form";
 import { toast } from "sonner";
 
-import { cn, downloadFile, logger } from "@/shared/utils";
+import { cn } from "@/shared/lib";
+import { downloadFile, logger } from "@/shared/lib";
 
 import { CardService } from "@/app/services";
 import { AssetService } from "@/app/services/asset-service";

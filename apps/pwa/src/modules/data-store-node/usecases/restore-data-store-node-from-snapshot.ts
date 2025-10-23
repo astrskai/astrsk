@@ -1,5 +1,5 @@
 import { Result, UseCase } from "@/shared/core";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { DataStoreNode } from "@/modules/data-store-node/domain";
 import { SaveDataStoreNodeRepo } from "@/modules/data-store-node/repos/save-data-store-node-repo";

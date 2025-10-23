@@ -1,5 +1,5 @@
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 
 import {
   InsertApiConnection,
