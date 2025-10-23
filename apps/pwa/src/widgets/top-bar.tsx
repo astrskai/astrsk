@@ -4,7 +4,7 @@ import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/shared/ui";
 import { SquareArrowUpRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { isElectronEnvironment } from "@/utils/environment";
+import { isElectronEnvironment } from "@/shared/lib/environment";
 
 const NewWindowButton = () => {
   const handleNewWindow = useCallback(() => {

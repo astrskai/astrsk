@@ -43,7 +43,7 @@ import { delay } from "lodash-es";
 import { CircleAlert, Copy, Loader2, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { getUniqueEntityIDFromPath } from "@/utils/url-utils";
+import { getUniqueEntityIDFromPath } from "@/shared/lib/url-utils";
 
 const FlowItem = ({
   flowId,

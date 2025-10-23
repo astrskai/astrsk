@@ -834,7 +834,7 @@ Operations are being generated and will be ready for review shortly.`;
 
                         // Notify flow panel of nodes/edges update to ensure UI reflects reverted state
                         const { notifyFlowNodesEdgesUpdate } = await import(
-                          "@/utils/flow-local-state-sync"
+                          "@/shared/lib/flow-local-state-sync"
                         );
                         const flowNodes = flow.props.nodes || [];
                         const flowEdges = (flow.props.edges || []).map(

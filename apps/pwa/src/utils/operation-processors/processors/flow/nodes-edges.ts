@@ -21,7 +21,7 @@ import { IfNodeService } from '@/app/services/if-node-service';
 import { NodeType } from '@/flow-multi/types/node-types';
 import { getNextAvailableColor } from '@/flow-multi/utils/node-color-assignment';
 import { Edge } from '@/modules/flow/domain/flow';
-import { notifyFlowNodesEdgesUpdate } from '@/utils/flow-local-state-sync';
+import { notifyFlowNodesEdgesUpdate } from '@/shared/lib/flow-local-state-sync';
 
 /**
  * Create domain entity with predetermined ID from analysis agent

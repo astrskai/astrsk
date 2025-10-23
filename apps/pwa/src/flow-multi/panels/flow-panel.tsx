@@ -30,7 +30,7 @@ import {
   ensureEdgesSelectable,
 } from "@/flow-multi/utils/ensure-edge-selectable";
 import { invalidateSingleFlowQueries } from "@/flow-multi/utils/invalidate-flow-queries";
-import { useFlowLocalStateSync } from "@/utils/flow-local-state-sync";
+import { useFlowLocalStateSync } from "@/shared/lib/flow-local-state-sync";
 import { cn } from "@/shared/lib";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
