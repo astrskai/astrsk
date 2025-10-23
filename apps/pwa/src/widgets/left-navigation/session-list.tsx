@@ -54,7 +54,7 @@ import { CircleAlert, Copy, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { fetchBackgrounds } from "@/app/stores/background-store";
-import { getUniqueEntityIDFromPath } from "@/utils/url-utils";
+import { getUniqueEntityIDFromPath } from "@/shared/lib/url-utils";
 
 const SessionItem = ({
   sessionId,

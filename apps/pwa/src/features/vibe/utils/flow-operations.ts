@@ -564,7 +564,7 @@ export async function processFlowOperations(
           } else {
             // Step 4: Notify UI of the changes (now that everything is persisted)
             const { notifyFlowNodesEdgesUpdate } = await import(
-              "@/utils/flow-local-state-sync"
+              "@/shared/lib/flow-local-state-sync"
             );
 
             // Ensure all edges have the required 'type' field for ReactFlow
@@ -681,7 +681,7 @@ export async function processFlowOperations(
             } else {
               // Step 3: Notify UI of the changes (now that everything is persisted)
               const { notifyFlowNodesEdgesUpdate } = await import(
-                "@/utils/flow-local-state-sync"
+                "@/shared/lib/flow-local-state-sync"
               );
 
               // Ensure all edges have the required 'type' field for ReactFlow

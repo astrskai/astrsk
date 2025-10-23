@@ -66,7 +66,7 @@ import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
-import { isPathWithBasePath } from "@/utils/url-utils";
+import { isPathWithBasePath } from "@/shared/lib/url-utils";
 
 interface ScrollToBottomOptions {
   wait?: number;
