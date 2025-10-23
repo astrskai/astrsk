@@ -99,10 +99,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
-import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
+import { FloatingActionButton } from "@/shared/ui/floating-action-button";
 import { ScrollArea } from "@/shared/ui/scroll-area";
-import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
-import { toastError } from "@/components-v2/ui/toast-error";
+import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
+import { toastError } from "@/shared/ui/toast-error";
 import {
   Tooltip,
   TooltipContent,

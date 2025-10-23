@@ -8,7 +8,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { ScrollArea } from "@/shared/ui/scroll-area";
-import { Badge } from "@/components-v2/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import {
   Tabs,
   TabsContent,

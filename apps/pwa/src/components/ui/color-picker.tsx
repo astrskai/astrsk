@@ -13,7 +13,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components-v2/ui/popover";
+} from "@/shared/ui/popover";
 
 interface ColorPickerProps {
   value?: string | null;

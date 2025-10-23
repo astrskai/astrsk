@@ -60,7 +60,7 @@ import {
   SearchCheck,
   HelpCircle,
 } from "lucide-react";
-import { ButtonPill } from "@/components-v2/ui/button-pill";
+import { ButtonPill } from "@/shared/ui/button-pill";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useLeftNavigationWidth } from "@/components/layout/left-navigation/hooks/use-left-navigation-width";
@@ -82,7 +82,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components-v2/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 
 // Import ReactFlow components
 import {

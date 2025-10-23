@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Separator } from "@/components-v2/ui/separator";
+import { Separator } from "@/shared/ui/separator";
 import React from "react";
 
 const meta = {

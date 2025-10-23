@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Plus, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/shared/ui/input";
-import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
+import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
 import {
   Select,
   SelectContent,

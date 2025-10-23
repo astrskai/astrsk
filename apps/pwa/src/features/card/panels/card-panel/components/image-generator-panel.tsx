@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import { Loader2, Sparkles } from "lucide-react";
-import { Slider } from "@/components-v2/ui/slider";
+import { Slider } from "@/shared/ui/slider";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { useAsset } from "@/app/hooks/use-asset";
 import {

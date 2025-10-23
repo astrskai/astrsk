@@ -13,9 +13,9 @@ import { SortableBlockListV2 } from "@/features/card/components/edit-sheet/sorta
 import { useEntryList } from "@/features/card/hooks/useEntryList";
 import { Typo2XLarge } from "@/components/ui/typo";
 import { Button } from "@/shared/ui/button";
-import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
-import { FloatingLabelInputs } from "@/components-v2/ui/floating-label-inputs";
-import { FloatingLabelTextarea } from "@/components-v2/ui/floating-label-textarea";
+import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
+import { FloatingLabelInputs } from "@/shared/ui/floating-label-inputs";
+import { FloatingLabelTextarea } from "@/shared/ui/floating-label-textarea";
 import {
   Tabs,
   TabsContent,

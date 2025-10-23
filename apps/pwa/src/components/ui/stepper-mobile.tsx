@@ -5,7 +5,7 @@ import { cn } from "@/shared/lib";
 
 import { useBackGesture } from "@/shared/hooks/use-back-gesture";
 import { Button } from "@/shared/ui/button";
-import { Progress } from "@/components-v2/ui/progress";
+import { Progress } from "@/shared/ui/progress";
 
 interface StepperMobileProps {
   title?: string;

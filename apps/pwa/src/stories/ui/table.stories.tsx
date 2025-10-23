@@ -8,8 +8,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components-v2/ui/table";
-import { Badge } from "@/components-v2/ui/badge";
+} from "@/shared/ui/table";
+import { Badge } from "@/shared/ui/badge";
 import React from "react";
 
 const meta = {

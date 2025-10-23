@@ -41,7 +41,7 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
     - Cleaned up all import paths to use domain-based imports
     - Empty components-v2/setting/ folder removed
     - Build verified successful (26.9s)
-  - ✅ **components-v2/ cleanup COMPLETE** - All non-ui files migrated (43 → 38 files)
+  - ✅ **components-v2/ MIGRATION COMPLETE & DELETED** - All 43 files migrated to FSD structure
     - ✅ `layout/` - 2 files migrated → `components/layout/`
       - modal-pages.tsx, v2-layout.tsx
       - Updated 1 import in routes/_layout.tsx
@@ -83,10 +83,25 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
       - ScenarioItem, ScenarioSelectionDialog (4 usages in session + stories)
       - Session domain-specific components
       - Updated all imports
-    - ✅ `ui/` - 38 files (shadcn/ui - KEPT AS-IS, production use)
-    - ✅ **components-v2/ cleanup COMPLETE** - All non-ui files migrated (43 → 38 files)
-      - Build successful (9.72s)
-- ✅ **Quality Findings**:
+    - ✅ **ui/ COMPLETE MIGRATION** - All 38 shadcn/ui components → `shared/ui/` (FSD Layer)
+      - **High Usage** (20+ usages): button (113), scroll-area (44), dialog (34), tooltip (28), input (27)
+      - **Medium Usage** (10-19 usages): label (18), tabs (15), select (13), card (12), checkbox (11)
+      - **Low Usage** (1-9 usages): 23 components (accordion, badge, switch, sheet, separator, etc.)
+      - Updated ~400+ import paths: `@/components-v2/ui/*` → `@/shared/ui/*`
+      - **Zero unused components** - All 38 files actively used in production
+      - Build successful (9.56s)
+    - ✅ **components-v2/ FOLDER DELETED** - Complete FSD migration achieved
+      - All 43 files successfully migrated to FSD structure
+      - Legacy folder completely removed from codebase
+- ✅ **Quality Findings & Migration Stats**:
+  - **components-v2/ Migration**: 43 files → FSD structure (100% complete)
+    - 38 UI components → `shared/ui/` (~400 imports updated)
+    - 2 editor files → `shared/ui/editor/`
+    - 2 scenario files → `features/session/components/scenario/`
+    - 1 lib file → `shared/lib/cn.ts` (146 imports)
+  - **FSD Consolidation**: `shared/utils/` → `shared/lib/` (177 imports)
+  - **Total Import Updates**: ~700+ paths updated
+  - **Zero Unused Components**: All 38 UI components actively used
   - 3 UNUSED components identified (code-editor, json-viewer, tooltip-wrapper)
   - 5 Mobile duplication targets identified for Phase 3
   - 1 Legacy file removed (edit-card-dialog.tsx)
@@ -140,6 +155,45 @@ We are adopting [Feature-Sliced Design (FSD)](https://feature-sliced.design/) as
 2. **Isolation** - Layers can only import from layers below (shared ← entities ← features ← widgets ← pages ← app)
 3. **Public API** - Each module exposes a single entry point (index.ts)
 4. **Business-oriented** - Structure reflects business domains, not technical details
+
+#### **FSD 3-Level Hierarchy**
+
+FSD organizes code through three levels: **Layers → Slices → Segments**
+
+**1. Layers** (Vertical Separation by Responsibility)
+- **Purpose**: Separate code by responsibility scope and dependency range
+- **Rule**: Upper layers can only import from lower layers
+- **7 Standard Layers**: app, ~~processes~~(deprecated), pages, widgets, features, entities, shared
+
+**2. Slices** (Horizontal Separation by Business Domain)
+- **Purpose**: Group code by business meaning and product domain
+- **Naming**: Freely chosen based on business (e.g., `session`, `card`, `flow`)
+- **Rule**: Slices on the same layer cannot import each other (ensures high cohesion, low coupling)
+- **Applied to**: features, entities, widgets, pages layers only (app/shared go directly to segments)
+
+**3. Segments** (Technical Purpose Separation)
+- **Purpose**: Group code by technical nature within a slice
+- **Standard Segments**:
+  - `ui/` - Everything related to UI display
+  - `model/` - State management and business logic
+  - `api/` - API calls and backend integration
+  - `lib/` - Library code needed by this slice
+  - `config/` - Configuration files
+- **Public API**: Each slice exports only through `index.ts`
+
+**Example Structure:**
+```
+features/           # Layer
+  ├── session/      # Slice (business domain)
+  │   ├── ui/       # Segment (UI components)
+  │   ├── model/    # Segment (state management)
+  │   ├── api/      # Segment (API calls)
+  │   └── index.ts  # Public API
+  └── card/         # Slice (different business domain)
+      ├── ui/
+      ├── model/
+      └── index.ts
+```
 
 #### **FSD Layers** (Bottom-up dependency)
 
@@ -362,12 +416,43 @@ apps/pwa/src/
 │       └── updater-new.tsx
 │
 ├── shared/                        # ✅ FSD Layer: Reusable code
-│   ├── ui/                       # ✅ Global UI components (FSD)
+│   ├── ui/                       # ✅ Global UI components (FSD) - 41 files total
+│   │   ├── editor/              # Monaco Editor wrapper (10 usages)
+│   │   │   ├── editor.tsx       # Code editor component
+│   │   │   └── index.ts         # Barrel export
 │   │   ├── media-display.tsx    # Image/video display (5 usages)
 │   │   ├── play-button.tsx      # Video play button (3 usages)
-│   │   └── editor/              # ✅ NEW: Monaco Editor wrapper (10 usages)
-│   │       ├── editor.tsx       # Monaco Editor component (flow-multi, card, vibe)
-│   │       └── index.ts         # Barrel export
+│   │   │
+│   │   ├── button.tsx           # ✅ shadcn/ui components (38 files)
+│   │   ├── scroll-area.tsx      # High usage UI primitives
+│   │   ├── dialog.tsx
+│   │   ├── tooltip.tsx
+│   │   ├── input.tsx
+│   │   ├── label.tsx
+│   │   ├── tabs.tsx
+│   │   ├── select.tsx
+│   │   ├── card.tsx
+│   │   ├── checkbox.tsx
+│   │   ├── badge.tsx
+│   │   ├── switch.tsx
+│   │   ├── sheet.tsx
+│   │   ├── separator.tsx
+│   │   ├── accordion.tsx
+│   │   ├── carousel.tsx
+│   │   ├── dropdown-menu.tsx
+│   │   ├── popover.tsx
+│   │   ├── radio-group.tsx
+│   │   ├── skeleton.tsx
+│   │   ├── textarea.tsx
+│   │   ├── floating-label-input.tsx   # Custom form inputs
+│   │   ├── floating-label-inputs.tsx
+│   │   ├── floating-label-select.tsx
+│   │   ├── floating-label-textarea.tsx
+│   │   ├── floating-action-button.tsx
+│   │   ├── toast-error.tsx
+│   │   ├── toast-success.tsx
+│   │   ├── sonner.tsx
+│   │   └── ... (+ 10 more shadcn/ui components)
 │   │
 │   ├── lib/                      # ✅ Utilities & libraries (FSD - unified from utils/)
 │   │   ├── cn.ts                # Tailwind cn() utility (146 usages via barrel)
@@ -400,9 +485,6 @@ apps/pwa/src/
 │   ├── endpoints/                # API endpoints
 │   ├── prompt/                   # Prompt templates
 │   └── task/                     # Background tasks
-│
-├── components-v2/                 # ✅ Migration COMPLETE (only ui/ remains)
-│   └── ui/                       # 38 files - shadcn/ui (production use, kept as-is)
 │
 ├── app/                          # Global app configuration
 │   ├── queries/                  # TanStack Query factories
@@ -557,9 +639,14 @@ Criteria for moving to `components/`:
 
 ### **References**
 
+**Feature-Sliced Design (FSD):**
 - [Feature-Sliced Design](https://feature-sliced.design/) - **Primary architectural reference**
 - [FSD Get Started](https://feature-sliced.design/docs/get-started/overview) - Core concepts and layers
-- [FSD Migration from Custom](https://feature-sliced.design/docs/guides/migration/from-custom) - **Migration guide (lib vs utils)**
+- [FSD Layers](https://feature-sliced.design/docs/reference/layers) - **Layer hierarchy and dependency rules**
+- [FSD Slices & Segments](https://feature-sliced.design/docs/reference/slices-segments) - **Business domain and technical organization**
+- [FSD Migration from Custom](https://feature-sliced.design/docs/guides/migration/from-custom) - Migration guide (lib vs utils)
+
+**Other References:**
 - [Kent C. Dodds - Colocation](https://kentcdodds.com/blog/colocation) - File organization principles
 - [Bulletproof React](https://github.com/alan2207/bulletproof-react) - React project structure patterns
 - [Next.js Project Structure](https://nextjs.org/docs/getting-started/project-structure) - Modern folder conventions

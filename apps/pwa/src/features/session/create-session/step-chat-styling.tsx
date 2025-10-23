@@ -11,7 +11,7 @@ import { cn } from "@/shared/lib";
 import { StepBackgroundSchemaType } from "@/features/session/create-session/step-background";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
 import { MessageItemInternal } from "@/features/session/session-messages-and-user-inputs";
-import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
+import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
 import {
   Tabs,
   TabsContent,

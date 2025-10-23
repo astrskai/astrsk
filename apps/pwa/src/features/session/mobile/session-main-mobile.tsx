@@ -17,7 +17,7 @@ import { SessionSettingsMobile } from "@/features/session/mobile/session-setting
 import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/shared/ui/button";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
-import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
+import { Sheet, SheetContent } from "@/shared/ui/sheet";
 
 interface ScrollToBottomOptions {
   wait?: number;

@@ -10,8 +10,8 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { Badge } from "@/components-v2/ui/badge";
-import { Separator } from "@/components-v2/ui/separator";
+import { Badge } from "@/shared/ui/badge";
+import { Separator } from "@/shared/ui/separator";
 import React from "react";
 
 const meta = {

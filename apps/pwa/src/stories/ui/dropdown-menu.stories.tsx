@@ -14,7 +14,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuShortcut,
-} from "@/components-v2/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 import { Button } from "@/shared/ui/button";
 import {
   Cloud,

@@ -1,4 +1,4 @@
-import { Switch } from "@/components-v2/ui/switch";
+import { Switch } from "@/shared/ui/switch";
 import { MediaDisplay } from "@/shared/ui/media-display";
 import { Image } from "lucide-react";
 import { cn } from "@/shared/lib";

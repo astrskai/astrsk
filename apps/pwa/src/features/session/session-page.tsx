@@ -14,7 +14,7 @@ import { CardTab } from "@/features/session/create-session/step-cards";
 import { SessionMain } from "@/features/session/session-main";
 import { SessionSettings } from "@/features/session/session-settings";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
+import { FloatingActionButton } from "@/shared/ui/floating-action-button";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { logger } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";

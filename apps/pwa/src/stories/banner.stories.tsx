@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Banner, showBanner } from "@/components-v2/banner";
 import { Button } from "@/shared/ui/button";
-import { Toaster } from "@/components-v2/ui/sonner";
+import { Toaster } from "@/shared/ui/sonner";
 
 const meta = {
   title: "Components/Banner",

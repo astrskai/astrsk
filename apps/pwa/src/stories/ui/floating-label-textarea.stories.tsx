@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { FloatingLabelTextarea } from "@/components-v2/ui/floating-label-textarea";
+import { FloatingLabelTextarea } from "@/shared/ui/floating-label-textarea";
 import React from "react";
 
 const meta = {

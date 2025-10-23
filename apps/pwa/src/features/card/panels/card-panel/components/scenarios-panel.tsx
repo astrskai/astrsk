@@ -31,7 +31,7 @@ import {
 import { PlotCard } from "@/modules/card/domain";
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
-import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
+import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 

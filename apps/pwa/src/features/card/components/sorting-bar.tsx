@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components-v2/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 import { SearchCardsSort } from "@/modules/card/repos";
 
 interface SortingBarProps {

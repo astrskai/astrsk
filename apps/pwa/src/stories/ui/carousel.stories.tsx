@@ -6,7 +6,7 @@ import {
   CarouselNext,
   CarouselPrevious,
   type CarouselApi,
-} from "@/components-v2/ui/carousel";
+} from "@/shared/ui/carousel";
 import { Card, CardContent } from "@/shared/ui/card";
 import React from "react";
 

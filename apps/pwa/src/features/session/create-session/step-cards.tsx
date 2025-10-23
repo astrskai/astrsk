@@ -16,7 +16,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components-v2/ui/accordion";
+} from "@/shared/ui/accordion";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { Card, CardType } from "@/modules/card/domain";
 import { CardListItem, SessionProps } from "@/modules/session/domain";

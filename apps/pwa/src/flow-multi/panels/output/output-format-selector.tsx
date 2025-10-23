@@ -5,9 +5,9 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components-v2/ui/accordion";
+} from "@/shared/ui/accordion";
 import { cn } from "@/shared/lib";
-import { Switch } from "@/components-v2/ui/switch";
+import { Switch } from "@/shared/ui/switch";
 
 interface OutputFormatSelectorProps {
   value: {

@@ -12,7 +12,7 @@ import { Typo2XLarge, TypoBase } from "@/components/ui/typo";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { ScrollArea } from "@/shared/ui/scroll-area";
-import { Switch } from "@/components-v2/ui/switch";
+import { Switch } from "@/shared/ui/switch";
 import {
   Select,
   SelectContent,

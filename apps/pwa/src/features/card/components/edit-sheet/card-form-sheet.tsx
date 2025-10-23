@@ -33,7 +33,7 @@ import {
   SheetClose,
   SheetContent,
   SheetFooter,
-} from "@/components-v2/ui/sheet";
+} from "@/shared/ui/sheet";
 import { TableName } from "@/db/schema/table-name";
 import {
   Card,
