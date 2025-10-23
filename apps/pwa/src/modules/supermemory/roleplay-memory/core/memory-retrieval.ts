@@ -17,6 +17,7 @@ import type {
 import {
   validateCharacterContainer,
   validateWorldContainer,
+  validateNpcContainer,
 } from "./containers";
 import { logger } from "@/shared/utils/logger";
 
@@ -88,10 +89,13 @@ export async function retrieveCharacterMemories(
   input: CharacterMemoryQueryInput,
 ): Promise<CharacterMemoryQueryOutput> {
   try {
-    // Validate character container tag
-    if (!validateCharacterContainer(input.containerTag)) {
+    // Validate character or NPC container tag
+    const isCharacter = validateCharacterContainer(input.containerTag);
+    const isNpc = !isCharacter && validateNpcContainer(input.containerTag);
+
+    if (!isCharacter && !isNpc) {
       logger.error(
-        "[Memory Retrieval] Invalid character container tag:",
+        "[Memory Retrieval] Invalid container tag (not character or NPC):",
         input.containerTag,
       );
       return { memories: [], count: 0 };

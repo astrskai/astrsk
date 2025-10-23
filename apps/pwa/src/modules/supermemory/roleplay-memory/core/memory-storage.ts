@@ -16,6 +16,7 @@ import type {
 import {
   validateCharacterContainer,
   validateWorldContainer,
+  validateNpcContainer,
 } from "./containers";
 import { logger } from "@/shared/utils/logger";
 import {
@@ -161,16 +162,19 @@ export async function storeCharacterMessage(
   metadata: MemoryMetadata,
 ): Promise<StorageResult> {
   try {
-    // Validate character container tag
-    if (!validateCharacterContainer(containerTag)) {
+    // Validate character or NPC container tag
+    const isCharacter = validateCharacterContainer(containerTag);
+    const isNpc = !isCharacter && validateNpcContainer(containerTag);
+
+    if (!isCharacter && !isNpc) {
       logger.error(
-        "[Memory Storage] Invalid character container tag:",
+        "[Memory Storage] Invalid container tag (not character or NPC):",
         containerTag,
       );
       return {
         id: null,
         success: false,
-        error: "Invalid character container tag format",
+        error: "Invalid container tag format",
       };
     }
 

@@ -61,6 +61,15 @@ import {
   distributeMemories,
   executeWorldAgent,
 } from "@/modules/supermemory/roleplay-memory";
+import { executeNpcExtractionAgent } from "@/modules/supermemory/roleplay-memory/core/npc-extraction-agent";
+import {
+  buildCharacterMapping,
+  mapParticipantNamesToIds,
+  createNpcContainer
+} from "@/modules/supermemory/roleplay-memory/utils/npc-utils";
+import { retrieveCharacterMemories, retrieveWorldMemories } from "@/modules/supermemory/roleplay-memory/core/memory-retrieval";
+import { handleNpcDetection } from "@/modules/supermemory/roleplay-memory/integration/npc-detection-handler";
+import { useNpcStore } from "@/app/stores/npc-store";
 import {
   ApiConnection,
   OpenrouterProviderSort,
@@ -2925,6 +2934,7 @@ async function executeWorldAgentAndDistributeMemories(
 
     const allParticipantIds: string[] = [];
     const characterIdToName: Record<string, string> = {};
+    const characterDescriptions: string[] = []; // For NPC extraction
 
     // Retrieve world memories for World Agent context
     const { createWorldContainer } = await import("@/modules/supermemory/roleplay-memory/core/containers");
@@ -2974,15 +2984,20 @@ async function executeWorldAgentAndDistributeMemories(
       const idStr = id.toString();
       allParticipantIds.push(idStr);
 
-      // Get character name
+      // Get character name and description
       try {
         const card = (await CardService.getCard.execute(id))
           .throwOnFailure()
           .getValue() as CharacterCard;
-        characterIdToName[idStr] =
-          card.props.name || card.props.title || "Unknown";
+        const characterName = card.props.name || card.props.title || "Unknown";
+        characterIdToName[idStr] = characterName;
+
+        // Store description for NPC extraction (truncate to first 200 chars for brevity)
+        const description = card.props.description || "";
+        characterDescriptions.push(description.substring(0, 200));
       } catch {
         characterIdToName[idStr] = "Unknown";
+        characterDescriptions.push("");
       }
     }
 
@@ -2997,28 +3012,113 @@ async function executeWorldAgentAndDistributeMemories(
         )
           .throwOnFailure()
           .getValue() as CharacterCard;
-        characterIdToName[userIdStr] =
-          card.props.name || card.props.title || "User";
+        const characterName = card.props.name || card.props.title || "User";
+        characterIdToName[userIdStr] = characterName;
+
+        // Store description for NPC extraction
+        const description = card.props.description || "";
+        characterDescriptions.push(description.substring(0, 200));
       } catch {
         characterIdToName[userIdStr] = "User";
+        characterDescriptions.push("");
       }
     }
 
     // Extract participant names from the ID-to-name mapping
     const allParticipantNames = allParticipantIds.map((id) => characterIdToName[id]);
 
+    // ========== NPC EXTRACTION & MEMORY INTEGRATION ==========
+    // 1. Get existing NPC pool
+    const existingNpcPool = useNpcStore.getState().getNpcPool(sessionIdStr);
+
+    // 2. Retrieve world memory context for NPC descriptions
+    const worldContainerTag = `${sessionIdStr}::world`;
+    const worldMemoryResult = await retrieveWorldMemories({
+      containerTag: worldContainerTag,
+      query: "What characters, NPCs, and relationships exist in this story?",
+      limit: 15, // Get enough context for descriptions
+    });
+
+    // 3. Execute NPC extraction agent with world context
+    const npcExtractionResult = await executeNpcExtractionAgent({
+      sessionId: sessionIdStr,
+      message: {
+        role: characterName,
+        content: responseContent,
+        characterName: characterName,
+      },
+      recentMessages: recentMessagesForWorldAgent.slice(-3), // Optional: last 3 for context
+      existingNpcPool,
+      mainCharacterNames: allParticipantNames, // Pass main character names to exclude from extraction
+      mainCharacterDescriptions: characterDescriptions, // Pass descriptions to identify aliases
+      worldMemoryContext: worldMemoryResult.memories, // NEW: Pass world context for descriptions
+    });
+
+    // 4. Handle NPC detection: create cards and add to session
+    if (npcExtractionResult.npcs.length > 0) {
+      await handleNpcDetection(
+        npcExtractionResult.npcs.map((npc) => ({
+          id: npc.id,
+          name: npc.name,
+          description: npc.description,
+        })),
+        sessionIdStr,
+      );
+      logger.info("[NPC Detection] Processed NPCs", {
+        count: npcExtractionResult.npcs.length,
+        npcs: npcExtractionResult.npcs,
+      });
+    }
+
+    // 4. Build character mapping including NPCs
+    const updatedNpcPool = useNpcStore.getState().getNpcPool(sessionIdStr);
+    const characterIdToNameWithNpcs = buildCharacterMapping(
+      characterIdToName,
+      updatedNpcPool,
+    );
+
+    // 5. Fetch NPC memories for world agent context
+    const npcMemoryContext: string[] = [];
+    for (const npc of updatedNpcPool) {
+      try {
+        const npcContainerTag = createNpcContainer(sessionIdStr, npc.id);
+        const memories = await retrieveCharacterMemories({
+          containerTag: npcContainerTag,
+          current_game_time: gameTime,
+          current_game_time_interval: gameTimeInterval,
+          recentMessages: recentMessagesForWorldAgent.map((msg: { role: string; content: string; game_time: number }) =>
+            `${msg.role}: ${msg.content}`
+          ),
+          characterName: npc.names[0], // Use primary name
+          limit: 10, // Top 10 relevant memories per NPC
+        });
+        if (memories) {
+          npcMemoryContext.push(`[NPC: ${npc.names[0]}]\n${memories}`);
+        }
+      } catch (error) {
+        logger.warn(`[NPC Memory] Failed to fetch memories for NPC ${npc.id}:`, error);
+      }
+    }
+
+    // 6. Combine character and NPC memory context
+    const combinedMemoryContext = [
+      worldMemoryContext, // Existing character/world memories
+      ...npcMemoryContext
+    ].filter(Boolean).join("\n\n---\n\n");
+    // ========== END NPC EXTRACTION & MEMORY INTEGRATION ==========
+
     // Build data store for World Agent
     const dataStoreForWorldAgent = {
       sessionId: sessionIdStr,
       currentScene:
         fullContext.currentScene || fullContext.location || "Unknown",
-      participants: allParticipantNames, // Use names instead of IDs
+      participants: allParticipantNames, // Main characters - world agent will detect actual participants
       game_time: gameTime,
       game_time_interval: gameTimeInterval,
       worldContext: fullContext.world_context || "", // Pass accumulated world context (snake_case)
     };
 
-    // Execute World Agent to detect participants
+    // Execute World Agent to detect participants (now with NPC awareness)
     const worldAgentOutput = await executeWorldAgent({
       sessionId: sessionIdStr,
       speakerCharacterId: characterId,
@@ -3026,8 +3126,8 @@ async function executeWorldAgentAndDistributeMemories(
       generatedMessage: responseContent,
       recentMessages: recentMessagesForWorldAgent,
       dataStore: dataStoreForWorldAgent,
-      characterIdToName: characterIdToName,
-      worldMemoryContext, // Use retrieved world memories
+      characterIdToName: characterIdToNameWithNpcs, // Use mapping with NPCs
+      worldMemoryContext: combinedMemoryContext, // Use combined memory context
       worldMemoryQuery, // Pass query for debugging
     });
 

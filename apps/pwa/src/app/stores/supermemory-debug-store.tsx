@@ -20,7 +20,9 @@ export type SupermemoryDebugEventType =
   | "character_memory_add"
   | "world_memory_add"
   | "datastore_update"
-  | "agent_prompt_with_memories";
+  | "agent_prompt_with_memories"
+  | "npc_extraction"
+  | "npc_speak";
 
 export interface SupermemoryDebugEvent {
   id: string; // Unique event ID
@@ -129,6 +131,48 @@ export interface DataStoreUpdateEventData {
   };
   before: any; // DataStore snapshot before update
   after: any; // DataStore snapshot after update
+}
+
+export interface NpcExtractionEventData {
+  sessionId: string;
+  message: {
+    role: string;
+    content: string;
+    characterName?: string;
+  };
+  mainCharacterNames: string[]; // Main characters that should NOT be extracted
+  existingNpcPool: Array<{
+    id: string;
+    names: string[];
+  }>;
+  extractedNpcs: Array<{
+    id: string;
+    name: string;
+  }>;
+  prompt?: string; // Full prompt sent to agent
+  duration?: number; // Extraction time in ms
+}
+
+export interface NpcSpeakEventData {
+  sessionId: string;
+  npcPool: Array<{
+    id: string;
+    names: string[];
+  }>;
+  npcMemories: Record<string, string>; // npcId → memories
+  selectedNpcId?: string; // NPC that was selected to speak
+  selectedNpcName?: string; // Name used
+  generatedMessage: string; // Full output: "{name}: {message}"
+  recentMessages: Array<{
+    role: string;
+    content: string;
+    characterName?: string;
+  }>;
+  worldContext?: string;
+  gameTime?: number;
+  gameTimeInterval?: string;
+  prompt?: string; // Full prompt sent to agent
+  duration?: number; // Generation time in ms
 }
 
 interface SupermemoryDebugState {

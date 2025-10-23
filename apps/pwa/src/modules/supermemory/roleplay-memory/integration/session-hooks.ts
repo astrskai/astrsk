@@ -18,6 +18,7 @@ import type {
 import {
   createCharacterContainer,
   createWorldContainer,
+  createNpcContainer,
 } from "../core/containers";
 import {
   storeInitContent,
@@ -388,12 +389,15 @@ export async function distributeMemories(
     // We need to get character IDs from session.characterCards for creating containers
     const allParticipantNames = dataStore.participants || [];
 
-    // Build name-to-ID mapping by looking up session's character cards
+    // Build name-to-ID mapping by looking up session's character cards AND NPC pool
     const { CardService } = await import("@/app/services/card-service");
     const { CharacterCard } = await import(
       "@/modules/card/domain/character-card"
     );
-    const nameToId: Record<string, string> = {};
+    const { useNpcStore } = await import("@/app/stores/npc-store");
+    const { mapParticipantNamesToIds } = await import("../utils/npc-utils");
+
+    const characterIdToName: Record<string, string> = {};
 
     // Get all character cards from session to build name-to-ID mapping
     const { SessionService } = await import("@/app/services/session-service");
@@ -410,7 +414,7 @@ export async function distributeMemories(
             .throwOnFailure()
             .getValue() as typeof CharacterCard.prototype;
           const userName = userCard.props.name || userCard.props.title || "User";
-          nameToId[userName] = session.userCharacterCardId.toString();
+          characterIdToName[session.userCharacterCardId.toString()] = userName;
         } catch (error) {
           logger.warn(
             `[Memory Distribution] Failed to fetch user card for ${session.userCharacterCardId.toString()}`,
@@ -427,7 +431,7 @@ export async function distributeMemories(
             .throwOnFailure()
             .getValue() as typeof CharacterCard.prototype;
           const name = card.props.name || card.props.title || "Unknown";
-          nameToId[name] = charCardId.toString();
+          characterIdToName[charCardId.toString()] = name;
         } catch (error) {
           logger.warn(
             `[Memory Distribution] Failed to fetch card for ${charCardId.toString()}`,
@@ -436,10 +440,15 @@ export async function distributeMemories(
       }
     }
 
-    // Convert participant names to IDs for container creation
-    const participantIds = actualParticipants
-      .map((name) => nameToId[name])
-      .filter((id) => id !== undefined);
+    // Get NPC pool for this session
+    const npcPool = useNpcStore.getState().getNpcPool(sessionId);
+
+    // Convert participant names to IDs (handles both characters and NPCs)
+    const participantIds = mapParticipantNamesToIds(
+      actualParticipants,
+      characterIdToName,
+      npcPool
+    );
 
     // If no participants were mapped but we have names, log a warning
     if (participantIds.length === 0 && actualParticipants.length > 0) {
@@ -477,10 +486,15 @@ export async function distributeMemories(
       }
     }
 
-    // Get character name from ID helper
+    // Get character name from ID helper (for both characters and NPCs)
     const idToName: Record<string, string> = {};
-    for (const [name, id] of Object.entries(nameToId)) {
+    // Add character names
+    for (const [id, name] of Object.entries(characterIdToName)) {
       idToName[id] = name;
+    }
+    // Add NPC names
+    for (const npc of npcPool) {
+      idToName[npc.id] = npc.names[0]; // Use primary name
     }
 
     // Distribute enriched memories to participants in parallel
@@ -522,11 +536,10 @@ export async function distributeMemories(
         worldContext: contextUpdate || undefined,
       });
 
-      // Store in participant's container
-      const participantContainer = createCharacterContainer(
-        sessionId,
-        participantId,
-      );
+      // Store in participant's container (character or NPC)
+      const participantContainer = participantId.includes("-")
+        ? createCharacterContainer(sessionId, participantId) // UUID format → character
+        : createNpcContainer(sessionId, participantId); // Lowercase word → NPC
 
       return storeCharacterMessage(participantContainer, enrichedContent, {
         speaker: speakerCharacterId,

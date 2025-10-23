@@ -235,6 +235,8 @@ function EventCard({ event }: { event: SupermemoryDebugEvent }) {
     world_memory_add: "World Memory Add",
     datastore_update: "DataStore Update",
     agent_prompt_with_memories: "Agent Prompt After Memory Injection",
+    npc_extraction: "NPC Extraction",
+    npc_speak: "NPC Speak",
   }[event.type];
 
   const eventTypeColor = {
@@ -247,6 +249,8 @@ function EventCard({ event }: { event: SupermemoryDebugEvent }) {
     world_memory_add: "#6366F1", // indigo-500
     datastore_update: "#EC4899", // pink-500
     agent_prompt_with_memories: "#8B5CF6", // violet-500
+    npc_extraction: "#10B981", // green-500
+    npc_speak: "#14B8A6", // teal-500
   }[event.type];
 
   const eventTypeBgColor = {
@@ -259,6 +263,8 @@ function EventCard({ event }: { event: SupermemoryDebugEvent }) {
     world_memory_add: { bg: "rgba(99, 102, 241, 0.1)", border: "#6366F1" },
     datastore_update: { bg: "rgba(236, 72, 153, 0.1)", border: "#EC4899" },
     agent_prompt_with_memories: { bg: "rgba(139, 92, 246, 0.1)", border: "#8B5CF6" },
+    npc_extraction: { bg: "rgba(16, 185, 129, 0.1)", border: "#10B981" },
+    npc_speak: { bg: "rgba(20, 184, 166, 0.1)", border: "#14B8A6" },
   }[event.type];
 
   return (
