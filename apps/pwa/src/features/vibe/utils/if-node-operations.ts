@@ -1,4 +1,4 @@
-import { Operation } from "@/utils/operation-processor";
+import { Operation } from "../lib/operation-processor";
 
 /**
  * Process if-node operations

@@ -1,7 +1,7 @@
 import { UniqueEntityID } from "@/shared/domain";
 
 // Import operation-based processing
-import { applyOperations, Operation } from "@/utils/operation-processor";
+import { applyOperations, Operation } from "../lib/operation-processor";
 import { CardService } from "@/app/services/card-service";
 
 // Import separated operation modules

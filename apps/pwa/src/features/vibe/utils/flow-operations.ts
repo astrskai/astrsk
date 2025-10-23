@@ -1,6 +1,6 @@
 import { EditableFlowData } from "vibe-shared-types";
 import { UniqueEntityID } from "@/shared/domain";
-import { Operation } from "@/utils/operation-processor";
+import { Operation } from "../lib/operation-processor";
 
 /**
  * Map edited flow data from backend format to service call format

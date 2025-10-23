@@ -1,7 +1,7 @@
 import { EditableCharacterCard, EditablePlotCard } from "vibe-shared-types";
 import { Lorebook } from "@/modules/card/domain/lorebook";
 import { CardService } from "@/app/services/card-service";
-import { Operation } from "@/utils/operation-processor";
+import { Operation } from "../lib/operation-processor";
 
 /**
  * Convert plain JSON lorebook to domain object

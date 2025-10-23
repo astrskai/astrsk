@@ -6,7 +6,7 @@
  * This module provides utilities for processing those operations on the frontend
  */
 
-import { Operation } from "@/utils/operation-processor";
+import { Operation } from "../lib/operation-processor";
 
 export interface DataStoreFieldContext {
   flowId: string;
