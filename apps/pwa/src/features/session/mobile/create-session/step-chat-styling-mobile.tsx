@@ -10,7 +10,7 @@ import { cn } from "@/shared/lib";
 import { StepBackgroundSchemaType } from "@/features/session/create-session/step-background";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
 import { MessageItemInternalMobile } from "@/features/session/mobile/session-messages-and-user-inputs-mobile";
-import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
+import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
 import {
   Tabs,
   TabsContent,

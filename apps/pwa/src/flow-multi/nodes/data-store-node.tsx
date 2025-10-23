@@ -33,7 +33,7 @@ import {
   getDataStoreNodeOpacity,
   applyOpacityToHexColor,
 } from "@/flow-multi/utils/node-color-assignment";
-import { SimpleFieldBadges } from "@/components-v2/ui/field-badges";
+import { SimpleFieldBadges } from "@/shared/ui/field-badges";
 import { toast } from "sonner";
 import type {
   DataStoreSchemaField,

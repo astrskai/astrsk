@@ -26,7 +26,7 @@ import {
 } from "@/features/session/create-session/step-cards";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/shared/ui/button";
-import { CarouselItem } from "@/components-v2/ui/carousel";
+import { CarouselItem } from "@/shared/ui/carousel";
 import {
   Tabs,
   TabsContent,

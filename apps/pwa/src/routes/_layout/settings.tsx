@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useRouter } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
+import { FloatingActionButton } from "@/shared/ui/floating-action-button";
 import NotFound from "@/pages/not-found";
 
 export const Route = createFileRoute("/_layout/settings")({

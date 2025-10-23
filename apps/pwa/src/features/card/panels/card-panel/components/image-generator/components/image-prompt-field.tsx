@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
-import { Textarea } from "@/components-v2/ui/textarea";
+import { Textarea } from "@/shared/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
 import { debounce } from "lodash-es";
 import { cardQueries } from "@/app/queries/card/query-factory";

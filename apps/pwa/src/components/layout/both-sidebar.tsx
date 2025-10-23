@@ -8,10 +8,10 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib";
 import { Button } from "@/shared/ui/button";
-import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
+import { FloatingActionButton } from "@/shared/ui/floating-action-button";
 import { Input } from "@/shared/ui/input";
-import { Separator } from "@/components-v2/ui/separator";
-import { Skeleton } from "@/components-v2/ui/skeleton";
+import { Separator } from "@/shared/ui/separator";
+import { Skeleton } from "@/shared/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,

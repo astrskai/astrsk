@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/ui/dialog";
-import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
+import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
 
 const StepName = ({
   defaultValue = "",

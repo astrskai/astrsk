@@ -28,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
-import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
+import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { TableName } from "@/db/schema/table-name";
 import {

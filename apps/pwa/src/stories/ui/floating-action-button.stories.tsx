@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
+import { FloatingActionButton } from "@/shared/ui/floating-action-button";
 import { SidebarLeftProvider } from "@/components-v2/both-sidebar";
 import { Plus, Edit, Search, Upload, Download, Share2, Settings, MessageCircle } from "lucide-react";
 import React from "react";

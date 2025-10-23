@@ -18,8 +18,8 @@ import { TopNavigation } from "@/components/layout/top-navigation";
 import { Typo2XLarge, TypoBase, TypoXLarge } from "@/components/ui/typo";
 import { Button } from "@/shared/ui/button";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
-import { Separator } from "@/components-v2/ui/separator";
-import { Switch } from "@/components-v2/ui/switch";
+import { Separator } from "@/shared/ui/separator";
+import { Switch } from "@/shared/ui/switch";
 
 export function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");

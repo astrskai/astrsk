@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { ButtonPill } from "@/components-v2/ui/button-pill";
+import { ButtonPill } from "@/shared/ui/button-pill";
 import { useState } from "react";
 
 const meta = {

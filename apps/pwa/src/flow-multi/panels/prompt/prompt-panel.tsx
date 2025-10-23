@@ -40,7 +40,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
-import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
+import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
 import { ApiType } from "@/modules/agent/domain/agent";
 import { PromptMessage } from "@/modules/agent/domain";
 

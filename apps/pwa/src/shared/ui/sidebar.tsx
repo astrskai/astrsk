@@ -9,15 +9,15 @@ import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { Separator } from "@/components-v2/ui/separator";
+import { Separator } from "@/shared/ui/separator";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components-v2/ui/sheet";
-import { Skeleton } from "@/components-v2/ui/skeleton";
+} from "@/shared/ui/sheet";
+import { Skeleton } from "@/shared/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,

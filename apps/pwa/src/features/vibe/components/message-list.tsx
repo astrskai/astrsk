@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
+import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
 import { ChatMessage } from "./chat-message";
 import { SimpleMessage } from "../types";
 import { cn } from "@/shared/lib";

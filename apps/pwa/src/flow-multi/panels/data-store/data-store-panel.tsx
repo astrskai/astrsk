@@ -43,7 +43,7 @@ import type { editor } from "monaco-editor";
 import { debounce } from "lodash-es";
 import type { DataStoreField } from "@/modules/flow/domain/flow";
 import { SortableDataField } from "./sortable-data-field";
-import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
+import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
 import { UniqueEntityID } from "@/shared/domain";
 import { toast } from "sonner";
 

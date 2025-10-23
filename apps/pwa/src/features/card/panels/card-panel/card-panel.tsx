@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cardQueries, useUpdateCardTitle } from "@/app/queries/card";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { BookOpen, Pencil, Check, X, Image } from "lucide-react";
-import { ButtonPill } from "@/components-v2/ui/button-pill";
+import { ButtonPill } from "@/shared/ui/button-pill";
 import { Button } from "@/shared/ui/button";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { useLeftNavigationWidth } from "@/components/layout/left-navigation/hooks/use-left-navigation-width";

@@ -21,7 +21,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/ui/tabs";
-import { AspectRatio } from "@/components-v2/ui/aspect-ratio";
+import { AspectRatio } from "@/shared/ui/aspect-ratio";
 import { Background } from "@/modules/background/domain";
 
 // Re-export schema and converter from the shared step

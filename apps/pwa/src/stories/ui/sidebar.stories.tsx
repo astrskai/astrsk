@@ -24,7 +24,7 @@ import {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
-} from "@/components-v2/ui/sidebar";
+} from "@/shared/ui/sidebar";
 import {
   Home,
   Inbox,
@@ -50,7 +50,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { Avatar } from "@/components-v2/avatar";
-import { Badge } from "@/components-v2/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import React from "react";
 import { cn } from "@/shared/lib";
 

@@ -14,7 +14,7 @@ import {
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 import { TypoBase } from "@/components/ui/typo";
-import { AspectRatio } from "@/components-v2/ui/aspect-ratio";
+import { AspectRatio } from "@/shared/ui/aspect-ratio";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import {

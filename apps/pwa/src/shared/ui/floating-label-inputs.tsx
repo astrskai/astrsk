@@ -4,11 +4,11 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib";
 
-import { Badge } from "@/components-v2/ui/badge"; // Import the modified Badge
+import { Badge } from "@/shared/ui/badge"; // Import the modified Badge
 import {
   FloatingLabelInput,
   FloatingLabelInputProps,
-} from "@/components-v2/ui/floating-label-input"; // Import base input
+} from "@/shared/ui/floating-label-input"; // Import base input
 
 export interface FloatingLabelInputsProps
   extends Omit<FloatingLabelInputProps, "value" | "onChange"> {

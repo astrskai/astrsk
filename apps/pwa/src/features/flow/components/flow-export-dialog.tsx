@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components-v2/ui/radio-group";
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import { Label } from "@/shared/ui/label";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";

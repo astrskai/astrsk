@@ -57,7 +57,7 @@ import {
   CarouselContent,
   CarouselNext,
   CarouselPrevious,
-} from "@/components-v2/ui/carousel";
+} from "@/shared/ui/carousel";
 import { Checkbox } from "@/shared/ui/checkbox";
 import {
   Dialog,

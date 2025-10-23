@@ -8,8 +8,8 @@ import {
 import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/shared/ui/button";
-import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
-import { toastSuccess } from "@/components-v2/ui/toast-success";
+import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
+import { toastSuccess } from "@/shared/ui/toast-success";
 import { logger } from "@/shared/lib";
 import { useSignIn, useSignUp } from "@clerk/clerk-react";
 import { ArrowLeft, Check } from "lucide-react";

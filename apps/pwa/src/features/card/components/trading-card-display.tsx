@@ -5,7 +5,7 @@ import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Typo3XLarge, TypoSmall } from "@/components/ui/typo";
 import { Card as CardUI } from "@/shared/ui/card";
-import { Skeleton } from "@/components-v2/ui/skeleton";
+import { Skeleton } from "@/shared/ui/skeleton";
 import { Card, CardType, CharacterCard } from "@/modules/card/domain";
 import { MediaDisplay } from "@/shared/ui/media-display";
 

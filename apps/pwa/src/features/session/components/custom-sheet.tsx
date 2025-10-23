@@ -11,7 +11,7 @@ import {
   SheetDescription,
   SheetTitle,
   SheetTrigger,
-} from "@/components-v2/ui/sheet";
+} from "@/shared/ui/sheet";
 
 type FooterRenderer = (methods: {
   setOpen: (open: boolean) => void;
