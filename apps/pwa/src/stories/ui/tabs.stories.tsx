@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components-v2/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components-v2/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
-import { Label } from "@/components-v2/ui/label";
+import { Label } from "@/shared/ui/label";
 import { Button } from "@/shared/ui/button";
 import React from "react";
 

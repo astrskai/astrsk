@@ -58,7 +58,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components-v2/ui/carousel";
-import { Checkbox } from "@/components-v2/ui/checkbox";
+import { Checkbox } from "@/shared/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -69,7 +69,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/ui/dialog";
-import { Label } from "@/components-v2/ui/label";
+import { Label } from "@/shared/ui/label";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain/api-connection";
 import { SessionProps } from "@/modules/session/domain/session";

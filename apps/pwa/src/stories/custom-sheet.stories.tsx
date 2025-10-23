@@ -3,9 +3,9 @@ import { CustomSheet } from "@/components-v2/custom-sheet";
 import React from "react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { Label } from "@/components-v2/ui/label";
+import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/components-v2/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 
 const meta = {
   title: "Components/CustomSheet",

@@ -4,8 +4,8 @@ import { ScrollArea } from "@/shared/ui/scroll-area";
 import { ModelItem } from "@/flow-multi/components/model-selection";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { Label } from "@/components-v2/ui/label";
-import { Checkbox } from "@/components-v2/ui/checkbox";
+import { Label } from "@/shared/ui/label";
+import { Checkbox } from "@/shared/ui/checkbox";
 import { ModelTier } from "@/modules/agent/domain/agent";
 
 export interface AgentModel {

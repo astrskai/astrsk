@@ -24,7 +24,7 @@ import {
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
 import { Button } from "@/shared/ui/button";
-import { Checkbox } from "@/components-v2/ui/checkbox";
+import { Checkbox } from "@/shared/ui/checkbox";
 import { DeleteConfirm } from "@/components/dialogs/confirm";
 import {
   SessionImportDialog,
@@ -44,7 +44,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
-import { Label } from "@/components-v2/ui/label";
+import { Label } from "@/shared/ui/label";
 import { Session } from "@/modules/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";

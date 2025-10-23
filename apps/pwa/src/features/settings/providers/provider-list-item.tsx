@@ -11,7 +11,7 @@ import { DeleteConfirm } from "@/components/dialogs/confirm";
 import { cn } from "@/shared/lib";
 import { IconName, SvgIcon } from "@/components/ui/svg-icon";
 import { TypoSmall, TypoTiny } from "@/components/ui/typo";
-import { Card, CardContent } from "@/components-v2/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import {
   Tooltip,
   TooltipContent,

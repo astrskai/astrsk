@@ -12,7 +12,7 @@ import {
 } from "@/components-v2/ui/sheet";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { Label } from "@/components-v2/ui/label";
+import { Label } from "@/shared/ui/label";
 import React from "react";
 
 const meta = {

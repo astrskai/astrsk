@@ -22,7 +22,7 @@ import {
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { TypoBase, TypoSmall, TypoTiny } from "@/components/ui/typo";
 import { Button } from "@/shared/ui/button";
-import { Card, CardContent } from "@/components-v2/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";

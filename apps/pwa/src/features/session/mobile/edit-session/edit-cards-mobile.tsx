@@ -13,7 +13,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components-v2/ui/tabs";
+} from "@/shared/ui/tabs";
 import { StepCharacterCardsSchema } from "@/features/session/mobile/create-session/step-character-cards-mobile";
 import { StepCharacterCardsMobile } from "@/features/session/mobile/create-session/step-character-cards-mobile";
 import { StepUserCardSchema } from "@/features/session/mobile/create-session/step-user-card-mobile";

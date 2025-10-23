@@ -22,7 +22,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components-v2/ui/tabs";
+} from "@/shared/ui/tabs";
 import { CardType, PlotCard } from "@/modules/card/domain";
 import { cn } from "@/shared/lib";
 

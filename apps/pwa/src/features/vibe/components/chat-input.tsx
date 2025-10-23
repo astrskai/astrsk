@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components-v2/ui/select";
+} from "@/shared/ui/select";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 import { Send, Loader2 } from "lucide-react";
 import { cn } from "@/shared/lib";

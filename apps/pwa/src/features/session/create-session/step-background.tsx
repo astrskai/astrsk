@@ -22,7 +22,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components-v2/ui/tabs";
+} from "@/shared/ui/tabs";
 import { SessionProps } from "@/modules/session/domain";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 

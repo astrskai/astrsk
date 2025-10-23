@@ -6,10 +6,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components-v2/ui/card";
+} from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { Label } from "@/components-v2/ui/label";
+import { Label } from "@/shared/ui/label";
 import { Badge } from "@/components-v2/ui/badge";
 import { Separator } from "@/components-v2/ui/separator";
 import React from "react";

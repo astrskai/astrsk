@@ -39,7 +39,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components-v2/ui/dropdown-menu";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
-import { Label } from "@/components-v2/ui/label";
+import { Label } from "@/shared/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components-v2/ui/radio-group";
 import { TableName } from "@/db/schema/table-name";
 import { CharacterCard, PlotCard } from "@/modules/card/domain";

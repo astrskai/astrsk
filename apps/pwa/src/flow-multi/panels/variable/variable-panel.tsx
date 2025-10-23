@@ -12,7 +12,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components-v2/ui/tabs";
+} from "@/shared/ui/tabs";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import {
   FlowPanelError,

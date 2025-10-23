@@ -8,7 +8,7 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from "@/components-v2/ui/select";
+} from "@/shared/ui/select";
 import { useState } from "react";
 
 const meta = {
