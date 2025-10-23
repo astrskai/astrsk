@@ -11,7 +11,7 @@
 
 import { queryClient } from "@/app/queries/query-client";
 import { FlowService } from "@/app/services/flow-service";
-import { ValidationIssue } from "@/features/flow/flow-multi/validation/types/validation-types";
+import { ValidationIssue } from "@/modules/flow/model/validation-types";
 import {
   Edge,
   Flow,

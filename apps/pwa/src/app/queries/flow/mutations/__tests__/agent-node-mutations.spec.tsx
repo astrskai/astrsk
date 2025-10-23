@@ -16,7 +16,7 @@ import { Agent } from "@/modules/agent/domain/agent";
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { flowKeys } from "@/app/queries/flow/query-factory";
-import { NodeType } from "@/features/flow/flow-multi/types/node-types";
+import { NodeType } from "@/modules/flow/model/node-types";
 
 // Mock services
 vi.mock("@/app/services/agent-service", () => ({

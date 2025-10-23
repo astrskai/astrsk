@@ -4,7 +4,7 @@ import { Agent, ApiType } from "@/modules/agent/domain";
 import { Flow } from "@/modules/flow/domain/flow";
 import { SaveAgentRepo } from "@/modules/agent/repos";
 import { SaveFlowRepo } from "@/modules/flow/repos";
-import { NodeType } from "@/features/flow/flow-multi/types/node-types";
+import { NodeType } from "@/modules/flow/model/node-types";
 
 export class CreateFlow implements UseCase<void, Result<Flow>> {
   constructor(

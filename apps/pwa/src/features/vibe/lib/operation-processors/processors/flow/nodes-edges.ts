@@ -18,7 +18,7 @@ import { FlowService } from '@/app/services/flow-service';
 import { AgentService } from '@/app/services/agent-service';
 import { DataStoreNodeService } from '@/app/services/data-store-node-service';
 import { IfNodeService } from '@/app/services/if-node-service';
-import { NodeType } from '@/features/flow/flow-multi/types/node-types';
+import { NodeType } from "@/modules/flow/model/node-types";
 import { getNextAvailableColor } from '@/features/flow/flow-multi/utils/node-color-assignment';
 import { Edge } from '@/modules/flow/domain/flow';
 import { notifyFlowNodesEdgesUpdate } from '@/shared/lib/flow-local-state-sync';

@@ -160,6 +160,35 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
       - flow-dialog.tsx, flow-page-mobile.tsx, components/ (3 files)
       - flow-multi/ (100 files - React Flow editor)
       - Total: 105 files in unified Flow domain
+
+- 🔄 **Phase 2.5 IN PROGRESS** (2025-10-23) - **FSD Architecture Compliance**
+
+  **Summary**: Fixing critical FSD layer violations and standardizing entity layer naming from `modules/` to `entities/`.
+
+  **Discovered Issues**:
+  - 🚨 **Critical FSD Violation**: Domain layer (`modules/`) importing from Features layer
+  - 🚨 **NodeType enum in wrong layer** (19 files affected)
+    - Current: `features/flow/flow-multi/types/node-types.ts`
+    - Target: `modules/flow/domain/types/node-types.ts`
+    - Impact: `modules/flow/domain/flow.ts` illegally depends on features layer
+  - 🚨 **ValidationIssue type in wrong layer** (15 files affected)
+    - Current: `features/flow/flow-multi/validation/types/validation-types.ts`
+    - Target: `modules/flow/domain/types/validation-types.ts`
+    - Impact: `modules/flow/domain/flow.ts` + `db/schema/flows.ts` depend on features
+
+  **Tasks**:
+  - [ ] Move NodeType enum to `modules/flow/domain/types/` (19 files)
+  - [ ] Move ValidationIssue type to `modules/flow/domain/types/` (15 files)
+  - [ ] Rename `modules/` → `entities/` for FSD standard compliance
+  - [ ] Update all import paths (`@/modules` → `@/entities`)
+  - [ ] Verify no circular dependencies
+  - [ ] Build verification
+
+  **Rationale**:
+  - **FSD Layer Rule**: entities (domain) cannot import from features (UI/interactions)
+  - **Proper dependency**: features → entities → shared (one direction only)
+  - **Naming standard**: `entities/` is FSD convention, `modules/` is non-standard DDD term
+
 - ✅ **Phase 2 Final Statistics & Outcomes**:
 
   **Migration Summary**:
@@ -203,10 +232,10 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
   - ✅ CLAUDE.md updated (current structure documented)
   - ✅ types/ folder analyzed (kept as TypeScript ambient declarations)
 
-  **Next Steps (Phase 3)**:
-  - 🔜 Mobile duplication elimination (5 `-mobile.tsx` targets identified)
-  - 🔜 Component decomposition (enforce 500-line limit)
-  - 🔜 Tailwind responsive design migration
+  **Next Steps (Phase 2.5)**:
+  - 🔄 Fix FSD architecture violations (NodeType, ValidationIssue)
+  - 🔄 Rename modules/ → entities/ (FSD standard compliance)
+  - 🔄 Verify all domain types are in correct layer
 
 ### Migration Phases
 
@@ -225,6 +254,30 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
     - Domain consolidation (Flow, Vibe, Session, Card, Settings)
   - **Duration**: 2 days (2025-10-22 ~ 2025-10-23)
   - **Status**: ✅ 100% Complete
+
+- 🔄 **Phase 2.5 (Day 4)**: FSD Architecture Compliance - IN PROGRESS
+  - **Scope**: Fix FSD layer violations and standardize naming
+  - **Discovered Issues**:
+    - 🚨 **Critical**: Domain layer (`modules/`) importing from Features layer
+    - 🚨 **NodeType enum** in wrong layer (19 files affected)
+      - Current: `features/flow/flow-multi/types/node-types.ts`
+      - Should be: `modules/flow/domain/types/node-types.ts`
+      - Violation: `modules/flow/domain/flow.ts` depends on features layer
+    - 🚨 **ValidationIssue type** in wrong layer (15 files affected)
+      - Current: `features/flow/flow-multi/validation/types/validation-types.ts`
+      - Should be: `modules/flow/domain/types/validation-types.ts`
+      - Violation: `modules/flow/domain/flow.ts` + `db/schema/flows.ts` depend on features
+  - **Tasks**:
+    - [ ] Move domain types to correct layer (modules/flow/domain/types/)
+    - [ ] Rename `modules/` → `entities/` for FSD standard compliance
+    - [ ] Update all import paths (`@/modules` → `@/entities`)
+    - [ ] Verify no circular dependencies
+    - [ ] Build verification
+  - **Rationale**:
+    - FSD Layer Rule: `entities` (domain) cannot import from `features` (UI/interactions)
+    - Proper dependency direction: `features` → `entities` → `shared`
+    - `modules/` naming is non-standard; `entities/` is FSD convention
+  - **Status**: 🔄 In Progress
 
 - 🔜 **Phase 3 (Weeks 4-6)**: Mobile Duplication Elimination
   - Remove `-mobile.tsx` files (5 targets identified)
@@ -696,6 +749,12 @@ This cleanup project ENFORCES all 11 principles:
 
 ## Recent Changes
 
+- **2025-10-23**: 🔄 **Phase 2.5 IN PROGRESS** - FSD Architecture Compliance
+  - Discovered critical FSD layer violations (NodeType, ValidationIssue)
+  - Domain layer (`modules/`) importing from Features layer (architecture violation)
+  - Planning: Fix violations + rename `modules/` → `entities/` (FSD standard)
+  - Impact: 34 files affected (19 NodeType + 15 ValidationIssue)
+
 - **2025-10-23**: ✅ **Phase 2 COMPLETE** - FSD Architecture Migration
   - Migrated 180+ files to Feature-Sliced Design structure
   - Deleted 7 legacy folders (components, components-v2, contexts, assets, utils, flow-multi)
@@ -717,8 +776,8 @@ This cleanup project ENFORCES all 11 principles:
 
 ## Current Status
 
-**Active Phase**: Phase 3 Preparation
-**Overall Progress**: 50% (Phase 1 ✅, Phase 2 ✅, Phase 3 🔜, Phase 4 🔜)
+**Active Phase**: Phase 2.5 - FSD Architecture Compliance
+**Overall Progress**: 55% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 🔄, Phase 3 🔜, Phase 4 🔜)
 
 ### Completed
 
@@ -729,6 +788,17 @@ This cleanup project ENFORCES all 11 principles:
   - Domain consolidation (Flow, Vibe, Session, Card, Settings)
   - Barrel exports and import path optimization
   - Comprehensive documentation (FSD_MIGRATION.md)
+
+### In Progress
+
+- 🔄 **Phase 2.5**: FSD Architecture Compliance (Day 4)
+  - Fix critical FSD layer violations
+    - [ ] Move NodeType enum to `modules/flow/domain/types/` (19 files)
+    - [ ] Move ValidationIssue type to `modules/flow/domain/types/` (15 files)
+  - Rename `modules/` → `entities/` for FSD standard
+    - [ ] Update all import paths (`@/modules` → `@/entities`)
+    - [ ] Verify no circular dependencies
+  - [ ] Build verification and documentation update
 
 ### Next Steps
 

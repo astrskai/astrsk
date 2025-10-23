@@ -1,4 +1,4 @@
-import { ValidationIssue, ValidationIssueCode } from "@/features/flow/flow-multi/validation/types/validation-types";
+import { ValidationIssue, ValidationIssueCode } from "@/modules/flow/model/validation-types";
 import { ValidatorFunction } from "@/features/flow/flow-multi/validation/types/functional-validation-types";
 import { forEachConnectedAgent, generateIssueId } from "@/features/flow/flow-multi/validation/utils/validator-utils";
 import { generateValidationMessage } from "@/features/flow/flow-multi/validation/utils/message-generator";

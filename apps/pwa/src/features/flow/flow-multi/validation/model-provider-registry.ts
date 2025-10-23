@@ -1,4 +1,4 @@
-import { ModelProviderInfo } from "@/features/flow/flow-multi/validation/types/validation-types";
+import { ModelProviderInfo } from "@/modules/flow/model/validation-types";
 import { ApiSource } from "@/modules/api/domain";
 
 export class ModelProviderRegistry {
