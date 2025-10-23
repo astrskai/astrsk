@@ -32,7 +32,7 @@ import { ChatInput } from "./components/chat-input";
 // Utilities
 import { getResourceType } from "./utils/resource-helpers";
 import { formatStepPlan, formatErrorMessage } from "./utils/message-formatter";
-import { createSnapshotWithVerification } from "@/utils/snapshot-utils";
+import { createSnapshotWithVerification } from "./lib/snapshot-utils";
 import {
   mapCharacterEditsToUpdates,
   mapPlotEditsToUpdates,
@@ -40,7 +40,7 @@ import {
   applyPlotCardUpdates,
   applyOperationsToResource,
 } from "./utils/edit-mappers";
-import { DataStoreFieldPipeline } from "@/utils/data-store-field-pipeline";
+import { DataStoreFieldPipeline } from "./lib/data-store-field-pipeline";
 
 // Types
 import { VibePanelProps, ReviewData, SimpleMessage } from "./types";

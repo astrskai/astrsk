@@ -1,5 +1,5 @@
 import { UniqueEntityID } from "@/shared/domain";
-import { Operation } from "@/utils/operation-processor";
+import { Operation } from "../lib/operation-processor";
 
 /**
  * Pre-load existing agent data into the resource to ensure deep merge operations
