@@ -1,8 +1,8 @@
 import { Result } from "@/shared/core/result";
 import { AggregateRoot, UniqueEntityID } from "@/shared/domain";
 import { PartialOmit } from "@/shared/lib";
-import type { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
-import { NodeType } from "@/flow-multi/types/node-types";
+import type { ValidationIssue } from "@/features/flow/flow-multi/validation/types/validation-types";
+import { NodeType } from "@/features/flow/flow-multi/types/node-types";
 
 export enum TaskType {
   AiResponse = "ai_response",

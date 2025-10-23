@@ -231,7 +231,7 @@ export async function processFlowOperations(
         try {
           // Step 0: Get proper color assignment
           const { getNextAvailableColor } = await import(
-            "@/flow-multi/utils/node-color-assignment"
+            "@/features/flow/flow-multi/utils/node-color-assignment"
           );
           const nodeColor = await getNextAvailableColor({
             props: { nodes: updatedResource.nodes || [] },

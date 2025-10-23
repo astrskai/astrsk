@@ -40,8 +40,8 @@ import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { useWllamaStore } from "@/app/stores/wllama-store";
-import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
-import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
+import { Condition, isUnaryOperator } from "@/features/flow/flow-multi/types/condition-types";
+import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traversal";
 import { ModelTier } from "@/modules/agent/domain";
 import { ApiSource } from "@/modules/api/domain";
 import {

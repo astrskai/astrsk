@@ -29,11 +29,11 @@ import { flowKeys } from "../query-factory";
 import { agentKeys } from "../../agent/query-factory";
 import { dataStoreNodeKeys } from "../../data-store-node/query-factory";
 import { ifNodeKeys } from "../../if-node/query-factory";
-import { NodeType } from "@/flow-multi/types/node-types";
+import { NodeType } from "@/features/flow/flow-multi/types/node-types";
 import { Agent, ApiType } from "@/modules/agent/domain/agent";
 import { InsertFlow } from "@/db/schema/flows";
-import { type CustomNodeType } from "@/flow-multi/nodes/index";
-import { type CustomEdgeType } from "@/flow-multi/edges/index";
+import { type CustomNodeType } from "@/features/flow/flow-multi/nodes/index";
+import { type CustomEdgeType } from "@/features/flow/flow-multi/edges/index";
 
 // ============================================================================
 // Common Types

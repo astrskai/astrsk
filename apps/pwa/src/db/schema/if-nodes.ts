@@ -1,6 +1,6 @@
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
-import { IfCondition } from "@/flow-multi/nodes/if-node";
+import { IfCondition } from "@/features/flow/flow-multi/nodes/if-node";
 import { jsonb, pgTable, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const ifNodes = pgTable(TableName.IfNodes, {

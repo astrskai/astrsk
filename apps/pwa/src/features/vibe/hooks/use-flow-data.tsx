@@ -6,7 +6,7 @@ import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factor
 import { AgentDrizzleMapper } from "@/modules/agent/mappers/agent-drizzle-mapper";
 import { IfNodeDrizzleMapper } from "@/modules/if-node/mappers/if-node-drizzle-mapper";
 import { DataStoreNodeDrizzleMapper } from "@/modules/data-store-node/mappers/data-store-node-drizzle-mapper";
-import { NodeType } from "@/flow-multi/types/node-types";
+import { NodeType } from "@/features/flow/flow-multi/types/node-types";
 import { Flow } from "@/modules/flow/domain";
 import { InsertAgent } from "@/db/schema/agents";
 import { InsertIfNode } from "@/db/schema/if-nodes";
