@@ -39,7 +39,7 @@ import { Lorebook } from "@/modules/card/domain/lorebook";
 import { Entry } from "@/modules/card/domain/entry";
 import { UniqueEntityID } from "@/shared/domain";
 import { Input } from "@/components-v2/ui/input";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";

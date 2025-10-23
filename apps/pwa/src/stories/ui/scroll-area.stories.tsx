@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { Separator } from "@/components-v2/ui/separator";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import React from "react";
 
 const meta = {

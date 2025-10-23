@@ -89,7 +89,7 @@ import { ScenarioItem } from "@/features/session/components/scenario/scenario-it
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
 import { MediaPlaceholderMessage } from "@/features/session/media-placeholder-message";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogClose,

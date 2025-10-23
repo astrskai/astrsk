@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components-v2/ui/dialog";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { ScenarioItem } from "./scenario-item";
 
 export interface Scenario {

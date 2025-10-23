@@ -9,7 +9,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components-v2/ui/dialog";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Input } from "@/components-v2/ui/input";
 import { Label } from "@/components-v2/ui/label";
 import React from "react";

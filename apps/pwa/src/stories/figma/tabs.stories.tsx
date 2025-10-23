@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components-v2/ui/tab
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components-v2/ui/card";
 import { Input } from "@/components-v2/ui/input";
 import { Label } from "@/components-v2/ui/label";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import React from "react";
 
 /**

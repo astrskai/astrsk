@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogClose,

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components-v2/ui/popover";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Input } from "@/components-v2/ui/input";
 import { Label } from "@/components-v2/ui/label";
 import { Calendar, Settings, Info, HelpCircle } from "lucide-react";

@@ -8,7 +8,7 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { SessionService } from "@/app/services/session-service";
 import { TopNavigation } from "@/components/layout/top-navigation";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Tabs,
   TabsContent,

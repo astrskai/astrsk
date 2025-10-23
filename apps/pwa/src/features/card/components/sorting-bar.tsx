@@ -1,7 +1,7 @@
 import { ArrowUpAZ } from "lucide-react";
 import React, { useState } from "react";
 
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,

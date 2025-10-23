@@ -15,7 +15,7 @@ import { cn } from "@/shared/lib";
 import { SessionMessagesAndUserInputsMobile } from "@/features/session/mobile/session-messages-and-user-inputs-mobile";
 import { SessionSettingsMobile } from "@/features/session/mobile/session-settings-mobile";
 import { TopNavigation } from "@/components/layout/top-navigation";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
 

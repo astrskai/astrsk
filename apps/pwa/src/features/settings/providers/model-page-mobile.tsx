@@ -21,7 +21,7 @@ import {
 } from "@/features/settings/providers/provider-list-item";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { TypoBase, TypoSmall, TypoTiny } from "@/components/ui/typo";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/components-v2/ui/card";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";

@@ -8,7 +8,7 @@ import { useValidationStore } from "@/app/stores/validation-store";
 import { cn } from "@/shared/lib";
 import { MobileUpdater } from "@/components/system/mobile-updater";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");

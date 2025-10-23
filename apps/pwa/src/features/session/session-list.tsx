@@ -26,7 +26,7 @@ import { useSessionStore } from "@/app/stores/session-store";
 import { useValidationStore } from "@/app/stores/validation-store";
 import { cn } from "@/shared/lib";
 import { StepName } from "@/features/session/create-session/step-name";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/components-v2/ui/checkbox";
 import {
   Dialog,

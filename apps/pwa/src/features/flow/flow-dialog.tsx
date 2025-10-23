@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components-v2/ui/dialog";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 import { Flow, FlowProps } from "@/modules/flow/domain";

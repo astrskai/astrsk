@@ -12,7 +12,7 @@ import {
 import { debounce } from "lodash-es";
 
 import { Input } from "@/components-v2/ui/input";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { HelpCircle } from "lucide-react";

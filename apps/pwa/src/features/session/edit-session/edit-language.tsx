@@ -10,7 +10,7 @@ import {
   StepLanguageSchemaType,
 } from "@/features/session/create-session/step-language";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { SessionProps } from "@/modules/session/domain/session";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 

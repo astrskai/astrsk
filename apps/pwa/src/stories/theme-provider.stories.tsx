@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ThemeProvider, useTheme } from "@/components-v2/theme-provider";
 import React from "react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Moon, Sun, Monitor } from "lucide-react";
 
 const meta = {

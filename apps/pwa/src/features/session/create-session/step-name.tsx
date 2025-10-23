@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogClose,

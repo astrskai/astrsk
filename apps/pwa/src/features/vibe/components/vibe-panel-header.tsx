@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Badge } from "@/components-v2/ui/badge";
 import {
   ArrowLeftFromLine,

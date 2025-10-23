@@ -32,7 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components-v2/ui/dialog";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { agentKeys } from "@/app/queries/agent/query-factory";

@@ -25,7 +25,7 @@ import {
   StepCardsSchemaType,
 } from "@/features/session/create-session/step-cards";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { CarouselItem } from "@/components-v2/ui/carousel";
 import {
   Tabs,

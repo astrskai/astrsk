@@ -18,7 +18,7 @@ import {
   StepBackgroundSchemaType,
 } from "@/features/session/mobile/create-session/step-background-mobile";
 import { TopNavigation } from "@/components/layout/top-navigation";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import {
   Tabs,

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { TopNavigation } from "@/components-v2/top-navigation";
 import React from "react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { ArrowLeft, Search, MoreVertical, Filter, Share } from "lucide-react";
 
 const meta = {

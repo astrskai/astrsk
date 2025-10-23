@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components-v2/ui/dialog";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { Badge } from "@/components-v2/ui/badge";
 import {

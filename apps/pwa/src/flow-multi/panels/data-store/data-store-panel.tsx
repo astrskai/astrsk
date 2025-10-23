@@ -4,7 +4,7 @@ import { flowQueries } from "@/app/queries/flow/query-factory";
 import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
 import { useUpdateDataStoreNodeFields } from "@/app/queries/data-store-node/mutations/field-mutations";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Select,
   SelectContent,

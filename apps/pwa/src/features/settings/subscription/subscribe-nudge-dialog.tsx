@@ -1,6 +1,6 @@
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/shared/lib";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,

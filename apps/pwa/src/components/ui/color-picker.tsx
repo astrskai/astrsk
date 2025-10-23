@@ -6,8 +6,8 @@ import { HexColorPicker } from "react-colorful";
 import { cn } from "@/shared/lib";
 
 import { useForwardedRef } from "@/shared/hooks/use-forwarded-ref";
-import type { ButtonProps } from "@/components-v2/ui/button";
-import { Button } from "@/components-v2/ui/button";
+import type { ButtonProps } from "@/shared/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Input } from "@/components-v2/ui/input";
 import {
   Popover,

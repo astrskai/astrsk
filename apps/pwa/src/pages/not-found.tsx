@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Logo } from "@/assets/components/icons";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 
 const NotFound = () => {
   const navigate = useNavigate();
