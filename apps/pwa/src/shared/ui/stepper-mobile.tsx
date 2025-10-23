@@ -4,8 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/shared/lib";
 
 import { useBackGesture } from "@/shared/hooks/use-back-gesture";
-import { Button } from "@/shared/ui/button";
-import { Progress } from "@/shared/ui/progress";
+import { Button, Progress } from "@/shared/ui";
 
 interface StepperMobileProps {
   title?: string;

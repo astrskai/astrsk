@@ -7,8 +7,7 @@ import {
   VariableLibrary,
   VariableGroupLabel,
 } from "@/shared/prompt/domain/variable";
-import { ScrollArea } from "@/shared/ui/scroll-area";
-import { SearchInput } from "@/shared/ui/search-input";
+import { ScrollArea, SearchInput } from "@/shared/ui";
 
 interface VariablesPanelProps {
   cardId: string; // Required by the panel system but not used

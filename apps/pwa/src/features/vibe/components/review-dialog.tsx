@@ -1,20 +1,20 @@
 import React, { useState } from "react";
+
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/shared/ui/dialog";
-import { Button } from "@/shared/ui/button";
-import { ScrollArea } from "@/shared/ui/scroll-area";
-import { Badge } from "@/shared/ui/badge";
-import {
+  Badge,
+  Button,
+  ScrollArea,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/shared/ui/tabs";
+} from "@/shared/ui";
+
 import { Check, X, Code, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { ReviewData } from "../types";
 

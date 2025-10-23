@@ -4,26 +4,26 @@ import { type Node, type NodeProps } from "@xyflow/react";
 import { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import { Copy, Trash2, AlertCircle } from "lucide-react";
 import { CustomHandle } from "@/flow-multi/components/custom-handle";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/shared/ui/tooltip";
+
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 
 import { useAgentStore } from "@/app/stores/agent-store";
-import { ApiType, OutputFormat } from "@/modules/agent/domain/agent";
+import { ApiType } from "@/modules/agent/domain/agent";
 import { AgentModels } from "@/flow-multi/components/model-selection";
-import { Input } from "@/shared/ui/input";
+
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { PANEL_TYPES } from "@/flow-multi/components/panel-types";
 import { useAgentColor } from "@/flow-multi/hooks/use-agent-color";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { invalidateSingleAgentQueries } from "@/flow-multi/utils/invalidate-agent-queries";
+
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  Button,
+  Input,
+  SvgIcon,
   Dialog,
   DialogClose,
   DialogContent,
@@ -31,8 +31,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
-import { Button } from "@/shared/ui/button";
+} from "@/shared/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { agentKeys } from "@/app/queries/agent/query-factory";

@@ -4,14 +4,15 @@ import { Import, Plus } from "lucide-react";
 import React from "react";
 
 import { useAppStore } from "@/app/stores/app-store";
-import { TypoBase } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
+
 import {
+  Button,
+  TypoBase,
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import { CardType } from "@/modules/card/domain";
 
 interface HeaderBarProps {

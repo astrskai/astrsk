@@ -7,16 +7,20 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
-import { DeleteConfirm } from "@/shared/ui/confirm";
+
 import { cn } from "@/shared/lib";
-import { IconName, SvgIcon } from "@/shared/ui/svg-icon";
-import { TypoSmall, TypoTiny } from "@/shared/ui/typo";
-import { Card, CardContent } from "@/shared/ui/card";
 import {
+  Card,
+  CardContent,
+  DeleteConfirm,
+  IconName,
+  SvgIcon,
+  TypoSmall,
+  TypoTiny,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
 import { Flow } from "@/modules/flow/domain";
 import { Session } from "@/modules/session/domain/session";

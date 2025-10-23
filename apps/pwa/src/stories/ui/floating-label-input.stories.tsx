@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
+import { FloatingLabelInput } from "@/shared/ui";
 import { Edit2 } from "lucide-react";
 import React from "react";
 

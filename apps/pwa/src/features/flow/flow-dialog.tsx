@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { Button } from "@/shared/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
-import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
+import {
+  Button, Dialog, DialogContent, DialogTitle,
+  FloatingLabelInput,
+} from "@/shared/ui";
 import { Flow, FlowProps } from "@/modules/flow/domain";
 
 export type FlowDialogMode = "create" | "edit";

@@ -2,18 +2,16 @@
 
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { SidebarLeft, useSidebarLeft } from "@/widgets/both-sidebar";
-import { HelpVideoDialog } from "@/shared/ui/help-video-dialog";
+import { HelpVideoDialog, ScrollArea, ScrollBar, SvgIcon } from "@/shared/ui";
 import { CardSection } from "./card-list";
 import { FlowSection } from "./flow-list";
 import { SessionSection } from "./session-list";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import { UpdaterNew } from "@/app/providers/updater-new";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {

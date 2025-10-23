@@ -1,6 +1,5 @@
 import React from "react";
-import { Button } from "@/shared/ui/button";
-import { Badge } from "@/shared/ui/badge";
+import { Badge, Button, SvgIcon } from "@/shared/ui";
 import {
   ArrowLeftFromLine,
   ArrowRightFromLine,
@@ -9,7 +8,6 @@ import {
   Loader2,
   TestTube,
 } from "lucide-react";
-import { SvgIcon } from "@/shared/ui/svg-icon";
 import { cn } from "@/shared/lib";
 
 interface VibePanelHeaderProps {

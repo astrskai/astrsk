@@ -12,7 +12,7 @@ import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { useFlows } from "@/app/hooks/use-flows";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { SessionService } from "@/app/services/session-service";
-import { Combobox } from "@/shared/ui/combobox";
+import { Button, Combobox } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 import {
   convertFlowAndAgentsFormToSessionProps,
@@ -20,7 +20,6 @@ import {
   StepFlowAndAgentsSchemaType,
 } from "@/features/session/mobile/create-session/step-flow-and-agents-mobile";
 import { TopNavigation } from "@/widgets/top-navigation";
-import { Button } from "@/shared/ui/button";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain/api-connection";
 import { Session, SessionProps } from "@/modules/session/domain";
 import { useQuery } from "@tanstack/react-query";

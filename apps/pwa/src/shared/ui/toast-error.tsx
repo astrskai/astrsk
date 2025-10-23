@@ -1,13 +1,12 @@
 import { cn } from "@/shared/lib";
-import { Button } from "@/shared/ui/button";
+import { Button, ScrollArea } from "@/shared/ui";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from "@/shared/ui/dialog";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+} from "@/shared/ui";
 import { CircleAlert } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

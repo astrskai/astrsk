@@ -1,12 +1,13 @@
 import React from "react";
+
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/card";
-import { Badge } from "@/shared/ui/badge";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+  Badge,
+  ScrollArea,
+} from "@/shared/ui";
 import { Brain, Cpu, AlertCircle, CheckCircle, Clock } from "lucide-react";
 import { cn } from "@/shared/lib";
 import type {

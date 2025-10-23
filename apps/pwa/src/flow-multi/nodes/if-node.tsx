@@ -11,22 +11,21 @@ import {
   ConditionDataType,
   ConditionOperator,
 } from "@/flow-multi/types/condition-types";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
-import { Input } from "@/shared/ui/input";
-import {
+  Button,
+  Input,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
-import { Button } from "@/shared/ui/button";
+} from "@/shared/ui";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";
 import { useAgentStore } from "@/app/stores/agent-store";

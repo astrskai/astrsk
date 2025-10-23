@@ -13,18 +13,22 @@ import {
 } from "@/app/stores/background-store";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
-import { TypoBase } from "@/shared/ui/typo";
-import { AspectRatio } from "@/shared/ui/aspect-ratio";
-import { Button } from "@/shared/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
+
 import {
+  AspectRatio,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  ScrollArea,
+  ScrollBar,
+  TypoBase,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/shared/ui/tabs";
+} from "@/shared/ui";
 import { SessionProps } from "@/modules/session/domain";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 
 const StepBackgroundSchema = z.object({
   backgroundId: z.string().nullable(),

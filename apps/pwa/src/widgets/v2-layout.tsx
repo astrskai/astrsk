@@ -9,18 +9,18 @@ import { useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { InstallPwa } from "@/app/providers/install-pwa";
 import { TopBar } from "@/widgets/top-bar";
-import { Loading } from "@/shared/ui/loading";
+import {
+  Loading, LoadingOverlay, Sheet, SheetContent,
+  Toaster,
+} from "@/shared/ui";
 import { ThemeProvider } from "@/app/providers/theme-provider";
 import { SidebarLeftProvider } from "@/widgets/both-sidebar";
 import { LeftNavigationMobile } from "@/widgets/left-navigation/left-navigation-mobile";
-import { Sheet, SheetContent } from "@/shared/ui/sheet";
-import { Toaster } from "@/shared/ui/sonner";
 import { cn } from "@/shared/lib";
 import { LeftNavigation } from "@/widgets/left-navigation";
 import { LeftNavigationTrigger } from "@/widgets/left-navigation";
 import { SidebarInset } from "@/widgets/both-sidebar";
 import { MobileNavigationContext } from "@/contexts/mobile-navigation-context";
-import { LoadingOverlay } from "@/shared/ui/loading-overlay";
 import CreateSessionPage from "@/features/session/create-session-page";
 import { createPortal } from "react-dom";
 

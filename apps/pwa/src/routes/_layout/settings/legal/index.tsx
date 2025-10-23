@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
-import { TypoBase, TypoXLarge } from "@/shared/ui/typo";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
+import { ScrollArea, ScrollBar, TypoBase, TypoXLarge } from "@/shared/ui";
 
 export const Route = createFileRoute("/_layout/settings/legal/")({
   component: LegalPage,

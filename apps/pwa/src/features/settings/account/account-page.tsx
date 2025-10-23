@@ -1,6 +1,5 @@
 import { Page, useAppStore } from "@/app/stores/app-store";
-import { TypoBase, TypoXLarge } from "@/shared/ui/typo";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
+import { ScrollArea, ScrollBar, TypoBase, TypoXLarge } from "@/shared/ui";
 import { api } from "@/convex";
 import { Datetime } from "@/shared/lib";
 import { useClerk } from "@clerk/clerk-react";

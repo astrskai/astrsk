@@ -5,14 +5,13 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib";
 
-import { TypoTiny } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
+import { Button, TypoTiny } from "@/shared/ui";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 
 export interface FloatingLabelInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {

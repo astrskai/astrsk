@@ -19,21 +19,19 @@ import { useEditSessionDialogStore } from "@/app/stores/edit-session-dialog-stor
 import { CharacterForm } from "@/features/card/components/edit-sheet/character-form-v2";
 import { PlotForm } from "@/features/card/components/edit-sheet/plot-form-v2";
 import { CardFormValues } from "@/features/card/types/card-form";
+
+import { TopNavigation } from "@/widgets/top-navigation";
 import {
   DeleteConfirm,
   UnsavedChangesConfirm,
-} from "@/shared/ui/confirm";
-import { useBackGesture } from "@/shared/hooks/use-back-gesture";
-import { TopNavigation } from "@/widgets/top-navigation";
-import { Button } from "@/shared/ui/button";
-import { ScrollArea } from "@/shared/ui/scroll-area";
-import {
+  Button,
+  ScrollArea,
   Sheet,
   SheetBody,
   SheetClose,
   SheetContent,
   SheetFooter,
-} from "@/shared/ui/sheet";
+} from "@/shared/ui";
 import { TableName } from "@/db/schema/table-name";
 import {
   Card,

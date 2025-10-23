@@ -5,18 +5,18 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { useAsset } from "@/app/hooks/use-asset";
 import { useBackgroundStore } from "@/app/stores/background-store";
-import { ColorPicker } from "@/shared/ui/color-picker";
 import { cn } from "@/shared/lib";
 import { StepBackgroundSchemaType } from "@/features/session/create-session/step-background";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
 import { MessageItemInternalMobile } from "@/features/session/mobile/session-messages-and-user-inputs-mobile";
-import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
 import {
+  ColorPicker,
+  FloatingLabelInput,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/shared/ui/tabs";
+} from "@/shared/ui";
 import { ChatStyles } from "@/modules/session/domain/chat-styles";
 
 // Re-export schema and converter from the shared step

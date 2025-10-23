@@ -14,11 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 import { cardQueries, useUpdateCardTitle } from "@/app/queries/card";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { BookOpen, Pencil, Check, X, Image } from "lucide-react";
-import { ButtonPill } from "@/shared/ui/button-pill";
-import { Button } from "@/shared/ui/button";
-import { SvgIcon } from "@/shared/ui/svg-icon";
+import { Avatar, Button, ButtonPill, SvgIcon } from "@/shared/ui";
 import { useLeftNavigationWidth } from "@/widgets/left-navigation/hooks/use-left-navigation-width";
-import { Avatar } from "@/shared/ui/avatar";
 import { useAppStore } from "@/app/stores/app-store";
 
 interface CardPanelProps {

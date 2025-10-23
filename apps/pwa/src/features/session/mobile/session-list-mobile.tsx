@@ -15,34 +15,33 @@ import { useSession } from "@/app/hooks/use-session";
 import { useSessionValidation } from "@/app/hooks/use-session-validation";
 import { useSessions } from "@/app/hooks/use-sessions-v2";
 import { useTurn } from "@/app/hooks/use-turn";
-import { FlowService } from "@/app/services/flow-service";
+
 import { SessionService } from "@/app/services/session-service";
-import { Page, useAppStore } from "@/app/stores/app-store";
-import { fetchBackgrounds } from "@/app/stores/background-store";
+
 import { useSessionStore } from "@/app/stores/session-store";
 import { useValidationStore } from "@/app/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
 import { cn } from "@/shared/lib";
-import { SearchInput } from "@/shared/ui/search-input";
+
 import { SessionMainMobile } from "@/features/session/mobile/session-main-mobile";
 import CreateSessionPageMobile from "@/features/session/mobile/create-session-page-mobile";
-import { SvgIcon } from "@/shared/ui/svg-icon";
 import { ModelItem } from "@/flow-multi/components/model-selection";
-import { TypoBase } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
-import { CheckboxMobile } from "@/shared/ui/checkbox";
 import {
+  Button,
+  CheckboxMobile,
+  Label,
+  ListEditDialogMobile,
+  ScrollArea,
+  SearchInput,
+  SvgIcon,
+  TypoBase,
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/shared/ui/dialog";
-import { Label } from "@/shared/ui/label";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+} from "@/shared/ui";
 import { TableName } from "@/db/schema/table-name";
 import { Agent } from "@/modules/agent/domain/agent";
 import { Card } from "@/modules/card/domain";
@@ -50,7 +49,6 @@ import { Session } from "@/modules/session/domain/session";
 import { AgentService } from "@/app/services/agent-service";
 import { ApiSource } from "@/modules/api/domain";
 import { toast } from "sonner";
-import { ListEditDialogMobile } from "@/shared/ui/list-edit-dialog-mobile";
 import { TopNavigation } from "@/widgets/top-navigation";
 import { StepName } from "@/features/session/create-session/step-name";
 import { flowQueries } from "@/app/queries/flow-queries";

@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { ImportDialog } from "@/shared/ui/import-dialog";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+import { ImportDialog, ScrollArea, SvgIcon } from "@/shared/ui";
 import { ModelItem } from "@/flow-multi/components/model-selection";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";
-import { SvgIcon } from "@/shared/ui/svg-icon";
 import { ModelTier } from "@/modules/agent/domain/agent";
 
 export interface AgentModel {

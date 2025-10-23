@@ -5,15 +5,8 @@ import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { SessionService } from "@/app/services/session-service";
 import { TopNavigation } from "@/widgets/top-navigation";
-import { Button } from "@/shared/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/ui/tabs";
+import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 import { StepCharacterCardsSchema } from "@/features/session/mobile/create-session/step-character-cards-mobile";
 import { StepCharacterCardsMobile } from "@/features/session/mobile/create-session/step-character-cards-mobile";
 import { StepUserCardSchema } from "@/features/session/mobile/create-session/step-user-card-mobile";

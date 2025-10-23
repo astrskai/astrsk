@@ -4,14 +4,14 @@ import { flowQueries } from "@/app/queries/flow/query-factory";
 import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
 import { useUpdateDataStoreNodeFields } from "@/app/queries/data-store-node/mutations/field-mutations";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
-import { Button } from "@/shared/ui/button";
+import { Button, Editor, ScrollAreaSimple } from "@/shared/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/select";
+} from "@/shared/ui";
 import {
   DndContext,
   closestCenter,
@@ -37,13 +37,11 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
-import { Editor } from "@/shared/ui/editor";
+} from "@/shared/ui";
 import type { editor } from "monaco-editor";
 import { debounce } from "lodash-es";
 import type { DataStoreField } from "@/modules/flow/domain/flow";
 import { SortableDataField } from "./sortable-data-field";
-import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
 import { UniqueEntityID } from "@/shared/domain";
 import { toast } from "sonner";
 

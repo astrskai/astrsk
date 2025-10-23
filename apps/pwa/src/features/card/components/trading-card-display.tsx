@@ -2,12 +2,11 @@ import { PropsWithChildren, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/shared/lib";
 
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Typo3XLarge, TypoSmall } from "@/shared/ui/typo";
-import { Card as CardUI } from "@/shared/ui/card";
-import { Skeleton } from "@/shared/ui/skeleton";
+import {
+  Card as CardUI, MediaDisplay, Skeleton, SvgIcon,
+  Typo3XLarge, TypoSmall,
+} from "@/shared/ui";
 import { Card, CardType, CharacterCard } from "@/modules/card/domain";
-import { MediaDisplay } from "@/shared/ui/media-display";
 
 // Simple tag component for displaying card tags
 const Tag = ({ name }: { name: string }) => {

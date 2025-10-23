@@ -8,11 +8,10 @@ import {
 } from "@/app/stores/app-store";
 import { ConvexReady } from "@/app/providers/convex-ready";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Typo2XLarge, TypoBase, TypoXLarge } from "@/shared/ui/typo";
-import { FloatingActionButton } from "@/shared/ui/floating-action-button";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
-import { Separator } from "@/shared/ui/separator";
+import {
+  FloatingActionButton, ScrollArea, ScrollBar, Separator,
+  SvgIcon, Typo2XLarge, TypoBase, TypoXLarge,
+} from "@/shared/ui";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
 import { useState, useCallback } from "react";

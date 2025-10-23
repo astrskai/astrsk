@@ -9,7 +9,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import {
   DndContext,
   closestCenter,
@@ -26,13 +26,13 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
-import { Editor } from "@/shared/ui/editor";
+import {
+  Button, Editor, Input, ScrollAreaSimple,
+  Select, SelectContent, SelectItem, SelectTrigger,
+  SelectValue,
+} from "@/shared/ui";
 import type { editor } from "monaco-editor";
 
-import { Input } from "@/shared/ui/input";
-import { Button } from "@/shared/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
-import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
 import { sanitizeFileName } from "@/shared/lib";
 
 // Import queries and mutations

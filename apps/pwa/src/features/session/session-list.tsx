@@ -4,12 +4,6 @@ import { AlertTriangleIcon, Ellipsis, Menu, Plus, Search } from "lucide-react";
 import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/shared/ui/tooltip";
 
 import { UniqueEntityID } from "@/shared/domain";
 import { Datetime } from "@/shared/lib/datetime";
@@ -26,15 +20,19 @@ import { useSessionStore } from "@/app/stores/session-store";
 import { useValidationStore } from "@/app/stores/validation-store";
 import { cn } from "@/shared/lib";
 import { StepName } from "@/features/session/create-session/step-name";
-import { Button } from "@/shared/ui/button";
-import { Checkbox } from "@/shared/ui/checkbox";
+
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  Button,
+  Checkbox,
+  ScrollArea,
   Dialog,
   DialogClose,
   DialogContent,
   DialogTrigger,
-} from "@/shared/ui/dialog";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+} from "@/shared/ui";
 import { TableName } from "@/db/schema/table-name";
 import { Card as CardType } from "@/modules/card/domain";
 import { Session } from "@/modules/session/domain";
@@ -221,9 +219,9 @@ const SessionListMobile = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-background-surface-2">
+    <div className="bg-background-surface-2 flex h-full flex-col">
       {/* Mobile Header */}
-      <div className="relative flex items-center h-[60px] px-4 bg-background-surface-2">
+      <div className="bg-background-surface-2 relative flex h-[60px] items-center px-4">
         {isSelectionMode ? (
           <Button variant="ghost" size="sm" onClick={exitSelectionMode}>
             Done
@@ -234,10 +232,10 @@ const SessionListMobile = ({
               <Button
                 variant="ghost_white"
                 size="icon"
-                className="w-6 h-6 p-2"
+                className="h-6 w-6 p-2"
                 onClick={onMenuClick}
               >
-                <Menu className="w-4 h-3" />
+                <Menu className="h-3 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent variant="button">
@@ -245,8 +243,8 @@ const SessionListMobile = ({
             </TooltipContent>
           </Tooltip>
         )}
-        <div className="absolute inset-x-0 flex justify-center pointer-events-none">
-          <span className="font-semibold text-base text-text-primary truncate max-w-[60%]">
+        <div className="pointer-events-none absolute inset-x-0 flex justify-center">
+          <span className="text-text-primary max-w-[60%] truncate text-base font-semibold">
             {isSelectionMode
               ? `${selectedSessions.size} Sessions selected`
               : "Sessions"}
@@ -271,8 +269,12 @@ const SessionListMobile = ({
             <DialogTrigger asChild>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost_white" size="icon" className="w-6 h-6 p-2">
-                    <Ellipsis className="w-4 h-[2px]" />
+                  <Button
+                    variant="ghost_white"
+                    size="icon"
+                    className="h-6 w-6 p-2"
+                  >
+                    <Ellipsis className="h-[2px] w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent variant="button">
@@ -281,13 +283,13 @@ const SessionListMobile = ({
               </Tooltip>
             </DialogTrigger>
             <DialogContent
-              className="w-[248px] p-0 bg-background-input border-border-container rounded-[14px]"
+              className="bg-background-input border-border-container w-[248px] rounded-[14px] p-0"
               hideClose
             >
               <div className="flex flex-col py-2">
                 <DialogClose asChild>
                   <button
-                    className="w-full text-center px-6 py-4 hover:bg-background-card-hover transition-colors text-text-primary text-base border-b border-border-container"
+                    className="hover:bg-background-card-hover text-text-primary border-border-container w-full border-b px-6 py-4 text-center text-base transition-colors"
                     onClick={() => {
                       setSelectionAction("copy");
                       setIsSelectionMode(true);
@@ -298,7 +300,7 @@ const SessionListMobile = ({
                 </DialogClose>
                 <DialogClose asChild>
                   <button
-                    className="w-full text-center px-6 py-4 hover:bg-background-card-hover transition-colors text-text-primary text-base border-b border-border-container"
+                    className="hover:bg-background-card-hover text-text-primary border-border-container w-full border-b px-6 py-4 text-center text-base transition-colors"
                     onClick={() => {
                       setSelectionAction("export");
                       setIsSelectionMode(true);
@@ -309,7 +311,7 @@ const SessionListMobile = ({
                 </DialogClose>
                 <DialogClose asChild>
                   <button
-                    className="w-full text-center px-6 py-4 hover:bg-background-card-hover transition-colors text-text-primary text-base border-b border-border-container"
+                    className="hover:bg-background-card-hover text-text-primary border-border-container w-full border-b px-6 py-4 text-center text-base transition-colors"
                     onClick={() => {
                       handleImportClick();
                     }}
@@ -319,7 +321,7 @@ const SessionListMobile = ({
                 </DialogClose>
                 <DialogClose asChild>
                   <button
-                    className="w-full text-center px-6 py-4 hover:bg-background-card-hover transition-colors text-text-primary text-base"
+                    className="hover:bg-background-card-hover text-text-primary w-full px-6 py-4 text-center text-base transition-colors"
                     onClick={() => {
                       setSelectionAction("delete");
                       setIsSelectionMode(true);
@@ -344,12 +346,12 @@ const SessionListMobile = ({
       />
 
       {/* Search and Create */}
-      <div className="px-4 py-2 space-y-4 bg-background-surface-2">
-        <div className="self-stretch px-4 py-2 bg-background-surface-4 rounded-lg inline-flex flex-col justify-start items-start gap-2 overflow-hidden">
-          <div className="self-stretch inline-flex justify-start items-center gap-4">
-            <div className="w-6 h-6 relative overflow-hidden">
+      <div className="bg-background-surface-2 space-y-4 px-4 py-2">
+        <div className="bg-background-surface-4 inline-flex flex-col items-start justify-start gap-2 self-stretch overflow-hidden rounded-lg px-4 py-2">
+          <div className="inline-flex items-center justify-start gap-4 self-stretch">
+            <div className="relative h-6 w-6 overflow-hidden">
               <Search
-                className="w-4 h-4 left-[3px] top-[3px] absolute outline-2 outline-offset-[-1px] outline-text-body"
+                className="outline-text-body absolute top-[3px] left-[3px] h-4 w-4 outline-2 outline-offset-[-1px]"
                 strokeWidth={2}
               />
             </div>
@@ -358,7 +360,7 @@ const SessionListMobile = ({
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="Search"
-              className="flex-1 justify-start text-text-primary text-base font-normal leading-relaxed bg-transparent outline-none border-none focus:outline-none focus:ring-0 placeholder:text-text-placeholder"
+              className="text-text-primary placeholder:text-text-placeholder flex-1 justify-start border-none bg-transparent text-base leading-relaxed font-normal outline-none focus:ring-0 focus:outline-none"
             />
           </div>
         </div>
@@ -370,15 +372,15 @@ const SessionListMobile = ({
             navigate({ to: "/sessions/create" });
           }}
           trigger={
-            <div className="w-full flex flex-col items-center justify-center">
+            <div className="flex w-full flex-col items-center justify-center">
               <Button
                 onClick={() => refSessionListCreate.current?.click()}
                 disabled={isSelectionMode}
-                className="h-10 min-w-20 px-4 py-2.5 bg-button-background-primary rounded-[20px] flex flex-col justify-center items-center gap-2.5"
+                className="bg-button-background-primary flex h-10 min-w-20 flex-col items-center justify-center gap-2.5 rounded-[20px] px-4 py-2.5"
               >
-                <div className="inline-flex justify-start items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  <span className="justify-center text-button-foreground-primary text-sm font-semibold leading-tight">
+                <div className="inline-flex items-center justify-start gap-2">
+                  <Plus className="h-4 w-4" />
+                  <span className="text-button-foreground-primary justify-center text-sm leading-tight font-semibold">
                     Create new session
                   </span>
                 </div>
@@ -389,11 +391,11 @@ const SessionListMobile = ({
       </div>
 
       {/* Session List */}
-      <ScrollArea className="flex-1 bg-background-surface-2">
+      <ScrollArea className="bg-background-surface-2 flex-1">
         <div className="px-4">
           {sessions.length === 0 ? (
             <div className="flex items-center justify-center">
-              <div className="text-center text-text-input-subtitle">
+              <div className="text-text-input-subtitle text-center">
                 {keyword.length > 0
                   ? `No results for '${keyword}'`
                   : "No sessions"}
@@ -418,7 +420,6 @@ const SessionListMobile = ({
           )}
         </div>
       </ScrollArea>
-
     </div>
   );
 };
@@ -430,17 +431,17 @@ const MobileCharacterAvatar = ({ cardId }: { cardId: UniqueEntityID }) => {
 
   if (!card) {
     return (
-      <div className="w-8 h-8 rounded-full border-2 border-background-surface-2 bg-background-card" />
+      <div className="border-background-surface-2 bg-background-card h-8 w-8 rounded-full border-2" />
     );
   }
 
   return (
-    <div className="relative w-8 h-8 rounded-full border-2 border-background-surface-2 bg-background-card overflow-hidden">
+    <div className="border-background-surface-2 bg-background-card relative h-8 w-8 overflow-hidden rounded-full border-2">
       {icon ? (
-        <img src={icon} alt="" className="w-full h-full object-cover" />
+        <img src={icon} alt="" className="h-full w-full object-cover" />
       ) : (
-        <div className="w-full h-full bg-background-card flex items-center justify-center">
-          <span className="text-xs text-text-input-subtitle">
+        <div className="bg-background-card flex h-full w-full items-center justify-center">
+          <span className="text-text-input-subtitle text-xs">
             {(card as any).props.name?.charAt(0) || card.props.title.charAt(0)}
           </span>
         </div>
@@ -490,15 +491,15 @@ const SessionListItemMobile = ({
   return (
     <div
       className={cn(
-        "self-stretch outline-1 flex flex-col justify-start items-center",
+        "flex flex-col items-center justify-start self-stretch outline-1",
         hasError &&
-          "bg-background-surface-2 border-l-[3px] border-status-destrctive-light",
+          "bg-background-surface-2 border-status-destrctive-light border-l-[3px]",
       )}
     >
       <button
         onClick={handleClick}
         className={cn(
-          "self-stretch bg-background-surface-2 border-b border-border-dark inline-flex justify-start items-start w-full",
+          "bg-background-surface-2 border-border-dark inline-flex w-full items-start justify-start self-stretch border-b",
           "hover:bg-background-card-hover active:bg-background-card-hover",
           isActive && !isSelectionMode && "bg-background-card-hover",
           isSelected && "bg-background-card",
@@ -507,7 +508,7 @@ const SessionListItemMobile = ({
       >
         {/* Checkbox for selection mode */}
         {isSelectionMode && (
-          <div className="pl-4 pr-2">
+          <div className="pr-2 pl-4">
             <Checkbox
               checked={isSelected}
               onCheckedChange={() => onToggleSelection?.()}
@@ -516,18 +517,18 @@ const SessionListItemMobile = ({
           </div>
         )}
 
-        <div className="flex-1 p-4 inline-flex flex-col justify-start items-start gap-2">
+        <div className="inline-flex flex-1 flex-col items-start justify-start gap-2 p-4">
           {/* Title and Time */}
-          <div className="self-stretch inline-flex justify-between items-center">
+          <div className="inline-flex items-center justify-between self-stretch">
             {hasError && (
-              <div className="flex justify-start items-center gap-2">
-                <AlertTriangleIcon className="w-6 h-6 text-status-destrctive-light" />
+              <div className="flex items-center justify-start gap-2">
+                <AlertTriangleIcon className="text-status-destrctive-light h-6 w-6" />
               </div>
             )}
-            <div className="justify-start text-text-primary text-base font-semibold leading-relaxed">
+            <div className="text-text-primary justify-start text-base leading-relaxed font-semibold">
               {session.props.title}
             </div>
-            <div className="justify-start text-text-body text-xs font-medium">
+            <div className="text-text-body justify-start text-xs font-medium">
               {lastMessage
                 ? formatLastMessage(lastMessage.createdAt)
                 : "9:34 AM"}
@@ -535,32 +536,34 @@ const SessionListItemMobile = ({
           </div>
 
           {/* Message Count and Avatars */}
-          <div className="self-stretch inline-flex justify-between items-start">
-            <div className="flex justify-start items-center gap-3">
-              <div className="inline-flex flex-col justify-start items-start gap-1">
-                <div className="inline-flex justify-start items-center gap-1">
-                  <div className="justify-start text-text-primary text-base font-normal leading-relaxed">
+          <div className="inline-flex items-start justify-between self-stretch">
+            <div className="flex items-center justify-start gap-3">
+              <div className="inline-flex flex-col items-start justify-start gap-1">
+                <div className="inline-flex items-center justify-start gap-1">
+                  <div className="text-text-primary justify-start text-base leading-relaxed font-normal">
                     {messageCount.toLocaleString()}
                   </div>
-                  <div className="justify-start text-text-body text-xs font-normal">
+                  <div className="text-text-body justify-start text-xs font-normal">
                     Messages
                   </div>
                 </div>
               </div>
             </div>
-            <div className="flex justify-end items-center">
-              {session.characterCards.slice(0, 3).map((card: CardType, index: number) => (
-                <MobileCharacterAvatar
-                  key={card.id.toString()}
-                  cardId={card.id}
-                />
-              ))}
+            <div className="flex items-center justify-end">
+              {session.characterCards
+                .slice(0, 3)
+                .map((card: CardType, index: number) => (
+                  <MobileCharacterAvatar
+                    key={card.id.toString()}
+                    cardId={card.id}
+                  />
+                ))}
               {session.characterCards.length > 3 && (
                 <div
-                  className="w-8 h-8 px-2 py-2 bg-background-surface-3 rounded-xl outline-2 outline-offset-[-2.17px] outline-background-surface-2 inline-flex flex-col justify-center items-center gap-1.5"
+                  className="bg-background-surface-3 outline-background-surface-2 inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"
                   style={{ zIndex: 0 }}
                 >
-                  <div className="justify-start text-text-placeholder text-[10px] font-medium leading-none">
+                  <div className="text-text-placeholder justify-start text-[10px] leading-none font-medium">
                     +{session.characterCards.length - 3}
                   </div>
                 </div>

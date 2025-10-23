@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Button } from "@/shared/ui/button";
+import { Button, Editor } from "@/shared/ui";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { Editor } from "@/shared/ui/editor";
 import { SimpleMessage } from "../types";
 
 interface EditApprovalMessageProps {

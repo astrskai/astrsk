@@ -1,5 +1,5 @@
 import { cn } from "@/shared/lib";
-import { CheckboxMobile } from "@/shared/ui/checkbox";
+import { CheckboxMobile } from "@/shared/ui";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { Card, CardType } from "@/modules/card/domain";
 

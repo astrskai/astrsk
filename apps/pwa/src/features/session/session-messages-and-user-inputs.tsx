@@ -82,33 +82,33 @@ import {
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { AutoReply, useSessionStore } from "@/app/stores/session-store";
-import { Avatar } from "@/shared/ui/avatar";
+
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
 import { MediaPlaceholderMessage } from "@/features/session/media-placeholder-message";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Button } from "@/shared/ui/button";
+
 import {
+  Avatar,
+  Button,
+  FloatingActionButton,
+  ScrollArea,
+  ScrollAreaSimple,
+  SubscribeBadge,
+  SvgIcon,
+  toastError,
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
-import { FloatingActionButton } from "@/shared/ui/floating-action-button";
-import { ScrollArea } from "@/shared/ui/scroll-area";
-import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
-import { toastError } from "@/shared/ui/toast-error";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
@@ -118,7 +118,6 @@ import { DataStoreSchemaField } from "@/modules/flow/domain/flow";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
-import { SubscribeBadge } from "@/shared/ui/subscribe-badge";
 import { fetchCharacterCard } from "@/app/queries/card/query-factory";
 
 const MessageItemInternal = ({

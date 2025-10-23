@@ -1,11 +1,11 @@
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
+} from "@/shared/ui";
 import { Play, Volume2 } from "lucide-react";
 
 interface HelpVideoDialogProps {

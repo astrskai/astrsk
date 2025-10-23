@@ -6,15 +6,8 @@ import { toast } from "sonner";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { SessionService } from "@/app/services/session-service";
 import { TopNavigation } from "@/widgets/top-navigation";
-import { Button } from "@/shared/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/ui/tabs";
+import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 import {
   convertChatStylingFormToSessionProps,
   StepChatStylingSchema,

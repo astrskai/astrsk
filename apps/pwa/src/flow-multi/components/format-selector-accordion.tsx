@@ -5,7 +5,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/shared/ui/accordion";
+} from "@/shared/ui";
 import { cn } from "@/shared/lib";
 
 interface FormatSelectorAccordionProps {

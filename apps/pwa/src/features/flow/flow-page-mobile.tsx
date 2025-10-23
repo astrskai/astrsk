@@ -18,29 +18,30 @@ import { queryClient } from "@/app/queries/query-client";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { useQuery } from "@tanstack/react-query";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
-import { DeleteConfirm } from "@/shared/ui/confirm";
+
 import { FlowDialog } from "@/features/flow/flow-dialog";
 import { cn } from "@/shared/lib";
-import { SearchInput } from "@/shared/ui/search-input";
 import { humanizeBytes } from "@/features/session/session-list";
-import { SvgIcon } from "@/shared/ui/svg-icon";
 import { ModelItem } from "@/flow-multi/components/model-selection";
-import { TypoBase } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
-import { CheckboxMobile } from "@/shared/ui/checkbox";
 import {
+  Button,
+  CheckboxMobile,
+  DeleteConfirm,
+  ListEditDialogMobile,
+  ScrollArea,
+  SearchInput,
+  SvgIcon,
+  TypoBase,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+} from "@/shared/ui";
 import { TableName } from "@/db/schema/table-name";
 import { Flow, Node } from "@/modules/flow/domain";
 import { Session } from "@/modules/session/domain/session";
-import { ListEditDialogMobile } from "@/shared/ui/list-edit-dialog-mobile";
 import { TopNavigation } from "@/widgets/top-navigation";
 
 type SelectionAction = "copy" | "export" | "delete";

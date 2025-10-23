@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { UpdaterNew } from "@/components-v2/updater-new";
 import React from "react";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 
 const meta = {
   title: "Components/UpdaterNew",

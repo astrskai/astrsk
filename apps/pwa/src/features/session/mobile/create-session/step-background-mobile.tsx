@@ -12,17 +12,17 @@ import {
   useBackgroundStore,
 } from "@/app/stores/background-store";
 import { cn } from "@/shared/lib";
-import { TypoBase } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/shared/ui/tabs";
-import { AspectRatio } from "@/shared/ui/aspect-ratio";
-import { Background } from "@/modules/background/domain";
+  AspectRatio,
+  Button,
+  ScrollArea,
+  ScrollBar,
+  TypoBase,
+} from "@/shared/ui";
 
 // Re-export schema and converter from the shared step
 export {

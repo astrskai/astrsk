@@ -7,9 +7,8 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from "@/shared/ui/dialog";
-import { Button } from "@/shared/ui/button";
-import { TypoBase } from "@/shared/ui/typo";
+} from "@/shared/ui";
+import { Button, TypoBase } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 
 // Helper function to humanize bytes

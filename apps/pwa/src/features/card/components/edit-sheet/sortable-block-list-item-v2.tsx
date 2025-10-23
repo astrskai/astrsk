@@ -7,7 +7,7 @@ import React from "react";
 
 import { EntryBlockV2 } from "@/features/card/components/edit-sheet/entry-block-v2";
 import { cn } from "@/shared/lib";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 import { Entry } from "@/modules/card/domain";
 
 interface SortableBlockListItemV2Props {

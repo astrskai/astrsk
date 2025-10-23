@@ -15,9 +15,10 @@ import { cn } from "@/shared/lib";
 import { SessionMessagesAndUserInputsMobile } from "@/features/session/mobile/session-messages-and-user-inputs-mobile";
 import { SessionSettingsMobile } from "@/features/session/mobile/session-settings-mobile";
 import { TopNavigation } from "@/widgets/top-navigation";
-import { Button } from "@/shared/ui/button";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
-import { Sheet, SheetContent } from "@/shared/ui/sheet";
+import {
+  Button, ScrollArea, ScrollBar, Sheet,
+  SheetContent,
+} from "@/shared/ui";
 
 interface ScrollToBottomOptions {
   wait?: number;

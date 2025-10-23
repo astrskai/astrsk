@@ -5,19 +5,19 @@ import { z } from "zod";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useCards } from "@/app/hooks/use-cards";
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/app/stores/app-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { cn } from "@/shared/lib";
-import { SearchInput } from "@/shared/ui/search-input";
 import {
+  ScrollArea,
+  ScrollBar,
+  SearchInput,
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/shared/ui/accordion";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
+} from "@/shared/ui";
 import { Card, CardType } from "@/modules/card/domain";
 import { CardListItem, SessionProps } from "@/modules/session/domain";
 import { useQuery } from "@tanstack/react-query";

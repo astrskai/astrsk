@@ -1,6 +1,5 @@
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Button } from "@/shared/ui/button";
+import { Button, SvgIcon } from "@/shared/ui";
 import { Share, SquarePlus } from "lucide-react";
 
 export function InstallPwa({

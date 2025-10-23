@@ -19,19 +19,20 @@ import {
   restrictToVerticalAxis,
   restrictToParentElement,
 } from "@dnd-kit/modifiers";
-import { Editor } from "@/shared/ui/editor";
+
 import { Trash2, Plus, HelpCircle } from "lucide-react";
 import {
+  Button,
+  Editor,
+  Input,
+  ScrollAreaSimple,
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 
 import { PlotCard } from "@/modules/card/domain";
-import { Input } from "@/shared/ui/input";
-import { Button } from "@/shared/ui/button";
-import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 

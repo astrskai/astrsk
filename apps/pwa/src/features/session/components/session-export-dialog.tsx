@@ -1,16 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/shared/ui/dialog";
-import { Button } from "@/shared/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
-import { Label } from "@/shared/ui/label";
-import { ScrollArea } from "@/shared/ui/scroll-area";
-import { Checkbox } from "@/shared/ui/checkbox";
+  Button,
+  Checkbox,
+  Label,
+  RadioGroup,
+  RadioGroupItem,
+  ScrollArea,
+} from "@/shared/ui";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";
 import { ModelTier } from "@/modules/agent/domain/agent";
 

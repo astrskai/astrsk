@@ -1,6 +1,6 @@
 import { useSidebarLeft } from "@/widgets/both-sidebar";
 import { cn } from "@/shared/lib";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 
 function FloatingActionButton({
   className,

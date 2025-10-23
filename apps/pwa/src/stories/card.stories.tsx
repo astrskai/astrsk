@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Card, CardText } from "@/components-v2/card";
 import { MoreVertical, Edit, Trash, Copy, Star } from "lucide-react";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 import { useState } from "react";
 
 const meta = {

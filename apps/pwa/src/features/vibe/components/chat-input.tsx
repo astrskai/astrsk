@@ -1,17 +1,16 @@
 import React, { useState, KeyboardEvent } from "react";
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
+
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/select";
+} from "@/shared/ui";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 import { Send, Loader2 } from "lucide-react";
 import { cn } from "@/shared/lib";
-import { ChatSuggestions } from "./chat-suggestions";
+
 import { useModelStore, LANGUAGE_MODELS } from "@/app/stores/model-store";
 
 interface ChatInputProps {
@@ -90,9 +89,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
       {/* Model Selection */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-medium text-text-primary">Model</label>
+        <label className="text-text-primary text-xs font-medium">Model</label>
         <Select value={selectedModel} onValueChange={setSelectedModel}>
-          <SelectTrigger className="h-9 bg-background-surface-0 border-border-normal">
+          <SelectTrigger className="bg-background-surface-0 border-border-normal h-9">
             <SelectValue placeholder="Select a model" />
           </SelectTrigger>
           <SelectContent side="top">
@@ -116,8 +115,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       </div>
 
       {/* Input Box */}
-      <div className="self-stretch min-h-14 p-2 bg-background-surface-3 rounded-[28px] outline outline-1 outline-offset-[-1px] outline-zinc-100/30 flex items-end gap-4">
-        <div className="flex-1 pl-4 pr-2">
+      <div className="bg-background-surface-3 flex min-h-14 items-end gap-4 self-stretch rounded-[28px] p-2 outline outline-1 outline-offset-[-1px] outline-zinc-100/30">
+        <div className="flex-1 pr-2 pl-4">
           <TextareaAutosize
             maxRows={3}
             value={prompt}
@@ -126,7 +125,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             placeholder="Ask and/or build anything"
             disabled={!hasResource}
             className={cn(
-              "w-full p-0 pt-[4.8px] border-0 outline-0 bg-transparent rounded-none no-resizer",
+              "no-resizer w-full rounded-none border-0 bg-transparent p-0 pt-[4.8px] outline-0",
               "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
               "h-[25.6px] min-h-[25.6px]",
               "text-[16px] leading-[1.6] font-normal",
@@ -137,12 +136,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <button
           onClick={handleSend}
           disabled={!prompt.trim() || isProcessing || !hasResource}
-          className="h-10 px-4 py-1 bg-background-surface-4 rounded-[20px] flex justify-center items-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-background-surface-4 flex h-10 cursor-pointer items-center justify-center rounded-[20px] px-4 py-1 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isProcessing ? (
-            <Loader2 className="min-w-4 min-h-4 text-text-primary animate-spin" />
+            <Loader2 className="text-text-primary min-h-4 min-w-4 animate-spin" />
           ) : (
-            <Send className="min-w-4 min-h-4 text-text-primary" />
+            <Send className="text-text-primary min-h-4 min-w-4" />
           )}
         </button>
       </div>

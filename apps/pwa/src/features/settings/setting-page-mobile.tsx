@@ -13,13 +13,12 @@ import {
   TermsOfService as TermOfService,
   OssNotice,
 } from "@/features/settings/legal";
-import { SvgIcon } from "@/shared/ui/svg-icon";
+import {
+  Button, ScrollArea, ScrollBar, Separator,
+  SvgIcon, Switch, Typo2XLarge, TypoBase,
+  TypoXLarge,
+} from "@/shared/ui";
 import { TopNavigation } from "@/widgets/top-navigation";
-import { Typo2XLarge, TypoBase, TypoXLarge } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
-import { Separator } from "@/shared/ui/separator";
-import { Switch } from "@/shared/ui/switch";
 
 export function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");

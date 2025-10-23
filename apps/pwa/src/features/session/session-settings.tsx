@@ -41,37 +41,15 @@ import {
   EmptyFlow,
 } from "@/features/session/edit-session/edit-flow-and-agents";
 import { EditLanguage } from "@/features/session/edit-session/edit-language";
+
 import {
-  SessionExportDialog,
-  AgentModelTierInfo,
-} from "@/features/session/components/session-export-dialog";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shared/ui/tooltip";
-import { Button } from "@/shared/ui/button";
-import {
+  SvgIcon,
   Carousel,
   CarouselContent,
   CarouselNext,
   CarouselPrevious,
-} from "@/shared/ui/carousel";
-import { Checkbox } from "@/shared/ui/checkbox";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/shared/ui/dialog";
-import { Label } from "@/shared/ui/label";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
-import { ApiSource, apiSourceLabel } from "@/modules/api/domain/api-connection";
+} from "@/shared/ui";
+
 import { SessionProps } from "@/modules/session/domain/session";
 
 const Section = forwardRef<

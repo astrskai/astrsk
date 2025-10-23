@@ -6,10 +6,7 @@ import {
   useAppStore,
 } from "@/app/stores/app-store";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Button } from "@/shared/ui/button";
-import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
-import { toastSuccess } from "@/shared/ui/toast-success";
+import { Button, FloatingLabelInput, SvgIcon, toastSuccess } from "@/shared/ui";
 import { logger } from "@/shared/lib";
 import { useSignIn, useSignUp } from "@clerk/clerk-react";
 import { ArrowLeft, Check } from "lucide-react";

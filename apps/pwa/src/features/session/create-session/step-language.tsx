@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { languages } from "@/shared/lib/translate-utils";
 
-import { Combobox } from "@/shared/ui/combobox";
+import { Combobox } from "@/shared/ui";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 import { SessionProps } from "@/modules/session/domain";

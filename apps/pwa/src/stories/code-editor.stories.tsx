@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { CodeEditor } from "@/components-v2/code-editor";
 import React from "react";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 
 const meta = {
   title: "Components/CodeEditor",

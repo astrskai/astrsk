@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ImportDialog } from "@/shared/ui/import-dialog";
-import { SvgIcon } from "@/shared/ui/svg-icon";
+import { ImportDialog, SvgIcon } from "@/shared/ui";
 
 interface CardImportDialogProps {
   open: boolean;

@@ -3,9 +3,7 @@ import { useState } from "react";
 
 import { cn } from "@/shared/lib";
 
-import { UnsavedChangesConfirm } from "@/shared/ui/confirm";
-import { Button } from "@/shared/ui/button";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
+import { Button, ScrollArea, ScrollBar, UnsavedChangesConfirm } from "@/shared/ui";
 
 const Step = ({
   index,

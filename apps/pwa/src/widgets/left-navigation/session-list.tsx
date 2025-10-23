@@ -17,15 +17,15 @@ import {
   ImportButton,
 } from "./shared-list-components";
 import { StepName } from "@/features/session/create-session/step-name";
-import { SvgIcon } from "@/shared/ui/svg-icon";
+import {
+  Button, Checkbox, DeleteConfirm, Label,
+  SvgIcon,
+} from "@/shared/ui";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
-import { Button } from "@/shared/ui/button";
-import { Checkbox } from "@/shared/ui/checkbox";
-import { DeleteConfirm } from "@/shared/ui/confirm";
+} from "@/shared/ui";
 import {
   SessionImportDialog,
   type AgentModel,
@@ -43,8 +43,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
-import { Label } from "@/shared/ui/label";
+} from "@/shared/ui";
 import { Session } from "@/modules/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";

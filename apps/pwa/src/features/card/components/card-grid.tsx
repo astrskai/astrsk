@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { TradingCard } from "@/features/card/components/trading-card";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui";
 
 interface CardGridProps {
   cards: string[];

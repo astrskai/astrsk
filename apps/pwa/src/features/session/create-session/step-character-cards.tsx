@@ -7,9 +7,7 @@ import { Page, useAppStore } from "@/app/stores/app-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { cn } from "@/shared/lib";
-import { SearchInput } from "@/shared/ui/search-input";
-import { TypoSmall } from "@/shared/ui/typo";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+import { ScrollArea, SearchInput, TypoSmall } from "@/shared/ui";
 import { Card, CardType } from "@/modules/card/domain";
 
 const StepCharacterCardsSchema = z.object({

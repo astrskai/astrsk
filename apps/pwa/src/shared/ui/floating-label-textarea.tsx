@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib";
 
-import { Textarea } from "@/shared/ui/textarea";
+import { Textarea } from "@/shared/ui";
 
 export interface FloatingLabelTextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {

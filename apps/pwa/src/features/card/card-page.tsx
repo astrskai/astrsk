@@ -13,13 +13,13 @@ import {
   useCardManagement,
 } from "@/features/card/hooks";
 import { cn } from "@/shared/lib";
-import { TypoBase } from "@/shared/ui/typo";
 import {
+  TypoBase,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "@/shared/ui/dialog";
+} from "@/shared/ui";
 import { Card, CardType } from "@/modules/card/domain";
 
 export default function CardPage({ className }: { className?: string }) {

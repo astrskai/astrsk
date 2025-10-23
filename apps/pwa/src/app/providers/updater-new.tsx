@@ -1,11 +1,11 @@
 import { useAppStore } from "@/app/stores/app-store";
-import { TypoTiny } from "@/shared/ui/typo";
 import {
+  TypoTiny,
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import { cn } from "@/shared/lib";
 import { logger } from "@/shared/lib/logger";
 import { Import } from "lucide-react";
