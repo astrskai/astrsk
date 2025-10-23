@@ -19,10 +19,10 @@ import {
   StepBackgroundSchema,
   StepBackgroundSchemaType,
 } from "@/features/session/create-session/step-background";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { TypoBase, TypoLarge } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
+import {
+  Button, Dialog, DialogContent, DialogTitle,
+  SvgIcon, TypoBase, TypoLarge,
+} from "@/shared/ui";
 import { SessionProps } from "@/modules/session/domain/session";
 
 const SelectedBackground = ({

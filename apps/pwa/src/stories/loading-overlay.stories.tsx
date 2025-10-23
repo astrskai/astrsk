@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { LoadingOverlay } from "@/components-v2/loading-overlay";
 import { useAppStore } from "@/app/stores/app-store";
 import React from "react";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 
 const meta = {
   title: "Components/LoadingOverlay",

@@ -6,8 +6,8 @@ import {
   CarouselNext,
   CarouselPrevious,
   type CarouselApi,
-} from "@/shared/ui/carousel";
-import { Card, CardContent } from "@/shared/ui/card";
+} from "@/shared/ui";
+import { Card, CardContent } from "@/shared/ui";
 import React from "react";
 
 const meta = {

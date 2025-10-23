@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { BackgroundService } from "@/app/services/background-service";
-import { SessionService } from "@/app/services/session-service";
 import {
   fetchBackgrounds,
   useBackgroundStore,
@@ -18,17 +17,18 @@ import {
   StepBackgroundSchemaType,
 } from "@/features/session/mobile/create-session/step-background-mobile";
 import { TopNavigation } from "@/widgets/top-navigation";
-import { Button } from "@/shared/ui/button";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {
+  AspectRatio,
+  Button,
+  ScrollArea,
+  ScrollBar,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/shared/ui/tabs";
+} from "@/shared/ui";
 import { Session, SessionProps } from "@/modules/session/domain";
 import { useAsset } from "@/app/hooks/use-asset";
-import { AspectRatio } from "@/shared/ui/aspect-ratio";
 import { cn } from "@/shared/lib";
 
 // Mobile Background List Item Component

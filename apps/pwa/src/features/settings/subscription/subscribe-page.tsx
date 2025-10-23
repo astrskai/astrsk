@@ -1,15 +1,15 @@
 import { useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Button } from "@/shared/ui/button";
 import {
+  Button,
+  ScrollArea,
+  SvgIcon,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+} from "@/shared/ui";
 import { api } from "@/convex";
 import { logger } from "@/shared/lib/logger";
 import { useAuth, useSignUp } from "@clerk/clerk-react";

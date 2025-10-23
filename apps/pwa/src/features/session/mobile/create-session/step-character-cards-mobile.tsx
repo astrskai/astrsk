@@ -7,9 +7,10 @@ import { Page, useAppStore } from "@/app/stores/app-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { cn } from "@/shared/lib";
-import { SearchInput } from "@/shared/ui/search-input";
-import { TypoBase, TypoSmall, TypoXLarge } from "@/shared/ui/typo";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
+import {
+  ScrollArea, ScrollBar, SearchInput, TypoBase,
+  TypoSmall, TypoXLarge,
+} from "@/shared/ui";
 import { Card, CardType } from "@/modules/card/domain";
 
 // Re-export schema from the shared step

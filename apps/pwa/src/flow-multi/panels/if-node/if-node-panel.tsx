@@ -1,15 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Plus, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { Input } from "@/shared/ui/input";
-import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
+import { Input, ScrollAreaSimple } from "@/shared/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/select";
+} from "@/shared/ui";
 import { ifNodeQueries } from "@/app/queries/if-node/query-factory";
 import {
   useUpdateIfNodeConditions,

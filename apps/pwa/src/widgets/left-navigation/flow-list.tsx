@@ -26,14 +26,13 @@ import {
   CreateButton,
   ImportButton,
 } from "./shared-list-components";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { DeleteConfirm } from "@/shared/ui/confirm";
+import { DeleteConfirm, SvgIcon } from "@/shared/ui";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import { Session } from "@/modules/session/domain/session";
 import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 import { UniqueEntityID } from "@/shared/domain";

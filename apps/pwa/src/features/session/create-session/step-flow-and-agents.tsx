@@ -5,7 +5,7 @@ import { z } from "zod";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
-import { Combobox } from "@/shared/ui/combobox";
+import { Combobox } from "@/shared/ui";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain";

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { SearchInput } from "@/shared/ui/search-input";
+import { SearchInput } from "@/shared/ui";
 import { ParameterSettingsFields } from "@/flow-multi/panels/parameter/parameter-settings/parameter-settings-fields";
 import { ParameterPanelProps } from "./parameter-panel-types";
 import { agentQueries } from "@/app/queries/agent/query-factory";

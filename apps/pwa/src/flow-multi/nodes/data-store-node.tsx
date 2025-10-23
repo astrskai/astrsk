@@ -4,22 +4,22 @@ import { type Node, type NodeProps } from "@xyflow/react";
 import { useState, useCallback, useMemo } from "react";
 import { Copy, Trash2, Pencil } from "lucide-react";
 import { CustomHandle } from "@/flow-multi/components/custom-handle";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
-import { Input } from "@/shared/ui/input";
-import {
+  Button,
+  Input,
+  SimpleFieldBadges,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
-import { Button } from "@/shared/ui/button";
+} from "@/shared/ui";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";
 import { useAgentStore } from "@/app/stores/agent-store";
@@ -33,7 +33,6 @@ import {
   getDataStoreNodeOpacity,
   applyOpacityToHexColor,
 } from "@/flow-multi/utils/node-color-assignment";
-import { SimpleFieldBadges } from "@/shared/ui/field-badges";
 import { toast } from "sonner";
 import type {
   DataStoreSchemaField,

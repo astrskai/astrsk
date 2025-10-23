@@ -1,8 +1,9 @@
 import { useState } from "react";
 
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { Button } from "@/shared/ui/button";
 import {
+  Button,
+  FloatingLabelInput,
   Dialog,
   DialogClose,
   DialogContent,
@@ -11,8 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/shared/ui/dialog";
-import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
+} from "@/shared/ui";
 
 const StepName = ({
   defaultValue = "",

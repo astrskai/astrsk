@@ -1,6 +1,6 @@
 import { memo, forwardRef } from "react";
 import { Plus, Download } from "lucide-react";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 
 // Memoized Create button used across all lists
 export const CreateButton = memo(
@@ -37,4 +37,4 @@ export const ImportButton = memo(
 ImportButton.displayName = "ImportButton";
 
 // Re-export SearchInput which is already memoized
-export { SearchInput } from "@/shared/ui/search-input";
+export { SearchInput } from "@/shared/ui";

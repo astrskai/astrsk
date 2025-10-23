@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
   DialogClose,
-} from "@/shared/ui/dialog";
-import { Button } from "@/shared/ui/button";
+} from "@/shared/ui";
 import { ScenarioItem } from "./scenario-item";
 
 export interface Scenario {
@@ -23,14 +23,18 @@ interface ScenarioSelectionDialogProps {
   isLoading?: boolean;
 }
 
-export const ScenarioSelectionDialog: React.FC<ScenarioSelectionDialogProps> = ({
+export const ScenarioSelectionDialog: React.FC<
+  ScenarioSelectionDialogProps
+> = ({
   open,
   onOpenChange,
   scenarios,
   onSelectScenario,
   isLoading = false,
 }) => {
-  const [selectedScenarioIndex, setSelectedScenarioIndex] = useState<number | null>(null);
+  const [selectedScenarioIndex, setSelectedScenarioIndex] = useState<
+    number | null
+  >(null);
   const [isAddingScenario, setIsAddingScenario] = useState(false);
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -42,10 +46,13 @@ export const ScenarioSelectionDialog: React.FC<ScenarioSelectionDialogProps> = (
 
   const handleAddScenario = async () => {
     if (selectedScenarioIndex === null) return;
-    
+
     setIsAddingScenario(true);
     try {
-      await onSelectScenario(scenarios[selectedScenarioIndex], selectedScenarioIndex);
+      await onSelectScenario(
+        scenarios[selectedScenarioIndex],
+        selectedScenarioIndex,
+      );
       handleOpenChange(false);
     } finally {
       setIsAddingScenario(false);
@@ -56,18 +63,18 @@ export const ScenarioSelectionDialog: React.FC<ScenarioSelectionDialogProps> = (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         hideClose
-        className="w-80 p-6 bg-background-surface-2 rounded-lg outline-1 outline-border-light inline-flex flex-col justify-start items-start gap-2.5 overflow-hidden"
+        className="bg-background-surface-2 outline-border-light inline-flex w-80 flex-col items-start justify-start gap-2.5 overflow-hidden rounded-lg p-6 outline-1"
       >
-        <div className="self-stretch flex flex-col justify-start items-end gap-6">
-          <div className="self-stretch flex flex-col justify-start items-start gap-2">
-            <DialogTitle className="self-stretch justify-start text-text-primary text-xl font-semibold">
+        <div className="flex flex-col items-end justify-start gap-6 self-stretch">
+          <div className="flex flex-col items-start justify-start gap-2 self-stretch">
+            <DialogTitle className="text-text-primary justify-start self-stretch text-xl font-semibold">
               Scenario
             </DialogTitle>
-            <DialogDescription className="self-stretch justify-start text-text-body text-sm font-medium leading-tight">
+            <DialogDescription className="text-text-body justify-start self-stretch text-sm leading-tight font-medium">
               Select a scenario for your new session.
             </DialogDescription>
           </div>
-          <div className="self-stretch flex flex-col justify-start items-start gap-4">
+          <div className="flex flex-col items-start justify-start gap-4 self-stretch">
             {scenarios.map((scenario, index) => (
               <ScenarioItem
                 key={index}
@@ -78,13 +85,13 @@ export const ScenarioSelectionDialog: React.FC<ScenarioSelectionDialogProps> = (
               />
             ))}
           </div>
-          <div className="inline-flex justify-start items-center gap-2">
+          <div className="inline-flex items-center justify-start gap-2">
             <DialogClose asChild>
               <Button
                 variant="ghost"
-                className="min-w-20 px-3 py-2.5 rounded-[20px] flex justify-center items-center gap-2 h-auto"
+                className="flex h-auto min-w-20 items-center justify-center gap-2 rounded-[20px] px-3 py-2.5"
               >
-                <div className="justify-center text-button-background-primary text-sm font-medium leading-tight">
+                <div className="text-button-background-primary justify-center text-sm leading-tight font-medium">
                   Cancel
                 </div>
               </Button>
@@ -94,13 +101,13 @@ export const ScenarioSelectionDialog: React.FC<ScenarioSelectionDialogProps> = (
                 selectedScenarioIndex === null || isAddingScenario || isLoading
               }
               onClick={handleAddScenario}
-              className="h-10 min-w-20 px-4 py-2.5 bg-button-background-primary rounded-[20px] inline-flex flex-col justify-center items-center gap-2.5"
+              className="bg-button-background-primary inline-flex h-10 min-w-20 flex-col items-center justify-center gap-2.5 rounded-[20px] px-4 py-2.5"
             >
-              <div className="inline-flex justify-start items-center gap-2">
+              <div className="inline-flex items-center justify-start gap-2">
                 {(isAddingScenario || isLoading) && (
-                  <Loader2 className="animate-spin h-4 w-4" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 )}
-                <div className="justify-center text-button-foreground-primary text-sm font-semibold leading-tight">
+                <div className="text-button-foreground-primary justify-center text-sm leading-tight font-semibold">
                   Add
                 </div>
               </div>

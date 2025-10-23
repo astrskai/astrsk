@@ -6,12 +6,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/shared/ui/card";
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
-import { Badge } from "@/shared/ui/badge";
-import { Separator } from "@/shared/ui/separator";
+} from "@/shared/ui";
+import {
+  Badge, Button, Input, Label,
+  Separator,
+} from "@/shared/ui";
 import React from "react";
 
 const meta = {

@@ -13,7 +13,7 @@ import { useValidationStore } from "@/app/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
 import { BackgroundService } from "@/app/services/background-service";
 import { fetchBackgrounds } from "@/app/stores/background-store";
-import { StepperMobile } from "@/shared/ui/stepper-mobile";
+import { StepperMobile } from "@/shared/ui";
 import {
   convertBackgroundFormToSessionProps,
   StepBackgroundSchema,

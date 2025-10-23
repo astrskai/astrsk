@@ -7,19 +7,17 @@ import { useState, useEffect } from "react";
 
 import { Parameter, parameterList } from "@/shared/task/domain/parameter";
 
-import { SearchInput } from "@/shared/ui/search-input";
-import { Typo2XLarge, TypoBase } from "@/shared/ui/typo";
-import { Card, CardContent } from "@/shared/ui/card";
-import { Input } from "@/shared/ui/input";
-import { ScrollArea } from "@/shared/ui/scroll-area";
-import { Switch } from "@/shared/ui/switch";
+import {
+  Card, CardContent, Input, ScrollArea,
+  SearchInput, Switch, Typo2XLarge, TypoBase,
+} from "@/shared/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/select";
+} from "@/shared/ui";
 
 export type ParameterValue = number | string | boolean;
 

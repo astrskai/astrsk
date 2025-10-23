@@ -1,5 +1,5 @@
 import { cn } from "@/shared/lib";
-import { MediaDisplay } from "@/shared/ui/media-display";
+import { MediaDisplay } from "@/shared/ui";
 
 const Avatar = ({
   src,

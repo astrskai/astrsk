@@ -10,13 +10,11 @@ import { useForm } from "react-hook-form";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useCards } from "@/app/hooks/use-cards";
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/app/stores/app-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { CustomSheet } from "@/features/session/components/custom-sheet";
 import { cn } from "@/shared/lib";
-import { SearchInput } from "@/shared/ui/search-input";
 import {
   CardItem,
   CardTab,
@@ -24,15 +22,15 @@ import {
   StepCardsSchema,
   StepCardsSchemaType,
 } from "@/features/session/create-session/step-cards";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Button } from "@/shared/ui/button";
-import { CarouselItem } from "@/shared/ui/carousel";
 import {
+  CarouselItem,
+  SearchInput,
+  SvgIcon,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/shared/ui/tabs";
+} from "@/shared/ui";
 import { Card, CardType } from "@/modules/card/domain/card";
 import { SessionProps } from "@/modules/session/domain/session";
 import { useQuery } from "@tanstack/react-query";

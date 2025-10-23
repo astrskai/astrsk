@@ -8,13 +8,13 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import { debounce } from "lodash-es";
 
-import { Input } from "@/shared/ui/input";
-import { Button } from "@/shared/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
-import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
+import {
+  Button, Input, ScrollAreaSimple, Select,
+  SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/shared/ui";
 import { HelpCircle } from "lucide-react";
 
 // Import query and mutation system

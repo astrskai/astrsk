@@ -16,28 +16,28 @@ import {
 } from "./hooks/use-card-selection-mobile";
 import { CardGridMobile } from "./components/card-grid-mobile";
 import { cn } from "@/shared/lib";
-import { SearchInput } from "@/shared/ui/search-input";
-import { Button } from "@/shared/ui/button";
-import { CheckboxMobile } from "@/shared/ui/checkbox";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
+
 import {
+  Button,
+  CheckboxMobile,
+  DeleteConfirm,
+  ListEditDialogMobile,
+  ScrollArea,
+  ScrollBar,
+  SearchInput,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/shared/ui/tabs";
-import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
+} from "@/shared/ui";
 import { Card, CardType } from "@/modules/card/domain";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
-import { DeleteConfirm } from "@/shared/ui/confirm";
 import { SearchCardsSort } from "@/modules/card/repos";
-import { ListEditDialogMobile } from "@/shared/ui/list-edit-dialog-mobile";
 import { TopNavigation } from "@/widgets/top-navigation";
 import { SortDialogMobile } from "@/features/card/mobile/sort-dialog-mobile";
 

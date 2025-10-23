@@ -4,15 +4,13 @@ import { makeContext } from "@/app/services/session-play-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAgentStore } from "@/app/stores/agent-store";
-import { SearchInput } from "@/shared/ui/search-input";
-import { TypoBase, TypoLarge } from "@/shared/ui/typo";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+import { ScrollArea, SearchInput, TypoBase, TypoLarge } from "@/shared/ui";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/shared/ui/tabs";
+} from "@/shared/ui";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import {
   FlowPanelError,

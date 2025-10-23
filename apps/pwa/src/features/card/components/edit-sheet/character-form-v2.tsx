@@ -11,17 +11,18 @@ import { CardFormValues } from "@/features/card/types/card-form";
 import { ImageUpload } from "@/features/card/components/edit-sheet/image-upload";
 import { SortableBlockListV2 } from "@/features/card/components/edit-sheet/sortable-block-list-v2";
 import { useEntryList } from "@/features/card/hooks/useEntryList";
-import { Typo2XLarge } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
-import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
-import { FloatingLabelInputs } from "@/shared/ui/floating-label-inputs";
-import { FloatingLabelTextarea } from "@/shared/ui/floating-label-textarea";
+
 import {
+  Button,
+  FloatingLabelInput,
+  FloatingLabelInputs,
+  FloatingLabelTextarea,
+  Typo2XLarge,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/shared/ui/tabs";
+} from "@/shared/ui";
 import { CardType, CharacterCard } from "@/modules/card/domain";
 import { cn } from "@/shared/lib";
 

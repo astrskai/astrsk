@@ -3,13 +3,14 @@ import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImage } from "@/modules/generated-image/domain";
 import { useAsset } from "@/app/hooks/use-asset";
 import { Loader2, Download, Type, Copy, Video } from "lucide-react";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
-import { PlayButton } from "@/shared/ui/play-button";
+  PlayButton,
+} from "@/shared/ui";
 
 interface ImageItemProps {
   image: GeneratedImage;
@@ -82,7 +83,7 @@ export const ImageItem = ({
 
   return (
     <div
-      className="relative bg-background-surface-0 overflow-hidden w-16 h-32 cursor-pointer"
+      className="bg-background-surface-0 relative h-32 w-16 cursor-pointer overflow-hidden"
       onClick={() => {
         if (assetUrl) {
           onSelect(assetUrl, image.assetId);
@@ -90,8 +91,8 @@ export const ImageItem = ({
       }}
     >
       {isGenerating ? (
-        <div className="w-full h-full flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-text-subtle" />
+        <div className="flex h-full w-full items-center justify-center">
+          <Loader2 className="text-text-subtle h-8 w-8 animate-spin" />
         </div>
       ) : assetUrl ? (
         <>
@@ -103,14 +104,14 @@ export const ImageItem = ({
                 <img
                   src={thumbnailUrl}
                   alt={image.prompt}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                 />
               ) : videoLoaded ? (
                 // Show actual video when loaded
                 <video
                   ref={videoRef}
                   src={assetUrl}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   loop
                   muted
                   playsInline
@@ -119,8 +120,8 @@ export const ImageItem = ({
                 />
               ) : (
                 // Fallback if no thumbnail available
-                <div className="w-full h-full bg-background-surface-4 flex items-center justify-center">
-                  <Video className="w-8 h-8 text-text-subtle" />
+                <div className="bg-background-surface-4 flex h-full w-full items-center justify-center">
+                  <Video className="text-text-subtle h-8 w-8" />
                 </div>
               )}
 
@@ -129,30 +130,30 @@ export const ImageItem = ({
                 size="small"
                 isPlaying={isPlaying}
                 onClick={handlePlayPause}
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform"
               />
             </>
           ) : (
             <img
               src={assetUrl}
               alt={image.prompt}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover"
             />
           )}
 
           {/* Selected border overlay using inset */}
           {isSelected && (
-            <div className="absolute inset-0 border-[3px] border-text-primary pointer-events-none" />
+            <div className="border-text-primary pointer-events-none absolute inset-0 border-[3px]" />
           )}
         </>
       ) : (
-        <div className="w-full h-full flex items-center justify-center">
+        <div className="flex h-full w-full items-center justify-center">
           <div className="text-text-subtle text-xs">Failed to load</div>
         </div>
       )}
 
       {/* Download button and Prompt tooltip */}
-      <div className="absolute bottom-1 right-1 flex gap-1">
+      <div className="absolute right-1 bottom-1 flex gap-1">
         {/* Download button (for all media types) */}
         {assetUrl && (
           <button
@@ -160,10 +161,10 @@ export const ImageItem = ({
               e.stopPropagation();
               onDownload(assetUrl, image.prompt, isVideo);
             }}
-            className="p-1 bg-background-surface-4/50 rounded-md hover:bg-background-surface-4/70 transition-colors"
+            className="bg-background-surface-4/50 hover:bg-background-surface-4/70 rounded-md p-1 transition-colors"
             title={isVideo ? "Download video" : "Download image"}
           >
-            <Download className="w-3 h-3 text-text-primary" />
+            <Download className="text-text-primary h-3 w-3" />
           </button>
         )}
 
@@ -171,23 +172,23 @@ export const ImageItem = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="p-1 bg-background-surface-4/50 rounded-md inline-flex justify-start items-center gap-2">
-                <div className="w-3 h-3 relative overflow-hidden">
-                  <Type className="w-3 h-3 text-text-primary" />
+              <div className="bg-background-surface-4/50 inline-flex items-center justify-start gap-2 rounded-md p-1">
+                <div className="relative h-3 w-3 overflow-hidden">
+                  <Type className="text-text-primary h-3 w-3" />
                 </div>
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="relative pr-8 pb-6">
-              <p className="text-xs max-w-xs pr-2 pb-2">{image.prompt}</p>
+              <p className="max-w-xs pr-2 pb-2 text-xs">{image.prompt}</p>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   navigator.clipboard.writeText(image.prompt);
                 }}
-                className="absolute bottom-1 right-1 p-1 hover:bg-background-surface-4 rounded transition-colors"
+                className="hover:bg-background-surface-4 absolute right-1 bottom-1 rounded p-1 transition-colors"
                 title="Copy prompt"
               >
-                <Copy className="w-3 h-3 text-text-primary" />
+                <Copy className="text-text-primary h-3 w-3" />
               </button>
             </TooltipContent>
           </Tooltip>

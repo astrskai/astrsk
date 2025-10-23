@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
-import { Button } from "@/shared/ui/button";
+import {
+  Button, Card, CardContent, CardDescription,
+  CardHeader, CardTitle, Input, Label,
+  Tabs, TabsContent, TabsList, TabsTrigger,
+} from "@/shared/ui";
 import React from "react";
 
 const meta = {

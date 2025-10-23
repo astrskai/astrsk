@@ -1,8 +1,6 @@
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Button } from "@/shared/ui/button";
-import { toastSuccess } from "@/shared/ui/toast-success";
+import { Button, SvgIcon, toastSuccess } from "@/shared/ui";
 
 const PaymentPage = () => {
   // Page navigation

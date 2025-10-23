@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
+import {
+  Button, Input, Label, Popover,
+  PopoverContent, PopoverTrigger,
+} from "@/shared/ui";
 import { Calendar, Settings, Info, HelpCircle } from "lucide-react";
 import React from "react";
 

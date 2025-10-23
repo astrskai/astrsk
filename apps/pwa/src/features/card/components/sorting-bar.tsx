@@ -1,13 +1,13 @@
 import { ArrowUpAZ } from "lucide-react";
-import React, { useState } from "react";
+import React from "react";
 
-import { Button } from "@/shared/ui/button";
 import {
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu";
+} from "@/shared/ui";
 import { SearchCardsSort } from "@/modules/card/repos";
 
 interface SortingBarProps {
@@ -42,7 +42,7 @@ const SortingBar: React.FC<SortingBarProps> = ({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" size="sm" className="rounded-[8px]">
-            <ArrowUpAZ className="w-4 h-4 mr-1" />
+            <ArrowUpAZ className="mr-1 h-4 w-4" />
             {getSortDisplayText(sortOrder)}
           </Button>
         </DropdownMenuTrigger>

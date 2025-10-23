@@ -1,9 +1,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MessageCircle, GripVertical } from "lucide-react";
-import { Switch } from "@/shared/ui/switch";
+import { SvgIcon, Switch } from "@/shared/ui";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/shared/ui/svg-icon";
 import { PromptItem } from "./prompt-types";
 
 interface SortableItemProps {

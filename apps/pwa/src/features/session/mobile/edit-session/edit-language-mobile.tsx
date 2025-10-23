@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { SessionService } from "@/app/services/session-service";
 import { TopNavigation } from "@/widgets/top-navigation";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 import {
   convertLanguageFormToSessionProps,
   StepLanguageSchema,

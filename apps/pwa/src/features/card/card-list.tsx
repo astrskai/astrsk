@@ -9,10 +9,10 @@ import {
 import { CardService } from "@/app/services";
 import { HeaderBar, SortingBar } from "@/features/card/components";
 import CardGrid from "@/features/card/components/card-grid";
-import { SearchInput } from "@/shared/ui/search-input";
-import { TypoBase, Typo3XLarge } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
-import { Card } from "@/shared/ui/card";
+import {
+  Button, Card, SearchInput, Typo3XLarge,
+  TypoBase,
+} from "@/shared/ui";
 import { CardType } from "@/modules/card/domain";
 import { SearchCardsSort } from "@/modules/card/repos";
 import { useIsMobile } from "@/shared/hooks/use-mobile";

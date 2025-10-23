@@ -21,26 +21,23 @@ import {
   restrictToVerticalAxis,
   restrictToParentElement,
 } from "@dnd-kit/modifiers";
-import { Editor } from "@/shared/ui/editor";
+import { Button, Editor, Input, ScrollAreaSimple } from "@/shared/ui";
 import type { editor } from "monaco-editor";
 import { Trash2, Plus, Maximize2, Minimize2, HelpCircle } from "lucide-react";
 
-import { Input } from "@/shared/ui/input";
-import { Button } from "@/shared/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/select";
+} from "@/shared/ui";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
-import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
+} from "@/shared/ui";
 import { ApiType } from "@/modules/agent/domain/agent";
 import { PromptMessage } from "@/modules/agent/domain";
 

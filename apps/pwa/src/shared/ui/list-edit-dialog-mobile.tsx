@@ -1,11 +1,11 @@
 import { Ellipsis } from "lucide-react";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogTrigger,
-} from "@/shared/ui/dialog";
+} from "@/shared/ui";
 import { cn } from "@/shared/lib";
 
 export type ListEditAction = "copy" | "export" | "import" | "delete";

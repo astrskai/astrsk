@@ -10,7 +10,7 @@ import {
   SelectContent,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/select";
+} from "@/shared/ui";
 
 export interface FloatingLabelSelectProps
   extends React.ComponentPropsWithoutRef<typeof Select> {

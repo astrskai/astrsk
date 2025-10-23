@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { cn } from "@/shared/lib";
 
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 
 interface BannerProps {
   title?: React.ReactNode;

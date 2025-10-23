@@ -2,16 +2,17 @@ import React, { useState } from "react";
 
 import { cn } from "@/shared/lib";
 
-import { Button } from "@/shared/ui/button";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {
+  Button,
+  ScrollArea,
+  ScrollBar,
   Sheet,
   SheetClose,
   SheetContent,
   SheetDescription,
   SheetTitle,
   SheetTrigger,
-} from "@/shared/ui/sheet";
+} from "@/shared/ui";
 
 type FooterRenderer = (methods: {
   setOpen: (open: boolean) => void;

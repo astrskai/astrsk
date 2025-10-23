@@ -13,9 +13,7 @@ import {
   StepFlowAndAgentsSchema,
   StepFlowAndAgentsSchemaType,
 } from "@/features/session/create-session/step-flow-and-agents";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Button } from "@/shared/ui/button";
-import { CarouselItem } from "@/shared/ui/carousel";
+import { Button, CarouselItem, SvgIcon } from "@/shared/ui";
 import { SessionProps } from "@/modules/session/domain";
 import { useQuery } from "@tanstack/react-query";
 import { agentQueries } from "@/app/queries/agent/query-factory";

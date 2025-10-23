@@ -60,29 +60,28 @@ import {
   SearchCheck,
   HelpCircle,
 } from "lucide-react";
-import { ButtonPill } from "@/shared/ui/button-pill";
+import { ButtonPill, Card } from "@/shared/ui";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useLeftNavigationWidth } from "@/widgets/left-navigation/hooks/use-left-navigation-width";
-import { Card } from "@/shared/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/select";
+} from "@/shared/ui";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu";
+} from "@/shared/ui";
 
 // Import ReactFlow components
 import {

@@ -2,10 +2,7 @@
 import { ChevronDown, ChevronUp, Copy, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
-import { Button } from "@/shared/ui/button";
-import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
-import { FloatingLabelInputs } from "@/shared/ui/floating-label-inputs";
-import { FloatingLabelTextarea } from "@/shared/ui/floating-label-textarea";
+import { Button, FloatingLabelInput, FloatingLabelInputs, FloatingLabelTextarea } from "@/shared/ui";
 import { Entry } from "@/modules/card/domain";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 import {
   Dialog,
   DialogClose,
@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/shared/ui/dialog";
+} from "@/shared/ui";
 
 const Confirm = ({
   open,

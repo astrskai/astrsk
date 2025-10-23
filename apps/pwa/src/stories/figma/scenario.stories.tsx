@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 import { ScenarioSelectionDialog, Scenario } from "@/features/session/components/scenario/scenario-selection-dialog";
 import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/shared/ui";
 
 /**
  * Scenario Components

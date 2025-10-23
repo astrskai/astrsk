@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { FloatingLabelInputs } from "@/shared/ui/floating-label-inputs";
+import { FloatingLabelInputs } from "@/shared/ui";
 import React from "react";
 
 const meta = {

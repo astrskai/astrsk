@@ -35,15 +35,18 @@ import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { AutoReply, useSessionStore } from "@/app/stores/session-store";
-import { Avatar } from "@/shared/ui/avatar";
+
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { TypoSmall, TypoTiny } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
+
 import {
+  Avatar,
+  Button,
+  SvgIcon,
+  TypoSmall,
+  TypoTiny,
   Dialog,
   DialogClose,
   DialogContent,
@@ -51,13 +54,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { Option } from "@/modules/turn/domain/option";

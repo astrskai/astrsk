@@ -15,12 +15,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/shared/ui/command";
+} from "@/shared/ui";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/shared/ui/popover";
+} from "@/shared/ui";
 
 interface ComboboxOption {
   label: string;

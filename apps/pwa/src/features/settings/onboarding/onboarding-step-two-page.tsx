@@ -1,8 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Button } from "@/shared/ui/button";
+import { Button, SvgIcon } from "@/shared/ui";
 import { ArrowLeft, Key, Sparkles } from "lucide-react";
 
 function FloatingActionButton({

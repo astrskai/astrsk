@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { PANEL_TYPES } from "@/flow-multi/components/panel-types";
-import { ButtonPill } from "@/shared/ui/button-pill";
+import { ButtonPill } from "@/shared/ui";
 
 export type EndNodeData = {
   label?: string;

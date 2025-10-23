@@ -12,20 +12,18 @@ import { useApiConnections } from "@/app/hooks/use-api-connections";
 import { ApiService } from "@/app/services";
 import { queryClient } from "@/app/queries/query-client";
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
-import { Combobox } from "@/shared/ui/combobox";
+import {
+  Button, Card, CardContent, Combobox,
+  FloatingLabelInput, ScrollArea, ScrollBar, Sheet,
+  SheetContent, SvgIcon, TypoBase, TypoSmall,
+  TypoTiny,
+} from "@/shared/ui";
 import { cn } from "@/shared/lib";
 import {
   ProviderListItem,
   ProviderListItemDetail,
   apiSourceLogo,
 } from "@/features/settings/providers/provider-list-item";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { TypoBase, TypoSmall, TypoTiny } from "@/shared/ui/typo";
-import { Button } from "@/shared/ui/button";
-import { Card, CardContent } from "@/shared/ui/card";
-import { Sheet, SheetContent } from "@/shared/ui/sheet";
-import { FloatingLabelInput } from "@/shared/ui/floating-label-input";
-import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import { TableName } from "@/db/schema/table-name";
 import {

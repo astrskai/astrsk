@@ -17,20 +17,19 @@ import { SessionService } from "@/app/services/session-service";
 import { useSessionStore } from "@/app/stores/session-store";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/shared/ui/svg-icon";
-import { Button } from "@/shared/ui/button";
+
 import {
+  Button,
+  CheckboxMobile,
+  Label,
+  SvgIcon,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
-import { CheckboxMobile } from "@/shared/ui/checkbox";
-import { Label } from "@/shared/ui/label";
-import { Input } from "@/shared/ui/input";
+} from "@/shared/ui";
 import { SessionProps } from "@/modules/session/domain/session";
 
 // Import mobile edit components

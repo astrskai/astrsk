@@ -1,24 +1,24 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
-import { Button } from "@/shared/ui/button";
+
 import {
+  ScrollArea,
+  Slider,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/ui/select";
-import { Loader2, Sparkles } from "lucide-react";
-import { Slider } from "@/shared/ui/slider";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+} from "@/shared/ui";
+import { Loader2 } from "lucide-react";
 import { useAsset } from "@/app/hooks/use-asset";
 import {
   CardPanelProps,
   useCardPanel,
 } from "@/features/card/panels/hooks/use-card-panel";
 import { useResourceData } from "@/features/vibe/hooks/use-resource-data";
-import { useAppStore, Page } from "@/app/stores/app-store";
+import { useAppStore } from "@/app/stores/app-store";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {

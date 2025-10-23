@@ -9,7 +9,7 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from "@/shared/ui/command";
+} from "@/shared/ui";
 import {
   Calendar,
   Smile,

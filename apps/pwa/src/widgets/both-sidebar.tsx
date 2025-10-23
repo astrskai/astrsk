@@ -7,17 +7,16 @@ import { ArrowLeftFromLine, ArrowRightFromLine, List } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/shared/lib";
-import { Button } from "@/shared/ui/button";
-import { FloatingActionButton } from "@/shared/ui/floating-action-button";
-import { Input } from "@/shared/ui/input";
-import { Separator } from "@/shared/ui/separator";
-import { Skeleton } from "@/shared/ui/skeleton";
+import {
+  Button, FloatingActionButton, Input, Separator,
+  Skeleton,
+} from "@/shared/ui";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/shared/ui/tooltip";
+} from "@/shared/ui";
 import { useAppStore } from "@/app/stores/app-store";
 
 // Mobile sidebar content with swipe to close functionality
