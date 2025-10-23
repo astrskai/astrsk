@@ -16,7 +16,7 @@ import {
   CreateButton,
   ImportButton,
 } from "./shared-list-components";
-import { StepName } from "@/components-v2/session/create-session/step-name";
+import { StepName } from "@/features/session/create-session/step-name";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import {
   Tooltip,
@@ -29,11 +29,11 @@ import { DeleteConfirm } from "@/components/dialogs/confirm";
 import {
   SessionImportDialog,
   type AgentModel,
-} from "@/components-v2/session/components/session-import-dialog";
+} from "@/features/session/components/session-import-dialog";
 import {
   SessionExportDialog,
   type AgentModelTierInfo,
-} from "@/components-v2/session/components/session-export-dialog";
+} from "@/features/session/components/session-export-dialog";
 import { ModelTier } from "@/modules/agent/domain/agent";
 import {
   Dialog,

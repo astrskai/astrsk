@@ -19,12 +19,13 @@ export type CardFormValues = {
 
   // For Character
   name?: string;
-  description?: string;
   exampleDialogue?: string;
 
   // For Plot
-  scenario?: string;
-  firstMessages?: string[];
+  scenarios?: { name: string; description: string }[];
+
+  // For Character and Plot
+  description?: string;
 
   // For Character, Plot
   entries?: Entry[];

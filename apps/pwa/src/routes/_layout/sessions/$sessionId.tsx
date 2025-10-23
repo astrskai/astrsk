@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import SessionPage from "@/components-v2/session/session-page";
-import SessionPageMobile from "@/components-v2/session/mobile/session-page-mobile";
+import SessionPage from "@/features/session/session-page";
+import SessionPageMobile from "@/features/session/mobile/session-page-mobile";
 import { useSessionStore } from "@/app/stores/session-store";
 import { UniqueEntityID } from "@/shared/domain";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";

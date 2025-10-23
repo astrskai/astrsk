@@ -21,7 +21,7 @@ import { LeftNavigationTrigger } from "@/components/layout/left-navigation";
 import { SidebarInset } from "@/components/layout/both-sidebar";
 import { MobileNavigationContext } from "@/contexts/mobile-navigation-context";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
-import CreateSessionPage from "../session/create-session-page";
+import CreateSessionPage from "@/features/session/create-session-page";
 import { createPortal } from "react-dom";
 
 export function V2Layout({
