@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import { ApiType } from "@/modules/agent/domain/agent";
+import { ApiType } from "@/entities/agent/domain/agent";
 import {
   Accordion,
   AccordionContent,

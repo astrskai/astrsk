@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { sessionQueries } from "@/app/queries/session-queries";
-import { Session } from "@/modules/session/domain";
+import { Session } from "@/entities/session/domain";
 import { useNavigate } from "@tanstack/react-router";
 
 // Map genres to session names

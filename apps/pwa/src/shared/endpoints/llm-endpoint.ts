@@ -1,4 +1,4 @@
-import { ApiModel } from "@/modules/api/domain";
+import { ApiModel } from "@/entities/api/domain";
 
 export interface LlmEndpoint {
   // TODO: move logic to usecase

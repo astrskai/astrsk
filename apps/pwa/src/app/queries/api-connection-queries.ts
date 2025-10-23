@@ -1,9 +1,9 @@
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { ApiService } from "@/app/services";
-import { ApiConnectionDrizzleMapper } from "@/modules/api/mappers/api-connection-drizzle-mapper";
-import { ApiModel } from "@/modules/api/domain/api-model";
-import { ApiConnection } from "@/modules/api/domain";
+import { ApiConnectionDrizzleMapper } from "@/entities/api/mappers/api-connection-drizzle-mapper";
+import { ApiModel } from "@/entities/api/domain/api-model";
+import { ApiConnection } from "@/entities/api/domain";
 import { queryClient } from "@/app/queries/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders

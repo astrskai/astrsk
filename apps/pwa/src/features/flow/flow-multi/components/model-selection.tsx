@@ -11,10 +11,10 @@ import type { ApiConnectionWithModels } from "@/app/hooks/use-api-connections-wi
 import { Combobox, ComboboxOption } from "@/shared/ui";
 import { MobileOverrideProvider } from "@/shared/hooks/use-mobile-override";
 
-import { Agent } from "@/modules/agent/domain/agent";
-import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
-import { ApiModel } from "@/modules/api/domain/api-model";
-import { TaskType } from "@/modules/flow/domain/flow";
+import { Agent } from "@/entities/agent/domain/agent";
+import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
+import { ApiModel } from "@/entities/api/domain/api-model";
+import { TaskType } from "@/entities/flow/domain/flow";
 
 const PromptAndModelSchema = z.discriminatedUnion("type", [
   z.object({

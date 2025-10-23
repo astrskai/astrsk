@@ -12,10 +12,10 @@
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardService } from "@/app/services/card-service";
-import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
-import { LorebookDrizzleMapper } from "@/modules/card/mappers/lorebook-drizzle-mapper";
-import { Card, CardType, CharacterCard, PlotCard } from "@/modules/card/domain";
-import { SearchCardsSort } from "@/modules/card/repos";
+import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
+import { LorebookDrizzleMapper } from "@/entities/card/mappers/lorebook-drizzle-mapper";
+import { Card, CardType, CharacterCard, PlotCard } from "@/entities/card/domain";
+import { SearchCardsSort } from "@/entities/card/repos";
 import { queryClient } from "@/app/queries/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders

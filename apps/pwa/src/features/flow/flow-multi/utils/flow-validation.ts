@@ -1,4 +1,4 @@
-import { Agent, ApiType, OutputFormat } from '@/modules/agent/domain';
+import { Agent, ApiType, OutputFormat } from '@/entities/agent/domain';
 
 /**
  * Check if an individual agent is valid based on its required fields

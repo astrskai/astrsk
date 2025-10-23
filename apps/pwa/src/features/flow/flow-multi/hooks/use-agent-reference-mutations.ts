@@ -3,7 +3,7 @@
  * Returns the updated data that can be saved using mutations in the component
  */
 
-import { Agent } from "@/modules/agent/domain";
+import { Agent } from "@/entities/agent/domain";
 import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";
 import { sanitizeFileName } from "@/shared/lib/file-utils";

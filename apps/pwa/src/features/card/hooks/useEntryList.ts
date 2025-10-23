@@ -3,7 +3,7 @@ import { UseFormSetValue } from "react-hook-form";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
-import { Entry } from "@/modules/card/domain";
+import { Entry } from "@/entities/card/domain";
 
 interface UseEntryListProps {
   entries: Entry[];

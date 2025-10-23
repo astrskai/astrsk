@@ -103,7 +103,7 @@ export async function applyOperationsToResource(
 
       // Convert card to editable format (plain JSON)
       const { CardDrizzleMapper } = await import(
-        "@/modules/card/mappers/card-drizzle-mapper"
+        "@/entities/card/mappers/card-drizzle-mapper"
       );
       currentResource = CardDrizzleMapper.toPersistence(currentCard);
     }

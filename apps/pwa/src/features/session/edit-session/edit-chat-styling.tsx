@@ -17,8 +17,8 @@ import { Button, SvgIcon, TypoLarge } from "@/shared/ui";
 import {
   ChatStyles,
   defaultChatStyles,
-} from "@/modules/session/domain/chat-styles";
-import { SessionProps } from "@/modules/session/domain/session";
+} from "@/entities/session/domain/chat-styles";
+import { SessionProps } from "@/entities/session/domain/session";
 
 const ColorItem = ({ color }: { color?: string | null }) => {
   return (

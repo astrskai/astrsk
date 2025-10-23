@@ -4,12 +4,12 @@ import { useAsset } from "@/app/hooks/use-asset";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { turnQueries } from "@/app/queries/turn-queries";
-import { Turn } from "@/modules/turn/domain/turn";
+import { Turn } from "@/entities/turn/domain/turn";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { useMultipleCharacterAssets } from "./use-multiple-character-assets";
-import { CardType } from "@/modules/card/domain/card";
-import { CardListItem } from "@/modules/session/domain/session";
+import { CardType } from "@/entities/card/domain/card";
+import { CardListItem } from "@/entities/session/domain/session";
 
 interface UseEnhancedGenerationPromptParams {
   sessionId?: UniqueEntityID;

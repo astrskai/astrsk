@@ -3,8 +3,8 @@ import { useState, useCallback, useRef } from "react";
 import { flowKeys } from "../query-factory";
 import { FlowService } from "@/app/services/flow-service";
 import { UniqueEntityID } from "@/shared/domain";
-import { FlowViewport } from "@/modules/flow/domain/flow";
-import { Flow } from "@/modules/flow/domain/flow";
+import { FlowViewport } from "@/entities/flow/domain/flow";
+import { Flow } from "@/entities/flow/domain/flow";
 
 // Hook for updating flow name with isEditing flag and optimistic updates
 export function useUpdateFlowName(flowId: string) {

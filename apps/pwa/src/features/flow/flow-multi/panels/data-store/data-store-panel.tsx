@@ -40,7 +40,7 @@ import {
 } from "@/shared/ui";
 import type { editor } from "monaco-editor";
 import { debounce } from "lodash-es";
-import type { DataStoreField } from "@/modules/flow/domain/flow";
+import type { DataStoreField } from "@/entities/flow/domain/flow";
 import { SortableDataField } from "./sortable-data-field";
 import { UniqueEntityID } from "@/shared/domain";
 import { toast } from "sonner";

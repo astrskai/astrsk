@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Agent } from '@/modules/agent/domain';
-import { Flow } from '@/modules/flow/domain';
+import { Agent } from '@/entities/agent/domain';
+import { Flow } from '@/entities/flow/domain';
 import { getAgentHexColor, getAgentOpacity, DEFAULT_AGENT_COLOR, DEFAULT_NODE_OPACITY, hexToRgba } from '../utils/node-color-assignment';
 
 interface UseAgentColorProps {

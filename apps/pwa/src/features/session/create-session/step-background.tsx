@@ -28,7 +28,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/ui";
-import { SessionProps } from "@/modules/session/domain";
+import { SessionProps } from "@/entities/session/domain";
 
 const StepBackgroundSchema = z.object({
   backgroundId: z.string().nullable(),

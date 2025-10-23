@@ -18,9 +18,9 @@ import { FlowService } from '@/app/services/flow-service';
 import { AgentService } from '@/app/services/agent-service';
 import { DataStoreNodeService } from '@/app/services/data-store-node-service';
 import { IfNodeService } from '@/app/services/if-node-service';
-import { NodeType } from "@/modules/flow/model/node-types";
+import { NodeType } from "@/entities/flow/model/node-types";
 import { getNextAvailableColor } from '@/features/flow/flow-multi/utils/node-color-assignment';
-import { Edge } from '@/modules/flow/domain/flow';
+import { Edge } from '@/entities/flow/domain/flow';
 import { notifyFlowNodesEdgesUpdate } from '@/shared/lib/flow-local-state-sync';
 
 /**
@@ -55,7 +55,7 @@ async function createNodeEntityWithPredeterminedId(
     switch (nodeType) {
       case NodeType.AGENT:
         // Create agent domain entity first, then save it
-        const { Agent, ApiType } = await import('@/modules/agent/domain');
+        const { Agent, ApiType } = await import('@/entities/agent/domain');
         const agentOrError = Agent.create({
           name: nodeData.name || `Agent ${predeterminedId}`,
           description: nodeData.description || '',

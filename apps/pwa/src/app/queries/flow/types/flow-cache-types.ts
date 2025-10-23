@@ -5,7 +5,7 @@
  * This is different from the Flow domain object structure.
  */
 
-import { Node, Edge } from "@/modules/flow/domain/flow";
+import { Node, Edge } from "@/entities/flow/domain/flow";
 
 /**
  * Flow data as stored in React Query cache (persistence format)

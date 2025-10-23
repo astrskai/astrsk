@@ -3,7 +3,7 @@ import { immer } from "zustand/middleware/immer";
 
 import { createSelectors } from "@/shared/lib/zustand-utils";
 
-import { Agent } from "@/modules/agent/domain/agent";
+import { Agent } from "@/entities/agent/domain/agent";
 
 type FocusablePanelType = "prompt" | "responseDesign";
 

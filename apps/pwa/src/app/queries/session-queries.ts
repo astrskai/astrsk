@@ -1,11 +1,11 @@
 import { queryClient } from "@/app/queries/query-client";
 import { turnQueries, useTranslateTurn } from "@/app/queries/turn-queries";
 import { SessionService } from "@/app/services/session-service";
-import { Session } from "@/modules/session/domain/session";
-import { SessionDrizzleMapper } from "@/modules/session/mappers/session-drizzle-mapper";
-import { SearchSessionsQuery } from "@/modules/session/repos";
-import { Turn } from "@/modules/turn/domain/turn";
-import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
+import { Session } from "@/entities/session/domain/session";
+import { SessionDrizzleMapper } from "@/entities/session/mappers/session-drizzle-mapper";
+import { SearchSessionsQuery } from "@/entities/session/repos";
+import { Turn } from "@/entities/turn/domain/turn";
+import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { logger } from "@/shared/lib";

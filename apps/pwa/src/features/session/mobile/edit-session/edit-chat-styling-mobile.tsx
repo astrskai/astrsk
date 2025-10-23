@@ -18,8 +18,8 @@ import {
   StylingSettings,
 } from "@/features/session/mobile/create-session/step-chat-styling-mobile";
 import { StepBackgroundSchemaType } from "@/features/session/mobile/create-session/step-background-mobile";
-import { Session, SessionProps } from "@/modules/session/domain";
-import { CardType } from "@/modules/card/domain";
+import { Session, SessionProps } from "@/entities/session/domain";
+import { CardType } from "@/entities/card/domain";
 
 interface EditChatStylingMobileProps {
   session: Session;

@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card } from "@/modules/card/domain";
+import { Card } from "@/entities/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { cardQueries } from "@/app/queries/card-queries";
 import { debounce } from "lodash-es";

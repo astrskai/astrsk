@@ -21,9 +21,9 @@ import {
   Edge as FlowEdge,
   FlowViewport,
   Flow,
-} from "@/modules/flow/domain/flow";
-import { Session } from "@/modules/session/domain/session";
-import { NodeType } from "@/modules/flow/model/node-types";
+} from "@/entities/flow/domain/flow";
+import { Session } from "@/entities/session/domain/session";
+import { NodeType } from "@/entities/flow/model/node-types";
 import { ensureNodesSafety } from "@/features/flow/flow-multi/utils/ensure-node-safety";
 import {
   ensureEdgeSelectable,

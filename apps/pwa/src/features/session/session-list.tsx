@@ -34,8 +34,8 @@ import {
   DialogTrigger,
 } from "@/shared/ui";
 import { TableName } from "@/db/schema/table-name";
-import { Card as CardType } from "@/modules/card/domain";
-import { Session } from "@/modules/session/domain";
+import { Card as CardType } from "@/entities/card/domain";
+import { Session } from "@/entities/session/domain";
 
 export function humanizeBytes(bytes: number): string {
   const units = ["Bytes", "KB", "MB", "GB", "TB"];

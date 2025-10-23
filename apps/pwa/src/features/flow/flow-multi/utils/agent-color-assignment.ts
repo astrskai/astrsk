@@ -1,12 +1,12 @@
 // Agent color assignment utilities
 // Assigns permanent colors to agents based on what's already used in the flow
 
-import { Flow } from "@/modules/flow/domain/flow";
-import { Agent } from "@/modules/agent/domain/agent";
+import { Flow } from "@/entities/flow/domain/flow";
+import { Agent } from "@/entities/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
-import { NodeType } from "@/modules/flow/model/node-types";
+import { NodeType } from "@/entities/flow/model/node-types";
 import { UniqueEntityID } from "@/shared/domain";
 import { traverseFlowCached } from "./flow-traversal";
 

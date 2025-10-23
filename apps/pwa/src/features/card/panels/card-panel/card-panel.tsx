@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Card, CharacterCard } from "@/modules/card/domain";
-import { CardType } from "@/modules/card/domain";
+import { Card, CharacterCard } from "@/entities/card/domain";
+import { CardType } from "@/entities/card/domain";
 import { AssetService } from "@/app/services/asset-service";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { generatedImageKeys } from "@/app/queries/generated-image/query-factory";

@@ -38,8 +38,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui";
-import { ApiType } from "@/modules/agent/domain/agent";
-import { PromptMessage } from "@/modules/agent/domain";
+import { ApiType } from "@/entities/agent/domain/agent";
+import { PromptMessage } from "@/entities/agent/domain";
 
 // Import queries and mutations
 import { agentQueries } from "@/app/queries/agent/query-factory";

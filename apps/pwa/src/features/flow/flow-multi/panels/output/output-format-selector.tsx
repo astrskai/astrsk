@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import { OutputFormat } from "@/modules/agent/domain/agent";
+import { OutputFormat } from "@/entities/agent/domain/agent";
 import {
   Accordion,
   AccordionContent,

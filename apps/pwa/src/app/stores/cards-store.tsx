@@ -5,8 +5,8 @@ import { immer } from "zustand/middleware/immer";
 import { createSelectors } from "@/shared/lib/zustand-utils";
 
 import { CardFormValues } from "@/features/card/types/card-form";
-import { Card, CardType } from "@/modules/card/domain";
-import { SearchCardsSort } from "@/modules/card/repos";
+import { Card, CardType } from "@/entities/card/domain";
+import { SearchCardsSort } from "@/entities/card/repos";
 
 interface CardsState {
   // Card List

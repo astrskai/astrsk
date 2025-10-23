@@ -6,7 +6,7 @@ import { Result } from "@/shared/core";
 import { UniqueEntityID, ValueObject } from "@/shared/domain";
 import { PromptAndModelJsonMapper } from "@/shared/task/mappers/prompt-and-model-json-mapper";
 
-import { ApiConnection, ApiSource } from "@/modules/api/domain";
+import { ApiConnection, ApiSource } from "@/entities/api/domain";
 
 export const TokenizerType = {
   OpenAI: "openai",

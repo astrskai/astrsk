@@ -30,7 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
-import { SessionProps } from "@/modules/session/domain/session";
+import { SessionProps } from "@/entities/session/domain/session";
 
 // Import mobile edit components
 import { EditCardsMobile } from "@/features/session/mobile/edit-session/edit-cards-mobile";

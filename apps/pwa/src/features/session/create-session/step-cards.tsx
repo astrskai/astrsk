@@ -18,8 +18,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/shared/ui";
-import { Card, CardType } from "@/modules/card/domain";
-import { CardListItem, SessionProps } from "@/modules/session/domain";
+import { Card, CardType } from "@/entities/card/domain";
+import { CardListItem, SessionProps } from "@/entities/session/domain";
 import { useQuery } from "@tanstack/react-query";
 import { cardQueries } from "@/app/queries/card-queries";
 

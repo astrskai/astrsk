@@ -42,8 +42,8 @@ import {
 } from "@/features/session/create-session/step-language";
 import { StepLanguageMobile } from "./create-session/step-language-mobile";
 import { TableName } from "@/db/schema/table-name";
-import { Session } from "@/modules/session/domain";
-import { defaultChatStyles } from "@/modules/session/domain/chat-styles";
+import { Session } from "@/entities/session/domain";
+import { defaultChatStyles } from "@/entities/session/domain/chat-styles";
 
 const SessionSchema = StepCharacterCardsSchema.merge(StepUserCardSchema)
   .merge(StepPlotCardSchema)

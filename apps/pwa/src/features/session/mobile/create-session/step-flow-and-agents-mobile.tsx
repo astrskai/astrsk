@@ -5,9 +5,9 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { Combobox, TypoXLarge } from "@/shared/ui";
-import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
-import { Agent } from "@/modules/agent/domain";
-import { Flow, Node } from "@/modules/flow/domain";
+import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
+import { Agent } from "@/entities/agent/domain";
+import { Flow, Node } from "@/entities/flow/domain";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { agentQueries } from "@/app/queries/agent/query-factory";

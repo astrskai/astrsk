@@ -1,23 +1,23 @@
 import { Result } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { DrizzleVibeSessionRepo } from "@/modules/vibe-session/repos/impl";
+import { DrizzleVibeSessionRepo } from "@/entities/vibe-session/repos/impl";
 import {
   VibeSession,
   CreateVibeSessionProps,
   ResourceSnapshot,
   SnapshotResourceData,
-} from "@/modules/vibe-session/domain";
+} from "@/entities/vibe-session/domain";
 import { SESSION_STATUS } from "vibe-shared-types";
 import { CardService } from "@/app/services/card-service";
 import { FlowService } from "@/app/services/flow-service";
 import { AgentService } from "@/app/services/agent-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
-import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
-import { FlowDrizzleMapper } from "@/modules/flow/mappers/flow-drizzle-mapper";
-import { AgentDrizzleMapper } from "@/modules/agent/mappers/agent-drizzle-mapper";
-import { DataStoreNodeDrizzleMapper } from "@/modules/data-store-node/mappers/data-store-node-drizzle-mapper";
-import { IfNodeDrizzleMapper } from "@/modules/if-node/mappers/if-node-drizzle-mapper";
+import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
+import { FlowDrizzleMapper } from "@/entities/flow/mappers/flow-drizzle-mapper";
+import { AgentDrizzleMapper } from "@/entities/agent/mappers/agent-drizzle-mapper";
+import { DataStoreNodeDrizzleMapper } from "@/entities/data-store-node/mappers/data-store-node-drizzle-mapper";
+import { IfNodeDrizzleMapper } from "@/entities/if-node/mappers/if-node-drizzle-mapper";
 
 /**
  * Primary resources that can have vibe sessions

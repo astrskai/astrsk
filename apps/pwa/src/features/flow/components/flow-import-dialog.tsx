@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ImportDialog, ScrollArea, SvgIcon } from "@/shared/ui";
 import { ModelItem } from "@/features/flow/flow-multi/components/model-selection";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";
-import { ModelTier } from "@/modules/agent/domain/agent";
+import { ModelTier } from "@/entities/agent/domain/agent";
 
 export interface AgentModel {
   agentId: string;

@@ -43,11 +43,11 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { TableName } from "@/db/schema/table-name";
-import { Agent } from "@/modules/agent/domain/agent";
-import { Card } from "@/modules/card/domain";
-import { Session } from "@/modules/session/domain/session";
+import { Agent } from "@/entities/agent/domain/agent";
+import { Card } from "@/entities/card/domain";
+import { Session } from "@/entities/session/domain/session";
 import { AgentService } from "@/app/services/agent-service";
-import { ApiSource } from "@/modules/api/domain";
+import { ApiSource } from "@/entities/api/domain";
 import { toast } from "sonner";
 import { TopNavigation } from "@/widgets/top-navigation";
 import { StepName } from "@/features/session/create-session/step-name";

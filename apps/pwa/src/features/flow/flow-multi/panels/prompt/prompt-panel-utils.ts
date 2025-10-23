@@ -1,4 +1,4 @@
-import { PromptMessage, PlainPromptMessage, HistoryPromptMessage, parsePromptMessage, HistoryType, PromptMessageType } from "@/modules/agent/domain";
+import { PromptMessage, PlainPromptMessage, HistoryPromptMessage, parsePromptMessage, HistoryType, PromptMessageType } from "@/entities/agent/domain";
 import { PromptBlockType } from "@/shared/prompt/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { PromptItem } from "./prompt-panel-types";

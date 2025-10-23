@@ -13,7 +13,7 @@ import {
   ScrollArea,
 } from "@/shared/ui";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";
-import { ModelTier } from "@/modules/agent/domain/agent";
+import { ModelTier } from "@/entities/agent/domain/agent";
 
 export interface AgentModelTierInfo {
   agentId: string;

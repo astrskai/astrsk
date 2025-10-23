@@ -9,7 +9,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { CardService } from "@/app/services/card-service";
-import { CardType, Card, Lorebook, Entry } from "@/modules/card/domain";
+import { CardType, Card, Lorebook, Entry } from "@/entities/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { queryClient } from "@/app/queries/query-client";
 import { cardKeys } from "@/app/queries/card/query-factory";

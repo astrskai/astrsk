@@ -5,7 +5,7 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { Flow } from "@/modules/flow/domain";
+import { Flow } from "@/entities/flow/domain";
 
 import { useFlow } from "@/app/hooks/use-flow";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
@@ -20,8 +20,8 @@ import {
   StepFlowAndAgentsSchemaType,
 } from "@/features/session/mobile/create-session/step-flow-and-agents-mobile";
 import { TopNavigation } from "@/widgets/top-navigation";
-import { ApiSource, apiSourceLabel } from "@/modules/api/domain/api-connection";
-import { Session, SessionProps } from "@/modules/session/domain";
+import { ApiSource, apiSourceLabel } from "@/entities/api/domain/api-connection";
+import { Session, SessionProps } from "@/entities/session/domain";
 import { useQuery } from "@tanstack/react-query";
 
 const AgentListItem = ({ agentId }: { agentId: UniqueEntityID }) => {

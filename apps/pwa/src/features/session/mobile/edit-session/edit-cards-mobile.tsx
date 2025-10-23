@@ -14,8 +14,8 @@ import { StepUserCardMobile } from "@/features/session/mobile/create-session/ste
 import { StepPlotCardSchema } from "@/features/session/mobile/create-session/step-plot-card-mobile";
 import { StepPlotCardMobile } from "@/features/session/mobile/create-session/step-plot-card-mobile";
 import { convertCombinedCardsFormToSessionProps } from "@/features/session/create-session/step-cards-combined";
-import { Session, SessionProps } from "@/modules/session/domain";
-import { CardType } from "@/modules/card/domain";
+import { Session, SessionProps } from "@/entities/session/domain";
+import { CardType } from "@/entities/card/domain";
 
 const CombinedCardsSchema =
   StepCharacterCardsSchema.merge(StepUserCardSchema).merge(StepPlotCardSchema);

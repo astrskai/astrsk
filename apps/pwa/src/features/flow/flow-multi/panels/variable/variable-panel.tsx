@@ -23,7 +23,7 @@ import {
   OutputFormat,
   SchemaField,
   SchemaFieldType,
-} from "@/modules/agent/domain/agent";
+} from "@/entities/agent/domain/agent";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import {
   Variable,

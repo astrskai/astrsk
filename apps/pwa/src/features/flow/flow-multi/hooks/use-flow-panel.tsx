@@ -1,7 +1,7 @@
 import React, { useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Flow } from "@/modules/flow/domain";
-import { Agent } from "@/modules/agent/domain";
+import { Flow } from "@/entities/flow/domain";
+import { Agent } from "@/entities/agent/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { AgentService } from "@/app/services/agent-service";
 import { flowQueries } from "@/app/queries/flow-queries";

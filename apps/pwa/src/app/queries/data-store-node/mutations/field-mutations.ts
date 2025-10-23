@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { dataStoreNodeKeys } from "../query-factory";
-import { DataStoreField } from "@/modules/flow/domain/flow";
+import { DataStoreField } from "@/entities/flow/domain/flow";
 
 /**
  * Hook for updating data store node fields with isEditing flag

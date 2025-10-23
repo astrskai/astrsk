@@ -37,7 +37,7 @@ import { toast } from "sonner";
 import type {
   DataStoreSchemaField,
   DataStoreField,
-} from "@/modules/flow/domain/flow";
+} from "@/entities/flow/domain/flow";
 
 /**
  * Data Store node data type definition
@@ -53,7 +53,7 @@ export type DataStoreNodeData = {
 export type {
   DataStoreField,
   DataStoreSchemaField,
-} from "@/modules/flow/domain/flow";
+} from "@/entities/flow/domain/flow";
 
 /**
  * Data Store node type

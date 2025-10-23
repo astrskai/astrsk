@@ -1,15 +1,15 @@
-import { DeleteAsset } from "@/modules/asset/usecases/delete-asset";
-import { SaveFileToAsset } from "@/modules/asset/usecases/save-file-to-asset";
-import { DrizzleGeneratedImageRepo } from "@/modules/generated-image/repos/impl/drizzle-generated-image-repo";
-import { DeleteGeneratedImage } from "@/modules/generated-image/usecases/delete-generated-image";
-import { GetGeneratedImage } from "@/modules/generated-image/usecases/get-generated-image";
-import { ListGeneratedImages } from "@/modules/generated-image/usecases/list-generated-images";
-import { SaveGeneratedImage } from "@/modules/generated-image/usecases/save-generated-image";
-import { SaveFileToGeneratedImage } from "@/modules/generated-image/usecases/save-file-to-generated-image";
-import { SaveGeneratedImageFromAsset } from "@/modules/generated-image/usecases/save-generated-image-from-asset";
+import { DeleteAsset } from "@/entities/asset/usecases/delete-asset";
+import { SaveFileToAsset } from "@/entities/asset/usecases/save-file-to-asset";
+import { DrizzleGeneratedImageRepo } from "@/entities/generated-image/repos/impl/drizzle-generated-image-repo";
+import { DeleteGeneratedImage } from "@/entities/generated-image/usecases/delete-generated-image";
+import { GetGeneratedImage } from "@/entities/generated-image/usecases/get-generated-image";
+import { ListGeneratedImages } from "@/entities/generated-image/usecases/list-generated-images";
+import { SaveGeneratedImage } from "@/entities/generated-image/usecases/save-generated-image";
+import { SaveFileToGeneratedImage } from "@/entities/generated-image/usecases/save-file-to-generated-image";
+import { SaveGeneratedImageFromAsset } from "@/entities/generated-image/usecases/save-generated-image-from-asset";
 import { UniqueEntityID } from "@/shared/domain";
 import { Result } from "@/shared/core";
-import { GeneratedImage } from "@/modules/generated-image/domain";
+import { GeneratedImage } from "@/entities/generated-image/domain";
 
 export class GeneratedImageService {
   public static generatedImageRepo: DrizzleGeneratedImageRepo;

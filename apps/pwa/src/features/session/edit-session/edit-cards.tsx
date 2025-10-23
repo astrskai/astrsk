@@ -31,8 +31,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/ui";
-import { Card, CardType } from "@/modules/card/domain/card";
-import { SessionProps } from "@/modules/session/domain/session";
+import { Card, CardType } from "@/entities/card/domain/card";
+import { SessionProps } from "@/entities/session/domain/session";
 import { useQuery } from "@tanstack/react-query";
 import { cardQueries } from "@/app/queries/card-queries";
 

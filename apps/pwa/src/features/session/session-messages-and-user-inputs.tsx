@@ -109,13 +109,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui";
-import { CharacterCard, PlotCard } from "@/modules/card/domain";
-import { TranslationConfig } from "@/modules/session/domain/translation-config";
-import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
-import { Turn } from "@/modules/turn/domain/turn";
-import { PlaceholderType } from "@/modules/turn/domain/placeholder-type";
-import { DataStoreSchemaField } from "@/modules/flow/domain/flow";
-import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
+import { CharacterCard, PlotCard } from "@/entities/card/domain";
+import { TranslationConfig } from "@/entities/session/domain/translation-config";
+import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
+import { Turn } from "@/entities/turn/domain/turn";
+import { PlaceholderType } from "@/entities/turn/domain/placeholder-type";
+import { DataStoreSchemaField } from "@/entities/flow/domain/flow";
+import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
 import { fetchCharacterCard } from "@/app/queries/card/query-factory";

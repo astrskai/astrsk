@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { Card } from "@/modules/card/domain";
-import { Session } from "@/modules/session/domain/session";
+import { Card } from "@/entities/card/domain";
+import { Session } from "@/entities/session/domain/session";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
 import { toast } from "sonner";

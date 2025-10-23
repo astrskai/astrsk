@@ -7,7 +7,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FlowService } from "@/app/services/flow-service";
-import { ReadyState } from "@/modules/flow/domain/flow";
+import { ReadyState } from "@/entities/flow/domain/flow";
 import { flowKeys } from "../query-factory";
 
 /**

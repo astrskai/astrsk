@@ -6,7 +6,7 @@
 
 import { vertexAIParameterList } from './vertex-ai-parameters';
 import { openAIParameterList } from './openai-parameters';
-import { ApiSource } from '@/modules/api/domain';
+import { ApiSource } from '@/entities/api/domain';
 import { ValidationParameter } from '@/features/flow/flow-multi/validation/types/validation-parameter-types';
 
 /**

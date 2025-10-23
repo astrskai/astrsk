@@ -6,7 +6,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { createSelectors } from "@/shared/lib/zustand-utils";
 
 import { BackgroundService } from "@/app/services/background-service";
-import { Background } from "@/modules/background/domain/background";
+import { Background } from "@/entities/background/domain/background";
 
 export type DefaultBackground = {
   id: UniqueEntityID;

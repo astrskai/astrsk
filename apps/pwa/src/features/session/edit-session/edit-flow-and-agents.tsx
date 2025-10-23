@@ -14,10 +14,10 @@ import {
   StepFlowAndAgentsSchemaType,
 } from "@/features/session/create-session/step-flow-and-agents";
 import { Button, CarouselItem, SvgIcon } from "@/shared/ui";
-import { SessionProps } from "@/modules/session/domain";
+import { SessionProps } from "@/entities/session/domain";
 import { useQuery } from "@tanstack/react-query";
 import { agentQueries } from "@/app/queries/agent/query-factory";
-import { ApiSource, apiSourceLabel } from "@/modules/api/domain/api-connection";
+import { ApiSource, apiSourceLabel } from "@/entities/api/domain/api-connection";
 
 const AgentListItem = ({ agentId }: { agentId: UniqueEntityID }) => {
   const { data: agent } = useQuery(agentQueries.detail(agentId));

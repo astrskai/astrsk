@@ -1,4 +1,4 @@
-import { SchemaFieldType } from "@/modules/agent/domain/agent";
+import { SchemaFieldType } from "@/entities/agent/domain/agent";
 import { BasePanelProps } from "@/features/flow/flow-multi/types/panel";
 
 export interface StructuredOutputPanelProps extends BasePanelProps {

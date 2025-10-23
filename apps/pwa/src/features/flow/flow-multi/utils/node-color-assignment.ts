@@ -1,12 +1,12 @@
 // Unified node color and opacity assignment for all process node types
 // Replaces agent-color-assignment.ts to ensure consistent opacity across all nodes
 
-import { Flow } from "@/modules/flow/domain";
-import { Agent } from "@/modules/agent/domain";
+import { Flow } from "@/entities/flow/domain";
+import { Agent } from "@/entities/agent/domain";
 import { AgentService } from "@/app/services/agent-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
-import { NodeType } from "@/modules/flow/model/node-types";
+import { NodeType } from "@/entities/flow/model/node-types";
 import { UniqueEntityID } from "@/shared/domain";
 import { traverseFlowCached } from "./flow-traversal";
 

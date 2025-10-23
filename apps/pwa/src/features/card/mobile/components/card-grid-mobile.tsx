@@ -1,7 +1,7 @@
 import { cn } from "@/shared/lib";
 import { CheckboxMobile } from "@/shared/ui";
 import { TradingCard } from "@/features/card/components/trading-card";
-import { Card, CardType } from "@/modules/card/domain";
+import { Card, CardType } from "@/entities/card/domain";
 
 interface CardGridMobileProps {
   cards: Card[];

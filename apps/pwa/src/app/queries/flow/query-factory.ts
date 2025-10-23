@@ -11,13 +11,13 @@
 
 import { queryClient } from "@/app/queries/query-client";
 import { FlowService } from "@/app/services/flow-service";
-import { ValidationIssue } from "@/modules/flow/model/validation-types";
+import { ValidationIssue } from "@/entities/flow/model/validation-types";
 import {
   Edge,
   Flow,
   Node
-} from "@/modules/flow/domain/flow";
-import { FlowDrizzleMapper } from "@/modules/flow/mappers/flow-drizzle-mapper";
+} from "@/entities/flow/domain/flow";
+import { FlowDrizzleMapper } from "@/entities/flow/mappers/flow-drizzle-mapper";
 import { UniqueEntityID } from "@/shared/domain";
 import { queryOptions } from "@tanstack/react-query";
 

@@ -2,7 +2,7 @@ import { OpenAIComptableEndpoint } from "@/shared/endpoints/openai-compatible";
 import { HttpClient } from "@/shared/infra";
 import { logger } from "@/shared/lib";
 
-import { ApiModel } from "@/modules/api/domain";
+import { ApiModel } from "@/entities/api/domain";
 
 export class OpenRouterEndpoint extends OpenAIComptableEndpoint {
   constructor(

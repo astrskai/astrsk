@@ -6,7 +6,7 @@ import {
   Card as CardUI, MediaDisplay, Skeleton, SvgIcon,
   Typo3XLarge, TypoSmall,
 } from "@/shared/ui";
-import { Card, CardType, CharacterCard } from "@/modules/card/domain";
+import { Card, CardType, CharacterCard } from "@/entities/card/domain";
 
 // Simple tag component for displaying card tags
 const Tag = ({ name }: { name: string }) => {

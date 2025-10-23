@@ -1,8 +1,8 @@
-import { ValidationIssue, ValidationIssueCode } from "@/modules/flow/model/validation-types";
+import { ValidationIssue, ValidationIssueCode } from "@/entities/flow/model/validation-types";
 import { ValidatorFunction } from "@/features/flow/flow-multi/validation/types/functional-validation-types";
 import { forEachConnectedAgent, generateIssueId } from "@/features/flow/flow-multi/validation/utils/validator-utils";
 import { generateValidationMessage } from "@/features/flow/flow-multi/validation/utils/message-generator";
-import { Agent, ApiType, OutputFormat } from "@/modules/agent/domain";
+import { Agent, ApiType, OutputFormat } from "@/entities/agent/domain";
 import { isModelAvailable } from "@/features/flow/flow-multi/components/model-selection";
 
 // Check if agent has a model selected and if it's available

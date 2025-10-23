@@ -10,8 +10,8 @@ import { PromptAndModel } from "@/shared/task/domain/prompt-and-model";
 import { createSelectors } from "@/shared/lib/zustand-utils";
 
 import { CardFormValues } from "@/features/card/types/card-form";
-import { Card, CardType } from "@/modules/card/domain/card";
-import { CardListItem } from "@/modules/session/domain/session";
+import { Card, CardType } from "@/entities/card/domain/card";
+import { CardListItem } from "@/entities/session/domain/session";
 
 export enum EditSessionTab {
   PromptAndModel = "prompt-and-model",

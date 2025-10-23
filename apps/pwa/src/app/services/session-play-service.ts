@@ -42,19 +42,19 @@ import { useAppStore } from "@/app/stores/app-store";
 import { useWllamaStore } from "@/app/stores/wllama-store";
 import { Condition, isUnaryOperator } from "@/features/flow/flow-multi/types/condition-types";
 import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traversal";
-import { ModelTier } from "@/modules/agent/domain";
-import { ApiSource } from "@/modules/api/domain";
+import { ModelTier } from "@/entities/agent/domain";
+import { ApiSource } from "@/entities/api/domain";
 import {
   ApiConnection,
   OpenrouterProviderSort,
-} from "@/modules/api/domain/api-connection";
-import { PlotCard } from "@/modules/card/domain";
-import { CharacterCard } from "@/modules/card/domain/character-card";
-import { DataStoreFieldType } from "@/modules/flow/domain/flow";
-import { IfNode } from "@/modules/if-node/domain";
-import { Session } from "@/modules/session/domain/session";
-import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
-import { Turn as MessageEntity } from "@/modules/turn/domain/turn";
+} from "@/entities/api/domain/api-connection";
+import { PlotCard } from "@/entities/card/domain";
+import { CharacterCard } from "@/entities/card/domain/character-card";
+import { DataStoreFieldType } from "@/entities/flow/domain/flow";
+import { IfNode } from "@/entities/if-node/domain";
+import { Session } from "@/entities/session/domain/session";
+import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
+import { Turn as MessageEntity } from "@/entities/turn/domain/turn";
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain";
 import {

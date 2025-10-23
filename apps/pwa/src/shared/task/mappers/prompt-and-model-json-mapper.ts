@@ -7,7 +7,7 @@ import {
 } from "@/shared/task/domain/prompt-and-model";
 import { logger } from "@/shared/lib/logger";
 
-import { ApiSource } from "@/modules/api/domain";
+import { ApiSource } from "@/entities/api/domain";
 
 export interface PromptAndModelJson {
   // Prompt

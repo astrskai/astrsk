@@ -7,7 +7,7 @@ import { UseFormRegisterReturn } from "react-hook-form";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useAsset } from "@/app/hooks/use-asset";
-import { CardType } from "@/modules/card/domain";
+import { CardType } from "@/entities/card/domain";
 
 interface ImageUploadProps {
   type: CardType;

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Editor } from "@/shared/ui";
 import type { editor } from "monaco-editor";
-import { PlotCard } from "@/modules/card/domain";
+import { PlotCard } from "@/entities/card/domain";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 

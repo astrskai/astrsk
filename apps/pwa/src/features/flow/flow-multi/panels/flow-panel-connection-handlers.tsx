@@ -1,14 +1,14 @@
 import { toast } from "sonner";
-import { Agent, ApiType } from "@/modules/agent/domain/agent";
+import { Agent, ApiType } from "@/entities/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { getNextAvailableColor } from "@/features/flow/flow-multi/utils/node-color-assignment";
 import { ensureNodeSafety } from "@/features/flow/flow-multi/utils/ensure-node-safety";
 import { ensureEdgeSelectable } from "@/features/flow/flow-multi/utils/ensure-edge-selectable";
-import { Flow } from "@/modules/flow/domain/flow";
+import { Flow } from "@/entities/flow/domain/flow";
 import { CustomNodeType } from "@/features/flow/flow-multi/nodes";
-import { NodeType } from "@/modules/flow/model/node-types";
+import { NodeType } from "@/entities/flow/model/node-types";
 import { UniqueEntityID } from "@/shared/domain";
 
 // Define CustomEdgeType locally

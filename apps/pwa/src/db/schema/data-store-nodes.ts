@@ -1,6 +1,6 @@
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
-import { DataStoreField } from "@/modules/flow/domain/flow";
+import { DataStoreField } from "@/entities/flow/domain/flow";
 import { jsonb, pgTable, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const dataStoresNodes = pgTable(TableName.DataStoreNodes, {

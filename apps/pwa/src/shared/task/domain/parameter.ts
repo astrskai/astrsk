@@ -1,4 +1,4 @@
-import { ApiSource } from "@/modules/api/domain";
+import { ApiSource } from "@/entities/api/domain";
 
 export interface Parameter {
   id: string;

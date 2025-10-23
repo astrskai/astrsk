@@ -21,9 +21,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui";
-import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
-import { Flow } from "@/modules/flow/domain";
-import { Session } from "@/modules/session/domain/session";
+import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
+import { Flow } from "@/entities/flow/domain";
+import { Session } from "@/entities/session/domain/session";
 
 export const apiSourceLogo = new Map<ApiSource, IconName>([
   [ApiSource.AstrskAi, "astrsk_symbol"],

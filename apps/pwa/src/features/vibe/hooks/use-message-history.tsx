@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { SimpleMessage, ReviewData } from '../types';
 import { UniqueEntityID } from '@/shared/domain';
 import { VibeSessionService } from '@/app/services/vibe-session-service';
-import { CreateVibeSessionProps, MESSAGE_TYPE } from '@/modules/vibe-session/domain/vibe-session';
+import { CreateVibeSessionProps, MESSAGE_TYPE } from '@/entities/vibe-session/domain/vibe-session';
 import type { SessionStatus } from 'vibe-shared-types';
 import { SESSION_STATUS } from 'vibe-shared-types';
 

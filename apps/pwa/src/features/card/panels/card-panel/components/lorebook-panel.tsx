@@ -31,9 +31,9 @@ import {
   TooltipTrigger,
 } from "@/shared/ui";
 
-import { CharacterCard, PlotCard } from "@/modules/card/domain";
-import { Lorebook } from "@/modules/card/domain/lorebook";
-import { Entry } from "@/modules/card/domain/entry";
+import { CharacterCard, PlotCard } from "@/entities/card/domain";
+import { Lorebook } from "@/entities/card/domain/lorebook";
+import { Entry } from "@/entities/card/domain/entry";
 import { UniqueEntityID } from "@/shared/domain";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";

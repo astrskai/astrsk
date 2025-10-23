@@ -1,0 +1,18 @@
+import { Result, UseCase } from "@/shared/core";
+import { formatFail } from "@/shared/lib";
+
+import { Card } from "@/entities/card/domain";
+import { SaveCardRepo } from "@/entities/card/repos/save-card-repo";
+
+export class SaveCard implements UseCase<Card, Result<Card>> {
+  constructor(private saveCardRepo: SaveCardRepo) {}
+
+  async execute(card: Card): Promise<Result<Card>> {
+    try {
+      const savedCardResult = await this.saveCardRepo.saveCard(card);
+      return savedCardResult;
+    } catch (error) {
+      return formatFail("Failed to save card", error);
+    }
+  }
+}

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, useRef } from "react";
-import { Agent, ApiType, SchemaField } from "@/modules/agent/domain/agent";
-import { Session } from "@/modules/session/domain/session";
-import { Turn } from "@/modules/turn/domain/turn";
-import { DataStoreSavedField } from "@/modules/turn/domain/option";
+import { Agent, ApiType, SchemaField } from "@/entities/agent/domain/agent";
+import { Session } from "@/entities/session/domain/session";
+import { Turn } from "@/entities/turn/domain/turn";
+import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { RenderContext } from "@/shared/prompt/domain";
 import { logger } from "@/shared/lib/logger";
 import { makeContext, transformMessagesForModel } from "@/app/services/session-play-service";

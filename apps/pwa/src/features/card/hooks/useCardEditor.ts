@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 
 import { useCardsStore } from "@/app/stores/cards-store";
-import { Card, CardType, CharacterCard, PlotCard } from "@/modules/card/domain";
+import { Card, CardType, CharacterCard, PlotCard } from "@/entities/card/domain";
 
 /**
  * Hook to manage card creation and editing
