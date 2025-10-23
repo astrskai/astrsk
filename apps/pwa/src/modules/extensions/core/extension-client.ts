@@ -142,7 +142,7 @@ export class ExtensionClient implements IExtensionClient {
 
           // Invalidate specific card detail
           await queryClient.invalidateQueries({
-            queryKey: cardQueries.detail(new UniqueEntityID(cardId)).queryKey,
+            queryKey: cardQueries.detail(cardId).queryKey,
           });
 
           console.log("[Extension Client] Invalidated session and card queries for UI update");
