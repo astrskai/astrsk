@@ -20,7 +20,7 @@ import { cn } from "@/shared/lib";
 import { LeftNavigation } from "@/widgets/left-navigation";
 import { LeftNavigationTrigger } from "@/widgets/left-navigation";
 import { SidebarInset } from "@/widgets/both-sidebar";
-import { MobileNavigationContext } from "@/contexts/mobile-navigation-context";
+import { MobileNavigationContext } from "@/app/contexts/mobile-navigation-context";
 import CreateSessionPage from "@/features/session/create-session-page";
 import { createPortal } from "react-dom";
 

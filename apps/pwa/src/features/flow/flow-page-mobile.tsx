@@ -17,7 +17,7 @@ import { useValidationStore } from "@/app/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { useQuery } from "@tanstack/react-query";
-import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
+import { useMobileNavigation } from "@/app/contexts/mobile-navigation-context";
 
 import { FlowDialog } from "@/features/flow/flow-dialog";
 import { cn } from "@/shared/lib";
