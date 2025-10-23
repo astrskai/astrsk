@@ -1,6 +1,6 @@
 import { useCallback, useState, useMemo, useEffect } from "react";
 import { RefreshCw } from "lucide-react";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Button } from "@/shared/ui/button";
 import { cn } from "@/shared/lib";
 import { 

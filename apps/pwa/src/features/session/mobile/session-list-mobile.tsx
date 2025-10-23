@@ -40,9 +40,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Label } from "@/components-v2/ui/label";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { TableName } from "@/db/schema/table-name";
 import { Agent } from "@/modules/agent/domain/agent";
 import { Card } from "@/modules/card/domain";

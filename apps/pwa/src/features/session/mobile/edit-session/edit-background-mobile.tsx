@@ -19,7 +19,7 @@ import {
 } from "@/features/session/mobile/create-session/step-background-mobile";
 import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/shared/ui/button";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {
   Tabs,
   TabsContent,

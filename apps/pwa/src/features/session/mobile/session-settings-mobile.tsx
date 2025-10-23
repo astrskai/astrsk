@@ -27,10 +27,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { CheckboxMobile } from "@/components-v2/ui/checkbox";
 import { Label } from "@/components-v2/ui/label";
-import { Input } from "@/components-v2/ui/input";
+import { Input } from "@/shared/ui/input";
 import { SessionProps } from "@/modules/session/domain/session";
 
 // Import mobile edit components

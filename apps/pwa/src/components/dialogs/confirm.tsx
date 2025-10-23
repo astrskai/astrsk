@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 
 const Confirm = ({
   open,

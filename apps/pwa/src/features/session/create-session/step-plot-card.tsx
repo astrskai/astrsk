@@ -9,7 +9,7 @@ import { TradingCard } from "@/features/card/components/trading-card";
 import { cn } from "@/shared/lib";
 import { SearchInput } from "@/components/ui/search-input";
 import { TypoSmall } from "@/components/ui/typo";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Card, CardType } from "@/modules/card/domain";
 
 const StepPlotCardSchema = z.object({

@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components-v2/ui/card";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/components-v2/ui/input";
+import { Input } from "@/shared/ui/input";
 import { Label } from "@/components-v2/ui/label";
 import { Badge } from "@/components-v2/ui/badge";
 import { Separator } from "@/components-v2/ui/separator";

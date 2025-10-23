@@ -7,7 +7,7 @@ import {
   VariableLibrary,
   VariableGroupLabel,
 } from "@/shared/prompt/domain/variable";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { SearchInput } from "@/components/ui/search-input";
 
 interface VariablesPanelProps {

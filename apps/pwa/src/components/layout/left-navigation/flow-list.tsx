@@ -33,7 +33,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { Session } from "@/modules/session/domain/session";
 import { Flow, ReadyState } from "@/modules/flow/domain/flow";
 import { UniqueEntityID } from "@/shared/domain";

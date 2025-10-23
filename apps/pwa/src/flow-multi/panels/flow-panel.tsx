@@ -77,7 +77,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,

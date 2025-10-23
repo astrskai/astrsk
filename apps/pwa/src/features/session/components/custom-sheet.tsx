@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { cn } from "@/shared/lib";
 
 import { Button } from "@/shared/ui/button";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {
   Sheet,
   SheetClose,

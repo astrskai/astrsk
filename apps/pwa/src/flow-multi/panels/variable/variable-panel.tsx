@@ -6,7 +6,7 @@ import { TurnService } from "@/app/services/turn-service";
 import { useAgentStore } from "@/app/stores/agent-store";
 import { SearchInput } from "@/components/ui/search-input";
 import { TypoBase, TypoLarge } from "@/components/ui/typo";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import {
   Tabs,
   TabsContent,

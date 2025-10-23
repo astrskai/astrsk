@@ -19,7 +19,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Card, CardType } from "@/modules/card/domain";
 
 export default function CardPage({ className }: { className?: string }) {

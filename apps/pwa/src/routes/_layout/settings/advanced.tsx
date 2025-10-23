@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { TypoBase, TypoXLarge } from "@/components/ui/typo";
 import { Switch } from "@/components-v2/ui/switch";
 

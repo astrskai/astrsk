@@ -5,7 +5,7 @@ import { cn } from "@/shared/lib";
 
 import { UnsavedChangesConfirm } from "@/components/dialogs/confirm";
 import { Button } from "@/shared/ui/button";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 
 const Step = ({
   index,

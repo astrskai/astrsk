@@ -8,12 +8,12 @@ import { FlowSection } from "./flow-list";
 import { SessionSection } from "./session-list";
 import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { UpdaterNew } from "@/components/system/updater-new";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {

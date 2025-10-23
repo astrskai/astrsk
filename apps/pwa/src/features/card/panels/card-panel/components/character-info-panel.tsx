@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Editor } from "@/shared/ui/editor";
 import type { editor } from "monaco-editor";
 import { CharacterCard } from "@/modules/card/domain";
-import { Input } from "@/components-v2/ui/input";
+import { Input } from "@/shared/ui/input";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 import {

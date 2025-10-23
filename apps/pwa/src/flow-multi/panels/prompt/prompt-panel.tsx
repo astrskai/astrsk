@@ -25,7 +25,7 @@ import { Editor } from "@/shared/ui/editor";
 import type { editor } from "monaco-editor";
 import { Trash2, Plus, Maximize2, Minimize2, HelpCircle } from "lucide-react";
 
-import { Input } from "@/components-v2/ui/input";
+import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
 import {
   Select,
@@ -39,7 +39,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { ApiType } from "@/modules/agent/domain/agent";
 import { PromptMessage } from "@/modules/agent/domain";

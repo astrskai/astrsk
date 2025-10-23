@@ -22,7 +22,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/components-v2/ui/checkbox";
 import { DeleteConfirm } from "@/components/dialogs/confirm";
@@ -43,7 +43,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Label } from "@/components-v2/ui/label";
 import { Session } from "@/modules/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain";

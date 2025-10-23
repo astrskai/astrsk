@@ -8,8 +8,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+} from "@/shared/ui/dialog";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { api } from "@/convex";
 import { logger } from "@/shared/lib/logger";
 import { useAuth, useSignUp } from "@clerk/clerk-react";

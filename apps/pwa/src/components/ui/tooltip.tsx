@@ -5,7 +5,7 @@
  * Action: Review for deletion
  */
 
-import * as TooltipPrimitive from "@/components-v2/ui/tooltip";
+import * as TooltipPrimitive from "@/shared/ui/tooltip";
 
 const Tooltip = ({
   children,
