@@ -1,5 +1,5 @@
 import { EditableCharacterCard, EditablePlotCard } from "vibe-shared-types";
-import { Lorebook } from "@/modules/card/domain/lorebook";
+import { Lorebook } from "@/entities/card/domain/lorebook";
 import { CardService } from "@/app/services/card-service";
 import { Operation } from "../lib/operation-processor";
 

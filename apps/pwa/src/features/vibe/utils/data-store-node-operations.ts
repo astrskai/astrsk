@@ -1,5 +1,5 @@
 import { Operation } from "../lib/operation-processor";
-import { DataStoreNode } from "@/modules/data-store-node/domain/data-store-node";
+import { DataStoreNode } from "@/entities/data-store-node/domain/data-store-node";
 import { UniqueEntityID } from "@/shared/domain";
 
 /**

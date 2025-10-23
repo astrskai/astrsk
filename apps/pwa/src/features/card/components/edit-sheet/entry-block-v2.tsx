@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp, Copy, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 import { Button, FloatingLabelInput, FloatingLabelInputs, FloatingLabelTextarea } from "@/shared/ui";
-import { Entry } from "@/modules/card/domain";
+import { Entry } from "@/entities/card/domain";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 
 interface EntryBlockV2Props {

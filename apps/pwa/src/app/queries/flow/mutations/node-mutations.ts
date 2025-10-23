@@ -9,7 +9,7 @@ import { useState, useRef, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FlowService } from "@/app/services/flow-service";
 import { flowKeys } from "../query-factory";
-import { Flow, ReadyState } from "@/modules/flow/domain/flow";
+import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 
 /**
  * Hook for updating a node's title/label

@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { FlowService } from "@/app/services/flow-service";
 import { AgentService } from "@/app/services/agent-service";
-import { AgentDrizzleMapper } from "@/modules/agent/mappers/agent-drizzle-mapper";
+import { AgentDrizzleMapper } from "@/entities/agent/mappers/agent-drizzle-mapper";
 import { stringify } from "superjson";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
@@ -48,7 +48,7 @@ import type {
   EditableIfNodeData,
   EditableDataStoreNodeData,
 } from "vibe-shared-types";
-import { OutputFormat } from "@/modules/agent/domain/agent";
+import { OutputFormat } from "@/entities/agent/domain/agent";
 
 // Helper function to invalidate flow queries
 const invalidateSingleFlowQueries = async (

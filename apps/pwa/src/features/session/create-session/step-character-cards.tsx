@@ -8,7 +8,7 @@ import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { cn } from "@/shared/lib";
 import { ScrollArea, SearchInput, TypoSmall } from "@/shared/ui";
-import { Card, CardType } from "@/modules/card/domain";
+import { Card, CardType } from "@/entities/card/domain";
 
 const StepCharacterCardsSchema = z.object({
   aiCharacterCardIds: z.string().array().min(1),

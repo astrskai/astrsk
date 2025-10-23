@@ -4,7 +4,7 @@ import {
   Button, Dialog, DialogContent, DialogTitle,
   FloatingLabelInput,
 } from "@/shared/ui";
-import { Flow, FlowProps } from "@/modules/flow/domain";
+import { Flow, FlowProps } from "@/entities/flow/domain";
 
 export type FlowDialogMode = "create" | "edit";
 

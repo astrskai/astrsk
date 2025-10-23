@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { Card, CardType } from "@/modules/card/domain";
+import { Card, CardType } from "@/entities/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
 import { cardQueries } from "@/app/queries/card";

@@ -19,7 +19,7 @@ import {
   FlowExportDialog,
   AgentModelTierInfo,
 } from "@/features/flow/components/flow-export-dialog";
-import { ModelTier } from "@/modules/agent/domain/agent";
+import { ModelTier } from "@/entities/agent/domain/agent";
 import { SectionHeader } from "./index";
 import {
   SearchInput,
@@ -33,8 +33,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui";
-import { Session } from "@/modules/session/domain/session";
-import { Flow, ReadyState } from "@/modules/flow/domain/flow";
+import { Session } from "@/entities/session/domain/session";
+import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";
 import { downloadFile, logger } from "@/shared/lib";

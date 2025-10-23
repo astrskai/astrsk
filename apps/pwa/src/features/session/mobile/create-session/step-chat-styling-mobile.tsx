@@ -17,7 +17,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/ui";
-import { ChatStyles } from "@/modules/session/domain/chat-styles";
+import { ChatStyles } from "@/entities/session/domain/chat-styles";
 
 // Re-export schema and converter from the shared step
 export {

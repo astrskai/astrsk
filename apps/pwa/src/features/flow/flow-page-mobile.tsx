@@ -40,8 +40,8 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { TableName } from "@/db/schema/table-name";
-import { Flow, Node } from "@/modules/flow/domain";
-import { Session } from "@/modules/session/domain/session";
+import { Flow, Node } from "@/entities/flow/domain";
+import { Session } from "@/entities/session/domain/session";
 import { TopNavigation } from "@/widgets/top-navigation";
 
 type SelectionAction = "copy" | "export" | "delete";

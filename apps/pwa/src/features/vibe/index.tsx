@@ -21,7 +21,7 @@ import { useStartCodingSession } from "@/app/hooks/use-vibe-coding-convex";
 import { useAppStore, Page } from "@/app/stores/app-store";
 import { useAgentStore } from "@/app/stores/agent-store";
 import { UniqueEntityID } from "@/shared/domain";
-import { CardType } from "@/modules/card/domain";
+import { CardType } from "@/entities/card/domain";
 import { VibeSessionService } from "@/app/services/vibe-session-service";
 
 // Components

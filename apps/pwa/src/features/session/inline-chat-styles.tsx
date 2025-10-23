@@ -4,7 +4,7 @@ import {
   ChatStyles,
   FontStyle,
   TextStyle,
-} from "@/modules/session/domain/chat-styles";
+} from "@/entities/session/domain/chat-styles";
 
 const renderFontStyle = (style: FontStyle) => {
   const props: string[] = [];

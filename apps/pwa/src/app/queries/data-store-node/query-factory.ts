@@ -11,8 +11,8 @@
 
 import { queryClient } from "@/app/queries/query-client";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
-import { DataStoreNode } from "@/modules/data-store-node/domain/data-store-node";
-import { DataStoreNodeDrizzleMapper } from "@/modules/data-store-node/mappers/data-store-node-drizzle-mapper";
+import { DataStoreNode } from "@/entities/data-store-node/domain/data-store-node";
+import { DataStoreNodeDrizzleMapper } from "@/entities/data-store-node/mappers/data-store-node-drizzle-mapper";
 import { UniqueEntityID } from "@/shared/domain";
 import { queryOptions } from "@tanstack/react-query";
 import { parse, stringify } from "superjson";

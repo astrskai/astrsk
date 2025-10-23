@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { debounce } from "lodash-es";
 import { toast } from "sonner";
-import { SchemaFieldType, SchemaField } from "@/modules/agent/domain/agent";
+import { SchemaFieldType, SchemaField } from "@/entities/agent/domain/agent";
 import { Trash2, Plus, Maximize2, Minimize2, X } from "lucide-react";
 import {
   Tooltip,

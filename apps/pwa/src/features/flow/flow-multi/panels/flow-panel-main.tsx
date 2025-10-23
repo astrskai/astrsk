@@ -14,7 +14,7 @@ import {
 import CustomDockviewTab from "@/widgets/dockview-default-tab";
 import { PanelFocusAnimationWrapper } from "@/widgets/dockview-panel-focus-animation";
 // import "dockview/dist/styles/dockview.css";
-import { Flow } from "@/modules/flow/domain";
+import { Flow } from "@/entities/flow/domain";
 import { debounce } from "lodash-es";
 import { cn } from "@/shared/lib";
 import { logger } from "@/shared/lib";
@@ -37,10 +37,10 @@ import { IfNodePanel } from "@/features/flow/flow-multi/panels/if-node/if-node-p
 import { DataStorePanel } from "@/features/flow/flow-multi/panels/data-store/data-store-panel";
 import { FlowVibePanel } from "@/features/flow/flow-multi/panels/vibe/vibe-panel";
 import { FlowService } from "@/app/services/flow-service";
-import { PanelStructure } from "@/modules/flow/domain";
+import { PanelStructure } from "@/entities/flow/domain";
 import { Button, SvgIcon } from "@/shared/ui";
 import { UniqueEntityID } from "@/shared/domain";
-import { Agent } from "@/modules/agent/domain/agent";
+import { Agent } from "@/entities/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentKeys } from "@/app/queries/agent/query-factory";

@@ -7,12 +7,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
-import { Agent, ApiType } from "@/modules/agent/domain/agent";
-import { ApiSource } from "@/modules/api/domain";
+import { Agent, ApiType } from "@/entities/agent/domain/agent";
+import { ApiSource } from "@/entities/api/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { agentKeys } from "../query-factory";
 import { flowKeys } from "@/app/queries/flow/query-factory";
-import { Flow, ReadyState } from "@/modules/flow/domain/flow";
+import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 
 /**
  * Hook for updating agent model selection

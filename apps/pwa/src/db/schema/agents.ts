@@ -10,8 +10,8 @@ import {
 
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
-import { SchemaField, ModelTier } from "@/modules/agent/domain";
-import { ApiSource } from "@/modules/api/domain";
+import { SchemaField, ModelTier } from "@/entities/agent/domain";
+import { ApiSource } from "@/entities/api/domain";
 
 export const agents = pgTable(TableName.Agents, {
   id: uuid().primaryKey(),

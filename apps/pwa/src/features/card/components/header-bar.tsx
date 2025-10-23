@@ -13,7 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui";
-import { CardType } from "@/modules/card/domain";
+import { CardType } from "@/entities/card/domain";
 
 interface HeaderBarProps {
   title: string;

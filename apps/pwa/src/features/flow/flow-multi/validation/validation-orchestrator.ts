@@ -1,7 +1,7 @@
-import { Flow } from "@/modules/flow/domain/flow";
-import { Agent } from "@/modules/agent/domain/agent";
+import { Flow } from "@/entities/flow/domain/flow";
+import { Agent } from "@/entities/agent/domain/agent";
 import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traversal";
-import { ValidationContext, ValidationIssue } from "@/modules/flow/model/validation-types";
+import { ValidationContext, ValidationIssue } from "@/entities/flow/model/validation-types";
 import { ValidatorFunction, FunctionalValidator } from "@/features/flow/flow-multi/validation/types/functional-validation-types";
 import { composeValidators } from "@/features/flow/flow-multi/validation/utils/validator-utils";
 import { ApiConnectionWithModels } from "@/app/hooks/use-api-connections-with-models";

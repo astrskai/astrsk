@@ -20,9 +20,9 @@ import {
   ApiType,
   SchemaFieldType
 } from 'vibe-shared-types';
-import { AgentDrizzleMapper } from '@/modules/agent/mappers/agent-drizzle-mapper';
-import { IfNodeDrizzleMapper } from '@/modules/if-node/mappers/if-node-drizzle-mapper';
-import { DataStoreNodeDrizzleMapper } from '@/modules/data-store-node/mappers/data-store-node-drizzle-mapper';
+import { AgentDrizzleMapper } from '@/entities/agent/mappers/agent-drizzle-mapper';
+import { IfNodeDrizzleMapper } from '@/entities/if-node/mappers/if-node-drizzle-mapper';
+import { DataStoreNodeDrizzleMapper } from '@/entities/data-store-node/mappers/data-store-node-drizzle-mapper';
 import { sanitizeFileName } from '@/shared/lib/file-utils';
 
 /**

@@ -13,8 +13,8 @@ import {
   Edge,
   DataStoreSchemaField,
   ReadyState 
-} from "@/modules/flow/domain/flow";
-import { ValidationIssue } from "@/modules/flow/model/validation-types";
+} from "@/entities/flow/domain/flow";
+import { ValidationIssue } from "@/entities/flow/model/validation-types";
 
 /**
  * Update a node optimistically

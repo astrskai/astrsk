@@ -27,7 +27,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/ui";
-import { Session, SessionProps } from "@/modules/session/domain";
+import { Session, SessionProps } from "@/entities/session/domain";
 import { useAsset } from "@/app/hooks/use-asset";
 import { cn } from "@/shared/lib";
 

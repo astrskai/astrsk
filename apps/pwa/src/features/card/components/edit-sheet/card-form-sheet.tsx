@@ -39,8 +39,8 @@ import {
   CharacterCard,
   Lorebook,
   PlotCard,
-} from "@/modules/card/domain";
-import { Session } from "@/modules/session/domain/session";
+} from "@/entities/card/domain";
+import { Session } from "@/entities/session/domain/session";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 
 export const ActiveTabType = {

@@ -8,12 +8,12 @@ import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { Combobox } from "@/shared/ui";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
-import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
-import { SessionProps } from "@/modules/session/domain";
+import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
+import { SessionProps } from "@/entities/session/domain";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { agentQueries } from "@/app/queries/agent/query-factory";
-import { Flow } from "@/modules/flow/domain";
+import { Flow } from "@/entities/flow/domain";
 
 const StepFlowAndAgentsSchema = z.object({
   flowId: z.string().nonempty(),

@@ -20,7 +20,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/shared/ui";
-import { Card, CardType } from "@/modules/card/domain";
+import { Card, CardType } from "@/entities/card/domain";
 
 export default function CardPage({ className }: { className?: string }) {
   // Sheet state

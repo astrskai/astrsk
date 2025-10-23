@@ -13,8 +13,8 @@ import {
   Button, Card, SearchInput, Typo3XLarge,
   TypoBase,
 } from "@/shared/ui";
-import { CardType } from "@/modules/card/domain";
-import { SearchCardsSort } from "@/modules/card/repos";
+import { CardType } from "@/entities/card/domain";
+import { SearchCardsSort } from "@/entities/card/repos";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 

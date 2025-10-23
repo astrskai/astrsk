@@ -10,8 +10,8 @@ import {
   StepLanguageSchemaType,
 } from "@/features/session/create-session/step-language";
 import { Button, SvgIcon } from "@/shared/ui";
-import { SessionProps } from "@/modules/session/domain/session";
-import { TranslationConfig } from "@/modules/session/domain/translation-config";
+import { SessionProps } from "@/entities/session/domain/session";
+import { TranslationConfig } from "@/entities/session/domain/translation-config";
 
 const EditLanguage = ({
   defaultValue,

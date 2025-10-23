@@ -1,4 +1,4 @@
-import { SchemaFieldType } from "@/modules/agent/domain/agent";
+import { SchemaFieldType } from "@/entities/agent/domain/agent";
 
 export interface OutputPanelProps {
   flowId: string;

@@ -1,12 +1,12 @@
-import { DeleteAsset } from "@/modules/asset/usecases/delete-asset";
-import { SaveFileToAsset } from "@/modules/asset/usecases/save-file-to-asset";
-import { DrizzleBackgroundRepo } from "@/modules/background/repos/impl/drizzle-background-repo";
-import { DeleteBackground } from "@/modules/background/usecases/delete-background";
-import { GetBackground } from "@/modules/background/usecases/get-background";
-import { ListBackground } from "@/modules/background/usecases/list-background";
-import { SaveBackground } from "@/modules/background/usecases/save-background";
-import { SaveFileToBackground } from "@/modules/background/usecases/save-file-to-background";
-// import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
+import { DeleteAsset } from "@/entities/asset/usecases/delete-asset";
+import { SaveFileToAsset } from "@/entities/asset/usecases/save-file-to-asset";
+import { DrizzleBackgroundRepo } from "@/entities/background/repos/impl/drizzle-background-repo";
+import { DeleteBackground } from "@/entities/background/usecases/delete-background";
+import { GetBackground } from "@/entities/background/usecases/get-background";
+import { ListBackground } from "@/entities/background/usecases/list-background";
+import { SaveBackground } from "@/entities/background/usecases/save-background";
+import { SaveFileToBackground } from "@/entities/background/usecases/save-file-to-background";
+// import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 
 export class BackgroundService {
   public static backgroundRepo: DrizzleBackgroundRepo;

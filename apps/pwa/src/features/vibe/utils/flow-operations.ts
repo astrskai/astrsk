@@ -470,7 +470,7 @@ export async function processFlowOperations(
             );
 
             // Step 3: Create the agent in database via service layer
-            const { Agent, ApiType } = await import("@/modules/agent/domain");
+            const { Agent, ApiType } = await import("@/entities/agent/domain");
             const { UniqueEntityID } = await import("@/shared/domain");
             const { AgentService } = await import(
               "@/app/services/agent-service"

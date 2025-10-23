@@ -1,5 +1,5 @@
-import { Card } from "@/modules/card/domain";
-import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
+import { Card } from "@/entities/card/domain";
+import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
 
 /**
  * Enhances the user's image prompt with card context data

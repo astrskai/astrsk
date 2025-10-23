@@ -9,7 +9,7 @@ import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traver
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 
 import { useAgentStore } from "@/app/stores/agent-store";
-import { ApiType } from "@/modules/agent/domain/agent";
+import { ApiType } from "@/entities/agent/domain/agent";
 import { AgentModels } from "@/features/flow/flow-multi/components/model-selection";
 
 import { toast } from "sonner";

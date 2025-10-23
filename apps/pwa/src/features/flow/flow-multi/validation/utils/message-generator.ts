@@ -1,4 +1,4 @@
-import { ValidationIssueCode } from "@/modules/flow/model/validation-types";
+import { ValidationIssueCode } from "@/entities/flow/model/validation-types";
 import {
   ValidationData,
   BaseValidationData,

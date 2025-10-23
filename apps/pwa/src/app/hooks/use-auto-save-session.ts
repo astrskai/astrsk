@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { logger } from "@/shared/lib/logger";
-import { SessionProps } from "@/modules/session/domain/session";
-import { Session } from "@/modules/session/domain/session";
+import { SessionProps } from "@/entities/session/domain/session";
+import { Session } from "@/entities/session/domain/session";
 import { useSaveSession } from "@/app/queries/session-queries";
 
 interface UseAutoSaveSessionOptions {

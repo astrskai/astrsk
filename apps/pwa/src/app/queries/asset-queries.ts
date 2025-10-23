@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { AssetService } from "@/app/services/asset-service";
-import { AssetDrizzleMapper } from "@/modules/asset/mappers/asset-drizzle-mapper";
+import { AssetDrizzleMapper } from "@/entities/asset/mappers/asset-drizzle-mapper";
 import { logger } from "@/shared/lib/logger";
 
 export const assetQueries = {

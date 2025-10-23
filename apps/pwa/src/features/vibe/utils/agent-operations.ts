@@ -102,7 +102,7 @@ export async function processAgentOperations(
               if (actualAgentData.promptMessages) {
                 try {
                   const { parsePromptMessage } = await import(
-                    "@/modules/agent/domain/prompt-message"
+                    "@/entities/agent/domain/prompt-message"
                   );
                   const updatedMessages = [];
 

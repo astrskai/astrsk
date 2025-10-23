@@ -50,7 +50,7 @@ import {
   CarouselPrevious,
 } from "@/shared/ui";
 
-import { SessionProps } from "@/modules/session/domain/session";
+import { SessionProps } from "@/entities/session/domain/session";
 
 const Section = forwardRef<
   HTMLDivElement,

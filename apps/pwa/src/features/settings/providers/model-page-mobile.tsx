@@ -32,7 +32,7 @@ import {
   apiSourceLabel,
   OpenrouterProviderSort,
   openrouterProviderSortLabel,
-} from "@/modules/api/domain";
+} from "@/entities/api/domain";
 
 const maskApiKey = (apiKey?: string) => {
   if (!apiKey) {

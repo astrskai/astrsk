@@ -2,9 +2,9 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { cardQueries } from '@/app/queries/card/query-factory';
 import { flowQueries } from '@/app/queries/flow/query-factory';
-import { CardType } from '@/modules/card/domain';
-import { CardDrizzleMapper } from '@/modules/card/mappers/card-drizzle-mapper';
-import { FlowDrizzleMapper } from '@/modules/flow/mappers/flow-drizzle-mapper';
+import { CardType } from '@/entities/card/domain';
+import { CardDrizzleMapper } from '@/entities/card/mappers/card-drizzle-mapper';
+import { FlowDrizzleMapper } from '@/entities/flow/mappers/flow-drizzle-mapper';
 import { useFlowData } from './use-flow-data';
 import { filterEditableResourceFields } from '../utils/filter-editable-fields';
 

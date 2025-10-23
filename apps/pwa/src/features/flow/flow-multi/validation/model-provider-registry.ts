@@ -1,5 +1,5 @@
-import { ModelProviderInfo } from "@/modules/flow/model/validation-types";
-import { ApiSource } from "@/modules/api/domain";
+import { ModelProviderInfo } from "@/entities/flow/model/validation-types";
+import { ApiSource } from "@/entities/api/domain";
 
 export class ModelProviderRegistry {
   private static providers: Map<string, ModelProviderInfo> = new Map([

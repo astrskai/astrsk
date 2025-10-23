@@ -21,7 +21,7 @@ import { handleOperationError, handleCriticalError, handleDebugError } from '../
 async function createAgentPromptMessageFromData(data: any): Promise<any> {
   try {
     // Use the same domain parsing logic that direct service calls use
-    const { parsePromptMessage } = await import("@/modules/agent/domain/prompt-message");
+    const { parsePromptMessage } = await import("@/entities/agent/domain/prompt-message");
     
     // Handle both plain and history message types
     let domainData: any = {

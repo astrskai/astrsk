@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { cardQueries } from "@/app/queries/card-queries";
-import { CardType } from "@/modules/card/domain";
-import { SearchCardsSort } from "@/modules/card/repos";
+import { CardType } from "@/entities/card/domain";
+import { SearchCardsSort } from "@/entities/card/repos";
 
 interface UseLibraryCardsParams {
   keyword?: string;

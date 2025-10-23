@@ -11,9 +11,9 @@ import { useUpdateFlowValidation } from "@/app/queries/flow/mutations/validation
 import { ValidationPanelProps } from "./validation-panel-types";
 import { useQueries } from "@tanstack/react-query";
 import { IssueItem } from "./issue-item";
-import { Agent } from "@/modules/agent/domain";
-import { ReadyState } from "@/modules/flow/domain";
-import { ValidationIssue, ValidationContext } from "@/modules/flow/model/validation-types";
+import { Agent } from "@/entities/agent/domain";
+import { ReadyState } from "@/entities/flow/domain";
+import { ValidationIssue, ValidationContext } from "@/entities/flow/model/validation-types";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { useApiConnectionsWithModels } from "@/app/hooks/use-api-connections-with-models";
 import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traversal";

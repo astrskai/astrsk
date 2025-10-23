@@ -9,11 +9,11 @@ import { useRef, useCallback, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
-import { ApiType } from "@/modules/agent/domain/agent";
-import { PromptMessage } from "@/modules/agent/domain";
+import { ApiType } from "@/entities/agent/domain/agent";
+import { PromptMessage } from "@/entities/agent/domain";
 import { agentKeys } from "../query-factory";
 import { flowKeys } from "@/app/queries/flow/query-factory";
-import { Flow, ReadyState } from "@/modules/flow/domain/flow";
+import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 
 /**
  * Hook for updating just the API type

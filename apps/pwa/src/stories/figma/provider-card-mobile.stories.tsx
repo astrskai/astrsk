@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/shared/ui";
 import { SvgIcon, IconName } from "@/components-v2/svg-icon";
 import { cn } from "@/shared/lib";
 import React from "react";
-import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
+import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
 
 /**
  * Provider Card Mobile Component

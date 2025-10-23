@@ -12,12 +12,12 @@
 import { queryOptions } from "@tanstack/react-query";
 import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";
-import { AgentDrizzleMapper } from "@/modules/agent/mappers/agent-drizzle-mapper";
-import { PromptDrizzleMapper } from "@/modules/agent/mappers/prompt-drizzle-mapper";
-import { ParameterDrizzleMapper } from "@/modules/agent/mappers/parameter-drizzle-mapper";
-import { OutputDrizzleMapper } from "@/modules/agent/mappers/output-drizzle-mapper";
+import { AgentDrizzleMapper } from "@/entities/agent/mappers/agent-drizzle-mapper";
+import { PromptDrizzleMapper } from "@/entities/agent/mappers/prompt-drizzle-mapper";
+import { ParameterDrizzleMapper } from "@/entities/agent/mappers/parameter-drizzle-mapper";
+import { OutputDrizzleMapper } from "@/entities/agent/mappers/output-drizzle-mapper";
 import { queryClient } from "@/app/queries/query-client";
-import { Agent } from "@/modules/agent/domain";
+import { Agent } from "@/entities/agent/domain";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection

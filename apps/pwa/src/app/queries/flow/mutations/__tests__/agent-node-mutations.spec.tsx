@@ -12,11 +12,11 @@ import {
 } from "../composite-node-mutations";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
-import { Agent } from "@/modules/agent/domain/agent";
+import { Agent } from "@/entities/agent/domain/agent";
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { flowKeys } from "@/app/queries/flow/query-factory";
-import { NodeType } from "@/modules/flow/model/node-types";
+import { NodeType } from "@/entities/flow/model/node-types";
 
 // Mock services
 vi.mock("@/app/services/agent-service", () => ({
@@ -34,7 +34,7 @@ vi.mock("@/app/services/flow-service", () => ({
   },
 }));
 
-vi.mock("@/modules/agent/domain/agent", () => ({
+vi.mock("@/entities/agent/domain/agent", () => ({
   Agent: {
     create: vi.fn(),
   },

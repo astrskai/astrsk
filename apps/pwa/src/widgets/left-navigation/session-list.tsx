@@ -34,7 +34,7 @@ import {
   SessionExportDialog,
   type AgentModelTierInfo,
 } from "@/features/session/components/session-export-dialog";
-import { ModelTier } from "@/modules/agent/domain/agent";
+import { ModelTier } from "@/entities/agent/domain/agent";
 import {
   Dialog,
   DialogClose,
@@ -44,7 +44,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
-import { Session } from "@/modules/session/domain/session";
+import { Session } from "@/entities/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";
 import { downloadFile, logger } from "@/shared/lib";

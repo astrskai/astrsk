@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui";
-import { SearchCardsSort } from "@/modules/card/repos";
+import { SearchCardsSort } from "@/entities/card/repos";
 
 interface SortingBarProps {
   sortOrder: SearchCardsSort;

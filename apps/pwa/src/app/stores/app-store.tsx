@@ -5,7 +5,7 @@ import { immer } from "zustand/middleware/immer";
 import { createSelectors } from "@/shared/lib/zustand-utils";
 
 import { LocalPersistStorage } from "@/app/stores/local-persist-storage";
-import { CardType } from "@/modules/card/domain";
+import { CardType } from "@/entities/card/domain";
 
 export const Menu = {
   Play: "Sessions",

@@ -11,7 +11,7 @@ import {
   ScrollArea, ScrollBar, SearchInput, TypoBase,
   TypoSmall, TypoXLarge,
 } from "@/shared/ui";
-import { Card, CardType } from "@/modules/card/domain";
+import { Card, CardType } from "@/entities/card/domain";
 
 // Re-export schema from the shared step
 export { StepPlotCardSchema } from "@/features/session/create-session/step-plot-card";

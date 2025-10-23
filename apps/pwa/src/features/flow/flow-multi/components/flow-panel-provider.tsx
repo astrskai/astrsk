@@ -5,8 +5,8 @@ import {
   PanelType, 
   getPanelTitle,
 } from "@/features/flow/flow-multi/components/panel-types";
-import { Agent } from "@/modules/agent/domain/agent";
-import { Node } from "@/modules/flow/domain/flow";
+import { Agent } from "@/entities/agent/domain/agent";
+import { Node } from "@/entities/flow/domain/flow";
 import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";

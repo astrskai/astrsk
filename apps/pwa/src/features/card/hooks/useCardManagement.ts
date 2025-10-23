@@ -2,8 +2,8 @@ import { useState, useCallback, useMemo } from "react";
 
 import { useCards } from "@/app/hooks/use-cards";
 import { useCardsStore } from "@/app/stores/cards-store";
-import { Card, CardType, FilterCardType } from "@/modules/card/domain";
-import { SearchCardsSort } from "@/modules/card/repos";
+import { Card, CardType, FilterCardType } from "@/entities/card/domain";
+import { SearchCardsSort } from "@/entities/card/repos";
 
 /**
  * Hook to manage card listing, filtering, and searching functionality

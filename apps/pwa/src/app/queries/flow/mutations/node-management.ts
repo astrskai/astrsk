@@ -8,8 +8,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { flowKeys } from "../query-factory";
 import { processOperation } from "@/features/vibe/lib/operation-processors/operation-processor-factory";
-import { NodeType } from "@/modules/flow/model/node-types";
-import { Flow, ReadyState } from "@/modules/flow/domain/flow";
+import { NodeType } from "@/entities/flow/model/node-types";
+import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 import { FlowService } from "@/app/services/flow-service";
 
 export interface AddNodeRequest {

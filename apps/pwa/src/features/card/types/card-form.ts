@@ -1,4 +1,4 @@
-import { Entry } from "@/modules/card/domain";
+import { Entry } from "@/entities/card/domain";
 
 /**
  * Form values for card creation and editing

@@ -1,11 +1,11 @@
-import { ValidationIssue, ValidationIssueCode } from "@/modules/flow/model/validation-types";
+import { ValidationIssue, ValidationIssueCode } from "@/entities/flow/model/validation-types";
 import { ValidatorFunction } from "@/features/flow/flow-multi/validation/types/functional-validation-types";
 import { forEachConnectedAgent, generateIssueId } from "@/features/flow/flow-multi/validation/utils/validator-utils";
 import { generateValidationMessage } from "@/features/flow/flow-multi/validation/utils/message-generator";
 import { ModelProviderRegistry } from "@/features/flow/flow-multi/validation/model-provider-registry";
-import { Agent, PromptMessageType } from "@/modules/agent/domain";
+import { Agent, PromptMessageType } from "@/entities/agent/domain";
 import { MessageRole } from "@/shared/prompt/domain";
-import { ApiSource } from "@/modules/api/domain";
+import { ApiSource } from "@/entities/api/domain";
 
 // Check if there are non-system messages between system messages (for Google and Claude models)
 export const validateSystemMessagePlacement: ValidatorFunction = forEachConnectedAgent(

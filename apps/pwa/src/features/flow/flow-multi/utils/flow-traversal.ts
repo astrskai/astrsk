@@ -2,11 +2,11 @@
 // Implements algorithms to traverse the flow graph and determine sequence for agent, if, and dataStore nodes
 // Includes enhanced traversal that queries actual node data from services
 
-import { Flow, Node as FlowNode, Edge as FlowEdge } from "@/modules/flow/domain/flow";
+import { Flow, Node as FlowNode, Edge as FlowEdge } from "@/entities/flow/domain/flow";
 import { AgentService } from "@/app/services/agent-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
-import { NodeType } from "@/modules/flow/model/node-types";
+import { NodeType } from "@/entities/flow/model/node-types";
 import { UniqueEntityID } from "@/shared/domain";
 
 export interface ProcessNodePosition {

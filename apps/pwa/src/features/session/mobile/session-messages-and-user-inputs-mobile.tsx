@@ -59,11 +59,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui";
-import { CharacterCard, PlotCard } from "@/modules/card/domain";
-import { TranslationConfig } from "@/modules/session/domain/translation-config";
-import { Option } from "@/modules/turn/domain/option";
-import { Turn } from "@/modules/turn/domain/turn";
-import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
+import { CharacterCard, PlotCard } from "@/entities/card/domain";
+import { TranslationConfig } from "@/entities/session/domain/translation-config";
+import { Option } from "@/entities/turn/domain/option";
+import { Turn } from "@/entities/turn/domain/turn";
+import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
 import { isPathWithBasePath } from "@/shared/lib/url-utils";

@@ -1,6 +1,6 @@
 import { UniqueEntityID } from "@/shared/domain";
 import { type Viewport } from "@xyflow/react";
-import { Flow } from "@/modules/flow/domain/flow";
+import { Flow } from "@/entities/flow/domain/flow";
 import { AgentService } from "@/app/services/agent-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";

@@ -1,8 +1,8 @@
 import { queryClient } from "@/app/queries/query-client";
 import { TurnService } from "@/app/services/turn-service";
-import { TranslationConfig } from "@/modules/session/domain/translation-config";
-import { Turn } from "@/modules/turn/domain/turn";
-import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
+import { TranslationConfig } from "@/entities/session/domain/translation-config";
+import { Turn } from "@/entities/turn/domain/turn";
+import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
 import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib/logger";
 import { queryOptions, useMutation } from "@tanstack/react-query";

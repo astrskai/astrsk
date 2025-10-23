@@ -39,9 +39,9 @@ import {
 } from "./shared-list-components";
 import { CardImportDialog } from "@/features/card/components/card-import-dialog";
 import { TableName } from "@/db/schema/table-name";
-import { CharacterCard, PlotCard } from "@/modules/card/domain";
-import { Card, CardType } from "@/modules/card/domain/card";
-import { Session } from "@/modules/session/domain/session";
+import { CharacterCard, PlotCard } from "@/entities/card/domain";
+import { Card, CardType } from "@/entities/card/domain/card";
+import { Session } from "@/entities/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";
 import { downloadFile, logger } from "@/shared/lib";

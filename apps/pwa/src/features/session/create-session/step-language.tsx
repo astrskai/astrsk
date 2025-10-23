@@ -7,8 +7,8 @@ import { languages } from "@/shared/lib/translate-utils";
 import { Combobox } from "@/shared/ui";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
-import { SessionProps } from "@/modules/session/domain";
-import { TranslationConfig } from "@/modules/session/domain/translation-config";
+import { SessionProps } from "@/entities/session/domain";
+import { TranslationConfig } from "@/entities/session/domain/translation-config";
 
 const StepLanguageSchema = z.object({
   translation: z.object({

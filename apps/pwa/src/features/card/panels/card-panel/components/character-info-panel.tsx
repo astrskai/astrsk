@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Editor, Input } from "@/shared/ui";
 import type { editor } from "monaco-editor";
-import { CharacterCard } from "@/modules/card/domain";
+import { CharacterCard } from "@/entities/card/domain";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 import {

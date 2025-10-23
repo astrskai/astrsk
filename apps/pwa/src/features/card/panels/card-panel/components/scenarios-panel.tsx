@@ -32,7 +32,7 @@ import {
   TooltipTrigger,
 } from "@/shared/ui";
 
-import { PlotCard } from "@/modules/card/domain";
+import { PlotCard } from "@/entities/card/domain";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 

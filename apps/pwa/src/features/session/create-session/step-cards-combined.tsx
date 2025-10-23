@@ -1,6 +1,6 @@
 import { UniqueEntityID } from "@/shared/domain";
-import { CardType } from "@/modules/card/domain";
-import { CardListItem, SessionProps } from "@/modules/session/domain";
+import { CardType } from "@/entities/card/domain";
+import { CardListItem, SessionProps } from "@/entities/session/domain";
 
 interface CombinedCardsFormValues {
   aiCharacterCardIds: string[];

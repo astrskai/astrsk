@@ -22,8 +22,8 @@ import { useIsMobile } from "@/shared/hooks/use-mobile";
 import {
   ChatStyles,
   defaultChatStyles,
-} from "@/modules/session/domain/chat-styles";
-import { SessionProps } from "@/modules/session/domain/session";
+} from "@/entities/session/domain/chat-styles";
+import { SessionProps } from "@/entities/session/domain/session";
 
 const ChatStyleSchema = z.object({
   // Font

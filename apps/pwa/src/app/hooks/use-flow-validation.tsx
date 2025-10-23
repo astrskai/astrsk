@@ -11,7 +11,7 @@ import { useValidationStore } from "@/app/stores/validation-store";
 import {
   isAgentValid,
 } from "@/features/flow/flow-multi/utils/flow-validation";
-import { Agent } from "@/modules/agent/domain/agent";
+import { Agent } from "@/entities/agent/domain/agent";
 
 export function useFlowValidation(flowId?: UniqueEntityID | null) {
   // Get flow and api connections with models

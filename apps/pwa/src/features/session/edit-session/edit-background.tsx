@@ -23,7 +23,7 @@ import {
   Button, Dialog, DialogContent, DialogTitle,
   SvgIcon, TypoBase, TypoLarge,
 } from "@/shared/ui";
-import { SessionProps } from "@/modules/session/domain/session";
+import { SessionProps } from "@/entities/session/domain/session";
 
 const SelectedBackground = ({
   backgroundId,

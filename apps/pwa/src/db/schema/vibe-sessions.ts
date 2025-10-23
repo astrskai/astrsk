@@ -6,7 +6,7 @@ import type {
   ConversationHistoryEntry, 
   PersistedAIResults,
   ResourceSnapshot
-} from "@/modules/vibe-session/domain";
+} from "@/entities/vibe-session/domain";
 import type { SessionStatus } from "vibe-shared-types";
 import type { StructuredChange } from "vibe-shared-types";
 

@@ -15,7 +15,7 @@ import { FlowService } from "@/app/services/flow-service";
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain";
 import { flowKeys } from "@/app/queries/flow/query-factory";
-import { NodeType } from "@/modules/flow/model/node-types";
+import { NodeType } from "@/entities/flow/model/node-types";
 
 // Mock services
 vi.mock("@/app/services/if-node-service", () => ({

@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
-import { DataStoreField } from "@/modules/flow/domain/flow";
+import { DataStoreField } from "@/entities/flow/domain/flow";
 
 interface SortableDataFieldProps {
   field: DataStoreField;

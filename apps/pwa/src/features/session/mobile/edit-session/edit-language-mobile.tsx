@@ -13,7 +13,7 @@ import {
   StepLanguageSchemaType,
 } from "@/features/session/mobile/create-session/step-language-mobile";
 import { LanguageSettings } from "@/features/session/create-session/step-language";
-import { Session, SessionProps } from "@/modules/session/domain";
+import { Session, SessionProps } from "@/entities/session/domain";
 
 interface EditLanguageMobileProps {
   session: Session;

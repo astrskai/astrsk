@@ -1,11 +1,11 @@
-import { ValidationIssue, ValidationIssueCode } from "@/modules/flow/model/validation-types";
+import { ValidationIssue, ValidationIssueCode } from "@/entities/flow/model/validation-types";
 import { ValidatorFunction } from "@/features/flow/flow-multi/validation/types/functional-validation-types";
 import { forEachConnectedAgent, generateIssueId } from "@/features/flow/flow-multi/validation/utils/validator-utils";
 import { generateValidationMessage } from "@/features/flow/flow-multi/validation/utils/message-generator";
 import { ProviderValidationData } from "@/features/flow/flow-multi/validation/types/message-data-types";
 import { ModelProviderRegistry } from "@/features/flow/flow-multi/validation/model-provider-registry";
-import { Agent, OutputFormat } from "@/modules/agent/domain";
-import { ApiSource } from "@/modules/api/domain";
+import { Agent, OutputFormat } from "@/entities/agent/domain";
+import { ApiSource } from "@/entities/api/domain";
 import { ValidationParameter } from "@/features/flow/flow-multi/validation/types/validation-parameter-types";
 import { 
   anthropicParameterList,

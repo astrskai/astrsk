@@ -3,7 +3,7 @@
 
 import { file } from "opfs-tools";
 
-import { Asset } from "@/modules/asset/domain/asset";
+import { Asset } from "@/entities/asset/domain/asset";
 
 import pngChunksEncode from "png-chunks-encode";
 import pngChunksExtract from "png-chunks-extract";
