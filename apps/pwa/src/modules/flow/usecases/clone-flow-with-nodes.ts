@@ -10,7 +10,7 @@ import { LoadDataStoreNodeRepo, SaveDataStoreNodeRepo } from "@/modules/data-sto
 import { LoadIfNodeRepo, SaveIfNodeRepo } from "@/modules/if-node/repos";
 import { DataStoreNode } from "@/modules/data-store-node/domain";
 import { IfNode } from "@/modules/if-node/domain";
-import { NodeType } from "@/features/flow/flow-multi/types/node-types";
+import { NodeType } from "@/modules/flow/model/node-types";
 
 export class CloneFlowWithNodes
   implements UseCase<UniqueEntityID, Promise<Result<Flow>>>

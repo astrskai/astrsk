@@ -2,7 +2,7 @@
  * Utility functions for managing panels in the flow editor
  */
 
-import { NodeType } from "@/features/flow/flow-multi/types/node-types";
+import { NodeType } from "@/modules/flow/model/node-types";
 import { PANEL_TYPES, AGENT_PANEL_TYPES } from "@/features/flow/flow-multi/components/panel-types";
 
 /**

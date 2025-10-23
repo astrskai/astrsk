@@ -5,7 +5,7 @@ import { Flow } from "@/modules/flow/domain/flow";
 import { LoadFlowRepo } from "@/modules/flow/repos/load-flow-repo";
 import { LoadDataStoreNodeRepo } from "@/modules/data-store-node/repos";
 import { LoadIfNodeRepo } from "@/modules/if-node/repos";
-import { NodeType } from "@/features/flow/flow-multi/types/node-types";
+import { NodeType } from "@/modules/flow/model/node-types";
 
 /**
  * Enhanced GetFlow that properly loads flow with nodes from dedicated tables.

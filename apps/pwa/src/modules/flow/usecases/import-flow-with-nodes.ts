@@ -11,7 +11,7 @@ import { SaveIfNodeRepo } from "@/modules/if-node/repos";
 import { DataStoreNode } from "@/modules/data-store-node/domain";
 import { IfNode } from "@/modules/if-node/domain";
 import { UniqueEntityID } from "@/shared/domain";
-import { NodeType } from "@/features/flow/flow-multi/types/node-types";
+import { NodeType } from "@/modules/flow/model/node-types";
 import {
   isOldFlowFormat,
   migrateFlowToNewFormat,

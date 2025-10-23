@@ -8,7 +8,7 @@ import { ensureNodeSafety } from "@/features/flow/flow-multi/utils/ensure-node-s
 import { ensureEdgeSelectable } from "@/features/flow/flow-multi/utils/ensure-edge-selectable";
 import { Flow } from "@/modules/flow/domain/flow";
 import { CustomNodeType } from "@/features/flow/flow-multi/nodes";
-import { NodeType } from "@/features/flow/flow-multi/types/node-types";
+import { NodeType } from "@/modules/flow/model/node-types";
 import { UniqueEntityID } from "@/shared/domain";
 
 // Define CustomEdgeType locally

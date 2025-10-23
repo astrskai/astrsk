@@ -1,4 +1,4 @@
-import { ValidationContext, ValidationIssue } from "@/features/flow/flow-multi/validation/types/validation-types";
+import { ValidationContext, ValidationIssue } from "@/modules/flow/model/validation-types";
 import { ValidatorFunction, ValidatorComposer, ValidatorFilter, ValidatorEnhancer } from "@/features/flow/flow-multi/validation/types/functional-validation-types";
 
 // Compose multiple validators into one

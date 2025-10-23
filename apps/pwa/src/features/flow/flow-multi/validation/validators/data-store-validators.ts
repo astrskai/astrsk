@@ -1,4 +1,4 @@
-import { ValidationIssue, ValidationIssueCode } from "@/features/flow/flow-multi/validation/types/validation-types";
+import { ValidationIssue, ValidationIssueCode } from "@/modules/flow/model/validation-types";
 import { ValidatorFunction } from "@/features/flow/flow-multi/validation/types/functional-validation-types";
 import { generateIssueId } from "@/features/flow/flow-multi/validation/utils/validator-utils";
 import { DataStoreFieldType } from "@/features/flow/flow-multi/panels/data-store-schema/data-store-schema-types";

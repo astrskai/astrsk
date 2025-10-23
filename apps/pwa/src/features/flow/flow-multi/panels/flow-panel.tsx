@@ -23,7 +23,7 @@ import {
   Flow,
 } from "@/modules/flow/domain/flow";
 import { Session } from "@/modules/session/domain/session";
-import { NodeType } from "@/features/flow/flow-multi/types/node-types";
+import { NodeType } from "@/modules/flow/model/node-types";
 import { ensureNodesSafety } from "@/features/flow/flow-multi/utils/ensure-node-safety";
 import {
   ensureEdgeSelectable,
