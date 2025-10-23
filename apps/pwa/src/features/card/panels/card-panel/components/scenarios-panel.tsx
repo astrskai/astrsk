@@ -19,7 +19,7 @@ import {
   restrictToVerticalAxis,
   restrictToParentElement,
 } from "@dnd-kit/modifiers";
-import { Editor } from "@/components-v2/editor";
+import { Editor } from "@/shared/ui/editor";
 import { Trash2, Plus, HelpCircle } from "lucide-react";
 import {
   Tooltip,

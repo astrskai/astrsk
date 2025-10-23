@@ -38,7 +38,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
-import { Editor } from "@/components-v2/editor";
+import { Editor } from "@/shared/ui/editor";
 import type { editor } from "monaco-editor";
 import { debounce } from "lodash-es";
 import type { DataStoreField } from "@/modules/flow/domain/flow";

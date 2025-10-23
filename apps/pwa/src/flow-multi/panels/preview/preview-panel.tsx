@@ -1,7 +1,7 @@
 import { sessionQueries } from "@/app/queries/session-queries";
 import { turnQueries } from "@/app/queries/turn-queries";
 import { useAgentStore } from "@/app/stores/agent-store";
-import { Editor } from "@/components-v2/editor";
+import { Editor } from "@/shared/ui/editor";
 import {
   FlowPanelError,
   FlowPanelLoading,

@@ -85,7 +85,7 @@ import { AutoReply, useSessionStore } from "@/app/stores/session-store";
 import { Avatar } from "@/components/ui/avatar";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
-import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
+import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
 import { MediaPlaceholderMessage } from "@/features/session/media-placeholder-message";
 import { SvgIcon } from "@/components/ui/svg-icon";

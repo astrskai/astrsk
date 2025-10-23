@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { debounce } from "lodash-es";
 import { Loader2 } from "lucide-react";
 
-import { Editor } from "@/components-v2/editor";
+import { Editor } from "@/shared/ui/editor";
 import type { editor } from "monaco-editor";
 import { toast } from "sonner";
 

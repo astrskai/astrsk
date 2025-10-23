@@ -21,7 +21,7 @@ import {
   restrictToVerticalAxis,
   restrictToParentElement,
 } from "@dnd-kit/modifiers";
-import { Editor } from "@/components-v2/editor";
+import { Editor } from "@/shared/ui/editor";
 import type { editor } from "monaco-editor";
 import { Trash2, Plus, Maximize2, Minimize2, HelpCircle } from "lucide-react";
 
