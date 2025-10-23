@@ -24,7 +24,7 @@ import {
   ProviderListItemDetail,
   apiSourceLogo,
 } from "@/features/settings/providers/provider-list-item";
-import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
+import { useMobileNavigation } from "@/app/contexts/mobile-navigation-context";
 import { TableName } from "@/db/schema/table-name";
 import {
   ApiConnection,

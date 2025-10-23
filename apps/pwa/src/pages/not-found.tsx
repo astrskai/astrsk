@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Logo } from "@/assets/components/icons";
+import { Logo } from "@/shared/assets/icons";
 import { Button } from "@/shared/ui";
 
 const NotFound = () => {

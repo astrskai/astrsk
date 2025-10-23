@@ -1,4 +1,4 @@
-import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
+import { useMobileNavigation } from "@/app/contexts/mobile-navigation-context";
 import { cn } from "@/shared/lib";
 import { SessionListMobile } from "./session-list-mobile";
 import { useRef } from "react";

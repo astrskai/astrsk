@@ -11,7 +11,7 @@ import { LoadGeneratedImageRepo } from "@/modules/generated-image/repos/load-gen
 import {
   character_card_placeholder,
   plot_card_placeholder,
-} from "@/public/placeholders";
+} from "@/shared/assets/placeholders";
 
 export interface ExportOptions {
   format: "json" | "png";
