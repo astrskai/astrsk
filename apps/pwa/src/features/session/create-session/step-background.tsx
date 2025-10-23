@@ -11,8 +11,8 @@ import {
   fetchBackgrounds,
   useBackgroundStore,
 } from "@/app/stores/background-store";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
-import { cn } from "@/components-v2/lib/utils";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
+import { cn } from "@/shared/lib/cn";
 import { TypoBase } from "@/components/ui/typo";
 import { AspectRatio } from "@/components-v2/ui/aspect-ratio";
 import { Button } from "@/components-v2/ui/button";

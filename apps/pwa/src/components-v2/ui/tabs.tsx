@@ -3,7 +3,7 @@
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import * as React from "react";
 
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 
 // Create context for variant
 const TabsVariantContext = React.createContext<

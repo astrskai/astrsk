@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { SvgIcon } from "@/components/ui/svg-icon";
 
 const titles = [

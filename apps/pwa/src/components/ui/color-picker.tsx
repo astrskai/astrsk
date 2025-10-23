@@ -5,7 +5,7 @@ import { HexColorPicker } from "react-colorful";
 
 import { cn } from "@/shared/utils/tailwind-utils";
 
-import { useForwardedRef } from "@/components-v2/hooks/use-forwarded-ref";
+import { useForwardedRef } from "@/shared/hooks/use-forwarded-ref";
 import type { ButtonProps } from "@/components-v2/ui/button";
 import { Button } from "@/components-v2/ui/button";
 import { Input } from "@/components-v2/ui/input";

@@ -20,7 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import { DeleteConfirm } from "@/components/dialogs/confirm";
 import { FlowDialog } from "@/features/flow/flow-dialog";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { SearchInput } from "@/components/ui/search-input";
 import { humanizeBytes } from "@/features/session/session-list";
 import { SvgIcon } from "@/components/ui/svg-icon";

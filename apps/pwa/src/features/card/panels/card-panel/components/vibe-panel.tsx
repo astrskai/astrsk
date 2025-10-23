@@ -1,5 +1,5 @@
 import React from 'react';
-import VibeCodingPanel from '@/components-v2/right-navigation/vibe-panel/index';
+import VibeCodingPanel from '@/features/vibe';
 import { useCardPanelContext } from '@/features/card/panels/card-panel-provider';
 
 interface CardVibePanelProps {

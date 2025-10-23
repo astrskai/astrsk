@@ -1,4 +1,4 @@
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { CircleCheck } from "lucide-react";
 import { toast } from "sonner";
 

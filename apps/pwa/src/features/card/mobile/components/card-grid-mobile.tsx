@@ -1,4 +1,4 @@
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { CheckboxMobile } from "@/components-v2/ui/checkbox";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { Card, CardType } from "@/modules/card/domain";

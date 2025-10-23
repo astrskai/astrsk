@@ -13,7 +13,7 @@ import { useFlows } from "@/app/hooks/use-flows";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { SessionService } from "@/app/services/session-service";
 import { Combobox } from "@/components/ui/combobox";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import {
   convertFlowAndAgentsFormToSessionProps,
   StepFlowAndAgentsSchema,

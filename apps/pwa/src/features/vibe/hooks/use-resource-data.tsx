@@ -6,7 +6,7 @@ import { CardType } from '@/modules/card/domain';
 import { CardDrizzleMapper } from '@/modules/card/mappers/card-drizzle-mapper';
 import { FlowDrizzleMapper } from '@/modules/flow/mappers/flow-drizzle-mapper';
 import { useFlowData } from './use-flow-data';
-import { filterEditableResourceFields } from '../../filter-editable-fields';
+import { filterEditableResourceFields } from '../utils/filter-editable-fields';
 
 interface UseResourceDataProps {
   selectedCardId: string | null;

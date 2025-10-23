@@ -1,7 +1,7 @@
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { useState } from "react";
-import { usePwa } from "@/components-v2/hooks/use-pwa";
+import { usePwa } from "@/shared/hooks/use-pwa";
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
 import { useGlobalErrorHandler } from "@/app/hooks/use-global-error-handler";
 import { useSessionStore } from "@/app/stores/session-store";
@@ -15,7 +15,7 @@ import { SidebarLeftProvider } from "@/components/layout/both-sidebar";
 import { LeftNavigationMobile } from "@/components/layout/left-navigation/left-navigation-mobile";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
 import { Toaster } from "@/components-v2/ui/sonner";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { LeftNavigation } from "@/components/layout/left-navigation";
 import { LeftNavigationTrigger } from "@/components/layout/left-navigation";
 import { SidebarInset } from "@/components/layout/both-sidebar";

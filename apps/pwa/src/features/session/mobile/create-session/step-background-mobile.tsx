@@ -11,7 +11,7 @@ import {
   fetchBackgrounds,
   useBackgroundStore,
 } from "@/app/stores/background-store";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { TypoBase } from "@/components/ui/typo";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";

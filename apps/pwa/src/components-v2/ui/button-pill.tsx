@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { SubscribeBadge } from "@/components/ui/subscribe-badge";
 
 const buttonPillVariants = cva(

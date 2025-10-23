@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import FlowMultiPage from "@/flow-multi/pages/flow-multi-page";
 import { useAgentStore } from "@/app/stores/agent-store";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 import FlowPageMobile from "@/features/flow/flow-page-mobile";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 

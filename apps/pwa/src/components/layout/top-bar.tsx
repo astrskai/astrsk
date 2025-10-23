@@ -1,6 +1,6 @@
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
 import { useAppStore } from "@/app/stores/app-store";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { SquareArrowUpRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";

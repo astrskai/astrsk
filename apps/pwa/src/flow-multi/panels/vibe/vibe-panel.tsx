@@ -1,5 +1,5 @@
 import React from 'react';
-import VibeCodingPanel from '@/components-v2/right-navigation/vibe-panel/index';
+import VibeCodingPanel from '@/features/vibe';
 import { useFlowPanelContext } from '@/flow-multi/components/flow-panel-provider';
 import { PANEL_TYPES } from '@/flow-multi/components/panel-types';
 

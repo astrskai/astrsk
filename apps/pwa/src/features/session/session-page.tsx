@@ -9,7 +9,7 @@ import {
   SidebarLeftProvider,
 } from "@/components/layout/both-sidebar";
 import { InitialPage } from "@/components/system/init-page";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { CardTab } from "@/features/session/create-session/step-cards";
 import { SessionMain } from "@/features/session/session-main";
 import { SessionSettings } from "@/features/session/session-settings";

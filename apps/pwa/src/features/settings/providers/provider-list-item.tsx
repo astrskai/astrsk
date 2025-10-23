@@ -8,7 +8,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { DeleteConfirm } from "@/components/dialogs/confirm";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { IconName, SvgIcon } from "@/components/ui/svg-icon";
 import { TypoSmall, TypoTiny } from "@/components/ui/typo";
 import { Card, CardContent } from "@/components-v2/ui/card";

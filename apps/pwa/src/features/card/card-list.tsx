@@ -15,7 +15,7 @@ import { Button } from "@/components-v2/ui/button";
 import { Card } from "@/components-v2/ui/card";
 import { CardType } from "@/modules/card/domain";
 import { SearchCardsSort } from "@/modules/card/repos";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/utils";
 
 interface CardListProps {

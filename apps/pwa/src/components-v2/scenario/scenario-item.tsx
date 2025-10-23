@@ -2,8 +2,8 @@ import React from "react";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
-import { cn } from "@/components-v2/lib/utils";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { cn } from "@/shared/lib/cn";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 
 interface ScenarioItemProps {
   name: string;

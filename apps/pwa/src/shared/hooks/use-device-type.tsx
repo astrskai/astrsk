@@ -1,4 +1,4 @@
-import { usePwa } from "@/components-v2/hooks/use-pwa";
+import { usePwa } from "@/shared/hooks/use-pwa";
 import { useEffect, useState } from "react";
 import { isMobile as isUaMobile } from "react-device-detect";
 

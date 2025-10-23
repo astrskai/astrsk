@@ -3,11 +3,11 @@
 import { Check, ChevronDown, Search } from "lucide-react";
 import * as React from "react";
 
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import {
   useIsMobileWithOverride,
   MobileOverrideProvider,
-} from "@/components-v2/hooks/use-mobile-override";
+} from "@/shared/hooks/use-mobile-override";
 import {
   Command,
   CommandEmpty,

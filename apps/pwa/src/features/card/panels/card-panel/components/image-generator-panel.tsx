@@ -17,7 +17,7 @@ import {
   CardPanelProps,
   useCardPanel,
 } from "@/features/card/panels/hooks/use-card-panel";
-import { useResourceData } from "@/components-v2/right-navigation/vibe-panel/hooks/use-resource-data";
+import { useResourceData } from "@/features/vibe/hooks/use-resource-data";
 import { useAppStore, Page } from "@/app/stores/app-store";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
