@@ -6,7 +6,7 @@ import {
   SettingPageLevel,
   useAppStore,
 } from "@/app/stores/app-store";
-import { ConvexReady } from "@/components/system/convex-ready";
+import { ConvexReady } from "@/app/providers/convex-ready";
 import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/shared/ui/svg-icon";
 import { Typo2XLarge, TypoBase, TypoXLarge } from "@/shared/ui/typo";

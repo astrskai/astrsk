@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditUsagePage } from "@/features/settings/account";
-import { ConvexReady } from "@/components/system/convex-ready";
+import { ConvexReady } from "@/app/providers/convex-ready";
 
 export const Route = createFileRoute("/_layout/settings/account/credit-usage")({
   component: CreditUsagePageRoute,

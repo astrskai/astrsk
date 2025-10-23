@@ -5,7 +5,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { SessionService } from "@/app/services/session-service";
-import { TopNavigation } from "@/components/layout/top-navigation";
+import { TopNavigation } from "@/widgets/top-navigation";
 import { Button } from "@/shared/ui/button";
 import {
   convertLanguageFormToSessionProps,

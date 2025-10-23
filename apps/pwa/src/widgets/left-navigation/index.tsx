@@ -1,8 +1,8 @@
 // TODO: apply color palette
 
 import { Page, useAppStore } from "@/app/stores/app-store";
-import { SidebarLeft, useSidebarLeft } from "@/components/layout/both-sidebar";
-import { HelpVideoDialog } from "@/components/dialogs/help-video-dialog";
+import { SidebarLeft, useSidebarLeft } from "@/widgets/both-sidebar";
+import { HelpVideoDialog } from "@/shared/ui/help-video-dialog";
 import { CardSection } from "./card-list";
 import { FlowSection } from "./flow-list";
 import { SessionSection } from "./session-list";
@@ -14,7 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
-import { UpdaterNew } from "@/components/system/updater-new";
+import { UpdaterNew } from "@/app/providers/updater-new";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeftFromLine,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ImportDialog } from "@/components/dialogs/import-dialog";
+import { ImportDialog } from "@/shared/ui/import-dialog";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { ModelItem } from "@/flow-multi/components/model-selection";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";

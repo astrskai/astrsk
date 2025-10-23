@@ -14,7 +14,7 @@ import { useBackGesture } from "@/shared/hooks/use-back-gesture";
 import { cn } from "@/shared/lib";
 import { SessionMessagesAndUserInputsMobile } from "@/features/session/mobile/session-messages-and-user-inputs-mobile";
 import { SessionSettingsMobile } from "@/features/session/mobile/session-settings-mobile";
-import { TopNavigation } from "@/components/layout/top-navigation";
+import { TopNavigation } from "@/widgets/top-navigation";
 import { Button } from "@/shared/ui/button";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { Sheet, SheetContent } from "@/shared/ui/sheet";

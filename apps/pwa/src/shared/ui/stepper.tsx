@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { cn } from "@/shared/lib";
 
-import { UnsavedChangesConfirm } from "@/components/dialogs/confirm";
+import { UnsavedChangesConfirm } from "@/shared/ui/confirm";
 import { Button } from "@/shared/ui/button";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 

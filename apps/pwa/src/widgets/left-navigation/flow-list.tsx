@@ -27,7 +27,7 @@ import {
   ImportButton,
 } from "./shared-list-components";
 import { SvgIcon } from "@/shared/ui/svg-icon";
-import { DeleteConfirm } from "@/components/dialogs/confirm";
+import { DeleteConfirm } from "@/shared/ui/confirm";
 import {
   Tooltip,
   TooltipContent,
