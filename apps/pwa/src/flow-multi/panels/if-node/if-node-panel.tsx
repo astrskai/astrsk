@@ -9,7 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components-v2/ui/select";
+} from "@/shared/ui/select";
 import { ifNodeQueries } from "@/app/queries/if-node/query-factory";
 import {
   useUpdateIfNodeConditions,

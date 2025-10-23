@@ -31,7 +31,7 @@ import type { editor } from "monaco-editor";
 
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { sanitizeFileName } from "@/shared/lib";
 

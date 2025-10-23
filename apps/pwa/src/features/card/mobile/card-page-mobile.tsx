@@ -18,14 +18,14 @@ import { CardGridMobile } from "./components/card-grid-mobile";
 import { cn } from "@/shared/lib";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/shared/ui/button";
-import { CheckboxMobile } from "@/components-v2/ui/checkbox";
+import { CheckboxMobile } from "@/shared/ui/checkbox";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components-v2/ui/tabs";
+} from "@/shared/ui/tabs";
 import {
   Dialog,
   DialogContent,

@@ -30,7 +30,7 @@ import { SvgIcon } from "@/components/ui/svg-icon";
 import { ModelItem } from "@/flow-multi/components/model-selection";
 import { TypoBase } from "@/components/ui/typo";
 import { Button } from "@/shared/ui/button";
-import { CheckboxMobile } from "@/components-v2/ui/checkbox";
+import { CheckboxMobile } from "@/shared/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -41,7 +41,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/ui/dialog";
-import { Label } from "@/components-v2/ui/label";
+import { Label } from "@/shared/ui/label";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { TableName } from "@/db/schema/table-name";
 import { Agent } from "@/modules/agent/domain/agent";

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Card, CardContent } from "@/components-v2/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { SvgIcon, IconName } from "@/components-v2/svg-icon";
 import { cn } from "@/shared/lib";
 import React from "react";

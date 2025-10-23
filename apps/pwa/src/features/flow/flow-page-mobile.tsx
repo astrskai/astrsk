@@ -27,7 +27,7 @@ import { SvgIcon } from "@/components/ui/svg-icon";
 import { ModelItem } from "@/flow-multi/components/model-selection";
 import { TypoBase } from "@/components/ui/typo";
 import { Button } from "@/shared/ui/button";
-import { CheckboxMobile } from "@/components-v2/ui/checkbox";
+import { CheckboxMobile } from "@/shared/ui/checkbox";
 import {
   Dialog,
   DialogContent,

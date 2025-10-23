@@ -9,7 +9,7 @@ import { Parameter, parameterList } from "@/shared/task/domain/parameter";
 
 import { SearchInput } from "@/components/ui/search-input";
 import { Typo2XLarge, TypoBase } from "@/components/ui/typo";
-import { Card, CardContent } from "@/components-v2/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Switch } from "@/components-v2/ui/switch";
@@ -19,7 +19,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components-v2/ui/select";
+} from "@/shared/ui/select";
 
 export type ParameterValue = number | string | boolean;
 

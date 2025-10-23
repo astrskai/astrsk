@@ -32,7 +32,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components-v2/ui/tabs";
+} from "@/shared/ui/tabs";
 import { Card, CardType } from "@/modules/card/domain/card";
 import { SessionProps } from "@/modules/session/domain/session";
 import { useQuery } from "@tanstack/react-query";

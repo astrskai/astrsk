@@ -25,7 +25,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components-v2/ui/tabs";
+} from "@/shared/ui/tabs";
 import { Session, SessionProps } from "@/modules/session/domain";
 import { useAsset } from "@/app/hooks/use-asset";
 import { AspectRatio } from "@/components-v2/ui/aspect-ratio";

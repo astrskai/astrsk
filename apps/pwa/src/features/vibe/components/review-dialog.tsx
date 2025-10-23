@@ -14,7 +14,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components-v2/ui/tabs";
+} from "@/shared/ui/tabs";
 import { Check, X, Code, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { ReviewData } from "../types";
 

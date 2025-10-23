@@ -28,8 +28,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
-import { CheckboxMobile } from "@/components-v2/ui/checkbox";
-import { Label } from "@/components-v2/ui/label";
+import { CheckboxMobile } from "@/shared/ui/checkbox";
+import { Label } from "@/shared/ui/label";
 import { Input } from "@/shared/ui/input";
 import { SessionProps } from "@/modules/session/domain/session";
 

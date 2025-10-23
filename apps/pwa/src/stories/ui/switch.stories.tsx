@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Switch } from "@/components-v2/ui/switch";
-import { Label } from "@/components-v2/ui/label";
+import { Label } from "@/shared/ui/label";
 import React from "react";
 
 const meta = {

@@ -17,7 +17,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components-v2/ui/tabs";
+} from "@/shared/ui/tabs";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import {
   ChatStyles,

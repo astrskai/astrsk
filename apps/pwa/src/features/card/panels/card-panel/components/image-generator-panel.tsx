@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components-v2/ui/select";
+} from "@/shared/ui/select";
 import { Loader2, Sparkles } from "lucide-react";
 import { Slider } from "@/components-v2/ui/slider";
 import { ScrollArea } from "@/shared/ui/scroll-area";

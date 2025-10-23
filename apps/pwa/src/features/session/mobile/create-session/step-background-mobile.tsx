@@ -20,7 +20,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components-v2/ui/tabs";
+} from "@/shared/ui/tabs";
 import { AspectRatio } from "@/components-v2/ui/aspect-ratio";
 import { Background } from "@/modules/background/domain";
 

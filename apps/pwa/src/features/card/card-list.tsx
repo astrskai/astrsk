@@ -12,7 +12,7 @@ import CardGrid from "@/features/card/components/card-grid";
 import { SearchInput } from "@/components/ui/search-input";
 import { TypoBase, Typo3XLarge } from "@/components/ui/typo";
 import { Button } from "@/shared/ui/button";
-import { Card } from "@/components-v2/ui/card";
+import { Card } from "@/shared/ui/card";
 import { CardType } from "@/modules/card/domain";
 import { SearchCardsSort } from "@/modules/card/repos";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
