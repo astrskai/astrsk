@@ -32,6 +32,9 @@ importers:
       '@ai-sdk/xai':
         specifier: ^1.1.13
         version: 1.2.18(zod@3.25.76)
+      '@astrsk/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@clerk/clerk-react':
         specifier: ^5.46.1
         version: 5.46.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

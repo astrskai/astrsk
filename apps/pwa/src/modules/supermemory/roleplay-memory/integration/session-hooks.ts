@@ -18,7 +18,6 @@ import type {
 import {
   createCharacterContainer,
   createWorldContainer,
-  createNpcContainer,
 } from "../core/containers";
 import {
   storeInitContent,
@@ -250,6 +249,32 @@ export async function initializeRoleplayMemory(
       })),
       worldContainerTag: worldContainer,
     });
+
+    // Trigger extension hooks for scenario initialization (NPC detection in scenario content)
+    if (scenario?.messages && scenario.messages.length > 0) {
+      try {
+        const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
+        // Combine all scenario messages for NPC analysis
+        const scenarioContent = scenario.messages.map(m => m.content).join("\n\n");
+
+        // Get session entity for extension hook context
+        const { SessionService } = await import("@/app/services/session-service");
+        const sessionResult = await SessionService.getSession.execute(new UniqueEntityID(sessionId));
+
+        if (sessionResult.isSuccess) {
+          const session = sessionResult.getValue();
+          await triggerExtensionHook("scenario:initialized", {
+            session,
+            message: scenarioContent,
+            timestamp: Date.now(),
+          });
+          logger.info("[Session Init] Triggered extension hooks for scenario initialization");
+        }
+      } catch (error) {
+        logger.error("[Session Init] Failed to trigger extension hooks for scenario:", error);
+        // Don't throw - extension hooks are optional
+      }
+    }
   } catch (error) {
     logger.error("[Session Init] Failed to initialize roleplay memory:", error);
     throw error;
@@ -389,15 +414,12 @@ export async function distributeMemories(
     // We need to get character IDs from session.characterCards for creating containers
     const allParticipantNames = dataStore.participants || [];
 
-    // Build name-to-ID mapping by looking up session's character cards AND NPC pool
+    // Build name-to-ID mapping by looking up session's character cards
     const { CardService } = await import("@/app/services/card-service");
     const { CharacterCard } = await import(
       "@/modules/card/domain/character-card"
     );
-    const { useNpcStore } = await import("@/app/stores/npc-store");
-    const { mapParticipantNamesToIds } = await import("../utils/npc-utils");
-
-    const characterIdToName: Record<string, string> = {};
+    const nameToId: Record<string, string> = {};
 
     // Get all character cards from session to build name-to-ID mapping
     const { SessionService } = await import("@/app/services/session-service");
@@ -414,7 +436,7 @@ export async function distributeMemories(
             .throwOnFailure()
             .getValue() as typeof CharacterCard.prototype;
           const userName = userCard.props.name || userCard.props.title || "User";
-          characterIdToName[session.userCharacterCardId.toString()] = userName;
+          nameToId[userName] = session.userCharacterCardId.toString();
         } catch (error) {
           logger.warn(
             `[Memory Distribution] Failed to fetch user card for ${session.userCharacterCardId.toString()}`,
@@ -431,7 +453,7 @@ export async function distributeMemories(
             .throwOnFailure()
             .getValue() as typeof CharacterCard.prototype;
           const name = card.props.name || card.props.title || "Unknown";
-          characterIdToName[charCardId.toString()] = name;
+          nameToId[name] = charCardId.toString();
         } catch (error) {
           logger.warn(
             `[Memory Distribution] Failed to fetch card for ${charCardId.toString()}`,
@@ -440,15 +462,10 @@ export async function distributeMemories(
       }
     }
 
-    // Get NPC pool for this session
-    const npcPool = useNpcStore.getState().getNpcPool(sessionId);
-
-    // Convert participant names to IDs (handles both characters and NPCs)
-    const participantIds = mapParticipantNamesToIds(
-      actualParticipants,
-      characterIdToName,
-      npcPool
-    );
+    // Convert participant names to IDs for container creation
+    const participantIds = actualParticipants
+      .map((name) => nameToId[name])
+      .filter((id) => id !== undefined);
 
     // If no participants were mapped but we have names, log a warning
     if (participantIds.length === 0 && actualParticipants.length > 0) {
@@ -486,15 +503,10 @@ export async function distributeMemories(
       }
     }
 
-    // Get character name from ID helper (for both characters and NPCs)
+    // Get character name from ID helper
     const idToName: Record<string, string> = {};
-    // Add character names
-    for (const [id, name] of Object.entries(characterIdToName)) {
+    for (const [name, id] of Object.entries(nameToId)) {
       idToName[id] = name;
-    }
-    // Add NPC names
-    for (const npc of npcPool) {
-      idToName[npc.id] = npc.names[0]; // Use primary name
     }
 
     // Distribute enriched memories to participants in parallel
@@ -536,10 +548,11 @@ export async function distributeMemories(
         worldContext: contextUpdate || undefined,
       });
 
-      // Store in participant's container (character or NPC)
-      const participantContainer = participantId.includes("-")
-        ? createCharacterContainer(sessionId, participantId) // UUID format → character
-        : createNpcContainer(sessionId, participantId); // Lowercase word → NPC
+      // Store in participant's container
+      const participantContainer = createCharacterContainer(
+        sessionId,
+        participantId,
+      );
 
       return storeCharacterMessage(participantContainer, enrichedContent, {
         speaker: speakerCharacterId,
@@ -798,6 +811,20 @@ export async function processUserMessage(
     });
 
     logger.info(`[User Message] Successfully stored in supermemory for ${allParticipantNames.length} participants`);
+
+    // Trigger extension hooks for user message (NPC detection, etc.)
+    try {
+      const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
+      await triggerExtensionHook("message:afterGenerate", {
+        session,
+        message: messageContent,
+        timestamp: Date.now(),
+      });
+      logger.info("[User Message] Triggered extension hooks for user message");
+    } catch (error) {
+      logger.error("[User Message] Failed to trigger extension hooks:", error);
+      // Don't throw - extension hooks are optional
+    }
 
     // Build suggested dataStore updates to return to caller
     // Use participant names directly (no conversion to IDs)

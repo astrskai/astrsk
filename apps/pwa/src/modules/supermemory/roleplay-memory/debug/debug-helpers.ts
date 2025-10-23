@@ -15,8 +15,6 @@ import type {
   CharacterMemoryAddEventData,
   WorldMemoryAddEventData,
   DataStoreUpdateEventData,
-  NpcExtractionEventData,
-  NpcSpeakEventData,
 } from "@/app/stores/supermemory-debug-store";
 
 // Import the store dynamically to avoid circular dependencies
@@ -115,20 +113,6 @@ export function incrementTurn() {
   if (!store) return;
 
   store.getState().incrementTurn();
-}
-
-/**
- * Record NPC extraction event
- */
-export function recordNpcExtraction(data: NpcExtractionEventData) {
-  addEvent("npc_extraction", data);
-}
-
-/**
- * Record NPC speak event
- */
-export function recordNpcSpeak(data: NpcSpeakEventData) {
-  addEvent("npc_speak", data);
 }
 
 /**

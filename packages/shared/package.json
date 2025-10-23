@@ -1,0 +1,22 @@
+{
+  "name": "@astrsk/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared utilities and types for Astrsk monorepo",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./logger": "./src/logger.ts",
+    "./storage": "./src/storage.ts",
+    "./zustand-utils": "./src/zustand-utils.ts"
+  },
+  "dependencies": {
+    "tslog": "^4.9.2",
+    "zustand": "^4.4.7",
+    "superjson": "^2.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

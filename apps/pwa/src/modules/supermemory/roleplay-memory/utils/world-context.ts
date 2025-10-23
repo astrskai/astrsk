@@ -79,16 +79,14 @@ export function mergeWorldContext(
   // Parse current context
   const currentContext = parseWorldContext(currentContextString)
 
-  // Merge updates
+  // Merge updates (replace, not append)
   for (const update of updates) {
     const { characterName, contextUpdate } = update
 
     if (!characterName || !contextUpdate) continue
 
-    const existing = currentContext[characterName] || ''
-    currentContext[characterName] = existing
-      ? `${existing} ${contextUpdate}`
-      : contextUpdate
+    // Replace existing context with new context
+    currentContext[characterName] = contextUpdate
   }
 
   // Format back to string

@@ -3,6 +3,7 @@ import { initStores } from "@/app/stores/init-stores.ts";
 import { JwtUpdater } from "@/components-v2/convex/jwt-updater.tsx";
 import { Loading } from "@/components-v2/loading.tsx";
 import { migrate } from "@/db/migrate.ts";
+import { initializeExtensions } from "@/modules/extensions/bootstrap";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
 import { ConvexReactClient } from "convex/react";
@@ -52,6 +53,9 @@ async function initializeApp() {
 
   // Init stores
   await initStores();
+
+  // Init extensions
+  await initializeExtensions();
 
   // Render app
   if (isConvexReady && convex) {

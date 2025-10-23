@@ -19,6 +19,7 @@
     "convex": "npx convex-helpers ts-api-spec --output-file src/convex"
   },
   "dependencies": {
+    "@astrsk/shared": "workspace:*",
     "@ai-sdk/anthropic": "^1.1.0",
     "@ai-sdk/cohere": "^1.2.10",
     "@ai-sdk/deepseek": "^0.1.13",

@@ -39,7 +39,6 @@ import {
   Shuffle,
   ToggleRight,
   Trash2,
-  Users,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1903,11 +1902,6 @@ const SessionMessagesAndUserInputs = ({
         queryClient.invalidateQueries({
           queryKey: turnQueries.detail(streamingMessage.id).queryKey,
         });
-
-        // Invalidate session query (to show new NPC cards added during flow)
-        queryClient.invalidateQueries({
-          queryKey: sessionQueries.detail(session.id).queryKey,
-        });
       } catch (error) {
         // Notify error to user
         const parsedError = parseAiSdkErrorMessage(error);
@@ -2899,7 +2893,6 @@ const SessionMessagesAndUserInputs = ({
     queryClient,
     scrollToBottom,
   ]);
-
 
   const isInitialDataStore = useMemo(() => {
     if (!session || session.turnIds.length === 0) return true;

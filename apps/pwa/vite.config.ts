@@ -78,6 +78,10 @@ export default defineConfig(({ mode }) => {
     alias: {
       buffer: "buffer",
       "vibe-shared-types": path.resolve(__dirname, "../vibe-shared-types/src/index.ts"),
+      // Allow pwa to import extensions during build (they're bundled together in production)
+      // Physical separation is maintained during development for code organization
+      // Security is enforced through the extension client API, not file system isolation
+      "@extensions": path.resolve(__dirname, "../extensions"),
     },
   },
   define: {

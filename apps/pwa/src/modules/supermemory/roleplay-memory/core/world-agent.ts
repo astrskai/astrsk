@@ -254,11 +254,6 @@ function buildWorldAgentPrompt(input: WorldAgentInput): string {
   // Format all participants - dataStore.participants now contains names directly
   const allParticipantsText = (dataStore.participants || []).join(", ");
 
-  // Format available characters (main characters + NPCs)
-  const availableCharactersText = characterIdToName
-    ? Object.values(characterIdToName).join(", ")
-    : allParticipantsText;
-
   // Get world memory context if available
   const worldMemoryContext =
     input.worldMemoryContext || "No recent world events";
@@ -306,8 +301,7 @@ Content: ${generatedMessage}
 
 ### Session Data
 - Current Scene: ${dataStore.currentScene}
-- Main Participants (session characters): ${allParticipantsText}
-- Available Characters (including NPCs): ${availableCharactersText}
+- All Participants: ${allParticipantsText}
 - Total Participant Count: ${dataStore.participants?.length || 0}
 - **Current Game Time: ${dataStore.game_time} ${dataStore.game_time_interval}**
 
@@ -317,8 +311,7 @@ Determine:
    - **SPECIAL CASE: If Total Participant Count = 2, and the message contains dialogue or direct response, BOTH participants are active in the conversation**
    - If someone is speaking TO another character (direct address, dialogue), both are participants
    - If someone is speaking ABOUT another character (mentioning them), only speaker is participant
-   - Use character NAMES from "Available Characters" list - e.g., ["Alice", "Bob", "Tanaka-sensei"]
-   - Can include NPCs if they are actively participating in the conversation
+   - Use character NAMES (not IDs) - e.g., ["Alice", "Bob"]
    - Speaker is ALWAYS included as minimum
 2. worldContextUpdates: Brief context updates for each participant (1-2 sentences)
    - Each participant gets a brief summary of what happened from their perspective
