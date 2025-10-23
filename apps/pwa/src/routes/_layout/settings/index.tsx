@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import SettingPage from "@/components-v2/setting/setting-page";
-import SettingPageMobile from "@/components-v2/setting/setting-page-mobile";
+import SettingPage from "@/features/settings/setting-page";
+import SettingPageMobile from "@/features/settings/setting-page-mobile";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 
 export const Route = createFileRoute("/_layout/settings/")({
