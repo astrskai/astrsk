@@ -1,6 +1,6 @@
 import { useAppStore } from "@/app/stores/app-store";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
-import { cn } from "@/components-v2/lib/utils";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
+import { cn } from "@/shared/lib/cn";
 import { SvgIcon } from "@/components/ui/svg-icon";
 
 export const LoadingOverlay = () => {

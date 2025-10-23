@@ -1,7 +1,7 @@
 import * as React from "react";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { PlayButtonIconSize } from "@/components-v2/shared/media-display";
+import { PlayButtonIconSize } from "./media-display";
 
 export interface PlayButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {

@@ -22,7 +22,7 @@ import {
   DeleteConfirm,
   UnsavedChangesConfirm,
 } from "@/components/dialogs/confirm";
-import { useBackGesture } from "@/components-v2/hooks/use-back-gesture";
+import { useBackGesture } from "@/shared/hooks/use-back-gesture";
 import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
@@ -42,7 +42,7 @@ import {
   PlotCard,
 } from "@/modules/card/domain";
 import { Session } from "@/modules/session/domain/session";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 
 export const ActiveTabType = {
   BasicInfo: "basic-info",

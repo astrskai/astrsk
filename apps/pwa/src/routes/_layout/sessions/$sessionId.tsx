@@ -4,7 +4,7 @@ import SessionPage from "@/features/session/session-page";
 import SessionPageMobile from "@/features/session/mobile/session-page-mobile";
 import { useSessionStore } from "@/app/stores/session-store";
 import { UniqueEntityID } from "@/shared/domain";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 
 export const Route = createFileRoute("/_layout/sessions/$sessionId")({
   component: SessionDetailPage,

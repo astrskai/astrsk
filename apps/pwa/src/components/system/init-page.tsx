@@ -1,4 +1,4 @@
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { cn } from "@/shared/utils";
 

@@ -7,7 +7,7 @@ import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 import { FloatingLabelInputs } from "@/components-v2/ui/floating-label-inputs";
 import { FloatingLabelTextarea } from "@/components-v2/ui/floating-label-textarea";
 import { Entry } from "@/modules/card/domain";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 
 interface EntryBlockV2Props {
   entry: Entry;

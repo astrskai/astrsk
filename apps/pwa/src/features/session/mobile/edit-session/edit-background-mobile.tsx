@@ -29,7 +29,7 @@ import {
 import { Session, SessionProps } from "@/modules/session/domain";
 import { useAsset } from "@/app/hooks/use-asset";
 import { AspectRatio } from "@/components-v2/ui/aspect-ratio";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 
 // Mobile Background List Item Component
 const BackgroundListItem = ({

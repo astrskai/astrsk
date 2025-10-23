@@ -22,7 +22,7 @@ import { fetchBackgrounds } from "@/app/stores/background-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { useValidationStore } from "@/app/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { SearchInput } from "@/components/ui/search-input";
 import { SessionMainMobile } from "@/features/session/mobile/session-main-mobile";
 import CreateSessionPageMobile from "@/features/session/mobile/create-session-page-mobile";

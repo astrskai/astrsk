@@ -1,7 +1,7 @@
 import { useRef } from "react";
 
 import { useSessionStore } from "@/app/stores/session-store";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { SessionMessagesAndUserInputs } from "@/features/session/session-messages-and-user-inputs";
 
 const SessionMain = ({

@@ -35,7 +35,41 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
     - Merged Phase 1 custom-sheet.tsx into components/
     - Updated 85+ import statements across codebase
     - Build verified successful (26.0s)
-  - ⏳ `features/settings/` - 18 files remaining
+  - ✅ `features/settings/` - 24 files complete! (account, subscription, onboarding, legal, providers)
+    - Organized into 5 subdomain folders with clear separation
+    - Created 4 barrel exports (account/, subscription/, onboarding/, legal/)
+    - Cleaned up all import paths to use domain-based imports
+    - Empty components-v2/setting/ folder removed
+    - Build verified successful (26.9s)
+  - ⏳ **components-v2/ cleanup** - 43 files remaining (37 migrated)
+    - ✅ `layout/` - 2 files migrated → `components/layout/`
+      - modal-pages.tsx, v2-layout.tsx
+      - Updated 1 import in routes/_layout.tsx
+    - ✅ `lib/` - 1 file migrated → `shared/lib/cn.ts` (FSD Layer)
+      - Tailwind cn() utility function
+      - Updated 102 imports across codebase
+    - ✅ `hooks/` - 6 files migrated → `shared/hooks/` (FSD Layer)
+      - use-mobile.tsx (24 usages), use-device-type.tsx (internal)
+      - use-pwa.tsx (2 usages), use-back-gesture.tsx (3 usages)
+      - use-forwarded-ref.tsx (1 usage), use-mobile-override.tsx (2 usages)
+      - All hooks actively used, zero dead code
+    - ✅ `right-navigation/` - 26 files migrated → `features/vibe/` (FSD Layer)
+      - Identified as independent AI assistant feature (not just navigation)
+      - Components: 9 files, Hooks: 7 files (with barrel export)
+      - Utils: 8 files, Types: 1 file
+      - Updated 3 imports (flow-multi, features/card)
+      - Build successful (11.32s)
+    - ✅ `shared/` - 1 file migrated → `shared/ui/media-display.tsx` (FSD Layer)
+      - Image/video display component (5 usages)
+      - Updated all imports across codebase
+    - ✅ `ui/play-button.tsx` - 1 file migrated → `shared/ui/play-button.tsx` (FSD Layer)
+      - Video play button component (3 usages)
+      - Updated all imports, removed empty shared/ folder
+      - Build successful (10.04s)
+    - ✅ `ui/` - 38 files remaining (shadcn/ui - keep as-is, production use)
+    - ⏳ `editor/` - 2 files → analyze usage
+    - ⏳ `scenario/` - 2 files → analyze usage
+    - ⏳ `title/` - 1 file → has TODO comment (deprecated)
 - ✅ **Quality Findings**:
   - 3 UNUSED components identified (code-editor, json-viewer, tooltip-wrapper)
   - 5 Mobile duplication targets identified for Phase 3
@@ -78,7 +112,48 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
 
 ## Project Structure & Organization Principles
 
-### **Approach: Feature-based + Colocation**
+### **Architecture: Feature-Sliced Design (FSD)**
+
+We are adopting [Feature-Sliced Design (FSD)](https://feature-sliced.design/) as our long-term architectural standard. This is a gradual migration, with new code following FSD principles.
+
+> "Feature-Sliced Design is an architectural methodology for frontend projects. It aims to divide an application according to business logic and scopes of responsibility."
+
+#### **FSD Core Principles**
+
+1. **Explicit layer separation** - Clear boundaries between app, pages, widgets, features, entities, shared
+2. **Isolation** - Layers can only import from layers below (shared ← entities ← features ← widgets ← pages ← app)
+3. **Public API** - Each module exposes a single entry point (index.ts)
+4. **Business-oriented** - Structure reflects business domains, not technical details
+
+#### **FSD Layers** (Bottom-up dependency)
+
+```
+┌─────────────────────────────────────┐
+│  app/          (Initialization)     │  ← App-wide configs, providers, routes
+├─────────────────────────────────────┤
+│  pages/        (Pages)              │  ← Compose widgets + features
+├─────────────────────────────────────┤
+│  widgets/      (Large UI blocks)    │  ← Header, Sidebar, complex components
+├─────────────────────────────────────┤
+│  features/     (User interactions)  │  ← Business features (session, card, flow)
+├─────────────────────────────────────┤
+│  entities/     (Business entities)  │  ← Domain models (Card, Session, User)
+├─────────────────────────────────────┤
+│  shared/       (Reusable code)      │  ← ui/, lib/, hooks/, utils/, api/
+└─────────────────────────────────────┘
+```
+
+#### **Current Migration Status**
+
+- ✅ **shared/** - Following FSD structure (ui/, lib/, hooks/, utils/)
+- ✅ **features/** - Business features (session/, card/, flow/, settings/, vibe/)
+- ⏳ **components/** → **widgets/** (planned migration)
+- ⏳ **routes/** → **pages/** (planned migration)
+- ⏳ **modules/** → **entities/** (planned migration)
+
+#### **Colocation + FSD**
+
+We combine FSD layers with colocation principles:
 
 > "Keep files as close as possible to where they are used" - Kent C. Dodds
 
@@ -132,29 +207,87 @@ apps/pwa/src/
 │   │       ├── flow-export-dialog.tsx
 │   │       └── flow-import-dialog.tsx
 │   │
-│   ├── settings/                 # ✅ Settings domain (3 files, 18 pending)
-│   │   └── providers/
+│   ├── settings/                 # ✅ Settings domain COMPLETE (24 files)
+│   │   ├── setting-page.tsx
+│   │   ├── setting-page-mobile.tsx  # [Phase 3: Mobile removal target]
+│   │   ├── account/              # Account & auth (4 files)
+│   │   │   ├── account-page.tsx
+│   │   │   ├── signup-page.tsx   # 786 lines
+│   │   │   ├── credit-usage-page.tsx
+│   │   │   └── index.ts          # Barrel export
+│   │   ├── subscription/         # Subscription & payment (5 files)
+│   │   │   ├── subscribe-page.tsx  # 487 lines
+│   │   │   ├── subscribe-nudge-dialog.tsx
+│   │   │   ├── subscribe-checker.tsx
+│   │   │   ├── payment-page.tsx
+│   │   │   └── index.ts          # Barrel export
+│   │   ├── onboarding/           # Onboarding flow (4 files)
+│   │   │   ├── onboarding-step-one-page.tsx
+│   │   │   ├── onboarding-step-two-page.tsx
+│   │   │   ├── onboarding-genre-dialog.tsx
+│   │   │   └── index.ts          # Barrel export
+│   │   ├── legal/                # Legal documents (6 files)
+│   │   │   ├── privacy-policy.tsx
+│   │   │   ├── terms-of-service.tsx
+│   │   │   ├── content-policy.tsx
+│   │   │   ├── refund-policy.tsx
+│   │   │   ├── oss-notice.tsx
+│   │   │   └── index.ts          # Barrel export
+│   │   └── providers/            # Provider settings (3 files)
 │   │       ├── model-page.tsx
 │   │       ├── model-page-mobile.tsx  # [Phase 3: Mobile removal target]
 │   │       └── provider-list-item.tsx
 │   │
-│   └── session/                  # ✅ Session domain COMPLETE (47 files)
-│       ├── create-session-page.tsx
-│       ├── session-list.tsx
-│       ├── session-main.tsx
-│       ├── session-messages-and-user-inputs.tsx
-│       ├── session-page.tsx
-│       ├── session-settings.tsx
-│       ├── inline-chat-styles.tsx
-│       ├── media-placeholder-message.tsx
-│       ├── components/
-│       │   ├── custom-sheet.tsx
-│       │   ├── session-export-dialog.tsx
-│       │   └── session-import-dialog.tsx
-│       ├── create-session/      # Create session workflow (10 step files)
-│       ├── edit-session/        # Edit session workflow (5 edit files)
-│       ├── hooks/               # Custom hooks (2 files)
-│       └── mobile/              # [Phase 3: Mobile removal target] (19 files)
+│   ├── session/                  # ✅ Session domain COMPLETE (47 files)
+│   │   ├── create-session-page.tsx
+│   │   ├── session-list.tsx
+│   │   ├── session-main.tsx
+│   │   ├── session-messages-and-user-inputs.tsx
+│   │   ├── session-page.tsx
+│   │   ├── session-settings.tsx
+│   │   ├── inline-chat-styles.tsx
+│   │   ├── media-placeholder-message.tsx
+│   │   ├── components/
+│   │   │   ├── custom-sheet.tsx
+│   │   │   ├── session-export-dialog.tsx
+│   │   │   └── session-import-dialog.tsx
+│   │   ├── create-session/      # Create session workflow (10 step files)
+│   │   ├── edit-session/        # Edit session workflow (5 edit files)
+│   │   ├── hooks/               # Custom hooks (2 files)
+│   │   └── mobile/              # [Phase 3: Mobile removal target] (19 files)
+│   │
+│   └── vibe/                     # ✅ Vibe AI assistant domain COMPLETE (26 files)
+│       ├── index.tsx            # Main VibeCodingPanel component
+│       ├── components/          # UI components (9 files)
+│       │   ├── ai-outputs-display.tsx
+│       │   ├── analysis-ready-message.tsx
+│       │   ├── chat-input.tsx
+│       │   ├── chat-message.tsx
+│       │   ├── chat-suggestions.tsx
+│       │   ├── edit-approval-message.tsx
+│       │   ├── message-list.tsx
+│       │   ├── review-dialog.tsx
+│       │   └── vibe-panel-header.tsx
+│       ├── hooks/               # Custom hooks (7 files with barrel export)
+│       │   ├── index.ts         # Barrel export
+│       │   ├── use-vibe-session.tsx
+│       │   ├── use-message-history.tsx
+│       │   ├── use-resource-data.tsx
+│       │   ├── use-flow-data.tsx
+│       │   ├── use-apply-card-changes.tsx
+│       │   └── use-apply-flow-changes.tsx
+│       ├── utils/               # Utilities (8 files)
+│       │   ├── card-operations.ts
+│       │   ├── flow-operations.ts
+│       │   ├── agent-operations.ts
+│       │   ├── if-node-operations.ts
+│       │   ├── data-store-node-operations.ts
+│       │   ├── edit-mappers.ts
+│       │   ├── message-formatter.ts
+│       │   ├── resource-helpers.ts
+│       │   └── filter-editable-fields.ts
+│       └── types/               # Type definitions (1 file)
+│           └── index.ts
 │
 ├── components/                    # Shared components (domain-independent) [REORGANIZED]
 │   ├── ui/                       # shadcn/ui + basic UI (15 files)
@@ -209,20 +342,37 @@ apps/pwa/src/
 │       ├── theme-provider.tsx
 │       └── updater-new.tsx
 │
-├── components-v2/                 # Legacy structure (being migrated)
-│   ├── setting/                  # [TODO: → features/settings/] (18 files)
-│   ├── right-navigation/         # [TODO: → components/layout/]
-│   ├── layout/                   # [TODO: → components/layout/]
-│   └── editor/                   # [TODO: → features/editor/]
+├── shared/                        # ✅ FSD Layer: Reusable code
+│   ├── ui/                       # ✅ NEW (FSD): Global UI components
+│   │   ├── media-display.tsx    # Image/video display (5 usages)
+│   │   └── play-button.tsx      # Video play button (3 usages)
+│   ├── lib/                      # ✅ FSD: UI utilities
+│   │   └── cn.ts                # Tailwind cn() utility (102 usages)
+│   ├── hooks/                    # ✅ FSD: Global React hooks (32+ usages)
+│   │   ├── use-mobile.tsx       # Mobile detection (24 usages)
+│   │   ├── use-device-type.tsx  # Device type detection (internal)
+│   │   ├── use-pwa.tsx          # PWA state (2 usages)
+│   │   ├── use-back-gesture.tsx # Mobile back gesture (3 usages)
+│   │   ├── use-forwarded-ref.tsx # Ref forwarding (1 usage)
+│   │   └── use-mobile-override.tsx # Mobile override (2 usages)
+│   ├── utils/                    # Business logic utilities
+│   ├── domain/                   # DDD base classes (Entity, ValueObject, etc.)
+│   ├── core/                     # Core business logic
+│   ├── infra/                    # Infrastructure layer
+│   ├── endpoints/                # API endpoints
+│   ├── prompt/                   # Prompt templates
+│   └── task/                     # Background tasks
+│
+├── components-v2/                 # Legacy structure (43 files remaining, 37 migrated)
+│   ├── ui/                       # 38 files - shadcn/ui (KEEP AS-IS, production use)
+│   ├── editor/                   # 2 files [TODO: analyze usage]
+│   ├── scenario/                 # 2 files [TODO: analyze usage]
+│   └── title/                    # 1 file (has TODO comment, deprecated)
 │
 ├── app/                          # Global app configuration
 │   ├── queries/                  # TanStack Query factories
 │   ├── services/                 # Business logic services
 │   └── stores/                   # Global state management
-│
-├── lib/                          # Utilities
-│   ├── utils/
-│   └── hooks/                    # Shared hooks (domain-independent)
 │
 └── flow-multi/                   # Legacy flow editor (incremental migration)
 ```
@@ -348,8 +498,19 @@ Criteria for moving to `components/`:
   - Updated 85+ import statements across codebase
   - Fixed relative import in v2-layout.tsx
   - Build verified successful (26.0s)
-- ⏳ `features/settings/` - 18 files remaining
-- ⏳ Merge remaining navigation folders → `components/layout/`
+- ✅ `features/settings/` - 24 files migrated (COMPLETE!)
+  - Organized into 5 subdomain folders: account/, subscription/, onboarding/, legal/, providers/
+  - Created 4 barrel exports for cleaner imports (account, subscription, onboarding, legal)
+  - Cleaned up all import paths to use domain-based imports
+  - Removed empty components-v2/setting/ folder
+  - Build verified successful (26.9s)
+- ⏳ **Final cleanup: components-v2/ → complete migration** (80 files remaining)
+  - Phase 2a: Move layout files (2) → `components/layout/`
+  - Phase 2b: Move hooks (6) → `lib/hooks/`
+  - Phase 2c: Move right-navigation (26) → `components/layout/right-navigation/`
+  - Phase 2d: Analyze and migrate remaining small folders (7 files total)
+  - Phase 2e: Keep ui/ (39 files) as-is - already in use
+  - Goal: Complete removal of components-v2/ folder
 
 **Phase 3**: Mobile Duplication Elimination
 
@@ -361,9 +522,11 @@ Criteria for moving to `components/`:
 
 ### **References**
 
-- [Kent C. Dodds - Colocation](https://kentcdodds.com/blog/colocation)
-- [Bulletproof React](https://github.com/alan2207/bulletproof-react)
-- [Next.js Project Structure](https://nextjs.org/docs/getting-started/project-structure)
+- [Feature-Sliced Design](https://feature-sliced.design/) - **Primary architectural reference**
+- [FSD Get Started](https://feature-sliced.design/docs/get-started/overview) - Core concepts and layers
+- [Kent C. Dodds - Colocation](https://kentcdodds.com/blog/colocation) - File organization principles
+- [Bulletproof React](https://github.com/alan2207/bulletproof-react) - React project structure patterns
+- [Next.js Project Structure](https://nextjs.org/docs/getting-started/project-structure) - Modern folder conventions
 
 ## Component Patterns (Cleanup Project)
 

@@ -52,7 +52,7 @@ import {
 import { Avatar } from "@/components-v2/avatar";
 import { Badge } from "@/components-v2/ui/badge";
 import React from "react";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 
 const meta = {
   title: "UI/Sidebar",

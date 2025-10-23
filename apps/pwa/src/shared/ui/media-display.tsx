@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { cn } from "@/shared/utils";
-import { PlayButton } from "@/components-v2/ui/play-button";
+import { cn } from "@/shared/lib/cn";
+import { PlayButton } from "./play-button";
 
 export type PlayButtonIconSize = "small" | "medium" | "large";
 

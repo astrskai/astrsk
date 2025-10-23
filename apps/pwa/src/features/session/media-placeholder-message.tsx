@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Loader2, Trash2 } from "lucide-react";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { useAsset } from "@/app/hooks/use-asset";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
-import { PlayButton } from "@/components-v2/ui/play-button";
+import { PlayButton } from "@/shared/ui/play-button";
 
 interface MediaPlaceholderMessageProps {
   content: string; // The loading message like "🖼️ Generating image..."

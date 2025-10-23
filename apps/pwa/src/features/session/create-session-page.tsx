@@ -12,7 +12,7 @@ import { Page, useAppStore } from "@/app/stores/app-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { useValidationStore } from "@/app/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import {
   convertBackgroundFormToSessionProps,
   StepBackground,

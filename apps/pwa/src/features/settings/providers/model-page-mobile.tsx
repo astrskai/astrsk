@@ -13,7 +13,7 @@ import { ApiService } from "@/app/services";
 import { queryClient } from "@/app/queries/query-client";
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
 import { Combobox } from "@/components/ui/combobox";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import {
   ProviderListItem,
   ProviderListItemDetail,

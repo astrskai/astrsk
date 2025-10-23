@@ -7,7 +7,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/app/hooks/use-asset";
 import { useBackgroundStore } from "@/app/stores/background-store";
 import { ColorPicker } from "@/components/ui/color-picker";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { StepBackgroundSchemaType } from "@/features/session/create-session/step-background";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
 import { MessageItemInternal } from "@/features/session/session-messages-and-user-inputs";
@@ -18,7 +18,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components-v2/ui/tabs";
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 import {
   ChatStyles,
   defaultChatStyles,

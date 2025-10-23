@@ -1,7 +1,7 @@
 import { GripVertical, Code } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { SchemaFieldItem } from "./output-types";
 
 interface SortableSchemaFieldProps {

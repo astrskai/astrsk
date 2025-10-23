@@ -1,4 +1,4 @@
-import { useIsMobile } from "@/components-v2/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { useAppStore, Page } from "@/app/stores/app-store";
 import { OnboardingStepOnePage, OnboardingStepTwoPage } from "@/features/settings/onboarding";
 import { SubscribePage, PaymentPage } from "@/features/settings/subscription";

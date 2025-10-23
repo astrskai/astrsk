@@ -9,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components-v2/ui/tooltip";
-import { PlayButton } from "@/components-v2/ui/play-button";
+import { PlayButton } from "@/shared/ui/play-button";
 
 interface ImageItemProps {
   image: GeneratedImage;

@@ -17,7 +17,7 @@ import { SessionService } from "@/app/services/session-service";
 import { useSessionStore } from "@/app/stores/session-store";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import {

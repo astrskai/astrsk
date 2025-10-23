@@ -2,7 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MessageCircle, GripVertical } from "lucide-react";
 import { Switch } from "@/components-v2/ui/switch";
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { PromptItem } from "./prompt-types";
 

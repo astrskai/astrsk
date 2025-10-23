@@ -7,7 +7,7 @@ import { SessionService } from "@/app/services/session-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import useCardImport from "@/features/card/hooks/useCardImport";
-import { MediaDisplay } from "@/components-v2/shared/media-display";
+import { MediaDisplay } from "@/shared/ui/media-display";
 import { SectionHeader } from "./index";
 import {
   SearchInput,

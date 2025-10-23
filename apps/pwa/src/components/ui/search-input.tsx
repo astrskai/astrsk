@@ -1,7 +1,7 @@
 import { Search, X } from "lucide-react";
 import { forwardRef, useImperativeHandle, useRef, memo } from "react";
 
-import { cn } from "@/components-v2/lib/utils";
+import { cn } from "@/shared/lib/cn";
 import { Input } from "@/components-v2/ui/input";
 
 interface SearchInputProps {
