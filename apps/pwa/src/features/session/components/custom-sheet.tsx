@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";

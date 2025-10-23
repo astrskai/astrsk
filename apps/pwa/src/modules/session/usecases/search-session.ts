@@ -1,5 +1,5 @@
 import { Result, UseCase } from "@/shared/core";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { Session } from "@/modules/session/domain/session";
 import {

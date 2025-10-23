@@ -1,7 +1,7 @@
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { useSidebarLeft } from "@/components/layout/both-sidebar";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { Button } from "@/components-v2/ui/button";
 import {
   Dialog,

@@ -24,7 +24,7 @@ import {
   TabsTrigger,
 } from "@/components-v2/ui/tabs";
 import { CardType, PlotCard } from "@/modules/card/domain";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 interface PlotFormV2Props {
   store: CardStore;

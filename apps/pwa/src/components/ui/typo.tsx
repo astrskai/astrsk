@@ -1,5 +1,5 @@
 // Source: https://ui.shadcn.com/docs/components/typography
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 
 function Typo3XLarge({
   children,

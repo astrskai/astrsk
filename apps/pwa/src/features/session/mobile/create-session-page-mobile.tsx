@@ -4,7 +4,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 
 import { SessionService } from "@/app/services/session-service";
 import { Page, useAppStore } from "@/app/stores/app-store";

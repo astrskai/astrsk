@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { readFile } from "@/shared/utils/test";
+import { readFile } from "@/shared/lib/test";
 
 import { CharacterCard } from "@/modules/card/domain";
 import { DrizzleCardRepo } from "@/modules/card/repos/impl/drizzle-card-repo";

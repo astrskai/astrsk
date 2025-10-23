@@ -1,5 +1,5 @@
 import { Result, UseCase } from "@/shared/core";
-import { readFileToString } from "@/shared/utils/file-utils";
+import { readFileToString } from "@/shared/lib/file-utils";
 
 import { Flow } from "@/modules/flow/domain/flow";
 import { SaveFlowRepo } from "@/modules/flow/repos/save-flow-repo";

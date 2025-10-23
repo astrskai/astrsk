@@ -1,7 +1,7 @@
 import { Result } from "@/shared/core/result";
 import { UseCase } from "@/shared/core/use-case";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { SaveFileToAsset } from "@/modules/asset/usecases/save-file-to-asset";
 import { Background } from "@/modules/background/domain/background";

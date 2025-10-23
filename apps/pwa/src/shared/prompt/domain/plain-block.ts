@@ -10,8 +10,8 @@ import {
   Renderable,
   RenderContextWithVariables,
 } from "@/shared/prompt/domain";
-import { formatFail } from "@/shared/utils";
-import { TemplateRenderer } from "@/shared/utils/template-renderer";
+import { formatFail } from "@/shared/lib";
+import { TemplateRenderer } from "@/shared/lib/template-renderer";
 
 export type CreatePlainBlockProps = CreatePromptBlockProps;
 export type UpdatePlainBlockProps = CreatePlainBlockProps;

@@ -3,7 +3,7 @@ import { file } from "opfs-tools";
 import { useEffect, useState } from "react";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 
 import { assetQueries } from "@/app/queries/asset-queries";
 

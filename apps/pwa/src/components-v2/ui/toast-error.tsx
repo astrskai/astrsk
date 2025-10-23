@@ -1,4 +1,4 @@
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { Button } from "@/components-v2/ui/button";
 import {
   Dialog,

@@ -1,7 +1,7 @@
 import { Result } from "@/shared/core";
 import { AggregateRoot, UniqueEntityID } from "@/shared/domain";
-import { OpenAITokenizer } from "@/shared/utils/tokenizer/openai-tokenizer";
-import { Tokenizer } from "@/shared/utils/tokenizer/tokenizer";
+import { OpenAITokenizer } from "@/shared/lib/tokenizer/openai-tokenizer";
+import { Tokenizer } from "@/shared/lib/tokenizer/tokenizer";
 
 import {
   CardProps,

@@ -1,6 +1,6 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatError } from "@/shared/utils";
+import { formatError } from "@/shared/lib";
 
 import { Agent } from "@/modules/agent/domain";
 import { LoadAgentRepo, SaveAgentRepo } from "@/modules/agent/repos";

@@ -1,5 +1,5 @@
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 
 import { InsertTurn, SelectTurn } from "@/db/schema/turns";
 import { Turn } from "@/modules/turn/domain/turn";

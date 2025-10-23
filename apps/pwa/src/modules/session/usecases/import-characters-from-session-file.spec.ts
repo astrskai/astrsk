@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { readFile } from "@/shared/utils/test";
+import { readFile } from "@/shared/lib/test";
 
 import { ImportCharactersFromSessionFile } from "@/modules/session/usecases/import-characters-from-session-file";
 

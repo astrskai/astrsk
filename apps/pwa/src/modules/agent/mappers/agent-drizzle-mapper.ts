@@ -1,7 +1,7 @@
 import { parse, stringify } from "superjson";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 
 import { SelectAgent, InsertAgent } from "@/db/schema/agents";
 import { Agent, ApiType, OutputFormat, ModelTier } from "@/modules/agent/domain";

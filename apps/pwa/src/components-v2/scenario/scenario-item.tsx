@@ -2,7 +2,7 @@ import React from "react";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 
 interface ScenarioItemProps {

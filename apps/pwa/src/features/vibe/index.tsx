@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 import type {
   VibeAnalysisResult,
   VibeGeneratorResult,

@@ -12,7 +12,7 @@ import {
   useBackgroundStore,
 } from "@/app/stores/background-store";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { TypoBase } from "@/components/ui/typo";
 import { AspectRatio } from "@/components-v2/ui/aspect-ratio";
 import { Button } from "@/components-v2/ui/button";

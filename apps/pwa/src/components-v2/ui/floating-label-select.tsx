@@ -3,7 +3,7 @@
 import * as SelectPrimitive from "@radix-ui/react-select";
 import * as React from "react";
 
-import { cn } from "@/shared/utils/tailwind-utils";
+import { cn } from "@/shared/lib";
 
 import {
   Select,

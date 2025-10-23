@@ -1,5 +1,5 @@
 import { useAppStore } from "@/app/stores/app-store";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import {
@@ -11,7 +11,7 @@ import {
 } from "@/components-v2/ui/dialog";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import { api } from "@/convex";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "convex/react";
 import { Ban, Bot, ChevronDown, Coins, UserRoundPlus, Zap } from "lucide-react";

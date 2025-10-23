@@ -4,9 +4,9 @@ import { forEachConnectedAgent, generateIssueId } from "@/flow-multi/validation/
 import { generateValidationMessage } from "@/flow-multi/validation/utils/message-generator";
 import { VariableValidationData, SyntaxErrorData } from "@/flow-multi/validation/types/message-data-types";
 import { Agent } from "@/modules/agent/domain";
-import { TemplateRenderer } from "@/shared/utils/template-renderer";
+import { TemplateRenderer } from "@/shared/lib/template-renderer";
 import { VariableLibrary } from "@/shared/prompt/domain/variable";
-import { sanitizeFileName } from "@/shared/utils/file-utils";
+import { sanitizeFileName } from "@/shared/lib/file-utils";
 
 // Extract variables from template string, excluding local loop variables
 const extractVariables = (template: string): string[] => {

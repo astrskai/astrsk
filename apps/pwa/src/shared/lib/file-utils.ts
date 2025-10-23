@@ -1,4 +1,4 @@
-import { formatError } from "@/shared/utils/error-utils";
+import { formatError } from "@/shared/lib/error-utils";
 
 export function readFileToString(file: File): Promise<string> {
   return new Promise((resolve, reject) => {

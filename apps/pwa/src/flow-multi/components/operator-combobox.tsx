@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, CaseUpper, Hash, ToggleRight } from "lucide-react";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import {
   ConditionDataType,

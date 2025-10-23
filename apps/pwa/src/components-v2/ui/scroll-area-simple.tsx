@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 
 interface ScrollAreaSimpleProps extends React.HTMLAttributes<HTMLDivElement> {
   orientation?: "vertical" | "horizontal" | "both";

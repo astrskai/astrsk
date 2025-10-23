@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { Result } from "@/shared/core/result";
 import { UseCase } from "@/shared/core/use-case";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { defaultBackgrounds } from "@/app/stores/background-store";
 import { InsertSession } from "@/db/schema/sessions";

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { createSelectors } from "@/shared/utils/zustand-utils";
+import { createSelectors } from "@/shared/lib/zustand-utils";
 
 type Resource = "sessions" | "flows";
 

@@ -47,7 +47,8 @@ import {
 import { Label } from "@/components-v2/ui/label";
 import { Session } from "@/modules/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain";
-import { cn, downloadFile, logger } from "@/shared/utils";
+import { cn } from "@/shared/lib";
+import { downloadFile, logger } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import { CircleAlert, Copy, Trash2, Upload } from "lucide-react";

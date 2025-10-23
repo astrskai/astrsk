@@ -1,6 +1,6 @@
 import { Button } from "@/components-v2/ui/button";
 import { api } from "@/convex";
-import { Datetime } from "@/shared/utils";
+import { Datetime } from "@/shared/lib";
 import { usePaginatedQuery } from "convex/react";
 
 const PAGE_SIZE = 10;

@@ -1,5 +1,5 @@
-import React from 'react';
-import { cn } from '@/shared/utils';
+import React from "react";
+import { cn } from "@/shared/lib";
 
 interface ChatSuggestion {
   title: string;
@@ -19,17 +19,17 @@ export const ChatSuggestions: React.FC<ChatSuggestionsProps> = ({
   className,
 }) => {
   return (
-    <div className={cn("w-full grid grid-cols-2 gap-3", className)}>
+    <div className={cn("grid w-full grid-cols-2 gap-3", className)}>
       {suggestions.map((suggestion, index) => (
         <button
           key={index}
           onClick={() => onSuggestionClick(suggestion.prompt)}
-          className="h-24 px-4 py-3 bg-background-surface-4 rounded-2xl shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.05)] shadow-lg outline outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-center gap-2 hover:bg-background-surface-5 transition-colors cursor-pointer"
+          className="bg-background-surface-4 outline-border-normal hover:bg-background-surface-5 flex h-24 cursor-pointer flex-col items-center justify-start gap-2 rounded-2xl px-4 py-3 shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.05)] shadow-lg outline outline-1 outline-offset-[-1px] transition-colors"
         >
-          <div className="self-stretch text-left text-text-primary text-sm font-semibold leading-tight">
+          <div className="text-text-primary self-stretch text-left text-sm leading-tight font-semibold">
             {suggestion.title}
           </div>
-          <div className="self-stretch text-left text-text-primary text-xs font-normal">
+          <div className="text-text-primary self-stretch text-left text-xs font-normal">
             {suggestion.description}
           </div>
         </button>

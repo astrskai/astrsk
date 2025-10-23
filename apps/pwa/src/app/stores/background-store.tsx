@@ -3,7 +3,7 @@ import { immer } from "zustand/middleware/immer";
 
 // import { CdnBaseURL } from "@/shared/cdn";
 import { UniqueEntityID } from "@/shared/domain";
-import { createSelectors } from "@/shared/utils/zustand-utils";
+import { createSelectors } from "@/shared/lib/zustand-utils";
 
 import { BackgroundService } from "@/app/services/background-service";
 import { Background } from "@/modules/background/domain/background";

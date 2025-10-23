@@ -4,7 +4,7 @@ import { file } from "opfs-tools";
 
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatFail, sanitizeFileName } from "@/shared/utils";
+import { formatFail, sanitizeFileName } from "@/shared/lib";
 
 import { defaultBackgrounds } from "@/app/stores/background-store";
 import { GetAsset } from "@/modules/asset/usecases/get-asset";

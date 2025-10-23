@@ -4,8 +4,8 @@ import init, { Environment } from "minijinja-js/dist/web";
 import Roll from "roll";
 
 import { RenderContext } from "@/shared/prompt/domain";
-import { Datetime } from "@/shared/utils/datetime";
-import { logger } from "@/shared/utils/logger";
+import { Datetime } from "@/shared/lib/datetime";
+import { logger } from "@/shared/lib/logger";
 
 export type RenderOptions = {
   isDeleteUnnecessaryCharacters?: boolean;

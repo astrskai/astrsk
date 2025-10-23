@@ -4,7 +4,7 @@ import { Session } from "@/modules/session/domain/session";
 import { Turn } from "@/modules/turn/domain/turn";
 import { DataStoreSavedField } from "@/modules/turn/domain/option";
 import { RenderContext } from "@/shared/prompt/domain";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 import { makeContext, transformMessagesForModel } from "@/app/services/session-play-service";
 
 // Empty context for when no session is available

@@ -1,6 +1,6 @@
 import { Result } from "@/shared/core/result";
 import { UseCase } from "@/shared/core/use-case";
-import { formatFail, logger, readFileToString } from "@/shared/utils";
+import { formatFail, logger, readFileToString } from "@/shared/lib";
 
 type CharacterListItem = {
   name: string;

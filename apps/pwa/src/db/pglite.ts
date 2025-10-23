@@ -1,5 +1,5 @@
 import Worker from "@/db/pglite-worker.ts?worker";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 import { PGliteInterface } from "@electric-sql/pglite";
 import { PGliteWorker } from "@electric-sql/pglite/worker";
 import { Base64 } from "js-base64";

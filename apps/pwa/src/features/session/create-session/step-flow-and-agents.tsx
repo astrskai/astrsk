@@ -7,7 +7,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { Combobox } from "@/components/ui/combobox";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
 import { SessionProps } from "@/modules/session/domain";
 import { useQuery } from "@tanstack/react-query";

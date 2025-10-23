@@ -1,5 +1,5 @@
 import { Page, useAppStore } from "@/app/stores/app-store";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { toastSuccess } from "@/components-v2/ui/toast-success";

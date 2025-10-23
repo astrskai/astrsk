@@ -10,7 +10,7 @@ import {
   TestTube,
 } from "lucide-react";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 interface VibePanelHeaderProps {
   isCollapsed: boolean;

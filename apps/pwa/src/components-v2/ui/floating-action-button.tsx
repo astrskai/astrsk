@@ -1,5 +1,5 @@
 import { useSidebarLeft } from "@/components/layout/both-sidebar";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { Button } from "@/components-v2/ui/button";
 
 function FloatingActionButton({

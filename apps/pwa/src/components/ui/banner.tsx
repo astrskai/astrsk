@@ -3,7 +3,7 @@
 import { CircleAlert } from "lucide-react";
 import { toast } from "sonner";
 
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 import { Button } from "@/components-v2/ui/button";
 

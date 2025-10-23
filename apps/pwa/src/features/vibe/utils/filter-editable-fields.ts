@@ -23,7 +23,7 @@ import {
 import { AgentDrizzleMapper } from '@/modules/agent/mappers/agent-drizzle-mapper';
 import { IfNodeDrizzleMapper } from '@/modules/if-node/mappers/if-node-drizzle-mapper';
 import { DataStoreNodeDrizzleMapper } from '@/modules/data-store-node/mappers/data-store-node-drizzle-mapper';
-import { sanitizeFileName } from '@/shared/utils/file-utils';
+import { sanitizeFileName } from '@/shared/lib/file-utils';
 
 /**
  * FIELD CATEGORIES:

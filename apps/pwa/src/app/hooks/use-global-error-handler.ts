@@ -1,4 +1,4 @@
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 

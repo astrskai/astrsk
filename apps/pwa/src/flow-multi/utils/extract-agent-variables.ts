@@ -3,7 +3,7 @@
  * Uses the same parsing logic as the variable validators
  */
 
-import { sanitizeFileName } from "@/shared/utils/file-utils";
+import { sanitizeFileName } from "@/shared/lib/file-utils";
 
 /**
  * Extract all variables from a template string, excluding local loop variables

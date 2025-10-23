@@ -4,7 +4,7 @@ import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { Turn } from "@/modules/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/modules/turn/mappers/turn-drizzle-mapper";
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 import { queryOptions, useMutation } from "@tanstack/react-query";
 
 // WeakMap cache for preventing unnecessary re-renders

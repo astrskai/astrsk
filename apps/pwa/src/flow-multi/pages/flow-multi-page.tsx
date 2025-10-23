@@ -1,4 +1,4 @@
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 
 // Import components
 import { FlowPanelMain } from "../panels/flow-panel-main";

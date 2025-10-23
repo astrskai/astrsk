@@ -1,5 +1,5 @@
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 
 import { InsertAsset, SelectAsset } from "@/db/schema/assets";
 import { Asset } from "@/modules/asset/domain/asset";

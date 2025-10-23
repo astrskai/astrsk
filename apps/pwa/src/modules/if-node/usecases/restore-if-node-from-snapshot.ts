@@ -1,5 +1,5 @@
 import { Result, UseCase } from "@/shared/core";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { IfNode } from "@/modules/if-node/domain";
 import { SaveIfNodeRepo } from "@/modules/if-node/repos/save-if-node-repo";

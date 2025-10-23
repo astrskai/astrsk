@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { cn } from '@/shared/utils';
+import React, { useMemo, useRef, useEffect, useState } from "react";
+import { cn } from "@/shared/lib";
 
 interface FieldBadgesProps {
   fields: Array<{ id: string; name: string }>;
@@ -12,11 +12,11 @@ interface FieldBadgesProps {
  * Component to display field names as badges with automatic overflow handling
  * Shows badges up to maxRows (default 3) and adds a "+N" badge for remaining items
  */
-export function FieldBadges({ 
-  fields, 
+export function FieldBadges({
+  fields,
   maxRows = 3,
   className,
-  badgeClassName 
+  badgeClassName,
 }: FieldBadgesProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [visibleCount, setVisibleCount] = useState(fields.length);
@@ -40,7 +40,7 @@ export function FieldBadges({
       const maxHeight = lineHeight * maxRows;
 
       // Temporarily show all badges to measure
-      const badges = container.querySelectorAll('[data-badge]');
+      const badges = container.querySelectorAll("[data-badge]");
       let currentRowTop = 0;
       let rowCount = 1;
       let lastVisibleIndex = badges.length - 1;
@@ -70,7 +70,7 @@ export function FieldBadges({
       } else {
         setVisibleCount(fields.length);
       }
-      
+
       setIsCalculating(false);
     };
 
@@ -82,30 +82,30 @@ export function FieldBadges({
       setIsCalculating(true);
       calculateVisibleBadges();
     };
-    
-    window.addEventListener('resize', handleResize);
-    
+
+    window.addEventListener("resize", handleResize);
+
     return () => {
       clearTimeout(timeoutId);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, [fields, maxRows]);
 
   const { displayedFields, remainingCount } = useMemo(() => {
     if (isCalculating) {
       // While calculating, show all to measure
-      return { 
-        displayedFields: fields, 
-        remainingCount: 0 
+      return {
+        displayedFields: fields,
+        remainingCount: 0,
       };
     }
-    
+
     const displayed = fields.slice(0, visibleCount);
     const remaining = fields.length - visibleCount;
-    
-    return { 
-      displayedFields: displayed, 
-      remainingCount: remaining 
+
+    return {
+      displayedFields: displayed,
+      remainingCount: remaining,
     };
   }, [fields, visibleCount, isCalculating]);
 
@@ -114,12 +114,12 @@ export function FieldBadges({
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={cn(
-        "inline-flex justify-start items-start gap-1 flex-wrap content-start",
+        "inline-flex flex-wrap content-start items-start justify-start gap-1",
         isCalculating && "invisible", // Hide while calculating to prevent flicker
-        className
+        className,
       )}
     >
       {displayedFields.map((field) => (
@@ -127,11 +127,11 @@ export function FieldBadges({
           key={field.id}
           data-badge="true"
           className={cn(
-            "max-w-60 p-2 bg-button-chips rounded-lg flex justify-center items-center gap-2.5",
-            badgeClassName
+            "bg-button-chips flex max-w-60 items-center justify-center gap-2.5 rounded-lg p-2",
+            badgeClassName,
           )}
         >
-          <div className="flex-1 justify-start text-text-subtle text-sm font-medium leading-tight">
+          <div className="text-text-subtle flex-1 justify-start text-sm leading-tight font-medium">
             {field.name}
           </div>
         </div>
@@ -139,11 +139,11 @@ export function FieldBadges({
       {!isCalculating && remainingCount > 0 && (
         <div
           className={cn(
-            "max-w-60 p-2 bg-button-chips rounded-lg flex justify-center items-center gap-2.5",
-            badgeClassName
+            "bg-button-chips flex max-w-60 items-center justify-center gap-2.5 rounded-lg p-2",
+            badgeClassName,
           )}
         >
-          <div className="flex-1 justify-start text-text-subtle text-sm font-medium leading-tight">
+          <div className="text-text-subtle flex-1 justify-start text-sm leading-tight font-medium">
             +{remainingCount}
           </div>
         </div>
@@ -156,11 +156,11 @@ export function FieldBadges({
  * Simple version without automatic row calculation
  * Just shows first N badges and +remainder
  */
-export function SimpleFieldBadges({ 
-  fields, 
+export function SimpleFieldBadges({
+  fields,
   maxVisible = 8,
   className,
-  badgeClassName 
+  badgeClassName,
 }: {
   fields: Array<{ id: string; name: string }>;
   maxVisible?: number;
@@ -175,19 +175,21 @@ export function SimpleFieldBadges({
   }
 
   return (
-    <div className={cn(
-      "inline-flex justify-start items-start gap-1 flex-wrap content-start",
-      className
-    )}>
+    <div
+      className={cn(
+        "inline-flex flex-wrap content-start items-start justify-start gap-1",
+        className,
+      )}
+    >
       {displayedFields.map((field) => (
         <div
           key={field.id}
           className={cn(
-            "max-w-60 p-2 bg-button-chips rounded-lg flex justify-center items-center gap-2.5",
-            badgeClassName
+            "bg-button-chips flex max-w-60 items-center justify-center gap-2.5 rounded-lg p-2",
+            badgeClassName,
           )}
         >
-          <div className="flex-1 justify-start text-text-subtle text-sm font-medium leading-tight">
+          <div className="text-text-subtle flex-1 justify-start text-sm leading-tight font-medium">
             {field.name}
           </div>
         </div>
@@ -195,11 +197,11 @@ export function SimpleFieldBadges({
       {remainingCount > 0 && (
         <div
           className={cn(
-            "max-w-60 p-2 bg-button-chips rounded-lg flex justify-center items-center gap-2.5",
-            badgeClassName
+            "bg-button-chips flex max-w-60 items-center justify-center gap-2.5 rounded-lg p-2",
+            badgeClassName,
           )}
         >
-          <div className="flex-1 justify-start text-text-subtle text-sm font-medium leading-tight">
+          <div className="text-text-subtle flex-1 justify-start text-sm leading-tight font-medium">
             +{remainingCount}
           </div>
         </div>

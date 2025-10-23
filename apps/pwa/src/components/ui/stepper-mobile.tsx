@@ -1,7 +1,7 @@
 import { ArrowLeft, Check, X } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 import { useBackGesture } from "@/shared/hooks/use-back-gesture";
 import { Button } from "@/components-v2/ui/button";

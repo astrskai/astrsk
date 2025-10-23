@@ -10,7 +10,7 @@ import {
 } from "@/components-v2/ui/dialog";
 import { Button } from "@/components-v2/ui/button";
 import { TypoBase } from "@/components/ui/typo";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 
 // Helper function to humanize bytes
 export const humanizeBytes = (bytes: number): string => {

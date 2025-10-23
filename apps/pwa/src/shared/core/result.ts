@@ -1,4 +1,4 @@
-import { formatError } from "@/shared/utils";
+import { formatError } from "@/shared/lib";
 
 export interface ResultJson<T> {
   isSuccess: boolean;

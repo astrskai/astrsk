@@ -1,6 +1,6 @@
 import { LlmEndpoint } from "@/shared/endpoints";
 import { HttpClient } from "@/shared/infra";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 
 import { ApiModel } from "@/modules/api/domain";
 

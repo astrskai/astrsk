@@ -1,5 +1,5 @@
 import { AlertCircle, AlertTriangle, Check } from "lucide-react";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 export type IssueVariant = 'error' | 'warning' | 'success' | 'draft';
 

@@ -5,7 +5,7 @@ import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { createSelectors } from "@/shared/utils/zustand-utils";
+import { createSelectors } from "@/shared/lib/zustand-utils";
 
 import { LocalPersistStorage } from "@/app/stores/local-persist-storage";
 

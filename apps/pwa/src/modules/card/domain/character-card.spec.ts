@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { OpenAITokenizer } from "@/shared/utils";
+import { OpenAITokenizer } from "@/shared/lib";
 
 import { CharacterCard } from "@/modules/card/domain/character-card";
 

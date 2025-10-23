@@ -1,7 +1,7 @@
 import { Result } from "@/shared/core/result";
 import { OpenRouterEndpoint } from "@/shared/endpoints/openrouter";
 import { HttpClient } from "@/shared/infra";
-import { formatFail } from "@/shared/utils/error-utils";
+import { formatFail } from "@/shared/lib/error-utils";
 
 import { ApiConnection, ApiModel } from "@/modules/api/domain";
 import { ListApiModelStrategy } from "@/modules/api/usecases/list-api-model/list-api-model-strategy";

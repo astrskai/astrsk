@@ -1,5 +1,5 @@
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 
 import { InsertSession, SelectSession } from "@/db/schema/sessions";
 import { CardType } from "@/modules/card/domain";

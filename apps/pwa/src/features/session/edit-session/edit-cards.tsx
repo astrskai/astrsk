@@ -15,7 +15,7 @@ import { Page, useAppStore } from "@/app/stores/app-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { CustomSheet } from "@/features/session/components/custom-sheet";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   CardItem,

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { readFile } from "@/shared/utils/test";
+import { readFile } from "@/shared/lib/test";
 
 import { Background } from "@/modules/background/domain";
 import { DrizzleBackgroundRepo } from "@/modules/background/repos/impl/drizzle-background-repo";

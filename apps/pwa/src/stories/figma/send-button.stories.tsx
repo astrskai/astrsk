@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "@/components-v2/ui/button";
 import { Send } from "lucide-react";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 import React from "react";
 
 /**

@@ -48,9 +48,9 @@ import rehypeSanitize from "rehype-sanitize";
 import { toast } from "sonner";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { parseAiSdkErrorMessage } from "@/shared/utils/error-utils";
-import { logger } from "@/shared/utils/logger";
-import { TemplateRenderer } from "@/shared/utils/template-renderer";
+import { parseAiSdkErrorMessage } from "@/shared/lib/error-utils";
+import { logger } from "@/shared/lib/logger";
+import { TemplateRenderer } from "@/shared/lib/template-renderer";
 import { cloneDeep } from "lodash-es";
 
 import { useAsset } from "@/app/hooks/use-asset";
@@ -84,7 +84,7 @@ import { useAppStore } from "@/app/stores/app-store";
 import { AutoReply, useSessionStore } from "@/app/stores/session-store";
 import { Avatar } from "@/components/ui/avatar";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
 import { MediaPlaceholderMessage } from "@/features/session/media-placeholder-message";

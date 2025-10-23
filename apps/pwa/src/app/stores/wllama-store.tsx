@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-import { createSelectors } from "@/shared/utils/zustand-utils";
+import { createSelectors } from "@/shared/lib/zustand-utils";
 
 interface WllamaState {
   wllama: any;

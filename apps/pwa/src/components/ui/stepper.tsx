@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 import { useState } from "react";
 
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 import { UnsavedChangesConfirm } from "@/components/dialogs/confirm";
 import { Button } from "@/components-v2/ui/button";

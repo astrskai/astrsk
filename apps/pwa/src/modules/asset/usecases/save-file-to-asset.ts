@@ -1,7 +1,7 @@
 import { Result } from "@/shared/core/result";
 import { UseCase } from "@/shared/core/use-case";
-import { formatFail } from "@/shared/utils/error-utils";
-import { getFileHash } from "@/shared/utils/file-utils";
+import { formatFail } from "@/shared/lib/error-utils";
+import { getFileHash } from "@/shared/lib/file-utils";
 
 import { Asset } from "@/modules/asset/domain/asset";
 import { SaveAssetRepo } from "@/modules/asset/repos/save-asset-repo";

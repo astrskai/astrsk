@@ -15,7 +15,7 @@ import { SidebarLeftProvider } from "@/components/layout/both-sidebar";
 import { LeftNavigationMobile } from "@/components/layout/left-navigation/left-navigation-mobile";
 import { Sheet, SheetContent } from "@/components-v2/ui/sheet";
 import { Toaster } from "@/components-v2/ui/sonner";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { LeftNavigation } from "@/components/layout/left-navigation";
 import { LeftNavigationTrigger } from "@/components/layout/left-navigation";
 import { SidebarInset } from "@/components/layout/both-sidebar";

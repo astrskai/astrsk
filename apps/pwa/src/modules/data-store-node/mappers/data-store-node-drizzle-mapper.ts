@@ -1,6 +1,6 @@
 import { parse, stringify } from "superjson";
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 import { DataStoreNode } from "@/modules/data-store-node/domain/data-store-node";
 
 export class DataStoreNodeDrizzleMapper {

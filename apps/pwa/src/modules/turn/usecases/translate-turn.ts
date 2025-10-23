@@ -1,7 +1,7 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatFail } from "@/shared/utils";
-import { translate } from "@/shared/utils/translate-utils";
+import { formatFail } from "@/shared/lib";
+import { translate } from "@/shared/lib/translate-utils";
 
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { Turn } from "@/modules/turn/domain/turn";

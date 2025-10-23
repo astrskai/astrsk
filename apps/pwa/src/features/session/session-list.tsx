@@ -12,7 +12,7 @@ import {
 } from "@/components-v2/ui/tooltip";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { Datetime } from "@/shared/utils/datetime";
+import { Datetime } from "@/shared/lib/datetime";
 
 import { useAsset } from "@/app/hooks/use-asset";
 import { useCard } from "@/app/hooks/use-card";
@@ -24,7 +24,7 @@ import { SessionService } from "@/app/services/session-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { useValidationStore } from "@/app/stores/validation-store";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { StepName } from "@/features/session/create-session/step-name";
 import { Button } from "@/components-v2/ui/button";
 import { Checkbox } from "@/components-v2/ui/checkbox";

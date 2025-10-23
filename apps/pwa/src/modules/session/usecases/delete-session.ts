@@ -1,6 +1,6 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { DeleteSessionRepo } from "@/modules/session/repos/delete-session-repo";
 import { LoadSessionRepo } from "@/modules/session/repos/load-session-repo";

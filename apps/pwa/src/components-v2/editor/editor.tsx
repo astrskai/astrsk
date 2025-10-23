@@ -3,7 +3,7 @@ import { Editor as MonacoEditor } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { useTheme } from "@/components/system/theme-provider";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 
 interface EditorProps {
   value: string;

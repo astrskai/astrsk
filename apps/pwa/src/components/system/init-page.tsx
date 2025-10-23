@@ -1,6 +1,6 @@
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 const InitialPage = ({ className }: { className?: string }) => {
   const isMobile = useIsMobile();

@@ -1,6 +1,6 @@
 import { Result } from "@/shared/core/result";
 import { HttpClient } from "@/shared/infra/http-client";
-import { formatFail } from "@/shared/utils/error-utils";
+import { formatFail } from "@/shared/lib/error-utils";
 
 import { ApiConnection, ApiSource } from "@/modules/api/domain/api-connection";
 import { ApiModel } from "@/modules/api/domain/api-model";

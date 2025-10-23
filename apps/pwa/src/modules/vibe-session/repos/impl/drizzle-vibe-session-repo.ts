@@ -1,7 +1,7 @@
 import { and, eq, lt, sql, desc } from "drizzle-orm";
 
 import { Result } from "@/shared/core";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { Drizzle } from "@/db/drizzle";
 import { getOneOrThrow } from "@/db/helpers/get-one-or-throw";

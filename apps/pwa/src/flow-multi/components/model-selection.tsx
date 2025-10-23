@@ -1,23 +1,16 @@
 // TODO: remove this file
 
 import { useEffect, useState } from "react";
-import { Control, Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useReactFlow } from "@xyflow/react";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
 import type { ApiConnectionWithModels } from "@/app/hooks/use-api-connections-with-models";
-import { useAgentStore } from "@/app/stores/agent-store";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import { MobileOverrideProvider } from "@/shared/hooks/use-mobile-override";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components-v2/ui/select";
+
 import { Agent } from "@/modules/agent/domain/agent";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
 import { ApiModel } from "@/modules/api/domain/api-model";
@@ -170,7 +163,7 @@ const getIntendedModelValue = (
 };
 
 // Check if a model exists in the available API connections
-export const isModelAvailable = (
+const isModelAvailable = (
   modelName: string | undefined,
   apiSource: string | undefined,
   modelId: string | undefined,
@@ -236,23 +229,20 @@ const PromptItem = ({
       },
     },
   });
-  const { watch, control, setValue, trigger } = methods;
+  const { watch, setValue, trigger } = methods;
   const field =
     taskType === TaskType.AiResponse ? "aiResponse" : "userResponse";
-  const type = watch(`${field}.type`);
+  // const type = watch(`${field}.type`);
   const apiConnectionId = watch(`${field}.apiConnectionId`);
   const apiSource = watch(`${field}.apiSource`);
   const modelId = watch(`${field}.modelId`);
   const modelName = watch(`${field}.modelName`);
 
   // API models - using React Query directly for better control
-  const queryClient = useQueryClient();
-  const {
-    data: apiConnectionsWithModels,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery(apiConnectionQueries.listWithModels());
+
+  const { data: apiConnectionsWithModels, refetch } = useQuery(
+    apiConnectionQueries.listWithModels(),
+  );
 
   useEffect(() => {
     refetch();
@@ -296,15 +286,15 @@ const PromptItem = ({
     }
 
     // Only create a composite modelId if apiSource is valid
-    const formattedApiSource =
-      apiSource && Object.values(ApiSource).includes(apiSource as ApiSource)
-        ? (apiSource as ApiSource)
-        : undefined;
+    // const formattedApiSource =
+    //   apiSource && Object.values(ApiSource).includes(apiSource as ApiSource)
+    //     ? (apiSource as ApiSource)
+    //     : undefined;
 
     // Only create composite modelId if we have a valid apiSource
-    const compositeModelId = formattedApiSource
-      ? `${formattedApiSource}:${modelId}`
-      : modelId;
+    // const compositeModelId = formattedApiSource
+    //   ? `${formattedApiSource}:${modelId}`
+    //   : modelId;
 
     // Don't update the agent here - let the parent component handle it
     // The parent component (AgentNode) will update and save the agent properly
@@ -455,13 +445,5 @@ const AgentModels = ({
   );
 };
 
-export {
-  AgentModels,
-  flattenOptions,
-  getIntendedModelValue,
-  ModelItem,
-  PromptItem,
-  modelOptions,
-  StepPromptsSchema,
-};
-export type { StepPromptsSchemaType };
+export { AgentModels, ModelItem, isModelAvailable };
+// export type { StepPromptsSchemaType };

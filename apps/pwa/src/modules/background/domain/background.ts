@@ -1,6 +1,6 @@
 import { Guard, Result } from "@/shared/core";
 import { AggregateRoot, UniqueEntityID } from "@/shared/domain";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 export interface BackgroundProps {
   name: string;

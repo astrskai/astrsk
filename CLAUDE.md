@@ -1,6 +1,6 @@
 # astrsk Development Guidelines
 
-Maintained development guidelines. Last updated: 2025-10-22
+Maintained development guidelines. Last updated: 2025-10-23
 
 ## Active Feature: PWA Codebase Cleanup & Quality Improvement
 
@@ -66,6 +66,15 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
       - Video play button component (3 usages)
       - Updated all imports, removed empty shared/ folder
       - Build successful (10.04s)
+    - ✅ **FSD Layer Consolidation** - `shared/utils/` → `shared/lib/` (FSD compliance)
+      - Merged 12 utility files + 2 directories (test/, tokenizer/)
+      - Updated 177 import paths: `@/shared/utils` → `@/shared/lib`
+      - Barrel export updated in shared/lib/index.ts
+      - Eliminated lib/utils confusion (FSD recommends single `lib` segment)
+      - Build successful (10.55s)
+    - ✅ **Import Path Optimization** - cn utility barrel export
+      - Shortened 146 imports: `@/shared/lib/cn` → `@/shared/lib`
+      - Leverages barrel export pattern for cleaner imports
     - ✅ `ui/` - 38 files remaining (shadcn/ui - keep as-is, production use)
     - ⏳ `editor/` - 2 files → analyze usage
     - ⏳ `scenario/` - 2 files → analyze usage
@@ -139,13 +148,13 @@ We are adopting [Feature-Sliced Design (FSD)](https://feature-sliced.design/) as
 ├─────────────────────────────────────┤
 │  entities/     (Business entities)  │  ← Domain models (Card, Session, User)
 ├─────────────────────────────────────┤
-│  shared/       (Reusable code)      │  ← ui/, lib/, hooks/, utils/, api/
+│  shared/       (Reusable code)      │  ← ui/, lib/, hooks/, api/
 └─────────────────────────────────────┘
 ```
 
 #### **Current Migration Status**
 
-- ✅ **shared/** - Following FSD structure (ui/, lib/, hooks/, utils/)
+- ✅ **shared/** - Following FSD structure (ui/, lib/, hooks/) - **utils/ removed (FSD compliance)**
 - ✅ **features/** - Business features (session/, card/, flow/, settings/, vibe/)
 - ⏳ **components/** → **widgets/** (planned migration)
 - ⏳ **routes/** → **pages/** (planned migration)
@@ -343,19 +352,35 @@ apps/pwa/src/
 │       └── updater-new.tsx
 │
 ├── shared/                        # ✅ FSD Layer: Reusable code
-│   ├── ui/                       # ✅ NEW (FSD): Global UI components
+│   ├── ui/                       # ✅ Global UI components (FSD)
 │   │   ├── media-display.tsx    # Image/video display (5 usages)
 │   │   └── play-button.tsx      # Video play button (3 usages)
-│   ├── lib/                      # ✅ FSD: UI utilities
-│   │   └── cn.ts                # Tailwind cn() utility (102 usages)
-│   ├── hooks/                    # ✅ FSD: Global React hooks (32+ usages)
+│   │
+│   ├── lib/                      # ✅ Utilities & libraries (FSD - unified from utils/)
+│   │   ├── cn.ts                # Tailwind cn() utility (146 usages via barrel)
+│   │   ├── crypto-utils.ts      # Encryption & crypto operations
+│   │   ├── datetime.ts          # Date/time formatting
+│   │   ├── error-utils.ts       # Error handling utilities
+│   │   ├── file-utils.ts        # File operations
+│   │   ├── logger.ts            # Logging utilities
+│   │   ├── png-metadata.ts      # PNG metadata handling
+│   │   ├── prompt-converter.ts  # Prompt conversion
+│   │   ├── template-renderer.ts # Template rendering
+│   │   ├── translate-utils.ts   # Translation utilities
+│   │   ├── utility-types.ts     # TypeScript utility types
+│   │   ├── zustand-utils.ts     # Zustand state helpers
+│   │   ├── test/                # Test utilities
+│   │   ├── tokenizer/           # Tokenizer utilities
+│   │   └── index.ts             # Barrel export (all utilities)
+│   │
+│   ├── hooks/                    # ✅ Global React hooks (FSD)
 │   │   ├── use-mobile.tsx       # Mobile detection (24 usages)
 │   │   ├── use-device-type.tsx  # Device type detection (internal)
 │   │   ├── use-pwa.tsx          # PWA state (2 usages)
 │   │   ├── use-back-gesture.tsx # Mobile back gesture (3 usages)
 │   │   ├── use-forwarded-ref.tsx # Ref forwarding (1 usage)
 │   │   └── use-mobile-override.tsx # Mobile override (2 usages)
-│   ├── utils/                    # Business logic utilities
+│   │
 │   ├── domain/                   # DDD base classes (Entity, ValueObject, etc.)
 │   ├── core/                     # Core business logic
 │   ├── infra/                    # Infrastructure layer
@@ -524,6 +549,7 @@ Criteria for moving to `components/`:
 
 - [Feature-Sliced Design](https://feature-sliced.design/) - **Primary architectural reference**
 - [FSD Get Started](https://feature-sliced.design/docs/get-started/overview) - Core concepts and layers
+- [FSD Migration from Custom](https://feature-sliced.design/docs/guides/migration/from-custom) - **Migration guide (lib vs utils)**
 - [Kent C. Dodds - Colocation](https://kentcdodds.com/blog/colocation) - File organization principles
 - [Bulletproof React](https://github.com/alan2207/bulletproof-react) - React project structure patterns
 - [Next.js Project Structure](https://nextjs.org/docs/getting-started/project-structure) - Modern folder conventions

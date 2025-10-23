@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { readFile } from "@/shared/utils/test";
+import { readFile } from "@/shared/lib/test";
 
 import { Background } from "@/modules/background/domain";
 

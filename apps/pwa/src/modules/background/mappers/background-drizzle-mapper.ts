@@ -1,5 +1,5 @@
 import { UniqueEntityID } from "@/shared/domain";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 
 import { InsertBackground, SelectBackground } from "@/db/schema/backgrounds";
 import { Background } from "@/modules/background/domain/background";

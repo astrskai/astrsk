@@ -8,7 +8,7 @@ import { TradingCard } from "@/features/card/components/trading-card";
 import { useCardPanelContext } from "@/features/card/panels/card-panel-provider";
 import { CardItem } from "@/components/layout/left-navigation/card-list";
 import { useAsset } from "@/app/hooks/use-asset";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { cardQueries, useUpdateCardTitle } from "@/app/queries/card";

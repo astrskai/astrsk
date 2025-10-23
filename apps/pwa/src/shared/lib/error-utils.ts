@@ -2,7 +2,7 @@ import { AISDKError, APICallError } from "ai";
 import { ZodError } from "zod";
 
 import { Result } from "@/shared/core";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 
 export function formatErrorMessage(message: string, error?: unknown): string {
   return `${message}${

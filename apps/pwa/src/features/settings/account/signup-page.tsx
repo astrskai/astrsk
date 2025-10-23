@@ -5,12 +5,12 @@ import {
   SettingSubPageType,
   useAppStore,
 } from "@/app/stores/app-store";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Button } from "@/components-v2/ui/button";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 import { toastSuccess } from "@/components-v2/ui/toast-success";
-import { logger } from "@/shared/utils";
+import { logger } from "@/shared/lib";
 import { useSignIn, useSignUp } from "@clerk/clerk-react";
 import { ArrowLeft, Check } from "lucide-react";
 import { useCallback, useState } from "react";

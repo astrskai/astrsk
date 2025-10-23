@@ -2,10 +2,10 @@ import { Info } from "lucide-react";
 import { Controller, useFormContext } from "react-hook-form";
 import { z } from "zod";
 
-import { languages } from "@/shared/utils/translate-utils";
+import { languages } from "@/shared/lib/translate-utils";
 
 import { Combobox } from "@/components/ui/combobox";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 
 // Re-export schema and converter from the shared step
 export {

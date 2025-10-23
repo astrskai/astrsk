@@ -1,7 +1,7 @@
 import { Result } from "@/shared/core/result";
 import { UseCase } from "@/shared/core/use-case";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatFail } from "@/shared/utils/error-utils";
+import { formatFail } from "@/shared/lib/error-utils";
 
 import { Transaction } from "@/db/transaction";
 import { DeleteAssetRepo } from "@/modules/asset/repos/delete-asset-repo";

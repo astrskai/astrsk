@@ -1,6 +1,6 @@
 import { Guard, Result } from "@/shared/core";
 import { ValueObject } from "@/shared/domain";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 export interface ApiModelProps {
   id: string;

@@ -9,8 +9,8 @@ import {
 } from "react";
 import { toast } from "sonner";
 
-import { downloadFile, logger } from "@/shared/utils";
-import { languagesLabelMap } from "@/shared/utils/translate-utils";
+import { downloadFile, logger } from "@/shared/lib";
+import { languagesLabelMap } from "@/shared/lib/translate-utils";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useFlow } from "@/app/hooks/use-flow";
@@ -20,7 +20,7 @@ import { SessionService } from "@/app/services/session-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { useSessionStore } from "@/app/stores/session-store";
 import { useValidationStore } from "@/app/stores/validation-store";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { CardTab } from "@/features/session/create-session/step-cards";
 import {
   EditBackground,

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { PlayButtonIconSize } from "./media-display";
 

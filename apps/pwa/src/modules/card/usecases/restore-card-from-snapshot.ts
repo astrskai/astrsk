@@ -1,5 +1,5 @@
 import { Result, UseCase } from "@/shared/core";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { Card } from "@/modules/card/domain";
 import { SaveCardRepo } from "@/modules/card/repos/save-card-repo";

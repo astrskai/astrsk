@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "@/shared/lib/logger";
 import { SessionProps } from "@/modules/session/domain/session";
 import { Session } from "@/modules/session/domain/session";
 import { useSaveSession } from "@/app/queries/session-queries";

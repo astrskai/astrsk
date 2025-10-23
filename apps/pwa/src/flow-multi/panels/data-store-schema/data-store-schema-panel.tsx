@@ -27,7 +27,7 @@ import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider
 import { DataStoreSchemaProps, DataStoreSchemaField, DataStoreSchema, DataStoreFieldType } from "./data-store-schema-types";
 import { SortableField } from "./sortable-field";
 import { UniqueEntityID } from "@/shared/domain";
-import { sanitizeFileName } from "@/shared/utils/file-utils";
+import { sanitizeFileName } from "@/shared/lib/file-utils";
 import { toast } from "sonner";
 
 export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {

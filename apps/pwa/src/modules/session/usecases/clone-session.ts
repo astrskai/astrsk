@@ -1,6 +1,6 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import { formatFail } from "@/shared/utils";
+import { formatFail } from "@/shared/lib";
 
 import { Session } from "@/modules/session/domain/session";
 import { SessionDrizzleMapper } from "@/modules/session/mappers/session-drizzle-mapper";

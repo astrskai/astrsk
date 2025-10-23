@@ -16,7 +16,7 @@ import { Card } from "@/components-v2/ui/card";
 import { CardType } from "@/modules/card/domain";
 import { SearchCardsSort } from "@/modules/card/repos";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { cn } from "@/shared/utils";
+import { cn } from "@/shared/lib";
 
 interface CardListProps {
   title: string;
