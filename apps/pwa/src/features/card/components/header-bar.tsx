@@ -4,7 +4,7 @@ import { Import, Plus } from "lucide-react";
 import React from "react";
 
 import { useAppStore } from "@/app/stores/app-store";
-import { TypoBase } from "@/components/ui/typo";
+import { TypoBase } from "@/shared/ui/typo";
 import { Button } from "@/shared/ui/button";
 import {
   Tooltip,

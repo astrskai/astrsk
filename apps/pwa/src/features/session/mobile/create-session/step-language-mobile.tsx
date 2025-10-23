@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { languages } from "@/shared/lib/translate-utils";
 
-import { Combobox } from "@/components/ui/combobox";
+import { Combobox } from "@/shared/ui/combobox";
 import { cn } from "@/shared/lib";
 
 // Re-export schema and converter from the shared step

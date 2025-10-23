@@ -1,5 +1,5 @@
 import { useAppStore } from "@/app/stores/app-store";
-import { TypoTiny } from "@/components/ui/typo";
+import { TypoTiny } from "@/shared/ui/typo";
 import {
   Tooltip,
   TooltipContent,

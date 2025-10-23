@@ -5,7 +5,7 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib";
 
-import { TypoTiny } from "@/components/ui/typo";
+import { TypoTiny } from "@/shared/ui/typo";
 import { Button } from "@/shared/ui/button";
 import {
   Tooltip,

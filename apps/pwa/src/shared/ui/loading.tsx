@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 
 const titles = [
   "Getting things ready — locally",

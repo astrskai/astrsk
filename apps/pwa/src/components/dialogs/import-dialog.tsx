@@ -9,7 +9,7 @@ import {
   DialogClose,
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
-import { TypoBase } from "@/components/ui/typo";
+import { TypoBase } from "@/shared/ui/typo";
 import { cn } from "@/shared/lib";
 
 // Helper function to humanize bytes

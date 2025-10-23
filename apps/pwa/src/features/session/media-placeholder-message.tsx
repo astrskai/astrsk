@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/app/hooks/use-asset";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";

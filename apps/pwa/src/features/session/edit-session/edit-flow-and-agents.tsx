@@ -13,7 +13,7 @@ import {
   StepFlowAndAgentsSchema,
   StepFlowAndAgentsSchemaType,
 } from "@/features/session/create-session/step-flow-and-agents";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import { Button } from "@/shared/ui/button";
 import { CarouselItem } from "@/shared/ui/carousel";
 import { SessionProps } from "@/modules/session/domain";

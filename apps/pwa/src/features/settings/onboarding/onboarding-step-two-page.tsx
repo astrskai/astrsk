@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Page, useAppStore } from "@/app/stores/app-store";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import { Button } from "@/shared/ui/button";
 import { ArrowLeft, Key, Sparkles } from "lucide-react";
 

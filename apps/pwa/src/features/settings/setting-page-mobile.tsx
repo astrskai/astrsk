@@ -13,9 +13,9 @@ import {
   TermsOfService as TermOfService,
   OssNotice,
 } from "@/features/settings/legal";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import { TopNavigation } from "@/components/layout/top-navigation";
-import { Typo2XLarge, TypoBase, TypoXLarge } from "@/components/ui/typo";
+import { Typo2XLarge, TypoBase, TypoXLarge } from "@/shared/ui/typo";
 import { Button } from "@/shared/ui/button";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { Separator } from "@/shared/ui/separator";

@@ -12,7 +12,7 @@ import {
   useBackgroundStore,
 } from "@/app/stores/background-store";
 import { cn } from "@/shared/lib";
-import { TypoBase } from "@/components/ui/typo";
+import { TypoBase } from "@/shared/ui/typo";
 import { Button } from "@/shared/ui/button";
 import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {

@@ -3,7 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { MessageCircle, GripVertical } from "lucide-react";
 import { Switch } from "@/shared/ui/switch";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import { PromptItem } from "./prompt-types";
 
 interface SortableItemProps {

@@ -17,7 +17,7 @@ import {
   ImportButton,
 } from "./shared-list-components";
 import { StepName } from "@/features/session/create-session/step-name";
-import { SvgIcon } from "@/components/ui/svg-icon";
+import { SvgIcon } from "@/shared/ui/svg-icon";
 import {
   Tooltip,
   TooltipContent,

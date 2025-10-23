@@ -1,7 +1,7 @@
 import { initServices } from "@/app/services/init-services.ts";
 import { useAppStore } from "@/app/stores/app-store.tsx";
 import { initStores } from "@/app/stores/init-stores.ts";
-import { Loading } from "@/components/ui/loading.tsx";
+import { Loading } from "@/shared/ui/loading";
 import { PwaRegister } from "@/components/system/pwa-register.tsx";
 import { migrate } from "@/db/migrate.ts";
 import { logger } from "@/shared/lib/logger.ts";

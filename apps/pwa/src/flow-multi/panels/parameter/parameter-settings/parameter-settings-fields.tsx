@@ -7,8 +7,8 @@ import { useState, useEffect } from "react";
 
 import { Parameter, parameterList } from "@/shared/task/domain/parameter";
 
-import { SearchInput } from "@/components/ui/search-input";
-import { Typo2XLarge, TypoBase } from "@/components/ui/typo";
+import { SearchInput } from "@/shared/ui/search-input";
+import { Typo2XLarge, TypoBase } from "@/shared/ui/typo";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { ScrollArea } from "@/shared/ui/scroll-area";
