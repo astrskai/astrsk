@@ -6,10 +6,13 @@ import {
   SettingPageLevel,
   useAppStore,
 } from "@/app/stores/app-store";
-import ContentPolicy from "@/components-v2/setting/content-policy";
-import PrivacyPolicy from "@/components-v2/setting/privacy-policy";
-import RefundPolicy from "@/components-v2/setting/refund-policy";
-import TermOfService from "@/components-v2/setting/terms-of-service";
+import {
+  ContentPolicy,
+  PrivacyPolicy,
+  RefundPolicy,
+  TermsOfService as TermOfService,
+  OssNotice,
+} from "@/features/settings/legal";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { TopNavigation } from "@/components/layout/top-navigation";
 import { Typo2XLarge, TypoBase, TypoXLarge } from "@/components/ui/typo";
@@ -17,7 +20,6 @@ import { Button } from "@/components-v2/ui/button";
 import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
 import { Separator } from "@/components-v2/ui/separator";
 import { Switch } from "@/components-v2/ui/switch";
-import OssNotice from "@/components-v2/setting/oss-notice";
 
 export function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");

@@ -1,7 +1,6 @@
-import { OnboardingDialog } from "@/components-v2/setting/onboarding-genre-dialog";
+import { OnboardingDialog } from "@/features/settings/onboarding";
 import { ConvexReady } from "@/components/system/convex-ready";
-import { SubscribeChecker } from "@/components-v2/setting/subscribe-checker";
-import { SubscribeNudgeDialog } from "@/components-v2/setting/subscribe-nudge-dialog";
+import { SubscribeChecker, SubscribeNudgeDialog } from "@/features/settings/subscription";
 
 const DesktopApp = () => {
   return (
