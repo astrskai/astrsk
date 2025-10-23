@@ -17,6 +17,7 @@ import { useCardsStore } from "@/app/stores/cards-store";
 import { useEditSessionDialogStore } from "@/app/stores/edit-session-dialog-store";
 import { CharacterForm } from "@/features/card/components/edit-sheet/character-form-v2";
 import { PlotForm } from "@/features/card/components/edit-sheet/plot-form-v2";
+import { CardFormValues } from "@/features/card/types/card-form";
 import {
   DeleteConfirm,
   UnsavedChangesConfirm,
@@ -37,7 +38,6 @@ import {
   Card,
   CardType,
   CharacterCard,
-  Entry,
   Lorebook,
   PlotCard,
 } from "@/modules/card/domain";
@@ -50,33 +50,6 @@ export const ActiveTabType = {
 } as const;
 
 export type ActiveTabType = (typeof ActiveTabType)[keyof typeof ActiveTabType];
-
-export type CardFormValues = {
-  // Metadata
-  title: string;
-  newIcon?: FileList;
-  iconAssetId?: string;
-  tags: string[];
-
-  // Creator
-  creator?: string;
-  cardSummary?: string;
-  version?: string;
-  conceptualOrigin?: string;
-
-  // For Character
-  name?: string;
-  exampleDialogue?: string;
-
-  // For Plot
-  scenarios?: { name: string; description: string }[];
-
-  // For Character and Plot
-  description?: string;
-
-  // For Character, Plot
-  entries?: Entry[];
-};
 
 export interface CardStore {
   // States

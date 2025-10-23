@@ -22,7 +22,7 @@ import { DeleteConfirm } from "@/components/dialogs/confirm";
 import { FlowDialog } from "@/features/flow/flow-dialog";
 import { cn } from "@/components-v2/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
-import { humanizeBytes } from "@/components-v2/session/session-list";
+import { humanizeBytes } from "@/features/session/session-list";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { ModelItem } from "@/components-v2/title/create-title/step-prompts";
 import { TypoBase } from "@/components/ui/typo";
