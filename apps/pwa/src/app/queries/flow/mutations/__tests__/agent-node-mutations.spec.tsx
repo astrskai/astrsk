@@ -16,7 +16,7 @@ import { Agent } from "@/modules/agent/domain/agent";
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { flowKeys } from "@/app/queries/flow/query-factory";
-import { NodeType } from "@/flow-multi/types/node-types";
+import { NodeType } from "@/features/flow/flow-multi/types/node-types";
 
 // Mock services
 vi.mock("@/app/services/agent-service", () => ({
@@ -48,11 +48,11 @@ vi.mock("@/modules/agent/domain/agent", () => ({
   },
 }));
 
-vi.mock("@/flow-multi/utils/node-color-assignment", () => ({
+vi.mock("@/features/flow/flow-multi/utils/node-color-assignment", () => ({
   getNextAvailableColor: vi.fn(() => Promise.resolve("#FF0000")),
 }));
 
-vi.mock("@/flow-multi/components/toast/use-toast", () => ({
+vi.mock("@/features/flow/flow-multi/components/toast/use-toast", () => ({
   useToast: () => ({
     toast: vi.fn(),
   }),

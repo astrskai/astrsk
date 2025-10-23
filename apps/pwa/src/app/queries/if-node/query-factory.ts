@@ -11,7 +11,7 @@
 
 import { queryClient } from "@/app/queries/query-client";
 import { IfNodeService } from "@/app/services/if-node-service";
-import { IfCondition } from "@/flow-multi/nodes/if-node";
+import { IfCondition } from "@/features/flow/flow-multi/nodes/if-node";
 import { IfNode } from "@/modules/if-node/domain/if-node";
 import { IfNodeDrizzleMapper } from "@/modules/if-node/mappers/if-node-drizzle-mapper";
 import { UniqueEntityID } from "@/shared/domain";

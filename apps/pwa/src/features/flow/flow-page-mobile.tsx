@@ -22,7 +22,7 @@ import { useMobileNavigation } from "@/app/contexts/mobile-navigation-context";
 import { FlowDialog } from "@/features/flow/flow-dialog";
 import { cn } from "@/shared/lib";
 import { humanizeBytes } from "@/features/session/session-list";
-import { ModelItem } from "@/flow-multi/components/model-selection";
+import { ModelItem } from "@/features/flow/flow-multi/components/model-selection";
 import {
   Button,
   CheckboxMobile,

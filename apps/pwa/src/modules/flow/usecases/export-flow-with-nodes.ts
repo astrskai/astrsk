@@ -5,7 +5,7 @@ import { LoadFlowRepo } from "@/modules/flow/repos/load-flow-repo";
 import { LoadAgentRepo } from "@/modules/agent/repos";
 import { LoadDataStoreNodeRepo } from "@/modules/data-store-node/repos";
 import { LoadIfNodeRepo } from "@/modules/if-node/repos";
-import { NodeType } from "@/flow-multi/types/node-types";
+import { NodeType } from "@/features/flow/flow-multi/types/node-types";
 import { ModelTier } from "@/modules/agent/domain/agent";
 
 // Enhanced legacy format - extends flow structure with separate node data

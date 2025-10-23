@@ -201,7 +201,7 @@ export async function applyOperationsToResource(
     if (errors.length === 0 && resourceId && resourceType === "flow") {
       try {
         const { invalidateSingleFlowQueries } = await import(
-          "@/flow-multi/utils/invalidate-flow-queries"
+          "@/features/flow/flow-multi/utils/invalidate-flow-queries"
         );
         await invalidateSingleFlowQueries(resourceId);
       } catch (invalidationError) {

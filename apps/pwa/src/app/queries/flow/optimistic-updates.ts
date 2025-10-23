@@ -14,7 +14,7 @@ import {
   DataStoreSchemaField,
   ReadyState 
 } from "@/modules/flow/domain/flow";
-import { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
+import { ValidationIssue } from "@/features/flow/flow-multi/validation/types/validation-types";
 
 /**
  * Update a node optimistically
