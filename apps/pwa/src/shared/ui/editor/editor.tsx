@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Editor as MonacoEditor } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
-import { useTheme } from "@/components/system/theme-provider";
+import { useTheme } from "@/app/providers/theme-provider";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/shared/lib";
 

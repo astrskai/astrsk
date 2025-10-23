@@ -7,8 +7,8 @@ import { useSessionStore } from "@/app/stores/session-store";
 import {
   SidebarInset,
   SidebarLeftProvider,
-} from "@/components/layout/both-sidebar";
-import { InitialPage } from "@/components/system/init-page";
+} from "@/widgets/both-sidebar";
+import { InitialPage } from "@/app/providers/init-page";
 import { cn } from "@/shared/lib";
 import { CardTab } from "@/features/session/create-session/step-cards";
 import { SessionMain } from "@/features/session/session-main";

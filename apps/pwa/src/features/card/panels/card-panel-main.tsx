@@ -33,8 +33,8 @@ import { CardVibePanel } from "./card-panel/components/vibe-panel";
 import { SvgIcon } from "@/shared/ui/svg-icon";
 import { cn } from "@/shared/lib";
 import { logger } from "@/shared/lib";
-import CustomDockviewTab from "@/components/layout/dockview-default-tab";
-import { PanelFocusAnimationWrapper } from "@/components/layout/dockview-panel-focus-animation";
+import CustomDockviewTab from "@/widgets/dockview-default-tab";
+import { PanelFocusAnimationWrapper } from "@/widgets/dockview-panel-focus-animation";
 import { useNavigate } from "@tanstack/react-router";
 
 interface CardPanelMainProps {

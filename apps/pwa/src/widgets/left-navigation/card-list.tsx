@@ -16,7 +16,7 @@ import {
 } from "./shared-list-components";
 import { SvgIcon } from "@/shared/ui/svg-icon";
 import { Button } from "@/shared/ui/button";
-import { DeleteConfirm } from "@/components/dialogs/confirm";
+import { DeleteConfirm } from "@/shared/ui/confirm";
 import { CardImportDialog } from "@/features/card/components/card-import-dialog";
 import {
   Tooltip,

@@ -93,18 +93,42 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
     - ✅ **components-v2/ FOLDER DELETED** - Complete FSD migration achieved
       - All 43 files successfully migrated to FSD structure
       - Legacy folder completely removed from codebase
+  - ✅ **components/ FOLDER COMPLETE FSD RECLASSIFICATION & DELETED**
+    - ✅ **components/ui/ → shared/ui/** (12 files)
+      - Deleted 3 unused: code-editor, json-viewer, tooltip
+      - Migrated: avatar, banner, color-picker, combobox, loading-overlay, loading, search-input, stepper-mobile, stepper, subscribe-badge, svg-icon, typo
+      - All domain-independent UI components
+    - ✅ **components/dialogs/ → shared/ui/** (4 files)
+      - confirm (8 usages), help-video-dialog (1), import-dialog (3), list-edit-dialog-mobile (3)
+      - Reusable dialog components
+    - ✅ **components/layout/ → widgets/** (8 files + 1 directory) - **FSD Widgets Layer**
+      - Deleted 1 unused: dockview-hidden-tab
+      - Migrated: both-sidebar, dockview-default-tab, dockview-panel-focus-animation, modal-pages, top-bar, top-navigation, v2-layout, left-navigation/
+      - Large UI blocks composing multiple features
+    - ✅ **components/system/ → app/providers/** (7 files) - **FSD App Layer**
+      - convex-ready, init-page, install-pwa, mobile-updater, pwa-register, theme-provider, updater-new
+      - App initialization and global providers
+    - ✅ **components/ FOLDER DELETED** - Complete FSD reorganization
+      - All files reclassified according to FSD principles
+      - Build successful (9.67s)
 - ✅ **Quality Findings & Migration Stats**:
   - **components-v2/ Migration**: 43 files → FSD structure (100% complete)
     - 38 UI components → `shared/ui/` (~400 imports updated)
     - 2 editor files → `shared/ui/editor/`
     - 2 scenario files → `features/session/components/scenario/`
     - 1 lib file → `shared/lib/cn.ts` (146 imports)
+  - **components/ FSD Reclassification**: 36 files → FSD layers (100% complete)
+    - 16 files → `shared/ui/` (domain-independent UI)
+    - 9 files → `widgets/` (large UI blocks - NEW FSD layer created)
+    - 7 files → `app/providers/` (app initialization - NEW segment created)
+    - 4 unused files deleted (code-editor, json-viewer, tooltip, dockview-hidden-tab)
   - **FSD Consolidation**: `shared/utils/` → `shared/lib/` (177 imports)
-  - **Total Import Updates**: ~700+ paths updated
-  - **Zero Unused Components**: All 38 UI components actively used
-  - 3 UNUSED components identified (code-editor, json-viewer, tooltip-wrapper)
+  - **Total Import Updates**: ~900+ paths updated
+  - **Deleted Unused Files**: 7 total (3 from components/ui, 1 from components/layout, 3 from components-v2)
+  - **FSD Layers Created**:
+    - `widgets/` - FSD Widgets layer (8 files + left-navigation/)
+    - `app/providers/` - FSD App layer segment (7 files)
   - 5 Mobile duplication targets identified for Phase 3
-  - 1 Legacy file removed (edit-card-dialog.tsx)
   - All barrel exports created (index.ts)
 
 ### Migration Phases
@@ -215,9 +239,11 @@ features/           # Layer
 
 #### **Current Migration Status**
 
-- ✅ **shared/** - Following FSD structure (ui/, lib/, hooks/) - **utils/ removed (FSD compliance)**
+- ✅ **app/** - App layer with providers/ segment (7 initialization files)
+- ✅ **widgets/** - Widgets layer created (8 layout files + left-navigation/)
 - ✅ **features/** - Business features (session/, card/, flow/, settings/, vibe/)
-- ⏳ **components/** → **widgets/** (planned migration)
+- ✅ **shared/** - Following FSD structure (ui/, lib/, hooks/) - **utils/ removed (FSD compliance)**
+- ✅ **components/** - **DELETED** - All files reclassified to FSD layers
 - ⏳ **routes/** → **pages/** (planned migration)
 - ⏳ **modules/** → **entities/** (planned migration)
 
@@ -362,66 +388,49 @@ apps/pwa/src/
 │       └── types/               # Type definitions (1 file)
 │           └── index.ts
 │
-├── components/                    # Shared components (domain-independent) [REORGANIZED]
-│   ├── ui/                       # shadcn/ui + basic UI (15 files)
-│   │   ├── avatar.tsx
-│   │   ├── banner.tsx
-│   │   ├── code-editor.tsx       # [UNUSED]
-│   │   ├── color-picker.tsx
-│   │   ├── combobox.tsx
-│   │   ├── json-viewer.tsx       # [UNUSED]
-│   │   ├── loading.tsx
-│   │   ├── loading-overlay.tsx
-│   │   ├── search-input.tsx
-│   │   ├── stepper.tsx
-│   │   ├── stepper-mobile.tsx    # [Phase 3: Mobile removal target]
-│   │   ├── subscribe-badge.tsx
-│   │   ├── svg-icon.tsx
-│   │   ├── tooltip.tsx           # [UNUSED - tooltip-wrapper]
-│   │   ├── typo.tsx
-│   │   └── index.ts              # Barrel export
-│   │
-│   ├── layout/                   # Layout/navigation [UPDATED]
-│   │   ├── both-sidebar.tsx
-│   │   ├── dockview-default-tab.tsx
-│   │   ├── dockview-hidden-tab.tsx  # [UNUSED]
-│   │   ├── dockview-panel-focus-animation.tsx
-│   │   ├── top-bar.tsx
-│   │   ├── top-navigation.tsx
-│   │   ├── left-navigation/      # ✅ Consolidated (7 files)
-│   │   │   ├── index.tsx         # Desktop main (barrel export)
-│   │   │   ├── left-navigation-mobile.tsx  # [Phase 3: Mobile removal target]
-│   │   │   ├── card-list.tsx
-│   │   │   ├── flow-list.tsx
-│   │   │   ├── session-list.tsx
-│   │   │   ├── shared-list-components.tsx
-│   │   │   └── hooks/
-│   │   │       └── use-left-navigation-width.ts
-│   │   └── index.ts              # Barrel export
-│   │
-│   ├── dialogs/                  # Shared dialogs (4 files)
-│   │   ├── confirm.tsx           # Used in 5 domains
-│   │   ├── help-video-dialog.tsx # left-navigation only
-│   │   ├── import-dialog.tsx     # Used in 3 domains
-│   │   ├── list-edit-dialog-mobile.tsx  # [Mobile only]
-│   │   └── index.ts              # Barrel export
-│   │
-│   └── system/                   # System/infrastructure (7 files, no index.ts)
-│       ├── convex-ready.tsx
-│       ├── init-page.tsx         # App initialization screen
-│       ├── install-pwa.tsx
-│       ├── mobile-updater.tsx    # [Mobile only]
-│       ├── pwa-register.tsx
-│       ├── theme-provider.tsx
-│       └── updater-new.tsx
+├── widgets/                       # ✅ FSD Widgets Layer: Large UI blocks (9 files)
+│   ├── both-sidebar.tsx          # Sidebar composition (6 usages)
+│   ├── dockview-default-tab.tsx  # Dockview tab component
+│   ├── dockview-panel-focus-animation.tsx
+│   ├── modal-pages.tsx           # Modal page wrapper
+│   ├── top-bar.tsx               # Top bar component
+│   ├── top-navigation.tsx        # Navigation header (12 usages)
+│   ├── v2-layout.tsx             # Main layout composition
+│   └── left-navigation/          # Left sidebar navigation
+│       ├── index.tsx             # Desktop navigation
+│       ├── left-navigation-mobile.tsx
+│       ├── card-list.tsx
+│       ├── flow-list.tsx
+│       ├── session-list.tsx
+│       ├── shared-list-components.tsx
+│       └── hooks/
+│           └── use-left-navigation-width.ts
 │
 ├── shared/                        # ✅ FSD Layer: Reusable code
-│   ├── ui/                       # ✅ Global UI components (FSD) - 41 files total
+│   ├── ui/                       # ✅ Global UI components (FSD) - 57 files total
 │   │   ├── editor/              # Monaco Editor wrapper (10 usages)
 │   │   │   ├── editor.tsx       # Code editor component
 │   │   │   └── index.ts         # Barrel export
+│   │   │
+│   │   ├── avatar.tsx           # ✅ Custom UI components (12 files from components/)
+│   │   ├── banner.tsx           # Banner notification component
+│   │   ├── color-picker.tsx     # Color picker component
+│   │   ├── combobox.tsx         # Combobox input component
+│   │   ├── loading.tsx          # Loading spinner (3 usages)
+│   │   ├── loading-overlay.tsx  # Loading overlay wrapper
 │   │   ├── media-display.tsx    # Image/video display (5 usages)
 │   │   ├── play-button.tsx      # Video play button (3 usages)
+│   │   ├── search-input.tsx     # Search input component
+│   │   ├── stepper.tsx          # Stepper component
+│   │   ├── stepper-mobile.tsx   # [Phase 3: Mobile removal target]
+│   │   ├── subscribe-badge.tsx  # Subscription badge
+│   │   ├── svg-icon.tsx         # SVG icon wrapper
+│   │   ├── typo.tsx             # Typography component
+│   │   │
+│   │   ├── confirm.tsx          # ✅ Shared dialogs (4 files from components/dialogs/)
+│   │   ├── help-video-dialog.tsx
+│   │   ├── import-dialog.tsx    # Generic import dialog
+│   │   ├── list-edit-dialog-mobile.tsx  # [Phase 3: Mobile removal target]
 │   │   │
 │   │   ├── button.tsx           # ✅ shadcn/ui components (38 files)
 │   │   ├── scroll-area.tsx      # High usage UI primitives
@@ -452,7 +461,8 @@ apps/pwa/src/
 │   │   ├── toast-error.tsx
 │   │   ├── toast-success.tsx
 │   │   ├── sonner.tsx
-│   │   └── ... (+ 10 more shadcn/ui components)
+│   │   ├── field-badges.tsx
+│   │   └── ... (+ 7 more shadcn/ui components)
 │   │
 │   ├── lib/                      # ✅ Utilities & libraries (FSD - unified from utils/)
 │   │   ├── cn.ts                # Tailwind cn() utility (146 usages via barrel)
@@ -486,7 +496,15 @@ apps/pwa/src/
 │   ├── prompt/                   # Prompt templates
 │   └── task/                     # Background tasks
 │
-├── app/                          # Global app configuration
+├── app/                          # ✅ FSD App Layer: Application initialization
+│   ├── providers/                # ✅ App providers & initialization (7 files)
+│   │   ├── convex-ready.tsx     # Convex connection wrapper
+│   │   ├── init-page.tsx        # App initialization screen
+│   │   ├── install-pwa.tsx      # PWA installation prompt
+│   │   ├── mobile-updater.tsx   # Mobile update checker
+│   │   ├── pwa-register.tsx     # PWA service worker registration
+│   │   ├── theme-provider.tsx   # Theme context provider
+│   │   └── updater-new.tsx      # App update checker
 │   ├── queries/                  # TanStack Query factories
 │   ├── services/                 # Business logic services
 │   └── stores/                   # Global state management

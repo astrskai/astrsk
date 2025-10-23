@@ -1,4 +1,4 @@
-import { useSidebarLeft } from "@/components/layout/both-sidebar";
+import { useSidebarLeft } from "@/widgets/both-sidebar";
 import { cn } from "@/shared/lib";
 import { Button } from "@/shared/ui/button";
 

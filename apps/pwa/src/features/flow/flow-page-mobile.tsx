@@ -18,7 +18,7 @@ import { queryClient } from "@/app/queries/query-client";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { useQuery } from "@tanstack/react-query";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
-import { DeleteConfirm } from "@/components/dialogs/confirm";
+import { DeleteConfirm } from "@/shared/ui/confirm";
 import { FlowDialog } from "@/features/flow/flow-dialog";
 import { cn } from "@/shared/lib";
 import { SearchInput } from "@/shared/ui/search-input";
@@ -40,8 +40,8 @@ import { ScrollArea } from "@/shared/ui/scroll-area";
 import { TableName } from "@/db/schema/table-name";
 import { Flow, Node } from "@/modules/flow/domain";
 import { Session } from "@/modules/session/domain/session";
-import { ListEditDialogMobile } from "@/components/dialogs/list-edit-dialog-mobile";
-import { TopNavigation } from "@/components/layout/top-navigation";
+import { ListEditDialogMobile } from "@/shared/ui/list-edit-dialog-mobile";
+import { TopNavigation } from "@/widgets/top-navigation";
 
 type SelectionAction = "copy" | "export" | "delete";
 

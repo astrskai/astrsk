@@ -35,10 +35,10 @@ import {
 } from "@/shared/ui/dialog";
 import { Card, CardType } from "@/modules/card/domain";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
-import { DeleteConfirm } from "@/components/dialogs/confirm";
+import { DeleteConfirm } from "@/shared/ui/confirm";
 import { SearchCardsSort } from "@/modules/card/repos";
-import { ListEditDialogMobile } from "@/components/dialogs/list-edit-dialog-mobile";
-import { TopNavigation } from "@/components/layout/top-navigation";
+import { ListEditDialogMobile } from "@/shared/ui/list-edit-dialog-mobile";
+import { TopNavigation } from "@/widgets/top-navigation";
 import { SortDialogMobile } from "@/features/card/mobile/sort-dialog-mobile";
 
 interface CardPageMobileProps {

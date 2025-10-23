@@ -22,9 +22,9 @@ import { CardFormValues } from "@/features/card/types/card-form";
 import {
   DeleteConfirm,
   UnsavedChangesConfirm,
-} from "@/components/dialogs/confirm";
+} from "@/shared/ui/confirm";
 import { useBackGesture } from "@/shared/hooks/use-back-gesture";
-import { TopNavigation } from "@/components/layout/top-navigation";
+import { TopNavigation } from "@/widgets/top-navigation";
 import { Button } from "@/shared/ui/button";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import {

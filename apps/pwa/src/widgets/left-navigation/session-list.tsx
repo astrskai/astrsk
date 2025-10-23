@@ -25,7 +25,7 @@ import {
 } from "@/shared/ui/tooltip";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { DeleteConfirm } from "@/components/dialogs/confirm";
+import { DeleteConfirm } from "@/shared/ui/confirm";
 import {
   SessionImportDialog,
   type AgentModel,

@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { V2Layout } from "@/components/layout/v2-layout";
-import { ModalPages } from "@/components/layout/modal-pages";
+import { V2Layout } from "@/widgets/v2-layout";
+import { ModalPages } from "@/widgets/modal-pages";
 import DesktopApp from "@/app/v2/desktop-app";
 
 export const Route = createFileRoute("/_layout")({
