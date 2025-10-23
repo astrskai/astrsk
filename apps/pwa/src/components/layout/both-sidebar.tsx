@@ -7,7 +7,7 @@ import { ArrowLeftFromLine, ArrowRightFromLine, List } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/shared/lib";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
 import { Input } from "@/components-v2/ui/input";
 import { Separator } from "@/components-v2/ui/separator";

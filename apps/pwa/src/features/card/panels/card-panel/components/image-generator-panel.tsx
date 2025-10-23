@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Select,
   SelectContent,

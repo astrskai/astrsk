@@ -21,7 +21,7 @@ import {
 } from "@/features/session/create-session/step-background";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { TypoBase, TypoLarge } from "@/components/ui/typo";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components-v2/ui/dialog";
 import { SessionProps } from "@/modules/session/domain/session";
 

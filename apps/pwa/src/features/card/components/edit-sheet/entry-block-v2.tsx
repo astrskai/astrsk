@@ -2,7 +2,7 @@
 import { ChevronDown, ChevronUp, Copy, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 import { FloatingLabelInputs } from "@/components-v2/ui/floating-label-inputs";
 import { FloatingLabelTextarea } from "@/components-v2/ui/floating-label-textarea";

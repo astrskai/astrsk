@@ -19,7 +19,7 @@ import { sessionQueries } from "@/app/queries/session-queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,

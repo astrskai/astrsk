@@ -1,5 +1,5 @@
 import React, { useState, KeyboardEvent } from "react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Input } from "@/components-v2/ui/input";
 import {
   Select,

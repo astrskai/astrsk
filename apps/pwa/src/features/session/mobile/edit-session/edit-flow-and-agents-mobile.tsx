@@ -20,7 +20,7 @@ import {
   StepFlowAndAgentsSchemaType,
 } from "@/features/session/mobile/create-session/step-flow-and-agents-mobile";
 import { TopNavigation } from "@/components/layout/top-navigation";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain/api-connection";
 import { Session, SessionProps } from "@/modules/session/domain";
 import { useQuery } from "@tanstack/react-query";

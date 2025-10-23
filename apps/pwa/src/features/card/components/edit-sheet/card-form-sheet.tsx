@@ -25,7 +25,7 @@ import {
 } from "@/components/dialogs/confirm";
 import { useBackGesture } from "@/shared/hooks/use-back-gesture";
 import { TopNavigation } from "@/components/layout/top-navigation";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
 import {
   Sheet,

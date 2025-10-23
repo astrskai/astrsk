@@ -1,6 +1,6 @@
 import { memo, forwardRef } from "react";
 import { Plus, Download } from "lucide-react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 
 // Memoized Create button used across all lists
 export const CreateButton = memo(

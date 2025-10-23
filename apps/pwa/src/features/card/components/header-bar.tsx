@@ -5,7 +5,7 @@ import React from "react";
 
 import { useAppStore } from "@/app/stores/app-store";
 import { TypoBase } from "@/components/ui/typo";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Tooltip,
   TooltipContent,

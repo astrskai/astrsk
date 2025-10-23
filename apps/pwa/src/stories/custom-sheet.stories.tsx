@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { CustomSheet } from "@/components-v2/custom-sheet";
 import React from "react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Input } from "@/components-v2/ui/input";
 import { Label } from "@/components-v2/ui/label";
 import { Textarea } from "@/components-v2/ui/textarea";

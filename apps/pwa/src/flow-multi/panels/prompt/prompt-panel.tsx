@@ -26,7 +26,7 @@ import type { editor } from "monaco-editor";
 import { Trash2, Plus, Maximize2, Minimize2, HelpCircle } from "lucide-react";
 
 import { Input } from "@/components-v2/ui/input";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Select,
   SelectContent,

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { Editor } from "@/shared/ui/editor";
 import { SimpleMessage } from "../types";

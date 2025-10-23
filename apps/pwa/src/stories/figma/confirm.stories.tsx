@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Confirm, UnsavedChangesConfirm, DeleteConfirm } from "@/components-v2/confirm";
 import React from "react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 
 /**
  * Confirm Dialog Component

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { JsonViewer } from "@/components-v2/json-viewer";
 import React from "react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui/button";
 
 const meta = {
   title: "Components/JsonViewer",
