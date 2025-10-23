@@ -41,7 +41,7 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
     - Cleaned up all import paths to use domain-based imports
     - Empty components-v2/setting/ folder removed
     - Build verified successful (26.9s)
-  - ⏳ **components-v2/ cleanup** - 43 files remaining (37 migrated)
+  - ✅ **components-v2/ cleanup COMPLETE** - All non-ui files migrated (43 → 38 files)
     - ✅ `layout/` - 2 files migrated → `components/layout/`
       - modal-pages.tsx, v2-layout.tsx
       - Updated 1 import in routes/_layout.tsx
@@ -75,10 +75,17 @@ Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loos
     - ✅ **Import Path Optimization** - cn utility barrel export
       - Shortened 146 imports: `@/shared/lib/cn` → `@/shared/lib`
       - Leverages barrel export pattern for cleaner imports
-    - ✅ `ui/` - 38 files remaining (shadcn/ui - keep as-is, production use)
-    - ⏳ `editor/` - 2 files → analyze usage
-    - ⏳ `scenario/` - 2 files → analyze usage
-    - ⏳ `title/` - 1 file → has TODO comment (deprecated)
+    - ✅ `editor/` - 2 files migrated → `shared/ui/editor/` (FSD Layer)
+      - Monaco Editor wrapper component (10 usages across flow-multi, card, vibe)
+      - Domain-independent UI component
+      - Updated all imports across codebase
+    - ✅ `scenario/` - 2 files migrated → `features/session/components/scenario/`
+      - ScenarioItem, ScenarioSelectionDialog (4 usages in session + stories)
+      - Session domain-specific components
+      - Updated all imports
+    - ✅ `ui/` - 38 files (shadcn/ui - KEPT AS-IS, production use)
+    - ✅ **components-v2/ cleanup COMPLETE** - All non-ui files migrated (43 → 38 files)
+      - Build successful (9.72s)
 - ✅ **Quality Findings**:
   - 3 UNUSED components identified (code-editor, json-viewer, tooltip-wrapper)
   - 5 Mobile duplication targets identified for Phase 3
@@ -247,7 +254,7 @@ apps/pwa/src/
 │   │       ├── model-page-mobile.tsx  # [Phase 3: Mobile removal target]
 │   │       └── provider-list-item.tsx
 │   │
-│   ├── session/                  # ✅ Session domain COMPLETE (47 files)
+│   ├── session/                  # ✅ Session domain COMPLETE (49 files)
 │   │   ├── create-session-page.tsx
 │   │   ├── session-list.tsx
 │   │   ├── session-main.tsx
@@ -259,7 +266,10 @@ apps/pwa/src/
 │   │   ├── components/
 │   │   │   ├── custom-sheet.tsx
 │   │   │   ├── session-export-dialog.tsx
-│   │   │   └── session-import-dialog.tsx
+│   │   │   ├── session-import-dialog.tsx
+│   │   │   └── scenario/        # ✅ NEW: Scenario components (2 files)
+│   │   │       ├── scenario-item.tsx
+│   │   │       └── scenario-selection-dialog.tsx
 │   │   ├── create-session/      # Create session workflow (10 step files)
 │   │   ├── edit-session/        # Edit session workflow (5 edit files)
 │   │   ├── hooks/               # Custom hooks (2 files)
@@ -354,7 +364,10 @@ apps/pwa/src/
 ├── shared/                        # ✅ FSD Layer: Reusable code
 │   ├── ui/                       # ✅ Global UI components (FSD)
 │   │   ├── media-display.tsx    # Image/video display (5 usages)
-│   │   └── play-button.tsx      # Video play button (3 usages)
+│   │   ├── play-button.tsx      # Video play button (3 usages)
+│   │   └── editor/              # ✅ NEW: Monaco Editor wrapper (10 usages)
+│   │       ├── editor.tsx       # Monaco Editor component (flow-multi, card, vibe)
+│   │       └── index.ts         # Barrel export
 │   │
 │   ├── lib/                      # ✅ Utilities & libraries (FSD - unified from utils/)
 │   │   ├── cn.ts                # Tailwind cn() utility (146 usages via barrel)
@@ -388,11 +401,8 @@ apps/pwa/src/
 │   ├── prompt/                   # Prompt templates
 │   └── task/                     # Background tasks
 │
-├── components-v2/                 # Legacy structure (43 files remaining, 37 migrated)
-│   ├── ui/                       # 38 files - shadcn/ui (KEEP AS-IS, production use)
-│   ├── editor/                   # 2 files [TODO: analyze usage]
-│   ├── scenario/                 # 2 files [TODO: analyze usage]
-│   └── title/                    # 1 file (has TODO comment, deprecated)
+├── components-v2/                 # ✅ Migration COMPLETE (only ui/ remains)
+│   └── ui/                       # 38 files - shadcn/ui (production use, kept as-is)
 │
 ├── app/                          # Global app configuration
 │   ├── queries/                  # TanStack Query factories
