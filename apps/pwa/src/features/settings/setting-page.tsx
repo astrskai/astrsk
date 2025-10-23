@@ -11,7 +11,7 @@ import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/components/ui/svg-icon";
 import { Typo2XLarge, TypoBase, TypoXLarge } from "@/components/ui/typo";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { Separator } from "@/components-v2/ui/separator";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { useAuth, useSignUp } from "@clerk/clerk-react";

@@ -19,7 +19,7 @@ import { cn } from "@/shared/lib";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/shared/ui/button";
 import { CheckboxMobile } from "@/components-v2/ui/checkbox";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import {
   Tabs,
   TabsContent,
@@ -32,7 +32,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Card, CardType } from "@/modules/card/domain";
 import { useMobileNavigation } from "@/contexts/mobile-navigation-context";
 import { DeleteConfirm } from "@/components/dialogs/confirm";

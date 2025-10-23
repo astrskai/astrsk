@@ -26,7 +26,7 @@ import {
 import { useBackGesture } from "@/shared/hooks/use-back-gesture";
 import { TopNavigation } from "@/components/layout/top-navigation";
 import { Button } from "@/shared/ui/button";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import {
   Sheet,
   SheetBody,

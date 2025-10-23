@@ -5,9 +5,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Badge } from "@/components-v2/ui/badge";
 import {
   Tabs,

@@ -12,7 +12,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 
 export interface FloatingLabelInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {

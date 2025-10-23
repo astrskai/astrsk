@@ -17,7 +17,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components-v2/ui/accordion";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { Card, CardType } from "@/modules/card/domain";
 import { CardListItem, SessionProps } from "@/modules/session/domain";
 import { useQuery } from "@tanstack/react-query";

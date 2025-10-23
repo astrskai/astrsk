@@ -8,9 +8,9 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/components-v2/ui/input";
+import { Input } from "@/shared/ui/input";
 import { Label } from "@/components-v2/ui/label";
 import React from "react";
 

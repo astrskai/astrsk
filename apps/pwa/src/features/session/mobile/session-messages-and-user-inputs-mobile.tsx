@@ -51,13 +51,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { Option } from "@/modules/turn/domain/option";

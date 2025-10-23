@@ -16,7 +16,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain";
 import { Flow } from "@/modules/flow/domain";
 import { Session } from "@/modules/session/domain/session";

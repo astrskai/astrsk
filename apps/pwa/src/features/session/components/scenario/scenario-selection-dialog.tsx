@@ -6,7 +6,7 @@ import {
   DialogDescription,
   DialogTitle,
   DialogClose,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { ScenarioItem } from "./scenario-item";
 

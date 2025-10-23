@@ -9,7 +9,7 @@ import * as React from "react";
 import { cn } from "@/shared/lib";
 import { Button } from "@/shared/ui/button";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
-import { Input } from "@/components-v2/ui/input";
+import { Input } from "@/shared/ui/input";
 import { Separator } from "@/components-v2/ui/separator";
 import { Skeleton } from "@/components-v2/ui/skeleton";
 import {
@@ -17,7 +17,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { useAppStore } from "@/app/stores/app-store";
 
 // Mobile sidebar content with swipe to close functionality

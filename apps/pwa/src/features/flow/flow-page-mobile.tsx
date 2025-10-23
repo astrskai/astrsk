@@ -35,8 +35,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+} from "@/shared/ui/dialog";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { TableName } from "@/db/schema/table-name";
 import { Flow, Node } from "@/modules/flow/domain";
 import { Session } from "@/modules/session/domain/session";

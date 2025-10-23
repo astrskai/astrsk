@@ -9,8 +9,8 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
-import { Input } from "@/components-v2/ui/input";
+} from "@/shared/ui/tooltip";
+import { Input } from "@/shared/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";

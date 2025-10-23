@@ -9,14 +9,14 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 
 import { useAgentStore } from "@/app/stores/agent-store";
 import { ApiType, OutputFormat } from "@/modules/agent/domain/agent";
 import { AgentModels } from "@/flow-multi/components/model-selection";
-import { Input } from "@/components-v2/ui/input";
+import { Input } from "@/shared/ui/input";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/flow-multi/components/flow-panel-provider";
 import { PANEL_TYPES } from "@/flow-multi/components/panel-types";
@@ -31,7 +31,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentQueries } from "@/app/queries/agent/query-factory";

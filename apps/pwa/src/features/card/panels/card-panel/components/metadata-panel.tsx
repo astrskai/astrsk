@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Input } from "@/components-v2/ui/input";
+import { Input } from "@/shared/ui/input";
 import { X } from "lucide-react";
 import { debounce } from "lodash-es";
 import { useQuery } from "@tanstack/react-query";

@@ -5,7 +5,7 @@ import {
   DialogClose,
   DialogContent,
   DialogTrigger,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { cn } from "@/shared/lib";
 
 export type SortOption = {

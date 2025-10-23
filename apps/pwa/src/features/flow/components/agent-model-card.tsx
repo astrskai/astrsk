@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { CircleHelp } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components-v2/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/shared/ui/tooltip";
 
 export interface AgentModelCardProps {
   agentName: string;

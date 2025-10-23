@@ -23,7 +23,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import {
   Dialog,
   DialogClose,
@@ -31,7 +31,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,

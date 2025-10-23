@@ -50,7 +50,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { Button } from "@/shared/ui/button";
 import {
   Carousel,
@@ -68,9 +68,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Label } from "@/components-v2/ui/label";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { ApiSource, apiSourceLabel } from "@/modules/api/domain/api-connection";
 import { SessionProps } from "@/modules/session/domain/session";
 

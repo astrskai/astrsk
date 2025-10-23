@@ -6,8 +6,8 @@ import {
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+} from "@/shared/ui/dialog";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { CircleAlert } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

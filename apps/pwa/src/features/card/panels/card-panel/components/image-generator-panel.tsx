@@ -11,7 +11,7 @@ import {
 } from "@/components-v2/ui/select";
 import { Loader2, Sparkles } from "lucide-react";
 import { Slider } from "@/components-v2/ui/slider";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { useAsset } from "@/app/hooks/use-asset";
 import {
   CardPanelProps,

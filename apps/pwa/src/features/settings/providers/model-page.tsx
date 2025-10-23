@@ -27,9 +27,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { TableName } from "@/db/schema/table-name";
 import {
   ApiConnection,

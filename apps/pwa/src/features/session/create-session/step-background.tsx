@@ -16,7 +16,7 @@ import { cn } from "@/shared/lib";
 import { TypoBase } from "@/components/ui/typo";
 import { AspectRatio } from "@/components-v2/ui/aspect-ratio";
 import { Button } from "@/shared/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components-v2/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import {
   Tabs,
   TabsContent,
@@ -24,7 +24,7 @@ import {
   TabsTrigger,
 } from "@/components-v2/ui/tabs";
 import { SessionProps } from "@/modules/session/domain";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 
 const StepBackgroundSchema = z.object({
   backgroundId: z.string().nullable(),

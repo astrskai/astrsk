@@ -37,7 +37,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { Editor } from "@/shared/ui/editor";
 import type { editor } from "monaco-editor";
 import { debounce } from "lodash-es";

@@ -7,7 +7,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { TypoBase } from "@/components/ui/typo";
 import { cn } from "@/shared/lib";

@@ -9,7 +9,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 

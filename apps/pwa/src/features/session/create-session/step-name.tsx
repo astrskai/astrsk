@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { FloatingLabelInput } from "@/components-v2/ui/floating-label-input";
 
 const StepName = ({

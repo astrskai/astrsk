@@ -98,9 +98,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { toastError } from "@/components-v2/ui/toast-error";
 import {
@@ -108,7 +108,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";

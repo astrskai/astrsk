@@ -9,7 +9,7 @@ import { TradingCard } from "@/features/card/components/trading-card";
 import { cn } from "@/shared/lib";
 import { SearchInput } from "@/components/ui/search-input";
 import { TypoBase, TypoSmall, TypoXLarge } from "@/components/ui/typo";
-import { ScrollArea, ScrollBar } from "@/components-v2/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 import { Card, CardType } from "@/modules/card/domain";
 
 // Re-export schema from the shared step

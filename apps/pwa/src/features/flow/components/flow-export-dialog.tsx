@@ -5,11 +5,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components-v2/ui/dialog";
+} from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components-v2/ui/radio-group";
 import { Label } from "@/components-v2/ui/label";
-import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { AgentModelCard } from "@/features/flow/components/agent-model-card";
 import { ModelTier } from "@/modules/agent/domain/agent";
 

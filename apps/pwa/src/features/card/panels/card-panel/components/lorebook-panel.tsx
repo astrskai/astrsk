@@ -32,13 +32,13 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 
 import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { Lorebook } from "@/modules/card/domain/lorebook";
 import { Entry } from "@/modules/card/domain/entry";
 import { UniqueEntityID } from "@/shared/domain";
-import { Input } from "@/components-v2/ui/input";
+import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
 import { ScrollAreaSimple } from "@/components-v2/ui/scroll-area-simple";
 import { debounce } from "lodash-es";

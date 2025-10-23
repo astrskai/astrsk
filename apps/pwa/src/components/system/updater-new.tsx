@@ -5,7 +5,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { cn } from "@/shared/lib";
 import { logger } from "@/shared/lib/logger";
 import { Import } from "lucide-react";
