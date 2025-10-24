@@ -6,6 +6,7 @@ import { z } from "zod";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useAppStore } from "@/shared/stores/app-store";
+import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { cn } from "@/shared/lib";
@@ -106,7 +107,8 @@ const StepCards = () => {
       keyword: keyword,
     }),
   );
-  const { setActivePage, setCardEditOpen } = useAppStore();
+  const { setActivePage } = useAppStore();
+  const { setCardEditOpen } = useCardUIStore();
 
   // Refresh active and disabled cards
   const refreshCardStates = useCallback(() => {

@@ -3,7 +3,6 @@
 import { Import } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
 
-import { useAppStore } from "@/shared/stores/app-store";
 import { useNavigate } from "@tanstack/react-router";
 import CardList from "@/features/card/card-list";
 import CardFormSheet from "@/features/card/components/edit-sheet/card-form-sheet";
@@ -21,6 +20,7 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { Card, CardType } from "@/entities/card/domain";
+import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 
 export default function CardPage({ className }: { className?: string }) {
   // Sheet state
@@ -29,7 +29,7 @@ export default function CardPage({ className }: { className?: string }) {
     CardType.Character,
   );
 
-  const { cardEditOpen } = useAppStore();
+  const { cardEditOpen } = useCardUIStore();
 
   const navigate = useNavigate();
 

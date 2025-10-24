@@ -18,7 +18,7 @@ import { useVibeSession } from "./hooks/use-vibe-session";
 import { useMessageHistory } from "./hooks/use-message-history";
 import { useResourceData } from "./hooks/use-resource-data";
 import { useStartCodingSession } from "@/shared/hooks/use-vibe-coding-convex";
-import { useAppStore, Page } from "@/shared/stores/app-store";
+import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardType } from "@/entities/card/domain";
@@ -60,7 +60,7 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
   const queryClient = useQueryClient();
 
   // Get selected resource from app stores or use overrides for local panels
-  const globalSelectedCardId = useAppStore((state) => state.selectedCardId);
+  const globalSelectedCardId = useCardUIStore((state) => state.selectedCardId);
   const globalSelectedFlowId = useAgentStore((state) => state.selectedFlowId);
   const location = useLocation();
 

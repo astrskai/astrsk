@@ -4,7 +4,7 @@ import { cardQueries } from "@/app/queries/card-queries";
 import { queryClient } from "@/app/queries/query-client";
 import { CardService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
-import { useAppStore } from "@/shared/stores/app-store";
+import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import useCardImport from "@/features/card/hooks/useCardImport";
 import {
@@ -68,7 +68,7 @@ const CardItem = ({
   const navigate = useNavigate();
 
   // Handle select
-  const setSelectedCardId = useAppStore.use.setSelectedCardId();
+  const setSelectedCardId = useCardUIStore.use.setSelectedCardId();
   const handleSelect = useCallback(() => {
     setSelectedCardId(cardId.toString());
     navigate({ to: "/cards/$cardId", params: { cardId: cardId.toString() } });
@@ -134,7 +134,7 @@ const CardItem = ({
   }, [cardId, navigate, setSelectedCardId]);
 
   // Handle delete
-  const selectedCardId = useAppStore.use.selectedCardId();
+  const selectedCardId = useCardUIStore.use.selectedCardId();
 
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [usedSessions, setUsedSessions] = useState<Session[]>([]);
@@ -456,7 +456,7 @@ const CardSection = ({
   const navigate = useNavigate();
 
   // Handle create
-  const setSelectedCardId = useAppStore.use.setSelectedCardId();
+  const setSelectedCardId = useCardUIStore.use.setSelectedCardId();
   const [isOpenCreate, setIsOpenCreate] = useState(false);
   const [createCardType, setCreateCardType] = useState<CardType>(
     CardType.Character,

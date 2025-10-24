@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { createSelectors } from "@/shared/lib/zustand-utils";
 import { LocalPersistStorage } from "@/shared/stores/local-persist-storage";
+import { CardType } from "@/entities/card/domain";
 
 export interface CardPanelVisibility {
   "card-panel": boolean;
@@ -21,6 +22,12 @@ interface LayoutState {
 }
 
 interface CardUIState {
+  // Card selection and editing state (moved from app-store for FSD compliance)
+  cardEditOpen: CardType | null;
+  setCardEditOpen: (cardType: CardType | null) => void;
+  selectedCardId: string | null;
+  setSelectedCardId: (cardId: string | null) => void;
+
   // Panel visibility states for different card types (character, plot)
   cardTypePanelVisibility: Record<string, CardPanelVisibility>;
 
@@ -222,6 +229,18 @@ const useCardUIStoreBase = create<CardUIState>()(
   persist(
     immer((set, get) => {
       return {
+        // Card selection and editing state
+        cardEditOpen: null,
+        setCardEditOpen: (cardType) =>
+          set((state) => {
+            state.cardEditOpen = cardType;
+          }),
+        selectedCardId: null,
+        setSelectedCardId: (cardId) =>
+          set((state) => {
+            state.selectedCardId = cardId;
+          }),
+
         cardTypePanelVisibility: {},
         cardTypeLayouts: {},
         cardTypeLayoutStates: {},

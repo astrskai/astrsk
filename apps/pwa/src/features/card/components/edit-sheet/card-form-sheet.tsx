@@ -14,6 +14,7 @@ import { CardService } from "@/app/services";
 import { AssetService } from "@/app/services/asset-service";
 import { SessionService } from "@/app/services/session-service";
 import { Page, useAppStore } from "@/shared/stores/app-store";
+import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 import { useCardsStore } from "@/shared/stores/cards-store";
 import { useEditSessionDialogStore } from "@/shared/stores/edit-session-dialog-store";
 import { CharacterForm } from "@/features/card/components/edit-sheet/character-form-v2";
@@ -95,7 +96,8 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
   const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
 
   const isMobile = useIsMobile();
-  const { setActivePage, cardEditOpen, setCardEditOpen } = useAppStore();
+  const { setActivePage } = useAppStore();
+  const { cardEditOpen, setCardEditOpen } = useCardUIStore();
   // Use the appropriate store based on source
   const store = (
     source === "library" ? useCardsStore.use : useEditSessionDialogStore.use

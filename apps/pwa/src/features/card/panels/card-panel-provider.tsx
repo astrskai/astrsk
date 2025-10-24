@@ -2,7 +2,7 @@ import React, { createContext, useContext, useCallback } from "react";
 import { Card } from "@/entities/card/domain";
 import { DockviewApi } from "dockview";
 import type { IDockviewPanel, DockviewGroupPanel } from "dockview-core";
-import { CardPanelVisibility } from "@/shared/stores/card-ui-store";
+import { CardPanelVisibility } from "@/entities/card/stores/card-ui-store";
 import { extractCardPanelType } from "@/features/card/utils/panel-id-utils";
 
 interface CardPanelContextType {
