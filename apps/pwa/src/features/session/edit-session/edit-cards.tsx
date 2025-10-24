@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { CustomSheet } from "@/features/session/components/custom-sheet";

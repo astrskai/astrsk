@@ -18,8 +18,8 @@ import { useTurn } from "@/app/hooks/use-turn";
 
 import { SessionService } from "@/app/services/session-service";
 
-import { useSessionStore } from "@/app/stores/session-store";
-import { useValidationStore } from "@/app/stores/validation-store";
+import { useSessionStore } from "@/shared/stores/session-store";
+import { useValidationStore } from "@/shared/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
 import { cn } from "@/shared/lib";
 

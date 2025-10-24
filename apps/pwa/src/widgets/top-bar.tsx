@@ -1,5 +1,5 @@
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/shared/ui";
 import { SquareArrowUpRight } from "lucide-react";

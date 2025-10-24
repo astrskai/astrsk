@@ -4,7 +4,7 @@ import { immer } from "zustand/middleware/immer";
 
 import { createSelectors } from "@/shared/lib/zustand-utils";
 
-import { LocalPersistStorage } from "@/app/stores/local-persist-storage";
+import { LocalPersistStorage } from "@/shared/stores/local-persist-storage";
 import { CardType } from "@/entities/card/domain";
 
 export const Menu = {

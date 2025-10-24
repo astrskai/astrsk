@@ -7,7 +7,7 @@ import { immer } from "zustand/middleware/immer";
 import { UniqueEntityID } from "@/shared/domain";
 import { createSelectors } from "@/shared/lib/zustand-utils";
 
-import { LocalPersistStorage } from "@/app/stores/local-persist-storage";
+import { LocalPersistStorage } from "@/shared/stores/local-persist-storage";
 
 export const RightSidebarDetail = {
   LLM: "llm",

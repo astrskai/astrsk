@@ -1,4 +1,4 @@
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 import { api } from "@/convex";
 import { useQuery } from "convex/react";
 import { useEffect } from "react";

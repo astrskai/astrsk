@@ -5,7 +5,7 @@ import {
   SettingDetailPageType,
   SettingPageLevel,
   useAppStore,
-} from "@/app/stores/app-store";
+} from "@/shared/stores/app-store";
 import {
   ContentPolicy,
   PrivacyPolicy,

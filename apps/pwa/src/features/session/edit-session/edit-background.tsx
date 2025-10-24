@@ -11,7 +11,7 @@ import {
   fetchBackgrounds,
   isDefaultBackground,
   useBackgroundStore,
-} from "@/app/stores/background-store";
+} from "@/shared/stores/background-store";
 import { CustomSheet } from "@/features/session/components/custom-sheet";
 import {
   BackgroundListItem,

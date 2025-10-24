@@ -11,7 +11,7 @@ import TextareaAutosize from "@mui/material/TextareaAutosize";
 import { Send, Loader2 } from "lucide-react";
 import { cn } from "@/shared/lib";
 
-import { useModelStore, LANGUAGE_MODELS } from "@/app/stores/model-store";
+import { useModelStore, LANGUAGE_MODELS } from "@/shared/stores/model-store";
 
 interface ChatInputProps {
   onSendMessage: (message: string, modelId?: string) => void;

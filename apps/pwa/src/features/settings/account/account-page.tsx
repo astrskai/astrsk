@@ -1,4 +1,4 @@
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { Page, useAppStore } from "@/shared/stores/app-store";
 import { ScrollArea, ScrollBar, TypoBase, TypoXLarge } from "@/shared/ui";
 import { api } from "@/convex";
 import { Datetime } from "@/shared/lib";

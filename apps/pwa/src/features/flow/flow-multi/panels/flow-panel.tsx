@@ -105,7 +105,7 @@ import {
 import { edgeTypes, type CustomEdgeType } from "@/features/flow/flow-multi/edges/index";
 import { nodeTypes, type CustomNodeType } from "@/features/flow/flow-multi/nodes/index";
 import { CustomReactFlowControls } from "@/features/flow/flow-multi/components/custom-controls";
-import { useAgentStore } from "@/app/stores/agent-store";
+import { useAgentStore } from "@/shared/stores/agent-store";
 import { sessionQueries } from "@/app/queries/session-queries";
 
 interface FlowPanelProps {

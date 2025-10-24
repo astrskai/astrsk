@@ -15,9 +15,9 @@ import { useSessions } from "@/app/hooks/use-sessions-v2";
 import { useTurn } from "@/app/hooks/use-turn";
 import { queryClient } from "@/app/queries/query-client";
 import { SessionService } from "@/app/services/session-service";
-import { useAppStore } from "@/app/stores/app-store";
-import { useSessionStore } from "@/app/stores/session-store";
-import { useValidationStore } from "@/app/stores/validation-store";
+import { useAppStore } from "@/shared/stores/app-store";
+import { useSessionStore } from "@/shared/stores/session-store";
+import { useValidationStore } from "@/shared/stores/validation-store";
 import { cn } from "@/shared/lib";
 import { StepName } from "@/features/session/create-session/step-name";
 

@@ -7,7 +7,7 @@ import { useApiConnectionsWithModels } from "@/app/hooks/use-api-connections-wit
 import { useFlow } from "@/app/hooks/use-flow";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { AgentService } from "@/app/services/agent-service";
-import { useValidationStore } from "@/app/stores/validation-store";
+import { useValidationStore } from "@/shared/stores/validation-store";
 import {
   isAgentValid,
 } from "@/features/flow/flow-multi/utils/flow-validation";

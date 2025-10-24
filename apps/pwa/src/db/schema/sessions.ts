@@ -1,6 +1,6 @@
 import { jsonb, pgTable, uuid, varchar } from "drizzle-orm/pg-core";
 
-import { AutoReply } from "@/app/stores/session-store";
+import { AutoReply } from "@/shared/stores/session-store";
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
 import { ChatStyles } from "@/entities/session/domain/chat-styles";

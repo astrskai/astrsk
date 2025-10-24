@@ -5,7 +5,7 @@ import { UseCase } from "@/shared/core/use-case";
 import { UniqueEntityID } from "@/shared/domain";
 import { formatFail } from "@/shared/lib";
 
-import { defaultBackgrounds } from "@/app/stores/background-store";
+import { defaultBackgrounds } from "@/shared/stores/background-store";
 import { InsertSession } from "@/db/schema/sessions";
 import { SaveFileToBackground } from "@/entities/background/usecases/save-file-to-background";
 import { CardType } from "@/entities/card/domain/card";

@@ -8,7 +8,7 @@ import { CustomHandle } from "@/features/flow/flow-multi/components/custom-handl
 import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traversal";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 
-import { useAgentStore } from "@/app/stores/agent-store";
+import { useAgentStore } from "@/shared/stores/agent-store";
 import { ApiType } from "@/entities/agent/domain/agent";
 import { AgentModels } from "@/features/flow/flow-multi/components/model-selection";
 

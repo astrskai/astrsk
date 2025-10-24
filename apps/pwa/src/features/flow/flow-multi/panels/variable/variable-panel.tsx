@@ -3,7 +3,7 @@ import { flowQueries } from "@/app/queries/flow/query-factory";
 import { makeContext } from "@/app/services/session-play-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
-import { useAgentStore } from "@/app/stores/agent-store";
+import { useAgentStore } from "@/shared/stores/agent-store";
 import { ScrollArea, SearchInput, TypoBase, TypoLarge } from "@/shared/ui";
 import {
   Tabs,

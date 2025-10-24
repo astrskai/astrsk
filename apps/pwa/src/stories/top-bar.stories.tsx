@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { TopBar } from "@/components-v2/top-bar";
-import { useSessionStore } from "@/app/stores/session-store";
-import { useAppStore } from "@/app/stores/app-store";
+import { useSessionStore } from "@/shared/stores/session-store";
+import { useAppStore } from "@/shared/stores/app-store";
 import { UniqueEntityID } from "@/shared/domain";
 import React from "react";
 

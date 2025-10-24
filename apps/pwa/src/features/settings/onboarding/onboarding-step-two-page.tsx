@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { Page, useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { Button, SvgIcon } from "@/shared/ui";
 import { ArrowLeft, Key, Sparkles } from "lucide-react";

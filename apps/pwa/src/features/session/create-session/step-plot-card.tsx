@@ -3,7 +3,7 @@ import { useFormContext } from "react-hook-form";
 import { z } from "zod";
 
 import { useCards } from "@/app/hooks/use-cards";
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { Page, useAppStore } from "@/shared/stores/app-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { cn } from "@/shared/lib";

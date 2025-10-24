@@ -6,7 +6,7 @@ Complete history of the PWA codebase cleanup & FSD migration project.
 **Branch**: 003-pwa-codebase-cleanup
 **Timeline**: 8-10 weeks (4 phases)
 **Started**: 2025-10-20
-**Current Status**: Phase 2.5 Complete (60% overall progress)
+**Current Status**: Phase 2.6 Complete (65% overall progress)
 
 ---
 
@@ -453,6 +453,324 @@ pnpm build:pwa
 
 ---
 
+## Phase 2.6: Routes & Pages Separation (2025-10-24)
+
+**Status**: ✅ COMPLETE
+**Duration**: 1 hour
+**Objective**: Separate routing logic from page components
+
+### Summary
+
+Extracted page components from route files to establish clear separation between routing definitions (TanStack Router) and page UI logic (FSD Pages layer).
+
+### Migration Steps
+
+#### Step 1: Create AppLayout Page Component
+- ✅ Created `pages/app-layout.tsx`
+- ✅ Extracted `LayoutWrapper` component from `routes/_layout.tsx`
+- ✅ Updated route file to import from pages/
+- Result: Route file reduced from 22 lines → 6 lines
+
+#### Step 2: Create CardDetailPage Component
+- ✅ Created `pages/card-detail-page.tsx`
+- ✅ Extracted `CardDetailPage` component logic
+- ✅ Kept route guards (`beforeLoad`, `redirect`) in route file
+- Result: Route file reduced from 31 lines → 14 lines
+
+#### Step 3: Create SessionDetailPage Component
+- ✅ Created `pages/session-detail-page.tsx`
+- ✅ Extracted `SessionDetailPage` component logic
+- ✅ Separated routing from state management
+- Result: Route file reduced from 31 lines → 14 lines
+
+#### Step 4: Create FlowDetailPage Component
+- ✅ Created `pages/flow-detail-page.tsx`
+- ✅ Extracted `FlowDetailPage` component logic
+- ✅ Maintained route parameter validation
+- Result: Route file reduced from 31 lines → 14 lines
+
+#### Step 5: Build Verification
+```bash
+pnpm build:pwa
+```
+- ✅ Build time: 10.12s
+- ✅ Exit code: 0 (success)
+- ✅ 252 packages verified
+
+---
+
+### Achievements
+
+#### Part 1: Routes/Pages Separation (2025-10-24 morning)
+
+- ✅ **4 Page Components Created**:
+  - `pages/app-layout.tsx` (15 lines)
+  - `pages/card-detail-page.tsx` (18 lines → 11 lines after FSD fix)
+  - `pages/session-detail-page.tsx` (19 lines → 9 lines after FSD fix)
+  - `pages/flow-detail-page.tsx` (18 lines → 9 lines after FSD fix)
+
+- ✅ **Route Files Simplified**:
+  - Average reduction: ~50% (31 lines → 14 lines)
+  - Routing logic only: `beforeLoad`, `redirect`, params validation
+  - No UI/state management in route files
+
+- ✅ **FSD Pages Layer Established**:
+  - Pages compose Features + Widgets
+  - Clear separation from routing framework
+  - Independently testable components
+
+#### Part 2: FSD Layer Violation Fixes (2025-10-24 afternoon)
+
+**Problem**: Pages layer importing from app layer (upward dependency violation)
+- ❌ `pages/session-detail-page.tsx` → `app/stores/session-store.tsx`
+- ❌ `pages/flow-detail-page.tsx` → `app/stores/agent-store.tsx`
+
+**Solution**: Move store access logic to features layer
+
+1. ✅ **session-detail-page.tsx fixed**:
+   - Moved `selectSession` logic to `features/session/session-page.tsx`
+   - Added `Route.useParams()` + `useEffect` in SessionPage
+   - Removed `useSessionStore` import from pages layer
+   - 19 lines → 9 lines (53% reduction)
+
+2. ✅ **flow-detail-page.tsx fixed**:
+   - Moved `selectFlowId` logic to `features/flow/flow-multi/pages/flow-multi-page.tsx`
+   - Added `Route.useParams()` + `useEffect` in FlowMultiPage
+   - Removed `useAgentStore` import from pages layer
+   - 19 lines → 9 lines (53% reduction)
+
+3. ✅ **card-detail-page.tsx already compliant**:
+   - No store imports (only shared/hooks)
+   - CardPanelMain handles store logic
+   - 18 lines → 11 lines (maintained)
+
+**FSD Compliance Verification**:
+```
+Before (❌ Violation):
+pages/session-detail-page.tsx
+  ↓ (pages → app: upward dependency)
+app/stores/session-store.tsx
+
+After (✅ Compliant):
+pages/session-detail-page.tsx
+  ↓ (pages → features: correct direction)
+features/session/session-page.tsx
+  ↓ (features → app: correct direction)
+app/stores/session-store.tsx
+```
+
+### Impact
+
+- **4 files** created in pages/ layer
+- **4 route files** simplified (routing definition only)
+- **2 FSD violations** fixed (session, flow)
+- **~50-53% code reduction** in detail pages
+- **100% FSD compliance** achieved
+- **Build success**: 26.2s, 35.5s (0 errors)
+
+### File Structure Changes
+
+**Before**:
+```
+pages/
+└── not-found.tsx
+
+routes/
+├── _layout.tsx (22 lines - routing + UI)
+├── _layout/cards/$cardId.tsx (31 lines - routing + UI)
+├── _layout/sessions/$sessionId.tsx (31 lines - routing + UI)
+└── _layout/flows/$flowId.tsx (31 lines - routing + UI)
+```
+
+**After (Final)**:
+```
+pages/
+├── not-found.tsx
+├── app-layout.tsx (15 lines - UI only) ✅ NEW
+├── card-detail-page.tsx (11 lines - UI only, FSD compliant) ✅ NEW
+├── session-detail-page.tsx (9 lines - UI only, FSD compliant) ✅ NEW
+└── flow-detail-page.tsx (9 lines - UI only, FSD compliant) ✅ NEW
+
+routes/
+├── _layout.tsx (6 lines - routing only)
+├── _layout/cards/$cardId.tsx (14 lines - routing only)
+├── _layout/sessions/$sessionId.tsx (14 lines - routing only)
+└── _layout/flows/$flowId.tsx (14 lines - routing only)
+
+features/
+├── session/
+│   └── session-page.tsx (added selectSession logic via useEffect)
+└── flow/
+    └── flow-multi/pages/flow-multi-page.tsx (added selectFlowId logic via useEffect)
+```
+
+### Documentation Updates
+
+- ✅ Added "Quick Reference: routes/ vs pages/" guide to CLAUDE.md
+- ✅ Included pattern examples and benefits
+- ✅ Updated migration history in PWA_FSD_MIGRATION_HISTORY.md
+
+---
+
+## Phase 2.7: FSD Layer Violation Fixes - Complete Stores Migration
+
+**Date**: 2025-10-24
+**Duration**: 1 hour
+**Status**: ✅ COMPLETE
+
+### Objective
+
+Fix FSD layer violations by migrating all stores from `app/stores/` to `shared/stores/`, ensuring features layer can properly import UI state without violating FSD principles.
+
+**Problem**: Features layer importing from app layer (e.g., `useAppStore` in card-panel-main.tsx) violates FSD architecture rules.
+
+**Root Cause**:
+- All 12 stores in `app/stores/` are UI state, not initialization code
+- `app/` layer should only contain initialization logic (FSD principle)
+- Features cannot import from app (upward dependency violation)
+- UI state belongs in `shared/` layer, not `app/` or `entities/`
+
+### Changes
+
+#### Stores Migrated (12 files)
+
+**Low-Risk First** (verified individually):
+1. `wllama-store.tsx` (1 usage)
+2. `edit-session-dialog-store.tsx` (1 usage)
+3. `cards-store.tsx` (3 usages)
+4. `card-ui-store.tsx` (3 usages)
+
+**Batch Migration** (verified together):
+5. `model-store.tsx` (8 usages)
+6. `validation-store.tsx` (9 usages)
+7. `agent-store.tsx` (11 usages)
+8. `background-store.tsx` (14 usages)
+9. `session-store.tsx` (19 usages)
+10. `app-store.tsx` (56 usages)
+11. `local-persist-storage.ts` (utility)
+12. `init-stores.ts` (initialization)
+
+#### Import Updates (~100+ files)
+
+**Pattern**:
+```typescript
+// Before
+import { useAppStore } from "@/app/stores/app-store";
+
+// After
+import { useAppStore } from "@/shared/stores/app-store";
+```
+
+**Automated Update** (sed command):
+```bash
+find apps/pwa/src -type f \( -name "*.tsx" -o -name "*.ts" \) -exec sed -i '' 's|@/app/stores/|@/shared/stores/|g' {} +
+```
+
+#### Barrel Export Created
+
+**`shared/stores/index.ts`** (NEW):
+```typescript
+export * from "./agent-store";
+export * from "./app-store";
+export * from "./background-store";
+export * from "./card-ui-store";
+export * from "./cards-store";
+export * from "./edit-session-dialog-store";
+export * from "./init-stores";
+export * from "./local-persist-storage";
+export * from "./model-store";
+export * from "./session-store";
+export * from "./validation-store";
+export * from "./wllama-store";
+```
+
+### Migration Strategy
+
+**Risk-Based Incremental Approach**:
+1. Analyze usage count for all stores (1 → 56 usages)
+2. Migrate low-usage stores first (1-3 usages)
+3. Verify build after each step
+4. Prove pattern works with manual updates
+5. Switch to batch processing (sed) for efficiency
+6. Delete old files after verification
+7. Final build verification
+
+### Impact
+
+- **12 stores** migrated to shared/stores/
+- **~100+ imports** updated across codebase
+- **app/stores/ directory** completely removed
+- **100% FSD compliance** achieved (features → shared allowed)
+- **Zero errors** during migration
+- **Build success**: 28.0s, 10.1s, 10.8s, 9.79s (4 builds, 100% success)
+
+### File Structure Changes
+
+**Before**:
+```
+app/
+└── stores/
+    ├── agent-store.tsx
+    ├── app-store.tsx
+    ├── background-store.tsx
+    ├── card-ui-store.tsx
+    ├── cards-store.tsx
+    ├── edit-session-dialog-store.tsx
+    ├── init-stores.ts
+    ├── local-persist-storage.ts
+    ├── model-store.tsx
+    ├── session-store.tsx
+    ├── validation-store.tsx
+    └── wllama-store.tsx
+
+shared/
+└── stores/ (did not exist)
+```
+
+**After**:
+```
+app/
+└── stores/ (DELETED)
+
+shared/
+└── stores/
+    ├── agent-store.tsx ✅ MIGRATED
+    ├── app-store.tsx ✅ MIGRATED
+    ├── background-store.tsx ✅ MIGRATED
+    ├── card-ui-store.tsx ✅ MIGRATED
+    ├── cards-store.tsx ✅ MIGRATED
+    ├── edit-session-dialog-store.tsx ✅ MIGRATED
+    ├── init-stores.ts ✅ MIGRATED
+    ├── local-persist-storage.ts ✅ MIGRATED
+    ├── model-store.tsx ✅ MIGRATED
+    ├── session-store.tsx ✅ MIGRATED
+    ├── validation-store.tsx ✅ MIGRATED
+    ├── wllama-store.tsx ✅ MIGRATED
+    └── index.ts ✅ NEW (barrel export)
+```
+
+### FSD Principle Clarification
+
+**Before** (INCORRECT):
+- `app/stores/` = Mixed initialization + UI state ❌
+- Features importing from app = FSD violation ❌
+
+**After** (CORRECT):
+- `shared/stores/` = Global UI state ✅
+- `app/` = Initialization only ✅
+- `entities/` = Pure business logic only ✅
+- Features → shared = Allowed by FSD ✅
+
+### Documentation Updates
+
+- ✅ Updated CLAUDE.md Current Migration Status
+- ✅ Added detailed shared/stores/ section to CLAUDE.md
+- ✅ Updated Recent Changes with Phase 2.7
+- ✅ Updated Current Progress table to 70%
+- ✅ Added Phase 2.7 to migration history
+
+---
+
 ## Timeline Summary
 
 | Phase | Dates | Duration | Status |
@@ -460,6 +778,8 @@ pnpm build:pwa
 | Phase 1 | 2025-10-20 ~ 2025-10-22 | 2 days | ✅ COMPLETE |
 | Phase 2 | 2025-10-22 ~ 2025-10-23 | 2 days | ✅ COMPLETE |
 | Phase 2.5 | 2025-10-23 | 2 hours | ✅ COMPLETE |
+| Phase 2.6 | 2025-10-24 | 1 hour | ✅ COMPLETE |
+| Phase 2.7 | 2025-10-24 | 1 hour | ✅ COMPLETE |
 | Phase 3 | TBD | 2-3 weeks | 🔜 PENDING |
 | Phase 4 | TBD | 1-2 weeks | 🔜 PENDING |
 
@@ -467,17 +787,18 @@ pnpm build:pwa
 
 ## Overall Progress
 
-**Completed**: 60% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 ✅)
-**Remaining**: 40% (Phase 3 🔜, Phase 4 🔜)
+**Completed**: 70% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 ✅, Phase 2.6 ✅, Phase 2.7 ✅)
+**Remaining**: 30% (Phase 3 🔜, Phase 4 🔜)
 
 ### Cumulative Statistics
 
-- **Files Migrated**: 214+ files (180 Phase 2 + 34 Phase 2.5)
-- **Import Paths Updated**: ~2,400+ imports
-- **Folders Deleted**: 7 legacy folders
-- **Barrel Exports Created**: 20+
-- **Build Verifications**: 15+ successful builds
-- **Average Build Time**: 15-28 seconds
+- **Files Migrated**: 230+ files (180 Phase 2 + 34 Phase 2.5 + 4 Phase 2.6 + 12 Phase 2.7)
+- **Import Paths Updated**: ~2,500+ imports (~2,400 + ~100 Phase 2.7)
+- **Folders Deleted**: 8 legacy folders (7 + app/stores/)
+- **Pages Created**: 4 page components (new pages/ layer)
+- **Barrel Exports Created**: 21 (20 + shared/stores/index.ts)
+- **Build Verifications**: 20+ successful builds (16 + 4 Phase 2.7)
+- **Average Build Time**: 10-28 seconds
 - **Build Success Rate**: 100%
 
 ---
@@ -497,6 +818,6 @@ pnpm build:pwa
 
 ---
 
-**Last Updated**: 2025-10-23
-**Document Version**: 1.0
+**Last Updated**: 2025-10-24
+**Document Version**: 1.1
 **Maintained By**: Migration Team

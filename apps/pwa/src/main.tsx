@@ -1,6 +1,6 @@
 import { initServices } from "@/app/services/init-services.ts";
-import { useAppStore } from "@/app/stores/app-store.tsx";
-import { initStores } from "@/app/stores/init-stores.ts";
+import { useAppStore } from "@/shared/stores/app-store.tsx";
+import { initStores } from "@/shared/stores/init-stores.ts";
 import { Loading } from "@/shared/ui";
 import { PwaRegister } from "@/app/providers/pwa-register";
 import { migrate } from "@/db/migrate.ts";

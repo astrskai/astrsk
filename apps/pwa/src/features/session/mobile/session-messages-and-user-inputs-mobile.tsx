@@ -33,8 +33,8 @@ import {
 } from "@/app/services/session-play-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
-import { Page, useAppStore } from "@/app/stores/app-store";
-import { AutoReply, useSessionStore } from "@/app/stores/session-store";
+import { Page, useAppStore } from "@/shared/stores/app-store";
+import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
 
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";

@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 
 import { useCards } from "@/app/hooks/use-cards";
-import { useCardsStore } from "@/app/stores/cards-store";
+import { useCardsStore } from "@/shared/stores/cards-store";
 import { Card, CardType, FilterCardType } from "@/entities/card/domain";
 import { SearchCardsSort } from "@/entities/card/repos";
 

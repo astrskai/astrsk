@@ -1,7 +1,7 @@
 import { ApiService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
-import { useAppStore } from "@/app/stores/app-store";
-import { fetchBackgrounds } from "@/app/stores/background-store";
+import { useAppStore } from "@/shared/stores/app-store";
+import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { ApiConnection, ApiSource } from "@/entities/api/domain";
 import { useQuery } from "@tanstack/react-query";
 

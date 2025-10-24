@@ -17,9 +17,9 @@ import { useFlow } from "@/app/hooks/use-flow";
 import { useSession } from "@/app/hooks/use-session";
 import { useAutoSaveSession } from "@/app/hooks/use-auto-save-session";
 import { SessionService } from "@/app/services/session-service";
-import { useAppStore } from "@/app/stores/app-store";
-import { useSessionStore } from "@/app/stores/session-store";
-import { useValidationStore } from "@/app/stores/validation-store";
+import { useAppStore } from "@/shared/stores/app-store";
+import { useSessionStore } from "@/shared/stores/session-store";
+import { useValidationStore } from "@/shared/stores/validation-store";
 import { cn } from "@/shared/lib";
 import { CardTab } from "@/features/session/create-session/step-cards";
 import {

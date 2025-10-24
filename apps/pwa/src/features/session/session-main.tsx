@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { useSessionStore } from "@/app/stores/session-store";
+import { useSessionStore } from "@/shared/stores/session-store";
 import { cn } from "@/shared/lib";
 import { SessionMessagesAndUserInputs } from "@/features/session/session-messages-and-user-inputs";
 

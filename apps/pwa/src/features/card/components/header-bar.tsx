@@ -3,7 +3,7 @@
 import { Import, Plus } from "lucide-react";
 import React from "react";
 
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 
 import {
   Button,

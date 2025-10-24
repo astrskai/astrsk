@@ -1,9 +1,5 @@
-import { useEffect } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import FlowMultiPage from "@/features/flow/flow-multi/pages/flow-multi-page";
-import { useAgentStore } from "@/app/stores/agent-store";
-import { useIsMobile } from "@/shared/hooks/use-mobile";
-import FlowPageMobile from "@/features/flow/flow-page-mobile";
+import { FlowDetailPage } from "@/pages/flow-detail-page";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 export const Route = createFileRoute("/_layout/flows/$flowId")({
@@ -16,15 +12,3 @@ export const Route = createFileRoute("/_layout/flows/$flowId")({
     }
   },
 });
-
-function FlowDetailPage() {
-  const { flowId } = Route.useParams();
-  const selectFlowId = useAgentStore.use.selectFlowId();
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    selectFlowId(flowId);
-  }, [flowId, selectFlowId]);
-
-  return isMobile ? <FlowPageMobile /> : <FlowMultiPage />;
-}

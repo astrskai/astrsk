@@ -1,6 +1,6 @@
 // TODO: apply color palette
 
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { Page, useAppStore } from "@/shared/stores/app-store";
 import { SidebarLeft, useSidebarLeft } from "@/widgets/both-sidebar";
 import { HelpVideoDialog, ScrollArea, ScrollBar, SvgIcon } from "@/shared/ui";
 import { CardSection } from "./card-list";

@@ -7,7 +7,7 @@ import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { CardService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
-import { useValidationStore } from "@/app/stores/validation-store";
+import { useValidationStore } from "@/shared/stores/validation-store";
 import { logger } from "@/shared/lib";
 
 export function useSessionValidation(sessionId?: UniqueEntityID | null) {

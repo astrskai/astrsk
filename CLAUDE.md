@@ -1,50 +1,27 @@
 # astrsk Development Guidelines
 
-Maintained development guidelines. Last updated: 2025-10-23
+Maintained development guidelines. Last updated: 2025-10-24
 
 ## Active Feature: PWA Codebase Cleanup & Quality Improvement
 
 **Branch**: 003-pwa-codebase-cleanup
 **Timeline**: 8-10 weeks (4 phases)
 
-### Objective
-
-Restructure PWA codebase to eliminate 40-50% code duplication, organize 36+ loose components into domain folders, decompose oversized components (max 2,979 lines → 500 line limit), remove 20+ duplicate mobile files using Tailwind responsive design, and establish automated quality gates. Enable 50% faster feature development and A/B testing cycles.
-
-**Current Progress**:
+### Current Progress
 
 > 📜 **Full Migration History**: For complete Phase-by-Phase details, see [PWA_FSD_MIGRATION_HISTORY.md](./PWA_FSD_MIGRATION_HISTORY.md)
 
-- ✅ **Phase 1 Complete** (2025-10-22)
-  - Dead code removal + Component reclassification (36 files)
+| Phase | Status | Key Achievements |
+|-------|--------|------------------|
+| Phase 1 | ✅ COMPLETE | Dead code removal, 36 files classified |
+| Phase 2 | ✅ COMPLETE | FSD architecture, 180+ files migrated |
+| Phase 2.5 | ✅ COMPLETE | FSD compliance, modules → entities |
+| Phase 2.6 | ✅ COMPLETE | Routes/Pages separation, 4 pages created |
+| Phase 2.7 | ✅ COMPLETE | Stores migration, app/stores → shared/stores |
+| Phase 3 | 🔜 PENDING | Mobile duplication elimination |
+| Phase 4 | 🔜 PENDING | Quality gates & polish |
 
-- ✅ **Phase 2 COMPLETE** (2025-10-23) - **FSD Architecture Migration** 🎉
-  - 7 Legacy Folders Deleted → FSD layers
-  - 180+ Files Migrated, ~1,300 Import Paths Updated
-  - 5 FSD Layers Established (app, pages, widgets, features, shared)
-
-- ✅ **Phase 2.5 COMPLETE** (2025-10-23) - **FSD Architecture Compliance** 🎉
-  - Fixed critical FSD violations (NodeType, ValidationIssue → entities/flow/model/)
-  - Renamed `modules/` → `entities/` (1,102 imports updated)
-  - 100% FSD compliance achieved
-
-### Quick Statistics
-
-| Metric | Value |
-|--------|-------|
-| Files Migrated | 214+ files |
-| Import Paths Updated | ~2,400+ imports |
-| Folders Deleted | 7 legacy folders |
-| Build Success Rate | 100% |
-| **Overall Progress** | **60%** |
-
-### Migration Phases
-
-- ✅ **Phase 1**: Foundation - COMPLETE (2025-10-22)
-- ✅ **Phase 2**: FSD Architecture Migration - COMPLETE (2025-10-23)
-- ✅ **Phase 2.5**: FSD Architecture Compliance - COMPLETE (2025-10-23)
-- 🔜 **Phase 3**: Mobile Duplication Elimination
-- 🔜 **Phase 4**: Quality Gates & Polish
+**Overall Progress**: 70% | **Build Success Rate**: 100%
 
 ### Quality Gates (CI/CD Enforced)
 
@@ -147,12 +124,12 @@ features/           # Layer
 
 #### **Current Migration Status**
 
-- ✅ **app/** - App layer with providers/ segment (7 initialization files)
-- ✅ **pages/** - Pages layer (not-found.tsx)
+- ✅ **app/** - App layer with providers/ segment (7 initialization files) - **stores/ moved to shared/**
+- ✅ **pages/** - Pages layer (4 page components + not-found.tsx)
 - ✅ **widgets/** - Widgets layer (8 layout files + left-navigation/)
 - ✅ **features/** - Business features (session/, card/, flow/, settings/, vibe/)
 - ✅ **entities/** - Domain entities (14 domains with model/, domain/, repos/) - **Renamed from modules/**
-- ✅ **shared/** - Reusable code (ui/, lib/, hooks/, assets/) - **utils/ removed (FSD compliance)**
+- ✅ **shared/** - Reusable code (ui/, lib/, hooks/, **stores/** ✅ NEW, assets/) - **utils/ removed, app/stores/ moved (FSD compliance)**
 - ✅ **components/** - **DELETED** - All files reclassified to FSD layers
 
 #### **Colocation + FSD**
@@ -203,6 +180,20 @@ apps/pwa/src/
 │   └── both-sidebar.tsx, top-bar.tsx, v2-layout.tsx, etc.
 │
 ├── shared/                        # ✅ FSD Shared Layer: Reusable code
+│   ├── stores/                   # ✅ NEW: Global state stores (12 files)
+│   │   ├── agent-store.tsx      # Flow panel UI state
+│   │   ├── app-store.tsx        # App-wide UI state (menu, page, selectedCardId)
+│   │   ├── background-store.tsx # Background assets cache
+│   │   ├── card-ui-store.tsx    # Card panel visibility
+│   │   ├── cards-store.tsx      # Card list/editor UI state
+│   │   ├── edit-session-dialog-store.tsx  # Dialog state
+│   │   ├── model-store.tsx      # Model polling state
+│   │   ├── session-store.tsx    # Session UI state (selectedSessionId)
+│   │   ├── validation-store.tsx # Validation results cache
+│   │   ├── wllama-store.tsx     # Local LLM state
+│   │   ├── init-stores.ts, local-persist-storage.ts
+│   │   └── index.ts             # Barrel export
+│   │
 │   ├── ui/                       # Global UI components (57 files)
 │   │   ├── editor/              # Monaco Editor wrapper
 │   │   ├── shadcn/ui components (38 files: button, dialog, input, etc.)
@@ -413,6 +404,66 @@ import { ValidationPanel } from "@/features/flow/flow-multi/panels/validation/va
 // This breaks FSD! Move shared types to entities/flow/model/
 ```
 
+### **Quick Reference: routes/ vs pages/**
+
+We use **TanStack Router** (file-based routing). Follow this pattern to separate routing logic from page components:
+
+| Folder | Responsibility | Contains | Example |
+|--------|---------------|----------|---------|
+| `routes/` | Routing definitions | Route config, guards, params validation | `beforeLoad`, `redirect`, route params |
+| `pages/` | Page components | UI composition, state management | Combining features + widgets |
+
+**Pattern**:
+```typescript
+// ✅ GOOD: routes/_layout/cards/$cardId.tsx (14 lines)
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { CardDetailPage } from "@/pages/card-detail-page";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+
+export const Route = createFileRoute("/_layout/cards/$cardId")({
+  component: CardDetailPage,
+  beforeLoad: async ({ params }) => {
+    // Route guard logic only
+    if (!UniqueEntityID.isValidUUID(params.cardId)) {
+      throw redirect({ to: "/", replace: true });
+    }
+  },
+});
+```
+
+```typescript
+// ✅ GOOD: pages/card-detail-page.tsx (11 lines, FSD compliant)
+import { Route } from "@/routes/_layout/cards/$cardId";
+import { CardPanelMain } from "@/features/card/panels/card-panel-main";
+import CardPanelMainMobile from "@/features/card/mobile/card-page-mobile";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
+
+export function CardDetailPage() {
+  const { cardId } = Route.useParams();
+  const isMobile = useIsMobile();
+
+  return isMobile ? <CardPanelMainMobile /> : <CardPanelMain cardId={cardId} />;
+}
+```
+
+**FSD Layer Compliance**:
+```typescript
+// ❌ BAD: Pages importing from app layer (upward dependency)
+pages/session-detail-page.tsx → app/stores/session-store.tsx
+
+// ✅ GOOD: Move store logic to features layer
+pages/session-detail-page.tsx → features/session/session-page.tsx → app/stores/session-store.tsx
+```
+
+**Benefits**:
+- ✅ Clear separation of concerns (routing vs UI)
+- ✅ Testable page components (no routing dependency)
+- ✅ FSD Pages layer properly utilized
+- ✅ Smaller route files (~50% reduction)
+- ✅ **100% FSD compliance** (no upward dependencies)
+
+---
+
 ### **Quick Reference: entities/ vs features/**
 
 | Question | entities/ | features/ |
@@ -561,13 +612,14 @@ Criteria for moving to `components/`:
 
 ### **Migration Strategy**
 
-For detailed migration history including all 11 steps of Phase 2 and complete Phase 2.5 documentation, see [PWA_FSD_MIGRATION_HISTORY.md](./PWA_FSD_MIGRATION_HISTORY.md).
+For detailed migration history including all steps and Phase-by-Phase documentation, see [PWA_FSD_MIGRATION_HISTORY.md](./PWA_FSD_MIGRATION_HISTORY.md).
 
-**Approach**: Incremental migration in 4 phases with build verification after every step.
+**Approach**: Incremental migration with build verification after every step.
 
-- ✅ **Phase 1 (2025-10-22)**: Foundation - Dead code removal, component classification
-- ✅ **Phase 2 (2025-10-23)**: FSD Architecture Migration - 7 folders deleted, 180+ files migrated
-- ✅ **Phase 2.5 (2025-10-23)**: FSD Compliance - Fixed violations, renamed modules → entities
+- ✅ **Phase 1**: Foundation (Dead code removal, component classification)
+- ✅ **Phase 2**: FSD Architecture Migration (7 folders deleted, 180+ files migrated)
+- ✅ **Phase 2.5**: FSD Compliance (Fixed violations, renamed modules → entities)
+- ✅ **Phase 2.6**: Routes & Pages Separation (4 page components created)
 - 🔜 **Phase 3**: Mobile Duplication Elimination
 - 🔜 **Phase 4**: Quality Gates & Polish
 
@@ -687,15 +739,24 @@ This cleanup project ENFORCES all 11 principles:
 
 > 📜 **Full Migration History**: See [PWA_FSD_MIGRATION_HISTORY.md](./PWA_FSD_MIGRATION_HISTORY.md) for complete Phase-by-Phase details
 
-- **2025-10-23**: ✅ Phase 2.5 COMPLETE - FSD Architecture Compliance (34 files + 1,102 imports)
-- **2025-10-23**: ✅ Phase 2 COMPLETE - FSD Architecture Migration (180+ files migrated)
-- **2025-10-22**: ✅ Phase 1 COMPLETE - Foundation (Dead code + classification)
-- **2025-10-20**: Project Initialization (Constitutional principles v2.0.0)
+- **2025-10-24**: ✅ Phase 2.7 COMPLETE - Stores Migration (app/stores → shared/stores)
+  - 12 store files migrated (10 stores + init + storage)
+  - ~100+ import paths updated
+  - app/stores/ directory deleted
+  - **100% FSD compliance**: features can now import stores from shared layer
+- **2025-10-24**: ✅ Phase 2.6 COMPLETE - Routes & Pages Separation + FSD Layer Violations Fixed
+  - Part 1: 4 page components created (routes/pages separation)
+  - Part 2: Fixed 2 FSD violations (session-detail-page, flow-detail-page)
+  - 100% FSD compliance achieved (no upward dependencies)
+- **2025-10-23**: ✅ Phase 2.5 COMPLETE - FSD Architecture Compliance (1,102 imports updated)
+- **2025-10-23**: ✅ Phase 2 COMPLETE - FSD Architecture Migration (180+ files)
+- **2025-10-22**: ✅ Phase 1 COMPLETE - Foundation
+- **2025-10-20**: Project Initialization
 
 ## Current Status
 
 **Active Phase**: Phase 3 Preparation
-**Overall Progress**: 60% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 ✅, Phase 3 🔜, Phase 4 🔜)
+**Overall Progress**: 65% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 ✅, Phase 2.6 ✅)
 
 ### Next Steps
 

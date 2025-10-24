@@ -4,7 +4,7 @@ import { AggregateRoot, UniqueEntityID } from "@/shared/domain";
 import { CardType } from "@/entities/card/domain";
 import { ChatStyles } from "@/entities/session/domain/chat-styles";
 import { TranslationConfig } from "@/entities/session/domain/translation-config";
-import { AutoReply } from "@/app/stores/session-store";
+import { AutoReply } from "@/shared/stores/session-store";
 
 export interface CardListItem {
   id: UniqueEntityID;
