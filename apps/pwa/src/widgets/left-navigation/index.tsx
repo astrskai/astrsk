@@ -12,7 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui";
-import { UpdaterNew } from "@/app/providers/updater-new";
+import { UpdaterNew } from "@/widgets/updater-new";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeftFromLine,

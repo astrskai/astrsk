@@ -2,7 +2,7 @@ import { Outlet } from "@tanstack/react-router";
 import { MainLayout } from "@/widgets/main-layout";
 import { ModalPages } from "@/widgets/modal-pages";
 import { OnboardingDialog } from "@/features/settings/onboarding";
-import { ConvexReady } from "@/app/providers/convex-ready";
+import { ConvexReady } from "@/shared/ui/convex-ready";
 import { SubscribeChecker, SubscribeNudgeDialog } from "@/features/settings/subscription";
 
 export function AppLayout() {

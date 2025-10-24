@@ -7,10 +7,13 @@ import { useGlobalErrorHandler } from "@/shared/hooks/use-global-error-handler";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
-import { InstallPwa } from "@/app/providers/install-pwa";
+import { InstallPwaPage } from "@/pages/install-pwa-page";
 import { TopBar } from "@/widgets/top-bar";
 import {
-  Loading, LoadingOverlay, Sheet, SheetContent,
+  Loading,
+  LoadingOverlay,
+  Sheet,
+  SheetContent,
   Toaster,
 } from "@/shared/ui";
 import { ThemeProvider } from "@/app/providers/theme-provider";
@@ -20,7 +23,7 @@ import { cn } from "@/shared/lib";
 import { LeftNavigation } from "@/widgets/left-navigation";
 import { LeftNavigationTrigger } from "@/widgets/left-navigation";
 import { SidebarInset } from "@/widgets/both-sidebar";
-import { MobileNavigationContext } from "@/app/contexts/mobile-navigation-context";
+import { MobileNavigationContext } from "@/shared/stores/mobile-navigation-context";
 import CreateSessionPage from "@/features/session/create-session-page";
 import { createPortal } from "react-dom";
 
@@ -93,7 +96,7 @@ export function MainLayout({
 
   // Show InstallPwa screen only in production for mobile non-standalone users
   if (isMobile && !isStandalone && !import.meta.env.DEV) {
-    return <InstallPwa canInstall={canInstall} install={install} />;
+    return <InstallPwaPage canInstall={canInstall} install={install} />;
   }
 
   // Development mode: Log PWA status for debugging

@@ -1,4 +1,4 @@
-import { InitialPage } from "@/app/providers/init-page";
+import { InitialPage } from "@/pages/initial-page";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_layout/")({

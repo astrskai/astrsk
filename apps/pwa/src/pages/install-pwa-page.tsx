@@ -2,7 +2,7 @@ import { cn } from "@/shared/lib";
 import { Button, SvgIcon } from "@/shared/ui";
 import { Share, SquarePlus } from "lucide-react";
 
-export function InstallPwa({
+export function InstallPwaPage({
   canInstall,
   install,
 }: {

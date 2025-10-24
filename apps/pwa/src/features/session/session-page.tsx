@@ -8,7 +8,7 @@ import {
   SidebarInset,
   SidebarLeftProvider,
 } from "@/widgets/both-sidebar";
-import { InitialPage } from "@/app/providers/init-page";
+import { InitialPage } from "@/pages/initial-page";
 import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
 import { Route } from "@/routes/_layout/sessions/$sessionId";

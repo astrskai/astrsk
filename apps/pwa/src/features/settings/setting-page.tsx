@@ -6,7 +6,7 @@ import {
   SettingPageLevel,
   useAppStore,
 } from "@/shared/stores/app-store";
-import { ConvexReady } from "@/app/providers/convex-ready";
+import { ConvexReady } from "@/shared/ui/convex-ready";
 import { cn } from "@/shared/lib";
 import {
   FloatingActionButton, ScrollArea, ScrollBar, Separator,

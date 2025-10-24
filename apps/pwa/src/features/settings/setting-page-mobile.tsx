@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { useMobileNavigation } from "@/app/contexts/mobile-navigation-context";
+import { useMobileNavigation } from "@/shared/stores/mobile-navigation-context";
 import {
   SettingDetailPageType,
   SettingPageLevel,

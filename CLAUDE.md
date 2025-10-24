@@ -3,10 +3,15 @@
 Maintained development guidelines. Last updated: 2025-10-24
 
 **Latest Updates (2025-10-24)**:
+- ✅ Phase 2.11: App providers cleanup - FSD layer compliance achieved
+  - app/contexts/ → shared/stores/ (mobile-navigation-context)
+  - app/providers/ → pages/ (init-page, install-pwa)
+  - app/providers/ → shared/ui/ (convex-ready)
+  - app/providers/ → widgets/ (updater-new, mobile-updater)
+  - **100% app layer purity**: Only 2 providers remain (theme, pwa-register)
 - ✅ Phase 2.10: Card UI state to entities layer (card-ui-store → entities/card/stores/)
 - ✅ Phase 2.9: App layer cleanup - app/v2/ folder eliminated (FSD app layer purification)
 - ✅ Phase 2.8: Hooks migration to shared layer (app/hooks → shared/hooks, 26 files)
-- ✅ Phase 2.7: Stores migration to shared layer (app/stores → shared/stores, 12 files)
 
 ## Active Feature: PWA Codebase Cleanup & Quality Improvement
 
@@ -27,10 +32,11 @@ Maintained development guidelines. Last updated: 2025-10-24
 | Phase 2.8 | ✅ COMPLETE | Hooks migration, app/hooks → shared/hooks |
 | Phase 2.9 | ✅ COMPLETE | App layer cleanup, app/v2/ folder eliminated |
 | Phase 2.10 | ✅ COMPLETE | Card UI store to entities (domain-specific state) |
+| Phase 2.11 | ✅ COMPLETE | App providers cleanup (FSD compliance achieved) |
 | Phase 3 | 🔜 PENDING | Mobile duplication elimination |
 | Phase 4 | 🔜 PENDING | Quality gates & polish |
 
-**Overall Progress**: 85% | **Build Success Rate**: 100%
+**Overall Progress**: 90% | **Build Success Rate**: 100%
 
 ### Quality Gates (CI/CD Enforced)
 
@@ -90,15 +96,15 @@ We are adopting [Feature-Sliced Design (FSD)](https://feature-sliced.design/) as
 **Quick Summary:**
 - **7 Layers**: app (init) → pages (routes) → widgets (reusable UI) → features (user interactions) → entities (business concepts) → shared (utils)
 - **Dependency Rule**: Upper layers can only import from lower layers
-- **Current Status**: 85% complete (Phase 2.10 done, Phase 3 pending)
+- **Current Status**: 90% complete (Phase 2.11 done, Phase 3 pending)
 
 **Migration Status:**
-- ✅ app/ - PURE initialization (no UI, hooks, or stores)
-- ✅ pages/ - 5 page components (1 page = 1 route)
-- ✅ widgets/ - 8 layout components (reused across pages)
+- ✅ app/ - PURE initialization (only 2 providers: theme, pwa-register)
+- ✅ pages/ - 7 page components (4 detail pages + 3 UI screens)
+- ✅ widgets/ - 10 layout components (reused across pages, includes updaters)
 - ✅ features/ - 5 feature domains (user interactions)
 - ✅ entities/ - 14 domain entities (business concepts)
-- ✅ shared/ - Reusable code (ui, lib, hooks, stores)
+- ✅ shared/ - UI components, hooks, stores, contexts (fully populated)
 
 ---
 
@@ -269,6 +275,18 @@ This cleanup project ENFORCES all 11 principles:
 
 > 📜 **Full Migration History**: See [PWA_FSD_MIGRATION_HISTORY.md](./PWA_FSD_MIGRATION_HISTORY.md) for complete Phase-by-Phase details
 
+- **2025-10-24**: ✅ Phase 2.11 COMPLETE - App Providers Cleanup (FSD Layer Compliance)
+  - **app/contexts/** deleted (1 file → shared/stores/):
+    - mobile-navigation-context.tsx → shared/stores/ (6 imports)
+  - **app/providers/** cleanup (7 → 2 files):
+    - init-page.tsx → pages/initial-page.tsx (2 imports)
+    - install-pwa.tsx → pages/install-pwa-page.tsx (1 import)
+    - convex-ready.tsx → shared/ui/convex-ready.tsx (4 imports)
+    - updater-new.tsx → widgets/updater-new.tsx (1 import)
+    - mobile-updater.tsx → widgets/mobile-updater.tsx (1 import)
+  - **100% app layer purity**: Only 2 true providers remain (theme-provider, pwa-register)
+  - **100% FSD compliance**: No routes/pages importing from app layer
+  - Total: 15 import paths updated, 6 files relocated
 - **2025-10-24**: ✅ Phase 2.10 COMPLETE - Card UI Store to Entities Layer
   - card-ui-store.tsx moved from shared/stores/ to entities/card/stores/
   - **Rationale**: Domain-specific state (card selection, editing, panel visibility) belongs in entity layer
@@ -277,7 +295,6 @@ This cleanup project ENFORCES all 11 principles:
 - **2025-10-24**: ✅ Phase 2.9 COMPLETE - App Layer Cleanup (app/v2/ folder eliminated)
   - 2 files deleted (desktop-app.tsx, mobile-app.tsx)
   - Logic inlined to pages/app-layout.tsx
-  - **100% FSD app layer purity**: Only initialization code remains (providers, contexts, queries, services)
 - **2025-10-24**: ✅ Phase 2.8 COMPLETE - Hooks Migration (app/hooks → shared/hooks)
   - 26 hook files migrated (query, validation, generator, vibe, utility, device hooks)
   - ~85+ import paths updated
@@ -300,7 +317,7 @@ This cleanup project ENFORCES all 11 principles:
 ## Current Status
 
 **Active Phase**: Phase 3 Preparation
-**Overall Progress**: 85% (Phase 1 ✅, Phase 2.x ✅ all 10 sub-phases complete)
+**Overall Progress**: 90% (Phase 1 ✅, Phase 2.x ✅ all 11 sub-phases complete)
 
 ### Next Steps
 
