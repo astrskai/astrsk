@@ -124,12 +124,12 @@ features/           # Layer
 
 #### **Current Migration Status**
 
-- ✅ **app/** - App layer with providers/ segment (7 initialization files) - **stores/ moved to shared/**
+- ✅ **app/** - App layer with providers/ segment (7 initialization files) - **stores/ moved to shared/, hooks/ moved to shared/ (FSD compliance)**
 - ✅ **pages/** - Pages layer (4 page components + not-found.tsx)
 - ✅ **widgets/** - Widgets layer (8 layout files + left-navigation/)
 - ✅ **features/** - Business features (session/, card/, flow/, settings/, vibe/)
 - ✅ **entities/** - Domain entities (14 domains with model/, domain/, repos/) - **Renamed from modules/**
-- ✅ **shared/** - Reusable code (ui/, lib/, hooks/, **stores/** ✅ NEW, assets/) - **utils/ removed, app/stores/ moved (FSD compliance)**
+- ✅ **shared/** - Reusable code (ui/, lib/, **hooks/** ✅ 26 files, **stores/** ✅ 12 files, assets/) - **app/stores/ & app/hooks/ moved (FSD compliance)**
 - ✅ **components/** - **DELETED** - All files reclassified to FSD layers
 
 #### **Colocation + FSD**
@@ -212,9 +212,18 @@ apps/pwa/src/
 │   │   ├── icons/, placeholders/
 │   │   └── index.ts             # Barrel exports
 │   │
-│   ├── hooks/                    # Global React hooks (6 files)
-│   │   ├── use-mobile.tsx, use-pwa.tsx, use-back-gesture.tsx
-│   │   └── use-device-type.tsx, use-forwarded-ref.tsx, use-mobile-override.tsx
+│   ├── hooks/                    # ✅ Global React hooks (26 files) - **app/hooks/ moved (FSD compliance)**
+│   │   ├── Query Hooks (11 files): use-asset, use-assets-shared, use-card, use-cards
+│   │   │   use-session, use-sessions-v2, use-flow, use-flows, use-turn
+│   │   │   use-api-connections, use-api-connections-with-models
+│   │   ├── Validation Hooks (2 files): use-session-validation, use-flow-validation
+│   │   ├── Generator Hooks (4 files): use-nano-banana-generator, use-seedream-generator
+│   │   │   use-seedance-generator, use-fallback-generator
+│   │   ├── Vibe Hooks (1 file): use-vibe-coding-convex
+│   │   ├── Utility Hooks (3 files): use-default-initialized, use-auto-save-session
+│   │   │   use-global-error-handler
+│   │   └── Device Hooks (6 files): use-mobile, use-pwa, use-back-gesture
+│   │       use-device-type, use-forwarded-ref, use-mobile-override
 │   │
 │   ├── domain/                   # DDD base classes
 │   ├── core/                     # Core business logic
@@ -227,8 +236,9 @@ apps/pwa/src/
 │   ├── providers/                # App providers (7 files)
 │   ├── contexts/                 # App-wide contexts (1 file)
 │   ├── queries/                  # TanStack Query factories
-│   ├── services/                 # Business logic services
-│   └── stores/                   # Global state management
+│   └── services/                 # Business logic services
+│   ├── stores/                   # ✅ MOVED to shared/stores/ (FSD compliance)
+│   └── hooks/                    # ✅ MOVED to shared/hooks/ (FSD compliance)
 │
 ├── pages/                        # ✅ FSD Pages Layer
 │   └── not-found.tsx
@@ -739,6 +749,11 @@ This cleanup project ENFORCES all 11 principles:
 
 > 📜 **Full Migration History**: See [PWA_FSD_MIGRATION_HISTORY.md](./PWA_FSD_MIGRATION_HISTORY.md) for complete Phase-by-Phase details
 
+- **2025-10-24**: ✅ Phase 2.8 COMPLETE - Hooks Migration (app/hooks → shared/hooks)
+  - 20 hook files migrated (query, validation, generator, vibe, utility hooks)
+  - ~85+ import paths updated
+  - app/hooks/ directory deleted
+  - **100% FSD compliance**: All hooks now in shared layer (app = initialization only)
 - **2025-10-24**: ✅ Phase 2.7 COMPLETE - Stores Migration (app/stores → shared/stores)
   - 12 store files migrated (10 stores + init + storage)
   - ~100+ import paths updated
@@ -756,7 +771,7 @@ This cleanup project ENFORCES all 11 principles:
 ## Current Status
 
 **Active Phase**: Phase 3 Preparation
-**Overall Progress**: 65% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 ✅, Phase 2.6 ✅)
+**Overall Progress**: 75% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 ✅, Phase 2.6 ✅, Phase 2.7 ✅, Phase 2.8 ✅)
 
 ### Next Steps
 

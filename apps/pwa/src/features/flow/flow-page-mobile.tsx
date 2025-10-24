@@ -7,8 +7,8 @@ import { toast } from "sonner";
 import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib";
 
-import { useFlowValidation } from "@/app/hooks/use-flow-validation";
-import { useFlows } from "@/app/hooks/use-flows";
+import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
+import { useFlows } from "@/shared/hooks/use-flows";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";

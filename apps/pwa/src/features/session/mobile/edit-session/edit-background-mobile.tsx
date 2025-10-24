@@ -28,7 +28,7 @@ import {
   TabsTrigger,
 } from "@/shared/ui";
 import { Session, SessionProps } from "@/entities/session/domain";
-import { useAsset } from "@/app/hooks/use-asset";
+import { useAsset } from "@/shared/hooks/use-asset";
 import { cn } from "@/shared/lib";
 
 // Mobile Background List Item Component

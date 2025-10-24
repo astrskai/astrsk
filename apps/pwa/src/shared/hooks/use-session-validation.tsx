@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useFlowValidation } from "@/app/hooks/use-flow-validation";
+import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { CardService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";

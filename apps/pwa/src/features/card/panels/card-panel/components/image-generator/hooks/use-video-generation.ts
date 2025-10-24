@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { toast } from "sonner";
-import { useSeedanceGenerator } from "@/app/hooks/use-seedance-generator";
+import { useSeedanceGenerator } from "@/shared/hooks/use-seedance-generator";
 import { IMAGE_MODELS } from "@/shared/stores/model-store";
 import { useAppStore, PollingContext } from "@/shared/stores/app-store";
 import { pollingManager } from "@/app/services/polling-manager";

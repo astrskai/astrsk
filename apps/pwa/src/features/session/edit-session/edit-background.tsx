@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useAsset } from "@/app/hooks/use-asset";
+import { useAsset } from "@/shared/hooks/use-asset";
 import { BackgroundService } from "@/app/services/background-service";
 import {
   fetchBackgrounds,

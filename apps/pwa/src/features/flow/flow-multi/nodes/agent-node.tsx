@@ -6,7 +6,7 @@ import { Copy, Trash2, AlertCircle } from "lucide-react";
 import { CustomHandle } from "@/features/flow/flow-multi/components/custom-handle";
 
 import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traversal";
-import { useFlowValidation } from "@/app/hooks/use-flow-validation";
+import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { ApiType } from "@/entities/agent/domain/agent";

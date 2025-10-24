@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useCodingSessionStatus } from "@/app/hooks/use-vibe-coding-convex";
+import { useCodingSessionStatus } from "@/shared/hooks/use-vibe-coding-convex";
 import { applyOperations } from "../lib/operation-processor";
 import { VibeSessionService } from "@/app/services/vibe-session-service";
 import { SESSION_STATUS } from "vibe-shared-types";

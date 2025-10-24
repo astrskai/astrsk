@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/shared/ui";
 import { Loader2 } from "lucide-react";
-import { useAsset } from "@/app/hooks/use-asset";
+import { useAsset } from "@/shared/hooks/use-asset";
 import {
   CardPanelProps,
   useCardPanel,

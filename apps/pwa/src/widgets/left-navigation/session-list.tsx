@@ -1,6 +1,6 @@
 // TODO: apply color palette
 import { useNavigate, useLocation } from "@tanstack/react-router";
-import { useSessionValidation } from "@/app/hooks/use-session-validation";
+import { useSessionValidation } from "@/shared/hooks/use-session-validation";
 import { cardQueries } from "@/app/queries/card-queries";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { queryClient } from "@/app/queries/query-client";

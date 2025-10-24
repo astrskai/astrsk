@@ -7,9 +7,9 @@ import { toast } from "sonner";
 import { UniqueEntityID } from "@/shared/domain";
 import { Flow } from "@/entities/flow/domain";
 
-import { useFlow } from "@/app/hooks/use-flow";
-import { useFlowValidation } from "@/app/hooks/use-flow-validation";
-import { useFlows } from "@/app/hooks/use-flows";
+import { useFlow } from "@/shared/hooks/use-flow";
+import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
+import { useFlows } from "@/shared/hooks/use-flows";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { SessionService } from "@/app/services/session-service";
 import { Button, Combobox } from "@/shared/ui";

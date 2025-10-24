@@ -1,11 +1,11 @@
 import { Plus } from "lucide-react";
 import React, { useState } from "react";
 
-import { useCards } from "@/app/hooks/use-cards";
+import { useCards } from "@/shared/hooks/use-cards";
 import {
   characterFilePath,
   plotFilePath,
-} from "@/app/hooks/use-default-initialized";
+} from "@/shared/hooks/use-default-initialized";
 import { CardService } from "@/app/services";
 import { HeaderBar, SortingBar } from "@/features/card/components";
 import CardGrid from "@/features/card/components/card-grid";

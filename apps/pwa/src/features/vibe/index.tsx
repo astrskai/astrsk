@@ -17,7 +17,7 @@ import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
 import { useVibeSession } from "./hooks/use-vibe-session";
 import { useMessageHistory } from "./hooks/use-message-history";
 import { useResourceData } from "./hooks/use-resource-data";
-import { useStartCodingSession } from "@/app/hooks/use-vibe-coding-convex";
+import { useStartCodingSession } from "@/shared/hooks/use-vibe-coding-convex";
 import { useAppStore, Page } from "@/shared/stores/app-store";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { UniqueEntityID } from "@/shared/domain";

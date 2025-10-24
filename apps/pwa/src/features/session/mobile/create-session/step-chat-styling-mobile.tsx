@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useAsset } from "@/app/hooks/use-asset";
+import { useAsset } from "@/shared/hooks/use-asset";
 import { useBackgroundStore } from "@/shared/stores/background-store";
 import { cn } from "@/shared/lib";
 import { StepBackgroundSchemaType } from "@/features/session/create-session/step-background";

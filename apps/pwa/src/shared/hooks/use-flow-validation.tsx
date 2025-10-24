@@ -3,8 +3,8 @@ import { useEffect } from "react";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useApiConnectionsWithModels } from "@/app/hooks/use-api-connections-with-models";
-import { useFlow } from "@/app/hooks/use-flow";
+import { useApiConnectionsWithModels } from "@/shared/hooks/use-api-connections-with-models";
+import { useFlow } from "@/shared/hooks/use-flow";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { AgentService } from "@/app/services/agent-service";
 import { useValidationStore } from "@/shared/stores/validation-store";

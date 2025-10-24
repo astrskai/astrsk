@@ -771,6 +771,183 @@ shared/
 
 ---
 
+## Phase 2.8: FSD Layer Compliance - Hooks Migration
+
+**Date**: 2025-10-24
+**Duration**: 30 minutes
+**Status**: ✅ COMPLETE
+
+### Objective
+
+Complete FSD layer compliance by migrating all hooks from `app/hooks/` to `shared/hooks/`, ensuring app layer contains only initialization code as per FSD principles.
+
+**Problem**: app/ layer should only contain initialization logic (FSD principle), not reusable hooks.
+
+**Root Cause**:
+- All 20 hooks in `app/hooks/` are reusable business logic hooks
+- Features, widgets, and pages layers import from app/hooks (upward dependency)
+- Hooks belong in `shared/` layer for global reusability
+
+### Changes
+
+#### Hooks Migrated (20 files)
+
+**Query Hooks** (11 files):
+1. `use-asset.tsx` (23 usages) - Asset query with OPFS
+2. `use-asset-shared.tsx` (1 usage) - Shared asset query (optimized)
+3. `use-card.tsx` (8 usages) - Card query
+4. `use-cards.tsx` (7 usages) - Cards list query
+5. `use-session.tsx` (6 usages) - Session query
+6. `use-sessions-v2.tsx` (3 usages) - Sessions list query
+7. `use-flow.tsx` (4 usages) - Flow query
+8. `use-flows.tsx` (3 usages) - Flows list query
+9. `use-turn.tsx` (2 usages) - Turn query
+10. `use-api-connections.tsx` (2 usages) - API connections query
+11. `use-api-connections-with-models.tsx` (5 usages) - API connections + models
+
+**Validation Hooks** (2 files):
+12. `use-session-validation.tsx` (2 usages) - Session validation
+13. `use-flow-validation.tsx` (9 usages) - Flow validation
+
+**Generator Hooks** (4 files - Convex actions):
+14. `use-nano-banana-generator.tsx` (1 usage) - Nano Banana image generation
+15. `use-seedream-generator.tsx` (1 usage) - Seedream image generation
+16. `use-seedance-generator.tsx` (1 usage) - Seedance video generation
+17. `use-fallback-generator.tsx` (1 usage) - Fallback image generation
+
+**Vibe Coding Hook** (1 file):
+18. `use-vibe-coding-convex.tsx` (2 usages) - Vibe coding session management
+
+**Utility Hooks** (3 files):
+19. `use-default-initialized.tsx` (3 usages) - Default data initialization
+20. `use-auto-save-session.ts` (1 usage) - Auto-save session logic
+21. `use-global-error-handler.ts` (1 usage) - Global error handling
+
+#### Import Updates (~85+ files)
+
+**Pattern**:
+```typescript
+// Before
+import { useAsset } from "@/app/hooks/use-asset";
+
+// After
+import { useAsset } from "@/shared/hooks/use-asset";
+```
+
+**Automated Update** (sed command):
+```bash
+find apps/pwa/src -type f \( -name "*.tsx" -o -name "*.ts" \) -exec sed -i '' 's|@/app/hooks/|@/shared/hooks/|g' {} +
+```
+
+### Migration Strategy
+
+**Direct Migration Approach**:
+1. Copy all 20 hook files from app/hooks/ to shared/hooks/ (already has 6 files from Phase 2.2)
+2. Update all import paths using batch sed command
+3. Delete app/hooks/ directory
+4. Verify build success
+
+**Rationale**: All hooks are reusable, no risk-based ordering needed (unlike stores with 56 usages)
+
+### Impact
+
+- **20 hooks** migrated to shared/hooks/
+- **~85+ imports** updated across codebase
+- **app/hooks/ directory** completely removed
+- **100% FSD compliance** achieved (app layer = initialization only)
+- **Build success**: 13.30s (core build), 39.5s (total)
+
+### File Structure Changes
+
+**Before**:
+```
+app/
+├── hooks/
+│   ├── use-asset.tsx
+│   ├── use-card.tsx
+│   ├── use-session.tsx
+│   ├── use-flow.tsx
+│   ├── ... (16 more files)
+│   └── Total: 20 files
+
+shared/
+└── hooks/
+    ├── use-mobile.tsx
+    ├── use-pwa.tsx
+    ├── ... (4 more files)
+    └── Total: 6 files (from Phase 2.2)
+```
+
+**After**:
+```
+app/
+└── hooks/ (DELETED)
+
+shared/
+└── hooks/
+    ├── Query Hooks (11 files)
+    │   ├── use-asset.tsx ✅ MIGRATED
+    │   ├── use-asset-shared.tsx ✅ MIGRATED
+    │   ├── use-card.tsx ✅ MIGRATED
+    │   ├── use-cards.tsx ✅ MIGRATED
+    │   ├── use-session.tsx ✅ MIGRATED
+    │   ├── use-sessions-v2.tsx ✅ MIGRATED
+    │   ├── use-flow.tsx ✅ MIGRATED
+    │   ├── use-flows.tsx ✅ MIGRATED
+    │   ├── use-turn.tsx ✅ MIGRATED
+    │   ├── use-api-connections.tsx ✅ MIGRATED
+    │   └── use-api-connections-with-models.tsx ✅ MIGRATED
+    │
+    ├── Validation Hooks (2 files)
+    │   ├── use-session-validation.tsx ✅ MIGRATED
+    │   └── use-flow-validation.tsx ✅ MIGRATED
+    │
+    ├── Generator Hooks (4 files)
+    │   ├── use-nano-banana-generator.tsx ✅ MIGRATED
+    │   ├── use-seedream-generator.tsx ✅ MIGRATED
+    │   ├── use-seedance-generator.tsx ✅ MIGRATED
+    │   └── use-fallback-generator.tsx ✅ MIGRATED
+    │
+    ├── Vibe Hooks (1 file)
+    │   └── use-vibe-coding-convex.tsx ✅ MIGRATED
+    │
+    ├── Utility Hooks (3 files)
+    │   ├── use-default-initialized.tsx ✅ MIGRATED
+    │   ├── use-auto-save-session.ts ✅ MIGRATED
+    │   └── use-global-error-handler.ts ✅ MIGRATED
+    │
+    └── Device Hooks (6 files - from Phase 2.2)
+        ├── use-mobile.tsx
+        ├── use-pwa.tsx
+        ├── use-back-gesture.tsx
+        ├── use-device-type.tsx
+        ├── use-forwarded-ref.tsx
+        └── use-mobile-override.tsx
+
+Total: 26 files in shared/hooks/
+```
+
+### FSD Principle Compliance
+
+**Before** (INCORRECT):
+- `app/hooks/` = Mixed initialization + business logic hooks ❌
+- Features/widgets importing from app = FSD violation ❌
+
+**After** (CORRECT):
+- `shared/hooks/` = Global reusable React hooks ✅
+- `app/` = Initialization only (providers, queries, services) ✅
+- Features/widgets → shared = Allowed by FSD ✅
+
+### Documentation Updates
+
+- ✅ Updated CLAUDE.md Current Migration Status
+- ✅ Added detailed shared/hooks/ section to CLAUDE.md (26 files, 5 categories)
+- ✅ Updated Recent Changes with Phase 2.8
+- ✅ Updated Current Progress to 75%
+- ✅ Added Phase 2.8 to migration history
+
+---
+
 ## Timeline Summary
 
 | Phase | Dates | Duration | Status |
@@ -780,6 +957,7 @@ shared/
 | Phase 2.5 | 2025-10-23 | 2 hours | ✅ COMPLETE |
 | Phase 2.6 | 2025-10-24 | 1 hour | ✅ COMPLETE |
 | Phase 2.7 | 2025-10-24 | 1 hour | ✅ COMPLETE |
+| Phase 2.8 | 2025-10-24 | 30 minutes | ✅ COMPLETE |
 | Phase 3 | TBD | 2-3 weeks | 🔜 PENDING |
 | Phase 4 | TBD | 1-2 weeks | 🔜 PENDING |
 
@@ -787,18 +965,18 @@ shared/
 
 ## Overall Progress
 
-**Completed**: 70% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 ✅, Phase 2.6 ✅, Phase 2.7 ✅)
-**Remaining**: 30% (Phase 3 🔜, Phase 4 🔜)
+**Completed**: 75% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 ✅, Phase 2.6 ✅, Phase 2.7 ✅, Phase 2.8 ✅)
+**Remaining**: 25% (Phase 3 🔜, Phase 4 🔜)
 
 ### Cumulative Statistics
 
-- **Files Migrated**: 230+ files (180 Phase 2 + 34 Phase 2.5 + 4 Phase 2.6 + 12 Phase 2.7)
-- **Import Paths Updated**: ~2,500+ imports (~2,400 + ~100 Phase 2.7)
-- **Folders Deleted**: 8 legacy folders (7 + app/stores/)
+- **Files Migrated**: 250+ files (180 Phase 2 + 34 Phase 2.5 + 4 Phase 2.6 + 12 Phase 2.7 + 20 Phase 2.8)
+- **Import Paths Updated**: ~2,585+ imports (~2,400 + ~100 Phase 2.7 + ~85 Phase 2.8)
+- **Folders Deleted**: 9 legacy folders (7 + app/stores/ + app/hooks/)
 - **Pages Created**: 4 page components (new pages/ layer)
-- **Barrel Exports Created**: 21 (20 + shared/stores/index.ts)
-- **Build Verifications**: 20+ successful builds (16 + 4 Phase 2.7)
-- **Average Build Time**: 10-28 seconds
+- **Barrel Exports Created**: 21
+- **Build Verifications**: 21+ successful builds (20 + 1 Phase 2.8)
+- **Average Build Time**: 10-39 seconds
 - **Build Success Rate**: 100%
 
 ---

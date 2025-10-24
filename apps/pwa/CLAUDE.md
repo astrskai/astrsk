@@ -91,7 +91,7 @@ Key modules: `agent`, `api`, `asset`, `background`, `card`, `config`, `flow`, `p
 
 - **Zustand Stores** (`/src/shared/stores/`): Global application state
 - **React Query**: Server state and caching for API calls
-- **Custom Hooks** (`/src/app/hooks/`): Business logic hooks
+- **Custom Hooks** (`/src/shared/hooks/`): Business logic hooks
 
 ### UI Components
 

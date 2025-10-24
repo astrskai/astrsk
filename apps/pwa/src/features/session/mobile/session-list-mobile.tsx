@@ -9,12 +9,12 @@ import { downloadFile } from "@/shared/lib";
 import { Datetime } from "@/shared/lib/datetime";
 import { logger } from "@/shared/lib/logger";
 
-import { useAsset } from "@/app/hooks/use-asset";
-import { useCard } from "@/app/hooks/use-card";
-import { useSession } from "@/app/hooks/use-session";
-import { useSessionValidation } from "@/app/hooks/use-session-validation";
-import { useSessions } from "@/app/hooks/use-sessions-v2";
-import { useTurn } from "@/app/hooks/use-turn";
+import { useAsset } from "@/shared/hooks/use-asset";
+import { useCard } from "@/shared/hooks/use-card";
+import { useSession } from "@/shared/hooks/use-session";
+import { useSessionValidation } from "@/shared/hooks/use-session-validation";
+import { useSessions } from "@/shared/hooks/use-sessions-v2";
+import { useTurn } from "@/shared/hooks/use-turn";
 
 import { SessionService } from "@/app/services/session-service";
 

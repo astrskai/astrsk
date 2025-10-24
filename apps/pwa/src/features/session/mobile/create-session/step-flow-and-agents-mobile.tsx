@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useFlowValidation } from "@/app/hooks/use-flow-validation";
+import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import { Combobox, TypoXLarge } from "@/shared/ui";
 import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
 import { Agent } from "@/entities/agent/domain";
