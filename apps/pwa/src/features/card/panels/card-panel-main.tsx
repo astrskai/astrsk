@@ -15,6 +15,7 @@ import {
   useCardUIStore,
   CardPanelVisibility,
 } from "@/app/stores/card-ui-store";
+import { useAppStore } from "@/app/stores/app-store";
 import { CardPanelProvider } from "./card-panel-provider";
 import { invalidateSingleCardQueries } from "../utils/invalidate-card-queries";
 import { extractCardPanelType } from "../utils/panel-id-utils";
@@ -170,11 +171,17 @@ const usePanelVisibility = (card: Card | null) => {
 export function CardPanelMain({ cardId }: CardPanelMainProps) {
   const navigate = useNavigate();
   const [api, setApi] = useState<DockviewApi | null>(null);
+  const setSelectedCardId = useAppStore.use.setSelectedCardId();
 
   // Use custom hooks
   const { card, isLoading, error } = useCardLoader(cardId);
   const { panelVisibility, setPanelVisibility, cardType } =
     usePanelVisibility(card);
+
+  // Set selected card ID when cardId changes
+  useEffect(() => {
+    setSelectedCardId(cardId);
+  }, [cardId, setSelectedCardId]);
 
   // Check card exists
   useEffect(() => {

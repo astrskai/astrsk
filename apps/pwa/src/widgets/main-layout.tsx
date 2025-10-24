@@ -24,7 +24,7 @@ import { MobileNavigationContext } from "@/app/contexts/mobile-navigation-contex
 import CreateSessionPage from "@/features/session/create-session-page";
 import { createPortal } from "react-dom";
 
-export function V2Layout({
+export function MainLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

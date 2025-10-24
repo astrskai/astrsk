@@ -10,6 +10,8 @@ import {
 } from "@/widgets/both-sidebar";
 import { InitialPage } from "@/app/providers/init-page";
 import { cn } from "@/shared/lib";
+import { UniqueEntityID } from "@/shared/domain";
+import { Route } from "@/routes/_layout/sessions/$sessionId";
 import { CardTab } from "@/features/session/create-session/step-cards";
 import { SessionMain } from "@/features/session/session-main";
 import { SessionSettings } from "@/features/session/session-settings";
@@ -22,15 +24,24 @@ import { useEffect, useRef, useState } from "react";
 
 export default function SessionPage({ className }: { className?: string }) {
   const navigate = useNavigate();
+  const { sessionId } = Route.useParams();
   const [isOpenSettings, setIsOpenSettings] = useState(false);
   const { isFirstTimeSidebarOpen, setIsFirstTimeSidebarOpen } = useAppStore();
   const { selectedSessionId } = useSessionStore();
+  const selectSession = useSessionStore.use.selectSession();
   const { data: session, isLoading } = useQuery(
     sessionQueries.detail(selectedSessionId ?? undefined),
   );
   const { data: sessions } = useSessions({
     keyword: "",
   });
+
+  // Set selected session when sessionId changes
+  useEffect(() => {
+    if (sessionId) {
+      selectSession(new UniqueEntityID(sessionId), "Session");
+    }
+  }, [sessionId, selectSession]);
 
   // Check session exists
   useEffect(() => {
