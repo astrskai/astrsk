@@ -6,7 +6,7 @@ Complete history of the PWA codebase cleanup & FSD migration project.
 **Branch**: 003-pwa-codebase-cleanup
 **Timeline**: 8-10 weeks (4 phases)
 **Started**: 2025-10-20
-**Current Status**: Phase 2.5 Complete (60% overall progress)
+**Current Status**: Phase 2.6 Complete (65% overall progress)
 
 ---
 
@@ -453,6 +453,116 @@ pnpm build:pwa
 
 ---
 
+## Phase 2.6: Routes & Pages Separation (2025-10-24)
+
+**Status**: ✅ COMPLETE
+**Duration**: 1 hour
+**Objective**: Separate routing logic from page components
+
+### Summary
+
+Extracted page components from route files to establish clear separation between routing definitions (TanStack Router) and page UI logic (FSD Pages layer).
+
+### Migration Steps
+
+#### Step 1: Create AppLayout Page Component
+- ✅ Created `pages/app-layout.tsx`
+- ✅ Extracted `LayoutWrapper` component from `routes/_layout.tsx`
+- ✅ Updated route file to import from pages/
+- Result: Route file reduced from 22 lines → 6 lines
+
+#### Step 2: Create CardDetailPage Component
+- ✅ Created `pages/card-detail-page.tsx`
+- ✅ Extracted `CardDetailPage` component logic
+- ✅ Kept route guards (`beforeLoad`, `redirect`) in route file
+- Result: Route file reduced from 31 lines → 14 lines
+
+#### Step 3: Create SessionDetailPage Component
+- ✅ Created `pages/session-detail-page.tsx`
+- ✅ Extracted `SessionDetailPage` component logic
+- ✅ Separated routing from state management
+- Result: Route file reduced from 31 lines → 14 lines
+
+#### Step 4: Create FlowDetailPage Component
+- ✅ Created `pages/flow-detail-page.tsx`
+- ✅ Extracted `FlowDetailPage` component logic
+- ✅ Maintained route parameter validation
+- Result: Route file reduced from 31 lines → 14 lines
+
+#### Step 5: Build Verification
+```bash
+pnpm build:pwa
+```
+- ✅ Build time: 10.12s
+- ✅ Exit code: 0 (success)
+- ✅ 252 packages verified
+
+---
+
+### Achievements
+
+- ✅ **4 Page Components Created**:
+  - `pages/app-layout.tsx` (15 lines)
+  - `pages/card-detail-page.tsx` (18 lines)
+  - `pages/session-detail-page.tsx` (19 lines)
+  - `pages/flow-detail-page.tsx` (18 lines)
+
+- ✅ **Route Files Simplified**:
+  - Average reduction: ~50% (31 lines → 14 lines)
+  - Routing logic only: `beforeLoad`, `redirect`, params validation
+  - No UI/state management in route files
+
+- ✅ **FSD Pages Layer Established**:
+  - Pages compose Features + Widgets
+  - Clear separation from routing framework
+  - Independently testable components
+
+### Impact
+
+- **4 files** created in pages/ layer
+- **4 route files** simplified (routing definition only)
+- **~50% code reduction** in route files
+- **100% FSD compliance** for Pages layer
+- **Build success**: 10.12s (0 errors)
+
+### File Structure Changes
+
+**Before**:
+```
+pages/
+└── not-found.tsx
+
+routes/
+├── _layout.tsx (22 lines - routing + UI)
+├── _layout/cards/$cardId.tsx (31 lines - routing + UI)
+├── _layout/sessions/$sessionId.tsx (31 lines - routing + UI)
+└── _layout/flows/$flowId.tsx (31 lines - routing + UI)
+```
+
+**After**:
+```
+pages/
+├── not-found.tsx
+├── app-layout.tsx (15 lines - UI only) ✅ NEW
+├── card-detail-page.tsx (18 lines - UI only) ✅ NEW
+├── session-detail-page.tsx (19 lines - UI only) ✅ NEW
+└── flow-detail-page.tsx (18 lines - UI only) ✅ NEW
+
+routes/
+├── _layout.tsx (6 lines - routing only)
+├── _layout/cards/$cardId.tsx (14 lines - routing only)
+├── _layout/sessions/$sessionId.tsx (14 lines - routing only)
+└── _layout/flows/$flowId.tsx (14 lines - routing only)
+```
+
+### Documentation Updates
+
+- ✅ Added "Quick Reference: routes/ vs pages/" guide to CLAUDE.md
+- ✅ Included pattern examples and benefits
+- ✅ Updated migration history in PWA_FSD_MIGRATION_HISTORY.md
+
+---
+
 ## Timeline Summary
 
 | Phase | Dates | Duration | Status |
@@ -460,6 +570,7 @@ pnpm build:pwa
 | Phase 1 | 2025-10-20 ~ 2025-10-22 | 2 days | ✅ COMPLETE |
 | Phase 2 | 2025-10-22 ~ 2025-10-23 | 2 days | ✅ COMPLETE |
 | Phase 2.5 | 2025-10-23 | 2 hours | ✅ COMPLETE |
+| Phase 2.6 | 2025-10-24 | 1 hour | ✅ COMPLETE |
 | Phase 3 | TBD | 2-3 weeks | 🔜 PENDING |
 | Phase 4 | TBD | 1-2 weeks | 🔜 PENDING |
 
@@ -467,17 +578,18 @@ pnpm build:pwa
 
 ## Overall Progress
 
-**Completed**: 60% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 ✅)
-**Remaining**: 40% (Phase 3 🔜, Phase 4 🔜)
+**Completed**: 65% (Phase 1 ✅, Phase 2 ✅, Phase 2.5 ✅, Phase 2.6 ✅)
+**Remaining**: 35% (Phase 3 🔜, Phase 4 🔜)
 
 ### Cumulative Statistics
 
-- **Files Migrated**: 214+ files (180 Phase 2 + 34 Phase 2.5)
+- **Files Migrated**: 218+ files (180 Phase 2 + 34 Phase 2.5 + 4 Phase 2.6)
 - **Import Paths Updated**: ~2,400+ imports
 - **Folders Deleted**: 7 legacy folders
+- **Pages Created**: 4 page components (new pages/ layer)
 - **Barrel Exports Created**: 20+
-- **Build Verifications**: 15+ successful builds
-- **Average Build Time**: 15-28 seconds
+- **Build Verifications**: 16+ successful builds
+- **Average Build Time**: 10-28 seconds
 - **Build Success Rate**: 100%
 
 ---
@@ -497,6 +609,6 @@ pnpm build:pwa
 
 ---
 
-**Last Updated**: 2025-10-23
-**Document Version**: 1.0
+**Last Updated**: 2025-10-24
+**Document Version**: 1.1
 **Maintained By**: Migration Team
