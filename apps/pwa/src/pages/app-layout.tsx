@@ -1,14 +1,22 @@
 import { Outlet } from "@tanstack/react-router";
 import { MainLayout } from "@/widgets/main-layout";
 import { ModalPages } from "@/widgets/modal-pages";
-import DesktopApp from "@/app/v2/desktop-app";
+import { OnboardingDialog } from "@/features/settings/onboarding";
+import { ConvexReady } from "@/app/providers/convex-ready";
+import { SubscribeChecker, SubscribeNudgeDialog } from "@/features/settings/subscription";
 
 export function AppLayout() {
   return (
     <>
       <MainLayout>
         <Outlet />
-        <DesktopApp />
+
+        {/* Global dialogs and checkers */}
+        <OnboardingDialog />
+        <SubscribeNudgeDialog />
+        <ConvexReady>
+          <SubscribeChecker />
+        </ConvexReady>
       </MainLayout>
 
       <ModalPages />
