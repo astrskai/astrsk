@@ -7,10 +7,13 @@ import { useGlobalErrorHandler } from "@/shared/hooks/use-global-error-handler";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
-import { InstallPwa } from "@/app/providers/install-pwa";
+import { InstallPwa } from "@/shared/ui/install-pwa";
 import { TopBar } from "@/widgets/top-bar";
 import {
-  Loading, LoadingOverlay, Sheet, SheetContent,
+  Loading,
+  LoadingOverlay,
+  Sheet,
+  SheetContent,
   Toaster,
 } from "@/shared/ui";
 import { ThemeProvider } from "@/app/providers/theme-provider";
@@ -20,7 +23,7 @@ import { cn } from "@/shared/lib";
 import { LeftNavigation } from "@/widgets/left-navigation";
 import { LeftNavigationTrigger } from "@/widgets/left-navigation";
 import { SidebarInset } from "@/widgets/both-sidebar";
-import { MobileNavigationContext } from "@/app/contexts/mobile-navigation-context";
+import { MobileNavigationContext } from "@/shared/stores/mobile-navigation-context";
 import CreateSessionPage from "@/features/session/create-session-page";
 import { createPortal } from "react-dom";
 

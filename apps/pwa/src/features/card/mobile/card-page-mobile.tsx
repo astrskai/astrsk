@@ -36,7 +36,7 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { Card, CardType } from "@/entities/card/domain";
-import { useMobileNavigation } from "@/app/contexts/mobile-navigation-context";
+import { useMobileNavigation } from "@/shared/stores/mobile-navigation-context";
 import { SearchCardsSort } from "@/entities/card/repos";
 import { TopNavigation } from "@/widgets/top-navigation";
 import { SortDialogMobile } from "@/features/card/mobile/sort-dialog-mobile";

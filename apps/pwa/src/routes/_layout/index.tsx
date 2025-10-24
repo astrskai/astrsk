@@ -1,4 +1,4 @@
-import { InitialPage } from "@/app/providers/init-page";
+import { InitialScreen } from "@/shared/ui/initial-screen";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_layout/")({
@@ -6,9 +6,5 @@ export const Route = createFileRoute("/_layout/")({
 });
 
 function Index() {
-  return (
-    <>
-      <InitialPage />
-    </>
-  );
+  return <InitialScreen />;
 }

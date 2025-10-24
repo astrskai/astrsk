@@ -8,7 +8,7 @@ import {
   SidebarInset,
   SidebarLeftProvider,
 } from "@/widgets/both-sidebar";
-import { InitialPage } from "@/app/providers/init-page";
+import { InitialScreen } from "@/shared/ui/initial-screen";
 import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
 import { Route } from "@/routes/_layout/sessions/$sessionId";
@@ -113,7 +113,7 @@ export default function SessionPage({ className }: { className?: string }) {
           <SidebarInset className="bg-transparent">
             {/* No selected session */}
             {selectedSessionId === null && sessions.length === 0 && (
-              <InitialPage />
+              <InitialScreen />
             )}
 
             {/* Session main */}
