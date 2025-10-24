@@ -4,7 +4,7 @@ import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traver
 import { ValidationContext, ValidationIssue } from "@/entities/flow/model/validation-types";
 import { ValidatorFunction, FunctionalValidator } from "@/features/flow/flow-multi/validation/types/functional-validation-types";
 import { composeValidators } from "@/features/flow/flow-multi/validation/utils/validator-utils";
-import { ApiConnectionWithModels } from "@/app/hooks/use-api-connections-with-models";
+import { ApiConnectionWithModels } from "@/shared/hooks/use-api-connections-with-models";
 
 // Import all functional validators
 import {

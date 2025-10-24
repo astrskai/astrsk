@@ -8,11 +8,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { UniqueEntityID } from "@/shared/domain";
 import { Datetime } from "@/shared/lib/datetime";
 
-import { useAsset } from "@/app/hooks/use-asset";
-import { useCard } from "@/app/hooks/use-card";
-import { useSession } from "@/app/hooks/use-session";
-import { useSessions } from "@/app/hooks/use-sessions-v2";
-import { useTurn } from "@/app/hooks/use-turn";
+import { useAsset } from "@/shared/hooks/use-asset";
+import { useCard } from "@/shared/hooks/use-card";
+import { useSession } from "@/shared/hooks/use-session";
+import { useSessions } from "@/shared/hooks/use-sessions-v2";
+import { useTurn } from "@/shared/hooks/use-turn";
 import { queryClient } from "@/app/queries/query-client";
 import { SessionService } from "@/app/services/session-service";
 import { useAppStore } from "@/shared/stores/app-store";

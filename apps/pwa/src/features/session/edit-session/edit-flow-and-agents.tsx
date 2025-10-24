@@ -4,7 +4,7 @@ import { FormProvider, useForm } from "react-hook-form";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useFlowValidation } from "@/app/hooks/use-flow-validation";
+import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import { CustomSheet } from "@/features/session/components/custom-sheet";
 import { cn } from "@/shared/lib";
 import {

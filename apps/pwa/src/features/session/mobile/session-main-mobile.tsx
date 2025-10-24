@@ -6,8 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useAsset } from "@/app/hooks/use-asset";
-import { useSession } from "@/app/hooks/use-session";
+import { useAsset } from "@/shared/hooks/use-asset";
+import { useSession } from "@/shared/hooks/use-session";
 import { useBackgroundStore } from "@/shared/stores/background-store";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useBackGesture } from "@/shared/hooks/use-back-gesture";

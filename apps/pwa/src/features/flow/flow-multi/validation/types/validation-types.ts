@@ -1,6 +1,6 @@
 import { Agent } from "@/entities/agent/domain/agent";
 import { Flow } from "@/entities/flow/domain/flow";
-import { ApiConnectionWithModels } from "@/app/hooks/use-api-connections-with-models";
+import { ApiConnectionWithModels } from "@/shared/hooks/use-api-connections-with-models";
 import { ApiSource } from "@/entities/api/domain";
 
 export type ValidationSeverity = "error" | "warning";

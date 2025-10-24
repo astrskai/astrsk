@@ -53,9 +53,9 @@ import { logger } from "@/shared/lib/logger";
 import { TemplateRenderer } from "@/shared/lib/template-renderer";
 import { cloneDeep } from "lodash-es";
 
-import { useAsset } from "@/app/hooks/use-asset";
-import { useAssetShared } from "@/app/hooks/use-asset-shared";
-import { useCard } from "@/app/hooks/use-card";
+import { useAsset } from "@/shared/hooks/use-asset";
+import { useAssetShared } from "@/shared/hooks/use-asset-shared";
+import { useCard } from "@/shared/hooks/use-card";
 import { useImageGeneration } from "@/features/card/panels/card-panel/components/image-generator/hooks/use-image-generation";
 import { useVideoGeneration } from "@/features/card/panels/card-panel/components/image-generator/hooks/use-video-generation";
 import { useEnhancedGenerationPrompt } from "@/features/session/hooks/use-enhanced-generation-prompt";

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/shared/lib";
-import { useAsset } from "@/app/hooks/use-asset";
+import { useAsset } from "@/shared/hooks/use-asset";
 import { PlayButton, SvgIcon } from "@/shared/ui";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";

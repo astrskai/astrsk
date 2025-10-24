@@ -13,9 +13,9 @@ import { downloadFile, logger } from "@/shared/lib";
 import { languagesLabelMap } from "@/shared/lib/translate-utils";
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useFlow } from "@/app/hooks/use-flow";
-import { useSession } from "@/app/hooks/use-session";
-import { useAutoSaveSession } from "@/app/hooks/use-auto-save-session";
+import { useFlow } from "@/shared/hooks/use-flow";
+import { useSession } from "@/shared/hooks/use-session";
+import { useAutoSaveSession } from "@/shared/hooks/use-auto-save-session";
 import { SessionService } from "@/app/services/session-service";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useSessionStore } from "@/shared/stores/session-store";

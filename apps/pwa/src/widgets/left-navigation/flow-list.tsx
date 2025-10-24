@@ -1,6 +1,6 @@
 // TODO: apply color palette
 
-import { useFlowValidation } from "@/app/hooks/use-flow-validation";
+import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import { flowQueries } from "@/app/queries/flow-queries";
 import {
   useCloneFlowWithNodes,

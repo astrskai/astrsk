@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { z } from "zod";
 
-import { useCards } from "@/app/hooks/use-cards";
+import { useCards } from "@/shared/hooks/use-cards";
 import { Page, useAppStore } from "@/shared/stores/app-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";

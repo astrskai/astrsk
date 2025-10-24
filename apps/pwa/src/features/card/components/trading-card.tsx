@@ -1,7 +1,7 @@
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useAsset } from "@/app/hooks/use-asset";
-import { useCard } from "@/app/hooks/use-card";
+import { useAsset } from "@/shared/hooks/use-asset";
+import { useCard } from "@/shared/hooks/use-card";
 import { Card } from "@/entities/card/domain";
 import { TradingCardDisplay } from "./trading-card-display";
 

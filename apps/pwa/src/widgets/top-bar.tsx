@@ -1,4 +1,4 @@
-import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
+import { useDefaultInitialized } from "@/shared/hooks/use-default-initialized";
 import { useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/shared/ui";

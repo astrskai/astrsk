@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { logger } from "@/shared/lib";
 
-import { useApiConnections } from "@/app/hooks/use-api-connections";
+import { useApiConnections } from "@/shared/hooks/use-api-connections";
 import { ApiService } from "@/app/services";
 import { queryClient } from "@/app/queries/query-client";
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";

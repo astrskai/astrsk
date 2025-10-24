@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { UniqueEntityID } from "@/shared/domain";
-import { useCard } from "@/app/hooks/use-card";
-import { useAsset } from "@/app/hooks/use-asset";
+import { useCard } from "@/shared/hooks/use-card";
+import { useAsset } from "@/shared/hooks/use-asset";
 import { CharacterCard } from "@/entities/card/domain";
 import { useQuery } from "@tanstack/react-query";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";

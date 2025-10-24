@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { UniqueEntityID } from "@/shared/domain";
-import { useAsset } from "@/app/hooks/use-asset";
+import { useAsset } from "@/shared/hooks/use-asset";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { turnQueries } from "@/app/queries/turn-queries";

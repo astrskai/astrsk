@@ -21,8 +21,8 @@ import { parseAiSdkErrorMessage } from "@/shared/lib/error-utils";
 import { logger } from "@/shared/lib/logger";
 import { TemplateRenderer } from "@/shared/lib/template-renderer";
 
-import { useAsset } from "@/app/hooks/use-asset";
-import { useCard } from "@/app/hooks/use-card";
+import { useAsset } from "@/shared/hooks/use-asset";
+import { useCard } from "@/shared/hooks/use-card";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { turnQueries } from "@/app/queries/turn-queries";
 import { CardService } from "@/app/services/card-service";

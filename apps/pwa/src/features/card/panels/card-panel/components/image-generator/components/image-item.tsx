@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImage } from "@/entities/generated-image/domain";
-import { useAsset } from "@/app/hooks/use-asset";
+import { useAsset } from "@/shared/hooks/use-asset";
 import { Loader2, Download, Type, Copy, Video } from "lucide-react";
 
 import {
