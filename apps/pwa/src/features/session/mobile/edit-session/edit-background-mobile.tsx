@@ -10,7 +10,7 @@ import { BackgroundService } from "@/app/services/background-service";
 import {
   fetchBackgrounds,
   useBackgroundStore,
-} from "@/app/stores/background-store";
+} from "@/shared/stores/background-store";
 import {
   convertBackgroundFormToSessionProps,
   StepBackgroundSchema,

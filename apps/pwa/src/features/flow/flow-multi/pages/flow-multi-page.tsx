@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { cn } from "@/shared/lib";
 import { Route } from "@/routes/_layout/flows/$flowId";
-import { useAgentStore } from "@/app/stores/agent-store";
+import { useAgentStore } from "@/shared/stores/agent-store";
 
 import { FlowPanelMain } from "../panels/flow-panel-main";
 

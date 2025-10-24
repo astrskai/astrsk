@@ -48,7 +48,7 @@ import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
 import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-mutations";
 import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
 import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
-import { useAgentStore } from "@/app/stores/agent-store";
+import { useAgentStore } from "@/shared/stores/agent-store";
 import "@/features/card/panels/card-panel-dockview.css";
 import { useNavigate } from "@tanstack/react-router";
 

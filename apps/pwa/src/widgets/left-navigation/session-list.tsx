@@ -8,8 +8,8 @@ import { sessionQueries } from "@/app/queries/session-queries";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
-import { Page, useAppStore } from "@/app/stores/app-store";
-import { useSessionStore } from "@/app/stores/session-store";
+import { Page, useAppStore } from "@/shared/stores/app-store";
+import { useSessionStore } from "@/shared/stores/session-store";
 import { SectionHeader } from "./index";
 import {
   SearchInput,
@@ -53,7 +53,7 @@ import { delay } from "lodash-es";
 import { CircleAlert, Copy, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { fetchBackgrounds } from "@/app/stores/background-store";
+import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { getUniqueEntityIDFromPath } from "@/shared/lib/url-utils";
 
 const SessionItem = ({

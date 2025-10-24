@@ -7,12 +7,12 @@ import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib";
 
 import { SessionService } from "@/app/services/session-service";
-import { Page, useAppStore } from "@/app/stores/app-store";
-import { useSessionStore } from "@/app/stores/session-store";
-import { useValidationStore } from "@/app/stores/validation-store";
+import { Page, useAppStore } from "@/shared/stores/app-store";
+import { useSessionStore } from "@/shared/stores/session-store";
+import { useValidationStore } from "@/shared/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
 import { BackgroundService } from "@/app/services/background-service";
-import { fetchBackgrounds } from "@/app/stores/background-store";
+import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { StepperMobile } from "@/shared/ui";
 import {
   convertBackgroundFormToSessionProps,

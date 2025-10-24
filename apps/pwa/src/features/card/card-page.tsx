@@ -3,7 +3,7 @@
 import { Import } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
 
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 import { useNavigate } from "@tanstack/react-router";
 import CardList from "@/features/card/card-list";
 import CardFormSheet from "@/features/card/components/edit-sheet/card-form-sheet";

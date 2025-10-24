@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 
-import { useCardsStore } from "@/app/stores/cards-store";
+import { useCardsStore } from "@/shared/stores/cards-store";
 import { Card, CardType, CharacterCard, PlotCard } from "@/entities/card/domain";
 
 /**

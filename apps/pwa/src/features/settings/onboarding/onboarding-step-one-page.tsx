@@ -1,4 +1,4 @@
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { Page, useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { Button, SvgIcon } from "@/shared/ui";
 import { useNavigate } from "@tanstack/react-router";

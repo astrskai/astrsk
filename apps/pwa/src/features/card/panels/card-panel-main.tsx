@@ -14,8 +14,8 @@ import { queryClient } from "@/app/queries/query-client";
 import {
   useCardUIStore,
   CardPanelVisibility,
-} from "@/app/stores/card-ui-store";
-import { useAppStore } from "@/app/stores/app-store";
+} from "@/shared/stores/card-ui-store";
+import { useAppStore } from "@/shared/stores/app-store";
 import { CardPanelProvider } from "./card-panel-provider";
 import { invalidateSingleCardQueries } from "../utils/invalidate-card-queries";
 import { extractCardPanelType } from "../utils/panel-id-utils";

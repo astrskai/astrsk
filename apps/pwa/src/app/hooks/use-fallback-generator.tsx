@@ -1,6 +1,6 @@
 import { useAction } from "convex/react";
 import { api } from "@/../convex/_generated/api";
-import { IMAGE_MODELS, type ImageModel } from "@/app/stores/model-store";
+import { IMAGE_MODELS, type ImageModel } from "@/shared/stores/model-store";
 
 /**
  * Hook for accessing image generation with fallback support

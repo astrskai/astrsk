@@ -1,9 +1,9 @@
 import { useAsset } from "@/app/hooks/use-asset";
 import { useSessions } from "@/app/hooks/use-sessions-v2";
 import { sessionQueries } from "@/app/queries/session-queries";
-import { useAppStore } from "@/app/stores/app-store";
-import { useBackgroundStore } from "@/app/stores/background-store";
-import { useSessionStore } from "@/app/stores/session-store";
+import { useAppStore } from "@/shared/stores/app-store";
+import { useBackgroundStore } from "@/shared/stores/background-store";
+import { useSessionStore } from "@/shared/stores/session-store";
 import {
   SidebarInset,
   SidebarLeftProvider,

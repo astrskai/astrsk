@@ -8,7 +8,7 @@ import { LoadSessionRepo, SaveSessionRepo } from "@/entities/session/repos";
 import { AddMessage } from "@/entities/session/usecases/add-message";
 import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
 import { LoadTurnRepo } from "@/entities/turn/repos/load-turn-repo";
-import { AutoReply } from "@/app/stores/session-store";
+import { AutoReply } from "@/shared/stores/session-store";
 
 type Command = {
   sessionId: UniqueEntityID;

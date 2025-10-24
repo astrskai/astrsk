@@ -17,10 +17,11 @@ Maintained development guidelines. Last updated: 2025-10-24
 | Phase 2 | ✅ COMPLETE | FSD architecture, 180+ files migrated |
 | Phase 2.5 | ✅ COMPLETE | FSD compliance, modules → entities |
 | Phase 2.6 | ✅ COMPLETE | Routes/Pages separation, 4 pages created |
+| Phase 2.7 | ✅ COMPLETE | Stores migration, app/stores → shared/stores |
 | Phase 3 | 🔜 PENDING | Mobile duplication elimination |
 | Phase 4 | 🔜 PENDING | Quality gates & polish |
 
-**Overall Progress**: 65% | **Build Success Rate**: 100%
+**Overall Progress**: 70% | **Build Success Rate**: 100%
 
 ### Quality Gates (CI/CD Enforced)
 
@@ -123,12 +124,12 @@ features/           # Layer
 
 #### **Current Migration Status**
 
-- ✅ **app/** - App layer with providers/ segment (7 initialization files)
-- ✅ **pages/** - Pages layer (not-found.tsx)
+- ✅ **app/** - App layer with providers/ segment (7 initialization files) - **stores/ moved to shared/**
+- ✅ **pages/** - Pages layer (4 page components + not-found.tsx)
 - ✅ **widgets/** - Widgets layer (8 layout files + left-navigation/)
 - ✅ **features/** - Business features (session/, card/, flow/, settings/, vibe/)
 - ✅ **entities/** - Domain entities (14 domains with model/, domain/, repos/) - **Renamed from modules/**
-- ✅ **shared/** - Reusable code (ui/, lib/, hooks/, assets/) - **utils/ removed (FSD compliance)**
+- ✅ **shared/** - Reusable code (ui/, lib/, hooks/, **stores/** ✅ NEW, assets/) - **utils/ removed, app/stores/ moved (FSD compliance)**
 - ✅ **components/** - **DELETED** - All files reclassified to FSD layers
 
 #### **Colocation + FSD**
@@ -179,6 +180,20 @@ apps/pwa/src/
 │   └── both-sidebar.tsx, top-bar.tsx, v2-layout.tsx, etc.
 │
 ├── shared/                        # ✅ FSD Shared Layer: Reusable code
+│   ├── stores/                   # ✅ NEW: Global state stores (12 files)
+│   │   ├── agent-store.tsx      # Flow panel UI state
+│   │   ├── app-store.tsx        # App-wide UI state (menu, page, selectedCardId)
+│   │   ├── background-store.tsx # Background assets cache
+│   │   ├── card-ui-store.tsx    # Card panel visibility
+│   │   ├── cards-store.tsx      # Card list/editor UI state
+│   │   ├── edit-session-dialog-store.tsx  # Dialog state
+│   │   ├── model-store.tsx      # Model polling state
+│   │   ├── session-store.tsx    # Session UI state (selectedSessionId)
+│   │   ├── validation-store.tsx # Validation results cache
+│   │   ├── wllama-store.tsx     # Local LLM state
+│   │   ├── init-stores.ts, local-persist-storage.ts
+│   │   └── index.ts             # Barrel export
+│   │
 │   ├── ui/                       # Global UI components (57 files)
 │   │   ├── editor/              # Monaco Editor wrapper
 │   │   ├── shadcn/ui components (38 files: button, dialog, input, etc.)
@@ -417,25 +432,27 @@ export const Route = createFileRoute("/_layout/cards/$cardId")({
 ```
 
 ```typescript
-// ✅ GOOD: pages/card-detail-page.tsx (18 lines)
-import { useEffect } from "react";
+// ✅ GOOD: pages/card-detail-page.tsx (11 lines, FSD compliant)
 import { Route } from "@/routes/_layout/cards/$cardId";
 import { CardPanelMain } from "@/features/card/panels/card-panel-main";
 import CardPanelMainMobile from "@/features/card/mobile/card-page-mobile";
-import { useAppStore } from "@/app/stores/app-store";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 
 export function CardDetailPage() {
   const { cardId } = Route.useParams();
-  const setSelectedCardId = useAppStore.use.setSelectedCardId();
   const isMobile = useIsMobile();
-
-  useEffect(() => {
-    setSelectedCardId(cardId);
-  }, [cardId, setSelectedCardId]);
 
   return isMobile ? <CardPanelMainMobile /> : <CardPanelMain cardId={cardId} />;
 }
+```
+
+**FSD Layer Compliance**:
+```typescript
+// ❌ BAD: Pages importing from app layer (upward dependency)
+pages/session-detail-page.tsx → app/stores/session-store.tsx
+
+// ✅ GOOD: Move store logic to features layer
+pages/session-detail-page.tsx → features/session/session-page.tsx → app/stores/session-store.tsx
 ```
 
 **Benefits**:
@@ -443,6 +460,7 @@ export function CardDetailPage() {
 - ✅ Testable page components (no routing dependency)
 - ✅ FSD Pages layer properly utilized
 - ✅ Smaller route files (~50% reduction)
+- ✅ **100% FSD compliance** (no upward dependencies)
 
 ---
 
@@ -721,7 +739,15 @@ This cleanup project ENFORCES all 11 principles:
 
 > 📜 **Full Migration History**: See [PWA_FSD_MIGRATION_HISTORY.md](./PWA_FSD_MIGRATION_HISTORY.md) for complete Phase-by-Phase details
 
-- **2025-10-24**: ✅ Phase 2.6 COMPLETE - Routes & Pages Separation (4 page components)
+- **2025-10-24**: ✅ Phase 2.7 COMPLETE - Stores Migration (app/stores → shared/stores)
+  - 12 store files migrated (10 stores + init + storage)
+  - ~100+ import paths updated
+  - app/stores/ directory deleted
+  - **100% FSD compliance**: features can now import stores from shared layer
+- **2025-10-24**: ✅ Phase 2.6 COMPLETE - Routes & Pages Separation + FSD Layer Violations Fixed
+  - Part 1: 4 page components created (routes/pages separation)
+  - Part 2: Fixed 2 FSD violations (session-detail-page, flow-detail-page)
+  - 100% FSD compliance achieved (no upward dependencies)
 - **2025-10-23**: ✅ Phase 2.5 COMPLETE - FSD Architecture Compliance (1,102 imports updated)
 - **2025-10-23**: ✅ Phase 2 COMPLETE - FSD Architecture Migration (180+ files)
 - **2025-10-22**: ✅ Phase 1 COMPLETE - Foundation

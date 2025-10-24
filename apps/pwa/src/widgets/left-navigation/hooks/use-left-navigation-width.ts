@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 
 // Constants matching the sidebar dimensions
 const SIDEBAR_WIDTH_EXPANDED = 320; // 20rem

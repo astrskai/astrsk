@@ -3,8 +3,8 @@
 import { Book, Settings } from "lucide-react";
 import { forwardRef, ReactNode, useMemo } from "react";
 
-import { Menu, Page, useAppStore } from "@/app/stores/app-store";
-import { useValidationStore } from "@/app/stores/validation-store";
+import { Menu, Page, useAppStore } from "@/shared/stores/app-store";
+import { useValidationStore } from "@/shared/stores/validation-store";
 import { cn } from "@/shared/lib";
 import { MobileUpdater } from "@/app/providers/mobile-updater";
 import { Button, SvgIcon } from "@/shared/ui";

@@ -17,7 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui";
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 
 // Mobile sidebar content with swipe to close functionality
 const MobileSidebarContent = React.forwardRef<

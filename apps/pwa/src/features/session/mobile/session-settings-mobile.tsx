@@ -14,7 +14,7 @@ import { downloadFile } from "@/shared/lib";
 
 import { useSession } from "@/app/hooks/use-session";
 import { SessionService } from "@/app/services/session-service";
-import { useSessionStore } from "@/app/stores/session-store";
+import { useSessionStore } from "@/shared/stores/session-store";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { useQueryClient } from "@tanstack/react-query";
 

@@ -4,7 +4,7 @@ import {
   SettingPageLevel,
   SettingSubPageType,
   useAppStore,
-} from "@/app/stores/app-store";
+} from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { Button, FloatingLabelInput, SvgIcon, toastSuccess } from "@/shared/ui";
 import { logger } from "@/shared/lib";

@@ -5,9 +5,9 @@ import { toast } from "sonner";
 import { useNanoBananaGenerator } from "@/app/hooks/use-nano-banana-generator";
 import { useSeedreamGenerator } from "@/app/hooks/use-seedream-generator";
 import { useFallbackGenerator } from "@/app/hooks/use-fallback-generator";
-import { IMAGE_MODELS } from "@/app/stores/model-store";
-import type { ImageModel } from "@/app/stores/model-store";
-import { useAppStore } from "@/app/stores/app-store";
+import { IMAGE_MODELS } from "@/shared/stores/model-store";
+import type { ImageModel } from "@/shared/stores/model-store";
+import { useAppStore } from "@/shared/stores/app-store";
 
 interface ImageGenerationConfig {
   prompt: string;

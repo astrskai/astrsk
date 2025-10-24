@@ -16,7 +16,7 @@ import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { BookOpen, Pencil, Check, X, Image } from "lucide-react";
 import { Avatar, Button, ButtonPill, SvgIcon } from "@/shared/ui";
 import { useLeftNavigationWidth } from "@/widgets/left-navigation/hooks/use-left-navigation-width";
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 
 interface CardPanelProps {
   cardId: string;

@@ -5,7 +5,7 @@ import {
   SettingDetailPageType,
   SettingPageLevel,
   useAppStore,
-} from "@/app/stores/app-store";
+} from "@/shared/stores/app-store";
 import { ConvexReady } from "@/app/providers/convex-ready";
 import { cn } from "@/shared/lib";
 import {

@@ -28,7 +28,7 @@ import {
 } from "@/shared/ui";
 import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
 import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";
-import { useAgentStore } from "@/app/stores/agent-store";
+import { useAgentStore } from "@/shared/stores/agent-store";
 import { useFlowValidation } from "@/app/hooks/use-flow-validation";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";

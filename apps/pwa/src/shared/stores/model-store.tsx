@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 import { createSelectors } from "@/shared/lib/zustand-utils";
-import { LocalPersistStorage } from "@/app/stores/local-persist-storage";
+import { LocalPersistStorage } from "@/shared/stores/local-persist-storage";
 
 // Language model options - using provider/modelId format for AstrskAi backend
 export const LANGUAGE_MODELS = {

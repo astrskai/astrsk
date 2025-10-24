@@ -59,7 +59,7 @@ import { useCard } from "@/app/hooks/use-card";
 import { useImageGeneration } from "@/features/card/panels/card-panel/components/image-generator/hooks/use-image-generation";
 import { useVideoGeneration } from "@/features/card/panels/card-panel/components/image-generator/hooks/use-video-generation";
 import { useEnhancedGenerationPrompt } from "@/features/session/hooks/use-enhanced-generation-prompt";
-import { IMAGE_MODELS } from "@/app/stores/model-store";
+import { IMAGE_MODELS } from "@/shared/stores/model-store";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
 import {
@@ -80,8 +80,8 @@ import {
   makeContext,
 } from "@/app/services/session-play-service";
 import { TurnService } from "@/app/services/turn-service";
-import { useAppStore } from "@/app/stores/app-store";
-import { AutoReply, useSessionStore } from "@/app/stores/session-store";
+import { useAppStore } from "@/shared/stores/app-store";
+import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
 
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";

@@ -4,7 +4,7 @@ import { cardQueries } from "@/app/queries/card-queries";
 import { queryClient } from "@/app/queries/query-client";
 import { CardService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import useCardImport from "@/features/card/hooks/useCardImport";
 import {

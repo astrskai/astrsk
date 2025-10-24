@@ -18,14 +18,14 @@ import {
   useCardPanel,
 } from "@/features/card/panels/hooks/use-card-panel";
 import { useResourceData } from "@/features/vibe/hooks/use-resource-data";
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   generatedImageQueries,
   generatedImageKeys,
 } from "@/app/queries/generated-image/query-factory";
-import { useModelStore, IMAGE_MODELS } from "@/app/stores/model-store";
+import { useModelStore, IMAGE_MODELS } from "@/shared/stores/model-store";
 import { toast } from "sonner";
 import { VIDEO_SETTINGS, GALLERY_LAYOUT } from "./image-generator/constants";
 import { ImageItem } from "./image-generator/components/image-item";

@@ -1,10 +1,10 @@
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { Page, useAppStore } from "@/app/stores/app-store";
+import { Page, useAppStore } from "@/shared/stores/app-store";
 import { useState } from "react";
 import { usePwa } from "@/shared/hooks/use-pwa";
 import { useDefaultInitialized } from "@/app/hooks/use-default-initialized";
 import { useGlobalErrorHandler } from "@/app/hooks/use-global-error-handler";
-import { useSessionStore } from "@/app/stores/session-store";
+import { useSessionStore } from "@/shared/stores/session-store";
 import { useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { InstallPwa } from "@/app/providers/install-pwa";

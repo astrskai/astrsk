@@ -3,8 +3,8 @@ import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { toast } from "sonner";
 import { useSeedanceGenerator } from "@/app/hooks/use-seedance-generator";
-import { IMAGE_MODELS } from "@/app/stores/model-store";
-import { useAppStore, PollingContext } from "@/app/stores/app-store";
+import { IMAGE_MODELS } from "@/shared/stores/model-store";
+import { useAppStore, PollingContext } from "@/shared/stores/app-store";
 import { pollingManager } from "@/app/services/polling-manager";
 
 interface VideoGenerationConfig {

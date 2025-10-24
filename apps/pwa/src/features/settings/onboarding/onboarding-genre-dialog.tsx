@@ -1,5 +1,5 @@
-import { Page, useAppStore } from "@/app/stores/app-store";
-import { useSessionStore } from "@/app/stores/session-store";
+import { Page, useAppStore } from "@/shared/stores/app-store";
+import { useSessionStore } from "@/shared/stores/session-store";
 import { useSidebarLeft } from "@/widgets/both-sidebar";
 import { cn } from "@/shared/lib";
 import {

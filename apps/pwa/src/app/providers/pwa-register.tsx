@@ -1,4 +1,4 @@
-import { useAppStore } from "@/app/stores/app-store";
+import { useAppStore } from "@/shared/stores/app-store";
 import { logger } from "@/shared/lib/logger";
 import { useEffect } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
