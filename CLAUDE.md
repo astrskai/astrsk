@@ -3,6 +3,7 @@
 Maintained development guidelines. Last updated: 2025-10-24
 
 **Latest Updates (2025-10-24)**:
+
 - ✅ Phase 2.11: App providers cleanup - FSD layer compliance achieved
   - app/contexts/ → shared/stores/ (mobile-navigation-context)
   - app/providers/ → pages/ (init-page, install-pwa)
@@ -22,19 +23,19 @@ Maintained development guidelines. Last updated: 2025-10-24
 
 > 📜 **Full Migration History**: For complete Phase-by-Phase details, see [PWA_FSD_MIGRATION_HISTORY.md](./PWA_FSD_MIGRATION_HISTORY.md)
 
-| Phase | Status | Key Achievements |
-|-------|--------|------------------|
-| Phase 1 | ✅ COMPLETE | Dead code removal, 36 files classified |
-| Phase 2 | ✅ COMPLETE | FSD architecture, 180+ files migrated |
-| Phase 2.5 | ✅ COMPLETE | FSD compliance, modules → entities |
-| Phase 2.6 | ✅ COMPLETE | Routes/Pages separation, 4 pages created |
-| Phase 2.7 | ✅ COMPLETE | Stores migration, app/stores → shared/stores |
-| Phase 2.8 | ✅ COMPLETE | Hooks migration, app/hooks → shared/hooks |
-| Phase 2.9 | ✅ COMPLETE | App layer cleanup, app/v2/ folder eliminated |
+| Phase      | Status      | Key Achievements                                  |
+| ---------- | ----------- | ------------------------------------------------- |
+| Phase 1    | ✅ COMPLETE | Dead code removal, 36 files classified            |
+| Phase 2    | ✅ COMPLETE | FSD architecture, 180+ files migrated             |
+| Phase 2.5  | ✅ COMPLETE | FSD compliance, modules → entities                |
+| Phase 2.6  | ✅ COMPLETE | Routes/Pages separation, 4 pages created          |
+| Phase 2.7  | ✅ COMPLETE | Stores migration, app/stores → shared/stores      |
+| Phase 2.8  | ✅ COMPLETE | Hooks migration, app/hooks → shared/hooks         |
+| Phase 2.9  | ✅ COMPLETE | App layer cleanup, app/v2/ folder eliminated      |
 | Phase 2.10 | ✅ COMPLETE | Card UI store to entities (domain-specific state) |
-| Phase 2.11 | ✅ COMPLETE | App providers cleanup (FSD compliance achieved) |
-| Phase 3 | 🔜 PENDING | Mobile duplication elimination |
-| Phase 4 | 🔜 PENDING | Quality gates & polish |
+| Phase 2.11 | ✅ COMPLETE | App providers cleanup (FSD compliance achieved)   |
+| Phase 3    | 🔜 PENDING  | Mobile duplication elimination                    |
+| Phase 4    | 🔜 PENDING  | Quality gates & polish                            |
 
 **Overall Progress**: 90% | **Build Success Rate**: 100%
 
@@ -68,6 +69,7 @@ Maintained development guidelines. Last updated: 2025-10-24
 ### TanStack Query Patterns
 
 > 📚 **Complete Guide**: See [TANSTACK_QUERY.md](./TANSTACK_QUERY.md) for comprehensive documentation on:
+>
 > - Query Factory Pattern (hierarchical keys)
 > - Mutation Hooks (optimistic updates + rollback)
 > - Cache Invalidation Strategies
@@ -76,9 +78,10 @@ Maintained development guidelines. Last updated: 2025-10-24
 > - Testing Guidelines
 
 **Quick Reference**:
+
 - **Query Factory**: Centralized, type-safe query key management
 - **Mutations**: Optimistic updates with automatic rollback on error
-- **Reference**: `app/queries/card/` (complete implementation)
+- **Reference**: `apps/pwa/src/app/queries/card/` (complete implementation)
 
 ---
 
@@ -87,6 +90,7 @@ Maintained development guidelines. Last updated: 2025-10-24
 We are adopting [Feature-Sliced Design (FSD)](https://feature-sliced.design/) as our long-term architectural standard.
 
 > 📚 **Complete FSD Guide**: See [FSD.md](./FSD.md) for comprehensive architecture documentation including:
+>
 > - Decision trees (where to put new code)
 > - Layer-by-layer guides (widgets/, pages/, features/, entities/)
 > - Store placement strategies
@@ -94,11 +98,13 @@ We are adopting [Feature-Sliced Design (FSD)](https://feature-sliced.design/) as
 > - PR checklist and migration patterns
 
 **Quick Summary:**
+
 - **7 Layers**: app (init) → pages (routes) → widgets (reusable UI) → features (user interactions) → entities (business concepts) → shared (utils)
 - **Dependency Rule**: Upper layers can only import from lower layers
 - **Current Status**: 90% complete (Phase 2.11 done, Phase 3 pending)
 
 **Migration Status:**
+
 - ✅ app/ - PURE initialization (only 2 providers: theme, pwa-register)
 - ✅ pages/ - 7 page components (4 detail pages + 3 UI screens)
 - ✅ widgets/ - 10 layout components (reused across pages, includes updaters)
@@ -204,12 +210,21 @@ Each mutation must have comprehensive tests:
 5. ✅ **Integration test** - Service layer interaction
 
 **Example test structure**:
+
 ```typescript
 describe('useUpdateFlowTitle', () => {
-  it('should update title optimistically', () => { /* ... */ });
-  it('should rollback on error', () => { /* ... */ });
-  it('should invalidate detail query on success', () => { /* ... */ });
-  it('should handle network errors gracefully', () => { /* ... */ });
+  it('should update title optimistically', () => {
+    /* ... */
+  });
+  it('should rollback on error', () => {
+    /* ... */
+  });
+  it('should invalidate detail query on success', () => {
+    /* ... */
+  });
+  it('should handle network errors gracefully', () => {
+    /* ... */
+  });
 });
 ```
 
@@ -228,6 +243,7 @@ describe('useUpdateFlowTitle', () => {
 - ✅ **Set appropriate `staleTime`** (avoid redundant refetches)
 
 **Example**:
+
 ```typescript
 // Only re-render when name changes
 const { data: flowName } = useQuery({

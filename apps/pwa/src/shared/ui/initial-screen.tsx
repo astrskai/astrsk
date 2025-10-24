@@ -2,7 +2,7 @@ import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { SvgIcon } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 
-const InitialPage = ({ className }: { className?: string }) => {
+const InitialScreen = ({ className }: { className?: string }) => {
   const isMobile = useIsMobile();
 
   return (
@@ -34,4 +34,4 @@ const InitialPage = ({ className }: { className?: string }) => {
   );
 };
 
-export { InitialPage };
+export { InitialScreen };

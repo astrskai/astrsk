@@ -7,7 +7,7 @@ import { useGlobalErrorHandler } from "@/shared/hooks/use-global-error-handler";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
-import { InstallPwaPage } from "@/pages/install-pwa-page";
+import { InstallPwa } from "@/shared/ui/install-pwa";
 import { TopBar } from "@/widgets/top-bar";
 import {
   Loading,
@@ -96,7 +96,7 @@ export function MainLayout({
 
   // Show InstallPwa screen only in production for mobile non-standalone users
   if (isMobile && !isStandalone && !import.meta.env.DEV) {
-    return <InstallPwaPage canInstall={canInstall} install={install} />;
+    return <InstallPwa canInstall={canInstall} install={install} />;
   }
 
   // Development mode: Log PWA status for debugging
