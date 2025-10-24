@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useAppStore } from "@/shared/stores/app-store";
+import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { CustomSheet } from "@/features/session/components/custom-sheet";
@@ -155,7 +156,8 @@ const EditCards = ({
     }),
   );
 
-  const { activePage, setActivePage, setCardEditOpen } = useAppStore();
+  const { activePage, setActivePage } = useAppStore();
+  const { setCardEditOpen } = useCardUIStore();
 
   // Refresh active and disabled cards
   const refreshCardStates = useCallback(() => {

@@ -5,7 +5,6 @@ import { immer } from "zustand/middleware/immer";
 import { createSelectors } from "@/shared/lib/zustand-utils";
 
 import { LocalPersistStorage } from "@/shared/stores/local-persist-storage";
-import { CardType } from "@/entities/card/domain";
 
 export const Menu = {
   Play: "Sessions",
@@ -198,10 +197,6 @@ interface AppState {
   generatingContext: PollingContext | null;
   setGeneratingContext: (context: PollingContext | null) => void;
 
-  // CardEditOpen
-  cardEditOpen: CardType | null;
-  setCardEditOpen: (cardEditOpen: CardType | null) => void;
-
   // Sidebar
   isFirstTimeSidebarOpen: boolean;
   setIsFirstTimeSidebarOpen: (isFirstTimeSidebarOpen: boolean) => void;
@@ -209,10 +204,6 @@ interface AppState {
   // Mobile
   isMobile: boolean;
   setIsMobile: (isMobile: boolean) => void;
-
-  // Card Panel
-  selectedCardId: string | null;
-  setSelectedCardId: (cardId: string | null) => void;
 }
 
 const lastPagePerMenu = new Map<Menu, Page>([
@@ -429,13 +420,6 @@ const useAppStoreBase = create<AppState>()(
           state.generatingContext = context;
         }),
 
-      // CardEditOpen
-      cardEditOpen: null,
-      setCardEditOpen: (cardEditOpen) =>
-        set((state) => {
-          state.cardEditOpen = cardEditOpen;
-        }),
-
       isFirstTimeSidebarOpen: false,
       setIsFirstTimeSidebarOpen: (isFirstTimeSidebarOpen) =>
         set((state) => {
@@ -447,13 +431,6 @@ const useAppStoreBase = create<AppState>()(
       setIsMobile: (isMobile) =>
         set((state) => {
           state.isMobile = isMobile;
-        }),
-
-      // Card Panel
-      selectedCardId: null,
-      setSelectedCardId: (cardId) =>
-        set((state) => {
-          state.selectedCardId = cardId;
         }),
     })),
     {

@@ -14,8 +14,7 @@ import { queryClient } from "@/app/queries/query-client";
 import {
   useCardUIStore,
   CardPanelVisibility,
-} from "@/shared/stores/card-ui-store";
-import { useAppStore } from "@/shared/stores/app-store";
+} from "@/entities/card/stores/card-ui-store";
 import { CardPanelProvider } from "./card-panel-provider";
 import { invalidateSingleCardQueries } from "../utils/invalidate-card-queries";
 import { extractCardPanelType } from "../utils/panel-id-utils";
@@ -171,7 +170,7 @@ const usePanelVisibility = (card: Card | null) => {
 export function CardPanelMain({ cardId }: CardPanelMainProps) {
   const navigate = useNavigate();
   const [api, setApi] = useState<DockviewApi | null>(null);
-  const setSelectedCardId = useAppStore.use.setSelectedCardId();
+  const setSelectedCardId = useCardUIStore.use.setSelectedCardId();
 
   // Use custom hooks
   const { card, isLoading, error } = useCardLoader(cardId);

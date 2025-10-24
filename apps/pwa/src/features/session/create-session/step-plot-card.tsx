@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { useCards } from "@/shared/hooks/use-cards";
 import { Page, useAppStore } from "@/shared/stores/app-store";
+import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { cn } from "@/shared/lib";
@@ -67,7 +68,8 @@ const StepPlotCard = ({ isEdit = false }: { isEdit?: boolean }) => {
     type: [CardType.Plot],
     keyword: keyword,
   });
-  const { setActivePage, setCardEditOpen } = useAppStore();
+  const { setActivePage } = useAppStore();
+  const { setCardEditOpen } = useCardUIStore();
 
   // Handle card click
   const handleCardClick = useCallback(

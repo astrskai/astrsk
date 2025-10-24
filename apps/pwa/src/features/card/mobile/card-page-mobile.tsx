@@ -40,6 +40,7 @@ import { useMobileNavigation } from "@/app/contexts/mobile-navigation-context";
 import { SearchCardsSort } from "@/entities/card/repos";
 import { TopNavigation } from "@/widgets/top-navigation";
 import { SortDialogMobile } from "@/features/card/mobile/sort-dialog-mobile";
+import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 
 interface CardPageMobileProps {
   className?: string;
@@ -53,11 +54,9 @@ export default function CardPageMobile({ className }: CardPageMobileProps) {
     CardType.Character,
   );
   const [activeTab, setActiveTab] = useState<"character" | "plot">("character");
-  const {
-    cardEditOpen,
-    isCardImportDonNotShowAgain,
-    setIsCardImportDonNotShowAgain,
-  } = useAppStore();
+  const { isCardImportDonNotShowAgain, setIsCardImportDonNotShowAgain } =
+    useAppStore();
+  const { cardEditOpen } = useCardUIStore();
 
   // Import tip dialog state
   const [showImportTip, setShowImportTip] = useState(false);
