@@ -6,17 +6,17 @@ const SIDEBAR_WIDTH_EXPANDED = 320; // 20rem
 const SIDEBAR_WIDTH_ICON = 48; // 3rem
 const SIDEBAR_WIDTH_MOBILE = 0; // Hidden on mobile
 
-export interface LeftNavigationWidth {
+export interface CollapsibleSidebarWidth {
   width: number;
   isExpanded: boolean;
   isMobile: boolean;
 }
 
 /**
- * Hook to get the current left navigation width based on its state
+ * Hook to get the current collapsible sidebar width based on its state
  * This helps other components adjust their layout accordingly
  */
-export function useLeftNavigationWidth(): LeftNavigationWidth {
+export function useCollapsibleSidebarWidth(): CollapsibleSidebarWidth {
   const { isMobile } = useAppStore();
   const [isExpanded, setIsExpanded] = useState(true);
 

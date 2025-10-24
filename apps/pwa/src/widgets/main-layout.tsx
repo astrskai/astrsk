@@ -18,10 +18,13 @@ import {
 } from "@/shared/ui";
 import { ThemeProvider } from "@/app/providers/theme-provider";
 import { SidebarLeftProvider } from "@/widgets/both-sidebar";
-import { LeftNavigationMobile } from "@/widgets/left-navigation/left-navigation-mobile";
+import { LeftNavigationMobile } from "@/widgets/collapsible-sidebar/left-navigation-mobile";
 import { cn } from "@/shared/lib";
-import { LeftNavigation } from "@/widgets/left-navigation";
-import { LeftNavigationTrigger } from "@/widgets/left-navigation";
+import {
+  CollapsibleSidebar,
+  CollapsibleSidebarTrigger,
+} from "@/widgets/collapsible-sidebar";
+import { FixedNav } from "@/widgets/fixed-nav";
 import { SidebarInset } from "@/widgets/both-sidebar";
 import { MobileNavigationContext } from "@/shared/stores/mobile-navigation-context";
 import CreateSessionPage from "@/features/session/create-session-page";
@@ -187,12 +190,20 @@ export function MainLayout({
       >
         <LoadingOverlay />
         <TopBar />
-        <SidebarLeftProvider defaultOpen={!isMobile}>
-          <LeftNavigation />
-          <LeftNavigationTrigger />
-          <SidebarInset>{children}</SidebarInset>
-          <Toaster expand className="!z-[9999]" />
-        </SidebarLeftProvider>
+        <div className="flex flex-1 overflow-hidden">
+          {/* Fixed sidebar - always visible on desktop, independent of CollapsibleSidebar state */}
+          <FixedNav />
+
+          {/* Collapsible navigation area */}
+          <div className="flex flex-1 overflow-hidden">
+            <SidebarLeftProvider defaultOpen={!isMobile}>
+              <CollapsibleSidebar />
+              <CollapsibleSidebarTrigger />
+              <SidebarInset>{children}</SidebarInset>
+              <Toaster expand className="!z-[9999]" />
+            </SidebarLeftProvider>
+          </div>
+        </div>
         {activePage === Page.CreateSession &&
           createPortal(<CreateSessionPage />, document.body)}
       </div>

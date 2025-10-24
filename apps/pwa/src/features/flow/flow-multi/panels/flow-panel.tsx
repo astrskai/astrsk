@@ -63,7 +63,7 @@ import {
 import { ButtonPill, Card } from "@/shared/ui";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
-import { useLeftNavigationWidth } from "@/widgets/left-navigation/hooks/use-left-navigation-width";
+import { useCollapsibleSidebarWidth } from "@/widgets/collapsible-sidebar/hooks/use-collapsible-sidebar-width";
 import {
   Select,
   SelectContent,
@@ -158,7 +158,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // 3. Context hooks
   const { openPanel, closePanel, isPanelOpen } = useFlowPanelContext();
-  const { isExpanded, isMobile } = useLeftNavigationWidth();
+  const { isExpanded, isMobile } = useCollapsibleSidebarWidth();
   const queryClient = useQueryClient();
 
   // 4. React Query hooks - using global queryClient settings

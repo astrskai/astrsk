@@ -6,7 +6,7 @@ import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { generatedImageKeys } from "@/app/queries/generated-image/query-factory";
 import { TradingCard } from "@/features/card/components/trading-card";
 import { useCardPanelContext } from "@/features/card/panels/card-panel-provider";
-import { CardItem } from "@/widgets/left-navigation/card-list";
+import { CardItem } from "@/widgets/collapsible-sidebar/card-list";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { cn } from "@/shared/lib";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,7 +15,7 @@ import { cardQueries, useUpdateCardTitle } from "@/app/queries/card";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { BookOpen, Pencil, Check, X, Image } from "lucide-react";
 import { Avatar, Button, ButtonPill, SvgIcon } from "@/shared/ui";
-import { useLeftNavigationWidth } from "@/widgets/left-navigation/hooks/use-left-navigation-width";
+import { useCollapsibleSidebarWidth } from "@/widgets/collapsible-sidebar/hooks/use-collapsible-sidebar-width";
 import { useAppStore } from "@/shared/stores/app-store";
 
 interface CardPanelProps {
@@ -94,8 +94,8 @@ export function CardPanel({ cardId }: CardPanelProps) {
   const updateTitle = useUpdateCardTitle(cardId);
   const updateIconAsset = useUpdateCardIconAsset(cardId);
 
-  // Get left navigation state for conditional margins
-  const { isExpanded, isMobile } = useLeftNavigationWidth();
+  // Get collapsible sidebar state for conditional margins
+  const { isExpanded, isMobile } = useCollapsibleSidebarWidth();
 
   // Use React Query to get card data
   const { data: cardFromQuery } = useQuery(cardQueries.detail(cardId));

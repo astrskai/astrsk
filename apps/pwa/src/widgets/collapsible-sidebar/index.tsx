@@ -96,7 +96,7 @@ const SectionHeader = ({
   );
 };
 
-const LeftNavigation = () => {
+const CollapsibleSidebar = () => {
   const { setOpen, open } = useSidebarLeft();
   const setActivePage = useAppStore.use.setActivePage();
 
@@ -163,11 +163,11 @@ const LeftNavigation = () => {
   }
 
   return (
-    <div className="relative">
+    <div className="relative hidden md:block">
       <SidebarLeft className="border-r-text-contrast-text z-20">
         <div className="bg-background-surface-2 flex h-full max-h-full flex-col">
           {/* Header */}
-          <LeftNavigationHeader
+          <CollapsibleSidebarHeader
             setActivePage={setActivePage}
             setClickCount={setClickCount}
             setOpen={setOpen}
@@ -202,7 +202,7 @@ const LeftNavigation = () => {
           </ScrollArea>
 
           {/* Footer */}
-          <LeftNavigationFooter setActivePage={setActivePage} />
+          <CollapsibleSidebarFooter setActivePage={setActivePage} />
         </div>
       </SidebarLeft>
 
@@ -277,7 +277,7 @@ const LeftNavigation = () => {
   );
 };
 
-const LeftNavigationTrigger = () => {
+const CollapsibleSidebarTrigger = () => {
   const { open, setOpen } = useSidebarLeft();
 
   // Session onboarding - show tooltip for third step
@@ -290,12 +290,12 @@ const LeftNavigationTrigger = () => {
     !sessionOnboardingSteps.openResource;
 
   return (
-    <div className="group/trigger-parent">
+    <div className="group/trigger-parent hidden md:block">
       {/* Onboarding Tooltip */}
       {shouldShowSidebarTooltip && (
         <div
           className={cn(
-            "bg-background-surface-2 border-border-selected-primary absolute top-[calc(var(--topbar-height)+76px)] left-[16px] z-50 rounded-2xl border-1 px-4 py-3 whitespace-nowrap shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+            "bg-background-surface-2 border-border-selected-primary absolute top-[calc(var(--topbar-height)+76px)] left-[88px] z-50 rounded-2xl border-1 px-4 py-3 whitespace-nowrap shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
             "transition-all duration-300 ease-out",
             "group-hover/trigger-parent:opacity-0",
           )}
@@ -308,7 +308,7 @@ const LeftNavigationTrigger = () => {
 
       <button
         className={cn(
-          "absolute top-[calc(var(--topbar-height)+16px)] left-[16px] z-40 grid place-items-center",
+          "absolute top-[calc(var(--topbar-height)+16px)] left-[88px] z-40 grid place-items-center",
           "size-[40px] rounded-full border-1 border-[#757575] bg-[#313131]",
           open && "hidden",
           shouldShowSidebarTooltip &&
@@ -330,7 +330,7 @@ const LeftNavigationTrigger = () => {
 };
 
 // Memoized sub-components to prevent unnecessary re-renders
-const LeftNavigationHeader = memo(
+const CollapsibleSidebarHeader = memo(
   ({
     setClickCount,
     setOpen,
@@ -382,7 +382,7 @@ const LeftNavigationHeader = memo(
     );
   },
 );
-LeftNavigationHeader.displayName = "LeftNavigationHeader";
+CollapsibleSidebarHeader.displayName = "CollapsibleSidebarHeader";
 
 const DocumentationButton = memo(() => {
   const handleClick = useCallback(() => {
@@ -407,7 +407,7 @@ const DocumentationButton = memo(() => {
 });
 DocumentationButton.displayName = "DocumentationButton";
 
-const LeftNavigationFooter = memo(
+const CollapsibleSidebarFooter = memo(
   ({ setActivePage }: { setActivePage: (page: Page) => void }) => {
     const subscribed = useAppStore.use.subscribed();
     const location = useLocation();
@@ -516,6 +516,6 @@ const LeftNavigationFooter = memo(
     );
   },
 );
-LeftNavigationFooter.displayName = "LeftNavigationFooter";
+CollapsibleSidebarFooter.displayName = "CollapsibleSidebarFooter";
 
-export { LeftNavigation, LeftNavigationTrigger, SectionHeader };
+export { CollapsibleSidebar, CollapsibleSidebarTrigger, SectionHeader };

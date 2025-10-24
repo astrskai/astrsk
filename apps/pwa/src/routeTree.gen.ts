@@ -14,6 +14,7 @@ import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as SessionsCreateRouteImport } from './routes/sessions/create'
 import { Route as LayoutSsoCallbackRouteImport } from './routes/_layout/sso-callback'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutLoginRouteImport } from './routes/_layout/login'
 import { Route as LayoutSettingsIndexRouteImport } from './routes/_layout/settings/index'
 import { Route as LayoutSessionsIndexRouteImport } from './routes/_layout/sessions/index'
 import { Route as LayoutFlowsIndexRouteImport } from './routes/_layout/flows/index'
@@ -54,6 +55,11 @@ const LayoutSsoCallbackRoute = LayoutSsoCallbackRouteImport.update({
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutLoginRoute = LayoutLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsIndexRoute = LayoutSettingsIndexRouteImport.update({
@@ -151,6 +157,7 @@ const LayoutSettingsAccountCreditUsageRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/login': typeof LayoutLoginRoute
   '/settings': typeof LayoutSettingsRouteWithChildren
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/sessions/create': typeof SessionsCreateRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
 export interface FileRoutesByTo {
+  '/login': typeof LayoutLoginRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/sessions/create': typeof SessionsCreateRoute
   '/': typeof LayoutIndexRoute
@@ -198,6 +206,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/login': typeof LayoutLoginRoute
   '/_layout/settings': typeof LayoutSettingsRouteWithChildren
   '/_layout/sso-callback': typeof LayoutSsoCallbackRoute
   '/sessions/create': typeof SessionsCreateRoute
@@ -223,6 +232,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/login'
     | '/settings'
     | '/sso-callback'
     | '/sessions/create'
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/settings/legal'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/login'
     | '/sso-callback'
     | '/sessions/create'
     | '/'
@@ -269,6 +280,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_layout'
+    | '/_layout/login'
     | '/_layout/settings'
     | '/_layout/sso-callback'
     | '/sessions/create'
@@ -332,6 +344,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof LayoutSettingsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/login': {
+      id: '/_layout/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LayoutLoginRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings/': {
@@ -490,6 +509,7 @@ const LayoutSettingsRouteWithChildren = LayoutSettingsRoute._addFileChildren(
 )
 
 interface LayoutRouteChildren {
+  LayoutLoginRoute: typeof LayoutLoginRoute
   LayoutSettingsRoute: typeof LayoutSettingsRouteWithChildren
   LayoutSsoCallbackRoute: typeof LayoutSsoCallbackRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
@@ -502,6 +522,7 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutLoginRoute: LayoutLoginRoute,
   LayoutSettingsRoute: LayoutSettingsRouteWithChildren,
   LayoutSsoCallbackRoute: LayoutSsoCallbackRoute,
   LayoutIndexRoute: LayoutIndexRoute,
