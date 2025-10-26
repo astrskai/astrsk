@@ -10,7 +10,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { InstallPwa } from "@/shared/ui/install-pwa";
 import { TopBar } from "@/widgets/top-bar";
 import {
-  Loading,
+  InitialLoading,
   LoadingOverlay,
   Sheet,
   SheetContent,
@@ -119,7 +119,7 @@ export function MainLayout({
       <>
         <TopBar />
         <div className="bg-background-screen flex h-[calc(100dvh-var(--topbar-height))] items-center justify-center">
-          <Loading isTimer />
+          <InitialLoading isTimer />
         </div>
       </>
     );
@@ -131,7 +131,7 @@ export function MainLayout({
       <>
         <TopBar />
         <div className="bg-background-screen flex h-[calc(100dvh-var(--topbar-height))] items-center justify-center">
-          <Loading />
+          <InitialLoading />
         </div>
       </>
     );

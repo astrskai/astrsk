@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { MessageSquare, FolderOpen, Settings, LogIn } from "lucide-react";
+import { FolderOpen, Settings, LogIn } from "lucide-react";
+import { SessionsIcon } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 
 // Constants
@@ -9,7 +10,7 @@ const FIXED_NAV_WIDTH = 80; // px
 const TOP_NAV_ITEMS = [
   {
     id: "sessions",
-    icon: MessageSquare,
+    icon: SessionsIcon,
     label: "Sessions",
     path: "/sessions",
   },
@@ -79,7 +80,12 @@ export function FixedNav() {
         aria-label={label}
         title={label}
       >
-        <Icon size={24} strokeWidth={isActive ? 2 : 1.5} />
+        <Icon
+          className="h-6 w-6"
+          style={{
+            strokeWidth: isActive ? 2 : 1.5,
+          }}
+        />
         <span className="text-[10px] font-medium">{label}</span>
       </Link>
     );

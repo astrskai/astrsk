@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
-import { Route as SessionsCreateRouteImport } from './routes/sessions/create'
 import { Route as LayoutSsoCallbackRouteImport } from './routes/_layout/sso-callback'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutLoginRouteImport } from './routes/_layout/login'
@@ -26,6 +25,7 @@ import { Route as LayoutFlowsFlowIdRouteImport } from './routes/_layout/flows/$f
 import { Route as LayoutCardsCardIdRouteImport } from './routes/_layout/cards/$cardId'
 import { Route as LayoutSettingsLegalIndexRouteImport } from './routes/_layout/settings/legal/index'
 import { Route as LayoutSettingsAccountIndexRouteImport } from './routes/_layout/settings/account/index'
+import { Route as LayoutSessionsCreateIndexRouteImport } from './routes/_layout/sessions/create/index'
 import { Route as LayoutSettingsLegalTermsOfServiceRouteImport } from './routes/_layout/settings/legal/terms-of-service'
 import { Route as LayoutSettingsLegalRefundPolicyRouteImport } from './routes/_layout/settings/legal/refund-policy'
 import { Route as LayoutSettingsLegalPrivacyPolicyRouteImport } from './routes/_layout/settings/legal/privacy-policy'
@@ -41,11 +41,6 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => LayoutRoute,
-} as any)
-const SessionsCreateRoute = SessionsCreateRouteImport.update({
-  id: '/sessions/create',
-  path: '/sessions/create',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutSsoCallbackRoute = LayoutSsoCallbackRouteImport.update({
   id: '/sso-callback',
@@ -119,6 +114,12 @@ const LayoutSettingsAccountIndexRoute =
     path: '/account/',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
+const LayoutSessionsCreateIndexRoute =
+  LayoutSessionsCreateIndexRouteImport.update({
+    id: '/sessions/create/',
+    path: '/sessions/create/',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 const LayoutSettingsLegalTermsOfServiceRoute =
   LayoutSettingsLegalTermsOfServiceRouteImport.update({
     id: '/legal/terms-of-service',
@@ -160,7 +161,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof LayoutLoginRoute
   '/settings': typeof LayoutSettingsRouteWithChildren
   '/sso-callback': typeof LayoutSsoCallbackRoute
-  '/sessions/create': typeof SessionsCreateRoute
   '/': typeof LayoutIndexRoute
   '/cards/$cardId': typeof LayoutCardsCardIdRoute
   '/flows/$flowId': typeof LayoutFlowsFlowIdRoute
@@ -177,13 +177,13 @@ export interface FileRoutesByFullPath {
   '/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
   '/settings/legal/refund-policy': typeof LayoutSettingsLegalRefundPolicyRoute
   '/settings/legal/terms-of-service': typeof LayoutSettingsLegalTermsOfServiceRoute
+  '/sessions/create': typeof LayoutSessionsCreateIndexRoute
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LayoutLoginRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
-  '/sessions/create': typeof SessionsCreateRoute
   '/': typeof LayoutIndexRoute
   '/cards/$cardId': typeof LayoutCardsCardIdRoute
   '/flows/$flowId': typeof LayoutFlowsFlowIdRoute
@@ -200,6 +200,7 @@ export interface FileRoutesByTo {
   '/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
   '/settings/legal/refund-policy': typeof LayoutSettingsLegalRefundPolicyRoute
   '/settings/legal/terms-of-service': typeof LayoutSettingsLegalTermsOfServiceRoute
+  '/sessions/create': typeof LayoutSessionsCreateIndexRoute
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
@@ -209,7 +210,6 @@ export interface FileRoutesById {
   '/_layout/login': typeof LayoutLoginRoute
   '/_layout/settings': typeof LayoutSettingsRouteWithChildren
   '/_layout/sso-callback': typeof LayoutSsoCallbackRoute
-  '/sessions/create': typeof SessionsCreateRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/cards/$cardId': typeof LayoutCardsCardIdRoute
   '/_layout/flows/$flowId': typeof LayoutFlowsFlowIdRoute
@@ -226,6 +226,7 @@ export interface FileRoutesById {
   '/_layout/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
   '/_layout/settings/legal/refund-policy': typeof LayoutSettingsLegalRefundPolicyRoute
   '/_layout/settings/legal/terms-of-service': typeof LayoutSettingsLegalTermsOfServiceRoute
+  '/_layout/sessions/create/': typeof LayoutSessionsCreateIndexRoute
   '/_layout/settings/account/': typeof LayoutSettingsAccountIndexRoute
   '/_layout/settings/legal/': typeof LayoutSettingsLegalIndexRoute
 }
@@ -235,7 +236,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/settings'
     | '/sso-callback'
-    | '/sessions/create'
     | '/'
     | '/cards/$cardId'
     | '/flows/$flowId'
@@ -252,13 +252,13 @@ export interface FileRouteTypes {
     | '/settings/legal/privacy-policy'
     | '/settings/legal/refund-policy'
     | '/settings/legal/terms-of-service'
+    | '/sessions/create'
     | '/settings/account'
     | '/settings/legal'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/sso-callback'
-    | '/sessions/create'
     | '/'
     | '/cards/$cardId'
     | '/flows/$flowId'
@@ -275,6 +275,7 @@ export interface FileRouteTypes {
     | '/settings/legal/privacy-policy'
     | '/settings/legal/refund-policy'
     | '/settings/legal/terms-of-service'
+    | '/sessions/create'
     | '/settings/account'
     | '/settings/legal'
   id:
@@ -283,7 +284,6 @@ export interface FileRouteTypes {
     | '/_layout/login'
     | '/_layout/settings'
     | '/_layout/sso-callback'
-    | '/sessions/create'
     | '/_layout/'
     | '/_layout/cards/$cardId'
     | '/_layout/flows/$flowId'
@@ -300,13 +300,13 @@ export interface FileRouteTypes {
     | '/_layout/settings/legal/privacy-policy'
     | '/_layout/settings/legal/refund-policy'
     | '/_layout/settings/legal/terms-of-service'
+    | '/_layout/sessions/create/'
     | '/_layout/settings/account/'
     | '/_layout/settings/legal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
-  SessionsCreateRoute: typeof SessionsCreateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -324,13 +324,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
-    }
-    '/sessions/create': {
-      id: '/sessions/create'
-      path: '/sessions/create'
-      fullPath: '/sessions/create'
-      preLoaderRoute: typeof SessionsCreateRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_layout/sso-callback': {
       id: '/_layout/sso-callback'
@@ -430,6 +423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsAccountIndexRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
+    '/_layout/sessions/create/': {
+      id: '/_layout/sessions/create/'
+      path: '/sessions/create'
+      fullPath: '/sessions/create'
+      preLoaderRoute: typeof LayoutSessionsCreateIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/settings/legal/terms-of-service': {
       id: '/_layout/settings/legal/terms-of-service'
       path: '/legal/terms-of-service'
@@ -519,6 +519,7 @@ interface LayoutRouteChildren {
   LayoutCardsIndexRoute: typeof LayoutCardsIndexRoute
   LayoutFlowsIndexRoute: typeof LayoutFlowsIndexRoute
   LayoutSessionsIndexRoute: typeof LayoutSessionsIndexRoute
+  LayoutSessionsCreateIndexRoute: typeof LayoutSessionsCreateIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -532,6 +533,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutCardsIndexRoute: LayoutCardsIndexRoute,
   LayoutFlowsIndexRoute: LayoutFlowsIndexRoute,
   LayoutSessionsIndexRoute: LayoutSessionsIndexRoute,
+  LayoutSessionsCreateIndexRoute: LayoutSessionsCreateIndexRoute,
 }
 
 const LayoutRouteWithChildren =
@@ -539,7 +541,6 @@ const LayoutRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
-  SessionsCreateRoute: SessionsCreateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

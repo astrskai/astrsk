@@ -1,0 +1,89 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+import {
+  NewSessionCard,
+  SessionNameDialog,
+  SessionsPageHeader,
+  SessionsGrid,
+  EmptyState,
+} from "@/features/session/ui";
+import { SessionImportDialog } from "@/features/session/components/session-import-dialog";
+import { useSessionImport } from "@/features/session/hooks/use-session-import";
+
+import { sessionQueries } from "@/app/queries/session-queries";
+import { Loading } from "@/shared/ui";
+
+/**
+ * Sessions list page - displays all sessions in a card grid
+ */
+export function SessionsPage() {
+  const [keyword, setKeyword] = useState<string>("");
+  const [isOpenImportDialog, setIsOpenImportDialog] = useState<boolean>(false);
+  const [isOpenCreateDialog, setIsOpenCreateDialog] = useState<boolean>(false);
+
+  // Fetch sessions with search filter
+  const { data: sessions, isLoading } = useQuery(
+    sessionQueries.list({ keyword }),
+  );
+
+  // Import handlers
+  const { handleImport, handleFileSelect } = useSessionImport();
+
+  const handleCreateSession = () => {
+    setIsOpenCreateDialog(true);
+  };
+
+  const handleExport = () => {
+    // TODO: Implement export functionality
+    console.log("Export clicked");
+  };
+
+  const handleClearSearch = () => {
+    setKeyword("");
+  };
+
+  return (
+    <div className="bg-background-surface-2 flex h-full w-full flex-col">
+      {/* Header */}
+      <SessionsPageHeader
+        keyword={keyword}
+        onKeywordChange={setKeyword}
+        onImportClick={() => setIsOpenImportDialog(true)}
+        onExportClick={handleExport}
+      />
+
+      <SessionImportDialog
+        open={isOpenImportDialog}
+        onOpenChange={setIsOpenImportDialog}
+        onImport={handleImport}
+        onFileSelect={handleFileSelect}
+      />
+      <SessionNameDialog
+        open={isOpenCreateDialog}
+        onOpenChange={setIsOpenCreateDialog}
+      />
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-8 py-6">
+        {isLoading ? (
+          <Loading />
+        ) : sessions && sessions.length > 0 ? (
+          <SessionsGrid
+            sessions={sessions}
+            onCreateSession={handleCreateSession}
+            keyword={keyword}
+          />
+        ) : keyword ? (
+          // Search with no results - show empty state
+          <EmptyState keyword={keyword} onClearSearch={handleClearSearch} />
+        ) : (
+          // No sessions at all - show only New Session card
+          <div className="mx-auto grid [grid-template-columns:repeat(auto-fit,minmax(min(288px,100%),340px))] justify-center gap-4 p-4">
+            <NewSessionCard onClick={handleCreateSession} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

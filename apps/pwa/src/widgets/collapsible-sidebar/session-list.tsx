@@ -17,15 +17,8 @@ import {
   ImportButton,
 } from "./shared-list-components";
 import { StepName } from "@/features/session/create-session/step-name";
-import {
-  Button, Checkbox, DeleteConfirm, Label,
-  SvgIcon,
-} from "@/shared/ui";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shared/ui";
+import { Button, Checkbox, DeleteConfirm, Label, SvgIcon } from "@/shared/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui";
 import {
   SessionImportDialog,
   type AgentModel,
