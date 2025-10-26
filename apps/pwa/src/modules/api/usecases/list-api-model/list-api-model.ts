@@ -77,6 +77,10 @@ export class ListApiModel
       new ListOllamaModelStrategy(this.httpClient),
     );
     this.strategies.set(
+      ApiSource.LMStudio,
+      new ListOpenaiCompatibleModelStrategy(this.httpClient),
+    );
+    this.strategies.set(
       ApiSource.DeepSeek,
       new ListDeepseekModelStrategy(this.httpClient),
     );
@@ -102,6 +106,7 @@ export class ListApiModel
     if (
       apiConnection.source !== ApiSource.Wllama &&
       apiConnection.source !== ApiSource.OpenAICompatible &&
+      apiConnection.source !== ApiSource.LMStudio &&
       this.modelCache.has(apiConnection.id.toString())
     ) {
       return Result.ok<ApiModel[]>(

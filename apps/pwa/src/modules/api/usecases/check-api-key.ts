@@ -60,6 +60,10 @@ export class CheckApiKey implements UseCase<ApiConnection, Result<boolean>> {
       new ListOllamaModelStrategy(this.httpClient),
     );
     this.strategies.set(
+      ApiSource.LMStudio,
+      new ListOpenaiCompatibleModelStrategy(this.httpClient),
+    );
+    this.strategies.set(
       ApiSource.DeepSeek,
       new ListDeepseekModelStrategy(this.httpClient),
     );

@@ -13,6 +13,7 @@ export const ApiSource = {
   KoboldCPP: "koboldcpp",
   AIHorde: "aihorde",
   Ollama: "ollama",
+  LMStudio: "lmstudio",
   Dummy: "dummy",
   DeepSeek: "deepseek",
   xAI: "xai",
@@ -33,6 +34,7 @@ export const apiSourceLabel = new Map<ApiSource, string>([
   [ApiSource.KoboldCPP, "KoboldCPP"],
   [ApiSource.AIHorde, "AI Horde"],
   [ApiSource.Ollama, "Ollama"],
+  [ApiSource.LMStudio, "LM Studio"],
   [ApiSource.DeepSeek, "DeepSeek"],
   [ApiSource.xAI, "xAI"],
   [ApiSource.Mistral, "Mistral"],
@@ -145,10 +147,11 @@ export class ApiConnection extends AggregateRoot<ApiConnectionProps> {
       this.props.source !== ApiSource.OpenAICompatible &&
       this.props.source !== ApiSource.Ollama &&
       this.props.source !== ApiSource.KoboldCPP &&
+      this.props.source !== ApiSource.LMStudio &&
       this.props.source !== ApiSource.AstrskAi
     ) {
       return formatFail(
-        "only astrsk-ai source, openai-compatible source, ollama source, and koboldcpp source can set baseUrl",
+        "only astrsk-ai source, openai-compatible source, ollama source, lmstudio source, and koboldcpp source can set baseUrl",
       );
     }
 
