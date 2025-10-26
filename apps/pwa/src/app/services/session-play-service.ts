@@ -65,7 +65,7 @@ import {
   RenderContext,
 } from "@/shared/prompt/domain/renderable";
 import { parameterList } from "@/shared/task/domain/parameter";
-import { parseAiSdkErrorMessage, sanitizeFileName } from "@/shared/lib";
+import { parseAiSdkErrorMessage, parsePartialJson, sanitizeFileName } from "@/shared/lib";
 import { Datetime } from "@/shared/lib/datetime";
 import { logger } from "@/shared/lib/logger";
 import { TemplateRenderer } from "@/shared/lib/template-renderer";
@@ -467,6 +467,35 @@ const makeProviderOptions = ({
   return options;
 };
 
+const makeLMStudioRequestParams = ({
+  parameters,
+}: {
+  parameters: Map<string, any>;
+}): Record<string, any> => {
+  const requestParams: Record<string, any> = {};
+
+  for (const [paramId, paramValueRaw] of parameters) {
+    const parameter = parameterList.find((p) => p.id === paramId);
+    if (!parameter) {
+      continue;
+    }
+
+    const paramValue = parameter.parsingFunction
+      ? parameter.parsingFunction(paramValueRaw, ApiSource.LMStudio)
+      : paramValueRaw;
+
+    const lmStudioParamName = parameter.nameByApiSource.get(ApiSource.LMStudio);
+
+    if (lmStudioParamName) {
+      requestParams[lmStudioParamName] = paramValue;
+    } else if (parameter.nameByApiSource.size === 0) {
+      requestParams[paramId] = paramValue;
+    }
+  }
+
+  return requestParams;
+};
+
 const transformMessagesForModel = (
   messages: Message[],
   modelId?: string,
@@ -641,6 +670,18 @@ const makeProvider = ({
         baseURL: baseUrl,
       });
       break;
+
+    case ApiSource.LMStudio: {
+      let lmStudioBaseUrl = baseUrl ?? "http://localhost:1234";
+      if (!lmStudioBaseUrl.endsWith("/v1")) {
+        lmStudioBaseUrl += "/v1";
+      }
+      provider = createOpenAI({
+        apiKey: apiKey || "",  // LM Studio doesn't require API key
+        baseURL: lmStudioBaseUrl,
+      });
+      break;
+    }
 
     case ApiSource.DeepSeek:
       provider = createDeepSeek({
@@ -971,6 +1012,159 @@ const generateMessageAIHorde = async ({
   return { textStream };
 };
 
+async function* streamObjectLMStudio({
+  modelId,
+  messages,
+  parameters,
+  schema,
+  abortSignal,
+  apiConnection,
+  streaming,
+}: {
+  modelId: string;
+  messages: Message[];
+  parameters: Map<string, any>;
+  schema: { typeDef: JSONSchema7; name?: string; description?: string };
+  abortSignal?: AbortSignal;
+  apiConnection: ApiConnection;
+  streaming: boolean;
+}) {
+  const baseUrl = apiConnection.baseUrl || "http://localhost:1234";
+  const endpoint = baseUrl.endsWith("/v1")
+    ? `${baseUrl}/chat/completions`
+    : `${baseUrl}/v1/chat/completions`;
+
+  const requestParams = makeLMStudioRequestParams({ parameters });
+
+  const jsonSchemaFormat = {
+    type: "json_schema",
+    json_schema: {
+      name: schema.name || "response",
+      description: schema.description || "Response schema",
+      schema: schema.typeDef,
+      strict: false,
+    }
+  };
+
+  const requestBody = {
+    model: modelId,
+    messages: messages.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    })),
+    response_format: jsonSchemaFormat,
+    stream: streaming,
+    ...requestParams,
+  };
+
+  console.log("[LM Studio] Structured output request:", {
+    endpoint,
+    streaming,
+    schemaName: schema.name,
+    parameters: requestParams,
+  });
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(apiConnection.apiKey && { Authorization: `Bearer ${apiConnection.apiKey}` }),
+    },
+    body: JSON.stringify(requestBody),
+    signal: abortSignal,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("[LM Studio] API error:", errorText);
+    throw new Error(`LM Studio API error: ${response.status} ${errorText}`);
+  }
+
+  if (streaming) {
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("No response body reader");
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let accumulatedContent = "";
+    let lastYieldedContent = "";
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          console.log("[LM Studio] Stream complete");
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim() || line.trim() === "data: [DONE]") continue;
+
+          if (line.startsWith("data: ")) {
+            try {
+              const jsonStr = line.slice(6);
+              const chunk = JSON.parse(jsonStr);
+              const delta = chunk.choices?.[0]?.delta?.content;
+
+              if (delta) {
+                accumulatedContent += delta;
+
+                // Try to parse the partial JSON
+                const partialObject = parsePartialJson(accumulatedContent);
+
+                if (partialObject && accumulatedContent !== lastYieldedContent) {
+                  console.log("[LM Studio] Partial object:", partialObject);
+                  yield partialObject;
+                  lastYieldedContent = accumulatedContent;
+                }
+              }
+            } catch (parseError) {
+              console.warn("[LM Studio] Failed to parse SSE line:", line);
+            }
+          }
+        }
+      }
+
+      // Final object - make sure we yield the complete final object
+      if (accumulatedContent) {
+        try {
+          const finalObject = JSON.parse(accumulatedContent);
+          console.log("[LM Studio] Final object:", finalObject);
+
+          // Only yield if different from last yielded
+          if (accumulatedContent !== lastYieldedContent) {
+            yield finalObject;
+          }
+        } catch (error) {
+          console.error("[LM Studio] Invalid final JSON:", accumulatedContent);
+          throw new Error(`Invalid JSON from LM Studio: ${accumulatedContent}`);
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  } else {
+    const data = await response.json();
+    console.log("[LM Studio] Non-streaming response:", data);
+
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content in LM Studio response");
+    }
+
+    const object = JSON.parse(content);
+    console.log("[LM Studio] Parsed object:", object);
+    yield object;
+  }
+}
+
 const createMessage = async ({
   sessionId,
   characterCardId,
@@ -1213,6 +1407,7 @@ async function generateTextOutput({
     case ApiSource.OpenRouter:
     case ApiSource.GoogleGenerativeAI:
     case ApiSource.Ollama:
+    case ApiSource.LMStudio:
     case ApiSource.DeepSeek:
     case ApiSource.xAI:
     case ApiSource.Mistral:
@@ -1406,6 +1601,20 @@ async function generateStructuredOutput({
         isStructuredOutput: true,
       });
       break;
+
+    // LM Studio - Custom implementation for json_schema support
+    case ApiSource.LMStudio:
+      return {
+        partialObjectStream: streamObjectLMStudio({
+          modelId: parsedModelId,
+          messages: transformedMessages,
+          parameters,
+          schema,
+          abortSignal: combinedAbortSignal,
+          apiConnection,
+          streaming: streaming ?? false,
+        })
+      };
 
     // TODO: implement structured data for non-AI SDK
     // Request by non-AI SDK
