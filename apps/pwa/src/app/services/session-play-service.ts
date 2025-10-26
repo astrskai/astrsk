@@ -1057,13 +1057,6 @@ async function* streamObjectLMStudio({
     ...requestParams,
   };
 
-  console.log("[LM Studio] Structured output request:", {
-    endpoint,
-    streaming,
-    schemaName: schema.name,
-    parameters: requestParams,
-  });
-
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
@@ -1096,7 +1089,6 @@ async function* streamObjectLMStudio({
         const { done, value } = await reader.read();
 
         if (done) {
-          console.log("[LM Studio] Stream complete");
           break;
         }
 
@@ -1120,7 +1112,6 @@ async function* streamObjectLMStudio({
                 const partialObject = parsePartialJson(accumulatedContent);
 
                 if (partialObject && accumulatedContent !== lastYieldedContent) {
-                  console.log("[LM Studio] Partial object:", partialObject);
                   yield partialObject;
                   lastYieldedContent = accumulatedContent;
                 }
@@ -1136,7 +1127,6 @@ async function* streamObjectLMStudio({
       if (accumulatedContent) {
         try {
           const finalObject = JSON.parse(accumulatedContent);
-          console.log("[LM Studio] Final object:", finalObject);
 
           // Only yield if different from last yielded
           if (accumulatedContent !== lastYieldedContent) {
@@ -1152,7 +1142,6 @@ async function* streamObjectLMStudio({
     }
   } else {
     const data = await response.json();
-    console.log("[LM Studio] Non-streaming response:", data);
 
     const content = data.choices?.[0]?.message?.content;
     if (!content) {
@@ -1160,7 +1149,6 @@ async function* streamObjectLMStudio({
     }
 
     const object = JSON.parse(content);
-    console.log("[LM Studio] Parsed object:", object);
     yield object;
   }
 }
