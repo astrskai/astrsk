@@ -91,6 +91,12 @@ export class LorebookPlugin implements IExtension {
   private client: IExtensionClient | null = null;
 
   async onLoad(client: IExtensionClient): Promise<void> {
+    // Remove existing listeners first to prevent memory leaks on hot reload
+    if (this.client) {
+      this.client.off("message:afterGenerate", this.handleMessageAfterGenerate);
+      this.client.off("scenario:initialized", this.handleMessageAfterGenerate);
+    }
+
     this.client = client;
 
     // Register hook for message generation (runs async with NPC extraction)

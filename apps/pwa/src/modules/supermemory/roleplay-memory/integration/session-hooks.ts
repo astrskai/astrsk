@@ -367,9 +367,22 @@ ${formattedMemoriesRaw}
 
     // Add lorebook entries as a separate XML section
     if (lorebookEntries.length > 0) {
-      const lorebookContent = lorebookEntries.map((entry) => `- ${entry.content}`).join("\n");
+      // Escape XML special characters to prevent injection
+      const escapeXml = (unsafe: string): string => {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
+      };
+
+      const lorebookContent = lorebookEntries
+        .map((entry) => `- ${escapeXml(entry.content)}`)
+        .join("\n");
+
       const lorebookSection = `<LOREBOOK>
-These are permanent facts about ${characterName}. Use this knowledge to inform your responses and maintain character consistency. These are NOT dialogue - they are factual information for you to reference.
+These are permanent facts about ${escapeXml(characterName)}. Use this knowledge to inform your responses and maintain character consistency. These are NOT dialogue - they are factual information for you to reference.
 
 ${lorebookContent}
 </LOREBOOK>`;
