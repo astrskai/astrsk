@@ -66,6 +66,7 @@ const getApiConnectionByApiSource = ({
 
 const showBaseUrl = new Map<ApiSource, boolean>([
   [ApiSource.Ollama, true],
+  [ApiSource.LMStudio, true],
   [ApiSource.KoboldCPP, true],
   [ApiSource.OpenAICompatible, true],
 ]);
@@ -271,6 +272,7 @@ const providerOrder: ApiSource[] = [
   ApiSource.Cohere,
   ApiSource.OpenRouter,
   ApiSource.Ollama,
+  ApiSource.LMStudio,
   ApiSource.KoboldCPP,
   ApiSource.AIHorde,
   // ApiSource.Wllama,
@@ -343,6 +345,11 @@ export default function ModelPage({ className }: { className?: string }) {
         case ApiSource.Ollama:
           setApiKey(connection.apiKey ?? "");
           setBaseUrl(connection.baseUrl ?? "http://localhost:11434/api");
+          break;
+
+        case ApiSource.LMStudio:
+          setApiKey(connection.apiKey ?? "");
+          setBaseUrl(connection.baseUrl ?? "http://localhost:1234");
           break;
 
         case ApiSource.KoboldCPP:
@@ -423,6 +430,10 @@ export default function ModelPage({ className }: { className?: string }) {
       if (showApiKey.get(editingApiConnection.source)) {
         editingApiConnection.setApiKey(apiKey);
       }
+      // LM Studio doesn't require API key, set a placeholder
+      if (editingApiConnection.source === ApiSource.LMStudio) {
+        editingApiConnection.setApiKey("not-needed");
+      }
       if (
         editingApiConnection.source === ApiSource.OpenRouter &&
         openrouterProviderSort
@@ -430,14 +441,16 @@ export default function ModelPage({ className }: { className?: string }) {
         editingApiConnection.setOpenrouterProviderSort(openrouterProviderSort);
       }
 
-      // Check api key is valid
-      const checkApiKeyResult =
-        await ApiService.checkApiKey.execute(editingApiConnection);
-      if (checkApiKeyResult.isFailure) {
-        throw new Error(checkApiKeyResult.getError());
-      }
-      if (checkApiKeyResult.isSuccess && !checkApiKeyResult.getValue()) {
-        throw new Error("API key is invalid");
+      // Check api key is valid (skip for LM Studio)
+      if (editingApiConnection.source !== ApiSource.LMStudio) {
+        const checkApiKeyResult =
+          await ApiService.checkApiKey.execute(editingApiConnection);
+        if (checkApiKeyResult.isFailure) {
+          throw new Error(checkApiKeyResult.getError());
+        }
+        if (checkApiKeyResult.isSuccess && !checkApiKeyResult.getValue()) {
+          throw new Error("API key is invalid");
+        }
       }
 
       // Save api connection
