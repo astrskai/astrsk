@@ -18,7 +18,7 @@ const TOP_NAV_ITEMS = [
     id: "assets",
     icon: FolderOpen,
     label: "Assets",
-    path: "/cards", // TODO: Update path when Assets page is ready
+    path: "/assets",
   },
 ] as const;
 

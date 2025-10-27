@@ -18,6 +18,7 @@ import { Route as LayoutSettingsIndexRouteImport } from './routes/_layout/settin
 import { Route as LayoutSessionsIndexRouteImport } from './routes/_layout/sessions/index'
 import { Route as LayoutFlowsIndexRouteImport } from './routes/_layout/flows/index'
 import { Route as LayoutCardsIndexRouteImport } from './routes/_layout/cards/index'
+import { Route as LayoutAssetsIndexRouteImport } from './routes/_layout/assets/index'
 import { Route as LayoutSettingsProvidersRouteImport } from './routes/_layout/settings/providers'
 import { Route as LayoutSettingsAdvancedRouteImport } from './routes/_layout/settings/advanced'
 import { Route as LayoutSessionsSessionIdRouteImport } from './routes/_layout/sessions/$sessionId'
@@ -75,6 +76,11 @@ const LayoutFlowsIndexRoute = LayoutFlowsIndexRouteImport.update({
 const LayoutCardsIndexRoute = LayoutCardsIndexRouteImport.update({
   id: '/cards/',
   path: '/cards/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAssetsIndexRoute = LayoutAssetsIndexRouteImport.update({
+  id: '/assets/',
+  path: '/assets/',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsProvidersRoute = LayoutSettingsProvidersRouteImport.update({
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/settings/advanced': typeof LayoutSettingsAdvancedRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
+  '/assets': typeof LayoutAssetsIndexRoute
   '/cards': typeof LayoutCardsIndexRoute
   '/flows': typeof LayoutFlowsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/settings/advanced': typeof LayoutSettingsAdvancedRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
+  '/assets': typeof LayoutAssetsIndexRoute
   '/cards': typeof LayoutCardsIndexRoute
   '/flows': typeof LayoutFlowsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/_layout/settings/advanced': typeof LayoutSettingsAdvancedRoute
   '/_layout/settings/providers': typeof LayoutSettingsProvidersRoute
+  '/_layout/assets/': typeof LayoutAssetsIndexRoute
   '/_layout/cards/': typeof LayoutCardsIndexRoute
   '/_layout/flows/': typeof LayoutFlowsIndexRoute
   '/_layout/sessions/': typeof LayoutSessionsIndexRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/sessions/$sessionId'
     | '/settings/advanced'
     | '/settings/providers'
+    | '/assets'
     | '/cards'
     | '/flows'
     | '/sessions'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/sessions/$sessionId'
     | '/settings/advanced'
     | '/settings/providers'
+    | '/assets'
     | '/cards'
     | '/flows'
     | '/sessions'
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/_layout/sessions/$sessionId'
     | '/_layout/settings/advanced'
     | '/_layout/settings/providers'
+    | '/_layout/assets/'
     | '/_layout/cards/'
     | '/_layout/flows/'
     | '/_layout/sessions/'
@@ -372,6 +384,13 @@ declare module '@tanstack/react-router' {
       path: '/cards'
       fullPath: '/cards'
       preLoaderRoute: typeof LayoutCardsIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/assets/': {
+      id: '/_layout/assets/'
+      path: '/assets'
+      fullPath: '/assets'
+      preLoaderRoute: typeof LayoutAssetsIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings/providers': {
@@ -516,6 +535,7 @@ interface LayoutRouteChildren {
   LayoutCardsCardIdRoute: typeof LayoutCardsCardIdRoute
   LayoutFlowsFlowIdRoute: typeof LayoutFlowsFlowIdRoute
   LayoutSessionsSessionIdRoute: typeof LayoutSessionsSessionIdRoute
+  LayoutAssetsIndexRoute: typeof LayoutAssetsIndexRoute
   LayoutCardsIndexRoute: typeof LayoutCardsIndexRoute
   LayoutFlowsIndexRoute: typeof LayoutFlowsIndexRoute
   LayoutSessionsIndexRoute: typeof LayoutSessionsIndexRoute
@@ -530,6 +550,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutCardsCardIdRoute: LayoutCardsCardIdRoute,
   LayoutFlowsFlowIdRoute: LayoutFlowsFlowIdRoute,
   LayoutSessionsSessionIdRoute: LayoutSessionsSessionIdRoute,
+  LayoutAssetsIndexRoute: LayoutAssetsIndexRoute,
   LayoutCardsIndexRoute: LayoutCardsIndexRoute,
   LayoutFlowsIndexRoute: LayoutFlowsIndexRoute,
   LayoutSessionsIndexRoute: LayoutSessionsIndexRoute,

@@ -19,15 +19,15 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex h-full w-full items-center justify-center bg-background-surface-2 p-4">
-      <Card className="w-full max-w-md space-y-6 p-8">
+    <div className="bg-background-surface-2 flex h-full w-full items-center justify-center p-4">
+      <Card className="bg-background-surface-1 w-full max-w-md space-y-6 border-0 p-8">
         {/* Header */}
         <div className="space-y-2 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <LogIn className="h-6 w-6 text-primary" />
+          <div className="bg-primary/10 mx-auto flex h-12 w-12 items-center justify-center rounded-full">
+            <LogIn className="text-primary h-6 w-6" />
           </div>
           <h1 className="text-2xl font-semibold">Welcome back</h1>
-          <p className="text-sm text-text-secondary">
+          <p className="text-text-secondary text-sm">
             Sign in to your account to continue
           </p>
         </div>
@@ -68,7 +68,7 @@ export function LoginPage() {
         </form>
 
         {/* Footer */}
-        <div className="text-center text-sm text-text-secondary">
+        <div className="text-text-secondary text-center text-sm">
           Don't have an account?{" "}
           <a href="/settings/account" className="text-primary hover:underline">
             Sign up
