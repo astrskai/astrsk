@@ -52,6 +52,7 @@ export interface MemoryRecallEventData {
   retrievedCount: number;
   memories: string[]; // Retrieved memory strings
   worldContext?: string; // Character-specific world context appended
+  lorebookCount?: number; // Number of lorebook entries included
 }
 
 export interface WorldAgentPromptEventData {

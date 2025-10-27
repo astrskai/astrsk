@@ -156,6 +156,117 @@ export class ExtensionClient implements IExtensionClient {
     },
 
     /**
+     * Add a lorebook entry to a character card
+     * Handles all domain object creation internally
+     */
+    addLorebookEntryToCard: async (params: {
+      cardId: string;
+      name: string;
+      keys: string[];
+      content: string;
+      enabled?: boolean;
+      recallRange?: number;
+    }) => {
+      const { CardService } = await import("@/app/services/card-service");
+      const { Entry } = await import("@/modules/card/domain/entry");
+      const { Lorebook } = await import("@/modules/card/domain/lorebook");
+      const { UniqueEntityID } = await import("@/shared/domain");
+
+      // Get the character card
+      const cardResult = await CardService.getCard.execute(new UniqueEntityID(params.cardId));
+      if (cardResult.isFailure) {
+        return cardResult;
+      }
+
+      const card = cardResult.getValue();
+
+      // Create new Entry domain object
+      const newEntryResult = Entry.create({
+        id: new UniqueEntityID(),
+        name: params.name,
+        enabled: params.enabled ?? true,
+        keys: params.keys,
+        recallRange: params.recallRange ?? 2,
+        content: params.content,
+      });
+
+      if (newEntryResult.isFailure) {
+        return newEntryResult;
+      }
+
+      const newEntry = newEntryResult.getValue();
+
+      // Get existing lorebook or create new one
+      const existingLorebook = card.props.lorebook;
+      const existingEntries = existingLorebook?.entries || [];
+
+      // Add new entry to lorebook
+      const updatedLorebookResult = existingLorebook
+        ? existingLorebook.withEntries([...existingEntries, newEntry])
+        : Lorebook.create({ entries: [newEntry] });
+
+      if (updatedLorebookResult.isFailure) {
+        return updatedLorebookResult;
+      }
+
+      const updatedLorebook = updatedLorebookResult.getValue();
+
+      // Update card with new lorebook
+      const updateResult = card.update({ lorebook: updatedLorebook });
+      if (updateResult.isFailure) {
+        return updateResult;
+      }
+
+      // Save card
+      const saveResult = await CardService.saveCard.execute(card);
+
+      // Invalidate queries to trigger UI updates
+      if (saveResult.isSuccess) {
+        try {
+          const { queryClient } = await import("@/app/queries/query-client");
+          const { cardQueries } = await import("@/app/queries/card/query-factory");
+
+          await queryClient.invalidateQueries({
+            queryKey: cardQueries.detail(params.cardId).queryKey,
+          });
+
+          console.log("[Extension Client] Lorebook entry added and queries invalidated");
+        } catch (error) {
+          console.warn("[Extension Client] Failed to invalidate queries:", error);
+        }
+      }
+
+      // Return the entry ID in the success result
+      return saveResult.isSuccess
+        ? { ...saveResult, entryId: newEntry.id.toString() }
+        : saveResult;
+    },
+
+    /**
+     * UI API - allows extensions to show dialogs
+     */
+    ui: {
+      /**
+       * Show a dialog and wait for user response
+       * @returns Promise that resolves to the selected button's value
+       */
+      showDialog: async (config: {
+        title: string;
+        description?: string;
+        content: any; // React node or plain text
+        buttons: Array<{
+          label: string;
+          variant?: "default" | "outline" | "ghost" | "destructive";
+          value: string;
+        }>;
+        maxWidth?: string;
+      }): Promise<string> => {
+        const { showExtensionDialog } = await import("../ui/dialog-manager");
+        return await showExtensionDialog(config);
+      },
+    },
+
+    /**
      * Call AI model with automatic authentication
      * JWT is handled internally - extensions never see credentials
      */

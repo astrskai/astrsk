@@ -2979,6 +2979,8 @@ async function injectRoleplayMemories(
     // Check if message contains ONLY the tag (exact match after trimming)
     if (trimmedContent === "###ROLEPLAY_MEMORY###") {
       try {
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.log("🔄 [MEMORY INJECTION] Tag detected, retrieving memories...");
 
         // Extract gameTime and gameTimeInterval from dataStore (using snake_case field names)
         const gameTime = fullContext.game_time || fullContext.game_day || 0;
@@ -2992,6 +2994,10 @@ async function injectRoleplayMemories(
         }
         const sessionIdStr = sessionId?.toString() || "unknown";
 
+        console.log(`   Character: ${characterName}`);
+        console.log(`   Session ID: ${sessionIdStr}`);
+        console.log(`   Game Time: ${gameTime} (${gameTimeInterval})`);
+
         // Get recent messages for context (last 2 turns)
         const recentMessages =
           fullContext.history?.slice(-2).map((msg: any) => ({
@@ -2999,6 +3005,8 @@ async function injectRoleplayMemories(
             content: msg.content || "",
             game_time: Number(msg.game_time ?? gameTime) || gameTime,
           })) || [];
+
+        console.log(`   Recent messages for context: ${recentMessages.length}`);
 
         // Recall character memories with current world context
         const roleplayMemories = await recallCharacterMemories({
@@ -3014,6 +3022,10 @@ async function injectRoleplayMemories(
 
         // Inject formatted memories (already formatted by recallCharacterMemories)
         message.content = roleplayMemories;
+
+        console.log("✅ [MEMORY INJECTION] Complete");
+        console.log(`   Injected content length: ${roleplayMemories.length} characters`);
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
 
         // Only replace the first occurrence, then return true
@@ -3032,11 +3044,11 @@ async function injectRoleplayMemories(
 
 /**
  * Apply automatic data store updates from World Agent
- * Updates game_time, participants, and world_context fields in the data store array
+ * Updates game_time, participants, world_context, and supermemory_ids fields in the data store array
  */
 function applyRoleplayMemoryDataStoreUpdates(
   dataStore: DataStoreSavedField[],
-  suggestedUpdates: { gameTime?: number; participants?: string[]; worldContext?: string },
+  suggestedUpdates: { gameTime?: number; participants?: string[]; worldContext?: string; supermemoryIds?: string[] },
 ): void {
   // Update game_time field
   if (suggestedUpdates.gameTime !== undefined) {
@@ -3085,13 +3097,33 @@ function applyRoleplayMemoryDataStoreUpdates(
       });
     }
   }
+
+  // Update supermemory_ids field (store memory IDs for update/delete operations)
+  if (suggestedUpdates.supermemoryIds && suggestedUpdates.supermemoryIds.length > 0) {
+    const supermemoryIdsIndex = dataStore.findIndex(
+      (f) => f.name === "supermemory_ids",
+    );
+    if (supermemoryIdsIndex >= 0) {
+      // Update existing supermemory_ids field
+      dataStore[supermemoryIdsIndex].value = JSON.stringify(suggestedUpdates.supermemoryIds);
+    } else {
+      // Create supermemory_ids field if it doesn't exist
+      dataStore.push({
+        id: "supermemory_ids",
+        name: "supermemory_ids",
+        type: "string",
+        value: JSON.stringify(suggestedUpdates.supermemoryIds),
+      });
+    }
+    console.log(`✅ Stored ${suggestedUpdates.supermemoryIds.length} memory IDs in Turn dataStore`);
+  }
 }
 
 /**
  * Execute World Agent and distribute memories (END node)
  * Analyzes generated message to detect participants and distribute memories
  * Updates dataStore with accumulated worldContext
- * Returns suggested data store updates (gameTime, participants, worldContext)
+ * Returns suggested data store updates (gameTime, participants, worldContext, supermemoryIds)
  */
 async function executeWorldAgentAndDistributeMemories(
   result: any,
@@ -3099,7 +3131,7 @@ async function executeWorldAgentAndDistributeMemories(
   sessionId: UniqueEntityID | undefined,
   agent: any,
   dataStore: DataStoreSavedField[],
-): Promise<{ gameTime?: number; participants?: string[]; worldContext?: string } | null> {
+): Promise<{ gameTime?: number; participants?: string[]; worldContext?: string; supermemoryIds?: string[] } | null> {
   try {
     const responseContent =
       typeof result.output === "object" && "response" in result.output
@@ -3273,8 +3305,8 @@ async function executeWorldAgentAndDistributeMemories(
       );
     }
 
-    // Distribute memories to participants
-    await distributeMemories({
+    // Distribute memories to participants and capture memory IDs
+    const memoryIds = await distributeMemories({
       sessionId: sessionIdStr,
       speakerCharacterId: characterId,
       speakerName: characterName,
@@ -3286,6 +3318,16 @@ async function executeWorldAgentAndDistributeMemories(
       worldAgentOutput, // Pass the World Agent output we already got
     });
 
+    // Log captured memory IDs
+    if (memoryIds.length > 0) {
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("💾 SUPERMEMORY IDs CAPTURED");
+      console.log(`Session: ${sessionIdStr}`);
+      console.log(`Speaker: ${characterName}`);
+      console.log(`Memory IDs (${memoryIds.length}):`, memoryIds);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    }
+
     // Calculate new gameTime if delta_time > 0
     const newGameTime =
       worldAgentOutput.delta_time > 0
@@ -3296,11 +3338,12 @@ async function executeWorldAgentAndDistributeMemories(
     // worldAgentOutput.actualParticipants contains character NAMES (e.g., ["Yui", "Ren"])
     const participantNames = worldAgentOutput.actualParticipants;
 
-    // Return suggested updates
+    // Return suggested updates including memory IDs
     const updates = {
       ...(newGameTime !== undefined && { gameTime: newGameTime }),
       ...(participantNames.length > 0 && { participants: participantNames }),
       ...(updatedWorldContext && { worldContext: updatedWorldContext }),
+      ...(memoryIds.length > 0 && { supermemoryIds: memoryIds }),
     };
 
     return updates;

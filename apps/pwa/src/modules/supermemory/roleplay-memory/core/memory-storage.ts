@@ -12,6 +12,9 @@ import type {
   MemoryMetadata,
   EnrichedMessageSections,
   StorageResult,
+  UpdateStorageResult,
+  DeleteStorageResult,
+  GetMemoryResponse,
 } from "../../shared/types";
 import {
   validateCharacterContainer,
@@ -116,6 +119,9 @@ export async function storeWorldMessage(
       },
     });
 
+    console.log("🆔 [Memory Storage] World memory API response:", JSON.stringify(result, null, 2));
+    console.log("🆔 [Memory Storage] Extracted ID:", result.id);
+
     // Record debug event
     recordWorldMemoryAdd({
       containerTag,
@@ -209,6 +215,9 @@ export async function storeCharacterMessage(
         ...(metadata.lorebookKey && { lorebookKey: metadata.lorebookKey }),
       },
     });
+
+    console.log("🆔 [Memory Storage] Character memory API response:", JSON.stringify(result, null, 2));
+    console.log("🆔 [Memory Storage] Extracted ID:", result.id);
 
     // Record debug event
     // Extract character ID and name from containerTag (format: sessionId::characterId)
@@ -411,6 +420,321 @@ export async function storeWorldStateUpdate(
     logger.error("[Memory Storage] Failed to store world state update:", error);
     return {
       id: null,
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// Update Operations
+// ============================================================================
+
+/**
+ * Get memory by ID
+ *
+ * @param memoryId - Memory ID to retrieve
+ * @returns Memory data or null if not found
+ */
+export async function getMemoryById(
+  memoryId: string,
+): Promise<GetMemoryResponse | null> {
+  try {
+    const result = await memoryClient.memories.get(memoryId);
+    logger.info("[Memory Storage] Retrieved memory:", memoryId);
+    return result;
+  } catch (error) {
+    logger.error("[Memory Storage] Failed to get memory:", error);
+    return null;
+  }
+}
+
+/**
+ * Update memory by ID
+ * Generic update that works for any memory type
+ *
+ * @param memoryId - Memory ID to update
+ * @param content - New content (optional)
+ * @param metadata - New metadata (optional, merged with existing)
+ * @returns Update result with status
+ */
+export async function updateMemoryById(
+  memoryId: string,
+  content?: string,
+  metadata?: Partial<MemoryMetadata>,
+): Promise<UpdateStorageResult> {
+  try {
+    const result = await memoryClient.memories.update(memoryId, {
+      content,
+      metadata,
+    });
+
+    logger.info("[Memory Storage] Updated memory:", memoryId);
+    return {
+      id: result.id,
+      success: true,
+      status: result.status,
+    };
+  } catch (error) {
+    logger.error("[Memory Storage] Failed to update memory:", error);
+    return {
+      id: null,
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Update character message
+ * Updates enriched message in character's private container
+ *
+ * @param memoryId - Memory ID to update
+ * @param enrichedContent - New enriched content (optional)
+ * @param metadata - New metadata (optional)
+ * @returns Update result with status
+ */
+export async function updateCharacterMessage(
+  memoryId: string,
+  enrichedContent?: string,
+  metadata?: Partial<MemoryMetadata>,
+): Promise<UpdateStorageResult> {
+  try {
+    // Validate metadata if provided
+    if (metadata) {
+      // If isSpeaker is being updated, it must be defined
+      if (metadata.isSpeaker === undefined && metadata.type === "message") {
+        logger.warn(
+          "[Memory Storage] Character message updates should include isSpeaker",
+        );
+      }
+    }
+
+    const result = await memoryClient.memories.update(memoryId, {
+      content: enrichedContent,
+      metadata,
+    });
+
+    logger.info("[Memory Storage] Updated character message:", memoryId);
+    return {
+      id: result.id,
+      success: true,
+      status: result.status,
+    };
+  } catch (error) {
+    logger.error("[Memory Storage] Failed to update character message:", error);
+    return {
+      id: null,
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Update world message
+ * Updates raw message in world container
+ *
+ * @param memoryId - Memory ID to update
+ * @param content - New message content (optional)
+ * @param metadata - New metadata (optional)
+ * @returns Update result with status
+ */
+export async function updateWorldMessage(
+  memoryId: string,
+  content?: string,
+  metadata?: Partial<MemoryMetadata>,
+): Promise<UpdateStorageResult> {
+  try {
+    const result = await memoryClient.memories.update(memoryId, {
+      content,
+      metadata,
+    });
+
+    logger.info("[Memory Storage] Updated world message:", memoryId);
+    return {
+      id: result.id,
+      success: true,
+      status: result.status,
+    };
+  } catch (error) {
+    logger.error("[Memory Storage] Failed to update world message:", error);
+    return {
+      id: null,
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+// ============================================================================
+// Delete Operations
+// ============================================================================
+
+/**
+ * Delete memory by ID
+ * Permanently deletes a single memory (hard delete)
+ *
+ * @param memoryId - Memory ID to delete
+ * @returns Delete result with success status
+ */
+export async function deleteMemoryById(
+  memoryId: string,
+): Promise<DeleteStorageResult> {
+  try {
+    const result = await memoryClient.memories.delete(memoryId);
+    logger.info("[Memory Storage] Deleted memory:", memoryId);
+    return {
+      success: result.success,
+    };
+  } catch (error) {
+    logger.error("[Memory Storage] Failed to delete memory:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Delete character message
+ * Deletes a message from character's private container
+ *
+ * @param memoryId - Memory ID to delete
+ * @returns Delete result with success status
+ */
+export async function deleteCharacterMessage(
+  memoryId: string,
+): Promise<DeleteStorageResult> {
+  try {
+    const result = await memoryClient.memories.delete(memoryId);
+    logger.info("[Memory Storage] Deleted character message:", memoryId);
+    return {
+      success: result.success,
+    };
+  } catch (error) {
+    logger.error("[Memory Storage] Failed to delete character message:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Delete world message
+ * Deletes a message from world container
+ *
+ * @param memoryId - Memory ID to delete
+ * @returns Delete result with success status
+ */
+export async function deleteWorldMessage(
+  memoryId: string,
+): Promise<DeleteStorageResult> {
+  try {
+    const result = await memoryClient.memories.delete(memoryId);
+    logger.info("[Memory Storage] Deleted world message:", memoryId);
+    return {
+      success: result.success,
+    };
+  } catch (error) {
+    logger.error("[Memory Storage] Failed to delete world message:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Delete all memories in a container
+ * Uses bulk delete to remove all memories by container tag
+ *
+ * @param containerTag - Character or world container tag
+ * @returns Delete result with count of deleted memories
+ */
+export async function deleteByContainer(
+  containerTag: string,
+): Promise<DeleteStorageResult> {
+  try {
+    // Validate container tag
+    const isCharacterContainer = validateCharacterContainer(containerTag);
+    const isWorldContainer = validateWorldContainer(containerTag);
+
+    if (!isCharacterContainer && !isWorldContainer) {
+      logger.error(
+        "[Memory Storage] Invalid container tag:",
+        containerTag,
+      );
+      return {
+        success: false,
+        error: "Invalid container tag format",
+      };
+    }
+
+    const result = await memoryClient.memories.bulkDelete({
+      containerTags: [containerTag],
+    });
+
+    logger.info(
+      `[Memory Storage] Deleted ${result.deletedCount} memories from container:`,
+      containerTag,
+    );
+    return {
+      success: result.success,
+      deletedCount: result.deletedCount,
+    };
+  } catch (error) {
+    logger.error("[Memory Storage] Failed to delete by container:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Bulk delete memories by IDs
+ * Deletes multiple memories at once (max 100 per request)
+ *
+ * @param memoryIds - Array of memory IDs to delete
+ * @returns Delete result with count and any errors
+ */
+export async function bulkDeleteByIds(
+  memoryIds: string[],
+): Promise<DeleteStorageResult> {
+  try {
+    if (memoryIds.length === 0) {
+      return {
+        success: true,
+        deletedCount: 0,
+      };
+    }
+
+    if (memoryIds.length > 100) {
+      logger.warn(
+        "[Memory Storage] Bulk delete limited to 100 IDs, truncating",
+      );
+      memoryIds = memoryIds.slice(0, 100);
+    }
+
+    const result = await memoryClient.memories.bulkDelete({
+      ids: memoryIds,
+    });
+
+    logger.info(
+      `[Memory Storage] Bulk deleted ${result.deletedCount} memories`,
+    );
+    return {
+      success: result.success,
+      deletedCount: result.deletedCount,
+      error: result.errors?.length
+        ? `${result.errors.length} memories failed to delete`
+        : undefined,
+    };
+  } catch (error) {
+    logger.error("[Memory Storage] Failed bulk delete:", error);
+    return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
     };

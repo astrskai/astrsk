@@ -1,6 +1,6 @@
 /**
- * Vercel serverless function to proxy Supermemory documents requests
- * Handles all routes: /api/documents, /api/documents/{id}, /api/documents/bulk
+ * Vercel serverless function to proxy Supermemory v3 document search requests
+ * Route: /api/search/documents → https://api.supermemory.ai/v3/search
  */
 module.exports = async function handler(req, res) {
   const allowedOrigins = [
@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-supermemory-user-id');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
@@ -31,29 +31,12 @@ module.exports = async function handler(req, res) {
   try {
     const apiKey = process.env.VITE_SUPERMEMORY_API_KEY;
     if (!apiKey) {
-      console.error('[Supermemory Documents] API key not configured');
+      console.error('[Supermemory v3 Search] API key not configured');
       return res.status(500).json({ error: 'Supermemory API key not configured' });
     }
 
-    // Build target URL based on query parameters
-    // GET /api/documents?id=mem_123 -> GET /v3/documents/mem_123
-    // PATCH /api/documents?id=mem_456 -> PATCH /v3/documents/mem_456
-    // DELETE /api/documents?id=mem_789 -> DELETE /v3/documents/mem_789
-    // DELETE /api/documents?bulk=true -> DELETE /v3/documents/bulk
-    // POST /api/documents -> POST /v3/documents
-
-    let targetPath = '/v3/documents';
-
-    if (req.query.id) {
-      // Single document operation (GET, PATCH, DELETE by ID)
-      targetPath = `/v3/documents/${req.query.id}`;
-    } else if (req.query.bulk === 'true' || req.query.bulk === true) {
-      // Bulk delete operation
-      targetPath = '/v3/documents/bulk';
-    }
-
-    const targetUrl = `https://api.supermemory.ai${targetPath}`;
-    console.log('[Supermemory Documents] Request:', req.method, targetUrl);
+    const targetUrl = 'https://api.supermemory.ai/v3/search';
+    console.log('[Supermemory v3 Search] Request:', req.method, targetUrl);
 
     const headers = {
       'Content-Type': 'application/json',
@@ -69,19 +52,14 @@ module.exports = async function handler(req, res) {
       headers: headers,
     };
 
-    if (['POST', 'PATCH', 'DELETE'].includes(req.method) && req.body) {
+    if (req.method === 'POST' && req.body) {
       fetchOptions.body = typeof req.body === 'object'
         ? JSON.stringify(req.body)
         : req.body;
     }
 
     const response = await fetch(targetUrl, fetchOptions);
-    console.log('[Supermemory Documents] Response status:', response.status);
-
-    // Handle 204 No Content (successful DELETE)
-    if (response.status === 204) {
-      return res.status(204).end();
-    }
+    console.log('[Supermemory v3 Search] Response status:', response.status);
 
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
@@ -92,9 +70,9 @@ module.exports = async function handler(req, res) {
       res.status(response.status).send(data);
     }
   } catch (error) {
-    console.error('[Supermemory Documents] Error:', error);
+    console.error('[Supermemory v3 Search] Error:', error);
     res.status(500).json({
-      error: 'Failed to proxy documents request',
+      error: 'Failed to proxy v3 search request',
       details: error.message || String(error),
     });
   }

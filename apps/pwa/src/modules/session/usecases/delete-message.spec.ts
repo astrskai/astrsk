@@ -19,7 +19,7 @@ describe("DeleteMessage", () => {
     turnRepo = new DrizzleTurnRepo();
     sessionRepo = new DrizzleSessionRepo();
 
-    target = new DeleteMessage(turnRepo, sessionRepo, sessionRepo);
+    target = new DeleteMessage(turnRepo, sessionRepo, sessionRepo, turnRepo);
   });
 
   const createMessage = ({
