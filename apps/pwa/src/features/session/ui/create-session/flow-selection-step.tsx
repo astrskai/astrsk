@@ -69,7 +69,7 @@ export function FlowSelectionStep({
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          1. Select Flow
+          1. Select Flow<span className="text-status-required">*</span>
         </h2>
         <p className="text-text-secondary text-sm">
           Choose a flow (a bundle of prompt preset and AI model) to use for your
@@ -82,7 +82,7 @@ export function FlowSelectionStep({
         onClick={handleAddFlowClick}
         className={cn(
           "group relative cursor-pointer overflow-hidden rounded-2xl transition-all",
-          "bg-background-surface-1 border-2 p-6",
+          "bg-background-surface-4 border-2 p-6",
           "hover:border-primary/50 hover:shadow-lg",
           selectedFlow ? "border-primary shadow-lg" : "border-border",
         )}
@@ -114,23 +114,25 @@ export function FlowSelectionStep({
 
               {/* DataStore Fields */}
               {selectedFlow.props.dataStoreSchema?.fields &&
-               selectedFlow.props.dataStoreSchema.fields.length > 0 && (
-                <div className="mt-3 flex flex-col gap-2">
-                  <span className="text-text-secondary text-sm font-medium">
-                    Session stats
-                  </span>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedFlow.props.dataStoreSchema.fields.map((field, index) => (
-                      <span
-                        key={index}
-                        className="bg-background-surface-3 text-text-secondary rounded-md px-2 py-0.5 text-xs"
-                      >
-                        {field.name}
-                      </span>
-                    ))}
+                selectedFlow.props.dataStoreSchema.fields.length > 0 && (
+                  <div className="mt-3 flex flex-col gap-2">
+                    <span className="text-text-secondary text-sm font-medium">
+                      Session stats
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedFlow.props.dataStoreSchema.fields.map(
+                        (field, index) => (
+                          <span
+                            key={index}
+                            className="bg-background-surface-3 text-text-secondary rounded-md px-2 py-0.5 text-xs"
+                          >
+                            {field.name}
+                          </span>
+                        ),
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </>
         ) : (

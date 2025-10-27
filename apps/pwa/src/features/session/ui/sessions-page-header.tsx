@@ -1,4 +1,4 @@
-import { Upload, Download, Menu, Ellipsis } from "lucide-react";
+import { Upload, Download, Menu, Ellipsis, CircleHelp } from "lucide-react";
 import { SearchInput, Button } from "@/shared/ui/forms";
 
 interface SessionsPageHeaderProps {
@@ -6,6 +6,7 @@ interface SessionsPageHeaderProps {
   onKeywordChange: (keyword: string) => void;
   onImportClick: () => void;
   onExportClick: () => void;
+  onHelpClick?: () => void;
 }
 
 /**
@@ -17,6 +18,7 @@ export function SessionsPageHeader({
   onKeywordChange,
   onImportClick,
   onExportClick,
+  onHelpClick,
 }: SessionsPageHeaderProps) {
   return (
     <div className="border-border flex flex-col border-b">
@@ -47,6 +49,13 @@ export function SessionsPageHeader({
           >
             Export
           </Button>
+          {onHelpClick && (
+            <Button
+              variant="secondary"
+              icon={<CircleHelp size={20} />}
+              onClick={onHelpClick}
+            />
+          )}
         </div>
       </div>
 
@@ -61,9 +70,7 @@ export function SessionsPageHeader({
             aria-label="Menu"
             className="bg-transparent"
           />
-          <h1 className="text-text-primary text-lg font-semibold">
-            Sessions
-          </h1>
+          <h1 className="text-text-primary text-lg font-semibold">Sessions</h1>
           <Button
             variant="secondary"
             icon={<Ellipsis size={20} />}

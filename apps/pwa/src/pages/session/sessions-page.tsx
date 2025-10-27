@@ -12,7 +12,7 @@ import { SessionImportDialog } from "@/features/session/components/session-impor
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
 
 import { sessionQueries } from "@/app/queries/session-queries";
-import { Loading } from "@/shared/ui";
+import { HelpVideoDialog, Loading } from "@/shared/ui";
 
 /**
  * Sessions list page - displays all sessions in a card grid
@@ -21,6 +21,7 @@ export function SessionsPage() {
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenImportDialog, setIsOpenImportDialog] = useState<boolean>(false);
   const [isOpenCreateDialog, setIsOpenCreateDialog] = useState<boolean>(false);
+  const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
 
   // Fetch sessions with search filter
   const { data: sessions, isLoading } = useQuery(
@@ -43,6 +44,10 @@ export function SessionsPage() {
     setKeyword("");
   };
 
+  const handleHelpClick = () => {
+    setIsOpenHelpDialog(true);
+  };
+
   return (
     <div className="bg-background-surface-2 flex h-full w-full flex-col">
       {/* Header */}
@@ -51,6 +56,7 @@ export function SessionsPage() {
         onKeywordChange={setKeyword}
         onImportClick={() => setIsOpenImportDialog(true)}
         onExportClick={handleExport}
+        onHelpClick={handleHelpClick}
       />
 
       <SessionImportDialog
@@ -62,6 +68,11 @@ export function SessionsPage() {
       <NameInputDialog
         open={isOpenCreateDialog}
         onOpenChange={setIsOpenCreateDialog}
+      />
+      <HelpVideoDialog
+        open={isOpenHelpDialog}
+        onOpenChange={setIsOpenHelpDialog}
+        type="sessions"
       />
 
       {/* Content */}

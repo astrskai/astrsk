@@ -102,7 +102,7 @@ export function AiCharacterSelectionStep({
         onClick={handleAddCharacterClick}
         className={cn(
           "group relative cursor-pointer overflow-hidden rounded-2xl transition-all",
-          "bg-background-surface-1 border-2 p-6",
+          "bg-background-surface-4 border-2 p-6",
           "hover:border-primary/50 hover:shadow-lg",
           selectedCharacters.length > 0
             ? "border-primary shadow-lg"
