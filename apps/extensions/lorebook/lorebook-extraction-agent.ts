@@ -19,10 +19,15 @@ const lorebookExtractionSchema = z.object({
   entries: z
     .array(
       z.object({
-        name: z
+        characterName: z
           .string()
           .describe(
-            "Character name from the entry content (e.g., 'Ren', 'Victor')"
+            "The character this lorebook entry is about. Must be one of the character names from the CHARACTERS WITH THEIR LOREBOOKS section above."
+          ),
+        entryTitle: z
+          .string()
+          .describe(
+            "Short descriptive title for this lorebook entry (e.g., 'Transfer Student Background', 'Telekinetic Abilities', 'Class Representative Role')"
           ),
         content: z
           .string()
@@ -148,6 +153,7 @@ INSTRUCTIONS:
 1. Analyze the message for lorebook-worthy information about each character
 2. For each piece of information:
    - Extract the character name (e.g., "Ren", "Victor")
+   - Create a SHORT, DESCRIPTIVE TITLE for the entry (e.g., "Magic Abilities", "Tragic Backstory", "Protective Nature")
    - Write content as a FACTUAL SENTENCE (e.g., "Ren learned to cast fireball magic from his mentor")
    - DO NOT use "character:" prefix format - write as complete factual sentences
 3. Check against EXISTING lorebook entries:
@@ -161,14 +167,15 @@ INSTRUCTIONS:
 
 OUTPUT FORMAT:
 {
-  "name": "Character Name",
+  "characterName": "Character Name",
+  "entryTitle": "Short Descriptive Title",
   "content": "Factual sentence about the character"
 }
 
 EXAMPLES:
-- { "name": "Ren", "content": "Ren learned to cast fireball magic from his mentor at the academy" }
-- { "name": "Victor", "content": "Victor grew up in an orphanage after his parents died in the war" }
-- { "name": "Yui", "content": "Yui is fiercely protective of her childhood friends" }
+- { "characterName": "Ren", "entryTitle": "Magic Training", "content": "Ren learned to cast fireball magic from his mentor at the academy" }
+- { "characterName": "Victor", "entryTitle": "Orphan Background", "content": "Victor grew up in an orphanage after his parents died in the war" }
+- { "characterName": "Yui", "entryTitle": "Protective Trait", "content": "Yui is fiercely protective of her childhood friends" }
 
 IMPORTANT: Write lorebook entries as factual statements, NOT in conversation format. This helps distinguish them from dialogue.
 

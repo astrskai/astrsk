@@ -18,35 +18,6 @@ import { executeLorebookExtractionAgent } from "./lorebook-extraction-agent";
 import { useLorebookStore, LorebookEntryData } from "./lorebook-store";
 
 /**
- * Helper: Generate entry name from content
- * Extracts a descriptive name from the lorebook content
- */
-function generateEntryName(content: string, characterName: string): string {
-  // Remove the "character_name:" prefix
-  const withoutPrefix = content.replace(/^[^:]+:\s*/, "");
-
-  // Take first 50 characters and capitalize first letter
-  let name = withoutPrefix.substring(0, 50).trim();
-  if (name.length === 50) {
-    // Find last complete word
-    const lastSpace = name.lastIndexOf(" ");
-    if (lastSpace > 0) {
-      name = name.substring(0, lastSpace);
-    }
-  }
-
-  // Capitalize first letter
-  name = name.charAt(0).toUpperCase() + name.slice(1);
-
-  // Add character name prefix if not already there
-  if (!name.toLowerCase().includes(characterName.toLowerCase())) {
-    name = `${characterName} - ${name}`;
-  }
-
-  return name;
-}
-
-/**
  * Helper: Generate keyword triggers from content
  * Extracts important words that should trigger this lorebook entry
  */
@@ -207,13 +178,14 @@ export class LorebookPlugin implements IExtension {
 
       console.log(
         `✨ [Lorebook Plugin] Found ${extractionResult.entries.length} potential lorebook entries:`,
-        extractionResult.entries.map((e) => `${e.content.substring(0, 50)}... (${e.name})`).join(", ")
+        extractionResult.entries.map((e) => `${e.characterName}: ${e.content.substring(0, 50)}...`).join(", ")
       );
       logger.info("[Lorebook Plugin] Extraction completed", {
         sessionId,
         extractedEntriesCount: extractionResult.entries.length,
         entries: extractionResult.entries.map((e) => ({
-          name: e.name,
+          characterName: e.characterName,
+          entryTitle: e.entryTitle,
           content: e.content.substring(0, 100),
         })),
       });
@@ -221,25 +193,31 @@ export class LorebookPlugin implements IExtension {
       // Process extracted lorebook entries
       for (const entry of extractionResult.entries) {
         try {
-          // Find the character this entry is for by matching name
+          // Find the character this entry is for by loose name matching
           const characterData = charactersWithLorebooks.find(
-            (c) => c.characterName.toLowerCase() === entry.name.toLowerCase() ||
-                   c.characterName.toLowerCase().includes(entry.name.toLowerCase()) ||
-                   entry.name.toLowerCase().includes(c.characterName.toLowerCase())
+            (c) => {
+              const charNameLower = c.characterName.toLowerCase().trim();
+              const entryNameLower = entry.characterName.toLowerCase().trim();
+
+              // Loose matching: exact match or substring match
+              return charNameLower === entryNameLower ||
+                     charNameLower.includes(entryNameLower) ||
+                     entryNameLower.includes(charNameLower);
+            }
           );
 
           if (!characterData) {
-            console.warn(`⚠️ [Lorebook Plugin] Character not found for entry: ${entry.name}`);
+            console.warn(`⚠️ [Lorebook Plugin] Character not found for entry: ${entry.characterName}`);
             continue;
           }
 
-          // Auto-generate entry name from content
-          const entryName = generateEntryName(entry.content, characterData.characterName);
+          // Use LLM-generated entry title
+          const entryName = entry.entryTitle;
 
           // Auto-generate keys from content
           const keys = generateKeysFromContent(entry.content);
 
-          console.log(`📚 [Lorebook Plugin] Generated entry name: "${entryName}", keys:`, keys);
+          console.log(`📚 [Lorebook Plugin] Using LLM-generated title: "${entryName}", keys:`, keys);
 
           // Check if very similar entry already exists
           const isDuplicate = characterData.existingEntries.some(
@@ -364,7 +342,8 @@ export class LorebookPlugin implements IExtension {
           }
         } catch (error) {
           logger.error("[Lorebook Plugin] Failed to process extracted entry", {
-            entryName: entry.name,
+            characterName: entry.characterName,
+            entryTitle: entry.entryTitle,
             content: entry.content.substring(0, 100),
             error,
           });

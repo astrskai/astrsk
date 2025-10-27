@@ -9,6 +9,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 /**
+ * Configuration constants
+ */
+const MAX_ENTRIES_PER_CHARACTER = 50;
+const MAX_REJECTED_ENTRIES_TOTAL = 100;
+
+/**
  * Lorebook entry data structure
  * Tracks what entries exist for each character
  */
@@ -115,9 +121,33 @@ export const useLorebookStore = create<LorebookStoreState>()(
       // === Existing Entries ===
 
       addEntry: (entry: LorebookEntryData) => {
-        set((state) => ({
-          entries: [...state.entries, entry],
-        }));
+        set((state) => {
+          const characterEntries = state.entries.filter(
+            (e) => e.characterId === entry.characterId && e.sessionId === entry.sessionId
+          );
+
+          // Enforce MAX_ENTRIES_PER_CHARACTER limit
+          if (characterEntries.length >= MAX_ENTRIES_PER_CHARACTER) {
+            console.warn(
+              `[Lorebook Store] Character ${entry.characterName} has reached max entries (${MAX_ENTRIES_PER_CHARACTER}). Removing oldest entry.`
+            );
+
+            // Sort by createdAt and remove the oldest entry
+            const sortedEntries = [...characterEntries].sort((a, b) => a.createdAt - b.createdAt);
+            const oldestEntry = sortedEntries[0];
+
+            return {
+              entries: [
+                ...state.entries.filter((e) => e.id !== oldestEntry.id),
+                entry,
+              ],
+            };
+          }
+
+          return {
+            entries: [...state.entries, entry],
+          };
+        });
       },
 
       getEntriesByCharacter: (characterId: string, sessionId: string) => {
@@ -149,9 +179,31 @@ export const useLorebookStore = create<LorebookStoreState>()(
       // === Rejected Entries ===
 
       addRejectedEntry: (entry: RejectedLorebookEntry) => {
-        set((state) => ({
-          rejectedEntries: [...state.rejectedEntries, entry],
-        }));
+        set((state) => {
+          // Enforce MAX_REJECTED_ENTRIES_TOTAL limit
+          if (state.rejectedEntries.length >= MAX_REJECTED_ENTRIES_TOTAL) {
+            console.warn(
+              `[Lorebook Store] Reached max rejected entries (${MAX_REJECTED_ENTRIES_TOTAL}). Removing oldest rejection.`
+            );
+
+            // Sort by rejectedAt and remove the oldest rejection
+            const sortedRejected = [...state.rejectedEntries].sort(
+              (a, b) => a.rejectedAt - b.rejectedAt
+            );
+            const oldestRejection = sortedRejected[0];
+
+            return {
+              rejectedEntries: [
+                ...state.rejectedEntries.filter((e) => e.id !== oldestRejection.id),
+                entry,
+              ],
+            };
+          }
+
+          return {
+            rejectedEntries: [...state.rejectedEntries, entry],
+          };
+        });
       },
 
       getRejectedEntriesByCharacter: (characterId: string, sessionId: string) => {
