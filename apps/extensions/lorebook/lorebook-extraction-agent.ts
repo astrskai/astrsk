@@ -88,7 +88,7 @@ export async function executeLorebookExtractionAgent(
           const rejectedText =
             char.rejectedEntries.length > 0
               ? char.rejectedEntries
-                  .map((e) => `  * ${e.name}: ${e.content} [keys: ${e.keys.join(", ")}] (rejected: ${e.reason || "user declined"})`)
+                  .map((e) => `  * ${e.name}: ${e.content} (rejected: ${e.reason || "user declined"})`)
                   .join("\n")
               : "  (no rejected entries)";
 

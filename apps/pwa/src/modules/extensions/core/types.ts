@@ -168,6 +168,39 @@ export interface IExtensionClient {
       sessionId?: string;
       feature?: string;
     }): Promise<any>;
+
+    /**
+     * Add a lorebook entry to a character card
+     * Handles all domain object creation internally
+     */
+    addLorebookEntryToCard(params: {
+      cardId: string;
+      name: string;
+      keys: string[];
+      content: string;
+      enabled?: boolean;
+      recallRange?: number;
+    }): Promise<{ success: boolean; entryId?: string; error?: string }>;
+
+    /**
+     * UI APIs for extensions
+     */
+    ui: {
+      /**
+       * Show a dialog to the user and wait for response
+       */
+      showDialog(config: {
+        title: string;
+        description?: string;
+        content: any;
+        buttons: Array<{
+          label: string;
+          variant?: "default" | "outline" | "ghost" | "destructive";
+          value: string;
+        }>;
+        maxWidth?: string;
+      }): Promise<string>;
+    };
   };
 }
 
