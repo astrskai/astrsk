@@ -89,11 +89,11 @@ export function AiCharacterSelectionStep({
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Select AI Characters
+          2. Select AI Characters&nbsp;
+          <span className="text-status-required">(Minimum 1)*</span>
         </h2>
         <p className="text-text-secondary text-sm">
-          Choose one or more AI character cards for this session&nbsp;
-          <span className="text-status-required">(Minimum 1)*</span>
+          Choose one or more AI characters to add to your session.
         </p>
       </div>
 

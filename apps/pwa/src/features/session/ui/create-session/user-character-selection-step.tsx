@@ -85,10 +85,10 @@ export function UserCharacterSelectionStep({
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Select User Character
+          3. Select User Character&nbsp;(optional)
         </h2>
         <p className="text-text-secondary text-sm">
-          Choose a user character card (optional)
+          Choose your character role for session.
         </p>
       </div>
 

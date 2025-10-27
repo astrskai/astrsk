@@ -18,12 +18,16 @@ export function FlowCard({ flow, isSelected, onClick }: FlowCardProps) {
     (node) => node.type === "agent",
   ).length;
 
+  // Get dataStore field names
+  const dataStoreFields = flow.props.dataStoreSchema?.fields || [];
+  const hasDataStoreFields = dataStoreFields.length > 0;
+
   return (
     <div
       onClick={onClick}
       className={cn(
         "group relative cursor-pointer overflow-hidden rounded-2xl transition-all",
-        "bg-background-surface-1 border-2 p-6",
+        "bg-background-surface-4 border-2 p-6",
         "hover:border-primary/50 hover:shadow-lg",
         isSelected ? "border-primary shadow-lg" : "border-border",
       )}
@@ -44,7 +48,45 @@ export function FlowCard({ flow, isSelected, onClick }: FlowCardProps) {
           <span className="text-text-secondary">Agents:</span>
           <span className="text-text-primary font-medium">{agentCount}</span>
         </div>
+
+        {/* DataStore Fields */}
+        {hasDataStoreFields && (
+          <div className="mt-3 flex flex-col gap-2">
+            <span className="text-text-secondary text-sm font-medium">
+              Session stats
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {dataStoreFields.map((field, index) => (
+                <span
+                  key={index}
+                  className="bg-background-surface-3 text-text-secondary rounded-md px-2 py-0.5 text-xs"
+                >
+                  {field.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Selection Indicator */}
+      {isSelected && (
+        <div className="absolute top-4 right-4">
+          <div className="bg-primary flex h-6 w-6 items-center justify-center rounded-full">
+            <svg
+              className="h-4 w-4 text-white"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

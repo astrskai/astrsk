@@ -81,10 +81,12 @@ export function PlotSelectionStep({
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Select Plot
+          4. Select Plot&nbsp;(optional)
         </h2>
         <p className="text-text-secondary text-sm">
-          Choose a plot card (optional)
+          Pick a plot to frame your session. The chosen plot will define the
+          background context and provide a list of first messages to choose
+          from.
         </p>
       </div>
 
@@ -132,9 +134,7 @@ export function PlotSelectionStep({
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>Select Plot</DialogTitle>
-            <DialogDescription>
-              Choose a plot card (optional)
-            </DialogDescription>
+            <DialogDescription>Choose a plot card (optional)</DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-4 py-4">

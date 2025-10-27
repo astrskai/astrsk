@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { Route } from "@/routes/_layout/sessions/create/index";
 import { Button } from "@/shared/ui/forms";
 import { ActionConfirm } from "@/shared/ui/dialogs";
@@ -188,9 +189,27 @@ export function CreateSessionPage() {
   const isLastStep = currentStepIndex === STEPS.length - 1;
 
   return (
-    <div className="bg-background-surface-2 flex h-full w-full flex-col">
-      {/* Header */}
-      <div className="border-border flex items-center justify-between border-b px-8 py-6">
+    <div className="bg-background-surface-2 relative flex h-full w-full flex-col">
+      {/* Mobile Header */}
+      <div className="border-border flex items-center border-b px-4 py-4 md:hidden">
+        <button
+          onClick={handleCancelClick}
+          className="text-text-primary hover:text-text-secondary mr-3 transition-colors"
+        >
+          <ArrowLeft size={24} />
+        </button>
+        <div className="flex flex-col">
+          <span className="text-text-secondary text-xs font-medium">
+            Create Session
+          </span>
+          <h1 className="text-text-primary text-lg font-semibold">
+            {sessionName}
+          </h1>
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="border-border hidden items-center justify-between border-b px-8 py-6 md:flex">
         {/* Title with Session Name */}
         <h1 className="flex items-center gap-2 text-2xl">
           <span className="text-text-secondary font-medium">
@@ -233,7 +252,7 @@ export function CreateSessionPage() {
 
       {/* Content */}
       <div className="flex flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl p-8">
+        <div className="mx-auto w-full max-w-5xl p-8 pb-24 md:pb-8">
           {currentStep === "flow" && (
             <FlowSelectionStep
               selectedFlow={selectedFlow}
@@ -264,6 +283,30 @@ export function CreateSessionPage() {
               onPlotSelected={setSelectedPlot}
             />
           )}
+        </div>
+      </div>
+
+      {/* Mobile Floating Buttons */}
+      <div className="border-border fixed bottom-0 left-0 right-0 border-t bg-background-surface-1 p-4 md:hidden">
+        <div className="flex items-center justify-between gap-3">
+          {showPreviousButton ? (
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              className="flex-1"
+            >
+              Previous
+            </Button>
+          ) : (
+            <div className="flex-1" />
+          )}
+          <Button
+            onClick={handleNext}
+            disabled={!canProceed}
+            className="flex-1"
+          >
+            {isLastStep ? "Finish" : "Next"}
+          </Button>
         </div>
       </div>
     </div>

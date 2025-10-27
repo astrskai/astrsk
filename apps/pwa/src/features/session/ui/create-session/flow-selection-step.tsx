@@ -69,10 +69,11 @@ export function FlowSelectionStep({
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Select Flow
+          1. Select Flow
         </h2>
         <p className="text-text-secondary text-sm">
-          Choose a flow to use for this session
+          Choose a flow (a bundle of prompt preset and AI model) to use for your
+          session.
         </p>
       </div>
 
@@ -110,6 +111,26 @@ export function FlowSelectionStep({
                   }
                 </span>
               </div>
+
+              {/* DataStore Fields */}
+              {selectedFlow.props.dataStoreSchema?.fields &&
+               selectedFlow.props.dataStoreSchema.fields.length > 0 && (
+                <div className="mt-3 flex flex-col gap-2">
+                  <span className="text-text-secondary text-sm font-medium">
+                    Session stats
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedFlow.props.dataStoreSchema.fields.map((field, index) => (
+                      <span
+                        key={index}
+                        className="bg-background-surface-3 text-text-secondary rounded-md px-2 py-0.5 text-xs"
+                      >
+                        {field.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </>
         ) : (
@@ -150,7 +171,7 @@ export function FlowSelectionStep({
 
             {/* Flow Cards Grid */}
             <div className="max-h-[400px] overflow-y-auto">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {filteredFlows.map((flow: Flow) => (
                   <FlowCard
                     key={flow.id.toString()}
@@ -172,9 +193,7 @@ export function FlowSelectionStep({
                   ) : (
                     <>
                       <p className="mb-2 text-lg">No flows available</p>
-                      <p className="text-sm">
-                        Create a flow first to continue
-                      </p>
+                      <p className="text-sm">Create a flow first to continue</p>
                     </>
                   )}
                 </div>
