@@ -172,7 +172,7 @@ export default function CardDisplay({
           >
             <h3
               className={cn(
-                "text-text-primary font-pragati-narrow line-clamp-2 text-xl font-bold",
+                "text-text-primary font-pragati-narrow line-clamp-2 text-xl font-bold text-ellipsis",
                 CONTAINER_TEXT_SIZES.name,
               )}
             >
@@ -222,7 +222,7 @@ export default function CardDisplay({
           </div>
           <div
             className={cn(
-              "text-text-secondary text-sm [writing-mode:vertical-rl]",
+              "text-text-secondary truncate text-sm [writing-mode:vertical-rl]",
               CONTAINER_TEXT_SIZES.nameVertical,
             )}
           >

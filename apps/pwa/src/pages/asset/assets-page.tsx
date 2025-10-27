@@ -14,7 +14,7 @@ import { CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { Flow } from "@/entities/flow/domain/flow";
-
+import { useNavigate } from "@tanstack/react-router";
 /**
  * Assets page - displays Characters, Plots, and Flows in a unified view
  * Users can switch between asset types using tab navigation
@@ -23,6 +23,7 @@ export function AssetsPage() {
   const [activeTab, setActiveTab] = useState<AssetType>("characters");
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   // Fetch cards and flows based on active tab
   const { data: allCards, isLoading: isLoadingCards } = useQuery(
@@ -73,8 +74,7 @@ export function AssetsPage() {
   };
 
   const handleCreateCharacter = () => {
-    // TODO: Navigate to character creation page
-    console.log("Create character clicked");
+    navigate({ to: "/assets/create/character" });
   };
 
   const handleCreatePlot = () => {

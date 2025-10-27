@@ -33,6 +33,7 @@ import { Route as LayoutSettingsLegalPrivacyPolicyRouteImport } from './routes/_
 import { Route as LayoutSettingsLegalOssNoticeRouteImport } from './routes/_layout/settings/legal/oss-notice'
 import { Route as LayoutSettingsLegalContentPolicyRouteImport } from './routes/_layout/settings/legal/content-policy'
 import { Route as LayoutSettingsAccountCreditUsageRouteImport } from './routes/_layout/settings/account/credit-usage'
+import { Route as LayoutAssetsCreateCharacterIndexRouteImport } from './routes/_layout/assets/create/character/index'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -162,6 +163,12 @@ const LayoutSettingsAccountCreditUsageRoute =
     path: '/account/credit-usage',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
+const LayoutAssetsCreateCharacterIndexRoute =
+  LayoutAssetsCreateCharacterIndexRouteImport.update({
+    id: '/assets/create/character/',
+    path: '/assets/create/character/',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LayoutLoginRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/sessions/create': typeof LayoutSessionsCreateIndexRoute
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
+  '/assets/create/character': typeof LayoutAssetsCreateCharacterIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LayoutLoginRoute
@@ -211,6 +219,7 @@ export interface FileRoutesByTo {
   '/sessions/create': typeof LayoutSessionsCreateIndexRoute
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
+  '/assets/create/character': typeof LayoutAssetsCreateCharacterIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -238,6 +247,7 @@ export interface FileRoutesById {
   '/_layout/sessions/create/': typeof LayoutSessionsCreateIndexRoute
   '/_layout/settings/account/': typeof LayoutSettingsAccountIndexRoute
   '/_layout/settings/legal/': typeof LayoutSettingsLegalIndexRoute
+  '/_layout/assets/create/character/': typeof LayoutAssetsCreateCharacterIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/sessions/create'
     | '/settings/account'
     | '/settings/legal'
+    | '/assets/create/character'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/sessions/create'
     | '/settings/account'
     | '/settings/legal'
+    | '/assets/create/character'
   id:
     | '__root__'
     | '/_layout'
@@ -315,6 +327,7 @@ export interface FileRouteTypes {
     | '/_layout/sessions/create/'
     | '/_layout/settings/account/'
     | '/_layout/settings/legal/'
+    | '/_layout/assets/create/character/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -491,6 +504,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsAccountCreditUsageRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
+    '/_layout/assets/create/character/': {
+      id: '/_layout/assets/create/character/'
+      path: '/assets/create/character'
+      fullPath: '/assets/create/character'
+      preLoaderRoute: typeof LayoutAssetsCreateCharacterIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
   }
 }
 
@@ -540,6 +560,7 @@ interface LayoutRouteChildren {
   LayoutFlowsIndexRoute: typeof LayoutFlowsIndexRoute
   LayoutSessionsIndexRoute: typeof LayoutSessionsIndexRoute
   LayoutSessionsCreateIndexRoute: typeof LayoutSessionsCreateIndexRoute
+  LayoutAssetsCreateCharacterIndexRoute: typeof LayoutAssetsCreateCharacterIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -555,6 +576,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutFlowsIndexRoute: LayoutFlowsIndexRoute,
   LayoutSessionsIndexRoute: LayoutSessionsIndexRoute,
   LayoutSessionsCreateIndexRoute: LayoutSessionsCreateIndexRoute,
+  LayoutAssetsCreateCharacterIndexRoute: LayoutAssetsCreateCharacterIndexRoute,
 }
 
 const LayoutRouteWithChildren =

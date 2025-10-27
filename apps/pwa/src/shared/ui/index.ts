@@ -56,6 +56,7 @@ export * from "./loading-overlay";
 export * from "./media-display";
 export * from "./play-button";
 export * from "./search-input";
+export * from "./step-indicator";
 export * from "./stepper";
 export * from "./stepper-mobile";
 export * from "./subscribe-badge";
