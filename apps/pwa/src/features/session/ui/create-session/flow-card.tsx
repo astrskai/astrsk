@@ -1,6 +1,8 @@
-import { Flow } from "@/entities/flow/domain/flow";
+import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 import { cn } from "@/shared/lib";
 import { FlowIcon } from "@/shared/assets/icons";
+import { CircleAlert } from "lucide-react";
+import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 
 interface FlowCardProps {
   flow: Flow;
@@ -18,6 +20,10 @@ export function FlowCard({ flow, isSelected, onClick }: FlowCardProps) {
     (node) => node.type === "agent",
   ).length;
 
+  // Validate flow
+  const { isValid, isFetched } = useFlowValidation(flow.id);
+  const isInvalid = isFetched && !isValid;
+
   // Get dataStore field names
   const dataStoreFields = flow.props.dataStoreSchema?.fields || [];
   const hasDataStoreFields = dataStoreFields.length > 0;
@@ -32,11 +38,38 @@ export function FlowCard({ flow, isSelected, onClick }: FlowCardProps) {
         isSelected ? "border-primary shadow-lg" : "border-border",
       )}
     >
-      {/* Flow Name */}
-      <h3 className="text-text-primary mb-3 flex items-center gap-2 text-lg font-semibold">
-        <FlowIcon className="h-5 w-5" />
-        {flow.props.name || "Untitled Flow"}
-      </h3>
+      {/* Flow Name with Status */}
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="text-text-primary flex items-center gap-2 text-lg font-semibold">
+          <FlowIcon className="h-5 w-5" />
+          {flow.props.name || "Untitled Flow"}
+        </h3>
+        <div className="flex items-center gap-2">
+          {/* Invalid Indicator */}
+          {isInvalid && (
+            <div className="text-status-destructive-light">
+              <CircleAlert size={16} />
+            </div>
+          )}
+          {/* Ready State Badge */}
+          <div
+            className={cn(
+              "rounded-md px-2 py-0.5 text-xs font-medium",
+              flow.props.readyState === ReadyState.Ready
+                ? "bg-status-ready-dark/10 text-status-ready-dark"
+                : flow.props.readyState === ReadyState.Error
+                  ? "bg-status-destructive-light/10 text-status-destructive-light"
+                  : "bg-background-surface-3 text-text-placeholder",
+            )}
+          >
+            {flow.props.readyState === ReadyState.Ready
+              ? "Ready"
+              : flow.props.readyState === ReadyState.Error
+                ? "Error"
+                : "Draft"}
+          </div>
+        </div>
+      </div>
 
       {/* Flow Metadata */}
       <div className="flex flex-col gap-2">

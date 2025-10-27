@@ -15,8 +15,8 @@ interface SessionsGridProps {
  * Displays sessions in a responsive grid with optional New Session Card
  *
  * Layout:
- * - Mobile: Create button (when no search) + session cards
- * - Desktop: New Session Card (when no search) + session cards
+ * - Mobile: Button above grid + 2 columns per row
+ * - Desktop: New card inside grid + up to 5 columns per row
  */
 export function SessionsGrid({
   sessions,
@@ -26,8 +26,8 @@ export function SessionsGrid({
   const showNewSessionCard = !keyword;
 
   return (
-    <div className="mx-auto grid [grid-template-columns:repeat(auto-fit,minmax(min(288px,100%),340px))] justify-center gap-4 p-4">
-      {/* Mobile: Create Button */}
+    <div className="flex flex-col gap-4 p-4">
+      {/* Mobile: Create Button (outside grid) */}
       {showNewSessionCard && (
         <Button
           onClick={onCreateSession}
@@ -38,18 +38,21 @@ export function SessionsGrid({
         </Button>
       )}
 
-      {/* Desktop: New Session Card */}
-      {showNewSessionCard && (
-        <NewSessionCard
-          onClick={onCreateSession}
-          className="hidden md:flex"
-        />
-      )}
+      {/* Sessions Grid */}
+      <div className="mx-auto grid w-full grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {/* Desktop: New Session Card (inside grid) */}
+        {showNewSessionCard && (
+          <NewSessionCard
+            onClick={onCreateSession}
+            className="hidden md:flex"
+          />
+        )}
 
-      {/* Existing Sessions */}
-      {sessions.map((session) => (
-        <SessionCard key={session.id.toString()} session={session} />
-      ))}
+        {/* Existing Sessions */}
+        {sessions.map((session) => (
+          <SessionCard key={session.id.toString()} session={session} />
+        ))}
+      </div>
     </div>
   );
 }

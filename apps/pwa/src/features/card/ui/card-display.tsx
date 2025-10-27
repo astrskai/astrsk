@@ -215,9 +215,9 @@ export default function CardDisplay({
             )}
           >
             {card.props.type === CardType.Character ? (
-              <IconCardTypeCharacter />
+              <IconCardTypeCharacter className="h-5 w-5" />
             ) : (
-              <IconCardTypePlot />
+              <IconCardTypePlot className="h-5 w-5" />
             )}
           </div>
           <div
