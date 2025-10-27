@@ -236,10 +236,14 @@ export class ExtensionClient implements IExtensionClient {
         }
       }
 
-      // Return the entry ID in the success result
-      return saveResult.isSuccess
-        ? { ...saveResult, entryId: newEntry.id.toString() }
-        : saveResult;
+      // Return result with entryId attached for success case
+      // Note: We can't modify frozen Result objects, so we create a wrapper
+      if (saveResult.isSuccess) {
+        return Object.assign(Object.create(Object.getPrototypeOf(saveResult)), saveResult, {
+          entryId: newEntry.id.toString()
+        });
+      }
+      return saveResult;
     },
 
     /**

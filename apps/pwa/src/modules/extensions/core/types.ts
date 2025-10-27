@@ -172,6 +172,7 @@ export interface IExtensionClient {
     /**
      * Add a lorebook entry to a character card
      * Handles all domain object creation internally
+     * Returns Result with entryId property added on success
      */
     addLorebookEntryToCard(params: {
       cardId: string;
@@ -180,7 +181,7 @@ export interface IExtensionClient {
       content: string;
       enabled?: boolean;
       recallRange?: number;
-    }): Promise<{ success: boolean; entryId?: string; error?: string }>;
+    }): Promise<any>;
 
     /**
      * UI APIs for extensions

@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-supermemory-user-id');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
@@ -42,10 +42,6 @@ module.exports = async function handler(req, res) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     };
-
-    if (req.headers['x-supermemory-user-id']) {
-      headers['x-supermemory-user-id'] = req.headers['x-supermemory-user-id'];
-    }
 
     const fetchOptions = {
       method: req.method,
