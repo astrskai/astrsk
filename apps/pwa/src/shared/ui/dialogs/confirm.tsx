@@ -88,7 +88,6 @@ export const ActionConfirm = ({
             <Button
               size="lg"
               variant="ghost"
-              tabIndex={-1}
               onClick={(e) => {
                 e.stopPropagation();
                 onOpenChange?.(false);

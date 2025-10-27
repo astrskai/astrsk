@@ -13,7 +13,7 @@ import {
 import { SearchInput } from "@/shared/ui/forms";
 import { cn } from "@/shared/lib";
 
-interface SessionNameDialogProps {
+interface NameInputDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -22,10 +22,10 @@ interface SessionNameDialogProps {
  * Dialog for entering session name and uploading optional background image
  * before navigating to create session page
  */
-export function SessionNameDialog({
+export function NameInputDialog({
   open,
   onOpenChange,
-}: SessionNameDialogProps) {
+}: NameInputDialogProps) {
   const navigate = useNavigate();
   const [sessionName, setSessionName] = useState("New Session");
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
@@ -42,9 +42,11 @@ export function SessionNameDialog({
   };
 
   const handleNext = () => {
-    // TODO: Pass sessionName and backgroundImage to create session page
-    // For now, just navigate to the route
-    navigate({ to: "/sessions/create" });
+    // Navigate to create session page with session name
+    navigate({
+      to: "/sessions/create",
+      search: { sessionName },
+    });
     onOpenChange(false);
 
     // Reset form

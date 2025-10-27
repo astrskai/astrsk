@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 
 import {
   NewSessionCard,
-  SessionNameDialog,
   SessionsPageHeader,
   SessionsGrid,
   EmptyState,
 } from "@/features/session/ui";
+import { NameInputDialog } from "@/features/session/ui/create-session";
 import { SessionImportDialog } from "@/features/session/components/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
 
@@ -59,7 +59,7 @@ export function SessionsPage() {
         onImport={handleImport}
         onFileSelect={handleFileSelect}
       />
-      <SessionNameDialog
+      <NameInputDialog
         open={isOpenCreateDialog}
         onOpenChange={setIsOpenCreateDialog}
       />
