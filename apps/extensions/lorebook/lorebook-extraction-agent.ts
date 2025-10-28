@@ -142,8 +142,6 @@ You should extract VERY FEW entries - only information that meets ALL these crit
 3. REUSABLE: Information that will matter in future conversations
 4. NEW: Not already captured in existing or rejected entries
 
-⚠️ DEFAULT BEHAVIOR: If the message contains only casual conversation, minor actions, or no new significant information, return NO entries (empty array). Most messages should result in zero extractions.
-
 WHAT IS LOREBOOK-WORTHY (Extract ONLY if highly significant):
 - Major character abilities/powers that define them
 - Important backstory reveals that shape their character
@@ -189,9 +187,7 @@ EXAMPLES OF SIGNIFICANT ENTRIES:
 
 REMEMBER:
 - Quality over quantity. Extract ONLY the most important information.
-- Empty results are perfectly acceptable and often correct.
-- If there's no significant lorebook-worthy information, return an empty array { "entries": [] }
-- It's better to extract nothing than to extract trivial information.`;
+- Empty results are perfectly acceptable.`;
 
   console.log("📚 [Lorebook Extraction] Prompt being sent:", {
     charactersCount: charactersWithLorebooks.length,
