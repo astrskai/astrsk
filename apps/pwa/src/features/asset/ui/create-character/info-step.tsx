@@ -29,13 +29,16 @@ export function CharacterInfoStep({
   exampleDialogue,
   onExampleDialogueChange,
 }: CharacterInfoStepProps) {
-  const [isExampleDialogueOpen, setIsExampleDialogueOpen] = useState(false);
   const [activeTextarea, setActiveTextarea] = useState<
     "description" | "dialogue" | null
   >(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(),
   );
+
+  const [isExampleDialogueOpen, setIsExampleDialogueOpen] =
+    useState<boolean>(false);
+
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const dialogueRef = useRef<HTMLTextAreaElement>(null);
 

@@ -32,7 +32,7 @@ export function CharacterLorebookStep({
   onEntriesChange,
 }: CharacterLorebookStepProps) {
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  const [newTag, setNewTag] = useState("");
+  const [newTag, setNewTag] = useState<string>("");
 
   const selectedEntry = entries.find((e) => e.id === selectedEntryId);
 

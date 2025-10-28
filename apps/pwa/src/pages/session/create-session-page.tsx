@@ -51,8 +51,6 @@ export function CreateSessionPage() {
   const navigate = useNavigate();
   const { sessionName } = Route.useSearch();
   const [currentStep, setCurrentStep] = useState<Step>("flow");
-  const [isOpenCancelDialog, setIsOpenCancelDialog] = useState(false);
-  const selectSession = useSessionStore.use.selectSession();
 
   // Selection state (simplified - each step component handles its own UI state)
   const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
@@ -62,6 +60,10 @@ export function CreateSessionPage() {
   const [selectedUserCharacter, setSelectedUserCharacter] =
     useState<CharacterCard | null>(null);
   const [selectedPlot, setSelectedPlot] = useState<CharacterCard | null>(null);
+
+  const [isOpenCancelDialog, setIsOpenCancelDialog] = useState<boolean>(false);
+
+  const selectSession = useSessionStore.use.selectSession();
 
   const handleCancelClick = () => {
     setIsOpenCancelDialog(true);
@@ -287,7 +289,7 @@ export function CreateSessionPage() {
       </div>
 
       {/* Mobile Floating Buttons */}
-      <div className="border-border fixed bottom-0 left-0 right-0 border-t bg-background-surface-1 p-4 md:hidden">
+      <div className="border-border bg-background-surface-1 fixed right-0 bottom-0 left-0 border-t p-4 md:hidden">
         <div className="flex items-center justify-between gap-3">
           {showPreviousButton ? (
             <Button

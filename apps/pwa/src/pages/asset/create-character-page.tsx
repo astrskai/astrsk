@@ -3,12 +3,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
-import { CharacterImageStep } from "@/features/asset/ui/create-character/image-step";
-import { CharacterInfoStep } from "@/features/asset/ui/create-character/info-step";
 import {
+  CharacterImageStep,
+  CharacterInfoStep,
   CharacterLorebookStep,
   type LorebookEntry,
-} from "@/features/asset/ui/create-character/lorebook-step";
+} from "@/features/asset/ui/create-character";
 import { AssetService } from "@/app/services/asset-service";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { CardService } from "@/app/services/card-service";
@@ -34,14 +34,16 @@ type CharacterStep = "image" | "info" | "lorebook";
 export function CreateCharacterPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [characterName, setCharacterName] = useState("New Character");
+
   const [currentStep, setCurrentStep] = useState<CharacterStep>("image");
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isCreatingCard, setIsCreatingCard] = useState(false);
+  const [characterName, setCharacterName] = useState<string>("New Character");
   const [avatarAssetId, setAvatarAssetId] = useState<string | undefined>();
-  const [description, setDescription] = useState("");
-  const [exampleDialogue, setExampleDialogue] = useState("");
+  const [description, setDescription] = useState<string>("");
+  const [exampleDialogue, setExampleDialogue] = useState<string>("");
   const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>([]);
+
+  const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
+  const [isCreatingCard, setIsCreatingCard] = useState<boolean>(false);
 
   const steps: StepConfig<CharacterStep>[] = [
     { id: "image", number: 1, label: "Upload Image", required: true },

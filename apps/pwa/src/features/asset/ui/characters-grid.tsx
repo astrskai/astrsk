@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import CardDisplay from "@/features/card/ui/card-display";
 import { NewCharacter } from "./new-character";
@@ -23,7 +24,12 @@ export function CharactersGrid({
   onCreateCharacter,
   keyword,
 }: CharactersGridProps) {
+  const navigate = useNavigate();
   const showNewCharacterCard = !keyword;
+
+  const handleCharacterClick = (characterId: string) => {
+    navigate({ to: "/cards/$cardId", params: { cardId: characterId } });
+  };
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -54,11 +60,8 @@ export function CharactersGrid({
             <CardDisplay
               card={character}
               isSelected={false}
-              showActions={false}
-              onClick={() => {
-                // TODO: Navigate to character detail page
-                console.log("Character clicked:", character.id.toString());
-              }}
+              showActions={true}
+              onClick={() => handleCharacterClick(character.id.toString())}
             />
           </div>
         ))}

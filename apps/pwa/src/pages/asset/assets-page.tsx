@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useRef, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import {
   AssetsPageHeader,
   AssetType,
@@ -10,11 +12,11 @@ import {
 import { HelpVideoDialog, Loading } from "@/shared/ui";
 import { cardQueries } from "@/app/queries/card-queries";
 import { flowQueries } from "@/app/queries/flow-queries";
+import { CardService } from "@/app/services/card-service";
 import { CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { Flow } from "@/entities/flow/domain/flow";
-import { useNavigate } from "@tanstack/react-router";
 /**
  * Assets page - displays Characters, Plots, and Flows in a unified view
  * Users can switch between asset types using tab navigation
@@ -23,7 +25,11 @@ export function AssetsPage() {
   const [activeTab, setActiveTab] = useState<AssetType>("characters");
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
+  const [isImporting, setIsImporting] = useState<boolean>(false);
+
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch cards and flows based on active tab
   const { data: allCards, isLoading: isLoadingCards } = useQuery(
@@ -59,10 +65,75 @@ export function AssetsPage() {
         ) || []
       : [];
 
-  const handleImport = () => {
-    // TODO: Implement import functionality
-    console.log("Import clicked for:", activeTab);
-  };
+  /**
+   * Handle import card from file
+   * Only supports PNG images with embedded metadata
+   */
+  const handleFileImport = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      // Validate file type - only PNG images allowed
+      if (file.type !== "image/png") {
+        toast.error("Invalid file type", {
+          description: "Only PNG images with embedded metadata are supported",
+        });
+        return;
+      }
+
+      setIsImporting(true);
+
+      try {
+        // Import card from file
+        const result = await CardService.importCardFromFile.execute(file);
+
+        if (result.isFailure) {
+          toast.error("Failed to import card", {
+            description: result.getError(),
+          });
+          return;
+        }
+
+        const importedCards = result.getValue();
+
+        // Show success message
+        toast.success("Card imported successfully", {
+          description: `Imported ${importedCards.length} card(s)`,
+        });
+
+        // Refresh card list
+        await queryClient.invalidateQueries({
+          queryKey: cardQueries.lists(),
+        });
+      } catch (error) {
+        toast.error("Failed to import card", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      } finally {
+        setIsImporting(false);
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    },
+    [queryClient],
+  );
+
+  /**
+   * Trigger file input click
+   */
+  const handleImport = useCallback(() => {
+    if (activeTab === "flows") {
+      // TODO: Implement flow import
+      toast.info("Flow import not yet implemented");
+      return;
+    }
+
+    // Trigger file input for card import
+    fileInputRef.current?.click();
+  }, [activeTab]);
 
   const handleExport = () => {
     // TODO: Implement export functionality
@@ -89,6 +160,15 @@ export function AssetsPage() {
 
   return (
     <div className="bg-background-surface-2 flex h-full w-full flex-col">
+      {/* Hidden file input for card import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png"
+        onChange={handleFileImport}
+        className="hidden"
+      />
+
       {/* Header */}
       <AssetsPageHeader
         activeTab={activeTab}
