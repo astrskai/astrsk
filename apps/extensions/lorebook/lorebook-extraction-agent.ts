@@ -125,6 +125,8 @@ ${rejectedText}`;
 
   const prompt = `You are a lorebook extraction agent. Your job is to identify ONLY THE MOST SIGNIFICANT and MEMORABLE information from conversation messages that should be permanently recorded about characters.
 
+⚠️ IMPORTANT: If there is no significant lorebook-worthy information in the message, return an EMPTY list. This is completely acceptable and often the correct response.
+
 CHARACTERS WITH THEIR LOREBOOKS:
 ${characterLorebookText}
 
@@ -139,6 +141,8 @@ You should extract VERY FEW entries - only information that meets ALL these crit
 2. PERMANENT: Lasting traits/facts, not temporary states
 3. REUSABLE: Information that will matter in future conversations
 4. NEW: Not already captured in existing or rejected entries
+
+⚠️ DEFAULT BEHAVIOR: If the message contains only casual conversation, minor actions, or no new significant information, return NO entries (empty array). Most messages should result in zero extractions.
 
 WHAT IS LOREBOOK-WORTHY (Extract ONLY if highly significant):
 - Major character abilities/powers that define them
@@ -183,7 +187,11 @@ EXAMPLES OF SIGNIFICANT ENTRIES:
 - { "characterName": "Victor", "entryTitle": "Orphan Background", "content": "Victor grew up in an orphanage after his parents died in the war" }
 - { "characterName": "Yui", "entryTitle": "Protective Trait", "content": "Yui is fiercely protective of her childhood friends" }
 
-REMEMBER: Quality over quantity. Extract ONLY the most important information. Empty results are perfectly acceptable and often correct.`;
+REMEMBER:
+- Quality over quantity. Extract ONLY the most important information.
+- Empty results are perfectly acceptable and often correct.
+- If there's no significant lorebook-worthy information, return an empty array { "entries": [] }
+- It's better to extract nothing than to extract trivial information.`;
 
   console.log("📚 [Lorebook Extraction] Prompt being sent:", {
     charactersCount: charactersWithLorebooks.length,
