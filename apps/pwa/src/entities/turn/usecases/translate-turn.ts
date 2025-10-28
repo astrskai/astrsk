@@ -39,7 +39,7 @@ export class TranslateTurn implements UseCase<Command, Result<Turn>> {
         langs.push(config.displayLanguage);
       }
       if (langs.length === 0) {
-        return Result.ok();
+        return Result.ok(turn);
       }
 
       // Translate turn
