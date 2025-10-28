@@ -290,13 +290,17 @@ export class DrizzleCardRepo
       const row = CardDrizzleMapper.toPersistence(card);
 
       // Insert or update card
+      const { created_at, ...commonWithoutCreatedAt } = row.common;
       const savedRow: SelectCard = {
         common: await db
           .insert(cards)
           .values(row.common)
           .onConflictDoUpdate({
             target: cards.id,
-            set: row.common,
+            set: {
+              ...commonWithoutCreatedAt,
+              updated_at: new Date(), // Update timestamp on conflict
+            },
           })
           .returning()
           .then(getOneOrThrow),
@@ -305,24 +309,32 @@ export class DrizzleCardRepo
       // Insert or update each type
       if (row.character) {
         // Character card
+        const { created_at: _c, ...characterWithoutCreatedAt } = row.character;
         const savedCharacterRow = await db
           .insert(characterCards)
           .values(row.character)
           .onConflictDoUpdate({
             target: characterCards.id,
-            set: row.character,
+            set: {
+              ...characterWithoutCreatedAt,
+              updated_at: new Date(), // Update timestamp on conflict
+            },
           })
           .returning()
           .then(getOneOrThrow);
         savedRow.character = savedCharacterRow;
       } else if (row.plot) {
         // Plot card
+        const { created_at: _p, ...plotWithoutCreatedAt } = row.plot;
         const savedPlotRow = await db
           .insert(plotCards)
           .values(row.plot)
           .onConflictDoUpdate({
             target: plotCards.id,
-            set: row.plot,
+            set: {
+              ...plotWithoutCreatedAt,
+              updated_at: new Date(), // Update timestamp on conflict
+            },
           })
           .returning()
           .then(getOneOrThrow);

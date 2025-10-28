@@ -2,7 +2,7 @@
 export { AssetsPageHeader } from "./assets-page-header";
 export type { AssetType } from "./assets-page-header";
 
-export { NewCharacterCard } from "./new-character-card";
+export { NewCharacter } from "./new-character";
 export { CharactersGrid } from "./characters-grid";
 
 export { NewPlotCard } from "./new-plot-card";

@@ -4,8 +4,21 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
 import { CharacterImageStep } from "@/features/asset/ui/create-character/image-step";
+import { CharacterInfoStep } from "@/features/asset/ui/create-character/info-step";
+import {
+  CharacterLorebookStep,
+  type LorebookEntry,
+} from "@/features/asset/ui/create-character/lorebook-step";
 import { AssetService } from "@/app/services/asset-service";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
+import { CardService } from "@/app/services/card-service";
+import { CharacterCard } from "@/entities/card/domain/character-card";
+import { CardType } from "@/entities/card/domain";
+import { Lorebook } from "@/entities/card/domain/lorebook";
+import { Entry } from "@/entities/card/domain/entry";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+import { useQueryClient } from "@tanstack/react-query";
+import { cardKeys } from "@/app/queries/card";
 
 type CharacterStep = "image" | "info" | "lorebook";
 
@@ -20,15 +33,20 @@ type CharacterStep = "image" | "info" | "lorebook";
  */
 export function CreateCharacterPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [characterName, setCharacterName] = useState("New Character");
   const [currentStep, setCurrentStep] = useState<CharacterStep>("image");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isCreatingCard, setIsCreatingCard] = useState(false);
   const [avatarAssetId, setAvatarAssetId] = useState<string | undefined>();
+  const [description, setDescription] = useState("");
+  const [exampleDialogue, setExampleDialogue] = useState("");
+  const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>([]);
 
   const steps: StepConfig<CharacterStep>[] = [
-    { id: "image", number: 1, label: "Character Image", required: true },
+    { id: "image", number: 1, label: "Upload Image", required: true },
     { id: "info", number: 2, label: "Character Info", required: true },
-    { id: "lorebook", number: 3, label: "Character Lorebook", required: false },
+    { id: "lorebook", number: 3, label: "Lorebook", required: false },
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
@@ -71,14 +89,74 @@ export function CreateCharacterPage() {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isLastStep) {
-      // TODO: Create character card with all collected data
-      console.log("Creating character card:", {
-        characterName,
-        avatarAssetId,
-      });
-      navigate({ to: "/assets" });
+      setIsCreatingCard(true);
+      try {
+        // Create lorebook if entries exist
+        let lorebook: Lorebook | undefined;
+        if (lorebookEntries.length > 0) {
+          const entries = lorebookEntries.map((entry) =>
+            Entry.create({
+              name: entry.name,
+              content: entry.description,
+              keys: entry.tags,
+              enabled: true,
+              recallRange: entry.recallRange,
+            }).getValue(),
+          );
+
+          const lorebookResult = Lorebook.create({
+            entries,
+          });
+
+          if (lorebookResult.isSuccess) {
+            lorebook = lorebookResult.getValue();
+          }
+        }
+
+        // Create character card
+        const cardResult = CharacterCard.create({
+          title: characterName,
+          name: characterName,
+          description: description,
+          exampleDialogue: exampleDialogue || undefined,
+          iconAssetId: avatarAssetId
+            ? new UniqueEntityID(avatarAssetId)
+            : undefined,
+          type: CardType.Character,
+          tags: [],
+          lorebook: lorebook,
+        });
+
+        if (cardResult.isFailure) {
+          console.error("Failed to create card:", cardResult.getError());
+          setIsCreatingCard(false);
+          return;
+        }
+
+        const card = cardResult.getValue();
+
+        // Save card to database
+        const saveResult = await CardService.saveCard.execute(card);
+
+        if (saveResult.isFailure) {
+          console.error("Failed to save card:", saveResult.getError());
+          setIsCreatingCard(false);
+          return;
+        }
+
+        // Invalidate queries to refresh card list
+        await queryClient.invalidateQueries({
+          queryKey: cardKeys.lists(),
+        });
+
+        // Navigate to assets page
+        navigate({ to: "/assets" });
+      } catch (error) {
+        console.error("Error creating character card:", error);
+        setIsCreatingCard(false);
+      }
     } else {
       const nextStep = steps[currentStepIndex + 1];
       if (nextStep) {
@@ -101,11 +179,19 @@ export function CreateCharacterPage() {
     navigate({ to: "/assets" });
   };
 
-  // Validation: Step 1 requires name and image
-  const canProceed =
-    currentStep === "image"
-      ? characterName.trim().length > 0 && avatarAssetId !== undefined
-      : true;
+  // Validation logic for each step
+  const canProceed = (() => {
+    switch (currentStep) {
+      case "image":
+        return characterName.trim().length > 0 && avatarAssetId !== undefined;
+      case "info":
+        return description.trim().length > 0;
+      case "lorebook":
+        return true; // Optional step
+      default:
+        return false;
+    }
+  })();
 
   return (
     <div className="bg-background-surface-2 relative flex h-full w-full flex-col">
@@ -138,7 +224,7 @@ export function CreateCharacterPage() {
           </button>
           <div>
             <h1 className="text-text-primary text-2xl font-semibold">
-              Create Character Card
+              Create Character
             </h1>
             <p className="text-text-secondary text-sm">{characterName}</p>
           </div>
@@ -149,8 +235,8 @@ export function CreateCharacterPage() {
               Previous
             </Button>
           )}
-          <Button onClick={handleNext} disabled={!canProceed}>
-            {isLastStep ? "Finish" : "Next"}
+          <Button onClick={handleNext} disabled={!canProceed || isCreatingCard}>
+            {isCreatingCard ? "Creating..." : isLastStep ? "Finish" : "Next"}
           </Button>
         </div>
       </div>
@@ -174,46 +260,26 @@ export function CreateCharacterPage() {
 
           {/* Step 2: Character Info */}
           {currentStep === "info" && (
-            <div className="flex flex-col gap-6">
-              <div>
-                <h2 className="text-text-primary mb-2 text-xl font-semibold">
-                  2. Character Info
-                </h2>
-                <p className="text-text-secondary text-sm">
-                  Enter the personality and description for your character.
-                </p>
-              </div>
-              <div className="bg-background-surface-1 rounded-2xl border-2 border-border p-6">
-                <p className="text-text-secondary">
-                  Step 2 content will be implemented here
-                </p>
-              </div>
-            </div>
+            <CharacterInfoStep
+              description={description}
+              onDescriptionChange={setDescription}
+              exampleDialogue={exampleDialogue}
+              onExampleDialogueChange={setExampleDialogue}
+            />
           )}
 
           {/* Step 3: Character Lorebook */}
           {currentStep === "lorebook" && (
-            <div className="flex flex-col gap-6">
-              <div>
-                <h2 className="text-text-primary mb-2 text-xl font-semibold">
-                  3. Character Lorebook
-                </h2>
-                <p className="text-text-secondary text-sm">
-                  Add additional lore and details for your character (optional).
-                </p>
-              </div>
-              <div className="bg-background-surface-1 rounded-2xl border-2 border-border p-6">
-                <p className="text-text-secondary">
-                  Step 3 content will be implemented here
-                </p>
-              </div>
-            </div>
+            <CharacterLorebookStep
+              entries={lorebookEntries}
+              onEntriesChange={setLorebookEntries}
+            />
           )}
         </div>
       </div>
 
       {/* Mobile Floating Buttons */}
-      <div className="border-border fixed bottom-0 left-0 right-0 border-t bg-background-surface-1 p-4 md:hidden">
+      <div className="border-border bg-background-surface-1 fixed right-0 bottom-0 left-0 border-t p-4 md:hidden">
         <div className="flex items-center justify-between gap-3">
           {showPreviousButton ? (
             <Button
@@ -228,10 +294,10 @@ export function CreateCharacterPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed}
+            disabled={!canProceed || isCreatingCard}
             className="flex-1"
           >
-            {isLastStep ? "Finish" : "Next"}
+            {isCreatingCard ? "Creating..." : isLastStep ? "Finish" : "Next"}
           </Button>
         </div>
       </div>

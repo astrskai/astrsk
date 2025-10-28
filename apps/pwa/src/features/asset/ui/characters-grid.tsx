@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import CardDisplay from "@/features/card/ui/card-display";
-import { NewCharacterCard } from "./new-character-card";
+import { NewCharacter } from "./new-character";
 import { Button } from "@/shared/ui/forms";
 
 interface CharactersGridProps {
@@ -42,7 +42,7 @@ export function CharactersGrid({
       <div className="mx-auto grid w-full grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {/* Desktop: New Character Card (inside grid) */}
         {showNewCharacterCard && (
-          <NewCharacterCard
+          <NewCharacter
             onClick={onCreateCharacter}
             className="hidden md:flex"
           />

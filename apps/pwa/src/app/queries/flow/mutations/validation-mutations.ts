@@ -52,17 +52,16 @@ export const useUpdateFlowValidation = (flowId: string) => {
       );
       
       // Optimistic update
+      // Cache contains persistence format (InsertFlow), not domain format
       queryClient.setQueryData(
         flowKeys.detail(flowId),
         (old: any) => {
           if (!old) return old;
           return {
             ...old,
-            props: {
-              ...old.props,
-              readyState,
-              validationIssues
-            }
+            ready_state: readyState,
+            validation_issues: validationIssues,
+            updated_at: new Date()
           };
         }
       );

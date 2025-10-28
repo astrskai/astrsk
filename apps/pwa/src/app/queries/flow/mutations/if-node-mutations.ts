@@ -136,13 +136,11 @@ export const useUpdateIfNodeConditions = (flowId: string, nodeId: string) => {
       // We need to update the flow detail cache instead, which is what's actually used
       
       // Also update the flow detail optimistically
+      // Cache contains persistence format (InsertFlow), not domain format
       queryClient.setQueryData(flowKeys.detail(flowId), (old: any) => {
-        if (!old) return old;
-        // Handle both plain object and Flow class instance
-        const nodes = old.props?.nodes || old.nodes;
-        if (!nodes) return old;
-        
-        const updatedNodes = nodes.map((node: any) => {
+        if (!old || !old.nodes) return old;
+
+        const updatedNodes = old.nodes.map((node: any) => {
           if (node.id === nodeId) {
             return {
               ...node,
@@ -156,24 +154,13 @@ export const useUpdateIfNodeConditions = (flowId: string, nodeId: string) => {
           }
           return node;
         });
-        // Return in the same structure as received
-        if (old.props) {
-          return {
-            ...old,
-            props: {
-              ...old.props,
-              nodes: updatedNodes,
-              readyState: old.props.readyState === ReadyState.Ready ? ReadyState.Draft : old.props.readyState
-            }
-          };
-        } else {
-          // Plain object structure
-          return {
-            ...old,
-            nodes: updatedNodes,
-            readyState: old.readyState === ReadyState.Ready ? ReadyState.Draft : old.readyState
-          };
-        }
+
+        return {
+          ...old,
+          nodes: updatedNodes,
+          ready_state: old.ready_state === ReadyState.Ready ? ReadyState.Draft : old.ready_state,
+          updated_at: new Date()
+        };
       });
       
       return { previousNode, previousFlow };

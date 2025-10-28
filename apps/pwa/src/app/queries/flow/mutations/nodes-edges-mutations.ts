@@ -7,7 +7,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FlowService } from "@/app/services/flow-service";
-import { Node, Edge, Flow, ReadyState } from "@/entities/flow/domain/flow";
+import { Node, Edge, ReadyState } from "@/entities/flow/domain/flow";
+import { InsertFlow } from "@/db/schema/flows";
 import { flowKeys } from "../query-factory";
 
 /**
@@ -36,8 +37,9 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
       }
       
       // Update flow ready state to Draft if it's Ready
-      const flow = queryClient.getQueryData<Flow>(flowKeys.detail(flowId));
-      if (flow && flow.props.readyState === ReadyState.Ready) {
+      // Note: queryClient.getQueryData returns cached data in persistence format
+      const flow = queryClient.getQueryData<InsertFlow>(flowKeys.detail(flowId));
+      if (flow && flow.ready_state === ReadyState.Ready) {
         await FlowService.updateFlowReadyState.execute({
           flowId,
           readyState: ReadyState.Draft
@@ -68,16 +70,14 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
       queryClient.setQueryData(flowKeys.edges(flowId), edges);
       
       // 3. Update flow detail
-      queryClient.setQueryData(flowKeys.detail(flowId), (old: any) => {
+      // Cache contains persistence format (InsertFlow), not domain format
+      queryClient.setQueryData(flowKeys.detail(flowId), (old: InsertFlow | undefined) => {
         if (!old) return old;
         return {
           ...old,
-          props: {
-            ...old.props,
-            nodes,
-            edges,
-            updatedAt: new Date()
-          }
+          nodes,
+          edges,
+          updated_at: new Date()
         };
       });
       

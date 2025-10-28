@@ -36,45 +36,55 @@ export const flowQueries = {
           flows.map(async (flow) => {
             try {
               // Use enhanced getFlowWithNodes for each flow
-              const enhancedFlowOrError = await FlowService.getFlowWithNodes.execute(flow.id);
+              const enhancedFlowOrError =
+                await FlowService.getFlowWithNodes.execute(flow.id);
               if (enhancedFlowOrError.isSuccess) {
                 const enhancedFlow = enhancedFlowOrError.getValue();
-                
+
                 // Store enhanced flow in detail cache
                 queryClient.setQueryData(
                   flowQueries.detail(flow.id).queryKey,
                   FlowDrizzleMapper.toPersistence(enhancedFlow),
                 );
-                
+
                 return enhancedFlow;
               } else {
-                console.warn(`Failed to enhance flow ${flow.id.toString()}, using basic data`);
-                
+                console.warn(
+                  `Failed to enhance flow ${flow.id.toString()}, using basic data`,
+                );
+
                 // Fallback to basic flow
                 queryClient.setQueryData(
                   flowQueries.detail(flow.id).queryKey,
                   FlowDrizzleMapper.toPersistence(flow),
                 );
-                
+
                 return flow;
               }
             } catch (error) {
-              console.error(`Error enhancing flow ${flow.id.toString()}:`, error);
+              console.error(
+                `Error enhancing flow ${flow.id.toString()}:`,
+                error,
+              );
               return flow; // Fallback to basic flow
             }
-          })
+          }),
         );
 
         // Return persistence objects for caching
-        return enhancedFlows.map((flow) => FlowDrizzleMapper.toPersistence(flow));
+        return enhancedFlows.map((flow) =>
+          FlowDrizzleMapper.toPersistence(flow),
+        );
       },
       select: (data) => {
         if (!data || !Array.isArray(data)) return [];
-        
+
         const cached = selectResultCache.get(data as object);
         if (cached) return cached;
-        
-        const result = data.map((flow) => FlowDrizzleMapper.toDomain(flow as any));
+
+        const result = data.map((flow) =>
+          FlowDrizzleMapper.toDomain(flow as any),
+        );
         selectResultCache.set(data as object, result);
         return result;
       },
@@ -89,7 +99,7 @@ export const flowQueries = {
       queryKey: [...flowQueries.details(), id?.toString() ?? "", "enhanced-v1"],
       queryFn: async () => {
         if (!id) return null;
-        
+
         // Check if enhanced method exists
         if (!FlowService.getFlowWithNodes) {
           const flowOrError = await FlowService.getFlow.execute(id);
@@ -100,7 +110,7 @@ export const flowQueries = {
           const persisted = FlowDrizzleMapper.toPersistence(flow);
           return persisted;
         }
-        
+
         // Use enhanced getFlowWithNodes to properly load data from dedicated tables
         const flowOrError = await FlowService.getFlowWithNodes.execute(id);
         if (flowOrError.isFailure) {
@@ -113,10 +123,10 @@ export const flowQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        
+
         const cached = selectResultCache.get(data as object);
         if (cached) return cached;
-        
+
         const result = FlowDrizzleMapper.toDomain(data as any);
         selectResultCache.set(data as object, result);
         return result;

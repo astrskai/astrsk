@@ -110,16 +110,11 @@ export const useUpdateDataStoreNodeFieldsLegacy = (
       });
 
       // Also update the flow detail optimistically
+      // Cache contains persistence format (InsertFlow), not domain format
       queryClient.setQueryData(flowKeys.detail(flowId), (old: any) => {
-        if (!old) return old;
+        if (!old || !old.nodes) return old;
 
-        // Handle both old format (old.props.nodes) and new format (old.nodes)
-        const nodes = old.props?.nodes || old.nodes;
-        if (!nodes) {
-          return old;
-        }
-
-        const updatedNodes = nodes.map((node: any) => {
+        const updatedNodes = old.nodes.map((node: any) => {
           if (node.id === nodeId) {
             return {
               ...node,
@@ -132,27 +127,16 @@ export const useUpdateDataStoreNodeFieldsLegacy = (
           return node;
         });
 
-        // Update in the correct location based on structure
-        if (old.props?.nodes) {
-          // Old format: nodes under props
-          return {
-            ...old,
-            props: {
-              ...old.props,
-              nodes: updatedNodes,
-              readyState:
-                old.props?.readyState === ReadyState.Ready
-                  ? ReadyState.Draft
-                  : old.props?.readyState,
-            },
-          };
-        } else {
-          // New format: nodes directly on flow
-          return {
-            ...old,
-            nodes: updatedNodes,
-          };
-        }
+        return {
+          ...old,
+          nodes: updatedNodes,
+          ready_state:
+            old.ready_state === ReadyState.Ready
+              ? ReadyState.Draft
+              : old.ready_state,
+          updated_at: new Date(),
+          // created_at preserved through ...old spread
+        };
       });
 
       return { previousNode, previousFlow };

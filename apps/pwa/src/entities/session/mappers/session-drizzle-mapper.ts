@@ -86,6 +86,8 @@ export class SessionDrizzleMapper {
       flow_id: domain.props.flowId.toString(),
       auto_reply: domain.props.autoReply,
       data_schema_order: domain.props.dataSchemaOrder || [],
+      created_at: domain.props.createdAt,
+      updated_at: domain.props.updatedAt,
     };
   }
 

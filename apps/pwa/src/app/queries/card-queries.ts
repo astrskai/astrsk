@@ -22,23 +22,19 @@ export const cardQueries = {
 
   // List queries - not cached, stores data in detail cache
   lists: () => [...cardQueries.all(), "list"] as const,
-  list: (
-    params: SearchCardsParams = {
-      keyword: "",
-      limit: 100,
-      sort: SearchCardsSort.Latest,
-      type: [],
-    },
-  ) =>
-    queryOptions({
-      queryKey: [...cardQueries.lists(), params],
+  list: (params: SearchCardsParams = {}) => {
+    // Merge with defaults
+    const mergedParams = {
+      keyword: params.keyword ?? "",
+      limit: params.limit ?? 100,
+      sort: params.sort ?? SearchCardsSort.Latest,
+      type: params.type ?? [],
+    };
+
+    return queryOptions({
+      queryKey: [...cardQueries.lists(), mergedParams],
       queryFn: async () => {
-        const result = await CardService.searchCard.execute({
-          limit: params.limit!,
-          keyword: params.keyword!,
-          sort: params.sort!,
-          type: params.type!,
-        });
+        const result = await CardService.searchCard.execute(mergedParams);
         if (result.isFailure) {
           return [];
         }
@@ -57,17 +53,18 @@ export const cardQueries = {
       },
       select: (data) => {
         if (!data || !Array.isArray(data)) return [];
-        
+
         const cached = selectResultCache.get(data as object);
         if (cached) return cached;
-        
+
         const result = data.map((card) => CardDrizzleMapper.toDomain(card as any));
         selectResultCache.set(data as object, result);
         return result;
       },
       gcTime: 1000 * 30, // 30 seconds cache
       staleTime: 1000 * 10, // 10 seconds stale time
-    }),
+    });
+  },
 
   // Detail queries - cached for reuse
   details: () => [...cardQueries.all(), "detail"] as const,
@@ -85,10 +82,10 @@ export const cardQueries = {
       },
       select: (data) => {
         if (!data) return null;
-        
+
         const cached = selectResultCache.get(data as object);
         if (cached) return cached;
-        
+
         const result = CardDrizzleMapper.toDomain(data as any) as T;
         selectResultCache.set(data as object, result);
         return result;

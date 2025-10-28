@@ -33,13 +33,19 @@ export class DrizzleSessionRepo
       // Convert to row
       const row = SessionDrizzleMapper.toPersistence(session);
 
+      // Exclude created_at from update to preserve original timestamp
+      const { created_at, ...rowWithoutCreatedAt } = row;
+
       // Insert or update session
       const savedRow = await db
         .insert(sessions)
         .values(row)
         .onConflictDoUpdate({
           target: sessions.id,
-          set: row,
+          set: {
+            ...rowWithoutCreatedAt,
+            updated_at: new Date(), // Update timestamp on conflict
+          },
         })
         .returning()
         .then(getOneOrThrow);

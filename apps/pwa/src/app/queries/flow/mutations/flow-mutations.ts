@@ -55,15 +55,13 @@ export function useUpdateFlowName(flowId: string) {
       });
 
       // Optimistically update the flow detail
+      // Cache contains persistence format (InsertFlow), not domain format
       queryClient.setQueryData(flowKeys.detail(flowId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          props: {
-            ...old.props,
-            name: newName,
-            updatedAt: new Date(),
-          },
+          name: newName,
+          updated_at: new Date(),
         };
       });
 
@@ -73,7 +71,7 @@ export function useUpdateFlowName(flowId: string) {
         return {
           ...old,
           name: newName,
-          updatedAt: new Date(),
+          updated_at: new Date(),
         };
       });
 

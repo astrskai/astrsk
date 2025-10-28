@@ -73,9 +73,10 @@ export const useUpdateNodesPositions = (flowId: string) => {
       });
       
       // Also update in flow detail - ONLY update positions
+      // Cache contains persistence format (InsertFlow), not domain format
       queryClient.setQueryData(flowKeys.detail(flowId), (old: any) => {
-        if (!old || !old.props?.nodes) return old;
-        const updatedNodes = old.props.nodes.map((node: any) => {
+        if (!old || !old.nodes) return old;
+        const updatedNodes = old.nodes.map((node: any) => {
           const update = positions.find(p => p.nodeId === node.id);
           if (update) {
             // IMPORTANT: Only update position to avoid overwriting recent changes
@@ -88,11 +89,10 @@ export const useUpdateNodesPositions = (flowId: string) => {
         });
         return {
           ...old,
-          props: {
-            ...old.props,
-            nodes: updatedNodes
-            // Note: NOT updating readyState - position changes don't affect it
-          }
+          nodes: updatedNodes,
+          updated_at: new Date(),
+          // created_at preserved through ...old spread
+          // Note: NOT updating ready_state - position changes don't affect it
         };
       });
       
