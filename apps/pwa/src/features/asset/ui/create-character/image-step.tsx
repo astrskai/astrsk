@@ -81,7 +81,7 @@ export function CharacterImageStep({
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          1. Upload Image <span className="text-status-required">*</span>
+          Upload Image <span className="text-status-required">*</span>
         </h2>
         <p className="text-text-secondary text-sm">
           Upload an image for your character and enter a name.

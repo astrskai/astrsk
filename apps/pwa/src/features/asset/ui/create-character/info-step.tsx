@@ -129,7 +129,7 @@ export function CharacterInfoStep({
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          2. Character Info
+          Character Info
         </h2>
         <p className="text-text-secondary text-sm">
           Enter the personality and description for your character.

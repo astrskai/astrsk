@@ -36,6 +36,11 @@ interface CardDisplayProps {
   showActions?: boolean;
   className?: string;
   onClick?: () => void;
+  /**
+   * Preview image URL for temporary preview (e.g., during card creation)
+   * If provided, this will be used instead of fetching from useAsset
+   */
+  previewImageUrl?: string;
 }
 
 const tagContainerWidth = 152;
@@ -44,6 +49,7 @@ const tagContainerWidth = 152;
  * Card display component for showing character/plot cards
  * Supports both Character and Plot card types (differentiated by icon only)
  * Used in selection dialogs and card listings
+ * Supports preview mode via previewImageUrl for temporary image display
  */
 export default function CardDisplay({
   card,
@@ -51,6 +57,7 @@ export default function CardDisplay({
   showActions = false,
   className,
   onClick,
+  previewImageUrl,
 }: CardDisplayProps) {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [isCopying, setIsCopying] = useState<boolean>(false);
@@ -58,7 +65,8 @@ export default function CardDisplay({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [usedSessionsCount, setUsedSessionsCount] = useState<number>(0);
 
-  const [imageUrl, isVideo] = useAsset(card?.props.iconAssetId);
+  const [assetImageUrl, isVideo] = useAsset(card?.props.iconAssetId);
+  const imageUrl = previewImageUrl || assetImageUrl;
   const queryClient = useQueryClient();
 
   /**
@@ -365,7 +373,7 @@ export default function CardDisplay({
                 CONTAINER_TEXT_SIZES.name,
               )}
             >
-              {card.props.name}
+              {card.props.name || card.props.title}
             </h3>
             <p
               className={cn(

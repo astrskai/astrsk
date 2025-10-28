@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
+import { PlotImageStep } from "@/features/asset/ui/create-plot";
 
 type PlotStep = "image" | "info" | "lorebook" | "scenario";
 
@@ -20,6 +21,8 @@ export function CreatePlotPage() {
   const navigate = useNavigate();
   const [plotName, setPlotName] = useState("New Plot");
   const [currentStep, setCurrentStep] = useState<PlotStep>("image");
+  const [imageFile, setImageFile] = useState<File | undefined>();
+  const [imageAssetId, setImageAssetId] = useState<string | undefined>();
 
   const STEPS: StepConfig<PlotStep>[] = [
     { id: "image", number: 1, label: "Image", required: true },
@@ -57,6 +60,15 @@ export function CreatePlotPage() {
   const handleCancelClick = () => {
     // TODO: Show confirmation dialog if changes exist
     navigate({ to: "/assets" });
+  };
+
+  const handleFileUpload = (file: File) => {
+    // Store the file for preview - actual upload happens on save
+    setImageFile(file);
+
+    // Create a temporary object URL for preview
+    const objectUrl = URL.createObjectURL(file);
+    setImageAssetId(objectUrl);
   };
 
   // TODO: Add validation logic for each step
@@ -118,21 +130,12 @@ export function CreatePlotPage() {
         <div className="mx-auto w-full max-w-5xl p-8 pb-24 md:pb-8">
           {/* Step 1: Image */}
           {currentStep === "image" && (
-            <div className="flex flex-col gap-6">
-              <div>
-                <h2 className="text-text-primary mb-2 text-xl font-semibold">
-                  1. Plot Image
-                </h2>
-                <p className="text-text-secondary text-sm">
-                  Upload or select an image for your plot.
-                </p>
-              </div>
-              <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-6">
-                <p className="text-text-secondary">
-                  Image upload will be implemented here
-                </p>
-              </div>
-            </div>
+            <PlotImageStep
+              plotName={plotName}
+              onPlotNameChange={setPlotName}
+              imageAssetId={imageAssetId}
+              onFileUpload={handleFileUpload}
+            />
           )}
 
           {/* Step 2: Info */}

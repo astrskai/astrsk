@@ -89,7 +89,7 @@ export function CharacterLorebookStep({
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          3. Character Lorebook
+          Character Lorebook
         </h2>
         <p className="text-text-secondary text-sm">
           Add additional lore and details for your character (optional).
