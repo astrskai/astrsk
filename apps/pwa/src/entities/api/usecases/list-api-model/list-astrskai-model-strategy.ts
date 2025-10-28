@@ -12,6 +12,11 @@ export class ListAstrskaiModelStrategy implements ListApiModelStrategy {
   async listApiModel(
     apiConnection: ApiConnection,
   ): Promise<Result<ApiModel[]>> {
+    // TEMPORARY: Hide all astrsk models from users
+    // TODO: Remove this when ready to show astrsk models again
+    return Result.ok([]);
+
+    /* COMMENTED OUT - Original implementation
     try {
       // Request models
       const response = await this.httpClient.get(
@@ -38,5 +43,6 @@ export class ListAstrskaiModelStrategy implements ListApiModelStrategy {
     } catch (error) {
       return formatFail("Failed to list astrsk model", error);
     }
+    */
   }
 }
