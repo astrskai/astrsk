@@ -12,10 +12,11 @@
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardService } from "@/app/services/card-service";
-import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
-import { LorebookDrizzleMapper } from "@/modules/card/mappers/lorebook-drizzle-mapper";
-import { Card, CardType, CharacterCard, PlotCard } from "@/modules/card/domain";
-import { SearchCardsSort } from "@/modules/card/repos";
+import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
+import { LorebookDrizzleMapper } from "@/entities/card/mappers/lorebook-drizzle-mapper";
+import { Card, CardType, CharacterCard, PlotCard } from "@/entities/card/domain";
+import { SearchCardsSort } from "@/entities/card/repos";
+import { queryClient } from "@/app/queries/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection
@@ -48,26 +49,6 @@ export interface CardListFilters {
   type?: CardType[];
 }
 
-export interface CardMetadata {
-  id: string;
-  name: string;
-  description: string;
-  type: CardType;
-  createdAt: Date;
-  updatedAt?: Date;
-}
-
-export interface CardContent {
-  name: string;
-  description: string;
-  greeting?: string;
-  systemPrompt?: string;
-  exampleMessages?: Array<{
-    user: string;
-    assistant: string;
-  }>;
-}
-
 // Query Key Factory
 export const cardKeys = {
   all: ["cards"] as const,
@@ -82,8 +63,6 @@ export const cardKeys = {
   detail: (id: string) => [...cardKeys.details(), id] as const,
 
   // Sub-queries for a specific card
-  metadata: (id: string) => [...cardKeys.detail(id), "metadata"] as const,
-  content: (id: string) => [...cardKeys.detail(id), "content"] as const,
   imagePrompt: (id: string) => [...cardKeys.detail(id), "imagePrompt"] as const,
 
   // Lorebook queries
@@ -137,58 +116,6 @@ export const cardQueries = {
         const result = CardDrizzleMapper.toDomain(data as any);
         selectResultCache.set(data as object, result);
         return result;
-      },
-      staleTime: 1000 * 30, // 30 seconds
-    }),
-
-  // Metadata only
-  metadata: (id: string) =>
-    queryOptions({
-      queryKey: cardKeys.metadata(id),
-      queryFn: async () => {
-        const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id),
-        );
-        if (cardOrError.isFailure) return null;
-
-        const card = cardOrError.getValue();
-        return {
-          id: card.id.toString(),
-          name: card.props.title,
-          description: card.props.cardSummary || "",
-          type: card.props.type,
-          createdAt: card.props.createdAt,
-          updatedAt: card.props.updatedAt,
-        } as CardMetadata;
-      },
-      staleTime: 1000 * 60, // 1 minute
-    }),
-
-  // Content (name, description, greeting, etc.)
-  content: (id: string) =>
-    queryOptions({
-      queryKey: cardKeys.content(id),
-      queryFn: async () => {
-        const cardOrError = await CardService.getCard.execute(
-          new UniqueEntityID(id),
-        );
-        if (cardOrError.isFailure) return null;
-
-        const card = cardOrError.getValue();
-        const content: CardContent = {
-          name: card.props.title,
-          description: card.props.cardSummary || "",
-        };
-
-        if (card instanceof CharacterCard) {
-          content.greeting = card.props.name;
-          content.systemPrompt = card.props.description;
-          content.exampleMessages = card.props.exampleDialogue
-            ? [{ user: "Example", assistant: card.props.exampleDialogue }]
-            : [];
-        }
-
-        return content;
       },
       staleTime: 1000 * 30, // 30 seconds
     }),
@@ -314,3 +241,55 @@ export const cardQueries = {
  * // Getting query data
  * const cachedCard = client.getQueryData<Card>(cardKeys.detail(cardId));
  */
+
+/**
+ * Helper functions to fetch cards from cache and convert to domain objects
+ * Note: queryClient.fetchQuery returns persistence objects, not domain objects
+ * The select function only works in useQuery hooks, so we need to manually convert
+ */
+
+export async function fetchCard(id: UniqueEntityID): Promise<Card> {
+  const data = await queryClient.fetchQuery(cardQueries.detail(id.toString()));
+  if (!data) {
+    throw new Error(`Card not found: ${id.toString()}`);
+  }
+  return CardDrizzleMapper.toDomain(data as any);
+}
+
+export async function fetchPlotCard(id: UniqueEntityID): Promise<PlotCard> {
+  const card = await fetchCard(id);
+  if (!(card instanceof PlotCard)) {
+    throw new Error(`Card is not a PlotCard: ${id.toString()}`);
+  }
+  return card;
+}
+
+export async function fetchPlotCardOptional(
+  id: UniqueEntityID,
+): Promise<PlotCard | null> {
+  try {
+    return await fetchPlotCard(id);
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchCharacterCard(
+  id: UniqueEntityID,
+): Promise<CharacterCard> {
+  const card = await fetchCard(id);
+  if (!(card instanceof CharacterCard)) {
+    throw new Error(`Card is not a CharacterCard: ${id.toString()}`);
+  }
+  return card;
+}
+
+export async function fetchCharacterCardOptional(
+  id: UniqueEntityID,
+): Promise<CharacterCard | null> {
+  try {
+    return await fetchCharacterCard(id);
+  } catch {
+    return null;
+  }
+}

@@ -9,8 +9,8 @@ import {
   FlowViewport,
   ReadyState,
   DataStoreSchema,
-} from "@/modules/flow/domain/flow";
-import type { ValidationIssue } from "@/flow-multi/validation/types/validation-types";
+} from "@/entities/flow/domain/flow";
+import type { ValidationIssue } from "@/entities/flow/model/validation-types";
 
 export const flows = pgTable(TableName.Flows, {
   id: uuid().primaryKey(),

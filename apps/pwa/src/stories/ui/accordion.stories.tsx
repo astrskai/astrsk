@@ -4,7 +4,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components-v2/ui/accordion";
+} from "@/shared/ui";
 import { ChevronDown } from "lucide-react";
 import React from "react";
 

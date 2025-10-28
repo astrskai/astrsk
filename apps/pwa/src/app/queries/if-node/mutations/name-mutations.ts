@@ -44,18 +44,18 @@ export function useUpdateIfNodeName(flowId: string, nodeId: string) {
       startEditing();
       
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ifNodeKeys.name(flowId, nodeId) });
+      await queryClient.cancelQueries({ queryKey: ifNodeKeys.name(nodeId) });
       
       // Optimistically update the cache
-      const previousName = queryClient.getQueryData(ifNodeKeys.name(flowId, nodeId));
-      queryClient.setQueryData(ifNodeKeys.name(flowId, nodeId), { name });
+      const previousName = queryClient.getQueryData(ifNodeKeys.name(nodeId));
+      queryClient.setQueryData(ifNodeKeys.name(nodeId), { name });
       
       return { previousName };
     },
     onError: (err, name, context) => {
       // Revert optimistic update on error
       if (context?.previousName) {
-        queryClient.setQueryData(ifNodeKeys.name(flowId, nodeId), context.previousName);
+        queryClient.setQueryData(ifNodeKeys.name(nodeId), context.previousName);
       }
       setIsEditing(false);
       if (editTimeoutRef.current) {
@@ -66,9 +66,9 @@ export function useUpdateIfNodeName(flowId: string, nodeId: string) {
       endEditing();
       // Invalidate to ensure consistency after delay
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ifNodeKeys.name(flowId, nodeId) });
+        queryClient.invalidateQueries({ queryKey: ifNodeKeys.name(nodeId) });
         // Also invalidate detail query to keep it in sync
-        queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
+        queryClient.invalidateQueries({ queryKey: ifNodeKeys.detail(nodeId) });
       }, 600);
     },
   });

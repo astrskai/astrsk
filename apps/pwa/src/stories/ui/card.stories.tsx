@@ -6,12 +6,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components-v2/ui/card";
-import { Button } from "@/components-v2/ui/button";
-import { Input } from "@/components-v2/ui/input";
-import { Label } from "@/components-v2/ui/label";
-import { Badge } from "@/components-v2/ui/badge";
-import { Separator } from "@/components-v2/ui/separator";
+} from "@/shared/ui";
+import {
+  Badge, Button, Input, Label,
+  Separator,
+} from "@/shared/ui";
 import React from "react";
 
 const meta = {

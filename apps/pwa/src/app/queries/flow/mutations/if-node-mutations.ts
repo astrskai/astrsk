@@ -7,10 +7,10 @@
 import { useState, useRef, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FlowService } from "@/app/services/flow-service";
-import { IfCondition } from "@/flow-multi/nodes/if-node";
-import { ConditionDataType, ConditionOperator } from "@/flow-multi/types/condition-types";
+import { IfCondition } from "@/features/flow/flow-multi/nodes/if-node";
+import { ConditionDataType, ConditionOperator } from "@/features/flow/flow-multi/types/condition-types";
 import { flowKeys } from "../query-factory";
-import { Flow, ReadyState } from "@/modules/flow/domain/flow";
+import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 
 // Type for conditions that may be incomplete (during editing)
 export interface EditableCondition {

@@ -3,7 +3,7 @@ import {
   PlainBlock,
   UpdatePlainBlockProps,
 } from "@/shared/prompt/domain";
-import { formatFail, PartialOmit } from "@/shared/utils";
+import { formatFail, PartialOmit } from "@/shared/lib";
 
 export const PromptBlockType = {
   Plain: "plain",

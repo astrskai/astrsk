@@ -1,15 +1,15 @@
-import { GetAsset } from "@/modules/asset/usecases/get-asset";
-import { GetBackground } from "@/modules/background/usecases/get-background";
-import { SaveFileToBackground } from "@/modules/background/usecases/save-file-to-background";
+import { GetAsset } from "@/entities/asset/usecases/get-asset";
+import { GetBackground } from "@/entities/background/usecases/get-background";
+import { SaveFileToBackground } from "@/entities/background/usecases/save-file-to-background";
 import {
   ExportCardToFile,
   GetCard,
   ImportCardFromFile,
-} from "@/modules/card/usecases";
-import { ExportFlowWithNodes } from "@/modules/flow/usecases/export-flow-with-nodes";
-import { GetModelsFromFlowFile } from "@/modules/flow/usecases/get-models-from-flow-file";
-import { ImportFlowWithNodes } from "@/modules/flow/usecases/import-flow-with-nodes";
-import { DrizzleSessionRepo } from "@/modules/session/repos/impl/drizzle-session-repo";
+} from "@/entities/card/usecases";
+import { ExportFlowWithNodes } from "@/entities/flow/usecases/export-flow-with-nodes";
+import { GetModelsFromFlowFile } from "@/entities/flow/usecases/get-models-from-flow-file";
+import { ImportFlowWithNodes } from "@/entities/flow/usecases/import-flow-with-nodes";
+import { DrizzleSessionRepo } from "@/entities/session/repos/impl/drizzle-session-repo";
 import {
   AddMessage,
   BulkDeleteMessage,
@@ -18,19 +18,19 @@ import {
   DeleteSession,
   ListSession,
   SaveSession,
-} from "@/modules/session/usecases";
-import { ExportSessionToFile } from "@/modules/session/usecases/export-session-to-file";
-import { GetModelsFromSessionFile } from "@/modules/session/usecases/get-models-from-session-file";
-import { GetSession } from "@/modules/session/usecases/get-session";
-import { ImportCharactersFromSessionFile } from "@/modules/session/usecases/import-characters-from-session-file";
-import { ImportSessionFromFile } from "@/modules/session/usecases/import-session-from-file";
-import { ListSessionByCard } from "@/modules/session/usecases/list-session-by-card";
-import { ListSessionByFlow } from "@/modules/session/usecases/list-session-by-flow";
-import { SearchSession } from "@/modules/session/usecases/search-session";
-// import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
-import { SaveFlowRepo } from "@/modules/flow/repos";
-import { DrizzleTurnRepo } from "@/modules/turn/repos/impl/drizzle-turn-repo";
-import { GetTurn } from "@/modules/turn/usecases/get-turn";
+} from "@/entities/session/usecases";
+import { ExportSessionToFile } from "@/entities/session/usecases/export-session-to-file";
+import { GetModelsFromSessionFile } from "@/entities/session/usecases/get-models-from-session-file";
+import { GetSession } from "@/entities/session/usecases/get-session";
+import { ImportCharactersFromSessionFile } from "@/entities/session/usecases/import-characters-from-session-file";
+import { ImportSessionFromFile } from "@/entities/session/usecases/import-session-from-file";
+import { ListSessionByCard } from "@/entities/session/usecases/list-session-by-card";
+import { ListSessionByFlow } from "@/entities/session/usecases/list-session-by-flow";
+import { SearchSession } from "@/entities/session/usecases/search-session";
+// import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
+import { SaveFlowRepo } from "@/entities/flow/repos";
+import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
+import { GetTurn } from "@/entities/turn/usecases/get-turn";
 
 export class SessionService {
   public static sessionRepo: DrizzleSessionRepo;

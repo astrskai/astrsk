@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ProviderListItem, ProviderListItemDetail } from "@/components-v2/model/provider-list-item";
-import { ApiSource } from "@/modules/api/domain";
+import { ApiSource } from "@/entities/api/domain";
 import React from "react";
 
 /**

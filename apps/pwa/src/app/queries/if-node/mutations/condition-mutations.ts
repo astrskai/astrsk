@@ -2,8 +2,8 @@ import { useState, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { ifNodeKeys } from "../query-factory";
-import { IfCondition } from "@/flow-multi/nodes/if-node";
-import { ConditionDataType, ConditionOperator } from "@/flow-multi/types/condition-types";
+import { IfCondition } from "@/features/flow/flow-multi/nodes/if-node";
+import { ConditionDataType, ConditionOperator } from "@/features/flow/flow-multi/types/condition-types";
 
 // Type for conditions that may be incomplete (during editing)
 // Now the same as IfCondition since both support null values
@@ -74,12 +74,12 @@ export function useUpdateIfNodeConditions(flowId: string, nodeId: string) {
       startEditing();
       
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
+      await queryClient.cancelQueries({ queryKey: ifNodeKeys.detail(nodeId) });
       
       // Optimistically update the cache
-      const previousData = queryClient.getQueryData(ifNodeKeys.detail(flowId, nodeId));
+      const previousData = queryClient.getQueryData(ifNodeKeys.detail(nodeId));
       if (previousData) {
-        queryClient.setQueryData(ifNodeKeys.detail(flowId, nodeId), {
+        queryClient.setQueryData(ifNodeKeys.detail(nodeId), {
           ...previousData,
           conditions: data.conditions,
           draftConditions: data.draftConditions,
@@ -92,7 +92,7 @@ export function useUpdateIfNodeConditions(flowId: string, nodeId: string) {
     onError: (err, data, context) => {
       // Revert optimistic update on error
       if (context?.previousData) {
-        queryClient.setQueryData(ifNodeKeys.detail(flowId, nodeId), context.previousData);
+        queryClient.setQueryData(ifNodeKeys.detail(nodeId), context.previousData);
       }
       setIsEditing(false);
       if (editTimeoutRef.current) {
@@ -104,13 +104,13 @@ export function useUpdateIfNodeConditions(flowId: string, nodeId: string) {
       
       // Immediate invalidation for if node queries
       await queryClient.invalidateQueries({ 
-        queryKey: ifNodeKeys.detail(flowId, nodeId),
+        queryKey: ifNodeKeys.detail(nodeId),
         refetchType: 'inactive'
       });
       
       // Also invalidate flow queries since if node conditions affect flow validation
       try {
-        const { invalidateSingleFlowQueries } = await import("@/flow-multi/utils/invalidate-flow-queries");
+        const { invalidateSingleFlowQueries } = await import("@/features/flow/flow-multi/utils/invalidate-flow-queries");
         await invalidateSingleFlowQueries(flowId);
       } catch (error) {
         console.warn("Failed to invalidate flow queries after if node condition update:", error);
@@ -168,12 +168,12 @@ export function useUpdateIfNodeLogicOperator(flowId: string, nodeId: string) {
       startEditing();
       
       // Cancel any outgoing refetches for detail query (no specific logic operator query)
-      await queryClient.cancelQueries({ queryKey: ifNodeKeys.detail(flowId, nodeId) });
+      await queryClient.cancelQueries({ queryKey: ifNodeKeys.detail(nodeId) });
       
       // Optimistically update the detail query cache
-      const previousData = queryClient.getQueryData(ifNodeKeys.detail(flowId, nodeId));
+      const previousData = queryClient.getQueryData(ifNodeKeys.detail(nodeId));
       if (previousData) {
-        queryClient.setQueryData(ifNodeKeys.detail(flowId, nodeId), {
+        queryClient.setQueryData(ifNodeKeys.detail(nodeId), {
           ...previousData,
           logicOperator,
         });
@@ -184,7 +184,7 @@ export function useUpdateIfNodeLogicOperator(flowId: string, nodeId: string) {
     onError: (err, logicOperator, context) => {
       // Revert optimistic update on error
       if (context?.previousData) {
-        queryClient.setQueryData(ifNodeKeys.detail(flowId, nodeId), context.previousData);
+        queryClient.setQueryData(ifNodeKeys.detail(nodeId), context.previousData);
       }
       setIsEditing(false);
       if (editTimeoutRef.current) {
@@ -196,13 +196,13 @@ export function useUpdateIfNodeLogicOperator(flowId: string, nodeId: string) {
       
       // Immediate invalidation for if node queries
       await queryClient.invalidateQueries({ 
-        queryKey: ifNodeKeys.detail(flowId, nodeId),
+        queryKey: ifNodeKeys.detail(nodeId),
         refetchType: 'inactive'
       });
       
       // Also invalidate flow queries since if node conditions affect flow validation
       try {
-        const { invalidateSingleFlowQueries } = await import("@/flow-multi/utils/invalidate-flow-queries");
+        const { invalidateSingleFlowQueries } = await import("@/features/flow/flow-multi/utils/invalidate-flow-queries");
         await invalidateSingleFlowQueries(flowId);
       } catch (error) {
         console.warn("Failed to invalidate flow queries after if node logic operator update:", error);

@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 /// <reference types="vite-plugin-pwa/react" />
+/// <reference types="vite-plugin-svgr/client" />
 
 interface ImportMetaEnv {
   readonly VITE_ASTRSK_FREE_BASE_URL: string;

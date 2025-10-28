@@ -12,8 +12,8 @@
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
-import { GeneratedImage } from "@/modules/generated-image/domain";
-import { GeneratedImageDrizzleMapper } from "@/modules/generated-image/mappers/generated-image-drizzle-mapper";
+import { GeneratedImage } from "@/entities/generated-image/domain";
+import { GeneratedImageDrizzleMapper } from "@/entities/generated-image/mappers/generated-image-drizzle-mapper";
 import { queryClient } from "@/app/queries/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders

@@ -1,11 +1,11 @@
 import { jsonb, pgTable, uuid, varchar } from "drizzle-orm/pg-core";
 
-import { AutoReply } from "@/app/stores/session-store";
+import { AutoReply } from "@/shared/stores/session-store";
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
-import { ChatStyles } from "@/modules/session/domain/chat-styles";
-import { TranslationConfigJSON } from "@/modules/session/domain/translation-config";
-import { CardListItemJson } from "@/modules/session/mappers/session-drizzle-mapper";
+import { ChatStyles } from "@/entities/session/domain/chat-styles";
+import { TranslationConfigJSON } from "@/entities/session/domain/translation-config";
+import { CardListItemJson } from "@/entities/session/mappers/session-drizzle-mapper";
 
 export const sessions = pgTable(TableName.Sessions, {
   id: uuid().primaryKey(),

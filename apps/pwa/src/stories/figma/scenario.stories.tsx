@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
-import { ScenarioSelectionDialog, Scenario } from "@/components-v2/scenario/scenario-selection-dialog";
-import { ScenarioItem } from "@/components-v2/scenario/scenario-item";
-import { Button } from "@/components-v2/ui/button";
+import { ScenarioSelectionDialog, Scenario } from "@/features/session/components/scenario/scenario-selection-dialog";
+import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
+import { Button } from "@/shared/ui";
 
 /**
  * Scenario Components

@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { FloatingLabelSelect } from "@/components-v2/ui/floating-label-select";
-import { SelectItem, SelectGroup, SelectLabel, SelectSeparator } from "@/components-v2/ui/select";
+import {
+  FloatingLabelSelect, SelectGroup, SelectItem, SelectLabel,
+  SelectSeparator,
+} from "@/shared/ui";
 import React from "react";
 
 const meta = {

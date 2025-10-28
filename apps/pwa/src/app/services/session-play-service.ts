@@ -24,6 +24,37 @@ import { JSONSchema7 } from "json-schema";
 import { cloneDeep, merge } from "lodash-es";
 import { createOllama } from "ollama-ai-provider";
 
+import { fetchAgent } from "@/app/queries/agent/query-factory";
+import { fetchApiConnections } from "@/app/queries/api-connection-queries";
+import {
+  fetchCharacterCard,
+  fetchCharacterCardOptional,
+  fetchPlotCardOptional,
+} from "@/app/queries/card/query-factory";
+import { fetchDataStoreNode } from "@/app/queries/data-store-node/query-factory";
+import { fetchFlow } from "@/app/queries/flow/query-factory";
+import { fetchIfNode } from "@/app/queries/if-node/query-factory";
+import { fetchSession } from "@/app/queries/session-queries";
+import { fetchTurn, fetchTurnOptional } from "@/app/queries/turn-queries";
+import { SessionService } from "@/app/services/session-service";
+import { TurnService } from "@/app/services/turn-service";
+import { useAppStore } from "@/shared/stores/app-store";
+import { useWllamaStore } from "@/shared/stores/wllama-store";
+import { Condition, isUnaryOperator } from "@/features/flow/flow-multi/types/condition-types";
+import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traversal";
+import { ModelTier } from "@/entities/agent/domain";
+import { ApiSource } from "@/entities/api/domain";
+import {
+  ApiConnection,
+  OpenrouterProviderSort,
+} from "@/entities/api/domain/api-connection";
+import { PlotCard } from "@/entities/card/domain";
+import { CharacterCard } from "@/entities/card/domain/character-card";
+import { DataStoreFieldType } from "@/entities/flow/domain/flow";
+import { IfNode } from "@/entities/if-node/domain";
+import { Session } from "@/entities/session/domain/session";
+import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
+import { Turn as MessageEntity } from "@/entities/turn/domain/turn";
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain";
 import {
@@ -34,38 +65,12 @@ import {
   RenderContext,
 } from "@/shared/prompt/domain/renderable";
 import { parameterList } from "@/shared/task/domain/parameter";
-import { Datetime } from "@/shared/utils/datetime";
-import { logger } from "@/shared/utils/logger";
-import { TemplateRenderer } from "@/shared/utils/template-renderer";
-import { getTokenizer } from "@/shared/utils/tokenizer/tokenizer";
-
-import { AgentService } from "@/app/services/agent-service";
-import { ApiService } from "@/app/services/api-service";
-import { CardService } from "@/app/services/card-service";
-import { DataStoreNodeService } from "@/app/services/data-store-node-service";
-import { FlowService } from "@/app/services/flow-service";
-import { IfNodeService } from "@/app/services/if-node-service";
-import { SessionService } from "@/app/services/session-service";
-import { TurnService } from "@/app/services/turn-service";
-import { useAppStore } from "@/app/stores/app-store";
-import { useWllamaStore } from "@/app/stores/wllama-store";
-import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
-import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
-import { ApiSource } from "@/modules/api/domain";
-import {
-  ApiConnection,
-  OpenrouterProviderSort,
-} from "@/modules/api/domain/api-connection";
-import { PlotCard } from "@/modules/card/domain";
-import { CharacterCard } from "@/modules/card/domain/character-card";
-import { DataStoreFieldType } from "@/modules/flow/domain/flow";
-import { IfNode } from "@/modules/if-node/domain";
-import { Session } from "@/modules/session/domain/session";
-import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
-import { Turn as MessageEntity } from "@/modules/turn/domain/turn";
-import { parseAiSdkErrorMessage, sanitizeFileName } from "@/shared/utils";
-import { translate } from "@/shared/utils/translate-utils";
-import { ModelTier } from "@/modules/agent/domain";
+import { parseAiSdkErrorMessage, parsePartialJson, sanitizeFileName } from "@/shared/lib";
+import { Datetime } from "@/shared/lib/datetime";
+import { logger } from "@/shared/lib/logger";
+import { TemplateRenderer } from "@/shared/lib/template-renderer";
+import { getTokenizer } from "@/shared/lib/tokenizer/tokenizer";
+import { translate } from "@/shared/lib/translate-utils";
 
 // Model mapping configuration for automatic fallback
 // When using AstrskAi, format must be "ApiSource:modelId"
@@ -136,14 +141,7 @@ const makeContext = async ({
   // Get plot card
   let plotCard: PlotCard | null = null;
   if (session.plotCard && session.plotCard.enabled) {
-    // Check if CardService is initialized
-    if (!CardService.getCard) {
-      console.warn("CardService not initialized yet, skipping plot card");
-    } else {
-      plotCard = (await CardService.getCard.execute(session.plotCard.id))
-        .throwOnFailure()
-        .getValue() as PlotCard;
-    }
+    plotCard = await fetchPlotCardOptional(session.plotCard.id);
   }
 
   // Set `{{session.scenario}}`
@@ -163,9 +161,7 @@ const makeContext = async ({
       }
       let message;
       try {
-        message = (await TurnService.getTurn.execute(messageId))
-          .throwOnFailure()
-          .getValue();
+        message = await fetchTurn(messageId);
       } catch (error) {
         logger.error(
           `Failed to get message by id ${messageId.toString()}: ${error}`,
@@ -222,16 +218,15 @@ const makeContext = async ({
     }
 
     // Get character card
-    // Check if CardService is initialized
-    if (!CardService.getCard) {
-      console.warn("CardService not initialized yet, skipping character card");
+    let characterCard: CharacterCard;
+    try {
+      characterCard = await fetchCharacterCard(allCharCardItem.id);
+    } catch (error) {
+      console.warn(
+        `Character card not found: ${allCharCardItem.id.toString()}`,
+      );
       continue;
     }
-    const characterCard = (
-      await CardService.getCard.execute(allCharCardItem.id)
-    )
-      .throwOnFailure()
-      .getValue() as CharacterCard;
 
     // Scan lorebook
     let activatedEntries: string[] = [];
@@ -472,6 +467,35 @@ const makeProviderOptions = ({
   return options;
 };
 
+const makeLMStudioRequestParams = ({
+  parameters,
+}: {
+  parameters: Map<string, any>;
+}): Record<string, any> => {
+  const requestParams: Record<string, any> = {};
+
+  for (const [paramId, paramValueRaw] of parameters) {
+    const parameter = parameterList.find((p) => p.id === paramId);
+    if (!parameter) {
+      continue;
+    }
+
+    const paramValue = parameter.parsingFunction
+      ? parameter.parsingFunction(paramValueRaw, ApiSource.LMStudio)
+      : paramValueRaw;
+
+    const lmStudioParamName = parameter.nameByApiSource.get(ApiSource.LMStudio);
+
+    if (lmStudioParamName) {
+      requestParams[lmStudioParamName] = paramValue;
+    } else if (parameter.nameByApiSource.size === 0) {
+      requestParams[paramId] = paramValue;
+    }
+  }
+
+  return requestParams;
+};
+
 const transformMessagesForModel = (
   messages: Message[],
   modelId?: string,
@@ -646,6 +670,18 @@ const makeProvider = ({
         baseURL: baseUrl,
       });
       break;
+
+    case ApiSource.LMStudio: {
+      let lmStudioBaseUrl = baseUrl ?? "http://localhost:1234";
+      if (!lmStudioBaseUrl.endsWith("/v1")) {
+        lmStudioBaseUrl += "/v1";
+      }
+      provider = createOpenAI({
+        apiKey: apiKey || "",  // LM Studio doesn't require API key
+        baseURL: lmStudioBaseUrl,
+      });
+      break;
+    }
 
     case ApiSource.DeepSeek:
       provider = createDeepSeek({
@@ -976,6 +1012,147 @@ const generateMessageAIHorde = async ({
   return { textStream };
 };
 
+async function* streamObjectLMStudio({
+  modelId,
+  messages,
+  parameters,
+  schema,
+  abortSignal,
+  apiConnection,
+  streaming,
+}: {
+  modelId: string;
+  messages: Message[];
+  parameters: Map<string, any>;
+  schema: { typeDef: JSONSchema7; name?: string; description?: string };
+  abortSignal?: AbortSignal;
+  apiConnection: ApiConnection;
+  streaming: boolean;
+}) {
+  const baseUrl = apiConnection.baseUrl || "http://localhost:1234";
+  const endpoint = baseUrl.endsWith("/v1")
+    ? `${baseUrl}/chat/completions`
+    : `${baseUrl}/v1/chat/completions`;
+
+  const requestParams = makeLMStudioRequestParams({ parameters });
+
+  const jsonSchemaFormat = {
+    type: "json_schema",
+    json_schema: {
+      name: schema.name || "response",
+      description: schema.description || "Response schema",
+      schema: schema.typeDef,
+      strict: false,
+    }
+  };
+
+  const requestBody = {
+    model: modelId,
+    messages: messages.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    })),
+    response_format: jsonSchemaFormat,
+    stream: streaming,
+    ...requestParams,
+  };
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(apiConnection.apiKey && { Authorization: `Bearer ${apiConnection.apiKey}` }),
+    },
+    body: JSON.stringify(requestBody),
+    signal: abortSignal,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("[LM Studio] API error:", errorText);
+    throw new Error(`LM Studio API error: ${response.status} ${errorText}`);
+  }
+
+  if (streaming) {
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("No response body reader");
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let accumulatedContent = "";
+    let lastYieldedContent = "";
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim() || line.trim() === "data: [DONE]") continue;
+
+          if (line.startsWith("data: ")) {
+            try {
+              const jsonStr = line.slice(6);
+              const chunk = JSON.parse(jsonStr);
+              const delta = chunk.choices?.[0]?.delta?.content;
+
+              if (delta) {
+                accumulatedContent += delta;
+
+                // Try to parse the partial JSON
+                const partialObject = parsePartialJson(accumulatedContent);
+
+                if (partialObject && accumulatedContent !== lastYieldedContent) {
+                  yield partialObject;
+                  lastYieldedContent = accumulatedContent;
+                }
+              }
+            } catch (parseError) {
+              console.warn("[LM Studio] Failed to parse SSE line:", line);
+            }
+          }
+        }
+      }
+
+      // Final object - make sure we yield the complete final object
+      if (accumulatedContent) {
+        try {
+          const finalObject = JSON.parse(accumulatedContent);
+
+          // Only yield if different from last yielded
+          if (accumulatedContent !== lastYieldedContent) {
+            yield finalObject;
+          }
+        } catch (error) {
+          console.error("[LM Studio] Invalid final JSON:", accumulatedContent);
+          throw new Error(`Invalid JSON from LM Studio: ${accumulatedContent}`);
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  } else {
+    const data = await response.json();
+
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content in LM Studio response");
+    }
+
+    const object = JSON.parse(content);
+    yield object;
+  }
+}
+
 const createMessage = async ({
   sessionId,
   characterCardId,
@@ -992,20 +1169,18 @@ const createMessage = async ({
   messageId?: UniqueEntityID;
 }): Promise<Result<MessageEntity>> => {
   // Get session to access last turn's dataStore
-  const session = (await SessionService.getSession.execute(sessionId))
-    .throwOnFailure()
-    .getValue();
+  const session = await fetchSession(sessionId);
 
   // Get last turn's dataStore if exists
   let dataStore: DataStoreSavedField[] = [];
   if (session.turnIds.length > 0) {
     const lastTurnId = session.turnIds[session.turnIds.length - 1];
     try {
-      const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
-        .throwOnFailure()
-        .getValue();
-      // Clone the dataStore to avoid mutations
-      dataStore = cloneDeep(lastTurn.dataStore);
+      const lastTurn = await fetchTurnOptional(lastTurnId);
+      if (lastTurn) {
+        // Clone the dataStore to avoid mutations
+        dataStore = cloneDeep(lastTurn.dataStore);
+      }
     } catch (error) {
       logger.warn(`Failed to get last turn's dataStore: ${error}`);
     }
@@ -1014,15 +1189,8 @@ const createMessage = async ({
   // Get character name
   let characterName: string | null = defaultCharacterName || null;
   if (characterCardId) {
-    // Check if CardService is initialized
-    if (!CardService.getCard) {
-      console.warn(
-        "CardService not initialized yet, using default character name",
-      );
-    } else {
-      const characterCard = (await CardService.getCard.execute(characterCardId))
-        .throwOnFailure()
-        .getValue() as CharacterCard;
+    const characterCard = await fetchCharacterCardOptional(characterCardId);
+    if (characterCard) {
       characterName = characterCard.props.name || characterCard.props.title;
     }
   }
@@ -1045,6 +1213,9 @@ const createMessage = async ({
   );
 };
 
+/**
+ * @deprecated use mutation `useAddMessage()`
+ */
 const addMessage = async ({
   sessionId,
   characterCardId,
@@ -1063,9 +1234,7 @@ const addMessage = async ({
   messageId?: UniqueEntityID;
 }): Promise<Result<MessageEntity>> => {
   // Get session
-  const session = (await SessionService.getSession.execute(sessionId))
-    .throwOnFailure()
-    .getValue();
+  const session = await fetchSession(sessionId);
 
   // Create message
   const message = (
@@ -1102,55 +1271,6 @@ const addMessage = async ({
   }
 
   return Result.ok(sessionAndMessage.message);
-};
-
-const addOptionToMessage = async ({
-  messageId,
-  option,
-  isUser = false,
-}: {
-  messageId: UniqueEntityID;
-  option: Option;
-  isUser?: boolean;
-}) => {
-  // Get message
-  let message;
-  try {
-    message = (await TurnService.getTurn.execute(messageId))
-      .throwOnFailure()
-      .getValue();
-  } catch (error) {
-    return;
-  }
-
-  // Get session
-  const session = (await SessionService.getSession.execute(message.sessionId))
-    .throwOnFailure()
-    .getValue();
-
-  // Add option
-  message.addOption(option);
-
-  // Update message
-  try {
-    (await TurnService.updateTurn.execute(message)).throwOnFailure();
-  } catch (error) {
-    return;
-  }
-
-  // Translate message
-  if (option.content.trim() !== "" && session.translation) {
-    try {
-      (
-        await TurnService.translateTurn.execute({
-          turnId: message.id,
-          config: session.translation,
-        })
-      ).throwOnFailure();
-    } catch (error) {
-      return;
-    }
-  }
 };
 
 async function renderMessages({
@@ -1275,6 +1395,7 @@ async function generateTextOutput({
     case ApiSource.OpenRouter:
     case ApiSource.GoogleGenerativeAI:
     case ApiSource.Ollama:
+    case ApiSource.LMStudio:
     case ApiSource.DeepSeek:
     case ApiSource.xAI:
     case ApiSource.Mistral:
@@ -1469,6 +1590,20 @@ async function generateStructuredOutput({
       });
       break;
 
+    // LM Studio - Custom implementation for json_schema support
+    case ApiSource.LMStudio:
+      return {
+        partialObjectStream: streamObjectLMStudio({
+          modelId: parsedModelId,
+          messages: transformedMessages,
+          parameters,
+          schema,
+          abortSignal: combinedAbortSignal,
+          apiConnection,
+          streaming: streaming ?? false,
+        })
+      };
+
     // TODO: implement structured data for non-AI SDK
     // Request by non-AI SDK
     case ApiSource.Wllama:
@@ -1593,9 +1728,7 @@ async function* executeAgentNode({
 }): AsyncGenerator<AgentNodeResult, AgentNodeResult, void> {
   try {
     // Get agent
-    const agent = (await AgentService.getAgent.execute(agentId))
-      .throwOnFailure()
-      .getValue();
+    const agent = await fetchAgent(agentId);
 
     // Get API connection
     let apiSource = agent.props.apiSource;
@@ -1606,10 +1739,10 @@ async function* executeAgentNode({
       throw new Error("Agent does not have API source or model ID");
     }
 
-    let apiConnection = (await ApiService.listApiConnection.execute({}))
-      .throwOnFailure()
-      .getValue()
-      .find((connection) => connection.source === apiSource);
+    const apiConnections = await fetchApiConnections();
+    let apiConnection = apiConnections.find(
+      (connection) => connection.source === apiSource,
+    );
 
     // Automatic model mapping for logged-in users
     if (!apiConnection && isUserLoggedIn()) {
@@ -1617,12 +1750,9 @@ async function* executeAgentNode({
       // TODO: Replace with actual subscription check when available
       if (isUserSubscribed()) {
         // Try to use AstrskAi connection with fallback model
-        const astrskConnection = (
-          await ApiService.listApiConnection.execute({})
-        )
-          .throwOnFailure()
-          .getValue()
-          .find((connection) => connection.source === ApiSource.AstrskAi);
+        const astrskConnection = apiConnections.find(
+          (connection) => connection.source === ApiSource.AstrskAi,
+        );
 
         if (astrskConnection) {
           // Get fallback model based on agent's model tier
@@ -1760,9 +1890,7 @@ async function* executeFlow({
 
   try {
     // Get flow
-    const flow = (await FlowService.getFlow.execute(flowId))
-      .throwOnFailure()
-      .getValue();
+    const flow = await fetchFlow(flowId);
 
     // Find start node
     const startNode = flow.props.nodes.find((node) => node.type === "start");
@@ -1788,9 +1916,7 @@ async function* executeFlow({
     });
 
     // Get session
-    const session = (await SessionService.getSession.execute(sessionId))
-      .throwOnFailure()
-      .getValue();
+    const session = await fetchSession(sessionId);
 
     // Make context
     const context = (
@@ -1814,10 +1940,10 @@ async function* executeFlow({
       // Use last turn's dataStore as fallback
       const lastTurnId = session.turnIds[session.turnIds.length - 1];
       try {
-        const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
-          .throwOnFailure()
-          .getValue();
-        dataStore = cloneDeep(lastTurn.dataStore);
+        const lastTurn = await fetchTurnOptional(lastTurnId);
+        if (lastTurn) {
+          dataStore = cloneDeep(lastTurn.dataStore);
+        }
       } catch (error) {
         logger.warn(`Failed to get last turn's dataStore: ${error}`);
       }
@@ -1929,14 +2055,7 @@ async function* executeFlow({
         currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
       } else if (currentNode.type === "dataStore") {
         // Get datastore node
-        const dataStoreNode = (
-          await DataStoreNodeService.getDataStoreNode.execute({
-            flowId: flowId.toString(),
-            nodeId: currentNode.id,
-          })
-        )
-          .throwOnFailure()
-          .getValue();
+        const dataStoreNode = await fetchDataStoreNode(currentNode.id);
 
         // Execute datastore node
         const dataStoreFields = dataStoreNode?.dataStoreFields || [];
@@ -2013,17 +2132,7 @@ async function* executeFlow({
         currentNode = getNextNode(currentNode, adjacencyList, flow.props.nodes);
       } else if (currentNode.type === "if") {
         // Get if node
-        const ifNode = (
-          await IfNodeService.getIfNode.execute({
-            flowId: flowId.toString(),
-            nodeId: currentNode.id,
-          })
-        )
-          .throwOnFailure()
-          .getValue();
-        if (!ifNode) {
-          throw new Error(`No node: ${currentNode.id}`);
-        }
+        const ifNode = await fetchIfNode(currentNode.id);
 
         // Handle if node - evaluate condition and choose branch
         currentNode = await handleIfNode(
@@ -2565,11 +2674,11 @@ function convertToDataStoreType(
 
 export {
   addMessage,
-  addOptionToMessage,
   createMessage,
   evaluateConditionOperator,
   executeFlow,
   makeContext,
   renderMessages,
-  transformMessagesForModel,
+  transformMessagesForModel
 };
+

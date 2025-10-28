@@ -2,7 +2,7 @@ import { jsonb, pgTable, smallint, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
-import { OptionJSON } from "@/modules/turn/domain/option";
+import { OptionJSON } from "@/entities/turn/domain/option";
 
 export const turns = pgTable(TableName.Turns, {
   id: uuid().primaryKey(),

@@ -1,9 +1,9 @@
-import { LoadAssetRepo } from "@/modules/asset/repos/load-asset-repo";
-import { CloneAsset } from "@/modules/asset/usecases/clone-asset";
+import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
+import { CloneAsset } from "@/entities/asset/usecases/clone-asset";
 
-import { SaveFileToAsset } from "@/modules/asset/usecases/save-file-to-asset";
-import { LoadGeneratedImageRepo } from "@/modules/generated-image/repos/load-generated-image-repo";
-import { DrizzleCardRepo } from "@/modules/card/repos/impl/drizzle-card-repo";
+import { SaveFileToAsset } from "@/entities/asset/usecases/save-file-to-asset";
+import { LoadGeneratedImageRepo } from "@/entities/generated-image/repos/load-generated-image-repo";
+import { DrizzleCardRepo } from "@/entities/card/repos/impl/drizzle-card-repo";
 import {
   CloneCard,
   DeleteCard,
@@ -27,8 +27,8 @@ import {
   UpdateCardScenarios,
   UpdatePlotDescription,
   RestoreCardFromSnapshot,
-} from "@/modules/card/usecases";
-// import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
+} from "@/entities/card/usecases";
+// import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 
 export class CardService {
   public static cardRepo: DrizzleCardRepo;

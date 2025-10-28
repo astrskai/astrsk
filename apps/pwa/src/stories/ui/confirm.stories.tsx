@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui";
 import { Confirm, DeleteConfirm, UnsavedChangesConfirm } from "@/components-v2/confirm";
 
 const meta = {

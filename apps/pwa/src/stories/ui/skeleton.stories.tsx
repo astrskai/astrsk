@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Skeleton } from "@/components-v2/ui/skeleton";
+import { Skeleton } from "@/shared/ui";
 import React from "react";
 
 const meta = {

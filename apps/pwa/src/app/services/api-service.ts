@@ -1,6 +1,6 @@
 import { httpClient } from "@/shared/infra";
 
-import { DrizzleApiConnectionRepo } from "@/modules/api/repos/impl/drizzle-api-connection-repo";
+import { DrizzleApiConnectionRepo } from "@/entities/api/repos/impl/drizzle-api-connection-repo";
 import {
   DeleteApiConnection,
   GetApiConnection,
@@ -8,9 +8,9 @@ import {
   ListApiModel,
   SaveApiConnection,
   UpdateApiConnection,
-} from "@/modules/api/usecases";
-import { CheckApiKey } from "@/modules/api/usecases/check-api-key";
-// import { UpdateLocalSyncMetadata } from "@/modules/sync/usecases/update-local-sync-metadata";
+} from "@/entities/api/usecases";
+import { CheckApiKey } from "@/entities/api/usecases/check-api-key";
+// import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 
 export class ApiService {
   public static apiConnectionRepo: DrizzleApiConnectionRepo;

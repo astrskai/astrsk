@@ -2,7 +2,7 @@ import { jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core";
 
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
-import { LorebookJSON } from "@/modules/card/domain/lorebook";
+import { LorebookJSON } from "@/entities/card/domain/lorebook";
 
 export const plotCards = pgTable(TableName.PlotCards, {
   id: uuid().primaryKey(),

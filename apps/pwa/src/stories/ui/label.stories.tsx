@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Label } from "@/components-v2/ui/label";
-import { Input } from "@/components-v2/ui/input";
-import { Checkbox } from "@/components-v2/ui/checkbox";
-import { Textarea } from "@/components-v2/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components-v2/ui/radio-group";
+import {
+  Checkbox, Input, Label, RadioGroup,
+  RadioGroupItem, Textarea,
+} from "@/shared/ui";
 
 const meta = {
   title: "UI/Label",

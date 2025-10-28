@@ -9,10 +9,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components-v2/ui/sheet";
-import { Button } from "@/components-v2/ui/button";
-import { Input } from "@/components-v2/ui/input";
-import { Label } from "@/components-v2/ui/label";
+} from "@/shared/ui";
+import { Button, Input, Label } from "@/shared/ui";
 import React from "react";
 
 const meta = {

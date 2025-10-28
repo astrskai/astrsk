@@ -1,8 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { AgentService } from "@/app/services/agent-service";
-import { AgentDrizzleMapper } from "@/modules/agent/mappers/agent-drizzle-mapper";
-import { SearchAgentQuery } from "@/modules/agent/repos";
+import { AgentDrizzleMapper } from "@/entities/agent/mappers/agent-drizzle-mapper";
+import { SearchAgentQuery } from "@/entities/agent/repos";
 import { queryClient } from "@/app/queries/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders

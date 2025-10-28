@@ -4,8 +4,8 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components-v2/ui/tooltip";
-import { Button } from "@/components-v2/ui/button";
+} from "@/shared/ui";
+import { Button } from "@/shared/ui";
 import { Info, HelpCircle, AlertCircle, Plus, Copy, Download } from "lucide-react";
 import React from "react";
 

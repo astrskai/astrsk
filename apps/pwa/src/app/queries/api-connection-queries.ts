@@ -1,9 +1,9 @@
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { ApiService } from "@/app/services";
-import { ApiConnectionDrizzleMapper } from "@/modules/api/mappers/api-connection-drizzle-mapper";
-import { ApiModel } from "@/modules/api/domain/api-model";
-import { ApiConnection } from "@/modules/api/domain";
+import { ApiConnectionDrizzleMapper } from "@/entities/api/mappers/api-connection-drizzle-mapper";
+import { ApiModel } from "@/entities/api/domain/api-model";
+import { ApiConnection } from "@/entities/api/domain";
 import { queryClient } from "@/app/queries/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders
@@ -151,3 +151,27 @@ export const apiConnectionQueries = {
       enabled: !!id,
     }),
 };
+
+/**
+ * Helper functions to fetch api connections from cache and convert to domain objects
+ * Note: queryClient.fetchQuery returns persistence objects, not domain objects
+ * The select function only works in useQuery hooks, so we need to manually convert
+ */
+
+export async function fetchApiConnections(params: {
+  keyword?: string;
+  limit?: number;
+} = {}): Promise<ApiConnection[]> {
+  const data = await queryClient.fetchQuery(
+    apiConnectionQueries.list({
+      keyword: params.keyword || "",
+      limit: params.limit || 100,
+    })
+  );
+
+  if (!data || !Array.isArray(data)) return [];
+
+  return data.map((conn) =>
+    ApiConnectionDrizzleMapper.toDomain(conn as any)
+  );
+}

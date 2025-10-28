@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Tooltip } from "@/components-v2/tooltip";
 import React from "react";
-import { Button } from "@/components-v2/ui/button";
+import { Button } from "@/shared/ui";
 import { Info, HelpCircle, AlertCircle, CheckCircle } from "lucide-react";
 
 const meta = {

@@ -14,8 +14,8 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuShortcut,
-} from "@/components-v2/ui/dropdown-menu";
-import { Button } from "@/components-v2/ui/button";
+} from "@/shared/ui";
+import { Button } from "@/shared/ui";
 import {
   Cloud,
   CreditCard,

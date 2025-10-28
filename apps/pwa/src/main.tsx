@@ -1,10 +1,10 @@
 import { initServices } from "@/app/services/init-services.ts";
-import { useAppStore } from "@/app/stores/app-store.tsx";
-import { initStores } from "@/app/stores/init-stores.ts";
-import { Loading } from "@/components-v2/loading.tsx";
-import { PwaRegister } from "@/components-v2/pwa-register.tsx";
+import { useAppStore } from "@/shared/stores/app-store.tsx";
+import { initStores } from "@/shared/stores/init-stores.ts";
+import { Loading } from "@/shared/ui";
+import { PwaRegister } from "@/app/providers/pwa-register";
 import { migrate } from "@/db/migrate.ts";
-import { logger } from "@/shared/utils/logger.ts";
+import { logger } from "@/shared/lib/logger.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
 import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";

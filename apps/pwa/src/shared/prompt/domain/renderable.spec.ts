@@ -10,7 +10,7 @@ import {
   ToggleBlock,
   ToggleType,
 } from "@/shared/prompt/domain";
-import { OpenAITokenizer } from "@/shared/utils";
+import { OpenAITokenizer } from "@/shared/lib";
 
 const toggleBlockId = new UniqueEntityID();
 describe.each([

@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { CustomSheet } from "@/components-v2/custom-sheet";
 import React from "react";
-import { Button } from "@/components-v2/ui/button";
-import { Input } from "@/components-v2/ui/input";
-import { Label } from "@/components-v2/ui/label";
-import { Textarea } from "@/components-v2/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components-v2/ui/select";
+import {
+  Button, Input, Label, Select,
+  SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Textarea,
+} from "@/shared/ui";
 
 const meta = {
   title: "Components/CustomSheet",

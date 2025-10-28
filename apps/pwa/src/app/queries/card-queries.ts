@@ -1,9 +1,9 @@
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { CardService } from "@/app/services";
-import { CardDrizzleMapper } from "@/modules/card/mappers/card-drizzle-mapper";
-import { CardType } from "@/modules/card/domain";
-import { SearchCardsSort } from "@/modules/card/repos";
+import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
+import { CardType } from "@/entities/card/domain";
+import { SearchCardsSort } from "@/entities/card/repos";
 import { queryClient } from "@/app/queries/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders
