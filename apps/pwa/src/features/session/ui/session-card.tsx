@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Upload, Copy, Trash2, CircleAlert } from "lucide-react";
+import { Upload, Copy, Trash2, CircleAlert, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { queryClient } from "@/app/queries/query-client";
@@ -228,7 +228,7 @@ export function SessionCard({ session }: SessionCardProps) {
       <div
         className={cn(
           "group relative cursor-pointer overflow-hidden rounded-2xl",
-          "bg-background-surface-1 border-border border",
+          "border-border border bg-gray-900",
           "hover:border-primary/50 transition-all hover:shadow-lg",
           "flex h-[300px] max-w-[340px] flex-col",
         )}
@@ -296,6 +296,7 @@ export function SessionCard({ session }: SessionCardProps) {
               <span>No message</span>
             ) : (
               <>
+                <MessageCircle size={16} className="mr-1 text-white" />
                 <span className="text-text-primary font-medium">
                   {messageCount.toLocaleString()}
                 </span>

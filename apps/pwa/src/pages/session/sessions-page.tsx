@@ -1,18 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import {
-  NewSessionCard,
-  SessionsPageHeader,
-  SessionsGrid,
-  EmptyState,
-} from "@/features/session/ui";
+import { SessionsPageHeader, SessionsGrid } from "@/features/session/ui";
 import { NameInputDialog } from "@/features/session/ui/create-session";
 import { SessionImportDialog } from "@/features/session/components/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
 
 import { sessionQueries } from "@/app/queries/session-queries";
-import { HelpVideoDialog, Loading } from "@/shared/ui";
+import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
 
 /**
  * Sessions list page - displays all sessions in a card grid
@@ -79,20 +74,21 @@ export function SessionsPage() {
       <div className="flex-1 overflow-y-auto px-1 py-2">
         {isLoading ? (
           <Loading />
-        ) : sessions && sessions.length > 0 ? (
-          <SessionsGrid
-            sessions={sessions}
-            onCreateSession={handleCreateSession}
+        ) : keyword && (!sessions || sessions.length === 0) ? (
+          // Search with no results - show empty state with clear action
+          <SearchEmptyState
             keyword={keyword}
+            message="No sessions found"
+            description="Try a different search term"
+            onClearSearch={handleClearSearch}
           />
-        ) : keyword ? (
-          // Search with no results - show empty state
-          <EmptyState keyword={keyword} onClearSearch={handleClearSearch} />
         ) : (
-          // No sessions at all - show only New Session card
-          <div className="mx-auto grid [grid-template-columns:repeat(auto-fit,minmax(min(288px,100%),340px))] justify-center gap-4 p-4">
-            <NewSessionCard onClick={handleCreateSession} />
-          </div>
+          // Show grid with sessions (or NewSessionCard if empty)
+          <SessionsGrid
+            sessions={sessions || []}
+            onCreateSession={handleCreateSession}
+            showNewSessionCard={!keyword}
+          />
         )}
       </div>
     </div>

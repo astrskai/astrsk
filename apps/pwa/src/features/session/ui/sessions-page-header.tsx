@@ -33,7 +33,7 @@ export function SessionsPageHeader({
             name="session-search"
             value={keyword}
             onChange={(e) => onKeywordChange(e.target.value)}
-            className="w-[160px]"
+            className="w-[200px]"
           />
           <Button
             variant="secondary"

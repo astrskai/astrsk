@@ -7,7 +7,7 @@ import { Button } from "@/shared/ui/forms";
 interface SessionsGridProps {
   sessions: Session[];
   onCreateSession: () => void;
-  keyword: string;
+  showNewSessionCard: boolean;
 }
 
 /**
@@ -21,9 +21,8 @@ interface SessionsGridProps {
 export function SessionsGrid({
   sessions,
   onCreateSession,
-  keyword,
+  showNewSessionCard,
 }: SessionsGridProps) {
-  const showNewSessionCard = !keyword;
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -39,7 +38,7 @@ export function SessionsGrid({
       )}
 
       {/* Sessions Grid */}
-      <div className="mx-auto grid w-full grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {/* Desktop: New Session Card (inside grid) */}
         {showNewSessionCard && (
           <NewSessionCard

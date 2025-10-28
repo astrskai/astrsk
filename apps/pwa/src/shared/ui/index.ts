@@ -55,6 +55,7 @@ export * from "./loading";
 export * from "./loading-overlay";
 export * from "./media-display";
 export * from "./play-button";
+export * from "./search-empty-state";
 export * from "./search-input";
 export * from "./step-indicator";
 export * from "./stepper";

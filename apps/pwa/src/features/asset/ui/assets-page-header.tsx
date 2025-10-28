@@ -60,7 +60,7 @@ export function AssetsPageHeader({
             name="asset-search"
             value={keyword}
             onChange={(e) => onKeywordChange(e.target.value)}
-            className="w-[160px]"
+            className="w-[200px]"
           />
           <Button
             variant="secondary"
@@ -123,14 +123,14 @@ export function AssetsPageHeader({
               {TAB_LABELS[tab]}
               {/* Active Tab Indicator */}
               {activeTab === tab && (
-                <div className="bg-primary absolute bottom-0 left-0 right-0 h-0.5" />
+                <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
               )}
             </button>
           ))}
         </div>
 
         {/* Bottom Row: Search Input */}
-        <div className="px-4 pb-4 pt-4">
+        <div className="px-4 pt-4 pb-4">
           <SearchInput
             name="asset-search"
             value={keyword}

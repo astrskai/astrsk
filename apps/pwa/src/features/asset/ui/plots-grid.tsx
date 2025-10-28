@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import CardDisplay from "@/features/card/ui/card-display";
 import { NewPlotCard } from "./new-plot-card";
@@ -6,8 +7,7 @@ import { Button } from "@/shared/ui/forms";
 
 interface PlotsGridProps {
   plots: PlotCard[];
-  onCreatePlot: () => void;
-  keyword: string;
+  showNewPlotCard: boolean;
 }
 
 /**
@@ -18,19 +18,23 @@ interface PlotsGridProps {
  * - Mobile: Button above grid + 2 columns per row
  * - Desktop: New card inside grid + up to 5 columns per row
  */
-export function PlotsGrid({
-  plots,
-  onCreatePlot,
-  keyword,
-}: PlotsGridProps) {
-  const showNewPlotCard = !keyword;
+export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
+  const navigate = useNavigate();
+
+  const handleCreatePlot = () => {
+    navigate({ to: "/assets/create/plot" });
+  };
+
+  const handlePlotClick = (plotId: string) => {
+    navigate({ to: "/cards/$cardId", params: { cardId: plotId } });
+  };
 
   return (
     <div className="flex flex-col gap-4 p-4">
       {/* Mobile: Create Button (outside grid) */}
       {showNewPlotCard && (
         <Button
-          onClick={onCreatePlot}
+          onClick={handleCreatePlot}
           icon={<Plus size={16} />}
           className="w-full md:hidden"
         >
@@ -39,13 +43,10 @@ export function PlotsGrid({
       )}
 
       {/* Plots Grid */}
-      <div className="mx-auto grid w-full grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {/* Desktop: New Plot Card (inside grid) */}
         {showNewPlotCard && (
-          <NewPlotCard
-            onClick={onCreatePlot}
-            className="hidden md:flex"
-          />
+          <NewPlotCard onClick={handleCreatePlot} className="hidden md:flex" />
         )}
 
         {/* Existing Plots */}
@@ -54,11 +55,8 @@ export function PlotsGrid({
             <CardDisplay
               card={plot}
               isSelected={false}
-              showActions={false}
-              onClick={() => {
-                // TODO: Navigate to plot detail page
-                console.log("Plot clicked:", plot.id.toString());
-              }}
+              showActions={true}
+              onClick={() => handlePlotClick(plot.id.toString())}
             />
           </div>
         ))}

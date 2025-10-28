@@ -33,6 +33,7 @@ import { Route as LayoutSettingsLegalPrivacyPolicyRouteImport } from './routes/_
 import { Route as LayoutSettingsLegalOssNoticeRouteImport } from './routes/_layout/settings/legal/oss-notice'
 import { Route as LayoutSettingsLegalContentPolicyRouteImport } from './routes/_layout/settings/legal/content-policy'
 import { Route as LayoutSettingsAccountCreditUsageRouteImport } from './routes/_layout/settings/account/credit-usage'
+import { Route as LayoutAssetsCreatePlotIndexRouteImport } from './routes/_layout/assets/create/plot/index'
 import { Route as LayoutAssetsCreateCharacterIndexRouteImport } from './routes/_layout/assets/create/character/index'
 
 const LayoutRoute = LayoutRouteImport.update({
@@ -163,6 +164,12 @@ const LayoutSettingsAccountCreditUsageRoute =
     path: '/account/credit-usage',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
+const LayoutAssetsCreatePlotIndexRoute =
+  LayoutAssetsCreatePlotIndexRouteImport.update({
+    id: '/assets/create/plot/',
+    path: '/assets/create/plot/',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 const LayoutAssetsCreateCharacterIndexRoute =
   LayoutAssetsCreateCharacterIndexRouteImport.update({
     id: '/assets/create/character/',
@@ -195,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
   '/assets/create/character': typeof LayoutAssetsCreateCharacterIndexRoute
+  '/assets/create/plot': typeof LayoutAssetsCreatePlotIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LayoutLoginRoute
@@ -220,6 +228,7 @@ export interface FileRoutesByTo {
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
   '/assets/create/character': typeof LayoutAssetsCreateCharacterIndexRoute
+  '/assets/create/plot': typeof LayoutAssetsCreatePlotIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -248,6 +257,7 @@ export interface FileRoutesById {
   '/_layout/settings/account/': typeof LayoutSettingsAccountIndexRoute
   '/_layout/settings/legal/': typeof LayoutSettingsLegalIndexRoute
   '/_layout/assets/create/character/': typeof LayoutAssetsCreateCharacterIndexRoute
+  '/_layout/assets/create/plot/': typeof LayoutAssetsCreatePlotIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/legal'
     | '/assets/create/character'
+    | '/assets/create/plot'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/legal'
     | '/assets/create/character'
+    | '/assets/create/plot'
   id:
     | '__root__'
     | '/_layout'
@@ -328,6 +340,7 @@ export interface FileRouteTypes {
     | '/_layout/settings/account/'
     | '/_layout/settings/legal/'
     | '/_layout/assets/create/character/'
+    | '/_layout/assets/create/plot/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -504,6 +517,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsAccountCreditUsageRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
+    '/_layout/assets/create/plot/': {
+      id: '/_layout/assets/create/plot/'
+      path: '/assets/create/plot'
+      fullPath: '/assets/create/plot'
+      preLoaderRoute: typeof LayoutAssetsCreatePlotIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/assets/create/character/': {
       id: '/_layout/assets/create/character/'
       path: '/assets/create/character'
@@ -561,6 +581,7 @@ interface LayoutRouteChildren {
   LayoutSessionsIndexRoute: typeof LayoutSessionsIndexRoute
   LayoutSessionsCreateIndexRoute: typeof LayoutSessionsCreateIndexRoute
   LayoutAssetsCreateCharacterIndexRoute: typeof LayoutAssetsCreateCharacterIndexRoute
+  LayoutAssetsCreatePlotIndexRoute: typeof LayoutAssetsCreatePlotIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -577,6 +598,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutSessionsIndexRoute: LayoutSessionsIndexRoute,
   LayoutSessionsCreateIndexRoute: LayoutSessionsCreateIndexRoute,
   LayoutAssetsCreateCharacterIndexRoute: LayoutAssetsCreateCharacterIndexRoute,
+  LayoutAssetsCreatePlotIndexRoute: LayoutAssetsCreatePlotIndexRoute,
 }
 
 const LayoutRouteWithChildren =

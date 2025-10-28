@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
   AssetsPageHeader,
@@ -9,7 +8,7 @@ import {
   PlotsGrid,
   FlowsGrid,
 } from "@/features/asset/ui";
-import { HelpVideoDialog, Loading } from "@/shared/ui";
+import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
 import { cardQueries } from "@/app/queries/card-queries";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { CardService } from "@/app/services/card-service";
@@ -25,9 +24,7 @@ export function AssetsPage() {
   const [activeTab, setActiveTab] = useState<AssetType>("characters");
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
-  const [isImporting, setIsImporting] = useState<boolean>(false);
 
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -82,8 +79,6 @@ export function AssetsPage() {
         return;
       }
 
-      setIsImporting(true);
-
       try {
         // Import card from file
         const result = await CardService.importCardFromFile.execute(file);
@@ -111,7 +106,6 @@ export function AssetsPage() {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       } finally {
-        setIsImporting(false);
         // Reset file input
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
@@ -144,18 +138,13 @@ export function AssetsPage() {
     setIsOpenHelpDialog(true);
   };
 
-  const handleCreateCharacter = () => {
-    navigate({ to: "/assets/create/character" });
-  };
-
-  const handleCreatePlot = () => {
-    // TODO: Navigate to plot creation page
-    console.log("Create plot clicked");
-  };
-
   const handleCreateFlow = () => {
     // TODO: Navigate to flow creation page
     console.log("Create flow clicked");
+  };
+
+  const handleClearSearch = () => {
+    setKeyword("");
   };
 
   return (
@@ -191,23 +180,21 @@ export function AssetsPage() {
         {activeTab === "characters" && (
           <>
             {isLoadingCards ? (
-              <div className="flex h-full items-center justify-center">
-                <Loading />
-              </div>
-            ) : characters.length > 0 || !keyword ? (
-              <CharactersGrid
-                characters={characters}
-                onCreateCharacter={handleCreateCharacter}
+              <Loading />
+            ) : keyword && characters.length === 0 ? (
+              // Search with no results - show empty state with clear action
+              <SearchEmptyState
                 keyword={keyword}
+                message="No characters found"
+                description="Try a different search term"
+                onClearSearch={handleClearSearch}
               />
             ) : (
-              // Search with no results
-              <div className="text-text-secondary flex h-full items-center justify-center">
-                <div className="text-center">
-                  <p className="mb-2 text-lg">No characters found</p>
-                  <p className="text-sm">Try a different search term</p>
-                </div>
-              </div>
+              // Show grid with characters (or NewCharacterCard if empty)
+              <CharactersGrid
+                characters={characters}
+                showNewCharacterCard={!keyword}
+              />
             )}
           </>
         )}
@@ -215,23 +202,18 @@ export function AssetsPage() {
         {activeTab === "plots" && (
           <>
             {isLoadingCards ? (
-              <div className="flex h-full items-center justify-center">
-                <Loading />
-              </div>
-            ) : plots.length > 0 || !keyword ? (
-              <PlotsGrid
-                plots={plots}
-                onCreatePlot={handleCreatePlot}
+              <Loading />
+            ) : keyword && plots.length === 0 ? (
+              // Search with no results - show empty state with clear action
+              <SearchEmptyState
                 keyword={keyword}
+                message="No plots found"
+                description="Try a different search term"
+                onClearSearch={handleClearSearch}
               />
             ) : (
-              // Search with no results
-              <div className="text-text-secondary flex h-full items-center justify-center">
-                <div className="text-center">
-                  <p className="mb-2 text-lg">No plots found</p>
-                  <p className="text-sm">Try a different search term</p>
-                </div>
-              </div>
+              // Show grid with plots (or NewPlotCard if empty)
+              <PlotsGrid plots={plots} showNewPlotCard={!keyword} />
             )}
           </>
         )}
@@ -239,23 +221,22 @@ export function AssetsPage() {
         {activeTab === "flows" && (
           <>
             {isLoadingFlows ? (
-              <div className="flex h-full items-center justify-center">
-                <Loading />
-              </div>
-            ) : flows.length > 0 || !keyword ? (
+              <Loading />
+            ) : keyword && flows.length === 0 ? (
+              // Search with no results - show empty state with clear action
+              <SearchEmptyState
+                keyword={keyword}
+                message="No flows found"
+                description="Try a different search term"
+                onClearSearch={handleClearSearch}
+              />
+            ) : (
+              // Show grid with flows (or NewFlowCard if empty)
               <FlowsGrid
                 flows={flows}
                 onCreateFlow={handleCreateFlow}
                 keyword={keyword}
               />
-            ) : (
-              // Search with no results
-              <div className="text-text-secondary flex h-full items-center justify-center">
-                <div className="text-center">
-                  <p className="mb-2 text-lg">No flows found</p>
-                  <p className="text-sm">Try a different search term</p>
-                </div>
-              </div>
             )}
           </>
         )}

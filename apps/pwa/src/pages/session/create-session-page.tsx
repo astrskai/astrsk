@@ -5,12 +5,12 @@ import { Route } from "@/routes/_layout/sessions/create/index";
 import { Button } from "@/shared/ui/forms";
 import { ActionConfirm } from "@/shared/ui/dialogs";
 import {
-  StepIndicator,
   FlowSelectionStep,
   AiCharacterSelectionStep,
   UserCharacterSelectionStep,
   PlotSelectionStep,
 } from "@/features/session/ui/create-session";
+import { StepIndicator } from "@/shared/ui/step-indicator";
 import { logger } from "@/shared/lib";
 import { Flow } from "@/entities/flow/domain/flow";
 import { CharacterCard } from "@/entities/card/domain/character-card";

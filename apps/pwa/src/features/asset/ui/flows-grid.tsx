@@ -39,7 +39,7 @@ export function FlowsGrid({
       )}
 
       {/* Flows Grid */}
-      <div className="mx-auto grid w-full grid-cols-1 justify-center gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-1 justify-center gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Desktop: New Flow Card (inside grid) */}
         {showNewFlowCard && (
           <NewFlowCard

@@ -45,14 +45,14 @@ export function CreateCharacterPage() {
   const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
   const [isCreatingCard, setIsCreatingCard] = useState<boolean>(false);
 
-  const steps: StepConfig<CharacterStep>[] = [
+  const STEPS: StepConfig<CharacterStep>[] = [
     { id: "image", number: 1, label: "Upload Image", required: true },
     { id: "info", number: 2, label: "Character Info", required: true },
     { id: "lorebook", number: 3, label: "Lorebook", required: false },
   ];
 
-  const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
-  const isLastStep = currentStepIndex === steps.length - 1;
+  const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
+  const isLastStep = currentStepIndex === STEPS.length - 1;
   const showPreviousButton = currentStepIndex > 0;
 
   const handleFileUpload = async (file: File) => {
@@ -160,7 +160,7 @@ export function CreateCharacterPage() {
         setIsCreatingCard(false);
       }
     } else {
-      const nextStep = steps[currentStepIndex + 1];
+      const nextStep = STEPS[currentStepIndex + 1];
       if (nextStep) {
         setCurrentStep(nextStep.id);
       }
@@ -169,7 +169,7 @@ export function CreateCharacterPage() {
 
   const handlePrevious = () => {
     if (currentStepIndex > 0) {
-      const prevStep = steps[currentStepIndex - 1];
+      const prevStep = STEPS[currentStepIndex - 1];
       if (prevStep) {
         setCurrentStep(prevStep.id);
       }
@@ -244,7 +244,7 @@ export function CreateCharacterPage() {
       </div>
 
       {/* Step Indicator */}
-      <StepIndicator steps={steps} currentStep={currentStep} />
+      <StepIndicator steps={STEPS} currentStep={currentStep} />
 
       {/* Content */}
       <div className="flex flex-1 overflow-y-auto">

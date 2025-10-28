@@ -150,6 +150,9 @@
   --color-blue-700: var(--color-blue-700);
   --color-blue-800: var(--color-blue-800);
 
+  /* Color palette - Gray */
+  --color-gray-900: #303030;
+
   /* Color palette - Purple */
   --color-purple-200: var(--color-purple-200);
 
@@ -565,7 +568,15 @@
   body {
     color: var(--foreground);
     background-color: var(--background-surface-2);
-    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+      var(--font-inter),
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
   }
 
   /* Remove textarea resizer */

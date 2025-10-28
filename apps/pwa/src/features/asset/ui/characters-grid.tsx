@@ -7,8 +7,7 @@ import { Button } from "@/shared/ui/forms";
 
 interface CharactersGridProps {
   characters: CharacterCard[];
-  onCreateCharacter: () => void;
-  keyword: string;
+  showNewCharacterCard: boolean;
 }
 
 /**
@@ -21,14 +20,16 @@ interface CharactersGridProps {
  */
 export function CharactersGrid({
   characters,
-  onCreateCharacter,
-  keyword,
+  showNewCharacterCard,
 }: CharactersGridProps) {
   const navigate = useNavigate();
-  const showNewCharacterCard = !keyword;
 
   const handleCharacterClick = (characterId: string) => {
     navigate({ to: "/cards/$cardId", params: { cardId: characterId } });
+  };
+
+  const handleCreateCharacter = () => {
+    navigate({ to: "/assets/create/character" });
   };
 
   return (
@@ -36,7 +37,7 @@ export function CharactersGrid({
       {/* Mobile: Create Button (outside grid) */}
       {showNewCharacterCard && (
         <Button
-          onClick={onCreateCharacter}
+          onClick={handleCreateCharacter}
           icon={<Plus size={16} />}
           className="w-full md:hidden"
         >
@@ -45,11 +46,11 @@ export function CharactersGrid({
       )}
 
       {/* Characters Grid */}
-      <div className="mx-auto grid w-full grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {/* Desktop: New Character Card (inside grid) */}
         {showNewCharacterCard && (
           <NewCharacter
-            onClick={onCreateCharacter}
+            onClick={handleCreateCharacter}
             className="hidden md:flex"
           />
         )}
