@@ -20,10 +20,15 @@ export async function initializeExtensions(): Promise<void> {
     // Dynamically import and register NPC plugin
     // Extensions are physically separated during development but bundled in production
     // Security is enforced through the extension client API
-    // @ts-expect-error - Extensions types are not available to pwa TypeScript
     const { NpcPlugin } = await import("@extensions/npc/npc-plugin");
     const npcPlugin = new NpcPlugin();
     await extensionRegistry.register(npcPlugin);
+
+    // Dynamically import and register Lorebook plugin
+    // Runs async alongside NPC extraction
+    const { LorebookPlugin } = await import("@extensions/lorebook/lorebook-plugin");
+    const lorebookPlugin = new LorebookPlugin();
+    await extensionRegistry.register(lorebookPlugin);
 
     console.log("✅ [Extensions] All extensions loaded successfully");
     logger.info("[Extensions] All extensions loaded successfully");

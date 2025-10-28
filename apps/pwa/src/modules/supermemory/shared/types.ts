@@ -222,6 +222,70 @@ export interface StorageResult {
 }
 
 // ============================================================================
+// Update & Delete Operation Types
+// ============================================================================
+
+export interface GetMemoryRequest {
+  memoryId: string
+}
+
+export interface GetMemoryResponse {
+  id: string
+  containerTag: string
+  content: string
+  metadata: MemoryMetadata
+  customId?: string
+  status?: string
+}
+
+export interface UpdateMemoryRequest {
+  memoryId: string
+  content?: string
+  metadata?: Partial<MemoryMetadata>
+}
+
+export interface UpdateMemoryResponse {
+  id: string
+  status: string // "queued" for reprocessing
+  customId?: string
+}
+
+export interface DeleteMemoryRequest {
+  memoryId: string
+}
+
+export interface DeleteMemoryResponse {
+  success: boolean
+}
+
+export interface BulkDeleteRequest {
+  ids?: string[]
+  containerTags?: string[]
+}
+
+export interface BulkDeleteResponse {
+  success: boolean
+  deletedCount: number
+  errors?: Array<{
+    id: string
+    error: string
+  }>
+  containerTags?: string[]
+}
+
+// Convenience type for update operations
+export interface UpdateStorageResult extends StorageResult {
+  status?: string // Processing status
+}
+
+// Convenience type for delete operations
+export interface DeleteStorageResult {
+  success: boolean
+  error?: string
+  deletedCount?: number
+}
+
+// ============================================================================
 // Initialization Types
 // ============================================================================
 

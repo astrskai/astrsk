@@ -2095,6 +2095,22 @@ const SessionMessagesAndUserInputs = ({
                   }
                 }
 
+                // Apply supermemoryIds update (store memory IDs for edit/delete operations)
+                if (suggestedUpdates.supermemoryIds && suggestedUpdates.supermemoryIds.length > 0) {
+                  const supermemoryIdsIndex = dataStore.findIndex((f: any) => f.name === "supermemory_ids");
+                  if (supermemoryIdsIndex >= 0) {
+                    dataStore[supermemoryIdsIndex].value = JSON.stringify(suggestedUpdates.supermemoryIds);
+                  } else {
+                    dataStore.push({
+                      id: "supermemory_ids",
+                      name: "supermemory_ids",
+                      type: "string",
+                      value: JSON.stringify(suggestedUpdates.supermemoryIds),
+                    });
+                  }
+                  console.log(`✅ Stored ${suggestedUpdates.supermemoryIds.length} memory IDs in User Turn dataStore`);
+                }
+
                 // Update turn with new dataStore using setDataStore method
                 turn.setDataStore(dataStore as any);
 
@@ -2389,6 +2405,11 @@ const SessionMessagesAndUserInputs = ({
   // Edit message
   const editMessage = useCallback(
     async (messageId: UniqueEntityID, content: string) => {
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("✏️ [EditMessage] Starting edit process");
+      console.log(`   Message ID: ${messageId.toString()}`);
+      console.log(`   New content: "${content.substring(0, 100)}..."`);
+
       // Get message from DB
       const messageOrError = await TurnService.getTurn.execute(messageId);
       if (messageOrError.isFailure) {
@@ -2397,15 +2418,29 @@ const SessionMessagesAndUserInputs = ({
       }
       const message = messageOrError.getValue();
 
+      console.log("   Fetched message from DB");
+      console.log("   DataStore fields:", message.dataStore.map((f: any) => f.name));
+
+      const supermemoryIdsField = message.dataStore.find((f: any) => f.name === "supermemory_ids");
+      if (supermemoryIdsField) {
+        console.log("   ✅ Found supermemory_ids:", supermemoryIdsField.value);
+      } else {
+        console.log("   ❌ No supermemory_ids field found");
+      }
+
       // Set content
       message.setContent(content);
+      console.log("   Set new content on message");
 
       // Save message to DB
+      console.log("   Calling TurnService.updateTurn.execute()...");
       const savedMessageOrError = await TurnService.updateTurn.execute(message);
       if (savedMessageOrError.isFailure) {
         logger.error("Failed to save message", savedMessageOrError.getError());
         return;
       }
+      console.log("   ✅ Message saved successfully");
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
       // Invalidate message
       queryClient.invalidateQueries({

@@ -14,6 +14,10 @@ import type {
   SessionInitInput,
   MemoryRecallInput,
   MemoryDistributionInput,
+  UpdateStorageResult,
+  DeleteStorageResult,
+  GetMemoryResponse,
+  MemoryMetadata,
 } from "../../shared/types";
 import {
   createCharacterContainer,
@@ -24,6 +28,15 @@ import {
   storeWorldMessage,
   storeCharacterMessage,
   buildEnrichedMessage,
+  getMemoryById,
+  updateMemoryById,
+  deleteMemoryById,
+  updateCharacterMessage,
+  updateWorldMessage,
+  deleteCharacterMessage,
+  deleteWorldMessage,
+  deleteByContainer,
+  bulkDeleteByIds,
 } from "../core/memory-storage";
 import { retrieveCharacterMemories } from "../core/memory-retrieval";
 import { UniqueEntityID } from "@/shared/domain";
@@ -327,12 +340,59 @@ export async function recallCharacterMemories(
       limit,
     });
 
+    // Get lorebook entries for this character
+    const { useLorebookStore } = await import("@extensions/lorebook");
+    const lorebookEntries = useLorebookStore
+      .getState()
+      .getEntriesByCharacter(characterId, sessionId);
+
+    console.log(`📚 [Memory Recall] Found ${lorebookEntries.length} lorebook entries for ${characterName}`);
 
     // Format memories (simple sentences from Supermemory)
     const { formatMemoriesForPrompt } = await import(
       "../core/memory-retrieval"
     );
-    let formattedMemories = formatMemoriesForPrompt(result.memories);
+    const formattedMemoriesRaw = formatMemoriesForPrompt(result.memories);
+
+    // Wrap memories in XML tags with instructions
+    let formattedMemories = "";
+
+    if (formattedMemoriesRaw) {
+      formattedMemories = `<MEMORY>
+These are past memories retrieved from the conversation history. Use them to maintain continuity and recall previous events, but do NOT repeat them verbatim in your response.
+
+${formattedMemoriesRaw}
+</MEMORY>`;
+    }
+
+    // Add lorebook entries as a separate XML section
+    if (lorebookEntries.length > 0) {
+      // Escape XML special characters to prevent injection
+      const escapeXml = (unsafe: string): string => {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
+      };
+
+      const lorebookContent = lorebookEntries
+        .map((entry) => `- ${escapeXml(entry.content)}`)
+        .join("\n");
+
+      const lorebookSection = `<LOREBOOK>
+These are permanent facts about ${escapeXml(characterName)}. Use this knowledge to inform your responses and maintain character consistency. These are NOT dialogue - they are factual information for you to reference.
+
+${lorebookContent}
+</LOREBOOK>`;
+
+      if (formattedMemories) {
+        formattedMemories = `${formattedMemories}\n\n${lorebookSection}`;
+      } else {
+        formattedMemories = lorebookSection;
+      }
+    }
 
     // Append character-specific world context if available
     let appendedWorldContext: string | undefined;
@@ -367,6 +427,7 @@ export async function recallCharacterMemories(
       retrievedCount: result.count,
       memories: result.memories,
       worldContext: appendedWorldContext,
+      lorebookCount: lorebookEntries.length,
     });
 
     return formattedMemories;
@@ -391,10 +452,11 @@ export { formatMemoriesForPrompt } from "../core/memory-retrieval";
  * 2. Builds and stores enriched messages for each participant
  *
  * @param input - Memory distribution input
+ * @returns Array of all memory IDs created (world + all character memories)
  */
 export async function distributeMemories(
   input: MemoryDistributionInput,
-): Promise<void> {
+): Promise<string[]> {
   try {
     const {
       sessionId,
@@ -561,11 +623,25 @@ export async function distributeMemories(
         game_time,
         game_time_interval,
         type: "message",
-      });
+      }).then(result => ({ participantId, result }));
     });
 
-    await Promise.all(distributionPromises);
+    const characterResults = await Promise.all(distributionPromises);
 
+    // Collect all memory IDs (world + character)
+    const allMemoryIds: string[] = [];
+
+    // Add world memory ID
+    if (worldStoreResult.id) {
+      allMemoryIds.push(worldStoreResult.id);
+    }
+
+    // Add character memory IDs
+    for (const { participantId, result } of characterResults) {
+      if (result.success && result.id) {
+        allMemoryIds.push(result.id);
+      }
+    }
 
     // Debug event removed - memory distribution info already shown in Character Memory Add events
     // recordMemoryDistribution({
@@ -576,9 +652,12 @@ export async function distributeMemories(
     //   worldMessageContent,
     //   enrichedContents: enrichedContentsForDebug,
     // });
+
+    return allMemoryIds;
   } catch (error) {
     logger.error("[Memory Distribution] Failed to distribute memories:", error);
     // Don't throw - graceful degradation (memory distribution is enhancement, not requirement)
+    return [];
   }
 }
 
@@ -608,7 +687,7 @@ export interface UserMessageMemoryInput {
  */
 export async function processUserMessage(
   input: UserMessageMemoryInput,
-): Promise<{ gameTime?: number; participants?: string[]; worldContext?: string } | null> {
+): Promise<{ gameTime?: number; participants?: string[]; worldContext?: string; supermemoryIds?: string[] } | null> {
   try {
     const { sessionId, messageContent, session, flow, previousDataStore } = input;
 
@@ -798,8 +877,8 @@ export async function processUserMessage(
       worldMemoryQuery, // Query used to retrieve world memories
     });
 
-    // Distribute user message to all participants
-    await distributeMemories({
+    // Distribute user message to all participants and capture memory IDs
+    const memoryIds = await distributeMemories({
       sessionId,
       speakerCharacterId,
       speakerName,
@@ -811,6 +890,16 @@ export async function processUserMessage(
     });
 
     logger.info(`[User Message] Successfully stored in supermemory for ${allParticipantNames.length} participants`);
+
+    // Log captured memory IDs for user message
+    if (memoryIds.length > 0) {
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("💾 SUPERMEMORY IDs CAPTURED (User Message)");
+      console.log(`Session: ${sessionId}`);
+      console.log(`Speaker: ${speakerName}`);
+      console.log(`Memory IDs (${memoryIds.length}):`, memoryIds);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    }
 
     // Trigger extension hooks for user message (NPC detection, etc.)
     try {
@@ -853,6 +942,7 @@ export async function processUserMessage(
       ...(newGameTime !== undefined && { gameTime: newGameTime }),
       ...(participantNames.length > 0 && { participants: participantNames }),
       ...(updatedWorldContext && { worldContext: updatedWorldContext }),
+      ...(memoryIds.length > 0 && { supermemoryIds: memoryIds }),
     };
   } catch (error) {
     // Don't fail the entire operation if supermemory fails
@@ -860,6 +950,89 @@ export async function processUserMessage(
     return null;
   }
 }
+
+// ============================================================================
+// Memory Update & Delete Operations
+// ============================================================================
+
+/**
+ * Get memory by ID
+ * Retrieves a specific memory from any container
+ *
+ * @param memoryId - Memory ID to retrieve
+ * @returns Memory data or null if not found
+ */
+export async function getMemory(
+  memoryId: string,
+): Promise<GetMemoryResponse | null> {
+  return getMemoryById(memoryId);
+}
+
+/**
+ * Update memory by ID
+ * Generic update that works for any memory type
+ *
+ * @param memoryId - Memory ID to update
+ * @param content - New content (optional)
+ * @param metadata - New metadata (optional, merged with existing)
+ * @returns Update result with status
+ */
+export async function updateMemory(
+  memoryId: string,
+  content?: string,
+  metadata?: Partial<MemoryMetadata>,
+): Promise<UpdateStorageResult> {
+  return updateMemoryById(memoryId, content, metadata);
+}
+
+/**
+ * Delete memory by ID
+ * Permanently deletes a single memory (hard delete)
+ *
+ * @param memoryId - Memory ID to delete
+ * @returns Delete result with success status
+ */
+export async function deleteMemory(
+  memoryId: string,
+): Promise<DeleteStorageResult> {
+  return deleteMemoryById(memoryId);
+}
+
+/**
+ * Delete all memories in a container
+ * Uses bulk delete to remove all memories by container tag
+ *
+ * @param sessionId - Session ID
+ * @param characterId - Character ID (optional - if not provided, deletes world container)
+ * @returns Delete result with count of deleted memories
+ */
+export async function deleteContainerMemories(
+  sessionId: string,
+  characterId?: string,
+): Promise<DeleteStorageResult> {
+  const containerTag = characterId
+    ? createCharacterContainer(sessionId, characterId)
+    : createWorldContainer(sessionId);
+
+  return deleteByContainer(containerTag);
+}
+
+/**
+ * Bulk delete memories by IDs
+ * Deletes multiple memories at once (max 100 per request)
+ *
+ * @param memoryIds - Array of memory IDs to delete
+ * @returns Delete result with count and any errors
+ */
+export async function bulkDeleteMemories(
+  memoryIds: string[],
+): Promise<DeleteStorageResult> {
+  return bulkDeleteByIds(memoryIds);
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
 /**
  * Helper: Detect if agent prompt contains roleplay memory tag

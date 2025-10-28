@@ -88,6 +88,7 @@ export class SessionService {
       turnRepo,
       this.sessionRepo,
       this.sessionRepo,
+      turnRepo,
     );
     this.deleteSession = new DeleteSession(
       this.sessionRepo,

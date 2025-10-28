@@ -24,6 +24,7 @@ import { logger } from "@/shared/utils/logger";
 type MemoryResultItem = {
   memory?: string;
   content?: string;
+  id?: string; // Document ID for v3 GET
   metadata?: { game_time?: number; type?: string; participants?: string[] };
 };
 
@@ -109,17 +110,61 @@ export async function retrieveCharacterMemories(
     // Currently, filters are not supported in the query (Supermemory expects Or | And structure)
     // For POC, we rely on semantic search and content filtering
 
-    // Query Supermemory
-    const results = await memoryClient.search.memories({
+    // Query Supermemory v4 (with knowledge graph)
+    const v4Results = await memoryClient.search.memories({
       q: query,
       containerTag: input.containerTag,
       limit: input.limit,
+      rewriteQuery: true,
     });
 
-    const typed = results as unknown as MemorySearchResponse;
+    // Also query v3 (raw documents) for comparison
+    // v3 uses containerTags (plural, array) instead of containerTag (singular, string)
+    const v3Results = await memoryClient.search.documents({
+      q: query,
+      containerTags: [input.containerTag],
+      limit: input.limit,
+    }).catch((error) => {
+      console.warn("[Memory Retrieval] v3 search failed:", error);
+      return { results: [] };
+    });
+
+    const v4Typed = v4Results as unknown as MemorySearchResponse;
+    const v3Typed = v3Results as unknown as any; // v3 has different structure
+
+    console.log("🔍 [DEBUG] v3 raw response:", JSON.stringify(v3Typed, null, 2).substring(0, 500));
+
+    // Log comparison
+    console.log("\n━━━━━━━━ CHARACTER MEMORY RETRIEVAL COMPARISON ━━━━━━━━");
+    console.log(`Container: ${input.containerTag}`);
+    console.log(`Query: ${query.substring(0, 100)}...`);
+    console.log(`\n📊 v4 Memory Search (Knowledge Graph): ${v4Typed.results.length} results`);
+    v4Typed.results.forEach((r, i) => {
+      const preview = (r.memory ?? r.content ?? '').substring(0, 80).replace(/\n/g, ' ');
+      console.log(`  ${i+1}. ${preview}...`);
+    });
+
+    // v3 has nested chunks array structure: results[].chunks[].content
+    const v3Results_array = v3Typed.results || [];
+    console.log(`\n📄 v3 Document Search (Raw): ${v3Results_array.length} results`);
+    console.log(`   Response structure: ${Object.keys(v3Typed).join(', ')}`);
+    v3Results_array.forEach((r: any, i: number) => {
+      // v3 structure: each result has chunks[] array with content
+      const chunks = r.chunks || [];
+      const allChunksText = chunks.map((c: any) => c.content || '').join(' ');
+      const preview = allChunksText.substring(0, 80).replace(/\n/g, ' ');
+      const documentId = r.documentId || r.id || 'unknown';
+      console.log(`  ${i+1}. [${documentId}] ${preview}...`);
+      if (i === 0) {
+        console.log(`     [DEBUG] Chunks count: ${chunks.length}, First result fields:`, Object.keys(r).join(', '));
+      }
+    });
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+
+    // Return v4 results (current behavior)
     return {
-      memories: typed.results.map((r) => r.memory ?? r.content ?? ''),
-      count: typed.results.length,
+      memories: v4Typed.results.map((r) => r.memory ?? r.content ?? ''),
+      count: v4Typed.results.length,
     };
   } catch (error) {
     logger.error(
@@ -160,26 +205,68 @@ export async function retrieveWorldMemories(
     // Currently, filters are not supported in the query (Supermemory expects Or | And structure)
     // For POC, we rely on semantic search and content filtering
 
-    // Query Supermemory
-    const results = await memoryClient.search.memories({
+    // Query Supermemory v4 (with knowledge graph)
+    const v4Results = await memoryClient.search.memories({
       q: input.query,
       containerTag: input.containerTag,
       limit: input.limit,
+      rewriteQuery: true,
     });
 
-    const typed = results as unknown as MemorySearchResponse;
+    // Also query v3 (raw documents) for comparison
+    // v3 uses containerTags (plural, array) instead of containerTag (singular, string)
+    const v3Results = await memoryClient.search.documents({
+      q: input.query,
+      containerTags: [input.containerTag],
+      limit: input.limit,
+    }).catch((error) => {
+      console.warn("[Memory Retrieval] v3 world search failed:", error);
+      return { results: [] };
+    });
 
+    const v4Typed = v4Results as unknown as MemorySearchResponse;
+    const v3Typed = v3Results as unknown as any; // v3 has different structure
 
-    // Extract metadata if requested
-    const metadata = typed.results.map((r) => ({
+    console.log("🔍 [DEBUG] v3 world raw response:", JSON.stringify(v3Typed, null, 2).substring(0, 500));
+
+    // Log comparison
+    console.log("\n━━━━━━━━ WORLD MEMORY RETRIEVAL COMPARISON ━━━━━━━━");
+    console.log(`Container: ${input.containerTag}`);
+    console.log(`Query: ${input.query.substring(0, 100)}...`);
+    console.log(`\n📊 v4 Memory Search (Knowledge Graph): ${v4Typed.results.length} results`);
+    v4Typed.results.forEach((r, i) => {
+      const preview = (r.memory ?? r.content ?? '').substring(0, 80).replace(/\n/g, ' ');
+      console.log(`  ${i+1}. ${preview}...`);
+    });
+
+    // v3 has nested chunks array structure: results[].chunks[].content
+    const v3Results_array = v3Typed.results || [];
+    console.log(`\n📄 v3 Document Search (Raw): ${v3Results_array.length} results`);
+    console.log(`   Response structure: ${Object.keys(v3Typed).join(', ')}`);
+    v3Results_array.forEach((r: any, i: number) => {
+      // v3 structure: each result has chunks[] array with content
+      const chunks = r.chunks || [];
+      const allChunksText = chunks.map((c: any) => c.content || '').join(' ');
+      const preview = allChunksText.substring(0, 80).replace(/\n/g, ' ');
+      const documentId = r.documentId || r.id || 'unknown';
+      console.log(`  ${i+1}. [${documentId}] ${preview}...`);
+      if (i === 0) {
+        console.log(`     [DEBUG] Chunks count: ${chunks.length}, First result fields:`, Object.keys(r).join(', '));
+      }
+    });
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+
+    // Extract metadata if requested (from v4 results)
+    const metadata = v4Typed.results.map((r) => ({
       game_time: r.metadata?.game_time ?? 0,
       type: r.metadata?.type ?? '',
       participants: r.metadata?.participants ?? [],
     }));
 
+    // Return v4 results (current behavior)
     return {
-      memories: typed.results.map((r) => r.memory ?? r.content ?? ''),
-      count: typed.results.length,
+      memories: v4Typed.results.map((r) => r.memory ?? r.content ?? ''),
+      count: v4Typed.results.length,
       metadata,
     };
   } catch (error) {

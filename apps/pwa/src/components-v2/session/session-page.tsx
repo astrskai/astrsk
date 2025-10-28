@@ -16,6 +16,7 @@ import { SessionSettings } from "@/components-v2/session/session-settings";
 import { SvgIcon } from "@/components-v2/svg-icon";
 import { FloatingActionButton } from "@/components-v2/ui/floating-action-button";
 import { ScrollArea } from "@/components-v2/ui/scroll-area";
+import { ExtensionDialogRenderer } from "@/modules/extensions/ui/extension-dialog-renderer";
 import { ArrowLeft } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -156,6 +157,9 @@ export default function SessionPage({ className }: { className?: string }) {
           </div>
         </>
       )}
+
+      {/* Extension Dialog Renderer - for extension-triggered dialogs */}
+      <ExtensionDialogRenderer />
     </div>
   );
 }

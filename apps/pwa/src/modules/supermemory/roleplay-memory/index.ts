@@ -14,6 +14,12 @@ export {
   processUserMessage,
   hasRoleplayMemoryTag,
   injectMemoriesIntoPrompt,
+  // Memory update & delete operations
+  getMemory,
+  updateMemory,
+  deleteMemory,
+  deleteContainerMemories,
+  bulkDeleteMemories,
   type UserMessageMemoryInput
 } from './integration/session-hooks'
 
@@ -34,7 +40,17 @@ export {
   storeWorldMessage,
   storeCharacterMessage,
   storeInitContent,
-  storeWorldStateUpdate
+  storeWorldStateUpdate,
+  // Core update/delete operations
+  getMemoryById,
+  updateMemoryById,
+  updateCharacterMessage,
+  updateWorldMessage,
+  deleteMemoryById,
+  deleteCharacterMessage,
+  deleteWorldMessage,
+  deleteByContainer,
+  bulkDeleteByIds
 } from './core/memory-storage'
 
 export {
@@ -71,5 +87,17 @@ export type {
 
   // Storage types
   EnrichedMessageSections,
-  StorageResult
+  StorageResult,
+
+  // Update & Delete types
+  GetMemoryRequest,
+  GetMemoryResponse,
+  UpdateMemoryRequest,
+  UpdateMemoryResponse,
+  UpdateStorageResult,
+  DeleteMemoryRequest,
+  DeleteMemoryResponse,
+  DeleteStorageResult,
+  BulkDeleteRequest,
+  BulkDeleteResponse
 } from '../shared/types'

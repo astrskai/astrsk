@@ -23,13 +23,13 @@ export default defineConfig(({ mode }) => {
   // Proxy configuration for Supermemory API (development only)
   server: {
     proxy: {
-      '/api/search': {
+      '/api/search/documents': {
         target: 'https://api.supermemory.ai',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/search/, '/v4/search'),
+        rewrite: (path) => path.replace(/^\/api\/search\/documents/, '/v3/search'),
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
-            console.log('[Supermemory Search] proxy error', err);
+            console.log('[Supermemory v3 Search] proxy error', err);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
             // Add API key from environment
@@ -37,14 +37,49 @@ export default defineConfig(({ mode }) => {
             if (apiKey) {
               proxyReq.setHeader('Authorization', `Bearer ${apiKey}`);
             }
-            console.log('[Supermemory Search] Proxying:', req.method, req.url, '→', proxyReq.path);
+            console.log('[Supermemory v3 Search] Proxying:', req.method, req.url, '→', proxyReq.path);
+          });
+        },
+      },
+      '/api/search': {
+        target: 'https://api.supermemory.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/search/, '/v4/search'),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('[Supermemory v4 Search] proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // Add API key from environment
+            const apiKey = env.VITE_SUPERMEMORY_API_KEY;
+            if (apiKey) {
+              proxyReq.setHeader('Authorization', `Bearer ${apiKey}`);
+            }
+            console.log('[Supermemory v4 Search] Proxying:', req.method, req.url, '→', proxyReq.path);
           });
         },
       },
       '/api/documents': {
         target: 'https://api.supermemory.ai',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/documents/, '/v3/documents'),
+        rewrite: (path) => {
+          // Match production proxy behavior:
+          // /api/documents?id=mem_123 → /v3/documents/mem_123
+          // /api/documents?bulk=true → /v3/documents/bulk
+          // /api/documents → /v3/documents
+
+          const url = new URL(path, 'http://localhost');
+          const id = url.searchParams.get('id');
+          const bulk = url.searchParams.get('bulk');
+
+          if (id) {
+            return `/v3/documents/${id}`;
+          } else if (bulk === 'true') {
+            return '/v3/documents/bulk';
+          } else {
+            return '/v3/documents';
+          }
+        },
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
             console.log('[Supermemory Documents] proxy error', err);
