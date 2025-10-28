@@ -1,10 +1,10 @@
 /**
- * NPC Plugin
+ * NPC Extension
  *
- * Exports the NPC detection and character card creation plugin
+ * Exports the NPC detection and character card creation extension
  */
 
-export { NpcPlugin } from "./npc-plugin";
+export { NpcExtension } from "./npc-extension";
 export { useNpcStore } from "./npc-store";
 export type { NpcData } from "./npc-store";
 export * from "./npc-extraction-agent";

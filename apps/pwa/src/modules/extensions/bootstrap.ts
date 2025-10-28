@@ -17,18 +17,18 @@ export async function initializeExtensions(): Promise<void> {
   logger.info("[Extensions] Initializing extension system");
 
   try {
-    // Dynamically import and register NPC plugin
+    // Dynamically import and register NPC extension
     // Extensions are physically separated during development but bundled in production
     // Security is enforced through the extension client API
-    const { NpcPlugin } = await import("@extensions/npc/npc-plugin");
-    const npcPlugin = new NpcPlugin();
-    await extensionRegistry.register(npcPlugin);
+    const { NpcExtension } = await import("@extensions/npc/npc-extension");
+    const npcExtension = new NpcExtension();
+    await extensionRegistry.register(npcExtension);
 
-    // Dynamically import and register Lorebook plugin
+    // Dynamically import and register Lorebook extension
     // Runs async alongside NPC extraction
-    const { LorebookPlugin } = await import("@extensions/lorebook/lorebook-plugin");
-    const lorebookPlugin = new LorebookPlugin();
-    await extensionRegistry.register(lorebookPlugin);
+    const { LorebookExtension } = await import("@extensions/lorebook/lorebook-extension");
+    const lorebookExtension = new LorebookExtension();
+    await extensionRegistry.register(lorebookExtension);
 
     console.log("✅ [Extensions] All extensions loaded successfully");
     logger.info("[Extensions] All extensions loaded successfully");

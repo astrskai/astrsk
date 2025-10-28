@@ -1,5 +1,5 @@
 /**
- * NPC Plugin
+ * NPC Extension
  *
  * Automatically detects NPCs mentioned in conversations and creates character cards for them.
  */
@@ -10,7 +10,7 @@ import {
   ExtensionMetadata,
   HookContext,
 } from "../../pwa/src/modules/extensions/core/types";
-// Note: Plugin should NOT import from pwa except for extension types
+// Note: Extension should NOT import from pwa except for extension types
 // All other access must go through client.api
 import { logger } from "@astrsk/shared/logger";
 import { executeNpcExtractionAgent } from "./npc-extraction-agent";
@@ -18,9 +18,9 @@ import { createNpcCharacterCard } from "./npc-card-creation";
 import { useNpcStore } from "./npc-store";
 
 /**
- * NPC Plugin Extension
+ * NPC Extension
  */
-export class NpcPlugin implements IExtension {
+export class NpcExtension implements IExtension {
   metadata: ExtensionMetadata = {
     id: "npc-detection",
     name: "NPC Detection & Character Card Creation",
@@ -47,8 +47,8 @@ export class NpcPlugin implements IExtension {
     // Register hook for scenario initialization
     client.on("scenario:initialized", this.handleMessageAfterGenerate);
 
-    console.log("👤 [NPC Plugin] Loaded successfully - will auto-detect NPCs in conversations and scenarios");
-    logger.info("[NPC Plugin] Loaded successfully");
+    console.log("👤 [NPC Extension] Loaded successfully - will auto-detect NPCs in conversations and scenarios");
+    logger.info("[NPC Extension] Loaded successfully");
   }
 
   async onUnload(): Promise<void> {
@@ -57,7 +57,7 @@ export class NpcPlugin implements IExtension {
       this.client.off("scenario:initialized", this.handleMessageAfterGenerate);
     }
 
-    logger.info("[NPC Plugin] Unloaded successfully");
+    logger.info("[NPC Extension] Unloaded successfully");
   }
 
   /**
@@ -71,7 +71,7 @@ export class NpcPlugin implements IExtension {
       const { session, message } = context;
 
       if (!session || !message) {
-        logger.warn("[NPC Plugin] Missing session or message in context");
+        logger.warn("[NPC Extension] Missing session or message in context");
         return;
       }
 
@@ -83,7 +83,7 @@ export class NpcPlugin implements IExtension {
       const mainCharacterNames: string[] = [];
       const mainCharacterDescriptions: string[] = [];
 
-      console.log("🔍 [NPC Plugin] Session cards:", {
+      console.log("🔍 [NPC Extension] Session cards:", {
         totalCards: session.allCards.length,
         allCards: session.allCards.map((c: any) => ({ id: c.id?.toString(), type: c.type })),
         characterCards: mainCharacterCards.length,
@@ -91,9 +91,9 @@ export class NpcPlugin implements IExtension {
 
       for (const cardRef of mainCharacterCards) {
         try {
-          console.log("📖 [NPC Plugin] Loading character card:", cardRef.id.toString());
+          console.log("📖 [NPC Extension] Loading character card:", cardRef.id.toString());
           const cardResult = await this.client!.api.getCard(cardRef.id);
-          console.log("📖 [NPC Plugin] Card result:", {
+          console.log("📖 [NPC Extension] Card result:", {
             cardId: cardRef.id.toString(),
             isSuccess: cardResult.isSuccess,
             isFailure: cardResult.isFailure,
@@ -106,7 +106,7 @@ export class NpcPlugin implements IExtension {
             const cardTitle = card.props?.title || card.title;
             const cardDescription = card.props?.description || card.description || "";
 
-            console.log("📖 [NPC Plugin] Card data:", {
+            console.log("📖 [NPC Extension] Card data:", {
               cardId: cardRef.id.toString(),
               hasPropsName: !!(card.props?.name),
               propsName: card.props?.name,
@@ -120,26 +120,26 @@ export class NpcPlugin implements IExtension {
             if (cardName) {
               mainCharacterNames.push(cardName);
               mainCharacterDescriptions.push(cardDescription);
-              console.log("✅ [NPC Plugin] Added main character:", {
+              console.log("✅ [NPC Extension] Added main character:", {
                 name: cardName,
                 hasDescription: !!cardDescription,
               });
             } else {
-              console.warn("⚠️ [NPC Plugin] Card has no name property:", {
+              console.warn("⚠️ [NPC Extension] Card has no name property:", {
                 cardId: cardRef.id.toString(),
                 title: cardTitle,
                 propsExists: !!card.props,
               });
             }
           } else {
-            console.error("❌ [NPC Plugin] Failed to load card:", {
+            console.error("❌ [NPC Extension] Failed to load card:", {
               cardId: cardRef.id.toString(),
               error: cardResult.getError(),
             });
           }
         } catch (error) {
-          console.error("❌ [NPC Plugin] Exception loading card:", error);
-          logger.warn("[NPC Plugin] Failed to load character card", {
+          console.error("❌ [NPC Extension] Exception loading card:", error);
+          logger.warn("[NPC Extension] Failed to load character card", {
             cardId: cardRef.id.toString(),
             error,
           });
@@ -170,8 +170,8 @@ export class NpcPlugin implements IExtension {
             lastSeenAt: Date.now(),
           });
 
-          console.log(`👥 [NPC Plugin] Added main character to tracking pool: ${mainCharName} (${mainCharId})`);
-          logger.info("[NPC Plugin] Added main character to pool", {
+          console.log(`👥 [NPC Extension] Added main character to tracking pool: ${mainCharName} (${mainCharId})`);
+          logger.info("[NPC Extension] Added main character to pool", {
             id: mainCharId,
             name: mainCharName,
             cardId: mainCharCardId,
@@ -182,12 +182,12 @@ export class NpcPlugin implements IExtension {
       // Refresh the existing NPC pool after adding main characters
       const updatedNpcPool = useNpcStore.getState().getNpcPool(sessionId);
 
-      console.log("🔍 [NPC Plugin] Analyzing message for NPCs...", {
+      console.log("🔍 [NPC Extension] Analyzing message for NPCs...", {
         sessionId,
         existingNpcs: updatedNpcPool.length,
         mainCharacters: mainCharacterNames,
       });
-      logger.info("[NPC Plugin] Processing message for NPC detection", {
+      logger.info("[NPC Extension] Processing message for NPC detection", {
         sessionId,
         existingNpcCount: updatedNpcPool.length,
         mainCharacterCount: mainCharacterNames.length,
@@ -206,10 +206,10 @@ export class NpcPlugin implements IExtension {
         mainCharacterDescriptions, // Pass descriptions so AI can distinguish between main characters and NPCs with similar names
       });
 
-      console.log(`✨ [NPC Plugin] Found ${extractionResult.npcs.length} NPC(s):`,
+      console.log(`✨ [NPC Extension] Found ${extractionResult.npcs.length} NPC(s):`,
         extractionResult.npcs.map(n => `${n.name} (${n.id})`).join(", ")
       );
-      logger.info("[NPC Plugin] Extraction completed", {
+      logger.info("[NPC Extension] Extraction completed", {
         sessionId,
         extractedNpcCount: extractionResult.npcs.length,
         npcs: extractionResult.npcs.map(n => ({ id: n.id, name: n.name })),
@@ -225,11 +225,11 @@ export class NpcPlugin implements IExtension {
         );
 
         if (isMainCharacter) {
-          console.warn(`⚠️ [NPC Plugin] Skipping "${npc.name}" - detected as main character`, {
+          console.warn(`⚠️ [NPC Extension] Skipping "${npc.name}" - detected as main character`, {
             npcName: npc.name,
             mainCharacters: mainCharacterNames,
           });
-          logger.warn("[NPC Plugin] Skipped main character detected as NPC", {
+          logger.warn("[NPC Extension] Skipped main character detected as NPC", {
             npcId: npc.id,
             npcName: npc.name,
             mainCharacters: mainCharacterNames,
@@ -251,7 +251,7 @@ export class NpcPlugin implements IExtension {
             lastSeenAt: Date.now(),
           });
 
-          logger.info("[NPC Plugin] New NPC detected", {
+          logger.info("[NPC Extension] New NPC detected", {
             npcId: npc.id,
             name: npc.name,
           });
@@ -263,7 +263,7 @@ export class NpcPlugin implements IExtension {
               lastSeenAt: Date.now(),
             });
 
-            logger.info("[NPC Plugin] New alias detected for existing NPC", {
+            logger.info("[NPC Extension] New alias detected for existing NPC", {
               npcId: npc.id,
               newAlias: npc.name,
               allAliases: [...existingNpc.names, npc.name],
@@ -281,32 +281,32 @@ export class NpcPlugin implements IExtension {
               description: npc.description,
             });
 
-            console.log(`🎭 [NPC Plugin] Created character card for "${npc.name}"`);
-            logger.info("[NPC Plugin] Character card created successfully", {
+            console.log(`🎭 [NPC Extension] Created character card for "${npc.name}"`);
+            logger.info("[NPC Extension] Character card created successfully", {
               npcId: npc.id,
               name: npc.name,
             });
           } catch (error) {
-            logger.error("[NPC Plugin] Failed to create character card", {
+            logger.error("[NPC Extension] Failed to create character card", {
               npcId: npc.id,
               name: npc.name,
               error,
             });
           }
         } else if (npcData?.characterCardId) {
-          logger.debug("[NPC Plugin] NPC already has character card, skipping creation", {
+          logger.debug("[NPC Extension] NPC already has character card, skipping creation", {
             npcId: npc.id,
             cardId: npcData.characterCardId,
           });
         }
       }
 
-      logger.info("[NPC Plugin] Processing complete", {
+      logger.info("[NPC Extension] Processing complete", {
         sessionId,
         processedNpcCount: extractionResult.npcs.length,
       });
     } catch (error) {
-      logger.error("[NPC Plugin] Error processing message", { error });
+      logger.error("[NPC Extension] Error processing message", { error });
     }
   };
 }

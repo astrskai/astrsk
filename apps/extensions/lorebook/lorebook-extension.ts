@@ -1,10 +1,10 @@
 /**
- * Lorebook Plugin
+ * Lorebook Extension
  *
  * Automatically detects lorebook-worthy information in conversations
  * and suggests adding entries to character lorebooks.
  *
- * Runs async alongside NPC extraction plugin.
+ * Runs async alongside NPC extraction extension.
  */
 
 import {
@@ -47,9 +47,9 @@ function generateKeysFromContent(content: string): string[] {
 }
 
 /**
- * Lorebook Plugin Extension
+ * Lorebook Extension
  */
-export class LorebookPlugin implements IExtension {
+export class LorebookExtension implements IExtension {
   metadata: ExtensionMetadata = {
     id: "lorebook-extraction",
     name: "Lorebook Auto-Extraction",
@@ -76,8 +76,8 @@ export class LorebookPlugin implements IExtension {
     // Register hook for scenario initialization
     client.on("scenario:initialized", this.handleMessageAfterGenerate);
 
-    console.log("📚 [Lorebook Plugin] Loaded successfully - will auto-detect lorebook-worthy information");
-    logger.info("[Lorebook Plugin] Loaded successfully");
+    console.log("📚 [Lorebook Extension] Loaded successfully - will auto-detect lorebook-worthy information");
+    logger.info("[Lorebook Extension] Loaded successfully");
   }
 
   async onUnload(): Promise<void> {
@@ -86,7 +86,7 @@ export class LorebookPlugin implements IExtension {
       this.client.off("scenario:initialized", this.handleMessageAfterGenerate);
     }
 
-    logger.info("[Lorebook Plugin] Unloaded successfully");
+    logger.info("[Lorebook Extension] Unloaded successfully");
   }
 
   /**
@@ -100,7 +100,7 @@ export class LorebookPlugin implements IExtension {
       const { session, message } = context;
 
       if (!session || !message) {
-        logger.warn("[Lorebook Plugin] Missing session or message in context");
+        logger.warn("[Lorebook Extension] Missing session or message in context");
         return;
       }
 
@@ -109,7 +109,7 @@ export class LorebookPlugin implements IExtension {
       // Get all character cards from session
       const characterCards = session.allCards.filter((c: any) => c.type === "character");
 
-      console.log("📚 [Lorebook Plugin] Session characters:", {
+      console.log("📚 [Lorebook Extension] Session characters:", {
         sessionId,
         characterCount: characterCards.length,
       });
@@ -136,7 +136,7 @@ export class LorebookPlugin implements IExtension {
               .getState()
               .getRejectedEntriesByCharacter(characterId, sessionId);
 
-            console.log(`📚 [Lorebook Plugin] ${characterName}:`, {
+            console.log(`📚 [Lorebook Extension] ${characterName}:`, {
               characterId,
               existingEntries: existingEntries.length,
               rejectedEntries: rejectedEntries.length,
@@ -150,7 +150,7 @@ export class LorebookPlugin implements IExtension {
             });
           }
         } catch (error) {
-          logger.warn("[Lorebook Plugin] Failed to load character card", {
+          logger.warn("[Lorebook Extension] Failed to load character card", {
             cardId: cardRef.id.toString(),
             error,
           });
@@ -158,8 +158,8 @@ export class LorebookPlugin implements IExtension {
       }
 
       // Execute lorebook extraction using secure client API
-      console.log("📚 [Lorebook Plugin] Analyzing message for lorebook-worthy information...");
-      logger.info("[Lorebook Plugin] Processing message for lorebook extraction", {
+      console.log("📚 [Lorebook Extension] Analyzing message for lorebook-worthy information...");
+      logger.info("[Lorebook Extension] Processing message for lorebook extraction", {
         sessionId,
         characterCount: charactersWithLorebooks.length,
         messageLength: typeof message === "string" ? message.length : 0,
@@ -177,10 +177,10 @@ export class LorebookPlugin implements IExtension {
       });
 
       console.log(
-        `✨ [Lorebook Plugin] Found ${extractionResult.entries.length} potential lorebook entries:`,
+        `✨ [Lorebook Extension] Found ${extractionResult.entries.length} potential lorebook entries:`,
         extractionResult.entries.map((e) => `${e.characterName}: ${e.content.substring(0, 50)}...`).join(", ")
       );
-      logger.info("[Lorebook Plugin] Extraction completed", {
+      logger.info("[Lorebook Extension] Extraction completed", {
         sessionId,
         extractedEntriesCount: extractionResult.entries.length,
         entries: extractionResult.entries.map((e) => ({
@@ -207,7 +207,7 @@ export class LorebookPlugin implements IExtension {
           );
 
           if (!characterData) {
-            console.warn(`⚠️ [Lorebook Plugin] Character not found for entry: ${entry.characterName}`);
+            console.warn(`⚠️ [Lorebook Extension] Character not found for entry: ${entry.characterName}`);
             continue;
           }
 
@@ -217,7 +217,7 @@ export class LorebookPlugin implements IExtension {
           // Auto-generate keys from content
           const keys = generateKeysFromContent(entry.content);
 
-          console.log(`📚 [Lorebook Plugin] Using LLM-generated title: "${entryName}", keys:`, keys);
+          console.log(`📚 [Lorebook Extension] Using LLM-generated title: "${entryName}", keys:`, keys);
 
           // Check if very similar entry already exists
           const isDuplicate = characterData.existingEntries.some(
@@ -228,7 +228,7 @@ export class LorebookPlugin implements IExtension {
           );
 
           if (isDuplicate) {
-            console.log(`⏭️ [Lorebook Plugin] Skipping duplicate entry: ${entryName}`);
+            console.log(`⏭️ [Lorebook Extension] Skipping duplicate entry: ${entryName}`);
             continue;
           }
 
@@ -241,12 +241,12 @@ export class LorebookPlugin implements IExtension {
           );
 
           if (wasRejected) {
-            console.log(`⏭️ [Lorebook Plugin] Skipping rejected entry: ${entryName}`);
+            console.log(`⏭️ [Lorebook Extension] Skipping rejected entry: ${entryName}`);
             continue;
           }
 
           // Show dialog to user for confirmation
-          console.log(`📋 [Lorebook Plugin] Showing confirmation dialog for: ${entryName}`);
+          console.log(`📋 [Lorebook Extension] Showing confirmation dialog for: ${entryName}`);
 
           const userResponse = await this.client!.api.ui.showDialog({
             title: `Add to ${characterData.characterName}'s Lorebook?`,
@@ -266,7 +266,7 @@ export class LorebookPlugin implements IExtension {
             ],
           });
 
-          console.log(`👤 [Lorebook Plugin] User response: ${userResponse}`);
+          console.log(`👤 [Lorebook Extension] User response: ${userResponse}`);
 
           if (userResponse === "add") {
             // User confirmed - add to character card's lorebook
@@ -302,8 +302,8 @@ export class LorebookPlugin implements IExtension {
 
               useLorebookStore.getState().addEntry(lorebookEntry);
 
-              console.log(`✅ [Lorebook Plugin] Added to ${characterData.characterName}'s lorebook: ${entryName}`);
-              logger.info("[Lorebook Plugin] Entry added to character card lorebook", {
+              console.log(`✅ [Lorebook Extension] Added to ${characterData.characterName}'s lorebook: ${entryName}`);
+              logger.info("[Lorebook Extension] Entry added to character card lorebook", {
                 entryId,
                 characterId: characterData.characterId,
                 characterName: characterData.characterName,
@@ -311,13 +311,13 @@ export class LorebookPlugin implements IExtension {
                 keys,
               });
             } catch (error) {
-              logger.error("[Lorebook Plugin] Failed to add entry to character card", {
+              logger.error("[Lorebook Extension] Failed to add entry to character card", {
                 characterId: characterData.characterId,
                 characterName: characterData.characterName,
                 entryName,
                 error,
               });
-              console.error(`❌ [Lorebook Plugin] Failed to add entry:`, error);
+              console.error(`❌ [Lorebook Extension] Failed to add entry:`, error);
             }
           } else if (userResponse === "skip") {
             // User rejected - add to rejected list
@@ -331,17 +331,17 @@ export class LorebookPlugin implements IExtension {
               reason: "User declined",
             });
 
-            console.log(`❌ [Lorebook Plugin] Entry rejected: ${entryName}`);
-            logger.info("[Lorebook Plugin] Entry rejected by user", {
+            console.log(`❌ [Lorebook Extension] Entry rejected: ${entryName}`);
+            logger.info("[Lorebook Extension] Entry rejected by user", {
               characterName: characterData.characterName,
               entryName,
             });
           } else {
             // User chose "later" or closed dialog - do nothing
-            console.log(`⏸️ [Lorebook Plugin] Entry deferred: ${entryName}`);
+            console.log(`⏸️ [Lorebook Extension] Entry deferred: ${entryName}`);
           }
         } catch (error) {
-          logger.error("[Lorebook Plugin] Failed to process extracted entry", {
+          logger.error("[Lorebook Extension] Failed to process extracted entry", {
             characterName: entry.characterName,
             entryTitle: entry.entryTitle,
             content: entry.content.substring(0, 100),
@@ -350,12 +350,12 @@ export class LorebookPlugin implements IExtension {
         }
       }
 
-      logger.info("[Lorebook Plugin] Processing complete", {
+      logger.info("[Lorebook Extension] Processing complete", {
         sessionId,
         processedEntriesCount: extractionResult.entries.length,
       });
     } catch (error) {
-      logger.error("[Lorebook Plugin] Error processing message", { error });
+      logger.error("[Lorebook Extension] Error processing message", { error });
     }
   };
 }

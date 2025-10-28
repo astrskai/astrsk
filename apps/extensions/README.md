@@ -1,12 +1,12 @@
 # Extensions
 
-**Plugins are physically separated from the main PWA application for true isolation.**
+**Extensions are physically separated from the main PWA application for true isolation.**
 
 ## 🔒 Security Architecture
 
 ###Physical Separation Benefits:
 
-1. **Cannot import from pwa** - Plugins are in a separate folder, imports like `@/app/services/*` won't work
+1. **Cannot import from pwa** - Extensions are in a separate folder, imports like `@/app/services/*` won't work
 2. **Must use client API** - Only way to access pwa functionality is through `client.api.*`
 3. **True isolation** - Even malicious code cannot bypass the security boundary
 
@@ -19,15 +19,15 @@ apps/
       core/                      # Extension system (part of pwa)
         types.ts                 # IExtensionClient interface
         extension-client.ts      # Secure API implementation
-        extension-registry.ts    # Plugin registry
-      bootstrap.ts               # Loads plugins from ../../../extensions/
+        extension-registry.ts    # Extension registry
+      bootstrap.ts               # Loads extensions from ../../../extensions/
 
-  extensions/                    # Plugins (PHYSICALLY SEPARATE)
-    npc/                         # NPC detection plugin
-      npc-plugin.ts              # Main plugin class
+  extensions/                    # Extensions (PHYSICALLY SEPARATE)
+    npc/                         # NPC detection extension
+      npc-extension.ts           # Main extension class
       npc-extraction-agent.ts    # AI extraction logic
       npc-card-creation.ts       # Card creation logic
-      npc-store.tsx              # Plugin state
+      npc-store.tsx              # Extension state
 ```
 
 ## Security Rules
@@ -39,7 +39,7 @@ apps/
 import { IExtensionClient } from "../../pwa/src/modules/extensions/core/types";
 
 // Use secure client API
-export class MyPlugin implements IExtension {
+export class MyExtension implements IExtension {
   async onLoad(client: IExtensionClient) {
     // Access through client.api - JWT handled internally
     const result = await client.api.callAI(prompt, options);
@@ -61,7 +61,7 @@ const jwt = client.api.getJwt();  // ❌ This API doesn't exist!
 
 ## Current Issue: Shared Dependencies
 
-The plugin currently still has some pwa imports that need to be resolved:
+The extensions currently still have some pwa imports that need to be resolved:
 
 ```typescript
 // These won't work from extensions folder:
@@ -95,40 +95,40 @@ apps/
 
 ## Why Physical Separation Matters
 
-**Before** (plugins in pwa folder):
+**Before** (extensions in pwa folder):
 ```
 apps/pwa/src/modules/extensions/plugins/npc/
-  npc-plugin.ts can do:
+  npc-extension.ts can do:
     import { CardService } from "../../../app/services/card-service";  // ✅ Works!
 
   Even with "rules", nothing stops malicious code from importing anything!
 ```
 
-**After** (plugins in extensions folder):
+**After** (extensions in extensions folder):
 ```
 apps/extensions/npc/
-  npc-plugin.ts tries to do:
+  npc-extension.ts tries to do:
     import { CardService } from "@/app/services/card-service";  // ❌ Path doesn't exist!
 
   Physical filesystem separation = real security boundary!
 ```
 
-## Adding New Plugins
+## Adding New Extensions
 
-1. Create folder: `apps/extensions/my-plugin/`
+1. Create folder: `apps/extensions/my-extension/`
 2. Implement `IExtension` interface
 3. Only import from: `../../pwa/src/modules/extensions/core/types`
 4. Register in `apps/pwa/src/modules/extensions/bootstrap.ts`
 
 Example:
 ```typescript
-// apps/extensions/my-plugin/index.ts
+// apps/extensions/my-extension/index.ts
 import { IExtension, IExtensionClient } from "../../pwa/src/modules/extensions/core/types";
 
-export class MyPlugin implements IExtension {
+export class MyExtension implements IExtension {
   metadata = {
-    id: "my-plugin",
-    name: "My Plugin",
+    id: "my-extension",
+    name: "My Extension",
     version: "1.0.0",
   };
 
@@ -144,6 +144,6 @@ export class MyPlugin implements IExtension {
 ## Security Principle
 
 **Capability-Based Security** 🔒
-- Plugins get capabilities (client.api.callAI)
-- Plugins NEVER get credentials (JWT, API keys)
+- Extensions get capabilities (client.api.callAI)
+- Extensions NEVER get credentials (JWT, API keys)
 - Physical separation enforces this at filesystem level
