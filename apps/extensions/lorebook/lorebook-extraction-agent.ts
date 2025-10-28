@@ -123,7 +123,7 @@ ${rejectedText}`;
       worldMemoryContext.map((mem, i) => `${i + 1}. ${mem}`).join("\n")
     : "";
 
-  const prompt = `You are a lorebook extraction agent. Your job is to identify lorebook-worthy information from conversation messages and suggest new lorebook entries for characters.
+  const prompt = `You are a lorebook extraction agent. Your job is to identify ONLY THE MOST SIGNIFICANT and MEMORABLE information from conversation messages that should be permanently recorded about characters.
 
 CHARACTERS WITH THEIR LOREBOOKS:
 ${characterLorebookText}
@@ -133,37 +133,43 @@ ${messageText}
 ${contextText}
 ${worldContextText}
 
-WHAT IS LOREBOOK-WORTHY:
-Lorebook entries should capture important, reusable information about characters that would be useful for future context. Examples:
-- Character abilities/powers (e.g., "Ren can cast fireball magic")
-- Character backstory reveals (e.g., "Victor grew up in an orphanage")
-- Character traits/personality (e.g., "Yui is extremely loyal to her friends")
-- Character relationships (e.g., "Ren and Yui are childhood friends")
-- Important events (e.g., "Victor witnessed the great fire 10 years ago")
-- Character knowledge/skills (e.g., "Ren studied at the magic academy")
-- Physical characteristics (e.g., "Victor has a scar on his left arm")
+CRITICAL GUIDELINES - BE HIGHLY SELECTIVE:
+You should extract VERY FEW entries - only information that meets ALL these criteria:
+1. SIGNIFICANT: Major character reveals, not minor details
+2. PERMANENT: Lasting traits/facts, not temporary states
+3. REUSABLE: Information that will matter in future conversations
+4. NEW: Not already captured in existing or rejected entries
 
-NOT LOREBOOK-WORTHY:
-- Temporary states or emotions (e.g., "Ren is currently happy")
-- Simple dialogue or actions without lasting significance
-- Information already in existing lorebook entries
-- Information in rejected entries (user declined these)
+WHAT IS LOREBOOK-WORTHY (Extract ONLY if highly significant):
+- Major character abilities/powers that define them
+- Important backstory reveals that shape their character
+- Core personality traits (not just fleeting behaviors)
+- Significant relationships or bonds
+- Life-changing events they experienced
+- Critical knowledge/skills that are central to who they are
+- Distinctive physical characteristics that are memorable
+
+NOT LOREBOOK-WORTHY (DO NOT extract these):
+- Temporary states, emotions, or current feelings
+- Minor actions or simple dialogue
+- Trivial details or flavor text
+- Information that's already in existing lorebook entries
+- Variations of information in rejected entries
+- Small talk or casual conversation content
+- Things that are implied or already obvious from context
+- Mundane daily activities or routine behaviors
 
 INSTRUCTIONS:
-1. Analyze the message for lorebook-worthy information about each character
-2. For each piece of information:
-   - Extract the character name (e.g., "Ren", "Victor")
-   - Create a SHORT, DESCRIPTIVE TITLE for the entry (e.g., "Magic Abilities", "Tragic Backstory", "Protective Nature")
+1. Read the message carefully and identify ONLY HIGHLY SIGNIFICANT information
+2. Be VERY CONSERVATIVE - when in doubt, DON'T extract it
+3. For truly significant information:
+   - Identify the character name from the CHARACTERS section
+   - Create a SHORT, DESCRIPTIVE TITLE (e.g., "Magic Training", "Tragic Backstory")
    - Write content as a FACTUAL SENTENCE (e.g., "Ren learned to cast fireball magic from his mentor")
-   - DO NOT use "character:" prefix format - write as complete factual sentences
-3. Check against EXISTING lorebook entries:
-   - DO NOT suggest entries that are already in a character's lorebook
-   - DO NOT suggest duplicate or very similar information
-4. Check against REJECTED lorebook entries:
-   - DO NOT suggest entries that have been rejected by the user
-   - DO NOT suggest variations of rejected entries
-5. Only suggest truly NEW and RELEVANT lorebook entries
-6. Only character-specific entries for now (no world lore)
+4. Check against EXISTING lorebook entries - DO NOT duplicate or suggest similar information
+5. Check against REJECTED entries - DO NOT suggest variations of what was rejected
+6. Most messages will have ZERO lorebook-worthy entries - that's expected and correct!
+7. Only character-specific entries (no world lore)
 
 OUTPUT FORMAT:
 {
@@ -172,14 +178,12 @@ OUTPUT FORMAT:
   "content": "Factual sentence about the character"
 }
 
-EXAMPLES:
+EXAMPLES OF SIGNIFICANT ENTRIES:
 - { "characterName": "Ren", "entryTitle": "Magic Training", "content": "Ren learned to cast fireball magic from his mentor at the academy" }
 - { "characterName": "Victor", "entryTitle": "Orphan Background", "content": "Victor grew up in an orphanage after his parents died in the war" }
 - { "characterName": "Yui", "entryTitle": "Protective Trait", "content": "Yui is fiercely protective of her childhood friends" }
 
-IMPORTANT: Write lorebook entries as factual statements, NOT in conversation format. This helps distinguish them from dialogue.
-
-Output ONLY new lorebook-worthy entries that don't already exist or weren't rejected.`;
+REMEMBER: Quality over quantity. Extract ONLY the most important information. Empty results are perfectly acceptable and often correct.`;
 
   console.log("📚 [Lorebook Extraction] Prompt being sent:", {
     charactersCount: charactersWithLorebooks.length,
@@ -195,7 +199,7 @@ Output ONLY new lorebook-worthy entries that don't already exist or weren't reje
     const result = await client.api.callAI(prompt, {
       modelId: DEFAULT_LOREBOOK_EXTRACTION_MODEL,
       schema: lorebookExtractionSchema,
-      temperature: 0.7,
+      temperature: 0.3, // Low temperature for conservative, deterministic extraction
       sessionId: input.sessionId,
       feature: "lorebook-extraction",
     });
