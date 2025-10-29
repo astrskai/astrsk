@@ -53,7 +53,12 @@ export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
         {plots.map((plot) => (
           <div key={plot.id.toString()} className="group">
             <CardDisplay
-              card={plot}
+              cardId={plot.id}
+              title={plot.props.title}
+              type={plot.props.type}
+              tags={plot.props.tags}
+              tokenCount={plot.props.tokenCount}
+              iconAssetId={plot.props.iconAssetId}
               isSelected={false}
               showActions={true}
               onClick={() => handlePlotClick(plot.id.toString())}

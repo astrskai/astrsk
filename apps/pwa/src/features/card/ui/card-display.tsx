@@ -3,13 +3,13 @@ import { Copy, Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { CharacterCard } from "@/entities/card/domain/character-card";
 import { IconCardTypeCharacter, IconCardTypePlot } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { downloadFile } from "@/shared/lib/file-utils";
 import { CardType } from "@/entities/card/domain";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { useAsset } from "@/shared/hooks/use-asset";
-import { MediaDisplay, DeleteConfirm } from "@/shared/ui";
+import { DeleteConfirm } from "@/shared/ui";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
 import { cardQueries } from "@/app/queries/card-queries";
@@ -30,17 +30,57 @@ const CONTAINER_TEXT_SIZES = {
     "rounded-lg @[300px]:rounded-xl @[400px]:rounded-2xl @[500px]:rounded-3xl",
 };
 
+/**
+ * Props for CardDisplay component
+ *
+ * @example Preview mode (wizard, temporary image):
+ * ```tsx
+ * <CardDisplay
+ *   title="My Plot"
+ *   type={CardType.Plot}
+ *   tags={[]}
+ *   tokenCount={0}
+ *   previewImageUrl="blob:http://localhost/..."
+ *   isSelected={false}
+ *   showActions={false}
+ * />
+ * ```
+ *
+ * @example Saved card mode (grid, listing):
+ * ```tsx
+ * <CardDisplay
+ *   cardId={card.id}
+ *   title={card.props.title}
+ *   name={card.props.name}
+ *   type={card.props.type}
+ *   tags={card.props.tags}
+ *   tokenCount={card.props.tokenCount}
+ *   iconAssetId={card.props.iconAssetId}
+ *   isSelected={selectedCards.includes(card.id)}
+ *   showActions={true}
+ * />
+ * ```
+ */
 interface CardDisplayProps {
-  card: CharacterCard;
+  // Card data props
+  cardId?: UniqueEntityID;
+  title: string;
+  name?: string;
+  type: CardType;
+  tags?: string[];
+  tokenCount?: number;
+  iconAssetId?: UniqueEntityID;
+  /**
+   * Preview image URL (for blob URLs before upload)
+   * If provided, takes priority over iconAssetId
+   */
+  previewImageUrl?: string;
+
+  // Display options
   isSelected: boolean;
   showActions?: boolean;
   className?: string;
   onClick?: () => void;
-  /**
-   * Preview image URL for temporary preview (e.g., during card creation)
-   * If provided, this will be used instead of fetching from useAsset
-   */
-  previewImageUrl?: string;
 }
 
 const tagContainerWidth = 152;
@@ -52,20 +92,27 @@ const tagContainerWidth = 152;
  * Supports preview mode via previewImageUrl for temporary image display
  */
 export default function CardDisplay({
-  card,
+  cardId,
+  title,
+  name,
+  type,
+  tags = [],
+  tokenCount = 0,
+  iconAssetId,
+  previewImageUrl,
   isSelected,
   showActions = false,
   className,
   onClick,
-  previewImageUrl,
 }: CardDisplayProps) {
+
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [isCopying, setIsCopying] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [usedSessionsCount, setUsedSessionsCount] = useState<number>(0);
 
-  const [assetImageUrl, isVideo] = useAsset(card?.props.iconAssetId);
+  const [assetImageUrl] = useAsset(iconAssetId);
   const imageUrl = previewImageUrl || assetImageUrl;
   const queryClient = useQueryClient();
 
@@ -76,14 +123,14 @@ export default function CardDisplay({
     async (e: React.MouseEvent) => {
       e.stopPropagation();
 
-      if (isDownloading) return;
+      if (isDownloading || !cardId) return;
 
       setIsDownloading(true);
 
       try {
         // Export card as PNG file
         const result = await CardService.exportCardToFile.execute({
-          cardId: card.id,
+          cardId: cardId,
           options: { format: "png" },
         });
 
@@ -100,7 +147,7 @@ export default function CardDisplay({
         downloadFile(file);
 
         toast.success("Card downloaded", {
-          description: card.props.title,
+          description: title,
         });
       } catch (error) {
         toast.error("Failed to download card", {
@@ -110,7 +157,7 @@ export default function CardDisplay({
         setIsDownloading(false);
       }
     },
-    [card.id, card.props.title, isDownloading],
+    [cardId, title, isDownloading],
   );
 
   /**
@@ -121,14 +168,14 @@ export default function CardDisplay({
     async (e: React.MouseEvent) => {
       e.stopPropagation();
 
-      if (isCopying) return;
+      if (isCopying || !cardId) return;
 
       setIsCopying(true);
 
       try {
         // Clone card
         const result = await CardService.cloneCard.execute({
-          cardId: card.id,
+          cardId: cardId,
         });
 
         if (result.isFailure) {
@@ -140,7 +187,7 @@ export default function CardDisplay({
 
         // Successfully cloned card
         toast.success("Card copied", {
-          description: `Created copy of "${card.props.title}"`,
+          description: `Created copy of "${title}"`,
         });
 
         // Refresh card list
@@ -155,7 +202,7 @@ export default function CardDisplay({
         setIsCopying(false);
       }
     },
-    [card.id, card.props.title, isCopying, queryClient],
+    [cardId, title, isCopying, queryClient],
   );
 
   /**
@@ -166,10 +213,12 @@ export default function CardDisplay({
     async (e: React.MouseEvent) => {
       e.stopPropagation();
 
+      if (!cardId) return;
+
       // Fetch sessions using this card
       try {
         const result = await SessionService.listSessionByCard.execute({
-          cardId: card.id,
+          cardId: cardId,
         });
 
         if (result.isSuccess) {
@@ -183,7 +232,7 @@ export default function CardDisplay({
 
       setIsDeleteDialogOpen(true);
     },
-    [card.id],
+    [cardId],
   );
 
   /**
@@ -191,11 +240,13 @@ export default function CardDisplay({
    * Removes card and invalidates related queries
    */
   const handleDelete = useCallback(async () => {
+    if (!cardId) return;
+
     setIsDeleting(true);
 
     try {
       // Delete card
-      const result = await CardService.deleteCard.execute(card.id);
+      const result = await CardService.deleteCard.execute(cardId);
 
       if (result.isFailure) {
         toast.error("Failed to delete card", {
@@ -205,7 +256,7 @@ export default function CardDisplay({
       }
 
       toast.success("Card deleted", {
-        description: card.props.title,
+        description: title,
       });
 
       // Refresh card list
@@ -229,7 +280,7 @@ export default function CardDisplay({
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
     }
-  }, [card.id, card.props.title, queryClient, usedSessionsCount]);
+  }, [cardId, title, queryClient, usedSessionsCount]);
 
   const estimateTextWidth = (text: string): number => {
     const avgCharWidth = 5;
@@ -293,22 +344,15 @@ export default function CardDisplay({
         )}
       >
         <div className="absolute inset-0 overflow-hidden">
-          <MediaDisplay
-            src={imageUrl || null}
-            fallbackSrc={
-              card.props.type === CardType.Character
+          <img
+            src={
+              imageUrl ||
+              (type === CardType.Character
                 ? "/img/placeholder/character-card-image.png"
-                : "/img/placeholder/plot-card-image.png"
+                : "/img/placeholder/plot-card-image.png")
             }
-            alt={card.props.title}
+            alt={title}
             className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-110"
-            isVideo={isVideo}
-            showControls={false}
-            autoPlay={false}
-            muted={true}
-            loop={true}
-            playOnHover={true}
-            clickToToggle={false}
           />
         </div>
 
@@ -322,7 +366,7 @@ export default function CardDisplay({
                 <button
                   onClick={handleDownload}
                   disabled={isDownloading}
-                  aria-label={`Download ${card.props.title}`}
+                  aria-label={`Download ${title}`}
                   className={cn(
                     "hover:bg-primary-strong flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-sm backdrop-blur-sm transition-opacity",
                     isDownloading && "cursor-not-allowed opacity-50",
@@ -335,7 +379,7 @@ export default function CardDisplay({
                 <button
                   onClick={handleCopyClick}
                   disabled={isCopying}
-                  aria-label={`Copy ${card.props.title}`}
+                  aria-label={`Copy ${title}`}
                   className={cn(
                     "hover:bg-primary-strong flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-sm backdrop-blur-sm transition-opacity",
                     isCopying && "cursor-not-allowed opacity-50",
@@ -346,7 +390,7 @@ export default function CardDisplay({
                 <button
                   onClick={handleDeleteClick}
                   disabled={isDeleting}
-                  aria-label={`Delete ${card.props.title}`}
+                  aria-label={`Delete ${title}`}
                   className={cn(
                     "hover:bg-primary-strong flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-sm backdrop-blur-sm transition-opacity",
                     isDeleting && "cursor-not-allowed opacity-50",
@@ -373,7 +417,7 @@ export default function CardDisplay({
                 CONTAINER_TEXT_SIZES.name,
               )}
             >
-              {card.props.name || card.props.title}
+              {name || title}
             </h3>
             <p
               className={cn(
@@ -381,18 +425,18 @@ export default function CardDisplay({
                 CONTAINER_TEXT_SIZES.meta,
               )}
             >
-              {card.props.tags &&
-                card.props.tags.length > 0 &&
-                getTagString(card.props.tags || [])}
+              {tags && tags.length > 0 && getTagString(tags)}
             </p>
-            <p
-              className={cn(
-                "text-text-secondary text-[0.625rem]",
-                CONTAINER_TEXT_SIZES.meta,
-              )}
-            >
-              {card.props.tokenCount || 0} Tokens
-            </p>
+            {tokenCount > 0 && (
+              <p
+                className={cn(
+                  "text-text-secondary text-[0.625rem]",
+                  CONTAINER_TEXT_SIZES.meta,
+                )}
+              >
+                {tokenCount} Tokens
+              </p>
+            )}
           </div>
         </div>
 
@@ -406,12 +450,10 @@ export default function CardDisplay({
             className={cn(
               "flex h-5 w-5 items-center justify-center rounded-full p-[6px]",
               CONTAINER_TEXT_SIZES.icon,
-              card.props.type === CardType.Character
-                ? "bg-purple-200"
-                : "bg-blue-200",
+              type === CardType.Character ? "bg-purple-200" : "bg-blue-200",
             )}
           >
-            {card.props.type === CardType.Character ? (
+            {type === CardType.Character ? (
               <IconCardTypeCharacter className="h-5 w-5" />
             ) : (
               <IconCardTypePlot className="h-5 w-5" />
@@ -423,7 +465,7 @@ export default function CardDisplay({
               CONTAINER_TEXT_SIZES.nameVertical,
             )}
           >
-            {card.props.title}
+            {title}
           </div>
         </div>
       </article>

@@ -38,11 +38,11 @@ export function CreateCharacterPage() {
   const [currentStep, setCurrentStep] = useState<CharacterStep>("image");
   const [characterName, setCharacterName] = useState<string>("New Character");
   const [avatarAssetId, setAvatarAssetId] = useState<string | undefined>();
+  const [avatarFile, setAvatarFile] = useState<File | undefined>();
   const [description, setDescription] = useState<string>("");
   const [exampleDialogue, setExampleDialogue] = useState<string>("");
   const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>([]);
 
-  const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
   const [isCreatingCard, setIsCreatingCard] = useState<boolean>(false);
 
   const STEPS: StepConfig<CharacterStep>[] = [
@@ -55,47 +55,54 @@ export function CreateCharacterPage() {
   const isLastStep = currentStepIndex === STEPS.length - 1;
   const showPreviousButton = currentStepIndex > 0;
 
-  const handleFileUpload = async (file: File) => {
-    setIsUploadingImage(true);
-    try {
-      // Step 1: Create asset from uploaded file
-      const assetResult = await AssetService.saveFileToAsset.execute({ file });
+  const handleFileUpload = (file: File) => {
+    // Store the file for preview - actual upload happens on save
+    setAvatarFile(file);
 
-      if (assetResult.isSuccess) {
-        const asset = assetResult.getValue();
-        setAvatarAssetId(asset.id.toString());
-
-        // Step 2: Save to generated images gallery
-        const generatedImageResult =
-          await GeneratedImageService.saveGeneratedImageFromAsset.execute({
-            assetId: asset.id,
-            name: file.name.replace(/\.[^/.]+$/, ""),
-            prompt: `Character avatar for ${characterName}`,
-            style: "uploaded",
-            associatedCardId: undefined, // Will be associated when card is created
-          });
-
-        if (!generatedImageResult.isSuccess) {
-          console.error(
-            "Failed to add image to gallery:",
-            generatedImageResult.getError(),
-          );
-        }
-      } else {
-        console.error("Failed to upload file:", assetResult.getError());
-      }
-    } catch (error) {
-      console.error("Error uploading avatar:", error);
-    } finally {
-      setIsUploadingImage(false);
-    }
+    // Create a temporary object URL for preview
+    const objectUrl = URL.createObjectURL(file);
+    setAvatarAssetId(objectUrl);
   };
 
   const handleNext = async () => {
     if (isLastStep) {
       setIsCreatingCard(true);
       try {
-        // Create lorebook if entries exist
+        // Step 1: Upload image if exists
+        let uploadedAssetId: string | undefined;
+        if (avatarFile) {
+          const assetResult = await AssetService.saveFileToAsset.execute({
+            file: avatarFile,
+          });
+
+          if (assetResult.isSuccess) {
+            const asset = assetResult.getValue();
+            uploadedAssetId = asset.id.toString();
+
+            // Save to generated images gallery
+            const generatedImageResult =
+              await GeneratedImageService.saveGeneratedImageFromAsset.execute({
+                assetId: asset.id,
+                name: avatarFile.name.replace(/\.[^/.]+$/, ""),
+                prompt: `Character avatar for ${characterName}`,
+                style: "uploaded",
+                associatedCardId: undefined, // Will be associated when card is created
+              });
+
+            if (!generatedImageResult.isSuccess) {
+              console.error(
+                "Failed to add image to gallery:",
+                generatedImageResult.getError(),
+              );
+            }
+          } else {
+            console.error("Failed to upload file:", assetResult.getError());
+            setIsCreatingCard(false);
+            return;
+          }
+        }
+
+        // Step 2: Create lorebook if entries exist
         let lorebook: Lorebook | undefined;
         if (lorebookEntries.length > 0) {
           const entries = lorebookEntries.map((entry) =>
@@ -117,14 +124,14 @@ export function CreateCharacterPage() {
           }
         }
 
-        // Create character card
+        // Step 3: Create character card
         const cardResult = CharacterCard.create({
           title: characterName,
           name: characterName,
           description: description,
           exampleDialogue: exampleDialogue || undefined,
-          iconAssetId: avatarAssetId
-            ? new UniqueEntityID(avatarAssetId)
+          iconAssetId: uploadedAssetId
+            ? new UniqueEntityID(uploadedAssetId)
             : undefined,
           type: CardType.Character,
           tags: [],
@@ -139,7 +146,7 @@ export function CreateCharacterPage() {
 
         const card = cardResult.getValue();
 
-        // Save card to database
+        // Step 4: Save card to database
         const saveResult = await CardService.saveCard.execute(card);
 
         if (saveResult.isFailure) {
@@ -148,12 +155,12 @@ export function CreateCharacterPage() {
           return;
         }
 
-        // Invalidate queries to refresh card list
+        // Step 5: Invalidate queries to refresh card list
         await queryClient.invalidateQueries({
           queryKey: cardKeys.lists(),
         });
 
-        // Navigate to assets page
+        // Step 6: Navigate to assets page
         navigate({ to: "/assets" });
       } catch (error) {
         console.error("Error creating character card:", error);
@@ -255,7 +262,6 @@ export function CreateCharacterPage() {
               characterName={characterName}
               onCharacterNameChange={setCharacterName}
               avatarAssetId={avatarAssetId}
-              isUploading={isUploadingImage}
               onFileUpload={handleFileUpload}
             />
           )}

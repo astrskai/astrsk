@@ -3,7 +3,24 @@ import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
-import { PlotImageStep } from "@/features/asset/ui/create-plot";
+import {
+  PlotImageStep,
+  PlotInfoStep,
+  PlotLorebookStep,
+  PlotScenarioStep,
+  type LorebookEntry,
+  type Scenario,
+} from "@/features/asset/ui/create-plot";
+import { AssetService } from "@/app/services/asset-service";
+import { GeneratedImageService } from "@/app/services/generated-image-service";
+import { CardService } from "@/app/services/card-service";
+import { PlotCard } from "@/entities/card/domain/plot-card";
+import { CardType } from "@/entities/card/domain";
+import { Lorebook } from "@/entities/card/domain/lorebook";
+import { Entry } from "@/entities/card/domain/entry";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+import { useQueryClient } from "@tanstack/react-query";
+import { cardKeys } from "@/app/queries/card";
 
 type PlotStep = "image" | "info" | "lorebook" | "scenario";
 
@@ -19,10 +36,17 @@ type PlotStep = "image" | "info" | "lorebook" | "scenario";
  */
 export function CreatePlotPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const [plotName, setPlotName] = useState("New Plot");
   const [currentStep, setCurrentStep] = useState<PlotStep>("image");
   const [imageFile, setImageFile] = useState<File | undefined>();
   const [imageAssetId, setImageAssetId] = useState<string | undefined>();
+  const [description, setDescription] = useState("");
+  const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>([]);
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+
+  const [isCreatingCard, setIsCreatingCard] = useState(false);
 
   const STEPS: StepConfig<PlotStep>[] = [
     { id: "image", number: 1, label: "Image", required: true },
@@ -35,18 +59,6 @@ export function CreatePlotPage() {
   const isLastStep = currentStepIndex === STEPS.length - 1;
   const showPreviousButton = currentStepIndex > 0;
 
-  const handleNext = () => {
-    if (isLastStep) {
-      // TODO: Create plot card
-      console.log("Creating plot card:", plotName);
-      navigate({ to: "/assets" });
-    } else {
-      const nextStep = STEPS[currentStepIndex + 1];
-      if (nextStep) {
-        setCurrentStep(nextStep.id);
-      }
-    }
-  };
 
   const handlePrevious = () => {
     if (currentStepIndex > 0) {
@@ -71,8 +83,133 @@ export function CreatePlotPage() {
     setImageAssetId(objectUrl);
   };
 
-  // TODO: Add validation logic for each step
-  const canProceed = true;
+  const handleNext = async () => {
+    if (isLastStep) {
+      await handleFinish();
+    } else {
+      const nextStep = STEPS[currentStepIndex + 1];
+      if (nextStep) {
+        setCurrentStep(nextStep.id);
+      }
+    }
+  };
+
+  const handleFinish = async () => {
+    setIsCreatingCard(true);
+    try {
+      // Step 1: Upload image if exists
+      let uploadedAssetId: string | undefined;
+      if (imageFile) {
+        const assetResult = await AssetService.saveFileToAsset.execute({
+          file: imageFile,
+        });
+
+        if (assetResult.isSuccess) {
+          const asset = assetResult.getValue();
+          uploadedAssetId = asset.id.toString();
+
+          // Save to generated images gallery
+          await GeneratedImageService.saveGeneratedImageFromAsset.execute({
+            assetId: asset.id,
+            name: imageFile.name.replace(/\.[^/.]+$/, ""),
+            prompt: `Plot image for ${plotName}`,
+            style: "uploaded",
+            associatedCardId: undefined, // Will be associated when card is created
+          });
+        } else {
+          console.error("Failed to upload file:", assetResult.getError());
+          setIsCreatingCard(false);
+          return;
+        }
+      }
+
+      // Step 2: Create lorebook if entries exist
+      let lorebook: Lorebook | undefined;
+      if (lorebookEntries.length > 0) {
+        const entries = lorebookEntries.map((entry) =>
+          Entry.create({
+            name: entry.name,
+            content: entry.description,
+            keys: entry.tags,
+            enabled: true,
+            recallRange: entry.recallRange,
+          }).getValue(),
+        );
+
+        const lorebookResult = Lorebook.create({ entries });
+        if (lorebookResult.isSuccess) {
+          lorebook = lorebookResult.getValue();
+        }
+      }
+
+      // Step 3: Transform scenarios to the format PlotCard expects
+      const scenariosData = scenarios.map((scenario) => ({
+        name: scenario.name,
+        description: scenario.description,
+      }));
+
+      // Step 4: Create plot card
+      const cardResult = PlotCard.create({
+        title: plotName,
+        description: description,
+        scenarios: scenariosData.length > 0 ? scenariosData : undefined,
+        iconAssetId: uploadedAssetId
+          ? new UniqueEntityID(uploadedAssetId)
+          : undefined,
+        type: CardType.Plot,
+        tags: [],
+        lorebook: lorebook,
+      });
+
+      if (cardResult.isFailure) {
+        console.error("Failed to create card:", cardResult.getError());
+        setIsCreatingCard(false);
+        return;
+      }
+
+      const card = cardResult.getValue();
+
+      // Step 5: Save card to database
+      const saveResult = await CardService.saveCard.execute(card);
+
+      if (saveResult.isFailure) {
+        console.error("Failed to save card:", saveResult.getError());
+        setIsCreatingCard(false);
+        return;
+      }
+
+      // Step 6: Invalidate queries to refresh card list
+      await queryClient.invalidateQueries({
+        queryKey: cardKeys.lists(),
+      });
+
+      // Step 7: Navigate to assets page
+      navigate({ to: "/assets" });
+    } catch (error) {
+      console.error("Error creating plot card:", error);
+      setIsCreatingCard(false);
+    }
+  };
+
+  // Validation logic for each step
+  const canProceed = (() => {
+    switch (currentStep) {
+      case "image":
+        // Image step requires both name and image
+        return !!plotName.trim() && !!imageAssetId;
+      case "info":
+        // Info step requires description
+        return !!description.trim();
+      case "lorebook":
+        // Lorebook is optional
+        return true;
+      case "scenario":
+        // Scenario is optional
+        return true;
+      default:
+        return false;
+    }
+  })();
 
   return (
     <div className="bg-background-surface-2 relative flex h-full w-full flex-col">
@@ -116,8 +253,11 @@ export function CreatePlotPage() {
               Previous
             </Button>
           )}
-          <Button onClick={handleNext} disabled={!canProceed}>
-            {isLastStep ? "Finish" : "Next"}
+          <Button
+            onClick={handleNext}
+            disabled={!canProceed || isCreatingCard}
+          >
+            {isCreatingCard ? "Creating..." : isLastStep ? "Finish" : "Next"}
           </Button>
         </div>
       </div>
@@ -140,59 +280,26 @@ export function CreatePlotPage() {
 
           {/* Step 2: Info */}
           {currentStep === "info" && (
-            <div className="flex flex-col gap-6">
-              <div>
-                <h2 className="text-text-primary mb-2 text-xl font-semibold">
-                  2. Basic Information
-                </h2>
-                <p className="text-text-secondary text-sm">
-                  Enter the basic information for your plot card.
-                </p>
-              </div>
-              <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-6">
-                <p className="text-text-secondary">
-                  Info step content will be implemented here
-                </p>
-              </div>
-            </div>
+            <PlotInfoStep
+              description={description}
+              onDescriptionChange={setDescription}
+            />
           )}
 
           {/* Step 3: Lorebook */}
           {currentStep === "lorebook" && (
-            <div className="flex flex-col gap-6">
-              <div>
-                <h2 className="text-text-primary mb-2 text-xl font-semibold">
-                  3. Lorebook
-                </h2>
-                <p className="text-text-secondary text-sm">
-                  Add world-building and lore entries for your plot.
-                </p>
-              </div>
-              <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-6">
-                <p className="text-text-secondary">
-                  Lorebook content will be implemented here
-                </p>
-              </div>
-            </div>
+            <PlotLorebookStep
+              entries={lorebookEntries}
+              onEntriesChange={setLorebookEntries}
+            />
           )}
 
           {/* Step 4: Scenario */}
           {currentStep === "scenario" && (
-            <div className="flex flex-col gap-6">
-              <div>
-                <h2 className="text-text-primary mb-2 text-xl font-semibold">
-                  4. Scenario
-                </h2>
-                <p className="text-text-secondary text-sm">
-                  Define the initial scenario and story setup.
-                </p>
-              </div>
-              <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-6">
-                <p className="text-text-secondary">
-                  Scenario content will be implemented here
-                </p>
-              </div>
-            </div>
+            <PlotScenarioStep
+              scenarios={scenarios}
+              onScenariosChange={setScenarios}
+            />
           )}
         </div>
       </div>
@@ -213,10 +320,10 @@ export function CreatePlotPage() {
           )}
           <Button
             onClick={handleNext}
-            disabled={!canProceed}
+            disabled={!canProceed || isCreatingCard}
             className="flex-1"
           >
-            {isLastStep ? "Finish" : "Next"}
+            {isCreatingCard ? "Creating..." : isLastStep ? "Finish" : "Next"}
           </Button>
         </div>
       </div>

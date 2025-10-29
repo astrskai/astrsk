@@ -1,18 +1,12 @@
-import { useRef, useMemo } from "react";
 import { Avatar } from "@/shared/ui";
-import { Input, Button } from "@/shared/ui/forms";
-import { cn } from "@/shared/lib";
-import { CharacterCard } from "@/entities/card/domain/character-card";
+import { Input, FileUploadButton } from "@/shared/ui/forms";
 import { CardType } from "@/entities/card/domain";
-import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { useAsset } from "@/shared/hooks/use-asset";
 import CardDisplay from "@/features/card/ui/card-display";
 
 interface CharacterImageStepProps {
   characterName: string;
   onCharacterNameChange: (name: string) => void;
   avatarAssetId?: string;
-  isUploading: boolean;
   onFileUpload: (file: File) => void;
 }
 
@@ -30,54 +24,13 @@ export function CharacterImageStep({
   characterName,
   onCharacterNameChange,
   avatarAssetId,
-  isUploading,
   onFileUpload,
 }: CharacterImageStepProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Convert asset ID to URL for Avatar component
-  const avatarAssetIdEntity = avatarAssetId
-    ? new UniqueEntityID(avatarAssetId)
-    : undefined;
-  const [avatarUrl, isAvatarVideo] = useAsset(avatarAssetIdEntity);
-
-  // Create a temporary card for preview (only if image uploaded)
-  const previewCard = useMemo(() => {
-    if (!avatarAssetId) return null;
-
-    const result = CharacterCard.create({
-      title: characterName || "New Character",
-      name: characterName || "New Character",
-      iconAssetId: new UniqueEntityID(avatarAssetId),
-      type: CardType.Character,
-      tags: [],
-    });
-
-    return result.isSuccess ? result.getValue() : null;
-  }, [characterName, avatarAssetId]);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      onFileUpload(file);
-    }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
+  // avatarAssetId is now a blob URL (e.g., "blob:http://localhost:3000/...")
+  // Use it directly for both Avatar and CardDisplay preview
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".jpg,.jpeg,.png,.webp"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
@@ -89,7 +42,7 @@ export function CharacterImageStep({
       </div>
 
       {/* Main Content */}
-      <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-6 md:p-8">
+      <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-4 md:p-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
           {/* Character Name Input */}
           <Input
@@ -106,10 +59,9 @@ export function CharacterImageStep({
             {/* Avatar - Left side on desktop, top on mobile */}
             <div className="flex shrink-0 flex-col items-center gap-2">
               <Avatar
-                src={avatarUrl}
+                src={avatarAssetId}
                 alt={characterName || "New Character"}
                 size={96}
-                isVideo={isAvatarVideo}
                 className="ring-border ring-2"
               />
               <span className="text-text-secondary text-xs">
@@ -119,37 +71,36 @@ export function CharacterImageStep({
 
             {/* Card Preview - Center */}
             <div className="flex flex-1 flex-col items-center gap-4">
-              <div
-                className={cn(
-                  "relative w-full max-w-[320px]",
-                  !previewCard &&
-                    "bg-background-surface-3 flex aspect-[196/289] items-center justify-center rounded-[8px]",
-                )}
-              >
-                {previewCard ? (
-                  <div className="@container">
-                    <CardDisplay
-                      card={previewCard}
-                      isSelected={false}
-                      showActions={false}
-                    />
-                  </div>
-                ) : (
+              {avatarAssetId ? (
+                <div className="@container w-full max-w-[320px]">
+                  <CardDisplay
+                    title={characterName || "New Character"}
+                    name={characterName || "New Character"}
+                    type={CardType.Character}
+                    tags={[]}
+                    tokenCount={0}
+                    previewImageUrl={avatarAssetId}
+                    isSelected={false}
+                    showActions={false}
+                  />
+                </div>
+              ) : (
+                <div className="bg-background-surface-3 relative flex aspect-[196/289] w-full max-w-[320px] items-center justify-center rounded-[8px]">
                   <div className="text-text-placeholder px-4 text-center text-sm">
                     Upload an image to see your card preview
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Upload Button - Below card */}
-              <Button
-                onClick={handleUploadClick}
-                disabled={isUploading}
+              <FileUploadButton
+                accept=".jpg,.jpeg,.png,.webp"
+                onChange={onFileUpload}
                 size="lg"
                 className="w-full max-w-[320px]"
               >
-                {isUploading ? "Uploading..." : "Upload Character Image"}
-              </Button>
+                Upload Character Image
+              </FileUploadButton>
 
               <p className="text-text-secondary text-center text-xs">
                 Supported formats: JPG, PNG, WEBP

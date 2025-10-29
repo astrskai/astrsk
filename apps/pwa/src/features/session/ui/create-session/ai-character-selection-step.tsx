@@ -120,7 +120,13 @@ export function AiCharacterSelectionStep({
               {selectedCharacters.map((card) => (
                 <CardDisplay
                   key={card.id.toString()}
-                  card={card}
+                  cardId={card.id}
+                  title={card.props.title}
+                  name={card.props.name}
+                  type={card.props.type}
+                  tags={card.props.tags}
+                  tokenCount={card.props.tokenCount}
+                  iconAssetId={card.props.iconAssetId}
                   isSelected={false}
                 />
               ))}

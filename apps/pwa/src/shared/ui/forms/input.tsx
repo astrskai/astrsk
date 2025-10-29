@@ -1,15 +1,33 @@
 import { forwardRef } from "react";
+import { HelpCircle } from "lucide-react";
 import { cn } from "@/shared/lib";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui/tooltip";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   labelPosition?: "top" | "left";
+  helpTooltip?: string;
+  helperText?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
-    { label, error, labelPosition = "top", className, required, ...props },
+    {
+      label,
+      error,
+      labelPosition = "top",
+      className,
+      required,
+      helpTooltip,
+      helperText,
+      ...props
+    },
     ref,
   ) => {
     const inputElement = (
@@ -34,6 +52,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {error && (
           <p className="text-status-destructive-light mt-1 text-xs">{error}</p>
         )}
+        {/* Helper text */}
+        {!error && helperText && (
+          <p className="text-text-secondary mt-1 text-xs">{helperText}</p>
+        )}
       </div>
     );
 
@@ -52,9 +74,23 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             : "flex-row items-center gap-4",
         )}
       >
-        <label className="text-text-body text-sm font-medium">
-          {label}
-          {required && <span className="text-status-required ml-1">*</span>}
+        <label className="text-text-body flex items-center gap-1.5 text-sm font-medium">
+          <span>
+            {label}
+            {required && <span className="text-status-required ml-1">*</span>}
+          </span>
+          {helpTooltip && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="text-text-secondary hover:text-text-primary h-4 w-4 cursor-help transition-colors" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs">{helpTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </label>
         {inputElement}
       </div>

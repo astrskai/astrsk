@@ -111,7 +111,16 @@ export function UserCharacterSelectionStep({
             </h3>
             <div className="flex justify-center">
               <div className="w-48">
-                <CardDisplay card={selectedUserCharacter} isSelected={false} />
+                <CardDisplay
+                  cardId={selectedUserCharacter.id}
+                  title={selectedUserCharacter.props.title}
+                  name={selectedUserCharacter.props.name}
+                  type={selectedUserCharacter.props.type}
+                  tags={selectedUserCharacter.props.tags}
+                  tokenCount={selectedUserCharacter.props.tokenCount}
+                  iconAssetId={selectedUserCharacter.props.iconAssetId}
+                  isSelected={false}
+                />
               </div>
             </div>
           </>

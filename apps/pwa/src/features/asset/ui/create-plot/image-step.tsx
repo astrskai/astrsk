@@ -1,8 +1,5 @@
-import { useRef, useMemo } from "react";
-import { Input, Button } from "@/shared/ui/forms";
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { Input, FileUploadButton } from "@/shared/ui/forms";
 import { CardType } from "@/entities/card/domain";
-import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import CardDisplay from "@/features/card/ui/card-display";
 
 interface PlotImageStepProps {
@@ -33,44 +30,8 @@ export function PlotImageStep({
   imageAssetId,
   onFileUpload,
 }: PlotImageStepProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Create a temporary card for preview (only if image uploaded)
-  const previewCard = useMemo(() => {
-    if (!imageAssetId) return null;
-
-    const result = PlotCard.create({
-      title: plotName || DEFAULT_PLOT_NAME,
-      iconAssetId: new UniqueEntityID(imageAssetId),
-      type: CardType.Plot,
-      tags: [],
-    });
-
-    return result.isSuccess ? result.getValue() : null;
-  }, [plotName, imageAssetId]);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    onFileUpload(file);
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
   return (
     <div className="flex flex-col gap-6">
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={ACCEPTED_FILE_TYPES}
-        onChange={handleFileChange}
-        className="hidden"
-      />
-
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
@@ -82,7 +43,7 @@ export function PlotImageStep({
       </div>
 
       {/* Main Content */}
-      <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-6 md:p-8">
+      <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-4 md:p-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
           {/* Plot Name Input */}
           <Input
@@ -96,13 +57,16 @@ export function PlotImageStep({
 
           {/* Card Preview - Centered */}
           <div className="flex flex-col items-center gap-4">
-            {previewCard ? (
+            {imageAssetId ? (
               <div className="@container w-full max-w-[320px]">
                 <CardDisplay
-                  card={previewCard}
+                  title={plotName || DEFAULT_PLOT_NAME}
+                  type={CardType.Plot}
+                  tags={[]}
+                  tokenCount={0}
+                  previewImageUrl={imageAssetId}
                   isSelected={false}
                   showActions={false}
-                  previewImageUrl={imageAssetId}
                 />
               </div>
             ) : (
@@ -114,13 +78,14 @@ export function PlotImageStep({
             )}
 
             {/* Upload Button - Below card */}
-            <Button
-              onClick={handleUploadClick}
+            <FileUploadButton
+              accept={ACCEPTED_FILE_TYPES}
+              onChange={onFileUpload}
               size="lg"
               className="w-full max-w-[320px]"
             >
               Upload Plot Image
-            </Button>
+            </FileUploadButton>
 
             <p className="text-text-secondary text-center text-xs">
               Supported formats: JPG, PNG, WEBP

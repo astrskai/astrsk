@@ -59,7 +59,13 @@ export function CharactersGrid({
         {characters.map((character) => (
           <div key={character.id.toString()} className="group">
             <CardDisplay
-              card={character}
+              cardId={character.id}
+              title={character.props.title}
+              name={character.props.name}
+              type={character.props.type}
+              tags={character.props.tags}
+              tokenCount={character.props.tokenCount}
+              iconAssetId={character.props.iconAssetId}
               isSelected={false}
               showActions={true}
               onClick={() => handleCharacterClick(character.id.toString())}

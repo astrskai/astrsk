@@ -13,7 +13,7 @@ export interface LorebookEntry {
   description: string;
 }
 
-interface CharacterLorebookStepProps {
+interface PlotLorebookStepProps {
   entries: LorebookEntry[];
   onEntriesChange: (entries: LorebookEntry[]) => void;
 }
@@ -26,8 +26,8 @@ const DEFAULT_ENTRY_NAME_PREFIX = "Entry";
 const DESCRIPTION_ROWS = 8;
 
 /**
- * Character Lorebook Step Component
- * Step 3 of the Create Character Card wizard
+ * Plot Lorebook Step Component
+ * Step 3 of the Create Plot Card wizard
  *
  * Fields (all optional):
  * - Entries:
@@ -36,10 +36,10 @@ const DESCRIPTION_ROWS = 8;
  *   - Recall Range: Number of messages to scan
  *   - Description: Lore content (supports variable insertion)
  */
-export function CharacterLorebookStep({
+export function PlotLorebookStep({
   entries,
   onEntriesChange,
-}: CharacterLorebookStepProps) {
+}: PlotLorebookStepProps) {
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [newTag, setNewTag] = useState("");
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -139,10 +139,11 @@ export function CharacterLorebookStep({
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Character Lorebook
+          Plot Lorebook
         </h2>
         <p className="text-text-secondary text-sm">
-          Add additional lore and details for your character (optional).
+          Add additional lore and world-building details for your plot
+          (optional).
         </p>
       </div>
 

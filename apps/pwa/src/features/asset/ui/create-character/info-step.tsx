@@ -1,12 +1,8 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Textarea } from "@/shared/ui/forms";
-import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react";
-import {
-  Variable,
-  VariableLibrary,
-  VariableGroup,
-  VariableGroupLabel,
-} from "@/shared/prompt/domain/variable";
+import { Variable } from "@/shared/prompt/domain/variable";
+import { VariablesPanel } from "@/features/asset/ui/panels";
 
 interface CharacterInfoStepProps {
   description: string;
@@ -32,9 +28,6 @@ export function CharacterInfoStep({
   const [activeTextarea, setActiveTextarea] = useState<
     "description" | "dialogue" | null
   >(null);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
-    new Set(),
-  );
 
   const [isExampleDialogueOpen, setIsExampleDialogueOpen] =
     useState<boolean>(false);
@@ -42,46 +35,14 @@ export function CharacterInfoStep({
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const dialogueRef = useRef<HTMLTextAreaElement>(null);
 
-  // Group variables by their group property
-  const groupedVariables = useMemo(() => {
-    const libraryVariables = VariableLibrary.variableList;
-
-    // Filter message-related variables
-    const filteredVariables = libraryVariables.filter(
-      (variable: Variable) =>
-        !variable.variable.includes("message") &&
-        !variable.variable.includes("history") &&
-        !variable.dataType.toLowerCase().includes("message"),
-    );
-
-    // Group by variable.group
-    const groups = filteredVariables.reduce(
-      (acc, variable) => {
-        const group = variable.group;
-        if (!acc[group]) {
-          acc[group] = [];
-        }
-        acc[group].push(variable);
-        return acc;
-      },
-      {} as Record<string, Variable[]>,
-    );
-
-    return groups;
-  }, []);
-
-  // Toggle group collapse/expand
-  const toggleGroupCollapse = useCallback((group: string) => {
-    setCollapsedGroups((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(group)) {
-        newSet.delete(group);
-      } else {
-        newSet.add(group);
-      }
-      return newSet;
-    });
-  }, []);
+  // Filter out message-related variables
+  const filterVariables = useCallback(
+    (variable: Variable) =>
+      !variable.variable.includes("message") &&
+      !variable.variable.includes("history") &&
+      !variable.dataType.toLowerCase().includes("message"),
+    [],
+  );
 
   // Insert variable at cursor position
   const insertVariable = useCallback(
@@ -191,84 +152,12 @@ export function CharacterInfoStep({
         </div>
 
         {/* Variables Panel */}
-        <div className="bg-background-surface-1 border-border w-full rounded-2xl border-2 md:w-80">
-          <div className="flex max-h-[500px] flex-col">
-            {/* Header - Fixed */}
-            <div className="border-border flex-shrink-0 border-b p-4">
-              <h3 className="text-text-primary text-sm font-medium">
-                Variables
-              </h3>
-              {!activeTextarea && (
-                <p className="text-text-secondary mt-2 text-xs">
-                  Click in a text field to insert variables
-                </p>
-              )}
-            </div>
-
-            {/* Scrollable Content */}
-            {activeTextarea && (
-              <div className="flex-1 overflow-y-auto">
-                <div className="flex flex-col">
-                  {Object.entries(groupedVariables).map(
-                    ([group, variables]) => (
-                      <div key={group} className="flex flex-col">
-                        {/* Group Header */}
-                        <button
-                          type="button"
-                          onClick={() => toggleGroupCollapse(group)}
-                          className="border-border hover:bg-background-surface-3 flex items-center justify-between border-b px-4 py-3 transition-colors"
-                        >
-                          <div className="flex flex-col items-start gap-0.5">
-                            <div className="text-text-primary text-xs font-medium">
-                              {VariableGroupLabel[
-                                group as keyof typeof VariableGroupLabel
-                              ]?.displayName || group}
-                            </div>
-                            <div className="text-text-secondary text-xs">
-                              {
-                                VariableGroupLabel[
-                                  group as keyof typeof VariableGroupLabel
-                                ]?.description
-                              }
-                            </div>
-                          </div>
-                          {collapsedGroups.has(group) ? (
-                            <ChevronDown className="text-text-secondary h-4 w-4 flex-shrink-0" />
-                          ) : (
-                            <ChevronUp className="text-text-secondary h-4 w-4 flex-shrink-0" />
-                          )}
-                        </button>
-
-                        {/* Group Variables */}
-                        {!collapsedGroups.has(group) && (
-                          <div className="flex flex-col gap-2 p-4">
-                            {variables.map((variable: Variable) => (
-                              <button
-                                key={variable.variable}
-                                type="button"
-                                onClick={() =>
-                                  insertVariable(`{{${variable.variable}}}`)
-                                }
-                                className="bg-background-surface-2 hover:bg-background-surface-3 border-border flex flex-col gap-1 rounded-lg border p-3 text-left transition-colors"
-                              >
-                                <div className="text-text-primary text-xs font-medium">
-                                  {`{{${variable.variable}}}`}
-                                </div>
-                                <div className="text-text-secondary text-xs">
-                                  {variable.description}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <VariablesPanel
+          onVariableClick={insertVariable}
+          filterVariables={filterVariables}
+          isActive={!!activeTextarea}
+          inactiveMessage="Click in a text field to insert variables"
+        />
       </div>
     </div>
   );

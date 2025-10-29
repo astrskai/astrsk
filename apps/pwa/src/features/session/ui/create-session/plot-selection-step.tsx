@@ -109,7 +109,15 @@ export function PlotSelectionStep({
             </h3>
             <div className="flex justify-center">
               <div className="w-48">
-                <CardDisplay card={selectedPlot} isSelected={false} />
+                <CardDisplay
+                  cardId={selectedPlot.id}
+                  title={selectedPlot.props.title}
+                  type={selectedPlot.props.type}
+                  tags={selectedPlot.props.tags}
+                  tokenCount={selectedPlot.props.tokenCount}
+                  iconAssetId={selectedPlot.props.iconAssetId}
+                  isSelected={false}
+                />
               </div>
             </div>
           </>

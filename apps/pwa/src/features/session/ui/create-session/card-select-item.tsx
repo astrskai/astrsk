@@ -47,7 +47,16 @@ export function CardSelectItem({
       <div className="flex gap-4">
         {/* Left: Card Display */}
         <div className="w-32 shrink-0">
-          <CardDisplay card={card} isSelected={false} />
+          <CardDisplay
+            cardId={card.id}
+            title={card.props.title}
+            name={card.props.name}
+            type={card.props.type}
+            tags={card.props.tags}
+            tokenCount={card.props.tokenCount}
+            iconAssetId={card.props.iconAssetId}
+            isSelected={false}
+          />
         </div>
 
         {/* Right: Title, Description & Tags */}
