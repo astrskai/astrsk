@@ -1,6 +1,6 @@
 // Assets page components
-export { AssetsPageHeader } from "./assets-page-header";
-export type { AssetType } from "./assets-page-header";
+export { AssetsHeader } from "./assets-header";
+export type { AssetType } from "./assets-header";
 
 export { NewCharacter } from "./new-character";
 export { CharactersGrid } from "./characters-grid";

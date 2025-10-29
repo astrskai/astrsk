@@ -86,7 +86,10 @@ const FlowItem = ({
     selectFlowId(flow.id.toString());
 
     // Navigate to the flow
-    navigate({ to: "/flows/$flowId", params: { flowId: flow.id.toString() } });
+    navigate({
+      to: "/assets/flows/$flowId",
+      params: { flowId: flow.id.toString() },
+    });
 
     // Keep the loading screen visible for a minimum duration
     setTimeout(() => {

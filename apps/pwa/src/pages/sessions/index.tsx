@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { SessionsPageHeader, SessionsGrid } from "@/features/session/ui";
+import { SessionsHeader, SessionsGrid } from "@/features/session/ui";
 import { NameInputDialog } from "@/features/session/ui/create-session";
 import { SessionImportDialog } from "@/features/session/components/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
@@ -46,7 +46,7 @@ export function SessionsPage() {
   return (
     <div className="bg-background-surface-2 flex h-full w-full flex-col">
       {/* Header */}
-      <SessionsPageHeader
+      <SessionsHeader
         keyword={keyword}
         onKeywordChange={setKeyword}
         onImportClick={() => setIsOpenImportDialog(true)}

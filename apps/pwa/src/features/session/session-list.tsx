@@ -369,7 +369,7 @@ const SessionListMobile = ({
           defaultValue="New session"
           onNext={async (name) => {
             setCreateSessionName(name);
-            navigate({ to: "/sessions/create" });
+            navigate({ to: "/sessions/new" });
           }}
           trigger={
             <div className="flex w-full flex-col items-center justify-center">

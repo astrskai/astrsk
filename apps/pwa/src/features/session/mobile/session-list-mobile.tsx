@@ -563,7 +563,7 @@ const SessionListMobile = ({
   const handleCreateSessionWithName = useCallback(
     async (name: string) => {
       setCreateSessionName(name);
-      navigate({ to: "/sessions/create" });
+      navigate({ to: "/sessions/new" });
     },
     [setCreateSessionName, navigate],
   );

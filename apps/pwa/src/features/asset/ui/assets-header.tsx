@@ -1,12 +1,11 @@
 import { Upload, Download, Menu, Ellipsis, CircleHelp } from "lucide-react";
+import { Link, useLocation } from "@tanstack/react-router";
 import { SearchInput, Button } from "@/shared/ui/forms";
 import { cn } from "@/shared/lib";
 
 export type AssetType = "characters" | "plots" | "flows";
 
-interface AssetsPageHeaderProps {
-  activeTab: AssetType;
-  onTabChange: (tab: AssetType) => void;
+interface AssetsHeaderProps {
   keyword: string;
   onKeywordChange: (keyword: string) => void;
   onImportClick: () => void;
@@ -14,45 +13,57 @@ interface AssetsPageHeaderProps {
   onHelpClick?: () => void;
 }
 
-const TAB_LABELS: Record<AssetType, string> = {
-  characters: "Characters",
-  plots: "Plots",
-  flows: "Flows",
+const ASSET_ROUTES: Record<AssetType, { label: string; to: string }> = {
+  characters: { label: "Characters", to: "/assets/characters" },
+  plots: { label: "Plots", to: "/assets/plots" },
+  flows: { label: "Flows", to: "/assets/flows" },
 };
 
 /**
- * Assets page header with tab navigation and action buttons
- * Responsive: Desktop shows tabs + actions horizontally, Mobile shows stacked layout
+ * Assets header with navigation links and action buttons
+ * Responsive: Desktop shows nav links + actions horizontally, Mobile shows stacked layout
  */
-export function AssetsPageHeader({
-  activeTab,
-  onTabChange,
+export function AssetsHeader({
   keyword,
   onKeywordChange,
   onImportClick,
   onExportClick,
   onHelpClick,
-}: AssetsPageHeaderProps) {
+}: AssetsHeaderProps) {
+  const location = useLocation();
+
+  // Determine current active route
+  const currentAssetType: AssetType | null =
+    location.pathname.includes("/characters") ? "characters" :
+    location.pathname.includes("/plots") ? "plots" :
+    location.pathname.includes("/flows") ? "flows" :
+    null;
+
   return (
     <div className="border-border flex flex-col border-b">
       {/* Desktop Header */}
       <div className="hidden items-center justify-between px-8 py-6 md:flex">
-        {/* Left: Tab Buttons */}
-        <div className="flex items-center gap-2">
-          {(Object.keys(TAB_LABELS) as AssetType[]).map((tab) => (
-            <Button
-              key={tab}
-              variant={activeTab === tab ? "default" : "secondary"}
-              onClick={() => onTabChange(tab)}
-              className={cn(
-                "transition-colors",
-                activeTab === tab && "font-semibold",
-              )}
-            >
-              {TAB_LABELS[tab]}
-            </Button>
-          ))}
-        </div>
+        {/* Left: Navigation Links */}
+        <nav className="flex items-center gap-2">
+          {(Object.keys(ASSET_ROUTES) as AssetType[]).map((type) => {
+            const isActive = currentAssetType === type;
+            return (
+              <Link
+                key={type}
+                to={ASSET_ROUTES[type].to}
+                className={cn(
+                  "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                  "focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                  isActive
+                    ? "bg-primary text-primary-foreground font-semibold shadow hover:bg-primary/90"
+                    : "bg-background-surface-1 text-text-secondary hover:bg-background-surface-2",
+                )}
+              >
+                {ASSET_ROUTES[type].label}
+              </Link>
+            );
+          })}
+        </nav>
 
         {/* Right: Search, Import, Export, Help */}
         <div className="flex items-center gap-3">
@@ -98,7 +109,7 @@ export function AssetsPageHeader({
             className="bg-transparent"
           />
           <h1 className="text-text-primary text-lg font-semibold">
-            {TAB_LABELS[activeTab]}
+            {currentAssetType ? ASSET_ROUTES[currentAssetType].label : "Assets"}
           </h1>
           <Button
             variant="secondary"
@@ -111,22 +122,25 @@ export function AssetsPageHeader({
 
         {/* Tab Navigation */}
         <div className="border-border flex border-b px-4">
-          {(Object.keys(TAB_LABELS) as AssetType[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => onTabChange(tab)}
-              className={cn(
-                "text-text-secondary relative flex-1 py-3 text-sm font-medium transition-colors",
-                activeTab === tab && "text-text-primary font-semibold",
-              )}
-            >
-              {TAB_LABELS[tab]}
-              {/* Active Tab Indicator */}
-              {activeTab === tab && (
-                <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
-              )}
-            </button>
-          ))}
+          {(Object.keys(ASSET_ROUTES) as AssetType[]).map((type) => {
+            const isActive = currentAssetType === type;
+            return (
+              <Link
+                key={type}
+                to={ASSET_ROUTES[type].to}
+                className={cn(
+                  "text-text-secondary relative flex-1 py-3 text-sm font-medium transition-colors",
+                  isActive && "text-text-primary font-semibold",
+                )}
+              >
+                {ASSET_ROUTES[type].label}
+                {/* Active Tab Indicator */}
+                {isActive && (
+                  <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Bottom Row: Search Input */}

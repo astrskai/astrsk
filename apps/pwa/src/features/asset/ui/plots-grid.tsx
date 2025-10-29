@@ -22,11 +22,11 @@ export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
   const navigate = useNavigate();
 
   const handleCreatePlot = () => {
-    navigate({ to: "/assets/create/plot" });
+    navigate({ to: "/assets/plots/new" });
   };
 
   const handlePlotClick = (plotId: string) => {
-    navigate({ to: "/cards/$cardId", params: { cardId: plotId } });
+    navigate({ to: "/assets/plots/$plotId", params: { plotId } });
   };
 
   return (

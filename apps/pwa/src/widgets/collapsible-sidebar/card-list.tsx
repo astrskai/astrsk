@@ -70,9 +70,23 @@ const CardItem = ({
   // Handle select
   const setSelectedCardId = useCardUIStore.use.setSelectedCardId();
   const handleSelect = useCallback(() => {
+    if (!card) return;
+
     setSelectedCardId(cardId.toString());
-    navigate({ to: "/cards/$cardId", params: { cardId: cardId.toString() } });
-  }, [cardId, navigate, setSelectedCardId]);
+
+    // Navigate based on card type
+    if (card.props.type === CardType.Character) {
+      navigate({
+        to: "/assets/characters/$characterId",
+        params: { characterId: cardId.toString() },
+      });
+    } else if (card.props.type === CardType.Plot) {
+      navigate({
+        to: "/assets/plots/$plotId",
+        params: { plotId: cardId.toString() },
+      });
+    }
+  }, [cardId, card, navigate, setSelectedCardId]);
 
   // Handle export
   const handleExport = useCallback(async () => {

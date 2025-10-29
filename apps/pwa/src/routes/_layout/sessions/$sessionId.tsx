@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { SessionDetailPage } from "@/pages/session";
+import { SessionDetailPage } from "@/pages/sessions/session-detail";
 import { UniqueEntityID } from "@/shared/domain";
 
 export const Route = createFileRoute("/_layout/sessions/$sessionId")({

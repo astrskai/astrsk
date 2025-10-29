@@ -160,8 +160,8 @@ export function CreateCharacterPage() {
           queryKey: cardKeys.lists(),
         });
 
-        // Step 6: Navigate to assets page
-        navigate({ to: "/assets" });
+        // Step 6: Navigate to characters list page
+        navigate({ to: "/assets/characters" });
       } catch (error) {
         console.error("Error creating character card:", error);
         setIsCreatingCard(false);
@@ -185,7 +185,7 @@ export function CreateCharacterPage() {
 
   const handleCancelClick = () => {
     // TODO: Show confirmation dialog if changes exist
-    navigate({ to: "/assets" });
+    navigate({ to: "/assets/characters" });
   };
 
   // Validation logic for each step

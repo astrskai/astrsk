@@ -71,7 +71,7 @@ export function CreatePlotPage() {
 
   const handleCancelClick = () => {
     // TODO: Show confirmation dialog if changes exist
-    navigate({ to: "/assets" });
+    navigate({ to: "/assets/plots" });
   };
 
   const handleFileUpload = (file: File) => {
@@ -183,8 +183,8 @@ export function CreatePlotPage() {
         queryKey: cardKeys.lists(),
       });
 
-      // Step 7: Navigate to assets page
-      navigate({ to: "/assets" });
+      // Step 7: Navigate to plots list page
+      navigate({ to: "/assets/plots" });
     } catch (error) {
       console.error("Error creating plot card:", error);
       setIsCreatingCard(false);

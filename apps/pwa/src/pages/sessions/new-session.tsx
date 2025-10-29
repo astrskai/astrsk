@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { Route } from "@/routes/_layout/sessions/create/index";
+import { Route } from "@/routes/_layout/sessions/new";
 import { Button } from "@/shared/ui/forms";
 import { ActionConfirm } from "@/shared/ui/dialogs";
 import {

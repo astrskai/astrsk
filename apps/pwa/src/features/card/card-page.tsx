@@ -74,9 +74,17 @@ export default function CardPage({ className }: { className?: string }) {
   );
 
   // Handle card click to navigate to CardPanel
-  const handleCardClick = (id: string) => {
-    console.log("Navigate to card detail page for card:", id);
-    navigate({ to: "/cards/$cardId", params: { cardId: id } });
+  const handleCharacterClick = (id: string) => {
+    console.log("Navigate to character detail page for card:", id);
+    navigate({
+      to: "/assets/characters/$characterId",
+      params: { characterId: id },
+    });
+  };
+
+  const handlePlotClick = (id: string) => {
+    console.log("Navigate to plot detail page for card:", id);
+    navigate({ to: "/assets/plots/$plotId", params: { plotId: id } });
   };
 
   useEffect(() => {
@@ -135,7 +143,7 @@ export default function CardPage({ className }: { className?: string }) {
                 handleCreateCard(CardType.Character);
               }}
               onCardClick={(id) => {
-                handleCardClick(id);
+                handleCharacterClick(id);
               }}
               onImport={() => {
                 setIsOpenImportCardPopup(true);
@@ -165,7 +173,7 @@ export default function CardPage({ className }: { className?: string }) {
                 handleCreateCard(CardType.Plot);
               }}
               onCardClick={(id) => {
-                handleCardClick(id);
+                handlePlotClick(id);
               }}
               onImport={() => {
                 setIsOpenImportCardPopup(true);

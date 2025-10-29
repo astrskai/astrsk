@@ -44,7 +44,7 @@ export function NameInputDialog({
   const handleNext = () => {
     // Navigate to create session page with session name
     navigate({
-      to: "/sessions/create",
+      to: "/sessions/new",
       search: { sessionName },
     });
     onOpenChange(false);

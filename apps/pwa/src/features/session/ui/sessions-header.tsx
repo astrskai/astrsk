@@ -1,7 +1,7 @@
 import { Upload, Download, Menu, Ellipsis, CircleHelp } from "lucide-react";
 import { SearchInput, Button } from "@/shared/ui/forms";
 
-interface SessionsPageHeaderProps {
+interface SessionsHeaderProps {
   keyword: string;
   onKeywordChange: (keyword: string) => void;
   onImportClick: () => void;
@@ -10,16 +10,16 @@ interface SessionsPageHeaderProps {
 }
 
 /**
- * Sessions page header with search and action buttons
+ * Sessions header with search and action buttons
  * Responsive: Desktop shows title + actions horizontally, Mobile shows stacked layout
  */
-export function SessionsPageHeader({
+export function SessionsHeader({
   keyword,
   onKeywordChange,
   onImportClick,
   onExportClick,
   onHelpClick,
-}: SessionsPageHeaderProps) {
+}: SessionsHeaderProps) {
   return (
     <div className="border-border flex flex-col border-b">
       {/* Desktop Header */}

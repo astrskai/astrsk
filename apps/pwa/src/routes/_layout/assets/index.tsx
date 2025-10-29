@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AssetsPage } from "@/pages/asset/assets-page";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_layout/assets/")({
-  component: AssetsPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/assets/characters" });
+  },
 });

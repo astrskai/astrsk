@@ -16,25 +16,27 @@ import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutLoginRouteImport } from './routes/_layout/login'
 import { Route as LayoutSettingsIndexRouteImport } from './routes/_layout/settings/index'
 import { Route as LayoutSessionsIndexRouteImport } from './routes/_layout/sessions/index'
-import { Route as LayoutFlowsIndexRouteImport } from './routes/_layout/flows/index'
-import { Route as LayoutCardsIndexRouteImport } from './routes/_layout/cards/index'
 import { Route as LayoutAssetsIndexRouteImport } from './routes/_layout/assets/index'
 import { Route as LayoutSettingsProvidersRouteImport } from './routes/_layout/settings/providers'
 import { Route as LayoutSettingsAdvancedRouteImport } from './routes/_layout/settings/advanced'
+import { Route as LayoutSessionsNewRouteImport } from './routes/_layout/sessions/new'
 import { Route as LayoutSessionsSessionIdRouteImport } from './routes/_layout/sessions/$sessionId'
-import { Route as LayoutFlowsFlowIdRouteImport } from './routes/_layout/flows/$flowId'
-import { Route as LayoutCardsCardIdRouteImport } from './routes/_layout/cards/$cardId'
 import { Route as LayoutSettingsLegalIndexRouteImport } from './routes/_layout/settings/legal/index'
 import { Route as LayoutSettingsAccountIndexRouteImport } from './routes/_layout/settings/account/index'
-import { Route as LayoutSessionsCreateIndexRouteImport } from './routes/_layout/sessions/create/index'
+import { Route as LayoutAssetsPlotsIndexRouteImport } from './routes/_layout/assets/plots/index'
+import { Route as LayoutAssetsFlowsIndexRouteImport } from './routes/_layout/assets/flows/index'
+import { Route as LayoutAssetsCharactersIndexRouteImport } from './routes/_layout/assets/characters/index'
 import { Route as LayoutSettingsLegalTermsOfServiceRouteImport } from './routes/_layout/settings/legal/terms-of-service'
 import { Route as LayoutSettingsLegalRefundPolicyRouteImport } from './routes/_layout/settings/legal/refund-policy'
 import { Route as LayoutSettingsLegalPrivacyPolicyRouteImport } from './routes/_layout/settings/legal/privacy-policy'
 import { Route as LayoutSettingsLegalOssNoticeRouteImport } from './routes/_layout/settings/legal/oss-notice'
 import { Route as LayoutSettingsLegalContentPolicyRouteImport } from './routes/_layout/settings/legal/content-policy'
 import { Route as LayoutSettingsAccountCreditUsageRouteImport } from './routes/_layout/settings/account/credit-usage'
-import { Route as LayoutAssetsCreatePlotIndexRouteImport } from './routes/_layout/assets/create/plot/index'
-import { Route as LayoutAssetsCreateCharacterIndexRouteImport } from './routes/_layout/assets/create/character/index'
+import { Route as LayoutAssetsPlotsNewRouteImport } from './routes/_layout/assets/plots/new'
+import { Route as LayoutAssetsPlotsPlotIdRouteImport } from './routes/_layout/assets/plots/$plotId'
+import { Route as LayoutAssetsFlowsFlowIdRouteImport } from './routes/_layout/assets/flows/$flowId'
+import { Route as LayoutAssetsCharactersNewRouteImport } from './routes/_layout/assets/characters/new'
+import { Route as LayoutAssetsCharactersCharacterIdRouteImport } from './routes/_layout/assets/characters/$characterId'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -70,16 +72,6 @@ const LayoutSessionsIndexRoute = LayoutSessionsIndexRouteImport.update({
   path: '/sessions/',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutFlowsIndexRoute = LayoutFlowsIndexRouteImport.update({
-  id: '/flows/',
-  path: '/flows/',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutCardsIndexRoute = LayoutCardsIndexRouteImport.update({
-  id: '/cards/',
-  path: '/cards/',
-  getParentRoute: () => LayoutRoute,
-} as any)
 const LayoutAssetsIndexRoute = LayoutAssetsIndexRouteImport.update({
   id: '/assets/',
   path: '/assets/',
@@ -95,19 +87,14 @@ const LayoutSettingsAdvancedRoute = LayoutSettingsAdvancedRouteImport.update({
   path: '/advanced',
   getParentRoute: () => LayoutSettingsRoute,
 } as any)
+const LayoutSessionsNewRoute = LayoutSessionsNewRouteImport.update({
+  id: '/sessions/new',
+  path: '/sessions/new',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSessionsSessionIdRoute = LayoutSessionsSessionIdRouteImport.update({
   id: '/sessions/$sessionId',
   path: '/sessions/$sessionId',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutFlowsFlowIdRoute = LayoutFlowsFlowIdRouteImport.update({
-  id: '/flows/$flowId',
-  path: '/flows/$flowId',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutCardsCardIdRoute = LayoutCardsCardIdRouteImport.update({
-  id: '/cards/$cardId',
-  path: '/cards/$cardId',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsLegalIndexRoute =
@@ -122,10 +109,20 @@ const LayoutSettingsAccountIndexRoute =
     path: '/account/',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
-const LayoutSessionsCreateIndexRoute =
-  LayoutSessionsCreateIndexRouteImport.update({
-    id: '/sessions/create/',
-    path: '/sessions/create/',
+const LayoutAssetsPlotsIndexRoute = LayoutAssetsPlotsIndexRouteImport.update({
+  id: '/assets/plots/',
+  path: '/assets/plots/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAssetsFlowsIndexRoute = LayoutAssetsFlowsIndexRouteImport.update({
+  id: '/assets/flows/',
+  path: '/assets/flows/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAssetsCharactersIndexRoute =
+  LayoutAssetsCharactersIndexRouteImport.update({
+    id: '/assets/characters/',
+    path: '/assets/characters/',
     getParentRoute: () => LayoutRoute,
   } as any)
 const LayoutSettingsLegalTermsOfServiceRoute =
@@ -164,16 +161,31 @@ const LayoutSettingsAccountCreditUsageRoute =
     path: '/account/credit-usage',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
-const LayoutAssetsCreatePlotIndexRoute =
-  LayoutAssetsCreatePlotIndexRouteImport.update({
-    id: '/assets/create/plot/',
-    path: '/assets/create/plot/',
+const LayoutAssetsPlotsNewRoute = LayoutAssetsPlotsNewRouteImport.update({
+  id: '/assets/plots/new',
+  path: '/assets/plots/new',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAssetsPlotsPlotIdRoute = LayoutAssetsPlotsPlotIdRouteImport.update({
+  id: '/assets/plots/$plotId',
+  path: '/assets/plots/$plotId',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAssetsFlowsFlowIdRoute = LayoutAssetsFlowsFlowIdRouteImport.update({
+  id: '/assets/flows/$flowId',
+  path: '/assets/flows/$flowId',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAssetsCharactersNewRoute =
+  LayoutAssetsCharactersNewRouteImport.update({
+    id: '/assets/characters/new',
+    path: '/assets/characters/new',
     getParentRoute: () => LayoutRoute,
   } as any)
-const LayoutAssetsCreateCharacterIndexRoute =
-  LayoutAssetsCreateCharacterIndexRouteImport.update({
-    id: '/assets/create/character/',
-    path: '/assets/create/character/',
+const LayoutAssetsCharactersCharacterIdRoute =
+  LayoutAssetsCharactersCharacterIdRouteImport.update({
+    id: '/assets/characters/$characterId',
+    path: '/assets/characters/$characterId',
     getParentRoute: () => LayoutRoute,
   } as any)
 
@@ -182,53 +194,57 @@ export interface FileRoutesByFullPath {
   '/settings': typeof LayoutSettingsRouteWithChildren
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/': typeof LayoutIndexRoute
-  '/cards/$cardId': typeof LayoutCardsCardIdRoute
-  '/flows/$flowId': typeof LayoutFlowsFlowIdRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
+  '/sessions/new': typeof LayoutSessionsNewRoute
   '/settings/advanced': typeof LayoutSettingsAdvancedRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
   '/assets': typeof LayoutAssetsIndexRoute
-  '/cards': typeof LayoutCardsIndexRoute
-  '/flows': typeof LayoutFlowsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
   '/settings/': typeof LayoutSettingsIndexRoute
+  '/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
+  '/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
+  '/assets/flows/$flowId': typeof LayoutAssetsFlowsFlowIdRoute
+  '/assets/plots/$plotId': typeof LayoutAssetsPlotsPlotIdRoute
+  '/assets/plots/new': typeof LayoutAssetsPlotsNewRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
   '/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
   '/settings/legal/refund-policy': typeof LayoutSettingsLegalRefundPolicyRoute
   '/settings/legal/terms-of-service': typeof LayoutSettingsLegalTermsOfServiceRoute
-  '/sessions/create': typeof LayoutSessionsCreateIndexRoute
+  '/assets/characters': typeof LayoutAssetsCharactersIndexRoute
+  '/assets/flows': typeof LayoutAssetsFlowsIndexRoute
+  '/assets/plots': typeof LayoutAssetsPlotsIndexRoute
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
-  '/assets/create/character': typeof LayoutAssetsCreateCharacterIndexRoute
-  '/assets/create/plot': typeof LayoutAssetsCreatePlotIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LayoutLoginRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/': typeof LayoutIndexRoute
-  '/cards/$cardId': typeof LayoutCardsCardIdRoute
-  '/flows/$flowId': typeof LayoutFlowsFlowIdRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
+  '/sessions/new': typeof LayoutSessionsNewRoute
   '/settings/advanced': typeof LayoutSettingsAdvancedRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
   '/assets': typeof LayoutAssetsIndexRoute
-  '/cards': typeof LayoutCardsIndexRoute
-  '/flows': typeof LayoutFlowsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
   '/settings': typeof LayoutSettingsIndexRoute
+  '/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
+  '/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
+  '/assets/flows/$flowId': typeof LayoutAssetsFlowsFlowIdRoute
+  '/assets/plots/$plotId': typeof LayoutAssetsPlotsPlotIdRoute
+  '/assets/plots/new': typeof LayoutAssetsPlotsNewRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
   '/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
   '/settings/legal/refund-policy': typeof LayoutSettingsLegalRefundPolicyRoute
   '/settings/legal/terms-of-service': typeof LayoutSettingsLegalTermsOfServiceRoute
-  '/sessions/create': typeof LayoutSessionsCreateIndexRoute
+  '/assets/characters': typeof LayoutAssetsCharactersIndexRoute
+  '/assets/flows': typeof LayoutAssetsFlowsIndexRoute
+  '/assets/plots': typeof LayoutAssetsPlotsIndexRoute
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
-  '/assets/create/character': typeof LayoutAssetsCreateCharacterIndexRoute
-  '/assets/create/plot': typeof LayoutAssetsCreatePlotIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -237,27 +253,29 @@ export interface FileRoutesById {
   '/_layout/settings': typeof LayoutSettingsRouteWithChildren
   '/_layout/sso-callback': typeof LayoutSsoCallbackRoute
   '/_layout/': typeof LayoutIndexRoute
-  '/_layout/cards/$cardId': typeof LayoutCardsCardIdRoute
-  '/_layout/flows/$flowId': typeof LayoutFlowsFlowIdRoute
   '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
+  '/_layout/sessions/new': typeof LayoutSessionsNewRoute
   '/_layout/settings/advanced': typeof LayoutSettingsAdvancedRoute
   '/_layout/settings/providers': typeof LayoutSettingsProvidersRoute
   '/_layout/assets/': typeof LayoutAssetsIndexRoute
-  '/_layout/cards/': typeof LayoutCardsIndexRoute
-  '/_layout/flows/': typeof LayoutFlowsIndexRoute
   '/_layout/sessions/': typeof LayoutSessionsIndexRoute
   '/_layout/settings/': typeof LayoutSettingsIndexRoute
+  '/_layout/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
+  '/_layout/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
+  '/_layout/assets/flows/$flowId': typeof LayoutAssetsFlowsFlowIdRoute
+  '/_layout/assets/plots/$plotId': typeof LayoutAssetsPlotsPlotIdRoute
+  '/_layout/assets/plots/new': typeof LayoutAssetsPlotsNewRoute
   '/_layout/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/_layout/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/_layout/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
   '/_layout/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
   '/_layout/settings/legal/refund-policy': typeof LayoutSettingsLegalRefundPolicyRoute
   '/_layout/settings/legal/terms-of-service': typeof LayoutSettingsLegalTermsOfServiceRoute
-  '/_layout/sessions/create/': typeof LayoutSessionsCreateIndexRoute
+  '/_layout/assets/characters/': typeof LayoutAssetsCharactersIndexRoute
+  '/_layout/assets/flows/': typeof LayoutAssetsFlowsIndexRoute
+  '/_layout/assets/plots/': typeof LayoutAssetsPlotsIndexRoute
   '/_layout/settings/account/': typeof LayoutSettingsAccountIndexRoute
   '/_layout/settings/legal/': typeof LayoutSettingsLegalIndexRoute
-  '/_layout/assets/create/character/': typeof LayoutAssetsCreateCharacterIndexRoute
-  '/_layout/assets/create/plot/': typeof LayoutAssetsCreatePlotIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -266,53 +284,57 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sso-callback'
     | '/'
-    | '/cards/$cardId'
-    | '/flows/$flowId'
     | '/sessions/$sessionId'
+    | '/sessions/new'
     | '/settings/advanced'
     | '/settings/providers'
     | '/assets'
-    | '/cards'
-    | '/flows'
     | '/sessions'
     | '/settings/'
+    | '/assets/characters/$characterId'
+    | '/assets/characters/new'
+    | '/assets/flows/$flowId'
+    | '/assets/plots/$plotId'
+    | '/assets/plots/new'
     | '/settings/account/credit-usage'
     | '/settings/legal/content-policy'
     | '/settings/legal/oss-notice'
     | '/settings/legal/privacy-policy'
     | '/settings/legal/refund-policy'
     | '/settings/legal/terms-of-service'
-    | '/sessions/create'
+    | '/assets/characters'
+    | '/assets/flows'
+    | '/assets/plots'
     | '/settings/account'
     | '/settings/legal'
-    | '/assets/create/character'
-    | '/assets/create/plot'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/sso-callback'
     | '/'
-    | '/cards/$cardId'
-    | '/flows/$flowId'
     | '/sessions/$sessionId'
+    | '/sessions/new'
     | '/settings/advanced'
     | '/settings/providers'
     | '/assets'
-    | '/cards'
-    | '/flows'
     | '/sessions'
     | '/settings'
+    | '/assets/characters/$characterId'
+    | '/assets/characters/new'
+    | '/assets/flows/$flowId'
+    | '/assets/plots/$plotId'
+    | '/assets/plots/new'
     | '/settings/account/credit-usage'
     | '/settings/legal/content-policy'
     | '/settings/legal/oss-notice'
     | '/settings/legal/privacy-policy'
     | '/settings/legal/refund-policy'
     | '/settings/legal/terms-of-service'
-    | '/sessions/create'
+    | '/assets/characters'
+    | '/assets/flows'
+    | '/assets/plots'
     | '/settings/account'
     | '/settings/legal'
-    | '/assets/create/character'
-    | '/assets/create/plot'
   id:
     | '__root__'
     | '/_layout'
@@ -320,27 +342,29 @@ export interface FileRouteTypes {
     | '/_layout/settings'
     | '/_layout/sso-callback'
     | '/_layout/'
-    | '/_layout/cards/$cardId'
-    | '/_layout/flows/$flowId'
     | '/_layout/sessions/$sessionId'
+    | '/_layout/sessions/new'
     | '/_layout/settings/advanced'
     | '/_layout/settings/providers'
     | '/_layout/assets/'
-    | '/_layout/cards/'
-    | '/_layout/flows/'
     | '/_layout/sessions/'
     | '/_layout/settings/'
+    | '/_layout/assets/characters/$characterId'
+    | '/_layout/assets/characters/new'
+    | '/_layout/assets/flows/$flowId'
+    | '/_layout/assets/plots/$plotId'
+    | '/_layout/assets/plots/new'
     | '/_layout/settings/account/credit-usage'
     | '/_layout/settings/legal/content-policy'
     | '/_layout/settings/legal/oss-notice'
     | '/_layout/settings/legal/privacy-policy'
     | '/_layout/settings/legal/refund-policy'
     | '/_layout/settings/legal/terms-of-service'
-    | '/_layout/sessions/create/'
+    | '/_layout/assets/characters/'
+    | '/_layout/assets/flows/'
+    | '/_layout/assets/plots/'
     | '/_layout/settings/account/'
     | '/_layout/settings/legal/'
-    | '/_layout/assets/create/character/'
-    | '/_layout/assets/create/plot/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -398,20 +422,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSessionsIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/flows/': {
-      id: '/_layout/flows/'
-      path: '/flows'
-      fullPath: '/flows'
-      preLoaderRoute: typeof LayoutFlowsIndexRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/cards/': {
-      id: '/_layout/cards/'
-      path: '/cards'
-      fullPath: '/cards'
-      preLoaderRoute: typeof LayoutCardsIndexRouteImport
-      parentRoute: typeof LayoutRoute
-    }
     '/_layout/assets/': {
       id: '/_layout/assets/'
       path: '/assets'
@@ -433,25 +443,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsAdvancedRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
+    '/_layout/sessions/new': {
+      id: '/_layout/sessions/new'
+      path: '/sessions/new'
+      fullPath: '/sessions/new'
+      preLoaderRoute: typeof LayoutSessionsNewRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/sessions/$sessionId': {
       id: '/_layout/sessions/$sessionId'
       path: '/sessions/$sessionId'
       fullPath: '/sessions/$sessionId'
       preLoaderRoute: typeof LayoutSessionsSessionIdRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/flows/$flowId': {
-      id: '/_layout/flows/$flowId'
-      path: '/flows/$flowId'
-      fullPath: '/flows/$flowId'
-      preLoaderRoute: typeof LayoutFlowsFlowIdRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/cards/$cardId': {
-      id: '/_layout/cards/$cardId'
-      path: '/cards/$cardId'
-      fullPath: '/cards/$cardId'
-      preLoaderRoute: typeof LayoutCardsCardIdRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings/legal/': {
@@ -468,11 +471,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsAccountIndexRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
-    '/_layout/sessions/create/': {
-      id: '/_layout/sessions/create/'
-      path: '/sessions/create'
-      fullPath: '/sessions/create'
-      preLoaderRoute: typeof LayoutSessionsCreateIndexRouteImport
+    '/_layout/assets/plots/': {
+      id: '/_layout/assets/plots/'
+      path: '/assets/plots'
+      fullPath: '/assets/plots'
+      preLoaderRoute: typeof LayoutAssetsPlotsIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/assets/flows/': {
+      id: '/_layout/assets/flows/'
+      path: '/assets/flows'
+      fullPath: '/assets/flows'
+      preLoaderRoute: typeof LayoutAssetsFlowsIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/assets/characters/': {
+      id: '/_layout/assets/characters/'
+      path: '/assets/characters'
+      fullPath: '/assets/characters'
+      preLoaderRoute: typeof LayoutAssetsCharactersIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings/legal/terms-of-service': {
@@ -517,18 +534,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsAccountCreditUsageRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
-    '/_layout/assets/create/plot/': {
-      id: '/_layout/assets/create/plot/'
-      path: '/assets/create/plot'
-      fullPath: '/assets/create/plot'
-      preLoaderRoute: typeof LayoutAssetsCreatePlotIndexRouteImport
+    '/_layout/assets/plots/new': {
+      id: '/_layout/assets/plots/new'
+      path: '/assets/plots/new'
+      fullPath: '/assets/plots/new'
+      preLoaderRoute: typeof LayoutAssetsPlotsNewRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/assets/create/character/': {
-      id: '/_layout/assets/create/character/'
-      path: '/assets/create/character'
-      fullPath: '/assets/create/character'
-      preLoaderRoute: typeof LayoutAssetsCreateCharacterIndexRouteImport
+    '/_layout/assets/plots/$plotId': {
+      id: '/_layout/assets/plots/$plotId'
+      path: '/assets/plots/$plotId'
+      fullPath: '/assets/plots/$plotId'
+      preLoaderRoute: typeof LayoutAssetsPlotsPlotIdRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/assets/flows/$flowId': {
+      id: '/_layout/assets/flows/$flowId'
+      path: '/assets/flows/$flowId'
+      fullPath: '/assets/flows/$flowId'
+      preLoaderRoute: typeof LayoutAssetsFlowsFlowIdRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/assets/characters/new': {
+      id: '/_layout/assets/characters/new'
+      path: '/assets/characters/new'
+      fullPath: '/assets/characters/new'
+      preLoaderRoute: typeof LayoutAssetsCharactersNewRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/assets/characters/$characterId': {
+      id: '/_layout/assets/characters/$characterId'
+      path: '/assets/characters/$characterId'
+      fullPath: '/assets/characters/$characterId'
+      preLoaderRoute: typeof LayoutAssetsCharactersCharacterIdRouteImport
       parentRoute: typeof LayoutRoute
     }
   }
@@ -572,16 +610,18 @@ interface LayoutRouteChildren {
   LayoutSettingsRoute: typeof LayoutSettingsRouteWithChildren
   LayoutSsoCallbackRoute: typeof LayoutSsoCallbackRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
-  LayoutCardsCardIdRoute: typeof LayoutCardsCardIdRoute
-  LayoutFlowsFlowIdRoute: typeof LayoutFlowsFlowIdRoute
   LayoutSessionsSessionIdRoute: typeof LayoutSessionsSessionIdRoute
+  LayoutSessionsNewRoute: typeof LayoutSessionsNewRoute
   LayoutAssetsIndexRoute: typeof LayoutAssetsIndexRoute
-  LayoutCardsIndexRoute: typeof LayoutCardsIndexRoute
-  LayoutFlowsIndexRoute: typeof LayoutFlowsIndexRoute
   LayoutSessionsIndexRoute: typeof LayoutSessionsIndexRoute
-  LayoutSessionsCreateIndexRoute: typeof LayoutSessionsCreateIndexRoute
-  LayoutAssetsCreateCharacterIndexRoute: typeof LayoutAssetsCreateCharacterIndexRoute
-  LayoutAssetsCreatePlotIndexRoute: typeof LayoutAssetsCreatePlotIndexRoute
+  LayoutAssetsCharactersCharacterIdRoute: typeof LayoutAssetsCharactersCharacterIdRoute
+  LayoutAssetsCharactersNewRoute: typeof LayoutAssetsCharactersNewRoute
+  LayoutAssetsFlowsFlowIdRoute: typeof LayoutAssetsFlowsFlowIdRoute
+  LayoutAssetsPlotsPlotIdRoute: typeof LayoutAssetsPlotsPlotIdRoute
+  LayoutAssetsPlotsNewRoute: typeof LayoutAssetsPlotsNewRoute
+  LayoutAssetsCharactersIndexRoute: typeof LayoutAssetsCharactersIndexRoute
+  LayoutAssetsFlowsIndexRoute: typeof LayoutAssetsFlowsIndexRoute
+  LayoutAssetsPlotsIndexRoute: typeof LayoutAssetsPlotsIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -589,16 +629,19 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutSettingsRoute: LayoutSettingsRouteWithChildren,
   LayoutSsoCallbackRoute: LayoutSsoCallbackRoute,
   LayoutIndexRoute: LayoutIndexRoute,
-  LayoutCardsCardIdRoute: LayoutCardsCardIdRoute,
-  LayoutFlowsFlowIdRoute: LayoutFlowsFlowIdRoute,
   LayoutSessionsSessionIdRoute: LayoutSessionsSessionIdRoute,
+  LayoutSessionsNewRoute: LayoutSessionsNewRoute,
   LayoutAssetsIndexRoute: LayoutAssetsIndexRoute,
-  LayoutCardsIndexRoute: LayoutCardsIndexRoute,
-  LayoutFlowsIndexRoute: LayoutFlowsIndexRoute,
   LayoutSessionsIndexRoute: LayoutSessionsIndexRoute,
-  LayoutSessionsCreateIndexRoute: LayoutSessionsCreateIndexRoute,
-  LayoutAssetsCreateCharacterIndexRoute: LayoutAssetsCreateCharacterIndexRoute,
-  LayoutAssetsCreatePlotIndexRoute: LayoutAssetsCreatePlotIndexRoute,
+  LayoutAssetsCharactersCharacterIdRoute:
+    LayoutAssetsCharactersCharacterIdRoute,
+  LayoutAssetsCharactersNewRoute: LayoutAssetsCharactersNewRoute,
+  LayoutAssetsFlowsFlowIdRoute: LayoutAssetsFlowsFlowIdRoute,
+  LayoutAssetsPlotsPlotIdRoute: LayoutAssetsPlotsPlotIdRoute,
+  LayoutAssetsPlotsNewRoute: LayoutAssetsPlotsNewRoute,
+  LayoutAssetsCharactersIndexRoute: LayoutAssetsCharactersIndexRoute,
+  LayoutAssetsFlowsIndexRoute: LayoutAssetsFlowsIndexRoute,
+  LayoutAssetsPlotsIndexRoute: LayoutAssetsPlotsIndexRoute,
 }
 
 const LayoutRouteWithChildren =

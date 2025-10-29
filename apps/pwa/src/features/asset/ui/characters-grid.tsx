@@ -25,11 +25,14 @@ export function CharactersGrid({
   const navigate = useNavigate();
 
   const handleCharacterClick = (characterId: string) => {
-    navigate({ to: "/cards/$cardId", params: { cardId: characterId } });
+    navigate({
+      to: "/assets/characters/$characterId",
+      params: { characterId },
+    });
   };
 
   const handleCreateCharacter = () => {
-    navigate({ to: "/assets/create/character" });
+    navigate({ to: "/assets/characters/new" });
   };
 
   return (
