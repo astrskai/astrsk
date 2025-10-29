@@ -665,11 +665,28 @@ const makeProvider = ({
       });
       break;
 
-    case ApiSource.Ollama:
+    case ApiSource.Ollama: {
+      // CORS fix: Use OpenAI-compatible endpoint with custom fetch to remove Stainless headers
+      // This fixes CORS issues when running Ollama locally in browser
+      // See: https://github.com/ollama/ollama/issues/2045#issuecomment-1960835690
+      const customFetch: typeof fetch = async (url, options = {}) => {
+        const headers = new Headers(options.headers);
+        // Remove Stainless SDK headers that cause CORS issues with Ollama
+        headers.delete("x-stainless-retry-count");
+        headers.delete("x-stainless-timeout");
+
+        return fetch(url, {
+          ...options,
+          headers,
+        });
+      };
+
       provider = createOllama({
         baseURL: baseUrl,
+        fetch: customFetch,
       });
       break;
+    }
 
     case ApiSource.LMStudio: {
       let lmStudioBaseUrl = baseUrl ?? "http://localhost:1234";
@@ -1642,7 +1659,11 @@ async function generateStructuredOutput({
   const modelProvider = model.provider.split(".").at(0);
 
   let mode = model.defaultObjectGenerationMode;
-  if (apiConnection.source === ApiSource.OpenRouter) {
+  if (apiConnection.source === ApiSource.OpenRouter || 
+      apiConnection.source === ApiSource.Ollama ||
+      apiConnection.source === ApiSource.KoboldCPP ||
+      apiConnection.source === ApiSource.OpenAICompatible
+  ) {
     mode = "json";
   }
 
@@ -1686,6 +1707,7 @@ async function generateStructuredOutput({
       schema: jsonSchema(schema.typeDef),
       schemaName: schema.name,
       schemaDescription: schema.description,
+      mode,
       ...settings,
       ...(Object.keys(providerOptions).length > 0 && modelProvider
         ? {
@@ -1804,7 +1826,7 @@ async function* executeAgentNode({
     const isStructuredOutput = agent.props.enabledStructuredOutput;
     if (isStructuredOutput) {
       // Generate structured output
-      const { partialObjectStream } = await generateStructuredOutput({
+      const streamResult = await generateStructuredOutput({
         apiConnection: apiConnection,
         modelId: apiModelId,
         messages: transformedMessages,
@@ -1822,13 +1844,64 @@ async function* executeAgentNode({
       });
 
       // Stream structured output
-      for await (const partialObject of partialObjectStream) {
+      for await (const partialObject of streamResult.partialObjectStream) {
         merge(result, { output: partialObject });
         yield result;
       }
+
+      try {
+        const metadata: any = {};
+
+        // Automatically extract all promise properties from streamResult
+        const streamResultAny = streamResult as any;
+
+        // Get all property names that end with "Promise"
+        const promiseProps = Object.keys(streamResultAny).filter(key => key.endsWith('Promise'));
+
+        // Await all promises and extract their values
+        for (const prop of promiseProps) {
+          const propName = prop.replace('Promise', ''); // Remove "Promise" suffix for cleaner naming
+
+          try {
+            // Add timeout for all promises (some may not resolve for certain providers)
+            const promiseResult = await Promise.race([
+              streamResultAny[prop],
+              new Promise((resolve) => setTimeout(() => resolve(null), 2000))
+            ]);
+
+            // Extract value from DelayedPromise - the actual value is in status.value
+            let value = promiseResult;
+            if (promiseResult && typeof promiseResult === 'object' && 'status' in promiseResult) {
+              // It's a DelayedPromise with status.value
+              const status = (promiseResult as any).status;
+              if (status && status.type === 'resolved' && 'value' in status) {
+                value = status.value;
+              }
+            }
+
+            // Check if value is meaningful (not null, not undefined, not empty object)
+            const isEmptyObject = value && typeof value === 'object' && Object.keys(value).length === 0;
+
+            if (value !== null && value !== undefined && !isEmptyObject) {
+              metadata[propName] = value;
+            }
+          } catch (err) {
+            // Silently skip unavailable promises
+          }
+        }
+
+        if (Object.keys(metadata).length > 0) {
+          merge(result, { metadata });
+          // Yield the result with metadata
+          yield result;
+        }
+      } catch (error) {
+        // Don't throw, just continue without metadata
+        // Don't throw, just continue without metadata
+      }
     } else {
       // Generate text output
-      const { textStream } = await generateTextOutput({
+      const streamResult = await generateTextOutput({
         apiConnection: apiConnection,
         modelId: apiModelId,
         messages: transformedMessages,
@@ -1840,10 +1913,61 @@ async function* executeAgentNode({
 
       // Stream text output
       let response = "";
-      for await (const chunk of textStream) {
+      for await (const chunk of streamResult.textStream) {
         response += chunk;
         merge(result, { output: { response } });
         yield result;
+      }
+
+      try {
+        const metadata: any = {};
+
+        // Automatically extract all promise properties from streamResult
+        const streamResultAny = streamResult as any;
+
+        // Get all property names that end with "Promise"
+        const promiseProps = Object.keys(streamResultAny).filter(key => key.endsWith('Promise'));
+
+        // Await all promises and extract their values
+        for (const prop of promiseProps) {
+          const propName = prop.replace('Promise', ''); // Remove "Promise" suffix for cleaner naming
+
+          try {
+
+            // Add timeout for all promises (some may not resolve for certain providers)
+            const promiseResult = await Promise.race([
+              streamResultAny[prop],
+              new Promise((resolve) => setTimeout(() => resolve(null), 2000))
+            ]);
+
+            // Extract value from DelayedPromise - the actual value is in status.value
+            let value = promiseResult;
+            if (promiseResult && typeof promiseResult === 'object' && 'status' in promiseResult) {
+              // It's a DelayedPromise with status.value
+              const status = (promiseResult as any).status;
+              if (status && status.type === 'resolved' && 'value' in status) {
+                value = status.value;
+              }
+            }
+            // Check if value is meaningful (not null, not undefined, not empty object)
+            const isEmptyObject = value && typeof value === 'object' && Object.keys(value).length === 0;
+
+            if (value !== null && value !== undefined && !isEmptyObject) {
+              metadata[propName] = value;
+            }
+          } catch (err) {
+            console.log(`[DEBUG] ${propName} not available:`, err);
+          }
+        }
+
+        if (Object.keys(metadata).length > 0) {
+          merge(result, { metadata });
+          // Yield the result with metadata
+          yield result;
+        }
+      } catch (error) {
+        console.error("[DEBUG] Error fetching metadata:", error);
+        // Don't throw, just continue without metadata
       }
     }
 
@@ -1867,6 +1991,7 @@ type FlowResult = {
   variables: Record<string, any>;
   translations?: Map<string, string>;
   dataStore?: DataStoreSavedField[];
+  metadata?: Record<string, any>;
 };
 
 async function* executeFlow({
@@ -2048,6 +2173,7 @@ async function* executeFlow({
             content: content,
             variables: variables,
             dataStore: dataStore,
+            metadata: (result as any).metadata,
           };
         }
 

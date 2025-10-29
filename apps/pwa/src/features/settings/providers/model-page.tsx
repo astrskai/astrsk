@@ -430,8 +430,11 @@ export default function ModelPage({ className }: { className?: string }) {
       if (showApiKey.get(editingApiConnection.source)) {
         editingApiConnection.setApiKey(apiKey);
       }
-      // LM Studio doesn't require API key, set a placeholder
-      if (editingApiConnection.source === ApiSource.LMStudio) {
+      // LM Studio and Ollama don't require API key, set a placeholder
+      if (
+        editingApiConnection.source === ApiSource.LMStudio ||
+        editingApiConnection.source === ApiSource.Ollama
+      ) {
         editingApiConnection.setApiKey("not-needed");
       }
       if (
@@ -441,8 +444,11 @@ export default function ModelPage({ className }: { className?: string }) {
         editingApiConnection.setOpenrouterProviderSort(openrouterProviderSort);
       }
 
-      // Check api key is valid (skip for LM Studio)
-      if (editingApiConnection.source !== ApiSource.LMStudio) {
+      // Check api key is valid (skip for LM Studio and Ollama)
+      if (
+        editingApiConnection.source !== ApiSource.LMStudio &&
+        editingApiConnection.source !== ApiSource.Ollama
+      ) {
         const checkApiKeyResult =
           await ApiService.checkApiKey.execute(editingApiConnection);
         if (checkApiKeyResult.isFailure) {
