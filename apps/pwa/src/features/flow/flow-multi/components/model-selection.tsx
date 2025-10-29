@@ -83,6 +83,11 @@ const modelOptions = (
     for (const apiConnectionWithModels of apiConnectionsWithModels) {
       const { apiConnection, models } = apiConnectionWithModels;
 
+      // TEMPORARY: Hide astrsk connections from model selection
+      if (apiConnection.source === ApiSource.AstrskAi) {
+        continue;
+      }
+
       options.push({
         label: apiSourceLabel.get(apiConnection.source) ?? "",
         value: apiConnection.id.toString(),
