@@ -1,5 +1,4 @@
 import { Result } from "@/shared/core/result";
-import { HttpClient } from "@/shared/infra";
 import { formatFail } from "@/shared/lib";
 import { logger } from "@/shared/lib/logger";
 
@@ -7,14 +6,25 @@ import { ApiConnection, ApiModel } from "@/entities/api/domain";
 import { ListApiModelStrategy } from "@/entities/api/usecases/list-api-model/list-api-model-strategy";
 
 export class ListOllamaModelStrategy implements ListApiModelStrategy {
-  constructor(private httpClient: HttpClient) {}
-
   async listApiModel(
     apiConnection: ApiConnection,
   ): Promise<Result<ApiModel[]>> {
     try {
-      const response = await this.httpClient.get(
-        `${apiConnection.baseUrl}/tags`,
+      // Use custom fetch to remove Stainless SDK headers that cause CORS issues with Ollama
+      const customFetch: typeof fetch = async (url, options = {}) => {
+        const headers = new Headers(options.headers);
+        // Remove Stainless SDK headers that cause CORS issues with Ollama
+        headers.delete("x-stainless-retry-count");
+        headers.delete("x-stainless-timeout");
+
+        return fetch(url, {
+          ...options,
+          headers,
+        });
+      };
+
+      const response = await customFetch(
+        `${apiConnection.baseUrl}/api/tags`,
         {
           headers: {
             accept: "application/json",
@@ -23,14 +33,17 @@ export class ListOllamaModelStrategy implements ListApiModelStrategy {
       );
 
       if (response.status !== 200) {
-        logger.error(response.status, response.statusText, response.data);
+        const data = await response.json().catch(() => ({}));
+        logger.error(response.status, response.statusText, data);
         throw new Error(
           `response status is not 200: ${response.status} ${response.statusText}`,
         );
       }
 
+      const data = await response.json();
+
       return Result.ok(
-        response.data.models.map((model: any) =>
+        data.models.map((model: any) =>
           ApiModel.create({
             id: model.model,
             name: model.name,
