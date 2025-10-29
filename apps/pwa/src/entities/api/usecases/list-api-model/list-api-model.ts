@@ -74,7 +74,7 @@ export class ListApiModel
     this.strategies.set(ApiSource.Dummy, new ListDummyModelStrategy());
     this.strategies.set(
       ApiSource.Ollama,
-      new ListOllamaModelStrategy(this.httpClient),
+      new ListOllamaModelStrategy(),
     );
     this.strategies.set(
       ApiSource.LMStudio,
