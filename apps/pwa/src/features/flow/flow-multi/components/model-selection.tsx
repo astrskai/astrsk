@@ -234,7 +234,7 @@ const PromptItem = ({
       },
     },
   });
-  const { watch, setValue, trigger } = methods;
+  const { watch, setValue, trigger, reset } = methods;
   const field =
     taskType === TaskType.AiResponse ? "aiResponse" : "userResponse";
   // const type = watch(`${field}.type`);
@@ -252,6 +252,20 @@ const PromptItem = ({
   useEffect(() => {
     refetch();
   }, []);
+
+  useEffect(() => {
+    if (agent?.props.modelName) {
+      reset({
+        aiResponse: {
+          type: "api-model",
+          apiSource: agent.props.apiSource == null ? undefined : agent.props.apiSource,
+          modelId: agent.props.modelId == null ? undefined : agent.props.modelId,
+          modelName: agent.props.modelName == null ? undefined : agent.props.modelName,
+        },
+      });
+    }
+  }, [agent?.props.modelName, agent?.props.apiSource, agent?.props.modelId, reset]);
+
 
   // NOTE: We're not automatically validating/clearing Astrsk API models
   // because it's difficult to determine when models are actually loaded vs still loading.
