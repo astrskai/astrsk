@@ -23,7 +23,6 @@ export function SessionsGrid({
   onCreateSession,
   showNewSessionCard,
 }: SessionsGridProps) {
-
   return (
     <div className="flex flex-col gap-4 p-4">
       {/* Mobile: Create Button (outside grid) */}
@@ -49,7 +48,10 @@ export function SessionsGrid({
 
         {/* Existing Sessions */}
         {sessions.map((session) => (
-          <SessionCard key={session.id.toString()} session={session} />
+          <SessionCard
+            key={`session-card-${session.id.toString()}`}
+            session={session}
+          />
         ))}
       </div>
     </div>
