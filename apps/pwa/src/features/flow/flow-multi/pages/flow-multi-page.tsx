@@ -9,13 +9,15 @@ export default function FlowMultiPage({ className }: { className?: string }) {
   const { flowId } = Route.useParams();
   const selectFlowId = useAgentStore.use.selectFlowId();
 
+  // Sync flowId to agent store for nodes (agent-node, if-node, data-store-node)
+  // that still rely on selectedFlowId from the store
   useEffect(() => {
     selectFlowId(flowId);
   }, [flowId, selectFlowId]);
 
   return (
     <div className={cn("h-full w-full", className)}>
-      <FlowPanelMain />
+      <FlowPanelMain flowId={flowId} />
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { Flow } from "@/entities/flow/domain/flow";
 import { FlowCard } from "@/features/flow/ui";
 import { NewFlowCard } from "./new-flow-card";
 import { Button } from "@/shared/ui/forms";
-import { useAgentStore } from "@/shared/stores/agent-store";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
 
 interface FlowsGridProps {
@@ -29,9 +28,6 @@ export function FlowsGrid({
   showNewFlowCard,
   newlyCreatedFlowId = null,
 }: FlowsGridProps) {
-  // Store hooks
-  const selectFlowId = useAgentStore.use.selectFlowId();
-
   // Custom hooks
   const { animatingId, triggerAnimation } = useNewItemAnimation();
   const navigate = useNavigate();
@@ -53,14 +49,14 @@ export function FlowsGrid({
 
   const handleFlowClick = useCallback(
     (flowId: string) => {
-      // Set the selected flow ID in the store before navigating
-      selectFlowId(flowId);
+      // Navigate to flow detail page
+      // flow-multi-page will sync the flowId to store automatically
       navigate({
         to: "/assets/flows/$flowId",
         params: { flowId },
       });
     },
-    [selectFlowId, navigate],
+    [navigate],
   );
 
   return (
