@@ -133,11 +133,6 @@ const getIntendedModelValue = (
     // When we don't have apiConnectionId, we need to find the matching value
     // by checking if the value contains our apiSource, modelId, and modelName
 
-    // Extract the actual model ID from composite format (e.g., "deepseek:deepseek-chat" -> "deepseek-chat")
-    const actualModelId = modelId.includes(":")
-      ? modelId.split(":")[1]
-      : modelId;
-
     for (const value of allValues) {
       // Split the value to check its components
       const parts = value.split("|");
@@ -153,9 +148,10 @@ const getIntendedModelValue = (
             return value;
           }
         } else {
+          // For all other sources, compare full modelId and modelName
           if (
             valueApiSource === apiSource &&
-            valueModelId === actualModelId &&
+            valueModelId === modelId &&
             valueModelName === modelName
           ) {
             return value;
@@ -253,6 +249,7 @@ const PromptItem = ({
     refetch();
   }, []);
 
+  // Reset form when agent props change
   useEffect(() => {
     if (agent?.props.modelName) {
       reset({
@@ -300,32 +297,15 @@ const PromptItem = ({
     modelId: string,
     modelName: string,
   ) => {
-    if (!agent) {
-      return;
-    }
+    if (!agent) return;
 
-    // Only create a composite modelId if apiSource is valid
-    // const formattedApiSource =
-    //   apiSource && Object.values(ApiSource).includes(apiSource as ApiSource)
-    //     ? (apiSource as ApiSource)
-    //     : undefined;
-
-    // Only create composite modelId if we have a valid apiSource
-    // const compositeModelId = formattedApiSource
-    //   ? `${formattedApiSource}:${modelId}`
-    //   : modelId;
-
-    // Don't update the agent here - let the parent component handle it
-    // The parent component (AgentNode) will update and save the agent properly
-
+    // Pass the full model information to the parent
     if (modelName) {
-      // Pass the full model information to the parent
       modelChanged(modelName, true, {
         apiSource: apiSource,
         modelId: modelId,
       });
     }
-    // setIsDirty(true);
   };
 
   return (
