@@ -192,6 +192,51 @@ pnpm build:pwa         # Build PWA (with feature flags)
 - **Follow existing patterns**: Reuse card/ implementation as reference for queries/mutations
 - **Comprehensive error handling**: Always implement rollback on mutation errors
 
+### React Hooks Declaration Order
+
+Follow this order for consistent, readable components:
+
+```typescript
+export function Component({ prop }: Props) {
+  // 1. State hooks (useState, useReducer)
+  const [state, setState] = useState(initial);
+
+  // 2. Store/Context hooks (global state)
+  const value = useMyStore.use.selector();
+
+  // 3. Ref hooks
+  const ref = useRef(null);
+
+  // 4. Custom hooks (data fetching, utilities)
+  const { data } = useQuery(...);
+  const navigate = useNavigate();
+
+  // 5. Effects (in logical order, not alphabetical)
+  useEffect(() => { /* initialization */ }, [deps]);
+  useEffect(() => { /* side effects */ }, [deps]);
+
+  // 6. Memoized callbacks (useCallback)
+  const handler = useCallback(() => { ... }, [deps]);
+
+  // 7. Memoized values (useMemo)
+  const derived = useMemo(() => { ... }, [deps]);
+
+  // 8. Regular functions (only if not passed as props)
+  function helper() { ... }
+
+  return <div>...</div>;
+}
+```
+
+**useCallback Guidelines**:
+- ✅ **Use when**: Function is passed as prop to child components, or used in dependency arrays
+- ❌ **Don't use when**: Simple event handlers not passed as props (avoid premature optimization)
+- **Rationale**: Prevents unnecessary child re-renders by maintaining referential equality
+
+**useEffect Ordering**:
+- Group by logical purpose, not alphabetically
+- Order: initialization → validation → event listeners → data sync → cleanup
+
 ## Testing Requirements
 
 - **Test coverage**: ≥80% (enforced by CI/CD)

@@ -25,7 +25,7 @@ export function NewSessionCard({ onClick, className }: NewSessionCardProps) {
       {/* Content: Plus icon + Text */}
       <div className="flex flex-col items-center gap-4">
         {/* Plus Icon */}
-        <div className="bg-background-surface-3 group-hover:bg-primary/20 flex h-16 w-16 items-center justify-center rounded-full transition-colors">
+        <div className="bg-background-surface-3 group-hover:bg-primary/20 flex h-16 w-16 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110">
           <Plus
             size={32}
             className="text-text-secondary group-hover:text-primary transition-colors"

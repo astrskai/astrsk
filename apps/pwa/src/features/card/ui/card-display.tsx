@@ -9,7 +9,7 @@ import { downloadFile } from "@/shared/lib/file-utils";
 import { CardType } from "@/entities/card/domain";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { useAsset } from "@/shared/hooks/use-asset";
-import { DeleteConfirm } from "@/shared/ui";
+import { ActionConfirm } from "@/shared/ui/dialogs";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
 import { cardQueries } from "@/app/queries/card-queries";
@@ -471,7 +471,7 @@ export default function CardDisplay({
       </article>
 
       {/* Delete Confirmation Dialog */}
-      <DeleteConfirm
+      <ActionConfirm
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         title="Delete Card"
@@ -491,8 +491,9 @@ export default function CardDisplay({
             "Are you sure you want to delete this card? This action cannot be undone."
           )
         }
-        deleteLabel="Yes, delete"
-        onDelete={handleDelete}
+        confirmLabel="Yes, delete"
+        confirmVariant="destructive"
+        onConfirm={handleDelete}
       />
     </div>
   );

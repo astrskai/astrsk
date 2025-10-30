@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button, SearchInput } from "@/shared/ui/forms";
-import { FlowCard } from "@/features/session/ui/create-session/flow-card";
+import { FlowCard } from "@/features/flow/ui";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { Flow } from "@/entities/flow/domain/flow";
 import { FlowIcon } from "@/shared/assets/icons";

@@ -1,13 +1,18 @@
 import { Plus } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useCallback } from "react";
 import { Flow } from "@/entities/flow/domain/flow";
-import { FlowCard } from "@/features/session/ui/create-session/flow-card";
+import { FlowCard } from "@/features/flow/ui";
 import { NewFlowCard } from "./new-flow-card";
 import { Button } from "@/shared/ui/forms";
+import { useAgentStore } from "@/shared/stores/agent-store";
+import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
 
 interface FlowsGridProps {
   flows: Flow[];
   onCreateFlow: () => void;
-  keyword: string;
+  showNewFlowCard: boolean;
+  newlyCreatedFlowId?: string | null; // ID of the newly created/copied flow
 }
 
 /**
@@ -21,9 +26,42 @@ interface FlowsGridProps {
 export function FlowsGrid({
   flows,
   onCreateFlow,
-  keyword,
+  showNewFlowCard,
+  newlyCreatedFlowId = null,
 }: FlowsGridProps) {
-  const showNewFlowCard = !keyword;
+  // Store hooks
+  const selectFlowId = useAgentStore.use.selectFlowId();
+
+  // Custom hooks
+  const { animatingId, triggerAnimation } = useNewItemAnimation();
+  const navigate = useNavigate();
+
+  // Effects - Track newly created flow from parent (via prop)
+  useEffect(() => {
+    if (newlyCreatedFlowId) {
+      triggerAnimation(newlyCreatedFlowId);
+    }
+  }, [newlyCreatedFlowId, triggerAnimation]);
+
+  // Memoized callbacks - handleCopySuccess is passed as prop to FlowCard
+  const handleCopySuccess = useCallback(
+    (copiedFlowId: string) => {
+      triggerAnimation(copiedFlowId);
+    },
+    [triggerAnimation],
+  );
+
+  const handleFlowClick = useCallback(
+    (flowId: string) => {
+      // Set the selected flow ID in the store before navigating
+      selectFlowId(flowId);
+      navigate({
+        to: "/assets/flows/$flowId",
+        params: { flowId },
+      });
+    },
+    [selectFlowId, navigate],
+  );
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -39,13 +77,10 @@ export function FlowsGrid({
       )}
 
       {/* Flows Grid */}
-      <div className="mx-auto grid w-full max-w-7xl grid-cols-1 justify-center gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto grid w-full max-w-7xl auto-rows-fr grid-cols-1 justify-center gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Desktop: New Flow Card (inside grid) */}
         {showNewFlowCard && (
-          <NewFlowCard
-            onClick={onCreateFlow}
-            className="hidden md:block"
-          />
+          <NewFlowCard onClick={onCreateFlow} className="hidden md:block" />
         )}
 
         {/* Existing Flows */}
@@ -54,10 +89,10 @@ export function FlowsGrid({
             key={flow.id.toString()}
             flow={flow}
             isSelected={false}
-            onClick={() => {
-              // TODO: Navigate to flow detail page
-              console.log("Flow clicked:", flow.id.toString());
-            }}
+            showActions={true}
+            isNewlyCreated={animatingId === flow.id.toString()}
+            onCopySuccess={handleCopySuccess}
+            onClick={() => handleFlowClick(flow.id.toString())}
           />
         ))}
       </div>

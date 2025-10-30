@@ -129,7 +129,7 @@ export function AssetsHeader({
                 key={type}
                 to={ASSET_ROUTES[type].to}
                 className={cn(
-                  "text-text-secondary relative flex-1 py-3 text-sm font-medium transition-colors",
+                  "text-text-secondary relative flex flex-1 items-center justify-center py-3 text-center text-sm font-medium transition-colors",
                   isActive && "text-text-primary font-semibold",
                 )}
               >

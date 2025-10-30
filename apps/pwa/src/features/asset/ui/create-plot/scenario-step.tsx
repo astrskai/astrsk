@@ -49,6 +49,15 @@ export function PlotScenarioStep({
     [],
   );
 
+  const handleUpdateScenario = useCallback(
+    (id: string, updates: Partial<Scenario>) => {
+      onScenariosChange(
+        scenarios.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+      );
+    },
+    [scenarios, onScenariosChange],
+  );
+
   // Insert variable at cursor position in description
   const insertVariable = useCallback(
     (variableText: string) => {
@@ -74,7 +83,7 @@ export function PlotScenarioStep({
         textarea.setSelectionRange(newPosition, newPosition);
       }, 0);
     },
-    [selectedMessage],
+    [selectedMessage, handleUpdateScenario],
   );
 
   const handleAddScenario = () => {
@@ -93,12 +102,6 @@ export function PlotScenarioStep({
     if (selectedMessageId === id) {
       setSelectedMessageId(filtered[0]?.id || null);
     }
-  };
-
-  const handleUpdateScenario = (id: string, updates: Partial<Scenario>) => {
-    onScenariosChange(
-      scenarios.map((s) => (s.id === id ? { ...s, ...updates } : s)),
-    );
   };
 
   return (

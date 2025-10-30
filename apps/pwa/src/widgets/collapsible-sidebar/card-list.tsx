@@ -129,8 +129,14 @@ const CardItem = ({
 
       // Navigate to cloned card
       navigate({
-        to: "/cards/$cardId",
-        params: { cardId: clonedCard.id.toString() },
+        to:
+          clonedCard.props.type === CardType.Character
+            ? "/assets/characters/$characterId"
+            : "/assets/plots/$plotId",
+        params:
+          clonedCard.props.type === CardType.Character
+            ? { characterId: clonedCard.id.toString() }
+            : { plotId: clonedCard.id.toString() },
       });
 
       // Invalidate card queries
@@ -509,8 +515,8 @@ const CardSection = ({
       setSelectedCardId(savedCard.id.toString());
 
       navigate({
-        to: "/cards/$cardId",
-        params: { cardId: savedCard.id.toString() },
+        to: "/assets/characters/$characterId",
+        params: { characterId: savedCard.id.toString() },
       });
     } catch (error) {
       logger.error("Failed to create card", error);

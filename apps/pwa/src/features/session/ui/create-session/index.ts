@@ -8,5 +8,4 @@ export { UserCharacterSelectionStep } from "./user-character-selection-step";
 export { PlotSelectionStep } from "./plot-selection-step";
 
 // Card components
-export { FlowCard } from "./flow-card";
 export { CardSelectItem } from "./card-select-item";
