@@ -1655,6 +1655,7 @@ async function generateStructuredOutput({
 
   let mode = model.defaultObjectGenerationMode;
   if (apiConnection.source === ApiSource.OpenRouter ||
+      apiConnection.source === ApiSource.Ollama ||
       apiConnection.source === ApiSource.KoboldCPP ||
       apiConnection.source === ApiSource.OpenAICompatible
   ) {
