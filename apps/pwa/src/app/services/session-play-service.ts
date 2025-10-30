@@ -666,24 +666,8 @@ const makeProvider = ({
       break;
 
     case ApiSource.Ollama: {
-      // CORS fix: Use OpenAI-compatible endpoint with custom fetch to remove Stainless headers
-      // This fixes CORS issues when running Ollama locally in browser
-      // See: https://github.com/ollama/ollama/issues/2045#issuecomment-1960835690
-      const customFetch: typeof fetch = async (url, options = {}) => {
-        const headers = new Headers(options.headers);
-        // Remove Stainless SDK headers that cause CORS issues with Ollama
-        headers.delete("x-stainless-retry-count");
-        headers.delete("x-stainless-timeout");
-
-        return fetch(url, {
-          ...options,
-          headers,
-        });
-      };
-
       provider = createOllama({
         baseURL: baseUrl,
-        fetch: customFetch,
       });
       break;
     }
