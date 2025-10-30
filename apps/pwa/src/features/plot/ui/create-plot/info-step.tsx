@@ -1,7 +1,7 @@
 import { useRef, useCallback } from "react";
 import { Textarea } from "@/shared/ui/forms";
 import { Variable } from "@/shared/prompt/domain/variable";
-import { VariablesPanel } from "@/features/asset/ui/panels";
+import { VariablesPanel } from "@/shared/ui/panels";
 
 interface PlotInfoStepProps {
   description: string;

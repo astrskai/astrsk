@@ -8,7 +8,7 @@ import {
   CharacterInfoStep,
   CharacterLorebookStep,
   type LorebookEntry,
-} from "@/features/asset/ui/create-character";
+} from "@/features/character/ui/create-character";
 import { AssetService } from "@/app/services/asset-service";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { CardService } from "@/app/services/card-service";

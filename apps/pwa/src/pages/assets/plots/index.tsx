@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AssetsHeader, PlotsGrid } from "@/features/asset/ui";
+import { AssetsHeader } from "@/widgets/assets-header";
+import { PlotsGrid } from "@/features/plot/ui";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
 import { cardQueries } from "@/app/queries/card-queries";
 import { CardService } from "@/app/services/card-service";

@@ -3,7 +3,7 @@ import { X, Plus } from "lucide-react";
 import { Input, Textarea, Button } from "@/shared/ui/forms";
 import { cn } from "@/shared/lib";
 import { Variable } from "@/shared/prompt/domain/variable";
-import { VariablesPanel } from "@/features/asset/ui/panels";
+import { VariablesPanel } from "@/shared/ui/panels";
 
 export interface LorebookEntry {
   id: string;

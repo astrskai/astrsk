@@ -10,7 +10,7 @@ import {
   PlotScenarioStep,
   type LorebookEntry,
   type Scenario,
-} from "@/features/asset/ui/create-plot";
+} from "@/features/plot/ui/create-plot";
 import { AssetService } from "@/app/services/asset-service";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { CardService } from "@/app/services/card-service";

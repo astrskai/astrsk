@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AssetsHeader, FlowsGrid } from "@/features/asset/ui";
-import { CreateFlowDialog } from "@/features/asset/ui/create-flow-dialog";
+import { AssetsHeader } from "@/widgets/assets-header";
+import { FlowsGrid, CreateFlowDialog } from "@/features/flow/ui";
 import {
   FlowImportDialog,
   AgentModel,
