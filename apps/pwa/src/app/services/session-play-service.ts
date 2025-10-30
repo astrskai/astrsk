@@ -22,6 +22,7 @@ import {
 } from "ai";
 import { JSONSchema7 } from "json-schema";
 import { cloneDeep, merge } from "lodash-es";
+import { createOllama } from "ollama-ai-provider";
 
 import { fetchAgent } from "@/app/queries/agent/query-factory";
 import { fetchApiConnections } from "@/app/queries/api-connection-queries";
@@ -1653,13 +1654,13 @@ async function generateStructuredOutput({
   const modelProvider = model.provider.split(".").at(0);
 
   let mode = model.defaultObjectGenerationMode;
-  if (apiConnection.source === ApiSource.OpenRouter || 
-      apiConnection.source === ApiSource.Ollama ||
+  if (apiConnection.source === ApiSource.OpenRouter ||
       apiConnection.source === ApiSource.KoboldCPP ||
       apiConnection.source === ApiSource.OpenAICompatible
   ) {
     mode = "json";
   }
+  // Note: Ollama removed - createOllama supports proper schema mode for structured output
 
   // Extra headers for astrsk
   const jwt = useAppStore.getState().jwt;
@@ -1891,7 +1892,6 @@ async function* executeAgentNode({
         }
       } catch (error) {
         // Don't throw, just continue without metadata
-        // Don't throw, just continue without metadata
       }
     } else {
       // Generate text output
@@ -1946,13 +1946,13 @@ async function* executeAgentNode({
             // Check if value is meaningful (not null, not undefined, not empty object)
             const isEmptyObject = value && typeof value === 'object' && Object.keys(value).length === 0;
 
-            if (value !== null && value !== undefined && !isEmptyObject) {
-              metadata[propName] = value;
+              if (value !== null && value !== undefined && !isEmptyObject) {
+                metadata[propName] = value;
+              }
+            } catch (err) {
+              // Silently skip unavailable promises
             }
-          } catch (err) {
-            console.log(`[DEBUG] ${propName} not available:`, err);
           }
-        }
 
         if (Object.keys(metadata).length > 0) {
           merge(result, { metadata });
