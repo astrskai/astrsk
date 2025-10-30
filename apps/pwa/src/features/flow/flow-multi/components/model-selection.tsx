@@ -1,6 +1,6 @@
 // TODO: remove this file
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useReactFlow } from "@xyflow/react";
@@ -217,9 +217,6 @@ const PromptItem = ({
   const reactFlow = useReactFlow();
   const zoomScale = reactFlow.getViewport().zoom;
 
-  // Track if user is actively selecting to prevent reset race condition
-  const isUserSelectingRef = useRef(false);
-
   const methods = useForm<StepPromptsSchemaType>({
     defaultValues: {
       aiResponse: {
@@ -252,9 +249,9 @@ const PromptItem = ({
     refetch();
   }, []);
 
-  // Reset form when agent props change (but not during user selection to prevent race condition)
+  // Reset form when agent props change
   useEffect(() => {
-    if (agent?.props.modelName && !isUserSelectingRef.current) {
+    if (agent?.props.modelName) {
       reset({
         aiResponse: {
           type: "api-model",
@@ -263,7 +260,6 @@ const PromptItem = ({
           modelName: agent.props.modelName == null ? undefined : agent.props.modelName,
         },
       });
-      console.log('[MODEL] Reset to:', agent.props.modelName);
     }
   }, [agent?.props.modelName, agent?.props.apiSource, agent?.props.modelId, reset]);
 
@@ -303,9 +299,6 @@ const PromptItem = ({
   ) => {
     if (!agent) return;
 
-    // Mark that user is actively selecting to prevent reset race condition
-    isUserSelectingRef.current = true;
-
     // Pass the full model information to the parent
     if (modelName) {
       modelChanged(modelName, true, {
@@ -313,11 +306,6 @@ const PromptItem = ({
         modelId: modelId,
       });
     }
-
-    // Allow reset after mutation completes (give it time to update agent props)
-    setTimeout(() => {
-      isUserSelectingRef.current = false;
-    }, 500);
   };
 
   return (
