@@ -11,10 +11,11 @@ import { Datetime } from "@/shared/lib/datetime";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useCard } from "@/shared/hooks/use-card";
 import { useSession } from "@/shared/hooks/use-session";
-import { useSessions } from "@/shared/hooks/use-sessions-v2";
 import { useTurn } from "@/shared/hooks/use-turn";
 import { queryClient } from "@/app/queries/query-client";
+import { sessionQueries } from "@/app/queries/session-queries";
 import { SessionService } from "@/app/services/session-service";
+import { useQuery } from "@tanstack/react-query";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useValidationStore } from "@/shared/stores/validation-store";
@@ -73,9 +74,9 @@ const SessionListMobile = ({
   } = useSessionStore();
   const { setActivePage, isMobile } = useAppStore();
   const navigate = useNavigate();
-  const { data: sessions } = useSessions({
-    keyword,
-  });
+  const { data: sessions = [] } = useQuery(
+    sessionQueries.list({ keyword }),
+  );
 
   // Mobile stepper state
   const [isOpenCreateSessionMobile, setIsOpenCreateSessionMobile] =
@@ -98,7 +99,9 @@ const SessionListMobile = ({
 
   // Check invalid sessions
   const setSessionIds = useValidationStore((state) => state.setSessionIds);
-  const { data: allSessions } = useSessions({});
+  const { data: allSessions = [] } = useQuery(
+    sessionQueries.list({ keyword: "" }),
+  );
   useEffect(() => {
     if (!allSessions) {
       return;

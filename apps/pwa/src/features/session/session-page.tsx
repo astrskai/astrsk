@@ -1,13 +1,12 @@
 import { useAsset } from "@/shared/hooks/use-asset";
-import { useSessions } from "@/shared/hooks/use-sessions-v2";
 import { sessionQueries } from "@/app/queries/session-queries";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useBackgroundStore } from "@/shared/stores/background-store";
 import { useSessionStore } from "@/shared/stores/session-store";
 import {
-  SidebarInset,
-  SidebarLeftProvider,
-} from "@/widgets/both-sidebar";
+  SearchableSidebar,
+  SessionListItem,
+} from "@/widgets/searchable-sidebar";
 import { InitialScreen } from "@/shared/ui/initial-screen";
 import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
@@ -26,15 +25,15 @@ export default function SessionPage({ className }: { className?: string }) {
   const navigate = useNavigate();
   const { sessionId } = Route.useParams();
   const [isOpenSettings, setIsOpenSettings] = useState(false);
-  const { isFirstTimeSidebarOpen, setIsFirstTimeSidebarOpen } = useAppStore();
+  const [sidebarKeyword, setSidebarKeyword] = useState("");
   const { selectedSessionId } = useSessionStore();
   const selectSession = useSessionStore.use.selectSession();
   const { data: session, isLoading } = useQuery(
     sessionQueries.detail(selectedSessionId ?? undefined),
   );
-  const { data: sessions } = useSessions({
-    keyword: "",
-  });
+  const { data: sessions = [] } = useQuery(
+    sessionQueries.list({ keyword: sidebarKeyword }),
+  );
 
   // Set selected session when sessionId changes
   useEffect(() => {
@@ -98,31 +97,38 @@ export default function SessionPage({ className }: { className?: string }) {
       )}
       <div
         className={cn(
-          "absolute inset-0 transition-transform duration-[600ms] ease-in-out",
+          "absolute inset-0 flex transition-transform duration-[600ms] ease-in-out",
           isOpenSettings && "-translate-x-full",
         )}
       >
-        <SidebarLeftProvider
-          defaultOpen={isFirstTimeSidebarOpen}
-          changeDefaultOpen={(open) => {
-            if (!isFirstTimeSidebarOpen) {
-              setIsFirstTimeSidebarOpen(true);
-            }
-          }}
+        {/* Searchable Sidebar */}
+        <SearchableSidebar
+          keyword={sidebarKeyword}
+          onKeywordChange={setSidebarKeyword}
+          defaultExpanded={true}
         >
-          <SidebarInset className="bg-transparent">
-            {/* No selected session */}
-            {selectedSessionId === null && sessions.length === 0 && (
-              <InitialScreen />
-            )}
-
-            {/* Session main */}
-            <SessionMain
-              onAddPlotCard={onAddPlotCard}
-              isOpenSettings={isOpenSettings}
+          {sessions.map((session) => (
+            <SessionListItem
+              key={session.id.toString()}
+              session={session}
+              isActive={session.id.toString() === selectedSessionId?.toString()}
             />
-          </SidebarInset>
-        </SidebarLeftProvider>
+          ))}
+        </SearchableSidebar>
+
+        {/* Main Content */}
+        <div className="flex flex-1 flex-col bg-transparent">
+          {/* No selected session */}
+          {selectedSessionId === null && sessions.length === 0 && (
+            <InitialScreen />
+          )}
+
+          {/* Session main */}
+          <SessionMain
+            onAddPlotCard={onAddPlotCard}
+            isOpenSettings={isOpenSettings}
+          />
+        </div>
       </div>
 
       {/* Session top gradient */}

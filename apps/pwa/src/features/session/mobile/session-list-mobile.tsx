@@ -13,7 +13,6 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { useCard } from "@/shared/hooks/use-card";
 import { useSession } from "@/shared/hooks/use-session";
 import { useSessionValidation } from "@/shared/hooks/use-session-validation";
-import { useSessions } from "@/shared/hooks/use-sessions-v2";
 import { useTurn } from "@/shared/hooks/use-turn";
 
 import { SessionService } from "@/app/services/session-service";
@@ -21,6 +20,7 @@ import { SessionService } from "@/app/services/session-service";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useValidationStore } from "@/shared/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/shared/lib";
 
 import { SessionMainMobile } from "@/features/session/mobile/session-main-mobile";
@@ -234,9 +234,7 @@ const SessionListMobile = ({
     selectSession,
     setCreateSessionName,
   } = useSessionStore();
-  const { data: sessions } = useSessions({
-    keyword,
-  });
+  const { data: sessions = [] } = useQuery(sessionQueries.list({ keyword }));
 
   // Search focus state
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -296,7 +294,9 @@ const SessionListMobile = ({
 
   // Check invalid sessions
   const setSessionIds = useValidationStore((state) => state.setSessionIds);
-  const { data: allSessions } = useSessions({});
+  const { data: allSessions = [] } = useQuery(
+    sessionQueries.list({ keyword: "" }),
+  );
   useEffect(() => {
     if (!allSessions) {
       return;
