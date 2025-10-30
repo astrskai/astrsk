@@ -68,8 +68,10 @@ const CustomError = ({
         <DialogContent hideClose>
           <DialogTitle className="truncate">{title}</DialogTitle>
           <DialogDescription className="rounded-[12px] bg-background-surface-3">
-            <ScrollArea className="h-full max-h-[624px] p-[8px] break-all">
-              {details}
+            <ScrollArea className="h-full max-h-[624px] p-[8px]">
+              <pre className="font-mono text-[12px] leading-[18px] whitespace-pre-wrap break-words">
+                {details}
+              </pre>
             </ScrollArea>
           </DialogDescription>
           <DialogFooter>

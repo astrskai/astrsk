@@ -1776,11 +1776,28 @@ const SessionMessagesAndUserInputs = ({
         });
 
         // Stream response
+        let streamingMetadata: Record<string, any> | undefined;
         for await (const response of flowResult) {
           streamingContent = response.content;
           streamingMessage.setContent(streamingContent);
           streamingVariables = response.variables;
           streamingMessage.setVariables(streamingVariables);
+
+          // If we have structured output (variables), show the JSON during streaming
+          // if (streamingVariables && Object.keys(streamingVariables).length > 0 && !streamingContent.trim()) {
+          //   // Show prettified JSON as temporary content during streaming
+          //   const prettyJson = JSON.stringify(streamingVariables, null, 2);
+          //   streamingMessage.setContent(prettyJson);
+          // } else {
+          //   // Normal text streaming
+          //   streamingMessage.setContent(streamingContent);
+          // }
+
+          // Capture metadata for error reporting
+          if (response.metadata) {
+            streamingMetadata = response.metadata;
+          }
+
           if (response.dataStore) {
             streamingMessage.setDataStore(response.dataStore);
           }
@@ -1802,7 +1819,31 @@ const SessionMessagesAndUserInputs = ({
 
         // Check empty message
         if (streamingContent.trim() === "") {
-          throw new Error("AI returned an empty message.");
+          // Error checking only - validate structured output response format
+          if (streamingVariables && Object.keys(streamingVariables).length > 0) {
+            const vars = streamingVariables as Record<string, any>;
+
+            // Look through all agent outputs for error conditions
+            for (const agentKey in vars) {
+              const agentOutput = vars[agentKey];
+
+              if (!agentOutput || typeof agentOutput !== 'object') continue;
+
+              // ERROR CHECK 1: Detect schema definition (malformed response)
+              if (agentOutput.type && agentOutput.properties) {
+                const error = new Error("Malformed structured output: AI returned schema definition instead of data") as any;
+                error.metadata = streamingMetadata;
+                throw error;
+              }
+            }
+
+            // ERROR CHECK 2: Empty response (no valid content)
+            const error = new Error("AI returned empty or invalid structured output") as any;
+            error.metadata = streamingMetadata;
+            throw error;
+          } else {
+            throw new Error("AI returned an empty message.");
+          }
         }
 
         // Update message to database
@@ -1825,17 +1866,22 @@ const SessionMessagesAndUserInputs = ({
           if (error.message.includes("Stop generate by user")) {
             toast.info("Generation stopped.");
           } else {
+            // Build error details
+            const errorDetails: any = {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            };
+
+            // If error has metadata (from AI SDK), include it
+            // Note: metadata.object contains the full structured output response
+            if ('metadata' in error && (error as any).metadata) {
+              errorDetails.metadata = (error as any).metadata;
+            }
+
             toastError({
               title: "Failed to generate message",
-              details: JSON.stringify(
-                {
-                  name: error.name,
-                  message: error.message,
-                  stack: error.stack,
-                },
-                null,
-                2,
-              ),
+              details: JSON.stringify(errorDetails, null, 2),
             });
           }
         }
