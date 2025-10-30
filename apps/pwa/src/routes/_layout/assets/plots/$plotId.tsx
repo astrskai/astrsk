@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { AssetDetailPage } from "@/pages/asset/asset-detail";
+import { AssetDetailPage } from "@/pages/assets/asset-detail";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 function PlotDetailPageWrapper() {

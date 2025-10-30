@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { FlowDetailPage } from "@/pages/asset/flow-detail";
+import { FlowDetailPage } from "@/pages/assets/flow-detail";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 export const Route = createFileRoute("/_layout/assets/flows/$flowId")({
