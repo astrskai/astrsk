@@ -22,7 +22,6 @@ import {
 } from "ai";
 import { JSONSchema7 } from "json-schema";
 import { cloneDeep, merge } from "lodash-es";
-import { createOllama } from "ollama-ai-provider";
 
 import { fetchAgent } from "@/app/queries/agent/query-factory";
 import { fetchApiConnections } from "@/app/queries/api-connection-queries";
@@ -666,8 +665,19 @@ const makeProvider = ({
       break;
 
     case ApiSource.Ollama: {
-      provider = createOllama({
-        baseURL: baseUrl,
+      // Use OpenAI-compatible provider instead of ollama-ai-provider
+      // This avoids strict schema validation issues (e.g., eval_duration requirement)
+      // Ollama supports OpenAI-compatible API: https://github.com/ollama/ollama/blob/main/docs/openai.md
+      let ollamaBaseUrl = baseUrl ?? "http://localhost:11434";
+      // Remove /api suffix if present (Ollama native endpoint)
+      ollamaBaseUrl = ollamaBaseUrl.replace(/\/api$/, "");
+      // Add /v1 for OpenAI-compatible endpoint
+      if (!ollamaBaseUrl.endsWith("/v1")) {
+        ollamaBaseUrl += "/v1";
+      }
+      provider = createOpenAICompatible({
+        name: "ollama",
+        baseURL: ollamaBaseUrl,
       });
       break;
     }
