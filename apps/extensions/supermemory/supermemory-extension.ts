@@ -195,12 +195,14 @@ export class SupermemoryExtension implements IExtension {
       // Store memory IDs in scenario turn's dataStore
       if (memoryIds.length > 0) {
         // Ensure dataStore is initialized
+        let dataStore = turn.dataStore || [];
         if (!turn.dataStore) {
-          turn.dataStore = [];
+          turn.setDataStore([]);
+          dataStore = [];
           console.log("🧠 [Supermemory Extension] Initialized empty dataStore for scenario turn");
         }
 
-        const supermemoryIdsField = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'memory_ids');
+        const supermemoryIdsField = dataStore.find((f: DataStoreSavedField) => f.name === 'memory_ids');
         if (supermemoryIdsField) {
           supermemoryIdsField.value = JSON.stringify(memoryIds);
         } else {
@@ -450,9 +452,9 @@ export class SupermemoryExtension implements IExtension {
       const speakerName = turn.characterName || "User";
       const message = turn.content;
 
-      // Ensure dataStore is initialized (IMPORTANT: modify turn.dataStore directly!)
+      // Ensure dataStore is initialized
       if (!turn.dataStore) {
-        turn.dataStore = [];
+        turn.setDataStore([]);
         console.log("🧠 [Supermemory Extension] Initialized empty dataStore for turn");
       }
       const dataStore = turn.dataStore;
