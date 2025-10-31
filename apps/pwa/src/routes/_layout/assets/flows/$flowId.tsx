@@ -1,9 +1,14 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { FlowDetailPage } from "@/pages/assets/flow-detail";
+import { FlowPanelMain } from "@/pages/assets/flows/flow-detail-page";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
+function FlowDetailPageWrapper() {
+  const { flowId } = Route.useParams();
+  return <FlowPanelMain flowId={flowId} />;
+}
+
 export const Route = createFileRoute("/_layout/assets/flows/$flowId")({
-  component: FlowDetailPage,
+  component: FlowDetailPageWrapper,
   beforeLoad: async ({ params }) => {
     const { flowId } = params;
 

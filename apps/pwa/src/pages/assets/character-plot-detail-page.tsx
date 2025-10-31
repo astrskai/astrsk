@@ -15,21 +15,21 @@ import {
   useCardUIStore,
   CardPanelVisibility,
 } from "@/entities/card/stores/card-ui-store";
-import { CardPanelProvider } from "./card-panel-provider";
-import { invalidateSingleCardQueries } from "../utils/invalidate-card-queries";
-import { extractCardPanelType } from "../utils/panel-id-utils";
-import "./card-panel-dockview.css";
+import { CardPanelProvider } from "@/features/card/panels/card-panel-provider";
+import { invalidateSingleCardQueries } from "@/features/card/utils/invalidate-card-queries";
+import { extractCardPanelType } from "@/features/card/utils/panel-id-utils";
+import "@/app/styles/dockview-detail.css";
 
 // Import panel components
-import { CardPanel } from "./card-panel/card-panel";
-import { MetadataPanel } from "./card-panel/components/metadata-panel";
-import { LorebookPanel } from "./card-panel/components/lorebook-panel";
-import { CharacterInfoPanel } from "./card-panel/components/character-info-panel";
-import { PlotInfoPanel } from "./card-panel/components/plot-info-panel";
-import { VariablesPanel } from "./card-panel/components/variables-panel";
-import { FirstMessagesPanel } from "./card-panel/components/scenarios-panel";
-import { ImageGeneratorPanel } from "./card-panel/components/image-generator-panel";
-import { CardVibePanel } from "./card-panel/components/vibe-panel";
+import { CardPanel } from "@/features/card/panels/card-panel/card-panel";
+import { MetadataPanel } from "@/features/card/panels/card-panel/components/metadata-panel";
+import { LorebookPanel } from "@/features/card/panels/card-panel/components/lorebook-panel";
+import { CharacterInfoPanel } from "@/features/card/panels/card-panel/components/character-info-panel";
+import { PlotInfoPanel } from "@/features/card/panels/card-panel/components/plot-info-panel";
+import { VariablesPanel } from "@/features/card/panels/card-panel/components/variables-panel";
+import { FirstMessagesPanel } from "@/features/card/panels/card-panel/components/scenarios-panel";
+import { ImageGeneratorPanel } from "@/features/card/panels/card-panel/components/image-generator-panel";
+import { CardVibePanel } from "@/features/card/panels/card-panel/components/vibe-panel";
 import { SvgIcon } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 import { logger } from "@/shared/lib";
@@ -37,7 +37,7 @@ import CustomDockviewTab from "@/widgets/dockview-default-tab";
 import { PanelFocusAnimationWrapper } from "@/widgets/dockview-panel-focus-animation";
 import { useNavigate } from "@tanstack/react-router";
 
-interface CardPanelMainProps {
+interface CharacterPlotDetailPageProps {
   cardId: string;
 }
 
@@ -167,7 +167,9 @@ const usePanelVisibility = (card: Card | null) => {
   return { panelVisibility, setPanelVisibility, cardType };
 };
 
-export function CardPanelMain({ cardId }: CardPanelMainProps) {
+export default function CharacterPlotDetailPage({
+  cardId,
+}: CharacterPlotDetailPageProps) {
   const navigate = useNavigate();
   const [api, setApi] = useState<DockviewApi | null>(null);
   const setSelectedCardId = useCardUIStore.use.setSelectedCardId();

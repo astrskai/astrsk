@@ -1,10 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { AssetDetailPage } from "@/pages/assets/asset-detail";
+import CharacterPlotDetailPage from "@/pages/assets/character-plot-detail-page";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 function PlotDetailPageWrapper() {
   const { plotId } = Route.useParams();
-  return <AssetDetailPage cardId={plotId} />;
+  return <CharacterPlotDetailPage cardId={plotId} />;
 }
 
 export const Route = createFileRoute("/_layout/assets/plots/$plotId")({

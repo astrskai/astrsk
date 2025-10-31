@@ -12,7 +12,7 @@ import { enableMapSet } from "immer";
 import { StrictMode, useCallback, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
-import "./index.css";
+import "@/app/styles/global.css";
 
 // Convex
 const isConvexReady =

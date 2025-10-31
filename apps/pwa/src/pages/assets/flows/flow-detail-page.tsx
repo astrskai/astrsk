@@ -25,7 +25,7 @@ import {
   getAgentHexColor,
   getAgentState,
 } from "@/features/flow/flow-multi/utils/node-color-assignment";
-import { FlowPanel } from "./flow-panel";
+import { FlowPanel } from "@/features/flow/flow-multi/panels/flow-panel";
 import { PromptPanel } from "@/features/flow/flow-multi/panels/prompt/prompt-panel";
 import { OutputPanel } from "@/features/flow/flow-multi/panels/output/output-panel";
 import { ParameterPanel } from "@/features/flow/flow-multi/panels/parameter/parameter-panel";
@@ -47,7 +47,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentKeys } from "@/app/queries/agent/query-factory";
 import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
 import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-mutations";
-import "@/features/card/panels/card-panel-dockview.css";
+import { useAgentStore } from "@/shared/stores/agent-store";
+import "@/app/styles/dockview-detail.css";
 
 // Watermark component with restore button
 const Watermark = React.memo<{ onRestore?: () => void }>(({ onRestore }) => (
@@ -186,6 +187,13 @@ interface FlowPanelMainProps {
 
 export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
   const queryClient = useQueryClient();
+  const selectFlowId = useAgentStore.use.selectFlowId();
+
+  // Sync flowId to agent store for nodes (agent-node, if-node, data-store-node)
+  // that still rely on selectedFlowId from the store
+  useEffect(() => {
+    selectFlowId(flowId);
+  }, [flowId, selectFlowId]);
 
   // Fetch flow data when flowId changes
   const { data: flow, isLoading } = useQuery({
