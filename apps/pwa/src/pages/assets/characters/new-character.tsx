@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
+import { CreatePageHeader } from "@/widgets/create-page-header";
+import { cn } from "@/shared/lib";
 import {
   CharacterImageStep,
   CharacterInfoStep,
@@ -21,6 +22,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cardKeys } from "@/app/queries/card";
 
 type CharacterStep = "image" | "info" | "lorebook";
+
+// Mobile floating button height constant (56px = h-14)
+const MOBILE_FLOATING_HEIGHT = 14; // Tailwind spacing units (14 * 4px = 56px)
 
 /**
  * Create Character Card Page
@@ -183,8 +187,7 @@ export function CreateCharacterPage() {
     }
   };
 
-  const handleCancelClick = () => {
-    // TODO: Show confirmation dialog if changes exist
+  const handleCancel = () => {
     navigate({ to: "/assets/characters" });
   };
 
@@ -204,57 +207,28 @@ export function CreateCharacterPage() {
 
   return (
     <div className="bg-background-surface-2 relative flex h-full w-full flex-col">
-      {/* Mobile Header */}
-      <div className="border-border flex items-center border-b px-4 py-4 md:hidden">
-        <button
-          onClick={handleCancelClick}
-          className="text-text-primary hover:text-text-secondary mr-3 transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <div className="flex flex-col">
-          <span className="text-text-secondary text-xs font-medium">
-            Create Character
-          </span>
-          <h1 className="text-text-primary text-lg font-semibold">
-            {characterName}
-          </h1>
-        </div>
-      </div>
-
-      {/* Desktop Header */}
-      <div className="border-border hidden items-center justify-between border-b px-8 py-6 md:flex">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleCancelClick}
-            className="text-text-primary hover:text-text-secondary transition-colors"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <div>
-            <h1 className="text-text-primary text-2xl font-semibold">
-              Create Character
-            </h1>
-            <p className="text-text-secondary text-sm">{characterName}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {showPreviousButton && (
-            <Button variant="secondary" onClick={handlePrevious}>
-              Previous
-            </Button>
-          )}
-          <Button onClick={handleNext} disabled={!canProceed || isCreatingCard}>
-            {isCreatingCard ? "Creating..." : isLastStep ? "Finish" : "Next"}
-          </Button>
-        </div>
-      </div>
+      <CreatePageHeader
+        category="Character"
+        itemName={characterName}
+        onCancel={handleCancel}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        showPreviousButton={showPreviousButton}
+        isLastStep={isLastStep}
+        canProceed={canProceed}
+        isSubmitting={isCreatingCard}
+      />
 
       {/* Step Indicator */}
       <StepIndicator steps={STEPS} currentStep={currentStep} />
 
       {/* Content */}
-      <div className="flex flex-1 overflow-y-auto">
+      <div
+        className={cn(
+          "flex flex-1 overflow-y-auto md:mb-0",
+          `mb-${MOBILE_FLOATING_HEIGHT}`,
+        )}
+      >
         <div className="mx-auto w-full max-w-5xl p-4 pb-24 md:p-8 md:pb-8">
           {/* Step 1: Character Image */}
           {currentStep === "image" && (
@@ -287,7 +261,12 @@ export function CreateCharacterPage() {
       </div>
 
       {/* Mobile Floating Buttons */}
-      <div className="border-border bg-background-surface-1 fixed right-0 bottom-0 left-0 border-t p-4 md:hidden">
+      <div
+        className={cn(
+          "border-border bg-background-surface-1 fixed right-0 bottom-0 left-0 flex flex-col justify-center border-t p-2 md:hidden",
+          `h-${MOBILE_FLOATING_HEIGHT}`,
+        )}
+      >
         <div className="flex items-center justify-between gap-3">
           {showPreviousButton ? (
             <Button

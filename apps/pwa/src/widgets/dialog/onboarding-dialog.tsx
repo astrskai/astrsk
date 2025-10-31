@@ -1,6 +1,6 @@
 import { Page, useAppStore } from "@/shared/stores/app-store";
 import { useSessionStore } from "@/shared/stores/session-store";
-import { useSidebarLeft } from "@/widgets/both-sidebar";
+// import { useSidebarLeft } from "@/widgets/both-sidebar";
 import { cn } from "@/shared/lib";
 import {
   Button,
@@ -39,7 +39,7 @@ const OnboardingDialog = () => {
   const navigate = useNavigate();
 
   // Sidebar control
-  const { setOpen: setSidebarOpen } = useSidebarLeft();
+  // const { setOpen: setSidebarOpen } = useSidebarLeft();
 
   // Get all sessions to find the matching session ID
   const { data: sessions, isLoading: isLoadingSessions } = useQuery(
@@ -71,7 +71,7 @@ const OnboardingDialog = () => {
       });
 
       // Collapse the left sidebar for a focused experience
-      setSidebarOpen(false);
+      // setSidebarOpen(false);
     } else {
       console.warn(`Could not find session with title: ${targetSessionName}`);
 
@@ -79,7 +79,7 @@ const OnboardingDialog = () => {
         to: "/",
       });
 
-      setSidebarOpen(false);
+      // setSidebarOpen(false);
     }
 
     setActivePage(Page.Init);

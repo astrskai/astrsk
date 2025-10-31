@@ -67,13 +67,20 @@ export const ActionConfirm = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        className="p-4 md:p-6"
         hideClose
         onPointerDownOutside={(e) => e.stopPropagation()}
         onInteractOutside={(e) => e.stopPropagation()}
       >
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          <DialogTitle className="text-xl font-semibold md:text-2xl">
+            {title}
+          </DialogTitle>
+          {description && (
+            <DialogDescription className="text-sm font-normal md:text-base">
+              {description}
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         {/* Body Content - Checkbox, Input, etc. */}
@@ -86,7 +93,6 @@ export const ActionConfirm = ({
         <DialogFooter>
           <DialogClose asChild>
             <Button
-              size="lg"
               variant="ghost"
               onClick={(e) => {
                 e.stopPropagation();
@@ -97,7 +103,6 @@ export const ActionConfirm = ({
             </Button>
           </DialogClose>
           <Button
-            size="lg"
             variant={confirmVariant}
             onClick={(e) => {
               e.stopPropagation();

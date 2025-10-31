@@ -1,9 +1,8 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
 import { Route } from "@/routes/_layout/sessions/new";
 import { Button } from "@/shared/ui/forms";
-import { ActionConfirm } from "@/shared/ui/dialogs";
+import { CreatePageHeader } from "@/widgets/create-page-header";
 import {
   FlowSelectionStep,
   AiCharacterSelectionStep,
@@ -61,12 +60,10 @@ export function CreateSessionPage() {
     useState<CharacterCard | null>(null);
   const [selectedPlot, setSelectedPlot] = useState<CharacterCard | null>(null);
 
-  const [isOpenCancelDialog, setIsOpenCancelDialog] = useState<boolean>(false);
-
   const selectSession = useSessionStore.use.selectSession();
 
-  const handleCancelClick = () => {
-    setIsOpenCancelDialog(true);
+  const handleCancel = () => {
+    navigate({ to: "/sessions" });
   };
 
   const handlePrevious = () => {
@@ -192,61 +189,17 @@ export function CreateSessionPage() {
 
   return (
     <div className="bg-background-surface-2 relative flex h-full w-full flex-col">
-      {/* Mobile Header */}
-      <div className="border-border flex items-center border-b px-4 py-4 md:hidden">
-        <button
-          onClick={handleCancelClick}
-          className="text-text-primary hover:text-text-secondary mr-3 transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <div className="flex flex-col">
-          <span className="text-text-secondary text-xs font-medium">
-            Create Session
-          </span>
-          <h1 className="text-text-primary text-lg font-semibold">
-            {sessionName}
-          </h1>
-        </div>
-      </div>
-
-      {/* Desktop Header */}
-      <div className="border-border hidden items-center justify-between border-b px-8 py-6 md:flex">
-        {/* Title with Session Name */}
-        <h1 className="flex items-center gap-2 text-2xl">
-          <span className="text-text-secondary font-medium">
-            Create Session
-          </span>
-          <span>&nbsp;</span>
-          <span className="text-text-primary font-semibold">{sessionName}</span>
-        </h1>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" onClick={handleCancelClick}>
-            Cancel
-          </Button>
-          {showPreviousButton && (
-            <Button variant="outline" onClick={handlePrevious}>
-              Previous
-            </Button>
-          )}
-          <Button onClick={handleNext} disabled={!canProceed}>
-            {isLastStep ? "Finish" : "Next"}
-          </Button>
-        </div>
-      </div>
-
-      {/* Cancel Confirmation Dialog */}
-      <ActionConfirm
-        open={isOpenCancelDialog}
-        onOpenChange={setIsOpenCancelDialog}
-        title="You've got unsaved changes!"
-        description="Are you sure you want to close?"
-        cancelLabel="Go back"
-        confirmLabel="Close without saving"
-        confirmVariant="destructive"
-        onConfirm={() => navigate({ to: "/sessions" })}
+      <CreatePageHeader
+        category="Session"
+        itemName={sessionName}
+        onCancel={handleCancel}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        showPreviousButton={showPreviousButton}
+        isLastStep={isLastStep}
+        canProceed={canProceed}
+        isSubmitting={false}
+        showCancelButton={true}
       />
 
       {/* Step Indicator */}

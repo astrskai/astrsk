@@ -96,7 +96,6 @@ export function CharacterImageStep({
               <FileUploadButton
                 accept=".jpg,.jpeg,.png,.webp"
                 onChange={onFileUpload}
-                size="lg"
                 className="w-full max-w-[320px]"
               >
                 Upload Character Image

@@ -12,12 +12,15 @@ import { flowQueries } from "@/app/queries/flow-queries";
 import { FlowService } from "@/app/services/flow-service";
 import { logger } from "@/shared/lib";
 import { Flow } from "@/entities/flow/domain/flow";
+import { useNavigate } from "@tanstack/react-router";
 
 /**
  * Flows List Page
  * Displays all flows with search and create functionality
  */
 export function FlowsListPage() {
+  const navigate = useNavigate();
+
   // 1. State hooks
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
@@ -64,15 +67,13 @@ export function FlowsListPage() {
           }
         }
 
-        // Refresh flow list and wait for refetch to complete
-        await queryClient.refetchQueries({
-          queryKey: flowQueries.lists(),
-        });
-
-        // Trigger animation for newly created flow
-        setNewlyCreatedFlowId(flow.id.toString());
-
         toast.success("Flow created successfully");
+
+        // Navigate to flow detail page immediately
+        navigate({
+          to: "/assets/flows/$flowId",
+          params: { flowId: flow.id.toString() },
+        });
       } catch (error) {
         logger.error(error);
         toast.error("Failed to create flow", {
@@ -80,7 +81,7 @@ export function FlowsListPage() {
         });
       }
     },
-    [queryClient],
+    [navigate],
   );
 
   const handleFileSelect = useCallback(async (file: File) => {

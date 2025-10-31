@@ -43,6 +43,7 @@ export function SessionsHeader({
             Import
           </Button>
           <Button
+            className="hidden"
             variant="secondary"
             icon={<Upload size={16} />}
             onClick={onExportClick}

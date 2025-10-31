@@ -3,6 +3,7 @@ import { sessionQueries } from "@/app/queries/session-queries";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useBackgroundStore } from "@/shared/stores/background-store";
 import { useSessionStore } from "@/shared/stores/session-store";
+import { Session } from "@/entities/session/domain/session";
 import {
   SearchableSidebar,
   SessionListItem,
@@ -107,7 +108,7 @@ export default function SessionPage({ className }: { className?: string }) {
           onKeywordChange={setSidebarKeyword}
           defaultExpanded={true}
         >
-          {sessions.map((session) => (
+          {sessions.map((session: Session) => (
             <SessionListItem
               key={session.id.toString()}
               session={session}

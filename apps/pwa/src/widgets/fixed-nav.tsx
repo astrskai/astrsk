@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { FolderOpen, Settings, LogIn } from "lucide-react";
-import { SessionsIcon } from "@/shared/assets/icons";
+import { IconSessions } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { UpdaterNew } from "@/widgets/updater-new";
 
@@ -11,7 +11,7 @@ const FIXED_NAV_WIDTH = 80; // px
 const TOP_NAV_ITEMS = [
   {
     id: "sessions",
-    icon: SessionsIcon,
+    icon: IconSessions,
     label: "Sessions",
     path: "/sessions",
   },
@@ -24,6 +24,7 @@ const TOP_NAV_ITEMS = [
 ] as const;
 
 // Bottom navigation items (Settings, Log in)
+// TODO: Implement a login system
 const BOTTOM_NAV_ITEMS = [
   {
     id: "settings",
@@ -31,12 +32,12 @@ const BOTTOM_NAV_ITEMS = [
     label: "Settings",
     path: "/settings",
   },
-  {
-    id: "login",
-    icon: LogIn,
-    label: "Log in",
-    path: "/login",
-  },
+  // {
+  //   id: "login",
+  //   icon: LogIn,
+  //   label: "Log in",
+  //   path: "/login",
+  // },
 ] as const;
 
 /**

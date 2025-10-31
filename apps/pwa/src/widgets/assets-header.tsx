@@ -33,11 +33,15 @@ export function AssetsHeader({
   const location = useLocation();
 
   // Determine current active route
-  const currentAssetType: AssetType | null =
-    location.pathname.includes("/characters") ? "characters" :
-    location.pathname.includes("/plots") ? "plots" :
-    location.pathname.includes("/flows") ? "flows" :
-    null;
+  const currentAssetType: AssetType | null = location.pathname.includes(
+    "/characters",
+  )
+    ? "characters"
+    : location.pathname.includes("/plots")
+      ? "plots"
+      : location.pathname.includes("/flows")
+        ? "flows"
+        : null;
 
   return (
     <div className="border-border flex flex-col border-b">
@@ -53,9 +57,9 @@ export function AssetsHeader({
                 to={ASSET_ROUTES[type].to}
                 className={cn(
                   "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                  "focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                  "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
                   isActive
-                    ? "bg-primary text-primary-foreground font-semibold shadow hover:bg-primary/90"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow"
                     : "bg-background-surface-1 text-text-secondary hover:bg-background-surface-2",
                 )}
               >
@@ -81,6 +85,7 @@ export function AssetsHeader({
             Import
           </Button>
           <Button
+            className="hidden"
             variant="secondary"
             icon={<Upload size={16} />}
             onClick={onExportClick}

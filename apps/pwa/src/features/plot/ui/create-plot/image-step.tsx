@@ -81,7 +81,6 @@ export function PlotImageStep({
             <FileUploadButton
               accept={ACCEPTED_FILE_TYPES}
               onChange={onFileUpload}
-              size="lg"
               className="w-full max-w-[320px]"
             >
               Upload Plot Image
