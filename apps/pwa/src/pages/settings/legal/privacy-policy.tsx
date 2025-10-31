@@ -1,19 +1,20 @@
+import { TypoXLarge, TypoBase } from "@/shared/ui";
+
 const PrivacyPolicy = () => {
   return (
-    <div className="overflow-y-auto py-[80px] h-full">
-      <div className="max-w-[587px] mx-auto text-text-primary">
-        {/* Header with back button */}
-        <div className="flex items-center mb-4">
-          <div className="flex items-center justify-center h-full">
-            <h1 className="text-2xl font-semibold">Privacy Policy</h1>
-          </div>
-        </div>
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Content */}
+      <div className="bg-background-surface-2 md:bg-background-surface-1 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-[587px] px-4 py-4 md:py-20">
+          {/* Desktop title - hidden on mobile */}
+          <TypoXLarge className="text-text-primary mb-8 hidden font-semibold md:block">
+            Privacy Policy
+          </TypoXLarge>
 
-        {/* Content */}
-        <div className="pr-8">
-          <div className="text-text-placeholder text-base font-normal mb-6">
+          {/* Last updated */}
+          <TypoBase className="text-text-placeholder mb-6">
             Last updated: May 19th, 2025
-          </div>
+          </TypoBase>
 
           {/* Policy content */}
           <div className="text-text-primary prose prose-invert max-w-none">
@@ -33,7 +34,7 @@ const PrivacyPolicy = () => {
               this Policy, please do not access or use the Services.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">
+            <h3 className="mt-8 mb-4 font-semibold">
               1. Information We Collect
             </h3>
             <hr className="border-border-divider mb-6" />
@@ -46,7 +47,7 @@ const PrivacyPolicy = () => {
               sessions, your card nor your agents. Below is the list of data
               that are collect based on your consent:
             </p>
-            <ul className="list-disc pl-6 mb-6 space-y-2">
+            <ul className="mb-6 list-disc space-y-2 pl-6">
               <li>
                 Session creation initiation count: when and how many times users
                 clicked the session create button. (Anonymous tracking only)
@@ -103,7 +104,7 @@ const PrivacyPolicy = () => {
               </li>
             </ul>
 
-            <h3 className="font-semibold mt-8 mb-4">
+            <h3 className="mt-8 mb-4 font-semibold">
               2. How We Use the Information We Collect
             </h3>
             <hr className="border-border-divider mb-6" />
@@ -112,7 +113,7 @@ const PrivacyPolicy = () => {
               We may use your information for any of the following purposes:
             </p>
 
-            <ul className="list-disc pl-6 mb-6 space-y-2">
+            <ul className="mb-6 list-disc space-y-2 pl-6">
               <li>Provide and administer the Services;</li>
               <li>
                 Detect and prevent fraud, criminal activity, or misuses of our
@@ -132,7 +133,7 @@ const PrivacyPolicy = () => {
               Services with information that we obtain from other sources.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">
+            <h3 className="mt-8 mb-4 font-semibold">
               3. When We Disclose the Information We Collect
             </h3>
             <hr className="border-border-divider mb-6" />
@@ -163,7 +164,7 @@ const PrivacyPolicy = () => {
               regulations.
             </p>
 
-            <h3 className="text-xl font-semibold mt-8 mb-4">
+            <h3 className="mt-8 mb-4 text-xl font-semibold">
               4. Online Analytics
             </h3>
             <hr className="border-border-divider mb-6" />
@@ -174,7 +175,7 @@ const PrivacyPolicy = () => {
               how users use the Services.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">
+            <h3 className="mt-8 mb-4 font-semibold">
               5. Security and Data Retention
             </h3>
             <hr className="border-border-divider mb-6" />
@@ -192,7 +193,7 @@ const PrivacyPolicy = () => {
               resolve disputes, and enforce our agreements.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">
+            <h3 className="mt-8 mb-4 font-semibold">
               6. Changes to this Policy
             </h3>
             <hr className="border-border-divider mb-6" />
@@ -207,7 +208,7 @@ const PrivacyPolicy = () => {
               read and understood the latest version of this Policy.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">7. Contact Us</h3>
+            <h3 className="mt-8 mb-4 font-semibold">7. Contact Us</h3>
             <hr className="border-border-divider mb-6" />
 
             <p className="mb-6">

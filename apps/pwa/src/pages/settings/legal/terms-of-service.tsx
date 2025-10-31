@@ -1,24 +1,23 @@
-"use client";
+import { TypoXLarge, TypoBase } from "@/shared/ui";
 
 const TermsOfService = () => {
   return (
-    <div className="overflow-y-auto py-[80px] h-full">
-      <div className="max-w-[587px] mx-auto text-text-primary">
-        {/* Header with back button */}
-        <div className="flex items-center mb-4">
-          <div className="flex items-center justify-center h-full">
-            <h1 className="text-2xl font-semibold">Terms of Use</h1>
-          </div>
-        </div>
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Content */}
+      <div className="bg-background-surface-2 md:bg-background-surface-1 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-[587px] px-4 py-4 md:py-20">
+          {/* Desktop title - hidden on mobile */}
+          <TypoXLarge className="text-text-primary mb-8 hidden font-semibold md:block">
+            Terms of Use
+          </TypoXLarge>
 
-        {/* Content */}
-        <div className="pr-8">
-          <div className="text-text-placeholder text-base font-normal mb-6">
+          {/* Last updated */}
+          <TypoBase className="text-text-placeholder mb-6">
             Last updated: May 19th, 2025
-          </div>
+          </TypoBase>
 
           {/* Terms content */}
-          <div className="text-text-primary text-base prose prose-invert max-w-none">
+          <div className="text-text-primary prose prose-invert max-w-none text-base">
             <div className="mb-8"></div>
 
             <p className="text-text-placeholder mb-6">
@@ -60,7 +59,7 @@ const TermsOfService = () => {
               <hr className="border-border-divider my-6" />
             </div>
 
-            <h3 className="font-semibold mt-8 mb-4">Use of the Services</h3>
+            <h3 className="mt-8 mb-4 font-semibold">Use of the Services</h3>
 
             <p className="mb-6">
               Your Registration Obligations. When you register to use the
@@ -88,7 +87,7 @@ const TermsOfService = () => {
               the public.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">Indemnity and Release</h3>
+            <h3 className="mt-8 mb-4 font-semibold">Indemnity and Release</h3>
             <p className="mb-6">
               You agree to release, indemnify and hold harpy chat Inc. and its
               affiliates and their officers, employees, directors and agents
@@ -100,7 +99,7 @@ const TermsOfService = () => {
               out of or relating to your use of the Services.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">Disclaimer of Warranty</h3>
+            <h3 className="mt-8 mb-4 font-semibold">Disclaimer of Warranty</h3>
             <p className="mb-6">
               Your use of the Services is at your sole risk. The site is
               provided on an “AS IS” and “AS AVAILABLE” basis. harpy chat Inc.
@@ -113,7 +112,7 @@ const TermsOfService = () => {
               or reliable.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">Limitation of Liability</h3>
+            <h3 className="mt-8 mb-4 font-semibold">Limitation of Liability</h3>
             <p className="mb-6">
               You understand and agree that harpy chat Inc. will not be liable
               for any indirect, incidental, special, consequential, or exemplary
@@ -127,7 +126,7 @@ const TermsOfService = () => {
               Generations; or (vi) any other matter relating to the Services.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">
+            <h3 className="mt-8 mb-4 font-semibold">
               Dispute Resolution By Binding Arbitration
             </h3>
 
@@ -175,7 +174,7 @@ const TermsOfService = () => {
               confidential for the benefit of all parties.{" "}
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">General</h3>
+            <h3 className="mt-8 mb-4 font-semibold">General</h3>
 
             <p className="mb-2">
               <span className="font-medium">Entire Agreement.</span> These Terms
@@ -207,7 +206,7 @@ const TermsOfService = () => {
               displaying notices or links to notices generally on the Services.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">Changes to these Terms</h3>
+            <h3 className="mt-8 mb-4 font-semibold">Changes to these Terms</h3>
 
             <p className="mb-6">
               We reserve the right, at our sole discretion, to change or modify
@@ -221,7 +220,7 @@ const TermsOfService = () => {
               become effective constitutes your acceptance of the new Terms.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">Contact Us</h3>
+            <h3 className="mt-8 mb-4 font-semibold">Contact Us</h3>
 
             <p className="mb-6">
               If you have any questions about our Services, or to report any

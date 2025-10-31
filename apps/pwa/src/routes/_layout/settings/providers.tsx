@@ -1,14 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import ModelPage from "@/features/settings/providers/model-page";
-import ModelPageMobile from "@/features/settings/providers/model-page-mobile";
-import { useIsMobile } from "@/shared/hooks/use-mobile";
+import ModelPage from "@/pages/settings/providers/model-page";
 
 export const Route = createFileRoute("/_layout/settings/providers")({
-  component: ProvidersPage,
+  component: ModelPage,
 });
-
-function ProvidersPage() {
-  const isMobile = useIsMobile();
-
-  return isMobile ? <ModelPageMobile /> : <ModelPage />;
-}

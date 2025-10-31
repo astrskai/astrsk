@@ -15,7 +15,7 @@ import { cardQueries, useUpdateCardTitle } from "@/app/queries/card";
 import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
 import { BookOpen, Pencil, Check, X, Image } from "lucide-react";
 import { Avatar, Button, ButtonPill, SvgIcon } from "@/shared/ui";
-import { useCollapsibleSidebarWidth } from "@/widgets/collapsible-sidebar/hooks/use-collapsible-sidebar-width";
+// import { useCollapsibleSidebarWidth } from "@/widgets/collapsible-sidebar/hooks/use-collapsible-sidebar-width";
 import { useAppStore } from "@/shared/stores/app-store";
 
 interface CardPanelProps {
@@ -95,7 +95,7 @@ export function CardPanel({ cardId }: CardPanelProps) {
   const updateIconAsset = useUpdateCardIconAsset(cardId);
 
   // Get collapsible sidebar state for conditional margins
-  const { isExpanded, isMobile } = useCollapsibleSidebarWidth();
+  // const { isExpanded, isMobile } = useCollapsibleSidebarWidth();
 
   // Use React Query to get card data
   const { data: cardFromQuery } = useQuery(cardQueries.detail(cardId));
@@ -237,9 +237,9 @@ export function CardPanel({ cardId }: CardPanelProps) {
         <div
           className={cn(
             "bg-background-surface-3 flex items-center justify-between gap-2 rounded-lg px-4 py-2 transition-all duration-200",
-            isMobile || isExpanded
-              ? "ml-0 w-full"
-              : "ml-12 w-[calc(100%-48px)]",
+            // isMobile || isExpanded
+            //   ? "ml-0 w-full"
+            //   : "ml-12 w-[calc(100%-48px)]",
           )}
         >
           <div className="flex min-w-0 flex-1 items-center justify-start gap-2">

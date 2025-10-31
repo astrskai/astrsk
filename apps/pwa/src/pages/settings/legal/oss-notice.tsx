@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TypoXLarge } from "@/shared/ui";
 
 interface LicenseInfo {
   name: string;
@@ -23,19 +24,14 @@ const OssNotice = () => {
   }, []);
 
   return (
-    <div className="h-full overflow-y-auto py-[80px]">
-      <div className="text-text-primary mx-auto max-w-[587px]">
-        {/* Header with back button */}
-        <div className="mb-4 flex items-center">
-          <div className="flex h-full items-center justify-center">
-            <h1 className="text-2xl font-semibold">
-              Open-source Software Notice
-            </h1>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="pr-8">
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Content */}
+      <div className="bg-background-surface-2 md:bg-background-surface-1 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-[587px] px-4 py-4 md:py-20">
+          {/* Desktop title - hidden on mobile */}
+          <TypoXLarge className="text-text-primary mb-8 hidden font-semibold md:block">
+            Open-source Software Notice
+          </TypoXLarge>
           {/* Notice header */}
           <div className="text-text-placeholder mb-6 text-base font-normal">
             <p className="mb-6">

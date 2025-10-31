@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AccountPage } from "@/features/settings/account";
+import { AccountPage } from "@/pages/settings/account/account-page";
 import { ConvexReady } from "@/shared/ui/convex-ready";
 
 export const Route = createFileRoute("/_layout/settings/account/")({

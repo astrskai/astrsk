@@ -63,7 +63,7 @@ import {
 import { ButtonPill, Card } from "@/shared/ui";
 import { toast } from "sonner";
 import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
-import { useCollapsibleSidebarWidth } from "@/widgets/collapsible-sidebar/hooks/use-collapsible-sidebar-width";
+// import { useCollapsibleSidebarWidth } from "@/widgets/collapsible-sidebar/hooks/use-collapsible-sidebar-width";
 import {
   Select,
   SelectContent,
@@ -102,8 +102,14 @@ import {
   NodeSelectionMenu,
   NodeSelectionMenuItems,
 } from "@/features/flow/flow-multi/components/node-selection-menu";
-import { edgeTypes, type CustomEdgeType } from "@/features/flow/flow-multi/edges/index";
-import { nodeTypes, type CustomNodeType } from "@/features/flow/flow-multi/nodes/index";
+import {
+  edgeTypes,
+  type CustomEdgeType,
+} from "@/features/flow/flow-multi/edges/index";
+import {
+  nodeTypes,
+  type CustomNodeType,
+} from "@/features/flow/flow-multi/nodes/index";
 import { CustomReactFlowControls } from "@/features/flow/flow-multi/components/custom-controls";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { sessionQueries } from "@/app/queries/session-queries";
@@ -158,7 +164,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   // 3. Context hooks
   const { openPanel, closePanel, isPanelOpen } = useFlowPanelContext();
-  const { isExpanded, isMobile } = useCollapsibleSidebarWidth();
+  // const { isExpanded, isMobile } = useCollapsibleSidebarWidth();
   const queryClient = useQueryClient();
 
   // 4. React Query hooks - using global queryClient settings
@@ -1556,10 +1562,10 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         <div
           className={cn(
             "bg-background-surface-3 inline-flex items-center justify-start gap-2 rounded-lg px-4 py-2 transition-all duration-200",
-            {
-              "ml-0": isMobile || isExpanded, // Normal left margin when mobile or navigation expanded
-              "ml-12": !isMobile && !isExpanded, // Larger left margin when navigation collapsed
-            },
+            // {
+            //   "ml-0": isMobile || isExpanded, // Normal left margin when mobile or navigation expanded
+            //   "ml-12": !isMobile && !isExpanded, // Larger left margin when navigation collapsed
+            // },
           )}
         >
           <div className="flex min-w-0 flex-1 items-center justify-start gap-2">

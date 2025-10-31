@@ -3,15 +3,11 @@
 import { Page, useAppStore } from "@/shared/stores/app-store";
 import { SidebarLeft, useSidebarLeft } from "@/widgets/both-sidebar";
 import { HelpVideoDialog, ScrollArea, ScrollBar, SvgIcon } from "@/shared/ui";
-import { CardSection } from "./card-list";
-import { FlowSection } from "./flow-list";
-import { SessionSection } from "./session-list";
+// import { CardSection } from "./card-list";
+// import { FlowSection } from "./flow-list";
+// import { SessionSection } from "./session-list";
 import { cn } from "@/shared/lib";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shared/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui";
 import { UpdaterNew } from "@/widgets/updater-new";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
@@ -176,33 +172,33 @@ const CollapsibleSidebar = () => {
           {/* Navigation */}
           <ScrollArea viewportRef={navigationRef} className="min-h-0 flex-1">
             <div id="nav-session" />
-            <SessionSection
+            {/* <SessionSection
               onClick={() => scrollNavigation("session")}
               onboardingHighlight={shouldShowResourceManagementTooltip}
               onHelpClick={() => openHelpVideo("sessions")}
               onboardingHelpGlow={shouldShowHelpVideoTooltip}
-            />
+            /> */}
             <div id="nav-card" />
-            <CardSection
+            {/* <CardSection
               onClick={() => scrollNavigation("card")}
               onboardingHighlight={shouldShowResourceManagementTooltip}
               onboardingCollapsed={shouldShowResourceManagementTooltip}
               onHelpClick={() => openHelpVideo("cards")}
               onboardingHelpGlow={shouldShowHelpVideoTooltip}
-            />
+            /> */}
             <div id="nav-flow" />
-            <FlowSection
+            {/* <FlowSection
               onClick={() => scrollNavigation("flow")}
               onboardingHighlight={shouldShowResourceManagementTooltip}
               onboardingCollapsed={shouldShowResourceManagementTooltip}
               onHelpClick={() => openHelpVideo("flows")}
               onboardingHelpGlow={shouldShowHelpVideoTooltip}
-            />
+            /> */}
             <ScrollBar className="z-30" />
           </ScrollArea>
 
           {/* Footer */}
-          <CollapsibleSidebarFooter setActivePage={setActivePage} />
+          {/* <CollapsibleSidebarFooter setActivePage={setActivePage} /> */}
         </div>
       </SidebarLeft>
 
@@ -266,13 +262,13 @@ const CollapsibleSidebar = () => {
       )}
 
       {/* Help Video Dialog */}
-      {helpVideoDialog.type && (
+      {/* {helpVideoDialog.type && (
         <HelpVideoDialog
           open={helpVideoDialog.open}
           onOpenChange={closeHelpVideo}
           type={helpVideoDialog.type}
         />
-      )}
+      )} */}
     </div>
   );
 };

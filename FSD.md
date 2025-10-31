@@ -2,7 +2,7 @@
 
 > **Official Documentation**: [feature-sliced.design](https://feature-sliced.design/)
 
-Last updated: 2025-10-24
+Last updated: 2025-10-31
 
 ---
 
@@ -148,8 +148,11 @@ import { ValidationPanel } from "@/features/flow/flow-multi/panels/validation/va
   - ✅ **app/hooks/** → DELETED (moved to shared/hooks/)
   - ✅ **app/v2/** → DELETED (inlined to pages/app-layout.tsx)
 - ✅ **pages/** - Pages layer (5 page components: app-layout, card-detail, session-detail, flow-detail, not-found)
-- ✅ **widgets/** - Widgets layer (8 layout files + left-navigation/)
-- ✅ **features/** - Business features (session/, card/, flow/, settings/, vibe/)
+  - ✅ **pages/settings/providers/** - Page-specific components (provider-display.tsx)
+- ✅ **widgets/** - Widgets layer (layouts + left-navigation/ + **dialog/** ✅ 3 global dialogs)
+  - ✅ **widgets/dialog/** - Global dialogs (onboarding-dialog, subscribe-nudge-dialog, subscribe-checker)
+- ✅ **features/** - Business features (session/, card/, flow/, vibe/)
+  - ✅ **features/settings/** → DELETED (moved to widgets/dialog/ and pages/settings/)
 - ✅ **entities/** - Domain entities (14 domains with model/, domain/, repos/) - **Renamed from modules/**
 - ✅ **shared/** - Reusable code (ui/, lib/, **hooks/** ✅ 26 files, **stores/** ✅ 11 files, assets/)
   - ✅ **shared/stores/card-ui-store.tsx** → MOVED to **entities/card/stores/** (domain-specific state)
@@ -185,13 +188,16 @@ See [CLAUDE.md](./CLAUDE.md) for the full project structure tree.
 │  │     ├─ YES → Is it a large self-sufficient UI block (Sidebar, Layout)?
 │  │     │  ├─ YES → widgets/ (navigation, layouts, complex reusable blocks)
 │  │     │  └─ NO → shared/ui/ (buttons, inputs, simple components)
-│  │     └─ NO → Is it a complete user interaction/workflow?
-│  │        ├─ YES → Is it reused on multiple pages?
-│  │        │  ├─ YES → features/{domain}/components/ (e.g., CommentEditor on 3+ pages)
-│  │        │  └─ NO → Keep in pages/ (page-specific workflow)
-│  │        └─ NO → Is it a business entity's visual representation?
-│  │           ├─ YES → entities/{domain}/ui/ (reusable appearance, behavior via props)
-│  │           └─ NO → Keep in pages/ (page-specific, not reused)
+│  │     └─ NO (only 1-2 pages) → Does it contain business logic?
+│  │        ├─ YES (API calls, complex state) → Keep in pages/{page}/ (page-specific component)
+│  │        │  └─ Example: pages/settings/providers/provider-display.tsx
+│  │        └─ NO → Is it a pure UI component with props only?
+│  │           ├─ YES, used on 2 pages → Keep in pages/ (wait for 3rd usage - YAGNI)
+│  │           └─ YES, entity appearance → entities/{domain}/ui/ (if truly reusable)
+│  │
+│  │  **⚠️ Common mistake: Creating features/ for single-page components**
+│  │  - features/settings/providers/ ❌ (only used on 1 page)
+│  │  - pages/settings/providers/ ✅ (page-specific)
 │  │
 │  └─ NO → Is it a type/interface/enum?
 │     ├─ Real-world business concept? → entities/{domain}/model/ (Card, Session, User)
@@ -300,8 +306,11 @@ export function CardDetailPage() {
 | `main-layout.tsx` | Page layout wrapper with routing | Global |
 | `both-sidebar.tsx` | Desktop dual-sidebar layout | Global |
 | `modal-pages.tsx` | Modal routing system | Global |
+| `dialog/onboarding-dialog.tsx` | App-level onboarding flow | Global (triggered once) |
+| `dialog/subscribe-nudge-dialog.tsx` | Subscription upsell dialog | Global (triggered from 3+ pages) |
+| `dialog/subscribe-checker.tsx` | Subscription state sync | Global initialization |
 
-**Decision criteria:** All are **reused across multiple pages** or are **layout components**.
+**Decision criteria:** All are **reused across multiple pages** or are **layout components** or **global dialogs**.
 
 **Current pages/:**
 | File | Why it's a Page | Route |
@@ -311,8 +320,9 @@ export function CardDetailPage() {
 | `session-detail-page.tsx` | Session detail screen | `/sessions/:id` |
 | `flow-detail-page.tsx` | Flow editor screen | `/flows/:id` |
 | `not-found.tsx` | 404 error page | `*` (catch-all) |
+| `settings/providers/provider-display.tsx` | Provider card component (only used on 1 page) | N/A (page-specific) |
 
-**Decision criteria:** Each maps to **one route**, composes features + widgets.
+**Decision criteria:** Each maps to **one route**, composes features + widgets. Page-specific components stay within pages/ subfolder.
 
 **Common Mistakes to Avoid:**
 
@@ -358,20 +368,21 @@ pages/
 
 ---
 
-### entities/ vs features/
+### entities/ vs features/ vs pages/
 
 **Quick Reference Table:**
 
-| Question | entities/ | features/ |
-|----------|-----------|-----------|
-| **What** | Business concepts (nouns) | User interactions (verbs) |
-| **Examples** | User, Post, Card, Session | CreatePost, EditCard, CommentOnPost |
-| Contains React components? | Rare (📁 `ui/` for reusable appearance) | ✅ YES (📁 `ui/` for complete interactions) |
-| Contains business logic? | ✅ YES (domain rules, validation) | ✅ YES (user workflows, orchestration) |
-| Contains types/interfaces? | ✅ YES (📁 `model/` domain models) | Sometimes (UI-specific state) |
-| Contains API calls? | ✅ YES (📁 `api/` entity CRUD) | ✅ YES (📁 `api/` interaction-specific) |
-| Can import from features/? | ❌ NEVER | ✅ NO (only from entities) |
-| Reusability | Reused across features | Reused across pages |
+| Question | entities/ | features/ | pages/ |
+|----------|-----------|-----------|--------|
+| **What** | Business concepts (nouns) | User interactions (verbs) | Full screens/routes |
+| **Examples** | User, Post, Card, Session | CreatePost, EditCard, CommentOnPost | CardDetailPage, ProviderSettingsPage |
+| Contains React components? | Rare (📁 `ui/` for reusable appearance) | ✅ YES (📁 `ui/` for complete interactions) | ✅ YES (page-specific UI) |
+| Contains business logic? | ✅ YES (domain rules, validation) | ✅ YES (user workflows, orchestration) | ✅ YES (page-specific logic) |
+| Contains types/interfaces? | ✅ YES (📁 `model/` domain models) | Sometimes (UI-specific state) | Sometimes (page-specific types) |
+| Contains API calls? | ✅ YES (📁 `api/` entity CRUD) | ✅ YES (📁 `api/` interaction-specific) | ✅ YES (page-specific data) |
+| Can import from features/? | ❌ NEVER | ✅ NO (only from entities) | ✅ YES (composes features) |
+| Reusability | Reused across features | Reused across pages (3+) | **Never reused (1 route)** |
+| **Key Rule** | Pure domain logic | **Must be reused on 3+ pages** | **Keep if used on 1 page only** |
 
 ---
 
@@ -394,6 +405,39 @@ pages/
 **Key Principle:**
 - **ui/**: Provides **appearance**, not complete behavior
 - Business logic for entity **interactions** lives in **features/** or **pages/**
+- **Entities CANNOT contain**: Service calls, API mutations, complex workflows
+- **Entities CAN contain**: Validation, domain rules, type definitions
+
+**⚠️ When NOT to use entities/ui/:**
+```typescript
+// ❌ BAD: Entity UI with service calls
+// entities/provider/ui/provider-card.tsx
+const ProviderCard = ({ provider }) => {
+  const [flows, setFlows] = useState([]);
+
+  // ❌ Entity calling services - violates FSD!
+  useEffect(() => {
+    FlowService.listFlowByProvider(provider).then(setFlows);
+  }, [provider]);
+
+  return <Card>...</Card>;
+};
+
+// ✅ GOOD: Pure entity UI (appearance only)
+// entities/provider/ui/provider-badge.tsx
+const ProviderBadge = ({ provider, onClick }) => {
+  // Only displays provider info, behavior via props
+  return <Badge onClick={onClick}>{provider.name}</Badge>;
+};
+
+// ✅ GOOD: Business logic in pages/features
+// pages/settings/providers/provider-display.tsx
+const ProviderDisplay = ({ provider }) => {
+  // Pages can have business logic
+  const flows = useFlowsByProvider(provider);
+  return <ProviderCard provider={provider} flows={flows} />;
+};
+```
 
 #### **Entity Relationships (@x cross-imports)**
 
@@ -462,14 +506,19 @@ Create a new entity slice when:
 #### **When to Create New Feature**
 
 **✅ Create a feature when:**
-- Reused on **multiple pages** (e.g., comments on posts, sessions, flows)
+- Reused on **3+ pages** (e.g., comments on posts, sessions, flows)
 - Important **user interaction** (optimize for newcomer discovery)
 - Has dedicated **workflow/business logic** (multi-step forms, wizards)
 
 **❌ Don't create a feature when:**
-- Only used on **one page** → Keep in `pages/`
+- Only used on **1-2 pages** → Keep in `pages/{page}/` (page-specific component)
 - Too granular (feature bloat) → Drowns out important features
 - Simple UI component → Use `shared/ui/`
+
+**🎯 The "3+ Pages Rule":**
+- **1 page**: Keep in `pages/{page}/component.tsx` (page-specific)
+- **2 pages**: Still keep in `pages/` (wait for 3rd usage)
+- **3+ pages**: Extract to `features/{domain}/` or `widgets/` (proven reusability)
 
 **Examples:**
 
@@ -480,6 +529,31 @@ Create a new entity slice when:
 | Session creation wizard | ✅ `features/session/create-session/` | Multi-step, important interaction |
 | Card detail page header | ❌ Keep in `pages/card-detail-page.tsx` | Only used on one page |
 | Delete button | ❌ `shared/ui/button.tsx` | Simple UI, not a "feature" |
+
+#### **Real-World Case Study: ProviderDisplay Component**
+
+**Context**: A component that displays AI provider cards (OpenAI, Anthropic, etc.) with edit/delete actions and dependency checking logic.
+
+**Initial mistake**: Placed in `features/settings/providers/provider-list-item.tsx`
+
+**Analysis:**
+- ❌ **Used on**: Only 1 page (`pages/settings/providers/model-page.tsx`)
+- ❌ **"settings" is not a feature**: It's a page category, not a user interaction
+- ✅ **Contains business logic**: FlowService, SessionService calls for dependency checking
+- ✅ **Page-specific**: Never reused on other pages
+
+**Correct solution**: `pages/settings/providers/provider-display.tsx`
+
+**Rationale:**
+1. ✅ **FSD principle**: "Not everything needs to be a feature"
+2. ✅ **Single-page usage**: No evidence of reuse on 3+ pages
+3. ✅ **Cohesion**: Keeps related code together (page + its components)
+4. ✅ **YAGNI**: Don't abstract until proven need (wait for 3rd usage)
+
+**Wrong alternatives considered:**
+- `entities/api/ui/provider-card.tsx` - ❌ Entities cannot contain business logic (FlowService calls)
+- `features/provider/disconnect-provider.tsx` - ❌ Over-engineered for single-page usage
+- `widgets/provider-card.tsx` - ❌ Not reused across 3+ pages
 
 #### **Real-World Examples from Our Project**
 

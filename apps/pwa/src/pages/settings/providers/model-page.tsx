@@ -11,17 +11,15 @@ import { useApiConnections } from "@/shared/hooks/use-api-connections";
 import { ApiService } from "@/app/services";
 import { queryClient } from "@/app/queries/query-client";
 import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
-
+import { Button } from "@/shared/ui/forms";
 import { cn } from "@/shared/lib";
 import {
-  ProviderListItem,
-  ProviderListItemDetail,
-} from "@/features/settings/providers/provider-list-item";
+  ProviderDisplay,
+  ProviderDisplayDetailProps,
+} from "./provider-display";
 import {
-  Button,
   Combobox,
   FloatingLabelInput,
-  ScrollArea,
   TypoBase,
   TypoTiny,
   TypoXLarge,
@@ -33,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
+
 import { TableName } from "@/db/schema/table-name";
 import {
   ApiConnection,
@@ -42,16 +41,11 @@ import {
   openrouterProviderSortLabel,
 } from "@/entities/api/domain";
 
-const maskApiKey = (apiKey?: string) => {
-  if (!apiKey) {
-    return "";
-  }
-  if (apiKey.length <= 12) {
-    return `...${apiKey.slice(-4)}`;
-  }
-  const firstPart = apiKey.slice(0, 8);
-  const lastPart = apiKey.slice(-4);
-  return `${firstPart}...${lastPart}`;
+const maskApiKey = (apiKey?: string): string => {
+  if (!apiKey) return "";
+  if (apiKey.length <= 12) return `...${apiKey.slice(-4)}`;
+
+  return `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`;
 };
 
 const getApiConnectionByApiSource = ({
@@ -217,7 +211,7 @@ const renderProviderListItem = ({
   }
 
   // Get details by source
-  const details: ProviderListItemDetail[] = [];
+  const details: ProviderDisplayDetailProps[] = [];
   if (apiConnection) {
     if (showModelUrl.get(source)) {
       details.push({
@@ -250,7 +244,7 @@ const renderProviderListItem = ({
   }
 
   return (
-    <ProviderListItem
+    <ProviderDisplay
       key={apiConnection?.id.toString() ?? source.toString()}
       apiSource={source}
       details={details}
@@ -280,17 +274,9 @@ const providerOrder: ApiSource[] = [
 ];
 
 export default function ModelPage({ className }: { className?: string }) {
-  const [apiConnections] = useApiConnections({});
-
-  // Invalidate api connections
-  const invalidateApiConnections = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: apiConnectionQueries.all(),
-    });
-  }, []);
-
-  // Edit connection
+  // 1. State hooks
   const [isOpenEdit, setIsOpenEdit] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [editingApiConnection, setEditingApiConnection] =
     useState<ApiConnection | null>(null);
   const [apiKey, setApiKey] = useState<string>("");
@@ -298,6 +284,17 @@ export default function ModelPage({ className }: { className?: string }) {
   const [openrouterProviderSort, setOpenrouterProviderSort] =
     useState<OpenrouterProviderSort | null>(null);
   const [modelUrl, setModelUrl] = useState<string>("");
+
+  // 2. Custom hooks (data fetching)
+  const [apiConnections] = useApiConnections({});
+
+  // 3. Memoized callbacks (useCallback)
+  const invalidateApiConnections = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: apiConnectionQueries.all(),
+    });
+  }, []);
+
   const handleOnOpenEdit = useCallback(
     ({
       apiConnection,
@@ -404,8 +401,6 @@ export default function ModelPage({ className }: { className?: string }) {
     return true;
   }, [apiKey, baseUrl, editingApiConnection]);
 
-  // Save api connection
-  const [isLoading, setIsLoading] = useState(false);
   const handleOnConnect = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -484,11 +479,11 @@ export default function ModelPage({ className }: { className?: string }) {
     } finally {
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     apiKey,
     baseUrl,
     editingApiConnection,
-    invalidateApiConnections,
     modelUrl,
     openrouterProviderSort,
     validateEditForm,
@@ -539,89 +534,69 @@ export default function ModelPage({ className }: { className?: string }) {
   );
 
   return (
-    <ScrollArea className={cn("bg-background-surface-1 h-full", className)}>
-      <div className={cn("mx-auto my-[70px] max-w-[1100px]")}>
-        <TypoXLarge className="text-text-primary font-semibold">
-          Providers
-        </TypoXLarge>
+    <div className={cn("flex h-full flex-col overflow-hidden", className)}>
+      {/* Content */}
+      <div className="bg-background-surface-2 md:bg-background-surface-1 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full px-4 py-4 md:max-w-6xl md:py-20">
+          {/* Desktop title - hidden on mobile */}
+          <TypoXLarge className="text-text-primary mb-8 hidden font-semibold md:block">
+            Providers
+          </TypoXLarge>
 
-        <div className="flex flex-wrap justify-start pt-[32px] pr-0 pb-[16px]">
-          {apiConnections
-            ?.filter(
-              (
-                apiConnection: ApiConnection,
-                index: number,
-                array: ApiConnection[],
-              ) => {
-                // For AstrskAi connections, only keep the first occurrence
-                if (apiConnection.source === ApiSource.AstrskAi) {
-                  return false;
-                } else {
-                  return true;
-                }
-              },
-            )
-            ?.map((apiConnection: ApiConnection) =>
-              renderProviderListItem({
-                apiConnection: apiConnection,
-                onOpenEdit: () => {
-                  if (apiConnection.source === ApiSource.AstrskAi) {
-                    return;
-                  }
-                  handleOnOpenEdit({
-                    apiConnection: apiConnection,
-                  });
-                },
-                onDisconnect: (usedResourceIds) => {
-                  if (apiConnection.source === ApiSource.AstrskAi) {
-                    return;
-                  }
-                  handleOnDisconnect(apiConnection, usedResourceIds);
-                },
-              }),
-            )}
-          {providerOrder.map((apiSource) => {
-            // Get api connection by provider
-            const apiConnection = getApiConnectionByApiSource({
-              apiConnections: apiConnections,
-              source: apiSource,
-            });
-
-            // Provider is already connected
-            if (apiConnection && apiSource !== ApiSource.OpenAICompatible) {
-              return null;
-            }
-
-            // Provider is not connected
-            return renderProviderListItem({
-              apiSource: apiSource,
-              onOpenEdit: () =>
-                handleOnOpenEdit({
-                  apiSource: apiSource,
+          <div className="flex flex-col items-center gap-4 pb-4 md:mt-8 md:flex-row md:flex-wrap md:justify-center">
+            {apiConnections
+              ?.filter(
+                (apiConnection: ApiConnection) =>
+                  apiConnection.source !== ApiSource.AstrskAi,
+              )
+              ?.map((apiConnection: ApiConnection) =>
+                renderProviderListItem({
+                  apiConnection,
+                  onOpenEdit: () => {
+                    if (apiConnection.source !== ApiSource.AstrskAi) {
+                      handleOnOpenEdit({ apiConnection });
+                    }
+                  },
+                  onDisconnect: (usedResourceIds) => {
+                    if (apiConnection.source !== ApiSource.AstrskAi) {
+                      handleOnDisconnect(apiConnection, usedResourceIds);
+                    }
+                  },
                 }),
-            });
-          })}
-          <div
-            className={cn(
-              "relative inline-block align-top",
-              "mr-[16px] mb-[calc(-6px+16px)] h-[186px] w-[335px]",
-              "bg-background-surface-3 rounded-[8px]",
-            )}
-          >
-            <div className="flex h-full w-full flex-col justify-center gap-[8px] p-[32px]">
-              <div className="text-text-secondary text-[16px] leading-[20px] font-[600]">
-                Don&apos;t see your favorite provider?
-              </div>
-              <div className="text-text-input-subtitle [&>a]:text-secondary-normal text-[12px] leading-[15px] font-[400]">
-                Drop a request in our{" "}
-                <a href="https://discord.gg/J6ry7w8YCF" target="_blank">
-                  Discord!
-                </a>
+              )}
+            {providerOrder.map((apiSource) => {
+              const apiConnection = getApiConnectionByApiSource({
+                apiConnections,
+                source: apiSource,
+              });
+
+              // Skip already connected providers (except OpenAICompatible which allows multiple)
+              if (apiConnection && apiSource !== ApiSource.OpenAICompatible) {
+                return null;
+              }
+
+              return renderProviderListItem({
+                apiSource,
+                onOpenEdit: () => handleOnOpenEdit({ apiSource }),
+              });
+            })}
+            <div className="bg-background-surface-3 relative w-full shrink-0 rounded-lg md:h-[186px] md:w-[335px]">
+              <div className="flex w-full flex-col justify-start gap-2 p-6 md:justify-center md:p-8">
+                <div className="text-text-secondary text-left text-base leading-5 font-semibold">
+                  Don&apos;t see your favorite provider?
+                </div>
+                <div className="text-text-input-subtitle [&>a]:text-secondary-normal text-left text-xs leading-[15px] font-normal">
+                  Drop a request in our{" "}
+                  <a href="https://discord.gg/J6ry7w8YCF" target="_blank">
+                    Discord!
+                  </a>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
       <Dialog open={isOpenEdit} onOpenChange={setIsOpenEdit}>
         <DialogContent
           className="bg-background-surface-2 border-border-light border"
@@ -739,12 +714,9 @@ export default function ModelPage({ className }: { className?: string }) {
           )}
           <DialogFooter>
             <DialogClose asChild>
-              <Button size="lg" variant="ghost">
-                Cancel
-              </Button>
+              <Button variant="ghost">Cancel</Button>
             </DialogClose>
             <Button
-              size="lg"
               disabled={!validateEditForm() || isLoading}
               onClick={handleOnConnect}
             >
@@ -754,6 +726,6 @@ export default function ModelPage({ className }: { className?: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </ScrollArea>
+    </div>
   );
 }

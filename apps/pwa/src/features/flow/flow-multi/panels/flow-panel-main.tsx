@@ -13,12 +13,14 @@ import {
 } from "dockview";
 import CustomDockviewTab from "@/widgets/dockview-default-tab";
 import { PanelFocusAnimationWrapper } from "@/widgets/dockview-panel-focus-animation";
-// import "dockview/dist/styles/dockview.css";
 import { Flow } from "@/entities/flow/domain";
 import { debounce } from "lodash-es";
 import { cn } from "@/shared/lib";
 import { FlowPanelProvider } from "@/features/flow/flow-multi/components/flow-panel-provider";
-import { getPanelTitle, PanelType } from "@/features/flow/flow-multi/components/panel-types";
+import {
+  getPanelTitle,
+  PanelType,
+} from "@/features/flow/flow-multi/components/panel-types";
 import {
   getAgentHexColor,
   getAgentState,
@@ -45,8 +47,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentKeys } from "@/app/queries/agent/query-factory";
 import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
 import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-mutations";
-import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
-import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
 import "@/features/card/panels/card-panel-dockview.css";
 
 // Watermark component with restore button
@@ -587,12 +587,12 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
         );
 
         // Get node from flow to get its name (color will be queried by tab component)
-        let node = currentFlow.props.nodes.find((n) => n.id === agentId);
+        const node = currentFlow.props.nodes.find((n) => n.id === agentId);
         console.log(
           `[openPanel] Found node: ${!!node}, node.id: ${node?.id}, node.type: ${node?.type}`,
         );
 
-        let nodeData = node?.data as any;
+        const nodeData = node?.data as any;
         console.log(`[openPanel] Node data:`, nodeData);
 
         // Color will be queried by the tab component, so we don't set it here

@@ -20,10 +20,10 @@ import { ThemeProvider } from "@/app/providers/theme-provider";
 import { SidebarLeftProvider } from "@/widgets/both-sidebar";
 import { LeftNavigationMobile } from "@/widgets/collapsible-sidebar/left-navigation-mobile";
 import { cn } from "@/shared/lib";
-import {
-  CollapsibleSidebar,
-  CollapsibleSidebarTrigger,
-} from "@/widgets/collapsible-sidebar";
+// import {
+//   CollapsibleSidebar,
+//   CollapsibleSidebarTrigger,
+// } from "@/widgets/collapsible-sidebar";
 import { FixedNav } from "@/widgets/fixed-nav";
 import { SidebarInset } from "@/widgets/both-sidebar";
 import { MobileNavigationContext } from "@/shared/stores/mobile-navigation-context";
@@ -197,8 +197,8 @@ export function MainLayout({
           {/* Collapsible navigation area */}
           <div className="flex flex-1 overflow-hidden">
             <SidebarLeftProvider defaultOpen={!isMobile}>
-              <CollapsibleSidebar />
-              <CollapsibleSidebarTrigger />
+              {/* <CollapsibleSidebar />
+              <CollapsibleSidebarTrigger /> */}
               <SidebarInset>{children}</SidebarInset>
               <Toaster expand className="!z-[9999]" />
             </SidebarLeftProvider>

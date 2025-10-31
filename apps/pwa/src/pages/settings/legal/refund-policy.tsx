@@ -1,19 +1,20 @@
+import { TypoXLarge, TypoBase } from "@/shared/ui";
+
 const RefundPolicy = () => {
   return (
-    <div className="overflow-y-auto py-[80px] h-full">
-      <div className="max-w-[587px] mx-auto text-text-primary">
-        {/* Header with back button */}
-        <div className="flex items-center mb-4">
-          <div className="flex items-center justify-center h-full">
-            <h1 className="text-2xl font-semibold">Refund Policy</h1>
-          </div>{" "}
-        </div>
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Content */}
+      <div className="bg-background-surface-2 md:bg-background-surface-1 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-[587px] px-4 py-4 md:py-20">
+          {/* Desktop title - hidden on mobile */}
+          <TypoXLarge className="text-text-primary mb-8 hidden font-semibold md:block">
+            Refund Policy
+          </TypoXLarge>
 
-        {/* Content */}
-        <div className="pr-8">
-          <div className="text-text-placeholder text-base font-normal mb-6">
+          {/* Last updated */}
+          <TypoBase className="text-text-placeholder mb-6">
             Last updated: May 19th, 2025
-          </div>
+          </TypoBase>
 
           {/* Policy content */}
           <div className="text-text-primary prose prose-invert max-w-none">
@@ -41,7 +42,7 @@ const RefundPolicy = () => {
               liability arising from your action.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">Subscription Refund</h3>
+            <h3 className="mt-8 mb-4 font-semibold">Subscription Refund</h3>
 
             <p className="mb-6">
               You have 24 hours after your payment to request a refund. No

@@ -1,29 +1,30 @@
+import { TypoXLarge, TypoBase } from "@/shared/ui";
+
 const ContentPolicy = () => {
   return (
-    <div className="overflow-y-auto py-[80px] h-full">
-      <div className="max-w-[587px] mx-auto text-text-primary">
-        {/* Header with back button */}
-        <div className="flex items-center mb-4">
-          <div className="flex items-center justify-center h-full">
-            <h1 className="text-2xl font-semibold">Content Policy</h1>
-          </div>
-        </div>
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Content */}
+      <div className="bg-background-surface-2 md:bg-background-surface-1 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-[587px] px-4 py-4 md:py-20">
+          {/* Desktop title - hidden on mobile */}
+          <TypoXLarge className="text-text-primary mb-8 hidden font-semibold md:block">
+            Content Policy
+          </TypoXLarge>
 
-        {/* Content */}
-        <div className="pr-8">
-          <div className="text-text-placeholder text-base font-normal mb-6">
+          {/* Last updated */}
+          <TypoBase className="text-text-placeholder mb-6">
             Last updated: May 19th, 2025
-          </div>
+          </TypoBase>
 
           {/* Policy content */}
-          <div className="text-text-primary text-base prose prose-invert max-w-none">
+          <div className="text-text-primary prose prose-invert max-w-none text-base">
             <div className="mb-8"></div>
             <p className="text-text-placeholder mb-6">
               We, harpy chat inc., are dedicated to ensuring that our
               application is utilized responsibly and safely by our users.
             </p>
 
-            <h3 className="text-xl font-semibold mt-8 mb-4">
+            <h3 className="mt-8 mb-4 text-xl font-semibold">
               1. Content Responsibility
             </h3>
             <div className="mb-8">
@@ -53,7 +54,7 @@ const ContentPolicy = () => {
               exploiting their likeness.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">2. Content Ownership</h3>
+            <h3 className="mt-8 mb-4 font-semibold">2. Content Ownership</h3>
             <div className="mb-8">
               <hr className="border-border-divider my-6" />
             </div>
@@ -67,7 +68,7 @@ const ContentPolicy = () => {
               and we appreciate your cooperation in adhering to our guidelines.
             </p>
 
-            <h3 className="font-semibold mt-8 mb-4">3. Contact Information</h3>
+            <h3 className="mt-8 mb-4 font-semibold">3. Contact Information</h3>
             <div className="mb-8">
               <hr className="border-border-divider my-6" />
             </div>

@@ -2,6 +2,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { FolderOpen, Settings, LogIn } from "lucide-react";
 import { SessionsIcon } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
+import { UpdaterNew } from "@/widgets/updater-new";
 
 // Constants
 const FIXED_NAV_WIDTH = 80; // px
@@ -116,8 +117,11 @@ export function FixedNav() {
       {/* Spacer to push bottom items down */}
       <div className="flex-1" />
 
-      {/* Bottom section: Settings, Log in, Version */}
+      {/* Bottom section: UpdaterNew, Settings, Log in, Version */}
       <div className="flex flex-col items-center gap-2">
+        {/* UpdaterNew - shows only when update is available/downloading */}
+        <UpdaterNew />
+
         {BOTTOM_NAV_ITEMS.map((item) => renderNavItem(item))}
 
         {/* Version info */}

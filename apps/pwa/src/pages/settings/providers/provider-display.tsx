@@ -1,13 +1,14 @@
-"use client";
-
-import { Pencil, Unlink } from "lucide-react";
 import { useCallback, useState } from "react";
-
-import { UniqueEntityID } from "@/shared/domain";
+import { Pencil, Unlink } from "lucide-react";
 
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 
+import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
+import { Flow } from "@/entities/flow/domain";
+import { Session } from "@/entities/session/domain/session";
+
+import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";
 import {
   Card,
@@ -21,11 +22,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui";
-import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
-import { Flow } from "@/entities/flow/domain";
-import { Session } from "@/entities/session/domain/session";
 
-export const apiSourceLogo = new Map<ApiSource, IconName>([
+const apiSourceLogo = new Map<ApiSource, IconName>([
   [ApiSource.AstrskAi, "astrsk_symbol"],
   [ApiSource.OpenAI, "openai_logo"],
   [ApiSource.GoogleGenerativeAI, "google_ai_studio_logo"],
@@ -59,21 +57,14 @@ const apiSourceLabelWithNewLine = new Map<ApiSource, React.ReactNode>([
   ],
 ]);
 
-interface ProviderListItemDetail {
+interface ProviderDisplayDetailProps {
   label: string;
   value: string;
 }
 
-const ProviderListItem = ({
-  apiSource,
-  details,
-  isActive,
-  onOpenEdit,
-  onDisconnect,
-  hideButton = false,
-}: {
+interface ProviderDisplayProps {
   apiSource: ApiSource;
-  details?: ProviderListItemDetail[];
+  details?: ProviderDisplayDetailProps[];
   isActive?: boolean;
   onOpenEdit?: () => void;
   onDisconnect?: (usedResourceIds: {
@@ -81,7 +72,16 @@ const ProviderListItem = ({
     sessionIds: UniqueEntityID[];
   }) => void;
   hideButton?: boolean;
-}) => {
+}
+
+const ProviderDisplay = ({
+  apiSource,
+  details,
+  isActive,
+  onOpenEdit,
+  onDisconnect,
+  hideButton = false,
+}: ProviderDisplayProps) => {
   const providerName = apiSourceLabel.get(apiSource) ?? apiSource;
   const providerNameWithNewLine =
     apiSourceLabelWithNewLine.get(apiSource) ??
@@ -122,7 +122,7 @@ const ProviderListItem = ({
   return (
     <Card
       className={cn(
-        "group/card relative mr-[16px] mb-[calc(-6px+16px)] inline-block h-[186px] w-[335px] shrink-0 cursor-pointer overflow-hidden rounded-[8px]",
+        "group/card relative w-full shrink-0 cursor-pointer overflow-hidden rounded-lg md:h-[186px] md:w-[335px]",
         "bg-background-surface-3 border-border-light",
         apiSource === ApiSource.AstrskAi &&
           "bg-button-foreground-primary border-primary-semi-dark",
@@ -130,7 +130,7 @@ const ProviderListItem = ({
     >
       {isActive ? (
         <CardContent className="flex h-full flex-row p-0" onClick={onOpenEdit}>
-          <div className="flex grow flex-col justify-between gap-4 px-4 py-6">
+          <div className="flex grow flex-col justify-start gap-4 px-4 py-6 md:justify-between">
             <div className="flex h-[52px] flex-row items-center">
               {logo && <SvgIcon name={logo} size={40} />}
               <div className="text-text-primary text-[24px] leading-[29px] font-[600]">
@@ -244,10 +244,10 @@ const ProviderListItem = ({
         </CardContent>
       ) : (
         <CardContent
-          className="grid h-full place-content-center p-0"
+          className="flex h-full items-start justify-start p-6 md:grid md:place-content-center md:p-0"
           onClick={onOpenEdit}
         >
-          <div className="flex flex-row items-center gap-[4px]">
+          <div className="flex flex-row items-center gap-1">
             {logo && <SvgIcon name={logo} size={52} className="self-start" />}
             <div className="text-text-primary text-[32px] leading-[39px] font-[600]">
               {providerNameWithNewLine}
@@ -266,5 +266,5 @@ const ProviderListItem = ({
   );
 };
 
-export { ProviderListItem };
-export type { ProviderListItemDetail };
+export { ProviderDisplay };
+export type { ProviderDisplayDetailProps, ProviderDisplayProps };
