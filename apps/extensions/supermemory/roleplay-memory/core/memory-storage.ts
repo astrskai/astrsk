@@ -20,7 +20,7 @@ import {
   validateCharacterContainer,
   validateWorldContainer,
 } from "./containers";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "../../shared/logger";
 import {
   recordCharacterMemoryAdd,
   recordWorldMemoryAdd,
@@ -431,6 +431,57 @@ export async function storeWorldStateUpdate(
 // ============================================================================
 
 /**
+ * Wait for memory to become available (indexed and queryable)
+ * Polls until memory exists or timeout
+ *
+ * @param memoryId - Memory ID to wait for
+ * @param maxWaitMs - Maximum wait time in milliseconds (default: 100 seconds)
+ * @param pollIntervalMs - Polling interval in milliseconds (default: 10 seconds)
+ * @returns True if memory is available, false if timeout
+ */
+async function waitForMemoryAvailable(
+  memoryId: string,
+  maxWaitMs: number = 100000, // 100 seconds
+  pollIntervalMs: number = 10000  // 10 seconds
+): Promise<boolean> {
+  const startTime = Date.now();
+  let attemptCount = 0;
+
+  while (Date.now() - startTime < maxWaitMs) {
+    attemptCount++;
+    try {
+      const memory = await memoryClient.memories.get(memoryId);
+      // If we got a response, memory is available
+      logger.info(`[Memory Polling] Memory ${memoryId} is available (attempt ${attemptCount})`);
+      return true;
+    } catch (error) {
+      const is404 = error instanceof Error && error.message.includes('404');
+      if (is404) {
+        // 404 means still indexing - keep polling
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        logger.info(
+          `[Memory Polling] Memory ${memoryId} not yet available (404) - attempt ${attemptCount} after ${elapsedSeconds}s, waiting...`
+        );
+
+        // Wait before next poll
+        await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+      } else {
+        // Other errors - assume permanent failure
+        logger.error(`[Memory Polling] Unexpected error for ${memoryId}, giving up:`, error);
+        return false;
+      }
+    }
+  }
+
+  // Timeout reached
+  const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+  logger.warn(
+    `[Memory Polling] Timeout after ${totalSeconds}s waiting for memory ${memoryId} (${attemptCount} attempts)`
+  );
+  return false;
+}
+
+/**
  * Get memory by ID
  *
  * @param memoryId - Memory ID to retrieve
@@ -452,6 +503,7 @@ export async function getMemoryById(
 /**
  * Update memory by ID
  * Generic update that works for any memory type
+ * Waits for memory to be available before updating (polls for up to 100 seconds)
  *
  * @param memoryId - Memory ID to update
  * @param content - New content (optional)
@@ -464,6 +516,19 @@ export async function updateMemoryById(
   metadata?: Partial<MemoryMetadata>,
 ): Promise<UpdateStorageResult> {
   try {
+    // Wait for memory to be available (indexed and queryable)
+    logger.info(`[Memory Storage] Waiting for memory ${memoryId} to be available before updating...`);
+    const isAvailable = await waitForMemoryAvailable(memoryId);
+
+    if (!isAvailable) {
+      logger.error(`[Memory Storage] Memory ${memoryId} not available after timeout, cannot update`);
+      return {
+        id: null,
+        success: false,
+        error: "Memory not available after timeout (still indexing or does not exist)",
+      };
+    }
+
     const result = await memoryClient.memories.update(memoryId, {
       content,
       metadata,
@@ -488,6 +553,7 @@ export async function updateMemoryById(
 /**
  * Update character message
  * Updates enriched message in character's private container
+ * Waits for memory to be available before updating (polls for up to 100 seconds)
  *
  * @param memoryId - Memory ID to update
  * @param enrichedContent - New enriched content (optional)
@@ -508,6 +574,19 @@ export async function updateCharacterMessage(
           "[Memory Storage] Character message updates should include isSpeaker",
         );
       }
+    }
+
+    // Wait for memory to be available (indexed and queryable)
+    logger.info(`[Memory Storage] Waiting for character message ${memoryId} to be available before updating...`);
+    const isAvailable = await waitForMemoryAvailable(memoryId);
+
+    if (!isAvailable) {
+      logger.error(`[Memory Storage] Character message ${memoryId} not available after timeout, cannot update`);
+      return {
+        id: null,
+        success: false,
+        error: "Memory not available after timeout (still indexing or does not exist)",
+      };
     }
 
     const result = await memoryClient.memories.update(memoryId, {
@@ -534,6 +613,7 @@ export async function updateCharacterMessage(
 /**
  * Update world message
  * Updates raw message in world container
+ * Waits for memory to be available before updating (polls for up to 100 seconds)
  *
  * @param memoryId - Memory ID to update
  * @param content - New message content (optional)
@@ -546,6 +626,19 @@ export async function updateWorldMessage(
   metadata?: Partial<MemoryMetadata>,
 ): Promise<UpdateStorageResult> {
   try {
+    // Wait for memory to be available (indexed and queryable)
+    logger.info(`[Memory Storage] Waiting for world message ${memoryId} to be available before updating...`);
+    const isAvailable = await waitForMemoryAvailable(memoryId);
+
+    if (!isAvailable) {
+      logger.error(`[Memory Storage] World message ${memoryId} not available after timeout, cannot update`);
+      return {
+        id: null,
+        success: false,
+        error: "Memory not available after timeout (still indexing or does not exist)",
+      };
+    }
+
     const result = await memoryClient.memories.update(memoryId, {
       content,
       metadata,
@@ -574,6 +667,7 @@ export async function updateWorldMessage(
 /**
  * Delete memory by ID
  * Permanently deletes a single memory (hard delete)
+ * Waits for memory to be available before deleting (polls for up to 100 seconds)
  *
  * @param memoryId - Memory ID to delete
  * @returns Delete result with success status
@@ -582,6 +676,18 @@ export async function deleteMemoryById(
   memoryId: string,
 ): Promise<DeleteStorageResult> {
   try {
+    // Wait for memory to be available (indexed and queryable)
+    logger.info(`[Memory Storage] Waiting for memory ${memoryId} to be available before deleting...`);
+    const isAvailable = await waitForMemoryAvailable(memoryId);
+
+    if (!isAvailable) {
+      logger.error(`[Memory Storage] Memory ${memoryId} not available after timeout, cannot delete`);
+      return {
+        success: false,
+        error: "Memory not available after timeout (still indexing or does not exist)",
+      };
+    }
+
     const result = await memoryClient.memories.delete(memoryId);
     logger.info("[Memory Storage] Deleted memory:", memoryId);
     return {
@@ -599,6 +705,7 @@ export async function deleteMemoryById(
 /**
  * Delete character message
  * Deletes a message from character's private container
+ * Waits for memory to be available before deleting (polls for up to 100 seconds)
  *
  * @param memoryId - Memory ID to delete
  * @returns Delete result with success status
@@ -607,6 +714,18 @@ export async function deleteCharacterMessage(
   memoryId: string,
 ): Promise<DeleteStorageResult> {
   try {
+    // Wait for memory to be available (indexed and queryable)
+    logger.info(`[Memory Storage] Waiting for character message ${memoryId} to be available before deleting...`);
+    const isAvailable = await waitForMemoryAvailable(memoryId);
+
+    if (!isAvailable) {
+      logger.error(`[Memory Storage] Character message ${memoryId} not available after timeout, cannot delete`);
+      return {
+        success: false,
+        error: "Memory not available after timeout (still indexing or does not exist)",
+      };
+    }
+
     const result = await memoryClient.memories.delete(memoryId);
     logger.info("[Memory Storage] Deleted character message:", memoryId);
     return {
@@ -624,6 +743,7 @@ export async function deleteCharacterMessage(
 /**
  * Delete world message
  * Deletes a message from world container
+ * Waits for memory to be available before deleting (polls for up to 100 seconds)
  *
  * @param memoryId - Memory ID to delete
  * @returns Delete result with success status
@@ -632,6 +752,18 @@ export async function deleteWorldMessage(
   memoryId: string,
 ): Promise<DeleteStorageResult> {
   try {
+    // Wait for memory to be available (indexed and queryable)
+    logger.info(`[Memory Storage] Waiting for world message ${memoryId} to be available before deleting...`);
+    const isAvailable = await waitForMemoryAvailable(memoryId);
+
+    if (!isAvailable) {
+      logger.error(`[Memory Storage] World message ${memoryId} not available after timeout, cannot delete`);
+      return {
+        success: false,
+        error: "Memory not available after timeout (still indexing or does not exist)",
+      };
+    }
+
     const result = await memoryClient.memories.delete(memoryId);
     logger.info("[Memory Storage] Deleted world message:", memoryId);
     return {

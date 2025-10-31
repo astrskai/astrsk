@@ -49,18 +49,9 @@ import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { useWllamaStore } from "@/app/stores/wllama-store";
-import { useSupermemoryDebugStore } from "@/app/stores/supermemory-debug-store";
 import { Condition, isUnaryOperator } from "@/flow-multi/types/condition-types";
 import { traverseFlowCached } from "@/flow-multi/utils/flow-traversal";
 import { ApiSource } from "@/modules/api/domain";
-import {
-  recallCharacterMemories,
-  formatMemoriesForPrompt as formatRoleplayMemoriesForPrompt,
-  hasRoleplayMemoryTag,
-  injectMemoriesIntoPrompt,
-  distributeMemories,
-  executeWorldAgent,
-} from "@/modules/supermemory/roleplay-memory";
 import {
   ApiConnection,
   OpenrouterProviderSort,
@@ -1883,24 +1874,30 @@ async function* executeAgentNode({
       parameters: agent.parameters,
     });
 
-    // Roleplay Memory: Inject character memories if tag is present (START node)
-    const memoryInjected = await injectRoleplayMemories(messages, fullContext, sessionId, agent);
+    // Trigger prompt:afterRender hook for extensions (e.g., Supermemory memory injection)
+    // Extensions can find the ###ROLEPLAY_MEMORY### tag and modify messages directly
+    try {
+      const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
 
-    // Record debug event: Agent prompt with injected memories (only if memories were actually injected)
-    if (memoryInjected) {
-      useSupermemoryDebugStore.getState().addEvent("agent_prompt_with_memories", {
-        agentName: agent.props.name,
-        characterId: fullContext.character?.id,
-        characterName: fullContext.character?.name,
-        messages: messages.map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        fullContext: {
-          game_time: fullContext.game_time,
-          world_context: fullContext.world_context,
-        },
+      // Get session entity if available for hook context
+      let sessionEntity: any = undefined;
+      if (sessionId) {
+        const sessionResult = await SessionService.getSession.execute(sessionId);
+        if (sessionResult.isSuccess) {
+          sessionEntity = sessionResult.getValue();
+        }
+      }
+
+      await triggerExtensionHook("prompt:afterRender", {
+        messages,      // Extensions can modify this array directly
+        session: sessionEntity,
+        agent,
+        context: fullContext,
+        timestamp: Date.now(),
       });
+    } catch (error) {
+      logger.error("[executeFlow] Failed to trigger prompt:afterRender hook:", error);
+      // Don't fail - extension hooks are optional
     }
 
     const transformedMessages = transformMessagesForModel(messages, apiModelId);
@@ -1987,12 +1984,14 @@ async function* executeFlow({
   flowId,
   sessionId,
   characterCardId,
+  messageId,
   regenerateMessageId,
   stopSignalByUser,
 }: {
   flowId: UniqueEntityID;
   sessionId: UniqueEntityID;
   characterCardId: UniqueEntityID;
+  messageId: UniqueEntityID;
   regenerateMessageId?: UniqueEntityID;
   stopSignalByUser?: AbortSignal;
 }): AsyncGenerator<FlowResult, FlowResult, void> {
@@ -2162,14 +2161,6 @@ async function* executeFlow({
             [result.agentKey ?? ""]: result.output,
           });
 
-          // Apply automatic data store updates from World Agent (if any)
-          if (result.suggestedUpdates) {
-            applyRoleplayMemoryDataStoreUpdates(
-              dataStore,
-              result.suggestedUpdates,
-            );
-          }
-
           // Render content
           content = TemplateRenderer.render(
             flow.props.responseTemplate,
@@ -2317,27 +2308,6 @@ async function* executeFlow({
       dataStore: dataStore,
     };
 
-    // Roleplay Memory: Execute World Agent and distribute memories (END node reached)
-    // This runs ONCE after the entire flow completes
-    if (lastAgent && content) {
-      try {
-        const suggestedUpdates = await executeWorldAgentAndDistributeMemories(
-          { output: { response: content } }, // Wrap content in expected format
-          createFullContext(context, variables, dataStore),
-          sessionId,
-          lastAgent,
-          dataStore,
-        );
-
-        // Apply suggested updates to dataStore (participants, gameTime)
-        if (suggestedUpdates) {
-          applyRoleplayMemoryDataStoreUpdates(dataStore, suggestedUpdates);
-        }
-      } catch (error) {
-        logger.error("[Roleplay Memory] World Agent execution failed:", error);
-      }
-    }
-
     // Translate variables
     const langs: string[] = [];
     if (session.translation && session.translation.promptLanguage !== "none") {
@@ -2383,6 +2353,7 @@ async function* executeFlow({
       await triggerExtensionHook("message:afterGenerate", {
         session,
         message: content,
+        messageId,  // Pass messageId for UI blocking
         timestamp: Date.now(),
       });
     } catch (error) {
@@ -2860,499 +2831,12 @@ function convertToDataStoreType(
 }
 
 /**
- * Roleplay Memory Integration - Helper Functions
- * These functions can be easily removed or disabled if needed
+ * Roleplay Memory Integration - REMOVED
+ * All supermemory operations are now handled by the Supermemory Extension
+ * via extension hooks (session:afterCreate, message:beforeGenerate, turn:afterCreate, etc.)
+ * See: apps/extensions/supermemory/supermemory-extension.ts
  */
 
-/**
- * Initialize roleplay memory containers when scenario is selected
- * Call this after scenario is added to session
- */
-async function initializeRoleplayMemoryForSession(
-  sessionId: string,
-  characterCards: any[], // Domain Card objects (CharacterCard or PlotCard)
-  scenarioDescription: string,
-): Promise<void> {
-  try {
-    const { initializeRoleplayMemory } = await import(
-      "@/modules/supermemory/roleplay-memory"
-    );
-
-    // Import CharacterCard type
-    const { CharacterCard } = await import("@/modules/card/domain");
-
-    // Filter to only CharacterCard instances (excludes PlotCard and nulls)
-    const onlyCharacterCards = characterCards.filter(
-      (card) => card && card instanceof CharacterCard,
-    );
-
-    if (onlyCharacterCards.length === 0) {
-      logger.warn(
-        "[Roleplay Memory] No character cards found for initialization",
-      );
-      return;
-    }
-
-    await initializeRoleplayMemory({
-      sessionId,
-      participants: onlyCharacterCards.map((card) => card.id.toString()),
-      characters: onlyCharacterCards.map((card) => ({
-        characterId: card.id.toString(),
-        characterName: card.props.name || "Unknown",
-        characterCard: card.props.description || "",
-        lorebook: [], // Lorebook can be added later if available
-      })),
-      scenario: {
-        messages: [
-          {
-            content: scenarioDescription,
-            role: "system",
-          },
-        ],
-      },
-    });
-
-    logger.info(
-      `[Roleplay Memory] Initialized memory containers for ${onlyCharacterCards.length} characters`,
-    );
-  } catch (error) {
-    logger.error("[Roleplay Memory] Failed to initialize:", error);
-    // Don't throw - graceful degradation
-  }
-}
-
-/**
- * Track world state updates in roleplay memory
- * Call this when significant world state changes occur (location, time, quest updates)
- */
-async function trackWorldStateUpdate(
-  sessionId: string,
-  description: string,
-  gameTime: number,
-  gameTimeInterval: string = "Day",
-  speaker: string = "system",
-  participants: string[] = [],
-): Promise<void> {
-  try {
-    const { storeWorldStateUpdate, createWorldContainer } = await import(
-      "@/modules/supermemory/roleplay-memory"
-    );
-    const worldContainer = createWorldContainer(sessionId);
-
-    await storeWorldStateUpdate(worldContainer, description, {
-      speaker,
-      participants,
-      type: "world_state_update",
-      game_time: gameTime,
-      game_time_interval: gameTimeInterval,
-    });
-
-    logger.info(`[Roleplay Memory] Tracked world state update: ${description}`);
-  } catch (error) {
-    logger.error(
-      "[Roleplay Memory] Failed to track world state update:",
-      error,
-    );
-    // Don't throw - graceful degradation
-  }
-}
-
-/**
- * Inject roleplay memories into agent prompt (START node)
- * Finds message with ONLY ###ROLEPLAY_MEMORY### tag and replaces entire message with memories
- */
-async function injectRoleplayMemories(
-  messages: any[],
-  fullContext: any,
-  sessionId: UniqueEntityID | undefined,
-  agent: any,
-): Promise<boolean> {
-  if (messages.length === 0) return false;
-
-
-  // Loop through all messages to find the one with ONLY the tag
-  for (let i = 0; i < messages.length; i++) {
-    const message = messages[i];
-    const trimmedContent = message.content?.trim();
-
-
-    // Check if message contains ONLY the tag (exact match after trimming)
-    if (trimmedContent === "###ROLEPLAY_MEMORY###") {
-      try {
-        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        console.log("🔄 [MEMORY INJECTION] Tag detected, retrieving memories...");
-
-        // Extract gameTime and gameTimeInterval from dataStore (using snake_case field names)
-        const gameTime = fullContext.game_time || fullContext.game_day || 0;
-        const gameTimeInterval = fullContext.game_time_interval || "Day";
-        const characterId = fullContext.char?.id;
-        const characterName = fullContext.char?.name || agent.props.name;
-        if (!characterId) {
-          logger.error("❌ [Roleplay Memory] characterId not found in context");
-          message.content = "(Memory system unavailable - character not identified)";
-          return false;
-        }
-        const sessionIdStr = sessionId?.toString() || "unknown";
-
-        console.log(`   Character: ${characterName}`);
-        console.log(`   Session ID: ${sessionIdStr}`);
-        console.log(`   Game Time: ${gameTime} (${gameTimeInterval})`);
-
-        // Get recent messages for context (last 2 turns)
-        const recentMessages =
-          fullContext.history?.slice(-2).map((msg: any) => ({
-            role: msg.role || "user",
-            content: msg.content || "",
-            game_time: Number(msg.game_time ?? gameTime) || gameTime,
-          })) || [];
-
-        console.log(`   Recent messages for context: ${recentMessages.length}`);
-
-        // Recall character memories with current world context
-        const roleplayMemories = await recallCharacterMemories({
-          sessionId: sessionIdStr,
-          characterId,
-          characterName,
-          current_game_time: gameTime,
-          current_game_time_interval: gameTimeInterval,
-          recentMessages,
-          limit: 20,
-          worldContext: fullContext.world_context, // Pass accumulated world context (snake_case field name)
-        });
-
-        // Inject formatted memories (already formatted by recallCharacterMemories)
-        message.content = roleplayMemories;
-
-        console.log("✅ [MEMORY INJECTION] Complete");
-        console.log(`   Injected content length: ${roleplayMemories.length} characters`);
-        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-
-        // Only replace the first occurrence, then return true
-        return true;
-      } catch (error) {
-        logger.error("[Roleplay Memory] Failed to inject memories:", error);
-        // Replace with error message (graceful degradation)
-        message.content = "(Memory system unavailable)";
-        return false;
-      }
-    }
-  }
-
-  return false; // No tag found
-}
-
-/**
- * Apply automatic data store updates from World Agent
- * Updates game_time, participants, world_context, and supermemory_ids fields in the data store array
- */
-function applyRoleplayMemoryDataStoreUpdates(
-  dataStore: DataStoreSavedField[],
-  suggestedUpdates: { gameTime?: number; participants?: string[]; worldContext?: string; supermemoryIds?: string[] },
-): void {
-  // Update game_time field
-  if (suggestedUpdates.gameTime !== undefined) {
-    const gameTimeIndex = dataStore.findIndex((f) => f.name === "game_time");
-    if (gameTimeIndex >= 0) {
-      dataStore[gameTimeIndex].value = String(suggestedUpdates.gameTime);
-    }
-  }
-
-  // Update participants field
-  if (suggestedUpdates.participants && suggestedUpdates.participants.length > 0) {
-    const participantsIndex = dataStore.findIndex(
-      (f) => f.name === "participants",
-    );
-    if (participantsIndex >= 0) {
-      // Update existing participants field
-      dataStore[participantsIndex].value = JSON.stringify(
-        suggestedUpdates.participants,
-      );
-    } else {
-      // Create participants field if it doesn't exist (same as world_context)
-      dataStore.push({
-        id: "participants",
-        name: "participants",
-        type: "string",
-        value: JSON.stringify(suggestedUpdates.participants),
-      });
-    }
-  }
-
-  // Update world_context field
-  if (suggestedUpdates.worldContext) {
-    const worldContextIndex = dataStore.findIndex(
-      (f) => f.name === "world_context",
-    );
-    if (worldContextIndex >= 0) {
-      // Update existing world_context field
-      dataStore[worldContextIndex].value = suggestedUpdates.worldContext;
-    } else {
-      // Create world_context field if it doesn't exist
-      dataStore.push({
-        id: "world_context",
-        name: "world_context",
-        type: "string",
-        value: suggestedUpdates.worldContext,
-      });
-    }
-  }
-
-  // Update supermemory_ids field (store memory IDs for update/delete operations)
-  if (suggestedUpdates.supermemoryIds && suggestedUpdates.supermemoryIds.length > 0) {
-    const supermemoryIdsIndex = dataStore.findIndex(
-      (f) => f.name === "supermemory_ids",
-    );
-    if (supermemoryIdsIndex >= 0) {
-      // Update existing supermemory_ids field
-      dataStore[supermemoryIdsIndex].value = JSON.stringify(suggestedUpdates.supermemoryIds);
-    } else {
-      // Create supermemory_ids field if it doesn't exist
-      dataStore.push({
-        id: "supermemory_ids",
-        name: "supermemory_ids",
-        type: "string",
-        value: JSON.stringify(suggestedUpdates.supermemoryIds),
-      });
-    }
-    console.log(`✅ Stored ${suggestedUpdates.supermemoryIds.length} memory IDs in Turn dataStore`);
-  }
-}
-
-/**
- * Execute World Agent and distribute memories (END node)
- * Analyzes generated message to detect participants and distribute memories
- * Updates dataStore with accumulated worldContext
- * Returns suggested data store updates (gameTime, participants, worldContext, supermemoryIds)
- */
-async function executeWorldAgentAndDistributeMemories(
-  result: any,
-  fullContext: any,
-  sessionId: UniqueEntityID | undefined,
-  agent: any,
-  dataStore: DataStoreSavedField[],
-): Promise<{ gameTime?: number; participants?: string[]; worldContext?: string; supermemoryIds?: string[] } | null> {
-  try {
-    const responseContent =
-      typeof result.output === "object" && "response" in result.output
-        ? (result.output as any).response
-        : JSON.stringify(result.output);
-
-    // Enhanced validation: check for empty, whitespace, or empty object string
-    const isEmptyContent = !responseContent ||
-                          responseContent.trim() === "" ||
-                          responseContent.trim() === "{}" ||
-                          responseContent.trim() === "[]";
-
-    if (isEmptyContent || !sessionId) {
-      logger.warn("[World Agent] Skipping execution - no valid message content:", {
-        responseContent,
-        hasSessionId: !!sessionId,
-      });
-      return null;
-    }
-
-    // Extract data store fields (using snake_case field names)
-    // DataStore values are strings, so convert game_time to number
-    const gameTimeRaw = fullContext.game_time || fullContext.game_day || 0;
-    const gameTime = typeof gameTimeRaw === "string" ? parseInt(gameTimeRaw, 10) : gameTimeRaw;
-    const gameTimeInterval = fullContext.game_time_interval || "Day";
-    const characterId = fullContext.char?.id;
-    const characterName = fullContext.char?.name || agent.props.name;
-    if (!characterId) {
-      logger.error("❌ [Roleplay Memory] characterId not found in context");
-      return null;
-    }
-    const sessionIdStr = sessionId.toString();
-
-    // Get recent messages for World Agent context (last 2 turns)
-    const recentMessagesForWorldAgent =
-      fullContext.history?.slice(-2).map((msg: any) => ({
-        role: msg.role || "user",
-        content: msg.content || "",
-        game_time: Number(msg.game_time ?? gameTime) || gameTime,
-      })) || [];
-
-    // Get ALL participant IDs from session (AI characters + user character)
-    const session = (await SessionService.getSession.execute(sessionId))
-      .throwOnFailure()
-      .getValue();
-
-    const allParticipantIds: string[] = [];
-    const characterIdToName: Record<string, string> = {};
-
-    // Retrieve world memories for World Agent context
-    const { createWorldContainer } = await import("@/modules/supermemory/roleplay-memory/core/containers");
-    const { retrieveWorldMemories } = await import("@/modules/supermemory/roleplay-memory/core/memory-retrieval");
-    const worldContainer = createWorldContainer(sessionIdStr);
-
-    let worldMemoryContext = "";
-    let worldMemoryQuery = "";
-    try {
-      // Format world memory query
-      const queryParts = [
-        "###Current time###",
-        `GameTime: ${gameTime} ${gameTimeInterval}`,
-        ""
-      ];
-
-      // Add recent messages if available
-      if (recentMessagesForWorldAgent.length > 0) {
-        queryParts.push("###Recent messages###");
-        queryParts.push(recentMessagesForWorldAgent.map((msg: any) => `${msg.role}: ${msg.content} GameTime: ${msg.game_time}`).join("\n"));
-        queryParts.push("");
-      }
-
-      // Add current AI message
-      queryParts.push("###AI message###");
-      queryParts.push(responseContent);
-      queryParts.push("");
-      queryParts.push("What are the character information, scenario details, and world context that would help understand this situation?");
-
-      worldMemoryQuery = queryParts.join("\n");
-
-      const worldMemoriesResult = await retrieveWorldMemories({
-        query: worldMemoryQuery,
-        containerTag: worldContainer,
-        limit: 20,
-      });
-
-      if (worldMemoriesResult.memories && worldMemoriesResult.memories.length > 0) {
-        worldMemoryContext = worldMemoriesResult.memories.join("\n\n");
-      }
-    } catch (error) {
-      logger.error("[Roleplay Memory] Failed to retrieve world memories:", error);
-    }
-
-    // Add AI character IDs and names
-    for (const id of session.aiCharacterCardIds) {
-      const idStr = id.toString();
-      allParticipantIds.push(idStr);
-
-      // Get character name
-      try {
-        const card = (await CardService.getCard.execute(id))
-          .throwOnFailure()
-          .getValue() as CharacterCard;
-        characterIdToName[idStr] =
-          card.props.name || card.props.title || "Unknown";
-      } catch {
-        characterIdToName[idStr] = "Unknown";
-      }
-    }
-
-    // Add user character ID and name if exists
-    if (session.userCharacterCardId) {
-      const userIdStr = session.userCharacterCardId.toString();
-      allParticipantIds.push(userIdStr);
-
-      try {
-        const card = (
-          await CardService.getCard.execute(session.userCharacterCardId)
-        )
-          .throwOnFailure()
-          .getValue() as CharacterCard;
-        characterIdToName[userIdStr] =
-          card.props.name || card.props.title || "User";
-      } catch {
-        characterIdToName[userIdStr] = "User";
-      }
-    }
-
-    // Extract participant names from the ID-to-name mapping
-    const allParticipantNames = allParticipantIds.map((id) => characterIdToName[id]);
-
-    // Build data store for World Agent
-    const dataStoreForWorldAgent = {
-      sessionId: sessionIdStr,
-      currentScene:
-        fullContext.currentScene || fullContext.location || "Unknown",
-      participants: allParticipantNames, // Use names instead of IDs
-      game_time: gameTime,
-      game_time_interval: gameTimeInterval,
-      worldContext: fullContext.world_context || "", // Pass accumulated world context (snake_case)
-    };
-
-    // Execute World Agent to detect participants
-    const worldAgentOutput = await executeWorldAgent({
-      sessionId: sessionIdStr,
-      speakerCharacterId: characterId,
-      speakerName: characterName,
-      generatedMessage: responseContent,
-      recentMessages: recentMessagesForWorldAgent,
-      dataStore: dataStoreForWorldAgent,
-      characterIdToName: characterIdToName,
-      worldMemoryContext, // Use retrieved world memories
-      worldMemoryQuery, // Pass query for debugging
-    });
-
-    // Accumulate world context from World Agent output
-    // Don't update dataStore directly here - return it in updates object
-    // and let the caller apply it via applyRoleplayMemoryDataStoreUpdates
-    let updatedWorldContext: string | undefined;
-
-    if (
-      worldAgentOutput.worldContextUpdates &&
-      worldAgentOutput.worldContextUpdates.length > 0
-    ) {
-      const { mergeWorldContext } = await import(
-        "@/modules/supermemory/roleplay-memory"
-      );
-
-      updatedWorldContext = mergeWorldContext(
-        fullContext.world_context || "",
-        worldAgentOutput.worldContextUpdates,
-      );
-    }
-
-    // Distribute memories to participants and capture memory IDs
-    const memoryIds = await distributeMemories({
-      sessionId: sessionIdStr,
-      speakerCharacterId: characterId,
-      speakerName: characterName,
-      message: responseContent,
-      game_time: gameTime,
-      game_time_interval: gameTimeInterval,
-      dataStore: dataStoreForWorldAgent,
-      worldMemoryContext, // Use retrieved world memories (not from fullContext)
-      worldAgentOutput, // Pass the World Agent output we already got
-    });
-
-    // Log captured memory IDs
-    if (memoryIds.length > 0) {
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      console.log("💾 SUPERMEMORY IDs CAPTURED");
-      console.log(`Session: ${sessionIdStr}`);
-      console.log(`Speaker: ${characterName}`);
-      console.log(`Memory IDs (${memoryIds.length}):`, memoryIds);
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    }
-
-    // Calculate new gameTime if delta_time > 0
-    const newGameTime =
-      worldAgentOutput.delta_time > 0
-        ? gameTime + worldAgentOutput.delta_time
-        : undefined;
-
-    // Store participant NAMES directly (not IDs) in dataStore
-    // worldAgentOutput.actualParticipants contains character NAMES (e.g., ["Yui", "Ren"])
-    const participantNames = worldAgentOutput.actualParticipants;
-
-    // Return suggested updates including memory IDs
-    const updates = {
-      ...(newGameTime !== undefined && { gameTime: newGameTime }),
-      ...(participantNames.length > 0 && { participants: participantNames }),
-      ...(updatedWorldContext && { worldContext: updatedWorldContext }),
-      ...(memoryIds.length > 0 && { supermemoryIds: memoryIds }),
-    };
-
-    return updates;
-  } catch (error) {
-    logger.error("[Roleplay Memory] Failed to execute World Agent:", error);
-    // Don't throw - graceful degradation (memory distribution is enhancement, not requirement)
-    return null;
-  }
-}
 
 export {
   addMessage,
@@ -3363,5 +2847,5 @@ export {
   makeContext,
   renderMessages,
   transformMessagesForModel,
-  initializeRoleplayMemoryForSession,
+  // initializeRoleplayMemoryForSession, // Disabled - now handled by Supermemory extension
 };

@@ -67,6 +67,15 @@ export class NpcExtension implements IExtension {
   private handleMessageAfterGenerate = async (
     context: HookContext,
   ): Promise<void> => {
+    const { blockUIForTurn, unblockUI } = await import("../../pwa/src/modules/extensions/bootstrap");
+
+    // Set 10-second safety timeout to force unblock if something goes wrong
+    const messageId = context.messageId?.toString();
+    const safetyTimeout = setTimeout(() => {
+      console.warn(`⏱️ [NPC Extension] Safety timeout reached${messageId ? ` for message ${messageId}` : ''}, force unblocking UI`);
+      unblockUI();
+    }, 10000);
+
     try {
       const { session, message } = context;
 
@@ -76,6 +85,12 @@ export class NpcExtension implements IExtension {
       }
 
       const sessionId = session.id.toString();
+
+      // Block UI while processing NPCs
+      if (messageId) {
+        blockUIForTurn(messageId, "NPC extraction", "processing");
+        console.log(`🔒 [NPC Extension] Blocked UI for message ${messageId}`);
+      }
 
       // Get main character names and descriptions from session
       // Need to load actual card data to get names and descriptions
@@ -307,6 +322,13 @@ export class NpcExtension implements IExtension {
       });
     } catch (error) {
       logger.error("[NPC Extension] Error processing message", { error });
+    } finally {
+      // Clear safety timeout
+      clearTimeout(safetyTimeout);
+
+      // Unblock UI
+      unblockUI();
+      console.log(`🔓 [NPC Extension] Unblocked UI`);
     }
   };
 }

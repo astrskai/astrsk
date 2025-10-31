@@ -162,7 +162,8 @@ export interface WorldMemoryQueryInput {
 }
 
 export interface CharacterMemoryQueryOutput {
-  memories: string[]
+  memories: string[] // v4 semantic search results (knowledge graph)
+  verbatimMemories?: string[] // v3 document search results (for direct quotation)
   count: number
 }
 
@@ -299,8 +300,8 @@ export interface SessionInitInput {
 export interface CharacterInitData {
   characterId: string
   characterName: string
-  characterCard: string // Character description
-  lorebook?: LorebookEntry[] // Lore entries
+  // NOTE: characterCard and lorebook are NOT stored at initialization
+  // They will be fetched fresh during memory recall to ensure up-to-date data
 }
 
 export interface LorebookEntry {
@@ -332,6 +333,8 @@ export interface MemoryRecallInput {
   }>
   limit?: number
   worldContext?: string // Accumulated world context from dataStore
+  // Helper to get card by ID (from extension client API)
+  getCard?: (cardId: any) => Promise<any>
 }
 
 export interface MemoryDistributionInput {
@@ -345,4 +348,8 @@ export interface MemoryDistributionInput {
   worldMemoryContext?: string
   // World Agent output (already executed)
   worldAgentOutput: WorldAgentOutput
+  // Helper to get card by ID (from extension client API)
+  getCard?: (cardId: any) => Promise<any>
+  // Session object for character mapping
+  session?: any
 }

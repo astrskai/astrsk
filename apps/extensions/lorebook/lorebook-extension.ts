@@ -96,6 +96,15 @@ export class LorebookExtension implements IExtension {
   private handleMessageAfterGenerate = async (
     context: HookContext,
   ): Promise<void> => {
+    const { blockUIForTurn, unblockUI } = await import("../../pwa/src/modules/extensions/bootstrap");
+
+    // Set 10-second safety timeout to force unblock if something goes wrong
+    const messageId = context.messageId?.toString();
+    const safetyTimeout = setTimeout(() => {
+      console.warn(`⏱️ [Lorebook Extension] Safety timeout reached${messageId ? ` for message ${messageId}` : ''}, force unblocking UI`);
+      unblockUI();
+    }, 10000);
+
     try {
       const { session, message } = context;
 
@@ -105,6 +114,12 @@ export class LorebookExtension implements IExtension {
       }
 
       const sessionId = session.id.toString();
+
+      // Block UI while processing lorebook entries
+      if (messageId) {
+        blockUIForTurn(messageId, "Lorebook extraction", "processing");
+        console.log(`🔒 [Lorebook Extension] Blocked UI for message ${messageId}`);
+      }
 
       // Get all character cards from session
       const characterCards = session.allCards.filter((c: any) => c.type === "character");
@@ -356,6 +371,13 @@ export class LorebookExtension implements IExtension {
       });
     } catch (error) {
       logger.error("[Lorebook Extension] Error processing message", { error });
+    } finally {
+      // Clear safety timeout
+      clearTimeout(safetyTimeout);
+
+      // Unblock UI
+      unblockUI();
+      console.log(`🔓 [Lorebook Extension] Unblocked UI`);
     }
   };
 }

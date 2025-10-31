@@ -8,10 +8,9 @@
 // Session lifecycle hooks (START/END node integration)
 export {
   initializeRoleplayMemory,
+  storeScenarioMessages,
   recallCharacterMemories,
-  formatMemoriesForPrompt,
   distributeMemories,
-  processUserMessage,
   hasRoleplayMemoryTag,
   injectMemoriesIntoPrompt,
   // Memory update & delete operations

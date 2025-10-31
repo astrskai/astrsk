@@ -4,8 +4,15 @@
  * Core type definitions for the extension/plugin architecture
  */
 
-import { Session } from "@/modules/session/domain/session";
+import { Session, CardListItem } from "@/modules/session/domain/session";
 import { CharacterCard } from "@/modules/card/domain/character-card";
+import { Turn } from "@/modules/turn/domain/turn";
+import { DataStoreSavedField } from "@/modules/turn/domain/option";
+import { Message } from "@/shared/prompt/domain/renderable";
+import { MessageRole } from "@/shared/prompt/domain";
+
+// Re-export types that extensions commonly need
+export type { CardListItem, DataStoreSavedField, Message, MessageRole };
 
 /**
  * Extension lifecycle hook names
@@ -16,11 +23,15 @@ export type ExtensionHook =
   | "session:afterCreate"
   | "session:beforeUpdate"
   | "session:afterUpdate"
-  | "message:beforeGenerate"
+  | "scenario:afterAdd"        // After scenario is added to session
+  | "prompt:afterRender"       // After prompt messages rendered, before LLM execution
   | "message:afterGenerate"
   | "scenario:initialized"
   | "card:beforeCreate"
-  | "card:afterCreate";
+  | "card:afterCreate"
+  | "turn:afterCreate"
+  | "turn:beforeUpdate"
+  | "turn:afterDelete";
 
 /**
  * Extension event names
@@ -38,8 +49,44 @@ export type ExtensionEvent =
 export interface HookContext {
   session?: Session;
   card?: CharacterCard;
+  turn?: Turn;
   message?: string;
+  messageId?: any;  // UniqueEntityID for message/turn (used for UI blocking in extensions)
   timestamp?: number;
+
+  /**
+   * Prompt messages for prompt:afterRender hook
+   *
+   * This is the COMPLETE array that will be sent to LLM, containing:
+   * - Fixed agent messages (system prompts, character cards, ###ROLEPLAY_MEMORY### tag, etc.)
+   * - History messages (actual conversation turns)
+   *
+   * ⚠️ IMPORTANT: Role (system/user/assistant) does NOT distinguish fixed vs history!
+   * History can be positioned anywhere in the array (not just at the end).
+   *
+   * To get ONLY conversation history, use `context.history` instead.
+   *
+   * Extensions can modify this array directly (e.g., inject memories, modify content)
+   */
+  messages?: Message[];
+
+  /**
+   * Agent entity for prompt:afterRender hook
+   */
+  agent?: any;
+
+  /**
+   * Full render context for prompt:afterRender hook
+   *
+   * Contains:
+   * - `history`: HistoryItem[] - ONLY conversation turns (separate from fixed agent messages)
+   * - `char`, `user`, `cast`: Character information
+   * - `toggle`, `variables`: Template data
+   *
+   * Use `context.history` to distinguish conversation history from fixed agent prompts.
+   */
+  context?: any;
+
   [key: string]: any;
 }
 
@@ -154,6 +201,29 @@ export interface IExtensionClient {
       cardId: string,
       cardType: "character" | "plot"
     ): Promise<any>;
+
+    /**
+     * Get turn history for a session
+     */
+    getTurnHistory(sessionId: string, options?: {
+      limit?: number;
+      cursor?: string;
+    }): Promise<any>;
+
+    /**
+     * Get a specific turn by ID
+     */
+    getTurn(turnId: string): Promise<any>;
+
+    /**
+     * Update a turn
+     */
+    updateTurn(turn: Turn): Promise<any>;
+
+    /**
+     * Delete a turn
+     */
+    deleteTurn(turnId: string): Promise<any>;
 
     /**
      * Call AI model with automatic authentication

@@ -18,7 +18,7 @@ import {
   validateCharacterContainer,
   validateWorldContainer,
 } from "./containers";
-import { logger } from "@/shared/utils/logger";
+import { logger } from "../../shared/logger";
 
 // Type definitions for Supermemory API responses
 type MemoryResultItem = {
@@ -110,29 +110,41 @@ export async function retrieveCharacterMemories(
     // Currently, filters are not supported in the query (Supermemory expects Or | And structure)
     // For POC, we rely on semantic search and content filtering
 
-    // Query Supermemory v4 (with knowledge graph)
-    const v4Results = await memoryClient.search.memories({
-      q: query,
-      containerTag: input.containerTag,
-      limit: input.limit,
-      rewriteQuery: true,
-    });
-
-    // Also query v3 (raw documents) for comparison
-    // v3 uses containerTags (plural, array) instead of containerTag (singular, string)
-    const v3Results = await memoryClient.search.documents({
-      q: query,
-      containerTags: [input.containerTag],
-      limit: input.limit,
-    }).catch((error) => {
-      console.warn("[Memory Retrieval] v3 search failed:", error);
-      return { results: [] };
-    });
+    // Query v4 and v3 searches in parallel with timeouts (v4: 5s, v3: 3s)
+    const [v4Results, v3Results] = await Promise.all([
+      // v4 memory search with 5-second timeout
+      Promise.race([
+        memoryClient.search.memories({
+          q: query,
+          containerTag: input.containerTag,
+          limit: input.limit,
+          rewriteQuery: false, // Disable query rewriting for more literal matches
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('v4 search timeout after 5s')), 5000)
+        )
+      ]).catch((error) => {
+        console.warn("[Memory Retrieval] v4 search failed or timed out:", error.message);
+        return { results: [] };
+      }),
+      // v3 document search with 3-second timeout
+      Promise.race([
+        memoryClient.search.documents({
+          q: query,
+          containerTags: [input.containerTag],
+          limit: input.limit,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('v3 search timeout after 3s')), 3000)
+        )
+      ]).catch((error) => {
+        console.warn("[Memory Retrieval] v3 search failed or timed out:", error.message);
+        return { results: [] };
+      })
+    ]);
 
     const v4Typed = v4Results as unknown as MemorySearchResponse;
-    const v3Typed = v3Results as unknown as any; // v3 has different structure
-
-    console.log("🔍 [DEBUG] v3 raw response:", JSON.stringify(v3Typed, null, 2).substring(0, 500));
+    const v3Typed = v3Results as unknown as any;
 
     // Log comparison
     console.log("\n━━━━━━━━ CHARACTER MEMORY RETRIEVAL COMPARISON ━━━━━━━━");
@@ -161,9 +173,16 @@ export async function retrieveCharacterMemories(
     });
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
-    // Return v4 results (current behavior)
+    // Extract v3 verbatim memories (for direct quotation)
+    const v3VerbatimMemories = v3Results_array.flatMap((r: any) => {
+      const chunks = r.chunks || [];
+      return chunks.map((c: any) => c.content || '').filter((content: string) => content.trim());
+    });
+
+    // Return both v4 (semantic) and v3 (verbatim) results
     return {
       memories: v4Typed.results.map((r) => r.memory ?? r.content ?? ''),
+      verbatimMemories: v3VerbatimMemories,
       count: v4Typed.results.length,
     };
   } catch (error) {
@@ -205,29 +224,41 @@ export async function retrieveWorldMemories(
     // Currently, filters are not supported in the query (Supermemory expects Or | And structure)
     // For POC, we rely on semantic search and content filtering
 
-    // Query Supermemory v4 (with knowledge graph)
-    const v4Results = await memoryClient.search.memories({
-      q: input.query,
-      containerTag: input.containerTag,
-      limit: input.limit,
-      rewriteQuery: true,
-    });
-
-    // Also query v3 (raw documents) for comparison
-    // v3 uses containerTags (plural, array) instead of containerTag (singular, string)
-    const v3Results = await memoryClient.search.documents({
-      q: input.query,
-      containerTags: [input.containerTag],
-      limit: input.limit,
-    }).catch((error) => {
-      console.warn("[Memory Retrieval] v3 world search failed:", error);
-      return { results: [] };
-    });
+    // Query v4 and v3 searches in parallel with timeouts (v4: 5s, v3: 3s)
+    const [v4Results, v3Results] = await Promise.all([
+      // v4 memory search with 5-second timeout
+      Promise.race([
+        memoryClient.search.memories({
+          q: input.query,
+          containerTag: input.containerTag,
+          limit: input.limit,
+          rewriteQuery: false, // Disable query rewriting for more literal matches
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('v4 search timeout after 5s')), 5000)
+        )
+      ]).catch((error) => {
+        console.warn("[Memory Retrieval] v4 world search failed or timed out:", error.message);
+        return { results: [] };
+      }),
+      // v3 document search with 3-second timeout
+      Promise.race([
+        memoryClient.search.documents({
+          q: input.query,
+          containerTags: [input.containerTag],
+          limit: input.limit,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('v3 search timeout after 3s')), 3000)
+        )
+      ]).catch((error) => {
+        console.warn("[Memory Retrieval] v3 world search failed or timed out:", error.message);
+        return { results: [] };
+      })
+    ]);
 
     const v4Typed = v4Results as unknown as MemorySearchResponse;
-    const v3Typed = v3Results as unknown as any; // v3 has different structure
-
-    console.log("🔍 [DEBUG] v3 world raw response:", JSON.stringify(v3Typed, null, 2).substring(0, 500));
+    const v3Typed = v3Results as unknown as any;
 
     // Log comparison
     console.log("\n━━━━━━━━ WORLD MEMORY RETRIEVAL COMPARISON ━━━━━━━━");

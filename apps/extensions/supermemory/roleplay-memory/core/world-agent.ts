@@ -7,184 +7,30 @@
  * Based on contracts/world-agent.contract.md and research.md
  */
 
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createCohere } from "@ai-sdk/cohere";
-import { createDeepSeek } from "@ai-sdk/deepseek";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createMistral } from "@ai-sdk/mistral";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { createXai } from "@ai-sdk/xai";
-import {
-  createOpenRouter,
-  OpenRouterProviderSettings,
-} from "@openrouter/ai-sdk-provider";
-import { generateObject } from "ai";
-import { merge } from "lodash-es";
-import { createOllama } from "ollama-ai-provider";
 import { z } from "zod";
 import type { WorldAgentInput, WorldAgentOutput } from "../../shared/types";
-import { ApiSource } from "@/modules/api/domain";
-import { OpenrouterProviderSort } from "@/modules/api/domain/api-connection";
-import { logger } from "@/shared/utils/logger";
-import { useAppStore } from "@/app/stores/app-store";
+import { logger } from "../../shared/logger";
 import {
   recordWorldAgentPrompt,
   recordWorldAgentOutput,
 } from "../debug/debug-helpers";
 
 /**
+ * Type for the callAI function that will be passed from the extension client
+ */
+export type CallAIFunction = (prompt: string, options?: {
+  modelId?: string;
+  temperature?: number;
+  schema?: any;
+  sessionId?: string;
+  feature?: string;
+}) => Promise<any>;
+
+/**
  * Default World Agent configuration
  * Uses AstrskAi provider with Gemini 2.5 Flash (lightweight, cost-efficient)
  */
 const DEFAULT_WORLD_AGENT_MODEL = "openai-compatible:google/gemini-2.5-flash";
-const WORLD_AGENT_TIMEOUT_MS = 20000; // 20 seconds (increased to account for API latency and structured output generation)
-
-/**
- * Create AI SDK provider from API connection
- * Copied from session-play-service.ts to avoid circular dependency
- */
-const makeProvider = ({
-  source,
-  apiKey,
-  baseUrl,
-  isStructuredOutput,
-  openrouterProviderSort,
-}: {
-  source: ApiSource;
-  apiKey?: string;
-  baseUrl?: string;
-  isStructuredOutput?: boolean;
-  openrouterProviderSort?: OpenrouterProviderSort;
-}) => {
-  let provider;
-  switch (source) {
-    case ApiSource.OpenAI:
-      provider = createOpenAI({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.OpenAICompatible: {
-      let oaiCompBaseUrl = baseUrl ?? "";
-      if (!oaiCompBaseUrl.endsWith("/v1")) {
-        oaiCompBaseUrl += "/v1";
-      }
-      provider = createOpenAI({
-        apiKey: apiKey,
-        baseURL: oaiCompBaseUrl,
-      });
-      break;
-    }
-
-    case ApiSource.Anthropic:
-      provider = createAnthropic({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-        headers: {
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-      });
-      break;
-
-    case ApiSource.OpenRouter: {
-      const options: OpenRouterProviderSettings = {
-        apiKey: apiKey,
-        baseURL: baseUrl,
-        headers: {
-          "HTTP-Referer": "https://astrsk.ai",
-          "X-Title": "astrsk",
-        },
-      };
-      const extraBody = {};
-      if (isStructuredOutput) {
-        merge(extraBody, {
-          provider: {
-            require_parameters: true,
-          },
-        });
-      }
-      if (
-        openrouterProviderSort &&
-        openrouterProviderSort !== OpenrouterProviderSort.Default
-      ) {
-        merge(extraBody, {
-          provider: {
-            sort: openrouterProviderSort,
-          },
-        });
-      }
-      options.extraBody = extraBody;
-      provider = createOpenRouter(options);
-      break;
-    }
-
-    case ApiSource.GoogleGenerativeAI:
-      provider = createGoogleGenerativeAI({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.Ollama:
-      provider = createOllama({
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.DeepSeek:
-      provider = createDeepSeek({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.xAI:
-      provider = createXai({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.Mistral:
-      provider = createMistral({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.Cohere:
-      provider = createCohere({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.KoboldCPP: {
-      let koboldBaseUrl = baseUrl ?? "";
-      if (!koboldBaseUrl.endsWith("/v1")) {
-        koboldBaseUrl += "/v1";
-      }
-      provider = createOpenAICompatible({
-        name: ApiSource.KoboldCPP,
-        baseURL: koboldBaseUrl,
-      });
-      break;
-    }
-
-    case ApiSource.AstrskAi:
-      provider = createOpenAI({
-        apiKey: apiKey || "DUMMY", // AstrskAi uses JWT from headers
-        baseURL: baseUrl,
-      });
-      break;
-
-    default:
-      throw new Error("Invalid API connection source");
-  }
-  return provider;
-};
 
 /**
  * Zod schema for World Agent structured output
@@ -496,10 +342,12 @@ function validateWorldAgentOutput(
  * - MUST fallback gracefully on errors (no throws)
  *
  * @param input - World Agent input with message context
+ * @param callAI - Extension client callAI function for making LLM calls
  * @returns World Agent output with participants and knowledge
  */
 export async function executeWorldAgent(
   input: WorldAgentInput,
+  callAI: CallAIFunction,
 ): Promise<WorldAgentOutput> {
   try {
     // Build prompt with few-shot examples
@@ -516,52 +364,15 @@ export async function executeWorldAgent(
       worldMemoryQuery: input.worldMemoryQuery,
     });
 
-    // Always use Convex backend with JWT authentication
-    const [providerSource, parsedModelId] = DEFAULT_WORLD_AGENT_MODEL.split(":");
-    const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/${providerSource}`;
-
-    const provider = makeProvider({
-      source: providerSource as ApiSource,
-      apiKey: "DUMMY",
-      baseUrl: astrskBaseUrl,
-      isStructuredOutput: true,
-    });
-
-    // Create model using the same logic as session-play-service
-    const model = "chat" in provider
-      ? provider.chat(parsedModelId)
-      : provider.languageModel(parsedModelId);
-
-    // Get JWT for AstrskAi authentication
-    const jwt = useAppStore.getState().jwt;
-    const headers = jwt
-      ? {
-          Authorization: `Bearer ${jwt}`,
-          "x-astrsk-credit-log": JSON.stringify({
-            feature: "world-agent",
-            sessionId: input.sessionId,
-          }),
-        }
-      : undefined;
-
-    // Execute LLM call with timeout (2 seconds max per contract)
-    const abortController = new AbortController();
-    const timeoutId = setTimeout(
-      () => abortController.abort(),
-      WORLD_AGENT_TIMEOUT_MS,
-    );
-
     try {
-      const { object } = await generateObject({
-        model,
+      // Use extension client's callAI with structured output
+      const { object } = await callAI(prompt, {
+        modelId: DEFAULT_WORLD_AGENT_MODEL,
         schema: worldAgentSchema,
-        prompt,
-        abortSignal: abortController.signal,
         temperature: 0.7,
-        ...(headers && { headers }),
+        sessionId: input.sessionId,
+        feature: "world-agent",
       });
-
-      clearTimeout(timeoutId);
 
       // Type assertion for the generated object
       const typedObject = object as z.infer<typeof worldAgentSchema>;
@@ -623,21 +434,17 @@ export async function executeWorldAgent(
 
       return output;
     } catch (llmError) {
-      clearTimeout(timeoutId);
-
-      // Check if timeout
-      if (abortController.signal.aborted) {
-        logger.warn("[World Agent] LLM timeout (>2s), using fallback");
-      }
+      // LLM call failed - use fallback
+      logger.warn("[World Agent] LLM call failed, using fallback:", llmError);
 
       const fallbackOutput = createFallbackOutput(input.speakerCharacterId, input.speakerName, input.dataStore.worldContext);
 
-      // Record debug event - World Agent output (timeout fallback)
+      // Record debug event - World Agent output (LLM error fallback)
       recordWorldAgentOutput({
         actualParticipants: fallbackOutput.actualParticipants,
         worldContextUpdates: fallbackOutput.worldContextUpdates,
         delta_time: fallbackOutput.delta_time,
-        rawOutput: { fallback: true, reason: "timeout" },
+        rawOutput: { fallback: true, reason: "llm_error", error: String(llmError) },
       });
 
       return fallbackOutput;

@@ -55,6 +55,8 @@ export const memoryClient = {
 
     // v3 document search (raw documents, no knowledge graph)
     documents: async (params: SearchParamsV3) => {
+      console.log("📄 [Supermemory Client] POST /api/search/documents", params);
+
       const response = await fetch('/api/search/documents', {
         method: 'POST',
         headers: {
@@ -63,12 +65,17 @@ export const memoryClient = {
         body: JSON.stringify(params),
       });
 
+      console.log(`📄 [Supermemory Client] POST response status: ${response.status} ${response.statusText}`);
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error(`📄 [Supermemory Client] POST response error:`, error);
         throw new Error(`Document search failed: ${response.status} ${JSON.stringify(error)}`);
       }
 
-      return response.json();
+      const result = await response.json();
+      console.log(`📄 [Supermemory Client] POST response body:`, result);
+      return result;
     },
   },
   memories: {

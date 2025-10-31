@@ -156,6 +156,102 @@ export class ExtensionClient implements IExtensionClient {
     },
 
     /**
+     * Get turn history for a session
+     */
+    getTurnHistory: async (sessionId: string, options?: { limit?: number; cursor?: string }) => {
+      const { TurnService } = await import("@/app/services/turn-service");
+      const { UniqueEntityID } = await import("@/shared/domain");
+
+      // Use repo directly to list turns
+      const query: any = {
+        pageSize: options?.limit || 100,
+      };
+
+      if (options?.cursor) {
+        query.cursor = new UniqueEntityID(options.cursor);
+      }
+
+      // Get session to access turn IDs
+      const { SessionService } = await import("@/app/services/session-service");
+      const sessionResult = await SessionService.getSession.execute(new UniqueEntityID(sessionId));
+
+      if (sessionResult.isFailure) {
+        return sessionResult;
+      }
+
+      const session = sessionResult.getValue();
+      const turnIds = session.turnIds;
+
+      // Load each turn
+      const turnPromises = turnIds.map(async (turnId) => {
+        return await TurnService.getTurn.execute(turnId);
+      });
+
+      const turnResults = await Promise.all(turnPromises);
+
+      // Filter out failures and extract values
+      const turns = turnResults
+        .filter(result => result.isSuccess)
+        .map(result => result.getValue());
+
+      return turns;
+    },
+
+    /**
+     * Get a specific turn by ID
+     */
+    getTurn: async (turnId: string) => {
+      const { TurnService } = await import("@/app/services/turn-service");
+      const { UniqueEntityID } = await import("@/shared/domain");
+
+      return await TurnService.getTurn.execute(new UniqueEntityID(turnId));
+    },
+
+    /**
+     * Update a turn
+     */
+    updateTurn: async (turn: any) => {
+      const { TurnService } = await import("@/app/services/turn-service");
+
+      const result = await TurnService.updateTurn.execute(turn);
+
+      // Invalidate turn and session query caches after successful update
+      if (result.isSuccess) {
+        try {
+          const { queryClient } = await import("@/app/queries/query-client");
+          const { turnQueries } = await import("@/app/queries/turn-queries");
+          const { sessionQueries } = await import("@/app/queries/session-queries");
+
+          // Invalidate the specific turn
+          await queryClient.invalidateQueries({
+            queryKey: turnQueries.detail(turn.id).queryKey,
+          });
+
+          // Invalidate the session (so session data panel updates)
+          await queryClient.invalidateQueries({
+            queryKey: sessionQueries.detail(turn.sessionId).queryKey,
+          });
+        } catch (error) {
+          console.warn("[Extension Client] Failed to invalidate query caches:", error);
+          // Don't fail the update - cache invalidation is not critical
+        }
+      }
+
+      return result;
+    },
+
+    /**
+     * Delete a turn
+     */
+    deleteTurn: async (turnId: string) => {
+      const { TurnService } = await import("@/app/services/turn-service");
+      const { UniqueEntityID } = await import("@/shared/domain");
+
+      // Use repo directly to delete turn
+      return await TurnService.turnRepo.deleteTurnById(new UniqueEntityID(turnId));
+    },
+
+    /**
      * Add a lorebook entry to a character card
      * Handles all domain object creation internally
      */
