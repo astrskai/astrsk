@@ -73,15 +73,11 @@ import {
   executeFlow,
   makeContext,
 } from "@/app/services/session-play-service";
-import {
-  processUserMessage,
-} from "@/modules/supermemory/roleplay-memory";
 import { SessionService } from "@/app/services/session-service";
 import type { CardListItem } from "@/modules/session/domain/session";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/app/stores/app-store";
 import { AutoReply, useSessionStore } from  "@/app/stores/session-store";
-import { useSupermemoryDebugStore } from "@/app/stores/supermemory-debug-store";
 import { Avatar } from "@/components-v2/avatar";
 import { useIsMobile } from "@/components-v2/hooks/use-mobile";
 import { cn } from "@/components-v2/lib/utils";
@@ -112,7 +108,6 @@ import {
 import { CharacterCard, PlotCard } from "@/modules/card/domain";
 import { TranslationConfig } from "@/modules/session/domain/translation-config";
 import { DataStoreSavedField, Option } from "@/modules/turn/domain/option";
-import { initializeRoleplayMemoryForSession } from "@/app/services/session-play-service";
 import { Turn } from "@/modules/turn/domain/turn";
 import { PlaceholderType } from "@/modules/turn/domain/placeholder-type";
 import { DataStoreSchemaField } from "@/modules/flow/domain/flow";
@@ -1145,7 +1140,7 @@ const UserInputs = ({
                     }}
                     isHighLighted={shouldShowTooltip}
                   />
-                  <div className="bg-border-normal mx-2 h-[48px] w-[1px]" />
+                  {/* <div className="bg-border-normal mx-2 h-[48px] w-[1px]" />
                   <UserInputCharacterButton
                     icon={
                       isGeneratingGlobalImage ? (
@@ -1177,7 +1172,7 @@ const UserInputs = ({
                     }}
                     isHighLighted={false}
                     isSubscribeBadge={!subscribed}
-                  />
+                  /> */}
                   {/* Generate Video button - HIDDEN in user input */}
                   {/* <UserInputCharacterButton
                     icon={
@@ -1692,15 +1687,30 @@ const SessionMessagesAndUserInputs = ({
   const [streamingAgentName, setStreamingAgentName] = useState<string>("");
   const [streamingModelName, setStreamingModelName] = useState<string>("");
   const refStopGenerate = useRef<AbortController | null>(null);
+
+  // Register UI blocking callback for extensions
+  useEffect(() => {
+    import("@/modules/extensions/bootstrap").then(({ registerUIBlockingCallback }) => {
+      registerUIBlockingCallback((turnId: string | null, agentName?: string, modelName?: string) => {
+        if (turnId) {
+          console.log(`[UI Blocking] Blocking UI for turn ${turnId}, agent: ${agentName}, model: ${modelName}`);
+          setStreamingMessageId(new UniqueEntityID(turnId));
+          setStreamingAgentName(agentName || "Extension");
+          setStreamingModelName(modelName || "Processing");
+        } else {
+          console.log(`[UI Blocking] Unblocking UI`);
+          setStreamingMessageId(null);
+          setStreamingAgentName("");
+          setStreamingModelName("");
+        }
+      });
+    });
+  }, []);
   const generateCharacterMessage = useCallback(
     async (
       characterCardId: UniqueEntityID,
       regenerateMessageId?: UniqueEntityID,
     ) => {
-      // Increment turn number for debug tracking (only for new messages, not regeneration)
-      if (!regenerateMessageId) {
-        useSupermemoryDebugStore.getState().incrementTurn();
-      }
 
       // Check session
       if (!session) {
@@ -1820,6 +1830,7 @@ const SessionMessagesAndUserInputs = ({
           flowId: session.props.flowId,
           sessionId: session.id,
           characterCardId: characterCardId,
+          messageId: streamingMessage.id,
           regenerateMessageId: regenerateMessageId,
           stopSignalByUser: refStopGenerate.current.signal,
         });
@@ -1880,6 +1891,23 @@ const SessionMessagesAndUserInputs = ({
           }).catch((error) => {
             logger.error("[Convex Log] Failed to log AI message:", error);
           });
+
+          // Trigger turn:afterCreate hook for extensions (e.g., Supermemory memory storage)
+          // This replaces the old executeWorldAgentAndDistributeMemories call in executeFlow
+          (async () => {
+            try {
+              const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
+              await triggerExtensionHook("turn:afterCreate", {
+                turn: streamingMessage,
+                session,
+                timestamp: Date.now(),
+              });
+              logger.info("[Turn Create] Extension hooks triggered for new turn");
+            } catch (error) {
+              logger.error("[Turn Create] Failed to trigger extension hooks:", error);
+              // Don't fail - extension hooks are optional
+            }
+          })();
         } else {
           // Regenerated message - log as updateMessageOption
           logMessageRerollToConvex({
@@ -1982,9 +2010,6 @@ const SessionMessagesAndUserInputs = ({
   const addUserMessage = useCallback(
     async (messageContent: string) => {
       try {
-        // Increment turn number for debug tracking
-        useSupermemoryDebugStore.getState().incrementTurn();
-
         // Check session
         if (!session) {
           throw new Error("Session not found");
@@ -2007,150 +2032,8 @@ const SessionMessagesAndUserInputs = ({
         // Invalidate session immediately to show the user message
         invalidateSession();
 
-        // Run supermemory processing in the background (async, non-blocking)
-        // This prevents UI delay when user types messages
-        (async () => {
-          try {
-            // Refetch session to get updated turnIds after adding message
-            const updatedSession = (await SessionService.getSession.execute(session.id))
-              .throwOnFailure()
-              .getValue();
-
-            // Get the previous turn's dataStore to use as baseline (before the user message)
-            let previousDataStore: any[] = [];
-            if (updatedSession.turnIds.length > 1) {
-              try {
-                // Get second-to-last turn (the turn before the user message we just added)
-                const previousTurnId = updatedSession.turnIds[updatedSession.turnIds.length - 2];
-                const previousTurnResult = await TurnService.getTurn.execute(previousTurnId);
-                if (previousTurnResult.isSuccess) {
-                  const previousTurn = previousTurnResult.getValue();
-                  previousDataStore = previousTurn.selectedOption?.dataStore || [];
-                }
-              } catch (error) {
-                logger.warn(`[User Message] Failed to get previous turn's dataStore: ${error}`);
-              }
-            }
-
-            // Store user message in supermemory and get suggested dataStore updates
-            const suggestedUpdates = await processUserMessage({
-              sessionId: session.id.toString(),
-              messageContent,
-              session: updatedSession,
-              flow,
-              previousDataStore,
-            });
-
-            // Apply suggested updates to the user message we just created
-            if (suggestedUpdates) {
-              const turnResult = await TurnService.getTurn.execute(userMessage.id);
-
-              if (turnResult.isSuccess) {
-                const turn = turnResult.getValue();
-                // Start with a copy of the previous turn's dataStore, then apply updates
-                const dataStore = [...previousDataStore];
-
-                // Apply gameTime update
-                if (suggestedUpdates.gameTime !== undefined) {
-                  const gameTimeIndex = dataStore.findIndex((f: any) => f.name === "game_time");
-                  if (gameTimeIndex >= 0) {
-                    dataStore[gameTimeIndex].value = String(suggestedUpdates.gameTime);
-                  } else {
-                    dataStore.push({
-                      id: "game_time",
-                      name: "game_time",
-                      type: "number",
-                      value: String(suggestedUpdates.gameTime),
-                    });
-                  }
-                }
-
-                // Apply participants update
-                if (suggestedUpdates.participants && suggestedUpdates.participants.length > 0) {
-                  const participantsIndex = dataStore.findIndex((f: any) => f.name === "participants");
-                  if (participantsIndex >= 0) {
-                    dataStore[participantsIndex].value = JSON.stringify(suggestedUpdates.participants);
-                  } else {
-                    dataStore.push({
-                      id: "participants",
-                      name: "participants",
-                      type: "string",
-                      value: JSON.stringify(suggestedUpdates.participants),
-                    });
-                  }
-                }
-
-                // Apply worldContext update
-                if (suggestedUpdates.worldContext) {
-                  const worldContextIndex = dataStore.findIndex((f: any) => f.name === "world_context");
-                  if (worldContextIndex >= 0) {
-                    dataStore[worldContextIndex].value = suggestedUpdates.worldContext;
-                  } else {
-                    dataStore.push({
-                      id: "world_context",
-                      name: "world_context",
-                      type: "string",
-                      value: suggestedUpdates.worldContext,
-                    });
-                  }
-                }
-
-                // Apply supermemoryIds update (store memory IDs for edit/delete operations)
-                if (suggestedUpdates.supermemoryIds && suggestedUpdates.supermemoryIds.length > 0) {
-                  const supermemoryIdsIndex = dataStore.findIndex((f: any) => f.name === "supermemory_ids");
-                  if (supermemoryIdsIndex >= 0) {
-                    dataStore[supermemoryIdsIndex].value = JSON.stringify(suggestedUpdates.supermemoryIds);
-                  } else {
-                    dataStore.push({
-                      id: "supermemory_ids",
-                      name: "supermemory_ids",
-                      type: "string",
-                      value: JSON.stringify(suggestedUpdates.supermemoryIds),
-                    });
-                  }
-                  console.log(`✅ Stored ${suggestedUpdates.supermemoryIds.length} memory IDs in User Turn dataStore`);
-                }
-
-                // Update turn with new dataStore using setDataStore method
-                turn.setDataStore(dataStore as any);
-
-                // Save to database
-                await TurnService.updateTurn.execute(turn);
-
-                // Log user message to Convex (after dataStore update)
-                logMessageToConvex({
-                  sessionId: session.id.toString(),
-                  messageId: userMessage.id.toString(),
-                  type: "user",
-                  content: messageContent,
-                  characterCardId: session.userCharacterCardId?.toString(),
-                  characterName: "User",
-                  dataStore: dataStore,
-                  supermemory: suggestedUpdates ? {
-                    participants: suggestedUpdates.participants || [],
-                    gameTime: suggestedUpdates.gameTime || 0,
-                    gameTimeInterval: dataStore.find((f: any) => f.name === "game_time_interval")?.value || "Day",
-                    worldContext: suggestedUpdates.worldContext,
-                  } : undefined,
-                }).catch((error) => {
-                  logger.error("[Convex Log] Failed to log user message:", error);
-                  // Don't throw - logging failures should not block user
-                });
-
-                // Invalidate turn query to refresh
-                queryClient.invalidateQueries({
-                  queryKey: turnQueries.detail(turn.id).queryKey,
-                });
-
-                // Invalidate session again to refresh with updated dataStore
-                invalidateSession();
-              }
-            }
-          } catch (error) {
-            logger.error("[User Message] Background supermemory processing failed:", error);
-            // Don't throw - this is an enhancement, not a critical failure
-          }
-        })();
+        // NOTE: User message memory processing is now handled by Supermemory extension
+        // via turn:afterCreate hook. No manual processing needed here.
 
         // Scroll to bottom
         scrollToBottom({ behavior: "smooth" });
@@ -2381,14 +2264,24 @@ const SessionMessagesAndUserInputs = ({
           (c: any): c is NonNullable<typeof c> => c !== null,
         );
 
-        // Initialize roleplay memory in background (don't block UI)
-        initializeRoleplayMemoryForSession(
-          session.id.toString(),
-          validCharacterCards,
-          scenario.description,
-        ).catch((error) => {
-          logger.error("[Roleplay Memory] Background initialization failed:", error);
-        });
+        // Trigger scenario:afterAdd hook for extensions (e.g., Supermemory scenario storage)
+        // NOTE: Pass the scenario turn so extensions can store memory IDs in its dataStore
+        (async () => {
+          try {
+            const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
+            const scenarioTurn = scenarioMessageOrError.getValue();
+            await triggerExtensionHook("scenario:afterAdd", {
+              session,
+              turn: scenarioTurn,
+              scenarioDescription: scenario.description,
+              timestamp: Date.now(),
+            });
+            logger.info("[Scenario Add] Extension hooks triggered for scenario storage");
+          } catch (error) {
+            logger.error("[Scenario Add] Failed to trigger extension hooks:", error);
+            // Don't fail - extension hooks are optional
+          }
+        })();
 
         // Invalidate session
         invalidateSession();
@@ -2421,11 +2314,11 @@ const SessionMessagesAndUserInputs = ({
       console.log("   Fetched message from DB");
       console.log("   DataStore fields:", message.dataStore.map((f: any) => f.name));
 
-      const supermemoryIdsField = message.dataStore.find((f: any) => f.name === "supermemory_ids");
+      const supermemoryIdsField = message.dataStore.find((f: any) => f.name === "memory_ids");
       if (supermemoryIdsField) {
-        console.log("   ✅ Found supermemory_ids:", supermemoryIdsField.value);
+        console.log("   ✅ Found memory_ids:", supermemoryIdsField.value);
       } else {
-        console.log("   ❌ No supermemory_ids field found");
+        console.log("   ❌ No memory_ids field found");
       }
 
       // Set content
@@ -2440,6 +2333,23 @@ const SessionMessagesAndUserInputs = ({
         return;
       }
       console.log("   ✅ Message saved successfully");
+
+      // Update Supermemory memories with new content (fire-and-forget, don't block UI)
+      if (supermemoryIdsField) {
+        console.log("   🧠 Initiating background memory update...");
+        import("@/modules/extensions/bootstrap").then(({ updateTurnMemories }) => {
+          updateTurnMemories(messageId.toString())
+            .then(() => {
+              console.log("   ✅ Supermemory memories updated in background");
+            })
+            .catch((error) => {
+              console.warn("   ⚠️ Failed to update Supermemory memories:", error);
+            });
+        }).catch((error) => {
+          console.warn("   ⚠️ Failed to import updateTurnMemories:", error);
+        });
+      }
+
       console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
       // Invalidate message

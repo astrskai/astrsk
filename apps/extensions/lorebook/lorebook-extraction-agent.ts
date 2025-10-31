@@ -13,7 +13,7 @@ import type { IExtensionClient } from "../../pwa/src/modules/extensions/core/typ
 /**
  * Lorebook Extraction Schema
  * Simplified: Only name and content required
- * Plugin will figure out characterId and generate keys automatically
+ * Extension will figure out characterId and generate keys automatically
  */
 const lorebookExtractionSchema = z.object({
   entries: z
@@ -199,7 +199,7 @@ REMEMBER:
   try {
     const startTime = Date.now();
 
-    // Use secure client API - JWT handled internally, never exposed to plugin
+    // Use secure client API - JWT handled internally, never exposed to extension
     const result = await client.api.callAI(prompt, {
       modelId: DEFAULT_LOREBOOK_EXTRACTION_MODEL,
       schema: lorebookExtractionSchema,

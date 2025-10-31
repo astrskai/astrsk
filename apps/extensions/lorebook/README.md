@@ -4,7 +4,7 @@ Automatically detects lorebook-worthy information in conversations and suggests 
 
 ## Overview
 
-The Lorebook Extension runs **asynchronously** alongside the NPC extraction plugin, analyzing messages for important character information that should be saved to character lorebooks. It uses AI to extract relevant information, tracks what's already been added or rejected, and presents suggestions to the user for confirmation.
+The Lorebook Extension runs **asynchronously** alongside the NPC extraction extension, analyzing messages for important character information that should be saved to character lorebooks. It uses AI to extract relevant information, tracks what's already been added or rejected, and presents suggestions to the user for confirmation.
 
 ## Features
 
@@ -33,7 +33,7 @@ The AI looks for:
 
 ```
 lorebook/
-├── lorebook-plugin.ts              # Main plugin class
+├── lorebook-extension.ts           # Main extension class
 ├── lorebook-extraction-agent.ts    # AI extraction logic
 ├── lorebook-entry-creation.ts      # Entry creation functions
 ├── lorebook-store.ts               # Zustand state management
@@ -96,9 +96,9 @@ Functions to manage the lorebook lifecycle:
 
 ```typescript
 // apps/pwa/src/modules/extensions/bootstrap.ts
-const { LorebookPlugin } = await import("@extensions/lorebook/lorebook-plugin");
-const lorebookPlugin = new LorebookPlugin();
-await extensionRegistry.register(lorebookPlugin);
+const { LorebookExtension } = await import("@extensions/lorebook/lorebook-extension");
+const lorebookExtension = new LorebookExtension();
+await extensionRegistry.register(lorebookExtension);
 ```
 
 ### 2. Memory Retrieval (Future)

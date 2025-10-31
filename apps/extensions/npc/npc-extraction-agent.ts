@@ -162,7 +162,7 @@ Output ONLY new NPCs or new aliases for existing NPCs, each with their AI-genera
   try {
     const startTime = Date.now();
 
-    // Use secure client API - JWT handled internally, never exposed to plugin
+    // Use secure client API - JWT handled internally, never exposed to extension
     const result = await client.api.callAI(prompt, {
       modelId: DEFAULT_NPC_EXTRACTION_MODEL,
       schema: npcExtractionSchema,

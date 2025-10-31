@@ -6,7 +6,6 @@ import {
   SettingSubPageType,
   useAppStore,
 } from "@/app/stores/app-store";
-import { useSupermemoryDebugStore } from "@/app/stores/supermemory-debug-store";
 import { ConvexReady } from "@/components-v2/convex-ready";
 import { cn } from "@/components-v2/lib/utils";
 import { AccountPage } from "@/components-v2/setting/account-page";
@@ -113,9 +112,6 @@ const LegalPage = ({
 
 const AdvancedPage = () => {
   const [allowInsecureContent, setAllowInsecureContent] = useState(false);
-  const isSupermemoryDebugEnabled = useSupermemoryDebugStore.use.isDebugEnabled();
-  const setIsSupermemoryDebugEnabled = useSupermemoryDebugStore.use.setIsDebugEnabled();
-  const setIsPanelOpen = useSupermemoryDebugStore.use.setIsPanelOpen();
 
   useEffect(() => {
     const getConfigs = async () => {
@@ -161,45 +157,6 @@ const AdvancedPage = () => {
                   return;
                 }
                 window.api.config.setConfig("allowInsecureContent", checked);
-              }}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex justify-between">
-            <div className="flex flex-col gap-[8px]">
-              <TypoBase className="font-semibold text-text-body">
-                Supermemory Debug Mode
-              </TypoBase>
-              <div className="font-[400] text-[12px] leading-[15px] text-text-info">
-                Enable detailed debugging for roleplay memory system.
-                <br />
-                Shows data flow: initialization, retrieval, World Agent execution, and distribution.
-                <br />
-                <button
-                  className="text-text-link underline cursor-pointer"
-                  onClick={() => {
-                    if (isSupermemoryDebugEnabled) {
-                      setIsPanelOpen(true);
-                    } else {
-                      toast.info("Enable debug mode first to view the panel");
-                    }
-                  }}
-                >
-                  Open debug panel
-                </button>
-              </div>
-            </div>
-            <Switch
-              checked={isSupermemoryDebugEnabled}
-              onCheckedChange={(checked) => {
-                setIsSupermemoryDebugEnabled(checked);
-                if (checked) {
-                  toast.success("Supermemory debug mode enabled");
-                } else {
-                  toast.info("Supermemory debug mode disabled");
-                }
               }}
             />
           </div>

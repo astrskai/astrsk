@@ -5,7 +5,7 @@
  * and suggests adding entries to character lorebooks.
  */
 
-export { LorebookPlugin } from "./lorebook-plugin";
+export { LorebookExtension } from "./lorebook-extension";
 export { executeLorebookExtractionAgent } from "./lorebook-extraction-agent";
 export { useLorebookStore } from "./lorebook-store";
 export type { LorebookEntryData, RejectedLorebookEntry } from "./lorebook-store";

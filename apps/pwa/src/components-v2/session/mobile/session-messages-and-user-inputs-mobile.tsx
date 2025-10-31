@@ -1234,6 +1234,7 @@ const SessionMessagesAndUserInputsMobile = ({
           flowId: session.props.flowId,
           sessionId: session.id,
           characterCardId: characterCardId,
+          messageId: streamingMessage.id,
           regenerateMessageId: regenerateMessageId,
           stopSignalByUser: refStopGenerate.current.signal,
         });

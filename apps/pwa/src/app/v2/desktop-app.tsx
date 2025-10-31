@@ -14,7 +14,6 @@ import FlowMultiPage from "@/flow-multi/pages/flow-multi-page";
 import { ConvexReady } from "@/components-v2/convex-ready";
 import { SubscribeChecker } from "@/components-v2/setting/subscribe-checker";
 import { SubscribeNudgeDialog } from "@/components-v2/setting/subscribe-nudge-dialog";
-import { SupermemoryDebugPanel } from "@/components-v2/supermemory-debug-panel";
 
 const DesktopApp = () => {
   const selectedCardId = useAppStore.use.selectedCardId();
@@ -45,7 +44,6 @@ const DesktopApp = () => {
       <ConvexReady>
         <SubscribeChecker />
       </ConvexReady>
-      <SupermemoryDebugPanel />
     </>
   );
 };

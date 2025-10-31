@@ -394,7 +394,7 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 flex-shrink-0">
+        {/* <div className="flex gap-2 flex-shrink-0">
           <Button
             onClick={handleGenerateImage}
             disabled={isGenerating || !imagePrompt.trim()}
@@ -411,7 +411,6 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
                 : "Generate Image"}
           </Button>
 
-          {/* Hidden file input - keeping for future use */}
           <input
             ref={fileInputRef}
             type="file"
@@ -425,7 +424,7 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
             }}
             className="hidden"
           />
-        </div>
+        </div> */}
       </div>
 
       {/* Dynamic Images Section */}

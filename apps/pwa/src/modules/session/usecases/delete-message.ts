@@ -38,13 +38,13 @@ export class DeleteMessage implements UseCase<Command, Result<void>> {
       if (turnOrError.isSuccess) {
         const turn = turnOrError.getValue();
         const supermemoryIdsField = turn.dataStore.find(
-          (f) => f.name === "supermemory_ids"
+          (f) => f.name === "memory_ids"
         );
         if (supermemoryIdsField && supermemoryIdsField.value) {
           try {
             supermemoryIds = JSON.parse(supermemoryIdsField.value);
           } catch (error) {
-            logger.error("[DeleteMessage] Failed to parse supermemory_ids:", error);
+            logger.error("[DeleteMessage] Failed to parse memory_ids:", error);
           }
         }
       }
@@ -63,30 +63,18 @@ export class DeleteMessage implements UseCase<Command, Result<void>> {
         );
       }
 
-      // Delete from Supermemory if memory IDs exist
-      if (supermemoryIds.length > 0) {
-        console.log("🗑️ [DeleteMessage] Deleting Supermemory entries...");
-        console.log(`   Memory IDs (${supermemoryIds.length}):`, supermemoryIds);
-
+      // Trigger turn:afterDelete hook (for extensions like Supermemory)
+      if (turnOrError.isSuccess) {
         try {
-          const { bulkDeleteMemories } = await import("@/modules/supermemory/roleplay-memory");
-
-          const deleteResult = await bulkDeleteMemories(supermemoryIds);
-          if (deleteResult.success) {
-            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-            console.log("✅ SUPERMEMORY DELETE COMPLETE");
-            console.log(`   Turn ID: ${messageId.toString()}`);
-            console.log(`   Deleted ${deleteResult.deletedCount} memories from all containers`);
-            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-            logger.info(`[DeleteMessage] Deleted ${deleteResult.deletedCount} Supermemory entries`);
-          } else {
-            console.log(`❌ [DeleteMessage] Failed to delete from Supermemory: ${deleteResult.error}`);
-            logger.error("[DeleteMessage] Failed to delete from Supermemory:", deleteResult.error);
-          }
+          const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
+          await triggerExtensionHook("turn:afterDelete", {
+            turn: turnOrError.getValue(),
+            session,
+            timestamp: Date.now(),
+          });
         } catch (error) {
-          // Log error but don't fail the message deletion (graceful degradation)
-          console.log("❌ [DeleteMessage] Error deleting from Supermemory:", error);
-          logger.error("[DeleteMessage] Failed to delete from Supermemory:", error);
+          logger.error("[DeleteMessage] Failed to trigger extension hook:", error);
+          // Don't fail - extension hooks are optional
         }
       }
 
