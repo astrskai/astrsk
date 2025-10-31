@@ -409,10 +409,12 @@ export class HistoryPromptMessage
     // Make char id-history role map
     const charIdHistoryRoleMap = new Map<string, MessageRole>();
     for (const char of context.cast.all ?? []) {
-      if (char.id === context.user?.id && this.props.userMessageRole) {
-        charIdHistoryRoleMap.set(char.id, this.props.userMessageRole);
-      } else if (char.id === context.char?.id && this.props.charMessageRole) {
+      // Prioritize main character (speaker) role over user role
+      // When mainCharId === userId, the main char should be "assistant"
+      if (char.id === context.char?.id && this.props.charMessageRole) {
         charIdHistoryRoleMap.set(char.id, this.props.charMessageRole);
+      } else if (char.id === context.user?.id && this.props.userMessageRole) {
+        charIdHistoryRoleMap.set(char.id, this.props.userMessageRole);
       } else if (this.props.subCharMessageRole) {
         charIdHistoryRoleMap.set(char.id, this.props.subCharMessageRole);
       }
@@ -499,10 +501,12 @@ export class HistoryPromptMessage
     // Make char id-history role map
     const charIdHistoryRoleMap = new Map<string, MessageRole>();
     for (const char of context.cast.all ?? []) {
-      if (char.id === context.user?.id && this.props.userMessageRole) {
-        charIdHistoryRoleMap.set(char.id, this.props.userMessageRole);
-      } else if (char.id === context.char?.id && this.props.charMessageRole) {
+      // Prioritize main character (speaker) role over user role
+      // When mainCharId === userId, the main char should be "assistant"
+      if (char.id === context.char?.id && this.props.charMessageRole) {
         charIdHistoryRoleMap.set(char.id, this.props.charMessageRole);
+      } else if (char.id === context.user?.id && this.props.userMessageRole) {
+        charIdHistoryRoleMap.set(char.id, this.props.userMessageRole);
       } else if (this.props.subCharMessageRole) {
         charIdHistoryRoleMap.set(char.id, this.props.subCharMessageRole);
       }

@@ -260,6 +260,9 @@ export class LorebookExtension implements IExtension {
             continue;
           }
 
+          // Clear safety timeout before showing dialog - user needs time to respond
+          clearTimeout(safetyTimeout);
+
           // Show dialog to user for confirmation
           console.log(`📋 [Lorebook Extension] Showing confirmation dialog for: ${entryName}`);
 
