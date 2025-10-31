@@ -407,12 +407,14 @@ export class HistoryPromptMessage
     const history = this.getHistoryByRange(context);
 
     // Make char id-history role map
+    // Prioritize main character (speaker) role over user role
+    // When char.id === context.char?.id, the main char should get charMessageRole (assistant)
     const charIdHistoryRoleMap = new Map<string, MessageRole>();
     for (const char of context.cast.all ?? []) {
-      if (char.id === context.user?.id && this.props.userMessageRole) {
-        charIdHistoryRoleMap.set(char.id, this.props.userMessageRole);
-      } else if (char.id === context.char?.id && this.props.charMessageRole) {
+      if (char.id === context.char?.id && this.props.charMessageRole) {
         charIdHistoryRoleMap.set(char.id, this.props.charMessageRole);
+      } else if (char.id === context.user?.id && this.props.userMessageRole) {
+        charIdHistoryRoleMap.set(char.id, this.props.userMessageRole);
       } else if (this.props.subCharMessageRole) {
         charIdHistoryRoleMap.set(char.id, this.props.subCharMessageRole);
       }
@@ -497,12 +499,14 @@ export class HistoryPromptMessage
     const history = this.getHistoryByRange(context);
 
     // Make char id-history role map
+    // Prioritize main character (speaker) role over user role
+    // When char.id === context.char?.id, the main char should get charMessageRole (assistant)
     const charIdHistoryRoleMap = new Map<string, MessageRole>();
     for (const char of context.cast.all ?? []) {
-      if (char.id === context.user?.id && this.props.userMessageRole) {
-        charIdHistoryRoleMap.set(char.id, this.props.userMessageRole);
-      } else if (char.id === context.char?.id && this.props.charMessageRole) {
+      if (char.id === context.char?.id && this.props.charMessageRole) {
         charIdHistoryRoleMap.set(char.id, this.props.charMessageRole);
+      } else if (char.id === context.user?.id && this.props.userMessageRole) {
+        charIdHistoryRoleMap.set(char.id, this.props.userMessageRole);
       } else if (this.props.subCharMessageRole) {
         charIdHistoryRoleMap.set(char.id, this.props.subCharMessageRole);
       }
