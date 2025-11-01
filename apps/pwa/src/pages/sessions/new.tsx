@@ -8,7 +8,7 @@ import {
   AiCharacterSelectionStep,
   UserCharacterSelectionStep,
   PlotSelectionStep,
-} from "@/features/session/ui/create-session";
+} from "./ui/create";
 import { StepIndicator } from "@/shared/ui/step-indicator";
 import { logger } from "@/shared/lib";
 import { Flow } from "@/entities/flow/domain/flow";

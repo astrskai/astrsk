@@ -1,3 +1,7 @@
+/**
+ * @deprecated Use CreateSessionPage instead
+ * This file is no longer used and will be removed in the future.
+ */
 import { useNavigate } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";

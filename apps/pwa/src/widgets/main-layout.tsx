@@ -27,8 +27,8 @@ import { cn } from "@/shared/lib";
 import { FixedNav } from "@/widgets/fixed-nav";
 import { SidebarInset } from "@/widgets/both-sidebar";
 import { MobileNavigationContext } from "@/shared/stores/mobile-navigation-context";
-import CreateSessionPage from "@/features/session/create-session-page";
-import { createPortal } from "react-dom";
+// import CreateSessionPage from "@/features/session/create-session-page";
+// import { createPortal } from "react-dom";
 
 export function MainLayout({
   children,
@@ -173,8 +173,8 @@ export function MainLayout({
             <Toaster expand className="!z-[100]" />
           </MobileNavigationContext.Provider>
         </SidebarLeftProvider>
-        {activePage === Page.CreateSession &&
-          createPortal(<CreateSessionPage />, document.body)}
+        {/* {activePage === Page.CreateSession &&
+          createPortal(<CreateSessionPage />, document.body)} */}
       </ThemeProvider>
     );
   }
@@ -204,8 +204,8 @@ export function MainLayout({
             </SidebarLeftProvider>
           </div>
         </div>
-        {activePage === Page.CreateSession &&
-          createPortal(<CreateSessionPage />, document.body)}
+        {/* {activePage === Page.CreateSession &&
+          createPortal(<CreateSessionPage />, document.body)} */}
       </div>
     </ThemeProvider>
   );

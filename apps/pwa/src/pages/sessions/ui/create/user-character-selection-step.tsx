@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { UserIcon } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
-import { CardSelectItem } from "@/features/session/ui/create-session/card-select-item";
+import { CardSelectItem } from "@/pages/sessions/ui/create/card-select-item";
 import { CardDisplay } from "@/features/card/ui";
 import { cardQueries } from "@/app/queries/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";

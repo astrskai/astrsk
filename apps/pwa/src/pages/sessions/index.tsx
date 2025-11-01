@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { SessionsGrid } from "@/features/session/ui";
-import { NameInputDialog } from "@/features/session/ui/create-session";
+import { SessionsGrid } from "./ui/list";
+import { NameInputDialog } from "./ui/create";
 import { SessionImportDialog } from "@/features/session/components/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
 
