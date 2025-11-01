@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CreateSessionPage } from "@/pages/sessions/new-session";
+import { CreateSessionPage } from "@/pages/sessions/new";
 import { z } from "zod";
 
 const createSessionSearchSchema = z.object({

@@ -68,6 +68,13 @@ Feature-Sliced Design is a hierarchical architecture pattern that organizes code
 - `ui/` - Page UI, loading states, error boundaries
 - `api/` - Data fetching and mutations for the page
 
+**File Naming Convention**:
+- ✅ Use simple, predictable names within domain folders
+- ✅ Avoid redundant prefixes (folder name already indicates domain)
+- ✅ Common patterns: `index.tsx` (list), `new.tsx` (create), `detail.tsx` (detail view)
+- ❌ Avoid `-page` suffix (redundant - already in pages/ layer)
+- ❌ Avoid repeating folder name in file name
+
 **When to Use**:
 - ✅ One page = one route
 - ✅ Group similar pages (e.g., login + registration)
@@ -75,16 +82,34 @@ Feature-Sliced Design is a hierarchical architecture pattern that organizes code
 - ❌ Reusable components across pages (use widgets/ or features/)
 - ❌ Business logic without UI (use features/ or entities/)
 
-**Example**:
+**Examples**:
 ```typescript
-// ✅ GOOD: pages/assets/character-plot-detail-page.tsx
-// Full page component for character/plot detail view
+// ✅ GOOD: Optimal naming (current structure)
+pages/sessions/
+  index.tsx           // SessionsPage - list view
+  new.tsx             // CreateSessionPage
+  detail.tsx          // SessionDetailPage
 
-// ✅ GOOD: pages/auth/login-page.tsx + pages/auth/register-page.tsx
-// Grouped similar pages in one slice
+pages/assets/characters/
+  index.tsx           // CharactersPage - list view
+  new.tsx             // CreateCharacterPage
 
-// ❌ BAD: pages/assets/components/card-header.tsx
-// Reusable component → should be widgets/card-header/ or features/card/ui/
+pages/settings/account/
+  index.tsx           // AccountPage
+  credit-usage.tsx    // CreditUsagePage
+  signup.tsx          // SignUpPage
+
+// ❌ BAD: Old naming patterns (avoid these)
+pages/sessions/
+  new-session.tsx     // Redundant: folder already says "sessions"
+  session-detail.tsx  // Redundant prefix
+
+pages/login-page.tsx  // Redundant: already in pages/ layer
+pages/login.tsx       // ✅ Better
+
+// ❌ BAD: Reusable component in pages/
+pages/assets/components/card-header.tsx
+// Should be: widgets/card-header/ or features/card/ui/
 ```
 
 ---
@@ -144,13 +169,14 @@ Feature-Sliced Design is a hierarchical architecture pattern that organizes code
 **Example**:
 ```typescript
 // ✅ GOOD: features/character/ui/create-character/
-// Character creation wizard (multi-step form)
+// Character creation wizard (multi-step form) - reusable across pages
 
 // ✅ GOOD: features/session/api/use-create-session.ts
-// Session creation mutation
+// Session creation mutation - reusable logic
 
-// ❌ BAD: features/card/panels/card-panel-main.tsx
-// Full page component → should be pages/assets/character-plot-detail-page.tsx
+// ❌ BAD: Full page components in features/
+// Should be in pages/ layer instead
+// Example: pages/assets/flows/detail.tsx (not features/flow/flow-panel-main.tsx)
 ```
 
 ---
@@ -374,12 +400,30 @@ import { theme } from "app/store/theme"; // ✅ Segment to segment OK
     📁 styles/ - dockview-detail.css (global library override)
 
   📁 pages/
+    login.tsx (root-level page)
+    📁 sessions/
+      index.tsx (list view)
+      new.tsx (create page)
+      detail.tsx (detail view)
     📁 assets/
-      character-plot-detail-page.tsx (full page component)
+      character-plot-detail.tsx (shared detail page for characters & plots)
       📁 characters/
-        new-character.tsx
+        index.tsx (list view)
+        new.tsx (create page)
       📁 plots/
-        new-plot.tsx
+        index.tsx (list view)
+        new.tsx (create page)
+      📁 flows/
+        index.tsx (list view)
+        detail.tsx (detail page)
+    📁 settings/
+      📁 account/
+        index.tsx (main account page)
+        credit-usage.tsx
+        signup.tsx
+      📁 onboarding/
+        step-one.tsx
+        step-two.tsx
 
   📁 widgets/
     📁 create-page-header/ - ui/create-page-header.tsx (reused across pages)
@@ -413,7 +457,7 @@ import { theme } from "app/store/theme"; // ✅ Segment to segment OK
 ```
 // ❌ BAD: features/card/panels/card-panel-main.tsx
 // Full page component in features layer
-// ✅ FIXED: pages/assets/character-plot-detail-page.tsx
+// ✅ FIXED: pages/assets/flows/detail.tsx
 
 // ❌ BAD: pages/assets/character-plot-detail-dockview.css
 // Global library override in pages layer
@@ -430,6 +474,14 @@ import { theme } from "app/store/theme"; // ✅ Segment to segment OK
 // ❌ BAD: features/session/ui/session-panel-mobile.tsx
 // Separate mobile file (forbidden in astrsk)
 // ✅ FIXED: Single component with useBreakpoint() hook
+
+// ❌ BAD: pages/sessions/new-session.tsx
+// Redundant prefix in file name
+// ✅ FIXED: pages/sessions/new.tsx
+
+// ❌ BAD: pages/settings/account/account-page.tsx
+// Redundant suffix in file name
+// ✅ FIXED: pages/settings/account/index.tsx
 ```
 
 ---
@@ -457,6 +509,7 @@ When refactoring code to FSD:
 5. **Not everything needs to be a feature** - Optimize for navigation
 6. **Global CSS goes in app/styles/** - Not in pages/ or features/
 7. **Domain state in entities/**, **app-wide state in shared/** - Clear separation
+8. **Simple file names in pages/** - Avoid redundant prefixes/suffixes (folder provides context)
 
 ---
 
@@ -757,6 +810,39 @@ import { Panel } from "shared/ui/panel";
   📁 session/          // Business domain
   📁 authentication/   // Business purpose
 ```
+
+### 5. Redundant File Naming in pages/
+
+```typescript
+// ❌ BAD: Redundant prefixes and suffixes
+pages/sessions/
+  new-session.tsx          // Redundant: folder already says "sessions"
+  session-detail.tsx       // Redundant prefix
+  session-list-page.tsx    // Redundant suffix AND prefix
+
+pages/login-page.tsx       // Redundant: already in pages/ layer
+
+pages/settings/onboarding/
+  onboarding-step-one-page.tsx  // Triple redundancy!
+
+// ✅ GOOD: Simple, predictable names
+pages/sessions/
+  index.tsx           // List view (standard pattern)
+  new.tsx             // Create page (predictable location)
+  detail.tsx          // Detail view (easy to search)
+
+pages/login.tsx       // Clean, no redundancy
+
+pages/settings/onboarding/
+  step-one.tsx        // Folder name already says "onboarding"
+  step-two.tsx
+```
+
+**Benefits of Simple Naming**:
+- ✅ File search: `sessions/new.tsx` is predictable
+- ✅ Less typing: `import from "pages/sessions/new"`
+- ✅ Consistency: Same pattern across all domains
+- ✅ FSD compliant: Folder structure provides context
 
 ---
 

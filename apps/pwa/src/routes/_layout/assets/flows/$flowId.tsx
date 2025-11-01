@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { FlowPanelMain } from "@/pages/assets/flows/flow-detail-page";
+import { FlowPanelMain } from "@/pages/assets/flows/detail";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 function FlowDetailPageWrapper() {

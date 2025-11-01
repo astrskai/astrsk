@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import ModelPage from "@/pages/settings/providers/model-page";
+import ModelPage from "@/pages/settings/providers/model";
 
 export const Route = createFileRoute("/_layout/settings/providers")({
   component: ModelPage,
