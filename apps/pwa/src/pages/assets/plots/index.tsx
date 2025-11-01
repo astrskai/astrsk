@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ListPageHeader } from "@/widgets/list-page-header";
 import { ASSET_TABS } from "@/shared/config/asset-tabs";
-import { PlotsGrid } from "@/features/plot/ui";
+import { PlotsGrid } from "./ui/list";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
 import { cardQueries } from "@/app/queries/card-queries";
 import { CardService } from "@/app/services/card-service";

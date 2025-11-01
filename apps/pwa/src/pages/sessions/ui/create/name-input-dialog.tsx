@@ -22,10 +22,7 @@ interface NameInputDialogProps {
  * Dialog for entering session name and uploading optional background image
  * before navigating to create session page
  */
-export function NameInputDialog({
-  open,
-  onOpenChange,
-}: NameInputDialogProps) {
+export function NameInputDialog({ open, onOpenChange }: NameInputDialogProps) {
   const navigate = useNavigate();
   const [sessionName, setSessionName] = useState("New Session");
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
@@ -97,12 +94,12 @@ export function NameInputDialog({
 
           {/* Background Image Upload (Optional) */}
           <div className="flex flex-col gap-2">
-            <label className="text-text-primary text-sm font-medium">
+            {/* <label className="text-text-primary text-sm font-medium">
               Background Image <span className="text-text-secondary text-xs">(Optional)</span>
-            </label>
+            </label> */}
 
             {/* Preview or Upload Area */}
-            <div
+            {/* <div
               className={cn(
                 "border-border hover:border-primary relative flex h-32 w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-colors",
                 previewUrl && "border-solid",
@@ -128,7 +125,7 @@ export function NameInputDialog({
                   </span>
                 </div>
               )}
-            </div>
+            </div> */}
 
             <input
               id="background-upload"
@@ -144,11 +141,7 @@ export function NameInputDialog({
           <Button size="lg" variant="ghost" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button
-            size="lg"
-            onClick={handleNext}
-            disabled={!sessionName.trim()}
-          >
+          <Button size="lg" onClick={handleNext} disabled={!sessionName.trim()}>
             Next
           </Button>
         </DialogFooter>

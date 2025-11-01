@@ -19,7 +19,7 @@ import { flowQueries } from "@/app/queries/flow-queries";
 import { useQuery } from "@tanstack/react-query";
 import { useMobileNavigation } from "@/shared/stores/mobile-navigation-context";
 
-import { FlowDialog } from "@/features/flow/flow-dialog";
+// import { FlowDialog } from "@/features/flow/flow-dialog";
 import { cn } from "@/shared/lib";
 import { humanizeBytes } from "@/features/session/session-list";
 import { ModelItem } from "@/features/flow/flow-multi/components/model-selection";
@@ -894,12 +894,12 @@ export default function FlowPageMobile({ className }: { className?: string }) {
       />
 
       {/* Create Flow Dialog */}
-      <FlowDialog
+      {/* <FlowDialog
         open={isDialogOpen}
         mode="create"
         onCreate={handleDialogCreate}
         onClose={handleDialogClose}
-      />
+      /> */}
 
       {/* Mobile Edit Not Supported Dialog */}
       <Dialog

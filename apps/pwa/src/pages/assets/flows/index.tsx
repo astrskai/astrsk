@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ListPageHeader } from "@/widgets/list-page-header";
 import { ASSET_TABS } from "@/shared/config/asset-tabs";
-import { FlowsGrid, CreateFlowDialog } from "@/features/flow/ui";
+import { FlowsGrid } from "./ui/list";
+import { CreateFlowDialog } from "./ui/create";
 import {
   FlowImportDialog,
   AgentModel,

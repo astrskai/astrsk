@@ -2,7 +2,7 @@ import { Plus } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useCallback } from "react";
 import { Flow } from "@/entities/flow/domain/flow";
-import { FlowCard } from "@/features/flow/ui";
+import { FlowCard } from "./flow-card";
 import { NewFlowCard } from "./new-flow-card";
 import { Button } from "@/shared/ui/forms";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
