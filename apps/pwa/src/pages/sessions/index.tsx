@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { SessionsHeader, SessionsGrid } from "@/features/session/ui";
+import { SessionsGrid } from "@/features/session/ui";
 import { NameInputDialog } from "@/features/session/ui/create-session";
 import { SessionImportDialog } from "@/features/session/components/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
 
 import { sessionQueries } from "@/app/queries/session-queries";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
+import { ListPageHeader } from "@/widgets/list-page-header";
 
 /**
  * Sessions list page - displays all sessions in a card grid
@@ -46,7 +47,8 @@ export function SessionsPage() {
   return (
     <div className="bg-background-surface-2 flex h-full w-full flex-col">
       {/* Header */}
-      <SessionsHeader
+      <ListPageHeader
+        title="Sessions"
         keyword={keyword}
         onKeywordChange={setKeyword}
         onImportClick={() => setIsOpenImportDialog(true)}

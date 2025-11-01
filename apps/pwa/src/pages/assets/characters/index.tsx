@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AssetsHeader } from "@/widgets/assets-header";
+import { ListPageHeader } from "@/widgets/list-page-header";
+import { ASSET_TABS } from "@/shared/config/asset-tabs";
 import { CharactersGrid } from "@/features/character/ui";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
 import { cardQueries } from "@/app/queries/card-queries";
@@ -116,7 +117,10 @@ export function CharactersListPage() {
       />
 
       {/* Header */}
-      <AssetsHeader
+      <ListPageHeader
+        title="Assets"
+        tabs={ASSET_TABS}
+        activeTab="characters"
         keyword={keyword}
         onKeywordChange={setKeyword}
         onImportClick={handleImport}

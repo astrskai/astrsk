@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 import { cn, logger } from "@/shared/lib";
-import { FlowIcon } from "@/shared/assets/icons";
+import { IconFlow } from "@/shared/assets/icons";
 import { CircleAlert, Copy, Download, Trash2 } from "lucide-react";
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import {
@@ -265,7 +265,7 @@ export function FlowCard({
         {/* Flow Name with Status */}
         <div className="mb-3 flex items-start justify-between gap-2">
           <h3 className="text-text-primary flex items-start gap-2 text-lg font-semibold">
-            <FlowIcon className="h-5 w-5 shrink-0" />
+            <IconFlow className="h-5 w-5 shrink-0" />
             <span className="line-clamp-2">
               {flow.props.name || "Untitled Flow"}
             </span>
@@ -340,7 +340,7 @@ export function FlowCard({
             <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
             {/* Action buttons */}
-            <div className="text-button-foreground-primary absolute bottom-4 right-4 flex translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+            <div className="text-button-foreground-primary absolute right-4 bottom-4 flex translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
               <button
                 onClick={handleDownload}
                 aria-label={`Download ${flow.props.name}`}
@@ -354,7 +354,8 @@ export function FlowCard({
                 aria-label={`Copy ${flow.props.name}`}
                 className={cn(
                   "hover:bg-primary-strong flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-sm backdrop-blur-sm transition-colors",
-                  cloneFlowMutation.isPending && "cursor-not-allowed opacity-50",
+                  cloneFlowMutation.isPending &&
+                    "cursor-not-allowed opacity-50",
                 )}
               >
                 <Copy className="h-4 w-4" />
@@ -365,7 +366,8 @@ export function FlowCard({
                 aria-label={`Delete ${flow.props.name}`}
                 className={cn(
                   "hover:bg-primary-strong flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-sm backdrop-blur-sm transition-colors",
-                  deleteFlowMutation.isPending && "cursor-not-allowed opacity-50",
+                  deleteFlowMutation.isPending &&
+                    "cursor-not-allowed opacity-50",
                 )}
               >
                 <Trash2 className="h-4 w-4" />

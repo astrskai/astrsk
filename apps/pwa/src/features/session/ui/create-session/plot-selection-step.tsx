@@ -6,7 +6,7 @@ import { CardDisplay } from "@/features/card/ui";
 import { cardQueries } from "@/app/queries/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
-import { FlowIcon } from "@/shared/assets/icons";
+import { IconFlow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import {
   Dialog,
@@ -104,7 +104,7 @@ export function PlotSelectionStep({
           <>
             {/* Selected Plot Display */}
             <h3 className="text-text-primary mb-4 flex items-center gap-2 text-lg font-semibold">
-              <FlowIcon className="h-5 w-5" />
+              <IconFlow className="h-5 w-5" />
               Selected Plot
             </h3>
             <div className="flex justify-center">
@@ -125,7 +125,7 @@ export function PlotSelectionStep({
           <>
             {/* Select from List Placeholder */}
             <div className="flex flex-col items-center justify-center py-8">
-              <FlowIcon className="text-text-secondary mb-3 h-12 w-12" />
+              <IconFlow className="text-text-secondary mb-3 h-12 w-12" />
               <h3 className="text-text-primary mb-2 text-lg font-semibold">
                 Select from the list
               </h3>

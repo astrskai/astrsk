@@ -2,9 +2,6 @@ import { useNavigate, useLocation } from "@tanstack/react-router";
 import {
   ChevronLeft,
   ChevronRight,
-  FolderOpen,
-  LogIn,
-  Settings as SettingsIcon,
 } from "lucide-react";
 
 import {
@@ -13,90 +10,14 @@ import {
   Typo2XLarge,
   TypoXLarge,
   TypoBase,
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetDescription,
   SvgIcon,
 } from "@/shared/ui";
 import { TopNavigation } from "@/widgets/top-navigation";
-import { SessionsIcon } from "@/shared/assets/icons";
+import { MobileMenuDrawer } from "@/widgets/mobile-menu-drawer";
 import { useEffect, useState } from "react";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
-}
-
-// Mobile Navigation Menu Component
-function MobileNavigationMenu({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
-  const navigate = useNavigate();
-
-  const handleNavigation = (to: string) => {
-    navigate({ to });
-    onClose();
-  };
-
-  return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="left" className="w-[280px] p-0">
-        {/* Visually hidden title and description for accessibility */}
-        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-        <SheetDescription className="sr-only">
-          Navigate between Sessions, Assets, Settings, and Login pages
-        </SheetDescription>
-
-        <div className="bg-background-surface-2 flex h-full flex-col">
-          {/* Header with logo */}
-          <div className="border-border flex items-center gap-3 border-b px-4 py-4">
-            <SvgIcon name="astrsk_logo_full" width={85} height={20} />
-          </div>
-
-          {/* Navigation Links */}
-          <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
-              <button
-                onClick={() => handleNavigation("/sessions")}
-                className="hover:bg-background-hover text-text-primary flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors"
-              >
-                <SessionsIcon className="h-5 w-5" />
-                <span className="text-base font-medium">Sessions</span>
-              </button>
-
-              <button
-                onClick={() => handleNavigation("/assets")}
-                className="hover:bg-background-hover text-text-primary flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors"
-              >
-                <FolderOpen className="h-5 w-5" />
-                <span className="text-base font-medium">Assets</span>
-              </button>
-
-              <button
-                onClick={() => handleNavigation("/settings")}
-                className="bg-background-selected text-text-primary flex items-center gap-3 rounded-lg px-4 py-3 text-left"
-              >
-                <SettingsIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">Settings</span>
-              </button>
-
-              <Separator className="my-2" />
-
-              <button
-                onClick={() => handleNavigation("/login")}
-                className="hover:bg-background-hover text-text-primary flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors"
-              >
-                <LogIn className="h-5 w-5" />
-                <span className="text-base font-medium">Log in</span>
-              </button>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
 }
 
 export default function SettingsPage() {
@@ -183,10 +104,10 @@ export default function SettingsPage() {
 
   return (
     <>
-      {/* Mobile Navigation Menu */}
-      <MobileNavigationMenu
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
+      {/* Mobile Menu Drawer */}
+      <MobileMenuDrawer
+        open={isMobileMenuOpen}
+        onOpenChange={setIsMobileMenuOpen}
       />
 
       <div className="flex h-full flex-col overflow-hidden">

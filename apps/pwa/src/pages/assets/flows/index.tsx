@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AssetsHeader } from "@/widgets/assets-header";
+import { ListPageHeader } from "@/widgets/list-page-header";
+import { ASSET_TABS } from "@/shared/config/asset-tabs";
 import { FlowsGrid, CreateFlowDialog } from "@/features/flow/ui";
 import {
   FlowImportDialog,
@@ -184,7 +185,10 @@ export function FlowsListPage() {
   return (
     <div className="bg-background-surface-2 flex h-full w-full flex-col">
       {/* Header */}
-      <AssetsHeader
+      <ListPageHeader
+        title="Assets"
+        tabs={ASSET_TABS}
+        activeTab="flows"
         keyword={keyword}
         onKeywordChange={setKeyword}
         onImportClick={handleImportClick}

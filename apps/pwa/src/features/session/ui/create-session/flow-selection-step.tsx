@@ -4,7 +4,7 @@ import { Button, SearchInput } from "@/shared/ui/forms";
 import { FlowCard } from "@/features/flow/ui";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { Flow } from "@/entities/flow/domain/flow";
-import { FlowIcon } from "@/shared/assets/icons";
+import { IconFlow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import {
   Dialog,
@@ -91,7 +91,7 @@ export function FlowSelectionStep({
           <>
             {/* Selected Flow Display */}
             <h3 className="text-text-primary mb-3 flex items-center gap-2 text-lg font-semibold">
-              <FlowIcon className="h-5 w-5" />
+              <IconFlow className="h-5 w-5" />
               {selectedFlow.props.name || "Untitled Flow"}
             </h3>
             <div className="flex flex-col gap-2">
@@ -139,7 +139,7 @@ export function FlowSelectionStep({
           <>
             {/* Add Flow Placeholder */}
             <div className="flex flex-col items-center justify-center py-8">
-              <FlowIcon className="text-text-secondary mb-3 h-12 w-12" />
+              <IconFlow className="text-text-secondary mb-3 h-12 w-12" />
               <h3 className="text-text-primary mb-2 text-lg font-semibold">
                 Add Flow
               </h3>
