@@ -108,8 +108,11 @@ const SessionContent = ({
   const { data: session } = useQuery(
     sessionQueries.detail(selectedSessionId ?? undefined),
   );
+
   const invalidateSession = useCallback(() => {
-    queryClient.invalidateQueries({
+    // Use refetchQueries instead of invalidateQueries to prevent flickering
+    // This refetches in background while keeping optimistic data visible
+    queryClient.refetchQueries({
       queryKey: sessionQueries.detail(selectedSessionId ?? undefined).queryKey,
     });
   }, [queryClient, selectedSessionId]);
@@ -713,13 +716,16 @@ const SessionContent = ({
           return;
         }
 
-        // Close modal
+        // Close modal first to prevent flickering
         setIsOpenSelectScenarioModal(false);
+
+        // Invalidate session to refetch with new message
+        invalidateSession();
       } finally {
         // Modal handles its own loading state
       }
     },
-    [invalidateSession, renderedScenarios, session],
+    [addMessageMutation, invalidateSession, renderedScenarios, session],
   );
 
   // Edit message
@@ -1417,9 +1423,8 @@ const SessionContent = ({
               <Button
                 size="lg"
                 onClick={() => {
-                  renderScenarios();
                   setIsOpenSelectScenarioModal(false);
-                  setIsOpenSelectScenarioModal(true);
+                  onAddPlotCard();
                 }}
               >
                 Add plot card

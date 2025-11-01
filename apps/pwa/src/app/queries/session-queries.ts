@@ -11,10 +11,6 @@ import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { logger } from "@/shared/lib";
 import { queryOptions, useMutation } from "@tanstack/react-query";
 
-// WeakMap cache for preventing unnecessary re-renders
-// Uses data object references as keys for automatic garbage collection
-const selectResultCache = new WeakMap<object, any>();
-
 export const sessionQueries = {
   all: () => ["sessions"] as const,
 
@@ -46,15 +42,10 @@ export const sessionQueries = {
       },
       select: (data) => {
         if (!data || !Array.isArray(data)) return [];
-
-        const cached = selectResultCache.get(data as object);
-        if (cached) return cached;
-
-        const result = data.map((session) =>
+        // Always convert to domain - no caching to ensure optimistic updates work
+        return data.map((session) =>
           SessionDrizzleMapper.toDomain(session as any),
         );
-        selectResultCache.set(data as object, result);
-        return result;
       },
       gcTime: 1000 * 30, // 30 seconds cache
       staleTime: 1000 * 10, // 10 seconds stale time
@@ -76,13 +67,8 @@ export const sessionQueries = {
       },
       select: (data) => {
         if (!data) return null;
-
-        const cached = selectResultCache.get(data as object);
-        if (cached) return cached;
-
-        const result = SessionDrizzleMapper.toDomain(data as any);
-        selectResultCache.set(data as object, result);
-        return result;
+        // Always convert to domain - no caching to ensure optimistic updates work
+        return SessionDrizzleMapper.toDomain(data as any);
       },
       enabled: !!id,
       gcTime: 1000 * 60 * 5, // 5 minutes cache
@@ -170,8 +156,14 @@ export const useAddMessage = (sessionId: UniqueEntityID) => {
       sessionId: UniqueEntityID;
       message: Turn;
     }) => {
-      // Get session
-      const session = await fetchSession(sessionId);
+      // Get session from cache (don't refetch to preserve optimistic update)
+      const sessionData = queryClient.getQueryData(
+        sessionQueries.detail(sessionId).queryKey,
+      );
+      if (!sessionData) {
+        throw new Error("Session not found in cache");
+      }
+      const session = SessionDrizzleMapper.toDomain(sessionData as any);
 
       // Add message
       const sessionAndMessage = (
@@ -241,6 +233,7 @@ export const useAddMessage = (sessionId: UniqueEntityID) => {
         queryKey: turnQueryKey,
       });
     },
+
   });
 };
 

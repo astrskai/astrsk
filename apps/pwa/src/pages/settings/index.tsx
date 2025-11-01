@@ -1,11 +1,7 @@
-import { useNavigate, useLocation } from "@tanstack/react-router";
-import {
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { ChevronRight } from "lucide-react";
 
 import {
-  Button,
   Separator,
   Typo2XLarge,
   TypoXLarge,
@@ -15,21 +11,83 @@ import {
 import { TopNavigation } from "@/widgets/top-navigation";
 import { MobileMenuDrawer } from "@/widgets/mobile-menu-drawer";
 import { useEffect, useState } from "react";
+import { ConvexReady } from "@/shared/ui/convex-ready";
+import { Authenticated, Unauthenticated } from "convex/react";
+import { useAuth } from "@clerk/clerk-react";
+import { useSignUp } from "@clerk/clerk-react";
+import { useCallback } from "react";
+import { toast } from "sonner";
+import { logger } from "@/shared/lib/logger";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+// Settings menu items configuration
+interface SettingsMenuItem {
+  label: string;
+  onClick: () => void;
+  icon?: React.ReactNode;
+  showChevron?: boolean;
+}
+
+interface SettingsSectionProps {
+  title?: string;
+  items: SettingsMenuItem[];
+  className?: string;
+}
+
+// Reusable menu item component
+const SettingsMenuItemComponent = ({
+  label,
+  onClick,
+  icon,
+  showChevron = true,
+}: SettingsMenuItem) => {
+  return (
+    <div
+      className="flex cursor-pointer items-center justify-between"
+      onClick={onClick}
+    >
+      <div className="flex items-center gap-2">
+        {icon}
+        <TypoBase className="text-text-body font-semibold">{label}</TypoBase>
+      </div>
+      {showChevron && (
+        <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
+      )}
+    </div>
+  );
+};
+
+// Reusable section component
+const SettingsSectionComponent = ({
+  title,
+  items,
+  className = "my-8 space-y-8 md:my-13",
+}: SettingsSectionProps) => {
+  return (
+    <section className={className}>
+      {title && (
+        <TypoXLarge className="text-text-primary font-semibold">
+          {title}
+        </TypoXLarge>
+      )}
+
+      {items.map((item) => (
+        <SettingsMenuItemComponent key={item.label} {...item} />
+      ))}
+    </section>
+  );
+};
+
 export default function SettingsPage() {
   // 1. State hooks
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 2. Context hooks
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Determine if we're on settings root or sub-route
-  const isSettingsRoot = location.pathname === "/settings";
 
   // Close mobile menu when viewport changes to desktop size
   useEffect(() => {
@@ -45,62 +103,94 @@ export default function SettingsPage() {
   }, [isMobileMenuOpen]);
 
   // 3. Event handlers
-  const handleBack = () => {
-    navigate({ to: "/settings" });
-  };
-
-  const onClickProviders = () => {
-    navigate({ to: "/settings/providers" });
-  };
-
-  const onClickLegal = () => {
-    navigate({ to: "/settings/legal" });
-  };
-
-  const onClickAdvanced = () => {
-    navigate({ to: "/settings/advanced" });
-  };
-
-  {
-    /** disabled subscribe */
-  }
   // Sign up with SSO
-  // const { userId } = useAuth();
-  // const { isLoaded: isLoadedSignUp, signUp } = useSignUp();
+  const { userId } = useAuth();
+  const { isLoaded: isLoadedSignUp, signUp } = useSignUp();
 
-  // const signUpWithDiscord = useCallback(async () => {
-  //   // Check sign up is loaded
-  //   if (!isLoadedSignUp) {
-  //     return;
-  //   }
+  const signUpWithDiscord = useCallback(async () => {
+    // Check sign up is loaded
+    if (!isLoadedSignUp) {
+      return;
+    }
 
-  //   // Check already signed in
-  //   if (userId) {
-  //     toast.info("You already signed in");
-  //     return;
-  //   }
+    // Check already signed in
+    if (userId) {
+      toast.info("You already signed in");
+      return;
+    }
 
-  //   try {
-  //     // Try to sign up with google
-  //     setIsLoading(true);
+    try {
+      // Try to sign up with google
+      setIsLoading(true);
 
-  //     await signUp.authenticateWithRedirect({
-  //       strategy: "oauth_discord",
-  //       redirectUrl: "/sso-callback",
-  //       redirectUrlComplete: "/",
-  //     });
-  //   } catch (error) {
-  //     setIsLoading(false);
-  //     logger.error(error);
-  //     toast.error("Failed to sign up", {
-  //       description: JSON.stringify(error),
-  //     });
-  //   }
-  // }, [isLoadedSignUp, signUp, userId]);
+      await signUp.authenticateWithRedirect({
+        strategy: "oauth_discord",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/",
+      });
+    } catch (error) {
+      setIsLoading(false);
+      logger.error(error);
+      toast.error("Failed to sign up", {
+        description: JSON.stringify(error),
+      });
+    }
+  }, [isLoadedSignUp, signUp, userId]);
 
-  // const onClickAccount = () => {
-  //   navigate({ to: "/settings/account" });
-  // };
+  // Settings menu configuration
+  const appPreferencesItems: SettingsMenuItem[] = [
+    {
+      label: "Account and subscription",
+      onClick: () => navigate({ to: "/settings/account" }),
+      showChevron: true,
+    },
+    {
+      label: "Providers",
+      onClick: () => navigate({ to: "/settings/providers" }),
+      showChevron: true,
+    },
+  ];
+
+  const communityItems: SettingsMenuItem[] = [
+    {
+      label: "Join our Discord",
+      onClick: () => openInNewTab("https://discord.gg/J6ry7w8YCF"),
+      icon: <SvgIcon name="discord" className="h-5 w-5 text-[#5865F2]" />,
+      showChevron: false,
+    },
+    {
+      label: "Visit our Reddit",
+      onClick: () => openInNewTab("https://www.reddit.com/r/astrsk_ai/"),
+      icon: <SvgIcon name="reddit_color" className="h-5 w-5 text-orange-500" />,
+      showChevron: false,
+    },
+  ];
+
+  const supportItems: SettingsMenuItem[] = [
+    {
+      label: "User manual",
+      onClick: () => openInNewTab("https://docs.astrsk.ai/"),
+      showChevron: false,
+    },
+    {
+      label: "About astrsk.ai",
+      onClick: () => openInNewTab("https://join.astrsk.ai"),
+      showChevron: false,
+    },
+    {
+      label: "Legal",
+      onClick: () => navigate({ to: "/settings/legal" }),
+      showChevron: true,
+    },
+  ];
+
+  const advancedItems: SettingsMenuItem[] = [
+    {
+      label: "Advanced Preferences",
+      onClick: () => navigate({ to: "/settings/advanced" }),
+      showChevron: true,
+    },
+  ];
 
   return (
     <>
@@ -111,34 +201,13 @@ export default function SettingsPage() {
       />
 
       <div className="flex h-full flex-col overflow-hidden">
-        {/* Mobile Header - only show on mobile (<768px) when on settings root */}
-        {isSettingsRoot && (
-          <div className="md:hidden">
-            <TopNavigation
-              title="Settings"
-              onMenuClick={() => setIsMobileMenuOpen(true)}
-            />
-          </div>
-        )}
-
-        {/* Mobile Sub-route Header with Back Button - only show on mobile when NOT on settings root */}
-        {!isSettingsRoot && (
-          <div className="md:hidden">
-            <TopNavigation
-              title="Settings"
-              leftAction={
-                <Button
-                  variant="ghost_white"
-                  size="icon"
-                  className="h-[40px] w-[40px] p-[8px]"
-                  onClick={handleBack}
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </Button>
-              }
-            />
-          </div>
-        )}
+        {/* Mobile Header - settings root only (with menu button) */}
+        <div className="md:hidden">
+          <TopNavigation
+            title="Settings"
+            onMenuClick={() => setIsMobileMenuOpen(true)}
+          />
+        </div>
 
         {/* Content */}
         <div className="bg-background-surface-2 md:bg-background-surface-1 flex-1 overflow-y-auto">
@@ -154,134 +223,44 @@ export default function SettingsPage() {
                 App Preferences
               </TypoXLarge>
 
-              {/** disabled subscribe */}
-              {/* <ConvexReady>
-            <Authenticated>
-              <div
-                className="flex cursor-pointer items-center justify-between"
-                onClick={onClickAccount}
-              >
-                <TypoBase className="text-text-body font-semibold">
-                  Account and subscription
-                </TypoBase>
-                <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
-              </div>
-            </Authenticated>
-            <Unauthenticated>
-              <div
-                className="flex cursor-pointer items-center justify-between"
-                onClick={() => {
-                  signUpWithDiscord();
-                }}
-              >
-                <TypoBase className="text-text-body font-semibold">
-                  Sign in
-                </TypoBase>
-                <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
-              </div>
-            </Unauthenticated>
-          </ConvexReady> */}
-
-              <div
-                className="flex cursor-pointer items-center justify-between"
-                onClick={onClickProviders}
-              >
-                <TypoBase className="text-text-body font-semibold">
-                  Providers
-                </TypoBase>
-                <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
-              </div>
+              <ConvexReady>
+                <Authenticated>
+                  {appPreferencesItems.map((item) => (
+                    <SettingsMenuItemComponent key={item.label} {...item} />
+                  ))}
+                </Authenticated>
+                <Unauthenticated>
+                  {/* <SettingsMenuItemComponent
+                    label="Sign in"
+                    onClick={signUpWithDiscord}
+                    showChevron={true}
+                  /> */}
+                  <SettingsMenuItemComponent
+                    label="Providers"
+                    onClick={() => navigate({ to: "/settings/providers" })}
+                    showChevron={true}
+                  />
+                </Unauthenticated>
+              </ConvexReady>
             </section>
 
             <Separator />
 
             {/* Community Section */}
-            <section className="my-8 space-y-8 md:my-13">
-              <TypoXLarge className="text-text-primary font-semibold">
-                Community
-              </TypoXLarge>
-
-              <div
-                className="text-text-body flex cursor-pointer items-center justify-between"
-                onClick={() => openInNewTab("https://discord.gg/J6ry7w8YCF")}
-              >
-                <div className="flex items-center gap-2">
-                  <SvgIcon name="discord" className="h-5 w-5 text-[#5865F2]" />
-                  <TypoBase className="text-text-body font-semibold">
-                    Join our Discord
-                  </TypoBase>
-                </div>
-              </div>
-
-              <div
-                className="text-text-body flex cursor-pointer items-center justify-between"
-                onClick={() => {
-                  openInNewTab("https://www.reddit.com/r/astrsk_ai/");
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <SvgIcon
-                    name="reddit_color"
-                    className="h-5 w-5 text-orange-500"
-                  />
-                  <TypoBase className="text-text-body font-semibold">
-                    Visit our Reddit
-                  </TypoBase>
-                </div>
-              </div>
-            </section>
+            <SettingsSectionComponent
+              title="Community"
+              items={communityItems}
+            />
 
             <Separator />
 
             {/* Support Section */}
-            <section className="my-8 space-y-8 md:my-13">
-              <TypoXLarge className="text-text-primary font-semibold">
-                Support
-              </TypoXLarge>
-
-              <div
-                className="text-text-body flex cursor-pointer items-center justify-between"
-                onClick={() => openInNewTab("https://docs.astrsk.ai/")}
-              >
-                <TypoBase className="text-text-body font-semibold">
-                  User manual
-                </TypoBase>
-              </div>
-
-              <div
-                className="text-text-body flex cursor-pointer items-center justify-between"
-                onClick={() => openInNewTab("https://join.astrsk.ai")}
-              >
-                <TypoBase className="text-text-body font-semibold">
-                  About astrsk.ai
-                </TypoBase>
-              </div>
-
-              <div
-                className="flex cursor-pointer items-center justify-between"
-                onClick={onClickLegal}
-              >
-                <TypoBase className="text-text-body font-semibold">
-                  Legal
-                </TypoBase>
-                <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
-              </div>
-            </section>
+            <SettingsSectionComponent title="Support" items={supportItems} />
 
             <Separator />
 
             {/* Advanced Section */}
-            <section className="my-8 space-y-8 md:my-13">
-              <div
-                className="flex cursor-pointer items-center justify-between"
-                onClick={onClickAdvanced}
-              >
-                <TypoBase className="text-text-body font-semibold">
-                  Advanced Preferences
-                </TypoBase>
-                <ChevronRight className="text-text-secondary h-5 min-h-4 w-5 min-w-4" />
-              </div>
-            </section>
+            <SettingsSectionComponent items={advancedItems} />
           </div>
         </div>
       </div>

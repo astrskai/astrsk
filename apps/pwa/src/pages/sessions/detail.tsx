@@ -21,7 +21,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-export default function SessionPage({ className }: { className?: string }) {
+export default function SessionDetailPage({
+  className,
+}: {
+  className?: string;
+}) {
   const navigate = useNavigate();
   const { sessionId } = Route.useParams();
   const [isOpenSettings, setIsOpenSettings] = useState(false);
@@ -109,7 +113,7 @@ export default function SessionPage({ className }: { className?: string }) {
 
         {/* Center: Session title */}
         <h1 className="text-text-primary flex-1 truncate text-center text-base font-semibold">
-          {session?.props.name || "Session"}
+          {session?.title ?? "Session"}
         </h1>
 
         {/* Right: Settings button */}

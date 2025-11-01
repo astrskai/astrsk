@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import SessionPage from "@/pages/sessions/detail";
+import SessionDetailPage from "@/pages/sessions/detail";
 import { UniqueEntityID } from "@/shared/domain";
 
 export const Route = createFileRoute("/_layout/sessions/$sessionId")({
-  component: SessionPage,
+  component: SessionDetailPage,
   beforeLoad: async ({ params }) => {
     const { sessionId } = params;
 
