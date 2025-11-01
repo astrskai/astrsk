@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { SessionService } from "@/app/services/session-service";
 import { queryClient } from "@/app/queries/query-client";
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { cardQueries } from "@/app/queries/card-queries";
 import { fetchBackgrounds } from "@/shared/stores/background-store";

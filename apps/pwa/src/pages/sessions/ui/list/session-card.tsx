@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { queryClient } from "@/app/queries/query-client";
 import { SessionService } from "@/app/services/session-service";
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 import { Session } from "@/entities/session/domain/session";
 import { ModelTier } from "@/entities/agent/domain/agent";
 import { FlowService } from "@/app/services/flow-service";

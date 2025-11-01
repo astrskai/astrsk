@@ -13,7 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 import { Session } from "@/entities/session/domain";
 import { useNavigate } from "@tanstack/react-router";
 

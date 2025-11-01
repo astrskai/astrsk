@@ -1,4 +1,4 @@
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 import { turnQueries } from "@/app/queries/turn-queries";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { Editor } from "@/shared/ui";

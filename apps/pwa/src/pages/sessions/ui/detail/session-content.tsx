@@ -42,7 +42,7 @@ import {
   useAddMessage,
   useDeleteMessage,
   useSaveSession,
-} from "@/app/queries/session-queries";
+} from "@/entities/session/api";
 import {
   fetchTurn,
   fetchTurnOptional,

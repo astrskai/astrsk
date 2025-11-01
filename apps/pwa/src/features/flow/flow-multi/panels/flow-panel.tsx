@@ -112,7 +112,7 @@ import {
 } from "@/features/flow/flow-multi/nodes/index";
 import { CustomReactFlowControls } from "@/features/flow/flow-multi/components/custom-controls";
 import { useAgentStore } from "@/shared/stores/agent-store";
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 
 interface FlowPanelProps {
   flowId: string;

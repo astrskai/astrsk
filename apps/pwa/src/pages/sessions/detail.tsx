@@ -1,5 +1,5 @@
 import { useAsset } from "@/shared/hooks/use-asset";
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useBackgroundStore } from "@/shared/stores/background-store";
 import { useSessionStore } from "@/shared/stores/session-store";

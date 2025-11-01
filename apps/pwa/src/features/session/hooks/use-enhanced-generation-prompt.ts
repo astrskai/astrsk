@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useQuery, useQueries } from "@tanstack/react-query";
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 import { turnQueries } from "@/app/queries/turn-queries";
 import { Turn } from "@/entities/turn/domain/turn";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";

@@ -13,7 +13,7 @@ import { useCard } from "@/shared/hooks/use-card";
 import { useSession } from "@/shared/hooks/use-session";
 import { useTurn } from "@/shared/hooks/use-turn";
 import { queryClient } from "@/app/queries/query-client";
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 import { SessionService } from "@/app/services/session-service";
 import { useQuery } from "@tanstack/react-query";
 import { useAppStore } from "@/shared/stores/app-store";

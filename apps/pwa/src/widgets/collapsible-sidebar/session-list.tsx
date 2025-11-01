@@ -4,7 +4,7 @@ import { useSessionValidation } from "@/shared/hooks/use-session-validation";
 import { cardQueries } from "@/app/queries/card-queries";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { queryClient } from "@/app/queries/query-client";
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";

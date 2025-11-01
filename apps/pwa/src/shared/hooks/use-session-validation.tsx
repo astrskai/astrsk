@@ -3,7 +3,7 @@ import { useEffect, useMemo } from "react";
 
 import { UniqueEntityID } from "@/shared/domain";
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 import { useValidationStore } from "@/shared/stores/validation-store";
 import { logger } from "@/shared/lib";
 

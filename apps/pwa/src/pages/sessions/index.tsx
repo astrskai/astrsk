@@ -6,7 +6,7 @@ import { NameInputDialog } from "./ui/create";
 import { SessionImportDialog } from "@/features/session/ui/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
 
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
 import { ListPageHeader } from "@/widgets/list-page-header";
 
