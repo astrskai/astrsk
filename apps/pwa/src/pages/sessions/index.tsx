@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { SessionsGrid } from "./ui/list";
 import { NameInputDialog } from "./ui/create";
-import { SessionImportDialog } from "@/features/session/components/session-import-dialog";
+import { SessionImportDialog } from "@/features/session/ui/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
 
 import { sessionQueries } from "@/app/queries/session-queries";

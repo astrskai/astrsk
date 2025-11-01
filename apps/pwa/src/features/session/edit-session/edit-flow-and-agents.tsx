@@ -5,7 +5,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
-import { CustomSheet } from "@/features/session/components/custom-sheet";
+import { CustomSheet } from "@/features/session/ui/custom-sheet";
 import { cn } from "@/shared/lib";
 import {
   convertFlowAndAgentsFormToSessionProps,

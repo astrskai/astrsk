@@ -22,11 +22,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui";
 import {
   SessionImportDialog,
   type AgentModel,
-} from "@/features/session/components/session-import-dialog";
+} from "@/features/session/ui/session-import-dialog";
 import {
   SessionExportDialog,
   type AgentModelTierInfo,
-} from "@/features/session/components/session-export-dialog";
+} from "@/features/session/ui/session-export-dialog";
 import { ModelTier } from "@/entities/agent/domain/agent";
 import {
   Dialog,

@@ -7,7 +7,7 @@ import { flowQueries } from "@/app/queries/flow-queries";
 import { cardQueries } from "@/app/queries/card-queries";
 import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { logger } from "@/shared/lib";
-import type { AgentModel } from "@/features/session/components/session-import-dialog";
+import type { AgentModel } from "@/features/session/ui/session-import-dialog";
 
 /**
  * Hook for handling session import functionality

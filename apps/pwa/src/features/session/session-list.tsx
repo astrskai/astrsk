@@ -74,9 +74,7 @@ const SessionListMobile = ({
   } = useSessionStore();
   const { setActivePage, isMobile } = useAppStore();
   const navigate = useNavigate();
-  const { data: sessions = [] } = useQuery(
-    sessionQueries.list({ keyword }),
-  );
+  const { data: sessions = [] } = useQuery(sessionQueries.list({ keyword }));
 
   // Mobile stepper state
   const [isOpenCreateSessionMobile, setIsOpenCreateSessionMobile] =
@@ -553,14 +551,14 @@ const SessionListItemMobile = ({
               </div>
             </div>
             <div className="flex items-center justify-end">
-              {session.characterCards
+              {/* {session.characterCards
                 .slice(0, 3)
                 .map((card: CardType, index: number) => (
                   <MobileCharacterAvatar
                     key={card.id.toString()}
                     cardId={card.id}
                   />
-                ))}
+                ))} */}
               {session.characterCards.length > 3 && (
                 <div
                   className="bg-background-surface-3 outline-background-surface-2 inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"

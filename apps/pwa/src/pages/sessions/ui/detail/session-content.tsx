@@ -1337,9 +1337,9 @@ const SessionContent = ({
           isDataSchemaUsed && isOpenSessionData && "max-md:pr-0",
           // Bottom padding to prevent UserInputs overlap
           // Desktop: UserInputs height (~220px) + topbar height (40px)
-          "pb-[220px]",
+          "pb-[250px]",
           // Mobile: UserInputs height (~220px) + safe area
-          "max-md:pb-[230px]",
+          "max-md:pb-[220px]",
         )}
       >
         <div
