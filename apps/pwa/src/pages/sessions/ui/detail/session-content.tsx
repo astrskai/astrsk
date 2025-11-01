@@ -60,7 +60,7 @@ import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
 
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
-import { InlineChatStyles } from "@/features/session/inline-chat-styles";
+import { InlineChatStyles } from "./inline-chat-styles";
 
 import {
   Button,
@@ -88,9 +88,9 @@ import { fetchCharacterCard } from "@/app/queries/card/query-factory";
 import UserInputs from "./user-inputs";
 import {
   SelectScenarioModal,
-  MessageItem,
   SortableDataSchemaFieldItem,
 } from "./message-components";
+import { SessionMessages } from "./session-messages";
 
 const SessionContent = ({
   onAddPlotCard,
@@ -1352,48 +1352,20 @@ const SessionContent = ({
           />
 
           <div className="relative mx-auto max-w-[1196px]">
-            {virtualItems.map((virtualItem) => {
-              const messageId = session.turnIds[virtualItem.index];
-              const isLastMessage = virtualItem.index === messageCount - 1;
-
-              return (
-                <div
-                  key={virtualItem.key}
-                  data-index={virtualItem.index}
-                  ref={rowVirtualizer.measureElement}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    transform: `translateY(${virtualItem.start}px)`,
-                    paddingBottom: 16,
-                  }}
-                >
-                  <MessageItem
-                    messageId={messageId}
-                    userCharacterCardId={session.userCharacterCardId}
-                    translationConfig={session.translation}
-                    disabled={!!streamingMessageId}
-                    streaming={
-                      messageId.equals(streamingMessageId)
-                        ? {
-                            agentName: streamingAgentName,
-                            modelName: streamingModelName,
-                          }
-                        : undefined
-                    }
-                    isLastMessage={isLastMessage}
-                    dataSchemaOrder={session.dataSchemaOrder}
-                    editMessage={editMessage}
-                    deleteMessage={deleteMessage}
-                    selectOption={selectOption}
-                    generateOption={generateOption}
-                    onGenerateVideoFromImage={handleGenerateVideoFromImage}
-                  />
-                </div>
-              );
-            })}
+            <SessionMessages
+              session={session}
+              virtualItems={virtualItems}
+              messageCount={messageCount}
+              streamingMessageId={streamingMessageId}
+              streamingAgentName={streamingAgentName}
+              streamingModelName={streamingModelName}
+              editMessage={editMessage}
+              deleteMessage={deleteMessage}
+              selectOption={selectOption}
+              generateOption={generateOption}
+              handleGenerateVideoFromImage={handleGenerateVideoFromImage}
+              measureElement={rowVirtualizer.measureElement}
+            />
             {isOpenSelectScenarioModal && (
               <div className="absolute z-[20] flex w-full flex-row py-[100px]">
                 <SelectScenarioModal

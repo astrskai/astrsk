@@ -7,7 +7,7 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { useBackgroundStore } from "@/shared/stores/background-store";
 import { cn } from "@/shared/lib";
 import { StepBackgroundSchemaType } from "@/features/session/create-session/step-background";
-import { InlineChatStyles } from "@/features/session/inline-chat-styles";
+import { InlineChatStyles } from "@/pages/sessions/ui/detail/inline-chat-styles";
 import { MessageItemInternalMobile } from "@/features/session/mobile/session-messages-and-user-inputs-mobile";
 import {
   ColorPicker,
