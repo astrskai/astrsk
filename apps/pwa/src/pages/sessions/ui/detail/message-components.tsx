@@ -274,8 +274,8 @@ const MessageItemInternal = ({
               "chat-style-chat-bubble rounded-[8px] p-[16px] break-words",
               // Desktop: max width
               "max-w-[600px]",
-              // Mobile: full width of parent
-              "max-md:w-full max-md:max-w-full",
+              // Mobile: same behavior (text length only)
+              "max-md:max-w-full",
             )}
           >
             {/* Display generated image if exists */}
