@@ -74,9 +74,6 @@ export function MobileMenuDrawer({
     onOpenChange(false);
   };
 
-  // Get version from package.json or environment variable
-  const version = import.meta.env.VITE_APP_VERSION || "3.0.7";
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -101,7 +98,7 @@ export function MobileMenuDrawer({
 
         {/* Version Info */}
         <div className="border-border border-t px-4 py-3">
-          <p className="text-text-tertiary text-xs">Version {version}</p>
+          <p className="text-text-tertiary text-xs">Version {__APP_VERSION__}</p>
         </div>
       </SheetContent>
     </Sheet>

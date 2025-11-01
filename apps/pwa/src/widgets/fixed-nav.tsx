@@ -127,7 +127,7 @@ export function FixedNav() {
 
         {/* Version info */}
         <div className="text-text-secondary mt-4 text-center text-[10px]">
-          <div>v3.0.4</div>
+          <div>v{__APP_VERSION__}</div>
         </div>
       </div>
     </aside>
