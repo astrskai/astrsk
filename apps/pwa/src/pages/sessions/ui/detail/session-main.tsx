@@ -2,7 +2,7 @@ import { useRef } from "react";
 
 import { useSessionStore } from "@/shared/stores/session-store";
 import { cn } from "@/shared/lib";
-import { SessionMessagesAndUserInputs } from "@/features/session/session-messages-and-user-inputs";
+import { SessionMessagesAndUserInputs } from "./session-messages";
 
 const SessionMain = ({
   onAddPlotCard,

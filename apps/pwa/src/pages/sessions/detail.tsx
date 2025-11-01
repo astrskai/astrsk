@@ -13,8 +13,7 @@ import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
 import { Route } from "@/routes/_layout/sessions/$sessionId";
 import { CardTab } from "@/features/session/create-session/step-cards";
-import { SessionMain } from "@/features/session/session-main";
-import { SessionSettings } from "@/features/session/session-settings";
+import { SessionMain, SessionSettings } from "./ui/detail";
 import { FloatingActionButton, ScrollArea, SvgIcon } from "@/shared/ui";
 import { logger } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";
@@ -83,7 +82,7 @@ export default function SessionPage({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "bg-background-screen relative max-h-dvh min-h-dvh",
+        "bg-background-screen relative flex max-h-dvh min-h-dvh flex-col",
         className,
       )}
     >
@@ -96,14 +95,42 @@ export default function SessionPage({ className }: { className?: string }) {
           <div className="absolute inset-0 bg-[#000000] opacity-50" />
         </div>
       )}
+
+      {/* Mobile Header - only visible on mobile */}
+      <header className="border-border bg-background-surface-1 relative z-10 flex h-14 items-center justify-between border-b px-4 md:hidden">
+        {/* Left: Back button */}
+        <button
+          onClick={() => navigate({ to: "/sessions" })}
+          className="text-text-secondary hover:text-text-primary -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
+          aria-label="Go back to sessions list"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+
+        {/* Center: Session title */}
+        <h1 className="text-text-primary flex-1 truncate text-center text-base font-semibold">
+          {session?.props.name || "Session"}
+        </h1>
+
+        {/* Right: Settings button */}
+        <button
+          onClick={() => setIsOpenSettings(true)}
+          className="text-text-secondary hover:text-text-primary -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
+          aria-label="Session settings"
+        >
+          <SvgIcon name="edit" size={20} />
+        </button>
+      </header>
+
       <div
         className={cn(
-          "absolute inset-0 flex transition-transform duration-[600ms] ease-in-out",
+          "relative flex flex-1 transition-transform duration-[600ms] ease-in-out md:absolute md:inset-0",
           isOpenSettings && "-translate-x-full",
         )}
       >
         {/* Searchable Sidebar */}
         <SearchableSidebar
+          className="hidden md:block"
           keyword={sidebarKeyword}
           onKeywordChange={setSidebarKeyword}
           defaultExpanded={true}
@@ -132,15 +159,16 @@ export default function SessionPage({ className }: { className?: string }) {
         </div>
       </div>
 
-      {/* Session top gradient */}
+      {/* Session top gradient - desktop only */}
       <div
         className={cn(
           "pointer-events-none absolute inset-x-0 top-0 h-[100px]",
           "bg-gradient-to-b from-[#0E0E0EB2] to-[#0E0E0E00]",
+          "hidden md:block",
         )}
       />
 
-      {/* Session settings */}
+      {/* Session settings - desktop only */}
       {session && (
         <>
           <FloatingActionButton
@@ -148,7 +176,7 @@ export default function SessionPage({ className }: { className?: string }) {
             label="Session settings"
             position="top-right"
             className={cn(
-              "opacity-100 transition-opacity duration-[600ms] ease-in-out",
+              "hidden opacity-100 transition-opacity duration-[600ms] ease-in-out md:flex",
               isOpenSettings && "pointer-events-none opacity-0",
             )}
             onClick={() => {
@@ -162,7 +190,7 @@ export default function SessionPage({ className }: { className?: string }) {
             label="Back to session"
             position="top-left"
             className={cn(
-              "opacity-100 transition-opacity duration-[600ms] ease-in-out",
+              "hidden opacity-100 transition-opacity duration-[600ms] ease-in-out md:flex",
               !isOpenSettings && "pointer-events-none opacity-0",
             )}
             onClick={() => {
@@ -171,11 +199,31 @@ export default function SessionPage({ className }: { className?: string }) {
           />
           <div
             className={cn(
-              "absolute inset-0 translate-x-full overflow-hidden overflow-y-auto transition-transform duration-[600ms] ease-in-out",
+              "absolute inset-0 flex translate-x-full flex-col overflow-hidden transition-transform duration-[600ms] ease-in-out",
               isOpenSettings && "translate-x-0",
             )}
           >
-            <ScrollArea className="h-full">
+            {/* Mobile Settings Header - only visible on mobile */}
+            <header className="border-border bg-background-surface-1 relative z-10 flex h-14 items-center justify-between border-b px-4 md:hidden">
+              {/* Left: Back button */}
+              <button
+                onClick={() => setIsOpenSettings(false)}
+                className="text-text-secondary hover:text-text-primary -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
+                aria-label="Back to session"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+
+              {/* Center: Settings title */}
+              <h1 className="text-text-primary flex-1 truncate text-center text-base font-semibold">
+                Session Settings
+              </h1>
+
+              {/* Right: Empty for symmetry */}
+              <div className="h-10 w-10" />
+            </header>
+
+            <ScrollArea className="flex-1">
               <SessionSettings
                 setIsOpenSettings={setIsOpenSettings}
                 refEditCards={refEditCards}

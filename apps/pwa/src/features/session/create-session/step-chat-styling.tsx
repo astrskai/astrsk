@@ -9,7 +9,7 @@ import { useBackgroundStore } from "@/shared/stores/background-store";
 import { cn } from "@/shared/lib";
 import { StepBackgroundSchemaType } from "@/features/session/create-session/step-background";
 import { InlineChatStyles } from "@/features/session/inline-chat-styles";
-import { MessageItemInternal } from "@/features/session/session-messages-and-user-inputs";
+import { MessageItemInternal } from "@/pages/sessions/ui/detail";
 import {
   ColorPicker,
   FloatingLabelInput,

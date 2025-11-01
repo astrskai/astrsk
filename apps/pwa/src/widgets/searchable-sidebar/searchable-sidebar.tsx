@@ -8,6 +8,7 @@ interface SearchableSidebarProps {
   onKeywordChange: (keyword: string) => void;
   children: ReactNode;
   defaultExpanded?: boolean;
+  className?: string;
 }
 
 /**
@@ -21,6 +22,7 @@ export function SearchableSidebar({
   onKeywordChange,
   children,
   defaultExpanded = true,
+  className,
 }: SearchableSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -29,6 +31,7 @@ export function SearchableSidebar({
       className={cn(
         "border-border bg-background-surface-1 flex h-full flex-col border-r transition-all duration-300",
         isExpanded ? "w-80" : "w-12",
+        className,
       )}
     >
       {/* Header: Search Input + Toggle Button */}
@@ -44,7 +47,7 @@ export function SearchableSidebar({
         )}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="bg-background-surface-2 hover:bg-background-surface-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border transition-colors"
+          className="bg-background-surface-2 hover:bg-background-surface-3 border-border flex h-10 w-10 shrink-0 items-center justify-center rounded-md border transition-colors"
           aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
         >
           {isExpanded ? (
@@ -56,9 +59,7 @@ export function SearchableSidebar({
       </div>
 
       {/* Scrollable List Content */}
-      {isExpanded && (
-        <div className="flex-1 overflow-y-auto">{children}</div>
-      )}
+      {isExpanded && <div className="flex-1 overflow-y-auto">{children}</div>}
     </div>
   );
 }
