@@ -11,7 +11,6 @@ import {
   GripVertical,
   Hash,
   History,
-  Loader2,
   Pencil,
   RefreshCcw,
   ToggleRight,
@@ -39,13 +38,11 @@ import {
 
 import { TurnService } from "@/app/services/turn-service";
 
-import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
-import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
 
 import { MediaPlaceholderMessage } from "@/features/session/media-placeholder-message";
 
-import { Avatar, Button, ScrollAreaSimple, SvgIcon } from "@/shared/ui";
+import { SvgIcon } from "@/shared/ui";
 import { CharacterCard } from "@/entities/card/domain";
 import { TranslationConfig } from "@/entities/session/domain/translation-config";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
@@ -53,6 +50,85 @@ import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { PlaceholderType } from "@/entities/turn/domain/placeholder-type";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const MessageAvatar = ({
+  characterCard,
+  icon,
+  iconIsVideo,
+  avatarVideoRef,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  characterCard?: CharacterCard;
+  icon?: string | null;
+  iconIsVideo?: boolean;
+  avatarVideoRef?: React.RefObject<HTMLVideoElement>;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+}) => {
+  return (
+    <div
+      className={cn(
+        "flex shrink-0 flex-col items-center",
+        // Desktop: gap
+        "gap-[8px]",
+        // Mobile: smaller gap
+        "max-md:gap-[4px]",
+      )}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div
+        className={cn(
+          "border-border-selected-inverse/50 grid shrink-0 place-items-center overflow-hidden rounded-full border-1 select-none",
+          !icon && "bg-background-surface-3",
+          // Desktop: 80px
+          "h-[80px] w-[80px]",
+          // Mobile: 48px
+          "max-md:h-[48px] max-md:w-[48px]",
+        )}
+      >
+        {iconIsVideo ? (
+          <video
+            ref={avatarVideoRef}
+            src={icon || undefined}
+            className="h-full w-full object-cover"
+            muted
+            loop
+            playsInline
+          />
+        ) : icon ? (
+          <img
+            src={icon}
+            alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <img
+            src={
+              characterCard
+                ? "/img/placeholder/avatar.png"
+                : "/img/message-avatar-default.svg"
+            }
+            alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? "User"}
+            className="h-full w-full object-cover"
+          />
+        )}
+      </div>
+      <div
+        className={cn(
+          "text-text-primary truncate font-medium",
+          // Desktop: size
+          "max-w-[80px] text-[16px] leading-[19px]",
+          // Mobile: smaller
+          "max-md:max-w-[48px] max-md:text-[12px] max-md:leading-[14px]",
+        )}
+      >
+        {characterCard?.props.name ?? "User"}
+      </div>
+    </div>
+  );
+};
 
 const MessageItemInternal = ({
   characterCardId,
@@ -155,70 +231,38 @@ const MessageItemInternal = ({
   );
 
   return (
-    <div className="group/message relative px-[56px]" tabIndex={0}>
+    <div
+      className={cn(
+        "group/message relative",
+        // Desktop: horizontal padding
+        "px-[56px]",
+        // Mobile: horizontal padding
+        "max-md:px-[16px]",
+      )}
+      tabIndex={0}
+    >
       <div
         className={cn(
-          "flex items-start gap-[16px]",
+          "flex items-start",
+          // Desktop: gap
+          "gap-[16px]",
+          // Mobile: smaller gap
+          "max-md:gap-[12px]",
           isUser ? "flex-row-reverse" : "flex-row",
           isUser ? "user-chat-style" : "ai-chat-style",
         )}
       >
-        <div
-          className="flex flex-col items-center gap-[8px]"
+        <MessageAvatar
+          characterCard={characterCardId ? characterCard : undefined}
+          icon={icon}
+          iconIsVideo={iconIsVideo}
+          avatarVideoRef={avatarVideoRef}
           onMouseEnter={() => handleMediaHover(true)}
           onMouseLeave={() => handleMediaHover(false)}
-        >
-          {characterCardId ? (
-            <>
-              <div
-                className={cn(
-                  "border-border-selected-inverse/50 grid shrink-0 place-items-center overflow-hidden rounded-full border-1 select-none",
-                  !icon && "bg-background-surface-3",
-                )}
-                style={{
-                  width: 80,
-                  height: 80,
-                }}
-              >
-                {iconIsVideo ? (
-                  <video
-                    ref={avatarVideoRef}
-                    src={icon || undefined}
-                    className="h-full w-full object-cover"
-                    muted
-                    loop
-                    playsInline
-                  />
-                ) : icon ? (
-                  <img
-                    src={icon}
-                    alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <img
-                    src="/img/placeholder/avatar.png"
-                    alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
-                    className="h-full w-full object-cover"
-                  />
-                )}
-              </div>
-              <div className="text-text-primary max-w-[80px] truncate text-[16px] leading-[19px] font-medium">
-                {characterCard?.props.name}
-              </div>
-            </>
-          ) : (
-            <>
-              <Avatar src="/img/message-avatar-default.svg" size={80} />
-              <div className="text-text-primary max-w-[80px] truncate text-[16px] leading-[19px] font-medium">
-                User
-              </div>
-            </>
-          )}
-        </div>
+        />
         <div
           className={cn(
-            "flex flex-col gap-[8px]",
+            "flex min-w-0 flex-1 flex-col gap-[8px]",
             isUser ? "items-end" : "items-start",
           )}
           onMouseEnter={() => handleMediaHover(true)}
@@ -226,8 +270,11 @@ const MessageItemInternal = ({
         >
           <div
             className={cn(
-              "chat-style-chat-bubble max-w-[600px] rounded-[8px] p-[16px]",
-              // !streaming && "min-w-[300px]",
+              "chat-style-chat-bubble rounded-[8px] p-[16px] break-words",
+              // Desktop: max width
+              "max-w-[600px]",
+              // Mobile: full width of parent
+              "max-md:w-full max-md:max-w-full",
             )}
           >
             {/* Display generated image if exists */}
@@ -253,8 +300,9 @@ const MessageItemInternal = ({
             {isEditing && !disabled ? (
               <TextareaAutosize
                 className={cn(
-                  "no-resizer w-[568px] rounded-none border-0 bg-transparent p-0 outline-0",
+                  "no-resizer w-full rounded-none border-0 bg-transparent p-0 outline-0",
                   "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
+                  "break-words",
                 )}
                 autoFocus
                 value={editedContent}
@@ -321,77 +369,227 @@ const MessageItemInternal = ({
           <div
             className={cn(
               "flex flex-row items-center rounded-[8px] px-[16px] py-[8px]",
-              "opacity-0 transition-opacity duration-200 ease-in-out",
-              "group-hover/message:opacity-100 pointer-coarse:group-focus-within/message:opacity-100",
               "chat-style-chat-bubble message-buttons",
+              // Desktop: hover to show
+              "opacity-0 transition-opacity duration-200 ease-in-out",
+              "md:group-hover/message:opacity-100",
+              // Mobile: always visible with touch support
+              "max-md:opacity-100",
               !streaming && disabled && "!opacity-0",
               streaming && streamingAgentName && "opacity-100",
             )}
           >
             {streaming && streamingAgentName ? (
-              <div className="flex flex-row items-center">
+              <div
+                className={cn(
+                  "flex flex-row items-center",
+                  // Mobile: smaller text
+                  "max-md:text-[14px]",
+                )}
+              >
                 <SvgIcon
                   name="astrsk_symbol"
                   size={28}
-                  className="chat-style-text mr-[2px] animate-spin"
+                  className={cn(
+                    "chat-style-text mr-[2px] animate-spin",
+                    // Mobile: smaller icon
+                    "max-md:h-[20px] max-md:w-[20px]",
+                  )}
                 />
-                <div className="mr-[8px] text-[16px] leading-[25.6px] font-[400]">
+                <div
+                  className={cn(
+                    "mr-[8px] font-[400]",
+                    // Desktop
+                    "text-[16px] leading-[25.6px]",
+                    // Mobile
+                    "max-md:text-[14px] max-md:leading-[20px]",
+                  )}
+                >
                   {streamingAgentName}
                 </div>
-                <div className="text-[16px] leading-[25.6px] font-[600]">
+                <div
+                  className={cn(
+                    "font-[600]",
+                    // Desktop
+                    "text-[16px] leading-[25.6px]",
+                    // Mobile
+                    "max-md:text-[14px] max-md:leading-[20px]",
+                  )}
+                >
                   {streamingModelName}
                 </div>
               </div>
             ) : (
-              <div className="flex flex-row items-center gap-[12px]">
+              <div
+                className={cn(
+                  "flex flex-row items-center",
+                  // Desktop: gap
+                  "gap-[12px]",
+                  // Mobile: smaller gap
+                  "max-md:gap-[8px]",
+                )}
+              >
                 {isEditing ? (
-                  <button className="cursor-pointer" onClick={onEditDone}>
-                    <Check size={20} />
+                  <button
+                    className={cn(
+                      "cursor-pointer",
+                      // Mobile: larger touch target
+                      "max-md:p-[4px]",
+                    )}
+                    onClick={onEditDone}
+                  >
+                    <Check
+                      className={cn(
+                        // Desktop
+                        "h-[20px] w-[20px]",
+                        // Mobile
+                        "max-md:h-[18px] max-md:w-[18px]",
+                      )}
+                    />
                   </button>
                 ) : (
                   <button
-                    className="cursor-pointer"
+                    className={cn(
+                      "cursor-pointer",
+                      // Mobile: larger touch target
+                      "max-md:p-[4px]",
+                    )}
                     onClick={async () => {
                       setEditedContent(content ?? "");
                       setIsEditing(true);
                     }}
                   >
-                    <SvgIcon name="edit" size={20} />
+                    <SvgIcon
+                      name="edit"
+                      className={cn(
+                        // Desktop
+                        "h-[20px] w-[20px]",
+                        // Mobile
+                        "max-md:h-[18px] max-md:w-[18px]",
+                      )}
+                    />
                   </button>
                 )}
                 {isShowDataStore ? (
                   <button
-                    className="cursor-pointer"
+                    className={cn(
+                      "cursor-pointer",
+                      // Mobile: larger touch target
+                      "max-md:p-[4px]",
+                    )}
                     onClick={() => {
                       setIsShowDataStore(false);
                     }}
                   >
-                    <SvgIcon name="history_solid" size={20} />
+                    <SvgIcon
+                      name="history_solid"
+                      className={cn(
+                        // Desktop
+                        "h-[20px] w-[20px]",
+                        // Mobile
+                        "max-md:h-[18px] max-md:w-[18px]",
+                      )}
+                    />
                   </button>
                 ) : (
                   <button
-                    className="cursor-pointer"
+                    className={cn(
+                      "cursor-pointer",
+                      // Mobile: larger touch target
+                      "max-md:p-[4px]",
+                    )}
                     onClick={() => {
                       setIsShowDataStore(true);
                     }}
                   >
-                    <History size={20} />
+                    <History
+                      className={cn(
+                        // Desktop
+                        "h-[20px] w-[20px]",
+                        // Mobile
+                        "max-md:h-[18px] max-md:w-[18px]",
+                      )}
+                    />
                   </button>
                 )}
-                <button className="cursor-pointer" onClick={onDelete}>
-                  <Trash2 size={20} />
+                <button
+                  className={cn(
+                    "cursor-pointer",
+                    // Mobile: larger touch target
+                    "max-md:p-[4px]",
+                  )}
+                  onClick={onDelete}
+                >
+                  <Trash2
+                    className={cn(
+                      // Desktop
+                      "h-[20px] w-[20px]",
+                      // Mobile
+                      "max-md:h-[18px] max-md:w-[18px]",
+                    )}
+                  />
                 </button>
                 <div className="flex flex-row items-center gap-[2px]">
-                  <button className="cursor-pointer" onClick={onPrevOption}>
-                    <ChevronLeft size={16} />
+                  <button
+                    className={cn(
+                      "cursor-pointer",
+                      // Mobile: larger touch target
+                      "max-md:p-[4px]",
+                    )}
+                    onClick={onPrevOption}
+                  >
+                    <ChevronLeft
+                      className={cn(
+                        // Desktop
+                        "h-[16px] w-[16px]",
+                        // Mobile
+                        "max-md:h-[14px] max-md:w-[14px]",
+                      )}
+                    />
                   </button>
-                  <div className="min-w-[24px] text-center text-[10px] leading-[12px] font-[600] select-none">{`${selectedOptionIndex + 1} / ${optionsLength}`}</div>
-                  <button className="cursor-pointer" onClick={onNextOption}>
-                    <ChevronRight size={16} />
+                  <div
+                    className={cn(
+                      "min-w-[24px] text-center font-[600] select-none",
+                      // Desktop
+                      "text-[10px] leading-[12px]",
+                      // Mobile
+                      "max-md:text-[9px] max-md:leading-[11px]",
+                    )}
+                  >{`${selectedOptionIndex + 1} / ${optionsLength}`}</div>
+                  <button
+                    className={cn(
+                      "cursor-pointer",
+                      // Mobile: larger touch target
+                      "max-md:p-[4px]",
+                    )}
+                    onClick={onNextOption}
+                  >
+                    <ChevronRight
+                      className={cn(
+                        // Desktop
+                        "h-[16px] w-[16px]",
+                        // Mobile
+                        "max-md:h-[14px] max-md:w-[14px]",
+                      )}
+                    />
                   </button>
                 </div>
-                <button className="cursor-pointer" onClick={onRegenerate}>
-                  <RefreshCcw size={20} />
+                <button
+                  className={cn(
+                    "cursor-pointer",
+                    // Mobile: larger touch target
+                    "max-md:p-[4px]",
+                  )}
+                  onClick={onRegenerate}
+                >
+                  <RefreshCcw
+                    className={cn(
+                      // Desktop
+                      "h-[20px] w-[20px]",
+                      // Mobile
+                      "max-md:h-[18px] max-md:w-[18px]",
+                    )}
+                  />
                 </button>
               </div>
             )}
@@ -420,14 +618,26 @@ const ScenarioMessageItem = ({
   }, [editedContent, onEdit]);
 
   return (
-    <div className="group/scenario px-[56px]">
+    <div
+      className={cn(
+        "group/scenario",
+        // Desktop: horizontal padding
+        "px-[56px]",
+        // Mobile: horizontal padding
+        "max-md:px-[16px]",
+      )}
+    >
       <div
         className={cn(
-          "relative mx-auto w-full max-w-[890px] min-w-[400px] rounded-[4px] p-[24px]",
+          "relative mx-auto w-full rounded-[4px] p-[24px]",
           "bg-background-container text-text-placeholder text-[16px] leading-[19px] font-[400]",
           "transition-all duration-200 ease-in-out",
           "group-hover/scenario:inset-ring-text-primary group-hover/scenario:inset-ring-1",
           isEditing && "inset-ring-text-primary inset-ring-1",
+          // Desktop: max width and min width
+          "md:max-w-[890px] md:min-w-[400px]",
+          // Mobile: no min width, flexible
+          "max-md:max-w-full",
         )}
       >
         {isEditing ? (
@@ -435,6 +645,7 @@ const ScenarioMessageItem = ({
             className={cn(
               "no-resizer -mb-[4px] w-full rounded-none border-0 bg-transparent p-0 outline-0",
               "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
+              "break-words",
             )}
             autoFocus
             value={editedContent}
@@ -448,13 +659,20 @@ const ScenarioMessageItem = ({
           />
         ) : (
           <Markdown
-            className="markdown"
+            className="markdown overflow-wrap-anywhere break-words"
             rehypePlugins={[rehypeRaw, rehypeSanitize]}
           >
             {content}
           </Markdown>
         )}
-        <div className="absolute top-0 right-[-45px] flex flex-col gap-2">
+        {/* Desktop: Action buttons outside container on the right */}
+        <div
+          className={cn(
+            "absolute top-0 right-[-45px] flex flex-col gap-2",
+            // Mobile: hide desktop buttons
+            "max-md:hidden",
+          )}
+        >
           <div
             className={cn(
               "cursor-pointer rounded-[8px] p-[8px]",
@@ -486,6 +704,56 @@ const ScenarioMessageItem = ({
               "transition-all duration-200 ease-in-out",
               "opacity-0 group-hover/scenario:block group-hover/scenario:opacity-100",
               isEditing && "opacity-100",
+            )}
+            onClick={() => {
+              if (isEditing) {
+                // Cancel editing and restore original content
+                setEditedContent(content ?? "");
+                setIsEditing(false);
+              } else {
+                onDelete?.();
+              }
+            }}
+          >
+            {isEditing ? <X size={20} /> : <Trash2 size={20} />}
+          </div>
+        </div>
+
+        {/* Mobile: Action buttons inside container at bottom */}
+        <div
+          className={cn(
+            "mt-4 flex justify-end gap-2",
+            // Desktop: hide mobile buttons
+            "md:hidden",
+          )}
+        >
+          <div
+            className={cn(
+              "cursor-pointer rounded-[8px] p-[8px]",
+              "bg-background-surface-3 text-text-input-subtitle",
+              "active:text-text-primary active:inset-ring-text-primary active:inset-ring-1",
+              "transition-all duration-200 ease-in-out",
+            )}
+            onClick={() => {
+              if (isEditing) {
+                onEditDone();
+              } else {
+                setIsEditing(true);
+              }
+            }}
+          >
+            {isEditing ? (
+              <Check size={20} />
+            ) : (
+              <SvgIcon name="edit" size={20} />
+            )}
+          </div>
+          <div
+            className={cn(
+              "cursor-pointer rounded-[8px] p-[8px]",
+              "bg-background-surface-3 text-text-input-subtitle",
+              "active:text-text-primary active:inset-ring-text-primary active:inset-ring-1",
+              "transition-all duration-200 ease-in-out",
             )}
             onClick={() => {
               if (isEditing) {
@@ -747,130 +1015,6 @@ const MessageItem = ({
   );
 };
 
-const SelectScenarioModal = ({
-  onSkip,
-  onAdd,
-  renderedScenarios,
-  onRenderScenarios,
-  sessionId,
-  plotCardId,
-}: {
-  onSkip: () => void;
-  onAdd: (scenarioIndex: number) => void;
-  renderedScenarios: Array<{ name: string; description: string }> | null;
-  onRenderScenarios: () => void;
-  sessionId: string;
-  plotCardId: string;
-}) => {
-  const isMobile = useIsMobile();
-  const [selectedScenarioIndex, setSelectedScenarioIndex] = useState<
-    number | null
-  >(null);
-  const [isAddingScenario, setIsAddingScenario] = useState(false);
-
-  // Render scenarios on mount and when plotCardId changes
-  useEffect(() => {
-    onRenderScenarios();
-  }, [plotCardId, onRenderScenarios]);
-
-  // Reset selected index when sessionId or plotCardId changes
-  useEffect(() => {
-    setSelectedScenarioIndex(null);
-  }, [sessionId, plotCardId]);
-
-  // Handle adding scenario
-  const handleAddScenario = async () => {
-    if (selectedScenarioIndex !== null) {
-      setIsAddingScenario(true);
-      try {
-        await onAdd(selectedScenarioIndex);
-      } finally {
-        setIsAddingScenario(false);
-      }
-    }
-  };
-
-  if (isMobile) {
-    return null; // Mobile uses Dialog component instead
-  }
-
-  // Always show scenario selection view directly
-  if (renderedScenarios) {
-    // Scenario selection view
-    return (
-      <div className="bg-background-surface-2 outline-border-light mx-auto inline-flex w-[600px] flex-col items-start justify-start gap-2.5 overflow-hidden rounded-lg p-6 outline-1">
-        <div className="flex flex-col items-end justify-start gap-6 self-stretch">
-          <div className="flex flex-col items-start justify-start gap-2 self-stretch">
-            <div className="text-text-primary justify-start self-stretch text-2xl font-semibold">
-              Scenario
-            </div>
-            <div className="text-text-body justify-start self-stretch text-base leading-tight font-medium">
-              Select a scenario for your new session.
-            </div>
-          </div>
-          <div className="relative self-stretch">
-            <ScrollAreaSimple className="flex max-h-[600px] flex-col items-start justify-start gap-4">
-              {renderedScenarios.length > 0 ? (
-                renderedScenarios.map((scenario, index) => (
-                  <ScenarioItem
-                    key={index}
-                    name={scenario.name}
-                    contents={scenario.description}
-                    active={selectedScenarioIndex === index}
-                    onClick={() => {
-                      setSelectedScenarioIndex(index);
-                    }}
-                  />
-                ))
-              ) : (
-                <div className="inline-flex w-full flex-col items-start justify-start gap-4 self-stretch py-6">
-                  <div className="text-text-body justify-start self-stretch text-center text-2xl font-bold">
-                    No scenarios yet
-                  </div>
-                  <div className="text-background-surface-5 justify-start self-stretch text-center text-base leading-normal font-medium">
-                    Start by adding a scenario to your plot card.
-                    <br />
-                    Scenarios set the opening scene for your session <br />—
-                    like a narrator kicking things off.
-                  </div>
-                </div>
-              )}
-            </ScrollAreaSimple>
-          </div>
-          <div className="inline-flex items-center justify-start gap-2">
-            <Button
-              variant="ghost"
-              className="flex h-auto min-w-20 items-center justify-center gap-2 rounded-[20px] px-3 py-2.5"
-              onClick={onSkip}
-            >
-              <div className="text-button-background-primary justify-center text-sm leading-tight font-medium">
-                Skip
-              </div>
-            </Button>
-            <Button
-              disabled={selectedScenarioIndex === null || isAddingScenario}
-              onClick={handleAddScenario}
-              className="bg-button-background-primary inline-flex h-10 min-w-20 flex-col items-center justify-center gap-2.5 rounded-[20px] px-4 py-2.5"
-            >
-              <div className="inline-flex items-center justify-start gap-2">
-                {isAddingScenario && (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                )}
-                <div className="text-button-foreground-primary justify-center text-sm leading-tight font-semibold">
-                  Add
-                </div>
-              </div>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Loading state while scenarios are being rendered
-  return null;
-};
-
 const getSchemaTypeIcon = (type: string) => {
   switch (type) {
     case "string":
@@ -1027,9 +1171,4 @@ const SortableDataSchemaFieldItem = ({
   );
 };
 
-export {
-  MessageItem,
-  MessageItemInternal,
-  SelectScenarioModal,
-  SortableDataSchemaFieldItem,
-};
+export { MessageItem, MessageItemInternal, SortableDataSchemaFieldItem };

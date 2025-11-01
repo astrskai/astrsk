@@ -18,7 +18,7 @@ import { FloatingActionButton, ScrollArea, SvgIcon } from "@/shared/ui";
 import { logger } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export default function SessionDetailPage({
@@ -101,7 +101,7 @@ export default function SessionDetailPage({
       )}
 
       {/* Mobile Header - only visible on mobile */}
-      <header className="border-border bg-background-surface-1 relative z-10 flex h-14 items-center justify-between border-b px-4 md:hidden">
+      <header className="relative z-10 flex h-14 items-center justify-between px-4 backdrop-blur-md md:hidden">
         {/* Left: Back button */}
         <button
           onClick={() => navigate({ to: "/sessions" })}
@@ -116,13 +116,17 @@ export default function SessionDetailPage({
           {session?.title ?? "Session"}
         </h1>
 
-        {/* Right: Settings button */}
+        {/* Right: Settings/Close button */}
         <button
-          onClick={() => setIsOpenSettings(true)}
+          onClick={() => setIsOpenSettings(!isOpenSettings)}
           className="text-text-secondary hover:text-text-primary -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
-          aria-label="Session settings"
+          aria-label={isOpenSettings ? "Close settings" : "Session settings"}
         >
-          <SvgIcon name="edit" size={20} />
+          {isOpenSettings ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <SvgIcon name="edit" size={20} />
+          )}
         </button>
       </header>
 

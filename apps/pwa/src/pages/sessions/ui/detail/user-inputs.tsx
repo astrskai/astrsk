@@ -5,7 +5,6 @@ import TextareaAutosize from "@mui/material/TextareaAutosize";
 import { UniqueEntityID } from "@/shared/domain";
 import { useAssetShared } from "@/shared/hooks/use-asset-shared";
 import { useCard } from "@/shared/hooks/use-card";
-import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 import { AutoReply } from "@/shared/stores/session-store";
 import { useAppStore } from "@/shared/stores/app-store";
@@ -219,7 +218,6 @@ const UserInputs = ({
   isGeneratingGlobalVideo?: boolean;
   globalVideoStatus?: string;
 }) => {
-  const isMobile = useIsMobile();
   const isGroupButtonDonNotShowAgain =
     useAppStore.use.isGroupButtonDonNotShowAgain();
   const setIsGroupButtonDonNotShowAgain =
@@ -265,11 +263,24 @@ const UserInputs = ({
   }, [setSessionOnboardingStep, setIsGroupButtonDonNotShowAgain]);
 
   return (
-    <div className="sticky inset-x-0 bottom-0 px-[56px] pb-[calc(40px+var(--topbar-height))]">
+    <div
+      className={cn(
+        // Desktop: sticky with padding, z-index above scroll area
+        "sticky inset-x-0 bottom-0 z-20",
+        "px-[56px] pb-[calc(40px+var(--topbar-height))]",
+        // Mobile: fixed to bottom with safe area padding
+        "md:px-[56px] md:pb-[calc(40px+var(--topbar-height))]",
+        "max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:px-0 max-md:pb-0",
+      )}
+    >
       <div
         className={cn(
-          "mx-auto flex w-full max-w-[892px] min-w-[400px] flex-col gap-[16px] rounded-[40px] p-[24px]",
+          // Desktop styling
+          "mx-auto flex w-full max-w-[892px] flex-col gap-[16px] rounded-[40px] p-[24px]",
           "border-text-primary/10 border bg-[#3b3b3b]/50 backdrop-blur-xl",
+          // Mobile styling: remove rounded corners, full width, adjust padding
+          "md:min-w-[400px] md:rounded-[40px] md:p-[24px]",
+          "max-md:rounded-none max-md:rounded-t-[20px] max-md:px-[16px] max-md:py-[16px] max-md:pb-[calc(16px+env(safe-area-inset-bottom))]",
           disabled && "pointer-events-none opacity-50",
         )}
       >
@@ -403,9 +414,13 @@ const UserInputs = ({
         <div className="p-0">
           <div
             className={cn(
-              "flex flex-row items-center gap-[16px] rounded-[28px] p-[8px] pl-[32px]",
-              "bg-background-surface-2 border-border-dark border",
-              !isMobile && "border-border-selected-inverse/30 border-1", // Add border with 50% opacity for desktop only
+              "flex flex-row items-center rounded-[28px] bg-background-surface-2 border-border-dark border",
+              // Desktop: gap and padding
+              "gap-[16px] p-[8px] pl-[32px]",
+              // Mobile: smaller gap and padding
+              "max-md:gap-[8px] max-md:p-[6px] max-md:pl-[16px]",
+              // Desktop: Add border with 50% opacity
+              "md:border-border-selected-inverse/30 md:border-1",
             )}
           >
             <div className="grow">
@@ -413,11 +428,15 @@ const UserInputs = ({
                 maxRows={5}
                 placeholder="Type a message"
                 className={cn(
-                  "no-resizer w-full rounded-none border-0 bg-transparent p-0 pt-[4.8px] outline-0",
+                  "no-resizer w-full rounded-none border-0 bg-transparent p-0 outline-0",
                   "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
-                  "h-[25.6px] min-h-[25.6px]",
-                  "text-[16px] leading-[1.6] font-normal",
-                  "text-text-primary placeholder:text-text-placeholder",
+                  "text-text-primary placeholder:text-text-placeholder font-normal",
+                  // Desktop: size
+                  "h-[25.6px] min-h-[25.6px] pt-[4.8px]",
+                  "text-[16px] leading-[1.6]",
+                  // Mobile: smaller size
+                  "max-md:h-[20px] max-md:min-h-[20px] max-md:pt-[2px]",
+                  "max-md:text-[14px] max-md:leading-[1.4]",
                 )}
                 value={messageContent}
                 onChange={(e) => setMessageContent(e.target.value)}
@@ -436,12 +455,24 @@ const UserInputs = ({
                   onStopGenerate?.();
                 }}
                 className={cn(
-                  "bg-background-surface-3 text-text-primary h-[40px]",
+                  "bg-background-surface-3 text-text-primary shrink-0",
                   "hover:bg-background-card hover:text-text-primary",
                   "disabled:bg-background-surface-3 disabled:text-text-primary",
+                  // Desktop: height
+                  "h-[40px]",
+                  // Mobile: smaller height
+                  "max-md:h-[32px]",
                 )}
               >
-                <div className="bg-text-primary size-[10px] rounded-[1px]" />
+                <div
+                  className={cn(
+                    "bg-text-primary rounded-[1px]",
+                    // Desktop
+                    "size-[10px]",
+                    // Mobile
+                    "max-md:size-[8px]",
+                  )}
+                />
               </Button>
             ) : (
               <Button
@@ -452,12 +483,23 @@ const UserInputs = ({
                   setMessageContent("");
                 }}
                 className={cn(
-                  "bg-background-surface-3 text-text-primary h-[40px]",
+                  "bg-background-surface-3 text-text-primary shrink-0",
                   "hover:bg-background-card hover:text-text-primary",
                   "disabled:bg-background-surface-3 disabled:text-text-primary",
+                  // Desktop: height
+                  "h-[40px]",
+                  // Mobile: smaller height and text
+                  "max-md:h-[32px] max-md:text-[14px]",
                 )}
               >
-                <Send />
+                <Send
+                  className={cn(
+                    // Desktop
+                    "w-[20px] h-[20px]",
+                    // Mobile
+                    "max-md:w-[16px] max-md:h-[16px]",
+                  )}
+                />
                 Send
               </Button>
             )}

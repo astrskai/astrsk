@@ -3,38 +3,35 @@ import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { cn } from "@/shared/lib";
-import { useIsMobile } from "@/shared/hooks/use-mobile";
 
-interface ScenarioItemProps {
+interface SelectableScenarioItemProps {
   name: string;
   contents: string;
   active?: boolean;
   onClick?: () => void;
 }
 
-export const ScenarioItem: React.FC<ScenarioItemProps> = ({
+const SelectableScenarioItem = ({
   name,
   contents,
   active = false,
   onClick,
-}) => {
-  const isMobile = useIsMobile();
-
+}: SelectableScenarioItemProps) => {
   return (
     <div
       className={cn(
-        "self-stretch p-4 bg-background-surface-4 rounded flex flex-col justify-start items-start gap-2 cursor-pointer border-2",
+        "bg-background-surface-4 flex cursor-pointer flex-col items-start justify-start gap-2 self-stretch rounded border-2 p-4",
         active ? "border-border-selected-primary" : "border-transparent",
       )}
       onClick={onClick}
     >
-      <div className="self-stretch justify-start text-text-body text-base font-normal">
+      <div className="text-text-body justify-start self-stretch text-base font-normal break-words">
         {name}
       </div>
-      {!isMobile && contents && (
+      {contents && (
         <Markdown
           rehypePlugins={[rehypeRaw, rehypeSanitize]}
-          className="markdown self-stretch justify-start text-text-body text-sm font-normal opacity-70"
+          className="markdown text-text-body overflow-wrap-anywhere justify-start self-stretch text-sm font-normal break-words opacity-70"
         >
           {contents}
         </Markdown>
@@ -42,3 +39,5 @@ export const ScenarioItem: React.FC<ScenarioItemProps> = ({
     </div>
   );
 };
+
+export default SelectableScenarioItem;

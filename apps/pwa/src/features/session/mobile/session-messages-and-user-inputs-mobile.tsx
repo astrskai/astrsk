@@ -38,7 +38,7 @@ import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
 
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
-import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
+// import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
 import { InlineChatStyles } from "@/pages/sessions/ui/detail/inline-chat-styles";
 
 import {
@@ -1882,7 +1882,7 @@ const SessionMessagesAndUserInputsMobile = ({
               </DialogDescription>
             </div>
             <div className="flex flex-col items-start justify-start gap-4 self-stretch">
-              {renderedScenarios &&
+              {/* {renderedScenarios &&
                 renderedScenarios.map((scenario, index) => (
                   <ScenarioItem
                     key={index}
@@ -1893,7 +1893,7 @@ const SessionMessagesAndUserInputsMobile = ({
                       setSelectedScenarioIndex(index);
                     }}
                   />
-                ))}
+                ))} */}
             </div>
             <div className="inline-flex items-center justify-start gap-2">
               <DialogClose asChild>

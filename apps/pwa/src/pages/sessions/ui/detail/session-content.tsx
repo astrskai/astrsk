@@ -58,22 +58,14 @@ import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/shared/stores/app-store";
 import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
 
-import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 import { InlineChatStyles } from "./inline-chat-styles";
 
 import {
-  Button,
   FloatingActionButton,
   ScrollArea,
   SvgIcon,
   toastError,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from "@/shared/ui";
 import { PlotCard } from "@/entities/card/domain";
 import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
@@ -86,11 +78,9 @@ import delay from "lodash-es/delay";
 import { fetchCharacterCard } from "@/app/queries/card/query-factory";
 
 import UserInputs from "./user-inputs";
-import {
-  SelectScenarioModal,
-  SortableDataSchemaFieldItem,
-} from "./message-components";
+import { SortableDataSchemaFieldItem } from "./message-components";
 import { SessionMessages } from "./session-messages";
+import SelectScenarioDialog from "./select-scenario-dialog";
 
 const SessionContent = ({
   onAddPlotCard,
@@ -99,8 +89,6 @@ const SessionContent = ({
   onAddPlotCard: () => void;
   isOpenSettings: boolean;
 }) => {
-  const isMobile = useIsMobile();
-
   // Fetch session
   const queryClient = useQueryClient();
   const selectedSessionId = useSessionStore.use.selectedSessionId();
@@ -1343,11 +1331,25 @@ const SessionContent = ({
         className={cn(
           "session-scrollbar relative z-10 h-full w-full overflow-auto contain-strict",
           "pr-0 transition-[padding-right] duration-200",
-          isDataSchemaUsed && isOpenSessionData && "pr-[320px]",
+          // Desktop: data schema panel
+          isDataSchemaUsed && isOpenSessionData && "md:pr-[320px]",
+          // Mobile: no side panel (data schema hidden)
+          isDataSchemaUsed && isOpenSessionData && "max-md:pr-0",
+          // Bottom padding to prevent UserInputs overlap
+          // Desktop: UserInputs height (~220px) + topbar height (40px)
+          "pb-[220px]",
+          // Mobile: UserInputs height (~220px) + safe area
+          "max-md:pb-[230px]",
         )}
       >
         <div
-          className="relative min-h-[calc(100dvh-270px)] w-full"
+          className={cn(
+            "relative w-full",
+            // Desktop: min-height for empty state
+            "min-h-[calc(100dvh-270px)]",
+            // Mobile: minimal min-height (virtualizer controls actual height)
+            "max-md:min-h-[200px]",
+          )}
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
           }}
@@ -1357,7 +1359,13 @@ const SessionContent = ({
             chatStyles={session.props.chatStyles}
           />
 
-          <div className="relative mx-auto max-w-[1196px]">
+          <div
+            className={cn(
+              "relative mx-auto max-w-[1196px]",
+              // Mobile: add horizontal padding
+              "max-md:px-[16px]",
+            )}
+          >
             <SessionMessages
               session={session}
               virtualItems={virtualItems}
@@ -1372,67 +1380,37 @@ const SessionContent = ({
               handleGenerateVideoFromImage={handleGenerateVideoFromImage}
               measureElement={rowVirtualizer.measureElement}
             />
-            {isOpenSelectScenarioModal && (
-              <div className="absolute z-[20] flex w-full flex-row py-[100px]">
-                <SelectScenarioModal
-                  onSkip={() => {
-                    setIsOpenSelectScenarioModal(false);
-                  }}
-                  onAdd={addScenario}
-                  renderedScenarios={renderedScenarios}
-                  onRenderScenarios={renderScenarios}
-                  sessionId={sessionId}
-                  plotCardId={plotCardId}
-                />
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Mobile Select Scenario Prompt Dialog */}
-        <Dialog
-          open={isOpenSelectScenarioModal && isMobile}
-          onOpenChange={(open) => {
-            if (!open) {
-              setIsOpenSelectScenarioModal(false);
-            }
-          }}
-        >
-          <DialogContent hideClose className="max-w-[90vw]">
-            <DialogHeader>
-              <DialogTitle>Want to add a plot card?</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <p className="text-text-body">
-                You will not be able to add a scenario, because you have not
-                selected a plot card for this session.
-              </p>
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  onClick={() => {
-                    setIsOpenSelectScenarioModal(false);
-                  }}
-                >
-                  Skip
-                </Button>
-              </DialogClose>
-              <Button
-                size="lg"
-                onClick={() => {
+        {/* Select Scenario Modal - absolute on mobile (inside scroll area), fixed on desktop (full viewport) */}
+        {isOpenSelectScenarioModal && (
+          <div
+            className={cn(
+              "z-[100] overflow-y-auto bg-black/50 px-[16px] py-[16px]",
+              // Mobile: absolute positioning inside scroll area (respects header)
+              "absolute inset-0",
+              // Desktop: fixed positioning (full viewport overlay)
+              "md:fixed md:inset-0",
+            )}
+          >
+            <div className="flex min-h-full items-center justify-center">
+              <SelectScenarioDialog
+                onSkip={() => {
                   setIsOpenSelectScenarioModal(false);
-                  onAddPlotCard();
                 }}
-              >
-                Add plot card
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                onAdd={addScenario}
+                renderedScenarios={renderedScenarios}
+                onRenderScenarios={renderScenarios}
+                sessionId={sessionId}
+                plotCardId={plotCardId}
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
+      {!isOpenSelectScenarioModal && (
         <UserInputs
           userCharacterCardId={session.userCharacterCardId}
           aiCharacterCardIds={session.aiCharacterCardIds}
@@ -1455,13 +1433,15 @@ const SessionContent = ({
           isGeneratingGlobalVideo={isGeneratingGlobalVideo}
           globalVideoStatus={globalVideoStatus}
         />
-      </div>
+      )}
 
-      {/* Data schema toggle & list */}
+      {/* Data schema toggle & list - Desktop only */}
       <div
         className={cn(
           "absolute top-[72px] right-[32px] bottom-[80px] flex flex-col items-end gap-[16px]",
           !isDataSchemaUsed && "hidden",
+          // Mobile: hide data schema panel completely
+          "max-md:hidden",
         )}
       >
         <FloatingActionButton

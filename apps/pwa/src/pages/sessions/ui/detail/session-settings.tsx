@@ -82,13 +82,25 @@ const Section = forwardRef<
         )}
         {...props}
       >
-        <div className="flex flex-row items-center justify-between p-[16px] pb-0">
+        <div className={cn(
+          "flex flex-row items-center justify-between pb-0",
+          "p-[16px]",
+          "max-md:p-[12px]",
+        )}>
           <div className="flex flex-row gap-[16px]">
-            <div className="text-text-primary text-[20px] leading-[24px] font-[600] break-words">
+            <div className={cn(
+              "text-text-primary font-[600] break-words",
+              "text-[20px] leading-[24px]",
+              "max-md:text-[18px] max-md:leading-[22px]",
+            )}>
               {title}
             </div>
             {subtitle && (
-              <div className="text-text-primary text-[20px] leading-[24px] font-[500]">
+              <div className={cn(
+                "text-text-primary font-[500]",
+                "text-[20px] leading-[24px]",
+                "max-md:text-[18px] max-md:leading-[22px]",
+              )}>
                 {subtitle}
               </div>
             )}
@@ -102,7 +114,11 @@ const Section = forwardRef<
             <SvgIcon name="edit" size={24} />
           </div>
         </div>
-        <div className={cn(!fill && "m-[16px]", className)}>{children}</div>
+        <div className={cn(
+          !fill && "m-[16px]",
+          !fill && "max-md:m-[12px]",
+          className
+        )}>{children}</div>
         {error && (
           <div
             className={cn(
@@ -120,13 +136,24 @@ Section.displayName = "Section";
 const SectionCarousel = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Carousel>
-      <CarouselContent className="mr-4 ml-0">{children}</CarouselContent>
+      <CarouselContent className={cn(
+        "mr-4 ml-0",
+        "max-md:mr-2 max-md:ml-0",
+      )}>{children}</CarouselContent>
       <CarouselPrevious
-        className="bg-background-card border-border-container left-4 border disabled:hidden"
+        className={cn(
+          "bg-background-card border-border-container border disabled:hidden",
+          "left-4",
+          "max-md:left-2 max-md:h-8 max-md:w-8",
+        )}
         variant="ghost_white"
       />
       <CarouselNext
-        className="bg-background-card border-border-container right-4 border disabled:hidden"
+        className={cn(
+          "bg-background-card border-border-container border disabled:hidden",
+          "right-4",
+          "max-md:right-2 max-md:h-8 max-md:w-8",
+        )}
         variant="ghost_white"
       />
     </Carousel>
@@ -312,20 +339,49 @@ const SessionSettings = ({
   return (
     <div
       className={cn(
-        "relative mx-auto my-[80px] flex w-full max-w-[1024px] min-w-[873px] flex-col rounded-[16px] p-[16px]",
-        "bg-background-surface-2",
+        "relative mx-auto flex w-full flex-col rounded-[16px] bg-background-surface-2",
+        // Desktop: margin, max-width, padding
+        "my-[80px] max-w-[1024px] p-[16px]",
+        // Mobile: no margin, full width, smaller padding
+        "max-md:my-0 max-md:rounded-none max-md:p-[12px]",
         shouldShowResourceManagementTooltip &&
           "border-border-selected-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
       )}
     >
-      <div className="flex flex-col justify-end gap-[16px] space-y-0">
-        <div className="flex flex-row justify-between">
-          <div className="flex flex-row items-center gap-[16px] pr-[16px]">
-            <div className="text-text-secondary text-[16px] leading-[25.6px] font-[600]">
+      <div className={cn(
+        "flex flex-col justify-end space-y-0",
+        "gap-[16px]",
+        "max-md:gap-[12px]",
+      )}>
+        <div className={cn(
+          "flex justify-between",
+          // Desktop: horizontal
+          "flex-row",
+          // Mobile: vertical
+          "max-md:flex-col max-md:items-start max-md:gap-[8px]",
+        )}>
+          <div className={cn(
+            "flex items-center",
+            // Desktop: horizontal
+            "flex-row gap-[16px] pr-[16px]",
+            // Mobile: vertical, full width
+            "max-md:flex-col max-md:items-start max-md:gap-[8px] max-md:pr-0 max-md:w-full",
+          )}>
+            <div className={cn(
+              "text-text-secondary font-[600]",
+              "text-[16px] leading-[25.6px]",
+              "max-md:text-[14px] max-md:leading-[20px]",
+            )}>
               Session
             </div>
             {isEditingTitle ? (
-              <>
+              <div className={cn(
+                "flex items-center",
+                // Desktop: horizontal
+                "flex-row gap-[8px]",
+                // Mobile: vertical, full width
+                "max-md:flex-col max-md:items-stretch max-md:gap-[8px] max-md:w-full",
+              )}>
                 <input
                   type="text"
                   value={editedTitle}
@@ -334,28 +390,48 @@ const SessionSettings = ({
                     if (e.key === "Enter") handleSaveTitle();
                     if (e.key === "Escape") handleCancelEdit();
                   }}
-                  className="text-text-primary border-text-primary max-w-[820px] min-w-[200px] border-b bg-transparent text-[16px] leading-[25.6px] font-[400] outline-none"
-                  style={{
-                    width: `${Math.max(editedTitle.length * 8 + 16, 200)}px`,
-                  }}
+                  className={cn(
+                    "text-text-primary border-text-primary border-b bg-transparent font-[400] outline-none",
+                    // Desktop: larger size
+                    "text-[16px] leading-[25.6px] max-w-[820px] min-w-[200px]",
+                    // Mobile: smaller size and full width
+                    "max-md:text-[14px] max-md:leading-[20px] max-md:max-w-full max-md:min-w-0 max-md:w-full",
+                  )}
                   autoFocus
                 />
-                <button
-                  onClick={handleSaveTitle}
-                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
-                >
-                  <Check className="text-status-success h-4 w-4" />
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </>
+                <div className={cn(
+                  "flex flex-row gap-[8px]",
+                  "max-md:justify-end",
+                )}>
+                  <button
+                    onClick={handleSaveTitle}
+                    className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
+                  >
+                    <Check className="text-status-success h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             ) : (
-              <>
-                <div className="text-text-primary max-w-[870px] truncate text-[16px] leading-[25.6px] font-[400]">
+              <div className={cn(
+                "flex items-center",
+                // Desktop: horizontal
+                "flex-row gap-[8px]",
+                // Mobile: horizontal but with full width title
+                "max-md:w-full max-md:gap-[8px]",
+              )}>
+                <div className={cn(
+                  "text-text-primary truncate font-[400]",
+                  // Desktop: max-w
+                  "max-w-[870px] text-[16px] leading-[25.6px]",
+                  // Mobile: smaller text, full width
+                  "max-md:flex-1 max-md:text-[14px] max-md:leading-[20px]",
+                )}>
                   {session.title}
                 </div>
                 <button
@@ -367,7 +443,7 @@ const SessionSettings = ({
                 >
                   <Pencil className="text-text-subtle hover:text-text-primary h-4 w-4 transition-colors" />
                 </button>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -462,8 +538,17 @@ const SessionSettings = ({
             </Section>
           }
         />
-        <div className="flex flex-row gap-[16px]">
-          <div className="w-[30%]">
+        <div className={cn(
+          "flex gap-[16px]",
+          // Desktop: horizontal
+          "flex-row",
+          // Mobile: vertical stack
+          "max-md:flex-col max-md:gap-[12px]",
+        )}>
+          <div className={cn(
+            "w-[30%]",
+            "max-md:w-full",
+          )}>
             <EditLanguage
               defaultValue={{
                 translation: session.translation!,
@@ -505,7 +590,10 @@ const SessionSettings = ({
               }
             />
           </div>
-          <div className="w-[30%]">
+          <div className={cn(
+            "w-[30%]",
+            "max-md:w-full",
+          )}>
             <EditBackground
               defaultValue={{
                 backgroundId: session?.backgroundId,
@@ -526,7 +614,10 @@ const SessionSettings = ({
               }
             />
           </div>
-          <div className="w-[40%]">
+          <div className={cn(
+            "w-[40%]",
+            "max-md:w-full",
+          )}>
             <EditChatStyling
               defaultValue={{
                 chatStyles: session.chatStyles!,
@@ -557,9 +648,12 @@ const SessionSettings = ({
         <div
           className={cn(
             "bg-background-surface-2 border-border-selected-primary absolute z-10 flex flex-col items-end justify-center gap-2 rounded-2xl border-1 px-4 py-3 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+            // Desktop: left side if space, inside top if no space
             hasSpaceForTooltip
-              ? "top-4 left-[-340px] w-80 max-w-80" // Outside to the left when space available
-              : "top-4 right-4 left-4 w-80 max-w-80", // Inside at the top when no space
+              ? "top-4 left-[-340px] w-80 max-w-80"
+              : "top-4 right-4 left-4 w-80 max-w-80",
+            // Mobile: always inside at top with margins
+            "max-md:top-2 max-md:right-2 max-md:left-2 max-md:w-auto max-md:max-w-none",
           )}
         >
           <div className="text-text-primary justify-start self-stretch text-sm leading-tight font-semibold">
