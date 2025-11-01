@@ -21,7 +21,20 @@ function SettingsLayoutWrapper() {
   const location = useLocation();
 
   const handleBack = () => {
-    router.history.back();
+    // Get parent route by removing the last segment
+    const pathSegments = location.pathname.split("/").filter(Boolean);
+
+    if (pathSegments.length <= 1) {
+      // Already at /settings, shouldn't happen due to isSettingsRoot check
+      return;
+    }
+
+    // Navigate to parent route
+    // /settings/providers -> /settings
+    // /settings/account/credit-usage -> /settings/account
+    // /settings/legal/privacy-policy -> /settings/legal
+    const parentPath = "/" + pathSegments.slice(0, -1).join("/");
+    router.navigate({ to: parentPath });
   };
 
   // Only show back navigation on settings sub-routes, not on /settings root
