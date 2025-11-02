@@ -12,7 +12,7 @@ import {
   RadioGroupItem,
   ScrollArea,
 } from "@/shared/ui";
-import { AgentModelCard } from "@/features/flow/components/agent-model-card";
+import { AgentModelCard } from "@/features/flow/ui/agent-model-card";
 import { ModelTier } from "@/entities/agent/domain/agent";
 
 export interface AgentModelTierInfo {

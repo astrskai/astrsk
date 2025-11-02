@@ -14,7 +14,7 @@ import {
   useUpdateIfNodeConditions,
   type EditableCondition as EditableConditionType,
 } from "@/app/queries/if-node/mutations/condition-mutations";
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { IfCondition } from "@/features/flow/flow-multi/nodes/if-node";
 import { UniqueEntityID } from "@/shared/domain";
 import {
@@ -24,7 +24,7 @@ import {
   isUnaryOperator,
   isValidOperatorForDataType,
 } from "@/features/flow/flow-multi/types/condition-types";
-import { OperatorCombobox } from "@/features/flow/flow-multi/components/operator-combobox";
+import { OperatorCombobox } from "@/features/flow/ui/operator-combobox";
 import { toast } from "sonner";
 
 interface IfNodePanelProps {

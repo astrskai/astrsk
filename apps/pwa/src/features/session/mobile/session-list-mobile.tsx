@@ -25,7 +25,7 @@ import { cn } from "@/shared/lib";
 
 import { SessionMainMobile } from "@/features/session/mobile/session-main-mobile";
 import CreateSessionPageMobile from "@/features/session/mobile/create-session-page-mobile";
-import { ModelItem } from "@/features/flow/flow-multi/components/model-selection";
+import { ModelItem } from "@/features/flow/ui/model-selection";
 import {
   Button,
   CheckboxMobile,

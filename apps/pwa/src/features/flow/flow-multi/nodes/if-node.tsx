@@ -6,7 +6,7 @@ import { Copy, Trash2, Pencil } from "lucide-react";
 import {
   CustomHandle,
   CustomIfHandle,
-} from "@/features/flow/flow-multi/components/custom-handle";
+} from "@/features/flow/ui/custom-handle";
 import {
   ConditionDataType,
   ConditionOperator,
@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";

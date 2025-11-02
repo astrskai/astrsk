@@ -3,7 +3,7 @@
  */
 
 import { NodeType } from "@/entities/flow/model/node-types";
-import { PANEL_TYPES, AGENT_PANEL_TYPES } from "@/features/flow/flow-multi/components/panel-types";
+import { PANEL_TYPES, AGENT_PANEL_TYPES } from "@/features/flow/ui/panel-types";
 
 /**
  * Get all panel IDs associated with a node based on its type

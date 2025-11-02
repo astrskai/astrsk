@@ -4,7 +4,7 @@ import type { IDockviewPanel } from "dockview-core";
 import { 
   PanelType, 
   getPanelTitle,
-} from "@/features/flow/flow-multi/components/panel-types";
+} from "@/features/flow/ui/panel-types";
 import { Agent } from "@/entities/agent/domain/agent";
 import { Node } from "@/entities/flow/domain/flow";
 import { AgentService } from "@/app/services/agent-service";

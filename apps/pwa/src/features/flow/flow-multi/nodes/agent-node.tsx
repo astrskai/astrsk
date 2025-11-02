@@ -3,18 +3,18 @@
 import { type Node, type NodeProps } from "@xyflow/react";
 import { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import { Copy, Trash2, AlertCircle } from "lucide-react";
-import { CustomHandle } from "@/features/flow/flow-multi/components/custom-handle";
+import { CustomHandle } from "@/features/flow/ui/custom-handle";
 
 import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traversal";
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { ApiType } from "@/entities/agent/domain/agent";
-import { AgentModels } from "@/features/flow/flow-multi/components/model-selection";
+import { AgentModels } from "@/features/flow/ui/model-selection";
 
 import { toast } from "sonner";
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
-import { PANEL_TYPES } from "@/features/flow/flow-multi/components/panel-types";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
+import { PANEL_TYPES } from "@/features/flow/ui/panel-types";
 import { useAgentColor } from "@/features/flow/flow-multi/hooks/use-agent-color";
 
 import {

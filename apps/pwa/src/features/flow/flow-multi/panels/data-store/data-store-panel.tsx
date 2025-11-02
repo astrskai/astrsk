@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow/query-factory";
 import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
 import { useUpdateDataStoreNodeFields } from "@/app/queries/data-store-node/mutations/field-mutations";
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { Button, Editor, ScrollAreaSimple } from "@/shared/ui";
 import {
   Select,

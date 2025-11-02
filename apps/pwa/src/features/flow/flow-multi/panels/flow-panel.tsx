@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { PANEL_TYPES } from "@/features/flow/flow-multi/components/panel-types";
+import { PANEL_TYPES } from "@/features/flow/ui/panel-types";
 import {
   closeNodePanels,
   getNodeDisplayName,
@@ -62,7 +62,7 @@ import {
 } from "lucide-react";
 import { ButtonPill, Card } from "@/shared/ui";
 import { toast } from "sonner";
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 // import { useCollapsibleSidebarWidth } from "@/widgets/collapsible-sidebar/hooks/use-collapsible-sidebar-width";
 import {
   Select,
@@ -101,7 +101,7 @@ import "@xyflow/react/dist/style.css";
 import {
   NodeSelectionMenu,
   NodeSelectionMenuItems,
-} from "@/features/flow/flow-multi/components/node-selection-menu";
+} from "@/features/flow/ui/node-selection-menu";
 import {
   edgeTypes,
   type CustomEdgeType,
@@ -110,7 +110,7 @@ import {
   nodeTypes,
   type CustomNodeType,
 } from "@/features/flow/flow-multi/nodes/index";
-import { CustomReactFlowControls } from "@/features/flow/flow-multi/components/custom-controls";
+import { CustomReactFlowControls } from "@/features/flow/ui/custom-controls";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { sessionQueries } from "@/entities/session/api";
 

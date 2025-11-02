@@ -23,7 +23,7 @@ import { flowQueries } from "@/app/queries/flow/query-factory";
 import { useUpdateDataStoreSchema } from "@/app/queries/flow/mutations/data-store-mutations";
 
 // Import from flow panel architecture
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { DataStoreSchemaProps, DataStoreSchemaField, DataStoreSchema, DataStoreFieldType } from "./data-store-schema-types";
 import { SortableField } from "./sortable-field";
 import { UniqueEntityID } from "@/shared/domain";

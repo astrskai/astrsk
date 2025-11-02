@@ -52,7 +52,7 @@ vi.mock("@/features/flow/flow-multi/utils/node-color-assignment", () => ({
   getNextAvailableColor: vi.fn(() => Promise.resolve("#FF0000")),
 }));
 
-vi.mock("@/features/flow/flow-multi/components/toast/use-toast", () => ({
+vi.mock("@/features/flow/ui/toast/use-toast", () => ({
   useToast: () => ({
     toast: vi.fn(),
   }),

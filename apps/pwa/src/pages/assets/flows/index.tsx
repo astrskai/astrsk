@@ -8,7 +8,7 @@ import { CreateFlowDialog } from "./ui/create";
 import {
   FlowImportDialog,
   AgentModel,
-} from "@/features/flow/components/flow-import-dialog";
+} from "./ui/dialog/flow-import-dialog";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
 import { flowQueries } from "@/app/queries/flow-queries";
 import { FlowService } from "@/app/services/flow-service";

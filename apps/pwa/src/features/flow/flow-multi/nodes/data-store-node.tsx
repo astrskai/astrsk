@@ -3,7 +3,7 @@
 import { type Node, type NodeProps } from "@xyflow/react";
 import { useState, useCallback, useMemo } from "react";
 import { Copy, Trash2, Pencil } from "lucide-react";
-import { CustomHandle } from "@/features/flow/flow-multi/components/custom-handle";
+import { CustomHandle } from "@/features/flow/ui/custom-handle";
 
 import {
   Tooltip,
@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { useQuery } from "@tanstack/react-query";

@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow/query-factory";
 import { useUpdateResponseTemplate } from "@/app/queries/flow/mutations";
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 
 interface ResponseDesignPanelProps {
   flowId: string;

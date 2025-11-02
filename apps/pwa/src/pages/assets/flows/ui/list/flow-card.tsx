@@ -17,7 +17,7 @@ import { ActionConfirm } from "@/shared/ui/dialogs";
 import {
   FlowExportDialog,
   AgentModelTierInfo,
-} from "@/features/flow/components/flow-export-dialog";
+} from "../dialog/flow-export-dialog";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { useAgentStore } from "@/shared/stores/agent-store";

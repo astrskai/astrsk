@@ -11,7 +11,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/ui";
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import {
   FlowPanelError,
   FlowPanelLoading,

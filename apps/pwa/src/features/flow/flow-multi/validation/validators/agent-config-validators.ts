@@ -3,7 +3,7 @@ import { ValidatorFunction } from "@/features/flow/flow-multi/validation/types/f
 import { forEachConnectedAgent, generateIssueId } from "@/features/flow/flow-multi/validation/utils/validator-utils";
 import { generateValidationMessage } from "@/features/flow/flow-multi/validation/utils/message-generator";
 import { Agent, ApiType, OutputFormat } from "@/entities/agent/domain";
-import { isModelAvailable } from "@/features/flow/flow-multi/components/model-selection";
+import { isModelAvailable } from "@/features/flow/ui/model-selection";
 
 // Check if agent has a model selected and if it's available
 export const validateModelSelection: ValidatorFunction = (context) => {

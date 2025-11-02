@@ -13,12 +13,12 @@ import { SessionService } from "@/app/services/session-service";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useNavigate, useLocation } from "@tanstack/react-router";
-import { FlowDialog } from "@/features/flow/flow-dialog";
-import { FlowImportDialog } from "@/features/flow/components/flow-import-dialog";
+// import { FlowDialog } from "@/features/flow/flow-dialog";
+import { FlowImportDialog } from "@/pages/assets/flows/ui/dialog/flow-import-dialog";
 import {
   FlowExportDialog,
   AgentModelTierInfo,
-} from "@/features/flow/components/flow-export-dialog";
+} from "@/pages/assets/flows/ui/dialog/flow-export-dialog";
 import { ModelTier } from "@/entities/agent/domain/agent";
 import { SectionHeader } from "./index";
 import {
@@ -678,12 +678,12 @@ const FlowSection = ({
         </div>
         <div className="flex flex-row items-center gap-2 py-2 pr-4 pl-8">
           <CreateButton onClick={handleClickCreate} />
-          <FlowDialog
+          {/* <FlowDialog
             open={isOpenCreate}
             mode="create"
             onCreate={handleDialogCreate}
             onClose={handleDialogClose}
-          />
+          /> */}
           <ImportButton
             onClick={() => {
               // Check if services are initialized before opening import dialog

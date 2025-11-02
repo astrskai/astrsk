@@ -1,5 +1,5 @@
 import { type Node, type NodeProps } from "@xyflow/react";
-import { CustomHandle } from "@/features/flow/flow-multi/components/custom-handle";
+import { CustomHandle } from "@/features/flow/ui/custom-handle";
 
 export type StartNodeData = {
   label?: string;

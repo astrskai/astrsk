@@ -44,7 +44,7 @@ import {
 } from "@/app/queries/agent/mutations/output-mutations";
 
 // Import context
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { OutputPanelProps, SchemaFieldItem } from "./output-panel-types";
 
 // Import reusable components

@@ -1,7 +1,7 @@
 import React from 'react';
 import VibeCodingPanel from '@/features/vibe';
-import { useFlowPanelContext } from '@/features/flow/flow-multi/components/flow-panel-provider';
-import { PANEL_TYPES } from '@/features/flow/flow-multi/components/panel-types';
+import { useFlowPanelContext } from '@/features/flow/ui/flow-panel-provider';
+import { PANEL_TYPES } from '@/features/flow/ui/panel-types';
 
 interface FlowVibePanelProps {
   flowId: string;

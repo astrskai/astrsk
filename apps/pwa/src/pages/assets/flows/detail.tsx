@@ -16,11 +16,11 @@ import { PanelFocusAnimationWrapper } from "@/widgets/dockview-panel-focus-anima
 import { Flow } from "@/entities/flow/domain";
 import { debounce } from "lodash-es";
 import { cn } from "@/shared/lib";
-import { FlowPanelProvider } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { FlowPanelProvider } from "@/features/flow/ui/flow-panel-provider";
 import {
   getPanelTitle,
   PanelType,
-} from "@/features/flow/flow-multi/components/panel-types";
+} from "@/features/flow/ui/panel-types";
 import {
   getAgentHexColor,
   getAgentState,

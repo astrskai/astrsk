@@ -50,7 +50,7 @@ import {
 } from "@/app/queries/agent/mutations/prompt-mutations-new";
 
 // Import context
-import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { PromptPanelProps, PromptItem } from "./prompt-panel-types";
 import {
   convertPromptMessagesToItems,
@@ -59,7 +59,7 @@ import {
 
 // Import reusable components
 import { SortableItem } from "./sortable-item";
-import { FormatSelectorAccordion } from "@/features/flow/flow-multi/components/format-selector-accordion";
+import { FormatSelectorAccordion } from "@/features/flow/ui/format-selector-accordion";
 
 export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   // 1. Get Monaco editor functions from flow context
