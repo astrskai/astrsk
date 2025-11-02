@@ -5,7 +5,7 @@ import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factor
 import { ifNodeQueries } from "@/app/queries/if-node/query-factory";
 import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";
-import { getAgentHexColor } from "@/features/flow/flow-multi/utils/node-color-assignment";
+import { getAgentHexColor } from "@/features/flow/utils/node-color-assignment";
 
 type CustomTabParameters = {
   title?: string;

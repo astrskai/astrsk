@@ -7,7 +7,7 @@ import {
   ConditionOperator,
   getOperatorsForDataType,
   OPERATOR_LABELS,
-} from "@/features/flow/flow-multi/types/condition-types";
+} from "@/features/flow/types/condition-types";
 
 interface OperatorComboboxProps {
   value: {

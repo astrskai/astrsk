@@ -32,7 +32,7 @@ vi.mock("@/app/services/flow-service", () => ({
   },
 }));
 
-vi.mock("@/features/flow/flow-multi/utils/node-color-assignment", () => ({
+vi.mock("@/features/flow/utils/node-color-assignment", () => ({
   getNextAvailableColor: vi.fn(() => Promise.resolve("#FF0000")),
 }));
 

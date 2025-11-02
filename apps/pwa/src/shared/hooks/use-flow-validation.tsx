@@ -10,7 +10,7 @@ import { AgentService } from "@/app/services/agent-service";
 import { useValidationStore } from "@/shared/stores/validation-store";
 import {
   isAgentValid,
-} from "@/features/flow/flow-multi/utils/flow-validation";
+} from "@/features/flow/utils/flow-validation";
 import { Agent } from "@/entities/agent/domain/agent";
 
 export function useFlowValidation(flowId?: UniqueEntityID | null) {
@@ -41,7 +41,7 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
 
       // First, get flow traversal to know which agents are connected
       const { traverseFlowCached } = await import(
-        "@/features/flow/flow-multi/utils/flow-traversal"
+        "@/features/flow/utils/flow-traversal"
       );
       const traversalResult = traverseFlowCached(flow);
 

@@ -1,0 +1,1081 @@
+import { agentQueries } from "@/app/queries/agent/query-factory";
+import { flowQueries } from "@/app/queries/flow/query-factory";
+import { makeContext } from "@/app/services/session-play-service";
+import { SessionService } from "@/app/services/session-service";
+import { TurnService } from "@/app/services/turn-service";
+import { useAgentStore } from "@/shared/stores/agent-store";
+import { ScrollArea, SearchInput, TypoBase, TypoLarge } from "@/shared/ui";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/ui";
+import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
+import {
+  FlowPanelError,
+  FlowPanelLoading,
+  useFlowPanel,
+} from "@/features/flow/hooks/use-flow-panel";
+import { getAgentHexColor } from "@/features/flow/utils/node-color-assignment";
+import {
+  Agent,
+  OutputFormat,
+  SchemaField,
+  SchemaFieldType,
+} from "@/entities/agent/domain/agent";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+import {
+  Variable,
+  VariableGroupLabel,
+  VariableLibrary,
+} from "@/shared/prompt/domain/variable";
+import { Datetime, logger } from "@/shared/lib";
+import { sanitizeFileName } from "@/shared/lib/file-utils";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { isObject } from "lodash-es";
+import { Check, ChevronDown, ChevronUp, Database, Target } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { VariablePanelProps } from "./variable-panel-types";
+
+interface AgentVariable {
+  agentId: string;
+  agentName: string;
+  agentColor: string;
+  field: SchemaField;
+  variablePath: string;
+}
+
+// Helper function to format values
+const formatValue = (value: any): string => {
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  } else if (Datetime.isDuration(value)) {
+    return value.humanize();
+  } else if (typeof value === "object" && value !== null) {
+    return JSON.stringify(value);
+  }
+  return String(value);
+};
+
+// Helper function to recursively flatten nested objects with dot notation
+const flattenObject = (
+  obj: Record<string, any>,
+  prefix = "",
+): Record<string, string> => {
+  const flattened: Record<string, string> = {};
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    if (value === null || value === undefined) {
+      return;
+    }
+    const newKey = prefix ? `${prefix}.${key}` : key;
+    if (
+      isObject(value) &&
+      !Array.isArray(value) &&
+      !Datetime.isDuration(value)
+    ) {
+      // Store the JSON representation of the object at this path
+      flattened[newKey] = JSON.stringify(value);
+      // Continue flattening nested properties
+      Object.assign(flattened, flattenObject(value, newKey));
+    } else {
+      flattened[newKey] = formatValue(value);
+    }
+  });
+  return flattened;
+};
+
+export function VariablePanel({ flowId }: VariablePanelProps) {
+  // Use the flow panel hook
+  const { flow, isLoading } = useFlowPanel({ flowId });
+
+  // Query data store schema separately for real-time updates
+  const { data: dataStoreSchema } = useQuery({
+    ...flowQueries.dataStoreSchema(flowId),
+    enabled: !!flowId,
+    refetchOnWindowFocus: true, // Ensure we get latest schema
+  });
+
+  // Get session management from store
+  const previewSessionId = useAgentStore.use.previewSessionId();
+
+  // Direct polling for session data
+  const [previewSession, setPreviewSession] = useState<any>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
+  const [isInitialSessionLoad, setIsInitialSessionLoad] = useState(true);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    const fetchSession = async (isInitial = false) => {
+      if (!previewSessionId) {
+        setPreviewSession(null);
+        setIsLoadingSession(false);
+        setIsInitialSessionLoad(false);
+        return;
+      }
+
+      try {
+        // Only show loading for initial fetch, not for polling
+        if (isInitial) {
+          setIsLoadingSession(true);
+        }
+
+        const sessionResult = await SessionService.getSession.execute(
+          new UniqueEntityID(previewSessionId),
+        );
+        if (sessionResult.isSuccess) {
+          const newSession = sessionResult.getValue();
+          // Only update if data actually changed
+          setPreviewSession((prevSession: any) => {
+            if (JSON.stringify(prevSession) !== JSON.stringify(newSession)) {
+              return newSession;
+            }
+            return prevSession;
+          });
+        } else {
+          setPreviewSession(null);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch session:", error);
+        setPreviewSession(null);
+      } finally {
+        if (isInitial) {
+          setIsLoadingSession(false);
+          setIsInitialSessionLoad(false);
+        }
+      }
+    };
+
+    // Initial fetch
+    setIsInitialSessionLoad(true);
+    fetchSession(true);
+
+    // Set up polling (without loading states)
+    if (previewSessionId) {
+      intervalId = setInterval(() => fetchSession(false), 1000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [previewSessionId]);
+
+  // Get last monaco editor, input field and insert functions from flow context
+  const {
+    lastMonacoEditor,
+    insertVariableAtLastCursor,
+    lastInputField,
+    insertVariableAtInputField,
+  } = useFlowPanelContext();
+
+  // Local state
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = sessionStorage.getItem("variablePanel_activeTab");
+    return savedTab === "structured" || savedTab === "datastore"
+      ? savedTab
+      : "variables";
+  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [availableVariables, setAvailableVariables] = useState<Variable[]>([]);
+  const [aggregatedStructuredVariables, setAggregatedStructuredVariables] =
+    useState<AgentVariable[]>([]);
+  const [clickedVariable, setClickedVariable] = useState<string | null>(null);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(),
+  );
+  const [contextValues, setContextValues] = useState<Record<string, any>>({});
+
+  // Check if we have an editor or input field
+  const hasEditor = !!lastMonacoEditor?.editor || !!lastInputField?.element;
+
+  // Load variables from library
+  useEffect(() => {
+    const libraryVariables = VariableLibrary.variableList;
+    // Filter out message-related variables, keep only core template variables
+    const filteredLibraryVariables = libraryVariables.filter(
+      (variable: Variable) =>
+        !variable.variable.includes("message") &&
+        !variable.variable.includes("history") &&
+        !variable.dataType.toLowerCase().includes("message"),
+    );
+    setAvailableVariables(filteredLibraryVariables);
+  }, []);
+
+  // Get agent IDs from flow
+  const agentIds = useMemo(() => {
+    if (!flow) return [];
+
+    // Flow has agentIds array of UniqueEntityID objects, convert to strings
+    const ids = (flow.agentIds || [])
+      .map((id) => id?.toString())
+      .filter((id) => !!id);
+    return ids;
+  }, [flow]);
+
+  // Query all agents for their details
+  const agentQueries_ = useQueries({
+    queries: agentIds.map((id) => ({
+      ...agentQueries.detail(id),
+      enabled: !!id,
+    })),
+  });
+
+  // Query agent names separately for real-time updates
+  const agentNameQueries = useQueries({
+    queries: agentIds.map((id) => ({
+      ...agentQueries.name(id),
+      enabled: !!id,
+      refetchOnWindowFocus: true,
+      staleTime: 500, //TODO: Remove this for invalidations
+    })),
+  });
+
+  // Check if all agents are loaded
+  const areAgentsLoading = agentQueries_.some((q) => q.isLoading);
+
+  // Use state and ref to manage variables with stable updates
+  const previousAgentDataRef = useRef<string>("");
+
+  useEffect(() => {
+    const agents = agentQueries_
+      .filter((q) => q.data && !q.isLoading)
+      .map((q) => q.data as Agent)
+      .filter((agent) => agent != null); // Filter out any null/undefined agents
+
+    // Get agent names from name queries
+    const agentNames = new Map<string, string>();
+    agentNameQueries.forEach((q, index) => {
+      if (q.data && agentIds[index]) {
+        agentNames.set(agentIds[index], q.data.name);
+      }
+    });
+
+    if (!flow || areAgentsLoading || agents.length === 0) {
+      if (aggregatedStructuredVariables.length > 0) {
+        setAggregatedStructuredVariables([]);
+      }
+      return;
+    }
+
+    // Create a stable key from relevant agent properties
+    const agentDataKey = agents
+      .map((agent) => {
+        if (!agent || !agent.props || !agent.id) {
+          return null;
+        }
+        const agentIdString = agent.id.toString();
+        return {
+          id: agentIdString,
+          name: agentNames.get(agentIdString) || agent.props.name, // Use name from name query
+          enabledStructuredOutput: agent.props.enabledStructuredOutput,
+          schemaFields:
+            agent.props.schemaFields?.map((field) => ({
+              name: field.name,
+              type: field.type,
+              description: field.description,
+              required: field.required,
+              array: field.array,
+            })) || [],
+        };
+      })
+      .filter((data) => data != null);
+
+    const currentAgentData = JSON.stringify(agentDataKey);
+
+    // Only update if the relevant agent data has actually changed
+    if (previousAgentDataRef.current === currentAgentData) {
+      return;
+    }
+
+    previousAgentDataRef.current = currentAgentData;
+
+    const variables: AgentVariable[] = [];
+
+    // Iterate through all agents
+    agents.forEach((agent) => {
+      if (!agent || !agent.props || !agent.id) {
+        return;
+      }
+
+      const agentId = agent.id.toString();
+      const nameFromQuery = agentNames.get(agentId);
+      const agentName = nameFromQuery || agent.props.name || "Unnamed Agent"; // Use name from name query
+      const agentColor = getAgentHexColor(agent);
+
+      // Check if structured output is disabled (text output mode)
+      if (!agent.props.enabledStructuredOutput) {
+        // For text output, add single .response variable
+        const sanitizedAgentName = sanitizeFileName(agentName);
+        const variablePath = `${sanitizedAgentName}.response`;
+
+        variables.push({
+          agentId,
+          agentName,
+          agentColor,
+          field: {
+            name: "response",
+            description: "Text response from the agent",
+            required: true,
+            array: false,
+            type: SchemaFieldType.String,
+          },
+          variablePath,
+        });
+      } else if (
+        agent.props.enabledStructuredOutput &&
+        agent.props.schemaFields &&
+        agent.props.schemaFields.length > 0
+      ) {
+        // For structured output, add each field
+        agent.props.schemaFields.forEach((field) => {
+          const fieldPath = field.name;
+          const sanitizedAgentName = sanitizeFileName(agentName);
+          const variablePath = `${sanitizedAgentName}.${fieldPath}`;
+
+          variables.push({
+            agentId,
+            agentName,
+            agentColor,
+            field,
+            variablePath,
+          });
+        });
+      }
+    });
+
+    setAggregatedStructuredVariables(variables);
+  }, [
+    flow,
+    areAgentsLoading,
+    agentQueries_,
+    agentNameQueries, // Add agent name queries to dependencies
+    agentIds,
+    aggregatedStructuredVariables.length,
+  ]);
+
+  // Extract last turn ID and fetch turn data directly
+  const lastTurnId =
+    previewSession?.turnIds?.[previewSession.turnIds.length - 1];
+  const lastTurnIdString = useMemo(() => lastTurnId?.toString(), [lastTurnId]);
+
+  // Direct polling for turn data
+  const [lastTurn, setLastTurn] = useState<any>(null);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    const fetchTurn = async () => {
+      if (!lastTurnId) {
+        setLastTurn(null);
+        return;
+      }
+
+      try {
+        const turnResult = await TurnService.getTurn.execute(lastTurnId);
+        if (turnResult.isSuccess) {
+          const newTurn = turnResult.getValue();
+          // Only update if data actually changed
+          setLastTurn((prevTurn: any) => {
+            if (JSON.stringify(prevTurn) !== JSON.stringify(newTurn)) {
+              return newTurn;
+            }
+            return prevTurn;
+          });
+        } else {
+          setLastTurn(null);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch turn:", error);
+        setLastTurn(null);
+      }
+    };
+
+    // Initial fetch
+    fetchTurn();
+
+    // Set up polling
+    if (lastTurnId) {
+      intervalId = setInterval(fetchTurn, 1000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [lastTurnId]);
+
+  const lastTurnVariablesJson = useMemo(
+    () => JSON.stringify(lastTurn?.variables),
+    [lastTurn?.variables],
+  );
+
+  // Load context values from previewSession
+  useEffect(() => {
+    logger.debug({
+      previewSessionId,
+      lastTurnIdString,
+      lastTurnVariablesJson,
+    });
+    const fetchContextValues = async () => {
+      try {
+        // Get preview session
+        if (!previewSessionId) {
+          setContextValues({});
+          return;
+        }
+        const previewSessionOrError = await SessionService.getSession.execute(
+          new UniqueEntityID(previewSessionId),
+        );
+        if (previewSessionOrError.isFailure) {
+          setContextValues({});
+          return;
+        }
+        const previewSession = previewSessionOrError.getValue();
+
+        // Get characterCardId from the last message, fallback to first enabled character
+        let characterCardId;
+        let lastTurn;
+        if (previewSession.turnIds && previewSession.turnIds.length > 0) {
+          try {
+            const lastTurnId =
+              previewSession.turnIds[previewSession.turnIds.length - 1];
+            const lastTurnResult =
+              await TurnService.getTurn.execute(lastTurnId);
+            if (lastTurnResult.isSuccess) {
+              lastTurn = lastTurnResult.getValue();
+              characterCardId = lastTurn.characterCardId;
+            }
+          } catch (error) {
+            // Fallback to first enabled character if getting last turn fails
+            console.warn(
+              "Failed to get last turn, using fallback character:",
+              error,
+            );
+          }
+        }
+
+        // Fallback to first enabled character if no characterCardId from last turn
+        if (!characterCardId) {
+          const firstCharacterCard = previewSession.characterCards?.find(
+            (card) => card.enabled,
+          );
+          characterCardId = firstCharacterCard?.id;
+        }
+
+        const contextResult = await makeContext({
+          session: previewSession,
+          characterCardId,
+          includeHistory: true,
+        });
+
+        if (contextResult.isSuccess) {
+          const renderContext = contextResult.getValue();
+
+          // Flatten the context for variable lookup using recursive utility
+          const flattenedContext = flattenObject(renderContext);
+
+          // Add structured variables from last turn if available
+          if (lastTurn?.variables) {
+            Object.keys(lastTurn.variables).forEach((key) => {
+              const value = lastTurn.variables![key];
+              if (value !== null && value !== undefined) {
+                // If the value is an object, flatten it with the key as prefix
+                if (isObject(value) && !Array.isArray(value)) {
+                  const flattenedStructuredVars = flattenObject(value, key);
+                  Object.assign(flattenedContext, flattenedStructuredVars);
+                } else {
+                  flattenedContext[key] = formatValue(value);
+                }
+              }
+            });
+          }
+
+          // Add values from last turn
+          if (lastTurn) {
+            // Set history variables
+            flattenedContext["turn.char_id"] =
+              lastTurn.characterCardId?.toString() ?? "";
+            flattenedContext["turn.char_name"] = lastTurn.characterName ?? "";
+            flattenedContext["turn.content"] = lastTurn.content;
+
+            // Set data store values from last turn
+            if (lastTurn.dataStore && lastTurn.dataStore.length > 0) {
+              // Convert DataStoreSavedField[] to object
+              const dataStoreObject = Object.fromEntries(
+                lastTurn.dataStore.map((field) => [field.name, field.value]),
+              );
+              const flattenedDataStore = flattenObject(dataStoreObject, "");
+              Object.assign(flattenedContext, flattenedDataStore);
+            }
+          }
+
+          setContextValues(flattenedContext);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch context values", error);
+        setContextValues({});
+      }
+    };
+
+    fetchContextValues();
+  }, [previewSessionId, lastTurnIdString, lastTurnVariablesJson]);
+
+  // Group variables by their group property
+  const groupedVariables = useMemo(() => {
+    const groups = availableVariables.reduce(
+      (acc, variable) => {
+        const group = variable.group;
+        if (!acc[group]) {
+          acc[group] = [];
+        }
+        acc[group].push(variable);
+        return acc;
+      },
+      {} as Record<string, Variable[]>,
+    );
+
+    // Filter by search query if exists
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      Object.keys(groups).forEach((groupKey) => {
+        groups[groupKey] = groups[groupKey].filter(
+          (variable) =>
+            variable.variable.toLowerCase().includes(query) ||
+            variable.description.toLowerCase().includes(query) ||
+            (variable.template &&
+              variable.template.toLowerCase().includes(query)),
+        );
+        // Remove empty groups after filtering
+        if (groups[groupKey].length === 0) {
+          delete groups[groupKey];
+        }
+      });
+    }
+
+    return groups;
+  }, [availableVariables, searchQuery]);
+
+  // Handle structured variable insertion
+  const handleInsertStructuredVariable = useCallback(
+    (variablePath: string, event: React.MouseEvent) => {
+      event.stopPropagation();
+      event.preventDefault();
+
+      const variableValue = `{{${variablePath}}}`;
+      setClickedVariable(variablePath);
+
+      if (
+        lastMonacoEditor &&
+        lastMonacoEditor.editor &&
+        lastMonacoEditor.position
+      ) {
+        insertVariableAtLastCursor(variableValue);
+        toast.success(`Inserted: ${variablePath}`, {
+          duration: 2000,
+        });
+      } else if (lastInputField && lastInputField.element) {
+        insertVariableAtInputField(variableValue);
+        toast.success(`Inserted: ${variablePath}`, {
+          duration: 2000,
+        });
+      } else {
+        // Copy to clipboard when no field is selected
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(variableValue);
+          toast.info(
+            `No field selected. Copied ${variableValue} to clipboard.`,
+            {
+              duration: 2000,
+            },
+          );
+        }
+      }
+
+      setTimeout(() => {
+        setClickedVariable(null);
+      }, 1000);
+    },
+    [
+      lastMonacoEditor,
+      insertVariableAtLastCursor,
+      lastInputField,
+      insertVariableAtInputField,
+    ],
+  );
+
+  // Handle variable click for insertion
+  const handleVariableClick = useCallback(
+    (variable: Variable, event: React.MouseEvent) => {
+      event.stopPropagation();
+      event.preventDefault();
+
+      const variableTemplate = `{{${variable.variable}}}`;
+      setClickedVariable(variable.variable);
+
+      if (
+        lastMonacoEditor &&
+        lastMonacoEditor.editor &&
+        lastMonacoEditor.position
+      ) {
+        insertVariableAtLastCursor(variableTemplate);
+        toast.success(`Inserted: ${variable.variable}`, {
+          duration: 2000,
+        });
+      } else if (lastInputField && lastInputField.element) {
+        insertVariableAtInputField(variableTemplate);
+        toast.success(`Inserted: ${variable.variable}`, {
+          duration: 2000,
+        });
+      } else {
+        // Copy to clipboard when no field is selected
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(variableTemplate);
+          toast.info(
+            `No field selected. Copied ${variableTemplate} to clipboard.`,
+            {
+              duration: 2000,
+            },
+          );
+        }
+      }
+
+      setTimeout(() => {
+        setClickedVariable(null);
+      }, 1000);
+    },
+    [
+      lastMonacoEditor,
+      insertVariableAtLastCursor,
+      lastInputField,
+      insertVariableAtInputField,
+    ],
+  );
+
+  // Prevent focus steal on mouse down
+  const handleMouseDown = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
+  // Prevent panel activation on any interaction
+  const handlePanelInteraction = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+  }, []);
+
+  // Handle group collapse/expand
+  const toggleGroupCollapse = useCallback((group: string) => {
+    setCollapsedGroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(group)) {
+        newSet.delete(group);
+      } else {
+        newSet.add(group);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Loading state
+  if (isLoading || areAgentsLoading || isLoadingSession) {
+    return <FlowPanelLoading message="Loading variables..." />;
+  }
+
+  // Error state
+  if (!flow) {
+    return <FlowPanelError message="Flow not found" />;
+  }
+
+  return (
+    <div
+      className="bg-background-surface-2 flex h-full flex-col items-center justify-start gap-4 overflow-hidden p-4"
+      onClick={handlePanelInteraction}
+    >
+      <SearchInput
+        placeholder="Search"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full flex-shrink-0"
+      />
+
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => {
+          setActiveTab(value);
+          sessionStorage.setItem("variablePanel_activeTab", value);
+          // Clear search when switching tabs
+          setSearchQuery("");
+        }}
+        className="flex w-full flex-1 flex-col gap-4 overflow-hidden"
+      >
+        <TabsList className="w-full flex-shrink-0">
+          <TabsTrigger value="variables">Variables</TabsTrigger>
+          <TabsTrigger value="structured">Agent output</TabsTrigger>
+          <TabsTrigger value="datastore">Data</TabsTrigger>
+        </TabsList>
+
+        <TabsContent
+          value="variables"
+          className="mt-0 h-0 flex-1 overflow-hidden"
+        >
+          <ScrollArea className="h-full pr-2">
+            <div className="flex flex-col">
+              {Object.keys(groupedVariables).length === 0 ? (
+                <div className="py-8 text-center">
+                  <TypoBase className="text-[#A3A5A8]">
+                    {searchQuery
+                      ? "No variables found matching your search"
+                      : "No variables available"}
+                  </TypoBase>
+                </div>
+              ) : (
+                Object.entries(groupedVariables).map(([group, variables]) => (
+                  <div key={group} className="flex flex-col">
+                    {/* Group Header */}
+                    <div className="bg-[#272727] py-2.5">
+                      <div className="flex w-full flex-row items-center justify-start gap-4">
+                        <div className="flex grow basis-0 flex-row items-start justify-start gap-2 text-left text-xs">
+                          <div className="font-medium text-nowrap text-[#bfbfbf]">
+                            {VariableGroupLabel[
+                              group as keyof typeof VariableGroupLabel
+                            ]?.displayName || group}
+                          </div>
+                          <div className="min-h-px min-w-px grow basis-0 font-normal text-[#696969]">
+                            {VariableGroupLabel[
+                              group as keyof typeof VariableGroupLabel
+                            ]?.description || "Variables in this group"}
+                          </div>
+                        </div>
+                        <button
+                          className="flex items-center justify-center"
+                          onClick={() => toggleGroupCollapse(group)}
+                        >
+                          {collapsedGroups.has(group) ? (
+                            <ChevronDown className="min-h-6 min-w-6 text-[#bfbfbf]" />
+                          ) : (
+                            <ChevronUp className="min-h-6 min-w-6 text-[#bfbfbf]" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Group Variables */}
+                    {!collapsedGroups.has(group) && (
+                      <div className="bg-[#272727] pb-0">
+                        <div className="flex flex-col gap-2">
+                          {variables.map((variable) => (
+                            <button
+                              key={variable.variable}
+                              className={`relative flex w-full flex-col items-start justify-start gap-1 rounded-lg border border-[#525252] bg-[#313131] p-2 text-left transition-all duration-200 ${
+                                clickedVariable === variable.variable
+                                  ? "bg-[#313131]"
+                                  : "cursor-pointer bg-[#313131] hover:bg-[#414141]"
+                              }`}
+                              onClick={(e) => handleVariableClick(variable, e)}
+                              onMouseDown={handleMouseDown}
+                              tabIndex={-1}
+                            >
+                              {clickedVariable === variable.variable && (
+                                <div className="absolute right-0 bottom-0 left-0 h-[2px] bg-green-500" />
+                              )}
+                              <div className="flex w-full flex-col items-start justify-start gap-1">
+                                <div className="flex w-full items-center justify-start gap-2 text-xs text-nowrap">
+                                  <div className="font-medium text-[#f1f1f1]">
+                                    {`{{${variable.variable}}}`}
+                                  </div>
+                                  <div className="font-normal text-[#bfbfbf]">
+                                    {variable.dataType}
+                                  </div>
+                                  {hasEditor &&
+                                    (clickedVariable === variable.variable ? (
+                                      <Check className="ml-auto min-h-3 min-w-3 text-green-500 transition-opacity" />
+                                    ) : (
+                                      <Target className="text-primary ml-auto min-h-3 min-w-3 opacity-0 transition-opacity hover:opacity-100" />
+                                    ))}
+                                </div>
+                                <div className="text-left text-xs leading-normal font-normal text-[#9d9d9d]">
+                                  {variable.description}
+                                </div>
+                                {variable.template && (
+                                  <div className="text-[10px] leading-4 font-medium whitespace-pre-wrap text-[#bfbfbf]">
+                                    <span className="text-[#f1f1f1]">
+                                      {variable.template}
+                                    </span>
+                                  </div>
+                                )}
+                                {contextValues[variable.variable] && (
+                                  <div className="mt-2 w-full overflow-hidden">
+                                    <div className="bg-background-surface-4 w-full max-w-full overflow-hidden rounded-md px-2 py-1">
+                                      <div className="text-text-subtle mb-1 text-[12px] leading-[15px] font-[500]">
+                                        Data from session
+                                      </div>
+                                      <div className="font-fira-code text-text-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
+                                        {String(
+                                          contextValues[variable.variable],
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="structured" className="mt-0 flex-1 overflow-hidden">
+          {aggregatedStructuredVariables.length === 0 ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="inline-flex flex-col items-center justify-start gap-2">
+                <div className="text-text-body justify-start text-center text-base leading-relaxed font-semibold">
+                  {searchQuery
+                    ? "No structured output variables found matching your search"
+                    : "No structured output variables found"}
+                </div>
+                <div className="text-background-surface-5 w-52 justify-start text-center text-xs font-normal">
+                  {searchQuery
+                    ? "Try a different search term"
+                    : "Enable structured output on agents to see variables here"}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <ScrollArea className="h-full pr-2">
+              <div className="flex flex-col gap-2">
+                {aggregatedStructuredVariables
+                  .filter((variable) => {
+                    if (!searchQuery) return true;
+                    const query = searchQuery.toLowerCase();
+                    return (
+                      variable.field.name.toLowerCase().includes(query) ||
+                      variable.agentName.toLowerCase().includes(query) ||
+                      (variable.field.description &&
+                        variable.field.description
+                          .toLowerCase()
+                          .includes(query))
+                    );
+                  })
+                  .map((variable, index) => {
+                    const variableKey = variable.variablePath;
+                    return (
+                      <div
+                        key={`${variable.agentId}-${index}`}
+                        className="relative"
+                      >
+                        <div
+                          className="absolute top-0 bottom-0 left-0 w-[4px] rounded-l-lg"
+                          style={{ backgroundColor: variable.agentColor }}
+                        />
+                        <button
+                          className={`relative ml-[2px] flex w-full flex-col items-start justify-start gap-1 rounded-lg p-2 text-left transition-all duration-200 ${
+                            clickedVariable === variableKey
+                              ? "bg-background-surface-3"
+                              : "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
+                          }`}
+                          onClick={(e) =>
+                            handleInsertStructuredVariable(
+                              variable.variablePath,
+                              e,
+                            )
+                          }
+                          onMouseDown={handleMouseDown}
+                          tabIndex={-1}
+                        >
+                          {clickedVariable === variableKey && (
+                            <div className="absolute right-0 bottom-0 left-0 h-[2px] bg-green-500" />
+                          )}
+                          <div className="flex w-full flex-col items-start justify-start gap-1">
+                            <div className="flex w-full items-center justify-start gap-2">
+                              <div
+                                className="text-xs font-normal"
+                                style={{ color: variable.agentColor }}
+                              >
+                                {`{{${variable.variablePath}}}`}
+                              </div>
+                              <div className="text-text-body text-xs font-normal">
+                                {variable.field.type}
+                                {variable.field.array && "[]"}
+                              </div>
+                              {variable.field.required && (
+                                <div className="text-xs font-normal text-red-500">
+                                  required
+                                </div>
+                              )}
+                              {hasEditor &&
+                                (clickedVariable === variableKey ? (
+                                  <Check className="ml-auto h-3 w-3 text-green-500 transition-opacity" />
+                                ) : (
+                                  <Target className="text-primary ml-auto h-3 w-3 opacity-0 transition-opacity hover:opacity-100" />
+                                ))}
+                            </div>
+                            {variable.field.description && (
+                              <div className="text-text-subtle line-clamp-3 text-left text-xs leading-none font-medium">
+                                {variable.field.description}
+                              </div>
+                            )}
+                            {contextValues[variable.variablePath] && (
+                              <div className="mt-2 w-full overflow-hidden">
+                                <div className="bg-background-surface-4 w-full max-w-full overflow-hidden rounded-md px-2 py-1">
+                                  <div className="text-text-subtle mb-1 text-[12px] leading-[15px] font-[500]">
+                                    Data from session
+                                  </div>
+                                  <div className="font-fira-code text-text-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
+                                    {String(
+                                      contextValues[variable.variablePath],
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+            </ScrollArea>
+          )}
+        </TabsContent>
+
+        <TabsContent
+          value="datastore"
+          className="mt-0 h-0 flex-1 overflow-hidden"
+        >
+          {dataStoreSchema?.fields && dataStoreSchema.fields.length > 0 ? (
+            <ScrollArea className="h-full pr-2">
+              <div className="flex flex-col gap-2">
+                {dataStoreSchema.fields
+                  .filter(
+                    (field) =>
+                      !searchQuery ||
+                      field.name
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      field.type
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()),
+                  )
+                  .map((field) => {
+                    // Get actual value from contextValues (which includes dataStore from last turn)
+                    const hasValue = field.name in contextValues;
+                    const actualValue = hasValue
+                      ? contextValues[field.name]
+                      : "";
+                    const displayValue = hasValue ? actualValue : "";
+                    const variableName = `{{${field.name}}}`;
+
+                    return (
+                      <button
+                        key={field.id}
+                        className={`bg-background-surface-3 outline-border-normal relative flex w-full flex-col items-start justify-start gap-1 rounded-lg p-2 text-left outline outline-1 outline-offset-[-1px] transition-all duration-200 ${
+                          clickedVariable === variableName
+                            ? "bg-background-surface-3"
+                            : "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+
+                          setClickedVariable(variableName);
+
+                          // Insert into monaco editor or input field if available
+                          if (lastMonacoEditor?.editor) {
+                            insertVariableAtLastCursor(variableName);
+                            toast.success(`Inserted: ${field.name}`, {
+                              duration: 2000,
+                            });
+                          } else if (lastInputField?.element) {
+                            insertVariableAtInputField(variableName);
+                            toast.success(`Inserted: ${field.name}`, {
+                              duration: 2000,
+                            });
+                          } else {
+                            // Copy to clipboard when no field is selected
+                            if (navigator.clipboard) {
+                              navigator.clipboard.writeText(variableName);
+                              toast.info(
+                                `No field selected. Copied ${variableName} to clipboard.`,
+                                {
+                                  duration: 2000,
+                                },
+                              );
+                            }
+                          }
+
+                          setTimeout(() => setClickedVariable(null), 1000);
+                        }}
+                        onMouseDown={(e) => e.preventDefault()}
+                        tabIndex={-1}
+                      >
+                        {clickedVariable === variableName && (
+                          <div className="absolute right-0 bottom-0 left-0 h-[2px] bg-green-500" />
+                        )}
+                        <div className="flex flex-col items-start justify-start gap-4 self-stretch">
+                          <div className="flex flex-col items-start justify-start gap-1 self-stretch">
+                            <div className="flex w-full items-center justify-start gap-2">
+                              <div className="text-text-primary justify-start text-xs font-medium">
+                                {variableName}
+                              </div>
+                              <div className="text-text-body justify-start text-xs font-normal">
+                                {field.type}
+                              </div>
+                              {hasEditor &&
+                                (clickedVariable === variableName ? (
+                                  <Check className="ml-auto min-h-3 min-w-3 text-green-500 transition-opacity" />
+                                ) : (
+                                  <Target className="text-primary ml-auto min-h-3 min-w-3 opacity-0 transition-opacity hover:opacity-100" />
+                                ))}
+                            </div>
+                          </div>
+                          {hasValue &&
+                            displayValue !== "" &&
+                            displayValue !== null &&
+                            displayValue !== undefined && (
+                              <div className="mt-2 w-full overflow-hidden">
+                                <div className="bg-background-surface-4 w-full max-w-full overflow-hidden rounded-md px-2 py-1">
+                                  <div className="text-text-subtle mb-1 text-[12px] leading-[15px] font-[500]">
+                                    Most recent data from session
+                                  </div>
+                                  <div className="font-fira-code text-text-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
+                                    {typeof displayValue === "object"
+                                      ? JSON.stringify(displayValue)
+                                      : String(displayValue)}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
+            </ScrollArea>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="inline-flex flex-col items-center justify-start gap-2">
+                <div className="text-text-body justify-start text-center text-base leading-relaxed font-semibold">
+                  No data fields defined
+                </div>
+                <div className="text-background-surface-5 w-52 justify-start text-center text-xs font-normal">
+                  Define fields in the Data Schema to see them here
+                </div>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

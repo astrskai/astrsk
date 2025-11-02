@@ -32,8 +32,8 @@ import { ifNodeKeys } from "../../if-node/query-factory";
 import { NodeType } from "@/entities/flow/model/node-types";
 import { Agent, ApiType } from "@/entities/agent/domain/agent";
 import { InsertFlow } from "@/db/schema/flows";
-import { type CustomNodeType } from "@/features/flow/flow-multi/nodes/index";
-import { type CustomEdgeType } from "@/features/flow/flow-multi/edges/index";
+import { type CustomNodeType } from "@/features/flow/nodes/index";
+import { type CustomEdgeType } from "@/features/flow/edges/index";
 
 // ============================================================================
 // Common Types

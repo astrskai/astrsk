@@ -24,19 +24,19 @@ import {
 import {
   getAgentHexColor,
   getAgentState,
-} from "@/features/flow/flow-multi/utils/node-color-assignment";
-import { FlowPanel } from "@/features/flow/flow-multi/panels/flow-panel";
-import { PromptPanel } from "@/features/flow/flow-multi/panels/prompt/prompt-panel";
-import { OutputPanel } from "@/features/flow/flow-multi/panels/output/output-panel";
-import { ParameterPanel } from "@/features/flow/flow-multi/panels/parameter/parameter-panel";
-import { PreviewPanel } from "@/features/flow/flow-multi/panels/preview/preview-panel";
-import { VariablePanel } from "@/features/flow/flow-multi/panels/variable/variable-panel";
-import { ResponseDesignPanel } from "@/features/flow/flow-multi/panels/response-design/response-design-panel";
-import { ValidationPanel } from "@/features/flow/flow-multi/panels/validation/validation-panel";
-import { DataStoreSchemaPanel } from "@/features/flow/flow-multi/panels/data-store-schema/data-store-schema-panel";
-import { IfNodePanel } from "@/features/flow/flow-multi/panels/if-node/if-node-panel";
-import { DataStorePanel } from "@/features/flow/flow-multi/panels/data-store/data-store-panel";
-import { FlowVibePanel } from "@/features/flow/flow-multi/panels/vibe/vibe-panel";
+} from "@/features/flow/utils/node-color-assignment";
+import { FlowPanel } from "@/features/flow/panels/flow-panel";
+import { PromptPanel } from "@/features/flow/panels/prompt/prompt-panel";
+import { OutputPanel } from "@/features/flow/panels/output/output-panel";
+import { ParameterPanel } from "@/features/flow/panels/parameter/parameter-panel";
+import { PreviewPanel } from "@/features/flow/panels/preview/preview-panel";
+import { VariablePanel } from "@/features/flow/panels/variable/variable-panel";
+import { ResponseDesignPanel } from "@/features/flow/panels/response-design/response-design-panel";
+import { ValidationPanel } from "@/features/flow/panels/validation/validation-panel";
+import { DataStoreSchemaPanel } from "@/features/flow/panels/data-store-schema/data-store-schema-panel";
+import { IfNodePanel } from "@/features/flow/panels/if-node/if-node-panel";
+import { DataStorePanel } from "@/features/flow/panels/data-store/data-store-panel";
+import { FlowVibePanel } from "@/features/flow/panels/vibe/vibe-panel";
 import { FlowService } from "@/app/services/flow-service";
 import { PanelStructure } from "@/entities/flow/domain";
 import { Button, SvgIcon, Loading } from "@/shared/ui";

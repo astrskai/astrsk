@@ -11,7 +11,7 @@ import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/app/queries/flow-queries";
-import { getAgentHexColor, getAgentState } from "@/features/flow/flow-multi/utils/node-color-assignment";
+import { getAgentHexColor, getAgentState } from "@/features/flow/utils/node-color-assignment";
 
 
 interface FlowPanelContextType {
