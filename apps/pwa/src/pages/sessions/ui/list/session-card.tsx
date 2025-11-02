@@ -18,7 +18,7 @@ import { ActionConfirm } from "@/shared/ui/dialogs";
 import {
   AgentModelTierInfo,
   SessionExportDialog,
-} from "@/features/session/ui/session-export-dialog";
+} from "../dialog/session-export-dialog";
 import { Checkbox, Label } from "@/shared/ui";
 import { SessionPlaceholder } from "@/shared/assets/placeholders";
 import { cn, downloadFile, logger } from "@/shared/lib";

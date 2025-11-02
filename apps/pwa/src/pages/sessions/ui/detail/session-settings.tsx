@@ -25,22 +25,22 @@ import { CardTab } from "@/features/session/create-session/step-cards";
 import {
   EditBackground,
   SelectedBackground,
-} from "@/features/session/edit-session/edit-background";
+} from "./edit/edit-background";
 import {
   CardListItem,
   EditCards,
   EmptyCard,
-} from "@/features/session/edit-session/edit-cards";
+} from "./edit/edit-cards";
 import {
   ColorTable,
   EditChatStyling,
-} from "@/features/session/edit-session/edit-chat-styling";
+} from "./edit/edit-chat-styling";
 import {
   AgentListItem,
   EditFlowAndAgents,
   EmptyFlow,
-} from "@/features/session/edit-session/edit-flow-and-agents";
-import { EditLanguage } from "@/features/session/edit-session/edit-language";
+} from "./edit/edit-flow-and-agents";
+import { EditLanguage } from "./edit/edit-language";
 
 import {
   SvgIcon,

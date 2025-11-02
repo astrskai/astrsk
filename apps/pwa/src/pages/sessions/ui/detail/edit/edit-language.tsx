@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
-import { CustomSheet } from "@/features/session/ui/custom-sheet";
+import { CustomSheet } from "./custom-sheet";
 import {
   convertLanguageFormToSessionProps,
   LanguageSettings,

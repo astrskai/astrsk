@@ -87,30 +87,33 @@ Maintained development guidelines. Last updated: 2025-10-24
 
 ## Architecture: Feature-Sliced Design (FSD)
 
-We are adopting [Feature-Sliced Design (FSD)](https://feature-sliced.design/) as our long-term architectural standard.
+We follow [Feature-Sliced Design (FSD)](https://feature-sliced.design/) - a hierarchical architecture pattern organizing code by responsibility level.
 
-> 📚 **Complete FSD Guide**: See [FSD.md](./FSD.md) for comprehensive architecture documentation including:
+> 📚 **Complete Guide**: See [FSD_GUIDE.md](./FSD_GUIDE.md) for:
 >
-> - Decision trees (where to put new code)
-> - Layer-by-layer guides (widgets/, pages/, features/, entities/)
-> - Store placement strategies
-> - Real-world examples and anti-patterns
-> - PR checklist and migration patterns
+> - Layer definitions and decision trees
+> - Where to put new code (pages vs features vs entities)
+> - File organization and naming conventions
+> - Common patterns and anti-patterns
 
-**Quick Summary:**
+**Quick Reference:**
 
-- **7 Layers**: app (init) → pages (routes) → widgets (reusable UI) → features (user interactions) → entities (business concepts) → shared (utils)
-- **Dependency Rule**: Upper layers can only import from lower layers
-- **Current Status**: 90% complete (Phase 2.11 done, Phase 3 pending)
+```
+app/       → App initialization & global config
+pages/     → Route pages (1 route = 1 page)
+widgets/   → Reusable UI blocks across pages
+features/  → User interactions & business logic
+entities/  → Business domain models (Session, Card, Flow, Agent)
+shared/    → Foundation (UI kit, hooks, utilities)
+```
 
-**Migration Status:**
+**Key Rules:**
+- ✅ Upper layers import from lower layers only (one-way dependency)
+- ✅ Use relative imports for co-located files (`./component`)
+- ✅ Use absolute imports across layers (`@/entities/session/api`)
+- ✅ Each slice has public API via `index.ts` barrel export
 
-- ✅ app/ - PURE initialization (only 2 providers: theme, pwa-register)
-- ✅ pages/ - 7 page components (4 detail pages + 3 UI screens)
-- ✅ widgets/ - 10 layout components (reused across pages, includes updaters)
-- ✅ features/ - 5 feature domains (user interactions)
-- ✅ entities/ - 14 domain entities (business concepts)
-- ✅ shared/ - UI components, hooks, stores, contexts (fully populated)
+**Current Status**: 90% complete (Phase 2.11 done, Phase 3 pending)
 
 ---
 

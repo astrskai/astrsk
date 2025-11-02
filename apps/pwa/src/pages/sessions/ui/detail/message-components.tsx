@@ -40,7 +40,7 @@ import { TurnService } from "@/app/services/turn-service";
 
 import { cn } from "@/shared/lib";
 
-import { MediaPlaceholderMessage } from "@/features/session/media-placeholder-message";
+import { MediaPlaceholderMessage } from "./media-placeholder-message";
 
 import { SvgIcon } from "@/shared/ui";
 import { CharacterCard } from "@/entities/card/domain";

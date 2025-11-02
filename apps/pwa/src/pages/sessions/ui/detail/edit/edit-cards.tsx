@@ -14,7 +14,7 @@ import { useAppStore } from "@/shared/stores/app-store";
 import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 import { NoCardsFound } from "@/features/card/card-list";
 import { TradingCard } from "@/features/card/components/trading-card";
-import { CustomSheet } from "@/features/session/ui/custom-sheet";
+import { CustomSheet } from "./custom-sheet";
 import { cn } from "@/shared/lib";
 import {
   CardItem,
