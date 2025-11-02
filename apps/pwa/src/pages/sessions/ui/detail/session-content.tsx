@@ -31,8 +31,8 @@ import { TemplateRenderer } from "@/shared/lib/template-renderer";
 import { cloneDeep } from "lodash-es";
 
 import { useCard } from "@/shared/hooks/use-card";
-import { useImageGeneration } from "@/features/card/panels/card-panel/components/image-generator/hooks/use-image-generation";
-import { useVideoGeneration } from "@/features/card/panels/card-panel/components/image-generator/hooks/use-video-generation";
+import { useImageGeneration } from "@/pages/assets/characters/panel/image-generator/hooks/use-image-generation";
+import { useVideoGeneration } from "@/pages/assets/characters/panel/image-generator/hooks/use-video-generation";
 import { useEnhancedGenerationPrompt } from "@/features/session/hooks/use-enhanced-generation-prompt";
 import { IMAGE_MODELS } from "@/shared/stores/model-store";
 import { flowQueries } from "@/app/queries/flow-queries";

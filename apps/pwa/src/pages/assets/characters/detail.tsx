@@ -21,15 +21,15 @@ import { extractCardPanelType } from "@/features/card/utils/panel-id-utils";
 import "@/app/styles/dockview-detail.css";
 
 // Import panel components
-import { CardPanel } from "@/features/card/panels/card-panel/card-panel";
-import { MetadataPanel } from "@/features/card/panels/card-panel/components/metadata-panel";
-import { LorebookPanel } from "@/features/card/panels/card-panel/components/lorebook-panel";
-import { CharacterInfoPanel } from "@/features/card/panels/card-panel/components/character-info-panel";
-import { PlotInfoPanel } from "@/features/card/panels/card-panel/components/plot-info-panel";
-import { VariablesPanel } from "@/features/card/panels/card-panel/components/variables-panel";
-import { FirstMessagesPanel } from "@/features/card/panels/card-panel/components/scenarios-panel";
-import { ImageGeneratorPanel } from "@/features/card/panels/card-panel/components/image-generator-panel";
-import { CardVibePanel } from "@/features/card/panels/card-panel/components/vibe-panel";
+import { CardPanel } from "@/pages/assets/characters/panel";
+import { MetadataPanel } from "@/pages/assets/characters/panel/metadata-panel";
+import { LorebookPanel } from "@/pages/assets/characters/panel/lorebook-panel";
+import { CharacterInfoPanel } from "@/pages/assets/characters/panel/character-info-panel";
+import { PlotInfoPanel } from "@/pages/assets/characters/panel/plot-info-panel";
+import { VariablesPanel } from "@/pages/assets/characters/panel/variables-panel";
+import { FirstMessagesPanel } from "@/pages/assets/characters/panel/scenarios-panel";
+import { ImageGeneratorPanel } from "@/pages/assets/characters/panel/image-generator-panel";
+import { CardVibePanel } from "@/pages/assets/characters/panel/vibe-panel";
 import { SvgIcon } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 import { logger } from "@/shared/lib";

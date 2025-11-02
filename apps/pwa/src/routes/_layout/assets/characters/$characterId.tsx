@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import CharacterPlotDetailPage from "@/pages/assets/character-plot-detail";
+import CharacterPlotDetailPage from "@/pages/assets/characters/detail";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 function CharacterDetailPageWrapper() {

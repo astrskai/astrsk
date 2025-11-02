@@ -40,7 +40,7 @@ import { registerCardMonacoEditor } from "./variables-panel";
 import { cardQueries, useUpdateCardScenarios } from "@/app/queries/card";
 
 // Import the sortable component
-import { SortableItem } from "@/features/card/panels/card-panel/components/sortable-item";
+import { SortableItem } from "./sortable-item";
 
 // Import our abstraction
 import {
