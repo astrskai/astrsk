@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useAppStore } from "@/shared/stores/app-store";
-import CardFormSheet from "@/features/card/components/edit-sheet/card-form-sheet";
+import CardFormSheet from "@/features/card/ui/edit-sheet/card-form-sheet";
 import {
   useCardEditor,
   useCardImport,

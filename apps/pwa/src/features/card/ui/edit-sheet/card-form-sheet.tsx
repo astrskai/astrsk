@@ -17,8 +17,8 @@ import { Page, useAppStore } from "@/shared/stores/app-store";
 import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 import { useCardsStore } from "@/shared/stores/cards-store";
 import { useEditSessionDialogStore } from "@/shared/stores/edit-session-dialog-store";
-import { CharacterForm } from "@/features/card/components/edit-sheet/character-form-v2";
-import { PlotForm } from "@/features/card/components/edit-sheet/plot-form-v2";
+import { CharacterForm } from "@/features/card/ui/edit-sheet/character-form-v2";
+import { PlotForm } from "@/features/card/ui/edit-sheet/plot-form-v2";
 import { CardFormValues } from "@/features/card/types/card-form";
 
 import { TopNavigation } from "@/widgets/top-navigation";

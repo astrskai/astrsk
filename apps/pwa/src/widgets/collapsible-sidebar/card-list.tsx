@@ -37,7 +37,7 @@ import {
   CreateButton,
   ImportButton,
 } from "./shared-list-components";
-import { CardImportDialog } from "@/features/card/components/card-import-dialog";
+import { CardImportDialog } from "@/features/card/ui/card-import-dialog";
 import { TableName } from "@/db/schema/table-name";
 import { CharacterCard, PlotCard } from "@/entities/card/domain";
 import { Card, CardType } from "@/entities/card/domain/card";

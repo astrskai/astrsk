@@ -7,10 +7,10 @@ import { useForm } from "react-hook-form";
 import {
   ActiveTabType,
   CardStore,
-} from "@/features/card/components/edit-sheet/card-form-sheet";
+} from "@/features/card/ui/edit-sheet/card-form-sheet";
 import { CardFormValues } from "@/features/card/types/card-form";
-import { ImageUpload } from "@/features/card/components/edit-sheet/image-upload";
-import { SortableBlockListV2 } from "@/features/card/components/edit-sheet/sortable-block-list-v2";
+import { ImageUpload } from "@/features/card/ui/edit-sheet/image-upload";
+import { SortableBlockListV2 } from "@/features/card/ui/edit-sheet/sortable-block-list-v2";
 import { useEntryList } from "@/features/card/hooks/useEntryList";
 
 import {

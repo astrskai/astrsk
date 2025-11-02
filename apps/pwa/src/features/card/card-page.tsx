@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 
 import { useNavigate } from "@tanstack/react-router";
 import CardList from "@/features/card/card-list";
-import CardFormSheet from "@/features/card/components/edit-sheet/card-form-sheet";
+import CardFormSheet from "@/features/card/ui/edit-sheet/card-form-sheet";
 import {
   useCardEditor,
   useCardImport,

@@ -4,7 +4,7 @@ import { CardType } from "@/entities/card/domain";
 import { AssetService } from "@/app/services/asset-service";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { generatedImageKeys } from "@/app/queries/generated-image/query-factory";
-import { TradingCard } from "@/features/card/components/trading-card";
+import { TradingCard } from "@/features/card/ui/trading-card";
 import { useCardPanelContext } from "@/features/card/panels/card-panel-provider";
 import { CardItem } from "@/widgets/collapsible-sidebar/card-list";
 import { useAsset } from "@/shared/hooks/use-asset";
