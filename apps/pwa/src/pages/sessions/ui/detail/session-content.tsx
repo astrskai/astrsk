@@ -98,9 +98,7 @@ const SessionContent = ({
   );
 
   const invalidateSession = useCallback(() => {
-    // Use refetchQueries instead of invalidateQueries to prevent flickering
-    // This refetches in background while keeping optimistic data visible
-    queryClient.refetchQueries({
+    queryClient.invalidateQueries({
       queryKey: sessionQueries.detail(selectedSessionId ?? undefined).queryKey,
     });
   }, [queryClient, selectedSessionId]);
