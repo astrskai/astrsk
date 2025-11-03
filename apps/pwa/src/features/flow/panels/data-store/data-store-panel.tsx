@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { flowQueries } from "@/app/queries/flow/query-factory";
+import { flowQueries } from "@/entities/flow/api/query-factory";
 import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
 import { useUpdateDataStoreNodeFields } from "@/app/queries/data-store-node/mutations/field-mutations";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";

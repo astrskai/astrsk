@@ -27,12 +27,12 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
-import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";
+import { useUpdateNodeTitle } from "@/entities/flow/api/mutations/node-mutations";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { ifNodeQueries } from "@/app/queries/if-node/query-factory";
 import { useUpdateIfNodeName } from "@/app/queries/if-node/mutations";
 import {

@@ -22,13 +22,13 @@ import { IfNodeService } from "@/app/services/if-node-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { UniqueEntityID } from "@/shared/domain";
 import { queryClient } from "@/app/queries/query-client";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { agentKeys } from "@/app/queries/agent/query-factory";
 import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
 import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
-import { useUpdateFlowName } from "@/app/queries/flow/mutations/flow-mutations";
-import { useUpdateNodesAndEdges } from "@/app/queries/flow/mutations/nodes-edges-mutations";
-import { useUpdateDataStoreSchema } from "@/app/queries/flow/mutations/data-store-mutations";
+import { useUpdateFlowName } from "@/entities/flow/api/mutations/flow-mutations";
+import { useUpdateNodesAndEdges } from "@/entities/flow/api/mutations/nodes-edges-mutations";
+import { useUpdateDataStoreSchema } from "@/entities/flow/api/mutations/data-store-mutations";
 import {
   useUpdateAgentPromptMessages,
   useUpdateAgentApiType,

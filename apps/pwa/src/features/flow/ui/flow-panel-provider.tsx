@@ -10,7 +10,7 @@ import { Node } from "@/entities/flow/domain/flow";
 import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { getAgentHexColor, getAgentState } from "@/features/flow/utils/node-color-assignment";
 
 

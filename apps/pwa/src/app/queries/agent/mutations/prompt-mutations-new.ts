@@ -12,7 +12,7 @@ import { FlowService } from "@/app/services/flow-service";
 import { ApiType } from "@/entities/agent/domain/agent";
 import { PromptMessage } from "@/entities/agent/domain";
 import { agentKeys } from "../query-factory";
-import { flowKeys } from "@/app/queries/flow/query-factory";
+import { flowKeys } from "@/entities/flow/api/query-factory";
 import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 
 /**

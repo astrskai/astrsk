@@ -8,7 +8,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FlowService } from "@/app/services/flow-service";
-import { flowKeys } from "@/app/queries/flow/query-factory";
+import { flowKeys } from "@/entities/flow/api/query-factory";
 import { PanelStructure } from "@/entities/flow/domain/flow";
 import { toast } from "sonner";
 

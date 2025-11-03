@@ -11,8 +11,8 @@ import { toast } from "sonner";
 
 // Import flow queries and mutations
 import { useQuery } from "@tanstack/react-query";
-import { flowQueries } from "@/app/queries/flow/query-factory";
-import { useUpdateResponseTemplate } from "@/app/queries/flow/mutations";
+import { flowQueries } from "@/entities/flow/api/query-factory";
+import { useUpdateResponseTemplate } from "@/entities/flow/api/mutations";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 
 interface ResponseDesignPanelProps {

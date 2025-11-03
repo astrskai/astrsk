@@ -15,7 +15,7 @@ import { SessionService } from "@/app/services/session-service";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { useValidationStore } from "@/shared/stores/validation-store";
 import { queryClient } from "@/app/queries/query-client";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { useQuery } from "@tanstack/react-query";
 import { useMobileNavigation } from "@/shared/stores/mobile-navigation-context";
 

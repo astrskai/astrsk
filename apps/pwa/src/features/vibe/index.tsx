@@ -8,7 +8,7 @@ import type {
   VibeGeneratorResult,
 } from "vibe-shared-types";
 import { cardKeys } from "@/app/queries/card/query-factory";
-import { flowKeys } from "@/app/queries/flow/query-factory";
+import { flowKeys } from "@/entities/flow/api/query-factory";
 import { agentKeys } from "@/app/queries/agent/query-factory";
 import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
 import { ifNodeKeys } from "@/app/queries/if-node/query-factory";

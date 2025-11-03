@@ -1,5 +1,5 @@
 import { agentQueries } from "@/app/queries/agent/query-factory";
-import { flowQueries } from "@/app/queries/flow/query-factory";
+import { flowQueries } from "@/entities/flow/api/query-factory";
 import { makeContext } from "@/app/services/session-play-service";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";

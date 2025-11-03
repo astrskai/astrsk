@@ -6,7 +6,7 @@ import { sessionQueries } from "@/entities/session/api";
 import { turnQueries } from "@/app/queries/turn-queries";
 import { Turn } from "@/entities/turn/domain/turn";
 import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { useMultipleCharacterAssets } from "./use-multiple-character-assets";
 import { CardType } from "@/entities/card/domain/card";
 import { CardListItem } from "@/entities/session/domain/session";

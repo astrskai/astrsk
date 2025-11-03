@@ -35,7 +35,7 @@ import { useImageGeneration } from "@/shared/hooks/use-image-generation";
 import { useVideoGeneration } from "@/shared/hooks/use-video-generation";
 import { useEnhancedGenerationPrompt } from "@/features/session/hooks/use-enhanced-generation-prompt";
 import { IMAGE_MODELS } from "@/shared/stores/model-store";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 
 import {
   sessionQueries,

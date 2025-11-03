@@ -19,8 +19,8 @@ import { HelpCircle } from "lucide-react";
 
 // Import query and mutation system
 import { useQuery } from "@tanstack/react-query";
-import { flowQueries } from "@/app/queries/flow/query-factory";
-import { useUpdateDataStoreSchema } from "@/app/queries/flow/mutations/data-store-mutations";
+import { flowQueries } from "@/entities/flow/api/query-factory";
+import { useUpdateDataStoreSchema } from "@/entities/flow/api/mutations/data-store-mutations";
 
 // Import from flow panel architecture
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";

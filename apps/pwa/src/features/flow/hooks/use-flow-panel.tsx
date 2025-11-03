@@ -4,7 +4,7 @@ import { Flow } from "@/entities/flow/domain";
 import { Agent } from "@/entities/agent/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { AgentService } from "@/app/services/agent-service";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { agentQueries } from "@/app/queries/agent/query-factory";
 import { invalidateSingleFlowQueries } from "@/features/flow/utils/invalidate-flow-queries";
 

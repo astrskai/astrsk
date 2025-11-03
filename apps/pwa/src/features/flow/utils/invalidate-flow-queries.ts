@@ -1,5 +1,5 @@
 import { UniqueEntityID } from "@/shared/domain";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { queryClient } from "@/app/queries/query-client";
 
 /**

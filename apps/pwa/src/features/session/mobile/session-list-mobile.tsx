@@ -51,7 +51,7 @@ import { ApiSource } from "@/entities/api/domain";
 import { toast } from "sonner";
 import { TopNavigation } from "@/widgets/top-navigation";
 import { StepName } from "@/features/session/create-session/step-name";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { sessionQueries } from "@/entities/session/api";
 import { cardQueries } from "@/app/queries/card-queries";
 

@@ -21,10 +21,10 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
-import { useUpdateNodeTitle } from "@/app/queries/flow/mutations/node-mutations";
+import { useUpdateNodeTitle } from "@/entities/flow/api/mutations/node-mutations";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { useQuery } from "@tanstack/react-query";
-import { flowQueries } from "@/app/queries/flow/query-factory";
+import { flowQueries } from "@/entities/flow/api/query-factory";
 import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
 import { useUpdateDataStoreNodeName } from "@/app/queries/data-store-node/mutations";
 // Removed flow validation imports as validation is disabled

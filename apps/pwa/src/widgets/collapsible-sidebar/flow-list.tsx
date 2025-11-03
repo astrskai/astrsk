@@ -1,11 +1,11 @@
 // TODO: apply color palette
 
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import {
   useCloneFlowWithNodes,
   useDeleteFlowWithNodes,
-} from "@/app/queries/flow/mutations/flow-mutations";
+} from "@/entities/flow/api/mutations/flow-mutations";
 import { queryClient } from "@/app/queries/query-client";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";

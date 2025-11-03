@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { FlowService } from "@/app/services/flow-service";
-import { flowKeys } from "@/app/queries/flow/query-factory";
+import { flowKeys } from "@/entities/flow/api/query-factory";
 import { toast } from "sonner";
 
 /**

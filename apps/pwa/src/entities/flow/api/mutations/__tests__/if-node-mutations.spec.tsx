@@ -14,7 +14,7 @@ import { IfNodeService } from "@/app/services/if-node-service";
 import { FlowService } from "@/app/services/flow-service";
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain";
-import { flowKeys } from "@/app/queries/flow/query-factory";
+import { flowKeys } from "@/entities/flow/api/query-factory";
 import { NodeType } from "@/entities/flow/model/node-types";
 
 // Mock services

@@ -10,7 +10,7 @@ import {
   AgentModel,
 } from "./ui/dialog/flow-import-dialog";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { FlowService } from "@/app/services/flow-service";
 import { logger } from "@/shared/lib";
 import { Flow } from "@/entities/flow/domain/flow";

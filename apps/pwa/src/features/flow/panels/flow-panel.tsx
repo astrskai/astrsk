@@ -33,13 +33,13 @@ import { invalidateSingleFlowQueries } from "@/features/flow/utils/invalidate-fl
 import { useFlowLocalStateSync } from "@/shared/lib/flow-local-state-sync";
 import { cn } from "@/shared/lib";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
-import { useUpdateNodesPositions } from "@/app/queries/flow/mutations/nodes-positions-mutations";
+import { flowQueries, flowKeys } from "@/entities/flow/api/query-factory";
+import { useUpdateNodesPositions } from "@/entities/flow/api/mutations/nodes-positions-mutations";
 import {
   useUpdateFlowName,
   useUpdateFlowViewport,
-} from "@/app/queries/flow/mutations/flow-mutations";
-import { useUpdateNodesAndEdges } from "@/app/queries/flow/mutations/nodes-edges-mutations";
+} from "@/entities/flow/api/mutations/flow-mutations";
+import { useUpdateNodesAndEdges } from "@/entities/flow/api/mutations/nodes-edges-mutations";
 import {
   useCreateAgentNode,
   useDeleteAgentNode,
@@ -50,7 +50,7 @@ import {
   useCreateIfNode,
   useDeleteIfNode,
   useCloneIfNode,
-} from "@/app/queries/flow/mutations/composite-node-mutations";
+} from "@/entities/flow/api/mutations/composite-node-mutations";
 import {
   BookOpen,
   Pencil,

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button, SearchInput } from "@/shared/ui/forms";
 import { FlowCard } from "@/pages/assets/flows/ui/list";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { Flow } from "@/entities/flow/domain/flow";
 import { IconFlow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";

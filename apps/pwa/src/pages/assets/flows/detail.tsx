@@ -45,8 +45,8 @@ import { Agent } from "@/entities/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentKeys } from "@/app/queries/agent/query-factory";
-import { flowQueries, flowKeys } from "@/app/queries/flow/query-factory";
-import { useUpdatePanelLayout } from "@/app/queries/flow/mutations/panel-layout-mutations";
+import { flowQueries, flowKeys } from "@/entities/flow/api/query-factory";
+import { useUpdatePanelLayout } from "@/entities/flow/api/mutations/panel-layout-mutations";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import "@/app/styles/dockview-detail.css";
 

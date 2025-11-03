@@ -7,7 +7,7 @@ import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import {
   useDeleteFlowWithNodes,
   useCloneFlowWithNodes,
-} from "@/app/queries/flow/mutations/flow-mutations";
+} from "@/entities/flow/api/mutations/flow-mutations";
 import { SessionService } from "@/app/services/session-service";
 import { FlowService } from "@/app/services/flow-service";
 import { AgentService } from "@/app/services/agent-service";

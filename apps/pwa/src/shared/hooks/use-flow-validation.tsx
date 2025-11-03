@@ -5,7 +5,7 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { useApiConnectionsWithModels } from "@/shared/hooks/use-api-connections-with-models";
 import { useFlow } from "@/shared/hooks/use-flow";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { AgentService } from "@/app/services/agent-service";
 import { useValidationStore } from "@/shared/stores/validation-store";
 import {

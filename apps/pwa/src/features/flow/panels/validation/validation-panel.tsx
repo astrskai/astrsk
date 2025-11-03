@@ -7,7 +7,7 @@ import {
   FlowPanelLoading, 
   FlowPanelError 
 } from "@/features/flow/hooks/use-flow-panel";
-import { useUpdateFlowValidation } from "@/app/queries/flow/mutations/validation-mutations";
+import { useUpdateFlowValidation } from "@/entities/flow/api/mutations/validation-mutations";
 import { ValidationPanelProps } from "./validation-panel-types";
 import { useQueries } from "@tanstack/react-query";
 import { IssueItem } from "./issue-item";

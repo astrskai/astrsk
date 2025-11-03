@@ -11,7 +11,7 @@ import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
 import { OutputFormat, SchemaField } from "@/entities/agent/domain/agent";
 import { agentKeys } from "@/app/queries/agent/query-factory";
-import { flowKeys } from "@/app/queries/flow/query-factory";
+import { flowKeys } from "@/entities/flow/api/query-factory";
 import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 
 /**

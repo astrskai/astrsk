@@ -6,7 +6,7 @@
  * This helper provides consistent access patterns regardless of the structure.
  */
 
-import type { FlowDataDebugInfo } from "@/app/queries/flow/types/flow-cache-types";
+import type { FlowDataDebugInfo } from "@/entities/flow/api/types/flow-cache-types";
 
 // Control debug logging via environment variable
 const DEBUG_ENABLED = process.env.NODE_ENV === "development";
