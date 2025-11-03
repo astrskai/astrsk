@@ -109,6 +109,9 @@ const SessionContent = ({
   const deleteMessageMutation = useDeleteMessage(selectedSessionId!);
   const updateTurnMutation = useUpdateTurn();
 
+  // Flow data (needed for agent pre-loading in generateCharacterMessage)
+  const { data: flow } = useQuery(flowQueries.detail(session?.flowId));
+
   // Virtualizer setup
   const rowVirtualizer = useVirtualizer({
     count: session?.turnIds.length ?? 0,
@@ -196,6 +199,7 @@ const SessionContent = ({
   const [streamingAgentName, setStreamingAgentName] = useState<string>("");
   const [streamingModelName, setStreamingModelName] = useState<string>("");
   const refStopGenerate = useRef<AbortController | null>(null);
+
   const generateCharacterMessage = useCallback(
     async (
       characterCardId: UniqueEntityID,
@@ -290,14 +294,15 @@ const SessionContent = ({
         );
 
         // Add new empty message to session
+        // Use mutateAsync to ensure session.turnIds is updated before setting streamingMessageId
         if (!regenerateMessageId) {
-          addMessageMutation.mutate({
+          await addMessageMutation.mutateAsync({
             sessionId: session.id,
             message: streamingMessage,
           });
         }
 
-        // Set streaming message id
+        // Set streaming message id (now session.turnIds includes this message)
         setStreamingMessageId(streamingMessage.id);
         scrollToBottom({ behavior: "smooth" });
 
@@ -464,7 +469,15 @@ const SessionContent = ({
       // Invalidate session
       invalidateSession();
     },
-    [invalidateSession, queryClient, session, scrollToBottom],
+    [
+      addMessageMutation,
+      deleteMessageMutation,
+      invalidateSession,
+      queryClient,
+      session,
+      scrollToBottom,
+      updateTurnMutation,
+    ],
   );
 
   // Add user message
@@ -812,7 +825,6 @@ const SessionContent = ({
 
   // Session data
   const [isOpenSessionData, setIsOpenSessionData] = useState(false);
-  const { data: flow } = useQuery(flowQueries.detail(session?.flowId));
 
   // Session onboarding
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
