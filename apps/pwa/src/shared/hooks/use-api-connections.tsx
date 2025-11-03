@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
+import { apiConnectionQueries } from "@/entities/api/api-connection-queries";
 
 export const useApiConnections = ({
   keyword = "",

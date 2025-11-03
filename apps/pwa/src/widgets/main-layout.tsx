@@ -10,7 +10,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { InstallPwa } from "@/shared/ui/install-pwa";
 import { TopBar } from "@/widgets/top-bar";
 import {
-  Loading,
+  InitialLoading,
   LoadingOverlay,
   Sheet,
   SheetContent,
@@ -18,14 +18,17 @@ import {
 } from "@/shared/ui";
 import { ThemeProvider } from "@/app/providers/theme-provider";
 import { SidebarLeftProvider } from "@/widgets/both-sidebar";
-import { LeftNavigationMobile } from "@/widgets/left-navigation/left-navigation-mobile";
+import { LeftNavigationMobile } from "@/widgets/collapsible-sidebar/left-navigation-mobile";
 import { cn } from "@/shared/lib";
-import { LeftNavigation } from "@/widgets/left-navigation";
-import { LeftNavigationTrigger } from "@/widgets/left-navigation";
+// import {
+//   CollapsibleSidebar,
+//   CollapsibleSidebarTrigger,
+// } from "@/widgets/collapsible-sidebar";
+import { FixedNav } from "@/widgets/fixed-nav";
 import { SidebarInset } from "@/widgets/both-sidebar";
 import { MobileNavigationContext } from "@/shared/stores/mobile-navigation-context";
-import CreateSessionPage from "@/features/session/create-session-page";
-import { createPortal } from "react-dom";
+// import CreateSessionPage from "@/features/session/create-session-page";
+// import { createPortal } from "react-dom";
 
 export function MainLayout({
   children,
@@ -116,7 +119,7 @@ export function MainLayout({
       <>
         <TopBar />
         <div className="bg-background-screen flex h-[calc(100dvh-var(--topbar-height))] items-center justify-center">
-          <Loading isTimer />
+          <InitialLoading isTimer />
         </div>
       </>
     );
@@ -128,7 +131,7 @@ export function MainLayout({
       <>
         <TopBar />
         <div className="bg-background-screen flex h-[calc(100dvh-var(--topbar-height))] items-center justify-center">
-          <Loading />
+          <InitialLoading />
         </div>
       </>
     );
@@ -170,8 +173,8 @@ export function MainLayout({
             <Toaster expand className="!z-[100]" />
           </MobileNavigationContext.Provider>
         </SidebarLeftProvider>
-        {activePage === Page.CreateSession &&
-          createPortal(<CreateSessionPage />, document.body)}
+        {/* {activePage === Page.CreateSession &&
+          createPortal(<CreateSessionPage />, document.body)} */}
       </ThemeProvider>
     );
   }
@@ -187,14 +190,22 @@ export function MainLayout({
       >
         <LoadingOverlay />
         <TopBar />
-        <SidebarLeftProvider defaultOpen={!isMobile}>
-          <LeftNavigation />
-          <LeftNavigationTrigger />
-          <SidebarInset>{children}</SidebarInset>
-          <Toaster expand className="!z-[9999]" />
-        </SidebarLeftProvider>
-        {activePage === Page.CreateSession &&
-          createPortal(<CreateSessionPage />, document.body)}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Fixed sidebar - always visible on desktop, independent of CollapsibleSidebar state */}
+          <FixedNav />
+
+          {/* Collapsible navigation area */}
+          <div className="flex flex-1 overflow-hidden">
+            <SidebarLeftProvider defaultOpen={!isMobile}>
+              {/* <CollapsibleSidebar />
+              <CollapsibleSidebarTrigger /> */}
+              <SidebarInset>{children}</SidebarInset>
+              <Toaster expand className="!z-[9999]" />
+            </SidebarLeftProvider>
+          </div>
+        </div>
+        {/* {activePage === Page.CreateSession &&
+          createPortal(<CreateSessionPage />, document.body)} */}
       </div>
     </ThemeProvider>
   );

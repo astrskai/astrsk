@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib/logger";
 
-import { assetQueries } from "@/app/queries/asset-queries";
+import { assetQueries } from "@/entities/asset/api/asset-queries";
 
 const SKELETON_PATH = "/img/skeleton.svg";
 

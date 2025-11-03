@@ -2,11 +2,11 @@ import { useMemo } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useQuery, useQueries } from "@tanstack/react-query";
-import { sessionQueries } from "@/app/queries/session-queries";
-import { turnQueries } from "@/app/queries/turn-queries";
+import { sessionQueries } from "@/entities/session/api";
+import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { Turn } from "@/entities/turn/domain/turn";
-import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
-import { flowQueries } from "@/app/queries/flow-queries";
+import { generatedImageQueries } from "@/entities/generated-image/api/query-factory";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { useMultipleCharacterAssets } from "./use-multiple-character-assets";
 import { CardType } from "@/entities/card/domain/card";
 import { CardListItem } from "@/entities/session/domain/session";
@@ -47,8 +47,10 @@ export const useEnhancedGenerationPrompt = ({
 
   // Process turns to extract relevant information
   const processedData = useMemo(() => {
+    // Filter out null/undefined and assert type as Turn
+    // The select function in turnQueries.detail() already converts to Turn domain objects
     const turns = turnsResults
-      .map((result) => result.data)
+      .map((result) => result.data as Turn | null)
       .filter((turn): turn is Turn => turn !== null && turn !== undefined);
 
     if (turns.length === 0) {

@@ -23,8 +23,8 @@ import { TemplateRenderer } from "@/shared/lib/template-renderer";
 
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useCard } from "@/shared/hooks/use-card";
-import { sessionQueries } from "@/app/queries/session-queries";
-import { turnQueries } from "@/app/queries/turn-queries";
+import { sessionQueries } from "@/entities/session/api";
+import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { CardService } from "@/app/services/card-service";
 import {
   addMessage,
@@ -38,8 +38,8 @@ import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
 
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
-import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
-import { InlineChatStyles } from "@/features/session/inline-chat-styles";
+// import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
+import { InlineChatStyles } from "@/pages/sessions/ui/detail/inline-chat-styles";
 
 import {
   Avatar,
@@ -1882,7 +1882,7 @@ const SessionMessagesAndUserInputsMobile = ({
               </DialogDescription>
             </div>
             <div className="flex flex-col items-start justify-start gap-4 self-stretch">
-              {renderedScenarios &&
+              {/* {renderedScenarios &&
                 renderedScenarios.map((scenario, index) => (
                   <ScenarioItem
                     key={index}
@@ -1893,7 +1893,7 @@ const SessionMessagesAndUserInputsMobile = ({
                       setSelectedScenarioIndex(index);
                     }}
                   />
-                ))}
+                ))} */}
             </div>
             <div className="inline-flex items-center justify-start gap-2">
               <DialogClose asChild>

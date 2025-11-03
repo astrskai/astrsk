@@ -1,10 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PrivacyPolicy } from "@/features/settings/legal";
+import PrivacyPolicy from "@/pages/settings/legal/privacy-policy";
 
 export const Route = createFileRoute("/_layout/settings/legal/privacy-policy")({
-  component: PrivacyPolicyPage,
+  component: PrivacyPolicy,
 });
-
-function PrivacyPolicyPage() {
-  return <PrivacyPolicy />;
-}

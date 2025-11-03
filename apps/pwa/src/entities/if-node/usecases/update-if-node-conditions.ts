@@ -2,7 +2,7 @@ import { Result } from "@/shared/core";
 import { IfNode } from "../domain";
 import { LoadIfNodeRepo } from "../repos/load-if-node-repo";
 import { SaveIfNodeRepo } from "../repos/save-if-node-repo";
-import { IfCondition } from "@/features/flow/flow-multi/nodes/if-node";
+import { IfCondition } from "@/features/flow/nodes/if-node";
 
 export interface UpdateIfNodeConditionsRequest {
   flowId: string;

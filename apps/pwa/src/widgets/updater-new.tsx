@@ -73,9 +73,10 @@ const UpdaterNew = () => {
                   restartApp();
                 }
               }}
-              className="relative data-[state=closed]:[&>.dot]:opacity-100"
+              className="relative flex flex-col items-center justify-center gap-1 data-[state=closed]:[&>.dot]:opacity-100"
             >
-              <Import size={20} />
+              <Import size={24} />
+              <span className="text-[10px] font-medium">Update</span>
               {isUpdateReady && (
                 <div
                   className={cn(

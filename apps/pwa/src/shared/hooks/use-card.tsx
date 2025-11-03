@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 
 export function useCard<T>(cardId?: UniqueEntityID | null) {
   const { data: card } = useQuery(

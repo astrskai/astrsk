@@ -1,7 +1,7 @@
 import { initServices } from "@/app/services/init-services.ts";
 import { useAppStore } from "@/shared/stores/app-store.tsx";
 import { initStores } from "@/shared/stores/init-stores.ts";
-import { Loading } from "@/shared/ui";
+import { InitialLoading } from "@/shared/ui/initial-loading";
 import { PwaRegister } from "@/app/providers/pwa-register";
 import { migrate } from "@/db/migrate.ts";
 import { logger } from "@/shared/lib/logger.ts";
@@ -12,7 +12,7 @@ import { enableMapSet } from "immer";
 import { StrictMode, useCallback, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
-import "./index.css";
+import "@/app/styles/global.css";
 
 // Convex
 const isConvexReady =
@@ -71,7 +71,7 @@ async function initializeApp() {
   root.render(
     <StrictMode>
       <div className="bg-background-screen flex h-dvh items-center justify-center">
-        <Loading />
+        <InitialLoading />
       </div>
     </StrictMode>,
   );

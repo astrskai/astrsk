@@ -1,10 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ContentPolicy } from "@/features/settings/legal";
+import ContentPolicy from "@/pages/settings/legal/content-policy";
 
 export const Route = createFileRoute("/_layout/settings/legal/content-policy")({
-  component: ContentPolicyPage,
+  component: ContentPolicy,
 });
-
-function ContentPolicyPage() {
-  return <ContentPolicy />;
-}

@@ -1,10 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RefundPolicy } from "@/features/settings/legal";
+import RefundPolicy from "@/pages/settings/legal/refund-policy";
 
 export const Route = createFileRoute("/_layout/settings/legal/refund-policy")({
-  component: RefundPolicyPage,
+  component: RefundPolicy,
 });
-
-function RefundPolicyPage() {
-  return <RefundPolicy />;
-}

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "db:export": "npx tsx src/db/export-to-json.ts",
-    "dev": "vite --open",
+    "dev": "vite --host --open",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
