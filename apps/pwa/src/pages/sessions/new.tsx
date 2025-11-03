@@ -241,7 +241,7 @@ export function CreateSessionPage() {
     : undefined;
 
   return (
-    <div className="bg-background-surface-2 relative flex h-full w-full flex-col">
+    <div className="bg-background-surface-2 relative flex h-screen w-full flex-col overflow-hidden">
       <CreatePageHeader
         category="Session"
         itemName={sessionName}
@@ -260,8 +260,8 @@ export function CreateSessionPage() {
       <StepIndicator steps={STEPS} currentStep={currentStep} />
 
       {/* Content */}
-      <div className="flex flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl p-8 pb-24 md:pb-8">
+      <div className="flex flex-1 overflow-y-auto mb-20 md:mb-0">
+        <div className="mx-auto w-full max-w-5xl p-8">
           {currentStep === "basic-info" && (
             <BasicInfoStep
               sessionName={sessionName}
@@ -281,6 +281,7 @@ export function CreateSessionPage() {
           {currentStep === "ai-character" && (
             <AiCharacterSelectionStep
               selectedCharacters={selectedCharacters}
+              selectedUserCharacter={selectedUserCharacter}
               onCharactersSelected={setSelectedCharacters}
             />
           )}
@@ -305,7 +306,7 @@ export function CreateSessionPage() {
       </div>
 
       {/* Mobile Floating Buttons */}
-      <div className="border-border bg-background-surface-1 fixed right-0 bottom-0 left-0 border-t p-4 md:hidden">
+      <div className="border-border bg-background-surface-1 absolute right-0 bottom-0 left-0 border-t p-4 md:hidden">
         <div className="flex items-center justify-between gap-3">
           {showPreviousButton ? (
             <Button

@@ -3,7 +3,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
 import { CreatePageHeader } from "@/widgets/create-page-header";
-import { cn } from "@/shared/lib";
 import {
   PlotImageStep,
   PlotDescriptionStep,
@@ -24,9 +23,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cardKeys } from "@/entities/card/api";
 
 type PlotStep = "image" | "info" | "lorebook" | "scenario";
-
-// Mobile floating button height constant (56px = h-14)
-const MOBILE_FLOATING_HEIGHT = 14; // Tailwind spacing units (14 * 4px = 56px)
 
 /**
  * Create Plot Card Page
@@ -218,7 +214,7 @@ export function CreatePlotPage() {
   })();
 
   return (
-    <div className="bg-background-surface-2 relative flex h-full w-full flex-col">
+    <div className="bg-background-surface-2 relative flex h-screen w-full flex-col overflow-hidden">
       <CreatePageHeader
         category="Plot"
         itemName={plotName}
@@ -236,13 +232,8 @@ export function CreatePlotPage() {
       <StepIndicator steps={STEPS} currentStep={currentStep} />
 
       {/* Content */}
-      <div
-        className={cn(
-          "flex flex-1 overflow-y-auto md:mb-0",
-          `mb-${MOBILE_FLOATING_HEIGHT}`,
-        )}
-      >
-        <div className="mx-auto w-full max-w-5xl p-8 pb-24 md:pb-8">
+      <div className="flex flex-1 overflow-y-auto mb-20 md:mb-0">
+        <div className="mx-auto w-full max-w-5xl p-8">
           {/* Step 1: Image */}
           {currentStep === "image" && (
             <PlotImageStep
@@ -280,12 +271,7 @@ export function CreatePlotPage() {
       </div>
 
       {/* Mobile Floating Buttons */}
-      <div
-        className={cn(
-          "border-border bg-background-surface-1 fixed right-0 bottom-0 left-0 flex flex-col justify-center border-t p-2 md:hidden",
-          `h-${MOBILE_FLOATING_HEIGHT}`,
-        )}
-      >
+      <div className="border-border bg-background-surface-1 absolute right-0 bottom-0 left-0 border-t p-4 md:hidden">
         <div className="flex items-center justify-between gap-3">
           {showPreviousButton ? (
             <Button
