@@ -54,6 +54,12 @@ export interface CreatePageHeaderProps {
    * Default: false (shows back arrow)
    */
   showCancelButton?: boolean;
+
+  /**
+   * Current step information for mobile display
+   * Format: "Step 1 : Basic Info"
+   */
+  currentStepLabel?: string;
 }
 
 /**
@@ -91,6 +97,7 @@ export function CreatePageHeader({
   canProceed,
   isSubmitting,
   showCancelButton = false,
+  currentStepLabel,
 }: CreatePageHeaderProps) {
   const [isOpenCancelDialog, setIsOpenCancelDialog] = useState<boolean>(false);
 
@@ -124,7 +131,7 @@ export function CreatePageHeader({
             Create {category}
           </span>
           <h1 className="text-text-primary text-lg font-semibold">
-            {itemName}
+            {currentStepLabel || itemName}
           </h1>
         </div>
       </div>

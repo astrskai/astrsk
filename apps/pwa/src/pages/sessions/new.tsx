@@ -235,6 +235,10 @@ export function CreateSessionPage() {
   const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
   const showPreviousButton = currentStepIndex > 0;
   const isLastStep = currentStepIndex === STEPS.length - 1;
+  const currentStepConfig = STEPS[currentStepIndex];
+  const currentStepLabel = currentStepConfig
+    ? `Step ${currentStepConfig.number} : ${currentStepConfig.label}`
+    : undefined;
 
   return (
     <div className="bg-background-surface-2 relative flex h-full w-full flex-col">
@@ -249,6 +253,7 @@ export function CreateSessionPage() {
         canProceed={canProceed}
         isSubmitting={false}
         showCancelButton={true}
+        currentStepLabel={currentStepLabel}
       />
 
       {/* Step Indicator */}

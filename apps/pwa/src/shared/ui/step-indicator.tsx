@@ -26,37 +26,22 @@ export function StepIndicator<T extends string = string>({
 }: StepIndicatorProps<T>) {
   return (
     <div className="border-border border-b px-4 py-3 md:px-8 md:py-4">
-      {/* Mobile: Horizontal Bar Layout */}
+      {/* Mobile: Thin Horizontal Bars Layout */}
       <div className="flex gap-1 md:hidden">
         {steps.map((step) => {
-          const isActive = step.id === currentStep;
           const currentIndex = steps.findIndex((s) => s.id === currentStep);
           const stepIndex = steps.findIndex((s) => s.id === step.id);
-          const isCompleted = currentIndex > stepIndex;
+          const isCompleted = currentIndex >= stepIndex;
 
           return (
             <div
               key={step.id}
               className={cn(
-                "relative flex flex-1 flex-col items-center justify-center rounded-sm px-2 py-2 text-xs font-medium transition-colors",
-                isActive && "bg-white font-semibold text-black",
-                isCompleted && "bg-primary/30 text-text-primary",
-                !isActive &&
-                  !isCompleted &&
-                  "bg-background-surface-3 text-text-secondary",
+                "h-1 flex-1 rounded-full transition-colors",
+                isCompleted && "bg-blue-200",
+                !isCompleted && "bg-background-surface-3",
               )}
-            >
-              <span className="truncate">
-                {step.number}. {step.label}
-                {step.required && (
-                  <span className="text-status-required ml-0.5">*</span>
-                )}
-              </span>
-              {/* Bottom border indicator for active step */}
-              {isActive && (
-                <div className="absolute right-2 bottom-0.5 left-2 h-0.5 rounded-full bg-blue-200" />
-              )}
-            </div>
+            />
           );
         })}
       </div>

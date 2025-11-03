@@ -58,6 +58,10 @@ export function CreateCharacterPage() {
   const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
   const isLastStep = currentStepIndex === STEPS.length - 1;
   const showPreviousButton = currentStepIndex > 0;
+  const currentStepConfig = STEPS[currentStepIndex];
+  const currentStepLabel = currentStepConfig
+    ? `Step ${currentStepConfig.number} : ${currentStepConfig.label}`
+    : undefined;
 
   const handleFileUpload = (file: File) => {
     // Store the file for preview - actual upload happens on save
@@ -217,6 +221,7 @@ export function CreateCharacterPage() {
         isLastStep={isLastStep}
         canProceed={canProceed}
         isSubmitting={isCreatingCard}
+        currentStepLabel={currentStepLabel}
       />
 
       {/* Step Indicator */}

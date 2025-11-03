@@ -62,6 +62,10 @@ export function CreatePlotPage() {
   const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
   const isLastStep = currentStepIndex === STEPS.length - 1;
   const showPreviousButton = currentStepIndex > 0;
+  const currentStepConfig = STEPS[currentStepIndex];
+  const currentStepLabel = currentStepConfig
+    ? `Step ${currentStepConfig.number} : ${currentStepConfig.label}`
+    : undefined;
 
   const handlePrevious = () => {
     if (currentStepIndex > 0) {
@@ -225,6 +229,7 @@ export function CreatePlotPage() {
         isLastStep={isLastStep}
         canProceed={canProceed}
         isSubmitting={isCreatingCard}
+        currentStepLabel={currentStepLabel}
       />
 
       {/* Step Indicator */}
