@@ -1749,9 +1749,14 @@ const SessionMessagesAndUserInputs = ({
             }
           }
 
-          lastDataStore = dataStoreForRegeneration;
+          // IMPORTANT: Clear memory_ids from inherited dataStore during regeneration
+          // memory_ids are specific to a message's content and should NOT be inherited
+          // Each new option should get fresh memories based on its own content
+          lastDataStore = dataStoreForRegeneration.filter(
+            (field: DataStoreSavedField) => field.name !== 'memory_ids'
+          );
           console.log(
-            `Using dataStore from regeneration context (${lastDataStore.length} fields)`,
+            `Using dataStore from regeneration context (${lastDataStore.length} fields, memory_ids excluded)`,
           );
         } else if (session.turnIds.length > 0) {
           // For new messages, use last turn's dataStore
@@ -1760,7 +1765,12 @@ const SessionMessagesAndUserInputs = ({
             const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
               .throwOnFailure()
               .getValue();
-            lastDataStore = cloneDeep(lastTurn.dataStore);
+            // IMPORTANT: Clear memory_ids from inherited dataStore
+            // memory_ids are specific to a message's content and should NOT be inherited
+            // Each new message should get fresh memories based on its own content
+            lastDataStore = cloneDeep(lastTurn.dataStore).filter(
+              (field: DataStoreSavedField) => field.name !== 'memory_ids'
+            );
           } catch (error) {
             console.warn(`Failed to get last turn's dataStore: ${error}`);
           }
@@ -1900,6 +1910,7 @@ const SessionMessagesAndUserInputs = ({
               await triggerExtensionHook("turn:afterCreate", {
                 turn: streamingMessage,
                 session,
+                isRegeneration: false,
                 timestamp: Date.now(),
               });
               logger.info("[Turn Create] Extension hooks triggered for new turn");
@@ -1909,7 +1920,25 @@ const SessionMessagesAndUserInputs = ({
             }
           })();
         } else {
-          // Regenerated message - log as updateMessageOption
+          // Regenerated message - trigger turn:afterCreate with regeneration flag
+          // Extension will delete old memories then create new ones
+          (async () => {
+            try {
+              const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
+              await triggerExtensionHook("turn:afterCreate", {
+                turn: streamingMessage,
+                session,
+                isRegeneration: true,
+                timestamp: Date.now(),
+              });
+              logger.info("[Turn Regenerate] Extension hooks triggered for regenerated turn");
+            } catch (error) {
+              logger.error("[Turn Regenerate] Failed to trigger extension hooks:", error);
+              // Don't fail - extension hooks are optional
+            }
+          })();
+
+          // Log as updateMessageOption
           logMessageRerollToConvex({
             messageId: streamingMessage.id.toString(),
             newContent: streamingContent,
@@ -2032,8 +2061,22 @@ const SessionMessagesAndUserInputs = ({
         // Invalidate session immediately to show the user message
         invalidateSession();
 
-        // NOTE: User message memory processing is now handled by Supermemory extension
-        // via turn:afterCreate hook. No manual processing needed here.
+        // Trigger turn:afterCreate hook for extensions (e.g., Supermemory memory storage)
+        (async () => {
+          try {
+            const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
+            await triggerExtensionHook("turn:afterCreate", {
+              turn: userMessage,
+              session,
+              isRegeneration: false,
+              timestamp: Date.now(),
+            });
+            logger.info("[User Message] Extension hooks triggered for user message");
+          } catch (error) {
+            logger.error("[User Message] Failed to trigger extension hooks:", error);
+            // Don't fail - extension hooks are optional
+          }
+        })();
 
         // Scroll to bottom
         scrollToBottom({ behavior: "smooth" });

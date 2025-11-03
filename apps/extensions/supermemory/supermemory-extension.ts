@@ -395,7 +395,7 @@ export class SupermemoryExtension implements IExtension {
   private handleTurnAfterCreate = async (
     context: HookContext,
   ): Promise<void> => {
-    const { turn, session } = context;
+    const { turn, session, isRegeneration } = context;
 
     if (!turn || !session || !this.client) {
       console.warn("[Supermemory Extension] Missing turn, session, or client in context");
@@ -417,31 +417,12 @@ export class SupermemoryExtension implements IExtension {
       // Block UI interactions while creating memories
       blockUIForTurn(turnId, "Memory extension", "processing");
 
-      console.log(`🧠 [Supermemory Extension] Creating new memories for turn ${turnId}`);
+      const isRegenerationFlow = isRegeneration === true;
+      console.log(`🧠 [Supermemory Extension] ${isRegenerationFlow ? 'Regenerating' : 'Creating'} memories for turn ${turnId}`);
 
-      // Check if turn dataStore has old memory IDs (copied from previous turn during regeneration)
-      // These belong to the OLD turn and should be cleaned up by turn:afterDelete on that turn
-      // Just clear them here and proceed with creating NEW memories for THIS turn
-      const existingMemoryIdsField = turn.dataStore?.find(
-        (f: DataStoreSavedField) => f.name === 'memory_ids'
-      );
-
-      if (existingMemoryIdsField?.value) {
-        try {
-          const existingMemoryIds: string[] = JSON.parse(existingMemoryIdsField.value);
-          if (existingMemoryIds.length > 0) {
-            console.log(`🧹 [Supermemory Extension] Clearing ${existingMemoryIds.length} old memory IDs from dataStore (copied from previous turn)`);
-            console.log(`   Old memory IDs:`, existingMemoryIds);
-            console.log(`   These will be cleaned up by turn:afterDelete on the old turn`);
-
-            // Clear the old memory IDs - don't try to delete them
-            existingMemoryIdsField.value = JSON.stringify([]);
-          }
-        } catch (error) {
-          console.warn(`   ⚠️ Failed to parse existing memory IDs:`, error);
-          // Continue anyway - proceed with new memory creation
-        }
-      }
+      // NOTE: memory_ids are now filtered out before this hook fires (in session-messages-and-user-inputs.tsx)
+      // This ensures each message gets fresh memories specific to its content
+      // No need to check/delete old memory_ids here
 
       // Import distribution function
       const { distributeMemories } = await import("./roleplay-memory/integration/session-hooks");
@@ -752,36 +733,38 @@ export class SupermemoryExtension implements IExtension {
         return;
       }
 
-      console.log(`🧠 [Supermemory Extension] Deleting memory for turn ${turn.id.toString()}`);
+      console.log(`🧠 [Supermemory Extension] Deleting memories for turn ${turn.id.toString()}`);
 
       // Import delete function
       const { deleteMemory } = await import("./roleplay-memory/integration/session-hooks");
 
-      // Extract memory IDs from turn dataStore
-      const dataStore = turn.dataStore || [];
-      const memoryIdsField = dataStore.find((f: DataStoreSavedField) => f.name === 'memory_ids');
+      // IMPORTANT: Collect memory IDs from ALL options, not just the selected one
+      // When a turn has multiple options (from regeneration), each option has its own memories
+      const allMemoryIds: string[] = [];
 
-      if (!memoryIdsField || !memoryIdsField.value) {
-        console.log("🧠 [Supermemory Extension] No memory IDs found in turn, skipping deletion");
+      for (const option of turn.options) {
+        const dataStore = option.dataStore || [];
+        const memoryIdsField = dataStore.find((f: DataStoreSavedField) => f.name === 'memory_ids');
+
+        if (memoryIdsField?.value) {
+          try {
+            const memoryIds: string[] = JSON.parse(memoryIdsField.value as string);
+            allMemoryIds.push(...memoryIds);
+          } catch (error) {
+            console.warn("[Supermemory Extension] Failed to parse memory IDs from option:", error);
+          }
+        }
+      }
+
+      if (allMemoryIds.length === 0) {
+        console.log("🧠 [Supermemory Extension] No memory IDs found in any option, skipping deletion");
         return;
       }
 
-      // Parse memory IDs (stored as JSON array)
-      let memoryIds: string[] = [];
-      try {
-        memoryIds = JSON.parse(memoryIdsField.value as string);
-      } catch (error) {
-        console.warn("[Supermemory Extension] Failed to parse memory IDs:", error);
-        return;
-      }
-
-      if (memoryIds.length === 0) {
-        console.log("🧠 [Supermemory Extension] No memory IDs to delete");
-        return;
-      }
+      console.log(`🧠 [Supermemory Extension] Found ${allMemoryIds.length} memories across ${turn.options.length} option(s)`);
 
       // Delete each memory (fire and forget - don't block)
-      const deletePromises = memoryIds.map(async (memoryId: string) => {
+      const deletePromises = allMemoryIds.map(async (memoryId: string) => {
         try {
           await deleteMemory(memoryId);
         } catch (error) {
@@ -792,12 +775,12 @@ export class SupermemoryExtension implements IExtension {
 
       // Fire and forget - don't block the hook waiting for deletes
       Promise.all(deletePromises).then(() => {
-        console.log(`🧠 [Supermemory Extension] Deleted ${memoryIds.length} memories`);
+        console.log(`🧠 [Supermemory Extension] Deleted ${allMemoryIds.length} memories`);
       }).catch((error) => {
         console.error("[Supermemory Extension] Error in background memory delete:", error);
       });
 
-      console.log(`🧠 [Supermemory Extension] Initiated background deletion for ${memoryIds.length} memories`);
+      console.log(`🧠 [Supermemory Extension] Initiated background deletion for ${allMemoryIds.length} memories`);
 
     } catch (error) {
       console.error("[Supermemory Extension] Failed to delete memory:", error);

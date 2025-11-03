@@ -174,8 +174,11 @@ const makeContext = async ({
       }
 
       // Store dataStore from the last processed turn for regeneration
+      // IMPORTANT: Filter out memory_ids - they should NOT be inherited
       if (message.dataStore && message.dataStore.length > 0) {
-        dataStoreForRegeneration = cloneDeep(message.dataStore);
+        dataStoreForRegeneration = cloneDeep(message.dataStore).filter(
+          (field) => field.name !== 'memory_ids'
+        );
       }
 
       const content =
@@ -1046,7 +1049,11 @@ const createMessage = async ({
         .throwOnFailure()
         .getValue();
       // Clone the dataStore to avoid mutations
-      dataStore = cloneDeep(lastTurn.dataStore);
+      // IMPORTANT: Filter out memory_ids - they should NOT be inherited
+      // memory_ids are specific to a message's content, not game state
+      dataStore = cloneDeep(lastTurn.dataStore).filter(
+        (field) => field.name !== 'memory_ids'
+      );
     } catch (error) {
       logger.warn(`Failed to get last turn's dataStore: ${error}`);
     }
