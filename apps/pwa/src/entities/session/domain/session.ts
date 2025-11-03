@@ -23,8 +23,8 @@ export interface SessionProps {
   // Turns
   turnIds: UniqueEntityID[];
 
-  // Background
-  backgroundId?: UniqueEntityID;
+  // Images
+  backgroundId?: UniqueEntityID; // Background image
 
   // Translation
   translation?: TranslationConfig;

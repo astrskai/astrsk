@@ -57,8 +57,8 @@ export function CreateSessionPage() {
 
   // Basic Info state
   const [sessionName, setSessionName] = useState("New Session");
-  const [imageFile, setImageFile] = useState<File | undefined>();
-  const [imageAssetId, setImageAssetId] = useState<string | undefined>();
+  // const [imageFile, setImageFile] = useState<File | undefined>();
+  // const [imageAssetId, setImageAssetId] = useState<string | undefined>();
 
   // Selection state (simplified - each step component handles its own UI state)
   const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
@@ -71,14 +71,14 @@ export function CreateSessionPage() {
 
   const selectSession = useSessionStore.use.selectSession();
 
-  const handleFileUpload = (file: File) => {
-    // Store the file for preview - actual upload happens on save
-    setImageFile(file);
+  // const handleFileUpload = (file: File) => {
+  //   // Store the file for preview - actual upload happens on save
+  //   setImageFile(file);
 
-    // Create a temporary object URL for preview
-    const objectUrl = URL.createObjectURL(file);
-    setImageAssetId(objectUrl);
-  };
+  //   // Create a temporary object URL for preview
+  //   const objectUrl = URL.createObjectURL(file);
+  //   setImageAssetId(objectUrl);
+  // };
 
   const handleCancel = () => {
     navigate({ to: "/sessions" });
@@ -98,30 +98,30 @@ export function CreateSessionPage() {
     }
 
     try {
-      // Step 1: Upload image if exists
-      let uploadedAssetId: string | undefined;
-      if (imageFile) {
-        const assetResult = await AssetService.saveFileToAsset.execute({
-          file: imageFile,
-        });
+      // // Step 1: Upload image if exists
+      // let uploadedAssetId: string | undefined;
+      // if (imageFile) {
+      //   const assetResult = await AssetService.saveFileToAsset.execute({
+      //     file: imageFile,
+      //   });
 
-        if (assetResult.isSuccess) {
-          const asset = assetResult.getValue();
-          uploadedAssetId = asset.id.toString();
+      //   if (assetResult.isSuccess) {
+      //     const asset = assetResult.getValue();
+      //     uploadedAssetId = asset.id.toString();
 
-          // Save to generated images gallery
-          await GeneratedImageService.saveGeneratedImageFromAsset.execute({
-            assetId: asset.id,
-            name: imageFile.name.replace(/\.[^/.]+$/, ""),
-            prompt: `Session background for ${sessionName}`,
-            style: "uploaded",
-            associatedCardId: undefined,
-          });
-        } else {
-          logger.error("Failed to upload file:", assetResult.getError());
-          return;
-        }
-      }
+      //     // Save to generated images gallery
+      //     await GeneratedImageService.saveGeneratedImageFromAsset.execute({
+      //       assetId: asset.id,
+      //       name: imageFile.name.replace(/\.[^/.]+$/, ""),
+      //       prompt: `Session cover image for ${sessionName}`,
+      //       style: "uploaded",
+      //       associatedCardId: undefined,
+      //     });
+      //   } else {
+      //     logger.error("Failed to upload file:", assetResult.getError());
+      //     return;
+      //   }
+      // }
 
       // Step 2: Build allCards array from all selected cards
       const allCards: CardListItem[] = [];
@@ -159,9 +159,9 @@ export function CreateSessionPage() {
         flowId: selectedFlow.id,
         allCards,
         userCharacterCardId: selectedUserCharacter?.id,
-        backgroundId: uploadedAssetId
-          ? new UniqueEntityID(uploadedAssetId)
-          : undefined,
+        // backgroundId: uploadedAssetId
+        //   ? new UniqueEntityID(uploadedAssetId)
+        //   : undefined,
         turnIds: [],
         autoReply: AutoReply.Off,
         chatStyles: defaultChatStyles,
@@ -202,7 +202,7 @@ export function CreateSessionPage() {
     }
   }, [
     sessionName,
-    imageFile,
+    // imageFile,
     selectedFlow,
     selectedCharacters,
     selectedUserCharacter,
@@ -266,8 +266,8 @@ export function CreateSessionPage() {
             <BasicInfoStep
               sessionName={sessionName}
               onSessionNameChange={setSessionName}
-              imageAssetId={imageAssetId}
-              onFileUpload={handleFileUpload}
+              // imageAssetId={imageAssetId}
+              // onFileUpload={handleFileUpload}
             />
           )}
 

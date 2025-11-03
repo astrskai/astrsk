@@ -48,7 +48,7 @@ export function SessionCard({ session }: SessionCardProps) {
 
   // Get session background image
   const backgroundId = session.props.backgroundId;
-  const [backgroundUrl] = useAsset(backgroundId);
+  const [coverImageUrl] = useAsset(backgroundId);
 
   const handleCardClick = () => {
     selectSession(session.id, session.props.title);
@@ -234,12 +234,12 @@ export function SessionCard({ session }: SessionCardProps) {
         )}
         onClick={handleCardClick}
       >
-        {/* Top 2/3: Background Image */}
+        {/* Top 2/3: Cover Image */}
         <div className="bg-background-surface-2 relative h-[200px] w-full overflow-hidden">
-          {backgroundUrl ? (
+          {coverImageUrl ? (
             <img
-              src={backgroundUrl}
-              alt={session.props.title || "Session background"}
+              src={coverImageUrl}
+              alt={session.props.title || "Session cover"}
               className="h-full w-full object-cover transition-transform group-hover:scale-105"
             />
           ) : (

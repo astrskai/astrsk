@@ -192,7 +192,7 @@ const SessionItemMobile = ({
             </div>
           </div>
           <div className="flex items-center justify-end">
-            {session.characterCards
+            {/* {session.characterCards
               .slice(0, 3)
               .map((card: Card, index: number) => (
                 <div
@@ -201,7 +201,7 @@ const SessionItemMobile = ({
                 >
                   <MobileCharacterAvatar cardId={card.id} />
                 </div>
-              ))}
+              ))} */}
             {session.characterCards.length > 3 && (
               <div
                 className="bg-background-surface-3 outline-background-surface-2 inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"
