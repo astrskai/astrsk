@@ -271,7 +271,7 @@ const MessageItemInternal = ({
         >
           <div
             className={cn(
-              "chat-style-chat-bubble rounded-[8px] p-[16px] break-words",
+              "chat-style-chat-bubble rounded-[8px] p-[8px] break-words md:p-[16px]",
               // Desktop: max width
               "max-w-[600px]",
               // Mobile: same behavior (text length only)
@@ -369,7 +369,7 @@ const MessageItemInternal = ({
           </div>
           <div
             className={cn(
-              "flex flex-row items-center rounded-[8px] px-[16px] py-[8px]",
+              "flex flex-row items-center rounded-[8px] px-[8px] py-[4px] md:px-[16px] md:py-[8px]",
               "chat-style-chat-bubble message-buttons",
               // Desktop: hover to show
               "opacity-0 transition-opacity duration-200 ease-in-out",
