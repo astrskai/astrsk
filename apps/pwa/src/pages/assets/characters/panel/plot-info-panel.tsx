@@ -7,7 +7,7 @@ import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 
 // Import queries and mutations
-import { cardQueries, useUpdatePlotDescription } from "@/app/queries/card";
+import { cardQueries, useUpdatePlotDescription } from "@/entities/card/api";
 
 import {
   CardPanelProps,

@@ -10,7 +10,7 @@ import {
   useUpdateCardSummary,
   useUpdateCardVersion,
   useUpdateCardConceptualOrigin,
-} from "@/app/queries/card";
+} from "@/entities/card/api";
 import {
   CardPanelProps,
   CardPanelLoading,

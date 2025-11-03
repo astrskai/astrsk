@@ -1,6 +1,6 @@
 // TODO: apply color palette
 import { useAsset } from "@/shared/hooks/use-asset";
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 import { queryClient } from "@/app/queries/query-client";
 import { CardService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";

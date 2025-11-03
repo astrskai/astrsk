@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { Textarea } from "@/shared/ui";
 import { useQuery } from "@tanstack/react-query";
 import { debounce } from "lodash-es";
-import { cardQueries } from "@/app/queries/card/query-factory";
-import { useUpdateCardImagePrompt } from "@/app/queries/card/mutations";
+import { cardQueries } from "@/entities/card/api/query-factory";
+import { useUpdateCardImagePrompt } from "@/entities/card/api/mutations";
 
 interface ImagePromptFieldProps {
   cardId: string;

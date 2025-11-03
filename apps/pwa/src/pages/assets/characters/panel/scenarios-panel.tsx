@@ -37,7 +37,7 @@ import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 
 // Import queries and mutations
-import { cardQueries, useUpdateCardScenarios } from "@/app/queries/card";
+import { cardQueries, useUpdateCardScenarios } from "@/entities/card/api";
 
 // Import the sortable component
 import { SortableItem } from "./sortable-item";

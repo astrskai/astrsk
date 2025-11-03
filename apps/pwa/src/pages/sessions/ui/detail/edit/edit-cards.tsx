@@ -35,7 +35,7 @@ import {
 import { Card, CardType } from "@/entities/card/domain/card";
 import { SessionProps } from "@/entities/session/domain/session";
 import { useQuery } from "@tanstack/react-query";
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 
 const CardListItem = ({
   cardId,

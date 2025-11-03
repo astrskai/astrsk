@@ -12,7 +12,7 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { ActionConfirm } from "@/shared/ui/dialogs";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 import { TableName } from "@/db/schema/table-name";
 
 const CONTAINER_TEXT_SIZES = {

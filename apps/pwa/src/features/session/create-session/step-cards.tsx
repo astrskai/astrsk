@@ -22,7 +22,7 @@ import {
 import { Card, CardType } from "@/entities/card/domain";
 import { CardListItem, SessionProps } from "@/entities/session/domain";
 import { useQuery } from "@tanstack/react-query";
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 
 const StepCardsSchema = z.object({
   aiCharacterCardIds: z.string().array().min(1),

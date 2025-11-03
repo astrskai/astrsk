@@ -19,7 +19,7 @@ import {
 } from "@/features/card/panels/hooks/use-card-panel";
 import { useResourceData } from "@/features/vibe/hooks/use-resource-data";
 import { useAppStore } from "@/shared/stores/app-store";
-import { useUpdateCardIconAsset } from "@/app/queries/card/mutations";
+import { useUpdateCardIconAsset } from "@/entities/card/api/mutations";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   generatedImageQueries,

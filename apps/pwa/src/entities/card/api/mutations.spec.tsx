@@ -19,12 +19,12 @@ import {
   useUpdatePlotDescription,
   useUpdateCardScenarios,
 } from "./mutations";
-import { CardService } from "../../services/card-service";
-import { Result } from "../../../shared/core";
+import { CardService } from "@/app/services/card-service";
+import { Result } from "@/shared/core";
 import { cardKeys } from "./query-factory";
 
 // Mock CardService
-vi.mock("../../services/card-service", () => ({
+vi.mock("@/app/services/card-service", () => ({
   CardService: {
     updateCardTitle: {
       execute: vi.fn(),

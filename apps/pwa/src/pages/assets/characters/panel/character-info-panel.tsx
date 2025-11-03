@@ -10,7 +10,7 @@ import {
   useUpdateCharacterName,
   useUpdateCharacterDescription,
   useUpdateCharacterExampleDialogue,
-} from "@/app/queries/card";
+} from "@/entities/card/api";
 import {
   CardPanelProps,
   CardPanelLoading,

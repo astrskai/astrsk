@@ -5,7 +5,7 @@ import { ListPageHeader } from "@/widgets/list-page-header";
 import { ASSET_TABS } from "@/shared/config/asset-tabs";
 import { CharactersGrid } from "./ui/list";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 import { CardService } from "@/app/services/card-service";
 import { CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";

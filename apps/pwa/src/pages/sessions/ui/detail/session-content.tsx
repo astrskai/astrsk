@@ -75,7 +75,7 @@ import { DataStoreSchemaField } from "@/entities/flow/domain/flow";
 import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import delay from "lodash-es/delay";
-import { fetchCharacterCard } from "@/app/queries/card/query-factory";
+import { fetchCharacterCard } from "@/entities/card/api/query-factory";
 
 import UserInputs from "./user-inputs";
 import { SortableDataSchemaFieldItem } from "./message-components";

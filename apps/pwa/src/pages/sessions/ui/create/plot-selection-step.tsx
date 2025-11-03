@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button, SearchInput } from "@/shared/ui/forms";
 import { CardSelectItem } from "@/pages/sessions/ui/create/card-select-item";
 import { CardDisplay } from "@/features/card/ui";
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
 import { IconFlow } from "@/shared/assets/icons";

@@ -21,7 +21,7 @@ import { Lorebook } from "@/entities/card/domain/lorebook";
 import { Entry } from "@/entities/card/domain/entry";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { useQueryClient } from "@tanstack/react-query";
-import { cardKeys } from "@/app/queries/card";
+import { cardKeys } from "@/entities/card/api";
 
 type PlotStep = "image" | "info" | "lorebook" | "scenario";
 

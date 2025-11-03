@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardType } from "@/entities/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
-import { cardQueries } from "@/app/queries/card";
+import { cardQueries } from "@/entities/card/api";
 import {
   DockviewReact,
   IDockviewPanelProps,

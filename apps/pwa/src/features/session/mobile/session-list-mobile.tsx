@@ -53,7 +53,7 @@ import { TopNavigation } from "@/widgets/top-navigation";
 import { StepName } from "@/features/session/create-session/step-name";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { sessionQueries } from "@/entities/session/api";
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 
 export function humanizeBytes(bytes: number): string {
   const units = ["Bytes", "KB", "MB", "GB", "TB"];

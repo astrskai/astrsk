@@ -2,7 +2,7 @@ import { useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/entities/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 import { debounce } from "lodash-es";
 import { SvgIcon } from "@/shared/ui";
 
