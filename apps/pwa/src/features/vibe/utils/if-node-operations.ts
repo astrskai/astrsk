@@ -159,7 +159,7 @@ export async function processIfNodeOperations(
                   "@/app/queries/query-client"
                 );
                 const { ifNodeKeys } = await import(
-                  "@/app/queries/if-node/query-factory"
+                  "@/entities/if-node/api/query-factory"
                 );
 
                 const queryKey = ifNodeKeys.detail(nodeId);
@@ -293,7 +293,7 @@ export async function processIfNodeOperations(
                   "@/app/queries/query-client"
                 );
                 const { ifNodeKeys } = await import(
-                  "@/app/queries/if-node/query-factory"
+                  "@/entities/if-node/api/query-factory"
                 );
 
                 const queryKey = ifNodeKeys.detail(nodeId);

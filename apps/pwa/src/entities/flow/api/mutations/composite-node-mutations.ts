@@ -28,7 +28,7 @@ import { FlowService } from "@/app/services/flow-service";
 import { flowKeys } from "../query-factory";
 import { agentKeys } from "@/app/queries/agent/query-factory";
 import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
-import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
+import { ifNodeKeys } from "@/entities/if-node/api/query-factory";
 import { NodeType } from "@/entities/flow/model/node-types";
 import { Agent, ApiType } from "@/entities/agent/domain/agent";
 import { InsertFlow } from "@/db/schema/flows";

@@ -74,7 +74,7 @@ export const ifNodeProcessors = {
               // Invalidate specific if-node queries
               try {
                 const { queryClient } = await import("@/app/queries/query-client");
-                const { ifNodeKeys } = await import("@/app/queries/if-node/query-factory");
+                const { ifNodeKeys } = await import("@/entities/if-node/api/query-factory");
 
                 // Invalidate if-node queries
                 queryClient.invalidateQueries({
@@ -240,7 +240,7 @@ export const ifNodeProcessors = {
               // Invalidate specific if-node queries
               try {
                 const { queryClient } = await import("@/app/queries/query-client");
-                const { ifNodeKeys } = await import("@/app/queries/if-node/query-factory");
+                const { ifNodeKeys } = await import("@/entities/if-node/api/query-factory");
 
                 // Invalidate if-node queries
                 queryClient.invalidateQueries({

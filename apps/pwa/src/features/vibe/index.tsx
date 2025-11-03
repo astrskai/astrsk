@@ -11,7 +11,7 @@ import { cardKeys } from "@/entities/card/api/query-factory";
 import { flowKeys } from "@/entities/flow/api/query-factory";
 import { agentKeys } from "@/app/queries/agent/query-factory";
 import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
-import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
+import { ifNodeKeys } from "@/entities/if-node/api/query-factory";
 
 // Hooks
 import { useVibeSession } from "./hooks/use-vibe-session";

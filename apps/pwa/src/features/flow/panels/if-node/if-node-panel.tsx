@@ -9,11 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui";
-import { ifNodeQueries } from "@/app/queries/if-node/query-factory";
+import { ifNodeQueries } from "@/entities/if-node/api/query-factory";
 import {
   useUpdateIfNodeConditions,
   type EditableCondition as EditableConditionType,
-} from "@/app/queries/if-node/mutations/condition-mutations";
+} from "@/entities/if-node/api/mutations/condition-mutations";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { IfCondition } from "@/features/flow/nodes/if-node";
 import { UniqueEntityID } from "@/shared/domain";

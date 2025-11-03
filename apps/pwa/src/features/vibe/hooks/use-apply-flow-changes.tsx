@@ -24,7 +24,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { queryClient } from "@/app/queries/query-client";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { agentKeys } from "@/app/queries/agent/query-factory";
-import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
+import { ifNodeKeys } from "@/entities/if-node/api/query-factory";
 import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
 import { useUpdateFlowName } from "@/entities/flow/api/mutations/flow-mutations";
 import { useUpdateNodesAndEdges } from "@/entities/flow/api/mutations/nodes-edges-mutations";
@@ -38,8 +38,8 @@ import {
   useUpdateAgentOutput,
   useUpdateAgentOutputFormat,
 } from "@/app/queries/agent/mutations/output-mutations";
-import { useUpdateIfNodeConditions } from "@/app/queries/if-node/mutations/condition-mutations";
-import { useUpdateIfNodeName } from "@/app/queries/if-node/mutations/name-mutations";
+import { useUpdateIfNodeConditions } from "@/entities/if-node/api/mutations/condition-mutations";
+import { useUpdateIfNodeName } from "@/entities/if-node/api/mutations/name-mutations";
 import { useUpdateDataStoreNodeFields } from "@/app/queries/data-store-node/mutations/field-mutations";
 import { useUpdateDataStoreNodeName } from "@/app/queries/data-store-node/mutations/name-mutations";
 import type {

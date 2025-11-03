@@ -33,8 +33,8 @@ import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
-import { ifNodeQueries } from "@/app/queries/if-node/query-factory";
-import { useUpdateIfNodeName } from "@/app/queries/if-node/mutations";
+import { ifNodeQueries } from "@/entities/if-node/api/query-factory";
+import { useUpdateIfNodeName } from "@/entities/if-node/api/mutations";
 import {
   getIfNodeOpacity,
   applyOpacityToHexColor,

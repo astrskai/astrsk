@@ -33,7 +33,7 @@ import {
 } from "@/entities/card/api/query-factory";
 import { fetchDataStoreNode } from "@/app/queries/data-store-node/query-factory";
 import { fetchFlow } from "@/entities/flow/api/query-factory";
-import { fetchIfNode } from "@/app/queries/if-node/query-factory";
+import { fetchIfNode } from "@/entities/if-node/api/query-factory";
 import { fetchSession } from "@/entities/session/api";
 import { fetchTurn, fetchTurnOptional } from "@/app/queries/turn-queries";
 import { SessionService } from "@/app/services/session-service";
