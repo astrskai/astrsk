@@ -12,7 +12,7 @@ import { Result } from "@/shared/core";
 import { GeneratedImageService } from "./generated-image-service";
 import { AssetService } from "./asset-service";
 import { queryClient } from "@/app/queries/query-client";
-import { generatedImageKeys } from "@/app/queries/generated-image/query-factory";
+import { generatedImageKeys } from "@/entities/generated-image/api/query-factory";
 
 export class TurnService {
   public static turnRepo: DrizzleTurnRepo;

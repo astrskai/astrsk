@@ -28,7 +28,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 
 import { useCard } from "@/shared/hooks/use-card";
-import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
+import { generatedImageQueries } from "@/entities/generated-image/api/query-factory";
 
 import {
   fetchTurn,

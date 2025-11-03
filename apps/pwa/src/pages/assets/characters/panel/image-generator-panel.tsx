@@ -24,7 +24,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   generatedImageQueries,
   generatedImageKeys,
-} from "@/app/queries/generated-image/query-factory";
+} from "@/entities/generated-image/api/query-factory";
 import { useModelStore, IMAGE_MODELS } from "@/shared/stores/model-store";
 import { toast } from "sonner";
 import { VIDEO_SETTINGS, GALLERY_LAYOUT } from "./image-generator/constants";

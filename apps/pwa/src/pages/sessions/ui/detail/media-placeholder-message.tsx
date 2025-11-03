@@ -5,7 +5,7 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { PlayButton, SvgIcon } from "@/shared/ui";
 import { UniqueEntityID } from "@/shared/domain";
 import { useQuery } from "@tanstack/react-query";
-import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
+import { generatedImageQueries } from "@/entities/generated-image/api/query-factory";
 
 interface MediaPlaceholderMessageProps {
   content: string; // The loading message like "🖼️ Generating image..."

@@ -3,7 +3,7 @@ import { Card, CharacterCard } from "@/entities/card/domain";
 import { CardType } from "@/entities/card/domain";
 import { AssetService } from "@/app/services/asset-service";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
-import { generatedImageKeys } from "@/app/queries/generated-image/query-factory";
+import { generatedImageKeys } from "@/entities/generated-image/api/query-factory";
 import { TradingCard } from "@/features/card/ui/trading-card";
 import { useCardPanelContext } from "@/features/card/panels/card-panel-provider";
 import { CardItem } from "@/widgets/collapsible-sidebar/card-list";
