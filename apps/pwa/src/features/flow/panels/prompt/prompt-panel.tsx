@@ -42,12 +42,12 @@ import { ApiType } from "@/entities/agent/domain/agent";
 import { PromptMessage } from "@/entities/agent/domain";
 
 // Import queries and mutations
-import { agentQueries } from "@/app/queries/agent/query-factory";
+import { agentQueries } from "@/entities/agent/api/query-factory";
 import {
   useUpdateAgentApiType,
   useUpdateAgentPromptMessages,
   useUpdateAgentTextPrompt,
-} from "@/app/queries/agent/mutations/prompt-mutations-new";
+} from "@/entities/agent/api/mutations/prompt-mutations-new";
 
 // Import context
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";

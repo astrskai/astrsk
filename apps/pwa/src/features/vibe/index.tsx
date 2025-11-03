@@ -9,7 +9,7 @@ import type {
 } from "vibe-shared-types";
 import { cardKeys } from "@/entities/card/api/query-factory";
 import { flowKeys } from "@/entities/flow/api/query-factory";
-import { agentKeys } from "@/app/queries/agent/query-factory";
+import { agentKeys } from "@/entities/agent/api/query-factory";
 import { dataStoreNodeKeys } from "@/entities/data-store-node/api/query-factory";
 import { ifNodeKeys } from "@/entities/if-node/api/query-factory";
 

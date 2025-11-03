@@ -44,7 +44,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { Agent } from "@/entities/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { agentKeys } from "@/app/queries/agent/query-factory";
+import { agentKeys } from "@/entities/agent/api/query-factory";
 import { flowQueries, flowKeys } from "@/entities/flow/api/query-factory";
 import { useUpdatePanelLayout } from "@/entities/flow/api/mutations/panel-layout-mutations";
 import { useAgentStore } from "@/shared/stores/agent-store";

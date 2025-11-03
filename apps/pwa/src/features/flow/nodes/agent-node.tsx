@@ -33,8 +33,8 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { agentQueries } from "@/app/queries/agent/query-factory";
-import { agentKeys } from "@/app/queries/agent/query-factory";
+import { agentQueries } from "@/entities/agent/api/query-factory";
+import { agentKeys } from "@/entities/agent/api/query-factory";
 import { UniqueEntityID } from "@/shared/domain";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { flowKeys } from "@/entities/flow/api/query-factory";
@@ -43,8 +43,8 @@ import { AgentService } from "@/app/services/agent-service";
 import { useAgentReferenceMutations } from "@/features/flow/hooks/use-agent-reference-mutations";
 
 // Import new efficient mutations
-import { useUpdateAgentName } from "@/app/queries/agent/mutations/agent-node-mutations";
-import { useUpdateAgentModel } from "@/app/queries/agent/mutations/model-mutations";
+import { useUpdateAgentName } from "@/entities/agent/api/mutations/agent-node-mutations";
+import { useUpdateAgentModel } from "@/entities/agent/api/mutations/model-mutations";
 
 /**
  * Agent node data type definition

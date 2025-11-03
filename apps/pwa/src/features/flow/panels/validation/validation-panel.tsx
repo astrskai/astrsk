@@ -14,7 +14,7 @@ import { IssueItem } from "./issue-item";
 import { Agent } from "@/entities/agent/domain";
 import { ReadyState } from "@/entities/flow/domain";
 import { ValidationIssue, ValidationContext } from "@/entities/flow/model/validation-types";
-import { agentQueries } from "@/app/queries/agent/query-factory";
+import { agentQueries } from "@/entities/agent/api/query-factory";
 import { useApiConnectionsWithModels } from "@/shared/hooks/use-api-connections-with-models";
 import { traverseFlowCached } from "@/features/flow/utils/flow-traversal";
 import { invalidateSingleFlowQueries } from "@/features/flow/utils/invalidate-flow-queries";

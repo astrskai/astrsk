@@ -10,7 +10,7 @@ import { Flow } from "@/entities/flow/domain";
 import { useFlow } from "@/shared/hooks/use-flow";
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import { useFlows } from "@/shared/hooks/use-flows";
-import { agentQueries } from "@/app/queries/agent/query-factory";
+import { agentQueries } from "@/entities/agent/api/query-factory";
 import { SessionService } from "@/app/services/session-service";
 import { Button, Combobox } from "@/shared/ui";
 import { cn } from "@/shared/lib";

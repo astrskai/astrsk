@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AgentService } from "@/app/services/agent-service";
-import { agentKeys } from "@/app/queries/agent/query-factory";
+import { agentKeys } from "@/entities/agent/api/query-factory";
 
 /**
  * Hook for updating agent name with isEditing flag

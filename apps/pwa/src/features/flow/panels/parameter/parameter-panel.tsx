@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { SearchInput } from "@/shared/ui";
 import { ParameterSettingsFields } from "@/features/flow/panels/parameter/parameter-settings/parameter-settings-fields";
 import { ParameterPanelProps } from "./parameter-panel-types";
-import { agentQueries } from "@/app/queries/agent/query-factory";
-import { useUpdateAgentParametersQueue } from "@/app/queries/agent/mutations/parameter-mutations";
+import { agentQueries } from "@/entities/agent/api/query-factory";
+import { useUpdateAgentParametersQueue } from "@/entities/agent/api/mutations/parameter-mutations";
 import { toast } from "sonner";
 
 export function ParameterPanel({ flowId, agentId }: ParameterPanelProps) {

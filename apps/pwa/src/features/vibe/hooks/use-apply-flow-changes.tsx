@@ -23,7 +23,7 @@ import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { UniqueEntityID } from "@/shared/domain";
 import { queryClient } from "@/app/queries/query-client";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
-import { agentKeys } from "@/app/queries/agent/query-factory";
+import { agentKeys } from "@/entities/agent/api/query-factory";
 import { ifNodeKeys } from "@/entities/if-node/api/query-factory";
 import { dataStoreNodeKeys } from "@/entities/data-store-node/api/query-factory";
 import { useUpdateFlowName } from "@/entities/flow/api/mutations/flow-mutations";
@@ -33,11 +33,11 @@ import {
   useUpdateAgentPromptMessages,
   useUpdateAgentApiType,
   useUpdateAgentTextPrompt,
-} from "@/app/queries/agent/mutations/prompt-mutations-new";
+} from "@/entities/agent/api/mutations/prompt-mutations-new";
 import {
   useUpdateAgentOutput,
   useUpdateAgentOutputFormat,
-} from "@/app/queries/agent/mutations/output-mutations";
+} from "@/entities/agent/api/mutations/output-mutations";
 import { useUpdateIfNodeConditions } from "@/entities/if-node/api/mutations/condition-mutations";
 import { useUpdateIfNodeName } from "@/entities/if-node/api/mutations/name-mutations";
 import { useUpdateDataStoreNodeFields } from "@/entities/data-store-node/api/mutations/field-mutations";

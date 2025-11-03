@@ -36,12 +36,12 @@ import type { editor } from "monaco-editor";
 import { sanitizeFileName } from "@/shared/lib";
 
 // Import queries and mutations
-import { agentQueries } from "@/app/queries/agent/query-factory";
+import { agentQueries } from "@/entities/agent/api/query-factory";
 import { 
   useUpdateAgentOutput, 
   useUpdateAgentOutputFormat, 
   useUpdateAgentSchemaFields 
-} from "@/app/queries/agent/mutations/output-mutations";
+} from "@/entities/agent/api/mutations/output-mutations";
 
 // Import context
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";

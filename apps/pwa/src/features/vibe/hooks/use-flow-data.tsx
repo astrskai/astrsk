@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery, useQueries } from "@tanstack/react-query";
-import { agentQueries } from "@/app/queries/agent/query-factory";
+import { agentQueries } from "@/entities/agent/api/query-factory";
 import { ifNodeQueries } from "@/entities/if-node/api/query-factory";
 import { dataStoreNodeQueries } from "@/entities/data-store-node/api/query-factory";
 import { AgentDrizzleMapper } from "@/entities/agent/mappers/agent-drizzle-mapper";

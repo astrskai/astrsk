@@ -144,7 +144,7 @@ export async function processAgentOperations(
                     "@/app/queries/query-client"
                   );
                   const { agentKeys } = await import(
-                    "@/app/queries/agent/query-factory"
+                    "@/entities/agent/api/query-factory"
                   );
 
                   // Invalidate relevant agent queries using the new query factory structure
@@ -218,7 +218,7 @@ export async function processAgentOperations(
                 "@/app/queries/query-client"
               );
               const { agentKeys } = await import(
-                "@/app/queries/agent/query-factory"
+                "@/entities/agent/api/query-factory"
               );
 
               // Invalidate relevant agent queries
@@ -279,7 +279,7 @@ export async function processAgentOperations(
                 "@/app/queries/query-client"
               );
               const { agentKeys } = await import(
-                "@/app/queries/agent/query-factory"
+                "@/entities/agent/api/query-factory"
               );
 
               // Invalidate output query specifically
@@ -330,7 +330,7 @@ export async function processAgentOperations(
                   "@/app/queries/query-client"
                 );
                 const { agentKeys } = await import(
-                  "@/app/queries/agent/query-factory"
+                  "@/entities/agent/api/query-factory"
                 );
 
                 // Invalidate relevant agent queries

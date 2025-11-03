@@ -16,7 +16,7 @@ import {
 import { Button, CarouselItem, SvgIcon } from "@/shared/ui";
 import { SessionProps } from "@/entities/session/domain";
 import { useQuery } from "@tanstack/react-query";
-import { agentQueries } from "@/app/queries/agent/query-factory";
+import { agentQueries } from "@/entities/agent/api/query-factory";
 import { ApiSource, apiSourceLabel } from "@/entities/api/domain/api-connection";
 
 const AgentListItem = ({ agentId }: { agentId: UniqueEntityID }) => {

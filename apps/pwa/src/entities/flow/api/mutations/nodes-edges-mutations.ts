@@ -117,7 +117,7 @@ export const useUpdateNodesAndEdges = (flowId: string) => {
           setTimeout(async () => {
             // Invalidate agent detail queries for agent nodes
             // This ensures the variable panel gets fresh agent data
-            const { agentKeys } = await import("@/app/queries/agent/query-factory");
+            const { agentKeys } = await import("@/entities/agent/api/query-factory");
             await Promise.all(
               agentNodes.map(async (node) => {
                 const agentId = node.id;

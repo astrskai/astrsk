@@ -1,5 +1,5 @@
 import { UniqueEntityID } from "@/shared/domain";
-import { agentKeys } from "@/app/queries/agent/query-factory";
+import { agentKeys } from "@/entities/agent/api/query-factory";
 import { queryClient } from "@/app/queries/query-client";
 
 /**
