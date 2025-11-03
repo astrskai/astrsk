@@ -31,7 +31,7 @@ import {
   fetchCharacterCardOptional,
   fetchPlotCardOptional,
 } from "@/entities/card/api/query-factory";
-import { fetchDataStoreNode } from "@/app/queries/data-store-node/query-factory";
+import { fetchDataStoreNode } from "@/entities/data-store-node/api/query-factory";
 import { fetchFlow } from "@/entities/flow/api/query-factory";
 import { fetchIfNode } from "@/entities/if-node/api/query-factory";
 import { fetchSession } from "@/entities/session/api";

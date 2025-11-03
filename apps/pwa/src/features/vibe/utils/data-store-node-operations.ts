@@ -189,7 +189,7 @@ export async function processDataStoreNodeOperations(
                     "@/app/queries/query-client"
                   );
                   const { dataStoreNodeKeys } = await import(
-                    "@/app/queries/data-store-node/query-factory"
+                    "@/entities/data-store-node/api/query-factory"
                   );
 
                   // Invalidate data store node queries

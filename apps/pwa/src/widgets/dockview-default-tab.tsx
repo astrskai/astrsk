@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { IDockviewPanelHeaderProps } from "dockview";
 import { useQuery } from "@tanstack/react-query";
-import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
+import { dataStoreNodeQueries } from "@/entities/data-store-node/api/query-factory";
 import { ifNodeQueries } from "@/entities/if-node/api/query-factory";
 import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";

@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/entities/flow/api/query-factory";
-import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
-import { useUpdateDataStoreNodeFields } from "@/app/queries/data-store-node/mutations/field-mutations";
+import { dataStoreNodeQueries } from "@/entities/data-store-node/api/query-factory";
+import { useUpdateDataStoreNodeFields } from "@/entities/data-store-node/api/mutations/field-mutations";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { Button, Editor, ScrollAreaSimple } from "@/shared/ui";
 import {

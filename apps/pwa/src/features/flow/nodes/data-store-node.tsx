@@ -25,8 +25,8 @@ import { useUpdateNodeTitle } from "@/entities/flow/api/mutations/node-mutations
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { useQuery } from "@tanstack/react-query";
 import { flowQueries } from "@/entities/flow/api/query-factory";
-import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
-import { useUpdateDataStoreNodeName } from "@/app/queries/data-store-node/mutations";
+import { dataStoreNodeQueries } from "@/entities/data-store-node/api/query-factory";
+import { useUpdateDataStoreNodeName } from "@/entities/data-store-node/api/mutations";
 // Removed flow validation imports as validation is disabled
 import {
   getDataStoreNodeHexColor,
