@@ -2068,7 +2068,10 @@ async function* executeFlow({
         const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
           .throwOnFailure()
           .getValue();
-        dataStore = cloneDeep(lastTurn.dataStore);
+        // IMPORTANT: Filter out memory_ids - they should NOT be inherited
+        dataStore = cloneDeep(lastTurn.dataStore).filter(
+          (field) => field.name !== 'memory_ids'
+        );
       } catch (error) {
         logger.warn(`Failed to get last turn's dataStore: ${error}`);
       }
