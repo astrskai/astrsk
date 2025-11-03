@@ -142,7 +142,7 @@ export function UserCharacterSelectionStep({
 
       {/* User Character Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col">
           <DialogHeader>
             <DialogTitle>Select User Character</DialogTitle>
             <DialogDescription>
@@ -150,18 +150,18 @@ export function UserCharacterSelectionStep({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-4 py-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 py-4">
             {/* Search Input */}
             <SearchInput
               name="user-character-search"
               placeholder="Search characters..."
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              className="w-full max-w-md"
+              className="w-full max-w-md flex-shrink-0"
             />
 
             {/* User Character Cards Grid */}
-            <div className="max-h-[400px] overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {filteredUserCharacterCards.map((card: CharacterCard) => {
                   const isDisabled = selectedAiCharacterIds.includes(
