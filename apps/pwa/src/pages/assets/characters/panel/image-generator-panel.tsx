@@ -28,11 +28,11 @@ import {
 import { useModelStore, IMAGE_MODELS } from "@/shared/stores/model-store";
 import { toast } from "sonner";
 import { VIDEO_SETTINGS, GALLERY_LAYOUT } from "./image-generator/constants";
-import { ImageItem } from "./image-generator/components/image-item";
-import { ImageToImageSetting } from "./image-generator/components/image-to-image-setting";
-import { ImagePromptField } from "./image-generator/components/image-prompt-field";
-import { useVideoGeneration } from "./image-generator/hooks/use-video-generation";
-import { useImageGeneration } from "./image-generator/hooks/use-image-generation";
+import { ImageItem } from "./image-generator/image-item";
+import { ImageToImageSetting } from "./image-generator/image-to-image-setting";
+import { ImagePromptField } from "./image-generator/image-prompt-field";
+import { useVideoGeneration } from "@/shared/hooks/use-video-generation";
+import { useImageGeneration } from "@/shared/hooks/use-image-generation";
 import { enhancePromptWithCardContext } from "./image-generator/utils";
 import { useLocation } from "@tanstack/react-router";
 
