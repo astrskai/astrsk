@@ -3,7 +3,7 @@ import { Textarea } from "@/shared/ui/forms";
 import { Variable } from "@/shared/prompt/domain/variable";
 import { VariablesPanel } from "@/shared/ui/panels";
 
-interface PlotInfoStepProps {
+interface PlotDescriptionStepProps {
   description: string;
   onDescriptionChange: (description: string) => void;
 }
@@ -14,16 +14,16 @@ const DESCRIPTION_VARIABLE = "{{plot.description}}";
 const DESCRIPTION_ROWS = 8;
 
 /**
- * Plot Info Step Component
+ * Plot Description Step Component
  * Step 2 of the Create Plot Card wizard
  *
  * Fields:
  * - Description (Required): Plot setting, themes, and story elements
  */
-export function PlotInfoStep({
+export function PlotDescriptionStep({
   description,
   onDescriptionChange,
-}: PlotInfoStepProps) {
+}: PlotDescriptionStepProps) {
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   // Insert variable at cursor position
@@ -65,7 +65,7 @@ export function PlotInfoStep({
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Plot Info
+          Plot Description
         </h2>
         <p className="text-text-secondary text-sm">
           Enter the description and details for your plot.

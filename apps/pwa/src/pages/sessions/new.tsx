@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Route } from "@/routes/_layout/sessions/new";
 import { Button } from "@/shared/ui/forms";
 import { CreatePageHeader } from "@/widgets/create-page-header";
 import {
+  BasicInfoStep,
   FlowSelectionStep,
   AiCharacterSelectionStep,
   UserCharacterSelectionStep,
@@ -18,22 +18,26 @@ import { Session, CardListItem } from "@/entities/session/domain";
 import { defaultChatStyles } from "@/entities/session/domain/chat-styles";
 import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
 import { SessionService } from "@/app/services/session-service";
+import { AssetService } from "@/app/services/asset-service";
+import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { queryClient } from "@/shared/api/query-client";
 import { TableName } from "@/db/schema/table-name";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
-type Step = "flow" | "ai-character" | "user-character" | "plot";
+type Step = "basic-info" | "flow" | "ai-character" | "user-character" | "plot";
 
 const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
   [
-    { id: "flow", label: "Flow", number: 1, required: true },
-    { id: "ai-character", label: "AI Character", number: 2, required: true },
+    { id: "basic-info", label: "Basic Info", number: 1, required: false },
+    { id: "flow", label: "Flow", number: 2, required: true },
+    { id: "ai-character", label: "AI Character", number: 3, required: true },
     {
       id: "user-character",
       label: "User Character",
-      number: 3,
+      number: 4,
       required: false,
     },
-    { id: "plot", label: "Plot", number: 4, required: false },
+    { id: "plot", label: "Plot", number: 5, required: false },
   ];
 
 /**
@@ -41,15 +45,20 @@ const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
  * Multi-step wizard for creating a new session
  *
  * Steps:
- * 1. Flow - Select flow and agents
- * 2. AI Character - Select AI character cards
- * 3. User Character - Select user character card
- * 4. Plot - Select plot card
+ * 1. Basic Info - Session name and background image (Name required, image optional)
+ * 2. Flow - Select flow and agents
+ * 3. AI Character - Select AI character cards
+ * 4. User Character - Select user character card
+ * 5. Plot - Select plot card
  */
 export function CreateSessionPage() {
   const navigate = useNavigate();
-  const { sessionName } = Route.useSearch();
-  const [currentStep, setCurrentStep] = useState<Step>("flow");
+  const [currentStep, setCurrentStep] = useState<Step>("basic-info");
+
+  // Basic Info state
+  const [sessionName, setSessionName] = useState("New Session");
+  const [imageFile, setImageFile] = useState<File | undefined>();
+  const [imageAssetId, setImageAssetId] = useState<string | undefined>();
 
   // Selection state (simplified - each step component handles its own UI state)
   const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
@@ -61,6 +70,15 @@ export function CreateSessionPage() {
   const [selectedPlot, setSelectedPlot] = useState<CharacterCard | null>(null);
 
   const selectSession = useSessionStore.use.selectSession();
+
+  const handleFileUpload = (file: File) => {
+    // Store the file for preview - actual upload happens on save
+    setImageFile(file);
+
+    // Create a temporary object URL for preview
+    const objectUrl = URL.createObjectURL(file);
+    setImageAssetId(objectUrl);
+  };
 
   const handleCancel = () => {
     navigate({ to: "/sessions" });
@@ -80,7 +98,32 @@ export function CreateSessionPage() {
     }
 
     try {
-      // Build allCards array from all selected cards
+      // Step 1: Upload image if exists
+      let uploadedAssetId: string | undefined;
+      if (imageFile) {
+        const assetResult = await AssetService.saveFileToAsset.execute({
+          file: imageFile,
+        });
+
+        if (assetResult.isSuccess) {
+          const asset = assetResult.getValue();
+          uploadedAssetId = asset.id.toString();
+
+          // Save to generated images gallery
+          await GeneratedImageService.saveGeneratedImageFromAsset.execute({
+            assetId: asset.id,
+            name: imageFile.name.replace(/\.[^/.]+$/, ""),
+            prompt: `Session background for ${sessionName}`,
+            style: "uploaded",
+            associatedCardId: undefined,
+          });
+        } else {
+          logger.error("Failed to upload file:", assetResult.getError());
+          return;
+        }
+      }
+
+      // Step 2: Build allCards array from all selected cards
       const allCards: CardListItem[] = [];
 
       // Add AI character cards
@@ -110,12 +153,15 @@ export function CreateSessionPage() {
         });
       }
 
-      // Create session
+      // Step 3: Create session
       const sessionOrError = Session.create({
         title: sessionName,
         flowId: selectedFlow.id,
         allCards,
         userCharacterCardId: selectedUserCharacter?.id,
+        backgroundId: uploadedAssetId
+          ? new UniqueEntityID(uploadedAssetId)
+          : undefined,
         turnIds: [],
         autoReply: AutoReply.Off,
         chatStyles: defaultChatStyles,
@@ -156,6 +202,7 @@ export function CreateSessionPage() {
     }
   }, [
     sessionName,
+    imageFile,
     selectedFlow,
     selectedCharacters,
     selectedUserCharacter,
@@ -176,11 +223,13 @@ export function CreateSessionPage() {
 
   // Determine when Next button should be enabled based on current step
   const canProceed =
-    currentStep === "flow"
-      ? selectedFlow !== null
-      : currentStep === "ai-character"
-        ? selectedCharacters.length > 0
-        : true; // user-character and plot are optional
+    currentStep === "basic-info"
+      ? !!sessionName.trim()
+      : currentStep === "flow"
+        ? selectedFlow !== null
+        : currentStep === "ai-character"
+          ? selectedCharacters.length > 0
+          : true; // user-character and plot are optional
 
   // Show Previous button only from 2nd step onwards
   const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
@@ -208,6 +257,15 @@ export function CreateSessionPage() {
       {/* Content */}
       <div className="flex flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-5xl p-8 pb-24 md:pb-8">
+          {currentStep === "basic-info" && (
+            <BasicInfoStep
+              sessionName={sessionName}
+              onSessionNameChange={setSessionName}
+              imageAssetId={imageAssetId}
+              onFileUpload={handleFileUpload}
+            />
+          )}
+
           {currentStep === "flow" && (
             <FlowSelectionStep
               selectedFlow={selectedFlow}

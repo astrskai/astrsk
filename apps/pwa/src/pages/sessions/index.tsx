@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import { SessionsGrid } from "./ui/list";
-import { NameInputDialog } from "./ui/create";
 import { SessionImportDialog } from "./ui/dialog/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
 
@@ -14,9 +14,9 @@ import { ListPageHeader } from "@/widgets/list-page-header";
  * Sessions list page - displays all sessions in a card grid
  */
 export function SessionsPage() {
+  const navigate = useNavigate();
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenImportDialog, setIsOpenImportDialog] = useState<boolean>(false);
-  const [isOpenCreateDialog, setIsOpenCreateDialog] = useState<boolean>(false);
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
 
   // Fetch sessions with search filter
@@ -28,7 +28,7 @@ export function SessionsPage() {
   const { handleImport, handleFileSelect } = useSessionImport();
 
   const handleCreateSession = () => {
-    setIsOpenCreateDialog(true);
+    navigate({ to: "/sessions/new" });
   };
 
   const handleExport = () => {
@@ -61,10 +61,6 @@ export function SessionsPage() {
         onOpenChange={setIsOpenImportDialog}
         onImport={handleImport}
         onFileSelect={handleFileSelect}
-      />
-      <NameInputDialog
-        open={isOpenCreateDialog}
-        onOpenChange={setIsOpenCreateDialog}
       />
       <HelpVideoDialog
         open={isOpenHelpDialog}

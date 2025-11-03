@@ -1,31 +1,29 @@
 import { Input, FileUploadButton } from "@/shared/ui/forms";
-import { CardType } from "@/entities/card/domain";
-import CardDisplay from "@/features/card/ui/card-display";
 
-interface PlotImageStepProps {
-  plotName: string;
-  onPlotNameChange: (name: string) => void;
+interface BasicInfoStepProps {
+  sessionName: string;
+  onSessionNameChange: (name: string) => void;
   imageAssetId?: string;
   onFileUpload: (file: File) => void;
 }
 
-const DEFAULT_PLOT_NAME = "New Plot";
+const DEFAULT_SESSION_NAME = "New Session";
 const ACCEPTED_FILE_TYPES = ".jpg,.jpeg,.png";
 
 /**
  * Basic Info Step Component
- * Step 1 of the Create Plot Card wizard
+ * Step 1 of the Create Session wizard
  *
  * Layout:
- * - Section 1: Plot Name (Required)
- * - Section 2: Plot Image (Optional)
+ * - Section 1: Session Name (Required)
+ * - Section 2: Session Background Image (Optional)
  */
-export function PlotImageStep({
-  plotName,
-  onPlotNameChange,
+export function BasicInfoStep({
+  sessionName,
+  onSessionNameChange,
   imageAssetId,
   onFileUpload,
-}: PlotImageStepProps) {
+}: BasicInfoStepProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -34,74 +32,70 @@ export function PlotImageStep({
           Basic Info
         </h2>
         <p className="text-text-secondary text-sm">
-          Set up the basic information for your plot.
+          Set up the basic information for your session.
         </p>
       </div>
 
-      {/* Section 1: Plot Name */}
+      {/* Section 1: Session Name */}
       <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-4 md:p-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
             <h3 className="text-text-primary mb-1 text-lg font-semibold">
-              Name your plot <span className="text-status-required">*</span>
+              Name your session <span className="text-status-required">*</span>
             </h3>
             <p className="text-text-secondary text-sm">
-              Give your plot a name
+              Give your session a name
             </p>
           </div>
 
-          {/* Plot Name Input */}
+          {/* Session Name Input */}
           <Input
             type="text"
-            value={plotName}
-            onChange={(e) => onPlotNameChange(e.target.value)}
-            placeholder="Enter plot name..."
+            value={sessionName}
+            onChange={(e) => onSessionNameChange(e.target.value)}
+            placeholder="Enter session name..."
             required
           />
         </div>
       </div>
 
-      {/* Section 2: Plot Image */}
+      {/* Section 2: Session Background Image */}
       <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-4 md:p-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
             <h3 className="text-text-primary mb-1 text-lg font-semibold">
-              Upload plot image
+              Upload session cover
             </h3>
             <p className="text-text-secondary text-sm">
-              Any JPG, JPEG, or PNG. 1920x614 pixels for best display.
+              Any JPG, JPEG, or PNG. Recommended for visual customization.
             </p>
           </div>
 
-          {/* Card Preview - Centered */}
+          {/* Background Image Preview - Centered */}
           <div className="flex flex-col items-center gap-4">
             {imageAssetId ? (
-              <div className="@container w-full max-w-[320px]">
-                <CardDisplay
-                  title={plotName || DEFAULT_PLOT_NAME}
-                  type={CardType.Plot}
-                  tags={[]}
-                  tokenCount={0}
-                  previewImageUrl={imageAssetId}
-                  isSelected={false}
-                  showActions={false}
+              <div className="relative w-full max-w-[640px]">
+                <img
+                  src={imageAssetId}
+                  alt={sessionName || DEFAULT_SESSION_NAME}
+                  className="h-auto w-full rounded-lg object-cover"
                 />
               </div>
             ) : (
-              <div className="bg-background-surface-3 relative flex aspect-[196/289] w-full max-w-[320px] items-center justify-center rounded-[8px]">
+              <div className="bg-background-surface-3 relative flex aspect-video w-full max-w-[640px] items-center justify-center rounded-lg">
                 <div className="text-text-placeholder px-4 text-center text-sm">
-                  Upload an image to see your plot card preview
+                  Upload an image to see your background preview
                 </div>
               </div>
             )}
 
-            {/* Upload Button - Below card */}
+            {/* Upload Button - Below preview */}
             <FileUploadButton
               accept={ACCEPTED_FILE_TYPES}
               onChange={onFileUpload}
               className="w-full max-w-[320px]"
             >
-              Upload Plot Image
+              Upload session cover
             </FileUploadButton>
 
             <p className="text-text-secondary text-center text-xs">

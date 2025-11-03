@@ -6,7 +6,7 @@ import { CreatePageHeader } from "@/widgets/create-page-header";
 import { cn } from "@/shared/lib";
 import {
   PlotImageStep,
-  PlotInfoStep,
+  PlotDescriptionStep,
   PlotLorebookStep,
   PlotScenarioStep,
   type LorebookEntry,
@@ -33,10 +33,10 @@ const MOBILE_FLOATING_HEIGHT = 14; // Tailwind spacing units (14 * 4px = 56px)
  * Multi-step wizard for creating a new plot card
  *
  * Steps:
- * 1. Image - Upload or select plot image
- * 2. Info - Basic information (name, title, description)
- * 3. Lorebook - World-building and lore entries
- * 4. Scenario - Initial scenario and story setup
+ * 1. Basic Info - Plot name and image (Name required, image optional)
+ * 2. Info - Description (Required)
+ * 3. Lorebook - World-building and lore entries (Optional)
+ * 4. Scenario - Initial scenario and story setup (Optional)
  */
 export function CreatePlotPage() {
   const navigate = useNavigate();
@@ -53,8 +53,8 @@ export function CreatePlotPage() {
   const [isCreatingCard, setIsCreatingCard] = useState(false);
 
   const STEPS: StepConfig<PlotStep>[] = [
-    { id: "image", number: 1, label: "Image", required: true },
-    { id: "info", number: 2, label: "Info", required: true },
+    { id: "image", number: 1, label: "Basic Info", required: false },
+    { id: "info", number: 2, label: "Description", required: true },
     { id: "lorebook", number: 3, label: "Lorebook", required: false },
     { id: "scenario", number: 4, label: "Scenario", required: false },
   ];
@@ -197,8 +197,8 @@ export function CreatePlotPage() {
   const canProceed = (() => {
     switch (currentStep) {
       case "image":
-        // Image step requires both name and image
-        return !!plotName.trim() && !!imageAssetId;
+        // Image step requires only name (image is optional)
+        return !!plotName.trim();
       case "info":
         // Info step requires description
         return !!description.trim();
@@ -248,9 +248,9 @@ export function CreatePlotPage() {
             />
           )}
 
-          {/* Step 2: Info */}
+          {/* Step 2: Description */}
           {currentStep === "info" && (
-            <PlotInfoStep
+            <PlotDescriptionStep
               description={description}
               onDescriptionChange={setDescription}
             />

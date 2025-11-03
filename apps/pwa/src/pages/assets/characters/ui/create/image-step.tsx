@@ -10,15 +10,15 @@ interface CharacterImageStepProps {
   onFileUpload: (file: File) => void;
 }
 
+const ACCEPTED_FILE_TYPES = ".jpg,.jpeg,.png";
+
 /**
- * Character Image Step Component
+ * Basic Info Step Component
  * Step 1 of the Create Character Card wizard
  *
  * Layout:
- * - Top: Character name input
- * - Left: Avatar (small circle)
- * - Center: Trading card preview
- * - Bottom: Upload button
+ * - Section 1: Character Name (Required)
+ * - Section 2: Character Image (Optional)
  */
 export function CharacterImageStep({
   characterName,
@@ -34,25 +34,47 @@ export function CharacterImageStep({
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Upload Image <span className="text-status-required">*</span>
+          Basic Info
         </h2>
         <p className="text-text-secondary text-sm">
-          Upload an image for your character and enter a name.
+          Set up the basic information for your character.
         </p>
       </div>
 
-      {/* Main Content */}
+      {/* Section 1: Character Name */}
       <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-4 md:p-6">
-        <div className="mx-auto flex max-w-3xl flex-col gap-6">
+        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+          <div>
+            <h3 className="text-text-primary mb-1 text-lg font-semibold">
+              Name your character <span className="text-status-required">*</span>
+            </h3>
+            <p className="text-text-secondary text-sm">
+              Give your character a name
+            </p>
+          </div>
+
           {/* Character Name Input */}
           <Input
-            label="Character Name"
             type="text"
             value={characterName}
             onChange={(e) => onCharacterNameChange(e.target.value)}
             placeholder="Enter character name..."
             required
           />
+        </div>
+      </div>
+
+      {/* Section 2: Character Image */}
+      <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-4 md:p-6">
+        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+          <div>
+            <h3 className="text-text-primary mb-1 text-lg font-semibold">
+              Upload character image
+            </h3>
+            <p className="text-text-secondary text-sm">
+              Any JPG, JPEG, or PNG. 1920x614 pixels for best display.
+            </p>
+          </div>
 
           {/* Avatar and Card Display */}
           <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
@@ -94,7 +116,7 @@ export function CharacterImageStep({
 
               {/* Upload Button - Below card */}
               <FileUploadButton
-                accept=".jpg,.jpeg,.png,.webp"
+                accept={ACCEPTED_FILE_TYPES}
                 onChange={onFileUpload}
                 className="w-full max-w-[320px]"
               >
@@ -102,7 +124,7 @@ export function CharacterImageStep({
               </FileUploadButton>
 
               <p className="text-text-secondary text-center text-xs">
-                Supported formats: JPG, PNG, WEBP
+                Supported formats: JPG, PNG
               </p>
             </div>
           </div>

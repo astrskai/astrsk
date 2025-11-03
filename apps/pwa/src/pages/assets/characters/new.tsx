@@ -6,7 +6,7 @@ import { CreatePageHeader } from "@/widgets/create-page-header";
 import { cn } from "@/shared/lib";
 import {
   CharacterImageStep,
-  CharacterInfoStep,
+  CharacterDescriptionStep,
   CharacterLorebookStep,
   type LorebookEntry,
 } from "./ui/create";
@@ -31,8 +31,8 @@ const MOBILE_FLOATING_HEIGHT = 14; // Tailwind spacing units (14 * 4px = 56px)
  * Multi-step wizard for creating a new character card
  *
  * Steps:
- * 1. Character Image - Upload or select character image (Required)
- * 2. Character Info - Name, personality, description (Required)
+ * 1. Basic Info - Character name and image (Name required, image optional)
+ * 2. Character Description - Personality, description (Required)
  * 3. Character Lorebook - Additional lore and details (Optional)
  */
 export function CreateCharacterPage() {
@@ -50,8 +50,8 @@ export function CreateCharacterPage() {
   const [isCreatingCard, setIsCreatingCard] = useState<boolean>(false);
 
   const STEPS: StepConfig<CharacterStep>[] = [
-    { id: "image", number: 1, label: "Upload Image", required: true },
-    { id: "info", number: 2, label: "Character Info", required: true },
+    { id: "image", number: 1, label: "Basic Info", required: false },
+    { id: "info", number: 2, label: "Character Description", required: true },
     { id: "lorebook", number: 3, label: "Lorebook", required: false },
   ];
 
@@ -195,7 +195,7 @@ export function CreateCharacterPage() {
   const canProceed = (() => {
     switch (currentStep) {
       case "image":
-        return characterName.trim().length > 0 && avatarAssetId !== undefined;
+        return characterName.trim().length > 0; // Image is optional
       case "info":
         return description.trim().length > 0;
       case "lorebook":
@@ -240,9 +240,9 @@ export function CreateCharacterPage() {
             />
           )}
 
-          {/* Step 2: Character Info */}
+          {/* Step 2: Character Description */}
           {currentStep === "info" && (
-            <CharacterInfoStep
+            <CharacterDescriptionStep
               description={description}
               onDescriptionChange={setDescription}
               exampleDialogue={exampleDialogue}

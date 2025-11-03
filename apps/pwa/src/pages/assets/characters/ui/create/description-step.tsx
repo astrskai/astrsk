@@ -4,7 +4,7 @@ import { Textarea } from "@/shared/ui/forms";
 import { Variable } from "@/shared/prompt/domain/variable";
 import { VariablesPanel } from "@/shared/ui/panels";
 
-interface CharacterInfoStepProps {
+interface CharacterDescriptionStepProps {
   description: string;
   onDescriptionChange: (description: string) => void;
   exampleDialogue: string;
@@ -12,19 +12,19 @@ interface CharacterInfoStepProps {
 }
 
 /**
- * Character Info Step Component
+ * Character Description Step Component
  * Step 2 of the Create Character Card wizard
  *
  * Fields:
  * - Description (Required): Character personality and traits
  * - Example Dialogue (Optional): Sample conversations
  */
-export function CharacterInfoStep({
+export function CharacterDescriptionStep({
   description,
   onDescriptionChange,
   exampleDialogue,
   onExampleDialogueChange,
-}: CharacterInfoStepProps) {
+}: CharacterDescriptionStepProps) {
   const [activeTextarea, setActiveTextarea] = useState<
     "description" | "dialogue" | null
   >(null);
@@ -90,7 +90,7 @@ export function CharacterInfoStep({
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Character Info
+          Character Description
         </h2>
         <p className="text-text-secondary text-sm">
           Enter the personality and description for your character.
