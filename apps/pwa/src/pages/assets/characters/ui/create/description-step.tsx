@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Textarea } from "@/shared/ui/forms";
 import { Variable } from "@/shared/prompt/domain/variable";
 import { VariablesPanel } from "@/shared/ui/panels";
@@ -122,14 +122,14 @@ export function CharacterDescriptionStep({
               <button
                 type="button"
                 onClick={() => setIsExampleDialogueOpen(!isExampleDialogueOpen)}
-                className="text-text-primary hover:text-text-secondary flex w-full items-center gap-2 text-sm font-medium transition-colors"
+                className="text-text-primary hover:text-text-secondary flex w-full items-center justify-between text-sm font-medium transition-colors"
               >
+                <span>Example Dialogue (Optional)</span>
                 {isExampleDialogueOpen ? (
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronUp className="h-4 w-4" />
                 ) : (
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronDown className="h-4 w-4" />
                 )}
-                Example Dialogue (Optional)
               </button>
 
               {isExampleDialogueOpen && (
