@@ -5,6 +5,7 @@ import {
   VariableLibrary,
   VariableGroupLabel,
 } from "@/shared/prompt/domain/variable";
+import { SearchInput } from "@/shared/ui/forms";
 
 export interface VariablesPanelProps {
   /**
@@ -75,15 +76,26 @@ export function VariablesPanel({
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(),
   );
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Group variables by their group property
   const groupedVariables = useMemo(() => {
     const libraryVariables = VariableLibrary.variableList;
 
     // Apply filter if provided
-    const filteredVariables = filterVariables
+    let filteredVariables = filterVariables
       ? libraryVariables.filter(filterVariables)
       : libraryVariables;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filteredVariables = filteredVariables.filter(
+        (variable) =>
+          variable.variable.toLowerCase().includes(query) ||
+          variable.description.toLowerCase().includes(query),
+      );
+    }
 
     // Group by variable.group
     const groups = filteredVariables.reduce(
@@ -99,7 +111,7 @@ export function VariablesPanel({
     );
 
     return groups;
-  }, [filterVariables]);
+  }, [filterVariables, searchQuery]);
 
   // Toggle group collapse/expand
   const toggleGroupCollapse = useCallback((group: string) => {
@@ -119,14 +131,24 @@ export function VariablesPanel({
       <div className="flex max-h-[500px] flex-col">
         {/* Header - Fixed */}
         <div className="border-border flex-shrink-0 border-b p-4">
-          <h3 className="text-text-primary text-sm font-medium">Variables</h3>
+          <h3 className="text-text-primary mb-3 text-sm font-medium">
+            Variables
+          </h3>
+          {isActive && (
+            <SearchInput
+              placeholder="Search variables..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="mb-3"
+            />
+          )}
           {inactiveMessage && !isActive && (
             <p className="text-text-secondary mt-2 text-xs">
               {inactiveMessage}
             </p>
           )}
           {isActive && (
-            <p className="text-text-secondary mt-2 text-xs">
+            <p className="text-text-secondary text-xs">
               Click a variable to insert it at the cursor position
             </p>
           )}
