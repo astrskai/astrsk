@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useSessionValidation } from "@/shared/hooks/use-session-validation";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { sessionQueries } from "@/entities/session/api";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";

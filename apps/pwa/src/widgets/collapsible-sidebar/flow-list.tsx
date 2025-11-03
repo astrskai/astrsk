@@ -6,7 +6,7 @@ import {
   useCloneFlowWithNodes,
   useDeleteFlowWithNodes,
 } from "@/entities/flow/api/mutations/flow-mutations";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";

@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Upload, Copy, Trash2, CircleAlert, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { SessionService } from "@/app/services/session-service";
 import { sessionQueries } from "@/entities/session/api";
 import { Session } from "@/entities/session/domain/session";

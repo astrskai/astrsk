@@ -19,7 +19,7 @@ import { SessionService } from "@/app/services/session-service";
 
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useValidationStore } from "@/shared/stores/validation-store";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/shared/lib";
 

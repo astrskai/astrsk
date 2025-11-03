@@ -4,7 +4,7 @@ import { ApiService } from "@/app/services";
 import { ApiConnectionDrizzleMapper } from "@/entities/api/mappers/api-connection-drizzle-mapper";
 import { ApiModel } from "@/entities/api/domain/api-model";
 import { ApiConnection } from "@/entities/api/domain";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection

@@ -186,7 +186,7 @@ export async function processDataStoreNodeOperations(
                 // Invalidate queries to refresh UI
                 try {
                   const { queryClient } = await import(
-                    "@/app/queries/query-client"
+                    "@/shared/api/query-client"
                   );
                   const { dataStoreNodeKeys } = await import(
                     "@/entities/data-store-node/api/query-factory"

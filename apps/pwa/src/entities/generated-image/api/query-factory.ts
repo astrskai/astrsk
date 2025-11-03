@@ -14,7 +14,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { GeneratedImage } from "@/entities/generated-image/domain";
 import { GeneratedImageDrizzleMapper } from "@/entities/generated-image/mappers/generated-image-drizzle-mapper";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection

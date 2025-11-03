@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { SessionService } from "@/app/services/session-service";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { sessionQueries } from "@/entities/session/api";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { cardQueries } from "@/entities/card/api/card-queries";

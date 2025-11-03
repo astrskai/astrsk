@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { FlowService } from "@/app/services/flow-service";
 import { FlowDrizzleMapper } from "@/entities/flow/mappers/flow-drizzle-mapper";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection

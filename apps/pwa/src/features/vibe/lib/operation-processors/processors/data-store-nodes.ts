@@ -167,7 +167,7 @@ export const dataStoreNodeProcessors = {
               // Invalidate specific data store node queries
               try {
                 const { queryClient } = await import(
-                  "@/app/queries/query-client"
+                  "@/shared/api/query-client"
                 );
                 const { dataStoreNodeKeys } = await import(
                   "@/entities/data-store-node/api/query-factory"

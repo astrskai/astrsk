@@ -9,7 +9,7 @@
  * - Co-location of keys and query functions
  */
 
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { IfCondition } from "@/features/flow/nodes/if-node";
 import { IfNode } from "@/entities/if-node/domain/if-node";

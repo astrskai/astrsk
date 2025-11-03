@@ -21,7 +21,7 @@ import { stringify } from "superjson";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { UniqueEntityID } from "@/shared/domain";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { agentKeys } from "@/entities/agent/api/query-factory";
 import { ifNodeKeys } from "@/entities/if-node/api/query-factory";

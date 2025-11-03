@@ -12,7 +12,7 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { useCard } from "@/shared/hooks/use-card";
 import { useSession } from "@/shared/hooks/use-session";
 import { useTurn } from "@/shared/hooks/use-turn";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { sessionQueries } from "@/entities/session/api";
 import { SessionService } from "@/app/services/session-service";
 import { useQuery } from "@tanstack/react-query";

@@ -25,7 +25,7 @@ import { cloneDeep, merge } from "lodash-es";
 import { createOllama } from "ollama-ai-provider";
 
 import { fetchAgent } from "@/entities/agent/api/query-factory";
-import { fetchApiConnections } from "@/app/queries/api-connection-queries";
+import { fetchApiConnections } from "@/entities/api/api-connection-queries";
 import {
   fetchCharacterCard,
   fetchCharacterCardOptional,

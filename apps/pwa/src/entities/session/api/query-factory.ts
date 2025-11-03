@@ -1,4 +1,4 @@
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { SessionService } from "@/app/services/session-service";
 import { Session } from "@/entities/session/domain/session";
 import { SessionDrizzleMapper } from "@/entities/session/mappers/session-drizzle-mapper";

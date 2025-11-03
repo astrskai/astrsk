@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CardService } from "@/app/services/card-service";
 import { CardType, Card, Lorebook, Entry } from "@/entities/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { cardKeys } from "@/entities/card/api/query-factory";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import type {

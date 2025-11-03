@@ -9,7 +9,7 @@
  * - Co-location of keys and query functions
  */
 
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { FlowService } from "@/app/services/flow-service";
 import { ValidationIssue } from "@/entities/flow/model/validation-types";
 import {

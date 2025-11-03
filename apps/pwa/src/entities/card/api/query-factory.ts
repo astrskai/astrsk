@@ -16,7 +16,7 @@ import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
 import { LorebookDrizzleMapper } from "@/entities/card/mappers/lorebook-drizzle-mapper";
 import { Card, CardType, CharacterCard, PlotCard } from "@/entities/card/domain";
 import { SearchCardsSort } from "@/entities/card/repos";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection

@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useReactFlow } from "@xyflow/react";
 
 import { useQuery } from "@tanstack/react-query";
-import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
+import { apiConnectionQueries } from "@/entities/api/api-connection-queries";
 import type { ApiConnectionWithModels } from "@/shared/hooks/use-api-connections-with-models";
 import { Combobox, ComboboxOption } from "@/shared/ui";
 import { MobileOverrideProvider } from "@/shared/hooks/use-mobile-override";

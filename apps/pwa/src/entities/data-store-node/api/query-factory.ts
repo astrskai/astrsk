@@ -9,7 +9,7 @@
  * - Co-location of keys and query functions
  */
 
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { DataStoreNode } from "@/entities/data-store-node/domain/data-store-node";
 import { DataStoreNodeDrizzleMapper } from "@/entities/data-store-node/mappers/data-store-node-drizzle-mapper";

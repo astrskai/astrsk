@@ -141,7 +141,7 @@ export async function processAgentOperations(
                 // Invalidate agent queries to refresh UI
                 try {
                   const { queryClient } = await import(
-                    "@/app/queries/query-client"
+                    "@/shared/api/query-client"
                   );
                   const { agentKeys } = await import(
                     "@/entities/agent/api/query-factory"
@@ -215,7 +215,7 @@ export async function processAgentOperations(
             // Invalidate agent queries to refresh UI
             try {
               const { queryClient } = await import(
-                "@/app/queries/query-client"
+                "@/shared/api/query-client"
               );
               const { agentKeys } = await import(
                 "@/entities/agent/api/query-factory"
@@ -276,7 +276,7 @@ export async function processAgentOperations(
             // Invalidate agent queries to refresh UI
             try {
               const { queryClient } = await import(
-                "@/app/queries/query-client"
+                "@/shared/api/query-client"
               );
               const { agentKeys } = await import(
                 "@/entities/agent/api/query-factory"
@@ -327,7 +327,7 @@ export async function processAgentOperations(
               // Invalidate agent queries to refresh UI (similar to prompt/schema operations)
               try {
                 const { queryClient } = await import(
-                  "@/app/queries/query-client"
+                  "@/shared/api/query-client"
                 );
                 const { agentKeys } = await import(
                   "@/entities/agent/api/query-factory"

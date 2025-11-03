@@ -16,7 +16,7 @@ import { AgentDrizzleMapper } from "@/entities/agent/mappers/agent-drizzle-mappe
 import { PromptDrizzleMapper } from "@/entities/agent/mappers/prompt-drizzle-mapper";
 import { ParameterDrizzleMapper } from "@/entities/agent/mappers/parameter-drizzle-mapper";
 import { OutputDrizzleMapper } from "@/entities/agent/mappers/output-drizzle-mapper";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { Agent } from "@/entities/agent/domain";
 
 // WeakMap cache for preventing unnecessary re-renders

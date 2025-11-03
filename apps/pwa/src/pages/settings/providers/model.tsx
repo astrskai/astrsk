@@ -9,8 +9,8 @@ import { logger } from "@/shared/lib";
 
 import { useApiConnections } from "@/shared/hooks/use-api-connections";
 import { ApiService } from "@/app/services";
-import { queryClient } from "@/app/queries/query-client";
-import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
+import { queryClient } from "@/shared/api/query-client";
+import { apiConnectionQueries } from "@/entities/api/api-connection-queries";
 import { Button } from "@/shared/ui/forms";
 import { cn } from "@/shared/lib";
 import {

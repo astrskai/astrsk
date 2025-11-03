@@ -1,6 +1,6 @@
 import { UniqueEntityID } from "@/shared/domain";
 import { agentKeys } from "@/entities/agent/api/query-factory";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 
 /**
  * Invalidates all queries for a specific agent

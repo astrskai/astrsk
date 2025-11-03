@@ -10,7 +10,7 @@ import {
   DockviewApi,
 } from "dockview";
 import type { IDockviewPanel, DockviewGroupPanel } from "dockview-core";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import {
   useCardUIStore,
   CardPanelVisibility,

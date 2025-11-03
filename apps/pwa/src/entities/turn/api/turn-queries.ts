@@ -1,4 +1,4 @@
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { TurnService } from "@/app/services/turn-service";
 import { TranslationConfig } from "@/entities/session/domain/translation-config";
 import { Turn } from "@/entities/turn/domain/turn";
