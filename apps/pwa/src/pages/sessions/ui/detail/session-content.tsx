@@ -48,7 +48,7 @@ import {
   fetchTurnOptional,
   turnQueries,
   useUpdateTurn,
-} from "@/app/queries/turn-queries";
+} from "@/entities/turn/api/turn-queries";
 import {
   createMessage,
   executeFlow,

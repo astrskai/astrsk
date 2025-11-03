@@ -3,7 +3,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { sessionQueries } from "@/entities/session/api";
-import { turnQueries } from "@/app/queries/turn-queries";
+import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { Turn } from "@/entities/turn/domain/turn";
 import { generatedImageQueries } from "@/entities/generated-image/api/query-factory";
 import { flowQueries } from "@/entities/flow/api/flow-queries";

@@ -35,7 +35,7 @@ import { fetchDataStoreNode } from "@/entities/data-store-node/api/query-factory
 import { fetchFlow } from "@/entities/flow/api/query-factory";
 import { fetchIfNode } from "@/entities/if-node/api/query-factory";
 import { fetchSession } from "@/entities/session/api";
-import { fetchTurn, fetchTurnOptional } from "@/app/queries/turn-queries";
+import { fetchTurn, fetchTurnOptional } from "@/entities/turn/api/turn-queries";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/shared/stores/app-store";

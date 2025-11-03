@@ -1,5 +1,5 @@
 import { queryClient } from "@/app/queries/query-client";
-import { turnQueries, useTranslateTurn } from "@/app/queries/turn-queries";
+import { turnQueries, useTranslateTurn } from "@/entities/turn/api/turn-queries";
 import { SessionService } from "@/app/services/session-service";
 import { Session } from "@/entities/session/domain/session";
 import { SessionDrizzleMapper } from "@/entities/session/mappers/session-drizzle-mapper";

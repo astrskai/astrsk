@@ -34,7 +34,7 @@ import {
   fetchTurn,
   turnQueries,
   useUpdateTurn,
-} from "@/app/queries/turn-queries";
+} from "@/entities/turn/api/turn-queries";
 
 import { TurnService } from "@/app/services/turn-service";
 

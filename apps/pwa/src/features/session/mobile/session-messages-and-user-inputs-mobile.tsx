@@ -24,7 +24,7 @@ import { TemplateRenderer } from "@/shared/lib/template-renderer";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useCard } from "@/shared/hooks/use-card";
 import { sessionQueries } from "@/entities/session/api";
-import { turnQueries } from "@/app/queries/turn-queries";
+import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { CardService } from "@/app/services/card-service";
 import {
   addMessage,

@@ -1,5 +1,5 @@
 import { sessionQueries } from "@/entities/session/api";
-import { turnQueries } from "@/app/queries/turn-queries";
+import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { Editor } from "@/shared/ui";
 import {
