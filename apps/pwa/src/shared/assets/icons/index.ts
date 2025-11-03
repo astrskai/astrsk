@@ -4,3 +4,4 @@ export { default as IconCardTypeCharacter } from "./card-type-character.svg?reac
 export { default as IconCardTypePlot } from "./card-type-plot.svg?react";
 
 export { default as IconSessions } from "./icon-sessions.svg?react";
+export { default as IconAssets } from "./icon-assets.svg?react";

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { FolderOpen, Settings, LogIn } from "lucide-react";
-import { IconSessions } from "@/shared/assets/icons";
+import { Settings, LogIn } from "lucide-react";
+import { IconSessions, IconAssets } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { UpdaterNew } from "@/widgets/updater-new";
 
@@ -17,7 +17,7 @@ const TOP_NAV_ITEMS = [
   },
   {
     id: "assets",
-    icon: FolderOpen,
+    icon: IconAssets,
     label: "Assets",
     path: "/assets",
   },
