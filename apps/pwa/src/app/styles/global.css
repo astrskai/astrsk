@@ -16,7 +16,21 @@
   /* Special alpha colors - literal values */
   --color-alpha-80: rgba(128, 128, 128, 0.8);
 
+  /* Astrsk renewed colors start */
+
+  /* Foundation colors */
+  /* Blue colors */
   --color-blue-100: #b9e4fb;
+  --color-blue-200: #98d7f9;
+
+  /* Basic colors */
+  --color-black-alternate: #111111;
+  --color-dark-surface: #262626;
+
+  /* Semantic colors */
+  --color-background-primary: var(--color-dark-surface);
+
+  /* Astrsk renewed colors end */
 }
 
 @theme inline {
@@ -146,7 +160,6 @@
 
   /* Color palette - Blue */
   --color-blue-50: var(--color-blue-50);
-  --color-blue-200: var(--color-blue-200);
   --color-blue-300: var(--color-blue-300);
   --color-blue-500: var(--color-blue-500);
   --color-blue-700: var(--color-blue-700);
@@ -222,7 +235,6 @@
   --color-basic-darksurface: #1b1b1b;
 
   --color-blue-50: #e9f6fe;
-  --color-blue-200: #98d7f9;
   --color-blue-300: #68c5f6;
   --color-blue-500: #1ea9f2;
   --color-blue-700: #1578ac;
