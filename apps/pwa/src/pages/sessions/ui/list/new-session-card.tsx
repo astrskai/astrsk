@@ -37,7 +37,7 @@ export function NewSessionCard({ onClick, className }: NewSessionCardProps) {
           <h3 className="text-text-primary group-hover:text-primary text-lg font-semibold transition-colors">
             New Session
           </h3>
-          <p className="text-text-secondary text-sm">Create a new session</p>
+          <p className="text-text-secondary text-sm">Make your own story</p>
         </div>
       </div>
     </div>

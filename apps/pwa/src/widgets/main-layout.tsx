@@ -98,9 +98,10 @@ export function MainLayout({
   }, [defaultInitialized, setIsLoading]);
 
   // Show InstallPwa screen only in production for mobile non-standalone users
-  if (isMobile && !isStandalone && !import.meta.env.DEV) {
-    return <InstallPwa canInstall={canInstall} install={install} />;
-  }
+  // deprecated since we don't have a install screen anymore
+  // if (isMobile && !isStandalone && !import.meta.env.DEV) {
+  //   return <InstallPwa canInstall={canInstall} install={install} />;
+  // }
 
   // Development mode: Log PWA status for debugging
   if (import.meta.env.DEV && isMobile) {
