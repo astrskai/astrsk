@@ -47,8 +47,10 @@ export const useEnhancedGenerationPrompt = ({
 
   // Process turns to extract relevant information
   const processedData = useMemo(() => {
+    // Filter out null/undefined and assert type as Turn
+    // The select function in turnQueries.detail() already converts to Turn domain objects
     const turns = turnsResults
-      .map((result) => result.data)
+      .map((result) => result.data as Turn | null)
       .filter((turn): turn is Turn => turn !== null && turn !== undefined);
 
     if (turns.length === 0) {
