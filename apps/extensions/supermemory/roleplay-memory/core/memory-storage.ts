@@ -28,9 +28,9 @@ import {
 
 /**
  * Build enriched message content from sections
- * Format: Three-section structure with optional world context
+ * Format: Multi-section structure with optional participants and world context
  *
- * @param sections - Message sections (currentTime, message, worldContext)
+ * @param sections - Message sections (currentTime, participants, message, worldContext)
  * @returns Formatted enriched message string
  */
 export function buildEnrichedMessage(
@@ -41,10 +41,15 @@ export function buildEnrichedMessage(
   // Section 1: Current time (required)
   parts.push(sections.currentTime);
 
-  // Section 2: Message (required)
+  // Section 2: Participants (optional - shows who was present)
+  if (sections.participants && sections.participants.trim()) {
+    parts.push(sections.participants);
+  }
+
+  // Section 3: Message (required)
   parts.push(sections.message);
 
-  // Section 3: World context (optional - omit if empty)
+  // Section 4: World context (optional - character-specific context update)
   if (sections.worldContext && sections.worldContext.trim()) {
     parts.push(sections.worldContext);
   }
@@ -56,7 +61,7 @@ export function buildEnrichedMessage(
  * Store raw message in world container
  *
  * Contract: Store unenriched message for World Agent context
- * Format: "Message: {name}: {content} GameTime: {gameTime} {interval}"
+ * Format: "Message: {name}: {content} Scene: {scene}"
  *
  * @param containerTag - World container tag ({sessionId}-world)
  * @param content - Raw message content
@@ -87,8 +92,7 @@ export async function storeWorldMessage(
       !metadata.speaker ||
       !metadata.participants ||
       metadata.participants.length === 0 ||
-      typeof metadata.game_time !== "number" ||
-      !metadata.game_time_interval ||
+      !metadata.scene ||
       !metadata.type
     ) {
       logger.error("[Memory Storage] Invalid world message metadata - missing required fields");
@@ -106,8 +110,7 @@ export async function storeWorldMessage(
       metadata: {
         speaker: metadata.speaker,
         participants: metadata.participants,
-        game_time: metadata.game_time,
-        game_time_interval: metadata.game_time_interval,
+        scene: metadata.scene,
         type: metadata.type,
         ...(metadata.isSpeaker !== undefined && {
           isSpeaker: metadata.isSpeaker,
@@ -129,8 +132,7 @@ export async function storeWorldMessage(
       metadata: {
         speaker: metadata.speaker,
         participants: metadata.participants,
-        game_time: metadata.game_time,
-        game_time_interval: metadata.game_time_interval,
+        scene: metadata.scene,
         type: metadata.type,
       },
       storageId: result.id,
@@ -153,11 +155,11 @@ export async function storeWorldMessage(
 /**
  * Store enriched message in character's private container
  *
- * Contract: Store three-section enriched message
- * Format: Current time + Message + World knowledge (optional)
+ * Contract: Store enriched message with scene context
+ * Format: Scene + Participants + Message + World knowledge (optional)
  *
  * @param containerTag - Character container tag ({sessionId}-{characterId})
- * @param enrichedContent - Enriched message content (three sections)
+ * @param enrichedContent - Enriched message content (multiple sections)
  * @param metadata - Message metadata
  * @returns Storage result with id and success status
  */
@@ -185,8 +187,7 @@ export async function storeCharacterMessage(
       !metadata.speaker ||
       !metadata.participants ||
       metadata.participants.length === 0 ||
-      typeof metadata.game_time !== "number" ||
-      !metadata.game_time_interval ||
+      !metadata.scene ||
       !metadata.type ||
       metadata.isSpeaker === undefined
     ) {
@@ -205,8 +206,7 @@ export async function storeCharacterMessage(
       metadata: {
         speaker: metadata.speaker,
         participants: metadata.participants,
-        game_time: metadata.game_time,
-        game_time_interval: metadata.game_time_interval,
+        scene: metadata.scene,
         type: metadata.type,
         isSpeaker: metadata.isSpeaker,
         ...(metadata.permanent !== undefined && {
@@ -231,8 +231,7 @@ export async function storeCharacterMessage(
         speaker: metadata.speaker,
         participants: metadata.participants,
         isSpeaker: metadata.isSpeaker,
-        game_time: metadata.game_time,
-        game_time_interval: metadata.game_time_interval,
+        scene: metadata.scene,
         type: metadata.type,
       },
       storageId: result.id,
@@ -312,10 +311,7 @@ export async function storeInitContent(
         type: metadata.type,
         permanent: metadata.permanent,
         ...(metadata.lorebookKey && { lorebookKey: metadata.lorebookKey }),
-        ...(metadata.game_time !== undefined && { game_time: metadata.game_time }),
-        ...(metadata.game_time_interval && {
-          game_time_interval: metadata.game_time_interval,
-        }),
+        ...(metadata.scene && { scene: metadata.scene }),
       },
     });
 
@@ -334,8 +330,7 @@ export async function storeInitContent(
         speaker: metadata.speaker || "system",
         participants: metadata.participants || [],
         isSpeaker: false,
-        game_time: metadata.game_time || 0,
-        game_time_interval: metadata.game_time_interval || "Day",
+        scene: metadata.scene || "Unknown Scene",
         type: metadata.type,
       },
       storageId: result.id,
@@ -359,7 +354,7 @@ export async function storeInitContent(
  * Store world state update in world container
  *
  * Contract: Store world events/changes
- * Format: "{description}. GameTime: {game_time} {interval}"
+ * Format: "{description}. Scene: {scene}"
  * Type: 'world_state_update'
  *
  * @param containerTag - World container tag
@@ -389,8 +384,7 @@ export async function storeWorldStateUpdate(
     // Validate metadata
     if (
       metadata.type !== "world_state_update" ||
-      typeof metadata.game_time !== "number" ||
-      !metadata.game_time_interval
+      !metadata.scene
     ) {
       logger.error("[Memory Storage] Invalid world state update metadata");
       return {
@@ -406,8 +400,7 @@ export async function storeWorldStateUpdate(
       content: update,
       metadata: {
         type: metadata.type,
-        game_time: metadata.game_time,
-        game_time_interval: metadata.game_time_interval,
+        scene: metadata.scene,
       },
     });
 

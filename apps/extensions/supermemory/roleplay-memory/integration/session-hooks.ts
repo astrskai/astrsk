@@ -9,7 +9,7 @@
  * Based on quickstart.md integration guide
  */
 
-import { formatMessageWithGameTime } from "../../shared/utils";
+import { formatMessageWithScene } from "../../shared/utils";
 import type {
   SessionInitInput,
   MemoryRecallInput,
@@ -83,8 +83,7 @@ export async function storeScenarioMessages(input: {
         metadata: {
           type: "scenario",
           permanent: true,
-          game_time: 0,
-          game_time_interval: "Day",
+          scene: "Initial Scene",
         },
       }).then((result) => {
         // Record debug event
@@ -94,8 +93,7 @@ export async function storeScenarioMessages(input: {
           metadata: {
             speaker: "system",
             participants,
-            game_time: 0,
-            game_time_interval: "Day",
+            scene: "Initial Scene",
             type: "scenario",
           },
           storageId: result.id,
@@ -112,8 +110,7 @@ export async function storeScenarioMessages(input: {
         storeInitContent(characterContainer, message.content, {
           speaker: characterId,
           participants,
-          game_time: 0,
-          game_time_interval: "Day",
+          scene: "Initial Scene",
           type: "scenario",
           permanent: true,
         })
@@ -192,8 +189,7 @@ export async function initializeRoleplayMemory(
             metadata: {
               type: "scenario",
               permanent: true,
-              game_time: 0,
-              game_time_interval: "Day",
+              scene: "Initial Scene",
             },
           }).then((result) => {
             // Record debug event for world memory
@@ -203,8 +199,7 @@ export async function initializeRoleplayMemory(
               metadata: {
                 speaker: "system",
                 participants: participants,
-                game_time: 0,
-                game_time_interval: "Day",
+                scene: "Initial Scene",
                 type: "scenario",
               },
               storageId: result.id,
@@ -238,8 +233,7 @@ export async function initializeRoleplayMemory(
             storeInitContent(characterContainer, message.content, {
               speaker: character.characterId,
               participants: participants,
-              game_time: 0,
-              game_time_interval: "Day",
+              scene: "Initial Scene",
               type: "scenario",
               permanent: true,
             }),
@@ -300,29 +294,22 @@ export async function recallCharacterMemories(
       sessionId,
       characterId,
       characterName,
-      current_game_time,
-      current_game_time_interval,
+      current_scene,
       recentMessages,
       limit = 20,
       worldContext,
     } = input;
 
-    // Format recent messages
+    // Format recent messages - simply format as "{role}: {content}"
     const formattedMessages = recentMessages.map((msg) =>
-      formatMessageWithGameTime(
-        msg.role,
-        msg.content,
-        msg.game_time,
-        current_game_time_interval,
-      ),
+      `${msg.role}: ${msg.content}`
     );
 
     // Query character's private container
     const containerTag = createCharacterContainer(sessionId, characterId);
     const result = await retrieveCharacterMemories({
       containerTag,
-      current_game_time,
-      current_game_time_interval,
+      current_scene,
       recentMessages: formattedMessages,
       characterName,
       limit,
@@ -480,8 +467,7 @@ export async function distributeMemories(
       speakerCharacterId,
       speakerName,
       message,
-      game_time,
-      game_time_interval,
+      scene,
       dataStore,
       worldAgentOutput,
       getCard,
@@ -489,11 +475,20 @@ export async function distributeMemories(
     } = input;
 
     // Use the provided World Agent output (already executed in session-play-service)
-    const { actualParticipants, worldContextUpdates } = worldAgentOutput;
+    const { characterSceneUpdates, worldContextUpdates } = worldAgentOutput;
+
+    // Derive participants from characterSceneUpdates (characters in the current scene)
+    const selectedScene = dataStore.selectedScene || scene;
+    const actualParticipants = characterSceneUpdates
+      .filter(update => update.scene === selectedScene)
+      .map(update => update.characterName);
+
+    logger.info(`[Memory Distribution] Scene: "${selectedScene}"`);
+    logger.info(`[Memory Distribution] Characters in scene: ${actualParticipants.join(", ")}`);
 
     // dataStore.participants now contains NAMES (not IDs)
     // We need to get character IDs from session.characterCards for creating containers
-    const allParticipantNames = dataStore.participants || [];
+    const allParticipantNames = actualParticipants;
 
     // Build name-to-ID mapping by looking up session's character cards
     const nameToId: Record<string, string> = {};
@@ -565,18 +560,16 @@ export async function distributeMemories(
 
     // Store raw message in world container
     const worldContainer = createWorldContainer(sessionId);
-    const worldMessageContent = formatMessageWithGameTime(
+    const worldMessageContent = formatMessageWithScene(
       speakerName,
       message,
-      game_time,
-      game_time_interval,
+      selectedScene,
     );
 
     const worldStoreResult = await storeWorldMessage(worldContainer, worldMessageContent, {
       speaker: speakerCharacterId,
       participants: participantIds,
-      game_time,
-      game_time_interval,
+      scene: selectedScene,
       type: "message",
     });
 
@@ -613,8 +606,14 @@ export async function distributeMemories(
 
     const distributionPromises = participantIds.map((participantId) => {
       // Build enriched message sections
-      const currentTimeSection = `###Current time###\nGameTime: ${game_time} ${game_time_interval}`;
-      // For character containers, use message WITHOUT embedded game time (since we have separate ###Current time### section)
+      const currentTimeSection = `###Scene###\n${selectedScene}`;
+
+      // Add participants section so LLM knows who was present during this message
+      const participantsSection = actualParticipants.length > 0
+        ? `###Participants###\n${actualParticipants.join(", ")}`
+        : undefined;
+
+      // For character containers, use message WITHOUT embedded scene (since we have separate ###Scene### section)
       const characterMessageContent = `Message: ${speakerName}: ${message}`;
       const messageSection = `###Message###\n${characterMessageContent}`;
 
@@ -632,6 +631,7 @@ export async function distributeMemories(
       // Build enriched message
       const enrichedContent = buildEnrichedMessage({
         currentTime: currentTimeSection,
+        participants: participantsSection,
         message: messageSection,
         worldContext: worldContextSection,
       });
@@ -654,8 +654,7 @@ export async function distributeMemories(
         speaker: speakerCharacterId,
         participants: participantIds,
         isSpeaker: participantId === speakerCharacterId,
-        game_time,
-        game_time_interval,
+        scene: selectedScene,
         type: "message",
       }).then(result => ({ participantId, result }));
     });

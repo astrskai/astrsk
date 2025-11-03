@@ -326,17 +326,15 @@ export class SupermemoryExtension implements IExtension {
       const recentMessages = lastHistoryItem ? [{
         role: lastHistoryItem.char_id ? "assistant" : "user",
         content: lastHistoryItem.content,
-        game_time: 0, // Not available in context, but not critical for query context
       }] : [];
 
-      // Get current game time and world context from last turn in database
+      // Get current scene and world context from last turn in database
       // We only need the LAST turn to get current state, not all history
       const turnHistory = await this.client.api.getTurnHistory(sessionId, { limit: 1 });
       const lastTurn = Array.isArray(turnHistory) && turnHistory.length > 0
         ? turnHistory[turnHistory.length - 1]
         : null;
-      const current_game_time = lastTurn?.dataStore?.find((f: DataStoreSavedField) => f.name === 'game_time')?.value || 0;
-      const current_game_time_interval = lastTurn?.dataStore?.find((f: DataStoreSavedField) => f.name === 'game_time_interval')?.value || "Day";
+      const current_scene = lastTurn?.dataStore?.find((f: DataStoreSavedField) => f.name === 'selected_scene')?.value || "Unknown Scene";
       const worldContext = lastTurn?.dataStore?.find((f: DataStoreSavedField) => f.name === 'world_context')?.value as string || "";
 
       // Recall memories ONLY for the speaker (not all characters in session)
@@ -346,8 +344,7 @@ export class SupermemoryExtension implements IExtension {
           sessionId,
           characterId: speakerId,
           characterName: speakerName,
-          current_game_time: Number(current_game_time),
-          current_game_time_interval: String(current_game_time_interval),
+          current_scene: String(current_scene),
           recentMessages,
           limit: 20,
           worldContext,
@@ -427,6 +424,7 @@ export class SupermemoryExtension implements IExtension {
       // Import distribution function
       const { distributeMemories } = await import("./roleplay-memory/integration/session-hooks");
       const { executeWorldAgent } = await import("./roleplay-memory/core/world-agent");
+      const { executeSpaceTimeAgent } = await import("./roleplay-memory/core/space-time-agent");
 
       const sessionId = session.id.toString();
       const speakerCharacterId = turn.characterCardId?.toString() || "user";
@@ -439,36 +437,151 @@ export class SupermemoryExtension implements IExtension {
         console.log("🧠 [Supermemory Extension] Initialized empty dataStore for turn");
       }
       const dataStore = turn.dataStore;
-      const gameTimeField = dataStore.find((f: DataStoreSavedField) => f.name === 'game_time');
-      const gameTimeIntervalField = dataStore.find((f: DataStoreSavedField) => f.name === 'game_time_interval');
-      const game_time = gameTimeField?.value ? Number(gameTimeField.value) : 0;
-      const game_time_interval = (gameTimeIntervalField?.value as string) || "Day";
 
-      // Get recent turn history for World Agent context
+      // Get current scene pool from dataStore (inherits from previous turn)
+      const scenePoolField = dataStore.find((f: DataStoreSavedField) => f.name === 'scene_pool');
+      const currentScenePool: string[] = scenePoolField?.value
+        ? JSON.parse(scenePoolField.value as string)
+        : [];
+
+      // Get recent turn history for agent context
       const turnHistory = await this.client.api.getTurnHistory(sessionId, { limit: 5 });
       const recentMessages = Array.isArray(turnHistory)
         ? turnHistory.slice(-5).map((t: any) => ({
-            role: t.characterCardId ? "assistant" : "user",
+            role: (t.characterCardId ? "assistant" : "user") as "assistant" | "user",
             content: t.content,
-            game_time: t.dataStore?.find((f: DataStoreSavedField) => f.name === 'game_time')?.value || 0,
           }))
         : [];
 
-      // Get all character IDs for participant mapping
-      // const characterCards = session.characterCards.map(c => c.id.toString());
+      // STEP 1: Execute Space-Time Agent to determine scene
+      console.log(`🌍 [Supermemory Extension] Executing Space-Time Agent...`);
 
-      // Execute World Agent to detect participants and extract context
+      // Create adapter for Space-Time Agent's callAI signature
+      const spaceTimeCallAI = async (params: {
+        model: string;
+        messages: Array<{ role: string; content: string }>;
+        response_format?: { type: string; schema: any };
+      }) => {
+        // Convert to World Agent's callAI signature
+        const userMessage = params.messages.find(m => m.role === 'user');
+        if (!userMessage) throw new Error('No user message found');
+
+        // Convert raw model name to provider-prefixed format if needed
+        const modelId = params.model.includes(':')
+          ? params.model
+          : `anthropic:${params.model}`;
+
+        // Extension client returns { object: ... }, but Space-Time Agent expects raw object
+        const result = await this.client!.api.callAI(userMessage.content, {
+          modelId,
+          schema: params.response_format?.schema,
+          sessionId,
+          feature: 'space-time-agent',
+        });
+
+        // Unwrap the object
+        return result.object || result;
+      };
+
+      const spaceTimeOutput = await executeSpaceTimeAgent(
+        {
+          generatedMessage: message,
+          recentMessages,
+          scenePool: currentScenePool,
+          speakerName,
+        },
+        spaceTimeCallAI
+      );
+
+      // Update scene pool based on Space-Time Agent output
+      let updatedScenePool = [...currentScenePool];
+      const selectedScene = spaceTimeOutput.scene;
+
+      if (spaceTimeOutput.action === "new") {
+        // New scene - add to pool
+        console.log(`🆕 [Supermemory Extension] Creating new scene: "${selectedScene}"`);
+        updatedScenePool.push(selectedScene);
+
+        // Keep only last 20 scenes (FIFO)
+        if (updatedScenePool.length > 20) {
+          updatedScenePool = updatedScenePool.slice(-20);
+          console.log(`🗑️ [Supermemory Extension] Scene pool full, removed oldest scene`);
+        }
+      } else {
+        console.log(`✅ [Supermemory Extension] Selected existing scene: "${selectedScene}"`);
+      }
+
+      // Get character_scenes from dataStore (will be updated by World Agent)
+      const characterScenesField = dataStore.find((f: DataStoreSavedField) => f.name === 'character_scenes');
+      const characterScenes = characterScenesField?.value
+        ? JSON.parse(characterScenesField.value as string)
+        : {};
+
+      // Get world_context from dataStore (accumulated context from previous turns)
+      const worldContextField = dataStore.find((f: DataStoreSavedField) => f.name === 'world_context');
+      const currentWorldContext = (worldContextField?.value as string) || "";
+      if (currentWorldContext) {
+        console.log(`📚 [Supermemory Extension] Found accumulated world context (${currentWorldContext.length} chars)`);
+      }
+
+      // Get all session character names (includes NPCs added by NPC extension)
+      // IMPORTANT: Fetch fresh session to get NPCs added by NPC extension
+      // The session object passed to this hook is stale (from before NPC extension ran)
+      const allSessionCharacterNames: string[] = [];
+
+      const freshSessionResult = await this.client.api.getSession(sessionId);
+      const freshSession = freshSessionResult.isSuccess ? freshSessionResult.getValue() : session;
+
+      console.log(`📋 [Supermemory Extension] Fetched fresh session data`);
+      console.log(`   User card ID: ${freshSession.userCharacterCardId}`);
+      console.log(`   AI card IDs (${freshSession.aiCharacterCardIds?.length || 0}): ${freshSession.aiCharacterCardIds?.join(", ") || "none"}`);
+
+      // Add user character if exists
+      if (freshSession.userCharacterCardId) {
+        try {
+          const userCardResult = await this.client.api.getCard(freshSession.userCharacterCardId);
+          if (userCardResult.isSuccess) {
+            const userCard = userCardResult.getValue();
+            const userName = userCard.name || userCard.props?.name || "User";
+            allSessionCharacterNames.push(userName);
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch user card`);
+        }
+      }
+
+      // Add all AI characters (includes NPCs)
+      const aiCardIds = freshSession.aiCharacterCardIds || [];
+      for (const cardId of aiCardIds) {
+        try {
+          const cardResult = await this.client.api.getCard(cardId);
+          if (cardResult.isSuccess) {
+            const card = cardResult.getValue();
+            const name = card.name || card.props?.name || "Unknown";
+            allSessionCharacterNames.push(name);
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch character card`);
+        }
+      }
+
+      console.log(`   All session characters (${allSessionCharacterNames.length} total): ${allSessionCharacterNames.join(", ")}`);
+
+      // STEP 2: Execute World Agent to assign character_scenes and detect participants
+      console.log(`🌍 [Supermemory Extension] Executing World Agent...`);
+      console.log(`   Input selectedScene: "${selectedScene}"`);
+      console.log(`   Speaker: ${speakerName}`);
+
       const worldAgentOutput = await executeWorldAgent(
         {
           generatedMessage: message,
           recentMessages,
           dataStore: {
             sessionId,
-            currentScene: "",
-            participants: [],
-            game_time,
-            game_time_interval,
-            worldContext: "", // TODO: Get from session dataStore if exists
+            selectedScene,
+            characterScenes,
+            participants: allSessionCharacterNames, // Pass ALL session characters
+            worldContext: currentWorldContext, // Accumulated context from previous turns
           } as any,
           speakerCharacterId,
           speakerName,
@@ -480,20 +593,35 @@ export class SupermemoryExtension implements IExtension {
         this.client.api.callAI.bind(this.client.api)
       );
 
+      console.log(`   World Agent returned ${worldAgentOutput.characterSceneUpdates.length} scene updates:`,
+        worldAgentOutput.characterSceneUpdates.map(u => `${u.characterName} -> ${u.scene}`));
+
+      // Update character_scenes from World Agent output
+      const updatedCharacterScenes = { ...characterScenes };
+      for (const update of worldAgentOutput.characterSceneUpdates) {
+        updatedCharacterScenes[update.characterName] = update.scene;
+      }
+
+      // Derive participants from characterSceneUpdates (characters in selectedScene)
+      const actualParticipants = Object.entries(updatedCharacterScenes)
+        .filter(([_, scene]) => scene === selectedScene)
+        .map(([name, _]) => name);
+
+      console.log(`👥 [Supermemory Extension] Participants in scene "${selectedScene}":`, actualParticipants);
+
       // Distribute memories to containers and capture memory IDs
       const memoryIds = await distributeMemories({
         sessionId,
         speakerCharacterId,
         speakerName,
         message,
-        game_time,
-        game_time_interval,
+        scene: selectedScene,
         dataStore: {
           sessionId,
-          currentScene: "",
-          game_time,
-          game_time_interval,
-          participants: worldAgentOutput.actualParticipants || [],
+          selectedScene,
+          scene_pool: updatedScenePool,
+          characterScenes: updatedCharacterScenes,
+          participants: actualParticipants,
           worldContext: worldAgentOutput.worldContextUpdates?.[0]?.contextUpdate || "",
         } as any,
         worldAgentOutput,
@@ -505,7 +633,7 @@ export class SupermemoryExtension implements IExtension {
       console.log(`🧠 [Supermemory Extension] Memory stored for turn ${turn.id.toString()}`);
       console.log(`   Memory IDs (${memoryIds.length}):`, memoryIds);
 
-      // Update turn.dataStore with World Agent outputs
+      // Update turn.dataStore with Space-Time and World Agent outputs
       let dataStoreUpdated = false;
 
       // 1. Save memory IDs for future update/delete operations
@@ -524,38 +652,65 @@ export class SupermemoryExtension implements IExtension {
         dataStoreUpdated = true;
       }
 
-      // 2. Update game_time if World Agent detected time passing
-      if (worldAgentOutput.delta_time > 0) {
-        const newGameTime = game_time + worldAgentOutput.delta_time;
-        const gameTimeField = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'game_time');
-        if (gameTimeField) {
-          gameTimeField.value = String(newGameTime);
-        } else {
-          turn.dataStore.push({
-            id: 'game_time',
-            name: 'game_time',
-            type: 'number',
-            value: String(newGameTime),
-          });
-        }
-        console.log(`   ⏰ Updated game_time: ${game_time} → ${newGameTime}`);
-        dataStoreUpdated = true;
+      // 2. Update scene_pool from Space-Time Agent
+      const scenePoolFieldUpdate = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'scene_pool');
+      if (scenePoolFieldUpdate) {
+        scenePoolFieldUpdate.value = JSON.stringify(updatedScenePool);
+      } else {
+        turn.dataStore.push({
+          id: 'scene_pool',
+          name: 'scene_pool',
+          type: 'string',
+          value: JSON.stringify(updatedScenePool),
+        });
       }
+      console.log(`🎬 Updated scene_pool (${updatedScenePool.length} scenes)`);
+      dataStoreUpdated = true;
 
-      // 3. Update participants detected by World Agent
-      if (worldAgentOutput.actualParticipants && worldAgentOutput.actualParticipants.length > 0) {
+      // 3. Update selected_scene from Space-Time Agent
+      const selectedSceneField = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'selected_scene');
+      if (selectedSceneField) {
+        selectedSceneField.value = selectedScene;
+      } else {
+        turn.dataStore.push({
+          id: 'selected_scene',
+          name: 'selected_scene',
+          type: 'string',
+          value: selectedScene,
+        });
+      }
+      console.log(`📍 Updated selected_scene: "${selectedScene}"`);
+      dataStoreUpdated = true;
+
+      // 4. Update character_scenes from World Agent
+      const characterScenesFieldUpdate = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'character_scenes');
+      if (characterScenesFieldUpdate) {
+        characterScenesFieldUpdate.value = JSON.stringify(updatedCharacterScenes);
+      } else {
+        turn.dataStore.push({
+          id: 'character_scenes',
+          name: 'character_scenes',
+          type: 'string',
+          value: JSON.stringify(updatedCharacterScenes),
+        });
+      }
+      console.log(`🎭 Updated character_scenes:`, updatedCharacterScenes);
+      dataStoreUpdated = true;
+
+      // 5. Update participants derived from characterScenes
+      if (actualParticipants.length > 0) {
         const participantsField = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'participants');
         if (participantsField) {
-          participantsField.value = JSON.stringify(worldAgentOutput.actualParticipants);
+          participantsField.value = JSON.stringify(actualParticipants);
         } else {
           turn.dataStore.push({
             id: 'participants',
             name: 'participants',
             type: 'string',
-            value: JSON.stringify(worldAgentOutput.actualParticipants),
+            value: JSON.stringify(actualParticipants),
           });
         }
-        console.log(`   👥 Updated participants:`, worldAgentOutput.actualParticipants);
+        console.log(`   👥 Updated participants:`, actualParticipants);
         dataStoreUpdated = true;
       }
 
@@ -671,8 +826,7 @@ export class SupermemoryExtension implements IExtension {
       const { updateMemory } = await import("./roleplay-memory/integration/session-hooks");
 
       // Extract metadata from dataStore
-      const gameTime = Number(dataStore.find((f: DataStoreSavedField) => f.name === 'game_time')?.value || 0);
-      const gameTimeInterval = dataStore.find((f: DataStoreSavedField) => f.name === 'game_time_interval')?.value || "Day";
+      const selectedScene = dataStore.find((f: DataStoreSavedField) => f.name === 'selected_scene')?.value || "Unknown Scene";
       const participantsField = dataStore.find((f: DataStoreSavedField) => f.name === 'participants')?.value;
 
       // Parse participants
@@ -685,14 +839,13 @@ export class SupermemoryExtension implements IExtension {
         }
       }
 
-      console.log(`   Metadata: game_time=${gameTime}, participants=${participants.length}, content_length=${turn.content?.length || 0}`);
+      console.log(`   Metadata: scene="${selectedScene}", participants=${participants.length}, content_length=${turn.content?.length || 0}`);
 
       // Update each memory with new content and metadata
       const updatePromises = memoryIds.map(async (memoryId: string) => {
         try {
           const metadata: any = {
-            game_time: gameTime,
-            game_time_interval: gameTimeInterval as string,
+            scene: selectedScene,
           };
 
           if (participants.length > 0) {

@@ -121,12 +121,21 @@ export class LorebookExtension implements IExtension {
         console.log(`🔒 [Lorebook Extension] Blocked UI for message ${messageId}`);
       }
 
-      // Get all character cards from session
-      const characterCards = session.allCards.filter((c: any) => c.type === "character");
+      // IMPORTANT: Fetch fresh session to get NPCs added by NPC extension
+      // The session object passed to this hook is stale (from before NPC extension ran)
+      const freshSessionResult = await this.client!.api.getSession(sessionId);
+      const freshSession = freshSessionResult.isSuccess ? freshSessionResult.getValue() : session;
+
+      console.log("📚 [Lorebook Extension] Fetched fresh session data");
+      console.log(`   Total cards: ${freshSession.allCards?.length || 0}`);
+
+      // Get all character cards from FRESH session
+      const characterCards = freshSession.allCards.filter((c: any) => c.type === "character");
 
       console.log("📚 [Lorebook Extension] Session characters:", {
         sessionId,
         characterCount: characterCards.length,
+        characterNames: characterCards.map((c: any) => c.name || c.props?.name).join(", "),
       });
 
       // Build character lorebook context

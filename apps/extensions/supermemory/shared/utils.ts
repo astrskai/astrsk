@@ -4,21 +4,20 @@
  */
 
 /**
- * Format a message with embedded game time
+ * Format a message with embedded scene
  * @param characterName - Character who spoke
  * @param content - Message content
- * @param game_time - Current game time
- * @param interval - Time interval unit (default: "Day")
+ * @param scene - Current scene (e.g., "Classroom Morning Day 1")
  * @returns Formatted message string
  */
-export function formatMessageWithGameTime(
+export function formatMessageWithScene(
   characterName: string,
   content: string,
-  game_time: number,
-  interval: string = 'Day'
+  scene: string
 ): string {
-  return `Message: ${characterName}: ${content} GameTime: ${game_time} ${interval}`
+  return `Message: ${characterName}: ${content} Scene: ${scene}`
 }
+
 
 /**
  * Build a container tag from session ID and resource ID

@@ -25,7 +25,7 @@ type MemoryResultItem = {
   memory?: string;
   content?: string;
   id?: string; // Document ID for v3 GET
-  metadata?: { game_time?: number; type?: string; participants?: string[] };
+  metadata?: { scene?: string; type?: string; participants?: string[] };
 };
 
 type MemorySearchResponse = {
@@ -33,30 +33,28 @@ type MemorySearchResponse = {
 };
 
 /**
- * Format character memory query with current time and recent messages
+ * Format character memory query with current scene and recent messages
  *
  * Contract: Query format with three sections
- * 1. Current time: "###Current time###\nGameTime: {game_time} {interval}"
+ * 1. Current scene: "###Scene###\n{scene}"
  * 2. Recent messages: "###Recent messages###\n{formatted messages}"
  * 3. Query instruction: "What are relevant memories..."
  *
- * @param game_time - Current game time
- * @param interval - Time interval (default: "Day")
+ * @param currentScene - Current scene (e.g., "Classroom Morning Day 1")
  * @param recentMessages - Recent message strings
  * @param characterName - Character name for context
  * @returns Formatted query string
  */
 export function formatCharacterQuery(
-  game_time: number,
-  interval: string,
+  currentScene: string,
   recentMessages: string[],
   characterName: string,
 ): string {
   const parts: string[] = [];
 
-  // Section 1: Current time
-  parts.push("###Current time###");
-  parts.push(`GameTime: ${game_time} ${interval}`);
+  // Section 1: Current scene
+  parts.push("###Scene###");
+  parts.push(currentScene);
   parts.push("");
 
   // Section 2: Recent messages
@@ -98,10 +96,9 @@ export async function retrieveCharacterMemories(
       return { memories: [], count: 0 };
     }
 
-    // Format query with current time and recent messages
+    // Format query with current scene and recent messages
     const query = formatCharacterQuery(
-      input.current_game_time,
-      input.current_game_time_interval,
+      input.current_scene,
       input.recentMessages,
       input.characterName,
     );
@@ -289,7 +286,7 @@ export async function retrieveWorldMemories(
 
     // Extract metadata if requested (from v4 results)
     const metadata = v4Typed.results.map((r) => ({
-      game_time: r.metadata?.game_time ?? 0,
+      scene: r.metadata?.scene ?? '',
       type: r.metadata?.type ?? '',
       participants: r.metadata?.participants ?? [],
     }));

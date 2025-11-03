@@ -31,8 +31,7 @@ export interface MemoryMetadata {
   // Required fields
   speaker: string           // Character ID who spoke/acted (or 'system' for world events)
   participants: string[]    // Character IDs who participated (or all characters for world events)
-  game_time: number         // Temporal marker (numeric for filtering)
-  game_time_interval: string // Interval unit (default: "Day", can be customized later)
+  scene: string             // Scene name (e.g., "Classroom Morning Day 1")
   type: MemoryType         // Memory category
 
   // Optional fields (context-dependent)
@@ -65,7 +64,6 @@ export interface WorldAgentInput {
   recentMessages: Array<{
     role: string // Character name or ID
     content: string
-    game_time: number
   }>
 
   // Session State
@@ -80,17 +78,17 @@ export interface WorldAgentInput {
 }
 
 export interface WorldAgentOutput {
-  // Participant Detection (using character NAMES, not IDs)
-  actualParticipants: string[] // Non-empty array of character NAMES (e.g., ["Yui", "Ren"])
-
-  // World Context Updates (per character)
+  // World Context Updates (per character in the current scene)
   worldContextUpdates: Array<{
     characterName: string // Character name (e.g., "Yui", "Ren")
     contextUpdate: string // Brief context update
   }>
 
-  // Time Progression
-  delta_time: number // How much time passed (0 = no time change, 1 = one interval, etc.)
+  // Character Scene Assignments (determines participants)
+  characterSceneUpdates: Array<{
+    characterName: string // Character name (e.g., "Alice", "Bob")
+    scene: string // Scene where this character currently is (e.g., "Classroom Morning Day 1", "Park Afternoon Day 1", or "none" if unknown)
+  }>
 
   // Optional: Future optimization
   confidence?: number // 0-1 scale for detection confidence
@@ -102,6 +100,7 @@ export interface WorldAgentOutput {
 
 export interface EnrichedMessageSections {
   currentTime: string // "###Current time###\nGameTime: {gameTime} {interval}"
+  participants?: string // "###Participants###\n{name1}, {name2}, {name3}"
   message: string // "###Message###\nMessage: {char}: {content} GameTime: {gameTime} {interval}"
   worldContext?: string // "###World context###\n{context}"
 }
@@ -118,9 +117,8 @@ export interface CharacterMemoryQueryInput {
   // Container
   containerTag: string // Format: {sessionId}::{characterId}
 
-  // Temporal Context
-  current_game_time: number
-  current_game_time_interval: string // Default: "Day"
+  // Scene Context
+  current_scene: string // Current scene (e.g., "Classroom Morning Day 1")
 
   // Conversation Context
   recentMessages: string[] // Last 1-3 messages (formatted)
@@ -133,10 +131,7 @@ export interface CharacterMemoryQueryInput {
 
   // Optional Filters
   filters?: {
-    game_time?: {
-      gte?: number
-      lte?: number
-    }
+    scene?: string // Scene filter (exact match)
     type?: string // Exact match ('message', 'lorebook', etc.)
   }
 }
@@ -153,10 +148,7 @@ export interface WorldMemoryQueryInput {
 
   // Optional Filters
   filters?: {
-    game_time?: {
-      gte?: number
-      lte?: number
-    }
+    scene?: string // Scene filter (exact match)
     type?: string
   }
 }
@@ -171,7 +163,7 @@ export interface WorldMemoryQueryOutput {
   memories: string[]
   count: number
   metadata?: Array<{
-    game_time: number
+    scene: string
     type: string
     participants?: string[]
   }>
@@ -184,10 +176,12 @@ export interface WorldMemoryQueryOutput {
 export interface SessionDataStore {
   // Required State
   sessionId: string
-  currentScene: string // Location/scene name
+  selectedScene: string // Current scene (e.g., "Classroom Morning Day 1")
   participants: string[] // All character NAMES in session (e.g., ["Yui", "Ren"])
-  game_time: number // Current game time (numeric)
-  game_time_interval: string // Time interval unit (default: "Day")
+
+  // Scene System (NEW - replaces game_time)
+  scene_pool?: string[] // Array of recent scenes (max 20, FIFO)
+  characterScenes?: Record<string, string> // Map of character name → scene
 
   // Optional State
   timeOfDay?: string // Morning, evening, night
@@ -324,12 +318,10 @@ export interface MemoryRecallInput {
   sessionId: string
   characterId: string
   characterName: string
-  current_game_time: number
-  current_game_time_interval: string
+  current_scene: string
   recentMessages: Array<{
     role: string
     content: string
-    game_time: number
   }>
   limit?: number
   worldContext?: string // Accumulated world context from dataStore
@@ -342,8 +334,7 @@ export interface MemoryDistributionInput {
   speakerCharacterId: string
   speakerName: string
   message: string
-  game_time: number
-  game_time_interval: string
+  scene: string
   dataStore: SessionDataStore
   worldMemoryContext?: string
   // World Agent output (already executed)

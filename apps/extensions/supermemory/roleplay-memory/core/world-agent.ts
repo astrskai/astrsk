@@ -35,14 +35,9 @@ const DEFAULT_WORLD_AGENT_MODEL = "openai-compatible:google/gemini-2.5-flash";
 /**
  * Zod schema for World Agent structured output
  * Note: Uses character NAMES (not IDs) for better LLM understanding
+ * Participants are derived from characterSceneUpdates (characters in selectedScene)
  */
 const worldAgentSchema = z.object({
-  actualParticipants: z
-    .array(z.string())
-    .min(1)
-    .describe(
-      'Character NAMES who participated in this conversation (e.g., ["Yui", "Ren"])',
-    ),
   worldContextUpdates: z
     .array(
       z.object({
@@ -57,18 +52,33 @@ const worldAgentSchema = z.object({
       }),
     )
     .describe(
-      "Brief context updates for each participant describing what they learned or experienced",
+      "Brief context updates for each character in the current scene describing what they learned or experienced",
     ),
-  delta_time: z
-    .number()
+  characterSceneUpdates: z
+    .array(
+      z.object({
+        characterName: z
+          .string()
+          .describe('Character name (e.g., "Alice", "Bob")'),
+        scene: z
+          .string()
+          .describe(
+            'Scene where this character currently is. Use selectedScene if in current scene, different scene if moved elsewhere, or "none" if location unknown',
+          ),
+      }),
+    )
     .describe(
-      "How much time passed: 0 = no time change, 1 = one time interval passed, 2 = two intervals, etc.",
+      "Array of character scene assignments for ALL characters mentioned in recent messages. " +
+      "Include speaker and any characters they interact with or mention. " +
+      "Use the exact selectedScene name if they're in the current scene. " +
+      "Use a different scene name if they explicitly moved elsewhere. " +
+      "Use 'none' if character is mentioned but location is unknown.",
     ),
 });
 
 /**
  * World Agent prompt template with few-shot examples
- * Based on research.md Section 5: World Agent Prompt Engineering
+ * Focused on assigning characters to scenes and extracting world context
  */
 function buildWorldAgentPrompt(input: WorldAgentInput): string {
   const {
@@ -77,7 +87,6 @@ function buildWorldAgentPrompt(input: WorldAgentInput): string {
     dataStore,
     speakerCharacterId,
     speakerName,
-    characterIdToName,
   } = input;
 
   // Format recent messages with character names (if available)
@@ -92,7 +101,7 @@ function buildWorldAgentPrompt(input: WorldAgentInput): string {
                 : msg.role === "assistant"
                   ? speakerName
                   : msg.role;
-            return `${speaker}: ${msg.content} (GameTime: ${msg.game_time})`;
+            return `${speaker}: ${msg.content}`;
           })
           .join("\n")
       : "No recent messages";
@@ -108,25 +117,18 @@ function buildWorldAgentPrompt(input: WorldAgentInput): string {
   const worldContextText =
     dataStore.worldContext || "No accumulated world context yet";
 
-  // Format recent game time changes (last 3 messages with their times)
-  const recentTimeChanges =
-    recentMessages.length > 0
-      ? recentMessages
-          .map((msg, i) => {
-            const timeChange = i > 0 && msg.game_time !== recentMessages[i - 1].game_time
-              ? ` (TIME CHANGED: ${recentMessages[i - 1].game_time} → ${msg.game_time})`
-              : "";
-            return `- Message ${i + 1}: GameTime ${msg.game_time}${timeChange}`;
-          })
-          .join("\n")
-      : "- No recent time changes";
+  // Format current character scenes
+  const characterScenesText = dataStore.characterScenes
+    ? Object.entries(dataStore.characterScenes)
+        .map(([name, scene]) => `- ${name}: ${scene}`)
+        .join("\n")
+    : "No character scenes yet";
 
   return `You are the World Agent for a multi-character roleplay session. Your task is to:
-1. Analyze the message and determine which characters participated in this conversation
+1. Assign characters to scenes based on the conversation
 2. Update character-specific world context based on what happened
-3. Determine if time has passed (delta_time)
 
-IMPORTANT: Look at recent messages to understand the conversation context. If the previous message was from another character, and the current message is a response, BOTH characters are participants.
+IMPORTANT: Look at recent messages to understand which characters are participating and where they are.
 
 ## Context
 ### World Memory (recent events)
@@ -135,148 +137,139 @@ ${worldMemoryContext}
 ### Accumulated World Context (evolving character context)
 ${worldContextText}
 
-### Recent Messages (for conversation context only)
+### Recent Messages (for conversation context)
 ${recentMessagesText}
 
-### Recent Game Time History
-${recentTimeChanges}
-
-### Generated Message (⚠️ ANALYZE ONLY THIS MESSAGE FOR TIME PROGRESSION ⚠️)
+### Generated Message
 Speaker: ${speakerName} (ID: ${speakerCharacterId})
 Content: ${generatedMessage}
 
 ### Session Data
-- Current Scene: ${dataStore.currentScene}
-- All Participants: ${allParticipantsText}
+- Current Scene: ${dataStore.selectedScene}
+- All Known Participants: ${allParticipantsText}
 - Total Participant Count: ${dataStore.participants?.length || 0}
-- **Current Game Time: ${dataStore.game_time} ${dataStore.game_time_interval}**
+
+### Current Character Scenes
+${characterScenesText}
 
 ## Task
 Determine:
-1. actualParticipants: Which characters were ACTUALLY in this conversation? (not just mentioned)
-   - **SPECIAL CASE: If Total Participant Count = 2, and the message contains dialogue or direct response, BOTH participants are active in the conversation**
-   - If someone is speaking TO another character (direct address, dialogue), both are participants
-   - If someone is speaking ABOUT another character (mentioning them), only speaker is participant
-   - Use character NAMES (not IDs) - e.g., ["Alice", "Bob"]
-   - Speaker is ALWAYS included as minimum
-2. worldContextUpdates: Brief context updates for each participant (1-2 sentences)
-   - Each participant gets a brief summary of what happened from their perspective
+1. characterSceneUpdates: Which scene is each character in?
+   - **SPECIAL CASE: If Total Participant Count = 2, and the message contains dialogue or direct response, BOTH participants are in the current scene**
+   - If someone is speaking TO another character (direct address, dialogue), both are in the current scene
+   - If someone is speaking ABOUT another character (just mentioning them), only speaker is in current scene
+   - Use character NAMES (not IDs) - e.g., "Alice", "Bob"
+   - Use the exact selectedScene name for characters in the current scene
+   - Use a different scene name if a character explicitly moved elsewhere
+   - Use "none" if character is mentioned but location is unknown
+   - Speaker is ALWAYS included with their scene
+2. worldContextUpdates: Brief context updates for characters in the current scene (1-2 sentences)
+   - Each character in the scene gets a brief summary of what happened from their perspective
    - Use character NAMES (not IDs) - e.g., "Alice", "Bob"
    - Focus on actions, decisions, and relationship changes
    - These updates will accumulate over the session
-3. delta_time: How much time passed?
-   - 0 = no time change (most common - use this unless explicitly stated)
-   - 1 = one ${dataStore.game_time_interval} passed
-   - 2+ = multiple intervals passed
-   - Only set if message explicitly mentions time passing (e.g., "the next day", "3 hours later")
 
 ## Examples
-Example 1 (Two characters talking TO each other):
+Example 1 (Two characters talking in same scene):
 Message: "Alice and I agreed to search for the sword together!"
 Speaker: Bob (ID: bob-id)
-All Participants: Alice (ID: alice-id), Bob (ID: bob-id), Charlie (ID: charlie-id)
+Current Scene: "Tavern Morning Day 1"
+All Participants: Alice, Bob, Charlie
 Output:
 {
-  "actualParticipants": ["Alice", "Bob"],
+  "characterSceneUpdates": [
+    {"characterName": "Alice", "scene": "Tavern Morning Day 1"},
+    {"characterName": "Bob", "scene": "Tavern Morning Day 1"}
+  ],
   "worldContextUpdates": [
     {"characterName": "Alice", "contextUpdate": "You agreed with Bob to search for the Sacred Sword together"},
     {"characterName": "Bob", "contextUpdate": "You agreed with Alice to search for the Sacred Sword"}
-  ],
-  "delta_time": 0
+  ]
 }
 
-Example 2 (Character speaking alone):
+Example 2 (Character moving to different scene):
 Message: "I'm heading to the tavern alone to think."
 Speaker: Charlie (ID: charlie-id)
-All Participants: Alice (ID: alice-id), Bob (ID: bob-id), Charlie (ID: charlie-id)
+Current Scene: "Marketplace Afternoon Day 1"
+All Participants: Alice, Bob, Charlie
 Output:
 {
-  "actualParticipants": ["Charlie"],
+  "characterSceneUpdates": [
+    {"characterName": "Charlie", "scene": "Tavern Afternoon Day 1"}
+  ],
   "worldContextUpdates": [
     {"characterName": "Charlie", "contextUpdate": "You decided to go to the tavern alone to reflect on things"}
-  ],
-  "delta_time": 0
+  ]
 }
 
 Example 3 (Direct dialogue between two characters):
 Message: "Thanks for the compliment! Your observation skills are impressive too."
 Speaker: Yui (ID: yui-id)
-All Participants: Yui (ID: yui-id), Ren (ID: ren-id)
+Current Scene: "Classroom Morning Day 1"
+All Participants: Yui, Ren
 Output:
 {
-  "actualParticipants": ["Yui", "Ren"],
+  "characterSceneUpdates": [
+    {"characterName": "Yui", "scene": "Classroom Morning Day 1"},
+    {"characterName": "Ren", "scene": "Classroom Morning Day 1"}
+  ],
   "worldContextUpdates": [
     {"characterName": "Yui", "contextUpdate": "You thanked Ren for the compliment and complimented their observation skills"},
     {"characterName": "Ren", "contextUpdate": "Yui thanked you for your compliment and acknowledged your observation skills"}
-  ],
-  "delta_time": 0
+  ]
 }
 
-Example 4 (Time progression with multiple characters):
-Message: "The next morning, we all met at the Dragon's Lair as planned."
+Example 4 (Multiple characters meeting at new location):
+Message: "We all met at the Dragon's Lair as planned."
 Speaker: Alice (ID: alice-id)
-All Participants: Alice (ID: alice-id), Bob (ID: bob-id), Charlie (ID: charlie-id)
+Current Scene: "Dragon's Lair Morning Day 2"
+All Participants: Alice, Bob, Charlie
 Output:
 {
-  "actualParticipants": ["Alice", "Bob", "Charlie"],
-  "worldContextUpdates": [
-    {"characterName": "Alice", "contextUpdate": "You met everyone at the Dragon's Lair the next morning as planned"},
-    {"characterName": "Bob", "contextUpdate": "You met Alice and Charlie at the Dragon's Lair the next morning"},
-    {"characterName": "Charlie", "contextUpdate": "You joined Alice and Bob at the Dragon's Lair the next morning"}
+  "characterSceneUpdates": [
+    {"characterName": "Alice", "scene": "Dragon's Lair Morning Day 2"},
+    {"characterName": "Bob", "scene": "Dragon's Lair Morning Day 2"},
+    {"characterName": "Charlie", "scene": "Dragon's Lair Morning Day 2"}
   ],
-  "delta_time": 1
+  "worldContextUpdates": [
+    {"characterName": "Alice", "contextUpdate": "You met everyone at the Dragon's Lair as planned"},
+    {"characterName": "Bob", "contextUpdate": "You met Alice and Charlie at the Dragon's Lair"},
+    {"characterName": "Charlie", "contextUpdate": "You joined Alice and Bob at the Dragon's Lair"}
+  ]
 }
 
-Example 5 (Multiple days passing):
-Message: "Three days passed as we traveled through the desert."
-Speaker: Bob (ID: bob-id)
-All Participants: Alice (ID: alice-id), Bob (ID: bob-id), Charlie (ID: charlie-id)
-Output:
-{
-  "actualParticipants": ["Alice", "Bob", "Charlie"],
-  "worldContextUpdates": [
-    {"characterName": "Alice", "contextUpdate": "You spent three days traveling through the desert with the party"},
-    {"characterName": "Bob", "contextUpdate": "You led the party through three days of desert travel"},
-    {"characterName": "Charlie", "contextUpdate": "You traveled with the group through the desert for three days"}
-  ],
-  "delta_time": 3
-}
-
-Example 6 (NO time progression despite recent time change):
-### Recent Game Time History
-- Message 1: GameTime 5 (TIME CHANGED: 4 → 5)
-- Message 2: GameTime 5
-
-Message: "That's a good observation! I didn't think of it that way."
+Example 5 (Mentioning character not in scene):
+Message: "I wonder where Charlie went. Anyway, let's continue our discussion."
 Speaker: Alice (ID: alice-id)
-All Participants: Alice (ID: alice-id), Bob (ID: bob-id)
-Current Game Time: 5 Day
+Current Scene: "Library Afternoon Day 1"
+All Participants: Alice, Bob, Charlie
 Output:
 {
-  "actualParticipants": ["Alice", "Bob"],
-  "worldContextUpdates": [
-    {"characterName": "Alice", "contextUpdate": "You acknowledged Bob's observation and admitted you hadn't considered that perspective"},
-    {"characterName": "Bob", "contextUpdate": "Alice appreciated your observation and acknowledged it helped her see things differently"}
+  "characterSceneUpdates": [
+    {"characterName": "Alice", "scene": "Library Afternoon Day 1"},
+    {"characterName": "Bob", "scene": "Library Afternoon Day 1"}
   ],
-  "delta_time": 0
+  "worldContextUpdates": [
+    {"characterName": "Alice", "contextUpdate": "You wondered about Charlie's whereabouts and suggested continuing the discussion with Bob"},
+    {"characterName": "Bob", "contextUpdate": "Alice mentioned wondering where Charlie was and suggested you continue your discussion"}
+  ]
 }
-⚠️ IMPORTANT: Even though Recent Game Time History shows time changed from 4→5, THIS message doesn't mention time passing, so delta_time = 0
 
 IMPORTANT:
 - Use exact character NAMES from the participants list (not IDs!)
-- actualParticipants MUST include at least the speaker name
-- worldContextUpdates must have entries for each participant
-- delta_time is 0 unless THE CURRENT MESSAGE EXPLICITLY mentions time passing (ignore past time changes in history)
-- Recent Game Time History is ONLY for context - do NOT increment time based on history alone`;
+- characterSceneUpdates MUST include at least the speaker name with their scene
+- Use the exact selectedScene name when characters are in the current scene
+- worldContextUpdates should only include characters that are actively in the current scene
+- If a character explicitly moves to a new location, use a descriptive scene name for their new location`;
 }
 
 /**
  * Create fallback output when World Agent fails
- * Contract: Always include speaker, preserve previous context if available, no time change
+ * Contract: Always include speaker with their current scene, preserve previous context if available
  */
 function createFallbackOutput(
-  speakerCharacterId: string,
   speakerName: string,
+  currentScene: string,
   previousWorldContext?: string,
 ): WorldAgentOutput {
   // If we have previous world context, preserve it for this character
@@ -298,9 +291,13 @@ function createFallbackOutput(
   }
 
   return {
-    actualParticipants: [speakerName], // Use speaker name
     worldContextUpdates,
-    delta_time: 0,
+    characterSceneUpdates: [
+      {
+        characterName: speakerName,
+        scene: currentScene,
+      }
+    ],
   };
 }
 
@@ -313,22 +310,30 @@ function validateWorldAgentOutput(
 ): output is WorldAgentOutput {
   // Check required fields
   if (!output || typeof output !== "object") return false;
-  if (!Array.isArray(output.actualParticipants)) return false;
   if (!Array.isArray(output.worldContextUpdates)) return false;
-  if (typeof output.delta_time !== "number") return false;
+  if (!Array.isArray(output.characterSceneUpdates)) return false;
 
-  // actualParticipants must be non-empty
-  if (output.actualParticipants.length === 0) return false;
+  // characterSceneUpdates must be non-empty
+  if (output.characterSceneUpdates.length === 0) return false;
 
-  // actualParticipants must include speaker name (case-insensitive, whitespace-trimmed)
+  // characterSceneUpdates must include speaker name (case-insensitive, whitespace-trimmed)
   const normalizedSpeakerName = speakerName.trim().toLowerCase();
-  const normalizedParticipants = output.actualParticipants.map((p: string) =>
-    p.trim().toLowerCase(),
+  const characterNames = output.characterSceneUpdates.map((update: any) =>
+    update.characterName?.trim().toLowerCase(),
   );
-  if (!normalizedParticipants.includes(normalizedSpeakerName)) return false;
+  if (!characterNames.includes(normalizedSpeakerName)) return false;
 
-  // delta_time must be non-negative
-  if (output.delta_time < 0) return false;
+  // Validate structure of characterSceneUpdates
+  for (const update of output.characterSceneUpdates) {
+    if (!update.characterName || typeof update.characterName !== "string") return false;
+    if (!update.scene || typeof update.scene !== "string") return false;
+  }
+
+  // Validate structure of worldContextUpdates
+  for (const update of output.worldContextUpdates) {
+    if (!update.characterName || typeof update.characterName !== "string") return false;
+    if (!update.contextUpdate || typeof update.contextUpdate !== "string") return false;
+  }
 
   return true;
 }
@@ -384,10 +389,16 @@ export async function executeWorldAgent(
           )
         : [];
 
-      const output = {
-        actualParticipants: typedObject.actualParticipants || [], // Character names
+      // Validate characterSceneUpdates array
+      const characterSceneUpdates = Array.isArray(typedObject.characterSceneUpdates)
+        ? typedObject.characterSceneUpdates.filter(
+            (item) => item.characterName && item.scene,
+          )
+        : [];
+
+      const output: WorldAgentOutput = {
         worldContextUpdates,
-        delta_time: typedObject.delta_time || 0,
+        characterSceneUpdates,
       };
 
       // Validate output structure
@@ -397,23 +408,19 @@ export async function executeWorldAgent(
         // Log validation failure details
         logger.warn("[World Agent] Validation failed:", {
           speakerName: input.speakerName,
-          actualParticipants: output.actualParticipants,
-          worldContextUpdates: output.worldContextUpdates,
-          delta_time: output.delta_time,
           rawLLMOutput: typedObject,
         });
 
         const fallbackOutput = createFallbackOutput(
-          input.speakerCharacterId,
           input.speakerName,
+          input.dataStore.selectedScene,
           input.dataStore.worldContext,
         );
 
         // Record debug event - World Agent output (fallback)
         recordWorldAgentOutput({
-          actualParticipants: fallbackOutput.actualParticipants,
-          worldContextUpdates: fallbackOutput.worldContextUpdates,
-          delta_time: fallbackOutput.delta_time,
+          characterSceneUpdates: fallbackOutput.characterSceneUpdates as Array<{characterName: string; scene: string}>,
+          worldContextUpdates: fallbackOutput.worldContextUpdates as Array<{characterName: string; contextUpdate: string}>,
           rawOutput: {
             fallback: true,
             reason: "validation_failed",
@@ -426,9 +433,8 @@ export async function executeWorldAgent(
 
       // Record debug event - World Agent output (success)
       recordWorldAgentOutput({
-        actualParticipants: output.actualParticipants,
-        worldContextUpdates: output.worldContextUpdates,
-        delta_time: output.delta_time,
+        characterSceneUpdates: output.characterSceneUpdates as Array<{characterName: string; scene: string}>,
+        worldContextUpdates: output.worldContextUpdates as Array<{characterName: string; contextUpdate: string}>,
         rawOutput: typedObject,
       });
 
@@ -437,13 +443,16 @@ export async function executeWorldAgent(
       // LLM call failed - use fallback
       logger.warn("[World Agent] LLM call failed, using fallback:", llmError);
 
-      const fallbackOutput = createFallbackOutput(input.speakerCharacterId, input.speakerName, input.dataStore.worldContext);
+      const fallbackOutput = createFallbackOutput(
+        input.speakerName,
+        input.dataStore.selectedScene,
+        input.dataStore.worldContext
+      );
 
       // Record debug event - World Agent output (LLM error fallback)
       recordWorldAgentOutput({
-        actualParticipants: fallbackOutput.actualParticipants,
-        worldContextUpdates: fallbackOutput.worldContextUpdates,
-        delta_time: fallbackOutput.delta_time,
+        characterSceneUpdates: fallbackOutput.characterSceneUpdates as Array<{characterName: string; scene: string}>,
+        worldContextUpdates: fallbackOutput.worldContextUpdates as Array<{characterName: string; contextUpdate: string}>,
         rawOutput: { fallback: true, reason: "llm_error", error: String(llmError) },
       });
 
@@ -452,13 +461,16 @@ export async function executeWorldAgent(
   } catch (error) {
     // Catch-all for unexpected errors
     logger.error("[World Agent] Unexpected error:", error);
-    const fallbackOutput = createFallbackOutput(input.speakerCharacterId, input.speakerName, input.dataStore.worldContext);
+    const fallbackOutput = createFallbackOutput(
+      input.speakerName,
+      input.dataStore.selectedScene,
+      input.dataStore.worldContext
+    );
 
     // Record debug event - World Agent output (error fallback)
     recordWorldAgentOutput({
-      actualParticipants: fallbackOutput.actualParticipants,
-      worldContextUpdates: fallbackOutput.worldContextUpdates,
-      delta_time: fallbackOutput.delta_time,
+      characterSceneUpdates: fallbackOutput.characterSceneUpdates as Array<{characterName: string; scene: string}>,
+      worldContextUpdates: fallbackOutput.worldContextUpdates as Array<{characterName: string; contextUpdate: string}>,
       rawOutput: { fallback: true, reason: "error", error: String(error) },
     });
 
