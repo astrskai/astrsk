@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Copy, Download, Trash2 } from "lucide-react";
+import { Copy, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -371,7 +371,7 @@ export default function CardDisplay({
                     isDownloading && "cursor-not-allowed opacity-50",
                   )}
                 >
-                  <Download
+                  <Upload
                     className={cn("h-4", isDownloading && "animate-pulse")}
                   />
                 </button>

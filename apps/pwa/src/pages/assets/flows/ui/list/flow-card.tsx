@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 import { cn, logger } from "@/shared/lib";
 import { IconFlow } from "@/shared/assets/icons";
-import { CircleAlert, Copy, Download, Trash2 } from "lucide-react";
+import { CircleAlert, Copy, Upload, Trash2 } from "lucide-react";
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import {
   useDeleteFlowWithNodes,
@@ -348,7 +348,7 @@ export function FlowCard({
                 aria-label={`Download ${flow.props.name}`}
                 className="hover:bg-primary-strong flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-sm backdrop-blur-sm transition-colors"
               >
-                <Download className="h-4 w-4" />
+                <Upload className="h-4 w-4" />
               </button>
               <button
                 onClick={handleCopy}
