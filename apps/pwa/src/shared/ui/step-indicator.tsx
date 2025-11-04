@@ -60,7 +60,7 @@ export function StepIndicator<T extends string = string>({
                 {/* Circle */}
                 <div
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-colors",
+                    "flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-colors xl:h-12 xl:w-12 xl:text-base",
                     isActive && "bg-primary-normal text-background-surface-2",
                     isCompleted && "bg-primary/50 text-text-primary",
                     !isActive &&
@@ -73,7 +73,7 @@ export function StepIndicator<T extends string = string>({
                 {/* Label */}
                 <span
                   className={cn(
-                    "text-sm font-medium transition-colors",
+                    "text-sm font-medium transition-colors xl:text-base",
                     isActive && "text-text-primary",
                     !isActive && "text-text-secondary",
                   )}
