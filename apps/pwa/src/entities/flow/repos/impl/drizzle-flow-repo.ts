@@ -23,14 +23,28 @@ export class DrizzleFlowRepo
 {
   // constructor(private updateLocalSyncMetadata: UpdateLocalSyncMetadata) {}
 
-  async updateResponseTemplate(flowId: string, template: string): Promise<Result<void>> {
+  async updateResponseTemplate(flowId: string, template: string, endType?: string): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
+      // Determine which column to update based on endType
+      // "character" or undefined = response_template (default column)
+      // "user" = response_template_user
+      // "plot" = response_template_plot
+      let updateData: any;
+      if (endType === "user") {
+        updateData = { response_template_user: template };
+      } else if (endType === "plot") {
+        updateData = { response_template_plot: template };
+      } else {
+        // "character" or undefined
+        updateData = { response_template: template };
+      }
+
       await db
         .update(flows)
-        .set({ response_template: template })  // Use snake_case column name
+        .set(updateData)
         .where(eq(flows.id, flowId));
-      
+
       return Result.ok();
     } catch (error) {
       return Result.fail(

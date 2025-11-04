@@ -112,16 +112,16 @@ const createFlowPanelComponentOptional = (
 
 // Panel component factory for sub-panels without agentId
 const createFlowPanelComponentStandalone = (
-  Component: React.FC<{ flowId: string }>,
+  Component: React.FC<{ flowId: string; [key: string]: any }>,
 ): React.FC<IDockviewPanelProps> => {
   return React.memo((props: IDockviewPanelProps) => {
-    const { flowId } = props.params;
+    const { flowId, endType, ...otherParams } = props.params;
     return (
       <PanelFocusAnimationWrapper
         api={props.api}
         containerApi={props.containerApi}
       >
-        <Component flowId={flowId} />
+        <Component flowId={flowId} endType={endType} {...otherParams} />
       </PanelFocusAnimationWrapper>
     );
   });
@@ -611,6 +611,17 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
         title = getPanelTitle(panelType, nodeName);
         console.log(`[openPanel] Panel title: ${title}`);
       }
+      // Check if this is a response design panel with endType
+      else if (panelType === "responseDesign" && agentId) {
+        // For response design panels, agentId is actually the endType
+        const endType = agentId;
+        const templateLabel = endType === "character"
+          ? "Character"
+          : endType === "user"
+          ? "User"
+          : "Plot";
+        title = `${templateLabel} Response Design`;
+      }
       // Default case
       else {
         title = getPanelTitle(panelType);
@@ -646,6 +657,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
                 (panelType === "ifNode" || panelType === "dataStore") && {
                   nodeId: agentId,
                 }),
+              // For response design panels, pass endType
+              ...(panelType === "responseDesign" && agentId && { endType: agentId }),
               // Pass panel type and flow info to tab for color querying
               panelType,
               ...(agentColor && { agentColor }),
@@ -678,6 +691,8 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
                 (panelType === "ifNode" || panelType === "dataStore") && {
                   nodeId: agentId,
                 }),
+              // For response design panels, pass endType
+              ...(panelType === "responseDesign" && agentId && { endType: agentId }),
               // Pass panel type and flow info to tab for color querying
               panelType,
               ...(agentColor && { agentColor }),

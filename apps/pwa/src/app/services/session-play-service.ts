@@ -49,6 +49,13 @@ import {
   OpenrouterProviderSort,
 } from "@/entities/api/domain/api-connection";
 import { PlotCard } from "@/entities/card/domain";
+import {
+  identifyActivePaths,
+  selectTemplate,
+  getStartNodeIds,
+  getEndNodeIds,
+} from "@/app/services/multi-path-execution-service";
+import { EndNodeType } from "@/entities/flow/model/end-node-types";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { DataStoreFieldType } from "@/entities/flow/domain/flow";
 import { IfNode } from "@/entities/if-node/domain";
@@ -318,6 +325,17 @@ const makeContext = async ({
     } catch (error) {
       // Ignore lorebook scan errors
     }
+  }
+
+  // Phase 4: Set `{{plot.*}}` variables
+  if (plotCard) {
+    const plotEntries = context.session.plot_entries || [];
+    context.plot = {
+      id: plotCard.id.toString(),
+      name: plotCard.props.title || "",
+      description: plotCard.props.description || "",
+      entries: plotEntries,
+    };
   }
 
   // Set `{{session.entries}}`, `{{session.char_entries}}`
@@ -1993,12 +2011,16 @@ async function* executeFlow({
   flowId,
   sessionId,
   characterCardId,
+  plotCardId,
+  triggerType,
   regenerateMessageId,
   stopSignalByUser,
 }: {
   flowId: UniqueEntityID;
   sessionId: UniqueEntityID;
-  characterCardId: UniqueEntityID;
+  characterCardId?: UniqueEntityID;
+  plotCardId?: UniqueEntityID;
+  triggerType?: "character" | "user" | "plot";
   regenerateMessageId?: UniqueEntityID;
   stopSignalByUser?: AbortSignal;
 }): AsyncGenerator<FlowResult, FlowResult, void> {
@@ -2134,8 +2156,103 @@ async function* executeFlow({
       // DataStore initialization complete (will be saved after successful flow execution)
     }
 
-    // Execute flow step-by-step, starting from start node
-    let currentNode = startNode;
+    // Phase 3.6: Multi-path execution - determine which paths to execute
+    const activePaths = identifyActivePaths(flow, adjacencyList);
+    const startNodeIds = getStartNodeIds();
+    const endNodeIds = getEndNodeIds();
+
+    const pathsToExecute: Array<{
+      startNodeId: string;
+      endNodeId: string;
+      pathType: "character" | "user" | "plot";
+      endType: EndNodeType;
+    }> = [];
+
+    // If triggerType is specified, only execute that specific path
+    // Otherwise, execute all active paths (default behavior)
+    if (triggerType) {
+      // Manual trigger: execute only the requested path type
+      if (triggerType === "character" && activePaths.characterActive) {
+        pathsToExecute.push({
+          startNodeId: startNodeIds.character,
+          endNodeId: endNodeIds.character,
+          pathType: "character",
+          endType: EndNodeType.CHARACTER,
+        });
+      } else if (triggerType === "user" && activePaths.userActive) {
+        pathsToExecute.push({
+          startNodeId: startNodeIds.user,
+          endNodeId: endNodeIds.user,
+          pathType: "user",
+          endType: EndNodeType.USER,
+        });
+      } else if (triggerType === "plot" && activePaths.plotActive) {
+        pathsToExecute.push({
+          startNodeId: startNodeIds.plot,
+          endNodeId: endNodeIds.plot,
+          pathType: "plot",
+          endType: EndNodeType.PLOT,
+        });
+      }
+    } else {
+      // Auto trigger: execute all active paths
+      if (activePaths.characterActive) {
+        pathsToExecute.push({
+          startNodeId: startNodeIds.character,
+          endNodeId: endNodeIds.character,
+          pathType: "character",
+          endType: EndNodeType.CHARACTER,
+        });
+      }
+      if (activePaths.userActive) {
+        pathsToExecute.push({
+          startNodeId: startNodeIds.user,
+          endNodeId: endNodeIds.user,
+          pathType: "user",
+          endType: EndNodeType.USER,
+        });
+      }
+      if (activePaths.plotActive) {
+        pathsToExecute.push({
+          startNodeId: startNodeIds.plot,
+          endNodeId: endNodeIds.plot,
+          pathType: "plot",
+          endType: EndNodeType.PLOT,
+        });
+      }
+    }
+
+    logger.info(
+      `[FlowExecution] Executing ${pathsToExecute.length} path(s): ` +
+      pathsToExecute.map(p => p.pathType).join(", ")
+    );
+
+    // Phase 3.6: Execute all active paths
+    const pathContents: string[] = [];
+
+    for (const pathInfo of pathsToExecute) {
+      logger.info(`[FlowExecution] Starting ${pathInfo.pathType} path`);
+
+      // Select correct response template for this path
+      let responseTemplate: string;
+      if (pathInfo.pathType === "user") {
+        responseTemplate = flow.props.responseTemplateUser || flow.props.responseTemplate;
+      } else if (pathInfo.pathType === "plot") {
+        responseTemplate = flow.props.responseTemplatePlot || flow.props.responseTemplate;
+      } else {
+        // "character" or default
+        responseTemplate = flow.props.responseTemplate;
+      }
+
+      // Find START node for this path
+      const pathStartNode = flow.props.nodes.find((n: any) => n.id === pathInfo.startNodeId);
+      if (!pathStartNode) {
+        logger.warn(`[FlowExecution] START node ${pathInfo.startNodeId} not found, skipping`);
+        continue;
+      }
+
+      // Execute flow step-by-step for this path
+      let currentNode = pathStartNode;
     while (currentNode && currentNode.type !== "end") {
       if (currentNode.type === "agent") {
         // Execute agent node
@@ -2155,9 +2272,9 @@ async function* executeFlow({
             [result.agentKey ?? ""]: result.output,
           });
 
-          // Render content
+          // Render content using path-specific template
           content = TemplateRenderer.render(
-            flow.props.responseTemplate,
+            responseTemplate,
             createFullContext(context, variables, dataStore),
           );
 
@@ -2273,13 +2390,37 @@ async function* executeFlow({
       if (!currentNode) {
         break;
       }
+      }
+
+      // Phase 3.6: Render content for this path using correct template
+      const pathTemplate = selectTemplate(flow, pathInfo.endType);
+      const pathContent = TemplateRenderer.render(
+        pathTemplate,
+        createFullContext(context, variables, dataStore),
+      );
+
+      logger.info(`[FlowExecution] ${pathInfo.pathType} path completed, content length: ${pathContent.length}`);
+
+      pathContents.push(pathContent);
+
+      // Yield intermediate result for this path
+      yield {
+        agentName: `${pathInfo.pathType} path`,
+        content: pathContent,
+        variables: variables,
+        dataStore: dataStore,
+      };
     }
 
-    // Render final content
-    content = TemplateRenderer.render(
-      flow.props.responseTemplate,
-      createFullContext(context, variables, dataStore),
+    // Phase 3.6: Merge results from all paths
+    content = pathContents.join("\n\n---\n\n");
+
+    logger.info(
+      `[FlowExecution] All paths completed. Merged ${pathContents.length} path(s), ` +
+      `total content length: ${content.length}`
     );
+
+    // Yield final merged content
     yield {
       content: content,
       variables: variables,
@@ -2305,6 +2446,8 @@ async function* executeFlow({
       };
 
       // Translate by language
+      // Note: Uses character template for translation (default)
+      // TODO: If multi-path translation needed, translate each path separately
       for (const lang of langs) {
         const translatedVariables = await translate(variables, lang);
         const translatedContent = TemplateRenderer.render(

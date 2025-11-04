@@ -19,6 +19,8 @@ export const flows = pgTable(TableName.Flows, {
   nodes: jsonb().$type<Node[]>().notNull(),
   edges: jsonb().$type<Edge[]>().notNull(),
   response_template: text().notNull(),
+  response_template_user: text().notNull().default(''),
+  response_template_plot: text().notNull().default(''),
   data_store_schema: jsonb().$type<DataStoreSchema>(),
   panel_structure: jsonb().$type<PanelStructure>(),
   viewport: jsonb().$type<FlowViewport>(),

@@ -117,5 +117,14 @@
     "bps": true,
     "folderMillis": 1758216748714,
     "hash": "b4e0d123a01e9ec664c53d5f7c6e284a150c464c422934d868a5770f8399f672"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"flows\" ADD COLUMN \"response_template_user\" text DEFAULT '' NOT NULL;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"response_template_plot\" text DEFAULT '' NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1761983569049,
+    "hash": "0f066f28e0e4c8024280ab6701196d7401e9e3f7f0f65bd093ae1dc86c58b7ab"
   }
 ]

@@ -3,6 +3,7 @@ import { Result } from "@/shared/core";
 export const VariableGroup = {
   Character: "character",
   User: "user",
+  Plot: "plot",
   Cast: "cast",
   Session: "session",
   History: "history",
@@ -18,8 +19,12 @@ export const VariableGroupLabel = {
     description: "The character currently being referenced or taking action in a roleplaying sequence."
   },
   [VariableGroup.User]: {
-    displayName: "User", 
+    displayName: "User",
     description: "The character controlled by the user in a roleplay."
+  },
+  [VariableGroup.Plot]: {
+    displayName: "Plot",
+    description: "The plot controlling the scene, etc."
   },
   [VariableGroup.Cast]: {
     displayName: "Cast",
@@ -125,6 +130,28 @@ export const variableList: Variable[] = [
       "A list of all retrieved character book entries for the character controlled by the user in a roleplay.",
     dataType: "string[]",
     template: "\n{% for entry in user.entries %}\n  {{entry}}\n{% endfor %}\n",
+  },
+  {
+    group: VariableGroup.Plot,
+    variable: "plot.id",
+    description:
+      "The unique ID of the plot card controlling the scene.",
+    dataType: "string",
+  },
+  {
+    group: VariableGroup.Plot,
+    variable: "plot.description",
+    description:
+      "The description of the plot card controlling the scene.",
+    dataType: "string",
+  },
+  {
+    group: VariableGroup.Plot,
+    variable: "plot.entries",
+    description:
+      "A list of all retrieved plot lorebook entries.",
+    dataType: "string[]",
+    template: "\n{% for entry in plot.entries %}\n  {{entry}}\n{% endfor %}\n",
   },
   {
     group: VariableGroup.Cast,

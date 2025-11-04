@@ -5,6 +5,8 @@ import { Flow } from "@/entities/flow/domain/flow";
 import { SaveAgentRepo } from "@/entities/agent/repos";
 import { SaveFlowRepo } from "@/entities/flow/repos";
 import { NodeType } from "@/entities/flow/model/node-types";
+import { StartNodeType } from "@/entities/flow/model/start-node-types";
+import { EndNodeType } from "@/entities/flow/model/end-node-types";
 
 export class CreateFlow implements UseCase<void, Result<Flow>> {
   constructor(
@@ -24,38 +26,96 @@ export class CreateFlow implements UseCase<void, Result<Flow>> {
       }
       const agent = agentOrError.getValue();
 
-      // Create flow
+      // Create flow with 3 START nodes and 3 END nodes
       const flowOrError = Flow.create({
         name: "New Flow",
         nodes: [
+          // 3 START nodes (left side)
           {
-            id: "start",
+            id: "start", // Character START uses "start" for backward compatibility
             type: NodeType.START,
             position: { x: 0, y: 0 },
-            data: {},
+            data: {
+              startType: StartNodeType.CHARACTER,
+            },
             deletable: false,
-            zIndex: 1000, // Ensure start node is always on top
+            zIndex: 1000,
           },
           {
-            id: "end",
+            id: "start-user",
+            type: NodeType.START,
+            position: { x: 0, y: 150 },
+            data: {
+              startType: StartNodeType.USER,
+            },
+            deletable: false,
+            zIndex: 1000,
+          },
+          {
+            id: "start-plot",
+            type: NodeType.START,
+            position: { x: 0, y: 300 },
+            data: {
+              startType: StartNodeType.PLOT,
+            },
+            deletable: false,
+            zIndex: 1000,
+          },
+          // 3 END nodes (right side)
+          {
+            id: "end", // Character END uses "end" for backward compatibility
             type: NodeType.END,
             position: { x: 870, y: 0 },
-            data: {},
+            data: {
+              endType: EndNodeType.CHARACTER,
+              agentId: "end",
+            },
             deletable: false,
-            zIndex: 1000, // Ensure end node is always on top
+            zIndex: 1000,
           },
+          {
+            id: "end-user",
+            type: NodeType.END,
+            position: { x: 870, y: 150 },
+            data: {
+              endType: EndNodeType.USER,
+              agentId: "end-user",
+            },
+            deletable: false,
+            zIndex: 1000,
+          },
+          {
+            id: "end-plot",
+            type: NodeType.END,
+            position: { x: 870, y: 300 },
+            data: {
+              endType: EndNodeType.PLOT,
+              agentId: "end-plot",
+            },
+            deletable: false,
+            zIndex: 1000,
+          },
+          // AGENT node (middle)
           {
             id: agent.id.toString(),
             type: NodeType.AGENT,
-            position: { x: 400, y: -200 },
-            data: {},
+            position: { x: 400, y: 0 },
+            data: {
+              agentId: agent.id.toString(),
+            },
           },
         ],
         edges: [
+          // Connect Character START to AGENT to Character END (default active path)
           {
             id: "start-agent",
-            source: "start",
+            source: "start", // Character START id
             target: agent.id.toString(),
+          },
+          {
+            id: "agent-end",
+            source: agent.id.toString(),
+            target: "end", // Character END id
           },
         ],
         responseTemplate: "{{new_agent.response}}",

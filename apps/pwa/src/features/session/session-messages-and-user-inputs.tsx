@@ -22,6 +22,7 @@ import { CSS } from "@dnd-kit/utilities";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
+  BookOpen,
   CaseUpper,
   Check,
   ChevronDown,
@@ -109,7 +110,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui";
-import { CharacterCard, PlotCard } from "@/entities/card/domain";
+import { Card, CharacterCard, PlotCard } from "@/entities/card/domain";
 import { TranslationConfig } from "@/entities/session/domain/translation-config";
 import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
 import { Turn } from "@/entities/turn/domain/turn";
@@ -835,14 +836,18 @@ const UserInputCharacterButton = ({
   isSubscribeBadge?: boolean;
   isDisabled?: boolean;
 }) => {
-  const [characterCard] = useCard<CharacterCard>(characterCardId);
-  const [characterIcon, characterIconIsVideo] = useAssetShared(
-    characterCard?.props.iconAssetId,
+  // Fetch card (works for CharacterCard, PlotCard, etc.)
+  const [card] = useCard<Card>(characterCardId);
+  const [cardIcon, cardIconIsVideo] = useAssetShared(
+    card?.props.iconAssetId,
   );
 
-  if (characterCardId && !characterCard) {
+  if (characterCardId && !card) {
     return null;
   }
+
+  // Get display name: CharacterCard uses 'name', PlotCard/others use 'title'
+  const displayName = (card as any)?.props?.name || card?.props?.title || "";
 
   return (
     <div
@@ -850,13 +855,13 @@ const UserInputCharacterButton = ({
       onClick={onClick}
     >
       {isSubscribeBadge && <SubscribeBadge />}
-      {characterCard ? (
+      {card ? (
         <>
           <Avatar
-            src={characterIcon}
-            alt={characterCard.props.name?.at(0)?.toUpperCase() ?? ""}
+            src={cardIcon}
+            alt={displayName.at(0)?.toUpperCase() ?? ""}
             size={48}
-            isVideo={characterIconIsVideo}
+            isVideo={cardIconIsVideo}
             isDisabled={isDisabled}
             className={cn(
               isHighLighted &&
@@ -869,7 +874,7 @@ const UserInputCharacterButton = ({
               "max-w-[48px]",
             )}
           >
-            {characterCard.props.name}
+            {displayName}
           </div>
           <div
             className={cn(
@@ -981,7 +986,9 @@ const UserInputAutoReplyButton = ({
 const UserInputs = ({
   userCharacterCardId,
   aiCharacterCardIds = [],
+  plotCardId,
   generateCharacterMessage,
+  generatePlotMessage,
   addUserMessage,
   disabled = false,
   streamingMessageId,
@@ -998,7 +1005,9 @@ const UserInputs = ({
 }: {
   userCharacterCardId?: UniqueEntityID;
   aiCharacterCardIds?: UniqueEntityID[];
+  plotCardId?: UniqueEntityID;
   generateCharacterMessage?: (characterCardId: UniqueEntityID) => void;
+  generatePlotMessage?: (plotCardId: UniqueEntityID) => void;
   addUserMessage?: (messageContent: string) => void;
   disabled?: boolean;
   isOpenSettings?: boolean;
@@ -1078,6 +1087,19 @@ const UserInputs = ({
                     streamingMessageId && "pointer-events-none opacity-50",
                   )}
                 >
+                  {/* Plot button (first) */}
+                  {plotCardId && (
+                    <UserInputCharacterButton
+                      characterCardId={plotCardId}
+                      onClick={() => {
+                        generatePlotMessage?.(plotCardId);
+                        onCharacterButtonClicked();
+                      }}
+                      isDisabled={disabled}
+                      isHighLighted={shouldShowTooltip}
+                    />
+                  )}
+                  {/* User character button (second) */}
                   {userCharacterCardId && (
                     <UserInputCharacterButton
                       characterCardId={userCharacterCardId}
@@ -1090,6 +1112,7 @@ const UserInputs = ({
                       isHighLighted={shouldShowTooltip}
                     />
                   )}
+                  {/* AI character buttons (third) */}
                   {aiCharacterCardIds.map((characterCardId) => (
                     <UserInputCharacterButton
                       key={characterCardId.toString()}
@@ -1102,6 +1125,7 @@ const UserInputs = ({
                       isHighLighted={shouldShowTooltip}
                     />
                   ))}
+                  {/* Shuffle button (last) */}
                   <UserInputCharacterButton
                     icon={<Shuffle className="min-h-[24px] min-w-[24px]" />}
                     label="Shuffle"
@@ -1767,10 +1791,13 @@ const SessionMessagesAndUserInputs = ({
 
         // Execute flow
         refStopGenerate.current = new AbortController();
+        // Determine trigger type based on character
+        const isUserCharacter = session.userCharacterCardId?.equals(characterCardId);
         const flowResult = executeFlow({
           flowId: session.props.flowId,
           sessionId: session.id,
           characterCardId: characterCardId,
+          triggerType: isUserCharacter ? "user" : "character",
           regenerateMessageId: regenerateMessageId,
           stopSignalByUser: refStopGenerate.current.signal,
         });
@@ -1922,6 +1949,258 @@ const SessionMessagesAndUserInputs = ({
       invalidateSession();
     },
     [invalidateSession, queryClient, session, scrollToBottom],
+  );
+
+  // Generate plot message
+  const generatePlotMessage = useCallback(
+    async (plotCardId: UniqueEntityID, regenerateMessageId?: UniqueEntityID) => {
+      // Check session
+      if (!session) {
+        throw new Error("Session not found");
+      }
+
+      let streamingMessage: Turn | null = null;
+      let streamingContent = "";
+      let streamingVariables = {};
+      try {
+        // Get dataStore for inheritance - prioritize regeneration context
+        let lastDataStore: DataStoreSavedField[] = [];
+
+        if (regenerateMessageId) {
+          // For regeneration, get dataStore from the turn before the regenerated message
+          let dataStoreForRegeneration: DataStoreSavedField[] = [];
+
+          for (const turnId of session.turnIds) {
+            if (turnId.equals(regenerateMessageId)) {
+              break;
+            }
+            try {
+              const turn = await fetchTurn(turnId);
+
+              // Store dataStore from each processed turn
+              if (turn.dataStore && turn.dataStore.length > 0) {
+                dataStoreForRegeneration = cloneDeep(turn.dataStore);
+              }
+            } catch (error) {
+              console.warn(
+                `Failed to get turn for regeneration dataStore: ${error}`,
+              );
+              continue;
+            }
+          }
+
+          lastDataStore = dataStoreForRegeneration;
+          console.log(
+            `Using dataStore from regeneration context (${lastDataStore.length} fields)`,
+          );
+        } else if (session.turnIds.length > 0) {
+          // For new messages, use last turn's dataStore
+          const lastTurnId = session.turnIds[session.turnIds.length - 1];
+          try {
+            const lastTurn = await fetchTurn(lastTurnId);
+            lastDataStore = cloneDeep(lastTurn.dataStore);
+          } catch (error) {
+            console.warn(`Failed to get last turn's dataStore: ${error}`);
+          }
+        }
+
+        // Get streaming message
+        if (regenerateMessageId) {
+          // Get message from database
+          streamingMessage = await fetchTurn(regenerateMessageId);
+        } else {
+          // Create new empty message for plot (no character)
+          const messageOrError = Turn.create({
+            sessionId: session.id,
+            characterCardId: undefined, // Plot messages don't have a character
+            characterName: "Plot",
+            options: [],
+          });
+          if (messageOrError.isFailure) {
+            throw new Error(messageOrError.getError());
+          }
+          streamingMessage = messageOrError.getValue();
+        }
+
+        // Add new empty option with inherited dataStore
+        const emptyOptionOrError = Option.create({
+          content: "",
+          tokenSize: 0,
+          dataStore: lastDataStore,
+        });
+        if (emptyOptionOrError.isFailure) {
+          throw new Error(emptyOptionOrError.getError());
+        }
+        streamingMessage.addOption(emptyOptionOrError.getValue());
+
+        // Set query cache
+        queryClient.setQueryData(
+          turnQueries.detail(streamingMessage.id).queryKey,
+          TurnDrizzleMapper.toPersistence(streamingMessage),
+        );
+
+        // Add new empty message to session
+        if (!regenerateMessageId) {
+          addMessageMutation.mutate({
+            sessionId: session.id,
+            message: streamingMessage,
+          });
+        }
+
+        // Set streaming message id
+        setStreamingMessageId(streamingMessage.id);
+        scrollToBottom({ behavior: "smooth" });
+
+        // Execute flow with plot trigger
+        refStopGenerate.current = new AbortController();
+        const flowResult = executeFlow({
+          flowId: session.props.flowId,
+          sessionId: session.id,
+          plotCardId: plotCardId,
+          triggerType: "plot", // Trigger plot START node
+          regenerateMessageId: regenerateMessageId,
+          stopSignalByUser: refStopGenerate.current.signal,
+        });
+
+        // Stream response
+        let streamingMetadata: Record<string, any> | undefined;
+        for await (const response of flowResult) {
+          streamingContent = response.content;
+          streamingMessage.setContent(streamingContent);
+          streamingVariables = response.variables;
+          streamingMessage.setVariables(streamingVariables);
+
+          // Capture metadata for error reporting
+          if (response.metadata) {
+            streamingMetadata = response.metadata;
+          }
+
+          if (response.dataStore) {
+            streamingMessage.setDataStore(response.dataStore);
+          }
+          queryClient.setQueryData(
+            turnQueries.detail(streamingMessage.id).queryKey,
+            TurnDrizzleMapper.toPersistence(streamingMessage),
+          );
+          setStreamingAgentName(response.agentName ?? "");
+          setStreamingModelName(response.modelName ?? "");
+          if (!regenerateMessageId) {
+            scrollToBottom({ behavior: "smooth" });
+          }
+          if (response.translations) {
+            for (const [lang, translation] of response.translations) {
+              streamingMessage.setTranslation(lang, translation);
+            }
+          }
+        }
+
+        // Check empty message
+        if (streamingContent.trim() === "") {
+          // Error checking only - validate structured output response format
+          if (streamingVariables && Object.keys(streamingVariables).length > 0) {
+            const vars = streamingVariables as Record<string, any>;
+
+            // Look through all agent outputs for error conditions
+            for (const agentKey in vars) {
+              const agentOutput = vars[agentKey];
+
+              if (!agentOutput || typeof agentOutput !== 'object') continue;
+
+              // ERROR CHECK 1: Detect schema definition (malformed response)
+              if (agentOutput.type && agentOutput.properties) {
+                const error = new Error("Malformed structured output: AI returned schema definition instead of data") as any;
+                error.metadata = streamingMetadata;
+                throw error;
+              }
+            }
+
+            // ERROR CHECK 2: Empty response (no valid content)
+            const error = new Error("AI returned empty or invalid structured output") as any;
+            error.metadata = streamingMetadata;
+            throw error;
+          } else {
+            throw new Error("AI returned an empty message.");
+          }
+        }
+
+        // Update message to database
+        updateTurnMutation.mutate({
+          turn: streamingMessage,
+        });
+
+        // Invalidate session
+        invalidateSession();
+      } catch (error) {
+        // Error handling
+        const parsedError = parseAiSdkErrorMessage(error);
+        if (parsedError) {
+          if (parsedError.level === "error") {
+            toastError({
+              title: "Failed to generate plot message",
+              details: parsedError.message,
+            });
+          } else {
+            toast.info(parsedError.message);
+          }
+        } else if (error instanceof Error) {
+          if (error.message.includes("Stop generate by user")) {
+            toast.info("Generation stopped.");
+          } else {
+            // Build error details
+            const errorDetails: any = {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            };
+
+            // If error has metadata (from AI SDK), include it
+            if ('metadata' in error && (error as any).metadata) {
+              errorDetails.metadata = (error as any).metadata;
+            }
+
+            toastError({
+              title: "Failed to generate plot message",
+              details: JSON.stringify(errorDetails, null, 2),
+            });
+          }
+        }
+        logger.error("Failed to generate plot message", error);
+
+        // Check streaming message exists
+        if (streamingMessage) {
+          // Delete empty streaming message or option
+          if (streamingContent.trim() === "") {
+            if (regenerateMessageId) {
+              // Refetch message
+              queryClient.invalidateQueries({
+                queryKey: turnQueries.detail(regenerateMessageId).queryKey,
+              });
+            } else {
+              // Delete empty message
+              await deleteMessageMutation.mutateAsync({
+                sessionId: session.id,
+                messageId: streamingMessage.id,
+              });
+            }
+          } else {
+            // Update message to database
+            updateTurnMutation.mutate({
+              turn: streamingMessage,
+            });
+          }
+        }
+      } finally {
+        // Reset streaming states
+        setStreamingMessageId(null);
+        setStreamingAgentName("");
+        setStreamingModelName("");
+        refStopGenerate.current = null;
+      }
+
+      // Invalidate session
+      invalidateSession();
+    },
+    [invalidateSession, queryClient, session, scrollToBottom, addMessageMutation, updateTurnMutation, deleteMessageMutation],
   );
 
   // Add user message
@@ -2901,7 +3180,9 @@ const SessionMessagesAndUserInputs = ({
         <UserInputs
           userCharacterCardId={session.userCharacterCardId}
           aiCharacterCardIds={session.aiCharacterCardIds}
+          plotCardId={session.plotCard?.id}
           generateCharacterMessage={generateCharacterMessage}
+          generatePlotMessage={generatePlotMessage}
           addUserMessage={addUserMessage}
           isOpenSettings={isOpenSettings}
           disabled={isOpenSelectScenarioModal}

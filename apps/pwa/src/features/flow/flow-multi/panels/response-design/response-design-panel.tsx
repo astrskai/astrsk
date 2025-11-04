@@ -17,22 +17,25 @@ import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-
 
 interface ResponseDesignPanelProps {
   flowId: string;
+  endType?: string; // "character" | "user" | "plot"
 }
 
-export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
+export function ResponseDesignPanel({ flowId, endType }: ResponseDesignPanelProps) {
   // 1. Get the mutation hook with edit mode support
-  const updateResponseTemplate = useUpdateResponseTemplate(flowId);
-  
+  // Pass endType to mutation hook so it knows which template field to update
+  const updateResponseTemplate = useUpdateResponseTemplate(flowId, endType);
+
   // 2. Load just the response template - more efficient than loading entire flow
   // Disable refetching while editing or cursor is active to prevent UI jumping
   const queryEnabled = !!flowId && !updateResponseTemplate.isEditing && !updateResponseTemplate.hasCursor;
-  
-  const { 
-    data: responseTemplate, 
+
+  // Query the correct template based on endType
+  const {
+    data: responseTemplate,
     isLoading,
     error
   } = useQuery({
-    ...flowQueries.response(flowId),
+    ...flowQueries.response(flowId, endType),
     enabled: queryEnabled,
     refetchOnWindowFocus: queryEnabled,
     refetchOnMount: false, // Don't refetch on mount - only when needed

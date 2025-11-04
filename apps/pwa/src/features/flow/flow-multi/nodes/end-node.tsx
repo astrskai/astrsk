@@ -1,39 +1,67 @@
 import { type Node, type NodeProps } from "@xyflow/react";
 import { CustomHandle } from "@/features/flow/flow-multi/components/custom-handle";
 import { useCallback } from "react";
-import { toast } from "sonner";
 
 import { useFlowPanelContext } from "@/features/flow/flow-multi/components/flow-panel-provider";
 import { PANEL_TYPES } from "@/features/flow/flow-multi/components/panel-types";
 import { ButtonPill } from "@/shared/ui";
+import {
+  EndNodeType,
+  getEndNodeTheme,
+  getEndNodeLabel
+} from "@/entities/flow/model/end-node-types";
 
 export type EndNodeData = {
   label?: string;
   agentId: string;
+  endType?: EndNodeType;
 };
 
 export type EndNode = Node<EndNodeData>;
 
-export default function EndNode({ id }: NodeProps<EndNode>) {
-  const { openPanel, closePanel, isPanelOpen } = useFlowPanelContext();
+export default function EndNode({ data, id }: NodeProps<EndNode>) {
+  const { openPanel, isPanelOpen } = useFlowPanelContext();
+
+  // Default to CHARACTER if no endType (backward compatibility with old flows)
+  const endType = data.endType || EndNodeType.CHARACTER;
+  const theme = getEndNodeTheme(endType);
+  const label = getEndNodeLabel(endType);
+
+  // Normalize endType for panel system:
+  // - "character_end" → "character"
+  // - "user_end" → "user"
+  // - "plot_end" → "plot"
+  const normalizedEndType = endType.replace(/_end$/, '');
 
   const handleOpenResponseDesign = useCallback(() => {
-    openPanel(PANEL_TYPES.RESPONSE_DESIGN);
-  }, [openPanel]);
+    openPanel(PANEL_TYPES.RESPONSE_DESIGN, normalizedEndType);
+  }, [openPanel, normalizedEndType]);
 
-  const handleCloseResponseDesign = useCallback(() => {
-    const panelId = `${PANEL_TYPES.RESPONSE_DESIGN}-standalone`;
-    closePanel(panelId);
-  }, [closePanel]);
+  // Check if response design panel is currently open for this specific endType
+  const isResponseDesignOpen = isPanelOpen(PANEL_TYPES.RESPONSE_DESIGN, normalizedEndType);
 
-  // Check if response design panel is currently open
-  const isResponseDesignOpen = isPanelOpen(PANEL_TYPES.RESPONSE_DESIGN);
+  // Get button label based on endType
+  const buttonLabel = endType === EndNodeType.CHARACTER
+    ? "Character response"
+    : endType === EndNodeType.USER
+    ? "User response"
+    : "Plot response";
 
   return (
     <div className="group/node relative">
-      <div className="bg-background-surface-2 outline-background-surface-2 inline-flex w-56 flex-col items-start justify-center gap-2 rounded-lg px-4 py-3.5 shadow-[0px_1px_12px_0px_rgba(125,125,125,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px]">
-        <div className="text-text-primary justify-start text-2xl leading-10 font-medium">
-          End
+      <div
+        className="inline-flex w-56 flex-col items-start justify-center gap-2 rounded-lg px-4 py-3.5 shadow-lg outline-2 outline-offset-[-2px]"
+        style={{
+          backgroundColor: theme.background,
+          outlineColor: theme.border,
+          outlineStyle: 'solid'
+        }}
+      >
+        <div className="justify-start inline-flex items-center gap-2">
+          <span className="text-2xl leading-10">{theme.icon}</span>
+          <div className="text-2xl leading-10 font-medium" style={{ color: theme.border }}>
+            {label}
+          </div>
         </div>
         <div className="bg-background-surface-3 flex flex-col items-start justify-start gap-4 self-stretch rounded-lg p-2">
           <ButtonPill
@@ -43,7 +71,7 @@ export default function EndNode({ id }: NodeProps<EndNode>) {
             className="justify-center self-stretch"
             size="default"
           >
-            Response design
+            {buttonLabel}
           </ButtonPill>
           <div className="text-text-placeholder justify-start self-stretch text-xs font-normal">
             Design the exact format and structure of AI responses

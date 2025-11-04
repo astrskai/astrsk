@@ -14,9 +14,11 @@ import { flowKeys } from "./query-factory";
  * Hook for updating response template with edit mode support
  * Use this for template editor to prevent race conditions
  *
+ * @param flowId - The flow ID
+ * @param endType - undefined for character (default responseTemplate), "user" for responseTemplateUser, "plot" for responseTemplatePlot
  * @returns mutation with isEditing state that can be used to pause query subscriptions
  */
-export const useUpdateResponseTemplate = (flowId: string) => {
+export const useUpdateResponseTemplate = (flowId: string, endType?: string) => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [hasCursor, setHasCursor] = useState(false);
@@ -54,6 +56,7 @@ export const useUpdateResponseTemplate = (flowId: string) => {
       const result = await FlowService.updateResponseTemplate.execute({
         flowId,
         responseTemplate: template,
+        endType, // Pass endType to update the correct template
       });
 
       if (result.isFailure) {
@@ -68,11 +71,11 @@ export const useUpdateResponseTemplate = (flowId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({
-        queryKey: flowKeys.response(flowId),
+        queryKey: flowKeys.response(flowId, endType),
       });
 
       const previousTemplate = queryClient.getQueryData(
-        flowKeys.response(flowId),
+        flowKeys.response(flowId, endType),
       );
 
       // No optimistic update - let the mutation complete
@@ -83,7 +86,7 @@ export const useUpdateResponseTemplate = (flowId: string) => {
     onError: (err, variables, context) => {
       if (context?.previousTemplate !== undefined) {
         queryClient.setQueryData(
-          flowKeys.response(flowId),
+          flowKeys.response(flowId, endType),
           context.previousTemplate,
         );
       }
@@ -101,12 +104,18 @@ export const useUpdateResponseTemplate = (flowId: string) => {
         endEditing();
       }
 
-      // Invalidate both response and detail queries since detail query is used by vibe panel
+      // Only invalidate the specific response template query (don't invalidate detail)
+      // This prevents other response panels from re-fetching unnecessarily
       await queryClient.invalidateQueries({
-        queryKey: flowKeys.response(flowId),
+        queryKey: flowKeys.response(flowId, endType),
+        exact: true, // Only invalidate this exact query, not child queries
       });
+
+      // Invalidate the detail query to update vibe panel
+      // But use exact: true to prevent invalidating response queries
       await queryClient.invalidateQueries({
         queryKey: flowKeys.detail(flowId),
+        exact: true,
       });
     },
   });

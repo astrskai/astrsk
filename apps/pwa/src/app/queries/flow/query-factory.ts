@@ -44,7 +44,7 @@ const selectResultCache = new WeakMap<object, any>();
  *     - fields: ['flows', 'detail', id, 'dataStore', 'schema', 'fields']
  *     - field(fieldId): ['flows', 'detail', id, 'dataStore', 'schema', 'fields', fieldId]
  *     - runtime(nodeId): ['flows', 'detail', id, 'dataStore', 'runtime', nodeId]
- *   - response: ['flows', 'detail', id, 'response']
+ *   - response: ['flows', 'detail', id, 'response', endType]
  *   - validation: ['flows', 'detail', id, 'validation']
  *     - issues: ['flows', 'detail', id, 'validation', 'issues']
  *     - issue(issueId): ['flows', 'detail', id, 'validation', 'issues', issueId]
@@ -121,7 +121,12 @@ export const flowKeys = {
   dataStoreRuntime: (id: string, nodeId: string) =>
     [...flowKeys.dataStore(id), "runtime", nodeId] as const,
 
-  response: (id: string) => [...flowKeys.detail(id), "response"] as const,
+  response: (id: string, endType?: string) => {
+    // Important: Don't default undefined to "character" in the key
+    // Let undefined stay undefined so cache keys are truly unique
+    // After migration, all nodes will have explicit endType anyway
+    return [...flowKeys.detail(id), "response", endType] as const;
+  },
 
   validation: (id: string) => [...flowKeys.detail(id), "validation"] as const,
   validationIssues: (id: string) =>
@@ -405,9 +410,9 @@ export const flowQueries = {
     }),
 
   // Response template - Enhanced
-  response: (id: string) =>
+  response: (id: string, endType?: string) =>
     queryOptions({
-      queryKey: flowKeys.response(id),
+      queryKey: flowKeys.response(id, endType),
       queryFn: async () => {
         const flowOrError = await FlowService.getFlowWithNodes.execute(
           new UniqueEntityID(id),
@@ -416,7 +421,20 @@ export const flowQueries = {
           return "";
         }
 
-        return flowOrError.getValue().props.responseTemplate || "";
+        const flow = flowOrError.getValue();
+
+        // Return the appropriate template based on endType
+        // "character" or undefined = responseTemplate column (default)
+        // "user" = responseTemplateUser column
+        // "plot" = responseTemplatePlot column
+        if (endType === "user") {
+          return flow.props.responseTemplateUser || "";
+        } else if (endType === "plot") {
+          return flow.props.responseTemplatePlot || "";
+        } else {
+          // "character" or undefined = responseTemplate (backward compatibility)
+          return flow.props.responseTemplate || "";
+        }
       },
       staleTime: 1000 * 30,
     }),

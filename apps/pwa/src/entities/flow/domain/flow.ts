@@ -109,6 +109,8 @@ export interface FlowProps {
 
   // Response Design
   responseTemplate: string;
+  responseTemplateUser?: string; // User END node template
+  responseTemplatePlot?: string; // Plot END node template
 
   // Data Store Schema
   dataStoreSchema?: DataStoreSchema;
@@ -306,10 +308,20 @@ export class Flow extends AggregateRoot<FlowProps> {
       // Spread JSON
       const { id, ...props } = json;
 
+      // Convert date strings to Date objects (backward compatibility with old exports)
+      const createdAt = props.createdAt
+        ? (props.createdAt instanceof Date ? props.createdAt : new Date(props.createdAt))
+        : new Date();
+      const updatedAt = props.updatedAt
+        ? (props.updatedAt instanceof Date ? props.updatedAt : new Date(props.updatedAt))
+        : new Date();
+
       // Create flow from JSON
       const flow = new Flow(
         {
           ...props,
+          createdAt,
+          updatedAt,
           nodes: (() => {
             // Handle duplicate node IDs
             const seenNodeIds = new Set<string>();

@@ -33,6 +33,14 @@ export type RenderContext = {
     inactive?: Character[];
   };
 
+  // Plot (Phase 4: Plot Variables)
+  plot?: {
+    id: string;
+    name: string;
+    description: string;
+    entries: string[];
+  };
+
   // Session
   session: {
     char_entries?: string[];
