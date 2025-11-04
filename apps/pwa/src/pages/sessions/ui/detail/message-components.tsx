@@ -81,7 +81,7 @@ const MessageAvatar = ({
     >
       <div
         className={cn(
-          "border-border-selected-inverse/50 grid shrink-0 place-items-center overflow-hidden rounded-full border-1 select-none",
+          "border-border-selected-inverse/50 flex shrink-0 items-center justify-center overflow-hidden rounded-full border-1 select-none",
           !icon && "bg-background-surface-3",
           // Desktop: 80px
           "h-[80px] w-[80px]",
@@ -93,7 +93,7 @@ const MessageAvatar = ({
           <video
             ref={avatarVideoRef}
             src={icon || undefined}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover rounded-full"
             muted
             loop
             playsInline
@@ -102,7 +102,7 @@ const MessageAvatar = ({
           <img
             src={icon}
             alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover rounded-full"
           />
         ) : (
           <img
@@ -112,7 +112,7 @@ const MessageAvatar = ({
                 : "/img/message-avatar-default.svg"
             }
             alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? "User"}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover rounded-full"
           />
         )}
       </div>
