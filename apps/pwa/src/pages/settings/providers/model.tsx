@@ -536,7 +536,7 @@ export default function ModelPage({ className }: { className?: string }) {
   return (
     <div className={cn("flex h-full flex-col overflow-hidden", className)}>
       {/* Content */}
-      <div className="bg-background-surface-2 md:bg-background-surface-1 flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full px-4 py-4 md:max-w-6xl md:py-20">
           {/* Desktop title - hidden on mobile */}
           <TypoXLarge className="text-text-primary mb-8 hidden font-semibold md:block">

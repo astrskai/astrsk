@@ -210,7 +210,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Content */}
-        <div className="bg-background-surface-2 md:bg-background-surface-1 flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-lg px-4 py-4 md:py-6 md:pt-20 md:pb-6">
             {/* Desktop title - hidden on mobile */}
             <Typo2XLarge className="text-text-primary mb-12 hidden font-semibold md:block">

@@ -31,8 +31,8 @@ export function SessionListItem({ session, isActive }: SessionListItemProps) {
     <button
       onClick={handleClick}
       className={cn(
-        "text-text-primary hover:bg-background-surface-2 border-border flex w-full flex-col gap-2 border-b p-4 text-left transition-colors",
-        isActive && "bg-background-surface-3",
+        "flex w-full flex-col gap-2 border-b border-gray-900 p-4 text-left text-gray-50 transition-colors hover:bg-gray-800/80",
+        isActive && "bg-gray-800",
       )}
     >
       {/* Session Name */}
@@ -46,9 +46,19 @@ export function SessionListItem({ session, isActive }: SessionListItemProps) {
       </div>
 
       {/* Message Count */}
-      <div className="text-text-secondary flex items-center gap-1 text-xs">
-        <MessageCircle className="h-3 w-3" />
-        <span>{messageCount} messages</span>
+      <div className="flex items-center gap-1 text-xs text-gray-200">
+        <span>
+          {messageCount > 0 ? (
+            <>
+              <span className="text-sm font-semibold text-gray-50">
+                {messageCount}
+              </span>{" "}
+              Messages
+            </>
+          ) : (
+            "New session"
+          )}
+        </span>
       </div>
     </button>
   );

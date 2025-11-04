@@ -8,7 +8,10 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib";
 import {
-  Button, FloatingActionButton, Input, Separator,
+  Button,
+  FloatingActionButton,
+  Input,
+  Separator,
   Skeleton,
 } from "@/shared/ui";
 import {
@@ -569,7 +572,7 @@ const SidebarInset = React.forwardRef<
   return (
     <main
       className={cn(
-        "bg-background relative flex flex-1 flex-col overflow-hidden",
+        "bg-background-primary relative flex flex-1 flex-col overflow-hidden",
         "z-0 peer-data-[variant=inset]:rounded-xl peer-data-[variant=inset]:shadow-xs",
         className,
       )}

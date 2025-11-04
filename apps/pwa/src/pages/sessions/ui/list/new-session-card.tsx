@@ -14,10 +14,10 @@ export function NewSessionCard({ onClick, className }: NewSessionCardProps) {
   return (
     <div
       className={cn(
-        "group relative cursor-pointer overflow-hidden rounded-2xl",
-        "bg-black-alternate border-border border-2 border-dashed",
-        "hover:border-primary hover:bg-background-surface-2 transition-all",
-        "flex h-[300px] max-w-[340px] flex-col items-center justify-center",
+        "group relative cursor-pointer overflow-hidden rounded-lg",
+        "bg-black-alternate border-2 border-dashed border-gray-700",
+        "hover:bg-background-surface-2 transition-all hover:border-gray-100",
+        "flex max-w-[340px] flex-col items-center justify-center",
         className,
       )}
       onClick={onClick}
@@ -28,16 +28,16 @@ export function NewSessionCard({ onClick, className }: NewSessionCardProps) {
         <div className="group-hover:bg-primary/20 flex h-16 w-16 items-center justify-center rounded-full border border-gray-500 bg-gray-800 transition-all duration-300 group-hover:scale-110">
           <Plus
             size={32}
-            className="text-text-secondary group-hover:text-primary transition-colors"
+            className="group-hover:text-primary text-gray-50 transition-colors"
           />
         </div>
 
         {/* Text */}
         <div className="flex flex-col items-center gap-1">
-          <h3 className="text-text-primary group-hover:text-primary text-lg font-semibold transition-colors">
+          <h3 className="group-hover:text-primary text-lg font-semibold text-white transition-colors">
             New Session
           </h3>
-          <p className="text-text-secondary text-sm">Make your own story</p>
+          <p className="text-sm text-gray-200">Make your own story</p>
         </div>
       </div>
     </div>

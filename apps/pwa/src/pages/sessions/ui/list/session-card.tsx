@@ -227,10 +227,10 @@ export function SessionCard({ session }: SessionCardProps) {
     <>
       <div
         className={cn(
-          "group relative cursor-pointer overflow-hidden rounded-2xl",
-          "border-border border bg-gray-900",
-          "hover:border-primary/50 transition-all hover:shadow-lg",
-          "flex h-[300px] max-w-[340px] flex-col",
+          "group relative cursor-pointer overflow-hidden rounded-lg",
+          "border-1 border-gray-500 bg-gray-900",
+          "transition-all hover:border-gray-100",
+          "flex max-w-[340px] flex-col",
         )}
         onClick={handleCardClick}
       >
@@ -307,7 +307,7 @@ export function SessionCard({ session }: SessionCardProps) {
         </div>
 
         {/* Hover overlay border */}
-        <div className="group-hover:border-primary/30 pointer-events-none absolute inset-0 rounded-2xl border-2 border-transparent transition-colors" />
+        <div className="pointer-events-none absolute inset-0 rounded-lg transition-colors" />
       </div>
 
       {/* Dialogs - Outside of onClick area to prevent event bubbling */}

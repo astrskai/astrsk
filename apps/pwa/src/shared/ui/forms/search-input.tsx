@@ -39,7 +39,8 @@ export const SearchInput = forwardRef<
   return (
     <div className={cn("relative", className)}>
       <Search
-        className="text-text-secondary absolute top-1/2 left-3 -translate-y-1/2"
+        className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-200"
+        strokeWidth={2.5}
         size={18}
       />
       <input
@@ -48,7 +49,7 @@ export const SearchInput = forwardRef<
         placeholder={placeholder}
         value={currentValue}
         onChange={handleChange}
-        className="bg-background-surface-4 text-text-primary placeholder:text-text-secondary focus:ring-primary/50 h-10 w-full rounded-lg pr-10 pl-10 text-sm focus:ring-1 focus:outline-none"
+        className="focus:ring-primary/50 h-10 w-full rounded-lg bg-gray-800 pr-10 pl-10 text-sm text-gray-50 placeholder:text-gray-300 focus:ring-1 focus:outline-none"
         {...props}
       />
       {hasValue && (

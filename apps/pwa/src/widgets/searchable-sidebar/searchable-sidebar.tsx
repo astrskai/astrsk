@@ -29,13 +29,18 @@ export function SearchableSidebar({
   return (
     <div
       className={cn(
-        "border-border bg-background-surface-1 flex h-full flex-col border-r transition-all duration-300",
+        "border-border bg-dark-surface flex h-full flex-col border-r transition-all duration-300",
         isExpanded ? "w-80" : "w-12",
         className,
       )}
     >
       {/* Header: Search Input + Toggle Button */}
-      <div className="border-border flex items-center gap-2 border-b p-2">
+      <div
+        className={cn(
+          "border-border flex items-center border-b p-2",
+          isExpanded ? "gap-2" : "justify-center",
+        )}
+      >
         {isExpanded && (
           <SearchInput
             name="sidebar-search"
@@ -47,13 +52,16 @@ export function SearchableSidebar({
         )}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="bg-background-surface-2 hover:bg-background-surface-3 border-border flex h-10 w-10 shrink-0 items-center justify-center rounded-md border transition-colors"
+          className={cn(
+            "flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-white transition-colors hover:text-gray-300",
+            isExpanded ? "bg-transparent" : "bg-gray-800 hover:bg-gray-700",
+          )}
           aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
         >
           {isExpanded ? (
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-6 w-6" strokeWidth={2} />
           ) : (
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-6 w-6" strokeWidth={2} />
           )}
         </button>
       </div>

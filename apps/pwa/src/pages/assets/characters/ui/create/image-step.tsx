@@ -46,7 +46,8 @@ export function CharacterImageStep({
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
             <h3 className="text-text-primary mb-1 text-lg font-semibold">
-              Name your character <span className="text-status-required">*</span>
+              Name your character{" "}
+              <span className="text-status-required">*</span>
             </h3>
             <p className="text-text-secondary text-sm">
               Give your character a name
@@ -93,26 +94,20 @@ export function CharacterImageStep({
 
             {/* Card Preview - Center */}
             <div className="flex flex-1 flex-col items-center gap-4">
-              {avatarAssetId ? (
-                <div className="@container w-full max-w-[320px]">
-                  <CardDisplay
-                    title={characterName || "New Character"}
-                    name={characterName || "New Character"}
-                    type={CardType.Character}
-                    tags={[]}
-                    tokenCount={0}
-                    previewImageUrl={avatarAssetId}
-                    isSelected={false}
-                    showActions={false}
-                  />
-                </div>
-              ) : (
-                <div className="bg-background-surface-3 relative flex aspect-[196/289] w-full max-w-[320px] items-center justify-center rounded-[8px]">
-                  <div className="text-text-placeholder px-4 text-center text-sm">
-                    Upload an image to see your card preview
-                  </div>
-                </div>
-              )}
+              <div className="@container w-full max-w-[320px]">
+                <CardDisplay
+                  title={characterName || "New Character"}
+                  name={characterName || "New Character"}
+                  type={CardType.Character}
+                  tags={[]}
+                  tokenCount={0}
+                  previewImageUrl={
+                    avatarAssetId || "/img/placeholder/character-card-image.png"
+                  }
+                  isSelected={false}
+                  showActions={false}
+                />
+              </div>
 
               {/* Upload Button - Below card */}
               <FileUploadButton
