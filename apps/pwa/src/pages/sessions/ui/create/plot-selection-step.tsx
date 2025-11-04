@@ -139,7 +139,7 @@ export function PlotSelectionStep({
 
       {/* Plot Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col">
+        <DialogContent className="flex max-h-[90dvh] max-w-4xl flex-col">
           <DialogHeader>
             <DialogTitle>Select Plot</DialogTitle>
             <DialogDescription>Choose a plot card (optional)</DialogDescription>

@@ -153,7 +153,7 @@ export function FlowSelectionStep({
 
       {/* Flow Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col">
+        <DialogContent className="flex max-h-[90dvh] max-w-4xl flex-col">
           <DialogHeader>
             <DialogTitle>Select Flow</DialogTitle>
             <DialogDescription>

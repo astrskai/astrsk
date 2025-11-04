@@ -152,7 +152,7 @@ export function AiCharacterSelectionStep({
 
       {/* Character Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col">
+        <DialogContent className="flex max-h-[90dvh] max-w-4xl flex-col">
           <DialogHeader>
             <DialogTitle>Select AI Characters</DialogTitle>
             <DialogDescription>
