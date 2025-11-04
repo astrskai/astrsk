@@ -15,7 +15,7 @@ export function NewSessionCard({ onClick, className }: NewSessionCardProps) {
     <div
       className={cn(
         "group relative cursor-pointer overflow-hidden rounded-2xl",
-        "bg-background-surface-1 border-border border-2 border-dashed",
+        "bg-black-alternate border-border border-2 border-dashed",
         "hover:border-primary hover:bg-background-surface-2 transition-all",
         "flex h-[300px] max-w-[340px] flex-col items-center justify-center",
         className,
@@ -25,7 +25,7 @@ export function NewSessionCard({ onClick, className }: NewSessionCardProps) {
       {/* Content: Plus icon + Text */}
       <div className="flex flex-col items-center gap-4">
         {/* Plus Icon */}
-        <div className="bg-background-surface-3 group-hover:bg-primary/20 flex h-16 w-16 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110">
+        <div className="group-hover:bg-primary/20 flex h-16 w-16 items-center justify-center rounded-full border border-gray-500 bg-gray-800 transition-all duration-300 group-hover:scale-110">
           <Plus
             size={32}
             className="text-text-secondary group-hover:text-primary transition-colors"
