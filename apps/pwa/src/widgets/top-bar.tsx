@@ -29,11 +29,6 @@ const NewWindowButton = () => {
 };
 
 export function TopBar() {
-  // Check if we're in Electron environment - hide topbar in web browsers
-  if (!isElectronEnvironment()) {
-    return null;
-  }
-
   // Detect Windows platform
   const isWindows = window.electron?.process?.platform === "win32";
 
@@ -45,6 +40,7 @@ export function TopBar() {
   // Electron window controls
   // Track maximized state for toggle icon
   const [isMaximized, setIsMaximized] = useState(false);
+
   useEffect(() => {
     // Check API availability
     if (!window.api?.topBar) {
@@ -82,13 +78,18 @@ export function TopBar() {
   };
 
   // Window title
-  const { activeMenu, activePage } = useAppStore();
+  const { activeMenu } = useAppStore();
+
+  // Check if we're in Electron environment - hide topbar in web browsers
+  if (!isElectronEnvironment()) {
+    return null;
+  }
 
   return (
     <div
       className={cn(
         "electron-drag-region",
-        "bg-background-surface-2 z-30 min-h-[38px]",
+        "bg-black-alternate z-30 min-h-[38px]",
         "relative flex flex-row items-center justify-center gap-2",
       )}
     >

@@ -98,7 +98,7 @@ export function FixedNav() {
       className={cn(
         "hidden md:flex",
         "flex-col items-center py-4",
-        "bg-background-surface-1 border-border border-r",
+        "bg-black-alternate border-border border-r",
       )}
       style={{ width: FIXED_NAV_WIDTH }}
     >

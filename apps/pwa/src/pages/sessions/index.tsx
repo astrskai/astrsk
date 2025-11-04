@@ -96,7 +96,7 @@ export function SessionsPage() {
       />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-1 py-2">
+      <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <Loading />
         ) : keyword && (!sessions || sessions.length === 0) ? (
