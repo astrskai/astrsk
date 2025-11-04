@@ -212,6 +212,7 @@ export class ImportFlowWithNodes
   ): Promise<Result<Flow>> {
     try {
       // Enhanced format: extract separate node data while keeping flow structure
+      // Exclude panelStructure and viewport (dockview layout) - user should set their own layout
       const {
         agents,
         dataStoreNodes,
@@ -219,6 +220,8 @@ export class ImportFlowWithNodes
         exportedAt,
         exportedBy,
         metadata,
+        panelStructure,
+        viewport,
         ...flowData
       } = data;
 
@@ -335,42 +338,12 @@ export class ImportFlowWithNodes
 
       const newEdges = this.remapEdgeIds(flowData.edges, nodeIdMap);
 
-      // Update panel structure to use new flow ID
-      let updatedPanelStructure = flowData.panelStructure;
-      if (updatedPanelStructure) {
-        // Deep clone to avoid mutations
-        updatedPanelStructure = JSON.parse(
-          JSON.stringify(updatedPanelStructure),
-        );
-
-        // Update flow IDs in panel metadata
-        if (updatedPanelStructure.panelMetadata) {
-          for (const key in updatedPanelStructure.panelMetadata) {
-            const panel = updatedPanelStructure.panelMetadata[key];
-            if (panel.params && panel.params.flowId) {
-              panel.params.flowId = newFlowId;
-            }
-          }
-        }
-
-        // Update flow IDs in serialized layout panels
-        if (updatedPanelStructure.serializedLayout?.panels) {
-          for (const key in updatedPanelStructure.serializedLayout.panels) {
-            const panel = updatedPanelStructure.serializedLayout.panels[key];
-            if (panel.params && panel.params.flowId) {
-              panel.params.flowId = newFlowId;
-            }
-          }
-        }
-      }
-
-      // Create and save flow
+      // Create and save flow (without panelStructure/viewport - user sets their own layout)
       const flow = Flow.create(
         {
           ...flowData,
           nodes: newNodes,
           edges: newEdges,
-          panelStructure: updatedPanelStructure,
         },
         new UniqueEntityID(newFlowId),
       );
