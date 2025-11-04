@@ -251,9 +251,11 @@ export function FlowCard({
         onClick={onClick}
         className={cn(
           "group relative h-full cursor-pointer overflow-hidden rounded-2xl transition-all duration-300",
-          "bg-background-surface-4 border-2 p-6",
-          "hover:border-primary/50 hover:shadow-lg",
-          isSelected ? "border-primary shadow-lg" : "border-border",
+          "border-1 bg-gray-900 p-6",
+          "hover:shadow-lg",
+          isSelected
+            ? "border-blue-300 shadow-lg hover:border-blue-300/70"
+            : "border-gray-500 hover:border-gray-500/70",
           // New flow animation - green pulse effect
           isNewlyCreated && [
             "!border-green-500",
@@ -264,7 +266,7 @@ export function FlowCard({
       >
         {/* Flow Name with Status */}
         <div className="mb-3 flex items-start justify-between gap-2">
-          <h3 className="text-text-primary flex items-start gap-2 text-lg font-semibold">
+          <h3 className="flex items-start gap-2 text-lg font-semibold text-gray-50">
             <IconFlow className="h-5 w-5 shrink-0" />
             <span className="line-clamp-2">
               {flow.props.name || "Untitled Flow"}
@@ -318,13 +320,13 @@ export function FlowCard({
                 {dataStoreFields.slice(0, 3).map((field, index) => (
                   <span
                     key={index}
-                    className="bg-background-surface-3 text-text-secondary rounded-md px-2 py-0.5 text-xs"
+                    className="text-black-alternate rounded-md bg-gray-300 px-2 py-0.5 text-xs"
                   >
                     {field.name}
                   </span>
                 ))}
                 {dataStoreFields.length > 3 && (
-                  <span className="bg-background-surface-3 text-text-secondary rounded-md px-2 py-0.5 text-xs">
+                  <span className="rounded-md px-2 py-0.5 text-xs text-gray-200">
                     +{dataStoreFields.length - 3}
                   </span>
                 )}

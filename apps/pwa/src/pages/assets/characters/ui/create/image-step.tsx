@@ -42,7 +42,7 @@ export function CharacterImageStep({
       </div>
 
       {/* Section 1: Character Name */}
-      <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-4 md:p-6">
+      <div className="border-border rounded-2xl border-2 p-4 md:p-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
             <h3 className="text-text-primary mb-1 text-lg font-semibold">
@@ -66,7 +66,7 @@ export function CharacterImageStep({
       </div>
 
       {/* Section 2: Character Image */}
-      <div className="bg-background-surface-1 border-border rounded-2xl border-2 p-4 md:p-6">
+      <div className="border-border rounded-2xl border-2 p-4 md:p-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
             <h3 className="text-text-primary mb-1 text-lg font-semibold">

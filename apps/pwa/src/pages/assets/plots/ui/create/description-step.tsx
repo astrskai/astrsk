@@ -75,7 +75,7 @@ export function PlotDescriptionStep({
       {/* Main Content - Flex Layout */}
       <div className="flex flex-col gap-6 md:flex-row">
         {/* Text Field */}
-        <div className="bg-background-surface-1 border-border flex-1 rounded-2xl border-2 p-4 md:p-6">
+        <div className="bg-black-alternate border-border flex-1 rounded-2xl border-2 p-4 md:p-6">
           <div className="flex flex-col gap-1">
             {/* Plot Description */}
             <Textarea

@@ -97,9 +97,11 @@ export function UserCharacterSelectionStep({
         onClick={handleAddUserCharacterClick}
         className={cn(
           "group relative cursor-pointer overflow-hidden rounded-2xl transition-all",
-          "bg-background-surface-1 border-2 p-6",
+          "bg-black-alternate border-1 p-6",
           "hover:border-primary/50 hover:shadow-lg",
-          selectedUserCharacter ? "border-primary shadow-lg" : "border-border",
+          selectedUserCharacter
+            ? "border-primary shadow-lg"
+            : "border-gray-700",
         )}
       >
         {selectedUserCharacter ? (

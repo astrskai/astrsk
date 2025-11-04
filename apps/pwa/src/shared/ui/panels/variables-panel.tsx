@@ -127,7 +127,7 @@ export function VariablesPanel({
   }, []);
 
   return (
-    <div className="bg-background-surface-1 border-border w-full rounded-2xl border-2 md:w-80">
+    <div className="bg-black-alternate border-border w-full rounded-2xl border-2 md:w-80">
       <div className="flex max-h-[500px] flex-col">
         {/* Header - Fixed */}
         <div className="border-border flex-shrink-0 border-b p-4">
@@ -164,7 +164,7 @@ export function VariablesPanel({
                   <button
                     type="button"
                     onClick={() => toggleGroupCollapse(group)}
-                    className="border-border hover:bg-background-surface-3 flex items-center justify-between border-b px-4 py-3 transition-colors"
+                    className="border-border flex items-start justify-between border-b px-4 py-3 transition-colors hover:bg-gray-800"
                   >
                     <div className="flex flex-col items-start gap-0.5">
                       <div className="text-text-primary text-xs font-medium">
@@ -172,7 +172,7 @@ export function VariablesPanel({
                           group as keyof typeof VariableGroupLabel
                         ]?.displayName || group}
                       </div>
-                      <div className="text-text-secondary text-xs">
+                      <div className="text-text-secondary text-left text-xs">
                         {
                           VariableGroupLabel[
                             group as keyof typeof VariableGroupLabel
@@ -181,9 +181,9 @@ export function VariablesPanel({
                       </div>
                     </div>
                     {collapsedGroups.has(group) ? (
-                      <ChevronDown className="text-text-secondary h-4 w-4 flex-shrink-0" />
+                      <ChevronDown className="text-text-secondary h-5 w-5 flex-shrink-0" />
                     ) : (
-                      <ChevronUp className="text-text-secondary h-4 w-4 flex-shrink-0" />
+                      <ChevronUp className="text-text-secondary h-5 w-5 flex-shrink-0" />
                     )}
                   </button>
 
@@ -197,12 +197,15 @@ export function VariablesPanel({
                           onClick={() =>
                             onVariableClick(`{{${variable.variable}}}`)
                           }
-                          className="bg-background-surface-2 hover:bg-background-surface-3 border-border flex flex-col gap-1 rounded-lg border p-3 text-left transition-colors"
+                          className="flex flex-col gap-1 rounded-lg border border-gray-700 bg-gray-900 p-3 text-left transition-colors hover:bg-gray-800"
                         >
-                          <div className="text-text-primary text-xs font-medium">
-                            {`{{${variable.variable}}}`}
+                          <div className="space-x-1 text-xs font-medium text-gray-50">
+                            <span className="text-gray-50">{`{{${variable.variable}}}`}</span>
+                            <span className="text-gray-200">
+                              {variable.dataType}
+                            </span>
                           </div>
-                          <div className="text-text-secondary text-xs">
+                          <div className="text-xs break-words text-gray-300">
                             {variable.description}
                           </div>
                         </button>

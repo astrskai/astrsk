@@ -28,7 +28,7 @@ type Step = "basic-info" | "flow" | "ai-character" | "user-character" | "plot";
 
 const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
   [
-    { id: "basic-info", label: "Basic Info", number: 1, required: false },
+    { id: "basic-info", label: "Basic Info", number: 1, required: true },
     { id: "flow", label: "Flow", number: 2, required: true },
     { id: "ai-character", label: "AI Character", number: 3, required: true },
     {
@@ -260,7 +260,7 @@ export function CreateSessionPage() {
       <StepIndicator steps={STEPS} currentStep={currentStep} />
 
       {/* Content */}
-      <div className="flex flex-1 overflow-y-auto mb-20 md:mb-0">
+      <div className="mb-20 flex flex-1 overflow-y-auto md:mb-0">
         <div className="mx-auto w-full max-w-5xl p-8">
           {currentStep === "basic-info" && (
             <BasicInfoStep
