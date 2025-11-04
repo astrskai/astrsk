@@ -40,6 +40,9 @@
   /* Semantic colors */
   --color-background-primary: var(--color-dark-surface);
 
+  --color-text-primary: var(--color-gray-50);
+  --color-text-secondary: var(--color-gray-200);
+
   /* Astrsk renewed colors end */
 }
 
@@ -132,7 +135,6 @@
   --color-button-chips: var(--button-chips);
 
   /* Text colors */
-  --color-text-primary: var(--text-primary);
   --color-text-body: var(--text-body);
   --color-text-subtle: var(--text-subtle);
   --color-text-placeholder: var(--text-placeholder);
@@ -300,7 +302,6 @@
   --text-info: #696969;
   --text-input-subtitle: #97a2b1;
   --text-muted-title: #d4d4d4;
-  --text-primary: #f1f1f1;
   --text-placeholder: #a1a1a1;
   --text-secondary: #bfbfbf;
   --text-user-message: #3f3f3f;
@@ -465,7 +466,6 @@
   --text-info: #696969;
   --text-input-subtitle: #97a2b1;
   --text-muted-title: #d4d4d4;
-  --text-primary: #f1f1f1;
   --text-placeholder: #a1a1a1;
   --text-secondary: #bfbfbf;
   --text-user-message: #3f3f3f;
