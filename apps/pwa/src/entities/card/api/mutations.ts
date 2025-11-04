@@ -75,16 +75,24 @@ export const useUpdateCardTitle = (cardId: string) => {
         };
       });
 
-      // Optimistic update - all list queries
+      // Optimistic update - all list queries (in persistence format)
       queryClient.setQueriesData(
         { queryKey: cardKeys.lists() },
         (oldData: any) => {
           if (!oldData || !Array.isArray(oldData)) return oldData;
 
           // Find and update the specific card in the list
+          // Must update in persistence format: common.title (ID is in common.id)
           return oldData.map((card) =>
-            card.id === cardId || card.id?.toString() === cardId
-              ? { ...card, title: title, updatedAt: new Date() }
+            card.common?.id === cardId || card.common?.id?.toString() === cardId
+              ? {
+                  ...card,
+                  common: {
+                    ...card.common,
+                    title: title,
+                    updated_at: new Date(),
+                  },
+                }
               : card,
           );
         },
@@ -113,12 +121,20 @@ export const useUpdateCardTitle = (cardId: string) => {
     onSettled: async (_data, error) => {
       if (!error) {
         endEditing();
+
+        // If no list queries were in cache during optimistic update,
+        // invalidate them so they refetch fresh data when user navigates back
+        const currentLists = queryClient.getQueriesData({
+          queryKey: cardKeys.lists(),
+        });
+
+        if (currentLists.length === 0) {
+          await queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
+        }
       }
 
-      // await queryClient.invalidateQueries({
-      //   queryKey: cardKeys.detail(cardId),
-      // });
-      // await queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
+      // Optimistic updates handle UI refresh when list queries are in cache
+      // Invalidation ensures fresh data when list queries are not cached
     },
   });
 
@@ -282,10 +298,14 @@ export const useUpdateCharacterName = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
+      await queryClient.cancelQueries({ queryKey: cardKeys.lists() });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
+      const previousLists = queryClient.getQueriesData({
+        queryKey: cardKeys.lists(),
+      });
 
-      // Optimistic update - content
+      // Optimistic update - detail (in persistence format)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old || !old.character) return old;
         return {
@@ -301,13 +321,48 @@ export const useUpdateCharacterName = (cardId: string) => {
         };
       });
 
-      return { previousCard };
+      // Optimistic update - all list queries (in persistence format)
+      queryClient.setQueriesData(
+        { queryKey: cardKeys.lists() },
+        (oldData: any) => {
+          if (!oldData || !Array.isArray(oldData)) return oldData;
+
+          // Find and update the specific card in the list
+          // Must update in persistence format: character.name (ID is in common.id)
+          return oldData.map((card) =>
+            card.common?.id === cardId || card.common?.id?.toString() === cardId
+              ? {
+                  ...card,
+                  character: card.character
+                    ? {
+                        ...card.character,
+                        name: name,
+                      }
+                    : undefined,
+                  common: {
+                    ...card.common,
+                    updated_at: new Date(),
+                  },
+                }
+              : card,
+          );
+        },
+      );
+
+      return { previousCard, previousLists };
     },
 
     onError: (_err, _variables, context) => {
       if (context?.previousCard) {
         queryClient.setQueryData(cardKeys.detail(cardId), context.previousCard);
       }
+
+      if (context?.previousLists) {
+        context.previousLists.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+
       setIsEditing(false);
       if (editEndTimerRef.current) {
         clearTimeout(editEndTimerRef.current);
@@ -317,11 +372,20 @@ export const useUpdateCharacterName = (cardId: string) => {
     onSettled: async (_data, error) => {
       if (!error) {
         endEditing();
+
+        // If no list queries were in cache during optimistic update,
+        // invalidate them so they refetch fresh data when user navigates back
+        const currentLists = queryClient.getQueriesData({
+          queryKey: cardKeys.lists(),
+        });
+
+        if (currentLists.length === 0) {
+          await queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
+        }
       }
 
-      // await queryClient.invalidateQueries({
-      //   queryKey: cardKeys.detail(cardId),
-      // });
+      // Optimistic updates handle UI refresh when list queries are in cache
+      // Invalidation ensures fresh data when list queries are not cached
     },
   });
 
