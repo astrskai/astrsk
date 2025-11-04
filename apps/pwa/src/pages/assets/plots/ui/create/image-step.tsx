@@ -45,9 +45,7 @@ export function PlotImageStep({
             <h3 className="text-text-primary mb-1 text-lg font-semibold">
               Name your plot <span className="text-status-required">*</span>
             </h3>
-            <p className="text-text-secondary text-sm">
-              Give your plot a name
-            </p>
+            <p className="text-text-secondary text-sm">Give your plot a name</p>
           </div>
 
           {/* Plot Name Input */}
@@ -75,25 +73,19 @@ export function PlotImageStep({
 
           {/* Card Preview - Centered */}
           <div className="flex flex-col items-center gap-4">
-            {imageAssetId ? (
-              <div className="@container w-full max-w-[320px]">
-                <CardDisplay
-                  title={plotName || DEFAULT_PLOT_NAME}
-                  type={CardType.Plot}
-                  tags={[]}
-                  tokenCount={0}
-                  previewImageUrl={imageAssetId}
-                  isSelected={false}
-                  showActions={false}
-                />
-              </div>
-            ) : (
-              <div className="bg-background-surface-3 relative flex aspect-[196/289] w-full max-w-[320px] items-center justify-center rounded-[8px]">
-                <div className="text-text-placeholder px-4 text-center text-sm">
-                  Upload an image to see your plot card preview
-                </div>
-              </div>
-            )}
+            <div className="@container w-full max-w-[320px]">
+              <CardDisplay
+                title={plotName || DEFAULT_PLOT_NAME}
+                type={CardType.Plot}
+                tags={[]}
+                tokenCount={0}
+                previewImageUrl={
+                  imageAssetId || "/img/placeholder/plot-card-image.png"
+                }
+                isSelected={false}
+                showActions={false}
+              />
+            </div>
 
             {/* Upload Button - Below card */}
             <FileUploadButton

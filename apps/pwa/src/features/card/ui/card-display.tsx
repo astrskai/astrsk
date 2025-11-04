@@ -105,7 +105,6 @@ export default function CardDisplay({
   className,
   onClick,
 }: CardDisplayProps) {
-
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [isCopying, setIsCopying] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -333,7 +332,7 @@ export default function CardDisplay({
       <article
         onClick={onClick}
         className={cn(
-          "relative flex aspect-[4/6] w-full overflow-hidden",
+          "relative flex aspect-[4/6] w-full overflow-hidden border border-gray-800",
           "transition-[transform,filter] duration-300 ease-out",
           "group-hover:brightness-105",
           "group-hover:drop-shadow-[0_8px_24px_rgba(0,0,0,0.4)]",
