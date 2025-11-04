@@ -222,7 +222,6 @@ export function FlowCard({
       // Navigate away from deleted flow if currently viewing it
       if (selectedFlowId === flow.id.toString()) {
         selectFlowId(null);
-        navigate({ to: "/" });
       }
 
       toast.success("Successfully deleted!", {
