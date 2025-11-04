@@ -40,7 +40,7 @@ import {
  * - **scenario:afterAdd**: Stores scenario messages as initial memories (optional)
  * - **prompt:afterRender**: Recalls memories (containers created if needed)
  * - **turn:afterCreate**: Distributes memories (containers created if needed)
- * - **turn:beforeUpdate**: Updates existing memories
+ * - **turn:afterCreate** (with isRegeneration: true): Updates existing memories (same as Regenerate)
  * - **turn:afterDelete**: Deletes memories
  */
 export class SupermemoryExtension implements IExtension {
@@ -54,7 +54,6 @@ export class SupermemoryExtension implements IExtension {
   };
 
   private client: IExtensionClient | null = null;
-  private turnsBeingCreated: Set<string> = new Set(); // Track turns currently in turn:afterCreate
 
   async onLoad(client: IExtensionClient): Promise<void> {
     // Remove existing listeners first to prevent memory leaks on hot reload
@@ -63,7 +62,6 @@ export class SupermemoryExtension implements IExtension {
       this.client.off("scenario:afterAdd", this.handleScenarioAfterAdd);
       this.client.off("prompt:afterRender", this.handlePromptAfterRender);
       this.client.off("turn:afterCreate", this.handleTurnAfterCreate);
-      this.client.off("turn:beforeUpdate", this.handleTurnBeforeUpdate);
       this.client.off("turn:afterDelete", this.handleTurnAfterDelete);
     }
 
@@ -74,7 +72,6 @@ export class SupermemoryExtension implements IExtension {
     client.on("scenario:afterAdd", this.handleScenarioAfterAdd);
     client.on("prompt:afterRender", this.handlePromptAfterRender);
     client.on("turn:afterCreate", this.handleTurnAfterCreate);
-    client.on("turn:beforeUpdate", this.handleTurnBeforeUpdate);
     client.on("turn:afterDelete", this.handleTurnAfterDelete);
 
     console.log("🧠 [Supermemory Extension] Loaded successfully - semantic memory active");
@@ -86,7 +83,6 @@ export class SupermemoryExtension implements IExtension {
       this.client.off("scenario:afterAdd", this.handleScenarioAfterAdd);
       this.client.off("prompt:afterRender", this.handlePromptAfterRender);
       this.client.off("turn:afterCreate", this.handleTurnAfterCreate);
-      this.client.off("turn:beforeUpdate", this.handleTurnBeforeUpdate);
       this.client.off("turn:afterDelete", this.handleTurnAfterDelete);
     }
 
@@ -215,7 +211,6 @@ export class SupermemoryExtension implements IExtension {
         }
 
         // Persist updated turn with memory IDs
-        // The turn:beforeUpdate hook will check if this is a new memory ID save vs content edit
         const updateResult = await this.client.api.updateTurn(turn);
         if (updateResult.isSuccess) {
           console.log(`✅ [Supermemory Extension] Saved memory IDs to scenario turn`);
@@ -334,7 +329,11 @@ export class SupermemoryExtension implements IExtension {
       const lastTurn = Array.isArray(turnHistory) && turnHistory.length > 0
         ? turnHistory[turnHistory.length - 1]
         : null;
-      const current_scene = lastTurn?.dataStore?.find((f: DataStoreSavedField) => f.name === 'selected_scene')?.value || "Unknown Scene";
+
+      // Try to get combined time+scene format first, fall back to scene only
+      const current_scene = lastTurn?.dataStore?.find((f: DataStoreSavedField) => f.name === 'selected_time_and_scene')?.value
+        || lastTurn?.dataStore?.find((f: DataStoreSavedField) => f.name === 'selected_scene')?.value
+        || "Unknown Scene";
       const worldContext = lastTurn?.dataStore?.find((f: DataStoreSavedField) => f.name === 'world_context')?.value as string || "";
 
       // Recall memories ONLY for the speaker (not all characters in session)
@@ -399,9 +398,7 @@ export class SupermemoryExtension implements IExtension {
       return;
     }
 
-    // Mark this turn as being created to prevent turn:beforeUpdate from updating memories
     const turnId = turn.id.toString();
-    this.turnsBeingCreated.add(turnId);
 
     // Set 10-second safety timeout to force unblock if something goes wrong
     const { blockUIForTurn, unblockUI } = await import("../../pwa/src/modules/extensions/bootstrap");
@@ -417,9 +414,33 @@ export class SupermemoryExtension implements IExtension {
       const isRegenerationFlow = isRegeneration === true;
       console.log(`🧠 [Supermemory Extension] ${isRegenerationFlow ? 'Regenerating' : 'Creating'} memories for turn ${turnId}`);
 
-      // NOTE: memory_ids are now filtered out before this hook fires (in session-messages-and-user-inputs.tsx)
-      // This ensures each message gets fresh memories specific to its content
-      // No need to check/delete old memory_ids here
+      // STEP 0: Delete old memories if this is regeneration or update
+      if (isRegenerationFlow) {
+        const dataStore = turn.dataStore || [];
+        const memoryIdsField = dataStore.find((f: DataStoreSavedField) => f.name === 'memory_ids');
+
+        if (memoryIdsField?.value) {
+          try {
+            const oldMemoryIds: string[] = JSON.parse(memoryIdsField.value as string);
+            if (oldMemoryIds.length > 0) {
+              console.log(`🗑️ [Supermemory Extension] Deleting ${oldMemoryIds.length} old memories...`);
+
+              const { deleteMemory } = await import("./roleplay-memory/integration/session-hooks");
+              const deletePromises = oldMemoryIds.map(async (memoryId: string) => {
+                try {
+                  await deleteMemory(memoryId);
+                } catch (error) {
+                  console.warn(`[Supermemory Extension] Failed to delete memory ${memoryId}:`, error);
+                }
+              });
+              await Promise.all(deletePromises);
+              console.log(`✅ [Supermemory Extension] Deleted ${oldMemoryIds.length} old memories`);
+            }
+          } catch (error) {
+            console.warn("[Supermemory Extension] Failed to parse/delete old memory IDs:", error);
+          }
+        }
+      }
 
       // Import distribution function
       const { distributeMemories } = await import("./roleplay-memory/integration/session-hooks");
@@ -444,6 +465,10 @@ export class SupermemoryExtension implements IExtension {
         ? JSON.parse(scenePoolField.value as string)
         : [];
 
+      // Get current scene from dataStore (inherits from previous turn)
+      const currentSceneField = dataStore.find((f: DataStoreSavedField) => f.name === 'selected_scene');
+      const currentScene = currentSceneField?.value as string | undefined;
+
       // Get recent turn history for agent context
       const turnHistory = await this.client.api.getTurnHistory(sessionId, { limit: 5 });
       const recentMessages = Array.isArray(turnHistory)
@@ -455,6 +480,9 @@ export class SupermemoryExtension implements IExtension {
 
       // STEP 1: Execute Space-Time Agent to determine scene
       console.log(`🌍 [Supermemory Extension] Executing Space-Time Agent...`);
+      if (currentScene) {
+        console.log(`   Current Scene: "${currentScene}"`);
+      }
 
       // Create adapter for Space-Time Agent's callAI signature
       const spaceTimeCallAI = async (params: {
@@ -489,23 +517,37 @@ export class SupermemoryExtension implements IExtension {
           recentMessages,
           scenePool: currentScenePool,
           speakerName,
+          currentScene, // Pass current scene so agent knows where characters are
         },
         spaceTimeCallAI
       );
 
+      // Extract time and scene from Space-Time Agent output
+      const selectedTime = spaceTimeOutput.selected_time;
+      const selectedScene = spaceTimeOutput.selected_scene;
+
+      // Combine time and scene into full format
+      const selectedTimeAndScene = `${selectedTime} ${selectedScene}`;
+
+      console.log(`⏰ [Supermemory Extension] Selected Time: "${selectedTime}"`);
+      console.log(`📍 [Supermemory Extension] Selected Scene: "${selectedScene}"`);
+      console.log(`🎬 [Supermemory Extension] Combined: "${selectedTimeAndScene}"`);
+
       // Update scene pool based on Space-Time Agent output
+      // Scene pool stores unique scene names only (not time+scene combinations)
       let updatedScenePool = [...currentScenePool];
-      const selectedScene = spaceTimeOutput.scene;
 
       if (spaceTimeOutput.action === "new") {
-        // New scene - add to pool
+        // New scene - add to pool (scene name only)
         console.log(`🆕 [Supermemory Extension] Creating new scene: "${selectedScene}"`);
-        updatedScenePool.push(selectedScene);
+        if (!updatedScenePool.includes(selectedScene)) {
+          updatedScenePool.push(selectedScene);
 
-        // Keep only last 20 scenes (FIFO)
-        if (updatedScenePool.length > 20) {
-          updatedScenePool = updatedScenePool.slice(-20);
-          console.log(`🗑️ [Supermemory Extension] Scene pool full, removed oldest scene`);
+          // Keep only last 20 scenes (FIFO)
+          if (updatedScenePool.length > 20) {
+            updatedScenePool = updatedScenePool.slice(-20);
+            console.log(`🗑️ [Supermemory Extension] Scene pool full, removed oldest scene`);
+          }
         }
       } else {
         console.log(`✅ [Supermemory Extension] Selected existing scene: "${selectedScene}"`);
@@ -610,12 +652,13 @@ export class SupermemoryExtension implements IExtension {
       console.log(`👥 [Supermemory Extension] Participants in scene "${selectedScene}":`, actualParticipants);
 
       // Distribute memories to containers and capture memory IDs
+      // Use the combined time+scene format for memory storage
       const memoryIds = await distributeMemories({
         sessionId,
         speakerCharacterId,
         speakerName,
         message,
-        scene: selectedScene,
+        scene: selectedTimeAndScene, // Use combined format (e.g., "Morning Day 1 Classroom")
         dataStore: {
           sessionId,
           selectedScene,
@@ -667,7 +710,22 @@ export class SupermemoryExtension implements IExtension {
       console.log(`🎬 Updated scene_pool (${updatedScenePool.length} scenes)`);
       dataStoreUpdated = true;
 
-      // 3. Update selected_scene from Space-Time Agent
+      // 3. Update selected_time from Space-Time Agent
+      const selectedTimeField = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'selected_time');
+      if (selectedTimeField) {
+        selectedTimeField.value = selectedTime;
+      } else {
+        turn.dataStore.push({
+          id: 'selected_time',
+          name: 'selected_time',
+          type: 'string',
+          value: selectedTime,
+        });
+      }
+      console.log(`⏰ Updated selected_time: "${selectedTime}"`);
+      dataStoreUpdated = true;
+
+      // 4. Update selected_scene from Space-Time Agent
       const selectedSceneField = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'selected_scene');
       if (selectedSceneField) {
         selectedSceneField.value = selectedScene;
@@ -682,7 +740,22 @@ export class SupermemoryExtension implements IExtension {
       console.log(`📍 Updated selected_scene: "${selectedScene}"`);
       dataStoreUpdated = true;
 
-      // 4. Update character_scenes from World Agent
+      // 4b. Update selected_time_and_scene (combined format)
+      const selectedTimeAndSceneField = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'selected_time_and_scene');
+      if (selectedTimeAndSceneField) {
+        selectedTimeAndSceneField.value = selectedTimeAndScene;
+      } else {
+        turn.dataStore.push({
+          id: 'selected_time_and_scene',
+          name: 'selected_time_and_scene',
+          type: 'string',
+          value: selectedTimeAndScene,
+        });
+      }
+      console.log(`🎬 Updated selected_time_and_scene: "${selectedTimeAndScene}"`);
+      dataStoreUpdated = true;
+
+      // 5. Update character_scenes from World Agent
       const characterScenesFieldUpdate = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'character_scenes');
       if (characterScenesFieldUpdate) {
         characterScenesFieldUpdate.value = JSON.stringify(updatedCharacterScenes);
@@ -697,7 +770,7 @@ export class SupermemoryExtension implements IExtension {
       console.log(`🎭 Updated character_scenes:`, updatedCharacterScenes);
       dataStoreUpdated = true;
 
-      // 5. Update participants derived from characterScenes
+      // 6. Update participants derived from characterScenes
       if (actualParticipants.length > 0) {
         const participantsField = turn.dataStore.find((f: DataStoreSavedField) => f.name === 'participants');
         if (participantsField) {
@@ -714,7 +787,7 @@ export class SupermemoryExtension implements IExtension {
         dataStoreUpdated = true;
       }
 
-      // 4. Update world_context from World Agent
+      // 7. Update world_context from World Agent
       if (worldAgentOutput.worldContextUpdates && worldAgentOutput.worldContextUpdates.length > 0) {
         // Merge world context updates
         const { mergeWorldContext } = await import("./roleplay-memory/utils/world-context");
@@ -737,7 +810,6 @@ export class SupermemoryExtension implements IExtension {
       }
 
       // Save dataStore updates to database
-      // turn:beforeUpdate will be skipped because turnsBeingCreated.has(turnId) is true
       if (dataStoreUpdated) {
         console.log(`💾 [Supermemory Extension] Saving World Agent outputs to turn dataStore...`);
         const updateResult = await this.client.api.updateTurn(turn);
@@ -754,122 +826,10 @@ export class SupermemoryExtension implements IExtension {
       // Clear safety timeout
       clearTimeout(safetyTimeout);
 
-      // Remove turn from creation tracking
-      this.turnsBeingCreated.delete(turnId);
-
       // Unblock UI interactions (memory creation complete)
       unblockUI();
     }
   };
-
-  /**
-   * Handle turn:beforeUpdate hook
-   *
-   * NOTE: This hook is DISABLED for automatic memory updates.
-   * Memory updates should only happen when user explicitly clicks an update button in the UI.
-   * The UI buttons should call updateTurnMemories() directly instead of relying on this hook.
-   */
-  private handleTurnBeforeUpdate = async (
-    _context: HookContext,
-  ): Promise<void> => {
-    // Disabled - memory updates should be explicit, not automatic
-    console.log("🧠 [Supermemory Extension] turn:beforeUpdate fired, but automatic updates are disabled. Use explicit UI buttons instead.");
-    return;
-  };
-
-  /**
-   * Explicitly update memories for a turn
-   * This should be called by UI buttons (Update Message, Confirm Update, etc.)
-   * NOT called automatically by hooks
-   */
-  public async updateTurnMemories(turnId: string): Promise<void> {
-    try {
-      if (!this.client) {
-        console.warn("[Supermemory Extension] Client not initialized");
-        return;
-      }
-
-      // Fetch turn from database
-      const turnResult = await this.client.api.getTurn(turnId);
-      if (turnResult.isFailure) {
-        console.warn("[Supermemory Extension] Failed to fetch turn from DB");
-        return;
-      }
-
-      const turn = turnResult.getValue();
-      const dataStore = turn.dataStore || [];
-
-      // Extract memory IDs
-      const memoryIdsField = dataStore.find((f: DataStoreSavedField) => f.name === 'memory_ids');
-      if (!memoryIdsField || !memoryIdsField.value) {
-        console.log("🧠 [Supermemory Extension] No memory IDs found in turn");
-        return;
-      }
-
-      // Parse memory IDs
-      let memoryIds: string[] = [];
-      try {
-        memoryIds = JSON.parse(memoryIdsField.value as string);
-      } catch (error) {
-        console.warn("[Supermemory Extension] Failed to parse memory IDs:", error);
-        return;
-      }
-
-      if (memoryIds.length === 0) {
-        console.log("🧠 [Supermemory Extension] No memory IDs to update");
-        return;
-      }
-
-      console.log(`🧠 [Supermemory Extension] Explicitly updating ${memoryIds.length} memories for turn ${turnId}`);
-
-      // Import update functions
-      const { updateMemory } = await import("./roleplay-memory/integration/session-hooks");
-
-      // Extract metadata from dataStore
-      const selectedScene = dataStore.find((f: DataStoreSavedField) => f.name === 'selected_scene')?.value || "Unknown Scene";
-      const participantsField = dataStore.find((f: DataStoreSavedField) => f.name === 'participants')?.value;
-
-      // Parse participants
-      let participants: string[] = [];
-      if (participantsField) {
-        try {
-          participants = JSON.parse(participantsField as string);
-        } catch (error) {
-          console.warn("[Supermemory Extension] Failed to parse participants:", error);
-        }
-      }
-
-      console.log(`   Metadata: scene="${selectedScene}", participants=${participants.length}, content_length=${turn.content?.length || 0}`);
-
-      // Update each memory with new content and metadata
-      const updatePromises = memoryIds.map(async (memoryId: string) => {
-        try {
-          const metadata: any = {
-            scene: selectedScene,
-          };
-
-          if (participants.length > 0) {
-            metadata.participants = participants;
-          }
-
-          await updateMemory(
-            memoryId,
-            turn.content, // Update content
-            metadata      // Update metadata
-          );
-        } catch (error) {
-          console.warn(`[Supermemory Extension] Failed to update memory ${memoryId}:`, error);
-        }
-      });
-
-      await Promise.all(updatePromises);
-      console.log(`✅ [Supermemory Extension] Updated ${memoryIds.length} memories for turn ${turnId}`);
-
-    } catch (error) {
-      console.error("[Supermemory Extension] Failed to update turn memories:", error);
-      throw error;
-    }
-  }
 
   /**
    * Handle turn:afterDelete hook

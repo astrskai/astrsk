@@ -35,17 +35,17 @@ export class NpcExtension implements IExtension {
   async onLoad(client: IExtensionClient): Promise<void> {
     // Remove existing listeners first to prevent memory leaks on hot reload
     if (this.client) {
-      this.client.off("message:afterGenerate", this.handleMessageAfterGenerate);
-      this.client.off("scenario:initialized", this.handleMessageAfterGenerate);
+      this.client.off("turn:afterCreate", this.handleTurnAfterCreate);
+      this.client.off("scenario:afterAdd", this.handleScenarioAfterAdd);
     }
 
     this.client = client;
 
-    // Register hook for message generation
-    client.on("message:afterGenerate", this.handleMessageAfterGenerate);
+    // Register hook for turn creation (includes new messages and regenerations)
+    client.on("turn:afterCreate", this.handleTurnAfterCreate);
 
-    // Register hook for scenario initialization
-    client.on("scenario:initialized", this.handleMessageAfterGenerate);
+    // Register hook for scenario addition
+    client.on("scenario:afterAdd", this.handleScenarioAfterAdd);
 
     console.log("👤 [NPC Extension] Loaded successfully - will auto-detect NPCs in conversations and scenarios");
     logger.info("[NPC Extension] Loaded successfully");
@@ -53,44 +53,43 @@ export class NpcExtension implements IExtension {
 
   async onUnload(): Promise<void> {
     if (this.client) {
-      this.client.off("message:afterGenerate", this.handleMessageAfterGenerate);
-      this.client.off("scenario:initialized", this.handleMessageAfterGenerate);
+      this.client.off("turn:afterCreate", this.handleTurnAfterCreate);
+      this.client.off("scenario:afterAdd", this.handleScenarioAfterAdd);
     }
 
     logger.info("[NPC Extension] Unloaded successfully");
   }
 
   /**
-   * Handle message:afterGenerate and scenario:initialized hooks
-   * Triggers NPC extraction and card creation for both generated messages and scenario content
+   * Handle turn:afterCreate hook
+   * Triggers NPC extraction and card creation for new messages and regenerations
    */
-  private handleMessageAfterGenerate = async (
+  private handleTurnAfterCreate = async (
     context: HookContext,
   ): Promise<void> => {
     const { blockUIForTurn, unblockUI } = await import("../../pwa/src/modules/extensions/bootstrap");
 
     // Set 10-second safety timeout to force unblock if something goes wrong
-    const messageId = context.messageId?.toString();
     const safetyTimeout = setTimeout(() => {
-      console.warn(`⏱️ [NPC Extension] Safety timeout reached${messageId ? ` for message ${messageId}` : ''}, force unblocking UI`);
+      console.warn(`⏱️ [NPC Extension] Safety timeout reached, force unblocking UI`);
       unblockUI();
     }, 10000);
 
     try {
-      const { session, message } = context;
+      const { session, turn } = context;
 
-      if (!session || !message) {
-        logger.warn("[NPC Extension] Missing session or message in context");
+      if (!session || !turn) {
+        logger.warn("[NPC Extension] Missing session or turn in context");
         return;
       }
 
       const sessionId = session.id.toString();
+      const turnId = turn.id.toString();
+      const message = turn.content; // Extract message content from turn
 
       // Block UI while processing NPCs
-      if (messageId) {
-        blockUIForTurn(messageId, "NPC extraction", "processing");
-        console.log(`🔒 [NPC Extension] Blocked UI for message ${messageId}`);
-      }
+      blockUIForTurn(turnId, "NPC extraction", "processing");
+      console.log(`🔒 [NPC Extension] Blocked UI for turn ${turnId}`);
 
       // Get main character names and descriptions from session
       // Need to load actual card data to get names and descriptions

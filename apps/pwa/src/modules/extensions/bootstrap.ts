@@ -66,26 +66,6 @@ export function emitExtensionEvent(
   extensionRegistry.emitEvent(event, context);
 }
 
-/**
- * Update memories for a turn (Supermemory extension)
- * Call this when user explicitly edits a message
- */
-export async function updateTurnMemories(turnId: string): Promise<void> {
-  const extension = extensionRegistry.getExtension("supermemory");
-  if (!extension) {
-    console.warn("[Extensions] Supermemory extension not found");
-    return;
-  }
-
-  // Cast to SupermemoryExtension to access updateTurnMemories method
-  const supermemoryExtension = extension as any;
-  if (typeof supermemoryExtension.updateTurnMemories === "function") {
-    await supermemoryExtension.updateTurnMemories(turnId);
-  } else {
-    console.warn("[Extensions] updateTurnMemories method not found on Supermemory extension");
-  }
-}
-
 // Global callback for UI blocking - set by SessionMessagesAndUserInputs component
 let blockUICallback: ((turnId: string | null, agentName?: string, modelName?: string) => void) | null = null;
 

@@ -22,11 +22,13 @@ export interface SpaceTimeAgentInput {
   }>;
   scenePool: string[];                // Existing scenes (max 20)
   speakerName: string;                // Who spoke this message
+  currentScene?: string;              // Current scene/location (if known)
 }
 
 export interface SpaceTimeAgentOutput {
-  action: "select" | "new";           // Whether selecting existing or creating new
-  scene: string;                      // The scene name
+  selected_time: string;              // Time period (e.g., "Morning Day 1", "Afternoon Day 2")
+  action: "select" | "new";           // Whether selecting existing or creating new scene
+  selected_scene: string;             // Scene/Location (e.g., "Classroom", "Park", "Coffee Shop")
 }
 
 export type CallAIFunction = (params: {
@@ -40,13 +42,17 @@ export type CallAIFunction = (params: {
 // ============================================================================
 
 const spaceTimeAgentSchema = z.object({
-  action: z.enum(["select", "new"]).describe(
-    "Whether you are selecting an existing scene from the pool or creating a new scene"
+  selected_time: z.string().describe(
+    "The time period in format: 'TimeOfDay Day#' (e.g., 'Morning Day 1', 'Afternoon Day 2', 'Evening Day 3'). " +
+    "First determine when this conversation is happening based on the narrative progression and context."
   ),
-  scene: z.string().describe(
-    "The scene name in format: 'Location TimeOfDay Day#'. " +
-    "If action='select', this MUST be one of the scenes from the Existing Scenes list. " +
-    "If action='new', this is a new scene name you are creating."
+  action: z.enum(["select", "new"]).describe(
+    "Set to 'select' if the selected_scene matches an existing scene from the Scene Pool. " +
+    "Set to 'new' if the selected_scene is a new location not in the Scene Pool."
+  ),
+  selected_scene: z.string().describe(
+    "The specific scene/location where this conversation is happening (e.g., 'Classroom', 'Park', 'Coffee Shop', 'Alice's House'). " +
+    "Be specific about the location. Use the selected_time to help determine the appropriate scene."
   ),
 });
 
@@ -55,9 +61,9 @@ const spaceTimeAgentSchema = z.object({
 // ============================================================================
 
 function buildSpaceTimeAgentPrompt(input: SpaceTimeAgentInput): string {
-  const { generatedMessage, recentMessages, scenePool, speakerName } = input;
+  const { generatedMessage, recentMessages, scenePool, speakerName, currentScene } = input;
 
-  // Format scene pool
+  // Format scene pool for reference
   const scenePoolFormatted = scenePool.length > 0
     ? scenePool.map((scene, idx) => `${idx + 1}. "${scene}"`).join("\n")
     : "(Empty - this will be the first scene)";
@@ -69,30 +75,40 @@ function buildSpaceTimeAgentPrompt(input: SpaceTimeAgentInput): string {
       ).join("\n")
     : "(No recent messages)";
 
+  // Format current scene
+  const currentSceneText = currentScene || "Unknown (this is the first scene)";
+
   return `You are a Space-Time Agent that tracks WHERE and WHEN conversations happen in a roleplay.
 
-Your job is to analyze the current message and determine what scene it belongs to.
+Your job is to analyze the current message and determine the TIME and LOCATION in two steps:
 
-## Scene Format
-A scene is a plain English description of: **Location + Time Period**
+**CURRENT LOCATION**: ${currentSceneText}
+(Characters start here - only change if they physically move)
 
-Examples:
-- "Classroom Morning Day 1"
-- "School Hallway Lunch Break Day 1"
-- "Park Afternoon Day 2"
-- "Alice's House Evening Day 2"
-- "Coffee Shop Night Day 3"
+## Step 1: Determine TIME
+First, analyze WHEN this conversation is happening:
+- **Time of day**: Morning, Afternoon, Evening, Night, Lunch Break, etc.
+- **Day number**: Day 1, Day 2, Day 3, etc. - track narrative progression
+- Format: "TimeOfDay Day#" (e.g., "Morning Day 1", "Afternoon Day 2")
 
-## Guidelines
-1. Be **specific** about location (not just "school" but "Classroom" or "Cafeteria")
-2. Include **time of day** (Morning, Afternoon, Evening, Night, Lunch Break, etc.)
-3. Include **day number** (Day 1, Day 2, etc.) - track narrative progression
-4. Use **consistent naming** - if a location was called "Classroom" before, keep calling it "Classroom"
-5. **Prefer selecting existing scenes** when the conversation continues in the same place/time
-6. **Create new scenes** when:
-   - Location changes (character moves to different place)
-   - Time advances significantly (morning → afternoon, today → tomorrow)
-   - Message explicitly indicates scene change
+## Step 2: Determine LOCATION (using the time context)
+After determining the time, identify WHERE this conversation is happening:
+- Be **specific** about location (not just "school" but "Classroom" or "Cafeteria")
+- Use **consistent naming** - look at the scene pool to see if this location already exists
+- Consider the time context to help determine the appropriate location
+
+**CRITICAL - Physical Movement Rule:**
+- Characters must **PHYSICALLY MOVE** to create a new scene
+- **Suggestions, plans, or talking about going somewhere** = STAY in current scene
+  - [NO] "Let's go to the hallway" = Still in current location
+  - [NO] "Should we head outside?" = Still in current location
+  - [NO] "I want to check the cafeteria" = Still in current location
+- **Physical movement indicators** = NEW scene
+  - [YES] "walked to the hallway" = Now in Hallway
+  - [YES] "They entered the cafeteria" = Now in Cafeteria
+  - [YES] "arrived at the park" = Now in Park
+  - [YES] "standing outside the classroom" = Now in Hallway (infer logical location)
+- When physical movement occurs, **extract the actual destination** (e.g., "outside classroom" → "Hallway")
 
 ## Existing Scenes (Scene Pool)
 ${scenePoolFormatted}
@@ -105,18 +121,22 @@ Speaker: ${speakerName}
 Content: ${generatedMessage}
 
 ## Task
-Determine the scene for this message.
+Analyze the message and output THREE fields:
 
-**Output TWO fields:**
-1. **action**: Either "select" or "new"
-   - "select" = Choose an existing scene from the Scene Pool above
-   - "new" = Create a new scene (location or time has changed)
+1. **selected_time**: The time period in format "TimeOfDay Day#"
+   - Example: "Morning Day 1", "Afternoon Day 2", "Evening Day 3"
 
-2. **scene**: The scene name
-   - If action="select": MUST be EXACTLY one of the scenes from the Scene Pool (copy it exactly as written)
-   - If action="new": Create a new scene name following the format guidelines
+2. **action**: Verification field
+   - Set to "select" if your selected_scene (location name only) already appears in any of the scenes from the Scene Pool above
+   - Set to "new" if your selected_scene is a new location not seen in the Scene Pool
+   - Note: Characters can be in the same location at different times, so only check the location name
 
-**IMPORTANT**: If you choose action="select", the scene name MUST match one of the scenes in the Scene Pool exactly!`;
+3. **selected_scene**: The specific location name
+   - Example: "Classroom", "Park", "Coffee Shop", "Alice's House"
+   - Use consistent naming with existing locations from the Scene Pool when appropriate
+   - **IMPORTANT**: Only change location if the message shows PHYSICAL MOVEMENT (walked, entered, arrived, standing at)
+   - If characters just TALK ABOUT going somewhere, keep the current location from Scene Pool
+   - If "outside [location]" is mentioned, infer the logical adjacent location (e.g., "outside classroom" → "Hallway")`;
 }
 
 // ============================================================================
@@ -154,18 +174,24 @@ export async function executeSpaceTimeAgent(
       });
 
       const output: SpaceTimeAgentOutput = {
+        selected_time: response.selected_time,
         action: response.action,
-        scene: response.scene,
+        selected_scene: response.selected_scene,
       };
 
-      logger.info(`   Agent Output: action="${output.action}", scene="${output.scene}"`);
+      logger.info(`   Agent Output: selected_time="${output.selected_time}", action="${output.action}", selected_scene="${output.selected_scene}"`);
 
-      // Validation: If action is "select", scene MUST exist in pool
+      // Validation: If action is "select", scene name MUST exist in pool (checking location only, not time)
       if (output.action === "select") {
-        if (!input.scenePool.includes(output.scene)) {
+        // Check if any scene in the pool contains this location name
+        const sceneExists = input.scenePool.some(poolScene =>
+          poolScene.includes(output.selected_scene)
+        );
+
+        if (!sceneExists) {
           logger.warn(
             `⚠️ [Space-Time Agent] Retry ${attempt + 1}/${maxRetries}: ` +
-            `Agent said "select" but scene "${output.scene}" not in pool.`
+            `Agent said "select" but scene "${output.selected_scene}" not in pool.`
           );
           logger.warn(`   Available scenes: ${input.scenePool.join(", ")}`);
 
@@ -176,11 +202,12 @@ export async function executeSpaceTimeAgent(
             // Max retries reached - force to "new"
             logger.warn(
               `⚠️ [Space-Time Agent] Max retries reached. ` +
-              `Forcing action to "new" for scene: ${output.scene}`
+              `Forcing action to "new" for scene: ${output.selected_scene}`
             );
             return {
+              selected_time: output.selected_time,
               action: "new",
-              scene: output.scene,
+              selected_scene: output.selected_scene,
             };
           }
         }
@@ -188,9 +215,9 @@ export async function executeSpaceTimeAgent(
 
       // Valid output
       if (output.action === "select") {
-        logger.info(`✅ [Space-Time Agent] Selected existing scene: "${output.scene}"`);
+        logger.info(`✅ [Space-Time Agent] Selected existing scene: "${output.selected_scene}" at time: "${output.selected_time}"`);
       } else {
-        logger.info(`🆕 [Space-Time Agent] Creating new scene: "${output.scene}"`);
+        logger.info(`🆕 [Space-Time Agent] Creating new scene: "${output.selected_scene}" at time: "${output.selected_time}"`);
       }
 
       return output;
@@ -204,8 +231,9 @@ export async function executeSpaceTimeAgent(
         // Fallback: Create a default scene
         logger.error(`[Space-Time Agent] All retries failed. Using fallback scene.`);
         return {
+          selected_time: "Unknown Time Day 1",
           action: "new",
-          scene: `Unknown Location Day 1`,
+          selected_scene: "Unknown Location",
         };
       }
     }

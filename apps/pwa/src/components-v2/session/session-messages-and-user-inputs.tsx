@@ -2377,19 +2377,24 @@ const SessionMessagesAndUserInputs = ({
       }
       console.log("   ✅ Message saved successfully");
 
-      // Update Supermemory memories with new content (fire-and-forget, don't block UI)
-      if (supermemoryIdsField) {
+      // Update memories with new content (fire-and-forget, don't block UI)
+      // Fire turn:afterCreate with isRegeneration: true (same as Regenerate button)
+      if (supermemoryIdsField && session) {
         console.log("   🧠 Initiating background memory update...");
-        import("@/modules/extensions/bootstrap").then(({ updateTurnMemories }) => {
-          updateTurnMemories(messageId.toString())
+        import("@/modules/extensions/bootstrap").then(({ triggerExtensionHook }) => {
+          triggerExtensionHook("turn:afterCreate", {
+            turn: message,
+            session,
+            isRegeneration: true,
+          })
             .then(() => {
-              console.log("   ✅ Supermemory memories updated in background");
+              console.log("   ✅ Memories updated in background (all extensions)");
             })
             .catch((error) => {
-              console.warn("   ⚠️ Failed to update Supermemory memories:", error);
+              console.warn("   ⚠️ Failed to update memories:", error);
             });
         }).catch((error) => {
-          console.warn("   ⚠️ Failed to import updateTurnMemories:", error);
+          console.warn("   ⚠️ Failed to import triggerExtensionHook:", error);
         });
       }
 

@@ -25,11 +25,9 @@ export type ExtensionHook =
   | "session:afterUpdate"
   | "scenario:afterAdd"        // After scenario is added to session
   | "prompt:afterRender"       // After prompt messages rendered, before LLM execution
-  | "message:afterGenerate"
-  | "scenario:initialized"
   | "card:beforeCreate"
   | "card:afterCreate"
-  | "turn:afterCreate"
+  | "turn:afterCreate"         // After turn is created (includes new messages, regenerations, and updates)
   | "turn:beforeUpdate"
   | "turn:afterDelete";
 

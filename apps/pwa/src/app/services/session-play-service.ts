@@ -2356,22 +2356,9 @@ async function* executeFlow({
       };
     }
 
-    // Trigger extension hooks for message:afterGenerate
-    try {
-      console.log("🪝 [Flow] Triggering extension hooks (message:afterGenerate)");
-      const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
-      await triggerExtensionHook("message:afterGenerate", {
-        session,
-        message: content,
-        messageId,  // Pass messageId for UI blocking
-        timestamp: Date.now(),
-      });
-    } catch (error) {
-      console.error("❌ [Flow] Failed to trigger extension hooks", error);
-      logger.error("[Flow] Failed to trigger extension hooks", { error });
-    }
-
     // Flow execution completed successfully - dataStore will be saved with the new turn
+    // Note: Extension hooks (NPC, Lorebook, Supermemory) are triggered via turn:afterCreate
+    // from the UI layer after the turn is persisted
   } catch (error) {
     const parsedError = parseAiSdkErrorMessage(error);
     if (parsedError) {
