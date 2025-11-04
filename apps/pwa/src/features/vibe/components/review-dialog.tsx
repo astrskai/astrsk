@@ -118,7 +118,7 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-4xl">
+      <DialogContent className="max-h-[90dvh] max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Review Changes</span>

@@ -3,7 +3,7 @@ import { useCallback } from "react";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
-import { sessionQueries } from "@/app/queries/session-queries";
+import { sessionQueries } from "@/entities/session/api";
 
 export const useSession = (sessionId?: UniqueEntityID | null) => {
   const { data } = useQuery(sessionQueries.detail(sessionId || undefined));

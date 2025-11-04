@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { apiConnectionQueries } from "@/app/queries/api-connection-queries";
-import { queryClient } from "@/app/queries/query-client";
+import { apiConnectionQueries } from "@/entities/api/api-connection-queries";
+import { queryClient } from "@/shared/api/query-client";
 import { ApiConnection } from "@/entities/api/domain";
 import { ApiModel } from "@/entities/api/domain/api-model";
 

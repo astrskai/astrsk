@@ -95,6 +95,8 @@ export class CardDrizzleMapper {
         version: domain.props.version,
         conceptual_origin: domain.props.conceptualOrigin,
         image_prompt: domain.props.imagePrompt,
+        created_at: domain.props.createdAt,
+        updated_at: domain.props.updatedAt,
       },
     };
 
@@ -106,6 +108,8 @@ export class CardDrizzleMapper {
         description: domain.props.description,
         example_dialogue: domain.props.exampleDialogue,
         lorebook: domain.props.lorebook ? domain.props.lorebook.toJSON() : null,
+        created_at: domain.props.createdAt,
+        updated_at: domain.props.updatedAt,
       };
     } else if (this.isPlotCard(domain)) {
       insertRow.plot = {
@@ -113,6 +117,8 @@ export class CardDrizzleMapper {
         description: domain.props.description,
         scenarios: domain.props.scenarios,
         lorebook: domain.props.lorebook ? domain.props.lorebook.toJSON() : null,
+        created_at: domain.props.createdAt,
+        updated_at: domain.props.updatedAt,
       };
     } else {
       // Unknown card type

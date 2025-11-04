@@ -24,24 +24,24 @@ import { JSONSchema7 } from "json-schema";
 import { cloneDeep, merge } from "lodash-es";
 import { createOllama } from "ollama-ai-provider";
 
-import { fetchAgent } from "@/app/queries/agent/query-factory";
-import { fetchApiConnections } from "@/app/queries/api-connection-queries";
+import { fetchAgent } from "@/entities/agent/api/query-factory";
+import { fetchApiConnections } from "@/entities/api/api-connection-queries";
 import {
   fetchCharacterCard,
   fetchCharacterCardOptional,
   fetchPlotCardOptional,
-} from "@/app/queries/card/query-factory";
-import { fetchDataStoreNode } from "@/app/queries/data-store-node/query-factory";
-import { fetchFlow } from "@/app/queries/flow/query-factory";
-import { fetchIfNode } from "@/app/queries/if-node/query-factory";
-import { fetchSession } from "@/app/queries/session-queries";
-import { fetchTurn, fetchTurnOptional } from "@/app/queries/turn-queries";
+} from "@/entities/card/api/query-factory";
+import { fetchDataStoreNode } from "@/entities/data-store-node/api/query-factory";
+import { fetchFlow } from "@/entities/flow/api/query-factory";
+import { fetchIfNode } from "@/entities/if-node/api/query-factory";
+import { fetchSession } from "@/entities/session/api";
+import { fetchTurn, fetchTurnOptional } from "@/entities/turn/api/turn-queries";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useWllamaStore } from "@/shared/stores/wllama-store";
-import { Condition, isUnaryOperator } from "@/features/flow/flow-multi/types/condition-types";
-import { traverseFlowCached } from "@/features/flow/flow-multi/utils/flow-traversal";
+import { Condition, isUnaryOperator } from "@/features/flow/types/condition-types";
+import { traverseFlowCached } from "@/features/flow/utils/flow-traversal";
 import { ModelTier } from "@/entities/agent/domain";
 import { ApiSource } from "@/entities/api/domain";
 import {

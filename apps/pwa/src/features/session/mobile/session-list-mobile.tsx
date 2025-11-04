@@ -13,19 +13,19 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { useCard } from "@/shared/hooks/use-card";
 import { useSession } from "@/shared/hooks/use-session";
 import { useSessionValidation } from "@/shared/hooks/use-session-validation";
-import { useSessions } from "@/shared/hooks/use-sessions-v2";
 import { useTurn } from "@/shared/hooks/use-turn";
 
 import { SessionService } from "@/app/services/session-service";
 
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useValidationStore } from "@/shared/stores/validation-store";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/shared/lib";
 
 import { SessionMainMobile } from "@/features/session/mobile/session-main-mobile";
 import CreateSessionPageMobile from "@/features/session/mobile/create-session-page-mobile";
-import { ModelItem } from "@/features/flow/flow-multi/components/model-selection";
+import { ModelItem } from "@/features/flow/ui/model-selection";
 import {
   Button,
   CheckboxMobile,
@@ -51,9 +51,9 @@ import { ApiSource } from "@/entities/api/domain";
 import { toast } from "sonner";
 import { TopNavigation } from "@/widgets/top-navigation";
 import { StepName } from "@/features/session/create-session/step-name";
-import { flowQueries } from "@/app/queries/flow-queries";
-import { sessionQueries } from "@/app/queries/session-queries";
-import { cardQueries } from "@/app/queries/card-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
+import { sessionQueries } from "@/entities/session/api";
+import { cardQueries } from "@/entities/card/api/card-queries";
 
 export function humanizeBytes(bytes: number): string {
   const units = ["Bytes", "KB", "MB", "GB", "TB"];
@@ -192,7 +192,7 @@ const SessionItemMobile = ({
             </div>
           </div>
           <div className="flex items-center justify-end">
-            {session.characterCards
+            {/* {session.characterCards
               .slice(0, 3)
               .map((card: Card, index: number) => (
                 <div
@@ -201,7 +201,7 @@ const SessionItemMobile = ({
                 >
                   <MobileCharacterAvatar cardId={card.id} />
                 </div>
-              ))}
+              ))} */}
             {session.characterCards.length > 3 && (
               <div
                 className="bg-background-surface-3 outline-background-surface-2 inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"
@@ -234,9 +234,7 @@ const SessionListMobile = ({
     selectSession,
     setCreateSessionName,
   } = useSessionStore();
-  const { data: sessions } = useSessions({
-    keyword,
-  });
+  const { data: sessions = [] } = useQuery(sessionQueries.list({ keyword }));
 
   // Search focus state
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -296,7 +294,9 @@ const SessionListMobile = ({
 
   // Check invalid sessions
   const setSessionIds = useValidationStore((state) => state.setSessionIds);
-  const { data: allSessions } = useSessions({});
+  const { data: allSessions = [] } = useQuery(
+    sessionQueries.list({ keyword: "" }),
+  );
   useEffect(() => {
     if (!allSessions) {
       return;
@@ -563,7 +563,7 @@ const SessionListMobile = ({
   const handleCreateSessionWithName = useCallback(
     async (name: string) => {
       setCreateSessionName(name);
-      navigate({ to: "/sessions/create" });
+      navigate({ to: "/sessions/new" });
     },
     [setCreateSessionName, navigate],
   );

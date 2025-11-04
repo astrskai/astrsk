@@ -19,7 +19,7 @@ import { AgentService } from '@/app/services/agent-service';
 import { DataStoreNodeService } from '@/app/services/data-store-node-service';
 import { IfNodeService } from '@/app/services/if-node-service';
 import { NodeType } from "@/entities/flow/model/node-types";
-import { getNextAvailableColor } from '@/features/flow/flow-multi/utils/node-color-assignment';
+import { getNextAvailableColor } from '@/features/flow/utils/node-color-assignment';
 import { Edge } from '@/entities/flow/domain/flow';
 import { notifyFlowNodesEdgesUpdate } from '@/shared/lib/flow-local-state-sync';
 

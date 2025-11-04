@@ -61,7 +61,7 @@ export class FlowDrizzleMapper {
   public static toPersistence(flow: Flow): InsertFlow {
     try {
       const props = flow.props;
-      
+
 
       const result = {
         id: flow.id.toString(),
@@ -75,9 +75,11 @@ export class FlowDrizzleMapper {
         viewport: props.viewport,
         ready_state: props.readyState,
         validation_issues: props.validationIssues,
+        created_at: props.createdAt,
+        updated_at: props.updatedAt,
       };
-      
-      
+
+
       return result;
     } catch (error) {
       logger.error(`Failed to convert flow domain to row: ${error}`);

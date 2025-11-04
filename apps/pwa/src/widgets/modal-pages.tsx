@@ -1,8 +1,10 @@
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { useAppStore, Page } from "@/shared/stores/app-store";
-import { OnboardingStepOnePage, OnboardingStepTwoPage } from "@/features/settings/onboarding";
-import { SubscribePage, PaymentPage } from "@/features/settings/subscription";
-import { SignUpPage } from "@/features/settings/account";
+import { OnboardingStepOnePage } from "@/pages/settings/onboarding/step-one";
+import { OnboardingStepTwoPage } from "@/pages/settings/onboarding/step-two";
+import { SubscribePage } from "@/pages/settings/subscription/subscribe";
+import { PaymentPage } from "@/pages/settings/subscription/payment";
+import { SignUpPage } from "@/pages/settings/account/signup";
 
 export const ModalPages = () => {
   const isMobile = useIsMobile();

@@ -9,8 +9,8 @@ import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
 import { Agent } from "@/entities/agent/domain";
 import { Flow, Node } from "@/entities/flow/domain";
 import { useQuery, useQueries } from "@tanstack/react-query";
-import { flowQueries } from "@/app/queries/flow-queries";
-import { agentQueries } from "@/app/queries/agent/query-factory";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
+import { agentQueries } from "@/entities/agent/api/query-factory";
 import { AgentListItemMobile } from "../components/agent-list-item-mobile";
 
 // Re-export schema and converter from the shared step

@@ -10,7 +10,7 @@ import { SessionService } from "@/app/services/session-service";
 import { Page, useAppStore } from "@/shared/stores/app-store";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useValidationStore } from "@/shared/stores/validation-store";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
 import { BackgroundService } from "@/app/services/background-service";
 import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { StepperMobile } from "@/shared/ui";

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { logger } from "@/shared/lib/logger";
 import { SessionProps } from "@/entities/session/domain/session";
 import { Session } from "@/entities/session/domain/session";
-import { useSaveSession } from "@/app/queries/session-queries";
+import { useSaveSession } from "@/entities/session/api";
 
 interface UseAutoSaveSessionOptions {
   session: Session | null;

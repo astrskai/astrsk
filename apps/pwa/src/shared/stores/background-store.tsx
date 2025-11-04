@@ -125,6 +125,7 @@ export const fetchBackgrounds = async () => {
   const backgroundsOrError = await BackgroundService.listBackground.execute({
     limit: 100,
   });
+
   if (backgroundsOrError.isFailure) {
     return;
   }

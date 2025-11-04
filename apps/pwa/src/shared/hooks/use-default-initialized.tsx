@@ -29,6 +29,7 @@ export const useDefaultInitialized = () => {
         .throwOnFailure()
         .getValue();
       let addAstrskaiProvider = false;
+
       if (apiConnections && apiConnections.length === 0) {
         addAstrskaiProvider = true;
       } else if (apiConnections) {
@@ -40,6 +41,7 @@ export const useDefaultInitialized = () => {
           addAstrskaiProvider = true;
         }
       }
+
       if (
         addAstrskaiProvider &&
         import.meta.env.VITE_ASTRSK_FREE_API_KEY &&

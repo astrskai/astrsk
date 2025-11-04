@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 import { CardType } from "@/entities/card/domain";
 import { SearchCardsSort } from "@/entities/card/repos";
 

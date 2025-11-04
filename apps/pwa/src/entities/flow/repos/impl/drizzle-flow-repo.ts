@@ -260,8 +260,17 @@ export class DrizzleFlowRepo
   async saveFlow(flow: Flow, tx?: Transaction): Promise<Result<Flow>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
+      console.log('[saveFlow] Called:', {
+        flowId: flow.id.toString().slice(0, 8),
+        flowName: flow.props.name,
+        createdAt: flow.props.createdAt,
+      });
+
       // Convert to row
       const row = FlowDrizzleMapper.toPersistence(flow);
+
+      // Exclude created_at from update to preserve original timestamp
+      const { created_at, ...rowWithoutCreatedAt } = row;
 
       // Insert or update flow
       const savedRow = await db
@@ -269,7 +278,10 @@ export class DrizzleFlowRepo
         .values(row)
         .onConflictDoUpdate({
           target: flows.id,
-          set: row,
+          set: {
+            ...rowWithoutCreatedAt,
+            updated_at: new Date(), // Update timestamp on conflict
+          },
         })
         .returning()
         .then(getOneOrThrow);

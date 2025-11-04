@@ -1,4 +1,3 @@
-import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { Page, useAppStore } from "@/shared/stores/app-store";
 import { useState } from "react";
 import { usePwa } from "@/shared/hooks/use-pwa";
@@ -7,34 +6,40 @@ import { useGlobalErrorHandler } from "@/shared/hooks/use-global-error-handler";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
+import { useLocation } from "@tanstack/react-router";
 import { InstallPwa } from "@/shared/ui/install-pwa";
 import { TopBar } from "@/widgets/top-bar";
+import { WebTopBar } from "@/widgets/web-top-bar";
 import {
-  Loading,
+  InitialLoading,
   LoadingOverlay,
   Sheet,
   SheetContent,
   Toaster,
 } from "@/shared/ui";
+import { isElectronEnvironment } from "@/shared/lib/environment";
 import { ThemeProvider } from "@/app/providers/theme-provider";
 import { SidebarLeftProvider } from "@/widgets/both-sidebar";
-import { LeftNavigationMobile } from "@/widgets/left-navigation/left-navigation-mobile";
+import { LeftNavigationMobile } from "@/widgets/collapsible-sidebar/left-navigation-mobile";
 import { cn } from "@/shared/lib";
-import { LeftNavigation } from "@/widgets/left-navigation";
-import { LeftNavigationTrigger } from "@/widgets/left-navigation";
+// import {
+//   CollapsibleSidebar,
+//   CollapsibleSidebarTrigger,
+// } from "@/widgets/collapsible-sidebar";
+import { FixedNav } from "@/widgets/fixed-nav";
 import { SidebarInset } from "@/widgets/both-sidebar";
 import { MobileNavigationContext } from "@/shared/stores/mobile-navigation-context";
-import CreateSessionPage from "@/features/session/create-session-page";
-import { createPortal } from "react-dom";
+// import CreateSessionPage from "@/features/session/create-session-page";
+// import { createPortal } from "react-dom";
 
 export function MainLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isMobile = useIsMobile();
   const setIsLoading = useAppStore.use.setIsLoading();
   const activePage = useAppStore.use.activePage();
+  const location = useLocation();
 
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const { isStandalone, canInstall, install } = usePwa();
@@ -95,14 +100,14 @@ export function MainLayout({
   }, [defaultInitialized, setIsLoading]);
 
   // Show InstallPwa screen only in production for mobile non-standalone users
-  if (isMobile && !isStandalone && !import.meta.env.DEV) {
-    return <InstallPwa canInstall={canInstall} install={install} />;
-  }
+  // deprecated since we don't have a install screen anymore
+  // if (isMobile && !isStandalone && !import.meta.env.DEV) {
+  //   return <InstallPwa canInstall={canInstall} install={install} />;
+  // }
 
   // Development mode: Log PWA status for debugging
-  if (import.meta.env.DEV && isMobile) {
+  if (import.meta.env.DEV) {
     console.log("[Dev Mode] PWA Install Screen bypassed:", {
-      isMobile,
       isStandalone,
       canInstall,
       isDev: import.meta.env.DEV,
@@ -116,7 +121,7 @@ export function MainLayout({
       <>
         <TopBar />
         <div className="bg-background-screen flex h-[calc(100dvh-var(--topbar-height))] items-center justify-center">
-          <Loading isTimer />
+          <InitialLoading isTimer />
         </div>
       </>
     );
@@ -128,53 +133,14 @@ export function MainLayout({
       <>
         <TopBar />
         <div className="bg-background-screen flex h-[calc(100dvh-var(--topbar-height))] items-center justify-center">
-          <Loading />
+          <InitialLoading />
         </div>
       </>
     );
   }
 
-  if (isMobile) {
-    return (
-      <ThemeProvider>
-        <LoadingOverlay />
-        <SidebarLeftProvider defaultOpen={false}>
-          <MobileNavigationContext.Provider
-            value={{ isOpen: isMobileNavOpen, setIsOpen: setIsMobileNavOpen }}
-          >
-            <div
-              className={cn(
-                "text-foreground safe-area-all h-dvh w-full antialiased",
-                "flex flex-col",
-                "font-inter",
-                "bg-background-surface-2",
-              )}
-            >
-              <main className="relative flex-1 overflow-hidden">
-                {children}
-              </main>
-
-              {/* Mobile navigation sheet */}
-              <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
-                <SheetContent
-                  side="left"
-                  className="bg-background-container w-[250px] p-0"
-                  hideClose
-                >
-                  <LeftNavigationMobile
-                    onNavigate={() => setIsMobileNavOpen(false)}
-                  />
-                </SheetContent>
-              </Sheet>
-            </div>
-            <Toaster expand className="!z-[100]" />
-          </MobileNavigationContext.Provider>
-        </SidebarLeftProvider>
-        {activePage === Page.CreateSession &&
-          createPortal(<CreateSessionPage />, document.body)}
-      </ThemeProvider>
-    );
-  }
+  const isElectron = isElectronEnvironment();
+  const isRootPage = location.pathname === "/";
 
   return (
     <ThemeProvider>
@@ -186,16 +152,26 @@ export function MainLayout({
         )}
       >
         <LoadingOverlay />
-        <TopBar />
-        <SidebarLeftProvider defaultOpen={!isMobile}>
-          <LeftNavigation />
-          <LeftNavigationTrigger />
-          <SidebarInset>{children}</SidebarInset>
-          <Toaster expand className="!z-[9999]" />
-        </SidebarLeftProvider>
-        {activePage === Page.CreateSession &&
-          createPortal(<CreateSessionPage />, document.body)}
+        {/* Electron: TopBar (window controls), Web: WebTopBar (mobile menu, root page only) */}
+        {isElectron ? <TopBar /> : isRootPage && <WebTopBar />}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Fixed sidebar - always visible on desktop, independent of CollapsibleSidebar state */}
+          <FixedNav />
+
+          {/* Collapsible navigation area */}
+          <div className="flex flex-1 overflow-hidden">
+            <SidebarLeftProvider>
+              {/* <CollapsibleSidebar />
+              <CollapsibleSidebarTrigger /> */}
+              <SidebarInset>{children}</SidebarInset>
+              <Toaster expand className="!z-[9999]" />
+            </SidebarLeftProvider>
+          </div>
+        </div>
+        {/* {activePage === Page.CreateSession &&
+          createPortal(<CreateSessionPage />, document.body)} */}
       </div>
     </ThemeProvider>
   );
+
 }

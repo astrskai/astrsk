@@ -11,10 +11,11 @@ import { Datetime } from "@/shared/lib/datetime";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useCard } from "@/shared/hooks/use-card";
 import { useSession } from "@/shared/hooks/use-session";
-import { useSessions } from "@/shared/hooks/use-sessions-v2";
 import { useTurn } from "@/shared/hooks/use-turn";
-import { queryClient } from "@/app/queries/query-client";
+import { queryClient } from "@/shared/api/query-client";
+import { sessionQueries } from "@/entities/session/api";
 import { SessionService } from "@/app/services/session-service";
+import { useQuery } from "@tanstack/react-query";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useValidationStore } from "@/shared/stores/validation-store";
@@ -73,9 +74,7 @@ const SessionListMobile = ({
   } = useSessionStore();
   const { setActivePage, isMobile } = useAppStore();
   const navigate = useNavigate();
-  const { data: sessions } = useSessions({
-    keyword,
-  });
+  const { data: sessions = [] } = useQuery(sessionQueries.list({ keyword }));
 
   // Mobile stepper state
   const [isOpenCreateSessionMobile, setIsOpenCreateSessionMobile] =
@@ -98,7 +97,9 @@ const SessionListMobile = ({
 
   // Check invalid sessions
   const setSessionIds = useValidationStore((state) => state.setSessionIds);
-  const { data: allSessions } = useSessions({});
+  const { data: allSessions = [] } = useQuery(
+    sessionQueries.list({ keyword: "" }),
+  );
   useEffect(() => {
     if (!allSessions) {
       return;
@@ -369,7 +370,7 @@ const SessionListMobile = ({
           defaultValue="New session"
           onNext={async (name) => {
             setCreateSessionName(name);
-            navigate({ to: "/sessions/create" });
+            navigate({ to: "/sessions/new" });
           }}
           trigger={
             <div className="flex w-full flex-col items-center justify-center">
@@ -550,14 +551,14 @@ const SessionListItemMobile = ({
               </div>
             </div>
             <div className="flex items-center justify-end">
-              {session.characterCards
+              {/* {session.characterCards
                 .slice(0, 3)
                 .map((card: CardType, index: number) => (
                   <MobileCharacterAvatar
                     key={card.id.toString()}
                     cardId={card.id}
                   />
-                ))}
+                ))} */}
               {session.characterCards.length > 3 && (
                 <div
                   className="bg-background-surface-3 outline-background-surface-2 inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"

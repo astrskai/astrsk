@@ -8,7 +8,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 import { NoCardsFound } from "@/features/card/card-list";
-import { TradingCard } from "@/features/card/components/trading-card";
+import { TradingCard } from "@/features/card/ui/trading-card";
 import { cn } from "@/shared/lib";
 import {
   ScrollArea,
@@ -22,7 +22,7 @@ import {
 import { Card, CardType } from "@/entities/card/domain";
 import { CardListItem, SessionProps } from "@/entities/session/domain";
 import { useQuery } from "@tanstack/react-query";
-import { cardQueries } from "@/app/queries/card-queries";
+import { cardQueries } from "@/entities/card/api/card-queries";
 
 const StepCardsSchema = z.object({
   aiCharacterCardIds: z.string().array().min(1),

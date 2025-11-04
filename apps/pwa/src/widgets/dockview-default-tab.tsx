@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { IDockviewPanelHeaderProps } from "dockview";
 import { useQuery } from "@tanstack/react-query";
-import { dataStoreNodeQueries } from "@/app/queries/data-store-node/query-factory";
-import { ifNodeQueries } from "@/app/queries/if-node/query-factory";
+import { dataStoreNodeQueries } from "@/entities/data-store-node/api/query-factory";
+import { ifNodeQueries } from "@/entities/if-node/api/query-factory";
 import { AgentService } from "@/app/services/agent-service";
 import { UniqueEntityID } from "@/shared/domain";
-import { getAgentHexColor } from "@/features/flow/flow-multi/utils/node-color-assignment";
+import { getAgentHexColor } from "@/features/flow/utils/node-color-assignment";
 
 type CustomTabParameters = {
   title?: string;

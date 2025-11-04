@@ -4,7 +4,7 @@ import { useCard } from "@/shared/hooks/use-card";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { CharacterCard } from "@/entities/card/domain";
 import { useQuery } from "@tanstack/react-query";
-import { generatedImageQueries } from "@/app/queries/generated-image/query-factory";
+import { generatedImageQueries } from "@/entities/generated-image/api/query-factory";
 
 interface CharacterAssetData {
   card: CharacterCard;

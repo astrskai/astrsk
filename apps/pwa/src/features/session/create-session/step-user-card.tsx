@@ -6,7 +6,7 @@ import { useCards } from "@/shared/hooks/use-cards";
 import { Page, useAppStore } from "@/shared/stores/app-store";
 import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
 import { NoCardsFound } from "@/features/card/card-list";
-import { TradingCard } from "@/features/card/components/trading-card";
+import { TradingCard } from "@/features/card/ui/trading-card";
 import { cn } from "@/shared/lib";
 import { ScrollArea, SearchInput, TypoSmall } from "@/shared/ui";
 import { Card, CardType } from "@/entities/card/domain";

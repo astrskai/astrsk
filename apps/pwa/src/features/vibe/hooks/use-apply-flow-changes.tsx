@@ -21,27 +21,27 @@ import { stringify } from "superjson";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { UniqueEntityID } from "@/shared/domain";
-import { queryClient } from "@/app/queries/query-client";
-import { flowQueries } from "@/app/queries/flow-queries";
-import { agentKeys } from "@/app/queries/agent/query-factory";
-import { ifNodeKeys } from "@/app/queries/if-node/query-factory";
-import { dataStoreNodeKeys } from "@/app/queries/data-store-node/query-factory";
-import { useUpdateFlowName } from "@/app/queries/flow/mutations/flow-mutations";
-import { useUpdateNodesAndEdges } from "@/app/queries/flow/mutations/nodes-edges-mutations";
-import { useUpdateDataStoreSchema } from "@/app/queries/flow/mutations/data-store-mutations";
+import { queryClient } from "@/shared/api/query-client";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
+import { agentKeys } from "@/entities/agent/api/query-factory";
+import { ifNodeKeys } from "@/entities/if-node/api/query-factory";
+import { dataStoreNodeKeys } from "@/entities/data-store-node/api/query-factory";
+import { useUpdateFlowName } from "@/entities/flow/api/mutations/flow-mutations";
+import { useUpdateNodesAndEdges } from "@/entities/flow/api/mutations/nodes-edges-mutations";
+import { useUpdateDataStoreSchema } from "@/entities/flow/api/mutations/data-store-mutations";
 import {
   useUpdateAgentPromptMessages,
   useUpdateAgentApiType,
   useUpdateAgentTextPrompt,
-} from "@/app/queries/agent/mutations/prompt-mutations-new";
+} from "@/entities/agent/api/mutations/prompt-mutations-new";
 import {
   useUpdateAgentOutput,
   useUpdateAgentOutputFormat,
-} from "@/app/queries/agent/mutations/output-mutations";
-import { useUpdateIfNodeConditions } from "@/app/queries/if-node/mutations/condition-mutations";
-import { useUpdateIfNodeName } from "@/app/queries/if-node/mutations/name-mutations";
-import { useUpdateDataStoreNodeFields } from "@/app/queries/data-store-node/mutations/field-mutations";
-import { useUpdateDataStoreNodeName } from "@/app/queries/data-store-node/mutations/name-mutations";
+} from "@/entities/agent/api/mutations/output-mutations";
+import { useUpdateIfNodeConditions } from "@/entities/if-node/api/mutations/condition-mutations";
+import { useUpdateIfNodeName } from "@/entities/if-node/api/mutations/name-mutations";
+import { useUpdateDataStoreNodeFields } from "@/entities/data-store-node/api/mutations/field-mutations";
+import { useUpdateDataStoreNodeName } from "@/entities/data-store-node/api/mutations/name-mutations";
 import type {
   EditableFlowData,
   EditableAgentData,

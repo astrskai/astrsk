@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { cardQueries } from '@/app/queries/card/query-factory';
-import { flowQueries } from '@/app/queries/flow/query-factory';
+import { cardQueries } from '@/entities/card/api/query-factory';
+import { flowQueries } from '@/entities/flow/api/query-factory';
 import { CardType } from '@/entities/card/domain';
 import { CardDrizzleMapper } from '@/entities/card/mappers/card-drizzle-mapper';
 import { FlowDrizzleMapper } from '@/entities/flow/mappers/flow-drizzle-mapper';

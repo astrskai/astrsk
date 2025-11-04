@@ -12,18 +12,18 @@ const CustomSuccess = ({
   return (
     <div
       className={cn(
-        "w-[388px] p-[16px] pr-[24px] bg-[#FFFFFF]",
-        "border-[1px] border-[#E4E4E7] rounded-[8px]",
+        "w-[calc(100dvw-2rem)] bg-[#FFFFFF] p-[8px] pr-[24px] md:w-[388px] md:p-[16px]",
+        "rounded-[8px] border-[1px] border-[#E4E4E7]",
         "flex flex-col gap-[4px]",
       )}
     >
-      <div className="h-[28px] flex flex-row gap-[4px] items-center text-[#18181B]">
+      <div className="flex h-[28px] flex-row items-center gap-[4px] text-[#18181B]">
         <CircleCheck size={16} className="m-[6px]" />
-        <div className="w-full font-[600] text-[14px] leading-[20px] truncate">
+        <div className="w-full truncate text-[14px] leading-[20px] font-[600]">
           {title}
         </div>
       </div>
-      <div className="font-[400] text-[14px] leading-[20px] text-[#2F2F32] line-clamp-2">
+      <div className="line-clamp-2 text-[14px] leading-[20px] font-[400] text-[#2F2F32]">
         {details}
       </div>
     </div>

@@ -156,10 +156,10 @@ export async function processIfNodeOperations(
               // Invalidate queries to refresh UI
               try {
                 const { queryClient } = await import(
-                  "@/app/queries/query-client"
+                  "@/shared/api/query-client"
                 );
                 const { ifNodeKeys } = await import(
-                  "@/app/queries/if-node/query-factory"
+                  "@/entities/if-node/api/query-factory"
                 );
 
                 const queryKey = ifNodeKeys.detail(nodeId);
@@ -290,10 +290,10 @@ export async function processIfNodeOperations(
               // Invalidate queries to refresh UI
               try {
                 const { queryClient } = await import(
-                  "@/app/queries/query-client"
+                  "@/shared/api/query-client"
                 );
                 const { ifNodeKeys } = await import(
-                  "@/app/queries/if-node/query-factory"
+                  "@/entities/if-node/api/query-factory"
                 );
 
                 const queryKey = ifNodeKeys.detail(nodeId);
