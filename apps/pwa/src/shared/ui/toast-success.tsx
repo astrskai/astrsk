@@ -12,7 +12,7 @@ const CustomSuccess = ({
   return (
     <div
       className={cn(
-        "w-[calc(100vw-2rem)] bg-[#FFFFFF] p-[8px] pr-[24px] md:w-[388px] md:p-[16px]",
+        "w-[calc(100dvw-2rem)] bg-[#FFFFFF] p-[8px] pr-[24px] md:w-[388px] md:p-[16px]",
         "rounded-[8px] border-[1px] border-[#E4E4E7]",
         "flex flex-col gap-[4px]",
       )}

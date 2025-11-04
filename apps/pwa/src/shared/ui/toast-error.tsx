@@ -26,7 +26,7 @@ const CustomError = ({
     <>
       <div
         className={cn(
-          "bg-status-destructive w-[calc(100vw-2rem)] px-[8px] py-[6px] md:w-[431px] md:px-[16px] md:py-[12px]",
+          "bg-status-destructive w-[calc(100dvw-2rem)] px-[8px] py-[6px] md:w-[431px] md:px-[16px] md:py-[12px]",
           "border-status-destructive-light rounded-[8px] border-[1px]",
           "flex flex-col gap-[4px] opacity-100 transition-opacity",
           (isOpenDetails || isDismissed) && "opacity-0",
