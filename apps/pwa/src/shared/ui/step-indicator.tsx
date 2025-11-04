@@ -54,7 +54,7 @@ export function StepIndicator<T extends string = string>({
             steps.findIndex((s) => s.id === currentStep) > index;
 
           return (
-            <div key={step.id} className="flex items-center">
+            <div key={step.id} className="flex items-start">
               {/* Step Circle & Label */}
               <div className="flex flex-col items-center gap-2">
                 {/* Circle */}
@@ -85,11 +85,13 @@ export function StepIndicator<T extends string = string>({
                 </span>
               </div>
 
-              {/* Connector Line */}
+              {/* Connector Line - positioned at circle height */}
               {index < steps.length - 1 && (
                 <div
                   className={cn(
                     "mx-4 h-[2px] w-16 transition-colors",
+                    // Position at circle center (h-10 = 40px / 2 = 20px, h-12 = 48px / 2 = 24px)
+                    "mt-5 xl:mt-6",
                     isCompleted ? "bg-primary/50" : "bg-background-surface-4",
                   )}
                 />
