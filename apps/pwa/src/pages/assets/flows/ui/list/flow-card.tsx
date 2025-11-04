@@ -93,7 +93,7 @@ export function FlowCard({
   }, [flow.id]);
 
   // Handle export dialog open - fetch agents info
-  const handleDownload = useCallback(
+  const handleExportClick = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation();
 
@@ -161,17 +161,17 @@ export function FlowCard({
           throw new Error("Export returned empty file");
         }
 
-        // Download flow file
+        // Export flow file
         downloadFile(file);
 
-        toast.success("Flow exported successfully", {
-          description: flow.props.name || "Untitled Flow",
+        toast.success("Successfully exported!", {
+          description: `"${flow.props.name || "Untitled Flow"}" exported`,
         });
 
         setIsExportDialogOpen(false);
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to export flow", {
+        toast.error("Failed to export", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -192,12 +192,12 @@ export function FlowCard({
         // Notify parent of successful copy for animation
         onCopySuccess?.(copiedFlow.id.toString());
 
-        toast.success("Flow copied successfully", {
-          description: copiedFlow.props.name || "Untitled Flow",
+        toast.success("Successfully copied!", {
+          description: `"${copiedFlow.props.name || "Untitled Flow"}" copied`,
         });
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to copy flow", {
+        toast.error("Failed to copy", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -225,12 +225,12 @@ export function FlowCard({
         navigate({ to: "/" });
       }
 
-      toast.success("Flow deleted successfully", {
-        description: flow.props.name || "Untitled Flow",
+      toast.success("Successfully deleted!", {
+        description: `"${flow.props.name || "Untitled Flow"}" deleted`,
       });
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to delete flow", {
+      toast.error("Failed to delete", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
@@ -344,8 +344,8 @@ export function FlowCard({
             {/* Action buttons */}
             <div className="text-button-foreground-primary absolute right-4 bottom-4 flex translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
               <button
-                onClick={handleDownload}
-                aria-label={`Download ${flow.props.name}`}
+                onClick={handleExportClick}
+                aria-label={`Export ${flow.props.name}`}
                 className="hover:bg-primary-strong flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-sm backdrop-blur-sm transition-colors"
               >
                 <Upload className="h-4 w-4" />
