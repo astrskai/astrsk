@@ -23,6 +23,7 @@ import {
   SessionImportDialog,
   type AgentModel,
 } from "@/pages/sessions/ui/dialog/session-import-dialog";
+import { useSessionImportDialog } from "@/shared/hooks/use-session-import-dialog";
 import {
   SessionExportDialog,
   type AgentModelTierInfo,
@@ -44,7 +45,7 @@ import { downloadFile, logger } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import { CircleAlert, Copy, Trash2, Upload } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { toast } from "sonner";
 import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { getUniqueEntityIDFromPath } from "@/shared/lib/url-utils";
@@ -418,7 +419,17 @@ const SessionSection = ({
 
   // Handle import
   const selectSession = useSessionStore.use.selectSession();
-  const [isOpenImportDialog, setIsOpenImportDialog] = useState(false);
+
+  // Import dialog hook - manages file input and parsing
+  const {
+    fileInputRef,
+    isOpenImportDialog,
+    setIsOpenImportDialog,
+    importingFile,
+    agentModels,
+    handleFileSelect,
+    triggerImport,
+  } = useSessionImportDialog();
 
   const handleImport = useCallback(
     async (
@@ -478,40 +489,6 @@ const SessionSection = ({
     [navigate, selectSession],
   );
 
-  const handleFileSelect = useCallback(
-    async (file: File): Promise<AgentModel[] | void> => {
-      if (!file) {
-        return;
-      }
-      try {
-        const modelNameOrError =
-          await SessionService.getModelsFromSessionFile.execute(file);
-        if (modelNameOrError.isFailure) {
-          toast.error("Failed to import session", {
-            description: modelNameOrError.getError(),
-          });
-          return;
-        }
-        const agentIdToModelNames = modelNameOrError.getValue();
-
-        // TODO: Get agent names from the session file flows
-        // For now, use agent ID as fallback name
-        const enhancedModels = agentIdToModelNames.map((item) => ({
-          agentId: item.agentId,
-          agentName: item.agentName || `Agent ${item.agentId.slice(0, 8)}`,
-          modelName: item.modelName,
-          modelTier: item.modelTier,
-        }));
-
-        return enhancedModels;
-      } catch (error) {
-        console.error("Error reading session file:", error);
-        toast.error("Failed to read session file");
-      }
-    },
-    [],
-  );
-
   return (
     <div
       className={cn(
@@ -543,6 +520,14 @@ const SessionSection = ({
           />
         </div>
         <div className="flex flex-row items-center gap-2 py-2 pr-4 pl-8">
+          {/* Hidden file input for import - triggers file selection */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".session"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
           <StepName
             defaultValue="New Session"
             onNext={async (name) => {
@@ -551,12 +536,14 @@ const SessionSection = ({
             }}
             trigger={<CreateButton onClick={() => null} />}
           />
-          <ImportButton onClick={() => setIsOpenImportDialog(true)} />
+          <ImportButton onClick={triggerImport} />
+          {/* Session Import Dialog - receives file and agent models from hook */}
           <SessionImportDialog
             open={isOpenImportDialog}
             onOpenChange={setIsOpenImportDialog}
             onImport={handleImport}
-            onFileSelect={handleFileSelect}
+            file={importingFile}
+            agentModels={agentModels}
           />
         </div>
         {sessions && sessions.length > 0 ? (

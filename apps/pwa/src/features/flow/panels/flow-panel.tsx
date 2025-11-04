@@ -1557,7 +1557,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   return (
     <div ref={containerRef} className="relative h-full w-full">
       {/* Header section with flow name */}
-      <div className="absolute top-4 right-4 left-4 z-10 flex flex-col gap-4">
+      <div className="absolute top-4 right-4 left-[72px] z-10 flex flex-col gap-4">
         {/* Flow header - conditional left margin */}
         <div
           className={cn(

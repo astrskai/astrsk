@@ -26,6 +26,8 @@ export interface SessionImportDialogProps {
     >,
   ) => Promise<void>;
   onFileSelect?: (file: File) => Promise<AgentModel[] | void>;
+  file?: File | null;
+  agentModels?: AgentModel[];
   title?: string;
   description?: string;
 }
@@ -35,6 +37,8 @@ export function SessionImportDialog({
   onOpenChange,
   onImport,
   onFileSelect,
+  file: externalFile,
+  agentModels: externalAgentModels,
   title = "Import session",
   description = "Importing a session automatically imports all its related cards and flows.",
 }: SessionImportDialogProps) {
@@ -45,6 +49,16 @@ export function SessionImportDialog({
   >(new Map());
   const [isIncludeHistory, setIsIncludeHistory] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+
+  // Initialize with external file and agent models if provided
+  useEffect(() => {
+    if (open && externalFile) {
+      setImportingFile(externalFile);
+    }
+    if (open && externalAgentModels) {
+      setAgentModels(externalAgentModels);
+    }
+  }, [open, externalFile, externalAgentModels]);
 
   // Reset state when dialog closes
   useEffect(() => {

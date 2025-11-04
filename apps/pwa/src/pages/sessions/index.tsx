@@ -5,6 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { SessionsGrid } from "./ui/list";
 import { SessionImportDialog } from "./ui/dialog/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
+import { useSessionImportDialog } from "@/shared/hooks/use-session-import-dialog";
 
 import { sessionQueries } from "@/entities/session/api";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
@@ -16,7 +17,6 @@ import { ListPageHeader } from "@/widgets/list-page-header";
 export function SessionsPage() {
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState<string>("");
-  const [isOpenImportDialog, setIsOpenImportDialog] = useState<boolean>(false);
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
 
   // Fetch sessions with search filter
@@ -24,11 +24,27 @@ export function SessionsPage() {
     sessionQueries.list({ keyword }),
   );
 
-  // Import handlers
-  const { handleImport, handleFileSelect } = useSessionImport();
+  // Import dialog hook - manages file input and parsing
+  const {
+    fileInputRef,
+    isOpenImportDialog,
+    setIsOpenImportDialog,
+    importingFile,
+    agentModels,
+    handleFileSelect,
+    triggerImport,
+  } = useSessionImportDialog();
+
+  // Import handler
+  const { handleImport } = useSessionImport();
 
   const handleCreateSession = () => {
     navigate({ to: "/sessions/new" });
+  };
+
+  const handleImportClick = () => {
+    // Trigger file selection via hook
+    triggerImport();
   };
 
   const handleExport = () => {
@@ -46,21 +62,32 @@ export function SessionsPage() {
 
   return (
     <div className="bg-background-surface-2 flex h-full w-full flex-col">
+      {/* Hidden file input for import - triggers file selection */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".session"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
       {/* Header */}
       <ListPageHeader
         title="Sessions"
         keyword={keyword}
         onKeywordChange={setKeyword}
-        onImportClick={() => setIsOpenImportDialog(true)}
+        onImportClick={handleImportClick}
         onExportClick={handleExport}
         onHelpClick={handleHelpClick}
       />
 
+      {/* Session Import Dialog - receives file and agent models from hook */}
       <SessionImportDialog
         open={isOpenImportDialog}
         onOpenChange={setIsOpenImportDialog}
         onImport={handleImport}
-        onFileSelect={handleFileSelect}
+        file={importingFile}
+        agentModels={agentModels}
       />
       <HelpVideoDialog
         open={isOpenHelpDialog}

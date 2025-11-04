@@ -1,4 +1,4 @@
-import { write } from "opfs-tools";
+import { write, file } from "opfs-tools";
 
 import { Result } from "@/shared/core/result";
 import { AggregateRoot } from "@/shared/domain/aggregate-root";
@@ -157,7 +157,53 @@ export class Asset extends AggregateRoot<AssetProps> {
 
       // Save file to OPFS
       const filePath = `/assets/${hash}`;
-      await write(filePath, webpFile.stream());
+
+      // Check if file already exists to avoid concurrent write errors
+      try {
+        const existingFile = await file(filePath).getOriginFile();
+        if (existingFile) {
+          // File already exists, skip write and create asset from existing file
+          return Asset.create(
+            {
+              hash: hash,
+              name: webpFile.name,
+              sizeByte: webpFile.size,
+              mimeType: webpFile.type,
+              filePath: filePath,
+              updatedAt: new Date(),
+            },
+            id,
+          );
+        }
+      } catch (checkError) {
+        // File doesn't exist, proceed with write
+      }
+
+      // Write file to OPFS with retry logic
+      let writeAttempts = 0;
+      const maxAttempts = 3;
+
+      while (writeAttempts < maxAttempts) {
+        try {
+          await write(filePath, webpFile.stream());
+          break;
+        } catch (writeError) {
+          writeAttempts++;
+          const errorMessage = writeError instanceof Error ? writeError.message : 'Unknown error';
+
+          if (errorMessage.includes('Other writer have not been closed') && writeAttempts < maxAttempts) {
+            // Wait before retry
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } else {
+            // Re-throw if it's a different error or max attempts reached
+            throw writeError;
+          }
+        }
+      }
+
+      if (writeAttempts >= maxAttempts) {
+        throw new Error(`Failed to write file after ${maxAttempts} attempts (writer still locked)`);
+      }
 
       // Create asset
       return Asset.create(

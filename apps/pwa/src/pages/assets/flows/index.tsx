@@ -1,20 +1,18 @@
 import { useState, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ListPageHeader } from "@/widgets/list-page-header";
 import { ASSET_TABS } from "@/shared/config/asset-tabs";
 import { FlowsGrid } from "./ui/list";
 import { CreateFlowDialog } from "./ui/create";
-import {
-  FlowImportDialog,
-  AgentModel,
-} from "./ui/dialog/flow-import-dialog";
+import { FlowImportDialog } from "./ui/dialog/flow-import-dialog";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { FlowService } from "@/app/services/flow-service";
 import { logger } from "@/shared/lib";
 import { Flow } from "@/entities/flow/domain/flow";
 import { useNavigate } from "@tanstack/react-router";
+import { useResourceImport } from "@/shared/hooks/use-resource-import";
 
 /**
  * Flows List Page
@@ -27,13 +25,21 @@ export function FlowsListPage() {
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
   const [isOpenCreateDialog, setIsOpenCreateDialog] = useState<boolean>(false);
-  const [isOpenImportDialog, setIsOpenImportDialog] = useState<boolean>(false);
   const [newlyCreatedFlowId, setNewlyCreatedFlowId] = useState<string | null>(
     null,
   );
 
-  // 2. Query client
-  const queryClient = useQueryClient();
+  // 2. Unified resource import hook
+  const {
+    fileInputRef,
+    isOpenImportDialog,
+    setIsOpenImportDialog,
+    importingFile,
+    agentModels,
+    handleFileSelect,
+    handleImportFlow,
+    triggerImport,
+  } = useResourceImport();
 
   // 3. Data fetching hooks
   const { data: allFlows, isLoading: isLoadingFlows } = useQuery(
@@ -86,37 +92,10 @@ export function FlowsListPage() {
     [navigate],
   );
 
-  const handleFileSelect = useCallback(async (file: File) => {
-    try {
-      // Get models from file
-      const modelNameOrError =
-        await FlowService.getModelsFromFlowFile.execute(file);
-      if (modelNameOrError.isFailure) {
-        toast.error("Failed to read flow file", {
-          description: modelNameOrError.getError(),
-        });
-        return;
-      }
-
-      // Parse the file to get agent names
-      const text = await file.text();
-      const flowJson = JSON.parse(text);
-      const agentIdToModelNames = modelNameOrError.getValue();
-
-      // Enhance with agent names
-      const enhancedModels: AgentModel[] = agentIdToModelNames.map((item) => ({
-        ...item,
-        agentName: flowJson.agents[item.agentId]?.name || "Unknown Agent",
-      }));
-
-      return enhancedModels;
-    } catch (error) {
-      logger.error("Error reading flow file:", error);
-      toast.error("Failed to read flow file");
-    }
-  }, []);
-
-  const handleImportFlow = useCallback(
+  /**
+   * Wrap handleImportFlow to set newly created flow ID for animation
+   */
+  const handleImportFlowWithAnimation = useCallback(
     async (
       file: File,
       agentModelOverrides?: Map<
@@ -124,47 +103,14 @@ export function FlowsListPage() {
         { apiSource: string; modelId: string; modelName: string }
       >,
     ) => {
-      try {
-        // Import flow from file
-        const importedFlowOrError =
-          await FlowService.importFlowWithNodes.execute({
-            file,
-            agentModelOverrides:
-              agentModelOverrides && agentModelOverrides.size > 0
-                ? agentModelOverrides
-                : undefined,
-          });
-
-        if (importedFlowOrError.isFailure) {
-          throw new Error(importedFlowOrError.getError());
-        }
-
-        const importedFlow = importedFlowOrError.getValue();
-
-        // Refresh flow list
-        await queryClient.refetchQueries({
-          queryKey: flowQueries.lists(),
-        });
-
-        // Trigger animation for imported flow
-        setNewlyCreatedFlowId(importedFlow.id.toString());
-
-        toast.success("Flow imported successfully", {
-          description: importedFlow.props.name || "Untitled Flow",
-        });
-      } catch (error) {
-        logger.error(error);
-        toast.error("Failed to import flow", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
+      await handleImportFlow(file, agentModelOverrides, setNewlyCreatedFlowId);
     },
-    [queryClient],
+    [handleImportFlow],
   );
 
   // 5. Regular event handlers - not passed as props, no need for useCallback
   const handleImportClick = () => {
-    setIsOpenImportDialog(true);
+    triggerImport();
   };
   const handleCreateClick = () => {
     setIsOpenCreateDialog(true);
@@ -185,6 +131,15 @@ export function FlowsListPage() {
 
   return (
     <div className="bg-background-surface-2 flex h-full w-full flex-col">
+      {/* Hidden file input for import - triggers file selection */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,.json,application/json"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
       {/* Header */}
       <ListPageHeader
         title="Assets"
@@ -204,12 +159,14 @@ export function FlowsListPage() {
         onCreate={handleCreateFlow}
       />
 
-      {/* Import Flow Dialog */}
+      {/* Import Flow Dialog - skips file selection step, shows agent model overrides */}
       <FlowImportDialog
         open={isOpenImportDialog}
         onOpenChange={setIsOpenImportDialog}
-        onFileSelect={handleFileSelect}
-        onImport={handleImportFlow}
+        onImport={handleImportFlowWithAnimation}
+        onFileSelect={async () => agentModels}
+        file={importingFile}
+        agentModels={agentModels}
       />
 
       <HelpVideoDialog
