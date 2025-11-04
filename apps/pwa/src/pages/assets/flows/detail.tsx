@@ -39,7 +39,7 @@ import { DataStorePanel } from "@/features/flow/panels/data-store/data-store-pan
 import { FlowVibePanel } from "@/features/flow/panels/vibe/vibe-panel";
 import { FlowService } from "@/app/services/flow-service";
 import { PanelStructure } from "@/entities/flow/domain";
-import { Button, SvgIcon, Loading } from "@/shared/ui";
+import { Button, SvgIcon, Loading, FloatingActionButton } from "@/shared/ui";
 import { UniqueEntityID } from "@/shared/domain";
 import { Agent } from "@/entities/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
@@ -49,6 +49,7 @@ import { flowQueries, flowKeys } from "@/entities/flow/api/query-factory";
 import { useUpdatePanelLayout } from "@/entities/flow/api/mutations/panel-layout-mutations";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import "@/app/styles/dockview-detail.css";
+import { ArrowLeft } from "lucide-react";
 
 // Watermark component with restore button
 const Watermark = React.memo<{ onRestore?: () => void }>(({ onRestore }) => (
@@ -932,6 +933,14 @@ export function FlowPanelMain({ flowId, className }: FlowPanelMainProps) {
       api={dockviewApi || null}
       openPanel={openPanel}
     >
+      <FloatingActionButton
+        icon={<ArrowLeft className="min-h-[24px] min-w-[24px]" />}
+        position="top-left"
+        className="!z-50 !left-[16px] !top-[24px]"
+        onClick={() => {
+          window.history.back();
+        }}
+      />
       <div
         className={cn("relative h-full w-full", className)}
         style={{ height: "calc(100% - var(--topbar-height))" }}
