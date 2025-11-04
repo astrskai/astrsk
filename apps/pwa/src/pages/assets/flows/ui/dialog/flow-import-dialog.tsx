@@ -22,6 +22,8 @@ export interface FlowImportDialogProps {
     >,
   ) => Promise<void>;
   onFileSelect?: (file: File) => Promise<AgentModel[] | void>;
+  file?: File | null;
+  agentModels?: AgentModel[];
   title?: string;
   description?: string;
 }
@@ -31,6 +33,8 @@ export function FlowImportDialog({
   onOpenChange,
   onImport,
   onFileSelect,
+  file: externalFile,
+  agentModels: externalAgentModels,
   title = "Import flow",
   description = "",
 }: FlowImportDialogProps) {
@@ -40,6 +44,16 @@ export function FlowImportDialog({
     Map<string, { apiSource: string; modelId: string; modelName: string }>
   >(new Map());
   const [isImporting, setIsImporting] = useState(false);
+
+  // Initialize with external file and agent models if provided
+  useEffect(() => {
+    if (open && externalFile) {
+      setImportingFile(externalFile);
+    }
+    if (open && externalAgentModels) {
+      setAgentModels(externalAgentModels);
+    }
+  }, [open, externalFile, externalAgentModels]);
 
   // Reset state when dialog closes
   useEffect(() => {
