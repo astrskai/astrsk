@@ -67,14 +67,14 @@ export function FixedNav() {
         className={cn(
           "flex flex-col items-center justify-center gap-1",
           "h-16 w-16 transition-all",
-          "hover:bg-background-hover",
+          "hover:text-text-primary",
           isActive
             ? [
                 "bg-background-selected",
                 "text-text-primary",
                 "shadow-sm",
                 "border-l-2",
-                "border-primary-heavy",
+                "border-blue-200",
                 "rounded-r-lg",
               ]
             : "text-text-secondary rounded-lg",
