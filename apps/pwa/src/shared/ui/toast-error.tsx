@@ -26,22 +26,22 @@ const CustomError = ({
     <>
       <div
         className={cn(
-          "w-[431px] px-[16px] py-[12px] bg-status-destructive",
-          "border-[1px] border-status-destructive-light rounded-[8px]",
-          "flex flex-col gap-[4px] transition-opacity opacity-100",
+          "bg-status-destructive w-[calc(100vw-2rem)] px-[8px] py-[6px] md:w-[431px] md:px-[16px] md:py-[12px]",
+          "border-status-destructive-light rounded-[8px] border-[1px]",
+          "flex flex-col gap-[4px] opacity-100 transition-opacity",
           (isOpenDetails || isDismissed) && "opacity-0",
         )}
       >
-        <div className="flex flex-row gap-[12px] items-center">
+        <div className="flex flex-row items-center gap-[12px]">
           <CircleAlert size={16} />
-          <div className="w-full font-[500] text-[14px] leading-[20px] text-text-primary truncate">
+          <div className="text-text-primary w-full truncate text-[14px] leading-[20px] font-[500]">
             {title}
           </div>
         </div>
-        <div className="ml-[28px] font-[400] text-[14px] leading-[20px] text-text-primary opacity-70 line-clamp-2">
+        <div className="text-text-primary ml-[28px] line-clamp-2 text-[14px] leading-[20px] font-[400] opacity-70">
           {details}
         </div>
-        <div className="place-self-end flex flex-row gap-[4px]">
+        <div className="flex flex-row gap-[4px] place-self-end">
           <Button
             size="lg"
             variant="ghost_white"
@@ -67,9 +67,12 @@ const CustomError = ({
       <Dialog open={isOpenDetails}>
         <DialogContent hideClose>
           <DialogTitle className="truncate">{title}</DialogTitle>
-          <DialogDescription className="rounded-[12px] bg-background-surface-3">
-            <ScrollArea className="h-full max-h-[624px] p-[8px] overflow-x-hidden">
-              <pre className="font-mono text-[12px] leading-[18px] whitespace-pre-wrap break-all max-w-full" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+          <DialogDescription className="bg-background-surface-3 rounded-[12px]">
+            <ScrollArea className="h-full max-h-[624px] overflow-x-hidden p-[8px]">
+              <pre
+                className="max-w-full font-mono text-[12px] leading-[18px] break-all whitespace-pre-wrap"
+                style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+              >
                 {details}
               </pre>
             </ScrollArea>
