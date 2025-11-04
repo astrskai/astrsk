@@ -40,7 +40,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           {
             "bg-button-background-primary hover:bg-primary-strong text-button-foreground-primary":
               variant === "default",
-            "bg-background-surface-4 text-text-primary hover:bg-background-surface-3":
+            "border border-gray-500 bg-gray-800 text-gray-50 hover:bg-gray-700":
               variant === "secondary",
             "text-button-background-primary hover:bg-background-surface-2 hover:text-primary-strong bg-transparent":
               variant === "ghost",

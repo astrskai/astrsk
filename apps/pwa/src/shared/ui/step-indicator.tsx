@@ -47,35 +47,63 @@ export function StepIndicator<T extends string = string>({
       </div>
 
       {/* Desktop: Circle & Connector Layout */}
-      <div className="hidden items-center justify-center gap-2 md:flex">
-        {steps.map((step, index) => {
-          const isActive = step.id === currentStep;
-          const isCompleted =
-            steps.findIndex((s) => s.id === currentStep) > index;
+      <div className="hidden md:flex md:w-full md:justify-center">
+        <div className="w-full max-w-2xl">
+        <div className="flex w-full">
+          {steps.map((step, index) => {
+            const isActive = step.id === currentStep;
+            const isCompleted =
+              steps.findIndex((s) => s.id === currentStep) > index;
 
-          return (
-            <div key={step.id} className="flex items-start">
-              {/* Step Circle & Label */}
-              <div className="flex flex-col items-center gap-2">
-                {/* Circle */}
-                <div
-                  className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-colors xl:h-12 xl:w-12 xl:text-base",
-                    isActive && "bg-primary-normal text-background-surface-2",
-                    isCompleted && "bg-primary/50 text-text-primary",
-                    !isActive &&
-                      !isCompleted &&
-                      "bg-background-surface-4 text-text-secondary",
-                  )}
-                >
-                  {step.number}
+            return (
+              <div key={step.id} className="flex flex-1 flex-col items-center">
+                {/* Circle and Connector Row */}
+                <div className="flex w-full items-center">
+                  {/* Connector Line - Left Half */}
+                  <div
+                    className={cn(
+                      "h-[2px] flex-1 transition-all duration-500 ease-in-out",
+                      index === 0
+                        ? "bg-transparent"
+                        : steps.findIndex((s) => s.id === currentStep) >= index
+                          ? "bg-primary/50"
+                          : "bg-background-surface-4",
+                    )}
+                  />
+
+                  {/* Circle */}
+                  <div
+                    className={cn(
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-all duration-300 xl:h-12 xl:w-12 xl:text-base",
+                      isActive && "bg-primary-normal text-background-surface-2 scale-110",
+                      isCompleted && "bg-primary/50 text-text-primary scale-100",
+                      !isActive &&
+                        !isCompleted &&
+                        "bg-background-surface-4 text-text-secondary scale-100",
+                    )}
+                  >
+                    {step.number}
+                  </div>
+
+                  {/* Connector Line - Right Half */}
+                  <div
+                    className={cn(
+                      "h-[2px] flex-1 transition-all duration-500 ease-in-out",
+                      index === steps.length - 1
+                        ? "bg-transparent"
+                        : steps.findIndex((s) => s.id === currentStep) > index
+                          ? "bg-primary/50"
+                          : "bg-background-surface-4",
+                    )}
+                  />
                 </div>
-                {/* Label */}
+
+                {/* Label - Centered below circle */}
                 <span
                   className={cn(
-                    "text-sm font-medium transition-colors xl:text-base",
-                    isActive && "text-text-primary",
-                    !isActive && "text-text-secondary",
+                    "mt-2 text-center text-sm font-medium transition-all duration-300 xl:text-base",
+                    isActive && "text-text-primary scale-105",
+                    !isActive && "text-text-secondary scale-100",
                   )}
                 >
                   {step.label}
@@ -84,21 +112,10 @@ export function StepIndicator<T extends string = string>({
                   )}
                 </span>
               </div>
-
-              {/* Connector Line - positioned at circle height */}
-              {index < steps.length - 1 && (
-                <div
-                  className={cn(
-                    "mx-4 h-[2px] w-16 transition-colors",
-                    // Position at circle center (h-10 = 40px / 2 = 20px, h-12 = 48px / 2 = 24px)
-                    "mt-5 xl:mt-6",
-                    isCompleted ? "bg-primary/50" : "bg-background-surface-4",
-                  )}
-                />
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        </div>
       </div>
     </div>
   );

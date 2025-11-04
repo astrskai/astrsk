@@ -11,7 +11,6 @@ interface PlotDescriptionStepProps {
 const DESCRIPTION_PLACEHOLDER =
   "Describe your plot's setting, themes, and story elements...";
 const DESCRIPTION_VARIABLE = "{{plot.description}}";
-const DESCRIPTION_ROWS = 8;
 
 /**
  * Plot Description Step Component
@@ -73,7 +72,7 @@ export function PlotDescriptionStep({
       </div>
 
       {/* Main Content - Flex Layout */}
-      <div className="flex flex-col gap-6 md:flex-row">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start">
         {/* Text Field */}
         <div className="bg-black-alternate border-border flex-1 rounded-2xl border-2 p-4 md:p-6">
           <div className="flex flex-col gap-1">
@@ -85,7 +84,8 @@ export function PlotDescriptionStep({
               onChange={(e) => onDescriptionChange(e.target.value)}
               placeholder={DESCRIPTION_PLACEHOLDER}
               required
-              rows={DESCRIPTION_ROWS}
+              autoResize
+              className="min-h-[300px]"
             />
             <p className="text-text-secondary text-right text-xs">
               {DESCRIPTION_VARIABLE}
@@ -93,11 +93,13 @@ export function PlotDescriptionStep({
           </div>
         </div>
 
-        {/* Variables Panel */}
-        <VariablesPanel
-          onVariableClick={insertVariable}
-          filterVariables={filterVariables}
-        />
+        {/* Variables Panel - Sticky on desktop */}
+        <div className="md:sticky md:top-4 md:self-start">
+          <VariablesPanel
+            onVariableClick={insertVariable}
+            filterVariables={filterVariables}
+          />
+        </div>
       </div>
     </div>
   );

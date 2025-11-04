@@ -225,7 +225,7 @@ export function CreateCharacterPage() {
 
       {/* Content */}
       <div className="mb-20 flex flex-1 overflow-y-auto md:mb-0">
-        <div className="mx-auto w-full max-w-5xl p-4 md:p-8">
+        <div className="mx-auto w-full max-w-7xl p-4 md:p-8">
           {/* Step 1: Character Image */}
           {currentStep === "image" && (
             <CharacterImageStep
