@@ -127,7 +127,7 @@ export function VariablesPanel({
   }, []);
 
   return (
-    <div className="bg-black-alternate border-border w-full rounded-2xl border-2 md:w-80">
+    <div className="bg-black-alternate border-border w-full rounded-2xl border-2 md:w-95">
       <div className="flex max-h-[750px] flex-col">
         {/* Header - Fixed */}
         <div className="border-border flex-shrink-0 border-b p-4">
