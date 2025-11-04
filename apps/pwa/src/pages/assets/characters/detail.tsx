@@ -30,12 +30,13 @@ import { VariablesPanel } from "@/pages/assets/characters/panel/variables-panel"
 import { FirstMessagesPanel } from "@/pages/assets/characters/panel/scenarios-panel";
 import { ImageGeneratorPanel } from "@/pages/assets/characters/panel/image-generator-panel";
 import { CardVibePanel } from "@/pages/assets/characters/panel/vibe-panel";
-import { SvgIcon } from "@/shared/ui";
+import { SvgIcon, FloatingActionButton } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 import { logger } from "@/shared/lib";
 import CustomDockviewTab from "@/widgets/dockview-default-tab";
 import { PanelFocusAnimationWrapper } from "@/widgets/dockview-panel-focus-animation";
 import { useNavigate } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 
 interface CharacterPlotDetailPageProps {
   cardId: string;
@@ -499,6 +500,14 @@ export default function CharacterPlotDetailPage({
       invalidateExternalQueries={invalidateExternalQueries}
       card={card}
     >
+      <FloatingActionButton
+        icon={<ArrowLeft className="min-h-[24px] min-w-[24px]" />}
+        position="top-left"
+        className="!z-50 !left-[16px] !top-[24px]"
+        onClick={() => {
+          window.history.back();
+        }}
+      />
       <div
         className="h-full w-full"
         style={{ height: "calc(100% - var(--topbar-height))" }}
