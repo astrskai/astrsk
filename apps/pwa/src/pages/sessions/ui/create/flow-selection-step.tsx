@@ -81,10 +81,10 @@ export function FlowSelectionStep({
       <div
         onClick={handleAddFlowClick}
         className={cn(
-          "group relative cursor-pointer overflow-hidden rounded-2xl transition-all",
-          "bg-background-surface-4 border-2 p-6",
+          "group relative cursor-pointer overflow-hidden rounded-lg transition-all",
+          "bg-black-alternate border-1 p-6",
           "hover:border-primary/50 hover:shadow-lg",
-          selectedFlow ? "border-primary shadow-lg" : "border-border",
+          selectedFlow ? "border-primary shadow-lg" : "border-gray-700",
         )}
       >
         {selectedFlow ? (

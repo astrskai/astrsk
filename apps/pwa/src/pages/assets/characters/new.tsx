@@ -46,7 +46,7 @@ export function CreateCharacterPage() {
   const [isCreatingCard, setIsCreatingCard] = useState<boolean>(false);
 
   const STEPS: StepConfig<CharacterStep>[] = [
-    { id: "image", number: 1, label: "Basic Info", required: false },
+    { id: "image", number: 1, label: "Basic Info", required: true },
     { id: "info", number: 2, label: "Character Description", required: true },
     { id: "lorebook", number: 3, label: "Lorebook", required: false },
   ];
@@ -224,7 +224,7 @@ export function CreateCharacterPage() {
       <StepIndicator steps={STEPS} currentStep={currentStep} />
 
       {/* Content */}
-      <div className="flex flex-1 overflow-y-auto mb-20 md:mb-0">
+      <div className="mb-20 flex flex-1 overflow-y-auto md:mb-0">
         <div className="mx-auto w-full max-w-5xl p-4 md:p-8">
           {/* Step 1: Character Image */}
           {currentStep === "image" && (

@@ -28,6 +28,7 @@
   --color-gray-50: #f1f1f1;
   --color-gray-100: #d4d4d4;
   --color-gray-200: #bfbfbf;
+  --color-gray-300: #a1a1a1;
   --color-gray-500: #737373;
   --color-gray-700: #525252;
   --color-gray-800: #3f3f3f;
@@ -141,7 +142,6 @@
   --color-text-info: var(--text-info);
   --color-text-contrast-text: var(--text-contrast-text);
   --color-text-muted-title: var(--text-muted-title);
-  --color-text-secondary: var(--text-secondary);
   --color-text-input-subtitle: var(--text-input-subtitle);
   --color-text-user-message: var(--text-user-message);
 
@@ -303,7 +303,6 @@
   --text-input-subtitle: #97a2b1;
   --text-muted-title: #d4d4d4;
   --text-placeholder: #a1a1a1;
-  --text-secondary: #bfbfbf;
   --text-user-message: #3f3f3f;
 
   /* New text colors */
@@ -467,7 +466,6 @@
   --text-input-subtitle: #97a2b1;
   --text-muted-title: #d4d4d4;
   --text-placeholder: #a1a1a1;
-  --text-secondary: #bfbfbf;
   --text-user-message: #3f3f3f;
 
   /* New text colors */

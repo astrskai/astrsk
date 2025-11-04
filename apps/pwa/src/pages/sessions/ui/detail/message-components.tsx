@@ -93,7 +93,7 @@ const MessageAvatar = ({
           <video
             ref={avatarVideoRef}
             src={icon || undefined}
-            className="h-full w-full object-cover rounded-full"
+            className="h-full w-full rounded-full object-cover"
             muted
             loop
             playsInline
@@ -102,7 +102,7 @@ const MessageAvatar = ({
           <img
             src={icon}
             alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? ""}
-            className="h-full w-full object-cover rounded-full"
+            className="h-full w-full rounded-full object-cover"
           />
         ) : (
           <img
@@ -112,7 +112,7 @@ const MessageAvatar = ({
                 : "/img/message-avatar-default.svg"
             }
             alt={characterCard?.props.name?.at(0)?.toUpperCase() ?? "User"}
-            className="h-full w-full object-cover rounded-full"
+            className="h-full w-full rounded-full object-cover"
           />
         )}
       </div>
@@ -272,11 +272,16 @@ const MessageItemInternal = ({
           <div
             className={cn(
               "chat-style-chat-bubble rounded-[8px] p-[8px] break-words md:p-[16px]",
-              // Desktop: max width
+              // Width based on content
               "max-w-[600px]",
-              // Mobile: same behavior (text length only)
+              // Mobile: full width
               "max-md:max-w-full",
             )}
+            style={
+              isEditing && !disabled
+                ? { width: "100%", maxWidth: "600px" }
+                : undefined
+            }
           >
             {/* Display generated image if exists */}
             {assetUrl && (

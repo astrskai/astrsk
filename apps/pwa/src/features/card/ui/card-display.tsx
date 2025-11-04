@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Copy, Download, Trash2 } from "lucide-react";
+import { Copy, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -105,7 +105,7 @@ export default function CardDisplay({
   className,
   onClick,
 }: CardDisplayProps) {
-  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isCopying, setIsCopying] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
@@ -118,13 +118,13 @@ export default function CardDisplay({
   /**
    * Handle card download/export as PNG file
    */
-  const handleDownload = useCallback(
+  const handleExportClick = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation();
 
-      if (isDownloading || !cardId) return;
+      if (isExporting || !cardId) return;
 
-      setIsDownloading(true);
+      setIsExporting(true);
 
       try {
         // Export card as PNG file
@@ -134,7 +134,7 @@ export default function CardDisplay({
         });
 
         if (result.isFailure) {
-          toast.error("Failed to download card", {
+          toast.error("Failed to export", {
             description: result.getError(),
           });
           return;
@@ -142,21 +142,21 @@ export default function CardDisplay({
 
         const file = result.getValue();
 
-        // Download file
+        // Export file
         downloadFile(file);
 
-        toast.success("Card downloaded", {
-          description: title,
+        toast.success("Successfully exported!", {
+          description: `"${title}" exported`,
         });
       } catch (error) {
-        toast.error("Failed to download card", {
+        toast.error("Failed to export", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       } finally {
-        setIsDownloading(false);
+        setIsExporting(false);
       }
     },
-    [cardId, title, isDownloading],
+    [cardId, title, isExporting],
   );
 
   /**
@@ -363,16 +363,16 @@ export default function CardDisplay({
               <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <div className="text-button-foreground-primary absolute top-2 left-2 flex -translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                 <button
-                  onClick={handleDownload}
-                  disabled={isDownloading}
-                  aria-label={`Download ${title}`}
+                  onClick={handleExportClick}
+                  disabled={isExporting}
+                  aria-label={`Export ${title}`}
                   className={cn(
                     "hover:bg-primary-strong flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-sm backdrop-blur-sm transition-opacity",
-                    isDownloading && "cursor-not-allowed opacity-50",
+                    isExporting && "cursor-not-allowed opacity-50",
                   )}
                 >
-                  <Download
-                    className={cn("h-4", isDownloading && "animate-pulse")}
+                  <Upload
+                    className={cn("h-4", isExporting && "animate-pulse")}
                   />
                 </button>
                 <button

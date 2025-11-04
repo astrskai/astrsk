@@ -150,13 +150,13 @@ export function PlotLorebookStep({
       {/* Main Content - 3 Column Layout */}
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left + Center: Entries List and Editor */}
-        <div className="bg-background-surface-1 border-border flex-1 rounded-2xl border-2 p-4 md:p-6">
+        <div className="bg-black-alternate border-border flex-1 rounded-2xl border-2 p-4 md:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:gap-6">
             {/* Left: Entries List */}
             <div className="flex flex-col gap-2 md:w-64">
               <div className="flex items-center justify-between">
                 <span className="text-text-primary text-sm font-medium">
-                  Entries
+                  Lorebook Entries
                 </span>
                 <Button
                   onClick={handleAddEntry}
@@ -168,7 +168,7 @@ export function PlotLorebookStep({
                 </Button>
               </div>
 
-              <div className="bg-background-surface-2 border-border flex flex-col gap-1 rounded-lg border p-2">
+              <div className="border-border flex flex-col gap-1 rounded-lg border bg-gray-900 p-2">
                 {entries.length === 0 ? (
                   <div className="text-text-placeholder py-8 text-center text-xs">
                     No entries yet
@@ -180,7 +180,7 @@ export function PlotLorebookStep({
                       className={cn(
                         "flex cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm transition-colors",
                         selectedEntryId === entry.id
-                          ? "bg-background-surface-4 text-text-primary"
+                          ? "text-text-primary bg-gray-800"
                           : "text-text-secondary hover:bg-background-surface-3",
                       )}
                       onClick={() => setSelectedEntryId(entry.id)}
@@ -207,7 +207,7 @@ export function PlotLorebookStep({
                 <>
                   {/* Entry Name */}
                   <Input
-                    label="Entry Name"
+                    label="Lorebook Name"
                     type="text"
                     value={selectedEntry.name}
                     onChange={(e) =>
@@ -215,7 +215,7 @@ export function PlotLorebookStep({
                         name: e.target.value,
                       })
                     }
-                    placeholder="Entry name..."
+                    placeholder="e.g. The World of Elariah"
                   />
 
                   {/* Tags */}
@@ -251,7 +251,7 @@ export function PlotLorebookStep({
                         {selectedEntry.tags.map((tag) => (
                           <div
                             key={tag}
-                            className="bg-background-surface-3 text-text-primary flex items-center gap-1 rounded px-2 py-1 text-xs"
+                            className="flex items-center gap-1 rounded bg-gray-800 px-2 py-1 text-xs text-gray-200"
                           >
                             <span>{tag}</span>
                             <button

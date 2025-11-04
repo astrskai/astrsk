@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { MessageCircle, CircleAlert } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 import { Session } from "@/entities/session/domain/session";
 import { useSessionValidation } from "@/shared/hooks/use-session-validation";
 import { cn } from "@/shared/lib";

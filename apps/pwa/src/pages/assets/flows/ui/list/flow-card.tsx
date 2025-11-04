@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { Flow, ReadyState } from "@/entities/flow/domain/flow";
 import { cn, logger } from "@/shared/lib";
 import { IconFlow } from "@/shared/assets/icons";
-import { CircleAlert, Copy, Download, Trash2 } from "lucide-react";
+import { CircleAlert, Copy, Upload, Trash2 } from "lucide-react";
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import {
   useDeleteFlowWithNodes,
@@ -93,7 +93,7 @@ export function FlowCard({
   }, [flow.id]);
 
   // Handle export dialog open - fetch agents info
-  const handleDownload = useCallback(
+  const handleExportClick = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation();
 
@@ -161,17 +161,17 @@ export function FlowCard({
           throw new Error("Export returned empty file");
         }
 
-        // Download flow file
+        // Export flow file
         downloadFile(file);
 
-        toast.success("Flow exported successfully", {
-          description: flow.props.name || "Untitled Flow",
+        toast.success("Successfully exported!", {
+          description: `"${flow.props.name || "Untitled Flow"}" exported`,
         });
 
         setIsExportDialogOpen(false);
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to export flow", {
+        toast.error("Failed to export", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -192,12 +192,12 @@ export function FlowCard({
         // Notify parent of successful copy for animation
         onCopySuccess?.(copiedFlow.id.toString());
 
-        toast.success("Flow copied successfully", {
-          description: copiedFlow.props.name || "Untitled Flow",
+        toast.success("Successfully copied!", {
+          description: `"${copiedFlow.props.name || "Untitled Flow"}" copied`,
         });
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to copy flow", {
+        toast.error("Failed to copy", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -225,12 +225,12 @@ export function FlowCard({
         navigate({ to: "/" });
       }
 
-      toast.success("Flow deleted successfully", {
-        description: flow.props.name || "Untitled Flow",
+      toast.success("Successfully deleted!", {
+        description: `"${flow.props.name || "Untitled Flow"}" deleted`,
       });
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to delete flow", {
+      toast.error("Failed to delete", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
@@ -251,9 +251,11 @@ export function FlowCard({
         onClick={onClick}
         className={cn(
           "group relative h-full cursor-pointer overflow-hidden rounded-2xl transition-all duration-300",
-          "bg-background-surface-4 border-2 p-6",
-          "hover:border-primary/50 hover:shadow-lg",
-          isSelected ? "border-primary shadow-lg" : "border-border",
+          "border-1 bg-gray-900 p-6",
+          "hover:shadow-lg",
+          isSelected
+            ? "border-blue-300 shadow-lg hover:border-blue-300/70"
+            : "border-gray-500 hover:border-gray-500/70",
           // New flow animation - green pulse effect
           isNewlyCreated && [
             "!border-green-500",
@@ -264,7 +266,7 @@ export function FlowCard({
       >
         {/* Flow Name with Status */}
         <div className="mb-3 flex items-start justify-between gap-2">
-          <h3 className="text-text-primary flex items-start gap-2 text-lg font-semibold">
+          <h3 className="flex items-start gap-2 text-lg font-semibold text-gray-50">
             <IconFlow className="h-5 w-5 shrink-0" />
             <span className="line-clamp-2">
               {flow.props.name || "Untitled Flow"}
@@ -318,13 +320,13 @@ export function FlowCard({
                 {dataStoreFields.slice(0, 3).map((field, index) => (
                   <span
                     key={index}
-                    className="bg-background-surface-3 text-text-secondary rounded-md px-2 py-0.5 text-xs"
+                    className="text-black-alternate rounded-md bg-gray-300 px-2 py-0.5 text-xs"
                   >
                     {field.name}
                   </span>
                 ))}
                 {dataStoreFields.length > 3 && (
-                  <span className="bg-background-surface-3 text-text-secondary rounded-md px-2 py-0.5 text-xs">
+                  <span className="rounded-md px-2 py-0.5 text-xs text-gray-200">
                     +{dataStoreFields.length - 3}
                   </span>
                 )}
@@ -342,11 +344,11 @@ export function FlowCard({
             {/* Action buttons */}
             <div className="text-button-foreground-primary absolute right-4 bottom-4 flex translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
               <button
-                onClick={handleDownload}
-                aria-label={`Download ${flow.props.name}`}
+                onClick={handleExportClick}
+                aria-label={`Export ${flow.props.name}`}
                 className="hover:bg-primary-strong flex h-8 w-8 items-center justify-center rounded-full bg-blue-200 text-sm backdrop-blur-sm transition-colors"
               >
-                <Download className="h-4 w-4" />
+                <Upload className="h-4 w-4" />
               </button>
               <button
                 onClick={handleCopy}
