@@ -8,7 +8,7 @@ export default function LegalPage() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="bg-background-surface-2 md:bg-background-surface-1 flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-[587px] px-4 py-4 md:py-20">
           {/* Desktop title - hidden on mobile */}
           <TypoXLarge className="text-text-primary mb-8 hidden font-semibold md:block">

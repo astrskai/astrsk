@@ -22,9 +22,14 @@
   /* Blue colors */
   --color-blue-100: #b9e4fb;
   --color-blue-200: #98d7f9;
+  --color-blue-300: #68c5f6;
 
   /* Gray colors */
+  --color-gray-50: #f1f1f1;
+  --color-gray-100: #d4d4d4;
+  --color-gray-200: #bfbfbf;
   --color-gray-500: #737373;
+  --color-gray-700: #525252;
   --color-gray-800: #3f3f3f;
   --color-gray-900: #303030;
 
@@ -165,7 +170,6 @@
 
   /* Color palette - Blue */
   --color-blue-50: var(--color-blue-50);
-  --color-blue-300: var(--color-blue-300);
   --color-blue-500: var(--color-blue-500);
   --color-blue-700: var(--color-blue-700);
   --color-blue-800: var(--color-blue-800);
@@ -181,7 +185,6 @@
   --color-orange-300: var(--orange-300);
   --color-lime-300: var(--lime-300);
   --color-red-300: var(--red-300);
-  --color-blue-300: var(--blue-300);
   --color-amber-300: var(--amber-300);
   --color-cyan-300: var(--cyan-300);
   --color-fuchsia-300: var(--fuchsia-300);
@@ -237,7 +240,6 @@
   --color-basic-darksurface: #1b1b1b;
 
   --color-blue-50: #e9f6fe;
-  --color-blue-300: #68c5f6;
   --color-blue-500: #1ea9f2;
   --color-blue-700: #1578ac;
   --color-blue-800: #115d85;
@@ -504,7 +506,6 @@
   --orange-300: #fdba74;
   --lime-300: #bef264;
   --red-300: #fca5a5;
-  --blue-300: #93c5fd;
   --amber-300: #fcd34d;
   --cyan-300: #67e8f9;
   --fuchsia-300: #f0abfc;
@@ -583,7 +584,7 @@
   }
   body {
     color: var(--foreground);
-    background-color: var(--background-surface-2);
+    background-color: var(--color-background-primary);
     font-family:
       var(--font-inter),
       -apple-system,
