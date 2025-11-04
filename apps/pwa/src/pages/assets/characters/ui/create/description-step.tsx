@@ -98,9 +98,9 @@ export function CharacterDescriptionStep({
       </div>
 
       {/* Main Content - Flex Layout */}
-      <div className="flex flex-col gap-6 md:flex-row">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start">
         {/* Text Fields */}
-        <div className="bg-black-alternate border-border flex-1 rounded-2xl border-2 p-4 md:p-6">
+        <div className="bg-black-alternate border-border flex flex-1 flex-col rounded-2xl border-2 p-4 md:p-6">
           <div className="flex flex-col gap-1">
             {/* Character Description */}
             <Textarea
@@ -111,7 +111,8 @@ export function CharacterDescriptionStep({
               onFocus={() => setActiveTextarea("description")}
               placeholder="Describe your character's personality, traits, and background..."
               required
-              rows={6}
+              autoResize
+              className="min-h-[300px]"
             />
             <p className="text-text-secondary text-right text-xs">
               {`{{char.description}}`}
@@ -140,7 +141,8 @@ export function CharacterDescriptionStep({
                     onChange={(e) => onExampleDialogueChange(e.target.value)}
                     onFocus={() => setActiveTextarea("dialogue")}
                     placeholder="Enter example conversations to define how your character speaks..."
-                    rows={8}
+                    autoResize
+                    className="min-h-[300px]"
                   />
                   <p className="text-text-secondary text-right text-xs">
                     {`{{char.example_dialog}}`}
@@ -151,13 +153,15 @@ export function CharacterDescriptionStep({
           </div>
         </div>
 
-        {/* Variables Panel */}
-        <VariablesPanel
-          onVariableClick={insertVariable}
-          filterVariables={filterVariables}
-          isActive={!!activeTextarea}
-          inactiveMessage="Click in a text field to insert variables"
-        />
+        {/* Variables Panel - Sticky on desktop */}
+        <div className="md:sticky md:top-4 md:self-start">
+          <VariablesPanel
+            onVariableClick={insertVariable}
+            filterVariables={filterVariables}
+            isActive={!!activeTextarea}
+            inactiveMessage="Click in a text field to insert variables"
+          />
+        </div>
       </div>
     </div>
   );

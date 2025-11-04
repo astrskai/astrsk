@@ -261,7 +261,7 @@ export function CreateSessionPage() {
 
       {/* Content */}
       <div className="mb-20 flex flex-1 overflow-y-auto md:mb-0">
-        <div className="mx-auto w-full max-w-5xl p-8">
+        <div className="mx-auto w-full max-w-7xl p-8">
           {currentStep === "basic-info" && (
             <BasicInfoStep
               sessionName={sessionName}
