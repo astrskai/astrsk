@@ -86,36 +86,72 @@ export function useResourceImport() {
             navigate({ to: "/assets/characters" });
           }
         } else if (isJSON) {
-          // For JSON files, parse agent models and show dialog
-          setImportingFile(file);
+          // For JSON files, try character card import first (V2/V3 format)
+          // If that fails, try flow import
 
-          // Get models from file
-          const modelNameOrError =
-            await FlowService.getModelsFromFlowFile.execute(file);
+          // First attempt: Import as character card
+          const cardResult = await CardService.importCardFromFile.execute(file);
 
-          if (modelNameOrError.isFailure) {
-            toast.error("Failed to read flow file", {
-              description: modelNameOrError.getError(),
+          if (cardResult.isSuccess) {
+            // Successfully imported as character card
+            const importedCards = cardResult.getValue();
+
+            // Refresh card list
+            await queryClient.invalidateQueries({
+              queryKey: cardQueries.lists(),
             });
-            return;
+
+            toast.success("Card imported successfully", {
+              description: `Imported ${importedCards.length} card(s)`,
+            });
+
+            // Navigate to appropriate card page
+            const hasCharacter = importedCards.some(
+              (card) => card.props.type === CardType.Character,
+            );
+            const hasPlot = importedCards.some(
+              (card) => card.props.type === CardType.Plot,
+            );
+
+            if (hasCharacter && !hasPlot) {
+              navigate({ to: "/assets/characters" });
+            } else if (hasPlot && !hasCharacter) {
+              navigate({ to: "/assets/plots" });
+            } else if (hasCharacter && hasPlot) {
+              navigate({ to: "/assets/characters" });
+            }
+          } else {
+            // Card import failed, try flow import
+            setImportingFile(file);
+
+            // Get models from file
+            const modelNameOrError =
+              await FlowService.getModelsFromFlowFile.execute(file);
+
+            if (modelNameOrError.isFailure) {
+              toast.error("Failed to import file", {
+                description: "File is not a valid character card or flow",
+              });
+              return;
+            }
+
+            // Parse the file to get agent names
+            const text = await file.text();
+            const flowJson = JSON.parse(text);
+            const agentIdToModelNames = modelNameOrError.getValue();
+
+            // Enhance with agent names
+            const enhancedModels: AgentModel[] = agentIdToModelNames.map(
+              (item) => ({
+                ...item,
+                agentName:
+                  flowJson.agents[item.agentId]?.name || "Unknown Agent",
+              }),
+            );
+
+            setAgentModels(enhancedModels);
+            setIsOpenImportDialog(true);
           }
-
-          // Parse the file to get agent names
-          const text = await file.text();
-          const flowJson = JSON.parse(text);
-          const agentIdToModelNames = modelNameOrError.getValue();
-
-          // Enhance with agent names
-          const enhancedModels: AgentModel[] = agentIdToModelNames.map(
-            (item) => ({
-              ...item,
-              agentName:
-                flowJson.agents[item.agentId]?.name || "Unknown Agent",
-            }),
-          );
-
-          setAgentModels(enhancedModels);
-          setIsOpenImportDialog(true);
         }
       } catch (error) {
         logger.error(error);
