@@ -1,21 +1,13 @@
-import { useState, useCallback } from "react";
 import { Plus, Upload, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
 import { ActionConfirm } from "@/shared/ui/dialogs";
 import CharacterPreview from "@/features/character/ui/character-preview";
-import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { downloadFile } from "@/shared/lib";
-import { CardService } from "@/app/services/card-service";
-import { SessionService } from "@/app/services/session-service";
-import { cardQueries } from "@/entities/card/api/card-queries";
-import { TableName } from "@/db/schema/table-name";
 import type { CharacterAction } from "@/features/character/model/character-actions";
+import { useCardActions } from "@/features/common/model/use-card-actions";
 
 interface CharactersGridProps {
   characters: CharacterCard[];
@@ -35,27 +27,16 @@ export function CharactersGrid({
   showNewCharacterCard,
 }: CharactersGridProps) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
-  const [deleteDialogState, setDeleteDialogState] = useState<{
-    isOpen: boolean;
-    cardId: string | null;
-    title: string;
-    usedSessionsCount: number;
-  }>({
-    isOpen: false,
-    cardId: null,
-    title: "",
-    usedSessionsCount: 0,
-  });
-
-  const [loadingStates, setLoadingStates] = useState<{
-    [key: string]: {
-      exporting?: boolean;
-      copying?: boolean;
-      deleting?: boolean;
-    };
-  }>({});
+  const {
+    loadingStates,
+    deleteDialogState,
+    handleExport,
+    handleCopy,
+    handleDeleteClick,
+    handleDeleteConfirm,
+    closeDeleteDialog,
+  } = useCardActions({ entityType: "character" });
 
   const handleCharacterClick = (characterId: string) => {
     navigate({
@@ -67,162 +48,6 @@ export function CharactersGrid({
   const handleCreateCharacter = () => {
     navigate({ to: "/assets/characters/new" });
   };
-
-  const handleExport = useCallback(
-    (cardId: string, title: string) => async (e: React.MouseEvent) => {
-      e.stopPropagation();
-
-      setLoadingStates((prev) => ({
-        ...prev,
-        [cardId]: { ...prev[cardId], exporting: true },
-      }));
-
-      try {
-        const result = await CardService.exportCardToFile.execute({
-          cardId: new UniqueEntityID(cardId),
-          options: { format: "png" },
-        });
-
-        if (result.isFailure) {
-          toast.error("Failed to export", { description: result.getError() });
-          return;
-        }
-
-        downloadFile(result.getValue());
-        toast.success("Successfully exported!", {
-          description: `"${title}" exported`,
-        });
-      } catch (error) {
-        toast.error("Failed to export", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      } finally {
-        setLoadingStates((prev) => ({
-          ...prev,
-          [cardId]: { ...prev[cardId], exporting: false },
-        }));
-      }
-    },
-    [],
-  );
-
-  const handleCopy = useCallback(
-    (cardId: string, title: string) => async (e: React.MouseEvent) => {
-      e.stopPropagation();
-
-      setLoadingStates((prev) => ({
-        ...prev,
-        [cardId]: { ...prev[cardId], copying: true },
-      }));
-
-      try {
-        const result = await CardService.cloneCard.execute({
-          cardId: new UniqueEntityID(cardId),
-        });
-
-        if (result.isFailure) {
-          toast.error("Failed to copy card", {
-            description: result.getError(),
-          });
-          return;
-        }
-
-        toast.success("Card copied", {
-          description: `Created copy of "${title}"`,
-        });
-        await queryClient.invalidateQueries({ queryKey: cardQueries.lists() });
-      } catch (error) {
-        toast.error("Failed to copy card", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      } finally {
-        setLoadingStates((prev) => ({
-          ...prev,
-          [cardId]: { ...prev[cardId], copying: false },
-        }));
-      }
-    },
-    [queryClient],
-  );
-
-  const handleDeleteClick = useCallback(
-    (cardId: string, title: string) => async (e: React.MouseEvent) => {
-      e.stopPropagation();
-
-      try {
-        const result = await SessionService.listSessionByCard.execute({
-          cardId: new UniqueEntityID(cardId),
-        });
-        const usedSessionsCount = result.isSuccess
-          ? result.getValue().length
-          : 0;
-
-        setDeleteDialogState({
-          isOpen: true,
-          cardId,
-          title,
-          usedSessionsCount,
-        });
-      } catch (error) {
-        console.error("Failed to check used sessions:", error);
-        setDeleteDialogState({
-          isOpen: true,
-          cardId,
-          title,
-          usedSessionsCount: 0,
-        });
-      }
-    },
-    [],
-  );
-
-  const handleDeleteConfirm = useCallback(async () => {
-    const { cardId, title, usedSessionsCount } = deleteDialogState;
-    if (!cardId) return;
-
-    setLoadingStates((prev) => ({
-      ...prev,
-      [cardId]: { ...prev[cardId], deleting: true },
-    }));
-
-    try {
-      const result = await CardService.deleteCard.execute(
-        new UniqueEntityID(cardId),
-      );
-
-      if (result.isFailure) {
-        toast.error("Failed to delete card", {
-          description: result.getError(),
-        });
-        return;
-      }
-
-      toast.success("Card deleted", { description: title });
-      await queryClient.invalidateQueries({ queryKey: cardQueries.lists() });
-
-      if (usedSessionsCount > 0) {
-        await queryClient.invalidateQueries({
-          queryKey: [TableName.Sessions],
-        });
-      }
-
-      setDeleteDialogState({
-        isOpen: false,
-        cardId: null,
-        title: "",
-        usedSessionsCount: 0,
-      });
-    } catch (error) {
-      toast.error("Failed to delete card", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    } finally {
-      setLoadingStates((prev) => ({
-        ...prev,
-        [cardId]: { ...prev[cardId], deleting: false },
-      }));
-    }
-  }, [deleteDialogState, queryClient]);
 
   return (
     <>
@@ -299,9 +124,7 @@ export function CharactersGrid({
 
       <ActionConfirm
         open={deleteDialogState.isOpen}
-        onOpenChange={() =>
-          setDeleteDialogState((prev) => ({ ...prev, isOpen: false }))
-        }
+        onOpenChange={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}
         title="Delete Character"
         description={
