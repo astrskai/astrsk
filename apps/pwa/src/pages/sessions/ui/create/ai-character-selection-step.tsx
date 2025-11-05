@@ -109,10 +109,7 @@ interface SelectedCharacterCardProps {
   onRemove: (cardId: string) => (e: React.MouseEvent) => void;
 }
 
-function SelectedCharacterCard({
-  card,
-  onRemove,
-}: SelectedCharacterCardProps) {
+function SelectedCharacterCard({ card, onRemove }: SelectedCharacterCardProps) {
   const [imageUrl] = useAsset(card.props.iconAssetId);
   const cardId = card.id.toString();
 
@@ -329,7 +326,7 @@ export function AiCharacterSelectionStep({
               title="Add Character"
               description="Add more characters"
               onClick={handleAddCharacterClick}
-              className="hidden aspect-[3/1] md:flex"
+              className="hidden aspect-[2/1] md:flex lg:aspect-[3/1]"
             />
 
             {/* Selected Characters */}

@@ -29,7 +29,7 @@ export function CreateItemCard({
       <div className="flex flex-col items-center gap-3">
         {/* Plus Icon */}
         <div className="flex h-16 w-16 items-center justify-center rounded-full border border-gray-500 bg-gray-800 transition-transform duration-300 group-hover/create-item-card:scale-105">
-          <Plus size={32} />
+          <Plus className="min-h-8 min-w-8" />
         </div>
 
         {/* Text */}

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, MouseEvent } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -74,7 +74,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
    * Export card to PNG file
    */
   const handleExport = useCallback(
-    (cardId: string, title: string) => async (e: React.MouseEvent) => {
+    (cardId: string, title: string) => async (e: MouseEvent) => {
       e.stopPropagation();
 
       setLoadingStates((prev) => ({
@@ -115,7 +115,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
    * Clone/copy card
    */
   const handleCopy = useCallback(
-    (cardId: string, title: string) => async (e: React.MouseEvent) => {
+    (cardId: string, title: string) => async (e: MouseEvent) => {
       e.stopPropagation();
 
       setLoadingStates((prev) => ({
@@ -158,7 +158,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
    * Fetches sessions using this card
    */
   const handleDeleteClick = useCallback(
-    (cardId: string, title: string) => async (e: React.MouseEvent) => {
+    (cardId: string, title: string) => async (e: MouseEvent) => {
       e.stopPropagation();
 
       try {

@@ -25,7 +25,10 @@ interface CharacterGridItemProps {
   onCharacterClick: (characterId: string) => void;
   onExport: (cardId: string, title: string) => (e: React.MouseEvent) => void;
   onCopy: (cardId: string, title: string) => (e: React.MouseEvent) => void;
-  onDeleteClick: (cardId: string, title: string) => (e: React.MouseEvent) => void;
+  onDeleteClick: (
+    cardId: string,
+    title: string,
+  ) => (e: React.MouseEvent) => void;
 }
 
 function CharacterGridItem({
@@ -120,7 +123,7 @@ export function CharactersGrid({
         {showNewCharacterCard && (
           <Button
             onClick={handleCreateCharacter}
-            icon={<Plus size={16} />}
+            icon={<Plus className="min-h-4 min-w-4" />}
             className="w-full md:hidden"
           >
             Create new character
@@ -135,7 +138,7 @@ export function CharactersGrid({
               title="New Character"
               description="Create a new character"
               onClick={handleCreateCharacter}
-              className="hidden aspect-[3/1] md:flex"
+              className="hidden aspect-[2/1] md:flex lg:aspect-[3/1]"
             />
           )}
 

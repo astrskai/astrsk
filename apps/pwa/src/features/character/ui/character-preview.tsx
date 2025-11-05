@@ -30,7 +30,6 @@ const CharacterPreview = ({
   isDisabled = false,
   onClick,
 }: CharacterPreviewProps) => {
-
   const getCompactedTagString = (tags: string[]) => {
     const compactedTags = tags.slice(0, 3).map((tag, index) => {
       return (
@@ -136,10 +135,21 @@ const CharacterPreview = ({
 
         {/* Content layer */}
         <div className="relative z-10 flex h-full flex-col justify-around gap-1 lg:justify-between lg:gap-2">
-          <h3 className="text-base font-semibold text-gray-50 lg:text-lg">
+          <h3
+            className={cn(
+              "text-base font-semibold text-gray-50 lg:text-lg",
+              "transition-all duration-300 group-hover/preview:text-gray-200",
+            )}
+          >
             {title}
           </h3>
-          <p className="line-clamp-2 text-xs lg:text-sm">
+          <p
+            className={cn(
+              "line-clamp-2 text-xs lg:text-sm",
+              summary &&
+                "transition-all duration-300 group-hover/preview:text-gray-50",
+            )}
+          >
             {summary || "No summary"}
           </p>
           <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
