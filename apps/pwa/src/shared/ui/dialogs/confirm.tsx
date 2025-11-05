@@ -67,7 +67,7 @@ export const ActionConfirm = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="p-4 md:p-6"
+        className="p-4 md:max-w-xl md:p-6 lg:max-w-2xl xl:max-w-3xl"
         hideClose
         onPointerDownOutside={(e) => e.stopPropagation()}
         onInteractOutside={(e) => e.stopPropagation()}

@@ -138,10 +138,10 @@ export function CharacterLorebookStep({
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
+        <h2 className="mb-2 text-xl font-semibold text-gray-50">
           Character Lorebook
         </h2>
-        <p className="text-text-secondary text-sm">
+        <p className="text-sm text-gray-200">
           Add additional lore and details for your character (optional).
         </p>
       </div>
@@ -149,27 +149,27 @@ export function CharacterLorebookStep({
       {/* Main Content - 3 Column Layout */}
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left + Center: Entries List and Editor */}
-        <div className="bg-black-alternate border-border flex-1 rounded-2xl border-2 p-4 md:p-6">
+        <div className="border-border flex-1 rounded-lg border-2 bg-gray-900 p-2 md:p-4">
           <div className="flex flex-col gap-4 md:flex-row md:gap-6">
             {/* Left: Entries List */}
             <div className="flex flex-col gap-2 md:w-64">
               <div className="flex items-center justify-between">
-                <span className="text-text-primary text-sm font-medium">
+                <span className="text-text-secondary text-sm font-medium">
                   Lorebook Entries
                 </span>
                 <Button
                   onClick={handleAddEntry}
                   size="sm"
-                  variant="ghost"
+                  variant="secondary"
                   icon={<Plus size={16} />}
                 >
                   Add
                 </Button>
               </div>
 
-              <div className="border-border flex flex-col gap-1 rounded-lg border bg-gray-900 p-2">
+              <div className="bg-dark-surface flex flex-col gap-1 rounded-lg p-2">
                 {entries.length === 0 ? (
-                  <div className="text-text-placeholder py-8 text-center text-xs">
+                  <div className="text-text-secondary py-8 text-center text-sm">
                     No entries yet
                   </div>
                 ) : (
@@ -219,7 +219,7 @@ export function CharacterLorebookStep({
 
                   {/* Tags */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-text-primary text-sm font-medium">
+                    <label className="text-text-secondary text-sm font-medium">
                       Tags
                     </label>
                     <div className="flex items-center gap-2">
@@ -302,7 +302,7 @@ export function CharacterLorebookStep({
                   />
                 </>
               ) : (
-                <div className="text-text-placeholder border-border flex flex-1 items-center justify-center rounded-lg border py-12 text-sm">
+                <div className="text-text-secondary border-border flex flex-1 items-center justify-center rounded-lg border py-12 text-sm">
                   Select an entry to edit or add a new one
                 </div>
               )}
@@ -315,13 +315,15 @@ export function CharacterLorebookStep({
           </p>
         </div>
 
-        {/* Right: Variables Panel */}
-        <VariablesPanel
-          onVariableClick={insertVariable}
-          filterVariables={filterVariables}
-          isActive={!!selectedEntry}
-          inactiveMessage="Select an entry to insert variables"
-        />
+        {/* Right: Variables Panel - Sticky on desktop */}
+        <div className="lg:sticky lg:top-4 lg:self-start">
+          <VariablesPanel
+            onVariableClick={insertVariable}
+            filterVariables={filterVariables}
+            isActive={!!selectedEntry}
+            inactiveMessage="Select an entry to insert variables"
+          />
+        </div>
       </div>
     </div>
   );

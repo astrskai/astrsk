@@ -217,6 +217,7 @@ export function CreateCharacterPage() {
         isLastStep={isLastStep}
         canProceed={canProceed}
         isSubmitting={isCreatingCard}
+        showCancelButton={true}
         currentStepLabel={currentStepLabel}
       />
 

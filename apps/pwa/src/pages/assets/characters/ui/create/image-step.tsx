@@ -56,7 +56,7 @@ export function CharacterImageStep({
 
       {/* Section 2: Character Image */}
       <div className="border-border rounded-2xl border-2 p-4 md:p-6">
-        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+        <div className="mx-auto flex max-w-3xl flex-col gap-4 lg:gap-6">
           <div>
             <h3 className="text-text-primary mb-1 text-lg font-semibold">
               Upload character image
@@ -70,20 +70,23 @@ export function CharacterImageStep({
           <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
             {/* Avatar - Left side on desktop, top on mobile */}
             <div className="flex shrink-0 flex-col items-center gap-2">
+              <span className="text-text-secondary text-xs">
+                Avatar Preview
+              </span>
               <Avatar
                 src={avatarAssetId}
                 alt={characterName || "New Character"}
                 size={96}
                 className="ring-border ring-2"
               />
-              <span className="text-text-secondary text-xs">
-                Avatar Preview
-              </span>
             </div>
 
             {/* Card Preview - Center */}
             <div className="flex flex-1 flex-col items-center gap-4">
-              <div className="w-full">
+              <div className="w-full space-y-2">
+                <span className="text-text-secondary flex items-center justify-center text-xs">
+                  Character Preview
+                </span>
                 <CharacterPreview
                   title={characterName || "New Character"}
                   imageUrl={

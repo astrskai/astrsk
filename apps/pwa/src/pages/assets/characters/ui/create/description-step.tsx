@@ -90,17 +90,17 @@ export function CharacterDescriptionStep({
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Character Description
+          Add Your Character Description*
         </h2>
         <p className="text-text-secondary text-sm">
-          Enter the personality and description for your character.
+          Give your character a name and add a description.
         </p>
       </div>
 
       {/* Main Content - Flex Layout */}
       <div className="flex flex-col gap-6 md:flex-row md:items-start">
         {/* Text Fields */}
-        <div className="bg-black-alternate border-border flex flex-1 flex-col rounded-2xl border-2 p-4 md:p-6">
+        <div className="border-border flex flex-1 flex-col rounded-lg border-2 bg-gray-900 p-2 md:p-4">
           <div className="flex flex-col gap-1">
             {/* Character Description */}
             <Textarea
@@ -114,7 +114,7 @@ export function CharacterDescriptionStep({
               autoResize
               className="min-h-[300px]"
             />
-            <p className="text-text-secondary text-right text-xs">
+            <p className="text-right text-xs text-gray-300">
               {`{{char.description}}`}
             </p>
 
@@ -123,7 +123,7 @@ export function CharacterDescriptionStep({
               <button
                 type="button"
                 onClick={() => setIsExampleDialogueOpen(!isExampleDialogueOpen)}
-                className="text-text-primary hover:text-text-secondary flex w-full items-center justify-between text-sm font-medium transition-colors"
+                className="text-text-secondary hover:text-text-secondary flex w-full items-center justify-between text-sm font-medium transition-colors"
               >
                 <span>Example Dialogue (Optional)</span>
                 {isExampleDialogueOpen ? (
@@ -144,7 +144,7 @@ export function CharacterDescriptionStep({
                     autoResize
                     className="min-h-[300px]"
                   />
-                  <p className="text-text-secondary text-right text-xs">
+                  <p className="text-right text-xs text-gray-300">
                     {`{{char.example_dialog}}`}
                   </p>
                 </div>
