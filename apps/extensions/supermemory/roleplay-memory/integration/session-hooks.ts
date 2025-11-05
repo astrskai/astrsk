@@ -18,6 +18,7 @@ import type {
   DeleteStorageResult,
   GetMemoryResponse,
   MemoryMetadata,
+  CharacterMemoryQueryOutput,
 } from "../../shared/types";
 import {
   createCharacterContainer,
@@ -283,6 +284,11 @@ export async function initializeRoleplayMemory(
  * based on current time and recent conversation context.
  * Returns formatted string with memories and current world context.
  *
+ * OPTIMIZATION: For the first 5 turns, skips v4/v3 memory search since the
+ * memory database is still being populated. Instead, only injects lorebook
+ * entries and dataStore values (worldContext). This improves performance
+ * and avoids empty search results during the early conversation.
+ *
  * @param input - Memory recall input
  * @returns Formatted memory string (empty string on error)
  */
@@ -298,6 +304,8 @@ export async function recallCharacterMemories(
       recentMessages,
       limit = 20,
       worldContext,
+      turnCount,
+      dataStoreState,
     } = input;
 
     // Format recent messages - simply format as "{role}: {content}"
@@ -305,15 +313,29 @@ export async function recallCharacterMemories(
       `${msg.role}: ${msg.content}`
     );
 
-    // Query character's private container
+    // Create container tag (needed for both cases)
     const containerTag = createCharacterContainer(sessionId, characterId);
-    const result = await retrieveCharacterMemories({
-      containerTag,
-      current_scene,
-      recentMessages: formattedMessages,
-      characterName,
-      limit,
-    });
+
+    // OPTIMIZATION: Skip v4/v3 memory search for first 5 turns
+    // Memory database is still being populated, so search would return empty results
+    // Still inject lorebook entries and dataStore values (worldContext)
+    let result: CharacterMemoryQueryOutput;
+
+    if (turnCount !== undefined && turnCount <= 5) {
+      console.log(`⏩ [Memory Recall] Turn ${turnCount}/5 - Skipping v4/v3 memory search (database still populating)`);
+      console.log(`   Will still inject lorebook entries and world context from dataStore`);
+      result = { memories: [], count: 0 };
+    } else {
+      console.log(`🔍 [Memory Recall] Turn ${turnCount || 'unknown'} - Performing v4/v3 memory search`);
+      // Query character's private container
+      result = await retrieveCharacterMemories({
+        containerTag,
+        current_scene,
+        recentMessages: formattedMessages,
+        characterName,
+        limit,
+      });
+    }
 
     // Get lorebook entries from character card (fetch fresh to ensure up-to-date data)
     let lorebookEntries: Array<{ content: string }> = [];
@@ -333,11 +355,11 @@ export async function recallCharacterMemories(
       }
     }
 
-    // Format memories (simple sentences from Supermemory)
+    // Format memories with time/location metadata (simple sentences from Supermemory)
     const { formatMemoriesForPrompt } = await import(
       "../core/memory-retrieval"
     );
-    const formattedMemoriesRaw = formatMemoriesForPrompt(result.memories);
+    const formattedMemoriesRaw = formatMemoriesForPrompt(result.memories, result.metadata);
 
     // Wrap memories in XML tags with instructions
     let formattedMemories = "";
@@ -352,6 +374,7 @@ export async function recallCharacterMemories(
         const cleanMessages = parseVerbatimMemories(result.verbatimMemories);
 
         if (cleanMessages.length > 0) {
+          // Verbatim memories don't have metadata, so pass undefined
           const formattedVerbatim = formatMemoriesForPrompt(cleanMessages);
           verbatimSection = `
 
@@ -398,6 +421,111 @@ ${lorebookContent}
       }
     }
 
+    // Build dataStore world state section (CRITICAL for first 5 turns)
+    let worldStateSection = "";
+    if (dataStoreState) {
+      try {
+        const { selectedTime, selectedScene, scenePool, characterScenes } = dataStoreState;
+
+        // CRITICAL: Get THIS CHARACTER's location from characterScenes
+        // Don't use selectedScene (which is the global scene from most recent message)
+        // Use the character's actual location so each character sees their own location
+        let characterLocation = selectedScene || "Unknown"; // Fallback to selectedScene
+        if (characterScenes && typeof characterScenes === 'object') {
+          const locationFromScenes = characterScenes[characterName];
+          if (locationFromScenes) {
+            characterLocation = locationFromScenes;
+          }
+        }
+
+        // Format character locations
+        let locationInfo = "";
+        if (characterScenes && typeof characterScenes === 'object') {
+          const characterList = Object.entries(characterScenes)
+            .map(([name, location]) => `  - ${name}: ${location}`)
+            .join("\n");
+          if (characterList) {
+            locationInfo = `\n### Character Locations:\n${characterList}`;
+          }
+        }
+
+        // Format available scenes
+        let sceneInfo = "";
+        if (scenePool && Array.isArray(scenePool) && scenePool.length > 0) {
+          sceneInfo = `\n### Available Scenes:\n  ${scenePool.join(", ")}`;
+        }
+
+        // Build list of characters who ARE in this location and who are NOT
+        let charactersHere: string[] = [];
+        let charactersElsewhere: string[] = [];
+        if (characterScenes && typeof characterScenes === 'object') {
+          Object.entries(characterScenes).forEach(([name, location]) => {
+            if (location === characterLocation) {
+              charactersHere.push(name);
+            } else {
+              charactersElsewhere.push(name);
+            }
+          });
+        }
+
+        const presentList = charactersHere.length > 0
+          ? charactersHere.join(", ")
+          : "Only you";
+        const absentList = charactersElsewhere.length > 0
+          ? charactersElsewhere.join(", ")
+          : "None";
+
+        worldStateSection = `<WORLD_STATE>
+### Current Time: ${selectedTime || "Unknown"}
+### Your Location: ${characterLocation}
+### Your Character: ${characterName}${sceneInfo}
+
+**WHO IS PHYSICALLY PRESENT IN ${characterLocation} WITH YOU:**
+${presentList}
+
+**WHO IS NOT PRESENT (they are elsewhere - DO NOT interact with them):**
+${absentList}
+
+**CRITICAL - READ CAREFULLY BEFORE WRITING YOUR RESPONSE:**
+
+1. **YOU CAN ONLY SEE AND INTERACT WITH: ${presentList}**
+   - These are the ONLY characters physically present in ${characterLocation}
+   - You can see them, talk to them, touch them, interact with them
+
+2. **DO NOT INTERACT WITH THESE CHARACTERS (they are elsewhere): ${absentList}**
+   - These characters are in DIFFERENT locations (NOT in ${characterLocation})
+   - They are PHYSICALLY ABSENT from your scene
+   - **YOU DO NOT KNOW WHERE THEY ARE** - you are not omniscient
+
+3. **ABSOLUTE PROHIBITIONS - DO NOT WRITE ABOUT: ${absentList}**
+   - WRONG: "I see ${absentList}" - You cannot see them (they're elsewhere)
+   - WRONG: "I watch ${absentList}" - You cannot watch them (they're elsewhere)
+   - WRONG: "I catch a glimpse of ${absentList}" - You cannot glimpse them (they're elsewhere)
+   - WRONG: "I hear ${absentList} talking" - You cannot hear them (they're elsewhere)
+   - WRONG: "I observe ${absentList}" - You cannot observe them (they're elsewhere)
+   - WRONG: "${absentList} walks past" - They cannot (they're elsewhere)
+   - **IF YOU WRITE ANY OF THE ABOVE ABOUT ${absentList}, YOU ARE BREAKING THE RULES**
+
+4. **WHAT YOU CAN WRITE ABOUT ABSENT CHARACTERS:**
+   - CORRECT: "I wonder where [character] is" (internal thought/speculation)
+   - CORRECT: "I hope [character] is okay" (internal thought/concern)
+   - CORRECT: "I remember when [character] did [action]" (past memory)
+   - **You can think about them, but you CANNOT see, hear, or interact with them**
+
+5. **WHAT YOU CAN WRITE:**
+   - Interact with characters in the present list: ${presentList}
+   - Describe what YOU are doing in ${characterLocation}
+   - Think about or remember absent characters
+   - Move to a different location (by explicitly describing movement)
+
+**ABSOLUTE RULE: Write ONLY what ${characterName} can physically see and do in ${characterLocation}. Characters not in the present list do NOT exist in your current scene.**
+</WORLD_STATE>`;
+      } catch (error) {
+        console.error(`❌ [Memory Recall] Failed to build world state section:`, error);
+        // Continue without world state section
+      }
+    }
+
     // Append character-specific world context if available
     let appendedWorldContext: string | undefined;
     if (worldContext) {
@@ -421,6 +549,32 @@ ${lorebookContent}
 
       }
     }
+
+    // Prepend world state section to the final prompt (should come first)
+    if (worldStateSection) {
+      if (formattedMemories) {
+        formattedMemories = `${worldStateSection}\n\n${formattedMemories}`;
+      } else {
+        formattedMemories = worldStateSection;
+      }
+    }
+
+    // DEBUG: Print exact memory injection prompt (always, even for first 5 turns)
+    console.log("\n━━━━━━━━ MEMORY INJECTION DEBUG ━━━━━━━━");
+    console.log(`Character: ${characterName}`);
+    console.log(`Turn: ${turnCount !== undefined ? turnCount : 'unknown'}`);
+    console.log(`Memory Count (v4/v3): ${result.memories.length}`);
+    console.log(`Verbatim Count: ${result.verbatimMemories?.length || 0}`);
+    console.log(`Lorebook Entries: ${lorebookEntries.length}`);
+    console.log(`World State: ${worldStateSection ? 'Yes (Time, Location, Character Positions)' : 'No'}`);
+    console.log(`World Context: ${appendedWorldContext ? 'Yes' : 'No'}`);
+    console.log("\nFinal Injected Prompt:");
+    if (formattedMemories) {
+      console.log(formattedMemories);
+    } else {
+      console.log("(empty - no memories, lorebooks, or context to inject)");
+    }
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     // Record debug event
     recordMemoryRecall({
@@ -461,6 +615,14 @@ export { formatMemoriesForPrompt } from "../core/memory-retrieval";
 export async function distributeMemories(
   input: MemoryDistributionInput,
 ): Promise<string[]> {
+  console.log(`\n${'='.repeat(80)}`);
+  console.log(`🎯 [DEBUG] DISTRIBUTE MEMORIES - FUNCTION ENTRY`);
+  console.log(`${'='.repeat(80)}`);
+  console.log(`   Session ID: ${input.sessionId}`);
+  console.log(`   Speaker: ${input.speakerName} (${input.speakerCharacterId})`);
+  console.log(`   Scene: ${input.scene}`);
+  console.log(`   Message length: ${typeof input.message === 'string' ? input.message.length : 0} chars`);
+
   try {
     const {
       sessionId,
@@ -474,14 +636,29 @@ export async function distributeMemories(
       session,
     } = input;
 
+    console.log(`📊 [DEBUG] Extracting input parameters...`);
+    console.log(`   worldAgentOutput present: ${!!worldAgentOutput}`);
+    console.log(`   getCard function present: ${!!getCard}`);
+    console.log(`   session present: ${!!session}`);
+    console.log(`   dataStore present: ${!!dataStore}`);
+
     // Use the provided World Agent output (already executed in session-play-service)
     const { characterSceneUpdates, worldContextUpdates } = worldAgentOutput;
+    console.log(`✅ [DEBUG] Extracted World Agent output`);
+    console.log(`   characterSceneUpdates count: ${characterSceneUpdates?.length || 0}`);
+    console.log(`   worldContextUpdates count: ${worldContextUpdates?.length || 0}`);
 
     // Derive participants from characterSceneUpdates (characters in the current scene)
     const selectedScene = dataStore.selectedScene || scene;
+    console.log(`🎬 [DEBUG] Selected scene: "${selectedScene}"`);
+
     const actualParticipants = characterSceneUpdates
       .filter(update => update.scene === selectedScene)
       .map(update => update.characterName);
+
+    console.log(`👥 [DEBUG] Extracted participants from scene`);
+    console.log(`   Participants count: ${actualParticipants.length}`);
+    console.log(`   Participants: ${actualParticipants.join(", ")}`);
 
     logger.info(`[Memory Distribution] Scene: "${selectedScene}"`);
     logger.info(`[Memory Distribution] Characters in scene: ${actualParticipants.join(", ")}`);
@@ -490,11 +667,14 @@ export async function distributeMemories(
     // We need to get character IDs from session.characterCards for creating containers
     const allParticipantNames = actualParticipants;
 
+    console.log(`🔑 [DEBUG] Building name-to-ID mapping...`);
+
     // Build name-to-ID mapping by looking up session's character cards
     const nameToId: Record<string, string> = {};
 
     // If session and getCard are provided, use them to build name-to-ID mapping
     if (session && getCard) {
+      console.log(`   Session and getCard available, fetching character cards...`);
       // Add user character if it exists
       if (session.userCharacterCardId) {
         try {
@@ -530,10 +710,18 @@ export async function distributeMemories(
       }
     }
 
+    console.log(`✅ [DEBUG] Name-to-ID mapping complete`);
+    console.log(`   Mapped ${Object.keys(nameToId).length} names to IDs`);
+    console.log(`   Mapping:`, JSON.stringify(nameToId, null, 2));
+
     // Convert participant names to IDs for container creation
     const participantIds = actualParticipants
       .map((name) => nameToId[name])
       .filter((id) => id !== undefined);
+
+    console.log(`🆔 [DEBUG] Converted participant names to IDs`);
+    console.log(`   Participant IDs count: ${participantIds.length}`);
+    console.log(`   Participant IDs: ${participantIds.join(", ")}`);
 
     // If no participants were mapped but we have names, log a warning
     if (participantIds.length === 0 && actualParticipants.length > 0) {
@@ -558,6 +746,12 @@ export async function distributeMemories(
     logger.info(`   Speaker: ${speakerName} (${speakerCharacterId})`);
     logger.info(`   Participants: ${participantIds.join(", ")}`);
 
+    console.log(`\n🌍 [DEBUG] STORING WORLD MEMORY`);
+    console.log(`   Container: world:${sessionId}`);
+    console.log(`   Speaker: ${speakerName} (${speakerCharacterId})`);
+    console.log(`   Participants: ${participantIds.join(", ")}`);
+    console.log(`   Scene: ${selectedScene}`);
+
     // Store raw message in world container
     const worldContainer = createWorldContainer(sessionId);
     const worldMessageContent = formatMessageWithScene(
@@ -566,12 +760,17 @@ export async function distributeMemories(
       selectedScene,
     );
 
+    console.log(`📤 [DEBUG] Calling storeWorldMessage...`);
     const worldStoreResult = await storeWorldMessage(worldContainer, worldMessageContent, {
       speaker: speakerCharacterId,
       participants: participantIds,
       scene: selectedScene,
       type: "message",
     });
+    console.log(`✅ [DEBUG] storeWorldMessage completed`);
+    console.log(`   Success: ${worldStoreResult.success}`);
+    console.log(`   Memory ID: ${worldStoreResult.id || 'none'}`);
+    console.log(`   Error: ${worldStoreResult.error || 'none'}`);
 
     if (!worldStoreResult.success) {
       logger.error("[Memory Distribution] Failed to store world message:", worldStoreResult.error);
@@ -596,6 +795,10 @@ export async function distributeMemories(
       idToName[id] = name;
     }
 
+    console.log(`\n👥 [DEBUG] DISTRIBUTING TO CHARACTER CONTAINERS`);
+    console.log(`   Participant count: ${participantIds.length}`);
+    console.log(`   Participant IDs: ${participantIds.join(", ")}`);
+
     // Distribute enriched memories to participants in parallel
     const enrichedContentsForDebug: Array<{
       characterName: string;
@@ -604,6 +807,7 @@ export async function distributeMemories(
       worldContext?: string;
     }> = [];
 
+    console.log(`📝 [DEBUG] Building distribution promises...`);
     const distributionPromises = participantIds.map((participantId) => {
       // Build enriched message sections
       const currentTimeSection = `###Scene###\n${selectedScene}`;
@@ -613,8 +817,9 @@ export async function distributeMemories(
         ? `###Participants###\n${actualParticipants.join(", ")}`
         : undefined;
 
-      // For character containers, use message WITHOUT embedded scene (since we have separate ###Scene### section)
-      const characterMessageContent = `Message: ${speakerName}: ${message}`;
+      // For character containers, explicitly state who generated the message
+      // CRITICAL: This ensures AI knowledge extraction understands who "I" refers to
+      const characterMessageContent = `This message was generated by ${speakerName} (speaker):\n${message}`;
       const messageSection = `###Message###\n${characterMessageContent}`;
 
       // Get participant-specific world context by name
@@ -659,22 +864,35 @@ export async function distributeMemories(
       }).then(result => ({ participantId, result }));
     });
 
+    console.log(`⏳ [DEBUG] Awaiting ${distributionPromises.length} character memory storage operations...`);
     const characterResults = await Promise.all(distributionPromises);
+    console.log(`✅ [DEBUG] All character memory storage operations completed`);
+    console.log(`   Results count: ${characterResults.length}`);
 
     // Collect all memory IDs (world + character)
     const allMemoryIds: string[] = [];
 
+    console.log(`\n📊 [DEBUG] COLLECTING MEMORY IDS`);
+
     // Add world memory ID
     if (worldStoreResult.id) {
       allMemoryIds.push(worldStoreResult.id);
+      console.log(`   World memory ID: ${worldStoreResult.id}`);
     }
 
     // Add character memory IDs
     for (const { participantId, result } of characterResults) {
       if (result.success && result.id) {
         allMemoryIds.push(result.id);
+        console.log(`   Character memory ID (${participantId}): ${result.id}`);
+      } else {
+        console.log(`   Character memory FAILED for ${participantId}: ${result.error || 'unknown error'}`);
       }
     }
+
+    console.log(`\n✅ [DEBUG] DISTRIBUTE MEMORIES - RETURNING`);
+    console.log(`   Total memory IDs: ${allMemoryIds.length}`);
+    console.log(`   Memory IDs: ${allMemoryIds.join(", ")}`);
 
     // Debug event removed - memory distribution info already shown in Character Memory Add events
     // recordMemoryDistribution({
@@ -688,6 +906,9 @@ export async function distributeMemories(
 
     return allMemoryIds;
   } catch (error) {
+    console.error(`\n❌ [DEBUG] DISTRIBUTE MEMORIES - EXCEPTION CAUGHT`);
+    console.error(`   Error:`, error);
+    console.error(`   Stack:`, error instanceof Error ? error.stack : 'no stack');
     logger.error("[Memory Distribution] Failed to distribute memories:", error);
     // Don't throw - graceful degradation (memory distribution is enhancement, not requirement)
     return [];

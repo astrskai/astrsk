@@ -157,6 +157,11 @@ export interface CharacterMemoryQueryOutput {
   memories: string[] // v4 semantic search results (knowledge graph)
   verbatimMemories?: string[] // v3 document search results (for direct quotation)
   count: number
+  metadata?: Array<{
+    scene: string
+    type: string
+    participants: string[]
+  }>
 }
 
 export interface WorldMemoryQueryOutput {
@@ -325,6 +330,14 @@ export interface MemoryRecallInput {
   }>
   limit?: number
   worldContext?: string // Accumulated world context from dataStore
+  turnCount?: number // Number of turns in session (for first 5 turns optimization)
+  // DataStore state for world context (CRITICAL for first 5 turns)
+  dataStoreState?: {
+    selectedTime?: string // e.g., "Morning Day 1"
+    selectedScene?: string // e.g., "Classroom 2-A"
+    scenePool?: string[] // e.g., ["Classroom 2-A", "Hallway"]
+    characterScenes?: Record<string, string> // e.g., {"Yui": "Classroom 2-A", "Ren": "Hallway"}
+  }
   // Helper to get card by ID (from extension client API)
   getCard?: (cardId: any) => Promise<any>
 }

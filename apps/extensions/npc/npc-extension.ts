@@ -208,6 +208,48 @@ export class NpcExtension implements IExtension {
         messageLength: typeof message === 'string' ? message.length : 0,
       });
 
+      // Get recent turn history for context (last 3 messages)
+      const turnHistory = await this.client!.api.getTurnHistory(sessionId, { limit: 3 });
+      const recentMessages = Array.isArray(turnHistory)
+        ? turnHistory.map(t => ({
+            role: t.char_id ? "assistant" : "user",
+            content: t.content,
+          }))
+        : [];
+
+      // Get characters in current scene from dataStore
+      const dataStore = turn.dataStore || [];
+      const characterScenesRaw = dataStore.find((f: any) => f.name === 'character_scenes')?.value;
+      const selectedScene = dataStore.find((f: any) => f.name === 'selected_scene')?.value as string | undefined;
+
+      // Parse character_scenes to get list of characters in current scene
+      let charactersInScene: string[] = [];
+      if (characterScenesRaw && selectedScene) {
+        try {
+          let characterScenes: Record<string, string>;
+          if (typeof characterScenesRaw === 'object' && !Array.isArray(characterScenesRaw)) {
+            characterScenes = characterScenesRaw as Record<string, string>;
+          } else if (typeof characterScenesRaw === 'string') {
+            characterScenes = JSON.parse(characterScenesRaw);
+          } else {
+            characterScenes = {};
+          }
+
+          // Filter characters who are in the selected scene
+          charactersInScene = Object.entries(characterScenes)
+            .filter(([_, location]) => location === selectedScene)
+            .map(([name, _]) => name);
+        } catch (error) {
+          console.warn("⚠️ [NPC Extension] Failed to parse character_scenes:", error);
+        }
+      }
+
+      console.log("📍 [NPC Extension] Context for extraction:", {
+        recentMessageCount: recentMessages.length,
+        selectedScene,
+        charactersInScene,
+      });
+
       // Execute NPC extraction using secure client API
       const extractionResult = await executeNpcExtractionAgent(this.client!, {
         sessionId,
@@ -215,9 +257,11 @@ export class NpcExtension implements IExtension {
           role: "assistant",
           content: message,
         },
+        recentMessages, // Pass recent messages for context
         existingNpcPool: updatedNpcPool, // Use updated pool that includes main characters
         mainCharacterNames,
         mainCharacterDescriptions, // Pass descriptions so AI can distinguish between main characters and NPCs with similar names
+        charactersInScene, // Pass characters in current scene to identify contextual references
       });
 
       console.log(`✨ [NPC Extension] Found ${extractionResult.npcs.length} NPC(s):`,
