@@ -2062,26 +2062,26 @@ const SessionMessagesAndUserInputs = ({
         invalidateSession();
 
         // Trigger turn:afterCreate hook for extensions (e.g., Supermemory memory storage)
-        (async () => {
-          try {
-            const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
-            await triggerExtensionHook("turn:afterCreate", {
-              turn: userMessage,
-              session,
-              isRegeneration: false,
-              timestamp: Date.now(),
-            });
-            logger.info("[User Message] Extension hooks triggered for user message");
-          } catch (error) {
-            logger.error("[User Message] Failed to trigger extension hooks:", error);
-            // Don't fail - extension hooks are optional
-          }
-        })();
+        // IMPORTANT: Wait for extension hooks to complete before auto-reply
+        // This ensures memory generation finishes before AI responds
+        try {
+          const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
+          await triggerExtensionHook("turn:afterCreate", {
+            turn: userMessage,
+            session,
+            isRegeneration: false,
+            timestamp: Date.now(),
+          });
+          logger.info("[User Message] Extension hooks triggered for user message");
+        } catch (error) {
+          logger.error("[User Message] Failed to trigger extension hooks:", error);
+          // Don't fail - extension hooks are optional
+        }
 
         // Scroll to bottom
         scrollToBottom({ behavior: "smooth" });
 
-        // Auto reply
+        // Auto reply (only after memory generation completes)
         switch (autoReply) {
           // No auto reply
           case AutoReply.Off:
