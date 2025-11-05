@@ -1,7 +1,6 @@
 import { Avatar } from "@/shared/ui";
 import { Input, FileUploadButton } from "@/shared/ui/forms";
-import { CardType } from "@/entities/card/domain";
-import CardDisplay from "@/features/card/ui/card-display";
+import CharacterPreview from "@/features/character/ui/character-preview";
 
 interface CharacterImageStepProps {
   characterName: string;
@@ -94,18 +93,16 @@ export function CharacterImageStep({
 
             {/* Card Preview - Center */}
             <div className="flex flex-1 flex-col items-center gap-4">
-              <div className="@container w-full max-w-[320px]">
-                <CardDisplay
+              <div className="w-full">
+                <CharacterPreview
                   title={characterName || "New Character"}
-                  name={characterName || "New Character"}
-                  type={CardType.Character}
-                  tags={[]}
-                  tokenCount={0}
-                  previewImageUrl={
+                  imageUrl={
                     avatarAssetId || "/img/placeholder/character-card-image.png"
                   }
-                  isSelected={false}
-                  showActions={false}
+                  summary="Character preview"
+                  tags={[]}
+                  tokenCount={0}
+                  isShowActions={false}
                 />
               </div>
 

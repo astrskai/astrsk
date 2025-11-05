@@ -1,4 +1,3 @@
-import { useAsset } from "@/shared/hooks/use-asset";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { cn } from "@/shared/lib";
 import type { CharacterAction } from "@/features/character/model/character-actions";
@@ -6,7 +5,7 @@ import type { CharacterAction } from "@/features/character/model/character-actio
 interface CharacterPreviewProps {
   cardId?: UniqueEntityID;
   title: string;
-  iconAssetId?: UniqueEntityID;
+  imageUrl?: string | null;
   summary?: string;
   className?: string;
   tags: string[];
@@ -20,7 +19,7 @@ interface CharacterPreviewProps {
 const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-card-image.png";
 
 const CharacterPreview = ({
-  iconAssetId,
+  imageUrl,
   title,
   summary,
   tags,
@@ -31,7 +30,6 @@ const CharacterPreview = ({
   isDisabled = false,
   onClick,
 }: CharacterPreviewProps) => {
-  const [imageUrl] = useAsset(iconAssetId);
 
   const getCompactedTagString = (tags: string[]) => {
     const compactedTags = tags.slice(0, 3).map((tag, index) => {

@@ -32,11 +32,119 @@ interface AiCharacterSelectionStepProps {
 }
 
 /**
+ * Character Preview Item (for dialog selection list)
+ * Wrapper component that handles useAsset hook and passes imageUrl to CharacterPreview
+ */
+interface CharacterPreviewItemProps {
+  card: CharacterCard;
+  cardId: string;
+  isDisabled: boolean;
+  isSelected: boolean;
+  onCardClick: (cardId: string) => void;
+  onDetailClick: (cardId: string) => void;
+  onMouseEnter: () => void;
+}
+
+function CharacterPreviewItem({
+  card,
+  cardId,
+  isDisabled,
+  isSelected,
+  onCardClick,
+  onDetailClick,
+  onMouseEnter,
+}: CharacterPreviewItemProps) {
+  const [imageUrl] = useAsset(card.props.iconAssetId);
+
+  return (
+    <div
+      className={cn(
+        "relative transition-all",
+        isDisabled && "pointer-events-none opacity-50",
+      )}
+    >
+      <div
+        onClick={() => {
+          if (!isDisabled) {
+            onCardClick(cardId);
+          }
+        }}
+        onMouseEnter={onMouseEnter}
+      >
+        <CharacterPreview
+          cardId={card.id}
+          imageUrl={imageUrl}
+          title={card.props.title}
+          summary={card.props.cardSummary}
+          tags={card.props.tags || []}
+          tokenCount={card.props.tokenCount}
+          className={cn(
+            isSelected && "border-normal-primary border-2 shadow-lg",
+          )}
+          isDisabled={isDisabled}
+        />
+      </div>
+
+      {/* Mobile Detail Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDetailClick(cardId);
+        }}
+        className="text-text-secondary hover:text-text-primary absolute right-2 bottom-2 flex items-center gap-1 text-xs transition-colors md:hidden"
+      >
+        <span>Character detail</span>
+        <ChevronRight className="h-3 w-3" />
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Selected Character Card
+ * Wrapper component for selected characters with Remove action
+ */
+interface SelectedCharacterCardProps {
+  card: CharacterCard;
+  onRemove: (cardId: string) => (e: React.MouseEvent) => void;
+}
+
+function SelectedCharacterCard({
+  card,
+  onRemove,
+}: SelectedCharacterCardProps) {
+  const [imageUrl] = useAsset(card.props.iconAssetId);
+  const cardId = card.id.toString();
+
+  const actions: CharacterAction[] = [
+    {
+      icon: Trash2,
+      label: `Remove ${card.props.title}`,
+      onClick: onRemove(cardId),
+    },
+  ];
+
+  return (
+    <CharacterPreview
+      key={cardId}
+      cardId={card.id}
+      imageUrl={imageUrl}
+      title={card.props.title}
+      summary={card.props.cardSummary}
+      tags={card.props.tags || []}
+      tokenCount={card.props.tokenCount}
+      actions={actions}
+      isShowActions={true}
+    />
+  );
+}
+
+/**
  * Character Detail Panel
  * Displays detailed information about a selected character
  */
 function CharacterDetailPanel({ character }: { character: CharacterCard }) {
-  const [imageUrl] = useAsset(character.props.iconAssetId);
+  const [characterImageUrl] = useAsset(character.props.iconAssetId);
 
   return (
     <div className="flex flex-col gap-4">
@@ -48,7 +156,7 @@ function CharacterDetailPanel({ character }: { character: CharacterCard }) {
       {/* Character Image */}
       <div className="relative mx-auto aspect-[3/4] max-w-xs overflow-hidden rounded-lg">
         <img
-          src={imageUrl || "/img/placeholder/character-card-image.png"}
+          src={characterImageUrl || "/img/placeholder/character-card-image.png"}
           alt={character.props.title}
           className="h-full w-full object-cover"
         />
@@ -225,30 +333,13 @@ export function AiCharacterSelectionStep({
             />
 
             {/* Selected Characters */}
-            {selectedCharacters.map((card) => {
-              const cardId = card.id.toString();
-              const actions: CharacterAction[] = [
-                {
-                  icon: Trash2,
-                  label: `Remove ${card.props.title}`,
-                  onClick: handleRemoveCharacter(cardId),
-                },
-              ];
-
-              return (
-                <CharacterPreview
-                  key={cardId}
-                  cardId={card.id}
-                  iconAssetId={card.props.iconAssetId}
-                  title={card.props.title}
-                  summary={card.props.cardSummary}
-                  tags={card.props.tags || []}
-                  tokenCount={card.props.tokenCount}
-                  actions={actions}
-                  isShowActions={true}
-                />
-              );
-            })}
+            {selectedCharacters.map((card) => (
+              <SelectedCharacterCard
+                key={card.id.toString()}
+                card={card}
+                onRemove={handleRemoveCharacter}
+              />
+            ))}
           </div>
         ) : (
           /* Empty State - Show Add Button Card */
@@ -334,54 +425,24 @@ export function AiCharacterSelectionStep({
                     const isSelected = selectedCharacterIds.includes(cardId);
 
                     return (
-                      <div
+                      <CharacterPreviewItem
                         key={cardId}
-                        className={cn(
-                          "relative transition-all",
-                          isDisabled && "pointer-events-none opacity-50",
-                        )}
-                      >
-                        <div
-                          onClick={() => {
-                            if (!isDisabled) {
-                              handleCharacterCardClick(cardId);
-                            }
-                          }}
-                          onMouseEnter={() => {
-                            // Only enable hover on desktop
-                            if (window.innerWidth >= 768) {
-                              setPreviewCharacterId(cardId);
-                            }
-                          }}
-                        >
-                          <CharacterPreview
-                            cardId={card.id}
-                            iconAssetId={card.props.iconAssetId}
-                            title={card.props.title}
-                            summary={card.props.cardSummary}
-                            tags={card.props.tags || []}
-                            tokenCount={card.props.tokenCount}
-                            className={cn(
-                              isSelected &&
-                                "border-normal-primary border-2 shadow-lg",
-                            )}
-                            isDisabled={isDisabled}
-                          />
-                        </div>
-
-                        {/* Mobile Detail Button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setMobileDetailCharacterId(cardId);
-                            setShowMobileDetail(true);
-                          }}
-                          className="text-text-secondary hover:text-text-primary absolute right-2 bottom-2 flex items-center gap-1 text-xs transition-colors md:hidden"
-                        >
-                          <span>Character detail</span>
-                          <ChevronRight className="h-3 w-3" />
-                        </button>
-                      </div>
+                        card={card}
+                        cardId={cardId}
+                        isDisabled={isDisabled}
+                        isSelected={isSelected}
+                        onCardClick={handleCharacterCardClick}
+                        onDetailClick={(cardId) => {
+                          setMobileDetailCharacterId(cardId);
+                          setShowMobileDetail(true);
+                        }}
+                        onMouseEnter={() => {
+                          // Only enable hover on desktop
+                          if (window.innerWidth >= 768) {
+                            setPreviewCharacterId(cardId);
+                          }
+                        }}
+                      />
                     );
                   })}
                 </div>

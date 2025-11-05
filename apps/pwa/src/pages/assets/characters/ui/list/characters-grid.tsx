@@ -8,10 +8,74 @@ import { ActionConfirm } from "@/shared/ui/dialogs";
 import CharacterPreview from "@/features/character/ui/character-preview";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 import { useCardActions } from "@/features/common/model/use-card-actions";
+import { useAsset } from "@/shared/hooks/use-asset";
 
 interface CharactersGridProps {
   characters: CharacterCard[];
   showNewCharacterCard: boolean;
+}
+
+/**
+ * Character Grid Item
+ * Wrapper component that handles useAsset hook
+ */
+interface CharacterGridItemProps {
+  character: CharacterCard;
+  loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
+  onCharacterClick: (characterId: string) => void;
+  onExport: (cardId: string, title: string) => (e: React.MouseEvent) => void;
+  onCopy: (cardId: string, title: string) => (e: React.MouseEvent) => void;
+  onDeleteClick: (cardId: string, title: string) => (e: React.MouseEvent) => void;
+}
+
+function CharacterGridItem({
+  character,
+  loading,
+  onCharacterClick,
+  onExport,
+  onCopy,
+  onDeleteClick,
+}: CharacterGridItemProps) {
+  const [imageUrl] = useAsset(character.props.iconAssetId);
+  const cardId = character.id.toString();
+
+  const actions: CharacterAction[] = [
+    {
+      icon: Upload,
+      label: `Export ${character.props.title}`,
+      onClick: onExport(cardId, character.props.title),
+      disabled: loading.exporting,
+      loading: loading.exporting,
+    },
+    {
+      icon: Copy,
+      label: `Copy ${character.props.title}`,
+      onClick: onCopy(cardId, character.props.title),
+      disabled: loading.copying,
+      loading: loading.copying,
+    },
+    {
+      icon: Trash2,
+      label: `Delete ${character.props.title}`,
+      onClick: onDeleteClick(cardId, character.props.title),
+      disabled: loading.deleting,
+      loading: loading.deleting,
+    },
+  ];
+
+  return (
+    <CharacterPreview
+      cardId={character.id}
+      imageUrl={imageUrl}
+      title={character.props.title}
+      summary={character.props.cardSummary}
+      tags={character.props.tags || []}
+      tokenCount={character.props.tokenCount}
+      onClick={() => onCharacterClick(cardId)}
+      actions={actions}
+      isShowActions={true}
+    />
+  );
 }
 
 /**
@@ -80,42 +144,15 @@ export function CharactersGrid({
             const cardId = character.id.toString();
             const loading = loadingStates[cardId] || {};
 
-            const actions: CharacterAction[] = [
-              {
-                icon: Upload,
-                label: `Export ${character.props.title}`,
-                onClick: handleExport(cardId, character.props.title),
-                disabled: loading.exporting,
-                loading: loading.exporting,
-              },
-              {
-                icon: Copy,
-                label: `Copy ${character.props.title}`,
-                onClick: handleCopy(cardId, character.props.title),
-                disabled: loading.copying,
-                loading: loading.copying,
-              },
-              {
-                icon: Trash2,
-                label: `Delete ${character.props.title}`,
-                onClick: handleDeleteClick(cardId, character.props.title),
-                disabled: loading.deleting,
-                loading: loading.deleting,
-              },
-            ];
-
             return (
-              <CharacterPreview
+              <CharacterGridItem
                 key={cardId}
-                cardId={character.id}
-                iconAssetId={character.props.iconAssetId}
-                title={character.props.title}
-                summary={character.props.cardSummary}
-                tags={character.props.tags || []}
-                tokenCount={character.props.tokenCount}
-                onClick={() => handleCharacterClick(cardId)}
-                actions={actions}
-                isShowActions={true}
+                character={character}
+                loading={loading}
+                onCharacterClick={handleCharacterClick}
+                onExport={handleExport}
+                onCopy={handleCopy}
+                onDeleteClick={handleDeleteClick}
               />
             );
           })}
