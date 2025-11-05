@@ -102,7 +102,9 @@ const CharacterPreview = ({
               aria-label={action.label}
               className={cn(
                 "bg-normal-primary hover:bg-normal-primary/80 flex h-8 w-8 items-center justify-center rounded-full text-sm text-blue-900 transition-opacity",
-                action.disabled && "cursor-not-allowed opacity-50",
+                action.disabled
+                  ? "cursor-not-allowed opacity-50"
+                  : "cursor-pointer",
               )}
             >
               <action.icon

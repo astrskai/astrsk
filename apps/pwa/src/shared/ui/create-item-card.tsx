@@ -5,9 +5,9 @@ interface CreateItemCardProps {
   /** Title text (e.g., "New Character", "New Session") */
   title: string;
   /** Description text (e.g., "Create a new character") */
-  description: string;
+  description?: string;
   /** Click handler */
-  onClick: () => void;
+  onClick?: () => void;
   /** Optional additional className */
   className?: string;
 }
@@ -24,7 +24,7 @@ export function CreateItemCard({
         "group/create-item-card bg-black-alternate relative flex w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-700 transition-all duration-300 hover:border-gray-100 hover:bg-gray-900",
         className,
       )}
-      onClick={onClick}
+      onClick={onClick ?? undefined}
     >
       <div className="flex flex-col items-center gap-3">
         {/* Plus Icon */}
@@ -35,7 +35,9 @@ export function CreateItemCard({
         {/* Text */}
         <div className="flex flex-col items-center gap-2">
           <h3 className="text-lg font-semibold text-white">{title}</h3>
-          <p className="text-sm text-gray-200">{description}</p>
+          {description && (
+            <p className="text-sm text-gray-200">{description}</p>
+          )}
         </div>
       </div>
     </article>
