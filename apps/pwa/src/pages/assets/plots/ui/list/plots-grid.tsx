@@ -2,8 +2,8 @@ import { Plus } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import CardDisplay from "@/features/card/ui/card-display";
-import { NewPlotCard } from "./new-plot-card";
 import { Button } from "@/shared/ui/forms";
+import { CreateItemCard } from "@/shared/ui";
 
 interface PlotsGridProps {
   plots: PlotCard[];
@@ -46,7 +46,12 @@ export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
       <div className="mx-auto grid w-full max-w-7xl grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {/* Desktop: New Plot Card (inside grid) */}
         {showNewPlotCard && (
-          <NewPlotCard onClick={handleCreatePlot} className="hidden md:flex" />
+          <CreateItemCard
+            title="New Plot"
+            description="Create a new plot"
+            onClick={handleCreatePlot}
+            className="hidden aspect-[4/6] md:flex"
+          />
         )}
 
         {/* Existing Plots */}

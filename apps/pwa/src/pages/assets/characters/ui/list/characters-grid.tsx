@@ -1,9 +1,9 @@
 import { Plus } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { CharacterCard } from "@/entities/card/domain/character-card";
-import CardDisplay from "@/features/card/ui/card-display";
-import { NewCharacter } from "./new-character";
+import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
+import CharacterPreview from "@/features/character/ui/character-preview";
 
 interface CharactersGridProps {
   characters: CharacterCard[];
@@ -15,8 +15,8 @@ interface CharactersGridProps {
  * Displays character cards in a responsive grid with optional New Character Card
  *
  * Layout:
- * - Mobile: Button above grid + 2 columns per row
- * - Desktop: New card inside grid + up to 5 columns per row
+ * - Mobile: Button above grid + 1 column per row
+ * - Desktop: New card inside grid + 2 columns per row
  */
 export function CharactersGrid({
   characters,
@@ -49,31 +49,30 @@ export function CharactersGrid({
       )}
 
       {/* Characters Grid */}
-      <div className="mx-auto grid w-full max-w-7xl grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-1 justify-center gap-4 md:grid-cols-2">
         {/* Desktop: New Character Card (inside grid) */}
         {showNewCharacterCard && (
-          <NewCharacter
+          <CreateItemCard
+            title="New Character"
+            description="Create a new character"
             onClick={handleCreateCharacter}
-            className="hidden md:flex"
+            className="hidden aspect-[3/1] md:flex"
           />
         )}
 
         {/* Existing Characters */}
         {characters.map((character) => (
-          <div key={character.id.toString()} className="group">
-            <CardDisplay
-              cardId={character.id}
-              title={character.props.title}
-              name={character.props.name}
-              type={character.props.type}
-              tags={character.props.tags}
-              tokenCount={character.props.tokenCount}
-              iconAssetId={character.props.iconAssetId}
-              isSelected={false}
-              showActions={true}
-              onClick={() => handleCharacterClick(character.id.toString())}
-            />
-          </div>
+          <CharacterPreview
+            key={character.id.toString()}
+            cardId={character.id}
+            iconAssetId={character.props.iconAssetId}
+            title={character.props.title}
+            summary={character.props.cardSummary}
+            tags={character.props.tags || []}
+            tokenCount={character.props.tokenCount}
+            onClick={() => handleCharacterClick(character.id.toString())}
+            isShowActions={true}
+          />
         ))}
       </div>
     </div>

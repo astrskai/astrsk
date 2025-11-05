@@ -14,6 +14,7 @@ import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { TableName } from "@/db/schema/table-name";
+import { MediaDisplay } from "@/shared/ui/media-display";
 
 const CONTAINER_TEXT_SIZES = {
   name: "@[200px]:text-2xl @[250px]:text-3xl @[300px]:text-4xl @[350px]:text-5xl @[400px]:text-6xl @[500px]:text-7xl",
@@ -81,6 +82,7 @@ interface CardDisplayProps {
   showActions?: boolean;
   className?: string;
   onClick?: () => void;
+  isVideo?: boolean;
 }
 
 const tagContainerWidth = 152;
@@ -104,6 +106,7 @@ export default function CardDisplay({
   showActions = false,
   className,
   onClick,
+  isVideo = false,
 }: CardDisplayProps) {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isCopying, setIsCopying] = useState<boolean>(false);
@@ -343,7 +346,7 @@ export default function CardDisplay({
         )}
       >
         <div className="absolute inset-0 overflow-hidden">
-          <img
+          <MediaDisplay
             src={
               imageUrl ||
               (type === CardType.Character
@@ -352,7 +355,24 @@ export default function CardDisplay({
             }
             alt={title}
             className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-110"
+            isVideo={isVideo}
+            showControls={isVideo}
+            autoPlay={false}
+            muted={true}
+            loop={true}
+            playOnHover={false}
+            clickToToggle={false}
           />
+          {/* <img
+            src={
+              imageUrl ||
+              (type === CardType.Character
+                ? "/img/placeholder/character-card-image.png"
+                : "/img/placeholder/plot-card-image.png")
+            }
+            alt={title}
+            className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-110"
+          /> */}
         </div>
 
         <div className="relative flex min-w-0 flex-1 flex-col justify-end">

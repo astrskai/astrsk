@@ -1,8 +1,8 @@
 import { Plus } from "lucide-react";
 import { Session } from "@/entities/session/domain/session";
 import { SessionCard } from "./session-card";
-import { NewSessionCard } from "./new-session-card";
 import { Button } from "@/shared/ui/forms";
+import { CreateItemCard } from "@/shared/ui";
 
 interface SessionsGridProps {
   sessions: Session[];
@@ -40,9 +40,11 @@ export function SessionsGrid({
       <div className="mx-auto grid w-full max-w-7xl grid-cols-2 justify-center gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {/* Desktop: New Session Card (inside grid) */}
         {showNewSessionCard && (
-          <NewSessionCard
+          <CreateItemCard
+            title="New Session"
+            description="Make your own story"
             onClick={onCreateSession}
-            className="hidden md:flex"
+            className="hidden max-w-[340px] md:flex"
           />
         )}
 
