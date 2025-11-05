@@ -306,10 +306,20 @@ export class Flow extends AggregateRoot<FlowProps> {
       // Spread JSON
       const { id, ...props } = json;
 
+      // Parse date strings to Date objects
+      const createdAt = props.createdAt
+        ? (typeof props.createdAt === 'string' ? new Date(props.createdAt) : props.createdAt)
+        : new Date();
+      const updatedAt = props.updatedAt
+        ? (typeof props.updatedAt === 'string' ? new Date(props.updatedAt) : props.updatedAt)
+        : undefined;
+
       // Create flow from JSON
       const flow = new Flow(
         {
           ...props,
+          createdAt,
+          updatedAt,
           nodes: (() => {
             // Handle duplicate node IDs
             const seenNodeIds = new Set<string>();
