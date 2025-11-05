@@ -36,7 +36,7 @@ export class NpcExtension implements IExtension {
     // Remove existing listeners first to prevent memory leaks on hot reload
     if (this.client) {
       this.client.off("turn:afterCreate", this.handleTurnAfterCreate);
-      this.client.off("scenario:afterAdd", this.handleScenarioAfterAdd);
+      this.client.off("scenario:afterAdd", this.handleTurnAfterCreate);
     }
 
     this.client = client;
@@ -45,7 +45,7 @@ export class NpcExtension implements IExtension {
     client.on("turn:afterCreate", this.handleTurnAfterCreate);
 
     // Register hook for scenario addition
-    client.on("scenario:afterAdd", this.handleScenarioAfterAdd);
+    client.on("scenario:afterAdd", this.handleTurnAfterCreate);
 
     console.log("👤 [NPC Extension] Loaded successfully - will auto-detect NPCs in conversations and scenarios");
     logger.info("[NPC Extension] Loaded successfully");
@@ -54,15 +54,15 @@ export class NpcExtension implements IExtension {
   async onUnload(): Promise<void> {
     if (this.client) {
       this.client.off("turn:afterCreate", this.handleTurnAfterCreate);
-      this.client.off("scenario:afterAdd", this.handleScenarioAfterAdd);
+      this.client.off("scenario:afterAdd", this.handleTurnAfterCreate);
     }
 
     logger.info("[NPC Extension] Unloaded successfully");
   }
 
   /**
-   * Handle turn:afterCreate hook
-   * Triggers NPC extraction and card creation for new messages and regenerations
+   * Handle turn:afterCreate and scenario:afterAdd hooks
+   * Triggers NPC extraction and card creation for new messages, regenerations, and scenarios
    */
   private handleTurnAfterCreate = async (
     context: HookContext,
