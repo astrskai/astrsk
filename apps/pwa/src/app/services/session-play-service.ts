@@ -1794,7 +1794,7 @@ type AgentNodeResult = {
   agentName?: string;
   modelName?: string;
   output?: object;
-  suggestedUpdates?: { gameTime?: number; participants?: string[]; worldContext?: string } | null;
+  suggestedUpdates?: { selectedScene?: string; selectedTime?: string; participants?: string[]; worldContext?: string } | null;
 };
 
 async function* executeAgentNode({

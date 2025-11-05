@@ -1891,8 +1891,8 @@ const SessionMessagesAndUserInputs = ({
             dataStore: streamingMessage.dataStore,
             supermemory: streamingMessage.dataStore ? {
               participants: JSON.parse(streamingMessage.dataStore.find((f: any) => f.name === "participants")?.value || "[]"),
-              gameTime: parseInt(streamingMessage.dataStore.find((f: any) => f.name === "game_time")?.value || "0", 10),
-              gameTimeInterval: streamingMessage.dataStore.find((f: any) => f.name === "game_time_interval")?.value || "Day",
+              selectedScene: streamingMessage.dataStore.find((f: any) => f.name === "selected_scene")?.value || "Unknown",
+              selectedTime: streamingMessage.dataStore.find((f: any) => f.name === "selected_time")?.value || "Day 1",
               worldContext: streamingMessage.dataStore.find((f: any) => f.name === "world_context")?.value,
             } : undefined,
             agentId: streamingAgentName,
@@ -1946,8 +1946,8 @@ const SessionMessagesAndUserInputs = ({
             dataStore: streamingMessage.dataStore,
             supermemory: streamingMessage.dataStore ? {
               participants: JSON.parse(streamingMessage.dataStore.find((f: any) => f.name === "participants")?.value || "[]"),
-              gameTime: parseInt(streamingMessage.dataStore.find((f: any) => f.name === "game_time")?.value || "0", 10),
-              gameTimeInterval: streamingMessage.dataStore.find((f: any) => f.name === "game_time_interval")?.value || "Day",
+              selectedScene: streamingMessage.dataStore.find((f: any) => f.name === "selected_scene")?.value || "Unknown",
+              selectedTime: streamingMessage.dataStore.find((f: any) => f.name === "selected_time")?.value || "Day 1",
               worldContext: streamingMessage.dataStore.find((f: any) => f.name === "world_context")?.value,
             } : undefined,
           }).catch((error) => {

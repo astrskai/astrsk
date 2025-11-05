@@ -99,9 +99,9 @@ export interface WorldAgentOutput {
 // ============================================================================
 
 export interface EnrichedMessageSections {
-  currentTime: string // "###Current time###\nGameTime: {gameTime} {interval}"
+  currentTime: string // "###Scene###\n{time} {location} (e.g., 'Morning Day 1 Classroom')"
   participants?: string // "###Participants###\n{name1}, {name2}, {name3}"
-  message: string // "###Message###\nMessage: {char}: {content} GameTime: {gameTime} {interval}"
+  message: string // "###Message###\nMessage: {char}: {content}"
   worldContext?: string // "###World context###\n{context}"
 }
 
@@ -184,7 +184,7 @@ export interface SessionDataStore {
   selectedScene: string // Current scene (e.g., "Classroom Morning Day 1")
   participants: string[] // All character NAMES in session (e.g., ["Yui", "Ren"])
 
-  // Scene System (NEW - replaces game_time)
+  // Scene System (tracks location and time)
   scene_pool?: string[] // Array of recent scenes (max 20, FIFO)
   characterScenes?: Record<string, string> // Map of character name → scene
 

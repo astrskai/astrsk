@@ -438,17 +438,6 @@ ${lorebookContent}
           }
         }
 
-        // Format character locations
-        let locationInfo = "";
-        if (characterScenes && typeof characterScenes === 'object') {
-          const characterList = Object.entries(characterScenes)
-            .map(([name, location]) => `  - ${name}: ${location}`)
-            .join("\n");
-          if (characterList) {
-            locationInfo = `\n### Character Locations:\n${characterList}`;
-          }
-        }
-
         // Format available scenes
         let sceneInfo = "";
         if (scenePool && Array.isArray(scenePool) && scenePool.length > 0) {
@@ -934,7 +923,7 @@ export interface UserMessageMemoryInput {
  * - Executes World Agent to detect participants and extract context
  * - Distributes memories to all detected participants
  * - Stores in world container and character containers
- * - Returns suggested dataStore updates (gameTime, participants, worldContext)
+ * - Returns suggested dataStore updates (scene, time, participants, worldContext)
  *
  * @param input - User message memory input
  * @returns Suggested dataStore updates or null
