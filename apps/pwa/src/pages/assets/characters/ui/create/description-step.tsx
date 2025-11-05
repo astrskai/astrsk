@@ -93,7 +93,7 @@ export function CharacterDescriptionStep({
           Add Your Character Description*
         </h2>
         <p className="text-text-secondary text-sm">
-          Give your character a name and add a description.
+          Describe your character's personality, traits, and background.
         </p>
       </div>
 
