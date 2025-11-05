@@ -11,7 +11,15 @@ interface TextareaProps
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   (
-    { label, error, labelPosition = "top", className, required, autoResize = false, ...props },
+    {
+      label,
+      error,
+      labelPosition = "top",
+      className,
+      required,
+      autoResize = false,
+      ...props
+    },
     ref,
   ) => {
     const internalRef = useRef<HTMLTextAreaElement>(null);
@@ -50,7 +58,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           required={required}
           className={cn(
             // Base styles
-            "bg-background-surface-4 text-text-primary placeholder:text-text-placeholder min-h-[120px] w-full rounded-lg border px-4 py-3 text-base transition-colors focus:ring-2 focus:outline-none",
+            "text-text-primary placeholder:text-text-placeholder min-h-[120px] w-full rounded-lg border bg-gray-800 px-4 py-3 text-base transition-colors focus:ring-2 focus:outline-none",
             // Resize behavior
             autoResize ? "resize-none overflow-hidden" : "resize-vertical",
             // Border and focus styles
@@ -85,7 +93,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             : "flex-row items-start gap-4",
         )}
       >
-        <label className="text-text-primary text-sm font-medium">
+        <label className="text-text-secondary text-sm font-medium">
           {label}
           {required && <span className="text-status-required ml-1">*</span>}
         </label>

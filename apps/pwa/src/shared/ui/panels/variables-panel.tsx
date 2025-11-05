@@ -127,29 +127,28 @@ export function VariablesPanel({
   }, []);
 
   return (
-    <div className="bg-black-alternate border-border w-full rounded-2xl border-2 md:w-95">
+    <div className="border-border w-full rounded-lg border-2 bg-gray-900 md:w-95">
       <div className="flex max-h-[750px] flex-col">
         {/* Header - Fixed */}
-        <div className="border-border flex-shrink-0 border-b p-4">
-          <h3 className="text-text-primary mb-3 text-sm font-medium">
+        <div className="border-border flex-shrink-0 space-y-2 border-b p-4">
+          <h3 className="text-text-secondary text-base font-medium">
             Variables
           </h3>
+          {isActive && (
+            <p className="text-text-secondary text-xs">
+              Click a variable to insert it at the cursor position
+            </p>
+          )}
           {isActive && (
             <SearchInput
               placeholder="Search variables..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="mb-3"
             />
           )}
           {inactiveMessage && !isActive && (
             <p className="text-text-secondary mt-2 text-xs">
               {inactiveMessage}
-            </p>
-          )}
-          {isActive && (
-            <p className="text-text-secondary text-xs">
-              Click a variable to insert it at the cursor position
             </p>
           )}
         </div>
@@ -166,8 +165,8 @@ export function VariablesPanel({
                     onClick={() => toggleGroupCollapse(group)}
                     className="border-border flex items-start justify-between border-b px-4 py-3 transition-colors hover:bg-gray-800"
                   >
-                    <div className="flex flex-col items-start gap-0.5">
-                      <div className="text-text-primary text-xs font-medium">
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="text-xs font-medium text-gray-200">
                         {VariableGroupLabel[
                           group as keyof typeof VariableGroupLabel
                         ]?.displayName || group}
@@ -181,9 +180,9 @@ export function VariablesPanel({
                       </div>
                     </div>
                     {collapsedGroups.has(group) ? (
-                      <ChevronDown className="text-text-secondary h-5 w-5 flex-shrink-0" />
+                      <ChevronDown className="h-5 w-5 flex-shrink-0 text-gray-200" />
                     ) : (
-                      <ChevronUp className="text-text-secondary h-5 w-5 flex-shrink-0" />
+                      <ChevronUp className="h-5 w-5 flex-shrink-0 text-gray-200" />
                     )}
                   </button>
 

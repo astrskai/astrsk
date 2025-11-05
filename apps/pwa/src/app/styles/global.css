@@ -40,6 +40,7 @@
   --color-dark-surface: #262626;
 
   /* Semantic colors */
+  --color-normal-primary: var(--color-blue-200);
   --color-background-primary: var(--color-dark-surface);
 
   --color-text-primary: var(--color-gray-50);

@@ -1,6 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { cn } from "@/shared/lib";
-import { PlayButton } from "./play-button";
+import { useEffect, useState } from "react";
+import VideoDisplay from "./video-display";
 
 export type PlayButtonIconSize = "small" | "medium" | "large";
 
@@ -21,6 +20,28 @@ interface MediaDisplayProps {
   playButtonSize?: PlayButtonIconSize;
 }
 
+/**
+ * Media Display Component
+ *
+ * Automatically detects and displays either an image or video based on the source.
+ * For video-only use cases, consider using VideoPlayer component directly.
+ *
+ * @example
+ * ```tsx
+ * // Auto-detect media type
+ * <MediaDisplay src="/media/asset.mp4" />
+ *
+ * // Force video mode
+ * <MediaDisplay src="/media/video" isVideo />
+ *
+ * // Image with fallback
+ * <MediaDisplay
+ *   src={userAvatar}
+ *   fallbackSrc="/img/default-avatar.png"
+ *   alt="User avatar"
+ * />
+ * ```
+ */
 export const MediaDisplay = ({
   src,
   alt = "",
@@ -38,10 +59,6 @@ export const MediaDisplay = ({
   playButtonSize,
 }: MediaDisplayProps) => {
   const [isVideo, setIsVideo] = useState(forceIsVideo || false);
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
-  const [isClickPlaying, setIsClickPlaying] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Detect if source is a video
   useEffect(() => {
@@ -68,50 +85,6 @@ export const MediaDisplay = ({
     setIsVideo(hasVideoExtension || hasVideoMime);
   }, [src, forceIsVideo]);
 
-  const handlePlayPause = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    if (videoRef.current) {
-      if (isPlaying || isClickPlaying) {
-        videoRef.current.pause();
-        setIsClickPlaying(false);
-      } else {
-        videoRef.current.play();
-        setIsClickPlaying(true);
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    // Don't handle click if showControls is enabled (play button handles it)
-    if (showControls || !clickToToggle || !videoRef.current) return;
-
-    e.stopPropagation();
-    e.preventDefault();
-
-    if (isClickPlaying) {
-      videoRef.current.pause();
-      setIsClickPlaying(false);
-    } else {
-      videoRef.current.play();
-      setIsClickPlaying(true);
-    }
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    if (!playOnHover || !videoRef.current || isClickPlaying) return;
-    videoRef.current.play();
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    if (!playOnHover || !videoRef.current || isClickPlaying) return;
-    videoRef.current.pause();
-  };
-
   const displaySrc = src || fallbackSrc || "";
 
   if (!displaySrc) {
@@ -120,40 +93,19 @@ export const MediaDisplay = ({
 
   if (isVideo) {
     return (
-      <div
-        className="relative w-full h-full group"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onClick={handleClick}
-      >
-        <video
-          ref={videoRef}
-          src={displaySrc}
-          className={className}
-          width={width}
-          height={height}
-          autoPlay={autoPlay}
-          muted={muted}
-          loop={loop}
-          playsInline
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-        />
-        {showControls && (
-          <PlayButton
-            size={playButtonSize}
-            isPlaying={isPlaying || isClickPlaying}
-            onClick={handlePlayPause}
-            className={cn(
-              "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
-              "z-10 pointer-events-auto",
-              "opacity-0 group-hover:opacity-100",
-              isHovered && "opacity-100",
-            )}
-            style={{ pointerEvents: "auto" }}
-          />
-        )}
-      </div>
+      <VideoDisplay
+        src={displaySrc}
+        className={className}
+        width={width}
+        height={height}
+        showControls={showControls}
+        autoPlay={autoPlay}
+        muted={muted}
+        loop={loop}
+        playOnHover={playOnHover}
+        clickToToggle={clickToToggle}
+        playButtonSize={playButtonSize}
+      />
     );
   }
 
