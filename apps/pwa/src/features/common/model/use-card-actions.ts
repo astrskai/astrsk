@@ -79,7 +79,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
 
       setLoadingStates((prev) => ({
         ...prev,
-        [cardId]: { ...prev[cardId], exporting: true },
+        [cardId]: { ...prev[cardId] ?? {}, exporting: true },
       }));
 
       try {
@@ -104,7 +104,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
       } finally {
         setLoadingStates((prev) => ({
           ...prev,
-          [cardId]: { ...prev[cardId], exporting: false },
+          [cardId]: { ...prev[cardId] ?? {}, exporting: false },
         }));
       }
     },
@@ -120,7 +120,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
 
       setLoadingStates((prev) => ({
         ...prev,
-        [cardId]: { ...prev[cardId], copying: true },
+        [cardId]: { ...prev[cardId] ?? {}, copying: true },
       }));
 
       try {
@@ -146,7 +146,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
       } finally {
         setLoadingStates((prev) => ({
           ...prev,
-          [cardId]: { ...prev[cardId], copying: false },
+          [cardId]: { ...prev[cardId] ?? {}, copying: false },
         }));
       }
     },
@@ -197,7 +197,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
 
     setLoadingStates((prev) => ({
       ...prev,
-      [cardId]: { ...prev[cardId], deleting: true },
+      [cardId]: { ...prev[cardId] ?? {}, deleting: true },
     }));
 
     try {
@@ -236,7 +236,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
     } finally {
       setLoadingStates((prev) => ({
         ...prev,
-        [cardId]: { ...prev[cardId], deleting: false },
+        [cardId]: { ...prev[cardId] ?? {}, deleting: false },
       }));
     }
   }, [deleteDialogState, entityType, queryClient]);

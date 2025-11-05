@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   UserIcon,
@@ -45,7 +45,7 @@ interface CharacterPreviewItemProps {
   onMouseEnter: () => void;
 }
 
-function CharacterPreviewItem({
+const CharacterPreviewItem = ({
   card,
   cardId,
   isDisabled,
@@ -53,7 +53,7 @@ function CharacterPreviewItem({
   onCardClick,
   onDetailClick,
   onMouseEnter,
-}: CharacterPreviewItemProps) {
+}: CharacterPreviewItemProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
   return (
@@ -98,7 +98,7 @@ function CharacterPreviewItem({
       </button>
     </div>
   );
-}
+};
 
 /**
  * Selected Character Card
@@ -109,7 +109,10 @@ interface SelectedCharacterCardProps {
   onRemove: (cardId: string) => (e: React.MouseEvent) => void;
 }
 
-function SelectedCharacterCard({ card, onRemove }: SelectedCharacterCardProps) {
+const SelectedCharacterCard = ({
+  card,
+  onRemove,
+}: SelectedCharacterCardProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
   const cardId = card.id.toString();
 
@@ -134,13 +137,13 @@ function SelectedCharacterCard({ card, onRemove }: SelectedCharacterCardProps) {
       isShowActions={true}
     />
   );
-}
+};
 
 /**
  * Character Detail Panel
  * Displays detailed information about a selected character
  */
-function CharacterDetailPanel({ character }: { character: CharacterCard }) {
+const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
   const [characterImageUrl] = useAsset(character.props.iconAssetId);
 
   return (
@@ -193,7 +196,7 @@ function CharacterDetailPanel({ character }: { character: CharacterCard }) {
       )}
     </div>
   );
-}
+};
 
 /**
  * AI Character Selection Step
@@ -205,18 +208,25 @@ export function AiCharacterSelectionStep({
   selectedUserCharacter,
   onCharactersSelected,
 }: AiCharacterSelectionStepProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedCharacterIds, setSelectedCharacterIds] = useState<string[]>(
     selectedCharacters.map((c) => c.id.toString()),
   );
+  // Temporary state for dialog selection (only committed on Add)
+  const [tempSelectedIds, setTempSelectedIds] = useState<string[]>([]);
   const [previewCharacterId, setPreviewCharacterId] = useState<string | null>(
     null,
   );
-  const [showMobileDetail, setShowMobileDetail] = useState(false);
+  const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
   const [mobileDetailCharacterId, setMobileDetailCharacterId] = useState<
     string | null
   >(null);
+
+  // Sync selectedCharacterIds with selectedCharacters prop
+  useEffect(() => {
+    setSelectedCharacterIds(selectedCharacters.map((c) => c.id.toString()));
+  }, [selectedCharacters]);
 
   const { data: characterCards } = useQuery(
     cardQueries.list({ type: [CardType.Character] }),
@@ -252,11 +262,14 @@ export function AiCharacterSelectionStep({
   }, [characterCards, searchKeyword]);
 
   const handleAddCharacterClick = () => {
+    // Initialize temp state with current selection when opening dialog
+    setTempSelectedIds(selectedCharacterIds);
     setIsDialogOpen(true);
   };
 
   const handleCharacterCardClick = (cardId: string) => {
-    setSelectedCharacterIds((prev) => {
+    // Modify temp state only (not committed until Add button)
+    setTempSelectedIds((prev) => {
       if (prev.includes(cardId)) {
         // Remove if already selected
         return prev.filter((id) => id !== cardId);
@@ -268,9 +281,10 @@ export function AiCharacterSelectionStep({
   };
 
   const handleDialogAdd = () => {
-    if (selectedCharacterIds.length > 0 && characterCards) {
+    // Commit temp selection to actual state
+    if (tempSelectedIds.length > 0 && characterCards) {
       const selected = characterCards.filter((card: CharacterCard) =>
-        selectedCharacterIds.includes(card.id.toString()),
+        tempSelectedIds.includes(card.id.toString()),
       ) as CharacterCard[];
       onCharactersSelected(selected);
       setIsDialogOpen(false);
@@ -279,6 +293,7 @@ export function AiCharacterSelectionStep({
   };
 
   const handleDialogCancel = () => {
+    // Discard temp changes
     setIsDialogOpen(false);
     setSearchKeyword("");
   };
@@ -289,8 +304,7 @@ export function AiCharacterSelectionStep({
       (card) => card.id.toString() !== cardId,
     );
     onCharactersSelected(updated);
-    // Sync selectedCharacterIds state
-    setSelectedCharacterIds((prev) => prev.filter((id) => id !== cardId));
+    // selectedCharacterIds will be synced via useEffect when selectedCharacters prop changes
   };
 
   return (
@@ -419,7 +433,7 @@ export function AiCharacterSelectionStep({
                     const cardId = card.id.toString();
                     const isDisabled =
                       selectedUserCharacter?.id.toString() === cardId;
-                    const isSelected = selectedCharacterIds.includes(cardId);
+                    const isSelected = tempSelectedIds.includes(cardId);
 
                     return (
                       <CharacterPreviewItem
@@ -489,9 +503,9 @@ export function AiCharacterSelectionStep({
             </Button>
             <Button
               onClick={handleDialogAdd}
-              disabled={selectedCharacterIds.length === 0}
+              disabled={tempSelectedIds.length === 0}
             >
-              Add ({selectedCharacterIds.length})
+              Add ({tempSelectedIds.length})
             </Button>
           </DialogFooter>
         </DialogContent>

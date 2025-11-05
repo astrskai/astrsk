@@ -30,16 +30,6 @@ export function CharacterImageStep({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Basic Info
-        </h2>
-        <p className="text-text-secondary text-sm">
-          Set up the basic information for your character.
-        </p>
-      </div>
-
       {/* Section 1: Character Name */}
       <div className="border-border rounded-2xl border-2 p-4 md:p-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
@@ -99,8 +89,8 @@ export function CharacterImageStep({
                   imageUrl={
                     avatarAssetId || "/img/placeholder/character-card-image.png"
                   }
-                  summary="Character preview"
-                  tags={[]}
+                  summary="Character summary"
+                  tags={["tag1", "tag2"]}
                   tokenCount={0}
                   isShowActions={false}
                 />
