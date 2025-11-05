@@ -94,7 +94,7 @@ const CharacterPreviewItem = ({
         className="text-text-secondary hover:text-text-primary absolute right-2 bottom-2 flex items-center gap-1 text-xs transition-colors md:hidden"
       >
         <span>Character detail</span>
-        <ChevronRight className="h-3 w-3" />
+        <ChevronRight className="min-h-3 min-w-3" />
       </button>
     </div>
   );
@@ -324,7 +324,7 @@ export function AiCharacterSelectionStep({
         {/* Mobile: Add Button (outside grid) */}
         <Button
           onClick={handleAddCharacterClick}
-          icon={<Plus size={16} />}
+          icon={<Plus className="min-h-4 min-w-4" />}
           className="w-full md:hidden"
         >
           {selectedCharacters.length > 0
@@ -363,7 +363,7 @@ export function AiCharacterSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <UserIcon className="text-text-secondary mb-3 h-12 w-12" />
+              <UserIcon className="text-text-secondary mb-3 min-h-12 min-w-12" />
               <h3 className="text-text-primary mb-2 text-lg font-semibold">
                 Add AI Characters
               </h3>
@@ -396,7 +396,7 @@ export function AiCharacterSelectionStep({
                     onClick={() => setShowMobileDetail(false)}
                     className="text-text-primary hover:text-primary flex items-center gap-2 transition-colors"
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="min-h-5 min-w-5" />
                     <span className="font-semibold">
                       {mobileDetailCharacter.props.title}
                     </span>
@@ -448,10 +448,7 @@ export function AiCharacterSelectionStep({
                           setShowMobileDetail(true);
                         }}
                         onMouseEnter={() => {
-                          // Only enable hover on desktop
-                          if (window.innerWidth >= 768) {
-                            setPreviewCharacterId(cardId);
-                          }
+                          setPreviewCharacterId(cardId);
                         }}
                       />
                     );
