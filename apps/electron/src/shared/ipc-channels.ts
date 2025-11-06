@@ -47,6 +47,13 @@ const CONFIG_CHANNEL = {
 const HTTP_PROXY_CHANNEL = {
   // Methods
   FETCH: "http-proxy/fetch",
+  STREAM_START: "http-proxy/stream-start",
+  STREAM_ABORT: "http-proxy/stream-abort",
+
+  // Events (renderer receives these)
+  STREAM_CHUNK: "http-proxy/stream-chunk",
+  STREAM_END: "http-proxy/stream-end",
+  STREAM_ERROR: "http-proxy/stream-error",
 } as const;
 
 export { DEBUG_CHANNEL, DUMP_CHANNEL, TOP_BAR_CHANNEL, UPDATER_CHANNEL, CONFIG_CHANNEL, HTTP_PROXY_CHANNEL };
