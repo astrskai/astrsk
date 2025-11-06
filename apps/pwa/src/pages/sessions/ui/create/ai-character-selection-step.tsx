@@ -1,12 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  UserIcon,
-  ChevronRight,
-  ChevronLeft,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { UserIcon, ChevronLeft, Plus, Trash2 } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
 import CharacterPreview from "@/features/character/ui/character-preview";
 import { CreateItemCard } from "@/shared/ui";
@@ -73,7 +67,6 @@ const CharacterPreviewItem = ({
         className="pointer-events-auto"
       >
         <CharacterPreview
-          cardId={card.id}
           imageUrl={imageUrl}
           title={card.props.title}
           summary={card.props.cardSummary}
@@ -130,8 +123,6 @@ const SelectedCharacterCard = ({
 
   return (
     <CharacterPreview
-      key={cardId}
-      cardId={card.id}
       imageUrl={imageUrl}
       title={card.props.title}
       summary={card.props.cardSummary}
@@ -181,7 +172,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
           <div className="flex flex-wrap gap-2">
             {character.props.tags.map((tag, index) => (
               <span
-                key={index}
+                key={`${character.props.title}-tag-${index}-${tag}`}
                 className="text-black-alternate rounded-md bg-gray-300 px-2.5 py-0.5 text-sm"
               >
                 {tag}
@@ -260,8 +251,7 @@ export function AiCharacterSelectionStep({
     const keyword = searchKeyword.toLowerCase();
     return characterCards.filter((card: CharacterCard) => {
       const title = card.props.title?.toLowerCase() || "";
-      const name = card.props.name?.toLowerCase() || "";
-      return title.includes(keyword) || name.includes(keyword);
+      return title.includes(keyword);
     });
   }, [characterCards, searchKeyword]);
 
@@ -359,7 +349,7 @@ export function AiCharacterSelectionStep({
             {/* Selected Characters */}
             {selectedCharacters.map((card) => (
               <SelectedCharacterCard
-                key={card.id.toString()}
+                key={`${card.props.title}-${card.id.toString()}`}
                 card={card}
                 onRemove={handleRemoveCharacter}
               />
@@ -390,7 +380,7 @@ export function AiCharacterSelectionStep({
 
       {/* Character Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex max-h-[90dvh] flex-col gap-2">
+        <DialogContent className="flex h-[90dvh] max-h-[90dvh] flex-col gap-2">
           <DialogHeader>
             {showMobileDetail && mobileDetailCharacter ? (
               <div className="flex items-center gap-2 md:hidden">
@@ -450,7 +440,7 @@ export function AiCharacterSelectionStep({
 
                     return (
                       <CharacterPreviewItem
-                        key={cardId}
+                        key={`${card.props.title}-${card.id.toString()}`}
                         card={card}
                         cardId={cardId}
                         isDisabled={isDisabled}

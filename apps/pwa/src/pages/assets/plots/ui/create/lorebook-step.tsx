@@ -1,9 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Variable } from "@/shared/prompt/domain/variable";
 import {
   LorebookEditor,
   VariablesPanel,
   type LorebookEntry,
+  type LorebookEditorRef,
 } from "@/shared/ui/panels";
 
 interface PlotLorebookStepProps {
@@ -26,6 +27,9 @@ export function PlotLorebookStep({
   entries,
   onEntriesChange,
 }: PlotLorebookStepProps) {
+  const editorRef = useRef<LorebookEditorRef>(null);
+  const [selectedEntry, setSelectedEntry] = useState<LorebookEntry | null>(null);
+
   // Filter out message-related variables
   const filterVariables = useCallback(
     (variable: Variable) =>
@@ -35,10 +39,14 @@ export function PlotLorebookStep({
     [],
   );
 
-  // Insert variable - handled by VariablesPanel
+  // Insert variable at cursor position
   const insertVariable = useCallback((variableText: string) => {
-    // Variables panel integration can be added here if needed
-    console.log("Variable clicked:", variableText);
+    editorRef.current?.insertTextAtCursor(variableText);
+  }, []);
+
+  // Handle selected entry change
+  const handleSelectedEntryChange = useCallback((entry: LorebookEntry | null) => {
+    setSelectedEntry(entry);
   }, []);
 
   return (
@@ -57,13 +65,18 @@ export function PlotLorebookStep({
       {/* Main Content - 3 Column Layout */}
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left + Center: Entries List and Editor */}
-        <LorebookEditor entries={entries} onEntriesChange={onEntriesChange} />
+        <LorebookEditor
+          ref={editorRef}
+          entries={entries}
+          onEntriesChange={onEntriesChange}
+          onSelectedEntryChange={handleSelectedEntryChange}
+        />
 
         {/* Right: Variables Panel */}
         <VariablesPanel
           onVariableClick={insertVariable}
           filterVariables={filterVariables}
-          isActive={!!entries.find((e) => e.id)}
+          isActive={!!selectedEntry}
           inactiveMessage="Select an entry to insert variables"
         />
       </div>

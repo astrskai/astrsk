@@ -1,4 +1,11 @@
-import { useState, useRef, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { X, Plus } from "lucide-react";
 import { Input, Textarea, Button } from "@/shared/ui/forms";
 import { cn } from "@/shared/lib";
@@ -14,6 +21,21 @@ export interface LorebookEntry {
 export interface LorebookEditorProps {
   entries: LorebookEntry[];
   onEntriesChange: (entries: LorebookEntry[]) => void;
+  onSelectedEntryChange?: (entry: LorebookEntry | null) => void;
+}
+
+export interface LorebookEditorRef {
+  /**
+   * Insert text at cursor position in the currently selected entry's description field
+   * @param text - Text to insert
+   * @returns true if insertion was successful, false if no entry is selected
+   */
+  insertTextAtCursor: (text: string) => boolean;
+  /**
+   * Get the currently selected entry
+   * @returns Selected entry or null if none selected
+   */
+  getSelectedEntry: () => LorebookEntry | null;
 }
 
 // Constants
@@ -28,28 +50,42 @@ const DESCRIPTION_ROWS = 8;
  *
  * Reusable lorebook management UI with entries list and editor.
  * Variables panel should be composed separately by the parent.
+ * Use ref to insert variables at cursor position.
  *
  * @example
  * ```tsx
+ * const editorRef = useRef<LorebookEditorRef>(null);
+ *
+ * const insertVariable = (variableText: string) => {
+ *   editorRef.current?.insertTextAtCursor(variableText);
+ * };
+ *
  * return (
  *   <div className="flex flex-col gap-6 lg:flex-row">
- *     <LorebookEditor entries={entries} onEntriesChange={setEntries} />
- *     <div className="lg:sticky lg:top-4 lg:self-start">
- *       <VariablesPanel onVariableClick={insertVariable} />
- *     </div>
+ *     <LorebookEditor
+ *       ref={editorRef}
+ *       entries={entries}
+ *       onEntriesChange={setEntries}
+ *     />
+ *     <VariablesPanel onVariableClick={insertVariable} />
  *   </div>
  * );
  * ```
  */
-export function LorebookEditor({
-  entries,
-  onEntriesChange,
-}: LorebookEditorProps) {
+export const LorebookEditor = forwardRef<
+  LorebookEditorRef,
+  LorebookEditorProps
+>(function LorebookEditor({ entries, onEntriesChange, onSelectedEntryChange }, ref) {
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [newTag, setNewTag] = useState<string>("");
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const selectedEntry = entries.find((e) => e.id === selectedEntryId);
+
+  // Notify parent when selected entry changes
+  useEffect(() => {
+    onSelectedEntryChange?.(selectedEntry || null);
+  }, [selectedEntry, onSelectedEntryChange]);
 
   const handleAddEntry = () => {
     const newEntry: LorebookEntry = {
@@ -101,6 +137,40 @@ export function LorebookEditor({
       tags: selectedEntry.tags.filter((t) => t !== tag),
     });
   };
+
+  // Expose ref methods for parent component
+  useImperativeHandle(
+    ref,
+    () => ({
+      insertTextAtCursor: (text: string) => {
+        if (!selectedEntry) return false;
+
+        const textarea = descriptionRef.current;
+        if (!textarea) return false;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentDescription = selectedEntry.description;
+        const newValue =
+          currentDescription.substring(0, start) +
+          text +
+          currentDescription.substring(end);
+
+        handleUpdateEntry(selectedEntry.id, { description: newValue });
+
+        // Set cursor position after the inserted text
+        setTimeout(() => {
+          textarea.focus();
+          const newPosition = start + text.length;
+          textarea.setSelectionRange(newPosition, newPosition);
+        }, 0);
+
+        return true;
+      },
+      getSelectedEntry: () => selectedEntry || null,
+    }),
+    [selectedEntry, handleUpdateEntry],
+  );
 
   return (
     <div className="flex-1 bg-gray-900 p-2 md:p-4">
@@ -269,4 +339,4 @@ export function LorebookEditor({
       </p>
     </div>
   );
-}
+});

@@ -1,12 +1,13 @@
 import { cn } from "@/shared/lib";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 
-interface CharacterPreviewProps {
+interface PlotPreviewProps {
   title: string;
   imageUrl?: string | null;
   summary?: string;
   tags: string[];
   tokenCount?: number;
+  firstMessages?: number;
   actions?: CharacterAction[];
   className?: string;
   isShowActions?: boolean;
@@ -14,20 +15,21 @@ interface CharacterPreviewProps {
   onClick?: () => void;
 }
 
-const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-card-image.png";
+const PLACEHOLDER_IMAGE_URL = "/img/placeholder/plot-card-image.png";
 
-const CharacterPreview = ({
+const PlotPreview = ({
   title,
   imageUrl,
   summary,
   tags,
   tokenCount = 0,
-  actions = [],
+  firstMessages = 0,
   className,
   isShowActions = false,
+  actions = [],
   isDisabled = false,
   onClick,
-}: CharacterPreviewProps) => {
+}: PlotPreviewProps) => {
   const getCompactedTagString = (tags: string[]) => {
     const compactedTags = tags.slice(0, 3).map((tag, index) => {
       return (
@@ -72,7 +74,7 @@ const CharacterPreview = ({
   return (
     <article
       className={cn(
-        "group/preview relative flex aspect-[2/1] w-full overflow-hidden rounded-lg border border-gray-700 bg-gray-900 text-gray-200 transition-all duration-300 lg:aspect-[3/1]",
+        "group/preview relative flex aspect-[2/1] w-full flex-col overflow-hidden rounded-lg border border-gray-700 bg-gray-900 text-gray-200 transition-all duration-300 lg:aspect-[3/1.2]",
         !isDisabled && onClick && "cursor-pointer",
         isDisabled
           ? "pointer-events-none"
@@ -110,57 +112,66 @@ const CharacterPreview = ({
         </div>
       )}
 
-      <img
-        src={imageUrl || PLACEHOLDER_IMAGE_URL}
-        alt={title}
-        className={cn(
-          "h-full w-24 flex-shrink-0 object-cover transition-transform duration-300 md:w-36",
-          !isDisabled && "group-hover/preview:scale-105",
-        )}
-        loading="lazy"
-      />
-
-      <div className="relative flex flex-1 flex-col justify-between overflow-hidden p-4">
-        {/* Background image with blur on hover */}
-        {!isDisabled && (
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-0 blur-md transition-opacity duration-300 group-hover/preview:opacity-20"
-            style={{
-              backgroundImage: `url(${imageUrl || PLACEHOLDER_IMAGE_URL})`,
-            }}
-          />
-        )}
-
-        {/* Content layer */}
-        <div className="relative z-10 flex h-full flex-col justify-around gap-1 lg:justify-between lg:gap-2">
+      <div className="flex min-h-0 flex-[1_1_50%] items-center bg-gray-800">
+        <img
+          src={imageUrl || PLACEHOLDER_IMAGE_URL}
+          alt={title}
+          className={cn(
+            "h-full w-24 flex-shrink-0 object-cover transition-transform duration-300 md:w-32",
+            !isDisabled && "group-hover/preview:scale-105",
+          )}
+          loading="lazy"
+        />
+        <div className="relative flex h-full min-w-0 flex-1 flex-col justify-center gap-2 p-2">
           <h3
             className={cn(
-              "text-base font-semibold text-gray-50 lg:text-lg",
+              "truncate text-base font-semibold text-gray-50 lg:text-lg",
               "transition-all duration-300 group-hover/preview:text-gray-200",
             )}
           >
             {title}
           </h3>
-          <p
-            className={cn(
-              "line-clamp-2 text-xs lg:text-sm",
-              summary &&
-                "transition-all duration-300 group-hover/preview:text-gray-50",
-            )}
-          >
-            {summary || "No summary"}
-          </p>
-          <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
+
+          <div className="flex items-center gap-2 overflow-hidden text-xs lg:text-sm">
             {tags.length > 0 ? getCompactedTagString(tags) : "No tags"}
           </div>
-          <div className="flex items-center gap-1 text-xs lg:text-sm">
+
+          {/* Background image with blur on hover */}
+          {!isDisabled && (
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-0 blur-md transition-opacity duration-300 group-hover/preview:opacity-20"
+              style={{
+                backgroundImage: `url(${imageUrl || PLACEHOLDER_IMAGE_URL})`,
+              }}
+            />
+          )}
+        </div>
+      </div>
+
+      <div className="relative flex min-h-0 flex-[1_1_50%] flex-col justify-around gap-2 overflow-hidden bg-gray-900 p-4">
+        <p
+          className={cn(
+            "line-clamp-2 text-xs lg:text-sm",
+            summary &&
+              "transition-all duration-300 group-hover/preview:text-gray-50",
+          )}
+        >
+          {summary || "No summary"}
+        </p>
+
+        <div className="flex items-center gap-3 text-xs lg:text-sm">
+          <p>
             <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
             Tokens
-          </div>
+          </p>
+          <p>
+            <span className="font-semibold text-gray-50">{firstMessages}</span>{" "}
+            First messages
+          </p>
         </div>
       </div>
     </article>
   );
 };
 
-export default CharacterPreview;
+export default PlotPreview;
