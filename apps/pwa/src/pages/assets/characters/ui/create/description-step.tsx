@@ -109,7 +109,6 @@ export function CharacterDescriptionStep({
               value={description}
               onChange={(e) => onDescriptionChange(e.target.value)}
               onFocus={() => setActiveTextarea("description")}
-              onBlur={() => setActiveTextarea(null)}
               placeholder="Describe your character's personality, traits, and background..."
               required
               autoResize
