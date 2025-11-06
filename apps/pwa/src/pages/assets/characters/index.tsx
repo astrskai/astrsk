@@ -60,7 +60,7 @@ export function CharactersListPage() {
   };
 
   return (
-    <div className="bg-background-surface-2 flex h-full w-full flex-col">
+    <div className="flex h-full w-full flex-col">
       {/* Hidden file input for import */}
       <input
         ref={fileInputRef}
@@ -112,7 +112,10 @@ export function CharactersListPage() {
           />
         ) : (
           // Show grid with characters (or NewCharacterCard if empty)
-          <CharactersGrid characters={characters} showNewCharacterCard={!keyword} />
+          <CharactersGrid
+            characters={characters}
+            showNewCharacterCard={!keyword}
+          />
         )}
       </div>
     </div>
