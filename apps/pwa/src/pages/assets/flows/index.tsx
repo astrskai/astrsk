@@ -144,7 +144,7 @@ export function FlowsListPage() {
       <ListPageHeader
         title="Assets"
         tabs={ASSET_TABS}
-        activeTab="flows"
+        activeTab="workflow"
         keyword={keyword}
         onKeywordChange={setKeyword}
         onImportClick={handleImportClick}

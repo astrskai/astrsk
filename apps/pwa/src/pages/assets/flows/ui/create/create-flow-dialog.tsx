@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/shared/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/shared/ui";
 import { Button, Input } from "@/shared/ui/forms";
 import { Flow } from "@/entities/flow/domain/flow";
 
@@ -48,28 +53,30 @@ export function CreateFlowDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideClose>
-        <DialogTitle>Create Flow</DialogTitle>
+      <DialogContent hideClose className="gap-2">
+        <DialogTitle>Create workflow</DialogTitle>
+        <DialogDescription>
+          Name your workflow to organize your agent structure
+        </DialogDescription>
         <div className="mt-4 flex flex-col gap-4">
           <Input
-            label="Flow name"
+            label="Workflow name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyPress={handleKeyPress}
             disabled={isCreating}
-            placeholder="Enter flow name"
+            placeholder="Enter workflow name"
             autoFocus
           />
           <div className="flex justify-end gap-2">
             <Button
               variant="ghost"
-              size="lg"
               onClick={handleCancel}
               disabled={isCreating}
             >
               Cancel
             </Button>
-            <Button size="lg" onClick={handleCreate} disabled={isCreating}>
+            <Button onClick={handleCreate} disabled={isCreating}>
               {isCreating ? "Creating..." : "Create"}
             </Button>
           </div>

@@ -34,7 +34,7 @@ const CharacterPreview = ({
         <span
           key={`${title}-tag-${index}-${tag}`}
           className={cn(
-            "text-black-alternate rounded-md bg-gray-300/80 px-2.5 py-0.5 text-xs font-semibold lg:text-sm",
+            "rounded-md bg-gray-800/80 px-2.5 py-0.5 text-xs font-semibold text-gray-300 lg:text-sm",
             "transition-all duration-300 group-hover/preview:bg-gray-900/50 group-hover/preview:text-gray-50",
             index === 2 && "hidden lg:inline-flex",
           )}
@@ -76,7 +76,7 @@ const CharacterPreview = ({
         !isDisabled && onClick && "cursor-pointer",
         isDisabled
           ? "pointer-events-none"
-          : "group-hover/preview:border-gray-400 group-hover/preview:shadow-lg",
+          : "hover:border-gray-500 hover:shadow-lg",
         className,
       )}
       onClick={isDisabled ? undefined : onClick}
@@ -92,7 +92,10 @@ const CharacterPreview = ({
           {actions.map((action, index) => (
             <button
               key={index}
-              onClick={action.onClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                action.onClick(e);
+              }}
               disabled={action.disabled}
               aria-label={action.label}
               className={cn(

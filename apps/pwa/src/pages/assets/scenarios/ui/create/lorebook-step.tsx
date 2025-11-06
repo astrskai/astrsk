@@ -7,14 +7,14 @@ import {
   type LorebookEditorRef,
 } from "@/shared/ui/panels";
 
-interface PlotLorebookStepProps {
+interface ScenarioLorebookStepProps {
   entries: LorebookEntry[];
   onEntriesChange: (entries: LorebookEntry[]) => void;
 }
 
 /**
- * Plot Lorebook Step Component
- * Step 3 of the Create Plot Card wizard
+ * Scenario Lorebook Step Component
+ * Step 3 of the Create Scenario Card wizard
  *
  * Fields (all optional):
  * - Entries:
@@ -23,12 +23,14 @@ interface PlotLorebookStepProps {
  *   - Recall Range: Number of messages to scan
  *   - Description: Lore content (supports variable insertion)
  */
-export function PlotLorebookStep({
+export function ScenarioLorebookStep({
   entries,
   onEntriesChange,
-}: PlotLorebookStepProps) {
+}: ScenarioLorebookStepProps) {
   const editorRef = useRef<LorebookEditorRef>(null);
-  const [selectedEntry, setSelectedEntry] = useState<LorebookEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<LorebookEntry | null>(
+    null,
+  );
 
   // Filter out message-related variables
   const filterVariables = useCallback(
@@ -45,19 +47,22 @@ export function PlotLorebookStep({
   }, []);
 
   // Handle selected entry change
-  const handleSelectedEntryChange = useCallback((entry: LorebookEntry | null) => {
-    setSelectedEntry(entry);
-  }, []);
+  const handleSelectedEntryChange = useCallback(
+    (entry: LorebookEntry | null) => {
+      setSelectedEntry(entry);
+    },
+    [],
+  );
 
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Plot Lorebook
+          Add lorebook
         </h2>
         <p className="text-text-secondary text-sm">
-          Add additional lore and world-building details for your plot
+          Add additional lore and world-building details for your scenario
           (optional).
         </p>
       </div>

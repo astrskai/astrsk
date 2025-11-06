@@ -4,11 +4,11 @@ import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
 import { CreatePageHeader } from "@/widgets/create-page-header";
 import {
-  PlotImageStep,
-  PlotDescriptionStep,
-  PlotLorebookStep,
-  PlotScenarioStep,
-  type Scenario,
+  ScenarioImageStep,
+  ScenarioDescriptionStep,
+  ScenarioLorebookStep,
+  ScenarioFirstMessagesStep,
+  type FirstMessage,
 } from "./ui/create";
 import type { LorebookEntry } from "@/shared/ui/panels";
 import { AssetService } from "@/app/services/asset-service";
@@ -22,37 +22,42 @@ import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardKeys } from "@/entities/card/api";
 
-type PlotStep = "image" | "info" | "lorebook" | "scenario";
+type ScenarioStep = "image" | "info" | "first-messages" | "lorebook";
 
 /**
  * Create Plot Card Page
- * Multi-step wizard for creating a new plot card
+ * Multi-step wizard for creating a new scenario card
  *
  * Steps:
- * 1. Basic Info - Plot name and image (Name required, image optional)
+ * 1. Basic Info - Scenario name and image (Name required, image optional)
  * 2. Info - Description (Required)
- * 3. Lorebook - World-building and lore entries (Optional)
- * 4. Scenario - Initial scenario and story setup (Optional)
+ * 3. First Messages - Initial first messages and story setup (Optional)
+ * 4. Lorebook - World-building and lore entries (Optional)
  */
 export function CreatePlotPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [plotName, setPlotName] = useState("New Plot");
-  const [currentStep, setCurrentStep] = useState<PlotStep>("image");
+  const [plotName, setPlotName] = useState("New Scenario");
+  const [currentStep, setCurrentStep] = useState<ScenarioStep>("image");
   const [imageFile, setImageFile] = useState<File | undefined>();
   const [imageAssetId, setImageAssetId] = useState<string | undefined>();
   const [description, setDescription] = useState("");
   const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>([]);
-  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [firstMessages, setFirstMessages] = useState<FirstMessage[]>([]);
 
   const [isCreatingCard, setIsCreatingCard] = useState(false);
 
-  const STEPS: StepConfig<PlotStep>[] = [
+  const STEPS: StepConfig<ScenarioStep>[] = [
     { id: "image", number: 1, label: "Basic Info", required: true },
     { id: "info", number: 2, label: "Description", required: true },
-    { id: "lorebook", number: 3, label: "Lorebook", required: false },
-    { id: "scenario", number: 4, label: "Scenario", required: false },
+    {
+      id: "first-messages",
+      number: 3,
+      label: "First Messages",
+      required: false,
+    },
+    { id: "lorebook", number: 4, label: "Lorebook", required: false },
   ];
 
   const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
@@ -73,7 +78,7 @@ export function CreatePlotPage() {
   };
 
   const handleCancel = () => {
-    navigate({ to: "/assets/plots" });
+    navigate({ to: "/assets/scenarios" });
   };
 
   const handleFileUpload = (file: File) => {
@@ -145,16 +150,16 @@ export function CreatePlotPage() {
       }
 
       // Step 3: Transform scenarios to the format PlotCard expects
-      const scenariosData = scenarios.map((scenario) => ({
-        name: scenario.name,
-        description: scenario.description,
+      const firstMessagesData = firstMessages.map((firstMessage) => ({
+        name: firstMessage.name,
+        description: firstMessage.description,
       }));
 
       // Step 4: Create plot card
       const cardResult = PlotCard.create({
         title: plotName,
         description: description,
-        scenarios: scenariosData.length > 0 ? scenariosData : undefined,
+        scenarios: firstMessagesData.length > 0 ? firstMessagesData : undefined,
         iconAssetId: uploadedAssetId
           ? new UniqueEntityID(uploadedAssetId)
           : undefined,
@@ -186,7 +191,7 @@ export function CreatePlotPage() {
       });
 
       // Step 7: Navigate to plots list page
-      navigate({ to: "/assets/plots" });
+      navigate({ to: "/assets/scenarios" });
     } catch (error) {
       console.error("Error creating plot card:", error);
       setIsCreatingCard(false);
@@ -202,11 +207,11 @@ export function CreatePlotPage() {
       case "info":
         // Info step requires description
         return !!description.trim();
+      case "first-messages":
+        // First messages is optional
+        return true;
       case "lorebook":
         // Lorebook is optional
-        return true;
-      case "scenario":
-        // Scenario is optional
         return true;
       default:
         return false;
@@ -216,7 +221,7 @@ export function CreatePlotPage() {
   return (
     <div className="relative flex h-screen w-full flex-col overflow-hidden">
       <CreatePageHeader
-        category="Plot"
+        category="Scenario"
         itemName={plotName}
         onCancel={handleCancel}
         onPrevious={handlePrevious}
@@ -236,9 +241,9 @@ export function CreatePlotPage() {
         <div className="mx-auto w-full max-w-7xl p-8">
           {/* Step 1: Image */}
           {currentStep === "image" && (
-            <PlotImageStep
-              plotName={plotName}
-              onPlotNameChange={setPlotName}
+            <ScenarioImageStep
+              scenarioName={plotName}
+              onScenarioNameChange={setPlotName}
               imageAssetId={imageAssetId}
               onFileUpload={handleFileUpload}
             />
@@ -246,25 +251,25 @@ export function CreatePlotPage() {
 
           {/* Step 2: Description */}
           {currentStep === "info" && (
-            <PlotDescriptionStep
+            <ScenarioDescriptionStep
               description={description}
               onDescriptionChange={setDescription}
             />
           )}
 
-          {/* Step 3: Lorebook */}
-          {currentStep === "lorebook" && (
-            <PlotLorebookStep
-              entries={lorebookEntries}
-              onEntriesChange={setLorebookEntries}
+          {/* Step 3: First Messages */}
+          {currentStep === "first-messages" && (
+            <ScenarioFirstMessagesStep
+              firstMessages={firstMessages}
+              onFirstMessagesChange={setFirstMessages}
             />
           )}
 
-          {/* Step 4: Scenario */}
-          {currentStep === "scenario" && (
-            <PlotScenarioStep
-              scenarios={scenarios}
-              onScenariosChange={setScenarios}
+          {/* Step 4: Lorebook */}
+          {currentStep === "lorebook" && (
+            <ScenarioLorebookStep
+              entries={lorebookEntries}
+              onEntriesChange={setLorebookEntries}
             />
           )}
         </div>

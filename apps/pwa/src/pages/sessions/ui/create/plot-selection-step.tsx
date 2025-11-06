@@ -278,10 +278,11 @@ export function PlotSelectionStep({
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-xl">
-          4. Select Plot&nbsp;(optional)
+          Select a Scenario&nbsp;(optional)
         </h2>
         <p className="text-text-secondary text-sm">
-          Pick a plot to frame your session.
+          A scenario provides story context and starting messages for your
+          session.
         </p>
       </div>
 
@@ -304,10 +305,10 @@ export function PlotSelectionStep({
             <div className="flex flex-col items-center justify-center py-8">
               <IconFlow className="text-text-secondary mb-3 min-h-12 min-w-12" />
               <h3 className="text-text-primary mb-2 text-lg font-semibold">
-                Select Plot
+                Select Scenario
               </h3>
               <p className="text-text-secondary text-sm">
-                Click to select a plot (optional)
+                Click to select a scenario (optional)
               </p>
             </div>
           </div>
@@ -332,9 +333,9 @@ export function PlotSelectionStep({
               </div>
             ) : null}
             <div className={cn(showMobileDetail && "hidden md:block")}>
-              <DialogTitle>Select Plot</DialogTitle>
+              <DialogTitle>Select Scenario</DialogTitle>
               <DialogDescription>
-                Choose a plot card (optional)
+                Choose a scenario (optional)
               </DialogDescription>
             </div>
           </DialogHeader>
@@ -398,14 +399,14 @@ export function PlotSelectionStep({
                   <div className="text-text-secondary flex flex-col items-center justify-center py-12 text-center">
                     {searchKeyword ? (
                       <>
-                        <p className="mb-2 text-lg">No plots found</p>
+                        <p className="mb-2 text-lg">No scenarios found</p>
                         <p className="text-sm">Try a different search term</p>
                       </>
                     ) : (
                       <>
-                        <p className="mb-2 text-lg">No plot cards available</p>
+                        <p className="mb-2 text-lg">No scenarios available</p>
                         <p className="text-sm">
-                          Create a plot card first to continue
+                          Create a scenario first to continue
                         </p>
                       </>
                     )}
@@ -421,9 +422,9 @@ export function PlotSelectionStep({
               ) : (
                 <div className="text-text-secondary flex h-full flex-col items-center justify-center text-center">
                   <IconFlow className="mb-3 h-12 w-12 opacity-50" />
-                  <p className="text-lg">Hover over a plot</p>
+                  <p className="text-lg">Hover over a scenario</p>
                   <p className="text-sm">
-                    Move your mouse over a plot to see details
+                    Move your mouse over a scenario to see details
                   </p>
                 </div>
               )}

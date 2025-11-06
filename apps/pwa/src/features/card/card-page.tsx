@@ -83,8 +83,8 @@ export default function CardPage({ className }: { className?: string }) {
   };
 
   const handlePlotClick = (id: string) => {
-    console.log("Navigate to plot detail page for card:", id);
-    navigate({ to: "/assets/plots/$plotId", params: { plotId: id } });
+    console.log("Navigate to scenario detail page for card:", id);
+    navigate({ to: "/assets/scenarios/$scenarioId", params: { scenarioId: id } });
   };
 
   useEffect(() => {
