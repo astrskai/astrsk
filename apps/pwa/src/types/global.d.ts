@@ -92,13 +92,11 @@ interface Window {
         headers: Record<string, string>;
         status: number;
         statusText: string;
-      }) => void) => void;
+      }) => void) => () => void;
 
-      onStreamEnd: (callback: (data: { streamId: string }) => void) => void;
+      onStreamEnd: (callback: (data: { streamId: string }) => void) => () => void;
 
-      onStreamError: (callback: (data: { streamId: string; error: string }) => void) => void;
-
-      removeStreamListeners: () => void;
+      onStreamError: (callback: (data: { streamId: string; error: string }) => void) => () => void;
     };
   };
 }

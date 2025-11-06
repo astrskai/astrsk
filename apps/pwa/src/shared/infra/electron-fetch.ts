@@ -55,6 +55,19 @@ export async function electronAwareFetch(
         const stream = new ReadableStream({
           start(controller) {
             let isStreamClosed = false;
+            const cleanupFunctions: Array<() => void> = [];
+
+            // Cleanup all listeners for this stream
+            const cleanupListeners = () => {
+              cleanupFunctions.forEach(cleanup => {
+                try {
+                  cleanup();
+                } catch (error) {
+                  console.error('[Electron Stream] Error cleaning up listener:', error);
+                }
+              });
+              cleanupFunctions.length = 0; // Clear array
+            };
 
             // Safe controller operations that prevent crashes
             const safeEnqueue = (chunk: Uint8Array) => {
@@ -72,7 +85,7 @@ export async function electronAwareFetch(
               try {
                 controller.close();
                 isStreamClosed = true;
-                window.api!.httpProxy!.removeStreamListeners();
+                cleanupListeners();
               } catch (error) {
                 console.error('[Electron Stream] Error closing stream:', error);
                 isStreamClosed = true;
@@ -84,7 +97,7 @@ export async function electronAwareFetch(
               try {
                 controller.error(err);
                 isStreamClosed = true;
-                window.api!.httpProxy!.removeStreamListeners();
+                cleanupListeners();
               } catch (error) {
                 console.error('[Electron Stream] Error erroring stream:', error);
                 isStreamClosed = true;
@@ -92,7 +105,7 @@ export async function electronAwareFetch(
             };
 
             // Set up event listeners with error handling
-            window.api!.httpProxy!.onStreamChunk((data) => {
+            const cleanupChunk = window.api!.httpProxy!.onStreamChunk((data) => {
               try {
                 if (data.streamId === streamId && !isStreamClosed) {
                   // Enqueue the chunk (SSE format: "data: {...}\n\n")
@@ -104,8 +117,9 @@ export async function electronAwareFetch(
                 safeError(error instanceof Error ? error : new Error(String(error)));
               }
             });
+            cleanupFunctions.push(cleanupChunk);
 
-            window.api!.httpProxy!.onStreamEnd((data) => {
+            const cleanupEnd = window.api!.httpProxy!.onStreamEnd((data) => {
               try {
                 if (data.streamId === streamId) {
                   safeClose();
@@ -114,8 +128,9 @@ export async function electronAwareFetch(
                 console.error('[Electron Stream] Error in onStreamEnd:', error);
               }
             });
+            cleanupFunctions.push(cleanupEnd);
 
-            window.api!.httpProxy!.onStreamError((data) => {
+            const cleanupError = window.api!.httpProxy!.onStreamError((data) => {
               try {
                 if (data.streamId === streamId) {
                   safeError(new Error(data.error));
@@ -124,6 +139,7 @@ export async function electronAwareFetch(
                 console.error('[Electron Stream] Error in onStreamError:', error);
               }
             });
+            cleanupFunctions.push(cleanupError);
 
             // Handle abort signal
             if (init?.signal) {

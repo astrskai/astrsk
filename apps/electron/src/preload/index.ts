@@ -115,22 +115,22 @@ const api = {
       headers: Record<string, string>;
       status: number;
       statusText: string;
-    }) => void) => {
-      ipcRenderer.on(HTTP_PROXY_CHANNEL.STREAM_CHUNK, (_, data) => callback(data));
+    }) => void): (() => void) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on(HTTP_PROXY_CHANNEL.STREAM_CHUNK, listener);
+      return () => ipcRenderer.removeListener(HTTP_PROXY_CHANNEL.STREAM_CHUNK, listener);
     },
 
-    onStreamEnd: (callback: (data: { streamId: string }) => void) => {
-      ipcRenderer.on(HTTP_PROXY_CHANNEL.STREAM_END, (_, data) => callback(data));
+    onStreamEnd: (callback: (data: { streamId: string }) => void): (() => void) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on(HTTP_PROXY_CHANNEL.STREAM_END, listener);
+      return () => ipcRenderer.removeListener(HTTP_PROXY_CHANNEL.STREAM_END, listener);
     },
 
-    onStreamError: (callback: (data: { streamId: string; error: string }) => void) => {
-      ipcRenderer.on(HTTP_PROXY_CHANNEL.STREAM_ERROR, (_, data) => callback(data));
-    },
-
-    removeStreamListeners: () => {
-      ipcRenderer.removeAllListeners(HTTP_PROXY_CHANNEL.STREAM_CHUNK);
-      ipcRenderer.removeAllListeners(HTTP_PROXY_CHANNEL.STREAM_END);
-      ipcRenderer.removeAllListeners(HTTP_PROXY_CHANNEL.STREAM_ERROR);
+    onStreamError: (callback: (data: { streamId: string; error: string }) => void): (() => void) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on(HTTP_PROXY_CHANNEL.STREAM_ERROR, listener);
+      return () => ipcRenderer.removeListener(HTTP_PROXY_CHANNEL.STREAM_ERROR, listener);
     },
   },
 };
