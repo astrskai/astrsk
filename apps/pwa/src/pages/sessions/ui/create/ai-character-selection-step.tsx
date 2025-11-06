@@ -70,6 +70,7 @@ const CharacterPreviewItem = ({
           }
         }}
         onMouseEnter={onMouseEnter}
+        className="pointer-events-auto"
       >
         <CharacterPreview
           cardId={card.id}
@@ -86,16 +87,19 @@ const CharacterPreviewItem = ({
       </div>
 
       {/* Mobile Detail Button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDetailClick(cardId);
-        }}
-        className="text-text-secondary hover:text-text-primary absolute right-2 bottom-2 flex items-center gap-1 text-xs transition-colors md:hidden"
-      >
-        <span>Character detail</span>
-        <ChevronRight className="min-h-3 min-w-3" />
-      </button>
+      <div className="absolute right-2 bottom-2 z-10 md:hidden">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onDetailClick(cardId);
+          }}
+        >
+          Detail
+        </Button>
+      </div>
     </div>
   );
 };
@@ -149,7 +153,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
   return (
     <div className="flex flex-col gap-4">
       {/* Title */}
-      <h3 className="text-lg font-semibold text-gray-50">
+      <h3 className="hidden text-lg font-semibold text-gray-50 md:block">
         {character.props.title}
       </h3>
 
@@ -310,7 +314,7 @@ export function AiCharacterSelectionStep({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
+        <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-xl">
           2. Add AI Characters&nbsp;
           <span className="text-status-required">(Minimum 1)*</span>
         </h2>
@@ -377,12 +381,25 @@ export function AiCharacterSelectionStep({
 
       {/* Character Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex max-h-[90dvh] flex-col">
+        <DialogContent className="flex max-h-[90dvh] flex-col gap-2">
           <DialogHeader>
-            <DialogTitle>Choose characters</DialogTitle>
-            <DialogDescription>
-              Choose one or more AI character cards (at least 1 required)
-            </DialogDescription>
+            {showMobileDetail && mobileDetailCharacter ? (
+              <div className="flex items-center gap-2 md:hidden">
+                <button
+                  onClick={() => setShowMobileDetail(false)}
+                  className="text-text-primary hover:text-primary flex items-center gap-2 transition-colors"
+                >
+                  <ChevronLeft className="min-h-5 min-w-5" />
+                  <DialogTitle>{mobileDetailCharacter.props.title}</DialogTitle>
+                </button>
+              </div>
+            ) : null}
+            <div className={cn(showMobileDetail && "hidden md:block")}>
+              <DialogTitle>Choose characters</DialogTitle>
+              <DialogDescription>
+                Choose one or more AI character cards (at least 1 required)
+              </DialogDescription>
+            </div>
           </DialogHeader>
 
           {/* Split Layout */}
@@ -390,19 +407,6 @@ export function AiCharacterSelectionStep({
             {/* Mobile Detail View */}
             {showMobileDetail && mobileDetailCharacter && (
               <div className="flex min-h-0 w-full flex-col md:hidden">
-                {/* Back Button Header */}
-                <div className="mb-4 flex items-center gap-2">
-                  <button
-                    onClick={() => setShowMobileDetail(false)}
-                    className="text-text-primary hover:text-primary flex items-center gap-2 transition-colors"
-                  >
-                    <ChevronLeft className="min-h-5 min-w-5" />
-                    <span className="font-semibold">
-                      {mobileDetailCharacter.props.title}
-                    </span>
-                  </button>
-                </div>
-
                 {/* Character Detail Content */}
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   <CharacterDetailPanel character={mobileDetailCharacter} />
