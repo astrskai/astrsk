@@ -60,5 +60,19 @@ interface Window {
       getConfig: (key: string) => Promise<any>;
       setConfig: (key: string, value: any) => Promise<void>;
     };
+    httpProxy?: {
+      fetch: (options: {
+        url: string;
+        method: string;
+        headers?: Record<string, string>;
+        body?: any;
+        timeout?: number;
+      }) => Promise<{
+        status: number;
+        statusText: string;
+        data: any;
+        headers: Record<string, string>;
+      }>;
+    };
   };
 }

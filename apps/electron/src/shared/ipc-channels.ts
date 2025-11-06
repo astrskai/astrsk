@@ -44,4 +44,9 @@ const CONFIG_CHANNEL = {
   SET_CONFIG: "config/set-config",
 } as const;
 
-export { DEBUG_CHANNEL, DUMP_CHANNEL, TOP_BAR_CHANNEL, UPDATER_CHANNEL, CONFIG_CHANNEL };
+const HTTP_PROXY_CHANNEL = {
+  // Methods
+  FETCH: "http-proxy/fetch",
+} as const;
+
+export { DEBUG_CHANNEL, DUMP_CHANNEL, TOP_BAR_CHANNEL, UPDATER_CHANNEL, CONFIG_CHANNEL, HTTP_PROXY_CHANNEL };

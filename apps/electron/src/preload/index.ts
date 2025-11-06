@@ -12,6 +12,7 @@ import {
   CONFIG_CHANNEL,
   DEBUG_CHANNEL,
   DUMP_CHANNEL,
+  HTTP_PROXY_CHANNEL,
   TOP_BAR_CHANNEL,
   UPDATER_CHANNEL,
 } from "../shared/ipc-channels";
@@ -77,6 +78,20 @@ const api = {
     getConfig: (key: string): Promise<any> => ipcRenderer.invoke(CONFIG_CHANNEL.GET_CONFIG, key),
     setConfig: (key: string, value: any): Promise<void> =>
       ipcRenderer.invoke(CONFIG_CHANNEL.SET_CONFIG, key, value),
+  },
+  httpProxy: {
+    fetch: (options: {
+      url: string;
+      method: string;
+      headers?: Record<string, string>;
+      body?: any;
+      timeout?: number;
+    }): Promise<{
+      status: number;
+      statusText: string;
+      data: any;
+      headers: Record<string, string>;
+    }> => ipcRenderer.invoke(HTTP_PROXY_CHANNEL.FETCH, options),
   },
 };
 
