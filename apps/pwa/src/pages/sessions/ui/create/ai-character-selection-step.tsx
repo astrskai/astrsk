@@ -268,6 +268,9 @@ export function AiCharacterSelectionStep({
   const handleAddCharacterClick = () => {
     // Initialize temp state with current selection when opening dialog
     setTempSelectedIds(selectedCharacterIds);
+    // Reset mobile detail state
+    setShowMobileDetail(false);
+    setMobileDetailCharacterId(null);
     setIsDialogOpen(true);
   };
 
@@ -293,6 +296,9 @@ export function AiCharacterSelectionStep({
       onCharactersSelected(selected);
       setIsDialogOpen(false);
       setSearchKeyword("");
+      // Reset mobile detail state
+      setShowMobileDetail(false);
+      setMobileDetailCharacterId(null);
     }
   };
 
@@ -300,6 +306,9 @@ export function AiCharacterSelectionStep({
     // Discard temp changes
     setIsDialogOpen(false);
     setSearchKeyword("");
+    // Reset mobile detail state
+    setShowMobileDetail(false);
+    setMobileDetailCharacterId(null);
   };
 
   const handleRemoveCharacter = (cardId: string) => (e: React.MouseEvent) => {

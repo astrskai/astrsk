@@ -1,11 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  UserIcon,
-  ChevronRight,
-  ChevronLeft,
-  Trash2,
-} from "lucide-react";
+import { UserIcon, ChevronRight, ChevronLeft, Trash2 } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
 import CharacterPreview from "@/features/character/ui/character-preview";
 import { cardQueries } from "@/entities/card/api/card-queries";
@@ -209,8 +204,8 @@ export function UserCharacterSelectionStep({
   selectedAiCharacterIds,
   onUserCharacterSelected,
 }: UserCharacterSelectionStepProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedUserCharacterId, setSelectedUserCharacterId] = useState<
     string | null
   >(selectedUserCharacter?.id.toString() || null);
@@ -225,6 +220,11 @@ export function UserCharacterSelectionStep({
   const { data: characterCards } = useQuery(
     cardQueries.list({ type: [CardType.Character] }),
   );
+
+  // Sync local selection state with prop
+  useEffect(() => {
+    setSelectedUserCharacterId(selectedUserCharacter?.id.toString() || null);
+  }, [selectedUserCharacter]);
 
   // Get preview character details (desktop)
   const previewCharacter = useMemo(() => {
@@ -256,6 +256,9 @@ export function UserCharacterSelectionStep({
   }, [characterCards, searchKeyword]);
 
   const handleAddUserCharacterClick = () => {
+    // Reset mobile detail state
+    setShowMobileDetail(false);
+    setMobileDetailCharacterId(null);
     setIsDialogOpen(true);
   };
 
@@ -272,12 +275,18 @@ export function UserCharacterSelectionStep({
       onUserCharacterSelected(card || null);
       setIsDialogOpen(false);
       setSearchKeyword("");
+      // Reset mobile detail state
+      setShowMobileDetail(false);
+      setMobileDetailCharacterId(null);
     }
   };
 
   const handleDialogCancel = () => {
     setIsDialogOpen(false);
     setSearchKeyword("");
+    // Reset mobile detail state
+    setShowMobileDetail(false);
+    setMobileDetailCharacterId(null);
   };
 
   const handleRemoveUserCharacter = (e: React.MouseEvent) => {
