@@ -3,6 +3,7 @@
 export * from "./accordion";
 export * from "./aspect-ratio";
 export * from "./avatar";
+export * from "./avatar-simple";
 export * from "./badge";
 export * from "./button";
 export * from "./button-pill";
@@ -54,6 +55,7 @@ export * from "./initial-loading";
 export * from "./loading";
 export * from "./loading-overlay";
 export * from "./media-display";
+export * from "./create-item-card";
 export * from "./play-button";
 export * from "./search-empty-state";
 export * from "./search-input";
@@ -63,6 +65,7 @@ export * from "./stepper-mobile";
 export * from "./subscribe-badge";
 export * from "./svg-icon";
 export * from "./typo";
+export { default as VideoDisplay } from "./video-display";
 
 // Shared dialogs
 export * from "./confirm";

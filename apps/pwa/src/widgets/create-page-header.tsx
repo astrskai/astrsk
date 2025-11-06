@@ -137,7 +137,7 @@ export function CreatePageHeader({
       </div>
 
       {/* Desktop Header */}
-      <div className="border-border hidden items-center justify-between border-b px-8 py-6 md:flex">
+      <div className="hidden items-center justify-between bg-gray-900 px-8 py-4 md:flex">
         {showCancelButton ? (
           // Session-style: No back button, title only
           <h1 className="flex items-center gap-2 text-2xl">

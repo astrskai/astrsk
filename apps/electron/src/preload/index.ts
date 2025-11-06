@@ -12,6 +12,7 @@ import {
   CONFIG_CHANNEL,
   DEBUG_CHANNEL,
   DUMP_CHANNEL,
+  HTTP_PROXY_CHANNEL,
   TOP_BAR_CHANNEL,
   UPDATER_CHANNEL,
 } from "../shared/ipc-channels";
@@ -77,6 +78,60 @@ const api = {
     getConfig: (key: string): Promise<any> => ipcRenderer.invoke(CONFIG_CHANNEL.GET_CONFIG, key),
     setConfig: (key: string, value: any): Promise<void> =>
       ipcRenderer.invoke(CONFIG_CHANNEL.SET_CONFIG, key, value),
+  },
+  httpProxy: {
+    fetch: (options: {
+      url: string;
+      method: string;
+      headers?: Record<string, string>;
+      body?: any;
+      timeout?: number;
+    }): Promise<{
+      status: number;
+      statusText: string;
+      data: any;
+      headers: Record<string, string>;
+    }> => ipcRenderer.invoke(HTTP_PROXY_CHANNEL.FETCH, options),
+
+    // Streaming API
+    streamStart: (options: {
+      streamId: string;
+      url: string;
+      method: string;
+      headers?: Record<string, string>;
+      body?: any;
+      timeout?: number;
+    }): void => {
+      ipcRenderer.send(HTTP_PROXY_CHANNEL.STREAM_START, options);
+    },
+
+    streamAbort: (streamId: string): void => {
+      ipcRenderer.send(HTTP_PROXY_CHANNEL.STREAM_ABORT, { streamId });
+    },
+
+    onStreamChunk: (callback: (data: {
+      streamId: string;
+      chunk: string;
+      headers: Record<string, string>;
+      status: number;
+      statusText: string;
+    }) => void): (() => void) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on(HTTP_PROXY_CHANNEL.STREAM_CHUNK, listener);
+      return () => ipcRenderer.removeListener(HTTP_PROXY_CHANNEL.STREAM_CHUNK, listener);
+    },
+
+    onStreamEnd: (callback: (data: { streamId: string }) => void): (() => void) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on(HTTP_PROXY_CHANNEL.STREAM_END, listener);
+      return () => ipcRenderer.removeListener(HTTP_PROXY_CHANNEL.STREAM_END, listener);
+    },
+
+    onStreamError: (callback: (data: { streamId: string; error: string }) => void): (() => void) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on(HTTP_PROXY_CHANNEL.STREAM_ERROR, listener);
+      return () => ipcRenderer.removeListener(HTTP_PROXY_CHANNEL.STREAM_ERROR, listener);
+    },
   },
 };
 

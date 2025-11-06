@@ -130,7 +130,7 @@ export function FlowsListPage() {
   };
 
   return (
-    <div className="bg-background-surface-2 flex h-full w-full flex-col">
+    <div className="flex h-full w-full flex-col">
       {/* Hidden file input for import - triggers file selection */}
       <input
         ref={fileInputRef}

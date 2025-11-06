@@ -1,6 +1,5 @@
 import { Input, FileUploadButton } from "@/shared/ui/forms";
-import { CardType } from "@/entities/card/domain";
-import CardDisplay from "@/features/card/ui/card-display";
+import PlotPreview from "@/features/plot/ui/plot-preview";
 
 interface PlotImageStepProps {
   plotName: string;
@@ -9,7 +8,6 @@ interface PlotImageStepProps {
   onFileUpload: (file: File) => void;
 }
 
-const DEFAULT_PLOT_NAME = "New Plot";
 const ACCEPTED_FILE_TYPES = ".jpg,.jpeg,.png";
 
 /**
@@ -26,26 +24,20 @@ export function PlotImageStep({
   imageAssetId,
   onFileUpload,
 }: PlotImageStepProps) {
-  return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Basic Info
-        </h2>
-        <p className="text-text-secondary text-sm">
-          Set up the basic information for your plot.
-        </p>
-      </div>
+  // imageAssetId is now a blob URL (e.g., "blob:http://localhost:3000/...")
+  // Use it directly for PlotPreview
 
+  return (
+    <div className="flex flex-col gap-8">
       {/* Section 1: Plot Name */}
-      <div className="border-border rounded-2xl border-2 p-4 md:p-6">
+      <div>
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
-            <h3 className="text-text-primary mb-1 text-lg font-semibold">
-              Name your plot <span className="text-status-required">*</span>
+            <h3 className="mb-1 text-lg font-semibold text-gray-50">
+              Name your plot{" "}
+              <span className="text-normal-secondary">*</span>
             </h3>
-            <p className="text-text-secondary text-sm">Give your plot a name</p>
+            <p className="text-sm text-gray-200">Give your plot a name</p>
           </div>
 
           {/* Plot Name Input */}
@@ -60,8 +52,8 @@ export function PlotImageStep({
       </div>
 
       {/* Section 2: Plot Image */}
-      <div className="border-border rounded-2xl border-2 p-4 md:p-6">
-        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+      <div>
+        <div className="mx-auto flex max-w-3xl flex-col gap-4 lg:gap-6">
           <div>
             <h3 className="text-text-primary mb-1 text-lg font-semibold">
               Upload plot image
@@ -71,19 +63,22 @@ export function PlotImageStep({
             </p>
           </div>
 
-          {/* Card Preview - Centered */}
+          {/* Plot Preview - Center */}
           <div className="flex flex-col items-center gap-4">
-            <div className="@container w-full max-w-[320px]">
-              <CardDisplay
-                title={plotName || DEFAULT_PLOT_NAME}
-                type={CardType.Plot}
-                tags={[]}
-                tokenCount={0}
-                previewImageUrl={
+            <div className="w-full max-w-2xl space-y-2">
+              <span className="text-text-secondary flex items-center justify-center text-xs">
+                Plot Preview
+              </span>
+              <PlotPreview
+                title={plotName || "New Plot"}
+                imageUrl={
                   imageAssetId || "/img/placeholder/plot-card-image.png"
                 }
-                isSelected={false}
-                showActions={false}
+                summary="Plot summary"
+                tags={["tag1", "tag2"]}
+                tokenCount={0}
+                firstMessages={0}
+                isShowActions={false}
               />
             </div>
 

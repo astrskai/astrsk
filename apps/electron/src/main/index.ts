@@ -18,6 +18,7 @@ import icon from "../../resources/icon.png?asset";
 import { CONFIG_CHANNEL, TOP_BAR_CHANNEL } from "../shared/ipc-channels";
 import "./debug";
 import "./dump";
+import { initHttpProxy } from "./http-proxy";
 import { setTopBarCallbacks } from "./top-bar";
 import { initUpdater, setUpdaterCallbacks } from "./updater";
 
@@ -167,6 +168,9 @@ app.whenReady().then(() => {
   app.on("browser-window-created", (_, window) => {
     optimizer.watchWindowShortcuts(window, { zoom: true });
   });
+
+  // Initialize HTTP proxy for CORS-free localhost access
+  initHttpProxy();
 
   // Create main window.
   createMainWindow();

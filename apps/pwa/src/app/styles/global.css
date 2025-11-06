@@ -25,6 +25,9 @@
   --color-blue-300: #68c5f6;
   --color-blue-900: #0d4766;
 
+  /* Purple colors */
+  --color-purple-200: #b59eff;
+
   /* Gray colors */
   --color-gray-50: #f1f1f1;
   --color-gray-100: #d4d4d4;
@@ -40,6 +43,8 @@
   --color-dark-surface: #262626;
 
   /* Semantic colors */
+  --color-normal-primary: var(--color-blue-200);
+  --color-normal-secondary: var(--color-purple-200);
   --color-background-primary: var(--color-dark-surface);
 
   --color-text-primary: var(--color-gray-50);
@@ -177,9 +182,6 @@
   --color-blue-700: var(--color-blue-700);
   --color-blue-800: var(--color-blue-800);
 
-  /* Color palette - Purple */
-  --color-purple-200: var(--color-purple-200);
-
   /* Color palette - Yellow */
   --color-yellow-800: var(--color-yellow-800);
 
@@ -246,8 +248,6 @@
   --color-blue-500: #1ea9f2;
   --color-blue-700: #1578ac;
   --color-blue-800: #115d85;
-
-  --color-purple-200: #b59eff;
 
   --color-destructive-light: #dc2626;
   --color-destructive-dark: #7f1d1d;

@@ -1,0 +1,263 @@
+import { useState, useCallback, MouseEvent } from "react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+import { downloadFile } from "@/shared/lib";
+import { CardService } from "@/app/services/card-service";
+import { SessionService } from "@/app/services/session-service";
+import { cardQueries } from "@/entities/card/api/card-queries";
+import { TableName } from "@/db/schema/table-name";
+
+interface UseCardActionsOptions {
+  /**
+   * Entity type name for toast messages (e.g., "character", "plot")
+   * Defaults to "card"
+   */
+  entityType?: string;
+}
+
+interface DeleteDialogState {
+  isOpen: boolean;
+  cardId: string | null;
+  title: string;
+  usedSessionsCount: number;
+}
+
+interface LoadingStates {
+  [key: string]: {
+    exporting?: boolean;
+    copying?: boolean;
+    deleting?: boolean;
+  };
+}
+
+/**
+ * Hook for card action handlers (export, copy, delete)
+ * Provides state management and handlers for card operations
+ *
+ * Used by: characters-grid.tsx, plots-grid.tsx (CardDisplay)
+ *
+ * @example
+ * ```tsx
+ * const {
+ *   loadingStates,
+ *   deleteDialogState,
+ *   handleExport,
+ *   handleCopy,
+ *   handleDeleteClick,
+ *   handleDeleteConfirm,
+ *   closeDeleteDialog
+ * } = useCardActions({ entityType: "character" });
+ *
+ * const actions = [
+ *   { icon: Upload, onClick: handleExport(cardId, title), loading: loadingStates[cardId]?.exporting },
+ *   { icon: Copy, onClick: handleCopy(cardId, title), loading: loadingStates[cardId]?.copying },
+ *   { icon: Trash2, onClick: handleDeleteClick(cardId, title), loading: loadingStates[cardId]?.deleting },
+ * ];
+ * ```
+ */
+export function useCardActions(options: UseCardActionsOptions = {}) {
+  const { entityType = "card" } = options;
+  const queryClient = useQueryClient();
+
+  const [deleteDialogState, setDeleteDialogState] = useState<DeleteDialogState>({
+    isOpen: false,
+    cardId: null,
+    title: "",
+    usedSessionsCount: 0,
+  });
+
+  const [loadingStates, setLoadingStates] = useState<LoadingStates>({});
+
+  /**
+   * Export card to PNG file
+   */
+  const handleExport = useCallback(
+    (cardId: string, title: string) => async (e: MouseEvent) => {
+      e.stopPropagation();
+
+      setLoadingStates((prev) => ({
+        ...prev,
+        [cardId]: { ...prev[cardId] ?? {}, exporting: true },
+      }));
+
+      try {
+        const result = await CardService.exportCardToFile.execute({
+          cardId: new UniqueEntityID(cardId),
+          options: { format: "png" },
+        });
+
+        if (result.isFailure) {
+          toast.error("Failed to export", { description: result.getError() });
+          return;
+        }
+
+        downloadFile(result.getValue());
+        toast.success("Successfully exported!", {
+          description: `"${title}" exported`,
+        });
+      } catch (error) {
+        toast.error("Failed to export", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      } finally {
+        setLoadingStates((prev) => ({
+          ...prev,
+          [cardId]: { ...prev[cardId] ?? {}, exporting: false },
+        }));
+      }
+    },
+    [],
+  );
+
+  /**
+   * Clone/copy card
+   */
+  const handleCopy = useCallback(
+    (cardId: string, title: string) => async (e: MouseEvent) => {
+      e.stopPropagation();
+
+      setLoadingStates((prev) => ({
+        ...prev,
+        [cardId]: { ...prev[cardId] ?? {}, copying: true },
+      }));
+
+      try {
+        const result = await CardService.cloneCard.execute({
+          cardId: new UniqueEntityID(cardId),
+        });
+
+        if (result.isFailure) {
+          toast.error(`Failed to copy ${entityType}`, {
+            description: result.getError(),
+          });
+          return;
+        }
+
+        toast.success(`${entityType.charAt(0).toUpperCase() + entityType.slice(1)} copied`, {
+          description: `Created copy of "${title}"`,
+        });
+        await queryClient.invalidateQueries({ queryKey: cardQueries.lists() });
+      } catch (error) {
+        toast.error(`Failed to copy ${entityType}`, {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      } finally {
+        setLoadingStates((prev) => ({
+          ...prev,
+          [cardId]: { ...prev[cardId] ?? {}, copying: false },
+        }));
+      }
+    },
+    [entityType, queryClient],
+  );
+
+  /**
+   * Open delete confirmation dialog
+   * Fetches sessions using this card
+   */
+  const handleDeleteClick = useCallback(
+    (cardId: string, title: string) => async (e: MouseEvent) => {
+      e.stopPropagation();
+
+      try {
+        const result = await SessionService.listSessionByCard.execute({
+          cardId: new UniqueEntityID(cardId),
+        });
+        const usedSessionsCount = result.isSuccess
+          ? result.getValue().length
+          : 0;
+
+        setDeleteDialogState({
+          isOpen: true,
+          cardId,
+          title,
+          usedSessionsCount,
+        });
+      } catch (error) {
+        console.error("Failed to check used sessions:", error);
+        setDeleteDialogState({
+          isOpen: true,
+          cardId,
+          title,
+          usedSessionsCount: 0,
+        });
+      }
+    },
+    [],
+  );
+
+  /**
+   * Confirm and execute card deletion
+   */
+  const handleDeleteConfirm = useCallback(async () => {
+    const { cardId, title, usedSessionsCount } = deleteDialogState;
+    if (!cardId) return;
+
+    setLoadingStates((prev) => ({
+      ...prev,
+      [cardId]: { ...prev[cardId] ?? {}, deleting: true },
+    }));
+
+    try {
+      const result = await CardService.deleteCard.execute(
+        new UniqueEntityID(cardId),
+      );
+
+      if (result.isFailure) {
+        toast.error(`Failed to delete ${entityType}`, {
+          description: result.getError(),
+        });
+        return;
+      }
+
+      toast.success(`${entityType.charAt(0).toUpperCase() + entityType.slice(1)} deleted`, {
+        description: title
+      });
+      await queryClient.invalidateQueries({ queryKey: cardQueries.lists() });
+
+      if (usedSessionsCount > 0) {
+        await queryClient.invalidateQueries({
+          queryKey: [TableName.Sessions],
+        });
+      }
+
+      setDeleteDialogState({
+        isOpen: false,
+        cardId: null,
+        title: "",
+        usedSessionsCount: 0,
+      });
+    } catch (error) {
+      toast.error(`Failed to delete ${entityType}`, {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setLoadingStates((prev) => ({
+        ...prev,
+        [cardId]: { ...prev[cardId] ?? {}, deleting: false },
+      }));
+    }
+  }, [deleteDialogState, entityType, queryClient]);
+
+  /**
+   * Close delete dialog without deleting
+   */
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteDialogState((prev) => ({ ...prev, isOpen: false }));
+  }, []);
+
+  return {
+    // State
+    loadingStates,
+    deleteDialogState,
+
+    // Handlers
+    handleExport,
+    handleCopy,
+    handleDeleteClick,
+    handleDeleteConfirm,
+    closeDeleteDialog,
+  };
+}

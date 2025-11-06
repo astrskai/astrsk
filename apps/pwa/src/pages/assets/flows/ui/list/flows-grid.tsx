@@ -3,9 +3,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useCallback } from "react";
 import { Flow } from "@/entities/flow/domain/flow";
 import { FlowCard } from "./flow-card";
-import { NewFlowCard } from "./new-flow-card";
 import { Button } from "@/shared/ui/forms";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
+import { CreateItemCard } from "@/shared/ui";
 
 interface FlowsGridProps {
   flows: Flow[];
@@ -76,7 +76,12 @@ export function FlowsGrid({
       <div className="mx-auto grid w-full max-w-7xl auto-rows-fr grid-cols-1 justify-center gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Desktop: New Flow Card (inside grid) */}
         {showNewFlowCard && (
-          <NewFlowCard onClick={onCreateFlow} className="hidden md:block" />
+          <CreateItemCard
+            title="New Workflow"
+            description="Create a new workflow"
+            onClick={onCreateFlow}
+            className="hidden md:flex"
+          />
         )}
 
         {/* Existing Flows */}

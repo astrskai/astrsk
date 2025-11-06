@@ -1,7 +1,6 @@
 import { Avatar } from "@/shared/ui";
 import { Input, FileUploadButton } from "@/shared/ui/forms";
-import { CardType } from "@/entities/card/domain";
-import CardDisplay from "@/features/card/ui/card-display";
+import CharacterPreview from "@/features/character/ui/character-preview";
 
 interface CharacterImageStepProps {
   characterName: string;
@@ -30,28 +29,16 @@ export function CharacterImageStep({
   // Use it directly for both Avatar and CardDisplay preview
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Basic Info
-        </h2>
-        <p className="text-text-secondary text-sm">
-          Set up the basic information for your character.
-        </p>
-      </div>
-
+    <div className="flex flex-col gap-8">
       {/* Section 1: Character Name */}
-      <div className="border-border rounded-2xl border-2 p-4 md:p-6">
+      <div>
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
-            <h3 className="text-text-primary mb-1 text-lg font-semibold">
+            <h3 className="mb-1 text-lg font-semibold text-gray-50">
               Name your character{" "}
-              <span className="text-status-required">*</span>
+              <span className="text-normal-secondary">*</span>
             </h3>
-            <p className="text-text-secondary text-sm">
-              Give your character a name
-            </p>
+            <p className="text-sm text-gray-200">Give your character a name</p>
           </div>
 
           {/* Character Name Input */}
@@ -66,8 +53,8 @@ export function CharacterImageStep({
       </div>
 
       {/* Section 2: Character Image */}
-      <div className="border-border rounded-2xl border-2 p-4 md:p-6">
-        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+      <div>
+        <div className="mx-auto flex max-w-3xl flex-col gap-4 lg:gap-6">
           <div>
             <h3 className="text-text-primary mb-1 text-lg font-semibold">
               Upload character image
@@ -81,31 +68,32 @@ export function CharacterImageStep({
           <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
             {/* Avatar - Left side on desktop, top on mobile */}
             <div className="flex shrink-0 flex-col items-center gap-2">
+              <span className="text-text-secondary text-xs">
+                Avatar Preview
+              </span>
               <Avatar
                 src={avatarAssetId}
                 alt={characterName || "New Character"}
                 size={96}
                 className="ring-border ring-2"
               />
-              <span className="text-text-secondary text-xs">
-                Avatar Preview
-              </span>
             </div>
 
             {/* Card Preview - Center */}
             <div className="flex flex-1 flex-col items-center gap-4">
-              <div className="@container w-full max-w-[320px]">
-                <CardDisplay
+              <div className="w-full space-y-2">
+                <span className="text-text-secondary flex items-center justify-center text-xs">
+                  Character Preview
+                </span>
+                <CharacterPreview
                   title={characterName || "New Character"}
-                  name={characterName || "New Character"}
-                  type={CardType.Character}
-                  tags={[]}
-                  tokenCount={0}
-                  previewImageUrl={
+                  imageUrl={
                     avatarAssetId || "/img/placeholder/character-card-image.png"
                   }
-                  isSelected={false}
-                  showActions={false}
+                  summary="Character summary"
+                  tags={["tag1", "tag2"]}
+                  tokenCount={0}
+                  isShowActions={false}
                 />
               </div>
 

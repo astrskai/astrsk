@@ -71,6 +71,7 @@ import { logger } from "@/shared/lib/logger";
 import { TemplateRenderer } from "@/shared/lib/template-renderer";
 import { getTokenizer } from "@/shared/lib/tokenizer/tokenizer";
 import { translate } from "@/shared/lib/translate-utils";
+import { getAISDKFetch } from "@/shared/infra/electron-fetch";
 
 // Model mapping configuration for automatic fallback
 // When using AstrskAi, format must be "ApiSource:modelId"
@@ -612,6 +613,7 @@ const makeProvider = ({
       provider = createOpenAI({
         apiKey: apiKey,
         baseURL: oaiCompBaseUrl,
+        fetch: getAISDKFetch(), // Use Electron-aware fetch for CORS-free localhost access
       });
       break;
     }
@@ -679,6 +681,7 @@ const makeProvider = ({
       provider = createOpenAICompatible({
         name: "ollama",
         baseURL: ollamaBaseUrl,
+        fetch: getAISDKFetch(), // Use Electron-aware fetch for CORS-free localhost access
       });
       break;
     }
