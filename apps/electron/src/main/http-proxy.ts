@@ -163,8 +163,7 @@ export function initHttpProxy(): void {
           responseHeaders[key] = value;
         });
 
-        // Check if response is SSE
-        const contentType = response.headers.get("content-type");
+        // Check if response body exists
         if (!response.body) {
           throw new Error("Response body is null");
         }
