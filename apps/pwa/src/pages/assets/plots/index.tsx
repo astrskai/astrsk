@@ -59,7 +59,7 @@ export function PlotsListPage() {
   };
 
   return (
-    <div className="bg-background-surface-2 flex h-full w-full flex-col">
+    <div className="flex h-full w-full flex-col">
       {/* Hidden file input for import */}
       <input
         ref={fileInputRef}
