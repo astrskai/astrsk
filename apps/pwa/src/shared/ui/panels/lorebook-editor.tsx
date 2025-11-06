@@ -75,7 +75,10 @@ const DESCRIPTION_ROWS = 8;
 export const LorebookEditor = forwardRef<
   LorebookEditorRef,
   LorebookEditorProps
->(function LorebookEditor({ entries, onEntriesChange, onSelectedEntryChange }, ref) {
+>(function LorebookEditor(
+  { entries, onEntriesChange, onSelectedEntryChange },
+  ref,
+) {
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [newTag, setNewTag] = useState<string>("");
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -214,6 +217,7 @@ export const LorebookEditor = forwardRef<
                       e.stopPropagation();
                       handleDeleteEntry(entry.id);
                     }}
+                    aria-label={`Delete ${entry.name}`}
                     className="hover:text-status-destructive-light shrink-0 transition-colors"
                   >
                     <X size={16} />
@@ -260,12 +264,7 @@ export const LorebookEditor = forwardRef<
                     placeholder="Add tag..."
                     className="flex-1"
                   />
-                  <Button
-                    onClick={handleAddTag}
-                    size="md"
-                    variant="secondary"
-                    className="h-10"
-                  >
+                  <Button onClick={handleAddTag} size="md" variant="secondary">
                     Add
                   </Button>
                 </div>
@@ -279,6 +278,7 @@ export const LorebookEditor = forwardRef<
                         <span>{tag}</span>
                         <button
                           onClick={() => handleRemoveTag(tag)}
+                          aria-label={`Remove tag ${tag}`}
                           className="hover:text-status-destructive-light transition-colors"
                         >
                           <X size={12} />

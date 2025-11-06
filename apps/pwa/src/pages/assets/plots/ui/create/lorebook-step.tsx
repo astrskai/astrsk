@@ -72,13 +72,15 @@ export function PlotLorebookStep({
           onSelectedEntryChange={handleSelectedEntryChange}
         />
 
-        {/* Right: Variables Panel */}
-        <VariablesPanel
-          onVariableClick={insertVariable}
-          filterVariables={filterVariables}
-          isActive={!!selectedEntry}
-          inactiveMessage="Select an entry to insert variables"
-        />
+        {/* Right: Variables Panel - Sticky on desktop */}
+        <div className="lg:sticky lg:top-4 lg:self-start">
+          <VariablesPanel
+            onVariableClick={insertVariable}
+            filterVariables={filterVariables}
+            isActive={!!selectedEntry}
+            inactiveMessage="Select an entry to insert variables"
+          />
+        </div>
       </div>
     </div>
   );

@@ -117,9 +117,9 @@ export function PlotScenarioStep({
       </div>
 
       {/* Main Content - 2 Column Layout */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-start">
+      <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left: Scenarios List and Editor */}
-        <div className="border-border flex flex-1 flex-col rounded-lg border-2 bg-gray-900 p-2 md:p-4">
+        <div className="flex-1 bg-gray-900 p-2 md:p-4">
           <div className="flex flex-col gap-4 md:flex-row md:gap-6">
             {/* Scenarios List */}
             <div className="flex flex-col gap-2 md:w-64">
@@ -130,7 +130,7 @@ export function PlotScenarioStep({
                 <Button
                   onClick={handleAddScenario}
                   size="sm"
-                  variant="ghost"
+                  variant="secondary"
                   icon={<Plus size={16} />}
                 >
                   Add
@@ -149,7 +149,7 @@ export function PlotScenarioStep({
                       className={cn(
                         "flex cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm transition-colors",
                         selectedMessageId === scenario.id
-                          ? "bg-gray-700 text-text-primary"
+                          ? "text-text-primary bg-gray-700"
                           : "text-text-secondary hover:bg-gray-750",
                       )}
                       onClick={() => setSelectedMessageId(scenario.id)}
@@ -216,7 +216,7 @@ export function PlotScenarioStep({
         </div>
 
         {/* Right: Variables Panel - Sticky on desktop */}
-        <div className="md:sticky md:top-4 md:self-start">
+        <div className="lg:sticky lg:top-4 lg:self-start">
           <VariablesPanel
             onVariableClick={insertVariable}
             filterVariables={filterVariables}

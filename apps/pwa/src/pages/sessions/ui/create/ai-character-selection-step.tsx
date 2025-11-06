@@ -380,7 +380,7 @@ export function AiCharacterSelectionStep({
 
       {/* Character Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex h-[90dvh] max-h-[90dvh] flex-col gap-2">
+        <DialogContent className="flex h-[90dvh] max-h-[90dvh] max-w-5xl flex-col gap-2 md:max-w-6xl">
           <DialogHeader>
             {showMobileDetail && mobileDetailCharacter ? (
               <div className="flex items-center gap-2 md:hidden">
@@ -389,7 +389,9 @@ export function AiCharacterSelectionStep({
                   className="text-text-primary hover:text-primary flex items-center gap-2 transition-colors"
                 >
                   <ChevronLeft className="min-h-5 min-w-5" />
-                  <DialogTitle>{mobileDetailCharacter.props.title}</DialogTitle>
+                  <DialogTitle className="text-left">
+                    {mobileDetailCharacter.props.title}
+                  </DialogTitle>
                 </button>
               </div>
             ) : null}

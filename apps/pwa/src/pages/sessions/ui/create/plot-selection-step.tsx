@@ -60,6 +60,7 @@ const PlotPreviewItem = ({
           summary={card.props.cardSummary}
           tags={card.props.tags || []}
           tokenCount={card.props.tokenCount}
+          firstMessages={card.props.scenarios?.length || 0}
           className={cn(
             isSelected && "border-normal-primary border-2 shadow-lg",
           )}
@@ -111,6 +112,7 @@ const SelectedPlotCard = ({ card, onRemove }: SelectedPlotCardProps) => {
       summary={card.props.cardSummary}
       tags={card.props.tags || []}
       tokenCount={card.props.tokenCount}
+      firstMessages={card.props.scenarios?.length || 0}
       actions={actions}
       isShowActions={true}
     />
@@ -314,7 +316,7 @@ export function PlotSelectionStep({
 
       {/* Plot Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex h-[90dvh] max-h-[90dvh] flex-col gap-2">
+        <DialogContent className="flex h-[90dvh] max-h-[90dvh] max-w-5xl flex-col gap-2 md:max-w-6xl">
           <DialogHeader>
             {showMobileDetail && mobileDetailPlot ? (
               <div className="flex items-center gap-2 md:hidden">
@@ -323,7 +325,9 @@ export function PlotSelectionStep({
                   className="text-text-primary hover:text-primary flex items-center gap-2 transition-colors"
                 >
                   <ChevronLeft className="min-h-5 min-w-5" />
-                  <DialogTitle>{mobileDetailPlot.props.title}</DialogTitle>
+                  <DialogTitle className="text-left">
+                    {mobileDetailPlot.props.title}
+                  </DialogTitle>
                 </button>
               </div>
             ) : null}

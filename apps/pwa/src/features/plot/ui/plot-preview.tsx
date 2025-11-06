@@ -94,7 +94,10 @@ const PlotPreview = ({
           {actions.map((action, index) => (
             <button
               key={index}
-              onClick={action.onClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                action.onClick(e);
+              }}
               disabled={action.disabled}
               aria-label={action.label}
               className={cn(
