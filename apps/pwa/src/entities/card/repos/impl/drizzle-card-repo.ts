@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, ilike, inArray, or, SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, inArray, isNull, or, SQL } from "drizzle-orm";
 import { PgColumn } from "drizzle-orm/pg-core";
 
 import { Result } from "@/shared/core";
@@ -29,6 +29,20 @@ export class DrizzleCardRepo
 {
   // constructor(private updateLocalSyncMetadata: UpdateLocalSyncMetadata) {}
 
+  /**
+   * Helper method to mark a card as pending for sync
+   * Call this after any update to trigger background sync
+   *
+   * NOTE: Does NOT update updated_at - that's set by the actual data update
+   * This prevents sync loops where Electric sync triggers another pending state
+   */
+  private async markCardAsPending(db: any, cardId: UniqueEntityID): Promise<void> {
+    await db
+      .update(cards)
+      .set({ sync_status: 'pending' })
+      .where(eq(cards.id, cardId.toString()));
+  }
+
   async updateCardTitle(cardId: UniqueEntityID, title: string): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
@@ -36,7 +50,8 @@ export class DrizzleCardRepo
         .update(cards)
         .set({ title, updated_at: new Date() })
         .where(eq(cards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -54,7 +69,8 @@ export class DrizzleCardRepo
         .update(cards)
         .set({ card_summary: summary, updated_at: new Date() })
         .where(eq(cards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -72,7 +88,8 @@ export class DrizzleCardRepo
         .update(cards)
         .set({ version, updated_at: new Date() })
         .where(eq(cards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -90,7 +107,8 @@ export class DrizzleCardRepo
         .update(cards)
         .set({ conceptual_origin: conceptualOrigin, updated_at: new Date() })
         .where(eq(cards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -108,7 +126,8 @@ export class DrizzleCardRepo
         .update(cards)
         .set({ creator, updated_at: new Date() })
         .where(eq(cards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -126,7 +145,8 @@ export class DrizzleCardRepo
         .update(cards)
         .set({ tags, updated_at: new Date() })
         .where(eq(cards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -144,7 +164,10 @@ export class DrizzleCardRepo
       const cardRow = await db
         .select({ type: cards.type })
         .from(cards)
-        .where(eq(cards.id, cardId.toString()))
+        .where(and(
+          eq(cards.id, cardId.toString()),
+          isNull(cards.deleted_at) // Only active cards
+        ))
         .then(getOneOrThrow);
 
       if (cardRow.type === "character") {
@@ -160,7 +183,8 @@ export class DrizzleCardRepo
       } else {
         return Result.fail(`Card type ${cardRow.type} does not support lorebook`);
       }
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -179,7 +203,8 @@ export class DrizzleCardRepo
         .update(plotCards)
         .set({ scenarios, updated_at: new Date() })
         .where(eq(plotCards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -195,12 +220,13 @@ export class DrizzleCardRepo
     try {
       await db
         .update(cards)
-        .set({ 
-          icon_asset_id: iconAssetId ? iconAssetId.toString() : null, 
-          updated_at: new Date() 
+        .set({
+          icon_asset_id: iconAssetId ? iconAssetId.toString() : null,
+          updated_at: new Date()
         })
         .where(eq(cards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -218,7 +244,8 @@ export class DrizzleCardRepo
         .update(characterCards)
         .set({ name, updated_at: new Date() })
         .where(eq(characterCards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -236,7 +263,8 @@ export class DrizzleCardRepo
         .update(characterCards)
         .set({ description, updated_at: new Date() })
         .where(eq(characterCards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -254,7 +282,8 @@ export class DrizzleCardRepo
         .update(characterCards)
         .set({ example_dialogue: exampleDialogue, updated_at: new Date() })
         .where(eq(characterCards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -272,7 +301,8 @@ export class DrizzleCardRepo
         .update(plotCards)
         .set({ description, updated_at: new Date() })
         .where(eq(plotCards.id, cardId.toString()));
-      
+
+      await this.markCardAsPending(db, cardId);
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -300,6 +330,7 @@ export class DrizzleCardRepo
             set: {
               ...commonWithoutCreatedAt,
               updated_at: new Date(), // Update timestamp on conflict
+              sync_status: 'pending', // Reset sync status on update
             },
           })
           .returning()
@@ -364,13 +395,16 @@ export class DrizzleCardRepo
   ): Promise<Result<Card[]>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Select cards
+      // Select cards (only non-deleted)
       const rows = await db
         .select()
         .from(cards)
         .leftJoin(characterCards, eq(characterCards.id, cards.id))
         .leftJoin(plotCards, eq(plotCards.id, cards.id))
-        .where(cursor ? gt(cards.id, cursor.toString()) : undefined)
+        .where(and(
+          isNull(cards.deleted_at), // Only active cards
+          cursor ? gt(cards.id, cursor.toString()) : undefined
+        ))
         .limit(pageSize)
         .orderBy(asc(cards.id));
 
@@ -396,11 +430,14 @@ export class DrizzleCardRepo
   ): Promise<Result<Card>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Select card by id
+      // Select card by id (only if not deleted)
       const commonRow = await db
         .select()
         .from(cards)
-        .where(eq(cards.id, id.toString()))
+        .where(and(
+          eq(cards.id, id.toString()),
+          isNull(cards.deleted_at) // Only active cards
+        ))
         .then(getOneOrThrow);
 
       // Select each type
@@ -487,13 +524,16 @@ export class DrizzleCardRepo
           break;
       }
 
-      // Select cards
+      // Select cards (only non-deleted)
       const rows = await db
         .select()
         .from(cards)
         .leftJoin(characterCards, eq(characterCards.id, cards.id))
         .leftJoin(plotCards, eq(plotCards.id, cards.id))
-        .where(and(...filters))
+        .where(and(
+          isNull(cards.deleted_at), // Only active cards
+          ...filters
+        ))
         .limit(query.limit ?? 100)
         .offset(query.offset ?? 0)
         .orderBy(orderBy);
@@ -520,31 +560,41 @@ export class DrizzleCardRepo
   ): Promise<Result<Card>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Delete card by id
+      // Soft delete: set deleted_at timestamp and mark as pending for sync
       const deletedCommonRow = await db
-        .delete(cards)
+        .update(cards)
+        .set({
+          deleted_at: new Date(),
+          sync_status: 'pending', // Sync deletion to cloud
+          updated_at: new Date(),
+        })
         .where(eq(cards.id, id.toString()))
         .returning()
         .then(getOneOrThrow);
+
       const deletedRow: SelectCard = {
         common: deletedCommonRow,
       };
 
-      // Delete each type
+      // Fetch type-specific data for the deleted card
       if (deletedCommonRow.type === CardType.Character) {
-        const deletedCharacterRow = await db
-          .delete(characterCards)
+        const characterRow = await db
+          .select()
+          .from(characterCards)
           .where(eq(characterCards.id, id.toString()))
-          .returning()
-          .then(getOneOrThrow);
-        deletedRow.character = deletedCharacterRow;
+          .then((rows) => rows[0]);
+        if (characterRow) {
+          deletedRow.character = characterRow;
+        }
       } else if (deletedCommonRow.type === CardType.Plot) {
-        const deletedPlotRow = await db
-          .delete(plotCards)
+        const plotRow = await db
+          .select()
+          .from(plotCards)
           .where(eq(plotCards.id, id.toString()))
-          .returning()
-          .then(getOneOrThrow);
-        deletedRow.plot = deletedPlotRow;
+          .then((rows) => rows[0]);
+        if (plotRow) {
+          deletedRow.plot = plotRow;
+        }
       }
 
       // Update local sync metadata

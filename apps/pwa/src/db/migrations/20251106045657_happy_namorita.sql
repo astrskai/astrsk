@@ -1,0 +1,1 @@
+ALTER TABLE "cards" ADD COLUMN "deleted_at" timestamp;

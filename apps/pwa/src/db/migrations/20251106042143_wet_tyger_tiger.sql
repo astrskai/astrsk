@@ -1,0 +1,1 @@
+ALTER TABLE "cards" ADD COLUMN "sync_status" varchar DEFAULT 'pending' NOT NULL;

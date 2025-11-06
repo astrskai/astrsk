@@ -85,6 +85,28 @@ async function initializeApp() {
   // Init stores
   await initStores();
 
+  // Init Electric sync (if configured)
+  if (import.meta.env.VITE_ELECTRIC_URL) {
+    try {
+      const { Pglite } = await import('@/db/pglite');
+      const { initCardSync } = await import('@/db/sync-cards');
+      const db = await Pglite.getInstance();
+      await initCardSync(db);
+    } catch (error) {
+      console.warn('Electric sync failed (non-critical):', error);
+    }
+  }
+
+  // Start background sync worker (local → Postgres)
+  if (import.meta.env.VITE_POSTGRES_API_URL) {
+    try {
+      const { startSyncWorker } = await import('@/db/sync-worker');
+      await startSyncWorker();
+    } catch (error) {
+      console.warn('Background sync worker failed (non-critical):', error);
+    }
+  }
+
   // Render app
   if (isConvexReady && convex) {
     // Convex ready

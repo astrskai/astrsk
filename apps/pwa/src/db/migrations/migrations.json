@@ -117,5 +117,21 @@
     "bps": true,
     "folderMillis": 1758216748714,
     "hash": "b4e0d123a01e9ec664c53d5f7c6e284a150c464c422934d868a5770f8399f672"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"cards\" ADD COLUMN \"sync_status\" varchar DEFAULT 'pending' NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1762402903824,
+    "hash": "588058a8a281b5e0bad017031447f37d4749d16612f35d5456a4077510bcfdbd"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"cards\" ADD COLUMN \"deleted_at\" timestamp;"
+    ],
+    "bps": true,
+    "folderMillis": 1762405017683,
+    "hash": "5ce069085bca186774792a072c0b810e765a636d1a07bb02e4436d561c9893ad"
   }
 ]

@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CardService } from "@/app/services/card-service";
 import { cardKeys } from "./query-factory";
 import { UniqueEntityID } from "@/shared/domain";
+import { PostgresApiClient } from "@/db/postgres-api-client";
 
 /**
  * Hook for updating card title with edit mode support
@@ -1412,19 +1413,28 @@ export const useUpdatePlotDescription = (cardId: string) => {
 };
 
 /**
- * Hook for deleting a card
+ * Hook for deleting a card (soft delete)
+ *
+ * Marks the card as deleted locally by setting deleted_at timestamp.
+ * The background sync worker will sync this to Postgres, which Electric
+ * will then propagate to all browsers.
  */
 export const useDeleteCard = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (cardId: string) => {
+      // Soft delete from local PGlite (sets deleted_at + sync_status='pending')
       const result = await CardService.deleteCard.execute(
         new UniqueEntityID(cardId),
       );
       if (result.isFailure) {
         throw new Error(result.getError());
       }
+
+      // Background sync worker will handle syncing to Postgres
+      // No need to call API directly - soft deletes sync via Electric
+
       return cardId;
     },
 

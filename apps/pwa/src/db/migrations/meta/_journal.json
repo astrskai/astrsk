@@ -85,6 +85,20 @@
       "when": 1758216748714,
       "tag": "20250918173228_v3.0.0",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1762402903824,
+      "tag": "20251106042143_wet_tyger_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1762405017683,
+      "tag": "20251106045657_happy_namorita",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import Worker from "@/db/pglite-worker.ts?worker";
 import { logger } from "@/shared/lib/logger";
 import { PGliteInterface } from "@electric-sql/pglite";
 import { PGliteWorker } from "@electric-sql/pglite/worker";
+import { electricSync } from "@electric-sql/pglite-sync";
 import { Base64 } from "js-base64";
 import { file, write } from "opfs-tools";
 
@@ -96,7 +97,7 @@ export class Pglite {
         });
       }
 
-      // Create PGlite instance
+      // Create PGlite instance with Electric extension
       Pglite._instance = new PGliteWorker(
         new Worker({
           name: "pglite-worker",
@@ -104,6 +105,9 @@ export class Pglite {
         {
           dataDir: PGLITE_DATA_DIR,
           relaxedDurability: true,
+          extensions: {
+            electric: electricSync(),
+          },
         },
       );
 

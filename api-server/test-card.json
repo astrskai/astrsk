@@ -1,0 +1,29 @@
+{
+  "card": {
+    "common": {
+      "id": "test-card-123",
+      "title": "Test Card from API",
+      "icon_asset_id": null,
+      "type": "character",
+      "tags": ["test"],
+      "creator": "API Test",
+      "card_summary": "Testing the sync API",
+      "version": "1.0",
+      "conceptual_origin": null,
+      "vibe_session_id": null,
+      "image_prompt": null,
+      "sync_status": "pending",
+      "created_at": "2025-11-06T13:38:00Z",
+      "updated_at": "2025-11-06T13:38:00Z"
+    },
+    "character": {
+      "id": "test-card-123",
+      "name": "Test Character",
+      "description": "A test character to verify API",
+      "example_dialogue": "Hello, I am a test!",
+      "lorebook": null,
+      "created_at": "2025-11-06T13:38:00Z",
+      "updated_at": "2025-11-06T13:38:00Z"
+    }
+  }
+}

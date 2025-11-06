@@ -3,6 +3,7 @@ import {
   jsonb,
   pgTable,
   text,
+  timestamp,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -27,6 +28,8 @@ export const cards = pgTable(TableName.Cards, {
   conceptual_origin: varchar(),
   vibe_session_id: uuid(), // Reference to active vibe session
   image_prompt: text(), // Prompt for image generation
+  sync_status: varchar().default('pending').notNull(), // Track sync status: 'pending' | 'synced' | 'failed'
+  deleted_at: timestamp(), // Soft delete: null = active, timestamp = deleted
   ...timestamps,
 });
 
