@@ -8,9 +8,9 @@ import {
   PlotDescriptionStep,
   PlotLorebookStep,
   PlotScenarioStep,
-  type LorebookEntry,
   type Scenario,
 } from "./ui/create";
+import type { LorebookEntry } from "@/shared/ui/panels";
 import { AssetService } from "@/app/services/asset-service";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { CardService } from "@/app/services/card-service";
