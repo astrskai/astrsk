@@ -54,47 +54,103 @@ export async function electronAwareFetch(
         // Create ReadableStream to return
         const stream = new ReadableStream({
           start(controller) {
-            // Set up event listeners
+            let isStreamClosed = false;
+
+            // Safe controller operations that prevent crashes
+            const safeEnqueue = (chunk: Uint8Array) => {
+              if (isStreamClosed) return;
+              try {
+                controller.enqueue(chunk);
+              } catch (error) {
+                console.error('[Electron Stream] Error enqueueing chunk:', error);
+                isStreamClosed = true;
+              }
+            };
+
+            const safeClose = () => {
+              if (isStreamClosed) return;
+              try {
+                controller.close();
+                isStreamClosed = true;
+                window.api!.httpProxy!.removeStreamListeners();
+              } catch (error) {
+                console.error('[Electron Stream] Error closing stream:', error);
+                isStreamClosed = true;
+              }
+            };
+
+            const safeError = (err: Error) => {
+              if (isStreamClosed) return;
+              try {
+                controller.error(err);
+                isStreamClosed = true;
+                window.api!.httpProxy!.removeStreamListeners();
+              } catch (error) {
+                console.error('[Electron Stream] Error erroring stream:', error);
+                isStreamClosed = true;
+              }
+            };
+
+            // Set up event listeners with error handling
             window.api!.httpProxy!.onStreamChunk((data) => {
-              if (data.streamId === streamId) {
-                // Enqueue the chunk (SSE format: "data: {...}\n\n")
-                const encoder = new TextEncoder();
-                controller.enqueue(encoder.encode(`data: ${data.chunk}\n\n`));
+              try {
+                if (data.streamId === streamId && !isStreamClosed) {
+                  // Enqueue the chunk (SSE format: "data: {...}\n\n")
+                  const encoder = new TextEncoder();
+                  safeEnqueue(encoder.encode(`data: ${data.chunk}\n\n`));
+                }
+              } catch (error) {
+                console.error('[Electron Stream] Error in onStreamChunk:', error);
+                safeError(error instanceof Error ? error : new Error(String(error)));
               }
             });
 
             window.api!.httpProxy!.onStreamEnd((data) => {
-              if (data.streamId === streamId) {
-                controller.close();
-                window.api!.httpProxy!.removeStreamListeners();
+              try {
+                if (data.streamId === streamId) {
+                  safeClose();
+                }
+              } catch (error) {
+                console.error('[Electron Stream] Error in onStreamEnd:', error);
               }
             });
 
             window.api!.httpProxy!.onStreamError((data) => {
-              if (data.streamId === streamId) {
-                controller.error(new Error(data.error));
-                window.api!.httpProxy!.removeStreamListeners();
+              try {
+                if (data.streamId === streamId) {
+                  safeError(new Error(data.error));
+                }
+              } catch (error) {
+                console.error('[Electron Stream] Error in onStreamError:', error);
               }
             });
 
             // Handle abort signal
             if (init?.signal) {
               init.signal.addEventListener('abort', () => {
-                window.api!.httpProxy!.streamAbort(streamId);
-                controller.error(new DOMException('The operation was aborted', 'AbortError'));
-                window.api!.httpProxy!.removeStreamListeners();
+                try {
+                  window.api!.httpProxy!.streamAbort(streamId);
+                  safeError(new DOMException('The operation was aborted', 'AbortError'));
+                } catch (error) {
+                  console.error('[Electron Stream] Error in abort handler:', error);
+                }
               });
             }
 
-            // Start the stream
-            window.api!.httpProxy!.streamStart({
-              streamId,
-              url,
-              method: init?.method || "POST",
-              headers: headersObj,
-              body: init?.body as any,
-              timeout: 300000, // 5 minutes for streaming
-            });
+            // Start the stream with error handling
+            try {
+              window.api!.httpProxy!.streamStart({
+                streamId,
+                url,
+                method: init?.method || "POST",
+                headers: headersObj,
+                body: init?.body as any,
+                timeout: 300000, // 5 minutes for streaming
+              });
+            } catch (error) {
+              console.error('[Electron Stream] Error starting stream:', error);
+              safeError(error instanceof Error ? error : new Error(String(error)));
+            }
           },
         });
 

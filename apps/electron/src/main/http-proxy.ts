@@ -107,6 +107,19 @@ export function initHttpProxy(): void {
   const activeStreams = new Map<string, AbortController>();
 
   /**
+   * Safe IPC send that doesn't crash if renderer is destroyed
+   */
+  const safeSend = (event: IpcMainEvent, channel: string, data: any) => {
+    try {
+      if (!event.sender.isDestroyed()) {
+        event.sender.send(channel, data);
+      }
+    } catch (error) {
+      console.error(`[Electron Stream] Error sending to renderer (${channel}):`, error);
+    }
+  };
+
+  /**
    * Handle streaming requests (SSE from Ollama)
    */
   ipcMain.on(
@@ -123,7 +136,7 @@ export function initHttpProxy(): void {
         urlObj.hostname === "0.0.0.0";
 
       if (!isLocalhost) {
-        event.sender.send(HTTP_PROXY_CHANNEL.STREAM_ERROR, {
+        safeSend(event, HTTP_PROXY_CHANNEL.STREAM_ERROR, {
           streamId,
           error: `HTTP Proxy Error: Only localhost URLs are allowed, got: ${urlObj.hostname}`,
         });
@@ -180,7 +193,7 @@ export function initHttpProxy(): void {
             if (done) {
               // Send final buffer if exists
               if (buffer.trim()) {
-                event.sender.send(HTTP_PROXY_CHANNEL.STREAM_CHUNK, {
+                safeSend(event, HTTP_PROXY_CHANNEL.STREAM_CHUNK, {
                   streamId,
                   chunk: buffer,
                   headers: responseHeaders,
@@ -206,7 +219,7 @@ export function initHttpProxy(): void {
                   continue;
                 }
 
-                event.sender.send(HTTP_PROXY_CHANNEL.STREAM_CHUNK, {
+                safeSend(event, HTTP_PROXY_CHANNEL.STREAM_CHUNK, {
                   streamId,
                   chunk: data,
                   headers: responseHeaders,
@@ -218,15 +231,20 @@ export function initHttpProxy(): void {
           }
 
           // Stream complete
-          event.sender.send(HTTP_PROXY_CHANNEL.STREAM_END, { streamId });
+          safeSend(event, HTTP_PROXY_CHANNEL.STREAM_END, { streamId });
         } catch (error: any) {
+          // Always send errors via IPC instead of throwing (prevents main process crash)
           if (error.name === "AbortError") {
-            event.sender.send(HTTP_PROXY_CHANNEL.STREAM_ERROR, {
+            safeSend(event, HTTP_PROXY_CHANNEL.STREAM_ERROR, {
               streamId,
               error: "Stream aborted",
             });
           } else {
-            throw error;
+            console.error(`[Electron Stream] Error during streaming (${streamId}):`, error);
+            safeSend(event, HTTP_PROXY_CHANNEL.STREAM_ERROR, {
+              streamId,
+              error: `Stream error: ${error.message || String(error)}`,
+            });
           }
         } finally {
           activeStreams.delete(streamId);
@@ -235,12 +253,13 @@ export function initHttpProxy(): void {
         activeStreams.delete(streamId);
 
         if (error.name === "AbortError") {
-          event.sender.send(HTTP_PROXY_CHANNEL.STREAM_ERROR, {
+          safeSend(event, HTTP_PROXY_CHANNEL.STREAM_ERROR, {
             streamId,
             error: `HTTP Proxy Timeout: Request to ${url} exceeded ${timeout}ms`,
           });
         } else {
-          event.sender.send(HTTP_PROXY_CHANNEL.STREAM_ERROR, {
+          console.error(`[Electron Stream] Unhandled error in stream setup (${streamId}):`, error);
+          safeSend(event, HTTP_PROXY_CHANNEL.STREAM_ERROR, {
             streamId,
             error: `HTTP Proxy Error: ${error.message}`,
           });
