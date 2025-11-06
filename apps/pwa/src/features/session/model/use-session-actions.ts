@@ -8,15 +8,7 @@ import { SessionService } from "@/app/services/session-service";
 import { FlowService } from "@/app/services/flow-service";
 import { AgentService } from "@/app/services/agent-service";
 import { sessionQueries } from "@/entities/session/api";
-import { ModelTier } from "@/entities/agent/domain/agent";
-
-export interface AgentModelTierInfo {
-  agentId: string;
-  agentName: string;
-  modelName: string;
-  recommendedTier: ModelTier;
-  selectedTier: ModelTier;
-}
+import { ModelTier, AgentModelTierInfo } from "@/entities/agent/domain";
 
 interface DeleteDialogState {
   isOpen: boolean;
@@ -151,7 +143,8 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
           const agents: AgentModelTierInfo[] = [];
           for (const node of flowQuery.props.nodes) {
             if (node.type === "agent") {
-              const agentId = node.id;
+              // Agent nodes store agentId in node.data.agentId, fallback to node.id
+              const agentId = (node.data as any)?.agentId || node.id;
 
               // Fetch agent data
               const agentQuery = await queryClient.fetchQuery({

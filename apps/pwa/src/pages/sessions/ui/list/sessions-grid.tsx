@@ -16,7 +16,6 @@ import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
 import { SessionExportDialog } from "../dialog/session-export-dialog";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useAsset } from "@/shared/hooks/use-asset";
-import { useSessionValidation } from "@/shared/hooks/use-session-validation";
 import { cn } from "@/shared/lib";
 
 interface SessionsGridProps {
@@ -59,13 +58,13 @@ function SessionGridItem({
   const sessionId = session.id.toString();
   const messageCount = session.props.turnIds.length;
 
-  // Get session validation status
-  const { isValid, isFetched } = useSessionValidation(session.id);
-  const isInvalid = isFetched && !isValid;
-
   // Get session background image
   const backgroundId = session.props.backgroundId;
   const [coverImageUrl] = useAsset(backgroundId);
+
+  // Simple validation: check if session has AI character cards
+  // Avoid expensive per-card queries (useSessionValidation with nested flow queries)
+  const isInvalid = session.aiCharacterCardIds.length === 0;
 
   const actions: SessionAction[] = [
     {

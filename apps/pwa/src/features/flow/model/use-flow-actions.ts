@@ -8,19 +8,11 @@ import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { AgentService } from "@/app/services/agent-service";
 import { Session } from "@/entities/session/domain/session";
-import { ModelTier } from "@/entities/agent/domain/agent";
+import { ModelTier, AgentModelTierInfo } from "@/entities/agent/domain";
 import {
   useDeleteFlowWithNodes,
   useCloneFlowWithNodes,
 } from "@/entities/flow/api/mutations/flow-mutations";
-
-export interface AgentModelTierInfo {
-  agentId: string;
-  agentName: string;
-  modelName: string;
-  recommendedTier: ModelTier;
-  selectedTier: ModelTier;
-}
 
 interface DeleteDialogState {
   isOpen: boolean;
@@ -72,26 +64,32 @@ interface LoadingStates {
  * ];
  * ```
  */
-export function useFlowActions(options: { onCopySuccess?: (flowId: string) => void } = {}) {
+export function useFlowActions(
+  options: { onCopySuccess?: (flowId: string) => void } = {},
+) {
   const { onCopySuccess } = options;
   const queryClient = useQueryClient();
 
   const deleteFlowMutation = useDeleteFlowWithNodes();
   const cloneFlowMutation = useCloneFlowWithNodes();
 
-  const [deleteDialogState, setDeleteDialogState] = useState<DeleteDialogState>({
-    isOpen: false,
-    flowId: null,
-    title: "",
-    usedSessions: [],
-  });
+  const [deleteDialogState, setDeleteDialogState] = useState<DeleteDialogState>(
+    {
+      isOpen: false,
+      flowId: null,
+      title: "",
+      usedSessions: [],
+    },
+  );
 
-  const [exportDialogState, setExportDialogState] = useState<ExportDialogState>({
-    isOpen: false,
-    flowId: null,
-    title: "",
-    agents: [],
-  });
+  const [exportDialogState, setExportDialogState] = useState<ExportDialogState>(
+    {
+      isOpen: false,
+      flowId: null,
+      title: "",
+      agents: [],
+    },
+  );
 
   const [loadingStates, setLoadingStates] = useState<LoadingStates>({});
 
@@ -99,13 +97,17 @@ export function useFlowActions(options: { onCopySuccess?: (flowId: string) => vo
    * Open export dialog and fetch agent info
    */
   const handleExportClick = useCallback(
-    (flowId: string, title: string, flowNodes: { type: string; id: string }[]) =>
+    (
+      flowId: string,
+      title: string,
+      flowNodes: { type: string; id: string }[],
+    ) =>
       async (e: MouseEvent) => {
         e.stopPropagation();
 
         setLoadingStates((prev) => ({
           ...prev,
-          [flowId]: { ...prev[flowId] ?? {}, exporting: true },
+          [flowId]: { ...(prev[flowId] ?? {}), exporting: true },
         }));
 
         try {
@@ -115,7 +117,14 @@ export function useFlowActions(options: { onCopySuccess?: (flowId: string) => vo
           // Get agent data from flow nodes
           for (const node of flowNodes) {
             if (node.type === "agent") {
-              const agentId = node.id;
+              // Agent nodes store agentId in node.data.agentId, fallback to node.id
+              const agentId =
+                (node as { data?: { agentId?: string } }).data?.agentId ??
+                node.id;
+
+              if (!agentId) {
+                continue;
+              }
 
               // Fetch agent data
               const agentQuery = await queryClient.fetchQuery({
@@ -145,12 +154,13 @@ export function useFlowActions(options: { onCopySuccess?: (flowId: string) => vo
         } catch (error) {
           logger.error("Failed to prepare export:", error);
           toast.error("Failed to prepare export", {
-            description: error instanceof Error ? error.message : "Unknown error",
+            description:
+              error instanceof Error ? error.message : "Unknown error",
           });
         } finally {
           setLoadingStates((prev) => ({
             ...prev,
-            [flowId]: { ...prev[flowId] ?? {}, exporting: false },
+            [flowId]: { ...(prev[flowId] ?? {}), exporting: false },
           }));
         }
       },
@@ -161,7 +171,11 @@ export function useFlowActions(options: { onCopySuccess?: (flowId: string) => vo
    * Export flow with tier selections
    */
   const handleExportConfirm = useCallback(
-    async (flowId: string, title: string, modelTierSelections: Map<string, ModelTier>) => {
+    async (
+      flowId: string,
+      title: string,
+      modelTierSelections: Map<string, ModelTier>,
+    ) => {
       try {
         // Export flow to file with model tier selections
         const fileOrError = await FlowService.exportFlowWithNodes.execute({
@@ -185,7 +199,12 @@ export function useFlowActions(options: { onCopySuccess?: (flowId: string) => vo
           description: `"${title}" exported`,
         });
 
-        setExportDialogState({ isOpen: false, flowId: null, title: "", agents: [] });
+        setExportDialogState({
+          isOpen: false,
+          flowId: null,
+          title: "",
+          agents: [],
+        });
       } catch (error) {
         logger.error(error);
         toast.error("Failed to export", {
@@ -205,7 +224,7 @@ export function useFlowActions(options: { onCopySuccess?: (flowId: string) => vo
 
       setLoadingStates((prev) => ({
         ...prev,
-        [flowId]: { ...prev[flowId] ?? {}, copying: true },
+        [flowId]: { ...(prev[flowId] ?? {}), copying: true },
       }));
 
       try {
@@ -226,7 +245,7 @@ export function useFlowActions(options: { onCopySuccess?: (flowId: string) => vo
       } finally {
         setLoadingStates((prev) => ({
           ...prev,
-          [flowId]: { ...prev[flowId] ?? {}, copying: false },
+          [flowId]: { ...(prev[flowId] ?? {}), copying: false },
         }));
       }
     },
@@ -278,7 +297,7 @@ export function useFlowActions(options: { onCopySuccess?: (flowId: string) => vo
 
     setLoadingStates((prev) => ({
       ...prev,
-      [flowId]: { ...prev[flowId] ?? {}, deleting: true },
+      [flowId]: { ...(prev[flowId] ?? {}), deleting: true },
     }));
 
     try {
@@ -303,7 +322,7 @@ export function useFlowActions(options: { onCopySuccess?: (flowId: string) => vo
     } finally {
       setLoadingStates((prev) => ({
         ...prev,
-        [flowId]: { ...prev[flowId] ?? {}, deleting: false },
+        [flowId]: { ...(prev[flowId] ?? {}), deleting: false },
       }));
     }
   }, [deleteDialogState, deleteFlowMutation]);
@@ -319,7 +338,12 @@ export function useFlowActions(options: { onCopySuccess?: (flowId: string) => vo
    * Close export dialog without exporting
    */
   const closeExportDialog = useCallback(() => {
-    setExportDialogState({ isOpen: false, flowId: null, title: "", agents: [] });
+    setExportDialogState({
+      isOpen: false,
+      flowId: null,
+      title: "",
+      agents: [],
+    });
   }, []);
 
   return {

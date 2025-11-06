@@ -362,7 +362,7 @@ export function PlotSelectionStep({
               {/* Search Input */}
               <SearchInput
                 name="plot-search"
-                placeholder="Search plots..."
+                placeholder="Search scenarios..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="flex-shrink-0"
