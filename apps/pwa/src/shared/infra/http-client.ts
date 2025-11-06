@@ -12,8 +12,8 @@ if (isElectronEnvironment()) {
   httpClient.interceptors.request.use(async (config) => {
     const url = config.url || "";
 
-    // Proxy localhost/127.0.0.1 requests through Electron to avoid CORS
-    if ((url.includes("localhost") || url.includes("127.0.0.1")) && window.api?.httpProxy) {
+    // Proxy localhost/127.0.0.1/[::1] requests through Electron to avoid CORS
+    if ((url.includes("localhost") || url.includes("127.0.0.1") || url.includes("[::1]")) && window.api?.httpProxy) {
       try {
         const response = await window.api.httpProxy.fetch({
           url,

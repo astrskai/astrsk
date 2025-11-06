@@ -1,7 +1,15 @@
 import { isElectronEnvironment } from "@/shared/lib/environment";
 
 /**
+ * Generate unique stream ID
+ */
+function generateStreamId(): string {
+  return `stream-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
+/**
  * Custom fetch that proxies localhost requests through Electron to avoid CORS
+ * Supports both streaming and non-streaming requests
  * Falls back to native fetch for non-localhost URLs or when not in Electron
  */
 export async function electronAwareFetch(
@@ -13,18 +21,115 @@ export async function electronAwareFetch(
   // Check if we should proxy through Electron
   const shouldProxy =
     isElectronEnvironment() &&
-    (url.includes("localhost") || url.includes("127.0.0.1")) &&
+    (url.includes("localhost") || url.includes("127.0.0.1") || url.includes("[::1]")) &&
     window.api?.httpProxy;
 
   if (shouldProxy) {
     try {
-      const proxyResponse = await window.api!.httpProxy!.fetch({
+      // Convert Headers to plain object if necessary
+      let headersObj: Record<string, string> | undefined;
+      if (init?.headers) {
+        if (init.headers instanceof Headers) {
+          headersObj = {};
+          init.headers.forEach((value, key) => {
+            headersObj![key] = value;
+          });
+        } else if (Array.isArray(init.headers)) {
+          headersObj = Object.fromEntries(init.headers);
+        } else {
+          headersObj = init.headers as Record<string, string>;
+        }
+      }
+
+      // Check if request expects streaming (AI SDK sets this header for SSE)
+      const acceptHeader = headersObj?.['accept'] || headersObj?.['Accept'] || '';
+      const isStreamRequest = acceptHeader.includes('text/event-stream') ||
+                             acceptHeader.includes('text/plain') ||
+                             url.includes('/chat/completions'); // Ollama streaming endpoint
+
+      // Use streaming proxy if SSE is expected
+      if (isStreamRequest) {
+        const streamId = generateStreamId();
+
+        // Create ReadableStream to return
+        const stream = new ReadableStream({
+          start(controller) {
+            // Set up event listeners
+            window.api!.httpProxy!.onStreamChunk((data) => {
+              if (data.streamId === streamId) {
+                // Enqueue the chunk (SSE format: "data: {...}\n\n")
+                const encoder = new TextEncoder();
+                controller.enqueue(encoder.encode(`data: ${data.chunk}\n\n`));
+              }
+            });
+
+            window.api!.httpProxy!.onStreamEnd((data) => {
+              if (data.streamId === streamId) {
+                controller.close();
+                window.api!.httpProxy!.removeStreamListeners();
+              }
+            });
+
+            window.api!.httpProxy!.onStreamError((data) => {
+              if (data.streamId === streamId) {
+                controller.error(new Error(data.error));
+                window.api!.httpProxy!.removeStreamListeners();
+              }
+            });
+
+            // Handle abort signal
+            if (init?.signal) {
+              init.signal.addEventListener('abort', () => {
+                window.api!.httpProxy!.streamAbort(streamId);
+                controller.error(new DOMException('The operation was aborted', 'AbortError'));
+                window.api!.httpProxy!.removeStreamListeners();
+              });
+            }
+
+            // Start the stream
+            window.api!.httpProxy!.streamStart({
+              streamId,
+              url,
+              method: init?.method || "POST",
+              headers: headersObj,
+              body: init?.body as any,
+              timeout: 300000, // 5 minutes for streaming
+            });
+          },
+        });
+
+        // Return Response with ReadableStream body
+        return new Response(stream, {
+          status: 200,
+          statusText: "OK",
+          headers: new Headers({
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          }),
+        });
+      }
+
+      // Non-streaming request: use original fetch implementation
+      const abortPromise = init?.signal
+        ? new Promise<never>((_, reject) => {
+            init.signal!.addEventListener('abort', () => {
+              reject(new DOMException('The operation was aborted', 'AbortError'));
+            });
+          })
+        : null;
+
+      const fetchPromise = window.api!.httpProxy!.fetch({
         url,
         method: init?.method || "GET",
-        headers: init?.headers as Record<string, string> | undefined,
+        headers: headersObj,
         body: init?.body as any,
         timeout: 30000,
       });
+
+      const proxyResponse = await (abortPromise
+        ? Promise.race([fetchPromise, abortPromise])
+        : fetchPromise);
 
       // Convert proxy response to standard Response object
       return new Response(
