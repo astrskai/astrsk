@@ -117,14 +117,14 @@ export function PlotScenarioStep({
       </div>
 
       {/* Main Content - 2 Column Layout */}
-      <div className="flex flex-col gap-6 lg:flex-row">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start">
         {/* Left: Scenarios List and Editor */}
-        <div className="bg-background-surface-1 border-border flex-1 rounded-2xl border-2 p-4 md:p-6">
+        <div className="border-border flex flex-1 flex-col rounded-lg border-2 bg-gray-900 p-2 md:p-4">
           <div className="flex flex-col gap-4 md:flex-row md:gap-6">
             {/* Scenarios List */}
             <div className="flex flex-col gap-2 md:w-64">
               <div className="flex items-center justify-between">
-                <span className="text-text-primary text-sm font-medium">
+                <span className="text-text-secondary text-sm font-medium">
                   First message
                 </span>
                 <Button
@@ -137,9 +137,9 @@ export function PlotScenarioStep({
                 </Button>
               </div>
 
-              <div className="bg-background-surface-2 border-border flex flex-col gap-1 rounded-lg border p-2">
+              <div className="border-border flex flex-col gap-1 rounded-lg border bg-gray-800 p-2">
                 {scenarios.length === 0 ? (
-                  <div className="text-text-placeholder py-8 text-center text-xs">
+                  <div className="text-text-secondary py-8 text-center text-xs">
                     No first messages yet
                   </div>
                 ) : (
@@ -149,8 +149,8 @@ export function PlotScenarioStep({
                       className={cn(
                         "flex cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm transition-colors",
                         selectedMessageId === scenario.id
-                          ? "bg-background-surface-4 text-text-primary"
-                          : "text-text-secondary hover:bg-background-surface-3",
+                          ? "bg-gray-700 text-text-primary"
+                          : "text-text-secondary hover:bg-gray-750",
                       )}
                       onClick={() => setSelectedMessageId(scenario.id)}
                     >
@@ -202,7 +202,7 @@ export function PlotScenarioStep({
                   />
                 </>
               ) : (
-                <div className="text-text-placeholder border-border flex flex-1 items-center justify-center rounded-lg border py-12 text-sm">
+                <div className="text-text-secondary border-border flex flex-1 items-center justify-center rounded-lg border py-12 text-sm">
                   Select a message to edit or add a new one
                 </div>
               )}
@@ -215,13 +215,15 @@ export function PlotScenarioStep({
           </p>
         </div>
 
-        {/* Right: Variables Panel */}
-        <VariablesPanel
-          onVariableClick={insertVariable}
-          filterVariables={filterVariables}
-          isActive={!!selectedMessage}
-          inactiveMessage="Select a scenario to insert variables"
-        />
+        {/* Right: Variables Panel - Sticky on desktop */}
+        <div className="md:sticky md:top-4 md:self-start">
+          <VariablesPanel
+            onVariableClick={insertVariable}
+            filterVariables={filterVariables}
+            isActive={!!selectedMessage}
+            inactiveMessage="Select a scenario to insert variables"
+          />
+        </div>
       </div>
     </div>
   );

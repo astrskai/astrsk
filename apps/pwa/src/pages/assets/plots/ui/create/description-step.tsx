@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Textarea } from "@/shared/ui/forms";
 import { Variable } from "@/shared/prompt/domain/variable";
 import { VariablesPanel } from "@/shared/ui/panels";
@@ -7,10 +7,6 @@ interface PlotDescriptionStepProps {
   description: string;
   onDescriptionChange: (description: string) => void;
 }
-
-const DESCRIPTION_PLACEHOLDER =
-  "Describe your plot's setting, themes, and story elements...";
-const DESCRIPTION_VARIABLE = "{{plot.description}}";
 
 /**
  * Plot Description Step Component
@@ -23,7 +19,17 @@ export function PlotDescriptionStep({
   description,
   onDescriptionChange,
 }: PlotDescriptionStepProps) {
+  const [activeTextarea, setActiveTextarea] = useState<boolean>(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
+  // Filter out message-related variables
+  const filterVariables = useCallback(
+    (variable: Variable) =>
+      !variable.variable.includes("message") &&
+      !variable.variable.includes("history") &&
+      !variable.dataType.toLowerCase().includes("message"),
+    [],
+  );
 
   // Insert variable at cursor position
   const insertVariable = useCallback(
@@ -50,31 +56,22 @@ export function PlotDescriptionStep({
     [description, onDescriptionChange],
   );
 
-  // Filter out message-related variables
-  const filterVariables = useCallback(
-    (variable: Variable) =>
-      !variable.variable.includes("message") &&
-      !variable.variable.includes("history") &&
-      !variable.dataType.toLowerCase().includes("message"),
-    [],
-  );
-
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Plot Description
+          Add Your Plot Description*
         </h2>
         <p className="text-text-secondary text-sm">
-          Enter the description and details for your plot.
+          Describe your plot's setting, themes, and story elements.
         </p>
       </div>
 
       {/* Main Content - Flex Layout */}
       <div className="flex flex-col gap-6 md:flex-row md:items-start">
-        {/* Text Field */}
-        <div className="bg-black-alternate border-border flex-1 rounded-2xl border-2 p-4 md:p-6">
+        {/* Text Fields */}
+        <div className="border-border flex flex-1 flex-col rounded-lg border-2 bg-gray-900 p-2 md:p-4">
           <div className="flex flex-col gap-1">
             {/* Plot Description */}
             <Textarea
@@ -82,13 +79,14 @@ export function PlotDescriptionStep({
               label="Plot Description"
               value={description}
               onChange={(e) => onDescriptionChange(e.target.value)}
-              placeholder={DESCRIPTION_PLACEHOLDER}
+              onFocus={() => setActiveTextarea(true)}
+              placeholder="Describe your plot's setting, themes, and story elements..."
               required
               autoResize
               className="min-h-[300px]"
             />
-            <p className="text-text-secondary text-right text-xs">
-              {DESCRIPTION_VARIABLE}
+            <p className="text-right text-xs text-gray-300">
+              {`{{plot.description}}`}
             </p>
           </div>
         </div>
@@ -98,6 +96,8 @@ export function PlotDescriptionStep({
           <VariablesPanel
             onVariableClick={insertVariable}
             filterVariables={filterVariables}
+            isActive={activeTextarea}
+            inactiveMessage="Click in the text field to insert variables"
           />
         </div>
       </div>
