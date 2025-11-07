@@ -75,3 +75,9 @@ export * from "./list-edit-dialog-mobile";
 
 // Editor (already has its own index.ts)
 export * from "./editor";
+
+// File upload
+export * from "./file-drop-zone";
+
+// Chat
+export * from "./chat-bubble";

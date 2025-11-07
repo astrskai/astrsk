@@ -1,4 +1,4 @@
 // Create Character wizard step components
-export { CharacterImageStep } from "./image-step";
+export { CharacterBasicInfoStep } from "./basic-info";
 export { CharacterDescriptionStep } from "./description-step";
 export { CharacterLorebookStep } from "./lorebook-step";

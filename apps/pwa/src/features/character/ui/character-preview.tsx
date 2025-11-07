@@ -117,7 +117,7 @@ const CharacterPreview = ({
         src={imageUrl || PLACEHOLDER_IMAGE_URL}
         alt={title}
         className={cn(
-          "h-full w-24 flex-shrink-0 object-cover transition-transform duration-300 md:w-36",
+          "h-full w-1/4 flex-shrink-0 object-cover transition-transform duration-300",
           !isDisabled && "group-hover/preview:scale-105",
         )}
         loading="lazy"
@@ -138,7 +138,7 @@ const CharacterPreview = ({
         <div className="relative z-10 flex h-full flex-col justify-around gap-1 lg:justify-between lg:gap-2">
           <h3
             className={cn(
-              "text-base font-semibold text-gray-50 lg:text-lg",
+              "line-clamp-2 text-base font-semibold text-ellipsis text-gray-50 lg:text-lg",
               "transition-all duration-300 group-hover/preview:text-gray-200",
             )}
           >
@@ -146,7 +146,7 @@ const CharacterPreview = ({
           </h3>
           <p
             className={cn(
-              "line-clamp-2 text-xs lg:text-sm",
+              "line-clamp-2 text-xs text-ellipsis lg:text-sm",
               summary &&
                 "transition-all duration-300 group-hover/preview:text-gray-50",
             )}
@@ -157,8 +157,12 @@ const CharacterPreview = ({
             {tags.length > 0 ? getCompactedTagString(tags) : "No tags"}
           </div>
           <div className="flex items-center gap-1 text-xs lg:text-sm">
-            <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
-            Tokens
+            {tokenCount > 0 && (
+              <>
+                <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
+                Tokens
+              </>
+            )}
           </div>
         </div>
       </div>
