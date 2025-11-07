@@ -43,6 +43,7 @@ import { cardQueries, useUpdateCardLorebook } from "@/entities/card/api";
 
 // Import the sortable component
 import { SortableItem } from "./sortable-item";
+import { cn } from "@/shared/lib";
 
 // Import our abstraction
 import {
@@ -52,7 +53,9 @@ import {
   CardPanelEmpty,
 } from "@/features/card/panels/hooks/use-card-panel";
 
-interface LorebookPanelProps extends CardPanelProps {}
+interface LorebookPanelProps extends CardPanelProps {
+  className?: string;
+}
 
 interface LorebookEntry {
   id: string;
@@ -63,7 +66,7 @@ interface LorebookEntry {
   recallRange: number;
 }
 
-export function LorebookPanel({ cardId }: LorebookPanelProps) {
+export function LorebookPanel({ cardId, className }: LorebookPanelProps) {
   // 1. Mutation for updating lorebook
   const updateLorebook = useUpdateCardLorebook(cardId);
 
@@ -328,7 +331,10 @@ export function LorebookPanel({ cardId }: LorebookPanelProps) {
   return (
     <div
       ref={containerRef}
-      className="bg-background-surface-2 relative flex h-full flex-col"
+      className={cn(
+        "bg-background-surface-2 relative flex h-full flex-col",
+        className,
+      )}
     >
       <div className="flex-1 overflow-hidden p-2">
         {entries.length === 0 ? (
