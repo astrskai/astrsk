@@ -24,7 +24,7 @@ import { queryClient } from "@/shared/api/query-client";
 import { TableName } from "@/db/schema/table-name";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
-type Step = "basic-info" | "flow" | "ai-character" | "user-character" | "plot";
+type Step = "basic-info" | "flow" | "ai-character" | "user-character" | "scenario";
 
 const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
   [
@@ -37,7 +37,7 @@ const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
       number: 4,
       required: false,
     },
-    { id: "plot", label: "Plot", number: 5, required: false },
+    { id: "scenario", label: "Scenario", number: 5, required: false },
   ];
 
 /**
@@ -49,7 +49,7 @@ const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
  * 2. Flow - Select flow and agents
  * 3. AI Character - Select AI character cards
  * 4. User Character - Select user character card
- * 5. Plot - Select plot card
+ * 5. Scenario - Select scenario card
  */
 export function CreateSessionPage() {
   const navigate = useNavigate();
@@ -296,7 +296,7 @@ export function CreateSessionPage() {
             />
           )}
 
-          {currentStep === "plot" && (
+          {currentStep === "scenario" && (
             <PlotSelectionStep
               selectedPlot={selectedPlot}
               onPlotSelected={setSelectedPlot}

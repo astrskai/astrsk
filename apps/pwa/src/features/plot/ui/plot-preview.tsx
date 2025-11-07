@@ -36,8 +36,8 @@ const PlotPreview = ({
         <span
           key={`${title}-tag-${index}-${tag}`}
           className={cn(
-            "text-black-alternate rounded-md bg-gray-300/80 px-2.5 py-0.5 text-xs font-semibold lg:text-sm",
-            "transition-all duration-300 group-hover/preview:bg-gray-900/50 group-hover/preview:text-gray-50",
+            "rounded-md bg-gray-800/80 px-2.5 py-0.5 text-xs font-semibold text-gray-300 lg:text-sm",
+            "transition-all duration-300 group-hover/preview:bg-black/50 group-hover/preview:text-gray-50",
             index === 2 && "hidden lg:inline-flex",
           )}
         >
@@ -78,7 +78,7 @@ const PlotPreview = ({
         !isDisabled && onClick && "cursor-pointer",
         isDisabled
           ? "pointer-events-none"
-          : "group-hover/preview:border-gray-400 group-hover/preview:shadow-lg",
+          : "hover:border-gray-500 hover:shadow-lg",
         className,
       )}
       onClick={isDisabled ? undefined : onClick}
@@ -115,7 +115,7 @@ const PlotPreview = ({
         </div>
       )}
 
-      <div className="flex min-h-0 flex-[1_1_50%] items-center bg-gray-800">
+      <div className="flex min-h-0 flex-[1_1_50%] items-center space-x-2 bg-gray-900">
         <img
           src={imageUrl || PLACEHOLDER_IMAGE_URL}
           alt={title}

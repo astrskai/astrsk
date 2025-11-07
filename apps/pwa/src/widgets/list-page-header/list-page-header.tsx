@@ -173,7 +173,7 @@ export function ListPageHeader({
               icon={<Menu size={20} />}
               size="sm"
               aria-label="Menu"
-              className="bg-transparent"
+              className="border-0 bg-transparent"
               onClick={handleMenuClick}
             />
             <h1 className="text-text-primary text-lg font-semibold">
@@ -186,7 +186,7 @@ export function ListPageHeader({
               icon={<Ellipsis size={20} />}
               size="sm"
               aria-label="More options"
-              className="bg-transparent"
+              className="border-0 bg-transparent"
               onClick={onMoreClick}
             />
           </div>

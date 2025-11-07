@@ -6,8 +6,8 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/shared/ui/sheet";
-import { FolderOpen, Settings, LogIn } from "lucide-react";
-import { IconSessions } from "@/shared/assets/icons";
+import { Settings, LogIn } from "lucide-react";
+import { IconSessions, IconAssets } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 
 interface MobileMenuDrawerProps {
@@ -30,7 +30,7 @@ const MENU_ITEMS: Omit<MenuItemProps, "onClick">[] = [
   },
   {
     to: "/assets/characters",
-    icon: <FolderOpen size={20} />,
+    icon: <IconAssets className="h-5 w-5" />,
     label: "Assets",
   },
   {
@@ -98,7 +98,9 @@ export function MobileMenuDrawer({
 
         {/* Version Info */}
         <div className="border-border border-t px-4 py-3">
-          <p className="text-text-tertiary text-xs">Version {__APP_VERSION__}</p>
+          <p className="text-text-tertiary text-xs">
+            Version {__APP_VERSION__}
+          </p>
         </div>
       </SheetContent>
     </Sheet>

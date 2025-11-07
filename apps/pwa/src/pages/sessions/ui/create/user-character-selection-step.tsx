@@ -295,10 +295,11 @@ export function UserCharacterSelectionStep({
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-xl">
-          3. Select User Character&nbsp;(optional)
+          Select User Character&nbsp;(optional)
         </h2>
         <p className="text-text-secondary text-sm">
-          Choose your character role for session.
+          Select one character to play as in this session, or skip to continue
+          without one.
         </p>
       </div>
 

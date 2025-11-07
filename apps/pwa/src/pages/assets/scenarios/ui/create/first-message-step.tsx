@@ -5,15 +5,15 @@ import { cn } from "@/shared/lib";
 import { Variable } from "@/shared/prompt/domain/variable";
 import { VariablesPanel } from "@/shared/ui/panels";
 
-export interface Scenario {
+export interface FirstMessage {
   id: string;
   name: string;
   description: string;
 }
 
-interface PlotScenarioStepProps {
-  scenarios: Scenario[];
-  onScenariosChange: (scenarios: Scenario[]) => void;
+interface ScenarioFirstMessagesStepProps {
+  firstMessages: FirstMessage[];
+  onFirstMessagesChange: (firstMessages: FirstMessage[]) => void;
 }
 
 // Constants
@@ -21,24 +21,24 @@ const DEFAULT_MESSAGE_NAME_PREFIX = "Message";
 const DESCRIPTION_ROWS = 12;
 
 /**
- * Plot Message Step Component
- * Step 4 of the Create Plot Card wizard
+ * Scenario First Messages Step Component
+ * Step 4 of the Create Scenario Card wizard
  *
  * Fields (all optional):
  * - Messages:
  *   - Message Name: Name for the message
  *   - Description: Initial message content (supports variable insertion)
  */
-export function PlotScenarioStep({
-  scenarios,
-  onScenariosChange,
-}: PlotScenarioStepProps) {
+export function ScenarioFirstMessagesStep({
+  firstMessages,
+  onFirstMessagesChange,
+}: ScenarioFirstMessagesStepProps) {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(
     null,
   );
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
-  const selectedMessage = scenarios.find((s) => s.id === selectedMessageId);
+  const selectedMessage = firstMessages.find((s) => s.id === selectedMessageId);
 
   // Filter out message-related variables
   const filterVariables = useCallback(
@@ -49,13 +49,13 @@ export function PlotScenarioStep({
     [],
   );
 
-  const handleUpdateScenario = useCallback(
-    (id: string, updates: Partial<Scenario>) => {
-      onScenariosChange(
-        scenarios.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+  const handleUpdateFirstMessage = useCallback(
+    (id: string, updates: Partial<FirstMessage>) => {
+      onFirstMessagesChange(
+        firstMessages.map((s) => (s.id === id ? { ...s, ...updates } : s)),
       );
     },
-    [scenarios, onScenariosChange],
+    [firstMessages, onFirstMessagesChange],
   );
 
   // Insert variable at cursor position in description
@@ -74,7 +74,7 @@ export function PlotScenarioStep({
         variableText +
         currentDescription.substring(end);
 
-      handleUpdateScenario(selectedMessage.id, { description: newValue });
+      handleUpdateFirstMessage(selectedMessage.id, { description: newValue });
 
       // Set cursor position after the inserted variable
       setTimeout(() => {
@@ -83,24 +83,26 @@ export function PlotScenarioStep({
         textarea.setSelectionRange(newPosition, newPosition);
       }, 0);
     },
-    [selectedMessage, handleUpdateScenario],
+    [selectedMessage, handleUpdateFirstMessage],
   );
 
-  const handleAddScenario = () => {
-    const newScenario: Scenario = {
+  const handleAddFirstMessage = () => {
+    const newFirstMessage: FirstMessage = {
       id: crypto.randomUUID(),
-      name: `${DEFAULT_MESSAGE_NAME_PREFIX} ${scenarios.length + 1}`,
+      name: `${DEFAULT_MESSAGE_NAME_PREFIX} ${firstMessages.length + 1}`,
       description: "",
     };
-    onScenariosChange([...scenarios, newScenario]);
-    setSelectedMessageId(newScenario.id);
+    onFirstMessagesChange([...firstMessages, newFirstMessage]);
+    setSelectedMessageId(newFirstMessage.id);
   };
 
-  const handleDeleteScenario = (id: string) => {
-    const filtered = scenarios.filter((s) => s.id !== id);
-    onScenariosChange(filtered);
+  const handleDeleteFirstMessage = (id: string) => {
+    const filtered = firstMessages.filter(
+      (firstMessage) => firstMessage.id !== id,
+    );
+    onFirstMessagesChange(filtered);
     if (selectedMessageId === id) {
-      setSelectedMessageId(filtered[0]?.id || null);
+      setSelectedMessageId(filtered[0]?.id || "");
     }
   };
 
@@ -109,10 +111,10 @@ export function PlotScenarioStep({
       {/* Header */}
       <div>
         <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Plot Scenario
+          Add First Messages
         </h2>
         <p className="text-text-secondary text-sm">
-          Define first messages and story setups for your plot (optional).
+          Create the opening message that set the scene (optional).
         </p>
       </div>
 
@@ -128,7 +130,7 @@ export function PlotScenarioStep({
                   First message
                 </span>
                 <Button
-                  onClick={handleAddScenario}
+                  onClick={handleAddFirstMessage}
                   size="sm"
                   variant="secondary"
                   icon={<Plus size={16} />}
@@ -138,27 +140,27 @@ export function PlotScenarioStep({
               </div>
 
               <div className="border-border flex flex-col gap-1 rounded-lg border bg-gray-800 p-2">
-                {scenarios.length === 0 ? (
+                {firstMessages.length === 0 ? (
                   <div className="text-text-secondary py-8 text-center text-xs">
                     No first messages yet
                   </div>
                 ) : (
-                  scenarios.map((scenario) => (
+                  firstMessages.map((firstMessage) => (
                     <div
-                      key={scenario.id}
+                      key={firstMessage.id}
                       className={cn(
                         "flex cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm transition-colors",
-                        selectedMessageId === scenario.id
+                        selectedMessageId === firstMessage.id
                           ? "text-text-primary bg-gray-700"
                           : "text-text-secondary hover:bg-gray-750",
                       )}
-                      onClick={() => setSelectedMessageId(scenario.id)}
+                      onClick={() => setSelectedMessageId(firstMessage.id)}
                     >
-                      <span className="truncate">{scenario.name}</span>
+                      <span className="truncate">{firstMessage.name}</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteScenario(scenario.id);
+                          handleDeleteFirstMessage(firstMessage.id);
                         }}
                         className="hover:text-status-destructive-light shrink-0 transition-colors"
                       >
@@ -170,30 +172,30 @@ export function PlotScenarioStep({
               </div>
             </div>
 
-            {/* Scenario Editor */}
+            {/* First Message Editor */}
             <div className="flex flex-1 flex-col gap-4">
               {selectedMessage ? (
                 <>
-                  {/* Scenario Name */}
+                  {/* First Message Name */}
                   <Input
                     label="First Message Name"
                     type="text"
                     value={selectedMessage.name}
                     onChange={(e) =>
-                      handleUpdateScenario(selectedMessage.id, {
+                      handleUpdateFirstMessage(selectedMessage.id, {
                         name: e.target.value,
                       })
                     }
                     placeholder="Enter message name"
                   />
 
-                  {/* Description */}
+                  {/* First Message Description */}
                   <Textarea
                     ref={descriptionRef}
                     label="Description"
                     value={selectedMessage.description}
                     onChange={(e) =>
-                      handleUpdateScenario(selectedMessage.id, {
+                      handleUpdateFirstMessage(selectedMessage.id, {
                         description: e.target.value,
                       })
                     }
@@ -221,7 +223,7 @@ export function PlotScenarioStep({
             onVariableClick={insertVariable}
             filterVariables={filterVariables}
             isActive={!!selectedMessage}
-            inactiveMessage="Select a scenario to insert variables"
+            inactiveMessage="Select a first message to insert variables"
           />
         </div>
       </div>

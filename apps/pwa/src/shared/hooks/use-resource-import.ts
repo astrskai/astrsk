@@ -81,7 +81,7 @@ export function useResourceImport() {
           if (hasCharacter && !hasPlot) {
             navigate({ to: "/assets/characters" });
           } else if (hasPlot && !hasCharacter) {
-            navigate({ to: "/assets/plots" });
+            navigate({ to: "/assets/scenarios" });
           } else if (hasCharacter && hasPlot) {
             navigate({ to: "/assets/characters" });
           }
@@ -116,7 +116,7 @@ export function useResourceImport() {
             if (hasCharacter && !hasPlot) {
               navigate({ to: "/assets/characters" });
             } else if (hasPlot && !hasCharacter) {
-              navigate({ to: "/assets/plots" });
+              navigate({ to: "/assets/scenarios" });
             } else if (hasCharacter && hasPlot) {
               navigate({ to: "/assets/characters" });
             }

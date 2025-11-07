@@ -26,18 +26,8 @@ export function BasicInfoStep({
 }: BasicInfoStepProps) {
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Basic Info
-        </h2>
-        <p className="text-text-secondary text-sm">
-          Set up the basic information for your session.
-        </p>
-      </div>
-
       {/* Section 1: Session Name */}
-      <div className="border-border rounded-2xl border-2 p-4 md:p-6">
+      <div>
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
             <h3 className="text-text-primary mb-1 text-lg font-semibold">

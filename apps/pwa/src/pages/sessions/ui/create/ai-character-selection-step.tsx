@@ -314,7 +314,7 @@ export function AiCharacterSelectionStep({
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-xl">
-          2. Add AI Characters&nbsp;
+          Add AI Characters&nbsp;
           <span className="text-status-required">(Minimum 1)*</span>
         </h2>
         <p className="text-text-secondary text-sm">

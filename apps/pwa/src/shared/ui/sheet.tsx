@@ -73,8 +73,8 @@ const SheetContent = React.forwardRef<
         {...props}
       >
         {!hideClose && (
-          <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-            <X className="min-w-[24px] min-h-[24px]" />
+          <SheetPrimitive.Close className="ring-offset-background data-[state=open]:bg-secondary absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none">
+            <X className="min-h-[24px] min-w-[24px]" />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}
@@ -118,7 +118,7 @@ const SheetFooter = ({
 }: React.HTMLAttributes<HTMLDivElement> & { variant?: "edit" }) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-auto",
+      "mt-auto flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
       variant === "edit" && "bg-background border-t p-4",
       className,
     )}
@@ -133,7 +133,7 @@ const SheetTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Title
     ref={ref}
-    className={cn("text-lg font-semibold text-foreground", className)}
+    className={cn("text-foreground text-lg font-semibold", className)}
     {...props}
   />
 ));
@@ -145,7 +145,7 @@ const SheetDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-muted-foreground text-sm", className)}
     {...props}
   />
 ));

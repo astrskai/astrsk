@@ -104,13 +104,13 @@ export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
 
   const handlePlotClick = (plotId: string) => {
     navigate({
-      to: "/assets/plots/$plotId",
-      params: { plotId },
+      to: "/assets/scenarios/$scenarioId",
+      params: { scenarioId: plotId },
     });
   };
 
   const handleCreatePlot = () => {
-    navigate({ to: "/assets/plots/new" });
+    navigate({ to: "/assets/scenarios/new" });
   };
 
   return (
@@ -123,7 +123,7 @@ export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
             icon={<Plus className="min-h-4 min-w-4" />}
             className="w-full md:hidden"
           >
-            Create new plot
+            Create new scenario
           </Button>
         )}
 
@@ -132,8 +132,8 @@ export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
           {/* Desktop: New Plot Card (inside grid) */}
           {showNewPlotCard && (
             <CreateItemCard
-              title="New Plot"
-              description="Create a new plot"
+              title="New Scenario"
+              description="Create a new scenario"
               onClick={handleCreatePlot}
               className="hidden aspect-[2/1] md:flex lg:aspect-[3/1.2]"
             />
@@ -163,11 +163,11 @@ export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
         open={deleteDialogState.isOpen}
         onOpenChange={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}
-        title="Delete Plot"
+        title="Delete Scenario"
         description={
           deleteDialogState.usedSessionsCount > 0
-            ? `This plot is used in ${deleteDialogState.usedSessionsCount} session(s). Deleting it may affect those sessions.`
-            : "This plot will be permanently deleted and cannot be recovered."
+            ? `This scenario is used in ${deleteDialogState.usedSessionsCount} session(s). Deleting it may affect those sessions.`
+            : "This scenario will be permanently deleted and cannot be recovered."
         }
         confirmLabel="Delete"
         cancelLabel="Cancel"

@@ -82,8 +82,8 @@ const CardItem = ({
       });
     } else if (card.props.type === CardType.Plot) {
       navigate({
-        to: "/assets/plots/$plotId",
-        params: { plotId: cardId.toString() },
+        to: "/assets/scenarios/$scenarioId",
+        params: { scenarioId: cardId.toString() },
       });
     }
   }, [cardId, card, navigate, setSelectedCardId]);
@@ -132,11 +132,11 @@ const CardItem = ({
         to:
           clonedCard.props.type === CardType.Character
             ? "/assets/characters/$characterId"
-            : "/assets/plots/$plotId",
+            : "/assets/scenarios/$scenarioId",
         params:
           clonedCard.props.type === CardType.Character
             ? { characterId: clonedCard.id.toString() }
-            : { plotId: clonedCard.id.toString() },
+            : { scenarioId: clonedCard.id.toString() },
       });
 
       // Invalidate card queries

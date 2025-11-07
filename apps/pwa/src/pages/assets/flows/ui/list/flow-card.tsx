@@ -19,7 +19,6 @@ import {
   AgentModelTierInfo,
 } from "../dialog/flow-export-dialog";
 import { toast } from "sonner";
-import { useNavigate } from "@tanstack/react-router";
 import { useAgentStore } from "@/shared/stores/agent-store";
 import { useQueryClient } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
@@ -60,7 +59,6 @@ export function FlowCard({
   const hasDataStoreFields = dataStoreFields.length > 0;
 
   // Navigation and store
-  const navigate = useNavigate();
   const selectedFlowId = useAgentStore.use.selectedFlowId();
   const selectFlowId = useAgentStore.use.selectFlowId();
 
@@ -241,7 +239,6 @@ export function FlowCard({
     deleteFlowMutation,
     selectedFlowId,
     selectFlowId,
-    navigate,
   ]);
 
   return (

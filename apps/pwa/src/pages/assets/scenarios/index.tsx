@@ -73,7 +73,7 @@ export function PlotsListPage() {
       <ListPageHeader
         title="Assets"
         tabs={ASSET_TABS}
-        activeTab="plots"
+        activeTab="scenario"
         keyword={keyword}
         onKeywordChange={setKeyword}
         onImportClick={handleImport}

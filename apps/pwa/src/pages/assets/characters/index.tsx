@@ -74,7 +74,7 @@ export function CharactersListPage() {
       <ListPageHeader
         title="Assets"
         tabs={ASSET_TABS}
-        activeTab="characters"
+        activeTab="character"
         keyword={keyword}
         onKeywordChange={setKeyword}
         onImportClick={handleImport}

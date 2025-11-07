@@ -21,7 +21,7 @@ export function CreateItemCard({
   return (
     <article
       className={cn(
-        "group/create-item-card bg-black-alternate relative flex w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-700 transition-all duration-300 hover:border-gray-100 hover:bg-gray-900",
+        "group/create-item-card bg-black-alternate relative flex aspect-[1/1] w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-700 transition-all duration-300 hover:border-gray-100 hover:bg-gray-900",
         className,
       )}
       onClick={onClick ?? undefined}
