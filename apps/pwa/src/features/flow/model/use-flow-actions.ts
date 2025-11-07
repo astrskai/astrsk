@@ -58,7 +58,7 @@ interface LoadingStates {
  * } = useFlowActions({ onCopySuccess });
  *
  * const actions = [
- *   { icon: Upload, onClick: handleExportClick(flowId, title, flow), loading: loadingStates[flowId]?.exporting },
+ *   { icon: Upload, onClick: handleExportClick(flowId, title), loading: loadingStates[flowId]?.exporting },
  *   { icon: Copy, onClick: handleCopy(flowId, title), loading: loadingStates[flowId]?.copying },
  *   { icon: Trash2, onClick: handleDeleteClick(flowId, title), loading: loadingStates[flowId]?.deleting },
  * ];
@@ -97,11 +97,7 @@ export function useFlowActions(
    * Open export dialog and fetch agent info
    */
   const handleExportClick = useCallback(
-    (
-      flowId: string,
-      title: string,
-      flowNodes: { type: string; id: string }[],
-    ) =>
+    (flowId: string, title: string) =>
       async (e: MouseEvent) => {
         e.stopPropagation();
 
@@ -111,16 +107,31 @@ export function useFlowActions(
         }));
 
         try {
+          // Get flow with nodes to access node graph
+          const flowQuery = await queryClient.fetchQuery({
+            queryKey: ["flow-with-nodes", flowId.toString()],
+            queryFn: async () => {
+              const result = await FlowService.getFlowWithNodes.execute(
+                new UniqueEntityID(flowId),
+              );
+              if (result.isFailure) throw new Error(result.getError());
+              return result.getValue();
+            },
+          });
+
+          if (!flowQuery) {
+            toast.error("Failed to load flow");
+            return;
+          }
+
           // Get agents for this flow
           const agents: AgentModelTierInfo[] = [];
 
           // Get agent data from flow nodes
-          for (const node of flowNodes) {
+          for (const node of flowQuery.props.nodes) {
             if (node.type === "agent") {
               // Agent nodes store agentId in node.data.agentId, fallback to node.id
-              const agentId =
-                (node as { data?: { agentId?: string } }).data?.agentId ??
-                node.id;
+              const agentId = (node.data as any)?.agentId || node.id;
 
               if (!agentId) {
                 continue;

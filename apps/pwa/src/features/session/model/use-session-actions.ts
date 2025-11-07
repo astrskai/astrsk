@@ -124,11 +124,11 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
             return;
           }
 
-          // Get flow to find agents
+          // Get flow with nodes to find agents
           const flowQuery = await queryClient.fetchQuery({
-            queryKey: ["flow", flowId.toString()],
+            queryKey: ["flow-with-nodes", flowId.toString()],
             queryFn: async () => {
-              const result = await FlowService.getFlow.execute(flowId);
+              const result = await FlowService.getFlowWithNodes.execute(flowId);
               if (result.isFailure) throw new Error(result.getError());
               return result.getValue();
             },

@@ -32,7 +32,6 @@ interface FlowGridItemProps {
   onExportClick: (
     flowId: string,
     title: string,
-    flowNodes: { type: string; id: string }[],
   ) => (e: React.MouseEvent) => void;
   onCopy: (flowId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
@@ -57,7 +56,7 @@ function FlowGridItem({
     {
       icon: Upload,
       label: `Export ${flow.props.name}`,
-      onClick: onExportClick(flowId, flow.props.name, flow.props.nodes),
+      onClick: onExportClick(flowId, flow.props.name),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
