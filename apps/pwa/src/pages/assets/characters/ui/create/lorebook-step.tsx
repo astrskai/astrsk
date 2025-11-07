@@ -84,6 +84,7 @@ export function CharacterLorebookStep({
             filterVariables={filterVariables}
             isActive={!!selectedEntry}
             inactiveMessage="Select an entry to insert variables"
+            className="hidden md:block"
           />
         </div>
       </div>

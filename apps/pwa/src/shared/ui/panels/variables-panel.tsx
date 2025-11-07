@@ -6,6 +6,7 @@ import {
   VariableGroupLabel,
 } from "@/shared/prompt/domain/variable";
 import { SearchInput } from "@/shared/ui/forms";
+import { cn } from "@/shared/lib";
 
 export interface VariablesPanelProps {
   /**
@@ -42,6 +43,7 @@ export interface VariablesPanelProps {
    * @default true
    */
   isActive?: boolean;
+  className?: string;
 }
 
 /**
@@ -72,6 +74,7 @@ export function VariablesPanel({
   filterVariables,
   inactiveMessage,
   isActive = true,
+  className,
 }: VariablesPanelProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(),
@@ -127,10 +130,15 @@ export function VariablesPanel({
   }, []);
 
   return (
-    <div className="border-border w-full rounded-lg border-2 bg-gray-900 md:w-95">
+    <div
+      className={cn(
+        "w-full overflow-hidden rounded-lg bg-gray-900 md:w-95",
+        className,
+      )}
+    >
       <div className="flex max-h-[750px] flex-col">
         {/* Header - Fixed */}
-        <div className="border-border flex-shrink-0 space-y-2 border-b p-4">
+        <div className="flex-shrink-0 space-y-2 border-b border-gray-800 p-4">
           <h3 className="text-text-secondary text-base font-medium">
             Variables
           </h3>
@@ -155,7 +163,7 @@ export function VariablesPanel({
 
         {/* Scrollable Content */}
         {isActive && (
-          <div className="flex-1 overflow-y-auto">
+          <div className="custom-scrollbar flex-1 overflow-y-auto">
             <div className="flex flex-col">
               {Object.entries(groupedVariables).map(([group, variables]) => (
                 <div key={group} className="flex flex-col">
@@ -163,7 +171,7 @@ export function VariablesPanel({
                   <button
                     type="button"
                     onClick={() => toggleGroupCollapse(group)}
-                    className="border-border flex items-start justify-between border-b px-4 py-3 transition-colors hover:bg-gray-800"
+                    className="flex items-start justify-between border-b border-gray-800 px-4 py-3 transition-colors hover:bg-gray-800"
                   >
                     <div className="flex flex-col items-start gap-1">
                       <div className="text-xs font-medium text-gray-200">

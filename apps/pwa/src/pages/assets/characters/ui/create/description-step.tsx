@@ -112,7 +112,7 @@ export function CharacterDescriptionStep({
               placeholder="Describe your character's personality, traits, and background..."
               required
               autoResize
-              className="min-h-[300px]"
+              className="min-h-[300px] md:min-h-[620px]"
             />
             <p className="text-right text-xs text-gray-300">
               {`{{char.description}}`}
@@ -160,6 +160,7 @@ export function CharacterDescriptionStep({
             filterVariables={filterVariables}
             isActive={!!activeTextarea}
             inactiveMessage="Click in a text field to insert variables"
+            className="hidden md:block"
           />
         </div>
       </div>

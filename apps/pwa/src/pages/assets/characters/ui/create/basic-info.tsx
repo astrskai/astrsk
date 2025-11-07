@@ -68,25 +68,13 @@ export function CharacterBasicInfoStep({
       {/* Section 2: Character Image */}
       <div>
         <div className="mx-auto flex max-w-3xl flex-col gap-4 lg:gap-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-text-primary mb-1 text-base font-semibold md:text-lg">
-                Upload character image and preview
-              </h3>
-              <p className="text-text-secondary text-xs md:text-sm">
-                Any JPG, JPEG, or PNG. 500x416 pixels for best display.
-              </p>
-            </div>
-            {imageUrl && (
-              <button
-                className={cn(
-                  "cursor-pointer text-sm text-gray-200 hover:text-gray-50",
-                )}
-                onClick={handleDeleteImage}
-              >
-                <Trash2 size={20} />
-              </button>
-            )}
+          <div>
+            <h3 className="text-text-primary mb-1 text-base font-semibold md:text-lg">
+              Upload character image and preview
+            </h3>
+            <p className="text-text-secondary text-xs md:text-sm">
+              Any JPG, JPEG, or PNG. 500x416 pixels for best display.
+            </p>
           </div>
 
           {/* Avatar and Card Display */}
@@ -140,17 +128,24 @@ export function CharacterBasicInfoStep({
                 </div>
 
                 {/* Change Image Button - Below card */}
-                <FileUploadButton
-                  accept={ACCEPTED_FILE_TYPES}
-                  onChange={onFileUpload}
-                  className="w-full max-w-[320px]"
-                >
-                  Change Character Image
-                </FileUploadButton>
+                <div className="flex w-full items-center justify-between gap-2">
+                  <FileUploadButton
+                    accept={ACCEPTED_FILE_TYPES}
+                    onChange={onFileUpload}
+                    className="w-full max-w-[240px]"
+                  >
+                    Change Character Image
+                  </FileUploadButton>
 
-                <p className="text-text-secondary text-center text-xs">
-                  Supported formats: JPG, PNG
-                </p>
+                  <button
+                    className={cn(
+                      "cursor-pointer text-sm text-gray-200 hover:text-gray-50",
+                    )}
+                    onClick={handleDeleteImage}
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
               </div>
             </div>
           )}
