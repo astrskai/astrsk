@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, Trash2 } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
-import PlotPreview from "@/features/plot/ui/plot-preview";
+import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { CardType } from "@/entities/card/domain";
@@ -54,7 +54,7 @@ const PlotPreviewItem = ({
         onMouseEnter={onMouseEnter}
         className="pointer-events-auto"
       >
-        <PlotPreview
+        <ScenarioPreview
           imageUrl={imageUrl}
           title={card.props.title}
           summary={card.props.cardSummary}
@@ -106,7 +106,7 @@ const SelectedPlotCard = ({ card, onRemove }: SelectedPlotCardProps) => {
   ];
 
   return (
-    <PlotPreview
+    <ScenarioPreview
       imageUrl={imageUrl}
       title={card.props.title}
       summary={card.props.cardSummary}

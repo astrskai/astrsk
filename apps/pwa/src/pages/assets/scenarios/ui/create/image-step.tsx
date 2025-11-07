@@ -1,5 +1,5 @@
 import { Input, FileUploadButton } from "@/shared/ui/forms";
-import PlotPreview from "@/features/plot/ui/plot-preview";
+import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
 
 interface ScenarioImageStepProps {
   scenarioName: string;
@@ -69,7 +69,7 @@ export function ScenarioImageStep({
               <span className="text-text-secondary flex items-center justify-center text-xs">
                 Scenario Preview
               </span>
-              <PlotPreview
+              <ScenarioPreview
                 title={scenarioName || "New Scenario"}
                 imageUrl={
                   imageAssetId || "/img/placeholder/scenario-card-image.png"

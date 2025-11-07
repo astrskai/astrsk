@@ -5,7 +5,7 @@ import { PlotCard } from "@/entities/card/domain/plot-card";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
 import { ActionConfirm } from "@/shared/ui/dialogs";
-import PlotPreview from "@/features/plot/ui/plot-preview";
+import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 import { useCardActions } from "@/features/common/model/use-card-actions";
 import { useAsset } from "@/shared/hooks/use-asset";
@@ -67,7 +67,7 @@ function PlotGridItem({
   ];
 
   return (
-    <PlotPreview
+    <ScenarioPreview
       imageUrl={imageUrl}
       title={plot.props.title}
       summary={plot.props.cardSummary}
