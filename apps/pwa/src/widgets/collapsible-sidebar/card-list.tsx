@@ -248,7 +248,7 @@ const CardItem = ({
             fallbackSrc={
               card?.props.type === CardType.Character
                 ? "/img/placeholder/character-card-image.png"
-                : "/img/placeholder/plot-card-image.png"
+                : "/img/placeholder/scenario-card-image.png"
             }
             alt="Card icon"
             className={cn(

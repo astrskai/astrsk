@@ -7,12 +7,13 @@ import {
   FlowSelectionStep,
   AiCharacterSelectionStep,
   UserCharacterSelectionStep,
-  PlotSelectionStep,
+  ScenarioSelectionStep,
 } from "./ui/create";
 import { StepIndicator } from "@/shared/ui/step-indicator";
 import { logger } from "@/shared/lib";
 import { Flow } from "@/entities/flow/domain/flow";
 import { CharacterCard } from "@/entities/card/domain/character-card";
+import { PlotCard } from "@/entities/card/domain/plot-card";
 import { CardType } from "@/entities/card/domain";
 import { Session, CardListItem } from "@/entities/session/domain";
 import { defaultChatStyles } from "@/entities/session/domain/chat-styles";
@@ -67,7 +68,7 @@ export function CreateSessionPage() {
   );
   const [selectedUserCharacter, setSelectedUserCharacter] =
     useState<CharacterCard | null>(null);
-  const [selectedPlot, setSelectedPlot] = useState<CharacterCard | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<PlotCard | null>(null);
 
   const selectSession = useSessionStore.use.selectSession();
 
@@ -145,9 +146,9 @@ export function CreateSessionPage() {
       }
 
       // Add plot card if selected
-      if (selectedPlot) {
+      if (selectedScenario) {
         allCards.push({
-          id: selectedPlot.id,
+          id: selectedScenario.id,
           type: CardType.Plot,
           enabled: true,
         });
@@ -206,7 +207,7 @@ export function CreateSessionPage() {
     selectedFlow,
     selectedCharacters,
     selectedUserCharacter,
-    selectedPlot,
+    selectedScenario,
     selectSession,
     navigate,
   ]);
@@ -297,9 +298,9 @@ export function CreateSessionPage() {
           )}
 
           {currentStep === "scenario" && (
-            <PlotSelectionStep
-              selectedPlot={selectedPlot}
-              onPlotSelected={setSelectedPlot}
+            <ScenarioSelectionStep
+              selectedScenario={selectedScenario}
+              onScenarioSelected={setSelectedScenario}
             />
           )}
         </div>

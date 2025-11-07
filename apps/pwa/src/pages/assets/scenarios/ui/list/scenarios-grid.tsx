@@ -5,24 +5,24 @@ import { PlotCard } from "@/entities/card/domain/plot-card";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
 import { ActionConfirm } from "@/shared/ui/dialogs";
-import PlotPreview from "@/features/plot/ui/plot-preview";
+import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 import { useCardActions } from "@/features/common/model/use-card-actions";
 import { useAsset } from "@/shared/hooks/use-asset";
 
-interface PlotsGridProps {
-  plots: PlotCard[];
-  showNewPlotCard: boolean;
+interface ScenariosGridProps {
+  scenarios: PlotCard[];
+  showNewScenarioCard: boolean;
 }
 
 /**
- * Plot Grid Item
+ * Scenario Grid Item
  * Wrapper component that handles useAsset hook
  */
-interface PlotGridItemProps {
+interface ScenarioGridItemProps {
   plot: PlotCard;
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
-  onPlotClick: (plotId: string) => void;
+  onScenarioClick: (plotId: string) => void;
   onExport: (cardId: string, title: string) => (e: React.MouseEvent) => void;
   onCopy: (cardId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
@@ -31,14 +31,14 @@ interface PlotGridItemProps {
   ) => (e: React.MouseEvent) => void;
 }
 
-function PlotGridItem({
+function ScenarioGridItem({
   plot,
   loading,
-  onPlotClick,
+  onScenarioClick,
   onExport,
   onCopy,
   onDeleteClick,
-}: PlotGridItemProps) {
+}: ScenarioGridItemProps) {
   const [imageUrl] = useAsset(plot.props.iconAssetId);
   const cardId = plot.id.toString();
 
@@ -67,14 +67,14 @@ function PlotGridItem({
   ];
 
   return (
-    <PlotPreview
+    <ScenarioPreview
       imageUrl={imageUrl}
       title={plot.props.title}
       summary={plot.props.cardSummary}
       tags={plot.props.tags || []}
       tokenCount={plot.props.tokenCount}
       firstMessages={plot.props.scenarios?.length || 0}
-      onClick={() => onPlotClick(cardId)}
+      onClick={() => onScenarioClick(cardId)}
       actions={actions}
       isShowActions={true}
     />
@@ -82,14 +82,17 @@ function PlotGridItem({
 }
 
 /**
- * Plots grid component
- * Displays plot cards in a responsive grid with optional New Plot Card
+ * Scenarios grid component
+ * Displays scenario cards in a responsive grid with optional New Scenario Card
  *
  * Layout:
  * - Mobile: Button above grid + 1 column per row
  * - Desktop: New card inside grid + 2 columns per row
  */
-export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
+export function ScenariosGrid({
+  scenarios,
+  showNewScenarioCard,
+}: ScenariosGridProps) {
   const navigate = useNavigate();
 
   const {
@@ -102,14 +105,14 @@ export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
     closeDeleteDialog,
   } = useCardActions({ entityType: "plot" });
 
-  const handlePlotClick = (plotId: string) => {
+  const handleScenarioClick = (plotId: string) => {
     navigate({
       to: "/assets/scenarios/$scenarioId",
       params: { scenarioId: plotId },
     });
   };
 
-  const handleCreatePlot = () => {
+  const handleCreateScenario = () => {
     navigate({ to: "/assets/scenarios/new" });
   };
 
@@ -117,9 +120,9 @@ export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
     <>
       <div className="flex flex-col gap-4 p-4">
         {/* Mobile: Create Button (outside grid) */}
-        {showNewPlotCard && (
+        {showNewScenarioCard && (
           <Button
-            onClick={handleCreatePlot}
+            onClick={handleCreateScenario}
             icon={<Plus className="min-h-4 min-w-4" />}
             className="w-full md:hidden"
           >
@@ -127,29 +130,29 @@ export function PlotsGrid({ plots, showNewPlotCard }: PlotsGridProps) {
           </Button>
         )}
 
-        {/* Plots Grid */}
+        {/* Scenarios Grid */}
         <div className="mx-auto grid w-full max-w-7xl grid-cols-1 justify-center gap-4 md:grid-cols-2">
-          {/* Desktop: New Plot Card (inside grid) */}
-          {showNewPlotCard && (
+          {/* Desktop: New Scenario Card (inside grid) */}
+          {showNewScenarioCard && (
             <CreateItemCard
               title="New Scenario"
               description="Create a new scenario"
-              onClick={handleCreatePlot}
+              onClick={handleCreateScenario}
               className="hidden aspect-[2/1] md:flex lg:aspect-[3/1.2]"
             />
           )}
 
-          {/* Existing Plots */}
-          {plots.map((plot) => {
+          {/* Existing Scenarios */}
+          {scenarios.map((plot) => {
             const cardId = plot.id.toString();
             const loading = loadingStates[cardId] || {};
 
             return (
-              <PlotGridItem
+              <ScenarioGridItem
                 key={cardId}
                 plot={plot}
                 loading={loading}
-                onPlotClick={handlePlotClick}
+                onScenarioClick={handleScenarioClick}
                 onExport={handleExport}
                 onCopy={handleCopy}
                 onDeleteClick={handleDeleteClick}

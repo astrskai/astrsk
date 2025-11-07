@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ListPageHeader } from "@/widgets/list-page-header";
 import { ASSET_TABS } from "@/shared/config/asset-tabs";
-import { PlotsGrid } from "./ui/list";
+import { ScenariosGrid } from "./ui/list";
 import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CardType } from "@/entities/card/domain";
@@ -111,7 +111,7 @@ export function PlotsListPage() {
           />
         ) : (
           // Show grid with plots (or NewPlotCard if empty)
-          <PlotsGrid plots={plots} showNewPlotCard={!keyword} />
+          <ScenariosGrid scenarios={plots} showNewScenarioCard={!keyword} />
         )}
       </div>
     </div>

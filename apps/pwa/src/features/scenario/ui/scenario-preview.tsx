@@ -1,7 +1,7 @@
 import { cn } from "@/shared/lib";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 
-interface PlotPreviewProps {
+interface ScenarioPreviewProps {
   title: string;
   imageUrl?: string | null;
   summary?: string;
@@ -15,9 +15,9 @@ interface PlotPreviewProps {
   onClick?: () => void;
 }
 
-const PLACEHOLDER_IMAGE_URL = "/img/placeholder/plot-card-image.png";
+const PLACEHOLDER_IMAGE_URL = "/img/placeholder/scenario-card-image.png";
 
-const PlotPreview = ({
+const ScenarioPreview = ({
   title,
   imageUrl,
   summary,
@@ -29,7 +29,7 @@ const PlotPreview = ({
   actions = [],
   isDisabled = false,
   onClick,
-}: PlotPreviewProps) => {
+}: ScenarioPreviewProps) => {
   const getCompactedTagString = (tags: string[]) => {
     const compactedTags = tags.slice(0, 3).map((tag, index) => {
       return (
@@ -177,4 +177,4 @@ const PlotPreview = ({
   );
 };
 
-export default PlotPreview;
+export default ScenarioPreview;
