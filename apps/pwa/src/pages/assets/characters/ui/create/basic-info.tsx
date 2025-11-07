@@ -68,7 +68,7 @@ export function CharacterBasicInfoStep({
       {/* Section 2: Character Image */}
       <div>
         <div className="mx-auto flex max-w-3xl flex-col gap-4 lg:gap-6">
-          <div>
+          <div className="flex flex-col justify-between gap-1">
             <h3 className="text-text-primary mb-1 text-base font-semibold md:text-lg">
               Upload character image and preview
             </h3>
@@ -86,66 +86,30 @@ export function CharacterBasicInfoStep({
               maxFiles={1}
             />
           ) : (
-            /* Preview Layout - After Upload */
-            <div className="flex flex-col items-center gap-6">
-              {/* Avatar - Left side on desktop, top on mobile */}
-              <div className="flex w-full shrink-0 flex-col items-center gap-2">
-                <span className="text-text-secondary text-xs">
-                  Avatar Preview
-                </span>
-                <div className="flex w-full max-w-md items-start gap-4">
-                  <AvatarSimple
-                    src={imageUrl}
-                    alt={characterName || "Untitled Character"}
-                    size="2xl"
-                    className="shrink-0"
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <div className="w-fit max-w-full truncate rounded-full px-1 py-0.5 text-sm font-medium">
-                      {characterName || "Untitled Character"}
-                    </div>
-                    <ChatBubble direction="left">
-                      Hello! I am {characterName || "Untitled Character"}
-                    </ChatBubble>
-                  </div>
-                </div>
-              </div>
+            <div className="flex flex-col items-center gap-4">
+              <img
+                src={imageUrl}
+                alt={characterName || "Untitled Character"}
+                className="aspect-[4/6] h-auto w-full max-w-[200px] rounded-lg object-cover md:max-w-[320px]"
+              />
 
-              {/* Card Preview - Center */}
-              <div className="flex w-full max-w-xl flex-1 flex-col items-center gap-4">
-                <div className="w-full space-y-2">
-                  <span className="text-text-secondary flex items-center justify-center text-xs">
-                    Character Preview
-                  </span>
-                  <CharacterPreview
-                    title={characterName || "Untitled Character"}
-                    imageUrl={imageUrl}
-                    summary="Character summary"
-                    tags={["tag1", "tag2"]}
-                    tokenCount={0}
-                    isShowActions={false}
-                  />
-                </div>
-
-                {/* Change Image Button - Below card */}
-                <div className="flex w-full items-center justify-between gap-2">
-                  <FileUploadButton
-                    accept={ACCEPTED_FILE_TYPES}
-                    onChange={onFileUpload}
-                    className="w-full max-w-[240px]"
-                  >
-                    Change Character Image
-                  </FileUploadButton>
-
-                  <button
-                    className={cn(
-                      "cursor-pointer text-sm text-gray-200 hover:text-gray-50",
-                    )}
-                    onClick={handleDeleteImage}
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
+              {/* Change Image Button - Below previews */}
+              <div className="flex items-center gap-4">
+                <button
+                  className={cn(
+                    "cursor-pointer text-sm text-gray-200 hover:text-gray-50",
+                  )}
+                  onClick={handleDeleteImage}
+                >
+                  <Trash2 size={20} />
+                </button>
+                <FileUploadButton
+                  accept={ACCEPTED_FILE_TYPES}
+                  onChange={onFileUpload}
+                  className="w-full max-w-[180px] text-xs md:max-w-[240px] md:text-sm"
+                >
+                  Change Character Image
+                </FileUploadButton>
               </div>
             </div>
           )}
