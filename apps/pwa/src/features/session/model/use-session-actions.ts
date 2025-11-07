@@ -83,18 +83,22 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
   const { onCopySuccess } = options;
   const queryClient = useQueryClient();
 
-  const [deleteDialogState, setDeleteDialogState] = useState<DeleteDialogState>({
-    isOpen: false,
-    sessionId: null,
-    title: "",
-  });
+  const [deleteDialogState, setDeleteDialogState] = useState<DeleteDialogState>(
+    {
+      isOpen: false,
+      sessionId: null,
+      title: "",
+    },
+  );
 
-  const [exportDialogState, setExportDialogState] = useState<ExportDialogState>({
-    isOpen: false,
-    sessionId: null,
-    title: "",
-    agents: [],
-  });
+  const [exportDialogState, setExportDialogState] = useState<ExportDialogState>(
+    {
+      isOpen: false,
+      sessionId: null,
+      title: "",
+      agents: [],
+    },
+  );
 
   const [copyDialogState, setCopyDialogState] = useState<CopyDialogState>({
     isOpen: false,
@@ -115,7 +119,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
         setLoadingStates((prev) => ({
           ...prev,
-          [sessionId]: { ...prev[sessionId] ?? {}, exporting: true },
+          [sessionId]: { ...(prev[sessionId] ?? {}), exporting: true },
         }));
 
         try {
@@ -146,6 +150,10 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
               // Agent nodes store agentId in node.data.agentId, fallback to node.id
               const agentId = (node.data as any)?.agentId || node.id;
 
+              if (!agentId) {
+                continue;
+              }
+
               // Fetch agent data
               const agentQuery = await queryClient.fetchQuery({
                 queryKey: ["agent", agentId],
@@ -174,12 +182,13 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
         } catch (error) {
           logger.error("Failed to prepare export:", error);
           toast.error("Failed to prepare export", {
-            description: error instanceof Error ? error.message : "Unknown error",
+            description:
+              error instanceof Error ? error.message : "Unknown error",
           });
         } finally {
           setLoadingStates((prev) => ({
             ...prev,
-            [sessionId]: { ...prev[sessionId] ?? {}, exporting: false },
+            [sessionId]: { ...(prev[sessionId] ?? {}), exporting: false },
           }));
         }
       },
@@ -220,7 +229,12 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
           description: `"${title}" exported`,
         });
 
-        setExportDialogState({ isOpen: false, sessionId: null, title: "", agents: [] });
+        setExportDialogState({
+          isOpen: false,
+          sessionId: null,
+          title: "",
+          agents: [],
+        });
       } catch (error) {
         logger.error(error);
         toast.error("Failed to export", {
@@ -266,7 +280,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
     setLoadingStates((prev) => ({
       ...prev,
-      [sessionId]: { ...prev[sessionId] ?? {}, copying: true },
+      [sessionId]: { ...(prev[sessionId] ?? {}), copying: true },
     }));
 
     try {
@@ -305,7 +319,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
     } finally {
       setLoadingStates((prev) => ({
         ...prev,
-        [sessionId]: { ...prev[sessionId] ?? {}, copying: false },
+        [sessionId]: { ...(prev[sessionId] ?? {}), copying: false },
       }));
     }
   }, [copyDialogState, queryClient, onCopySuccess]);
@@ -334,7 +348,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
     setLoadingStates((prev) => ({
       ...prev,
-      [sessionId]: { ...prev[sessionId] ?? {}, deleting: true },
+      [sessionId]: { ...(prev[sessionId] ?? {}), deleting: true },
     }));
 
     try {
@@ -366,7 +380,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
     } finally {
       setLoadingStates((prev) => ({
         ...prev,
-        [sessionId]: { ...prev[sessionId] ?? {}, deleting: false },
+        [sessionId]: { ...(prev[sessionId] ?? {}), deleting: false },
       }));
     }
   }, [deleteDialogState, queryClient]);
@@ -382,7 +396,12 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
    * Close export dialog without exporting
    */
   const closeExportDialog = useCallback(() => {
-    setExportDialogState({ isOpen: false, sessionId: null, title: "", agents: [] });
+    setExportDialogState({
+      isOpen: false,
+      sessionId: null,
+      title: "",
+      agents: [],
+    });
   }, []);
 
   /**
