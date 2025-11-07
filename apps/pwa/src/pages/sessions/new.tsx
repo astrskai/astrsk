@@ -7,7 +7,7 @@ import {
   FlowSelectionStep,
   AiCharacterSelectionStep,
   UserCharacterSelectionStep,
-  PlotSelectionStep,
+  ScenarioSelectionStep,
 } from "./ui/create";
 import { StepIndicator } from "@/shared/ui/step-indicator";
 import { logger } from "@/shared/lib";
@@ -67,7 +67,7 @@ export function CreateSessionPage() {
   );
   const [selectedUserCharacter, setSelectedUserCharacter] =
     useState<CharacterCard | null>(null);
-  const [selectedPlot, setSelectedPlot] = useState<CharacterCard | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<CharacterCard | null>(null);
 
   const selectSession = useSessionStore.use.selectSession();
 
@@ -145,9 +145,9 @@ export function CreateSessionPage() {
       }
 
       // Add plot card if selected
-      if (selectedPlot) {
+      if (selectedScenario) {
         allCards.push({
-          id: selectedPlot.id,
+          id: selectedScenario.id,
           type: CardType.Plot,
           enabled: true,
         });
@@ -206,7 +206,7 @@ export function CreateSessionPage() {
     selectedFlow,
     selectedCharacters,
     selectedUserCharacter,
-    selectedPlot,
+    selectedScenario,
     selectSession,
     navigate,
   ]);
@@ -297,9 +297,9 @@ export function CreateSessionPage() {
           )}
 
           {currentStep === "scenario" && (
-            <PlotSelectionStep
-              selectedPlot={selectedPlot}
-              onPlotSelected={setSelectedPlot}
+            <ScenarioSelectionStep
+              selectedScenario={selectedScenario}
+              onScenarioSelected={setSelectedScenario}
             />
           )}
         </div>

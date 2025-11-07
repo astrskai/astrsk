@@ -61,12 +61,14 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
   const { entityType = "card" } = options;
   const queryClient = useQueryClient();
 
-  const [deleteDialogState, setDeleteDialogState] = useState<DeleteDialogState>({
-    isOpen: false,
-    cardId: null,
-    title: "",
-    usedSessionsCount: 0,
-  });
+  const [deleteDialogState, setDeleteDialogState] = useState<DeleteDialogState>(
+    {
+      isOpen: false,
+      cardId: null,
+      title: "",
+      usedSessionsCount: 0,
+    },
+  );
 
   const [loadingStates, setLoadingStates] = useState<LoadingStates>({});
 
@@ -79,7 +81,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
 
       setLoadingStates((prev) => ({
         ...prev,
-        [cardId]: { ...prev[cardId] ?? {}, exporting: true },
+        [cardId]: { ...(prev[cardId] ?? {}), exporting: true },
       }));
 
       try {
@@ -104,7 +106,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
       } finally {
         setLoadingStates((prev) => ({
           ...prev,
-          [cardId]: { ...prev[cardId] ?? {}, exporting: false },
+          [cardId]: { ...(prev[cardId] ?? {}), exporting: false },
         }));
       }
     },
@@ -120,8 +122,10 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
 
       setLoadingStates((prev) => ({
         ...prev,
-        [cardId]: { ...prev[cardId] ?? {}, copying: true },
+        [cardId]: { ...(prev[cardId] ?? {}), copying: true },
       }));
+
+      const entityTypeText = entityType === "plot" ? "scenario" : entityType;
 
       try {
         const result = await CardService.cloneCard.execute({
@@ -129,24 +133,27 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
         });
 
         if (result.isFailure) {
-          toast.error(`Failed to copy ${entityType}`, {
+          toast.error(`Failed to copy ${entityTypeText}`, {
             description: result.getError(),
           });
           return;
         }
 
-        toast.success(`${entityType.charAt(0).toUpperCase() + entityType.slice(1)} copied`, {
-          description: `Created copy of "${title}"`,
-        });
+        toast.success(
+          `${entityTypeText.charAt(0).toUpperCase() + entityTypeText.slice(1)} copied`,
+          {
+            description: `Created copy of "${title}"`,
+          },
+        );
         await queryClient.invalidateQueries({ queryKey: cardQueries.lists() });
       } catch (error) {
-        toast.error(`Failed to copy ${entityType}`, {
+        toast.error(`Failed to copy ${entityTypeText}`, {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       } finally {
         setLoadingStates((prev) => ({
           ...prev,
-          [cardId]: { ...prev[cardId] ?? {}, copying: false },
+          [cardId]: { ...(prev[cardId] ?? {}), copying: false },
         }));
       }
     },
@@ -197,8 +204,10 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
 
     setLoadingStates((prev) => ({
       ...prev,
-      [cardId]: { ...prev[cardId] ?? {}, deleting: true },
+      [cardId]: { ...(prev[cardId] ?? {}), deleting: true },
     }));
+
+    const entityTypeText = entityType === "plot" ? "scenario" : entityType;
 
     try {
       const result = await CardService.deleteCard.execute(
@@ -206,15 +215,18 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
       );
 
       if (result.isFailure) {
-        toast.error(`Failed to delete ${entityType}`, {
+        toast.error(`Failed to delete ${entityTypeText}`, {
           description: result.getError(),
         });
         return;
       }
 
-      toast.success(`${entityType.charAt(0).toUpperCase() + entityType.slice(1)} deleted`, {
-        description: title
-      });
+      toast.success(
+        `${entityTypeText.charAt(0).toUpperCase() + entityTypeText.slice(1)} deleted`,
+        {
+          description: title,
+        },
+      );
       await queryClient.invalidateQueries({ queryKey: cardQueries.lists() });
 
       if (usedSessionsCount > 0) {
@@ -230,13 +242,13 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
         usedSessionsCount: 0,
       });
     } catch (error) {
-      toast.error(`Failed to delete ${entityType}`, {
+      toast.error(`Failed to delete ${entityTypeText}`, {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setLoadingStates((prev) => ({
         ...prev,
-        [cardId]: { ...prev[cardId] ?? {}, deleting: false },
+        [cardId]: { ...(prev[cardId] ?? {}), deleting: false },
       }));
     }
   }, [deleteDialogState, entityType, queryClient]);

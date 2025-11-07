@@ -19,16 +19,16 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 
-interface PlotSelectionStepProps {
-  selectedPlot: PlotCard | null;
-  onPlotSelected: (plot: PlotCard | null) => void;
+interface ScenarioSelectionStepProps {
+  selectedScenario: PlotCard | null;
+  onScenarioSelected: (plot: PlotCard | null) => void;
 }
 
 /**
- * Plot Preview Item (for dialog selection list)
- * Wrapper component that handles useAsset hook and passes imageUrl to PlotPreview
+ * Scenario Preview Item (for dialog selection list)
+ * Wrapper component that handles useAsset hook and passes imageUrl to ScenarioPreview
  */
-interface PlotPreviewItemProps {
+interface ScenarioPreviewItemProps {
   card: PlotCard;
   cardId: string;
   isSelected: boolean;
@@ -37,14 +37,14 @@ interface PlotPreviewItemProps {
   onMouseEnter: () => void;
 }
 
-const PlotPreviewItem = ({
+const ScenarioPreviewItem = ({
   card,
   cardId,
   isSelected,
   onCardClick,
   onDetailClick,
   onMouseEnter,
-}: PlotPreviewItemProps) => {
+}: ScenarioPreviewItemProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
   return (
@@ -86,15 +86,18 @@ const PlotPreviewItem = ({
 };
 
 /**
- * Selected Plot Card
- * Wrapper component for selected plot with Remove action
+ * Selected Scenario Card
+ * Wrapper component for selected scenario with Remove action
  */
-interface SelectedPlotCardProps {
+interface SelectedScenarioCardProps {
   card: PlotCard;
   onRemove: (e: React.MouseEvent) => void;
 }
 
-const SelectedPlotCard = ({ card, onRemove }: SelectedPlotCardProps) => {
+const SelectedScenarioCard = ({
+  card,
+  onRemove,
+}: SelectedScenarioCardProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
   const actions: CharacterAction[] = [
@@ -120,11 +123,11 @@ const SelectedPlotCard = ({ card, onRemove }: SelectedPlotCardProps) => {
 };
 
 /**
- * Plot Detail Panel
- * Displays detailed information about a selected plot
+ * Scenario Detail Panel
+ * Displays detailed information about a selected scenario
  */
-const PlotDetailPanel = ({ plot }: { plot: PlotCard }) => {
-  const [plotImageUrl] = useAsset(plot.props.iconAssetId);
+const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
+  const [scenarioImageUrl] = useAsset(plot.props.iconAssetId);
 
   return (
     <div className="flex flex-col gap-4">
@@ -133,10 +136,10 @@ const PlotDetailPanel = ({ plot }: { plot: PlotCard }) => {
         {plot.props.title}
       </h3>
 
-      {/* Plot Image */}
+      {/* Scenario Image */}
       <div className="relative mx-auto aspect-[3/4] max-w-xs overflow-hidden rounded-lg">
         <img
-          src={plotImageUrl || "/img/placeholder/plot-card-image.png"}
+          src={scenarioImageUrl || "/img/placeholder/scenario-card-image.png"}
           alt={plot.props.title}
           className="h-full w-full object-cover"
         />
@@ -179,85 +182,87 @@ const PlotDetailPanel = ({ plot }: { plot: PlotCard }) => {
 };
 
 /**
- * Plot Selection Step
+ * Scenario Selection Step
  * Fourth step in create session wizard
- * Allows user to select one plot card (optional)
+ * Allows user to select one scenario card (optional)
  */
-export function PlotSelectionStep({
-  selectedPlot,
-  onPlotSelected,
-}: PlotSelectionStepProps) {
+export function ScenarioSelectionStep({
+  selectedScenario,
+  onScenarioSelected,
+}: ScenarioSelectionStepProps) {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [searchKeyword, setSearchKeyword] = useState<string>("");
-  const [selectedPlotId, setSelectedPlotId] = useState<string | null>(
-    selectedPlot?.id.toString() || null,
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(
+    selectedScenario?.id.toString() || null,
   );
-  const [previewPlotId, setPreviewPlotId] = useState<string | null>(null);
-  const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
-  const [mobileDetailPlotId, setMobileDetailPlotId] = useState<string | null>(
+  const [previewScenarioId, setPreviewScenarioId] = useState<string | null>(
     null,
   );
+  const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
+  const [mobileDetailScenarioId, setMobileDetailScenarioId] = useState<
+    string | null
+  >(null);
 
-  const { data: plotCards } = useQuery(
+  const { data: scenarioCards } = useQuery(
     cardQueries.list({ type: [CardType.Plot] }),
   );
 
   // Sync local selection state with prop
   useEffect(() => {
-    setSelectedPlotId(selectedPlot?.id.toString() || null);
-  }, [selectedPlot]);
+    setSelectedScenarioId(selectedScenario?.id.toString() || null);
+  }, [selectedScenario]);
 
   // Get preview plot details (desktop)
-  const previewPlot = useMemo(() => {
-    if (!previewPlotId || !plotCards) return null;
-    return plotCards.find(
-      (card: PlotCard) => card.id.toString() === previewPlotId,
+  const previewScenario = useMemo(() => {
+    if (!previewScenarioId || !scenarioCards) return null;
+    return scenarioCards.find(
+      (card: PlotCard) => card.id.toString() === previewScenarioId,
     ) as PlotCard | null;
-  }, [previewPlotId, plotCards]);
+  }, [previewScenarioId, scenarioCards]);
 
   // Get mobile detail plot
-  const mobileDetailPlot = useMemo(() => {
-    if (!mobileDetailPlotId || !plotCards) return null;
-    return plotCards.find(
-      (card: PlotCard) => card.id.toString() === mobileDetailPlotId,
+  const mobileDetailScenario = useMemo(() => {
+    if (!mobileDetailScenarioId || !scenarioCards) return null;
+    return scenarioCards.find(
+      (card: PlotCard) => card.id.toString() === mobileDetailScenarioId,
     ) as PlotCard | null;
-  }, [mobileDetailPlotId, plotCards]);
+  }, [mobileDetailScenarioId, scenarioCards]);
 
-  // Filter plot cards by search keyword
-  const filteredPlotCards = useMemo(() => {
-    if (!plotCards) return [];
-    if (!searchKeyword.trim()) return plotCards;
+  // Filter scenario cards by search keyword
+  const filteredScenarioCards = useMemo(() => {
+    if (!scenarioCards) return [];
+    if (!searchKeyword.trim()) return scenarioCards;
 
     const keyword = searchKeyword.toLowerCase();
-    return plotCards.filter((card: PlotCard) => {
+    return scenarioCards.filter((card: PlotCard) => {
       const title = card.props.title?.toLowerCase() || "";
       return title.includes(keyword);
     });
-  }, [plotCards, searchKeyword]);
+  }, [scenarioCards, searchKeyword]);
 
-  const handleAddPlotClick = () => {
+  const handleAddScenarioClick = () => {
     // Reset mobile detail state
     setShowMobileDetail(false);
-    setMobileDetailPlotId(null);
+    setMobileDetailScenarioId(null);
     setIsDialogOpen(true);
   };
 
-  const handlePlotCardClick = (cardId: string) => {
+  const handleScenarioCardClick = (cardId: string) => {
     // Single select - toggle or replace
-    setSelectedPlotId((prev) => (prev === cardId ? null : cardId));
+    setSelectedScenarioId((prev) => (prev === cardId ? null : cardId));
   };
 
   const handleDialogAdd = () => {
-    if (selectedPlotId && plotCards) {
-      const card = plotCards.find(
-        (c: PlotCard) => c.id.toString() === selectedPlotId,
+    if (selectedScenarioId && scenarioCards) {
+      const card = scenarioCards.find(
+        (c: PlotCard) => c.id.toString() === selectedScenarioId,
       ) as PlotCard | undefined;
-      onPlotSelected(card || null);
+      onScenarioSelected(card || null);
       setIsDialogOpen(false);
       setSearchKeyword("");
       // Reset mobile detail state
       setShowMobileDetail(false);
-      setMobileDetailPlotId(null);
+      setMobileDetailScenarioId(null);
     }
   };
 
@@ -266,12 +271,12 @@ export function PlotSelectionStep({
     setSearchKeyword("");
     // Reset mobile detail state
     setShowMobileDetail(false);
-    setMobileDetailPlotId(null);
+    setMobileDetailScenarioId(null);
   };
 
-  const handleRemovePlot = (e: React.MouseEvent) => {
+  const handleRemoveScenario = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onPlotSelected(null);
+    onScenarioSelected(null);
   };
 
   return (
@@ -286,16 +291,19 @@ export function PlotSelectionStep({
         </p>
       </div>
 
-      {/* Selected Plot Display */}
+      {/* Selected Scenario Display */}
       <div className="flex flex-col gap-4">
-        {selectedPlot ? (
+        {selectedScenario ? (
           <div className="mx-auto w-full max-w-2xl">
-            <SelectedPlotCard card={selectedPlot} onRemove={handleRemovePlot} />
+            <SelectedScenarioCard
+              card={selectedScenario}
+              onRemove={handleRemoveScenario}
+            />
           </div>
         ) : (
           /* Empty State - Show Select Button Card */
           <div
-            onClick={handleAddPlotClick}
+            onClick={handleAddScenarioClick}
             className={cn(
               "group relative cursor-pointer overflow-hidden rounded-2xl transition-all",
               "bg-black-alternate border-1 border-gray-700 p-6",
@@ -315,11 +323,11 @@ export function PlotSelectionStep({
         )}
       </div>
 
-      {/* Plot Selection Dialog */}
+      {/* Scenario Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="flex h-[90dvh] max-h-[90dvh] max-w-5xl flex-col gap-2 md:max-w-6xl">
           <DialogHeader>
-            {showMobileDetail && mobileDetailPlot ? (
+            {showMobileDetail && mobileDetailScenario ? (
               <div className="flex items-center gap-2 md:hidden">
                 <button
                   onClick={() => setShowMobileDetail(false)}
@@ -327,7 +335,7 @@ export function PlotSelectionStep({
                 >
                   <ChevronLeft className="min-h-5 min-w-5" />
                   <DialogTitle className="text-left">
-                    {mobileDetailPlot.props.title}
+                    {mobileDetailScenario.props.title}
                   </DialogTitle>
                 </button>
               </div>
@@ -343,16 +351,16 @@ export function PlotSelectionStep({
           {/* Split Layout */}
           <div className="flex min-h-0 flex-1 gap-6 py-4">
             {/* Mobile Detail View */}
-            {showMobileDetail && mobileDetailPlot && (
+            {showMobileDetail && mobileDetailScenario && (
               <div className="flex min-h-0 w-full flex-col md:hidden">
-                {/* Plot Detail Content */}
+                {/* Scenario Detail Content */}
                 <div className="min-h-0 flex-1 overflow-y-auto">
-                  <PlotDetailPanel plot={mobileDetailPlot} />
+                  <ScenarioDetailPanel plot={mobileDetailScenario} />
                 </div>
               </div>
             )}
 
-            {/* Left Side: Search + Plot List */}
+            {/* Left Side: Search + Scenario List */}
             <div
               className={cn(
                 "flex min-h-0 w-full flex-col gap-4 md:w-1/2",
@@ -361,33 +369,33 @@ export function PlotSelectionStep({
             >
               {/* Search Input */}
               <SearchInput
-                name="plot-search"
+                name="scenario-search"
                 placeholder="Search scenarios..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="flex-shrink-0"
               />
 
-              {/* Plot Preview List */}
+              {/* Scenario Preview List */}
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <div className="flex flex-col gap-3">
-                  {filteredPlotCards.map((card: PlotCard) => {
+                  {filteredScenarioCards.map((card: PlotCard) => {
                     const cardId = card.id.toString();
-                    const isSelected = selectedPlotId === cardId;
+                    const isSelected = selectedScenarioId === cardId;
 
                     return (
-                      <PlotPreviewItem
+                      <ScenarioPreviewItem
                         key={`${card.props.title}-${card.id.toString()}`}
                         card={card}
                         cardId={cardId}
                         isSelected={isSelected}
-                        onCardClick={handlePlotCardClick}
+                        onCardClick={handleScenarioCardClick}
                         onDetailClick={(cardId) => {
-                          setMobileDetailPlotId(cardId);
+                          setMobileDetailScenarioId(cardId);
                           setShowMobileDetail(true);
                         }}
                         onMouseEnter={() => {
-                          setPreviewPlotId(cardId);
+                          setPreviewScenarioId(cardId);
                         }}
                       />
                     );
@@ -395,7 +403,7 @@ export function PlotSelectionStep({
                 </div>
 
                 {/* Empty State */}
-                {filteredPlotCards.length === 0 && (
+                {filteredScenarioCards.length === 0 && (
                   <div className="text-text-secondary flex flex-col items-center justify-center py-12 text-center">
                     {searchKeyword ? (
                       <>
@@ -415,10 +423,10 @@ export function PlotSelectionStep({
               </div>
             </div>
 
-            {/* Right Side: Plot Detail (Desktop only) */}
+            {/* Right Side: Scenario Detail (Desktop only) */}
             <div className="hidden w-1/2 flex-col overflow-y-auto rounded-lg bg-gray-900 p-4 md:flex">
-              {previewPlot ? (
-                <PlotDetailPanel plot={previewPlot} />
+              {previewScenario ? (
+                <ScenarioDetailPanel plot={previewScenario} />
               ) : (
                 <div className="text-text-secondary flex h-full flex-col items-center justify-center text-center">
                   <IconFlow className="mb-3 h-12 w-12 opacity-50" />
@@ -435,7 +443,7 @@ export function PlotSelectionStep({
             <Button variant="ghost" onClick={handleDialogCancel}>
               Cancel
             </Button>
-            <Button onClick={handleDialogAdd} disabled={!selectedPlotId}>
+            <Button onClick={handleDialogAdd} disabled={!selectedScenarioId}>
               Select
             </Button>
           </DialogFooter>

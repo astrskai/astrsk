@@ -351,7 +351,7 @@ export default function CardDisplay({
               imageUrl ||
               (type === CardType.Character
                 ? "/img/placeholder/character-card-image.png"
-                : "/img/placeholder/plot-card-image.png")
+                : "/img/placeholder/scenario-card-image.png")
             }
             alt={title}
             className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-110"
@@ -368,7 +368,7 @@ export default function CardDisplay({
               imageUrl ||
               (type === CardType.Character
                 ? "/img/placeholder/character-card-image.png"
-                : "/img/placeholder/plot-card-image.png")
+                : "/img/placeholder/scenario-card-image.png")
             }
             alt={title}
             className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-110"

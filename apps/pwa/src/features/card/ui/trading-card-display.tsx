@@ -3,8 +3,12 @@ import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import { cn } from "@/shared/lib";
 
 import {
-  Card as CardUI, MediaDisplay, Skeleton, SvgIcon,
-  Typo3XLarge, TypoSmall,
+  Card as CardUI,
+  MediaDisplay,
+  Skeleton,
+  SvgIcon,
+  Typo3XLarge,
+  TypoSmall,
 } from "@/shared/ui";
 import { Card, CardType, CharacterCard } from "@/entities/card/domain";
 
@@ -163,7 +167,7 @@ export const TradingCardDisplay = ({
             fallbackSrc={
               card.props.type === CardType.Character
                 ? "/img/placeholder/character-card-image.png"
-                : "/img/placeholder/plot-card-image.png"
+                : "/img/placeholder/scenario-card-image.png"
             }
             alt={card.props.title}
             className="h-full w-full object-cover"
@@ -222,7 +226,7 @@ export const TradingCardDisplay = ({
               fallbackSrc={
                 card.props.type === CardType.Character
                   ? "/img/placeholder/character-card-image.png"
-                  : "/img/placeholder/plot-card-image.png"
+                  : "/img/placeholder/scenario-card-image.png"
               }
               alt={card.props.title}
               className="h-full w-full object-cover object-right"
