@@ -36,7 +36,7 @@ interface LoadingStates {
  * Hook for card action handlers (export, copy, delete)
  * Provides state management and handlers for card operations
  *
- * Used by: characters-grid.tsx, plots-grid.tsx (CardDisplay)
+ * Used by: characters-grid.tsx, scenarios-grid.tsx (CardDisplay)
  *
  * @example
  * ```tsx

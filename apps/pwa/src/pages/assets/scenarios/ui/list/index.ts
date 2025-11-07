@@ -1,1 +1,1 @@
-export { PlotsGrid } from "./plots-grid";
+export { ScenariosGrid } from "./scenarios-grid";
