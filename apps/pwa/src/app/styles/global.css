@@ -50,6 +50,9 @@
   --color-text-primary: var(--color-gray-50);
   --color-text-secondary: var(--color-gray-200);
 
+  --color-status-error: #dc2626;
+  --color-status-error-dark: #7f1d1d;
+
   /* Astrsk renewed colors end */
 }
 

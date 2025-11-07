@@ -4,7 +4,7 @@ import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
 import { CreatePageHeader } from "@/widgets/create-page-header";
 import {
-  CharacterImageStep,
+  CharacterBasicInfoStep,
   CharacterDescriptionStep,
   CharacterLorebookStep,
 } from "./ui/create";
@@ -20,7 +20,7 @@ import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardKeys } from "@/entities/card/api";
 
-type CharacterStep = "image" | "info" | "lorebook";
+type CharacterStep = "basic-info" | "info" | "lorebook";
 
 /**
  * Create Character Card Page
@@ -35,10 +35,10 @@ export function CreateCharacterPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [currentStep, setCurrentStep] = useState<CharacterStep>("image");
+  const [currentStep, setCurrentStep] = useState<CharacterStep>("basic-info");
   const [characterName, setCharacterName] = useState<string>("New Character");
-  const [avatarAssetId, setAvatarAssetId] = useState<string | undefined>();
-  const [avatarFile, setAvatarFile] = useState<File | undefined>();
+  const [imageUrl, setImageUrl] = useState<string | undefined>();
+  const [imageFile, setImageFile] = useState<File | undefined>();
   const [description, setDescription] = useState<string>("");
   const [exampleDialogue, setExampleDialogue] = useState<string>("");
   const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>([]);
@@ -46,7 +46,7 @@ export function CreateCharacterPage() {
   const [isCreatingCard, setIsCreatingCard] = useState<boolean>(false);
 
   const STEPS: StepConfig<CharacterStep>[] = [
-    { id: "image", number: 1, label: "Basic Info", required: true },
+    { id: "basic-info", number: 1, label: "Basic Info", required: true },
     { id: "info", number: 2, label: "Character Description", required: true },
     { id: "lorebook", number: 3, label: "Lorebook", required: false },
   ];
@@ -59,13 +59,19 @@ export function CreateCharacterPage() {
     ? `Step ${currentStepConfig.number} : ${currentStepConfig.label}`
     : undefined;
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = (file: File | null) => {
+    if (!file) {
+      setImageFile(undefined);
+      setImageUrl(undefined);
+      return;
+    }
+
     // Store the file for preview - actual upload happens on save
-    setAvatarFile(file);
+    setImageFile(file);
 
     // Create a temporary object URL for preview
     const objectUrl = URL.createObjectURL(file);
-    setAvatarAssetId(objectUrl);
+    setImageUrl(objectUrl);
   };
 
   const handleNext = async () => {
@@ -74,9 +80,9 @@ export function CreateCharacterPage() {
       try {
         // Step 1: Upload image if exists
         let uploadedAssetId: string | undefined;
-        if (avatarFile) {
+        if (imageFile) {
           const assetResult = await AssetService.saveFileToAsset.execute({
-            file: avatarFile,
+            file: imageFile,
           });
 
           if (assetResult.isSuccess) {
@@ -87,7 +93,7 @@ export function CreateCharacterPage() {
             const generatedImageResult =
               await GeneratedImageService.saveGeneratedImageFromAsset.execute({
                 assetId: asset.id,
-                name: avatarFile.name.replace(/\.[^/.]+$/, ""),
+                name: imageFile.name.replace(/\.[^/.]+$/, ""),
                 prompt: `Character avatar for ${characterName}`,
                 style: "uploaded",
                 associatedCardId: undefined, // Will be associated when card is created
@@ -194,7 +200,7 @@ export function CreateCharacterPage() {
   // Validation logic for each step
   const canProceed = (() => {
     switch (currentStep) {
-      case "image":
+      case "basic-info":
         return characterName.trim().length > 0; // Image is optional
       case "info":
         return description.trim().length > 0;
@@ -227,12 +233,12 @@ export function CreateCharacterPage() {
       {/* Content */}
       <div className="mb-13 flex-1 overflow-y-auto md:mb-0">
         <div className="mx-auto w-full max-w-7xl p-4 md:p-8">
-          {/* Step 1: Character Image */}
-          {currentStep === "image" && (
-            <CharacterImageStep
+          {/* Step 1: Character Basic Info */}
+          {currentStep === "basic-info" && (
+            <CharacterBasicInfoStep
               characterName={characterName}
               onCharacterNameChange={setCharacterName}
-              avatarAssetId={avatarAssetId}
+              imageUrl={imageUrl}
               onFileUpload={handleFileUpload}
             />
           )}

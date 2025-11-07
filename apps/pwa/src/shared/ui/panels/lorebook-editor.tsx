@@ -176,7 +176,7 @@ export const LorebookEditor = forwardRef<
   );
 
   return (
-    <div className="flex-1 bg-gray-900 p-2 md:p-4">
+    <div className="flex-1 rounded-lg bg-gray-900 p-2 md:p-4">
       <div className="flex flex-col gap-4 md:flex-row md:gap-6">
         {/* Left: Entries List */}
         <div className="flex flex-col gap-2 md:w-64">

@@ -28,7 +28,9 @@ export function CharacterLorebookStep({
   onEntriesChange,
 }: CharacterLorebookStepProps) {
   const editorRef = useRef<LorebookEditorRef>(null);
-  const [selectedEntry, setSelectedEntry] = useState<LorebookEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<LorebookEntry | null>(
+    null,
+  );
 
   // Filter out message-related variables
   const filterVariables = useCallback(
@@ -45,19 +47,23 @@ export function CharacterLorebookStep({
   }, []);
 
   // Handle selected entry change
-  const handleSelectedEntryChange = useCallback((entry: LorebookEntry | null) => {
-    setSelectedEntry(entry);
-  }, []);
+  const handleSelectedEntryChange = useCallback(
+    (entry: LorebookEntry | null) => {
+      setSelectedEntry(entry);
+    },
+    [],
+  );
 
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
         <h2 className="mb-2 text-xl font-semibold text-gray-50">
-          Character Lorebook
+          Add Lorebook
         </h2>
         <p className="text-sm text-gray-200">
-          Add additional lore and details for your character (optional).
+          Add character lore that appears when related keywords are used in
+          chat.
         </p>
       </div>
 

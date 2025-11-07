@@ -119,10 +119,10 @@ export function CreatePageHeader({
   return (
     <>
       {/* Mobile Header */}
-      <div className="border-border flex items-center border-b px-4 py-4 md:hidden">
+      <div className="border-border flex items-center gap-5 border-b px-4 py-2 md:hidden">
         <button
           onClick={handleCancelClick}
-          className="text-text-primary hover:text-text-secondary mr-3 transition-colors"
+          className="text-text-primary hover:text-text-secondary transition-colors"
         >
           <ArrowLeft size={24} />
         </button>

@@ -106,6 +106,7 @@
     "react-colorful": "^5.6.1",
     "react-device-detect": "^2.2.3",
     "react-dom": "^18.3.1",
+    "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.53.1",
     "react-markdown": "^9.0.3",
     "react-qr-code": "^2.0.16",
