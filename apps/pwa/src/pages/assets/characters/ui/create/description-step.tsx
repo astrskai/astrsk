@@ -89,10 +89,11 @@ export function CharacterDescriptionStep({
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          Add Your Character Description*
+        <h2 className="text-text-primary mb-2 text-base font-semibold md:text-[1.2rem]">
+          Add Your Character Description
+          <span className="text-normal-secondary">*</span>
         </h2>
-        <p className="text-text-secondary text-sm">
+        <p className="text-text-secondary text-xs md:text-sm">
           Describe your character's personality, traits, and background.
         </p>
       </div>

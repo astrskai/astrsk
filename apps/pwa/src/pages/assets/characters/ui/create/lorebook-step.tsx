@@ -58,10 +58,10 @@ export function CharacterLorebookStep({
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
-        <h2 className="mb-2 text-xl font-semibold text-gray-50">
+        <h2 className="mb-2 text-base font-semibold text-gray-50 md:text-[1.2rem]">
           Add Lorebook
         </h2>
-        <p className="text-sm text-gray-200">
+        <p className="text-xs text-gray-200 md:text-sm">
           Add character lore that appears when related keywords are used in
           chat.
         </p>

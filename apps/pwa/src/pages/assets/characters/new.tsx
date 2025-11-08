@@ -309,7 +309,7 @@ export function CreateCharacterPage() {
       </div>
 
       {/* Mobile Floating Buttons */}
-      <div className="absolute right-0 bottom-0 left-0 bg-gray-900 p-2 md:hidden">
+      <div className="absolute right-0 bottom-0 left-0 p-2 md:hidden">
         <div className="flex items-center justify-between gap-3">
           {showPreviousButton ? (
             <Button

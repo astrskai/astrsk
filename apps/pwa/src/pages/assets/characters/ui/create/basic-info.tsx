@@ -1,4 +1,4 @@
-import { Pen, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import { FileDropZone } from "@/shared/ui";
 import { Input, FileUploadButton } from "@/shared/ui/forms";
@@ -42,7 +42,7 @@ export function CharacterBasicInfoStep({
       <div>
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
-            <h3 className="mb-1 text-base font-semibold text-gray-50 md:text-lg">
+            <h3 className="mb-1 text-base font-semibold text-gray-50 md:text-[1.2rem]">
               Name your character{" "}
               <span className="text-normal-secondary">*</span>
             </h3>
@@ -70,7 +70,7 @@ export function CharacterBasicInfoStep({
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
           <div className="flex flex-col justify-between gap-1 md:flex-row">
             <div>
-              <h3 className="text-text-primary mb-1 text-base font-semibold md:text-lg">
+              <h3 className="text-text-primary mb-1 text-base font-semibold md:text-[1.2rem]">
                 Upload character image
               </h3>
               <p className="text-text-secondary text-xs md:text-sm">
@@ -114,7 +114,7 @@ export function CharacterBasicInfoStep({
                 src={imageUrl}
                 alt={characterName || "Untitled Character"}
                 className={cn(
-                  "object-cover] h-auto w-full rounded-lg border-2 border-gray-100",
+                  "h-auto w-full rounded-lg border-2 border-gray-100 object-cover",
                   imageDimensions &&
                     imageDimensions.width > imageDimensions.height
                     ? "max-w-[280px] md:max-w-[480px]"
