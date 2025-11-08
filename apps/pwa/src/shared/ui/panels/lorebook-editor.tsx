@@ -327,7 +327,7 @@ export const LorebookEditor = forwardRef<
               />
             </>
           ) : (
-            <div className="text-text-secondary border-border flex flex-1 items-center justify-center rounded-lg border py-12 text-sm">
+            <div className="text-text-secondary border-dark-surface flex flex-1 items-center justify-center rounded-lg border py-12 text-sm">
               Select an entry to edit or add a new one
             </div>
           )}

@@ -21,7 +21,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={cn(
           // Base styles
-          "focus:ring-primary/50 inline-flex cursor-pointer items-center justify-center rounded-full font-medium transition-colors focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+          "focus:ring-primary/50 inline-flex cursor-pointer items-center justify-center rounded-full font-medium transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
           // Gap only when both icon and children exist
           !isIconOnly && "gap-2",
           // Size styles - different for icon-only vs with text

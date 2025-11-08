@@ -4,7 +4,7 @@ import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
 import { CreatePageHeader } from "@/widgets/create-page-header";
 import {
-  ScenarioImageStep,
+  ScenarioBasicInfoStep,
   ScenarioDescriptionStep,
   ScenarioLorebookStep,
   ScenarioFirstMessagesStep,
@@ -21,11 +21,12 @@ import { Entry } from "@/entities/card/domain/entry";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardKeys } from "@/entities/card/api";
+import { toast } from "sonner";
 
-type ScenarioStep = "image" | "info" | "first-messages" | "lorebook";
+type ScenarioStep = "basic-info" | "info" | "first-messages" | "lorebook";
 
 /**
- * Create Plot Card Page
+ * Create Scenario Card Page
  * Multi-step wizard for creating a new scenario card
  *
  * Steps:
@@ -34,22 +35,25 @@ type ScenarioStep = "image" | "info" | "first-messages" | "lorebook";
  * 3. First Messages - Initial first messages and story setup (Optional)
  * 4. Lorebook - World-building and lore entries (Optional)
  */
-export function CreatePlotPage() {
+export default function CreateScenarioPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [plotName, setPlotName] = useState("New Scenario");
-  const [currentStep, setCurrentStep] = useState<ScenarioStep>("image");
+  const [scenarioName, setScenarioName] = useState<string>("New Scenario");
+  const [currentStep, setCurrentStep] = useState<ScenarioStep>("basic-info");
+  const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [imageFile, setImageFile] = useState<File | undefined>();
-  const [imageAssetId, setImageAssetId] = useState<string | undefined>();
-  const [description, setDescription] = useState("");
+  const [imageDimensions, setImageDimensions] = useState<
+    { width: number; height: number } | undefined
+  >();
+  const [description, setDescription] = useState<string>("");
   const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>([]);
   const [firstMessages, setFirstMessages] = useState<FirstMessage[]>([]);
 
-  const [isCreatingCard, setIsCreatingCard] = useState(false);
+  const [isCreatingCard, setIsCreatingCard] = useState<boolean>(false);
 
   const STEPS: StepConfig<ScenarioStep>[] = [
-    { id: "image", number: 1, label: "Basic Info", required: true },
+    { id: "basic-info", number: 1, label: "Basic Info", required: true },
     { id: "info", number: 2, label: "Description", required: true },
     {
       id: "first-messages",
@@ -81,13 +85,52 @@ export function CreatePlotPage() {
     navigate({ to: "/assets/scenarios" });
   };
 
-  const handleFileUpload = (file: File) => {
+  const getImageDimensions = (
+    file: File,
+  ): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve({ width: img.width, height: img.height });
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Failed to load image"));
+      };
+
+      img.src = objectUrl;
+    });
+  };
+
+  const handleFileUpload = async (file: File | null) => {
+    if (!file) {
+      setImageFile(undefined);
+      setImageUrl(undefined);
+      setImageDimensions(undefined);
+      return;
+    }
+
     // Store the file for preview - actual upload happens on save
     setImageFile(file);
 
     // Create a temporary object URL for preview
     const objectUrl = URL.createObjectURL(file);
-    setImageAssetId(objectUrl);
+    setImageUrl(objectUrl);
+
+    // Get image dimensions
+    try {
+      const dimensions = await getImageDimensions(file);
+      setImageDimensions(dimensions);
+    } catch (error) {
+      toast.info("Failed to get image dimensions", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+      setImageDimensions(undefined);
+    }
   };
 
   const handleNext = async () => {
@@ -119,12 +162,14 @@ export function CreatePlotPage() {
           await GeneratedImageService.saveGeneratedImageFromAsset.execute({
             assetId: asset.id,
             name: imageFile.name.replace(/\.[^/.]+$/, ""),
-            prompt: `Plot image for ${plotName}`,
+            prompt: `Scenario image for ${scenarioName}`,
             style: "uploaded",
             associatedCardId: undefined, // Will be associated when card is created
           });
         } else {
-          console.error("Failed to upload file:", assetResult.getError());
+          toast.error("Failed to upload file", {
+            description: assetResult.getError(),
+          });
           setIsCreatingCard(false);
           return;
         }
@@ -149,15 +194,15 @@ export function CreatePlotPage() {
         }
       }
 
-      // Step 3: Transform scenarios to the format PlotCard expects
+      // Step 3: Transform scenarios to the format ScenarioCard expects
       const firstMessagesData = firstMessages.map((firstMessage) => ({
         name: firstMessage.name,
         description: firstMessage.description,
       }));
 
-      // Step 4: Create plot card
+      // Step 4: Create scenario card
       const cardResult = PlotCard.create({
-        title: plotName,
+        title: scenarioName,
         description: description,
         scenarios: firstMessagesData.length > 0 ? firstMessagesData : undefined,
         iconAssetId: uploadedAssetId
@@ -169,7 +214,9 @@ export function CreatePlotPage() {
       });
 
       if (cardResult.isFailure) {
-        console.error("Failed to create card:", cardResult.getError());
+        toast.error("Failed to create card", {
+          description: cardResult.getError(),
+        });
         setIsCreatingCard(false);
         return;
       }
@@ -180,7 +227,9 @@ export function CreatePlotPage() {
       const saveResult = await CardService.saveCard.execute(card);
 
       if (saveResult.isFailure) {
-        console.error("Failed to save card:", saveResult.getError());
+        toast.error("Failed to save card", {
+          description: saveResult.getError(),
+        });
         setIsCreatingCard(false);
         return;
       }
@@ -190,10 +239,12 @@ export function CreatePlotPage() {
         queryKey: cardKeys.lists(),
       });
 
-      // Step 7: Navigate to plots list page
+      // Step 7: Navigate to scenarios list page
       navigate({ to: "/assets/scenarios" });
     } catch (error) {
-      console.error("Error creating plot card:", error);
+      toast.error("Error creating scenario card", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
       setIsCreatingCard(false);
     }
   };
@@ -201,9 +252,9 @@ export function CreatePlotPage() {
   // Validation logic for each step
   const canProceed = (() => {
     switch (currentStep) {
-      case "image":
+      case "basic-info":
         // Image step requires only name (image is optional)
-        return !!plotName.trim();
+        return !!scenarioName.trim();
       case "info":
         // Info step requires description
         return !!description.trim();
@@ -222,7 +273,7 @@ export function CreatePlotPage() {
     <div className="relative flex h-screen w-full flex-col overflow-hidden">
       <CreatePageHeader
         category="Scenario"
-        itemName={plotName}
+        itemName={scenarioName}
         onCancel={handleCancel}
         onPrevious={handlePrevious}
         onNext={handleNext}
@@ -230,6 +281,7 @@ export function CreatePlotPage() {
         isLastStep={isLastStep}
         canProceed={canProceed}
         isSubmitting={isCreatingCard}
+        showCancelButton={true}
         currentStepLabel={currentStepLabel}
       />
 
@@ -237,14 +289,15 @@ export function CreatePlotPage() {
       <StepIndicator steps={STEPS} currentStep={currentStep} />
 
       {/* Content */}
-      <div className="mb-13 flex flex-1 overflow-y-auto md:mb-0">
-        <div className="mx-auto w-full max-w-7xl p-8">
-          {/* Step 1: Image */}
-          {currentStep === "image" && (
-            <ScenarioImageStep
-              scenarioName={plotName}
-              onScenarioNameChange={setPlotName}
-              imageAssetId={imageAssetId}
+      <div className="mb-13 flex-1 overflow-y-auto md:mb-0">
+        <div className="mx-auto w-full max-w-7xl p-4 md:p-8">
+          {/* Step 1: Basic Info */}
+          {currentStep === "basic-info" && (
+            <ScenarioBasicInfoStep
+              scenarioName={scenarioName}
+              onScenarioNameChange={setScenarioName}
+              imageUrl={imageUrl}
+              imageDimensions={imageDimensions}
               onFileUpload={handleFileUpload}
             />
           )}
@@ -276,7 +329,7 @@ export function CreatePlotPage() {
       </div>
 
       {/* Mobile Floating Buttons */}
-      <div className="absolute right-0 bottom-0 left-0 bg-gray-900 p-2 md:hidden">
+      <div className="absolute right-0 bottom-0 left-0 p-2 md:hidden">
         <div className="flex items-center justify-between gap-3">
           {showPreviousButton ? (
             <Button
