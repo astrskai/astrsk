@@ -19,6 +19,7 @@ import { Entry } from "@/entities/card/domain/entry";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardKeys } from "@/entities/card/api";
+import { toast } from "sonner";
 
 type CharacterStep = "basic-info" | "info" | "lorebook";
 
@@ -103,7 +104,9 @@ export function CreateCharacterPage() {
       const dimensions = await getImageDimensions(file);
       setImageDimensions(dimensions);
     } catch (error) {
-      console.error("Error getting image dimensions:", error);
+      toast.info("Failed to get image dimensions", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
       setImageDimensions(undefined);
     }
   };
@@ -134,13 +137,14 @@ export function CreateCharacterPage() {
               });
 
             if (!generatedImageResult.isSuccess) {
-              console.error(
-                "Failed to add image to gallery:",
-                generatedImageResult.getError(),
-              );
+              toast.error("Failed to add image to gallery", {
+                description: generatedImageResult.getError(),
+              });
             }
           } else {
-            console.error("Failed to upload file:", assetResult.getError());
+            toast.error("Failed to upload file", {
+              description: assetResult.getError(),
+            });
             setIsCreatingCard(false);
             return;
           }
@@ -183,7 +187,9 @@ export function CreateCharacterPage() {
         });
 
         if (cardResult.isFailure) {
-          console.error("Failed to create card:", cardResult.getError());
+          toast.error("Failed to create card", {
+            description: cardResult.getError(),
+          });
           setIsCreatingCard(false);
           return;
         }
@@ -194,7 +200,9 @@ export function CreateCharacterPage() {
         const saveResult = await CardService.saveCard.execute(card);
 
         if (saveResult.isFailure) {
-          console.error("Failed to save card:", saveResult.getError());
+          toast.error("Failed to save card", {
+            description: saveResult.getError(),
+          });
           setIsCreatingCard(false);
           return;
         }
@@ -207,7 +215,9 @@ export function CreateCharacterPage() {
         // Step 6: Navigate to characters list page
         navigate({ to: "/assets/characters" });
       } catch (error) {
-        console.error("Error creating character card:", error);
+        toast.error("Failed to create character card", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
         setIsCreatingCard(false);
       }
     } else {
