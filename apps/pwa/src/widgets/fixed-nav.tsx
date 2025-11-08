@@ -32,7 +32,7 @@ const TOP_NAV_ITEMS: NavItem[] = [
     submenu: [
       { id: "characters", label: "Characters", path: "/assets/characters" },
       { id: "scenarios", label: "Scenarios", path: "/assets/scenarios" },
-      { id: "flows", label: "Workflows", path: "/assets/flows" },
+      { id: "workflows", label: "Workflows", path: "/assets/workflows" },
     ],
   },
 ] as const;
@@ -71,7 +71,7 @@ export function FixedNav() {
   const [hoveredItem, setHoveredItem] = useState<string | undefined>();
 
   // Check if we should show submenu:
-  // - NOT on assets list pages (/assets/characters, /assets/scenarios, /assets/flows) - they have tabs
+  // - NOT on assets list pages (/assets/characters, /assets/scenarios, /assets/workflows) - they have tabs
   // - YES on assets detail pages (/assets/characters/123)
   // - YES on other pages (e.g., /sessions)
   const shouldShowSubmenu = (() => {
