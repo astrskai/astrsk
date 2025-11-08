@@ -136,7 +136,7 @@ export function VariablesPanel({
         className,
       )}
     >
-      <div className="flex max-h-[750px] flex-col">
+      <div className="flex max-h-[745px] flex-col">
         {/* Header - Fixed */}
         <div className="flex-shrink-0 space-y-2 border-b border-gray-800 p-4">
           <h3 className="text-text-secondary text-base font-medium">

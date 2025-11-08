@@ -110,10 +110,10 @@ export function ScenarioFirstMessagesStep({
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
+        <h2 className="text-text-primary mb-2 text-base font-semibold md:text-[1.2rem]">
           Add First Messages
         </h2>
-        <p className="text-text-secondary text-sm">
+        <p className="text-text-secondary text-xs md:text-sm">
           Create the opening message that set the scene (optional).
         </p>
       </div>
@@ -121,7 +121,7 @@ export function ScenarioFirstMessagesStep({
       {/* Main Content - 2 Column Layout */}
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left: Scenarios List and Editor */}
-        <div className="flex-1 bg-gray-900 p-2 md:p-4">
+        <div className="flex-1 rounded-lg bg-gray-900 p-2 md:p-4">
           <div className="flex flex-col gap-4 md:flex-row md:gap-6">
             {/* Scenarios List */}
             <div className="flex flex-col gap-2 md:w-64">
@@ -139,7 +139,7 @@ export function ScenarioFirstMessagesStep({
                 </Button>
               </div>
 
-              <div className="border-border flex flex-col gap-1 rounded-lg border bg-gray-800 p-2">
+              <div className="border-dark-surface flex flex-col gap-1 rounded-lg border bg-gray-800 p-2">
                 {firstMessages.length === 0 ? (
                   <div className="text-text-secondary py-8 text-center text-xs">
                     No first messages yet
@@ -204,7 +204,7 @@ export function ScenarioFirstMessagesStep({
                   />
                 </>
               ) : (
-                <div className="text-text-secondary border-border flex flex-1 items-center justify-center rounded-lg border py-12 text-sm">
+                <div className="text-text-secondary border-dark-surface flex flex-1 items-center justify-center rounded-lg border py-12 text-sm">
                   Select a message to edit or add a new one
                 </div>
               )}
@@ -218,7 +218,7 @@ export function ScenarioFirstMessagesStep({
         </div>
 
         {/* Right: Variables Panel - Sticky on desktop */}
-        <div className="lg:sticky lg:top-4 lg:self-start">
+        <div className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
           <VariablesPanel
             onVariableClick={insertVariable}
             filterVariables={filterVariables}

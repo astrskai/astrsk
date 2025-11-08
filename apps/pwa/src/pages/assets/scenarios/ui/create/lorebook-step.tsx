@@ -58,10 +58,10 @@ export function ScenarioLorebookStep({
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
+        <h2 className="text-text-primary mb-2 text-base font-semibold md:text-[1.2rem]">
           Add lorebook
         </h2>
-        <p className="text-text-secondary text-sm">
+        <p className="text-text-secondary text-xs md:text-sm">
           Add additional lore and world-building details for your scenario
           (optional).
         </p>
@@ -78,7 +78,7 @@ export function ScenarioLorebookStep({
         />
 
         {/* Right: Variables Panel - Sticky on desktop */}
-        <div className="lg:sticky lg:top-4 lg:self-start">
+        <div className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
           <VariablesPanel
             onVariableClick={insertVariable}
             filterVariables={filterVariables}

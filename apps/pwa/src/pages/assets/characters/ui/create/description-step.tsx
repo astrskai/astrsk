@@ -101,7 +101,7 @@ export function CharacterDescriptionStep({
       {/* Main Content - Flex Layout */}
       <div className="flex flex-col gap-6 md:flex-row md:items-start">
         {/* Text Fields */}
-        <div className="border-border flex flex-1 flex-col rounded-lg border-2 bg-gray-900 p-2 md:p-4">
+        <div className="flex flex-1 flex-col rounded-lg bg-gray-900 p-2 md:p-4">
           <div className="flex flex-col gap-1">
             {/* Character Description */}
             <Textarea
@@ -155,13 +155,12 @@ export function CharacterDescriptionStep({
         </div>
 
         {/* Variables Panel - Sticky on desktop */}
-        <div className="md:sticky md:top-4 md:self-start">
+        <div className="hidden md:sticky md:top-4 md:block md:self-start">
           <VariablesPanel
             onVariableClick={insertVariable}
             filterVariables={filterVariables}
             isActive={!!activeTextarea}
             inactiveMessage="Click in a text field to insert variables"
-            className="hidden md:block"
           />
         </div>
       </div>

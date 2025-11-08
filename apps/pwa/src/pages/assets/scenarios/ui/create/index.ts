@@ -1,4 +1,4 @@
-export { ScenarioImageStep } from "./image-step";
+export { ScenarioBasicInfoStep } from "./basic-info";
 export { ScenarioDescriptionStep } from "./description-step";
 export { ScenarioLorebookStep } from "./lorebook-step";
 export {

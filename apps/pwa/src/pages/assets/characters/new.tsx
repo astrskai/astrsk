@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
@@ -86,10 +86,18 @@ export function CreateCharacterPage() {
 
   const handleFileUpload = async (file: File | null) => {
     if (!file) {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+
       setImageFile(undefined);
       setImageUrl(undefined);
       setImageDimensions(undefined);
       return;
+    }
+
+    if (imageUrl) {
+      URL.revokeObjectURL(imageUrl);
     }
 
     // Store the file for preview - actual upload happens on save
@@ -254,6 +262,15 @@ export function CreateCharacterPage() {
         return false;
     }
   })();
+
+  // Cleanup blob URL on unmount or when imageUrl changes
+  useEffect(() => {
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl]);
 
   return (
     <div className="relative flex h-screen w-full flex-col overflow-hidden">

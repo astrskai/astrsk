@@ -60,10 +60,10 @@ export function ScenarioDescriptionStep({
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
+        <h2 className="text-text-primary mb-2 text-base font-semibold md:text-[1.2rem]">
           Add Your Scenario Description*
         </h2>
-        <p className="text-text-secondary text-sm">
+        <p className="text-text-secondary text-xs md:text-sm">
           Describe your scenario's setting, themes, and story elements.
         </p>
       </div>
@@ -71,7 +71,7 @@ export function ScenarioDescriptionStep({
       {/* Main Content - Flex Layout */}
       <div className="flex flex-col gap-6 md:flex-row md:items-start">
         {/* Text Fields */}
-        <div className="border-border flex flex-1 flex-col rounded-lg border-2 bg-gray-900 p-2 md:p-4">
+        <div className="flex flex-1 flex-col rounded-lg bg-gray-900 p-2 md:p-4">
           <div className="flex flex-col gap-1">
             {/* Scenario Description */}
             <Textarea
@@ -83,7 +83,7 @@ export function ScenarioDescriptionStep({
               placeholder="Describe your scenario's setting, themes, and story elements..."
               required
               autoResize
-              className="min-h-[300px]"
+              className="min-h-[300px] md:min-h-[665px]"
             />
             <p className="text-right text-xs text-gray-300">
               {`{{scenario.description}}`}
@@ -92,7 +92,7 @@ export function ScenarioDescriptionStep({
         </div>
 
         {/* Variables Panel - Sticky on desktop */}
-        <div className="md:sticky md:top-4 md:self-start">
+        <div className="hidden md:sticky md:top-4 md:block md:self-start">
           <VariablesPanel
             onVariableClick={insertVariable}
             filterVariables={filterVariables}
