@@ -32,7 +32,7 @@ import { Route as LayoutSettingsLegalPrivacyPolicyRouteImport } from './routes/_
 import { Route as LayoutSettingsLegalOssNoticeRouteImport } from './routes/_layout/settings/legal/oss-notice'
 import { Route as LayoutSettingsLegalContentPolicyRouteImport } from './routes/_layout/settings/legal/content-policy'
 import { Route as LayoutSettingsAccountCreditUsageRouteImport } from './routes/_layout/settings/account/credit-usage'
-import { Route as LayoutAssetsWorkflowsFlowIdRouteImport } from './routes/_layout/assets/workflows/$flowId'
+import { Route as LayoutAssetsWorkflowsWorkflowIdRouteImport } from './routes/_layout/assets/workflows/$workflowId'
 import { Route as LayoutAssetsScenariosNewRouteImport } from './routes/_layout/assets/scenarios/new'
 import { Route as LayoutAssetsScenariosScenarioIdRouteImport } from './routes/_layout/assets/scenarios/$scenarioId'
 import { Route as LayoutAssetsCharactersNewRouteImport } from './routes/_layout/assets/characters/new'
@@ -163,10 +163,10 @@ const LayoutSettingsAccountCreditUsageRoute =
     path: '/account/credit-usage',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
-const LayoutAssetsWorkflowsFlowIdRoute =
-  LayoutAssetsWorkflowsFlowIdRouteImport.update({
-    id: '/assets/workflows/$flowId',
-    path: '/assets/workflows/$flowId',
+const LayoutAssetsWorkflowsWorkflowIdRoute =
+  LayoutAssetsWorkflowsWorkflowIdRouteImport.update({
+    id: '/assets/workflows/$workflowId',
+    path: '/assets/workflows/$workflowId',
     getParentRoute: () => LayoutRoute,
   } as any)
 const LayoutAssetsScenariosNewRoute =
@@ -210,7 +210,7 @@ export interface FileRoutesByFullPath {
   '/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
   '/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
   '/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
-  '/assets/workflows/$flowId': typeof LayoutAssetsWorkflowsFlowIdRoute
+  '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
@@ -238,7 +238,7 @@ export interface FileRoutesByTo {
   '/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
   '/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
   '/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
-  '/assets/workflows/$flowId': typeof LayoutAssetsWorkflowsFlowIdRoute
+  '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
@@ -269,7 +269,7 @@ export interface FileRoutesById {
   '/_layout/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
   '/_layout/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
   '/_layout/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
-  '/_layout/assets/workflows/$flowId': typeof LayoutAssetsWorkflowsFlowIdRoute
+  '/_layout/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/_layout/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/_layout/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/_layout/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
@@ -300,7 +300,7 @@ export interface FileRouteTypes {
     | '/assets/characters/new'
     | '/assets/scenarios/$scenarioId'
     | '/assets/scenarios/new'
-    | '/assets/workflows/$flowId'
+    | '/assets/workflows/$workflowId'
     | '/settings/account/credit-usage'
     | '/settings/legal/content-policy'
     | '/settings/legal/oss-notice'
@@ -328,7 +328,7 @@ export interface FileRouteTypes {
     | '/assets/characters/new'
     | '/assets/scenarios/$scenarioId'
     | '/assets/scenarios/new'
-    | '/assets/workflows/$flowId'
+    | '/assets/workflows/$workflowId'
     | '/settings/account/credit-usage'
     | '/settings/legal/content-policy'
     | '/settings/legal/oss-notice'
@@ -358,7 +358,7 @@ export interface FileRouteTypes {
     | '/_layout/assets/characters/new'
     | '/_layout/assets/scenarios/$scenarioId'
     | '/_layout/assets/scenarios/new'
-    | '/_layout/assets/workflows/$flowId'
+    | '/_layout/assets/workflows/$workflowId'
     | '/_layout/settings/account/credit-usage'
     | '/_layout/settings/legal/content-policy'
     | '/_layout/settings/legal/oss-notice'
@@ -539,11 +539,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsAccountCreditUsageRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
-    '/_layout/assets/workflows/$flowId': {
-      id: '/_layout/assets/workflows/$flowId'
-      path: '/assets/workflows/$flowId'
-      fullPath: '/assets/workflows/$flowId'
-      preLoaderRoute: typeof LayoutAssetsWorkflowsFlowIdRouteImport
+    '/_layout/assets/workflows/$workflowId': {
+      id: '/_layout/assets/workflows/$workflowId'
+      path: '/assets/workflows/$workflowId'
+      fullPath: '/assets/workflows/$workflowId'
+      preLoaderRoute: typeof LayoutAssetsWorkflowsWorkflowIdRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/assets/scenarios/new': {
@@ -623,7 +623,7 @@ interface LayoutRouteChildren {
   LayoutAssetsCharactersNewRoute: typeof LayoutAssetsCharactersNewRoute
   LayoutAssetsScenariosScenarioIdRoute: typeof LayoutAssetsScenariosScenarioIdRoute
   LayoutAssetsScenariosNewRoute: typeof LayoutAssetsScenariosNewRoute
-  LayoutAssetsWorkflowsFlowIdRoute: typeof LayoutAssetsWorkflowsFlowIdRoute
+  LayoutAssetsWorkflowsWorkflowIdRoute: typeof LayoutAssetsWorkflowsWorkflowIdRoute
   LayoutAssetsCharactersIndexRoute: typeof LayoutAssetsCharactersIndexRoute
   LayoutAssetsScenariosIndexRoute: typeof LayoutAssetsScenariosIndexRoute
   LayoutAssetsWorkflowsIndexRoute: typeof LayoutAssetsWorkflowsIndexRoute
@@ -643,7 +643,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAssetsCharactersNewRoute: LayoutAssetsCharactersNewRoute,
   LayoutAssetsScenariosScenarioIdRoute: LayoutAssetsScenariosScenarioIdRoute,
   LayoutAssetsScenariosNewRoute: LayoutAssetsScenariosNewRoute,
-  LayoutAssetsWorkflowsFlowIdRoute: LayoutAssetsWorkflowsFlowIdRoute,
+  LayoutAssetsWorkflowsWorkflowIdRoute: LayoutAssetsWorkflowsWorkflowIdRoute,
   LayoutAssetsCharactersIndexRoute: LayoutAssetsCharactersIndexRoute,
   LayoutAssetsScenariosIndexRoute: LayoutAssetsScenariosIndexRoute,
   LayoutAssetsWorkflowsIndexRoute: LayoutAssetsWorkflowsIndexRoute,

@@ -14,11 +14,11 @@ import { useAgentStore } from "@/shared/stores/agent-store";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 // import { FlowDialog } from "@/features/flow/flow-dialog";
-import { FlowImportDialog } from "@/pages/assets/flows/ui/dialog/flow-import-dialog";
+import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
 import {
   FlowExportDialog,
   AgentModelTierInfo,
-} from "@/pages/assets/flows/ui/dialog/flow-export-dialog";
+} from "@/pages/assets/workflows/ui/dialog/flow-export-dialog";
 import { ModelTier } from "@/entities/agent/domain/agent";
 import { SectionHeader } from "./index";
 import {
@@ -87,8 +87,8 @@ const FlowItem = ({
 
     // Navigate to the flow
     navigate({
-      to: "/assets/workflows/$flowId",
-      params: { flowId: flow.id.toString() },
+      to: "/assets/workflows/$workflowId",
+      params: { workflowId: flow.id.toString() },
     });
 
     // Keep the loading screen visible for a minimum duration
@@ -199,8 +199,8 @@ const FlowItem = ({
       selectFlowId(copiedFlow.id.toString());
 
       navigate({
-        to: "/assets/workflows/$flowId",
-        params: { flowId: copiedFlow.id.toString() },
+        to: "/assets/workflows/$workflowId",
+        params: { workflowId: copiedFlow.id.toString() },
       });
 
       toast.success("Flow copied successfully");
@@ -472,8 +472,8 @@ const FlowSection = ({
 
           // Navigate to created flow
           navigate({
-            to: "/assets/workflows/$flowId",
-            params: { flowId: savedFlow.id.toString() },
+            to: "/assets/workflows/$workflowId",
+            params: { workflowId: savedFlow.id.toString() },
           });
         } else {
           // Select created flow
@@ -481,8 +481,8 @@ const FlowSection = ({
 
           // Navigate to created flow with default name
           navigate({
-            to: "/assets/workflows/$flowId",
-            params: { flowId: flow.id.toString() },
+            to: "/assets/workflows/$workflowId",
+            params: { workflowId: flow.id.toString() },
           });
         }
 
@@ -623,8 +623,8 @@ const FlowSection = ({
           selectFlowId(importedFlow.id.toString());
 
           navigate({
-            to: "/assets/workflows/$flowId",
-            params: { flowId: importedFlow.id.toString() },
+            to: "/assets/workflows/$workflowId",
+            params: { workflowId: importedFlow.id.toString() },
           });
         }, 100);
 

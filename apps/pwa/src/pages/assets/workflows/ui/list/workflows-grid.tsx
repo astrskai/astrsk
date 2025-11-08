@@ -130,8 +130,8 @@ export function FlowsGrid({
 
   const handleFlowClick = (flowId: string) => {
     navigate({
-      to: "/assets/workflows/$flowId",
-      params: { flowId },
+      to: "/assets/workflows/$workflowId",
+      params: { workflowId: flowId },
     });
   };
 
