@@ -39,6 +39,9 @@ export function CreateCharacterPage() {
   const [characterName, setCharacterName] = useState<string>("New Character");
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [imageFile, setImageFile] = useState<File | undefined>();
+  const [imageDimensions, setImageDimensions] = useState<
+    { width: number; height: number } | undefined
+  >();
   const [description, setDescription] = useState<string>("");
   const [exampleDialogue, setExampleDialogue] = useState<string>("");
   const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>([]);
@@ -59,10 +62,32 @@ export function CreateCharacterPage() {
     ? `Step ${currentStepConfig.number} : ${currentStepConfig.label}`
     : undefined;
 
-  const handleFileUpload = (file: File | null) => {
+  const getImageDimensions = (
+    file: File,
+  ): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve({ width: img.width, height: img.height });
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Failed to load image"));
+      };
+
+      img.src = objectUrl;
+    });
+  };
+
+  const handleFileUpload = async (file: File | null) => {
     if (!file) {
       setImageFile(undefined);
       setImageUrl(undefined);
+      setImageDimensions(undefined);
       return;
     }
 
@@ -72,6 +97,15 @@ export function CreateCharacterPage() {
     // Create a temporary object URL for preview
     const objectUrl = URL.createObjectURL(file);
     setImageUrl(objectUrl);
+
+    // Get image dimensions
+    try {
+      const dimensions = await getImageDimensions(file);
+      setImageDimensions(dimensions);
+    } catch (error) {
+      console.error("Error getting image dimensions:", error);
+      setImageDimensions(undefined);
+    }
   };
 
   const handleNext = async () => {
@@ -239,6 +273,7 @@ export function CreateCharacterPage() {
               characterName={characterName}
               onCharacterNameChange={setCharacterName}
               imageUrl={imageUrl}
+              imageDimensions={imageDimensions}
               onFileUpload={handleFileUpload}
             />
           )}
