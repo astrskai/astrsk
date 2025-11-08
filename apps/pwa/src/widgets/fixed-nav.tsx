@@ -129,11 +129,12 @@ export function FixedNav() {
   const renderSubmenu = (item: NavItem) => {
     return (
       hoveredItem === item.id &&
-      "submenu" in item &&
       item.submenu &&
       shouldShowSubmenu && (
         <div
           data-submenu
+          role="menu"
+          aria-label={`Submenu for ${item.label}`}
           className="absolute top-0 left-full z-50 min-w-[160px] rounded-lg border border-gray-700 bg-gray-900 py-2 shadow-lg"
           onMouseLeave={() => setHoveredItem(undefined)}
         >
@@ -143,6 +144,7 @@ export function FixedNav() {
             return (
               <Link
                 key={`${subItem.id}-${index}`}
+                role="menuitem"
                 to={subItem.path}
                 onClick={() => setHoveredItem(undefined)}
                 className={cn(
