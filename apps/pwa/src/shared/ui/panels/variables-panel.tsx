@@ -132,7 +132,7 @@ export function VariablesPanel({
   return (
     <div
       className={cn(
-        "w-full overflow-hidden rounded-lg bg-gray-900 md:w-95",
+        "min-h-[200px] w-full rounded-lg bg-gray-900 md:w-95",
         className,
       )}
     >

@@ -1,8 +1,6 @@
 import { Trash2 } from "lucide-react";
 
-import CharacterPreview from "@/features/character/ui/character-preview";
-
-import { FileDropZone, ChatBubble, AvatarSimple } from "@/shared/ui";
+import { FileDropZone } from "@/shared/ui";
 import { Input, FileUploadButton } from "@/shared/ui/forms";
 import { cn } from "@/shared/lib/cn";
 
@@ -10,6 +8,7 @@ interface CharacterBasicInfoStepProps {
   characterName: string;
   onCharacterNameChange: (name: string) => void;
   imageUrl?: string;
+  imageDimensions?: { width: number; height: number };
   onFileUpload: (file: File | null) => void;
 }
 
@@ -27,6 +26,7 @@ export function CharacterBasicInfoStep({
   characterName = "Untitled Character",
   onCharacterNameChange,
   imageUrl,
+  imageDimensions,
   onFileUpload,
 }: CharacterBasicInfoStepProps) {
   // avatarAssetId is now a blob URL (e.g., "blob:http://localhost:3000/...")
@@ -42,7 +42,7 @@ export function CharacterBasicInfoStep({
       <div>
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
-            <h3 className="mb-1 text-base font-semibold text-gray-50 md:text-lg">
+            <h3 className="mb-1 text-base font-semibold text-gray-50 md:text-[1.2rem]">
               Name your character{" "}
               <span className="text-normal-secondary">*</span>
             </h3>
@@ -67,14 +67,37 @@ export function CharacterBasicInfoStep({
 
       {/* Section 2: Character Image */}
       <div>
-        <div className="mx-auto flex max-w-3xl flex-col gap-4 lg:gap-6">
-          <div className="flex flex-col justify-between gap-1">
-            <h3 className="text-text-primary mb-1 text-base font-semibold md:text-lg">
-              Upload character image and preview
-            </h3>
-            <p className="text-text-secondary text-xs md:text-sm">
-              Any JPG, JPEG, or PNG. 500x416 pixels for best display.
-            </p>
+        <div className="mx-auto flex max-w-3xl flex-col gap-6">
+          <div className="flex flex-col justify-between gap-1 md:flex-row">
+            <div>
+              <h3 className="text-text-primary mb-1 text-base font-semibold md:text-[1.2rem]">
+                Upload character image
+              </h3>
+              <p className="text-text-secondary text-xs md:text-sm">
+                Any JPG, JPEG, or PNG. 500x416 pixels for best display.
+              </p>
+            </div>
+
+            {/* Change Image Button - Below previews */}
+            {imageUrl && (
+              <div className="hidden items-center justify-center gap-4 md:flex">
+                <button
+                  className={cn(
+                    "hidden cursor-pointer text-sm text-gray-200 hover:text-gray-50 md:block",
+                  )}
+                  onClick={handleDeleteImage}
+                >
+                  <Trash2 size={20} />
+                </button>
+                <FileUploadButton
+                  accept={ACCEPTED_FILE_TYPES}
+                  onChange={onFileUpload}
+                  className="w-full max-w-[120px] py-1.5 text-xs md:max-w-[200px] md:text-sm"
+                >
+                  Change Image
+                </FileUploadButton>
+              </div>
+            )}
           </div>
 
           {/* Avatar and Card Display */}
@@ -86,31 +109,30 @@ export function CharacterBasicInfoStep({
               maxFiles={1}
             />
           ) : (
-            <div className="flex flex-col items-center gap-4">
+            <div className="relative mx-auto flex w-fit flex-col items-center gap-2">
               <img
                 src={imageUrl}
                 alt={characterName || "Untitled Character"}
-                className="aspect-[4/6] h-auto w-full max-w-[200px] rounded-lg object-cover md:max-w-[320px]"
+                className={cn(
+                  "h-auto w-full rounded-lg border-2 border-gray-100 object-cover",
+                  imageDimensions &&
+                    imageDimensions.width > imageDimensions.height
+                    ? "max-w-[280px] md:max-w-[480px]"
+                    : "max-w-[140px] md:max-w-[320px]",
+                )}
               />
-
-              {/* Change Image Button - Below previews */}
-              <div className="flex items-center gap-4">
-                <button
-                  className={cn(
-                    "cursor-pointer text-sm text-gray-200 hover:text-gray-50",
-                  )}
-                  onClick={handleDeleteImage}
-                >
-                  <Trash2 size={20} />
-                </button>
-                <FileUploadButton
-                  accept={ACCEPTED_FILE_TYPES}
-                  onChange={onFileUpload}
-                  className="w-full max-w-[180px] text-xs md:max-w-[240px] md:text-sm"
-                >
-                  Change Character Image
-                </FileUploadButton>
-              </div>
+              {imageDimensions && (
+                <p className="text-text-secondary text-xs">
+                  {imageDimensions.width} x {imageDimensions.height} pixels
+                </p>
+              )}
+              <FileUploadButton
+                accept={ACCEPTED_FILE_TYPES}
+                onChange={onFileUpload}
+                className="absolute top-[-10px] right-[-10px] block md:hidden"
+                size="sm"
+                iconOnly
+              />
             </div>
           )}
         </div>
