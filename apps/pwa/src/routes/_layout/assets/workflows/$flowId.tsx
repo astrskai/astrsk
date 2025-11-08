@@ -7,7 +7,7 @@ function FlowDetailPageWrapper() {
   return <FlowPanelMain flowId={flowId} />;
 }
 
-export const Route = createFileRoute("/_layout/assets/flows/$flowId")({
+export const Route = createFileRoute("/_layout/assets/workflows/$flowId")({
   component: FlowDetailPageWrapper,
   beforeLoad: async ({ params }) => {
     const { flowId } = params;

@@ -87,7 +87,7 @@ const FlowItem = ({
 
     // Navigate to the flow
     navigate({
-      to: "/assets/flows/$flowId",
+      to: "/assets/workflows/$flowId",
       params: { flowId: flow.id.toString() },
     });
 
@@ -199,7 +199,7 @@ const FlowItem = ({
       selectFlowId(copiedFlow.id.toString());
 
       navigate({
-        to: "/assets/flows/$flowId",
+        to: "/assets/workflows/$flowId",
         params: { flowId: copiedFlow.id.toString() },
       });
 
@@ -472,7 +472,7 @@ const FlowSection = ({
 
           // Navigate to created flow
           navigate({
-            to: "/assets/flows/$flowId",
+            to: "/assets/workflows/$flowId",
             params: { flowId: savedFlow.id.toString() },
           });
         } else {
@@ -481,7 +481,7 @@ const FlowSection = ({
 
           // Navigate to created flow with default name
           navigate({
-            to: "/assets/flows/$flowId",
+            to: "/assets/workflows/$flowId",
             params: { flowId: flow.id.toString() },
           });
         }
@@ -623,7 +623,7 @@ const FlowSection = ({
           selectFlowId(importedFlow.id.toString());
 
           navigate({
-            to: "/assets/flows/$flowId",
+            to: "/assets/workflows/$flowId",
             params: { flowId: importedFlow.id.toString() },
           });
         }, 100);

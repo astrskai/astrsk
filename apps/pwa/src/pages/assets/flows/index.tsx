@@ -79,7 +79,7 @@ export function FlowsListPage() {
 
         // Navigate to flow detail page immediately
         navigate({
-          to: "/assets/flows/$flowId",
+          to: "/assets/workflows/$flowId",
           params: { flowId: flow.id.toString() },
         });
       } catch (error) {

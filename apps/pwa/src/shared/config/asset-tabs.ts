@@ -5,5 +5,5 @@ export type AssetType = "character" | "scenario" | "workflow";
 export const ASSET_TABS: TabConfig[] = [
   { label: "Character", to: "/assets/characters", value: "character" },
   { label: "Scenario", to: "/assets/scenarios", value: "scenario" },
-  { label: "Workflow", to: "/assets/flows", value: "workflow" },
+  { label: "Workflow", to: "/assets/workflows", value: "workflow" },
 ];

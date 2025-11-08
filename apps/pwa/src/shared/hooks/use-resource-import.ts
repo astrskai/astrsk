@@ -211,9 +211,9 @@ export function useResourceImport() {
           description: importedFlow.props.name || "Untitled Flow",
         });
 
-        // Navigate to flows page if not already there (setter only provided from flows page)
+        // Navigate to workflows page if not already there (setter only provided from workflows page)
         if (!newlyCreatedFlowIdSetter) {
-          navigate({ to: "/assets/flows" });
+          navigate({ to: "/assets/workflows" });
         }
       } catch (error) {
         logger.error(error);
