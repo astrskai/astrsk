@@ -18,7 +18,7 @@ import { useResourceImport } from "@/shared/hooks/use-resource-import";
  * Flows List Page
  * Displays all flows with search and create functionality
  */
-export function FlowsListPage() {
+export default function WorkflowsListPage() {
   const navigate = useNavigate();
 
   // 1. State hooks
@@ -79,8 +79,8 @@ export function FlowsListPage() {
 
         // Navigate to flow detail page immediately
         navigate({
-          to: "/assets/workflows/$flowId",
-          params: { flowId: flow.id.toString() },
+          to: "/assets/workflows/$workflowId",
+          params: { workflowId: flow.id.toString() },
         });
       } catch (error) {
         logger.error(error);

@@ -8,7 +8,7 @@ import { cardQueries } from "@/entities/card/api/card-queries";
 import { CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { useResourceImport } from "@/shared/hooks/use-resource-import";
-import { FlowImportDialog } from "@/pages/assets/flows/ui/dialog/flow-import-dialog";
+import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
 
 /**
  * Characters List Page

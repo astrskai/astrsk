@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FlowsListPage } from "@/pages/assets/flows";
+import WorkflowsListPage from "@/pages/assets/workflows";
 
 export const Route = createFileRoute("/_layout/assets/workflows/")({
-  component: FlowsListPage,
+  component: WorkflowsListPage,
 });
