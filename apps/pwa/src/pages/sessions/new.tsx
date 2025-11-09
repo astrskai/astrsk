@@ -25,7 +25,12 @@ import { queryClient } from "@/shared/api/query-client";
 import { TableName } from "@/db/schema/table-name";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
-type Step = "basic-info" | "flow" | "ai-character" | "user-character" | "scenario";
+type Step =
+  | "basic-info"
+  | "flow"
+  | "ai-character"
+  | "user-character"
+  | "scenario";
 
 const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
   [
@@ -68,7 +73,9 @@ export function CreateSessionPage() {
   );
   const [selectedUserCharacter, setSelectedUserCharacter] =
     useState<CharacterCard | null>(null);
-  const [selectedScenario, setSelectedScenario] = useState<PlotCard | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<PlotCard | null>(
+    null,
+  );
 
   const selectSession = useSessionStore.use.selectSession();
 
@@ -261,8 +268,8 @@ export function CreateSessionPage() {
       <StepIndicator steps={STEPS} currentStep={currentStep} />
 
       {/* Content */}
-      <div className="mb-13 flex flex-1 overflow-y-auto md:mb-0">
-        <div className="mx-auto w-full max-w-7xl p-8">
+      <div className="mb-13 flex-1 overflow-y-auto md:mb-0">
+        <div className="mx-auto w-full max-w-7xl p-4 md:p-8">
           {currentStep === "basic-info" && (
             <BasicInfoStep
               sessionName={sessionName}
@@ -307,7 +314,7 @@ export function CreateSessionPage() {
       </div>
 
       {/* Mobile Floating Buttons */}
-      <div className="absolute right-0 bottom-0 left-0 bg-gray-900 p-2 md:hidden">
+      <div className="absolute right-0 bottom-0 left-0 p-2 md:hidden">
         <div className="flex items-center justify-between gap-3">
           {showPreviousButton ? (
             <Button

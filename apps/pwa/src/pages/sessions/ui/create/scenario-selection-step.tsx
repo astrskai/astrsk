@@ -91,11 +91,13 @@ const ScenarioPreviewItem = ({
  */
 interface SelectedScenarioCardProps {
   card: PlotCard;
+  onClick: () => void;
   onRemove: (e: React.MouseEvent) => void;
 }
 
 const SelectedScenarioCard = ({
   card,
+  onClick,
   onRemove,
 }: SelectedScenarioCardProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
@@ -104,7 +106,10 @@ const SelectedScenarioCard = ({
     {
       icon: Trash2,
       label: `Remove ${card.props.title}`,
-      onClick: onRemove,
+      onClick: (e) => {
+        e.stopPropagation();
+        onRemove(e);
+      },
     },
   ];
 
@@ -118,6 +123,7 @@ const SelectedScenarioCard = ({
       firstMessages={card.props.scenarios?.length || 0}
       actions={actions}
       isShowActions={true}
+      onClick={onClick}
     />
   );
 };
@@ -137,7 +143,7 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
       </h3>
 
       {/* Scenario Image */}
-      <div className="relative mx-auto aspect-[3/4] max-w-xs overflow-hidden rounded-lg">
+      <div className="relative mx-auto aspect-[3/4] max-w-[200px] overflow-hidden rounded-lg md:max-w-xs">
         <img
           src={scenarioImageUrl || "/img/placeholder/scenario-card-image.png"}
           alt={plot.props.title}
@@ -186,7 +192,7 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
  * Fourth step in create session wizard
  * Allows user to select one scenario card (optional)
  */
-export function ScenarioSelectionStep({
+export default function ScenarioSelectionStep({
   selectedScenario,
   onScenarioSelected,
 }: ScenarioSelectionStepProps) {
@@ -282,24 +288,23 @@ export function ScenarioSelectionStep({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-xl">
+        <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-[1.2rem]">
           Select a Scenario&nbsp;(optional)
         </h2>
-        <p className="text-text-secondary text-sm">
+        <p className="text-text-secondary text-xs md:text-sm">
           A scenario provides story context and starting messages for your
           session.
         </p>
       </div>
 
       {/* Selected Scenario Display */}
-      <div className="flex flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         {selectedScenario ? (
-          <div className="mx-auto w-full max-w-2xl">
-            <SelectedScenarioCard
-              card={selectedScenario}
-              onRemove={handleRemoveScenario}
-            />
-          </div>
+          <SelectedScenarioCard
+            card={selectedScenario}
+            onClick={handleAddScenarioClick}
+            onRemove={handleRemoveScenario}
+          />
         ) : (
           /* Empty State - Show Select Button Card */
           <div
