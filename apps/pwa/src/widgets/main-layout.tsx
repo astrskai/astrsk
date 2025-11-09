@@ -146,8 +146,7 @@ export function MainLayout({
       <div
         className={cn(
           "h-dvh max-h-dvh min-h-dvh w-full",
-          "flex flex-col",
-          "font-inter antialiased",
+          "flex flex-col antialiased",
         )}
       >
         <LoadingOverlay />

@@ -17,7 +17,6 @@ interface SearchEmptyStateProps {
 /**
  * Empty state component for search results
  * Displays a message when search returns no results
- * Optionally shows a clear search button
  */
 export function SearchEmptyState({
   keyword,
@@ -28,7 +27,8 @@ export function SearchEmptyState({
     <div className="text-text-secondary flex h-full w-full flex-col items-center justify-center gap-4">
       <div className="max-w-[300px] text-center">
         <p className="text-text-primary mb-2 line-clamp-2 text-2xl font-semibold text-ellipsis">
-          {message || `No results for '${keyword}'`}
+          {message ||
+            (keyword ? `No results for '${keyword}'` : "No results found")}
         </p>
         <p className="text-sm">
           {description || `Try a different name, tag or keyword`}

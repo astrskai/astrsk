@@ -68,7 +68,7 @@ export function SearchableSidebar({
 
       {/* Scrollable List Content */}
       {isExpanded && (
-        <div className="h-[calc(100dvh-4rem)] flex-1 overflow-y-auto">{children}</div>
+        <div className="h-[calc(100dvh-4rem)] overflow-y-auto">{children}</div>
       )}
     </div>
   );
