@@ -62,7 +62,7 @@ export function SessionsPage() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex w-full flex-1 flex-col">
       {/* Hidden file input for import - triggers file selection */}
       <input
         ref={fileInputRef}
@@ -97,7 +97,7 @@ export function SessionsPage() {
       />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 p-4">
         {isLoading ? (
           <Loading />
         ) : keyword && (!sessions || sessions.length === 0) ? (

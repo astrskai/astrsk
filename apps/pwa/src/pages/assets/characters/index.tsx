@@ -67,7 +67,7 @@ export function CharactersListPage() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col overflow-y-auto">
+    <div className="flex w-full flex-1 flex-col">
       {/* Hidden file input for import */}
       <input
         ref={fileInputRef}
@@ -106,7 +106,7 @@ export function CharactersListPage() {
       />
 
       {/* Content */}
-      <div className="mx-auto w-full max-w-7xl flex-1 p-4">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 p-4">
         {isLoadingCards ? (
           <Loading />
         ) : keyword && characters.length === 0 ? (

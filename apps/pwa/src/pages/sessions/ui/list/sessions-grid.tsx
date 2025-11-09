@@ -161,7 +161,7 @@ export function SessionsGrid({
 
   return (
     <>
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex w-full flex-col gap-4">
         {/* Mobile: Create Button (outside grid) */}
         {showNewSessionCard && (
           <Button

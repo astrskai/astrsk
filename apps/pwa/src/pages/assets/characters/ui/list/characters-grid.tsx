@@ -117,7 +117,7 @@ export default function CharactersGrid({
 
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex w-full flex-col gap-4">
         {/* Mobile: Create Button (outside grid) */}
         {showNewCharacterCard && (
           <Button

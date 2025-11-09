@@ -163,7 +163,7 @@ export function MainLayout({
             <TooltipProvider delayDuration={0}>
               {/* <CollapsibleSidebar />
               <CollapsibleSidebarTrigger /> */}
-              <main className="relative z-0 flex flex-1 flex-col">
+              <main className="relative z-0 flex flex-1 flex-col overflow-y-auto">
                 {children}
               </main>
               <Toaster expand className="!z-[9999]" />

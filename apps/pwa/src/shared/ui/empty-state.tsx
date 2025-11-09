@@ -31,9 +31,9 @@ export function EmptyState({
   onButtonClick,
 }: EmptyStateProps) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-6">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-6">
       <div className="max-w-[400px] text-center">
-        <h2 className="text-text-primary mb-3 text-3xl font-semibold">
+        <h2 className="text-text-primary mb-3 text-2xl font-semibold md:text-3xl">
           {title}
         </h2>
         {description && (

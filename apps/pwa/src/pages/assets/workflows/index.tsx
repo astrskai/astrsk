@@ -131,7 +131,7 @@ export default function WorkflowsListPage() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex w-full flex-1 flex-col">
       {/* Hidden file input for import - triggers file selection */}
       <input
         ref={fileInputRef}
@@ -177,7 +177,7 @@ export default function WorkflowsListPage() {
       />
 
       {/* Content */}
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto p-4">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 p-4">
         {isLoadingFlows ? (
           <Loading />
         ) : keyword && flows.length === 0 ? (

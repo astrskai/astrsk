@@ -66,7 +66,7 @@ export function PlotsListPage() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex w-full flex-1 flex-col">
       {/* Hidden file input for import */}
       <input
         ref={fileInputRef}
@@ -105,7 +105,7 @@ export function PlotsListPage() {
       />
 
       {/* Content */}
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto p-4">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 p-4">
         {isLoadingCards ? (
           <Loading />
         ) : keyword && plots.length === 0 ? (

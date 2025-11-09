@@ -25,7 +25,7 @@ export function SearchEmptyState({
   description,
 }: SearchEmptyStateProps) {
   return (
-    <div className="text-text-secondary flex h-full flex-col items-center justify-center gap-4">
+    <div className="text-text-secondary flex h-full w-full flex-col items-center justify-center gap-4">
       <div className="max-w-[300px] text-center">
         <p className="text-text-primary mb-2 line-clamp-2 text-2xl font-semibold text-ellipsis">
           {message || `No results for '${keyword}'`}
