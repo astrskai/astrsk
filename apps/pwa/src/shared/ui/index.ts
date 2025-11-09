@@ -51,6 +51,7 @@ export * from "./field-badges";
 export * from "./banner";
 export * from "./color-picker";
 export * from "./combobox";
+export * from "./empty-state";
 export * from "./initial-loading";
 export * from "./loading";
 export * from "./loading-overlay";

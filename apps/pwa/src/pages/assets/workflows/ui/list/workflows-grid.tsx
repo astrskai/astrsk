@@ -137,7 +137,7 @@ export function FlowsGrid({
 
   return (
     <>
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex w-full flex-col gap-4">
         {/* Mobile: Create Button (outside grid) */}
         {showNewFlowCard && (
           <Button
@@ -150,7 +150,7 @@ export function FlowsGrid({
         )}
 
         {/* Flows Grid */}
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 justify-center gap-4 md:grid-cols-2">
+        <div className="grid w-full grid-cols-1 justify-center gap-4 md:grid-cols-2">
           {/* Desktop: New Flow Card (inside grid) */}
           {showNewFlowCard && (
             <CreateItemCard

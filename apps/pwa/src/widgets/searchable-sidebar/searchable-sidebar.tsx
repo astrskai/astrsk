@@ -29,15 +29,15 @@ export function SearchableSidebar({
   return (
     <div
       className={cn(
-        "border-border bg-dark-surface flex h-full flex-col border-r transition-all duration-300",
+        "bg-dark-surface flex flex-col overflow-hidden border-r border-gray-900 transition-all duration-300",
         isExpanded ? "w-80" : "w-12",
         className,
       )}
     >
-      {/* Header: Search Input + Toggle Button */}
+      {/* Header: Search Input + Toggle Button - Fixed at top */}
       <div
         className={cn(
-          "border-border flex items-center border-b p-2",
+          "border-border flex shrink-0 items-center border-b p-2",
           isExpanded ? "gap-2" : "justify-center",
         )}
       >
@@ -67,7 +67,9 @@ export function SearchableSidebar({
       </div>
 
       {/* Scrollable List Content */}
-      {isExpanded && <div className="flex-1 overflow-y-auto">{children}</div>}
+      {isExpanded && (
+        <div className="h-[calc(100dvh-4rem)] overflow-y-auto">{children}</div>
+      )}
     </div>
   );
 }

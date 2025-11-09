@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { ListPageHeader } from "@/widgets/list-page-header";
 import { ASSET_TABS } from "@/shared/config/asset-tabs";
 import { CharactersGrid } from "./ui/list";
-import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
+import {
+  HelpVideoDialog,
+  Loading,
+  SearchEmptyState,
+  EmptyState,
+} from "@/shared/ui";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
@@ -15,6 +21,7 @@ import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import
  * Displays all character cards with search and import functionality
  */
 export function CharactersListPage() {
+  const navigate = useNavigate();
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
 
@@ -55,12 +62,12 @@ export function CharactersListPage() {
     setIsOpenHelpDialog(true);
   };
 
-  const handleClearSearch = () => {
-    setKeyword("");
+  const handleCreateCharacter = () => {
+    navigate({ to: "/assets/characters/new" });
   };
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex w-full flex-1 flex-col">
       {/* Hidden file input for import */}
       <input
         ref={fileInputRef}
@@ -70,7 +77,7 @@ export function CharactersListPage() {
         className="hidden"
       />
 
-      {/* Header */}
+      {/* Header - Sticky */}
       <ListPageHeader
         title="Assets"
         tabs={ASSET_TABS}
@@ -99,19 +106,23 @@ export function CharactersListPage() {
       />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 p-4">
         {isLoadingCards ? (
           <Loading />
         ) : keyword && characters.length === 0 ? (
-          // Search with no results - show empty state with clear action
           <SearchEmptyState
             keyword={keyword}
-            message="No characters found"
-            description="Try a different search term"
-            onClearSearch={handleClearSearch}
+            description="Try a different name, tag or keyword to find the character you're looking for"
+          />
+        ) : !keyword && characters.length === 0 ? (
+          <EmptyState
+            title="No characters available"
+            description="Start your new character"
+            buttonLabel="Create new character"
+            onButtonClick={handleCreateCharacter}
           />
         ) : (
-          // Show grid with characters (or NewCharacterCard if empty)
+          // Show grid with characters
           <CharactersGrid
             characters={characters}
             showNewCharacterCard={!keyword}

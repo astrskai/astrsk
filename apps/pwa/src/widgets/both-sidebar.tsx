@@ -572,7 +572,7 @@ const SidebarInset = React.forwardRef<
   return (
     <main
       className={cn(
-        "bg-background-primary relative flex flex-1 flex-col overflow-hidden",
+        "bg-background-primary relative flex flex-1 flex-col",
         "z-0 peer-data-[variant=inset]:rounded-xl peer-data-[variant=inset]:shadow-xs",
         className,
       )}

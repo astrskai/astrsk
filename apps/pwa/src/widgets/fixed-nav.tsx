@@ -167,7 +167,7 @@ export function FixedNav() {
     <aside
       className={cn(
         "hidden md:flex",
-        "flex-col items-center py-4",
+        "h-full flex-col items-center py-4",
         "bg-black-alternate border-border border-r",
       )}
       style={{ width: FIXED_NAV_WIDTH }}
@@ -181,11 +181,17 @@ export function FixedNav() {
               onMouseEnter={() => setHoveredItem(item.id)}
               onMouseLeave={(e) => {
                 // Check if we're moving to the submenu
-                const relatedTarget = e.relatedTarget as HTMLElement;
+                const relatedTarget = e.relatedTarget;
                 const submenu = e.currentTarget.querySelector("[data-submenu]");
 
+                // Type guard: ensure relatedTarget is a Node and submenu exists
+                const isMovingToSubmenu =
+                  submenu &&
+                  relatedTarget instanceof Node &&
+                  submenu.contains(relatedTarget);
+
                 // Only clear hover if we're not moving to the submenu
-                if (!submenu || !submenu.contains(relatedTarget)) {
+                if (!isMovingToSubmenu) {
                   setHoveredItem(undefined);
                 }
               }}

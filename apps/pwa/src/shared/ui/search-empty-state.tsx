@@ -1,5 +1,3 @@
-import { Button } from "./forms";
-
 interface SearchEmptyStateProps {
   /**
    * Search keyword that produced no results
@@ -14,40 +12,28 @@ interface SearchEmptyStateProps {
    * Optional description text
    */
   description?: string;
-  /**
-   * Callback when clear search button is clicked
-   */
-  onClearSearch?: () => void;
-  /**
-   * Custom clear button text
-   * @default "Clear search"
-   */
-  clearButtonText?: string;
 }
 
 /**
  * Empty state component for search results
  * Displays a message when search returns no results
- * Optionally shows a clear search button
  */
 export function SearchEmptyState({
   keyword,
-  message = "No results found",
+  message,
   description,
-  onClearSearch,
-  clearButtonText = "Clear search",
 }: SearchEmptyStateProps) {
   return (
-    <div className="text-text-secondary flex h-full flex-col items-center justify-center gap-4">
-      <div className="text-center">
-        <p className="mb-2 text-lg">{message}</p>
-        {description && <p className="text-sm">{description}</p>}
+    <div className="text-text-secondary flex h-full w-full flex-col items-center justify-center gap-4">
+      <div className="max-w-[300px] text-center">
+        <p className="text-text-primary mb-2 line-clamp-2 text-2xl font-semibold text-ellipsis">
+          {message ||
+            (keyword ? `No results for '${keyword}'` : "No results found")}
+        </p>
+        <p className="text-sm">
+          {description || `Try a different name, tag or keyword`}
+        </p>
       </div>
-      {keyword && onClearSearch && (
-        <Button variant="outline" size="sm" onClick={onClearSearch}>
-          {clearButtonText}
-        </Button>
-      )}
     </div>
   );
 }

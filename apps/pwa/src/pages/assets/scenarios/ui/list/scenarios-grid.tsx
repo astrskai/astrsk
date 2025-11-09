@@ -118,7 +118,7 @@ export function ScenariosGrid({
 
   return (
     <>
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex w-full flex-col gap-4">
         {/* Mobile: Create Button (outside grid) */}
         {showNewScenarioCard && (
           <Button
@@ -131,7 +131,7 @@ export function ScenariosGrid({
         )}
 
         {/* Scenarios Grid */}
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 justify-center gap-4 md:grid-cols-2">
+        <div className="grid w-full grid-cols-1 justify-center gap-4 md:grid-cols-2">
           {/* Desktop: New Scenario Card (inside grid) */}
           {showNewScenarioCard && (
             <CreateItemCard

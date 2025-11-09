@@ -8,7 +8,12 @@ import { useSessionImport } from "@/features/session/hooks/use-session-import";
 import { useSessionImportDialog } from "@/shared/hooks/use-session-import-dialog";
 
 import { sessionQueries } from "@/entities/session/api";
-import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
+import {
+  HelpVideoDialog,
+  Loading,
+  SearchEmptyState,
+  EmptyState,
+} from "@/shared/ui";
 import { ListPageHeader } from "@/widgets/list-page-header";
 
 /**
@@ -52,16 +57,12 @@ export function SessionsPage() {
     console.log("Export clicked");
   };
 
-  const handleClearSearch = () => {
-    setKeyword("");
-  };
-
   const handleHelpClick = () => {
     setIsOpenHelpDialog(true);
   };
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex w-full flex-1 flex-col">
       {/* Hidden file input for import - triggers file selection */}
       <input
         ref={fileInputRef}
@@ -96,19 +97,19 @@ export function SessionsPage() {
       />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 p-4">
         {isLoading ? (
           <Loading />
         ) : keyword && (!sessions || sessions.length === 0) ? (
-          // Search with no results - show empty state with clear action
-          <SearchEmptyState
-            keyword={keyword}
-            message="No sessions found"
-            description="Try a different search term"
-            onClearSearch={handleClearSearch}
+          <SearchEmptyState keyword={keyword} />
+        ) : !keyword && (!sessions || sessions.length === 0) ? (
+          <EmptyState
+            title="No sessions available"
+            description="Start your new session"
+            buttonLabel="Create new session"
+            onButtonClick={handleCreateSession}
           />
         ) : (
-          // Show grid with sessions (or NewSessionCard if empty)
           <SessionsGrid
             sessions={sessions || []}
             onCreateSession={handleCreateSession}
