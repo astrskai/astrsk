@@ -30,10 +30,10 @@ export function BasicInfoStep({
       <div>
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           <div>
-            <h3 className="text-text-primary mb-1 text-lg font-semibold">
+            <h3 className="text-text-primary mb-1 text-base font-semibold md:text-[1.2rem]">
               Name your session <span className="text-status-required">*</span>
             </h3>
-            <p className="text-text-secondary text-sm">
+            <p className="text-text-secondary text-xs md:text-sm">
               Give your session a name
             </p>
           </div>
@@ -41,9 +41,12 @@ export function BasicInfoStep({
           {/* Session Name Input */}
           <Input
             type="text"
+            label="Session Name"
+            labelPosition="inner"
             value={sessionName}
             onChange={(e) => onSessionNameChange(e.target.value)}
             placeholder="Enter session name..."
+            maxLength={50}
             required
           />
         </div>
@@ -54,10 +57,10 @@ export function BasicInfoStep({
         <div className="border-border rounded-2xl border-2 p-4 md:p-6">
           <div className="mx-auto flex max-w-3xl flex-col gap-4">
             <div>
-              <h3 className="text-text-primary mb-1 text-lg font-semibold">
+              <h3 className="text-text-primary mb-1 text-base font-semibold md:text-[1.2rem]">
                 Upload session cover
               </h3>
-              <p className="text-text-secondary text-sm">
+              <p className="text-text-secondary text-xs md:text-sm">
                 Any JPG, JPEG, or PNG. Recommended for visual customization.
               </p>
             </div>
@@ -73,8 +76,8 @@ export function BasicInfoStep({
                   />
                 </div>
               ) : (
-                <div className="bg-background-surface-3 relative flex aspect-video w-full max-w-[640px] items-center justify-center rounded-lg">
-                  <div className="text-text-placeholder px-4 text-center text-sm">
+                <div className="bg-background-surface-3 relative flex w-full max-w-[640px] items-center justify-center rounded-lg">
+                  <div className="text-text-placeholder px-4 text-center text-xs md:text-sm">
                     Upload an image to see your background preview
                   </div>
                 </div>
@@ -89,7 +92,7 @@ export function BasicInfoStep({
                 Upload session cover
               </FileUploadButton>
 
-              <p className="text-text-secondary text-center text-xs">
+              <p className="text-text-secondary text-center text-xs md:text-sm">
                 Supported formats: JPG, PNG
               </p>
             </div>

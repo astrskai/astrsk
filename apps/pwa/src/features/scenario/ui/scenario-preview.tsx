@@ -74,7 +74,7 @@ const ScenarioPreview = ({
   return (
     <article
       className={cn(
-        "group/preview relative flex aspect-[2/1] w-full flex-col overflow-hidden rounded-lg border border-gray-700 bg-gray-900 text-gray-200 transition-all duration-300 lg:aspect-[3/1.2]",
+        "group/preview relative flex aspect-[2/1] w-full flex-col overflow-hidden rounded-lg border border-gray-700 bg-gray-900 text-gray-200 transition-all duration-300 lg:aspect-[3/1.1]",
         !isDisabled && onClick && "cursor-pointer",
         isDisabled
           ? "pointer-events-none"
@@ -151,7 +151,7 @@ const ScenarioPreview = ({
         </div>
       </div>
 
-      <div className="relative flex min-h-0 flex-[1_1_50%] flex-col justify-around gap-2 overflow-hidden bg-gray-900 p-4">
+      <div className="relative flex min-h-0 flex-[1_1_50%] flex-col justify-between gap-2 overflow-hidden bg-gray-900 p-4">
         <p
           className={cn(
             "line-clamp-2 text-xs lg:text-sm",
