@@ -6,7 +6,12 @@ import { ASSET_TABS } from "@/shared/config/asset-tabs";
 import { FlowsGrid } from "./ui/list";
 import { CreateFlowDialog } from "./ui/create";
 import { FlowImportDialog } from "./ui/dialog/flow-import-dialog";
-import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
+import {
+  HelpVideoDialog,
+  Loading,
+  SearchEmptyState,
+  EmptyState,
+} from "@/shared/ui";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { FlowService } from "@/app/services/flow-service";
 import { logger } from "@/shared/lib";
@@ -125,10 +130,6 @@ export default function WorkflowsListPage() {
     setIsOpenHelpDialog(true);
   };
 
-  const handleClearSearch = () => {
-    setKeyword("");
-  };
-
   return (
     <div className="flex h-full w-full flex-col">
       {/* Hidden file input for import - triggers file selection */}
@@ -176,19 +177,19 @@ export default function WorkflowsListPage() {
       />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto p-4">
         {isLoadingFlows ? (
           <Loading />
         ) : keyword && flows.length === 0 ? (
-          // Search with no results - show empty state with clear action
-          <SearchEmptyState
-            keyword={keyword}
-            message="No flows found"
-            description="Try a different search term"
-            onClearSearch={handleClearSearch}
+          <SearchEmptyState keyword={keyword} />
+        ) : !keyword && flows.length === 0 ? (
+          <EmptyState
+            title="No workflows available"
+            description="Start your new workflow"
+            buttonLabel="Create new workflow"
+            onButtonClick={handleCreateClick}
           />
         ) : (
-          // Show grid with flows (or NewFlowCard if empty)
           <FlowsGrid
             flows={flows}
             onCreateFlow={handleCreateClick}

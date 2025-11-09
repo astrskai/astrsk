@@ -1,5 +1,5 @@
-import { Page, useAppStore } from "@/shared/stores/app-store";
-import { useState } from "react";
+import { useAppStore } from "@/shared/stores/app-store";
+// import { useState } from "react";
 import { usePwa } from "@/shared/hooks/use-pwa";
 import { useDefaultInitialized } from "@/shared/hooks/use-default-initialized";
 import { useGlobalErrorHandler } from "@/shared/hooks/use-global-error-handler";
@@ -7,28 +7,27 @@ import { useSessionStore } from "@/shared/stores/session-store";
 import { useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { useLocation } from "@tanstack/react-router";
-import { InstallPwa } from "@/shared/ui/install-pwa";
+// import { InstallPwa } from "@/shared/ui/install-pwa";
 import { TopBar } from "@/widgets/top-bar";
 import { WebTopBar } from "@/widgets/web-top-bar";
 import {
   InitialLoading,
   LoadingOverlay,
-  Sheet,
-  SheetContent,
   Toaster,
+  TooltipProvider,
 } from "@/shared/ui";
 import { isElectronEnvironment } from "@/shared/lib/environment";
 import { ThemeProvider } from "@/app/providers/theme-provider";
-import { SidebarLeftProvider } from "@/widgets/both-sidebar";
-import { LeftNavigationMobile } from "@/widgets/collapsible-sidebar/left-navigation-mobile";
+// import { SidebarLeftProvider } from "@/widgets/both-sidebar";
+// import { LeftNavigationMobile } from "@/widgets/collapsible-sidebar/left-navigation-mobile";
 import { cn } from "@/shared/lib";
 // import {
 //   CollapsibleSidebar,
 //   CollapsibleSidebarTrigger,
 // } from "@/widgets/collapsible-sidebar";
 import { FixedNav } from "@/widgets/fixed-nav";
-import { SidebarInset } from "@/widgets/both-sidebar";
-import { MobileNavigationContext } from "@/shared/stores/mobile-navigation-context";
+// import { SidebarInset } from "@/widgets/both-sidebar";
+// import { MobileNavigationContext } from "@/shared/stores/mobile-navigation-context";
 // import CreateSessionPage from "@/features/session/create-session-page";
 // import { createPortal } from "react-dom";
 
@@ -38,11 +37,11 @@ export function MainLayout({
   children: React.ReactNode;
 }>) {
   const setIsLoading = useAppStore.use.setIsLoading();
-  const activePage = useAppStore.use.activePage();
+  // const activePage = useAppStore.use.activePage();
   const location = useLocation();
 
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const { isStandalone, canInstall, install } = usePwa();
+  // const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const { isStandalone, canInstall } = usePwa();
   const defaultInitialized = useDefaultInitialized();
 
   // Onboarding-based sidebar control
@@ -146,9 +145,9 @@ export function MainLayout({
     <ThemeProvider>
       <div
         className={cn(
-          "h-dvh max-h-dvh min-h-dvh w-full overflow-hidden",
+          "h-dvh max-h-dvh min-h-dvh w-full",
           "flex flex-col",
-          "font-inter text-foreground antialiased",
+          "font-inter antialiased",
         )}
       >
         <LoadingOverlay />
@@ -160,12 +159,16 @@ export function MainLayout({
 
           {/* Collapsible navigation area */}
           <div className="flex flex-1 overflow-hidden">
-            <SidebarLeftProvider>
+            {/* <SidebarLeftProvider> */}
+            <TooltipProvider delayDuration={0}>
               {/* <CollapsibleSidebar />
               <CollapsibleSidebarTrigger /> */}
-              <SidebarInset>{children}</SidebarInset>
+              <main className="relative z-0 flex flex-1 flex-col">
+                {children}
+              </main>
               <Toaster expand className="!z-[9999]" />
-            </SidebarLeftProvider>
+            </TooltipProvider>
+            {/* </SidebarLeftProvider> */}
           </div>
         </div>
         {/* {activePage === Page.CreateSession &&
@@ -173,5 +176,4 @@ export function MainLayout({
       </div>
     </ThemeProvider>
   );
-
 }

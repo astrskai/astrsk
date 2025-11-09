@@ -1,1 +1,1 @@
-export { CharactersGrid } from "./characters-grid";
+export { default as CharactersGrid } from "./characters-grid";

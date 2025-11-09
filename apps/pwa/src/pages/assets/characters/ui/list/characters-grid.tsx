@@ -88,7 +88,7 @@ function CharacterGridItem({
  * - Mobile: Button above grid + 1 column per row
  * - Desktop: New card inside grid + 2 columns per row
  */
-export function CharactersGrid({
+export default function CharactersGrid({
   characters,
   showNewCharacterCard,
 }: CharactersGridProps) {
@@ -117,7 +117,7 @@ export function CharactersGrid({
 
   return (
     <>
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-4">
         {/* Mobile: Create Button (outside grid) */}
         {showNewCharacterCard && (
           <Button
@@ -128,9 +128,8 @@ export function CharactersGrid({
             Create new character
           </Button>
         )}
-
         {/* Characters Grid */}
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 justify-center gap-4 md:grid-cols-2">
+        <div className="grid w-full grid-cols-1 justify-center gap-4 md:grid-cols-2">
           {/* Desktop: New Character Card (inside grid) */}
           {showNewCharacterCard && (
             <CreateItemCard

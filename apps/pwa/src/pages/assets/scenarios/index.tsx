@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { ListPageHeader } from "@/widgets/list-page-header";
 import { ASSET_TABS } from "@/shared/config/asset-tabs";
 import { ScenariosGrid } from "./ui/list";
-import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
+import {
+  HelpVideoDialog,
+  Loading,
+  SearchEmptyState,
+  EmptyState,
+} from "@/shared/ui";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CardType } from "@/entities/card/domain";
 import { PlotCard } from "@/entities/card/domain/plot-card";
@@ -15,6 +21,7 @@ import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import
  * Displays all plot cards with search and import functionality
  */
 export function PlotsListPage() {
+  const navigate = useNavigate();
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
 
@@ -54,8 +61,8 @@ export function PlotsListPage() {
     setIsOpenHelpDialog(true);
   };
 
-  const handleClearSearch = () => {
-    setKeyword("");
+  const handleCreateScenario = () => {
+    navigate({ to: "/assets/scenarios/new" });
   };
 
   return (
@@ -98,19 +105,19 @@ export function PlotsListPage() {
       />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto p-4">
         {isLoadingCards ? (
           <Loading />
         ) : keyword && plots.length === 0 ? (
-          // Search with no results - show empty state with clear action
-          <SearchEmptyState
-            keyword={keyword}
-            message="No plots found"
-            description="Try a different search term"
-            onClearSearch={handleClearSearch}
+          <SearchEmptyState keyword={keyword} />
+        ) : !keyword && plots.length === 0 ? (
+          <EmptyState
+            title="No scenarios available"
+            description="Start your new scenario"
+            buttonLabel="Create new scenario"
+            onButtonClick={handleCreateScenario}
           />
         ) : (
-          // Show grid with plots (or NewPlotCard if empty)
           <ScenariosGrid scenarios={plots} showNewScenarioCard={!keyword} />
         )}
       </div>

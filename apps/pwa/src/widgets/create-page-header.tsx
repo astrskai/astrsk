@@ -119,7 +119,7 @@ export function CreatePageHeader({
   return (
     <>
       {/* Mobile Header */}
-      <div className="border-border flex items-center gap-5 border-b px-4 py-2 md:hidden">
+      <div className="flex items-center gap-5 px-4 py-2 md:hidden">
         <button
           onClick={handleCancelClick}
           className="text-text-primary hover:text-text-secondary transition-colors"

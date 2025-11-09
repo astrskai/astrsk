@@ -8,7 +8,12 @@ import { useSessionImport } from "@/features/session/hooks/use-session-import";
 import { useSessionImportDialog } from "@/shared/hooks/use-session-import-dialog";
 
 import { sessionQueries } from "@/entities/session/api";
-import { HelpVideoDialog, Loading, SearchEmptyState } from "@/shared/ui";
+import {
+  HelpVideoDialog,
+  Loading,
+  SearchEmptyState,
+  EmptyState,
+} from "@/shared/ui";
 import { ListPageHeader } from "@/widgets/list-page-header";
 
 /**
@@ -50,10 +55,6 @@ export function SessionsPage() {
   const handleExport = () => {
     // TODO: Implement export functionality
     console.log("Export clicked");
-  };
-
-  const handleClearSearch = () => {
-    setKeyword("");
   };
 
   const handleHelpClick = () => {
@@ -100,15 +101,15 @@ export function SessionsPage() {
         {isLoading ? (
           <Loading />
         ) : keyword && (!sessions || sessions.length === 0) ? (
-          // Search with no results - show empty state with clear action
-          <SearchEmptyState
-            keyword={keyword}
-            message="No sessions found"
-            description="Try a different search term"
-            onClearSearch={handleClearSearch}
+          <SearchEmptyState keyword={keyword} />
+        ) : !keyword && (!sessions || sessions.length === 0) ? (
+          <EmptyState
+            title="No sessions available"
+            description="Start your new session"
+            buttonLabel="Create new session"
+            onButtonClick={handleCreateSession}
           />
         ) : (
-          // Show grid with sessions (or NewSessionCard if empty)
           <SessionsGrid
             sessions={sessions || []}
             onCreateSession={handleCreateSession}
