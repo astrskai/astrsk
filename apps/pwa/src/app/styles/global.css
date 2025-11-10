@@ -936,18 +936,20 @@
   --topbar-height: 0px !important;
 }
 
-.custom-scrollbar {
-  overflow-y: scroll;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
+/* Global scrollbar styles - applied to all scrollable elements */
+*::-webkit-scrollbar {
   @apply w-2;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   @apply bg-transparent;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   @apply rounded bg-white/50;
+}
+
+/* Legacy class support - for backwards compatibility */
+.custom-scrollbar {
+  overflow-y: scroll;
 }

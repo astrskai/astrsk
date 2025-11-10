@@ -110,9 +110,6 @@ export function StepIndicator<T extends string = string>({
                     )}
                   >
                     {step.label}
-                    {step.required && (
-                      <span className="text-normal-secondary ml-1">*</span>
-                    )}
                   </span>
                 </div>
               );
