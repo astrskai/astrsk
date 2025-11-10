@@ -77,9 +77,9 @@ export class DrizzleSessionRepo
       if (keyword) {
         filters.push(ilike(sessions.title, `%${keyword}%`));
       }
-      if (cursor) {
-        filters.push(gt(sessions.id, cursor.toString()));
-      }
+      // if (cursor) {
+      //   filters.push(gt(sessions.id, cursor.toString()));
+      // }
 
       // Make order by
       let orderBy: PgColumn | SQL;

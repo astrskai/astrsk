@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useId } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/shared/lib";
 
@@ -28,10 +28,15 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       required,
       helperText,
       selectSize = "md",
+      id: providedId,
       ...props
     },
     ref,
   ) => {
+    // Generate unique ID for accessibility
+    const generatedId = useId();
+    const selectId = providedId || generatedId;
+
     // Find the selected option to display its icon
     const selectedOption = options.find((opt) => opt.value === String(value));
     const SelectedIcon = selectedOption?.icon;
@@ -70,6 +75,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           )}
           <select
             ref={ref}
+            id={selectId}
             value={value}
             onChange={onChange}
             required={required}
@@ -139,7 +145,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     // With label
     return (
       <div className="flex flex-col gap-2">
-        <label className="text-text-body flex items-center gap-1.5 text-sm font-medium">
+        <label
+          htmlFor={selectId}
+          className="text-text-body flex items-center gap-1.5 text-sm font-medium"
+        >
           <span>
             {label}
             {required && <span className="text-status-required ml-1">*</span>}
