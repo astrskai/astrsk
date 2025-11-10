@@ -14,19 +14,28 @@ import {
   SearchEmptyState,
   EmptyState,
 } from "@/shared/ui";
+import { Select } from "@/shared/ui/forms";
 import { ListPageHeader } from "@/widgets/list-page-header";
+import {
+  SortOptionValue,
+  DEFAULT_SORT_VALUE,
+  SORT_OPTIONS,
+} from "@/shared/config/sort-options";
 
 /**
  * Sessions list page - displays all sessions in a card grid
  */
 export function SessionsPage() {
   const navigate = useNavigate();
+
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
+  const [sortOption, setSortOption] =
+    useState<SortOptionValue>(DEFAULT_SORT_VALUE);
 
   // Fetch sessions with search filter
-  const { data: sessions, isLoading } = useQuery(
-    sessionQueries.list({ keyword }),
+  const { data: sessions = [], isLoading } = useQuery(
+    sessionQueries.list({ keyword, sort: sortOption }),
   );
 
   // Import dialog hook - manages file input and parsing
@@ -42,6 +51,12 @@ export function SessionsPage() {
 
   // Import handler
   const { handleImport } = useSessionImport();
+
+  const handleSortOptionChange = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    setSortOption(event.target.value);
+  };
 
   const handleCreateSession = () => {
     navigate({ to: "/sessions/new" });
@@ -97,7 +112,7 @@ export function SessionsPage() {
       />
 
       {/* Content */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 p-4">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-4">
         {isLoading ? (
           <Loading />
         ) : keyword && (!sessions || sessions.length === 0) ? (
@@ -110,11 +125,29 @@ export function SessionsPage() {
             onButtonClick={handleCreateSession}
           />
         ) : (
-          <SessionsGrid
-            sessions={sessions || []}
-            onCreateSession={handleCreateSession}
-            showNewSessionCard={!keyword}
-          />
+          <>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-200">
+                <span className="font-semibold text-gray-50">
+                  {sessions.length}
+                </span>{" "}
+                {sessions.length === 1 ? "session" : "sessions"}
+              </span>
+              <Select
+                options={SORT_OPTIONS}
+                value={sortOption}
+                onChange={handleSortOptionChange}
+                selectSize="sm"
+                className="w-[150px] md:w-[180px]"
+              />
+            </div>
+
+            <SessionsGrid
+              sessions={sessions}
+              onCreateSession={handleCreateSession}
+              showNewSessionCard={!keyword}
+            />
+          </>
         )}
       </div>
     </div>

@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ListPageHeader } from "@/widgets/list-page-header";
 import { ASSET_TABS } from "@/shared/config/asset-tabs";
+import {
+  SORT_OPTIONS,
+  DEFAULT_SORT_VALUE,
+  type SortOptionValue,
+} from "@/shared/config/sort-options";
 import { CharactersGrid } from "./ui/list";
 import {
   HelpVideoDialog,
@@ -10,7 +15,8 @@ import {
   SearchEmptyState,
   EmptyState,
 } from "@/shared/ui";
-import { cardQueries } from "@/entities/card/api/card-queries";
+import { Select } from "@/shared/ui/forms";
+import { cardQueries } from "@/entities/card/api";
 import { CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { useResourceImport } from "@/shared/hooks/use-resource-import";
@@ -22,8 +28,11 @@ import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import
  */
 export function CharactersListPage() {
   const navigate = useNavigate();
+
   const [keyword, setKeyword] = useState<string>("");
   const [isOpenHelpDialog, setIsOpenHelpDialog] = useState<boolean>(false);
+  const [sortOption, setSortOption] =
+    useState<SortOptionValue>(DEFAULT_SORT_VALUE);
 
   // Unified resource import hook
   const {
@@ -37,16 +46,25 @@ export function CharactersListPage() {
     triggerImport,
   } = useResourceImport();
 
-  // Fetch cards
+  // Fetch cards with sorting
   const { data: allCards, isLoading: isLoadingCards } = useQuery(
-    cardQueries.list({ keyword }),
+    cardQueries.list({ keyword, sort: sortOption }),
   );
 
   // Filter by character type
-  const characters =
-    allCards?.filter(
-      (card: CharacterCard) => card.props.type === CardType.Character,
-    ) || [];
+  const characters = useMemo(() => {
+    return (
+      allCards?.filter(
+        (card: CharacterCard) => card.props.type === CardType.Character,
+      ) || []
+    );
+  }, [allCards]);
+
+  const handleSortOptionChange = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    setSortOption(event.target.value);
+  };
 
   // Event handlers
   const handleImport = () => {
@@ -106,7 +124,7 @@ export function CharactersListPage() {
       />
 
       {/* Content */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 p-4">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-4">
         {isLoadingCards ? (
           <Loading />
         ) : keyword && characters.length === 0 ? (
@@ -122,11 +140,30 @@ export function CharactersListPage() {
             onButtonClick={handleCreateCharacter}
           />
         ) : (
-          // Show grid with characters
-          <CharactersGrid
-            characters={characters}
-            showNewCharacterCard={!keyword}
-          />
+          <>
+            {/* Sort Controls */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-200">
+                <span className="font-semibold text-gray-50">
+                  {characters.length}
+                </span>{" "}
+                {characters.length === 1 ? "character" : "characters"}
+              </span>
+              <Select
+                options={SORT_OPTIONS}
+                value={sortOption}
+                onChange={handleSortOptionChange}
+                selectSize="sm"
+                className="w-[150px] md:w-[180px]"
+              />
+            </div>
+
+            {/* Characters Grid */}
+            <CharactersGrid
+              characters={characters}
+              showNewCharacterCard={!keyword}
+            />
+          </>
         )}
       </div>
     </div>

@@ -287,7 +287,7 @@ export default function ScenarioSelectionStep({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
+      <div className="mx-auto w-full max-w-2xl">
         <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-[1.2rem]">
           Select a Scenario&nbsp;(optional)
         </h2>

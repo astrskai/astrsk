@@ -1,4 +1,5 @@
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
+import type { PgColumn } from "drizzle-orm/pg-core";
 
 import { Result } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
@@ -16,6 +17,7 @@ import {
   SaveFlowRepo,
   SearchFlowQuery,
 } from "@/entities/flow/repos";
+import { SORT_VALUES } from "@/shared/config/sort-options";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 
 export class DrizzleFlowRepo
@@ -23,14 +25,17 @@ export class DrizzleFlowRepo
 {
   // constructor(private updateLocalSyncMetadata: UpdateLocalSyncMetadata) {}
 
-  async updateResponseTemplate(flowId: string, template: string): Promise<Result<void>> {
+  async updateResponseTemplate(
+    flowId: string,
+    template: string,
+  ): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
       await db
         .update(flows)
-        .set({ response_template: template })  // Use snake_case column name
+        .set({ response_template: template }) // Use snake_case column name
         .where(eq(flows.id, flowId));
-      
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -41,14 +46,17 @@ export class DrizzleFlowRepo
     }
   }
 
-  async updateDataStoreSchema(flowId: string, schema: any): Promise<Result<void>> {
+  async updateDataStoreSchema(
+    flowId: string,
+    schema: any,
+  ): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
       await db
         .update(flows)
-        .set({ data_store_schema: schema })  // Use snake_case column name
+        .set({ data_store_schema: schema }) // Use snake_case column name
         .where(eq(flows.id, flowId));
-      
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -59,14 +67,17 @@ export class DrizzleFlowRepo
     }
   }
 
-  async updateFlowName(flowId: UniqueEntityID, name: string): Promise<Result<void>> {
+  async updateFlowName(
+    flowId: UniqueEntityID,
+    name: string,
+  ): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
       await db
         .update(flows)
         .set({ name })
         .where(eq(flows.id, flowId.toString()));
-      
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -77,14 +88,17 @@ export class DrizzleFlowRepo
     }
   }
 
-  async updateFlowViewport(flowId: UniqueEntityID, viewport: any): Promise<Result<void>> {
+  async updateFlowViewport(
+    flowId: UniqueEntityID,
+    viewport: any,
+  ): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
       await db
         .update(flows)
         .set({ viewport })
         .where(eq(flows.id, flowId.toString()));
-      
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -95,17 +109,20 @@ export class DrizzleFlowRepo
     }
   }
 
-  async updatePanelLayout(flowId: UniqueEntityID, panelStructure: any): Promise<Result<void>> {
+  async updatePanelLayout(
+    flowId: UniqueEntityID,
+    panelStructure: any,
+  ): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
       await db
         .update(flows)
-        .set({ 
+        .set({
           panel_structure: panelStructure,
-          updated_at: new Date()
+          updated_at: new Date(),
         })
         .where(eq(flows.id, flowId.toString()));
-      
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -116,7 +133,11 @@ export class DrizzleFlowRepo
     }
   }
 
-  async updateNodePosition(flowId: UniqueEntityID, nodeId: string, position: { x: number; y: number }): Promise<Result<void>> {
+  async updateNodePosition(
+    flowId: UniqueEntityID,
+    nodeId: string,
+    position: { x: number; y: number },
+  ): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
       // First get the current nodes array
@@ -125,27 +146,27 @@ export class DrizzleFlowRepo
         .from(flows)
         .where(eq(flows.id, flowId.toString()))
         .then(getOneOrThrow);
-      
+
       // Find and update the specific node's position
       const nodes = row.nodes as any[];
       const nodeIndex = nodes.findIndex((n: any) => n.id === nodeId);
-      
+
       if (nodeIndex === -1) {
         return Result.fail(`Node with id ${nodeId} not found in flow`);
       }
-      
+
       // Update only the position
       nodes[nodeIndex] = {
         ...nodes[nodeIndex],
-        position
+        position,
       };
-      
+
       // Save back only the nodes field
       await db
         .update(flows)
         .set({ nodes })
         .where(eq(flows.id, flowId.toString()));
-      
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -156,7 +177,10 @@ export class DrizzleFlowRepo
     }
   }
 
-  async updateNodesPositions(flowId: UniqueEntityID, positions: Array<{ nodeId: string; position: { x: number; y: number } }>): Promise<Result<void>> {
+  async updateNodesPositions(
+    flowId: UniqueEntityID,
+    positions: Array<{ nodeId: string; position: { x: number; y: number } }>,
+  ): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
       // First get the current nodes array
@@ -165,7 +189,7 @@ export class DrizzleFlowRepo
         .from(flows)
         .where(eq(flows.id, flowId.toString()))
         .then(getOneOrThrow);
-      
+
       // Update positions for all specified nodes
       const nodes = row.nodes as any[];
       for (const update of positions) {
@@ -173,17 +197,17 @@ export class DrizzleFlowRepo
         if (nodeIndex !== -1) {
           nodes[nodeIndex] = {
             ...nodes[nodeIndex],
-            position: update.position
+            position: update.position,
           };
         }
       }
-      
+
       // Save back only the nodes field
       await db
         .update(flows)
         .set({ nodes })
         .where(eq(flows.id, flowId.toString()));
-      
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -194,7 +218,11 @@ export class DrizzleFlowRepo
     }
   }
 
-  async updateNode(flowId: string, nodeId: string, nodeData: any): Promise<Result<void>> {
+  async updateNode(
+    flowId: string,
+    nodeId: string,
+    nodeData: any,
+  ): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
       // First get the current nodes array
@@ -203,27 +231,24 @@ export class DrizzleFlowRepo
         .from(flows)
         .where(eq(flows.id, flowId))
         .then(getOneOrThrow);
-      
+
       // Find and update the specific node
       const nodes = row.nodes as any[];
       const nodeIndex = nodes.findIndex((n: any) => n.id === nodeId);
-      
+
       if (nodeIndex === -1) {
         return Result.fail(`Node with id ${nodeId} not found in flow`);
       }
-      
+
       // Update the node's data
       nodes[nodeIndex] = {
         ...nodes[nodeIndex],
-        data: nodeData
+        data: nodeData,
       };
-      
+
       // Save back only the nodes field
-      await db
-        .update(flows)
-        .set({ nodes })
-        .where(eq(flows.id, flowId));
-      
+      await db.update(flows).set({ nodes }).where(eq(flows.id, flowId));
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -234,16 +259,20 @@ export class DrizzleFlowRepo
     }
   }
 
-  async updateNodesAndEdges(flowId: UniqueEntityID, nodes: any[], edges: any[]): Promise<Result<void>> {
+  async updateNodesAndEdges(
+    flowId: UniqueEntityID,
+    nodes: any[],
+    edges: any[],
+  ): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
       // Update nodes and edges directly in database
       await db
         .update(flows)
-        .set({ 
+        .set({
           nodes: nodes,
           edges: edges,
-          updated_at: new Date()
+          updated_at: new Date(),
         })
         .where(eq(flows.id, flowId.toString()));
 
@@ -260,7 +289,7 @@ export class DrizzleFlowRepo
   async saveFlow(flow: Flow, tx?: Transaction): Promise<Result<Flow>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      console.log('[saveFlow] Called:', {
+      console.log("[saveFlow] Called:", {
         flowId: flow.id.toString().slice(0, 8),
         flowName: flow.props.name,
         createdAt: flow.props.createdAt,
@@ -353,6 +382,26 @@ export class DrizzleFlowRepo
         );
       }
 
+      // Make order by
+      let orderBy: PgColumn | SQL;
+      switch (query.sort) {
+        case SORT_VALUES.LATEST:
+          orderBy = desc(flows.created_at);
+          break;
+        case SORT_VALUES.OLDEST:
+          orderBy = flows.created_at;
+          break;
+        case SORT_VALUES.TITLE_A_TO_Z:
+          orderBy = flows.name;
+          break;
+        case SORT_VALUES.TITLE_Z_TO_A:
+          orderBy = desc(flows.name);
+          break;
+        default:
+          orderBy = desc(flows.created_at);
+          break;
+      }
+
       // Select flows
       const rows = await db
         .select()
@@ -360,7 +409,7 @@ export class DrizzleFlowRepo
         .where(filters.length > 0 ? and(...filters) : undefined)
         .limit(query.limit ?? 100)
         .offset(query.offset ?? 0)
-        .orderBy(desc(flows.created_at));
+        .orderBy(orderBy);
 
       // Convert rows to entities
       const entities = rows.map((row) => FlowDrizzleMapper.toDomain(row));
@@ -431,7 +480,7 @@ export class DrizzleFlowRepo
     flowId: string,
     readyState: ReadyState,
     validationIssues: any[],
-    tx?: Transaction
+    tx?: Transaction,
   ): Promise<Result<void>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
@@ -449,7 +498,7 @@ export class DrizzleFlowRepo
       return Result.fail<void>(
         `Failed to update flow validation: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -457,7 +506,7 @@ export class DrizzleFlowRepo
   async updateFlowReadyState(
     flowId: string,
     readyState: ReadyState,
-    tx?: Transaction
+    tx?: Transaction,
   ): Promise<Result<void>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
@@ -474,7 +523,7 @@ export class DrizzleFlowRepo
       return Result.fail<void>(
         `Failed to update flow ready state: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }

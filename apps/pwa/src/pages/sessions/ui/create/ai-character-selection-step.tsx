@@ -83,14 +83,14 @@ const CharacterPreviewItem = ({
       <div className="absolute right-2 bottom-2 z-10 md:hidden">
         <Button
           size="sm"
-          variant="secondary"
+          variant="ghost"
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
             onDetailClick(cardId);
           }}
         >
-          Detail
+          {`Detail >`}
         </Button>
       </div>
     </div>

@@ -127,7 +127,7 @@ const CharacterPreview = ({
         {/* Background image with blur on hover */}
         {!isDisabled && (
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-0 blur-md transition-opacity duration-300 group-hover/preview:opacity-20"
+            className="absolute inset-0 bg-cover bg-center opacity-0 blur-md transition-opacity duration-300 group-hover/preview:opacity-50"
             style={{
               backgroundImage: `url(${imageUrl || PLACEHOLDER_IMAGE_URL})`,
             }}
@@ -139,7 +139,6 @@ const CharacterPreview = ({
           <h3
             className={cn(
               "line-clamp-2 text-base font-semibold text-ellipsis text-gray-50 lg:text-lg",
-              "transition-all duration-300 group-hover/preview:text-gray-200",
             )}
           >
             {title}

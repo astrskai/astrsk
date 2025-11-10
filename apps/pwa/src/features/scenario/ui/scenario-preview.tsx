@@ -115,7 +115,7 @@ const ScenarioPreview = ({
         </div>
       )}
 
-      <div className="flex min-h-0 flex-[1_1_50%] items-center space-x-2 bg-gray-900">
+      <div className="flex min-h-0 flex-[1_1_50%] items-center border-b border-gray-800 bg-gray-900">
         <img
           src={imageUrl || PLACEHOLDER_IMAGE_URL}
           alt={title}
@@ -125,24 +125,23 @@ const ScenarioPreview = ({
           )}
           loading="lazy"
         />
-        <div className="relative flex h-full min-w-0 flex-1 flex-col justify-center gap-2 p-2">
+        <div className="relative flex h-full min-w-0 flex-1 flex-col justify-center gap-2 px-4 py-2">
           <h3
             className={cn(
-              "truncate text-base font-semibold text-gray-50 lg:text-lg",
-              "transition-all duration-300 group-hover/preview:text-gray-200",
+              "z-10 truncate text-base font-semibold text-gray-50 lg:text-lg",
             )}
           >
             {title}
           </h3>
 
-          <div className="flex items-center gap-2 overflow-hidden text-xs lg:text-sm">
+          <div className="z-10 flex items-center gap-2 overflow-hidden text-xs lg:text-sm">
             {tags.length > 0 ? getCompactedTagString(tags) : "No tags"}
           </div>
 
           {/* Background image with blur on hover */}
           {!isDisabled && (
             <div
-              className="absolute inset-0 bg-cover bg-center opacity-0 blur-md transition-opacity duration-300 group-hover/preview:opacity-20"
+              className="absolute inset-0 bg-cover bg-center opacity-0 blur-md transition-opacity duration-300 group-hover/preview:opacity-50"
               style={{
                 backgroundImage: `url(${imageUrl || PLACEHOLDER_IMAGE_URL})`,
               }}

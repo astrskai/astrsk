@@ -3,6 +3,7 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { Transaction } from "@/db/transaction";
 import { Card, CardType } from "@/entities/card/domain";
+import { SortOptionValue } from "@/shared/config/sort-options";
 
 export const SearchCardsSort = {
   Latest: "latest",
@@ -21,7 +22,7 @@ export type SearchCardsQuery = {
   offset?: number;
 
   // Sort
-  sort?: SearchCardsSort;
+  sort?: SortOptionValue;
 
   // Search
   keyword?: string;
