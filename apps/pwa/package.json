@@ -85,6 +85,8 @@
     "dockview-core": "^4.3.1",
     "dockview-react": "^4.4.0",
     "drizzle-orm": "^0.44.5",
+    "embla-carousel": "^8.6.0",
+    "embla-carousel-auto-height": "^8.6.0",
     "embla-carousel-auto-scroll": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "file-type": "^19.5.0",

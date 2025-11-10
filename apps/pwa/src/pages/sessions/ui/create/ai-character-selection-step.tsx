@@ -4,6 +4,7 @@ import { UserIcon, ChevronLeft, Plus, Trash2 } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
 import CharacterPreview from "@/features/character/ui/character-preview";
 import { CreateItemCard } from "@/shared/ui";
+import Carousel from "@/shared/ui/carousel-v2";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
@@ -139,6 +140,7 @@ const SelectedCharacterCard = ({
  * Displays detailed information about a selected character
  */
 const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
+  console.log("character", character);
   const [characterImageUrl] = useAsset(character.props.iconAssetId);
 
   return (
@@ -158,37 +160,68 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
       </div>
 
       {/* Description */}
-      <div className="flex flex-col gap-2">
-        <h4 className="text-text-primary text-lg font-semibold">Description</h4>
-        <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
-          {character.props.description || "No description available"}
-        </p>
-      </div>
+
+      <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
+        {character.props.description || "No description available"}
+      </p>
 
       {/* Tags */}
       {character.props.tags && character.props.tags.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <h4 className="text-text-primary text-lg font-semibold">Tags</h4>
-          <div className="flex flex-wrap gap-2">
-            {character.props.tags.map((tag, index) => (
-              <span
-                key={`${character.props.title}-tag-${index}-${tag}`}
-                className="text-black-alternate rounded-md bg-gray-300 px-2.5 py-0.5 text-sm"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-2">
+          {character.props.tags.map((tag, index) => (
+            <span
+              key={`${character.props.title}-tag-${index}-${tag}`}
+              className="rounded-md bg-gray-800 px-2.5 py-0.5 text-sm font-semibold text-gray-300"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
       )}
 
       {/* Token Count */}
       {character.props.tokenCount && character.props.tokenCount > 0 && (
         <div className="text-text-secondary flex items-center gap-2 text-sm">
-          <span className="font-semibold">Token Count:</span>
-          <span>{character.props.tokenCount}</span>
+          <span className="font-semibold text-gray-50">
+            {character.props.tokenCount}
+          </span>
+          <span>Tokens</span>
         </div>
       )}
+
+      {character.props.lorebook &&
+        character.props.lorebook.props.entries.length > 0 && (
+          <div>
+            <h4 className="text-text-secondary text-center text-xs">
+              Lorebook
+            </h4>
+            <Carousel
+              slides={character.props.lorebook.props.entries.map(
+                (entry, index) => ({
+                  title: entry.name,
+                  content: (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex flex-wrap items-center justify-center gap-2">
+                        {entry.keys.map((key) => (
+                          <span
+                            key={key}
+                            className="rounded-md bg-gray-700/80 px-2.5 py-1 text-sm font-semibold text-white"
+                          >
+                            {key}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="text-text-secondary p-2 text-sm">
+                        {entry.props.content || "No content"}
+                      </div>
+                    </div>
+                  ),
+                }),
+              )}
+              options={{ loop: true }}
+            />
+          </div>
+        )}
     </div>
   );
 };

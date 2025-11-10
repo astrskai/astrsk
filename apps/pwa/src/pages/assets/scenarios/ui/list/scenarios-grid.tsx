@@ -136,7 +136,6 @@ export function ScenariosGrid({
           {showNewScenarioCard && (
             <CreateItemCard
               title="New Scenario"
-              description="Create a new scenario"
               onClick={handleCreateScenario}
               className="hidden aspect-[2/1] md:flex lg:aspect-[3/1.1]"
             />

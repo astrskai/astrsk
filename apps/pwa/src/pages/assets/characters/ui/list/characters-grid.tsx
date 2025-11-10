@@ -134,7 +134,6 @@ export default function CharactersGrid({
           {showNewCharacterCard && (
             <CreateItemCard
               title="New Character"
-              description="Create a new character"
               onClick={handleCreateCharacter}
               className="hidden aspect-[2/1] md:flex lg:aspect-[3/1]"
             />

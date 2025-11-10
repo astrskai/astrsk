@@ -1,3 +1,4 @@
+import { Ellipsis } from "lucide-react";
 import { cn } from "@/shared/lib";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 

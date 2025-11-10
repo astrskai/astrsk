@@ -74,7 +74,7 @@ export default function AdvancedPage() {
                   className="cursor-pointer p-2 hover:text-blue-200"
                   onClick={() => window.api?.debug?.openDevTools()}
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight className="h-5 w-5" />
                 </button>
               </div>
             </div>
