@@ -9,6 +9,7 @@ import { CardType } from "@/entities/card/domain";
 import { IconFlow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
+import Carousel from "@/shared/ui/carousel-v2";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 import {
   Dialog,
@@ -47,6 +48,17 @@ const ScenarioPreviewItem = ({
 }: ScenarioPreviewItemProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
+  const bottomActions: CharacterAction[] = [
+    {
+      label: `Detail >`,
+      onClick: (e) => {
+        e.stopPropagation();
+        onDetailClick(cardId);
+      },
+      className: "block md:hidden",
+    },
+  ];
+
   return (
     <div className="relative transition-all">
       <div
@@ -62,24 +74,11 @@ const ScenarioPreviewItem = ({
           tokenCount={card.props.tokenCount}
           firstMessages={card.props.scenarios?.length || 0}
           className={cn(
-            isSelected && "border-normal-primary border-2 shadow-lg",
+            isSelected &&
+              "border-normal-primary hover:border-normal-primary/70 border-2 shadow-lg",
           )}
+          bottomActions={bottomActions}
         />
-      </div>
-
-      {/* Mobile Detail Button */}
-      <div className="absolute right-2 bottom-2 z-10 md:hidden">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onDetailClick(cardId);
-          }}
-        >
-          Detail
-        </Button>
       </div>
     </div>
   );
@@ -105,11 +104,12 @@ const SelectedScenarioCard = ({
   const actions: CharacterAction[] = [
     {
       icon: Trash2,
-      label: `Remove ${card.props.title}`,
+      label: `Remove`,
       onClick: (e) => {
         e.stopPropagation();
         onRemove(e);
       },
+      className: "block md:hidden",
     },
   ];
 
@@ -123,6 +123,7 @@ const SelectedScenarioCard = ({
       firstMessages={card.props.scenarios?.length || 0}
       actions={actions}
       isShowActions={true}
+      bottomActions={actions}
       onClick={onClick}
     />
   );
@@ -152,35 +153,82 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
       </div>
 
       {/* Description */}
-      <div className="flex flex-col gap-2">
-        <h4 className="text-text-primary text-lg font-semibold">Description</h4>
-        <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
-          {plot.props.description || "No description available"}
-        </p>
-      </div>
+      <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
+        {plot.props.description || "No description available"}
+      </p>
 
       {/* Tags */}
       {plot.props.tags && plot.props.tags.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <h4 className="text-text-primary text-lg font-semibold">Tags</h4>
-          <div className="flex flex-wrap gap-2">
-            {plot.props.tags.map((tag, index) => (
-              <span
-                key={`${plot.props.title}-tag-${index}-${tag}`}
-                className="text-black-alternate rounded-md bg-gray-300 px-2.5 py-0.5 text-sm"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-2">
+          {plot.props.tags.map((tag, index) => (
+            <span
+              key={`${plot.props.title}-tag-${index}-${tag}`}
+              className="rounded-md bg-gray-800 px-2.5 py-0.5 text-sm font-semibold text-gray-300"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
       )}
 
       {/* Token Count */}
       {plot.props.tokenCount && plot.props.tokenCount > 0 && (
         <div className="text-text-secondary flex items-center gap-2 text-sm">
-          <span className="font-semibold">Token Count:</span>
-          <span>{plot.props.tokenCount}</span>
+          <span className="font-semibold text-gray-50">
+            {plot.props.tokenCount}
+          </span>
+          <span>Tokens</span>
+        </div>
+      )}
+
+      {plot.props.scenarios && plot.props.scenarios.length > 0 && (
+        <div>
+          <h4 className="text-text-secondary text-center text-xs">
+            First message
+          </h4>
+          <Carousel
+            slides={plot.props.scenarios.map((scenario, index) => ({
+              title: scenario.name,
+              content: (
+                <div
+                  key={`${index}-${scenario.name}`}
+                  className="text-text-secondary p-2 text-sm whitespace-pre-wrap"
+                >
+                  {scenario.description || "No content"}
+                </div>
+              ),
+            }))}
+            options={{ loop: true }}
+          />
+        </div>
+      )}
+
+      {plot.props.lorebook && plot.props.lorebook.props.entries.length > 0 && (
+        <div>
+          <h4 className="text-text-secondary text-center text-xs">Lorebook</h4>
+          <Carousel
+            slides={plot.props.lorebook.props.entries.map((entry, index) => ({
+              title: entry.name,
+              content: (
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    {entry.keys.map((key, keyIndex) => (
+                      <span
+                        key={`${index}-${key}-${keyIndex}`}
+                        className="rounded-md bg-gray-700/80 px-2.5 py-1 text-sm font-semibold text-white"
+                      >
+                        {key}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="text-text-secondary p-2 text-sm whitespace-pre-wrap">
+                    {entry.props.content || "No content"}
+                  </div>
+                </div>
+              ),
+            }))}
+            options={{ loop: true }}
+          />
         </div>
       )}
     </div>
