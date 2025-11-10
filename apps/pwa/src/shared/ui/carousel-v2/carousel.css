@@ -61,7 +61,6 @@
   z-index: 1;
   border-radius: 50%;
   color: var(--text-body);
-  display: flex;
   align-items: center;
   justify-content: center;
 }

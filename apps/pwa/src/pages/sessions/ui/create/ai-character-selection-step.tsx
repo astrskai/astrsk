@@ -140,7 +140,6 @@ const SelectedCharacterCard = ({
  * Displays detailed information about a selected character
  */
 const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
-  console.log("character", character);
   const [characterImageUrl] = useAsset(character.props.iconAssetId);
 
   return (
@@ -202,9 +201,9 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
                   content: (
                     <div className="flex flex-col gap-2">
                       <div className="flex flex-wrap items-center justify-center gap-2">
-                        {entry.keys.map((key) => (
+                        {entry.keys.map((key, keyIndex) => (
                           <span
-                            key={key}
+                            key={`${index}-${key}-${keyIndex}`}
                             className="rounded-md bg-gray-700/80 px-2.5 py-1 text-sm font-semibold text-white"
                           >
                             {key}
