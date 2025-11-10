@@ -71,7 +71,7 @@ import { logger } from "@/shared/lib/logger";
 import { TemplateRenderer } from "@/shared/lib/template-renderer";
 import { getTokenizer } from "@/shared/lib/tokenizer/tokenizer";
 import { translate } from "@/shared/lib/translate-utils";
-import { getAISDKFetch } from "@/shared/infra/electron-fetch";
+import { getAISDKFetch } from "@/shared/infra/fetch-helper";
 
 // Model mapping configuration for automatic fallback
 // When using AstrskAi, format must be "ApiSource:modelId"
@@ -606,13 +606,11 @@ const makeProvider = ({
       break;
 
     case ApiSource.OpenAICompatible: {
-      let oaiCompBaseUrl = baseUrl ?? "";
-      if (!oaiCompBaseUrl.endsWith("/v1")) {
-        oaiCompBaseUrl += "/v1";
-      }
-      provider = createOpenAI({
+      // Use base URL as-is (no automatic /v1 addition)
+      provider = createOpenAICompatible({
+        name: "openai-compatible",
         apiKey: apiKey,
-        baseURL: oaiCompBaseUrl,
+        baseURL: baseUrl ?? "",
         fetch: getAISDKFetch(), // Use Electron-aware fetch for CORS-free localhost access
       });
       break;
@@ -674,10 +672,7 @@ const makeProvider = ({
       let ollamaBaseUrl = baseUrl ?? "http://localhost:11434";
       // Remove /api suffix if present (Ollama native endpoint)
       ollamaBaseUrl = ollamaBaseUrl.replace(/\/api$/, "");
-      // Add /v1 for OpenAI-compatible endpoint
-      if (!ollamaBaseUrl.endsWith("/v1")) {
-        ollamaBaseUrl += "/v1";
-      }
+      // No hardcoded /v1 - let endpoint auto-retry with /v1 if needed
       provider = createOpenAICompatible({
         name: "ollama",
         baseURL: ollamaBaseUrl,
@@ -688,12 +683,12 @@ const makeProvider = ({
 
     case ApiSource.LMStudio: {
       let lmStudioBaseUrl = baseUrl ?? "http://localhost:1234";
-      if (!lmStudioBaseUrl.endsWith("/v1")) {
-        lmStudioBaseUrl += "/v1";
-      }
-      provider = createOpenAI({
+      // No hardcoded /v1 - let fetch auto-retry with /v1 if needed
+      provider = createOpenAICompatible({
+        name: "lmstudio",
         apiKey: apiKey || "",  // LM Studio doesn't require API key
         baseURL: lmStudioBaseUrl,
+        fetch: getAISDKFetch(), // Use Electron-aware fetch for CORS-free localhost access
       });
       break;
     }
@@ -727,13 +722,11 @@ const makeProvider = ({
       break;
 
     case ApiSource.KoboldCPP: {
-      let koboldBaseUrl = baseUrl ?? "";
-      if (!koboldBaseUrl.endsWith("/v1")) {
-        koboldBaseUrl += "/v1";
-      }
+      // No hardcoded /v1 - let endpoint auto-retry with /v1 if needed
       provider = createOpenAICompatible({
         name: ApiSource.KoboldCPP,
-        baseURL: koboldBaseUrl,
+        baseURL: baseUrl ?? "",
+        fetch: getAISDKFetch(),
       });
       break;
     }
@@ -1760,10 +1753,36 @@ async function* executeAgentNode({
       throw new Error("Agent does not have API source or model ID");
     }
 
+    // Parse modelId for OpenAI compatible: "{title}|{actualModelId}"
+    let connectionTitle: string | undefined;
+
+    if (apiSource === ApiSource.OpenAICompatible && apiModelId.includes("|")) {
+      const parts = apiModelId.split("|");
+      if (parts.length === 2) {
+        connectionTitle = parts[0];
+        apiModelId = parts[1]; // Extract actual model ID
+      }
+    }
+
     const apiConnections = await fetchApiConnections();
-    let apiConnection = apiConnections.find(
-      (connection) => connection.source === apiSource,
-    );
+
+    let apiConnection: ApiConnection | undefined;
+
+    // For OpenAI compatible with title, find by source + title
+    if (apiSource === ApiSource.OpenAICompatible && connectionTitle) {
+      apiConnection = apiConnections.find(
+        (connection) =>
+          connection.source === apiSource &&
+          connection.title === connectionTitle
+      );
+    }
+
+    // Fallback: find by source only (for non-OpenAI compatible or if title lookup failed)
+    if (!apiConnection) {
+      apiConnection = apiConnections.find(
+        (connection) => connection.source === apiSource,
+      );
+    }
 
     // Automatic model mapping for logged-in users
     if (!apiConnection && isUserLoggedIn()) {

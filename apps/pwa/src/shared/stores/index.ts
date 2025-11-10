@@ -1,5 +1,6 @@
 // Barrel export for all stores (FSD shared layer)
 export * from "./agent-store";
+export * from "./api-connection-store";
 export * from "./app-store";
 export * from "./background-store";
 export * from "./cards-store";

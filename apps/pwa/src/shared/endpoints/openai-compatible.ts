@@ -28,27 +28,40 @@ export class OpenAIComptableEndpoint implements LlmEndpoint {
   }
 
   async getAvailableModelList(): Promise<ApiModel[]> {
-    try {
-      const response = await this.httpClient.get(
-        `${this.getBaseUrl()}/v1/models`,
-        {
+    // Remove trailing slash for consistent URL building
+    const cleanBaseUrl = this.getBaseUrl().replace(/\/$/, "");
+
+    // Try without /v1 first, then with /v1 as fallback
+    const urlsToTry = [
+      `${cleanBaseUrl}/models`,
+      `${cleanBaseUrl}/v1/models`,
+    ];
+
+    for (const modelsUrl of urlsToTry) {
+      try {
+        logger.debug(`[OpenAI Compatible] Trying: ${modelsUrl}`);
+
+        const response = await this.httpClient.get(modelsUrl, {
           headers: {
             Authorization: `Bearer ${this.getApiKey()}`,
           },
-        },
-      );
+        });
 
-      if (response.status === 200 && response.data.data) {
-        return response.data.data.map((model: any) =>
-          ApiModel.create({ id: model.id, name: model.id }).getValue(),
-        );
-      } else {
-        logger.info("Failed to fetch available models");
-        return [];
+        if (response.status === 200 && response.data.data) {
+          logger.info(`[OpenAI Compatible] Success with: ${modelsUrl}`);
+          return response.data.data.map((model: any) =>
+            ApiModel.create({ id: model.id, name: model.id }).getValue(),
+          );
+        }
+      } catch (error) {
+        logger.warn(`[OpenAI Compatible] Failed with ${modelsUrl}, trying next...`);
+        // Try next URL
+        continue;
       }
-    } catch (error) {
-      logger.error("Error fetching available models:", error);
-      throw error;
     }
+
+    // All attempts failed
+    logger.error("[OpenAI Compatible] All model fetch attempts failed");
+    return [];
   }
 }
