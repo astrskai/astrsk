@@ -3,6 +3,7 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { Transaction } from "@/db/transaction";
 import { Session } from "@/entities/session/domain/session";
+import { SortOptionValue } from "@/shared/config/sort-options";
 
 export type SearchSessionsQuery = {
   // Pagination
@@ -11,6 +12,9 @@ export type SearchSessionsQuery = {
 
   // Search
   keyword?: string;
+
+  // Sort
+  sort?: SortOptionValue;
 };
 
 export type GetSessionsQuery = {

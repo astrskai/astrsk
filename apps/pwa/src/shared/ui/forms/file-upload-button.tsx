@@ -1,3 +1,4 @@
+import { Pen } from "lucide-react";
 import { useId } from "react";
 import { cn } from "@/shared/lib";
 
@@ -11,9 +12,9 @@ interface FileUploadButtonProps {
    */
   onChange: (file: File) => void;
   /**
-   * Button text
+   * Button text (ignored if iconOnly is true)
    */
-  children: React.ReactNode;
+  children?: React.ReactNode;
   /**
    * Button variant
    */
@@ -22,6 +23,10 @@ interface FileUploadButtonProps {
    * Button size
    */
   size?: "sm" | "md" | "lg";
+  /**
+   * Icon-only mode (shows Pen icon instead of text)
+   */
+  iconOnly?: boolean;
   /**
    * Additional CSS classes
    */
@@ -55,6 +60,7 @@ export function FileUploadButton({
   children,
   variant = "default",
   size = "md",
+  iconOnly = false,
   className,
   disabled = false,
 }: FileUploadButtonProps) {
@@ -76,15 +82,24 @@ export function FileUploadButton({
         htmlFor={inputId}
         className={cn(
           // Base styles
-          "focus:ring-primary/50 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-medium transition-colors focus:outline-none focus:ring-1",
-          // Size styles
-          {
-            "px-3 py-1.5 text-xs": size === "sm",
-            "px-4 py-2 text-sm": size === "md",
-            "px-6 py-3 text-base": size === "lg",
-          },
-          // Variant styles
-          {
+          "focus:ring-primary/50 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-medium transition-colors focus:ring-1 focus:outline-none",
+          // Icon-only mode or text mode
+          iconOnly
+            ? {
+                "border-2 border-gray-100 bg-gray-700 p-2 hover:bg-gray-500":
+                  size === "sm",
+                "border-2 border-gray-700 bg-gray-700 p-2.5 hover:bg-gray-500":
+                  size === "md",
+                "border-2 border-gray-700 bg-gray-700 p-3 hover:bg-gray-500":
+                  size === "lg",
+              }
+            : {
+                "px-3 py-1.5 text-xs": size === "sm",
+                "px-4 py-2 text-sm": size === "md",
+                "px-6 py-3 text-base": size === "lg",
+              },
+          // Variant styles (only applied when not icon-only)
+          !iconOnly && {
             "bg-button-background-primary hover:bg-primary-strong text-button-foreground-primary":
               variant === "default",
             "bg-background-surface-4 text-text-primary hover:bg-background-surface-3":
@@ -102,7 +117,11 @@ export function FileUploadButton({
         )}
         aria-disabled={disabled}
       >
-        {children}
+        {iconOnly ? (
+          <Pen size={12} strokeWidth={2.5} className="text-gray-100" />
+        ) : (
+          children
+        )}
       </label>
       <input
         id={inputId}

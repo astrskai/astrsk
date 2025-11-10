@@ -11,7 +11,7 @@ import {
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
-  labelPosition?: "top" | "left";
+  labelPosition?: "top" | "left" | "inner";
   helpTooltip?: string;
   helperText?: string;
 }
@@ -30,6 +30,56 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref,
   ) => {
+    // Inner label layout
+    if (labelPosition === "inner" && label) {
+      return (
+        <div className="relative w-full">
+          <div className="flex flex-col gap-1 rounded-lg bg-gray-800 px-4 py-2">
+            <label className="text-text-secondary flex items-center gap-1.5 text-xs font-medium">
+              <span>
+                {label}
+                {required && (
+                  <span className="text-status-required ml-1">*</span>
+                )}
+              </span>
+              {helpTooltip && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="text-text-secondary hover:text-text-primary h-4 w-4 cursor-help transition-colors" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">{helpTooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </label>
+            <input
+              ref={ref}
+              required={required}
+              className={cn(
+                "text-text-primary placeholder:text-text-placeholder bg-transparent text-base transition-colors outline-none",
+                "disabled:cursor-not-allowed disabled:opacity-50",
+                className,
+              )}
+              {...props}
+            />
+          </div>
+          {/* Error message */}
+          {error && (
+            <p className="text-status-destructive-light mt-1 text-xs">
+              {error}
+            </p>
+          )}
+          {/* Helper text */}
+          {!error && helperText && (
+            <p className="text-text-secondary mt-1 text-xs">{helperText}</p>
+          )}
+        </div>
+      );
+    }
+
     const inputElement = (
       <div className="relative w-full">
         <input
@@ -64,7 +114,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       return inputElement;
     }
 
-    // With label
+    // With label (top or left)
     return (
       <div
         className={cn(

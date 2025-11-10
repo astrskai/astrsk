@@ -7,12 +7,13 @@ import {
   FlowSelectionStep,
   AiCharacterSelectionStep,
   UserCharacterSelectionStep,
-  PlotSelectionStep,
+  ScenarioSelectionStep,
 } from "./ui/create";
 import { StepIndicator } from "@/shared/ui/step-indicator";
 import { logger } from "@/shared/lib";
 import { Flow } from "@/entities/flow/domain/flow";
 import { CharacterCard } from "@/entities/card/domain/character-card";
+import { PlotCard } from "@/entities/card/domain/plot-card";
 import { CardType } from "@/entities/card/domain";
 import { Session, CardListItem } from "@/entities/session/domain";
 import { defaultChatStyles } from "@/entities/session/domain/chat-styles";
@@ -24,7 +25,12 @@ import { queryClient } from "@/shared/api/query-client";
 import { TableName } from "@/db/schema/table-name";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
-type Step = "basic-info" | "flow" | "ai-character" | "user-character" | "plot";
+type Step =
+  | "basic-info"
+  | "flow"
+  | "ai-character"
+  | "user-character"
+  | "scenario";
 
 const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
   [
@@ -37,7 +43,7 @@ const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
       number: 4,
       required: false,
     },
-    { id: "plot", label: "Plot", number: 5, required: false },
+    { id: "scenario", label: "Scenario", number: 5, required: false },
   ];
 
 /**
@@ -49,7 +55,7 @@ const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
  * 2. Flow - Select flow and agents
  * 3. AI Character - Select AI character cards
  * 4. User Character - Select user character card
- * 5. Plot - Select plot card
+ * 5. Scenario - Select scenario card
  */
 export function CreateSessionPage() {
   const navigate = useNavigate();
@@ -67,7 +73,9 @@ export function CreateSessionPage() {
   );
   const [selectedUserCharacter, setSelectedUserCharacter] =
     useState<CharacterCard | null>(null);
-  const [selectedPlot, setSelectedPlot] = useState<CharacterCard | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<PlotCard | null>(
+    null,
+  );
 
   const selectSession = useSessionStore.use.selectSession();
 
@@ -145,9 +153,9 @@ export function CreateSessionPage() {
       }
 
       // Add plot card if selected
-      if (selectedPlot) {
+      if (selectedScenario) {
         allCards.push({
-          id: selectedPlot.id,
+          id: selectedScenario.id,
           type: CardType.Plot,
           enabled: true,
         });
@@ -206,7 +214,7 @@ export function CreateSessionPage() {
     selectedFlow,
     selectedCharacters,
     selectedUserCharacter,
-    selectedPlot,
+    selectedScenario,
     selectSession,
     navigate,
   ]);
@@ -260,8 +268,8 @@ export function CreateSessionPage() {
       <StepIndicator steps={STEPS} currentStep={currentStep} />
 
       {/* Content */}
-      <div className="mb-13 flex flex-1 overflow-y-auto md:mb-0">
-        <div className="mx-auto w-full max-w-7xl p-8">
+      <div className="mb-13 flex-1 overflow-y-auto md:mb-0">
+        <div className="mx-auto w-full max-w-7xl p-4 md:p-8">
           {currentStep === "basic-info" && (
             <BasicInfoStep
               sessionName={sessionName}
@@ -296,17 +304,17 @@ export function CreateSessionPage() {
             />
           )}
 
-          {currentStep === "plot" && (
-            <PlotSelectionStep
-              selectedPlot={selectedPlot}
-              onPlotSelected={setSelectedPlot}
+          {currentStep === "scenario" && (
+            <ScenarioSelectionStep
+              selectedScenario={selectedScenario}
+              onScenarioSelected={setSelectedScenario}
             />
           )}
         </div>
       </div>
 
       {/* Mobile Floating Buttons */}
-      <div className="absolute right-0 bottom-0 left-0 bg-gray-900 p-2 md:hidden">
+      <div className="absolute right-0 bottom-0 left-0 p-2 md:hidden">
         <div className="flex items-center justify-between gap-3">
           {showPreviousButton ? (
             <Button

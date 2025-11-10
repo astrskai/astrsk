@@ -8,7 +8,7 @@ import { CardType } from "@/entities/card/domain";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { logger } from "@/shared/lib";
-import type { AgentModel } from "@/pages/assets/flows/ui/dialog/flow-import-dialog";
+import type { AgentModel } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
 
 /**
  * Unified resource import hook
@@ -81,7 +81,7 @@ export function useResourceImport() {
           if (hasCharacter && !hasPlot) {
             navigate({ to: "/assets/characters" });
           } else if (hasPlot && !hasCharacter) {
-            navigate({ to: "/assets/plots" });
+            navigate({ to: "/assets/scenarios" });
           } else if (hasCharacter && hasPlot) {
             navigate({ to: "/assets/characters" });
           }
@@ -116,7 +116,7 @@ export function useResourceImport() {
             if (hasCharacter && !hasPlot) {
               navigate({ to: "/assets/characters" });
             } else if (hasPlot && !hasCharacter) {
-              navigate({ to: "/assets/plots" });
+              navigate({ to: "/assets/scenarios" });
             } else if (hasCharacter && hasPlot) {
               navigate({ to: "/assets/characters" });
             }
@@ -211,9 +211,9 @@ export function useResourceImport() {
           description: importedFlow.props.name || "Untitled Flow",
         });
 
-        // Navigate to flows page if not already there (setter only provided from flows page)
+        // Navigate to workflows page if not already there (setter only provided from workflows page)
         if (!newlyCreatedFlowIdSetter) {
-          navigate({ to: "/assets/flows" });
+          navigate({ to: "/assets/workflows" });
         }
       } catch (error) {
         logger.error(error);

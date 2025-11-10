@@ -102,11 +102,13 @@ const CharacterPreviewItem = ({
  */
 interface SelectedCharacterCardProps {
   card: CharacterCard;
+  onClick: () => void;
   onRemove: (e: React.MouseEvent) => void;
 }
 
 const SelectedCharacterCard = ({
   card,
+  onClick,
   onRemove,
 }: SelectedCharacterCardProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
@@ -115,7 +117,10 @@ const SelectedCharacterCard = ({
     {
       icon: Trash2,
       label: `Remove ${card.props.title}`,
-      onClick: onRemove,
+      onClick: (e) => {
+        e.stopPropagation();
+        onRemove(e);
+      },
     },
   ];
 
@@ -128,6 +133,7 @@ const SelectedCharacterCard = ({
       tokenCount={card.props.tokenCount}
       actions={actions}
       isShowActions={true}
+      onClick={onClick}
     />
   );
 };
@@ -147,7 +153,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
       </h3>
 
       {/* Character Image */}
-      <div className="relative mx-auto aspect-[3/4] max-w-xs overflow-hidden rounded-lg">
+      <div className="relative mx-auto aspect-[3/4] max-w-[200px] overflow-hidden rounded-lg md:max-w-xs">
         <img
           src={characterImageUrl || "/img/placeholder/character-card-image.png"}
           alt={character.props.title}
@@ -197,7 +203,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
  * Allows user to select one user character card (optional)
  * Cards already selected as AI characters are disabled
  */
-export function UserCharacterSelectionStep({
+export default function UserCharacterSelectionStep({
   selectedUserCharacter,
   selectedAiCharacterIds,
   onUserCharacterSelected,
@@ -293,24 +299,24 @@ export function UserCharacterSelectionStep({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-xl">
-          3. Select User Character&nbsp;(optional)
+      <div className="mx-auto w-full max-w-2xl">
+        <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-[1.2rem]">
+          Select User Character&nbsp;(optional)
         </h2>
-        <p className="text-text-secondary text-sm">
-          Choose your character role for session.
+        <p className="text-text-secondary text-xs md:text-sm">
+          Select one character to play as in this session, or skip to continue
+          without one.
         </p>
       </div>
 
       {/* Selected Character Display */}
-      <div className="flex flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         {selectedUserCharacter ? (
-          <div className="mx-auto w-full max-w-2xl">
-            <SelectedCharacterCard
-              card={selectedUserCharacter}
-              onRemove={handleRemoveUserCharacter}
-            />
-          </div>
+          <SelectedCharacterCard
+            card={selectedUserCharacter}
+            onClick={handleAddUserCharacterClick}
+            onRemove={handleRemoveUserCharacter}
+          />
         ) : (
           /* Empty State - Show Select Button Card */
           <div

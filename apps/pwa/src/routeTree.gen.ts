@@ -23,8 +23,8 @@ import { Route as LayoutSessionsNewRouteImport } from './routes/_layout/sessions
 import { Route as LayoutSessionsSessionIdRouteImport } from './routes/_layout/sessions/$sessionId'
 import { Route as LayoutSettingsLegalIndexRouteImport } from './routes/_layout/settings/legal/index'
 import { Route as LayoutSettingsAccountIndexRouteImport } from './routes/_layout/settings/account/index'
-import { Route as LayoutAssetsPlotsIndexRouteImport } from './routes/_layout/assets/plots/index'
-import { Route as LayoutAssetsFlowsIndexRouteImport } from './routes/_layout/assets/flows/index'
+import { Route as LayoutAssetsWorkflowsIndexRouteImport } from './routes/_layout/assets/workflows/index'
+import { Route as LayoutAssetsScenariosIndexRouteImport } from './routes/_layout/assets/scenarios/index'
 import { Route as LayoutAssetsCharactersIndexRouteImport } from './routes/_layout/assets/characters/index'
 import { Route as LayoutSettingsLegalTermsOfServiceRouteImport } from './routes/_layout/settings/legal/terms-of-service'
 import { Route as LayoutSettingsLegalRefundPolicyRouteImport } from './routes/_layout/settings/legal/refund-policy'
@@ -32,9 +32,9 @@ import { Route as LayoutSettingsLegalPrivacyPolicyRouteImport } from './routes/_
 import { Route as LayoutSettingsLegalOssNoticeRouteImport } from './routes/_layout/settings/legal/oss-notice'
 import { Route as LayoutSettingsLegalContentPolicyRouteImport } from './routes/_layout/settings/legal/content-policy'
 import { Route as LayoutSettingsAccountCreditUsageRouteImport } from './routes/_layout/settings/account/credit-usage'
-import { Route as LayoutAssetsPlotsNewRouteImport } from './routes/_layout/assets/plots/new'
-import { Route as LayoutAssetsPlotsPlotIdRouteImport } from './routes/_layout/assets/plots/$plotId'
-import { Route as LayoutAssetsFlowsFlowIdRouteImport } from './routes/_layout/assets/flows/$flowId'
+import { Route as LayoutAssetsWorkflowsWorkflowIdRouteImport } from './routes/_layout/assets/workflows/$workflowId'
+import { Route as LayoutAssetsScenariosNewRouteImport } from './routes/_layout/assets/scenarios/new'
+import { Route as LayoutAssetsScenariosScenarioIdRouteImport } from './routes/_layout/assets/scenarios/$scenarioId'
 import { Route as LayoutAssetsCharactersNewRouteImport } from './routes/_layout/assets/characters/new'
 import { Route as LayoutAssetsCharactersCharacterIdRouteImport } from './routes/_layout/assets/characters/$characterId'
 
@@ -109,16 +109,18 @@ const LayoutSettingsAccountIndexRoute =
     path: '/account/',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
-const LayoutAssetsPlotsIndexRoute = LayoutAssetsPlotsIndexRouteImport.update({
-  id: '/assets/plots/',
-  path: '/assets/plots/',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutAssetsFlowsIndexRoute = LayoutAssetsFlowsIndexRouteImport.update({
-  id: '/assets/flows/',
-  path: '/assets/flows/',
-  getParentRoute: () => LayoutRoute,
-} as any)
+const LayoutAssetsWorkflowsIndexRoute =
+  LayoutAssetsWorkflowsIndexRouteImport.update({
+    id: '/assets/workflows/',
+    path: '/assets/workflows/',
+    getParentRoute: () => LayoutRoute,
+  } as any)
+const LayoutAssetsScenariosIndexRoute =
+  LayoutAssetsScenariosIndexRouteImport.update({
+    id: '/assets/scenarios/',
+    path: '/assets/scenarios/',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 const LayoutAssetsCharactersIndexRoute =
   LayoutAssetsCharactersIndexRouteImport.update({
     id: '/assets/characters/',
@@ -161,21 +163,24 @@ const LayoutSettingsAccountCreditUsageRoute =
     path: '/account/credit-usage',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
-const LayoutAssetsPlotsNewRoute = LayoutAssetsPlotsNewRouteImport.update({
-  id: '/assets/plots/new',
-  path: '/assets/plots/new',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutAssetsPlotsPlotIdRoute = LayoutAssetsPlotsPlotIdRouteImport.update({
-  id: '/assets/plots/$plotId',
-  path: '/assets/plots/$plotId',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutAssetsFlowsFlowIdRoute = LayoutAssetsFlowsFlowIdRouteImport.update({
-  id: '/assets/flows/$flowId',
-  path: '/assets/flows/$flowId',
-  getParentRoute: () => LayoutRoute,
-} as any)
+const LayoutAssetsWorkflowsWorkflowIdRoute =
+  LayoutAssetsWorkflowsWorkflowIdRouteImport.update({
+    id: '/assets/workflows/$workflowId',
+    path: '/assets/workflows/$workflowId',
+    getParentRoute: () => LayoutRoute,
+  } as any)
+const LayoutAssetsScenariosNewRoute =
+  LayoutAssetsScenariosNewRouteImport.update({
+    id: '/assets/scenarios/new',
+    path: '/assets/scenarios/new',
+    getParentRoute: () => LayoutRoute,
+  } as any)
+const LayoutAssetsScenariosScenarioIdRoute =
+  LayoutAssetsScenariosScenarioIdRouteImport.update({
+    id: '/assets/scenarios/$scenarioId',
+    path: '/assets/scenarios/$scenarioId',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 const LayoutAssetsCharactersNewRoute =
   LayoutAssetsCharactersNewRouteImport.update({
     id: '/assets/characters/new',
@@ -203,9 +208,9 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof LayoutSettingsIndexRoute
   '/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
   '/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
-  '/assets/flows/$flowId': typeof LayoutAssetsFlowsFlowIdRoute
-  '/assets/plots/$plotId': typeof LayoutAssetsPlotsPlotIdRoute
-  '/assets/plots/new': typeof LayoutAssetsPlotsNewRoute
+  '/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
+  '/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
+  '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
@@ -213,8 +218,8 @@ export interface FileRoutesByFullPath {
   '/settings/legal/refund-policy': typeof LayoutSettingsLegalRefundPolicyRoute
   '/settings/legal/terms-of-service': typeof LayoutSettingsLegalTermsOfServiceRoute
   '/assets/characters': typeof LayoutAssetsCharactersIndexRoute
-  '/assets/flows': typeof LayoutAssetsFlowsIndexRoute
-  '/assets/plots': typeof LayoutAssetsPlotsIndexRoute
+  '/assets/scenarios': typeof LayoutAssetsScenariosIndexRoute
+  '/assets/workflows': typeof LayoutAssetsWorkflowsIndexRoute
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
@@ -231,9 +236,9 @@ export interface FileRoutesByTo {
   '/settings': typeof LayoutSettingsIndexRoute
   '/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
   '/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
-  '/assets/flows/$flowId': typeof LayoutAssetsFlowsFlowIdRoute
-  '/assets/plots/$plotId': typeof LayoutAssetsPlotsPlotIdRoute
-  '/assets/plots/new': typeof LayoutAssetsPlotsNewRoute
+  '/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
+  '/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
+  '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
@@ -241,8 +246,8 @@ export interface FileRoutesByTo {
   '/settings/legal/refund-policy': typeof LayoutSettingsLegalRefundPolicyRoute
   '/settings/legal/terms-of-service': typeof LayoutSettingsLegalTermsOfServiceRoute
   '/assets/characters': typeof LayoutAssetsCharactersIndexRoute
-  '/assets/flows': typeof LayoutAssetsFlowsIndexRoute
-  '/assets/plots': typeof LayoutAssetsPlotsIndexRoute
+  '/assets/scenarios': typeof LayoutAssetsScenariosIndexRoute
+  '/assets/workflows': typeof LayoutAssetsWorkflowsIndexRoute
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
@@ -262,9 +267,9 @@ export interface FileRoutesById {
   '/_layout/settings/': typeof LayoutSettingsIndexRoute
   '/_layout/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
   '/_layout/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
-  '/_layout/assets/flows/$flowId': typeof LayoutAssetsFlowsFlowIdRoute
-  '/_layout/assets/plots/$plotId': typeof LayoutAssetsPlotsPlotIdRoute
-  '/_layout/assets/plots/new': typeof LayoutAssetsPlotsNewRoute
+  '/_layout/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
+  '/_layout/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
+  '/_layout/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/_layout/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/_layout/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/_layout/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
@@ -272,8 +277,8 @@ export interface FileRoutesById {
   '/_layout/settings/legal/refund-policy': typeof LayoutSettingsLegalRefundPolicyRoute
   '/_layout/settings/legal/terms-of-service': typeof LayoutSettingsLegalTermsOfServiceRoute
   '/_layout/assets/characters/': typeof LayoutAssetsCharactersIndexRoute
-  '/_layout/assets/flows/': typeof LayoutAssetsFlowsIndexRoute
-  '/_layout/assets/plots/': typeof LayoutAssetsPlotsIndexRoute
+  '/_layout/assets/scenarios/': typeof LayoutAssetsScenariosIndexRoute
+  '/_layout/assets/workflows/': typeof LayoutAssetsWorkflowsIndexRoute
   '/_layout/settings/account/': typeof LayoutSettingsAccountIndexRoute
   '/_layout/settings/legal/': typeof LayoutSettingsLegalIndexRoute
 }
@@ -293,9 +298,9 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/assets/characters/$characterId'
     | '/assets/characters/new'
-    | '/assets/flows/$flowId'
-    | '/assets/plots/$plotId'
-    | '/assets/plots/new'
+    | '/assets/scenarios/$scenarioId'
+    | '/assets/scenarios/new'
+    | '/assets/workflows/$workflowId'
     | '/settings/account/credit-usage'
     | '/settings/legal/content-policy'
     | '/settings/legal/oss-notice'
@@ -303,8 +308,8 @@ export interface FileRouteTypes {
     | '/settings/legal/refund-policy'
     | '/settings/legal/terms-of-service'
     | '/assets/characters'
-    | '/assets/flows'
-    | '/assets/plots'
+    | '/assets/scenarios'
+    | '/assets/workflows'
     | '/settings/account'
     | '/settings/legal'
   fileRoutesByTo: FileRoutesByTo
@@ -321,9 +326,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/assets/characters/$characterId'
     | '/assets/characters/new'
-    | '/assets/flows/$flowId'
-    | '/assets/plots/$plotId'
-    | '/assets/plots/new'
+    | '/assets/scenarios/$scenarioId'
+    | '/assets/scenarios/new'
+    | '/assets/workflows/$workflowId'
     | '/settings/account/credit-usage'
     | '/settings/legal/content-policy'
     | '/settings/legal/oss-notice'
@@ -331,8 +336,8 @@ export interface FileRouteTypes {
     | '/settings/legal/refund-policy'
     | '/settings/legal/terms-of-service'
     | '/assets/characters'
-    | '/assets/flows'
-    | '/assets/plots'
+    | '/assets/scenarios'
+    | '/assets/workflows'
     | '/settings/account'
     | '/settings/legal'
   id:
@@ -351,9 +356,9 @@ export interface FileRouteTypes {
     | '/_layout/settings/'
     | '/_layout/assets/characters/$characterId'
     | '/_layout/assets/characters/new'
-    | '/_layout/assets/flows/$flowId'
-    | '/_layout/assets/plots/$plotId'
-    | '/_layout/assets/plots/new'
+    | '/_layout/assets/scenarios/$scenarioId'
+    | '/_layout/assets/scenarios/new'
+    | '/_layout/assets/workflows/$workflowId'
     | '/_layout/settings/account/credit-usage'
     | '/_layout/settings/legal/content-policy'
     | '/_layout/settings/legal/oss-notice'
@@ -361,8 +366,8 @@ export interface FileRouteTypes {
     | '/_layout/settings/legal/refund-policy'
     | '/_layout/settings/legal/terms-of-service'
     | '/_layout/assets/characters/'
-    | '/_layout/assets/flows/'
-    | '/_layout/assets/plots/'
+    | '/_layout/assets/scenarios/'
+    | '/_layout/assets/workflows/'
     | '/_layout/settings/account/'
     | '/_layout/settings/legal/'
   fileRoutesById: FileRoutesById
@@ -471,18 +476,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsAccountIndexRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
-    '/_layout/assets/plots/': {
-      id: '/_layout/assets/plots/'
-      path: '/assets/plots'
-      fullPath: '/assets/plots'
-      preLoaderRoute: typeof LayoutAssetsPlotsIndexRouteImport
+    '/_layout/assets/workflows/': {
+      id: '/_layout/assets/workflows/'
+      path: '/assets/workflows'
+      fullPath: '/assets/workflows'
+      preLoaderRoute: typeof LayoutAssetsWorkflowsIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/assets/flows/': {
-      id: '/_layout/assets/flows/'
-      path: '/assets/flows'
-      fullPath: '/assets/flows'
-      preLoaderRoute: typeof LayoutAssetsFlowsIndexRouteImport
+    '/_layout/assets/scenarios/': {
+      id: '/_layout/assets/scenarios/'
+      path: '/assets/scenarios'
+      fullPath: '/assets/scenarios'
+      preLoaderRoute: typeof LayoutAssetsScenariosIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/assets/characters/': {
@@ -534,25 +539,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsAccountCreditUsageRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
-    '/_layout/assets/plots/new': {
-      id: '/_layout/assets/plots/new'
-      path: '/assets/plots/new'
-      fullPath: '/assets/plots/new'
-      preLoaderRoute: typeof LayoutAssetsPlotsNewRouteImport
+    '/_layout/assets/workflows/$workflowId': {
+      id: '/_layout/assets/workflows/$workflowId'
+      path: '/assets/workflows/$workflowId'
+      fullPath: '/assets/workflows/$workflowId'
+      preLoaderRoute: typeof LayoutAssetsWorkflowsWorkflowIdRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/assets/plots/$plotId': {
-      id: '/_layout/assets/plots/$plotId'
-      path: '/assets/plots/$plotId'
-      fullPath: '/assets/plots/$plotId'
-      preLoaderRoute: typeof LayoutAssetsPlotsPlotIdRouteImport
+    '/_layout/assets/scenarios/new': {
+      id: '/_layout/assets/scenarios/new'
+      path: '/assets/scenarios/new'
+      fullPath: '/assets/scenarios/new'
+      preLoaderRoute: typeof LayoutAssetsScenariosNewRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/assets/flows/$flowId': {
-      id: '/_layout/assets/flows/$flowId'
-      path: '/assets/flows/$flowId'
-      fullPath: '/assets/flows/$flowId'
-      preLoaderRoute: typeof LayoutAssetsFlowsFlowIdRouteImport
+    '/_layout/assets/scenarios/$scenarioId': {
+      id: '/_layout/assets/scenarios/$scenarioId'
+      path: '/assets/scenarios/$scenarioId'
+      fullPath: '/assets/scenarios/$scenarioId'
+      preLoaderRoute: typeof LayoutAssetsScenariosScenarioIdRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/assets/characters/new': {
@@ -616,12 +621,12 @@ interface LayoutRouteChildren {
   LayoutSessionsIndexRoute: typeof LayoutSessionsIndexRoute
   LayoutAssetsCharactersCharacterIdRoute: typeof LayoutAssetsCharactersCharacterIdRoute
   LayoutAssetsCharactersNewRoute: typeof LayoutAssetsCharactersNewRoute
-  LayoutAssetsFlowsFlowIdRoute: typeof LayoutAssetsFlowsFlowIdRoute
-  LayoutAssetsPlotsPlotIdRoute: typeof LayoutAssetsPlotsPlotIdRoute
-  LayoutAssetsPlotsNewRoute: typeof LayoutAssetsPlotsNewRoute
+  LayoutAssetsScenariosScenarioIdRoute: typeof LayoutAssetsScenariosScenarioIdRoute
+  LayoutAssetsScenariosNewRoute: typeof LayoutAssetsScenariosNewRoute
+  LayoutAssetsWorkflowsWorkflowIdRoute: typeof LayoutAssetsWorkflowsWorkflowIdRoute
   LayoutAssetsCharactersIndexRoute: typeof LayoutAssetsCharactersIndexRoute
-  LayoutAssetsFlowsIndexRoute: typeof LayoutAssetsFlowsIndexRoute
-  LayoutAssetsPlotsIndexRoute: typeof LayoutAssetsPlotsIndexRoute
+  LayoutAssetsScenariosIndexRoute: typeof LayoutAssetsScenariosIndexRoute
+  LayoutAssetsWorkflowsIndexRoute: typeof LayoutAssetsWorkflowsIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -636,12 +641,12 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAssetsCharactersCharacterIdRoute:
     LayoutAssetsCharactersCharacterIdRoute,
   LayoutAssetsCharactersNewRoute: LayoutAssetsCharactersNewRoute,
-  LayoutAssetsFlowsFlowIdRoute: LayoutAssetsFlowsFlowIdRoute,
-  LayoutAssetsPlotsPlotIdRoute: LayoutAssetsPlotsPlotIdRoute,
-  LayoutAssetsPlotsNewRoute: LayoutAssetsPlotsNewRoute,
+  LayoutAssetsScenariosScenarioIdRoute: LayoutAssetsScenariosScenarioIdRoute,
+  LayoutAssetsScenariosNewRoute: LayoutAssetsScenariosNewRoute,
+  LayoutAssetsWorkflowsWorkflowIdRoute: LayoutAssetsWorkflowsWorkflowIdRoute,
   LayoutAssetsCharactersIndexRoute: LayoutAssetsCharactersIndexRoute,
-  LayoutAssetsFlowsIndexRoute: LayoutAssetsFlowsIndexRoute,
-  LayoutAssetsPlotsIndexRoute: LayoutAssetsPlotsIndexRoute,
+  LayoutAssetsScenariosIndexRoute: LayoutAssetsScenariosIndexRoute,
+  LayoutAssetsWorkflowsIndexRoute: LayoutAssetsWorkflowsIndexRoute,
 }
 
 const LayoutRouteWithChildren =

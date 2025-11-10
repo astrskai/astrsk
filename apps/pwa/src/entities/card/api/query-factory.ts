@@ -14,9 +14,17 @@ import { UniqueEntityID } from "@/shared/domain";
 import { CardService } from "@/app/services/card-service";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
 import { LorebookDrizzleMapper } from "@/entities/card/mappers/lorebook-drizzle-mapper";
-import { Card, CardType, CharacterCard, PlotCard } from "@/entities/card/domain";
-import { SearchCardsSort } from "@/entities/card/repos";
+import {
+  Card,
+  CardType,
+  CharacterCard,
+  PlotCard,
+} from "@/entities/card/domain";
 import { queryClient } from "@/shared/api/query-client";
+import {
+  SortOptionValue,
+  DEFAULT_SORT_VALUE,
+} from "@/shared/config/sort-options";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection
@@ -45,7 +53,7 @@ const selectResultCache = new WeakMap<object, any>();
 export interface CardListFilters {
   keyword?: string;
   limit?: number;
-  sort?: (typeof SearchCardsSort)[keyof typeof SearchCardsSort];
+  sort?: SortOptionValue;
   type?: CardType[];
 }
 
@@ -84,7 +92,7 @@ export const cardQueries = {
         const result = await CardService.searchCard.execute({
           keyword: filters.keyword || "",
           limit: filters.limit || 100,
-          sort: filters.sort || SearchCardsSort.Latest,
+          sort: filters.sort || DEFAULT_SORT_VALUE,
           type: filters.type || [],
         });
         if (result.isFailure) return [];

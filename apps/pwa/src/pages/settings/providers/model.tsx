@@ -279,6 +279,7 @@ export default function ModelPage({ className }: { className?: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [editingApiConnection, setEditingApiConnection] =
     useState<ApiConnection | null>(null);
+  const [title, setTitle] = useState<string>("");
   const [apiKey, setApiKey] = useState<string>("");
   const [baseUrl, setBaseUrl] = useState<string>("");
   const [openrouterProviderSort, setOpenrouterProviderSort] =
@@ -317,6 +318,24 @@ export default function ModelPage({ className }: { className?: string }) {
         return null;
       }
       setEditingApiConnection(connection);
+
+      // Set title - generate unique title for new OpenAI compatible connections
+      let suggestedTitle = connection.title;
+      if (connection.source === ApiSource.OpenAICompatible && !apiConnection) {
+        // This is a new connection, find first available number
+        const baseTitle = apiSourceLabel.get(connection.source) || connection.source.toString();
+        const existingTitles = apiConnections
+          .filter((conn: ApiConnection) => conn.source === ApiSource.OpenAICompatible)
+          .map((conn: ApiConnection) => conn.title);
+
+        // Find the first available number starting from 1
+        let counter = 1;
+        while (existingTitles.includes(`${baseTitle} ${counter}`)) {
+          counter++;
+        }
+        suggestedTitle = `${baseTitle} ${counter}`;
+      }
+      setTitle(suggestedTitle);
 
       // Set input values by api source
       switch (connection.source) {
@@ -370,7 +389,7 @@ export default function ModelPage({ className }: { className?: string }) {
       // Open dialog
       setIsOpenEdit(true);
     },
-    [],
+    [apiConnections],
   );
 
   // Validate edit form
@@ -416,6 +435,28 @@ export default function ModelPage({ className }: { className?: string }) {
       }
 
       // Update api connection
+      // Generate unique title
+      let finalTitle = title.trim();
+
+      // If no custom title provided, use source label as base
+      if (!finalTitle) {
+        finalTitle = apiSourceLabel.get(editingApiConnection.source) || editingApiConnection.source.toString();
+      }
+
+      // Check for uniqueness and add number suffix if needed
+      const existingTitles = apiConnections
+        .filter((conn: ApiConnection) => conn.id.toString() !== editingApiConnection?.id.toString()) // Exclude current connection when editing
+        .map((conn: ApiConnection) => conn.title);
+
+      let uniqueTitle = finalTitle;
+      let counter = 1;
+      while (existingTitles.includes(uniqueTitle)) {
+        uniqueTitle = `${finalTitle} ${counter}`;
+        counter++;
+      }
+
+      editingApiConnection.setTitle(uniqueTitle);
+
       if (showBaseUrl.get(editingApiConnection.source)) {
         editingApiConnection.setBaseUrl(baseUrl);
       }
@@ -481,6 +522,7 @@ export default function ModelPage({ className }: { className?: string }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    title,
     apiKey,
     baseUrl,
     editingApiConnection,
@@ -711,6 +753,14 @@ export default function ModelPage({ className }: { className?: string }) {
                 fully register a new API on their system.
               </div>
             </div>
+          )}
+          {editingApiConnection?.source === ApiSource.OpenAICompatible && (
+            <FloatingLabelInput
+              label="Title (Optional)"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., DeepSeek Production, Together.ai, My Custom API"
+            />
           )}
           <DialogFooter>
             <DialogClose asChild>

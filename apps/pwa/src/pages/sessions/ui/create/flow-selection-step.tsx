@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
-import { FlowCard } from "@/pages/assets/flows/ui/list";
+import FlowPreview from "@/features/flow/ui/flow-preview";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { Flow } from "@/entities/flow/domain/flow";
 import { IconFlow } from "@/shared/assets/icons";
@@ -17,7 +18,7 @@ import {
 
 interface FlowSelectionStepProps {
   selectedFlow: Flow | null;
-  onFlowSelected: (flow: Flow) => void;
+  onFlowSelected: (flow: Flow | null) => void;
 }
 
 /**
@@ -65,79 +66,51 @@ export function FlowSelectionStep({
     setSearchKeyword("");
   };
 
+  const handleRemoveFlow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onFlowSelected(null);
+  };
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-text-primary mb-2 text-xl font-semibold">
-          1. Select Flow<span className="text-status-required">*</span>
+      <div className="mx-auto w-full max-w-2xl">
+        <h2 className="text-text-primary mb-2 text-base font-semibold md:text-[1.2rem]">
+          Select a Roleplay Workflow
+          <span className="text-status-required">*</span>
         </h2>
-        <p className="text-text-secondary text-sm">
-          Choose a flow (a bundle of prompt preset and AI model) to use for your
-          session.
+        <p className="text-text-secondary text-xs md:text-sm">
+          A workflow is a bundle of prompt presets and AI models that defines
+          your roleplay progression.
         </p>
       </div>
 
-      {/* Add Flow Card */}
-      <div
-        onClick={handleAddFlowClick}
-        className={cn(
-          "group relative cursor-pointer overflow-hidden rounded-lg transition-all",
-          "bg-black-alternate border-1 p-6",
-          "hover:border-primary/50 hover:shadow-lg",
-          selectedFlow ? "border-primary shadow-lg" : "border-gray-700",
-        )}
-      >
+      {/* Selected Flow Display */}
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         {selectedFlow ? (
-          <>
-            {/* Selected Flow Display */}
-            <h3 className="text-text-primary mb-3 flex items-center gap-2 text-lg font-semibold">
-              <IconFlow className="h-5 w-5" />
-              {selectedFlow.props.name || "Untitled Flow"}
-            </h3>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-text-secondary">Nodes:</span>
-                <span className="text-text-primary font-medium">
-                  {selectedFlow.props.nodes.length}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-text-secondary">Agents:</span>
-                <span className="text-text-primary font-medium">
-                  {
-                    selectedFlow.props.nodes.filter(
-                      (node) => node.type === "agent",
-                    ).length
-                  }
-                </span>
-              </div>
-
-              {/* DataStore Fields */}
-              {selectedFlow.props.dataStoreSchema?.fields &&
-                selectedFlow.props.dataStoreSchema.fields.length > 0 && (
-                  <div className="mt-3 flex flex-col gap-2">
-                    <span className="text-text-secondary text-sm font-medium">
-                      Session stats
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedFlow.props.dataStoreSchema.fields.map(
-                        (field, index) => (
-                          <span
-                            key={index}
-                            className="bg-background-surface-3 text-text-secondary rounded-md px-2 py-0.5 text-xs"
-                          >
-                            {field.name}
-                          </span>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-            </div>
-          </>
+          <FlowPreview
+            title={selectedFlow.props.name || "Untitled Flow"}
+            description={selectedFlow.props.description}
+            nodeCount={selectedFlow.props.nodes.length}
+            onClick={handleAddFlowClick}
+            actions={[
+              {
+                icon: Trash2,
+                label: `Remove ${selectedFlow.props.name || "flow"}`,
+                onClick: handleRemoveFlow,
+              },
+            ]}
+            isShowActions={true}
+          />
         ) : (
-          <>
-            {/* Add Flow Placeholder */}
+          /* Empty State - Show Select Button Card */
+          <div
+            onClick={handleAddFlowClick}
+            className={cn(
+              "group relative cursor-pointer overflow-hidden rounded-lg transition-all",
+              "bg-black-alternate border-1 border-gray-700 p-6",
+              "hover:border-primary/50 hover:shadow-lg",
+            )}
+          >
             <div className="flex flex-col items-center justify-center py-8">
               <IconFlow className="text-text-secondary mb-3 h-12 w-12" />
               <h3 className="text-text-primary mb-2 text-lg font-semibold">
@@ -147,13 +120,13 @@ export function FlowSelectionStep({
                 Click to select a flow
               </p>
             </div>
-          </>
+          </div>
         )}
       </div>
 
       {/* Flow Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex max-h-[90dvh] max-w-4xl flex-col">
+        <DialogContent className="flex h-[90dvh] max-h-[90dvh] max-w-5xl flex-col gap-2 md:max-w-6xl">
           <DialogHeader>
             <DialogTitle>Select Flow</DialogTitle>
             <DialogDescription>
@@ -175,11 +148,16 @@ export function FlowSelectionStep({
             <div className="min-h-0 flex-1 overflow-y-auto">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {filteredFlows.map((flow: Flow) => (
-                  <FlowCard
+                  <FlowPreview
                     key={flow.id.toString()}
-                    flow={flow}
-                    isSelected={selectedFlowId === flow.id.toString()}
+                    title={flow.props.name || "Untitled Flow"}
+                    description={flow.props.description}
+                    nodeCount={flow.props.nodes.length}
                     onClick={() => setSelectedFlowId(flow.id.toString())}
+                    className={cn(
+                      selectedFlowId === flow.id.toString() &&
+                        "!border-primary shadow-lg",
+                    )}
                   />
                 ))}
               </div>

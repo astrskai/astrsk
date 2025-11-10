@@ -51,6 +51,7 @@ export * from "./field-badges";
 export * from "./banner";
 export * from "./color-picker";
 export * from "./combobox";
+export * from "./empty-state";
 export * from "./initial-loading";
 export * from "./loading";
 export * from "./loading-overlay";
@@ -75,3 +76,9 @@ export * from "./list-edit-dialog-mobile";
 
 // Editor (already has its own index.ts)
 export * from "./editor";
+
+// File upload
+export * from "./file-drop-zone";
+
+// Chat
+export * from "./chat-bubble";

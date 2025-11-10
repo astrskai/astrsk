@@ -176,7 +176,7 @@ export const LorebookEditor = forwardRef<
   );
 
   return (
-    <div className="flex-1 bg-gray-900 p-2 md:p-4">
+    <div className="h-fit flex-1 rounded-lg bg-gray-900 p-2 md:p-4">
       <div className="flex flex-col gap-4 md:flex-row md:gap-6">
         {/* Left: Entries List */}
         <div className="flex flex-col gap-2 md:w-64">
@@ -235,6 +235,7 @@ export const LorebookEditor = forwardRef<
               {/* Entry Name */}
               <Input
                 label="Lorebook Name"
+                labelPosition="inner"
                 type="text"
                 value={selectedEntry.name}
                 onChange={(e) =>
@@ -247,12 +248,11 @@ export const LorebookEditor = forwardRef<
 
               {/* Tags */}
               <div className="flex flex-col gap-2">
-                <label className="text-text-secondary text-sm font-medium">
-                  Tags
-                </label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="text"
+                    label="Tags"
+                    labelPosition="inner"
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     onKeyDown={(e) => {
@@ -292,6 +292,7 @@ export const LorebookEditor = forwardRef<
               {/* Recall Range */}
               <Input
                 label="Recall Range"
+                labelPosition="inner"
                 type="number"
                 value={selectedEntry.recallRange}
                 onChange={(e) => {
@@ -326,7 +327,7 @@ export const LorebookEditor = forwardRef<
               />
             </>
           ) : (
-            <div className="text-text-secondary border-border flex flex-1 items-center justify-center rounded-lg border py-12 text-sm">
+            <div className="text-text-secondary border-dark-surface flex flex-1 items-center justify-center rounded-lg border py-12 text-sm">
               Select an entry to edit or add a new one
             </div>
           )}

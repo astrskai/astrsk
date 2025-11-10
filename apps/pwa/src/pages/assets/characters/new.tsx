@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
 import { CreatePageHeader } from "@/widgets/create-page-header";
 import {
-  CharacterImageStep,
+  CharacterBasicInfoStep,
   CharacterDescriptionStep,
   CharacterLorebookStep,
 } from "./ui/create";
@@ -19,8 +19,9 @@ import { Entry } from "@/entities/card/domain/entry";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardKeys } from "@/entities/card/api";
+import { toast } from "sonner";
 
-type CharacterStep = "image" | "info" | "lorebook";
+type CharacterStep = "basic-info" | "info" | "lorebook";
 
 /**
  * Create Character Card Page
@@ -35,10 +36,13 @@ export function CreateCharacterPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [currentStep, setCurrentStep] = useState<CharacterStep>("image");
+  const [currentStep, setCurrentStep] = useState<CharacterStep>("basic-info");
   const [characterName, setCharacterName] = useState<string>("New Character");
-  const [avatarAssetId, setAvatarAssetId] = useState<string | undefined>();
-  const [avatarFile, setAvatarFile] = useState<File | undefined>();
+  const [imageUrl, setImageUrl] = useState<string | undefined>();
+  const [imageFile, setImageFile] = useState<File | undefined>();
+  const [imageDimensions, setImageDimensions] = useState<
+    { width: number; height: number } | undefined
+  >();
   const [description, setDescription] = useState<string>("");
   const [exampleDialogue, setExampleDialogue] = useState<string>("");
   const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>([]);
@@ -46,7 +50,7 @@ export function CreateCharacterPage() {
   const [isCreatingCard, setIsCreatingCard] = useState<boolean>(false);
 
   const STEPS: StepConfig<CharacterStep>[] = [
-    { id: "image", number: 1, label: "Basic Info", required: true },
+    { id: "basic-info", number: 1, label: "Basic Info", required: true },
     { id: "info", number: 2, label: "Character Description", required: true },
     { id: "lorebook", number: 3, label: "Lorebook", required: false },
   ];
@@ -59,13 +63,60 @@ export function CreateCharacterPage() {
     ? `Step ${currentStepConfig.number} : ${currentStepConfig.label}`
     : undefined;
 
-  const handleFileUpload = (file: File) => {
+  const getImageDimensions = (
+    file: File,
+  ): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve({ width: img.width, height: img.height });
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Failed to load image"));
+      };
+
+      img.src = objectUrl;
+    });
+  };
+
+  const handleFileUpload = async (file: File | null) => {
+    if (!file) {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+
+      setImageFile(undefined);
+      setImageUrl(undefined);
+      setImageDimensions(undefined);
+      return;
+    }
+
+    if (imageUrl) {
+      URL.revokeObjectURL(imageUrl);
+    }
+
     // Store the file for preview - actual upload happens on save
-    setAvatarFile(file);
+    setImageFile(file);
 
     // Create a temporary object URL for preview
     const objectUrl = URL.createObjectURL(file);
-    setAvatarAssetId(objectUrl);
+    setImageUrl(objectUrl);
+
+    // Get image dimensions
+    try {
+      const dimensions = await getImageDimensions(file);
+      setImageDimensions(dimensions);
+    } catch (error) {
+      toast.info("Failed to get image dimensions", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+      setImageDimensions(undefined);
+    }
   };
 
   const handleNext = async () => {
@@ -74,9 +125,9 @@ export function CreateCharacterPage() {
       try {
         // Step 1: Upload image if exists
         let uploadedAssetId: string | undefined;
-        if (avatarFile) {
+        if (imageFile) {
           const assetResult = await AssetService.saveFileToAsset.execute({
-            file: avatarFile,
+            file: imageFile,
           });
 
           if (assetResult.isSuccess) {
@@ -87,20 +138,21 @@ export function CreateCharacterPage() {
             const generatedImageResult =
               await GeneratedImageService.saveGeneratedImageFromAsset.execute({
                 assetId: asset.id,
-                name: avatarFile.name.replace(/\.[^/.]+$/, ""),
+                name: imageFile.name.replace(/\.[^/.]+$/, ""),
                 prompt: `Character avatar for ${characterName}`,
                 style: "uploaded",
                 associatedCardId: undefined, // Will be associated when card is created
               });
 
             if (!generatedImageResult.isSuccess) {
-              console.error(
-                "Failed to add image to gallery:",
-                generatedImageResult.getError(),
-              );
+              toast.error("Failed to add image to gallery", {
+                description: generatedImageResult.getError(),
+              });
             }
           } else {
-            console.error("Failed to upload file:", assetResult.getError());
+            toast.error("Failed to upload file", {
+              description: assetResult.getError(),
+            });
             setIsCreatingCard(false);
             return;
           }
@@ -143,7 +195,9 @@ export function CreateCharacterPage() {
         });
 
         if (cardResult.isFailure) {
-          console.error("Failed to create card:", cardResult.getError());
+          toast.error("Failed to create card", {
+            description: cardResult.getError(),
+          });
           setIsCreatingCard(false);
           return;
         }
@@ -154,7 +208,9 @@ export function CreateCharacterPage() {
         const saveResult = await CardService.saveCard.execute(card);
 
         if (saveResult.isFailure) {
-          console.error("Failed to save card:", saveResult.getError());
+          toast.error("Failed to save card", {
+            description: saveResult.getError(),
+          });
           setIsCreatingCard(false);
           return;
         }
@@ -167,7 +223,9 @@ export function CreateCharacterPage() {
         // Step 6: Navigate to characters list page
         navigate({ to: "/assets/characters" });
       } catch (error) {
-        console.error("Error creating character card:", error);
+        toast.error("Failed to create character card", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
         setIsCreatingCard(false);
       }
     } else {
@@ -194,7 +252,7 @@ export function CreateCharacterPage() {
   // Validation logic for each step
   const canProceed = (() => {
     switch (currentStep) {
-      case "image":
+      case "basic-info":
         return characterName.trim().length > 0; // Image is optional
       case "info":
         return description.trim().length > 0;
@@ -204,6 +262,15 @@ export function CreateCharacterPage() {
         return false;
     }
   })();
+
+  // Cleanup blob URL on unmount or when imageUrl changes
+  useEffect(() => {
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl]);
 
   return (
     <div className="relative flex h-screen w-full flex-col overflow-hidden">
@@ -227,12 +294,13 @@ export function CreateCharacterPage() {
       {/* Content */}
       <div className="mb-13 flex-1 overflow-y-auto md:mb-0">
         <div className="mx-auto w-full max-w-7xl p-4 md:p-8">
-          {/* Step 1: Character Image */}
-          {currentStep === "image" && (
-            <CharacterImageStep
+          {/* Step 1: Character Basic Info */}
+          {currentStep === "basic-info" && (
+            <CharacterBasicInfoStep
               characterName={characterName}
               onCharacterNameChange={setCharacterName}
-              avatarAssetId={avatarAssetId}
+              imageUrl={imageUrl}
+              imageDimensions={imageDimensions}
               onFileUpload={handleFileUpload}
             />
           )}
@@ -258,7 +326,7 @@ export function CreateCharacterPage() {
       </div>
 
       {/* Mobile Floating Buttons */}
-      <div className="absolute right-0 bottom-0 left-0 bg-gray-900 p-2 md:hidden">
+      <div className="absolute right-0 bottom-0 left-0 p-2 md:hidden">
         <div className="flex items-center justify-between gap-3">
           {showPreviousButton ? (
             <Button

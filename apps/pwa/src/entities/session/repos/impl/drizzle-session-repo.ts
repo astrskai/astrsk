@@ -1,4 +1,5 @@
-import { and, desc, eq, gt, ilike, sql } from "drizzle-orm";
+import { and, desc, eq, gt, ilike, sql, type SQL } from "drizzle-orm";
+import type { PgColumn } from "drizzle-orm/pg-core";
 
 import { Result } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
@@ -17,6 +18,7 @@ import {
   SearchSessionsQuery,
 } from "@/entities/session/repos/load-session-repo";
 import { SaveSessionRepo } from "@/entities/session/repos/save-session-repo";
+import { SORT_VALUES } from "@/shared/config/sort-options";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 
 export class DrizzleSessionRepo
@@ -65,7 +67,7 @@ export class DrizzleSessionRepo
   }
 
   async searchSessions(
-    { cursor, pageSize = 100, keyword }: SearchSessionsQuery,
+    { cursor, pageSize = 100, keyword, sort }: SearchSessionsQuery,
     tx?: Transaction,
   ): Promise<Result<Session[]>> {
     const db = tx ?? (await Drizzle.getInstance());
@@ -75,15 +77,36 @@ export class DrizzleSessionRepo
       if (keyword) {
         filters.push(ilike(sessions.title, `%${keyword}%`));
       }
-      if (cursor) {
-        filters.push(gt(sessions.id, cursor.toString()));
+      // if (cursor) {
+      //   filters.push(gt(sessions.id, cursor.toString()));
+      // }
+
+      // Make order by
+      let orderBy: PgColumn | SQL;
+      switch (sort) {
+        case SORT_VALUES.LATEST:
+          orderBy = desc(sessions.created_at);
+          break;
+        case SORT_VALUES.OLDEST:
+          orderBy = sessions.created_at;
+          break;
+        case SORT_VALUES.TITLE_A_TO_Z:
+          orderBy = sessions.title;
+          break;
+        case SORT_VALUES.TITLE_Z_TO_A:
+          orderBy = desc(sessions.title);
+          break;
+        default:
+          orderBy = desc(sessions.created_at);
+          break;
       }
+
       const rows = await db
         .select()
         .from(sessions)
         .where(and(...filters))
         .limit(pageSize)
-        .orderBy(desc(sessions.id));
+        .orderBy(orderBy);
 
       // Convert rows to entities
       const entities = rows.map((row) => SessionDrizzleMapper.toDomain(row));

@@ -83,14 +83,14 @@ const CharacterPreviewItem = ({
       <div className="absolute right-2 bottom-2 z-10 md:hidden">
         <Button
           size="sm"
-          variant="secondary"
+          variant="ghost"
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
             onDetailClick(cardId);
           }}
         >
-          Detail
+          {`Detail >`}
         </Button>
       </div>
     </div>
@@ -149,7 +149,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
       </h3>
 
       {/* Character Image */}
-      <div className="relative mx-auto aspect-[3/4] max-w-xs overflow-hidden rounded-lg">
+      <div className="relative mx-auto aspect-[3/4] max-w-[200px] overflow-hidden rounded-lg md:max-w-xs">
         <img
           src={characterImageUrl || "/img/placeholder/character-card-image.png"}
           alt={character.props.title}
@@ -313,8 +313,8 @@ export function AiCharacterSelectionStep({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-xl">
-          2. Add AI Characters&nbsp;
+        <h2 className="text-text-primary mb-2 text-base font-semibold md:text-[1.2rem]">
+          Add AI Characters&nbsp;
           <span className="text-status-required">(Minimum 1)*</span>
         </h2>
         <p className="text-text-secondary text-sm">
@@ -325,15 +325,15 @@ export function AiCharacterSelectionStep({
       {/* Selected Characters Display */}
       <div className="flex flex-col gap-4">
         {/* Mobile: Add Button (outside grid) */}
-        <Button
-          onClick={handleAddCharacterClick}
-          icon={<Plus className="min-h-4 min-w-4" />}
-          className="w-full md:hidden"
-        >
-          {selectedCharacters.length > 0
-            ? `Add more characters (${selectedCharacters.length} selected)`
-            : "Add AI characters"}
-        </Button>
+        {selectedCharacters.length > 0 && (
+          <Button
+            onClick={handleAddCharacterClick}
+            icon={<Plus className="min-h-4 min-w-4" />}
+            className="w-full md:hidden"
+          >
+            {`Add more characters (${selectedCharacters.length} selected)`}
+          </Button>
+        )}
 
         {/* Characters Grid */}
         {selectedCharacters.length > 0 ? (

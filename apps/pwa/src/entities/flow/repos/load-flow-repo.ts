@@ -3,6 +3,7 @@ import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 import { ApiSource } from "@/entities/api/domain";
 import { Flow, TaskType } from "@/entities/flow/domain/flow";
+import { SortOptionValue } from "@/shared/config/sort-options";
 
 export type SearchFlowQuery = {
   // Pagination
@@ -12,6 +13,9 @@ export type SearchFlowQuery = {
   // Search
   keyword?: string;
   taskType?: TaskType;
+
+  // Sort
+  sort?: SortOptionValue;
 };
 
 export interface LoadFlowRepo {

@@ -1,9 +1,9 @@
 import { TabConfig } from "@/widgets/list-page-header";
 
-export type AssetType = "characters" | "plots" | "flows";
+export type AssetType = "character" | "scenario" | "workflow";
 
 export const ASSET_TABS: TabConfig[] = [
-  { label: "Characters", to: "/assets/characters", value: "characters" },
-  { label: "Plots", to: "/assets/plots", value: "plots" },
-  { label: "Flows", to: "/assets/flows", value: "flows" },
+  { label: "Character", to: "/assets/characters", value: "character" },
+  { label: "Scenario", to: "/assets/scenarios", value: "scenario" },
+  { label: "Workflow", to: "/assets/workflows", value: "workflow" },
 ];

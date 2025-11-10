@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { cn } from "@/shared/lib";
 
 export interface StepConfig<T extends string = string> {
@@ -25,7 +26,7 @@ export function StepIndicator<T extends string = string>({
   currentStep,
 }: StepIndicatorProps<T>) {
   return (
-    <div className="px-4 py-3 md:px-8 md:py-4">
+    <div className="px-4 py-2 md:px-8 md:py-4">
       {/* Mobile: Thin Horizontal Bars Layout */}
       <div className="flex gap-1 md:hidden">
         {steps.map((step) => {
@@ -84,7 +85,7 @@ export function StepIndicator<T extends string = string>({
                         !isActive && !isCompleted && "scale-100 bg-gray-500",
                       )}
                     >
-                      {step.number}
+                      {isCompleted ? <Check size={20} /> : step.number}
                     </div>
 
                     {/* Connector Line - Right Half */}
@@ -109,9 +110,6 @@ export function StepIndicator<T extends string = string>({
                     )}
                   >
                     {step.label}
-                    {step.required && (
-                      <span className="text-normal-secondary ml-1">*</span>
-                    )}
                   </span>
                 </div>
               );

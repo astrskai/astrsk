@@ -12,14 +12,14 @@
 import { queryClient } from "@/shared/api/query-client";
 import { FlowService } from "@/app/services/flow-service";
 import { ValidationIssue } from "@/entities/flow/model/validation-types";
-import {
-  Edge,
-  Flow,
-  Node
-} from "@/entities/flow/domain/flow";
+import { Edge, Flow, Node } from "@/entities/flow/domain/flow";
 import { FlowDrizzleMapper } from "@/entities/flow/mappers/flow-drizzle-mapper";
 import { UniqueEntityID } from "@/shared/domain";
 import { queryOptions } from "@tanstack/react-query";
+import {
+  DEFAULT_SORT_VALUE,
+  SortOptionValue,
+} from "@/shared/config/sort-options";
 
 // WeakMap cache for preventing unnecessary re-renders
 // Uses data object references as keys for automatic garbage collection
@@ -59,6 +59,7 @@ const selectResultCache = new WeakMap<object, any>();
 export interface SearchFlowsParams {
   keyword?: string;
   limit?: number;
+  sort?: SortOptionValue;
 }
 
 export interface FlowMetadata {
@@ -87,7 +88,7 @@ export const flowKeys = {
   lists: () => [...flowKeys.all, "list"] as const,
   list: (params?: SearchFlowsParams) => {
     if (!params || (params.keyword === "" && params.limit === 100)) {
-      return flowKeys.lists();
+      return [...flowKeys.lists(), params];
     }
     return [...flowKeys.lists(), params] as const;
   },
@@ -142,13 +143,19 @@ export const flowKeys = {
 // Query Options Factory
 export const flowQueries = {
   // List queries
-  list: (params: SearchFlowsParams = { keyword: "", limit: 100 }) =>
+  list: (
+    params: SearchFlowsParams = {
+      keyword: "",
+      limit: 100,
+    },
+  ) =>
     queryOptions({
       queryKey: flowKeys.list(params),
       queryFn: async () => {
         const result = await FlowService.searchFlow.execute({
           keyword: params.keyword || "",
           limit: params.limit || 100,
+          sort: params.sort || DEFAULT_SORT_VALUE,
         });
         if (result.isFailure) return [];
         return result
@@ -562,9 +569,7 @@ export const flowQueries = {
  */
 
 export async function fetchFlow(id: UniqueEntityID): Promise<Flow> {
-  const data = await queryClient.fetchQuery(
-    flowQueries.detail(id.toString()),
-  );
+  const data = await queryClient.fetchQuery(flowQueries.detail(id.toString()));
   if (!data) {
     throw new Error(`Flow not found: ${id.toString()}`);
   }

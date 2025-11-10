@@ -34,7 +34,7 @@ const CharacterPreview = ({
         <span
           key={`${title}-tag-${index}-${tag}`}
           className={cn(
-            "text-black-alternate rounded-md bg-gray-300/80 px-2.5 py-0.5 text-xs font-semibold lg:text-sm",
+            "rounded-md bg-gray-800/80 px-2.5 py-0.5 text-xs font-semibold text-gray-300 lg:text-sm",
             "transition-all duration-300 group-hover/preview:bg-gray-900/50 group-hover/preview:text-gray-50",
             index === 2 && "hidden lg:inline-flex",
           )}
@@ -76,7 +76,7 @@ const CharacterPreview = ({
         !isDisabled && onClick && "cursor-pointer",
         isDisabled
           ? "pointer-events-none"
-          : "group-hover/preview:border-gray-400 group-hover/preview:shadow-lg",
+          : "hover:border-gray-500 hover:shadow-lg",
         className,
       )}
       onClick={isDisabled ? undefined : onClick}
@@ -92,7 +92,10 @@ const CharacterPreview = ({
           {actions.map((action, index) => (
             <button
               key={index}
-              onClick={action.onClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                action.onClick(e);
+              }}
               disabled={action.disabled}
               aria-label={action.label}
               className={cn(
@@ -114,7 +117,7 @@ const CharacterPreview = ({
         src={imageUrl || PLACEHOLDER_IMAGE_URL}
         alt={title}
         className={cn(
-          "h-full w-24 flex-shrink-0 object-cover transition-transform duration-300 md:w-36",
+          "h-full w-1/4 flex-shrink-0 object-cover transition-transform duration-300",
           !isDisabled && "group-hover/preview:scale-105",
         )}
         loading="lazy"
@@ -124,7 +127,7 @@ const CharacterPreview = ({
         {/* Background image with blur on hover */}
         {!isDisabled && (
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-0 blur-md transition-opacity duration-300 group-hover/preview:opacity-20"
+            className="absolute inset-0 bg-cover bg-center opacity-0 blur-md transition-opacity duration-300 group-hover/preview:opacity-50"
             style={{
               backgroundImage: `url(${imageUrl || PLACEHOLDER_IMAGE_URL})`,
             }}
@@ -135,15 +138,14 @@ const CharacterPreview = ({
         <div className="relative z-10 flex h-full flex-col justify-around gap-1 lg:justify-between lg:gap-2">
           <h3
             className={cn(
-              "text-base font-semibold text-gray-50 lg:text-lg",
-              "transition-all duration-300 group-hover/preview:text-gray-200",
+              "line-clamp-2 text-base font-semibold text-ellipsis text-gray-50 lg:text-lg",
             )}
           >
             {title}
           </h3>
           <p
             className={cn(
-              "line-clamp-2 text-xs lg:text-sm",
+              "line-clamp-2 text-xs text-ellipsis lg:text-sm",
               summary &&
                 "transition-all duration-300 group-hover/preview:text-gray-50",
             )}
@@ -154,8 +156,12 @@ const CharacterPreview = ({
             {tags.length > 0 ? getCompactedTagString(tags) : "No tags"}
           </div>
           <div className="flex items-center gap-1 text-xs lg:text-sm">
-            <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
-            Tokens
+            {tokenCount > 0 && (
+              <>
+                <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
+                Tokens
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -93,7 +93,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             : "flex-row items-start gap-4",
         )}
       >
-        <label className="text-text-secondary text-sm font-medium">
+        <label className="text-text-secondary text-xs font-medium">
           {label}
           {required && <span className="text-status-required ml-1">*</span>}
         </label>

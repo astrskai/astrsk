@@ -19,7 +19,7 @@ const Avatar = ({
   return (
     <div
       className={cn(
-        "shrink-0 overflow-hidden rounded-full flex items-center justify-center select-none border-1 border-border-selected-inverse/50",
+        "flex shrink-0 items-center justify-center overflow-hidden rounded-full border-1 border-gray-700 select-none",
         !src && "bg-background-surface-3",
         className,
       )}
@@ -33,7 +33,7 @@ const Avatar = ({
         fallbackSrc="/img/placeholder/avatar.png"
         alt={alt}
         className={cn(
-          "w-full h-full object-cover rounded-full",
+          "h-full w-full rounded-full object-cover",
           isDisabled && "pointer-events-none",
         )}
         isVideo={isVideo}

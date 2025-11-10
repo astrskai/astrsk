@@ -95,9 +95,9 @@ export function ListPageHeader({
     <>
       <MobileMenuDrawer open={isMenuOpen} onOpenChange={setIsMenuOpen} />
 
-      <div className="border-border flex flex-col border-b">
+      <div className="bg-dark-surface sticky top-0 z-50 flex flex-col shadow-md">
         {/* Desktop Header */}
-        <div className="hidden items-center justify-between px-8 py-6 md:flex">
+        <div className="mx-auto hidden w-full max-w-7xl items-center justify-between p-4 md:flex">
           {/* Left: Title or Navigation Links */}
           {tabs && tabs.length > 0 ? (
             <nav className="flex items-center gap-2">
@@ -165,7 +165,7 @@ export function ListPageHeader({
         </div>
 
         {/* Mobile Header */}
-        <div className="flex flex-col md:hidden">
+        <div className="mx-auto flex w-full max-w-7xl flex-col md:hidden">
           {/* Top Row: Menu, Title, More */}
           <div className="flex items-center justify-between px-4 py-4">
             <Button
@@ -173,7 +173,7 @@ export function ListPageHeader({
               icon={<Menu size={20} />}
               size="sm"
               aria-label="Menu"
-              className="bg-transparent"
+              className="border-0 bg-transparent"
               onClick={handleMenuClick}
             />
             <h1 className="text-text-primary text-lg font-semibold">
@@ -186,7 +186,7 @@ export function ListPageHeader({
               icon={<Ellipsis size={20} />}
               size="sm"
               aria-label="More options"
-              className="bg-transparent"
+              className="border-0 bg-transparent"
               onClick={onMoreClick}
             />
           </div>
