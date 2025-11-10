@@ -1,5 +1,6 @@
 import { cn } from "@/shared/lib";
 import type { CharacterAction } from "@/features/character/model/character-actions";
+import { Button } from "@/shared/ui/forms";
 
 interface ScenarioPreviewProps {
   title: string;
@@ -12,6 +13,7 @@ interface ScenarioPreviewProps {
   className?: string;
   isShowActions?: boolean;
   isDisabled?: boolean;
+  bottomActions?: CharacterAction[];
   onClick?: () => void;
 }
 
@@ -28,6 +30,7 @@ const ScenarioPreview = ({
   isShowActions = false,
   actions = [],
   isDisabled = false,
+  bottomActions = [],
   onClick,
 }: ScenarioPreviewProps) => {
   const getCompactedTagString = (tags: string[]) => {
@@ -107,9 +110,13 @@ const ScenarioPreview = ({
                   : "cursor-pointer",
               )}
             >
-              <action.icon
-                className={cn("h-4", action.loading && "animate-pulse")}
-              />
+              {action.icon ? (
+                <action.icon
+                  className={cn("h-4", action.loading && "animate-pulse")}
+                />
+              ) : (
+                <span className="text-xs">{action.label.charAt(0)}</span>
+              )}
             </button>
           ))}
         </div>
@@ -161,15 +168,40 @@ const ScenarioPreview = ({
           {summary || "No summary"}
         </p>
 
-        <div className="flex items-center gap-3 text-xs lg:text-sm">
-          <p>
-            <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
-            Tokens
-          </p>
-          <p>
-            <span className="font-semibold text-gray-50">{firstMessages}</span>{" "}
-            First messages
-          </p>
+        <div className="flex items-center justify-between gap-1 text-xs lg:text-sm">
+          <div className="flex items-center gap-3">
+            <p>
+              <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
+              Tokens
+            </p>
+            <p>
+              <span className="font-semibold text-gray-50">
+                {firstMessages}
+              </span>{" "}
+              First messages
+            </p>
+          </div>
+
+          {bottomActions.length > 0 && (
+            <div className="flex items-center gap-1 text-xs lg:text-sm">
+              {bottomActions.map((action, index) => (
+                <Button
+                  key={index}
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    action.onClick(e);
+                  }}
+                  disabled={action.disabled}
+                  aria-label={action.label}
+                  className={cn(action.className, "px-2 py-1")}
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </article>

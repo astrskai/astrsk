@@ -50,6 +50,17 @@ const CharacterPreviewItem = ({
 }: CharacterPreviewItemProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
+  const bottomActions: CharacterAction[] = [
+    {
+      label: `Detail >`,
+      onClick: (e) => {
+        e.stopPropagation();
+        onDetailClick(cardId);
+      },
+      className: "block md:hidden",
+    },
+  ];
+
   return (
     <div
       className={cn(
@@ -73,25 +84,12 @@ const CharacterPreviewItem = ({
           tags={card.props.tags || []}
           tokenCount={card.props.tokenCount}
           className={cn(
-            isSelected && "border-normal-primary border-2 shadow-lg",
+            isSelected &&
+              "border-normal-primary hover:border-normal-primary/70 border-2 shadow-lg",
           )}
           isDisabled={isDisabled}
+          bottomActions={bottomActions}
         />
-      </div>
-
-      {/* Mobile Detail Button */}
-      <div className="absolute right-2 bottom-2 z-10 md:hidden">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onDetailClick(cardId);
-          }}
-        >
-          Detail
-        </Button>
       </div>
     </div>
   );
@@ -117,11 +115,12 @@ const SelectedCharacterCard = ({
   const actions: CharacterAction[] = [
     {
       icon: Trash2,
-      label: `Remove ${card.props.title}`,
+      label: `Remove`,
       onClick: (e) => {
         e.stopPropagation();
         onRemove(e);
       },
+      className: "block md:hidden",
     },
   ];
 
@@ -134,6 +133,7 @@ const SelectedCharacterCard = ({
       tokenCount={card.props.tokenCount}
       actions={actions}
       isShowActions={true}
+      bottomActions={actions}
       onClick={onClick}
     />
   );

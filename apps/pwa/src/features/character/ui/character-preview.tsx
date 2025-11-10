@@ -1,6 +1,7 @@
 import { Ellipsis } from "lucide-react";
 import { cn } from "@/shared/lib";
 import type { CharacterAction } from "@/features/character/model/character-actions";
+import { Button } from "@/shared/ui/forms";
 
 interface CharacterPreviewProps {
   title: string;
@@ -9,6 +10,7 @@ interface CharacterPreviewProps {
   tags: string[];
   tokenCount?: number;
   actions?: CharacterAction[];
+  bottomActions?: CharacterAction[];
   className?: string;
   isShowActions?: boolean;
   isDisabled?: boolean;
@@ -24,6 +26,7 @@ const CharacterPreview = ({
   tags,
   tokenCount = 0,
   actions = [],
+  bottomActions = [],
   className,
   isShowActions = false,
   isDisabled = false,
@@ -106,9 +109,13 @@ const CharacterPreview = ({
                   : "cursor-pointer",
               )}
             >
-              <action.icon
-                className={cn("h-4", action.loading && "animate-pulse")}
-              />
+              {action.icon ? (
+                <action.icon
+                  className={cn("h-4", action.loading && "animate-pulse")}
+                />
+              ) : (
+                <span className="text-xs">{action.label.charAt(0)}</span>
+              )}
             </button>
           ))}
         </div>
@@ -156,12 +163,33 @@ const CharacterPreview = ({
           <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
             {tags.length > 0 ? getCompactedTagString(tags) : "No tags"}
           </div>
-          <div className="flex items-center gap-1 text-xs lg:text-sm">
+          <div className="flex items-center justify-between gap-1 text-xs lg:text-sm">
             {tokenCount > 0 && (
-              <>
+              <div>
                 <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
                 Tokens
-              </>
+              </div>
+            )}
+
+            {bottomActions.length > 0 && (
+              <div className="flex items-center gap-1 text-xs lg:text-sm">
+                {bottomActions.map((action, index) => (
+                  <Button
+                    key={index}
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      action.onClick(e);
+                    }}
+                    disabled={action.disabled}
+                    aria-label={action.label}
+                    className={cn(action.className, "px-2 py-1")}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
             )}
           </div>
         </div>

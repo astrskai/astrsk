@@ -48,6 +48,17 @@ const ScenarioPreviewItem = ({
 }: ScenarioPreviewItemProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
+  const bottomActions: CharacterAction[] = [
+    {
+      label: `Detail >`,
+      onClick: (e) => {
+        e.stopPropagation();
+        onDetailClick(cardId);
+      },
+      className: "block md:hidden",
+    },
+  ];
+
   return (
     <div className="relative transition-all">
       <div
@@ -63,24 +74,11 @@ const ScenarioPreviewItem = ({
           tokenCount={card.props.tokenCount}
           firstMessages={card.props.scenarios?.length || 0}
           className={cn(
-            isSelected && "border-normal-primary border-2 shadow-lg",
+            isSelected &&
+              "border-normal-primary hover:border-normal-primary/70 border-2 shadow-lg",
           )}
+          bottomActions={bottomActions}
         />
-      </div>
-
-      {/* Mobile Detail Button */}
-      <div className="absolute right-2 bottom-2 z-10 md:hidden">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onDetailClick(cardId);
-          }}
-        >
-          Detail
-        </Button>
       </div>
     </div>
   );
@@ -106,11 +104,12 @@ const SelectedScenarioCard = ({
   const actions: CharacterAction[] = [
     {
       icon: Trash2,
-      label: `Remove ${card.props.title}`,
+      label: `Remove`,
       onClick: (e) => {
         e.stopPropagation();
         onRemove(e);
       },
+      className: "block md:hidden",
     },
   ];
 
@@ -124,6 +123,7 @@ const SelectedScenarioCard = ({
       firstMessages={card.props.scenarios?.length || 0}
       actions={actions}
       isShowActions={true}
+      bottomActions={actions}
       onClick={onClick}
     />
   );
@@ -134,7 +134,6 @@ const SelectedScenarioCard = ({
  * Displays detailed information about a selected scenario
  */
 const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
-  console.log("plot", plot);
   const [scenarioImageUrl] = useAsset(plot.props.iconAssetId);
 
   return (
