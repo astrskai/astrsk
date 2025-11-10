@@ -23,7 +23,7 @@ npm run preview
 
 # Run specific test files with Vitest
 npx vitest path/to/test.spec.ts
-```
+```d
 
 ### ⚠️ IMPORTANT: TypeScript Error Checking in Monorepo
 
