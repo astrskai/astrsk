@@ -155,7 +155,6 @@ export function FlowsGrid({
           {showNewFlowCard && (
             <CreateItemCard
               title="New Workflow"
-              description="Create a new workflow"
               onClick={onCreateFlow}
               className="hidden aspect-[2/1] md:flex lg:aspect-[3/1]"
             />

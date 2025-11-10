@@ -179,7 +179,6 @@ export function SessionsGrid({
           {showNewSessionCard && (
             <CreateItemCard
               title="New Session"
-              description="Make your own story"
               onClick={onCreateSession}
               className="hidden max-w-[340px] md:flex"
             />
