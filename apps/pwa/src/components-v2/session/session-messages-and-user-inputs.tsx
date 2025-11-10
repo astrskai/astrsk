@@ -1749,9 +1749,14 @@ const SessionMessagesAndUserInputs = ({
             }
           }
 
-          lastDataStore = dataStoreForRegeneration;
+          // IMPORTANT: Clear memory_ids from inherited dataStore during regeneration
+          // memory_ids are specific to a message's content and should NOT be inherited
+          // Each new option should get fresh memories based on its own content
+          lastDataStore = dataStoreForRegeneration.filter(
+            (field: DataStoreSavedField) => field.name !== 'memory_ids'
+          );
           console.log(
-            `Using dataStore from regeneration context (${lastDataStore.length} fields)`,
+            `Using dataStore from regeneration context (${lastDataStore.length} fields, memory_ids excluded)`,
           );
         } else if (session.turnIds.length > 0) {
           // For new messages, use last turn's dataStore
@@ -1760,7 +1765,12 @@ const SessionMessagesAndUserInputs = ({
             const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
               .throwOnFailure()
               .getValue();
-            lastDataStore = cloneDeep(lastTurn.dataStore);
+            // IMPORTANT: Clear memory_ids from inherited dataStore
+            // memory_ids are specific to a message's content and should NOT be inherited
+            // Each new message should get fresh memories based on its own content
+            lastDataStore = cloneDeep(lastTurn.dataStore).filter(
+              (field: DataStoreSavedField) => field.name !== 'memory_ids'
+            );
           } catch (error) {
             console.warn(`Failed to get last turn's dataStore: ${error}`);
           }
@@ -1881,8 +1891,8 @@ const SessionMessagesAndUserInputs = ({
             dataStore: streamingMessage.dataStore,
             supermemory: streamingMessage.dataStore ? {
               participants: JSON.parse(streamingMessage.dataStore.find((f: any) => f.name === "participants")?.value || "[]"),
-              gameTime: parseInt(streamingMessage.dataStore.find((f: any) => f.name === "game_time")?.value || "0", 10),
-              gameTimeInterval: streamingMessage.dataStore.find((f: any) => f.name === "game_time_interval")?.value || "Day",
+              selectedScene: streamingMessage.dataStore.find((f: any) => f.name === "selected_scene")?.value || "Unknown",
+              selectedTime: streamingMessage.dataStore.find((f: any) => f.name === "selected_time")?.value || "Day 1",
               worldContext: streamingMessage.dataStore.find((f: any) => f.name === "world_context")?.value,
             } : undefined,
             agentId: streamingAgentName,
@@ -1900,6 +1910,7 @@ const SessionMessagesAndUserInputs = ({
               await triggerExtensionHook("turn:afterCreate", {
                 turn: streamingMessage,
                 session,
+                isRegeneration: false,
                 timestamp: Date.now(),
               });
               logger.info("[Turn Create] Extension hooks triggered for new turn");
@@ -1909,7 +1920,25 @@ const SessionMessagesAndUserInputs = ({
             }
           })();
         } else {
-          // Regenerated message - log as updateMessageOption
+          // Regenerated message - trigger turn:afterCreate with regeneration flag
+          // Extension will delete old memories then create new ones
+          (async () => {
+            try {
+              const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
+              await triggerExtensionHook("turn:afterCreate", {
+                turn: streamingMessage,
+                session,
+                isRegeneration: true,
+                timestamp: Date.now(),
+              });
+              logger.info("[Turn Regenerate] Extension hooks triggered for regenerated turn");
+            } catch (error) {
+              logger.error("[Turn Regenerate] Failed to trigger extension hooks:", error);
+              // Don't fail - extension hooks are optional
+            }
+          })();
+
+          // Log as updateMessageOption
           logMessageRerollToConvex({
             messageId: streamingMessage.id.toString(),
             newContent: streamingContent,
@@ -1917,8 +1946,8 @@ const SessionMessagesAndUserInputs = ({
             dataStore: streamingMessage.dataStore,
             supermemory: streamingMessage.dataStore ? {
               participants: JSON.parse(streamingMessage.dataStore.find((f: any) => f.name === "participants")?.value || "[]"),
-              gameTime: parseInt(streamingMessage.dataStore.find((f: any) => f.name === "game_time")?.value || "0", 10),
-              gameTimeInterval: streamingMessage.dataStore.find((f: any) => f.name === "game_time_interval")?.value || "Day",
+              selectedScene: streamingMessage.dataStore.find((f: any) => f.name === "selected_scene")?.value || "Unknown",
+              selectedTime: streamingMessage.dataStore.find((f: any) => f.name === "selected_time")?.value || "Day 1",
               worldContext: streamingMessage.dataStore.find((f: any) => f.name === "world_context")?.value,
             } : undefined,
           }).catch((error) => {
@@ -2032,13 +2061,27 @@ const SessionMessagesAndUserInputs = ({
         // Invalidate session immediately to show the user message
         invalidateSession();
 
-        // NOTE: User message memory processing is now handled by Supermemory extension
-        // via turn:afterCreate hook. No manual processing needed here.
+        // Trigger turn:afterCreate hook for extensions (e.g., Supermemory memory storage)
+        // IMPORTANT: Wait for extension hooks to complete before auto-reply
+        // This ensures memory generation finishes before AI responds
+        try {
+          const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
+          await triggerExtensionHook("turn:afterCreate", {
+            turn: userMessage,
+            session,
+            isRegeneration: false,
+            timestamp: Date.now(),
+          });
+          logger.info("[User Message] Extension hooks triggered for user message");
+        } catch (error) {
+          logger.error("[User Message] Failed to trigger extension hooks:", error);
+          // Don't fail - extension hooks are optional
+        }
 
         // Scroll to bottom
         scrollToBottom({ behavior: "smooth" });
 
-        // Auto reply
+        // Auto reply (only after memory generation completes)
         switch (autoReply) {
           // No auto reply
           case AutoReply.Off:
@@ -2334,19 +2377,24 @@ const SessionMessagesAndUserInputs = ({
       }
       console.log("   ✅ Message saved successfully");
 
-      // Update Supermemory memories with new content (fire-and-forget, don't block UI)
-      if (supermemoryIdsField) {
+      // Update memories with new content (fire-and-forget, don't block UI)
+      // Fire turn:afterCreate with isRegeneration: true (same as Regenerate button)
+      if (supermemoryIdsField && session) {
         console.log("   🧠 Initiating background memory update...");
-        import("@/modules/extensions/bootstrap").then(({ updateTurnMemories }) => {
-          updateTurnMemories(messageId.toString())
+        import("@/modules/extensions/bootstrap").then(({ triggerExtensionHook }) => {
+          triggerExtensionHook("turn:afterCreate", {
+            turn: message,
+            session,
+            isRegeneration: true,
+          })
             .then(() => {
-              console.log("   ✅ Supermemory memories updated in background");
+              console.log("   ✅ Memories updated in background (all extensions)");
             })
             .catch((error) => {
-              console.warn("   ⚠️ Failed to update Supermemory memories:", error);
+              console.warn("   ⚠️ Failed to update memories:", error);
             });
         }).catch((error) => {
-          console.warn("   ⚠️ Failed to import updateTurnMemories:", error);
+          console.warn("   ⚠️ Failed to import triggerExtensionHook:", error);
         });
       }
 

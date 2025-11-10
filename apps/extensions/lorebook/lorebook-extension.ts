@@ -64,17 +64,17 @@ export class LorebookExtension implements IExtension {
   async onLoad(client: IExtensionClient): Promise<void> {
     // Remove existing listeners first to prevent memory leaks on hot reload
     if (this.client) {
-      this.client.off("message:afterGenerate", this.handleMessageAfterGenerate);
-      this.client.off("scenario:initialized", this.handleMessageAfterGenerate);
+      this.client.off("turn:afterCreate", this.handleTurnAfterCreate);
+      this.client.off("scenario:afterAdd", this.handleTurnAfterCreate);
     }
 
     this.client = client;
 
-    // Register hook for message generation (runs async with NPC extraction)
-    client.on("message:afterGenerate", this.handleMessageAfterGenerate);
+    // Register hook for turn creation (includes new messages and regenerations)
+    client.on("turn:afterCreate", this.handleTurnAfterCreate);
 
-    // Register hook for scenario initialization
-    client.on("scenario:initialized", this.handleMessageAfterGenerate);
+    // Register hook for scenario addition
+    client.on("scenario:afterAdd", this.handleTurnAfterCreate);
 
     console.log("📚 [Lorebook Extension] Loaded successfully - will auto-detect lorebook-worthy information");
     logger.info("[Lorebook Extension] Loaded successfully");
@@ -82,51 +82,59 @@ export class LorebookExtension implements IExtension {
 
   async onUnload(): Promise<void> {
     if (this.client) {
-      this.client.off("message:afterGenerate", this.handleMessageAfterGenerate);
-      this.client.off("scenario:initialized", this.handleMessageAfterGenerate);
+      this.client.off("turn:afterCreate", this.handleTurnAfterCreate);
+      this.client.off("scenario:afterAdd", this.handleTurnAfterCreate);
     }
 
     logger.info("[Lorebook Extension] Unloaded successfully");
   }
 
   /**
-   * Handle message:afterGenerate and scenario:initialized hooks
-   * Triggers lorebook extraction for both generated messages and scenario content
+   * Handle turn:afterCreate hook
+   * Triggers lorebook extraction for new messages and regenerations
    */
-  private handleMessageAfterGenerate = async (
+  private handleTurnAfterCreate = async (
     context: HookContext,
   ): Promise<void> => {
     const { blockUIForTurn, unblockUI } = await import("../../pwa/src/modules/extensions/bootstrap");
 
     // Set 10-second safety timeout to force unblock if something goes wrong
-    const messageId = context.messageId?.toString();
     const safetyTimeout = setTimeout(() => {
-      console.warn(`⏱️ [Lorebook Extension] Safety timeout reached${messageId ? ` for message ${messageId}` : ''}, force unblocking UI`);
+      console.warn(`⏱️ [Lorebook Extension] Safety timeout reached, force unblocking UI`);
       unblockUI();
     }, 10000);
 
     try {
-      const { session, message } = context;
+      const { session, turn } = context;
 
-      if (!session || !message) {
-        logger.warn("[Lorebook Extension] Missing session or message in context");
+      if (!session || !turn) {
+        logger.warn("[Lorebook Extension] Missing session or turn in context");
         return;
       }
 
       const sessionId = session.id.toString();
+      const turnId = turn.id.toString();
+      const message = turn.content; // Extract message content from turn
 
       // Block UI while processing lorebook entries
-      if (messageId) {
-        blockUIForTurn(messageId, "Lorebook extraction", "processing");
-        console.log(`🔒 [Lorebook Extension] Blocked UI for message ${messageId}`);
-      }
+      blockUIForTurn(turnId, "Lorebook extraction", "processing");
+      console.log(`🔒 [Lorebook Extension] Blocked UI for turn ${turnId}`);
 
-      // Get all character cards from session
-      const characterCards = session.allCards.filter((c: any) => c.type === "character");
+      // IMPORTANT: Fetch fresh session to get NPCs added by NPC extension
+      // The session object passed to this hook is stale (from before NPC extension ran)
+      const freshSessionResult = await this.client!.api.getSession(sessionId);
+      const freshSession = freshSessionResult.isSuccess ? freshSessionResult.getValue() : session;
+
+      console.log("📚 [Lorebook Extension] Fetched fresh session data");
+      console.log(`   Total cards: ${freshSession.allCards?.length || 0}`);
+
+      // Get all character cards from FRESH session
+      const characterCards = freshSession.allCards.filter((c: any) => c.type === "character");
 
       console.log("📚 [Lorebook Extension] Session characters:", {
         sessionId,
         characterCount: characterCards.length,
+        characterNames: characterCards.map((c: any) => c.name || c.props?.name).join(", "),
       });
 
       // Build character lorebook context

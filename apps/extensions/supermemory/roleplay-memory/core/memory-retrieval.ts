@@ -25,7 +25,7 @@ type MemoryResultItem = {
   memory?: string;
   content?: string;
   id?: string; // Document ID for v3 GET
-  metadata?: { game_time?: number; type?: string; participants?: string[] };
+  metadata?: { scene?: string; type?: string; participants?: string[] };
 };
 
 type MemorySearchResponse = {
@@ -33,30 +33,28 @@ type MemorySearchResponse = {
 };
 
 /**
- * Format character memory query with current time and recent messages
+ * Format character memory query with current scene and recent messages
  *
  * Contract: Query format with three sections
- * 1. Current time: "###Current time###\nGameTime: {game_time} {interval}"
+ * 1. Current scene: "###Scene###\n{scene}"
  * 2. Recent messages: "###Recent messages###\n{formatted messages}"
  * 3. Query instruction: "What are relevant memories..."
  *
- * @param game_time - Current game time
- * @param interval - Time interval (default: "Day")
+ * @param currentScene - Current scene (e.g., "Classroom Morning Day 1")
  * @param recentMessages - Recent message strings
  * @param characterName - Character name for context
  * @returns Formatted query string
  */
 export function formatCharacterQuery(
-  game_time: number,
-  interval: string,
+  currentScene: string,
   recentMessages: string[],
   characterName: string,
 ): string {
   const parts: string[] = [];
 
-  // Section 1: Current time
-  parts.push("###Current time###");
-  parts.push(`GameTime: ${game_time} ${interval}`);
+  // Section 1: Current scene
+  parts.push("###Scene###");
+  parts.push(currentScene);
   parts.push("");
 
   // Section 2: Recent messages
@@ -98,10 +96,9 @@ export async function retrieveCharacterMemories(
       return { memories: [], count: 0 };
     }
 
-    // Format query with current time and recent messages
+    // Format query with current scene and recent messages
     const query = formatCharacterQuery(
-      input.current_game_time,
-      input.current_game_time_interval,
+      input.current_scene,
       input.recentMessages,
       input.characterName,
     );
@@ -179,11 +176,19 @@ export async function retrieveCharacterMemories(
       return chunks.map((c: any) => c.content || '').filter((content: string) => content.trim());
     });
 
-    // Return both v4 (semantic) and v3 (verbatim) results
+    // Extract metadata from v4 results (includes scene with time and location)
+    const metadata = v4Typed.results.map((r) => ({
+      scene: r.metadata?.scene ?? '',
+      type: r.metadata?.type ?? '',
+      participants: r.metadata?.participants ?? [],
+    }));
+
+    // Return both v4 (semantic) and v3 (verbatim) results with metadata
     return {
       memories: v4Typed.results.map((r) => r.memory ?? r.content ?? ''),
       verbatimMemories: v3VerbatimMemories,
       count: v4Typed.results.length,
+      metadata, // Add metadata for time/location context
     };
   } catch (error) {
     logger.error(
@@ -289,7 +294,7 @@ export async function retrieveWorldMemories(
 
     // Extract metadata if requested (from v4 results)
     const metadata = v4Typed.results.map((r) => ({
-      game_time: r.metadata?.game_time ?? 0,
+      scene: r.metadata?.scene ?? '',
       type: r.metadata?.type ?? '',
       participants: r.metadata?.participants ?? [],
     }));
@@ -311,19 +316,39 @@ export async function retrieveWorldMemories(
 }
 
 /**
- * Format retrieved memories for injection into agent prompt
+ * Format retrieved memories for injection into agent prompt with time/location metadata
  *
- * Helper function to join memories with clear separators
+ * Helper function to join memories with clear separators and scene context
  *
  * @param memories - Array of memory strings
+ * @param metadata - Optional array of metadata objects with scene, type, participants
  * @returns Formatted string for prompt injection
  */
-export function formatMemoriesForPrompt(memories: string[]): string {
+export function formatMemoriesForPrompt(
+  memories: string[],
+  metadata?: Array<{ scene?: string; type?: string; participants?: string[] }>
+): string {
   if (memories.length === 0) {
     return "";
   }
 
-  return memories
-    .map((memory, index) => `[Memory ${index + 1}]\n${memory}`)
+  const formattedMemories = memories
+    .map((memory, index) => {
+      const meta = metadata?.[index];
+      const sceneInfo = meta?.scene ? `\nTime & Location: ${meta.scene}` : '';
+      return `[Memory ${index + 1}]${sceneInfo}\n${memory}`;
+    })
     .join("\n\n---\n\n");
+
+  // Add instructions about physical movement and time flow constraints
+  const instructions = metadata && metadata.length > 0 ? `
+IMPORTANT - Physical Continuity Rules:
+- Each memory above shows the Time & Location where it occurred
+- Characters can only move between scenes through physical movement (walking, traveling, etc.)
+- Time flows forward naturally - characters cannot jump back in time
+- If a memory is from a different location, the character must have physically traveled there
+- Do not reference memories that would require impossible teleportation or time travel
+` : '';
+
+  return instructions + formattedMemories;
 }

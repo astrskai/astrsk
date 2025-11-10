@@ -35,17 +35,17 @@ export class NpcExtension implements IExtension {
   async onLoad(client: IExtensionClient): Promise<void> {
     // Remove existing listeners first to prevent memory leaks on hot reload
     if (this.client) {
-      this.client.off("message:afterGenerate", this.handleMessageAfterGenerate);
-      this.client.off("scenario:initialized", this.handleMessageAfterGenerate);
+      this.client.off("turn:afterCreate", this.handleTurnAfterCreate);
+      this.client.off("scenario:afterAdd", this.handleTurnAfterCreate);
     }
 
     this.client = client;
 
-    // Register hook for message generation
-    client.on("message:afterGenerate", this.handleMessageAfterGenerate);
+    // Register hook for turn creation (includes new messages and regenerations)
+    client.on("turn:afterCreate", this.handleTurnAfterCreate);
 
-    // Register hook for scenario initialization
-    client.on("scenario:initialized", this.handleMessageAfterGenerate);
+    // Register hook for scenario addition
+    client.on("scenario:afterAdd", this.handleTurnAfterCreate);
 
     console.log("👤 [NPC Extension] Loaded successfully - will auto-detect NPCs in conversations and scenarios");
     logger.info("[NPC Extension] Loaded successfully");
@@ -53,44 +53,43 @@ export class NpcExtension implements IExtension {
 
   async onUnload(): Promise<void> {
     if (this.client) {
-      this.client.off("message:afterGenerate", this.handleMessageAfterGenerate);
-      this.client.off("scenario:initialized", this.handleMessageAfterGenerate);
+      this.client.off("turn:afterCreate", this.handleTurnAfterCreate);
+      this.client.off("scenario:afterAdd", this.handleTurnAfterCreate);
     }
 
     logger.info("[NPC Extension] Unloaded successfully");
   }
 
   /**
-   * Handle message:afterGenerate and scenario:initialized hooks
-   * Triggers NPC extraction and card creation for both generated messages and scenario content
+   * Handle turn:afterCreate and scenario:afterAdd hooks
+   * Triggers NPC extraction and card creation for new messages, regenerations, and scenarios
    */
-  private handleMessageAfterGenerate = async (
+  private handleTurnAfterCreate = async (
     context: HookContext,
   ): Promise<void> => {
     const { blockUIForTurn, unblockUI } = await import("../../pwa/src/modules/extensions/bootstrap");
 
     // Set 10-second safety timeout to force unblock if something goes wrong
-    const messageId = context.messageId?.toString();
     const safetyTimeout = setTimeout(() => {
-      console.warn(`⏱️ [NPC Extension] Safety timeout reached${messageId ? ` for message ${messageId}` : ''}, force unblocking UI`);
+      console.warn(`⏱️ [NPC Extension] Safety timeout reached, force unblocking UI`);
       unblockUI();
     }, 10000);
 
     try {
-      const { session, message } = context;
+      const { session, turn } = context;
 
-      if (!session || !message) {
-        logger.warn("[NPC Extension] Missing session or message in context");
+      if (!session || !turn) {
+        logger.warn("[NPC Extension] Missing session or turn in context");
         return;
       }
 
       const sessionId = session.id.toString();
+      const turnId = turn.id.toString();
+      const message = turn.content; // Extract message content from turn
 
       // Block UI while processing NPCs
-      if (messageId) {
-        blockUIForTurn(messageId, "NPC extraction", "processing");
-        console.log(`🔒 [NPC Extension] Blocked UI for message ${messageId}`);
-      }
+      blockUIForTurn(turnId, "NPC extraction", "processing");
+      console.log(`🔒 [NPC Extension] Blocked UI for turn ${turnId}`);
 
       // Get main character names and descriptions from session
       // Need to load actual card data to get names and descriptions
@@ -209,6 +208,48 @@ export class NpcExtension implements IExtension {
         messageLength: typeof message === 'string' ? message.length : 0,
       });
 
+      // Get recent turn history for context (last 3 messages)
+      const turnHistory = await this.client!.api.getTurnHistory(sessionId, { limit: 3 });
+      const recentMessages = Array.isArray(turnHistory)
+        ? turnHistory.map(t => ({
+            role: t.char_id ? "assistant" : "user",
+            content: t.content,
+          }))
+        : [];
+
+      // Get characters in current scene from dataStore
+      const dataStore = turn.dataStore || [];
+      const characterScenesRaw = dataStore.find((f: any) => f.name === 'character_scenes')?.value;
+      const selectedScene = dataStore.find((f: any) => f.name === 'selected_scene')?.value as string | undefined;
+
+      // Parse character_scenes to get list of characters in current scene
+      let charactersInScene: string[] = [];
+      if (characterScenesRaw && selectedScene) {
+        try {
+          let characterScenes: Record<string, string>;
+          if (typeof characterScenesRaw === 'object' && !Array.isArray(characterScenesRaw)) {
+            characterScenes = characterScenesRaw as Record<string, string>;
+          } else if (typeof characterScenesRaw === 'string') {
+            characterScenes = JSON.parse(characterScenesRaw);
+          } else {
+            characterScenes = {};
+          }
+
+          // Filter characters who are in the selected scene
+          charactersInScene = Object.entries(characterScenes)
+            .filter(([_, location]) => location === selectedScene)
+            .map(([name, _]) => name);
+        } catch (error) {
+          console.warn("⚠️ [NPC Extension] Failed to parse character_scenes:", error);
+        }
+      }
+
+      console.log("📍 [NPC Extension] Context for extraction:", {
+        recentMessageCount: recentMessages.length,
+        selectedScene,
+        charactersInScene,
+      });
+
       // Execute NPC extraction using secure client API
       const extractionResult = await executeNpcExtractionAgent(this.client!, {
         sessionId,
@@ -216,9 +257,11 @@ export class NpcExtension implements IExtension {
           role: "assistant",
           content: message,
         },
+        recentMessages, // Pass recent messages for context
         existingNpcPool: updatedNpcPool, // Use updated pool that includes main characters
         mainCharacterNames,
         mainCharacterDescriptions, // Pass descriptions so AI can distinguish between main characters and NPCs with similar names
+        charactersInScene, // Pass characters in current scene to identify contextual references
       });
 
       console.log(`✨ [NPC Extension] Found ${extractionResult.npcs.length} NPC(s):`,

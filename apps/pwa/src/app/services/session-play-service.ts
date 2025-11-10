@@ -174,8 +174,11 @@ const makeContext = async ({
       }
 
       // Store dataStore from the last processed turn for regeneration
+      // IMPORTANT: Filter out memory_ids - they should NOT be inherited
       if (message.dataStore && message.dataStore.length > 0) {
-        dataStoreForRegeneration = cloneDeep(message.dataStore);
+        dataStoreForRegeneration = cloneDeep(message.dataStore).filter(
+          (field) => field.name !== 'memory_ids'
+        );
       }
 
       const content =
@@ -1046,7 +1049,11 @@ const createMessage = async ({
         .throwOnFailure()
         .getValue();
       // Clone the dataStore to avoid mutations
-      dataStore = cloneDeep(lastTurn.dataStore);
+      // IMPORTANT: Filter out memory_ids - they should NOT be inherited
+      // memory_ids are specific to a message's content, not game state
+      dataStore = cloneDeep(lastTurn.dataStore).filter(
+        (field) => field.name !== 'memory_ids'
+      );
     } catch (error) {
       logger.warn(`Failed to get last turn's dataStore: ${error}`);
     }
@@ -1787,7 +1794,7 @@ type AgentNodeResult = {
   agentName?: string;
   modelName?: string;
   output?: object;
-  suggestedUpdates?: { gameTime?: number; participants?: string[]; worldContext?: string } | null;
+  suggestedUpdates?: { selectedScene?: string; selectedTime?: string; participants?: string[]; worldContext?: string } | null;
 };
 
 async function* executeAgentNode({
@@ -2061,7 +2068,10 @@ async function* executeFlow({
         const lastTurn = (await TurnService.getTurn.execute(lastTurnId))
           .throwOnFailure()
           .getValue();
-        dataStore = cloneDeep(lastTurn.dataStore);
+        // IMPORTANT: Filter out memory_ids - they should NOT be inherited
+        dataStore = cloneDeep(lastTurn.dataStore).filter(
+          (field) => field.name !== 'memory_ids'
+        );
       } catch (error) {
         logger.warn(`Failed to get last turn's dataStore: ${error}`);
       }
@@ -2346,22 +2356,9 @@ async function* executeFlow({
       };
     }
 
-    // Trigger extension hooks for message:afterGenerate
-    try {
-      console.log("🪝 [Flow] Triggering extension hooks (message:afterGenerate)");
-      const { triggerExtensionHook } = await import("@/modules/extensions/bootstrap");
-      await triggerExtensionHook("message:afterGenerate", {
-        session,
-        message: content,
-        messageId,  // Pass messageId for UI blocking
-        timestamp: Date.now(),
-      });
-    } catch (error) {
-      console.error("❌ [Flow] Failed to trigger extension hooks", error);
-      logger.error("[Flow] Failed to trigger extension hooks", { error });
-    }
-
     // Flow execution completed successfully - dataStore will be saved with the new turn
+    // Note: Extension hooks (NPC, Lorebook, Supermemory) are triggered via turn:afterCreate
+    // from the UI layer after the turn is persisted
   } catch (error) {
     const parsedError = parseAiSdkErrorMessage(error);
     if (parsedError) {

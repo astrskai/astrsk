@@ -21,12 +21,12 @@ const npcExtractionSchema = z.object({
         name: z
           .string()
           .describe(
-            "Full name as mentioned in conversation (e.g., 'John Doe') from the context if that name is in the pool dont print this, but if it exists in other form print it but with same id.",
+            "Full proper name of a PERSON (not book titles, places, or objects) as mentioned in conversation (e.g., 'Hamasaki-san', 'John Doe'). If this name exists in the pool, don't include it unless it's a NEW alias.",
           ),
         id: z
           .string()
           .describe(
-            "Lowercase single-word ID into single word (e.g., 'john') if this person exists in the pool, use the exact id in there.",
+            "Lowercase single-word ID from first name (e.g., 'hamasaki', 'john'). If this person already exists in the pool, use the EXACT same ID.",
           ),
         description: z
           .string()
@@ -35,7 +35,7 @@ const npcExtractionSchema = z.object({
           ),
       }),
     )
-    .describe("Only NEW NPCs or NEW ALIASES for existing NPCs"),
+    .describe("Only NEW PERSON NPCs (not titles/places/objects) or NEW ALIASES for existing NPCs. Empty array if no NPCs found."),
 });
 
 export type NpcExtractionOutput = z.infer<typeof npcExtractionSchema>;
@@ -56,6 +56,7 @@ export interface NpcExtractionInput {
   mainCharacterNames: string[]; // Main characters in session - do NOT extract as NPCs
   mainCharacterDescriptions?: string[]; // Character descriptions to help identify aliases/variations
   worldMemoryContext?: string[]; // NEW: World memory for relationship context and character descriptions
+  charactersInScene?: string[]; // Characters currently in the scene (helps identify contextual references)
 }
 
 /**
@@ -73,7 +74,7 @@ export async function executeNpcExtractionAgent(
   client: IExtensionClient,
   input: NpcExtractionInput,
 ): Promise<NpcExtractionOutput> {
-  const { message, recentMessages, existingNpcPool, mainCharacterNames, mainCharacterDescriptions, worldMemoryContext } = input;
+  const { message, recentMessages, existingNpcPool, mainCharacterNames, mainCharacterDescriptions, worldMemoryContext, charactersInScene } = input;
 
   // Build prompt
   const existingNpcsText = existingNpcPool.length
@@ -109,13 +110,19 @@ export async function executeNpcExtractionAgent(
       worldMemoryContext.map((mem, i) => `${i + 1}. ${mem}`).join("\n")
     : "";
 
+  // Build characters in scene text
+  const charactersInSceneText = charactersInScene?.length
+    ? "\n\nCHARACTERS IN CURRENT SCENE:\n" +
+      charactersInScene.map(name => `- ${name}`).join("\n")
+    : "";
+
   const prompt = `You are an NPC extraction agent. Your job is to identify Non-Player Characters (NPCs) mentioned in conversation messages AND generate detailed character descriptions for them.
 
 MAIN CHARACTERS in this session (DO NOT EXTRACT THESE):
 ${mainCharactersText}
 
 EXISTING NPCs in this session:
-${existingNpcsText}
+${existingNpcsText}${charactersInSceneText}
 
 CURRENT MESSAGE:
 ${messageText}
@@ -123,8 +130,15 @@ ${contextText}
 ${worldContextText}
 
 INSTRUCTIONS:
-1. Identify any NPCs mentioned in the messages (characters that are talked about or appear)
-2. For each NPC:
+1. Identify ONLY CHARACTERS (people) mentioned in the messages - characters that are talked about or appear
+2. **DO NOT extract:**
+   - Book titles, story titles, novel titles (e.g., "The Secret That Began in the Library")
+   - Place names, location names (e.g., "Classroom 2-A", "Tokyo Tower")
+   - Objects, items, things (e.g., "the book", "the desk")
+   - Abstract concepts or ideas
+   - **Context clue:** If preceded by "in", "at", "from", "the", or mentioned in quotes/italics, it's likely NOT a character
+   - **Context clue:** Phrases like "the male lead in X", "the story of X", "the book titled X" mean X is a title, NOT a character
+3. For each NPC (actual person):
    - Generate a lowercase single-word ID from their first name (e.g., "John Doe" → "john")
    - Record their full name as it appears in the conversation
    - Generate a 2-3 paragraph character description including:
@@ -133,19 +147,30 @@ INSTRUCTIONS:
      * Role in the story/relationship to main characters
      * Any relevant background or context from world memories
      * If insufficient context available, provide minimal description: "[Name] is a character in the story."
-3. Check against MAIN CHARACTERS list:
+4. Check against MAIN CHARACTERS list:
    - NEVER extract any character listed in MAIN CHARACTERS as an NPC
    - Use the character descriptions to identify if a mentioned name is an alias/variation of a main character
    - Examples: If "Sakuraba Yui" is a main character, then "Sakuraba-san", "Yui-chan", "Sakuraba" are aliases, NOT NPCs
    - This includes honorifics (san, kun, chan, sensei, sama), last names, first names, or nicknames
-4. Check against EXISTING NPCs:
+5. Check against EXISTING NPCs:
    - If the ID already exists but a NEW name/alias is used, include it WITH the same ID and generate description
    - If the ID and name both already exist, DO NOT include it
    - If it's a completely new NPC, include it with generated description
-5. DO NOT include:
+6. DO NOT extract as NPCs:
    - Main characters or their aliases (listed above)
    - Generic references like "someone", "people", "a person"
-   - Characters that are clearly not NPCs
+   - **Generic descriptive references that clearly refer to a character in the scene** (e.g., "new guy", "transfer student", "that person" when referring to a known character)
+   - Check CHARACTERS IN CURRENT SCENE and RECENT CONTEXT to determine if a generic reference is about a known character
+   - Examples:
+     * "new guy" or "transfer student" when a transfer student character (e.g., Ren) is in the scene → Skip (refers to known character)
+     * "Tanaka-sensei" when "Tanaka-sensei" is a main character → Skip (main character alias)
+     * "class president" when referring to Yui who is the class president → Skip (refers to known character)
+     * "the male lead in 'The Secret That Began in the Library'" → Skip (refers to a character IN a book, not a real person)
+     * "Hamasaki-san" when no Hamasaki is in main characters or scene → Extract (new NPC with proper name)
+7. **CRITICAL - Generic References Rule:**
+   - If a reference has NO specific name AND can be inferred from context to refer to a character already in MAIN CHARACTERS or CHARACTERS IN CURRENT SCENE, DO NOT extract it
+   - Check the RECENT CONTEXT to see if the generic reference was used right after introducing a known character
+   - Only extract characters with specific names that cannot be matched to existing characters
 
 Output ONLY new NPCs or new aliases for existing NPCs, each with their AI-generated description.`;
 
