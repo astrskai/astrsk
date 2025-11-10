@@ -159,7 +159,6 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
       </div>
 
       {/* Description */}
-
       <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
         {character.props.description || "No description available"}
       </p>
@@ -210,7 +209,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
                           </span>
                         ))}
                       </div>
-                      <div className="text-text-secondary p-2 text-sm">
+                      <div className="text-text-secondary p-2 text-sm whitespace-pre-wrap">
                         {entry.props.content || "No content"}
                       </div>
                     </div>
