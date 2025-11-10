@@ -88,8 +88,14 @@ const modelOptions = (
         continue;
       }
 
+      // Show "Title - Provider Type" format (e.g., "DeepSeek Production - OpenAI Compatible")
+      const providerLabel = apiSourceLabel.get(apiConnection.source) || "";
+      const displayLabel = apiConnection.title && apiConnection.title !== apiConnection.source
+        ? `${apiConnection.title} - ${providerLabel}`
+        : providerLabel;
+
       options.push({
-        label: apiSourceLabel.get(apiConnection.source) ?? "",
+        label: displayLabel,
         value: apiConnection.id.toString(),
         sub: models.map((model: ApiModel) => ({
           label: model.name,
@@ -217,14 +223,27 @@ const PromptItem = ({
   const reactFlow = useReactFlow();
   const zoomScale = reactFlow.getViewport().zoom;
 
+  // Helper to extract actual modelId from encoded format: "{title}|{actualModelId}"
+  const extractActualModelId = (encodedModelId: string | undefined, apiSource: string | undefined): string | undefined => {
+    if (!encodedModelId) return encodedModelId;
+    if (apiSource === ApiSource.OpenAICompatible && encodedModelId.includes("|")) {
+      const parts = encodedModelId.split("|");
+      if (parts.length === 2) {
+        return parts[1]; // Return actual model ID
+      }
+    }
+    return encodedModelId; // Return as-is for non-encoded format
+  };
+
+  const actualModelId = extractActualModelId(agent?.props.modelId, agent?.props.apiSource);
+
   const methods = useForm<StepPromptsSchemaType>({
     defaultValues: {
       aiResponse: {
         type: "api-model",
         apiSource:
           agent?.props.apiSource == null ? undefined : agent?.props.apiSource,
-        modelId:
-          agent?.props.modelId == null ? undefined : agent?.props.modelId,
+        modelId: actualModelId,
         modelName:
           agent?.props.modelName == null ? undefined : agent?.props.modelName,
       },
@@ -252,11 +271,12 @@ const PromptItem = ({
   // Reset form when agent props change
   useEffect(() => {
     if (agent?.props.modelName) {
+      const extractedModelId = extractActualModelId(agent.props.modelId, agent.props.apiSource);
       reset({
         aiResponse: {
           type: "api-model",
           apiSource: agent.props.apiSource == null ? undefined : agent.props.apiSource,
-          modelId: agent.props.modelId == null ? undefined : agent.props.modelId,
+          modelId: extractedModelId,
           modelName: agent.props.modelName == null ? undefined : agent.props.modelName,
         },
       });
@@ -293,17 +313,29 @@ const PromptItem = ({
   // ]);
 
   const handleModelChange = (
+    apiConnectionId: string,
     apiSource: string,
     modelId: string,
     modelName: string,
   ) => {
     if (!agent) return;
 
+    // For OpenAI compatible, encode title into modelId: "{title}|{actualModelId}"
+    let finalModelId = modelId;
+    if (apiSource === ApiSource.OpenAICompatible && apiConnectionId && apiConnectionsWithModels) {
+      const connection = apiConnectionsWithModels.find(
+        (c: ApiConnectionWithModels) => c.apiConnection.id.toString() === apiConnectionId
+      );
+      if (connection?.apiConnection.title) {
+        finalModelId = `${connection.apiConnection.title}|${modelId}`;
+      }
+    }
+
     // Pass the full model information to the parent
     if (modelName) {
       modelChanged(modelName, true, {
         apiSource: apiSource,
-        modelId: modelId,
+        modelId: finalModelId,
       });
     }
   };
@@ -339,6 +371,7 @@ const PromptItem = ({
             setValue(`${field}.modelId`, splittedValue[3]);
             setValue(`${field}.modelName`, splittedValue[4]);
             handleModelChange(
+              splittedValue[1],
               splittedValue[2],
               splittedValue[3],
               splittedValue[4],

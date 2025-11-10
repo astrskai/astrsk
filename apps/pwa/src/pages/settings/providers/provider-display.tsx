@@ -130,7 +130,7 @@ const ProviderDisplay = ({
     >
       {isActive ? (
         <CardContent className="flex h-full flex-row p-0" onClick={onOpenEdit}>
-          <div className="flex grow flex-col justify-start gap-4 px-4 py-6 md:justify-between">
+          <div className="flex grow flex-col justify-start gap-4 px-4 py-6 md:justify-between min-w-0">
             <div className="flex h-[52px] flex-row items-center">
               {logo && <SvgIcon name={logo} size={40} />}
               <div className="text-text-primary text-[24px] leading-[29px] font-[600]">
@@ -145,13 +145,13 @@ const ProviderDisplay = ({
                 )}
               </div>
             </div>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 min-w-0">
               {details?.map((detail) => (
-                <div key={detail.label} className="flex flex-col gap-1">
+                <div key={detail.label} className="flex flex-col gap-1 min-w-0">
                   <TypoTiny className="text-text-subtle">
                     {detail.label}
                   </TypoTiny>
-                  <TypoSmall className="text-text-primary">
+                  <TypoSmall className="text-text-primary truncate">
                     {detail.value}
                   </TypoSmall>
                 </div>

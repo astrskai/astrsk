@@ -1,22 +1,50 @@
 import { isElectronEnvironment } from "@/shared/lib/environment";
+import { generateStreamId } from "@/shared/lib/fetch-utils";
+import { logger } from "@/shared/lib/logger";
+import { addV1ToUrl, extractBaseUrl } from "@/shared/lib/url-utils";
+import { useApiConnectionStore } from "@/shared/stores";
 
 /**
- * Generate unique stream ID
+ * Get API connection store methods (works outside React components)
  */
-function generateStreamId(): string {
-  return `stream-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+function getApiConnectionStore() {
+  return useApiConnectionStore.getState();
+}
+
+/**
+ * Callbacks to invoke when we discover a base URL needs /v1
+ */
+const v1DiscoveryCallbacks: Array<(baseUrl: string) => void> = [];
+
+/**
+ * Register a callback to be notified when we discover a base URL needs /v1
+ */
+export function onV1Discovery(callback: (baseUrl: string) => void): void {
+  v1DiscoveryCallbacks.push(callback);
 }
 
 /**
  * Custom fetch that proxies localhost requests through Electron to avoid CORS
  * Supports both streaming and non-streaming requests
  * Falls back to native fetch for non-localhost URLs or when not in Electron
+ * Automatically retries with /v1 for OpenAI-compatible endpoints
+ *
+ * This is a simple wrapper around fetchWithV1Retry that always uses electronAwareFetchInternal
  */
 export async function electronAwareFetch(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<Response> {
-  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  return fetchWithV1Retry(input, init, electronAwareFetchInternal);
+}
+
+/**
+ * Internal fetch implementation without retry logic
+ */
+async function electronAwareFetchInternal(
+  url: string,
+  init?: RequestInit
+): Promise<Response> {
 
   // Check if we should proxy through Electron
   const shouldProxy =
@@ -56,6 +84,7 @@ export async function electronAwareFetch(
           start(controller) {
             let isStreamClosed = false;
             const cleanupFunctions: Array<() => void> = [];
+            let hasStartedSuccessfully = false;
 
             // Cleanup all listeners for this stream
             const cleanupListeners = () => {
@@ -221,18 +250,158 @@ export async function electronAwareFetch(
   }
 
   // Use native fetch for non-localhost or when proxy fails
-  return fetch(input, init);
+  return fetch(url, init);
+}
+
+/**
+ * Universal fetch with /v1 retry logic for OpenAI-compatible endpoints
+ * Works in both browser and Electron environments
+ *
+ * @param input - The request URL or Request object
+ * @param init - Optional fetch init options
+ * @param customFetch - Optional custom fetch function (defaults to auto-detect Electron vs browser)
+ */
+async function fetchWithV1Retry(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  customFetch?: (url: string, init?: RequestInit) => Promise<Response>
+): Promise<Response> {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  const baseUrl = extractBaseUrl(url);
+
+  // Build URLs to try
+  const v1Url = addV1ToUrl(url);
+
+  // For streaming requests, we can't retry after the Response is returned
+  // So we need to try the user's URL as-is (they may have configured /v1 already)
+  const isStreamingRequest =
+    // Check for text/event-stream accept header
+    (init?.headers &&
+     (typeof init.headers === 'object') &&
+     ('accept' in init.headers && (init.headers as any).accept?.includes('text/event-stream'))) ||
+    // Check for stream: true in request body (handles both single and double quotes)
+    (init?.body && typeof init.body === 'string' && /['"]stream['"]:\s*true/.test(init.body));
+
+  // Determine the base fetch function to use
+  // Priority: custom > Electron-aware > native fetch
+  const baseFetch = customFetch || (isElectronEnvironment() ? electronAwareFetchInternal : fetch);
+
+  // For streaming, use /v1 by default if no version tag exists
+  // We can't reliably detect empty responses from 200 OK status without consuming the stream
+  if (isStreamingRequest) {
+    const finalUrl = v1Url || url; // Use /v1 if available (no existing version), otherwise original
+
+    if (v1Url) {
+      logger.info(`[Fetch Helper] Streaming request, using /v1 (no version tag in URL): ${finalUrl}`);
+    } else {
+      logger.info(`[Fetch Helper] Streaming request, using original URL (has version tag or not OpenAI-compatible): ${url}`);
+    }
+
+    return baseFetch(finalUrl, init);
+  }
+
+  // For non-streaming, use retry logic
+  const urlsToTry: string[] = [];
+
+  if (v1Url) {
+    // ALWAYS try user's URL first (they might have configured /v2, /v4, etc.)
+    // Only fallback to /v1 if user's URL fails
+    urlsToTry.push(url);
+    urlsToTry.push(v1Url);
+  } else {
+    // No /v1 variant available (not an OpenAI-compatible endpoint)
+    urlsToTry.push(url);
+  }
+
+  let lastError: Error | null = null;
+
+  for (let i = 0; i < urlsToTry.length; i++) {
+    const tryUrl = urlsToTry[i];
+    try {
+      const response = await baseFetch(tryUrl, init);
+
+      // Re-check if this specific URL is a streaming endpoint
+      const isStreamingEndpointUrl =
+        tryUrl.includes('/chat/completions') ||
+        tryUrl.includes('/completions') ||
+        tryUrl.includes('/embeddings');
+
+      let hasContent = false;
+
+      if (isStreamingEndpointUrl) {
+        // For streaming endpoints, trust the status code only
+        // Reading the body would consume the stream
+        hasContent = response.ok;
+      } else {
+        // For non-streaming endpoints (like /models), validate body content
+        try {
+          const responseClone = response.clone();
+          const contentType = response.headers.get('content-type');
+
+          // For SSE, assume it has content if status is ok
+          if (contentType?.includes('text/event-stream')) {
+            hasContent = response.ok;
+          } else {
+            // Peek at the body to check if it has content
+            const text = await responseClone.text();
+            hasContent = text.length > 0;
+          }
+        } catch (error) {
+          logger.warn(`[Fetch Helper] Error validating response content: ${error}`);
+          hasContent = response.ok; // Fall back to just checking status
+        }
+      }
+
+      // If successful (2xx status) AND has content, return immediately
+      if (response.ok && hasContent) {
+        // Success!
+        if (v1Url && tryUrl === v1Url) {
+          logger.info(`[Fetch Helper] Successfully used /v1 URL for: ${baseUrl}`);
+        }
+        return response;
+      }
+
+      // If response is OK but empty, treat it as failure
+      if (response.ok && !hasContent) {
+        logger.warn(`[Fetch Helper] Empty response body from: ${tryUrl}`);
+      }
+
+      // If 4xx/5xx error and we have another URL to try, continue to next attempt
+      if (v1Url && tryUrl !== v1Url) {
+        lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+        continue;
+      }
+
+      // Last attempt or no v1 fallback available, return the error response
+      logger.error(`[Fetch Helper] Request failed with status ${response.status}`);
+      return response;
+
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      logger.error(`[Fetch Helper] Request exception: ${lastError.message}`);
+
+      // If we have another URL to try, continue
+      if (v1Url && tryUrl !== v1Url) {
+        continue;
+      }
+
+      // Last attempt failed, throw the error
+      throw lastError;
+    }
+  }
+
+  // Should never reach here, but just in case
+  logger.error(`[Fetch Helper] Unexpected error: no successful response`);
+  throw lastError || new Error('All fetch attempts failed');
 }
 
 /**
  * Get the appropriate fetch function based on environment
  * Use this when creating AI SDK providers
+ * ALWAYS returns a fetch with /v1 retry logic
  */
 export function getAISDKFetch(): typeof fetch {
-  if (isElectronEnvironment()) {
-    return electronAwareFetch as typeof fetch;
-  }
-  return fetch;
+  return fetchWithV1Retry as typeof fetch;
 }
 
 /**
@@ -253,6 +422,6 @@ export function initElectronFetch(): void {
       return electronAwareFetch(input, init);
     } as typeof fetch;
 
-    console.log("[Electron] Global fetch override initialized for CORS-free localhost access");
+    logger.info("[Fetch Helper] Global fetch override initialized for Electron environment");
   }
 }
