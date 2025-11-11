@@ -124,13 +124,6 @@ export function CharactersListPage() {
         type="cards"
       />
 
-      <DialogBase
-        trigger={<button type="button">Open</button>}
-        title="Create new character"
-        // description="Create a new character to start your new character"
-        content={<div>Create a new character to start your new character</div>}
-      />
-
       {/* Content */}
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-4">
         {isLoadingCards ? (
