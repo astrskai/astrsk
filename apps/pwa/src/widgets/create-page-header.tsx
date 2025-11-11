@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
-import { ActionConfirm } from "@/shared/ui/dialogs";
 
 export interface CreatePageHeaderProps {
   /**
@@ -99,29 +97,18 @@ export function CreatePageHeader({
   showCancelButton = false,
   currentStepLabel,
 }: CreatePageHeaderProps) {
-  const [isOpenCancelDialog, setIsOpenCancelDialog] = useState<boolean>(false);
-
   const nextButtonLabel = isSubmitting
     ? "Creating..."
     : isLastStep
       ? "Finish"
       : "Next";
 
-  const handleCancelClick = () => {
-    setIsOpenCancelDialog(true);
-  };
-
-  const handleConfirmCancel = () => {
-    setIsOpenCancelDialog(false);
-    onCancel();
-  };
-
   return (
     <>
       {/* Mobile Header */}
       <div className="flex items-center gap-5 px-4 py-2 md:hidden">
         <button
-          onClick={handleCancelClick}
+          onClick={onCancel}
           className="text-text-primary hover:text-text-secondary transition-colors"
         >
           <ArrowLeft size={24} />
@@ -153,7 +140,7 @@ export function CreatePageHeader({
           // Character/Plot-style: Back button + title/subtitle
           <div className="flex items-center gap-4">
             <button
-              onClick={handleCancelClick}
+              onClick={onCancel}
               className="text-text-primary hover:text-text-secondary transition-colors"
             >
               <ArrowLeft size={24} />
@@ -169,7 +156,7 @@ export function CreatePageHeader({
 
         <div className="flex items-center gap-3">
           {showCancelButton && (
-            <Button variant="ghost" onClick={handleCancelClick}>
+            <Button variant="ghost" onClick={onCancel}>
               Cancel
             </Button>
           )}
@@ -186,18 +173,6 @@ export function CreatePageHeader({
           </Button>
         </div>
       </div>
-
-      {/* Cancel Confirmation Dialog */}
-      <ActionConfirm
-        open={isOpenCancelDialog}
-        onOpenChange={setIsOpenCancelDialog}
-        title="You've got unsaved changes!"
-        description="Are you sure you want to close?"
-        cancelLabel="Go back"
-        confirmLabel="Close without saving"
-        confirmVariant="destructive"
-        onConfirm={handleConfirmCancel}
-      />
     </>
   );
 }
