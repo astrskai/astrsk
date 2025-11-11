@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/forms";
 import { CreatePageHeader } from "@/widgets/create-page-header";
 import {
@@ -24,6 +24,7 @@ import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { queryClient } from "@/shared/api/query-client";
 import { TableName } from "@/db/schema/table-name";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+import { ActionConfirm } from "@/shared/ui/dialogs";
 
 type Step =
   | "basic-info"
@@ -79,6 +80,21 @@ export function CreateSessionPage() {
 
   const selectSession = useSessionStore.use.selectSession();
 
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  // Track if user has made changes
+  const hasUnsavedChanges =
+    sessionName !== "New Session" ||
+    !!selectedFlow ||
+    selectedCharacters.length > 0;
+
+  // Block navigation when there are unsaved changes (but not during save)
+  const { proceed, reset, status } = useBlocker({
+    shouldBlockFn: () => hasUnsavedChanges && !isSaving,
+    withResolver: true,
+    enableBeforeUnload: hasUnsavedChanges && !isSaving,
+  });
+
   // const handleFileUpload = (file: File) => {
   //   // Store the file for preview - actual upload happens on save
   //   setImageFile(file);
@@ -105,6 +121,7 @@ export function CreateSessionPage() {
       return;
     }
 
+    setIsSaving(true);
     try {
       // // Step 1: Upload image if exists
       // let uploadedAssetId: string | undefined;
@@ -179,6 +196,7 @@ export function CreateSessionPage() {
 
       if (sessionOrError.isFailure) {
         logger.error("Failed to create session", sessionOrError.getError());
+        setIsSaving(false);
         return;
       }
 
@@ -191,6 +209,7 @@ export function CreateSessionPage() {
 
       if (savedSessionOrError.isFailure) {
         logger.error("Failed to save session", savedSessionOrError.getError());
+        setIsSaving(false);
         return;
       }
 
@@ -200,13 +219,14 @@ export function CreateSessionPage() {
       selectSession(savedSession.id, savedSession.title);
       queryClient.invalidateQueries({ queryKey: [TableName.Sessions] });
 
-      // Navigate to the created session
+      // Navigate to session (no unsaved changes after successful save)
       navigate({
         to: "/sessions/$sessionId",
         params: { sessionId: savedSession.id.toString() },
       });
     } catch (error) {
       logger.error("Error creating session", error);
+      setIsSaving(false);
     }
   }, [
     sessionName,
@@ -336,6 +356,22 @@ export function CreateSessionPage() {
           </Button>
         </div>
       </div>
+
+      {/* Navigation Confirmation Dialog */}
+      {status === "blocked" && (
+        <ActionConfirm
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) reset();
+          }}
+          title="You've got unsaved changes!"
+          description="Are you sure you want to leave? Your changes will be lost."
+          cancelLabel="Go back"
+          confirmLabel="Yes, leave"
+          confirmVariant="destructive"
+          onConfirm={proceed}
+        />
+      )}
     </div>
   );
 }
