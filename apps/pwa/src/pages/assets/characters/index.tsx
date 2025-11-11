@@ -21,7 +21,6 @@ import { CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { useResourceImport } from "@/shared/hooks/use-resource-import";
 import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
-import { DialogBase } from "@/shared/ui/dialogs";
 
 /**
  * Characters List Page
