@@ -6,7 +6,7 @@ import { Session } from "@/entities/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
-import { ActionConfirm } from "@/shared/ui/dialogs";
+import { DialogConfirm } from "@/shared/ui/dialogs";
 import { Checkbox, Label } from "@/shared/ui";
 
 import SessionPreview from "@/features/session/ui/session-preview";
@@ -231,7 +231,7 @@ export function SessionsGrid({
       />
 
       {/* Copy Confirmation Dialog */}
-      <ActionConfirm
+      <DialogConfirm
         open={copyDialogState.isOpen}
         onOpenChange={closeCopyDialog}
         title="Copy session"
@@ -252,7 +252,7 @@ export function SessionsGrid({
       />
 
       {/* Delete Confirmation Dialog */}
-      <ActionConfirm
+      <DialogConfirm
         open={deleteDialogState.isOpen}
         onOpenChange={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}

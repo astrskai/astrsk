@@ -1,46 +1,37 @@
 import React from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/shared/ui/forms";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui";
+import DialogBase from "./base";
 
 interface ConfirmProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  title?: React.ReactNode;
-  description?: React.ReactNode;
+  trigger?: React.ReactNode;
+  title?: string;
+  description?: string;
   content?: React.ReactNode;
   cancelLabel?: string;
   confirmLabel?: string;
   confirmVariant?: "default" | "destructive";
   onConfirm?: () => void | Promise<void>;
+  onCancel?: () => void;
 }
 
 /**
- * ActionConfirm
+ * DialogConfirm
  *
- * IMPORTANT: Place Dialog outside of onClick area to prevent event bubbling
+ * Confirmation dialog built on top of DialogBase
  *
  * @example
  * ```tsx
+ * // Controlled mode (recommended)
+ * const [isOpen, setIsOpen] = useState(false);
+ *
  * return (
  *   <>
- *     <div onClick={handleCardClick}>
- *       <Button onClick={(e) => {
- *         e.stopPropagation();
- *         setIsOpen(true);
- *       }}>
- *         Delete
- *       </Button>
- *     </div>
+ *     <Button onClick={() => setIsOpen(true)}>Delete</Button>
  *
- *     <ActionConfirm
+ *     <DialogConfirm
  *       open={isOpen}
  *       onOpenChange={setIsOpen}
  *       title="Are you sure?"
@@ -51,11 +42,22 @@ interface ConfirmProps {
  *     />
  *   </>
  * );
+ *
+ * // Uncontrolled mode (with trigger)
+ * <DialogConfirm
+ *   trigger={<Button>Delete</Button>}
+ *   title="Are you sure?"
+ *   description="This action cannot be undone."
+ *   confirmLabel="Yes, delete"
+ *   confirmVariant="destructive"
+ *   onConfirm={handleDelete}
+ * />
  * ```
  */
-export const ActionConfirm = ({
+export function DialogConfirm({
   open,
   onOpenChange,
+  trigger,
   title,
   description,
   content,
@@ -63,56 +65,50 @@ export const ActionConfirm = ({
   confirmLabel = "Confirm",
   confirmVariant = "default",
   onConfirm,
-}: ConfirmProps) => {
+  onCancel,
+}: ConfirmProps) {
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onConfirm?.();
+    onOpenChange?.(false);
+  };
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onCancel?.();
+    onOpenChange?.(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="p-4 md:max-w-xl md:p-6 lg:max-w-2xl xl:max-w-3xl"
-        hideClose
-        onPointerDownOutside={(e) => e.stopPropagation()}
-        onInteractOutside={(e) => e.stopPropagation()}
-      >
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold md:text-2xl">
-            {title}
-          </DialogTitle>
-          {description && (
-            <DialogDescription className="text-sm font-normal md:text-base">
-              {description}
-            </DialogDescription>
+    <DialogBase
+      open={open}
+      onOpenChange={onOpenChange}
+      trigger={trigger}
+      title={title}
+      description={description}
+      isShowCloseButton={false}
+      content={
+        <>
+          {/* Body Content - Checkbox, Input, etc. */}
+          {content && (
+            <div className="py-4" onClick={(e) => e.stopPropagation()}>
+              {content}
+            </div>
           )}
-        </DialogHeader>
 
-        {/* Body Content - Checkbox, Input, etc. */}
-        {content && (
-          <div className="py-4" onClick={(e) => e.stopPropagation()}>
-            {content}
-          </div>
-        )}
-
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenChange?.(false);
-              }}
-            >
-              {cancelLabel}
+          {/* Footer */}
+          <div className="mt-6 flex flex-row justify-end gap-2">
+            <Dialog.Close asChild>
+              <Button variant="ghost" onClick={handleCancel}>
+                {cancelLabel}
+              </Button>
+            </Dialog.Close>
+            <Button variant={confirmVariant} onClick={handleConfirm}>
+              {confirmLabel}
             </Button>
-          </DialogClose>
-          <Button
-            variant={confirmVariant}
-            onClick={(e) => {
-              e.stopPropagation();
-              onConfirm?.();
-            }}
-          >
-            {confirmLabel}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </>
+      }
+    />
   );
-};
+}
