@@ -55,7 +55,7 @@ const ScenarioPreviewItem = ({
         e.stopPropagation();
         onDetailClick(cardId);
       },
-      className: "block md:hidden",
+      bottomActionsClassName: "block md:hidden",
     },
   ];
 
@@ -109,7 +109,7 @@ const SelectedScenarioCard = ({
         e.stopPropagation();
         onRemove(e);
       },
-      className: "block md:hidden",
+      bottomActionsClassName: "block md:hidden",
     },
   ];
 
@@ -125,6 +125,7 @@ const SelectedScenarioCard = ({
       isShowActions={true}
       bottomActions={actions}
       onClick={onClick}
+      moreActionsClassName="hidden"
     />
   );
 };

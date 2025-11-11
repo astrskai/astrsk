@@ -57,7 +57,7 @@ const CharacterPreviewItem = ({
         e.stopPropagation();
         onDetailClick(cardId);
       },
-      className: "block md:hidden",
+      bottomActionsClassName: "block md:hidden",
     },
   ];
 
@@ -120,7 +120,7 @@ const SelectedCharacterCard = ({
         e.stopPropagation();
         onRemove(e);
       },
-      className: "block md:hidden",
+      bottomActionsClassName: "block md:hidden",
     },
   ];
 
@@ -135,6 +135,7 @@ const SelectedCharacterCard = ({
       isShowActions={true}
       bottomActions={actions}
       onClick={onClick}
+      moreActionsClassName="hidden"
     />
   );
 };

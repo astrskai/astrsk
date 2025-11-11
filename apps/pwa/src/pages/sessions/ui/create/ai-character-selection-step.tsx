@@ -58,7 +58,7 @@ const CharacterPreviewItem = ({
         e.stopPropagation();
         onDetailClick(cardId);
       },
-      className: "block md:hidden",
+      bottomActionsClassName: "block md:hidden",
     },
   ];
 
@@ -117,7 +117,7 @@ const SelectedCharacterCard = ({
       icon: Trash2,
       label: `Remove`,
       onClick: onRemove(cardId),
-      className: "block md:hidden",
+      bottomActionsClassName: "block md:hidden",
     },
   ];
 
@@ -131,6 +131,7 @@ const SelectedCharacterCard = ({
       actions={actions}
       isShowActions={true}
       bottomActions={actions}
+      moreActionsClassName="hidden"
     />
   );
 };

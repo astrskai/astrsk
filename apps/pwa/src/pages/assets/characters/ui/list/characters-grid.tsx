@@ -45,21 +45,21 @@ function CharacterGridItem({
   const actions: CharacterAction[] = [
     {
       icon: Upload,
-      label: `Export ${character.props.title}`,
+      label: `Export`,
       onClick: onExport(cardId, character.props.title),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
-      label: `Copy ${character.props.title}`,
+      label: `Copy`,
       onClick: onCopy(cardId, character.props.title),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
-      label: `Delete ${character.props.title}`,
+      label: `Delete`,
       onClick: onDeleteClick(cardId, character.props.title),
       disabled: loading.deleting,
       loading: loading.deleting,

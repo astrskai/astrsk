@@ -45,21 +45,21 @@ function ScenarioGridItem({
   const actions: CharacterAction[] = [
     {
       icon: Upload,
-      label: `Export ${plot.props.title}`,
+      label: `Export`,
       onClick: onExport(cardId, plot.props.title),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
-      label: `Copy ${plot.props.title}`,
+      label: `Copy`,
       onClick: onCopy(cardId, plot.props.title),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
-      label: `Delete ${plot.props.title}`,
+      label: `Delete`,
       onClick: onDeleteClick(cardId, plot.props.title),
       disabled: loading.deleting,
       loading: loading.deleting,

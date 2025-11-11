@@ -69,21 +69,21 @@ function SessionGridItem({
   const actions: SessionAction[] = [
     {
       icon: Upload,
-      label: `Export ${session.props.title}`,
+      label: `Export`,
       onClick: onExportClick(sessionId, session.props.title, session.flowId),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
-      label: `Copy ${session.props.title}`,
+      label: `Copy`,
       onClick: onCopy(sessionId, session.props.title),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
-      label: `Delete ${session.props.title}`,
+      label: `Delete`,
       onClick: onDeleteClick(sessionId, session.props.title),
       disabled: loading.deleting,
       loading: loading.deleting,

@@ -6,5 +6,5 @@ export interface CharacterAction {
   onClick: (e: React.MouseEvent) => void | Promise<void>;
   disabled?: boolean;
   loading?: boolean;
-  className?: string;
+  bottomActionsClassName?: string;
 }
