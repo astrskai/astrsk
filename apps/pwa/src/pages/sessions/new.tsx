@@ -196,6 +196,7 @@ export function CreateSessionPage() {
 
       if (sessionOrError.isFailure) {
         logger.error("Failed to create session", sessionOrError.getError());
+        setIsSaving(false);
         return;
       }
 
@@ -208,6 +209,7 @@ export function CreateSessionPage() {
 
       if (savedSessionOrError.isFailure) {
         logger.error("Failed to save session", savedSessionOrError.getError());
+        setIsSaving(false);
         return;
       }
 
