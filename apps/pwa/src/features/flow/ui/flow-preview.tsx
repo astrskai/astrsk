@@ -143,7 +143,14 @@ const FlowPreview = ({
 
         {/* Content layer */}
         <div className="relative z-10 flex h-full flex-col justify-around gap-1 lg:justify-between lg:gap-2">
-          <h3 className={cn("text-base font-semibold text-gray-50 lg:text-lg")}>
+          <h3
+            className={cn(
+              "text-base font-semibold text-gray-50 lg:text-lg",
+              isShowActions && actions.length > 0
+                ? "w-[90%] md:w-full"
+                : "w-full",
+            )}
+          >
             {title}
           </h3>
           <p className={cn("line-clamp-2 text-xs lg:text-sm")}>
