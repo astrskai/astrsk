@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
 import { CreatePageHeader } from "@/widgets/create-page-header";
@@ -38,7 +38,6 @@ type ScenarioStep = "basic-info" | "info" | "first-messages" | "lorebook";
  */
 export default function CreateScenarioPage() {
   const navigate = useNavigate();
-  const router = useRouter();
   const queryClient = useQueryClient();
 
   const [scenarioName, setScenarioName] = useState<string>("New Scenario");
@@ -54,79 +53,20 @@ export default function CreateScenarioPage() {
 
   const [isCreatingCard, setIsCreatingCard] = useState<boolean>(false);
 
-  // Track if user has made changes and navigation state
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
-  const [isNavigationConfirmOpen, setIsNavigationConfirmOpen] =
-    useState<boolean>(false);
-  const [pendingNavigation, setPendingNavigation] = useState<
-    (() => void) | null
-  >(null);
+  // Track if user has made changes
+  const hasUnsavedChanges =
+    scenarioName !== "New Scenario" ||
+    !!imageFile ||
+    description.trim().length > 0 ||
+    firstMessages.length > 0 ||
+    lorebookEntries.length > 0;
 
-  // Set hasUnsavedChanges to true when user makes any change
-  useEffect(() => {
-    if (
-      scenarioName !== "New Scenario" ||
-      imageFile ||
-      description.trim().length > 0 ||
-      firstMessages.length > 0 ||
-      lorebookEntries.length > 0
-    ) {
-      setHasUnsavedChanges(true);
-    }
-  }, [scenarioName, imageFile, description, firstMessages, lorebookEntries]);
-
-  // Intercept Link clicks from sidebar
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-
-    const handleBeforeNavigate = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const link = target.closest("a");
-
-      // Only intercept anchor tags with href
-      if (!link || !link.hasAttribute("href")) return;
-
-      const href = link.getAttribute("href");
-      if (!href || href === router.state.location.pathname) return;
-
-      // Prevent default navigation
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Store the link element to click it later after confirmation
-      setPendingNavigation(() => () => {
-        setHasUnsavedChanges(false);
-        // Trigger the original link navigation after clearing unsaved changes flag
-        setTimeout(() => {
-          link.click();
-        }, 0);
-      });
-      setIsNavigationConfirmOpen(true);
-    };
-
-    // Add listener to capture phase (before Link's onClick)
-    document.addEventListener(
-      "click",
-      handleBeforeNavigate as EventListener,
-      true,
-    );
-
-    return () => {
-      document.removeEventListener(
-        "click",
-        handleBeforeNavigate as EventListener,
-        true,
-      );
-    };
-  }, [hasUnsavedChanges, router]);
-
-  const handleNavigationConfirm = () => {
-    setIsNavigationConfirmOpen(false);
-    if (pendingNavigation) {
-      pendingNavigation();
-      setPendingNavigation(null);
-    }
-  };
+  // Block navigation when there are unsaved changes
+  const { proceed, reset, status } = useBlocker({
+    shouldBlockFn: () => hasUnsavedChanges,
+    withResolver: true,
+    enableBeforeUnload: hasUnsavedChanges,
+  });
 
   const STEPS: StepConfig<ScenarioStep>[] = [
     { id: "basic-info", number: 1, label: "Basic Info", required: true },
@@ -158,18 +98,7 @@ export default function CreateScenarioPage() {
   };
 
   const handleCancel = () => {
-    // If no unsaved changes, navigate immediately
-    if (!hasUnsavedChanges) {
-      navigate({ to: "/assets/scenarios" });
-      return;
-    }
-
-    // Otherwise, show confirmation dialog
-    setPendingNavigation(() => () => {
-      setHasUnsavedChanges(false);
-      setTimeout(() => navigate({ to: "/assets/scenarios" }), 0);
-    });
-    setIsNavigationConfirmOpen(true);
+    navigate({ to: "/assets/scenarios" });
   };
 
   const getImageDimensions = (
@@ -334,13 +263,8 @@ export default function CreateScenarioPage() {
         queryKey: cardKeys.lists(),
       });
 
-      // Clear unsaved changes flag before navigating
-      setHasUnsavedChanges(false);
-
-      // Step 7: Navigate to scenarios list page
-      setTimeout(() => {
-        navigate({ to: "/assets/scenarios" });
-      }, 0);
+      // Navigate to scenario list (no unsaved changes after successful save)
+      navigate({ to: "/assets/scenarios" });
     } catch (error) {
       toast.error("Error creating scenario card", {
         description: error instanceof Error ? error.message : "Unknown error",
@@ -461,17 +385,21 @@ export default function CreateScenarioPage() {
         </div>
       </div>
 
-      {/* Navigation Confirmation Dialog (for sidebar/browser navigation) */}
-      <ActionConfirm
-        open={isNavigationConfirmOpen}
-        onOpenChange={setIsNavigationConfirmOpen}
-        title="You've got unsaved changes!"
-        description="Are you sure you want to leave? Your changes will be lost."
-        cancelLabel="Go back"
-        confirmLabel="Yes, leave"
-        confirmVariant="destructive"
-        onConfirm={handleNavigationConfirm}
-      />
+      {/* Navigation Confirmation Dialog */}
+      {status === "blocked" && (
+        <ActionConfirm
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) reset();
+          }}
+          title="You've got unsaved changes!"
+          description="Are you sure you want to leave? Your changes will be lost."
+          cancelLabel="Go back"
+          confirmLabel="Yes, leave"
+          confirmVariant="destructive"
+          onConfirm={proceed}
+        />
+      )}
     </div>
   );
 }

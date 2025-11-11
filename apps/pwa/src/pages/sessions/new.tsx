@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from "react";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useState, useCallback } from "react";
+import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/forms";
 import { CreatePageHeader } from "@/widgets/create-page-header";
 import {
@@ -60,7 +60,6 @@ const STEPS: { id: Step; label: string; number: number; required: boolean }[] =
  */
 export function CreateSessionPage() {
   const navigate = useNavigate();
-  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<Step>("basic-info");
 
   // Basic Info state
@@ -81,77 +80,18 @@ export function CreateSessionPage() {
 
   const selectSession = useSessionStore.use.selectSession();
 
-  // Track if user has made changes and navigation state
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
-  const [isNavigationConfirmOpen, setIsNavigationConfirmOpen] =
-    useState<boolean>(false);
-  const [pendingNavigation, setPendingNavigation] = useState<
-    (() => void) | null
-  >(null);
+  // Track if user has made changes
+  const hasUnsavedChanges =
+    sessionName !== "New Session" ||
+    !!selectedFlow ||
+    selectedCharacters.length > 0;
 
-  // Set hasUnsavedChanges to true when user makes any change
-  useEffect(() => {
-    if (
-      sessionName !== "New Session" ||
-      selectedFlow ||
-      selectedCharacters.length > 0
-    ) {
-      setHasUnsavedChanges(true);
-    }
-  }, [sessionName, selectedFlow, selectedCharacters]);
-
-  // Intercept Link clicks from sidebar
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-
-    const handleBeforeNavigate = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const link = target.closest("a");
-
-      // Only intercept anchor tags with href
-      if (!link || !link.hasAttribute("href")) return;
-
-      const href = link.getAttribute("href");
-      if (!href || href === router.state.location.pathname) return;
-
-      // Prevent default navigation
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Store the link element to click it later after confirmation
-      setPendingNavigation(() => () => {
-        setHasUnsavedChanges(false);
-        // Trigger the original link navigation after clearing unsaved changes flag
-        setTimeout(() => {
-          link.click();
-        }, 0);
-      });
-      setIsNavigationConfirmOpen(true);
-    };
-
-    // Add listener to capture phase (before Link's onClick)
-    document.addEventListener(
-      "click",
-      handleBeforeNavigate as EventListener,
-      true,
-    );
-
-    return () => {
-      document.removeEventListener(
-        "click",
-        handleBeforeNavigate as EventListener,
-        true,
-      );
-    };
-  }, [hasUnsavedChanges, router]);
-
-  const handleNavigationConfirm = () => {
-    setIsNavigationConfirmOpen(false);
-    if (pendingNavigation) {
-      pendingNavigation();
-      setPendingNavigation(null);
-    }
-  };
+  // Block navigation when there are unsaved changes
+  const { proceed, reset, status } = useBlocker({
+    shouldBlockFn: () => hasUnsavedChanges,
+    withResolver: true,
+    enableBeforeUnload: hasUnsavedChanges,
+  });
 
   // const handleFileUpload = (file: File) => {
   //   // Store the file for preview - actual upload happens on save
@@ -163,18 +103,7 @@ export function CreateSessionPage() {
   // };
 
   const handleCancel = () => {
-    // If no unsaved changes, navigate immediately
-    if (!hasUnsavedChanges) {
-      navigate({ to: "/sessions" });
-      return;
-    }
-
-    // Otherwise, show confirmation dialog
-    setPendingNavigation(() => () => {
-      setHasUnsavedChanges(false);
-      setTimeout(() => navigate({ to: "/sessions" }), 0);
-    });
-    setIsNavigationConfirmOpen(true);
+    navigate({ to: "/sessions" });
   };
 
   const handlePrevious = () => {
@@ -285,16 +214,11 @@ export function CreateSessionPage() {
       selectSession(savedSession.id, savedSession.title);
       queryClient.invalidateQueries({ queryKey: [TableName.Sessions] });
 
-      // Clear unsaved changes flag before navigating
-      setHasUnsavedChanges(false);
-
-      // Navigate to the created session
-      setTimeout(() => {
-        navigate({
-          to: "/sessions/$sessionId",
-          params: { sessionId: savedSession.id.toString() },
-        });
-      }, 0);
+      // Navigate to session (no unsaved changes after successful save)
+      navigate({
+        to: "/sessions/$sessionId",
+        params: { sessionId: savedSession.id.toString() },
+      });
     } catch (error) {
       logger.error("Error creating session", error);
     }
@@ -427,17 +351,21 @@ export function CreateSessionPage() {
         </div>
       </div>
 
-      {/* Navigation Confirmation Dialog (for sidebar/browser navigation) */}
-      <ActionConfirm
-        open={isNavigationConfirmOpen}
-        onOpenChange={setIsNavigationConfirmOpen}
-        title="You've got unsaved changes!"
-        description="Are you sure you want to leave? Your changes will be lost."
-        cancelLabel="Go back"
-        confirmLabel="Yes, leave"
-        confirmVariant="destructive"
-        onConfirm={handleNavigationConfirm}
-      />
+      {/* Navigation Confirmation Dialog */}
+      {status === "blocked" && (
+        <ActionConfirm
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) reset();
+          }}
+          title="You've got unsaved changes!"
+          description="Are you sure you want to leave? Your changes will be lost."
+          cancelLabel="Go back"
+          confirmLabel="Yes, leave"
+          confirmVariant="destructive"
+          onConfirm={proceed}
+        />
+      )}
     </div>
   );
 }
