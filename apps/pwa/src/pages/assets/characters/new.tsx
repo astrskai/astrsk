@@ -58,11 +58,11 @@ export function CreateCharacterPage() {
     exampleDialogue.trim().length > 0 ||
     lorebookEntries.length > 0;
 
-  // Block navigation when there are unsaved changes
+  // Block navigation when there are unsaved changes (but not during save)
   const { proceed, reset, status } = useBlocker({
-    shouldBlockFn: () => hasUnsavedChanges,
+    shouldBlockFn: () => hasUnsavedChanges && !isCreatingCard,
     withResolver: true,
-    enableBeforeUnload: hasUnsavedChanges,
+    enableBeforeUnload: hasUnsavedChanges && !isCreatingCard,
   });
 
   const STEPS: StepConfig<CharacterStep>[] = [

@@ -80,17 +80,19 @@ export function CreateSessionPage() {
 
   const selectSession = useSessionStore.use.selectSession();
 
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
   // Track if user has made changes
   const hasUnsavedChanges =
     sessionName !== "New Session" ||
     !!selectedFlow ||
     selectedCharacters.length > 0;
 
-  // Block navigation when there are unsaved changes
+  // Block navigation when there are unsaved changes (but not during save)
   const { proceed, reset, status } = useBlocker({
-    shouldBlockFn: () => hasUnsavedChanges,
+    shouldBlockFn: () => hasUnsavedChanges && !isSaving,
     withResolver: true,
-    enableBeforeUnload: hasUnsavedChanges,
+    enableBeforeUnload: hasUnsavedChanges && !isSaving,
   });
 
   // const handleFileUpload = (file: File) => {
@@ -119,6 +121,7 @@ export function CreateSessionPage() {
       return;
     }
 
+    setIsSaving(true);
     try {
       // // Step 1: Upload image if exists
       // let uploadedAssetId: string | undefined;
@@ -221,6 +224,7 @@ export function CreateSessionPage() {
       });
     } catch (error) {
       logger.error("Error creating session", error);
+      setIsSaving(false);
     }
   }, [
     sessionName,
