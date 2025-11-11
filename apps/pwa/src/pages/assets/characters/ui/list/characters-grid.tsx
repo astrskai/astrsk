@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
-import { ActionConfirm } from "@/shared/ui/dialogs";
+import { DialogConfirm } from "@/shared/ui/dialogs";
 import CharacterPreview from "@/features/character/ui/character-preview";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 import { useCardActions } from "@/features/common/model/use-card-actions";
@@ -159,7 +159,7 @@ export default function CharactersGrid({
         </div>
       </div>
 
-      <ActionConfirm
+      <DialogConfirm
         open={deleteDialogState.isOpen}
         onOpenChange={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}

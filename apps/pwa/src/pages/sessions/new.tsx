@@ -24,7 +24,7 @@ import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { queryClient } from "@/shared/api/query-client";
 import { TableName } from "@/db/schema/table-name";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { ActionConfirm } from "@/shared/ui/dialogs";
+import { DialogConfirm } from "@/shared/ui/dialogs";
 
 type Step =
   | "basic-info"
@@ -359,7 +359,7 @@ export function CreateSessionPage() {
 
       {/* Navigation Confirmation Dialog */}
       {status === "blocked" && (
-        <ActionConfirm
+        <DialogConfirm
           open={true}
           onOpenChange={(open) => {
             if (!open) reset();

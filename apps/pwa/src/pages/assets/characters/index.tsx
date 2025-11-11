@@ -21,6 +21,7 @@ import { CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { useResourceImport } from "@/shared/hooks/use-resource-import";
 import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
+import { DialogBase } from "@/shared/ui/dialogs";
 
 /**
  * Characters List Page
@@ -121,6 +122,13 @@ export function CharactersListPage() {
         open={isOpenHelpDialog}
         onOpenChange={setIsOpenHelpDialog}
         type="cards"
+      />
+
+      <DialogBase
+        trigger={<button type="button">Open</button>}
+        title="Create new character"
+        // description="Create a new character to start your new character"
+        content={<div>Create a new character to start your new character</div>}
       />
 
       {/* Content */}

@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Flow } from "@/entities/flow/domain/flow";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
-import { ActionConfirm } from "@/shared/ui/dialogs";
+import { DialogConfirm } from "@/shared/ui/dialogs";
 import FlowPreview from "@/features/flow/ui/flow-preview";
 import type { FlowAction } from "@/features/flow/ui/flow-preview";
 import { useFlowActions } from "@/features/flow/model/use-flow-actions";
@@ -202,7 +202,7 @@ export function FlowsGrid({
       />
 
       {/* Delete Confirmation Dialog */}
-      <ActionConfirm
+      <DialogConfirm
         open={deleteDialogState.isOpen}
         onOpenChange={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}

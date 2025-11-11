@@ -182,7 +182,7 @@ export function ListPageHeader({
                 : title}
             </h1>
             {/* TODO: Add more options button */}
-            <div />
+            <div className="w-4">&nbsp;</div>
             <Button
               variant="secondary"
               icon={<Ellipsis size={20} />}

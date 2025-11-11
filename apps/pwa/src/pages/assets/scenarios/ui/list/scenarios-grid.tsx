@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
-import { ActionConfirm } from "@/shared/ui/dialogs";
+import { DialogConfirm } from "@/shared/ui/dialogs";
 import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 import { useCardActions } from "@/features/common/model/use-card-actions";
@@ -161,7 +161,7 @@ export function ScenariosGrid({
         </div>
       </div>
 
-      <ActionConfirm
+      <DialogConfirm
         open={deleteDialogState.isOpen}
         onOpenChange={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}

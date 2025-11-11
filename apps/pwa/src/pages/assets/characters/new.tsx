@@ -20,7 +20,7 @@ import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardKeys } from "@/entities/card/api";
 import { toast } from "sonner";
-import { ActionConfirm } from "@/shared/ui/dialogs";
+import { DialogConfirm } from "@/shared/ui/dialogs";
 
 type CharacterStep = "basic-info" | "info" | "lorebook";
 
@@ -367,7 +367,7 @@ export function CreateCharacterPage() {
 
       {/* Navigation Confirmation Dialog */}
       {status === "blocked" && (
-        <ActionConfirm
+        <DialogConfirm
           open={true}
           onOpenChange={(open) => {
             if (!open) reset();
