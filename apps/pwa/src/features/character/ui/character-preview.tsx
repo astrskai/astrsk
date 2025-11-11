@@ -46,7 +46,7 @@ const CharacterPreview = ({
         <span
           key={`${title}-tag-${index}-${tag}`}
           className={cn(
-            "rounded-md bg-gray-800/80 px-2.5 py-0.5 text-xs font-semibold text-gray-300 lg:text-sm",
+            "truncate rounded-md bg-gray-800/80 px-2.5 py-0.5 text-xs font-semibold text-gray-300 lg:text-sm",
             "transition-all duration-300 group-hover/preview:bg-gray-900/50 group-hover/preview:text-gray-50",
             index === 2 && "hidden lg:inline-flex",
           )}
@@ -204,6 +204,9 @@ const CharacterPreview = ({
           <h3
             className={cn(
               "line-clamp-2 text-base font-semibold text-ellipsis text-gray-50 lg:text-lg",
+              isShowActions && actions.length > 0
+                ? "w-[90%] md:w-full"
+                : "w-full",
             )}
           >
             {title}
