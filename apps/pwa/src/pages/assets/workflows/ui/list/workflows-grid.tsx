@@ -55,21 +55,21 @@ function FlowGridItem({
   const actions: FlowAction[] = [
     {
       icon: Upload,
-      label: `Export ${flow.props.name}`,
+      label: `Export`,
       onClick: onExportClick(flowId, flow.props.name),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
-      label: `Copy ${flow.props.name}`,
+      label: `Copy`,
       onClick: onCopy(flowId, flow.props.name),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
-      label: `Delete ${flow.props.name}`,
+      label: `Delete`,
       onClick: onDeleteClick(flowId, flow.props.name),
       disabled: loading.deleting,
       loading: loading.deleting,

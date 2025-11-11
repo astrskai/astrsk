@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
+import type { FlowAction } from "@/features/flow/ui/flow-preview";
 
 interface FlowSelectionStepProps {
   selectedFlow: Flow | null;
@@ -71,6 +72,15 @@ export function FlowSelectionStep({
     onFlowSelected(null);
   };
 
+  const bottomActions: FlowAction[] = [
+    {
+      icon: Trash2,
+      label: `Remove`,
+      onClick: handleRemoveFlow,
+      bottomActionsClassName: "block md:hidden",
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-2xl">
@@ -99,6 +109,8 @@ export function FlowSelectionStep({
                 onClick: handleRemoveFlow,
               },
             ]}
+            bottomActions={bottomActions}
+            moreActionsClassName="hidden"
             isShowActions={true}
           />
         ) : (

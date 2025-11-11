@@ -181,12 +181,14 @@ export function ListPageHeader({
                 ? tabs.find((t) => t.value === activeTab)?.label || title
                 : title}
             </h1>
+            {/* TODO: Add more options button */}
+            <div />
             <Button
               variant="secondary"
               icon={<Ellipsis size={20} />}
               size="sm"
               aria-label="More options"
-              className="border-0 bg-transparent"
+              className="hidden border-0 bg-transparent"
               onClick={onMoreClick}
             />
           </div>

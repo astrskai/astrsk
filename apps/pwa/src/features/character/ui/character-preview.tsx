@@ -1,7 +1,13 @@
-import { Ellipsis } from "lucide-react";
+import { EllipsisVertical } from "lucide-react";
 import { cn } from "@/shared/lib";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 import { Button } from "@/shared/ui/forms";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu";
 
 interface CharacterPreviewProps {
   title: string;
@@ -14,6 +20,7 @@ interface CharacterPreviewProps {
   className?: string;
   isShowActions?: boolean;
   isDisabled?: boolean;
+  moreActionsClassName?: string;
   onClick?: () => void;
 }
 
@@ -30,6 +37,7 @@ const CharacterPreview = ({
   className,
   isShowActions = false,
   isDisabled = false,
+  moreActionsClassName,
   onClick,
 }: CharacterPreviewProps) => {
   const getCompactedTagString = (tags: string[]) => {
@@ -90,9 +98,9 @@ const CharacterPreview = ({
         <div className="absolute inset-0 z-20 bg-white opacity-40" />
       )}
 
-      {/* Action buttons */}
+      {/* Action buttons - Desktop (hover) */}
       {isShowActions && actions.length > 0 && (
-        <div className="absolute top-2 right-2 z-30 flex -translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover/preview:translate-y-0 group-hover/preview:opacity-100">
+        <div className="absolute top-2 right-2 z-30 hidden -translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover/preview:translate-y-0 group-hover/preview:opacity-100 md:flex">
           {actions.map((action, index) => (
             <button
               key={index}
@@ -118,6 +126,55 @@ const CharacterPreview = ({
               )}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Action buttons - Mobile (dropdown menu) */}
+      {isShowActions && actions.length > 0 && (
+        <div
+          className={cn(
+            "absolute top-2 right-2 z-30 md:hidden",
+            moreActionsClassName,
+          )}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                aria-label="More actions"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-gray-50 hover:bg-gray-800/80"
+              >
+                <EllipsisVertical className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-gray-700 md:hidden"
+            >
+              {actions.map((action, index) => (
+                <DropdownMenuItem
+                  key={index}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    action.onClick(e);
+                  }}
+                  disabled={action.disabled}
+                  className="flex items-center gap-2"
+                >
+                  {action.icon && (
+                    <action.icon
+                      className={cn(
+                        "h-4 w-4",
+                        action.loading && "animate-pulse",
+                      )}
+                    />
+                  )}
+                  <span>{action.label}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )}
 
@@ -184,7 +241,7 @@ const CharacterPreview = ({
                     }}
                     disabled={action.disabled}
                     aria-label={action.label}
-                    className={cn(action.className, "px-2 py-1")}
+                    className={cn(action.bottomActionsClassName, "px-2 py-1")}
                   >
                     {action.label}
                   </Button>
