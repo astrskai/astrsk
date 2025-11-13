@@ -3,7 +3,7 @@ import { cn } from "@/shared/lib";
 type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 
 interface AvatarSimpleProps {
-  src?: string;
+  src?: string | null;
   alt?: string;
   size?: AvatarSize;
   className?: string;
@@ -33,7 +33,7 @@ export function AvatarSimple({
   return (
     <div
       className={cn(
-        "flex-shrink-0 overflow-hidden rounded-full bg-gray-700",
+        "flex-shrink-0 overflow-hidden rounded-full border border-gray-50/30 bg-gray-700",
         sizeClasses[size],
         className,
       )}

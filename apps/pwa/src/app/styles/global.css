@@ -598,6 +598,10 @@
       sans-serif;
   }
 
+  button {
+    cursor: pointer;
+  }
+
   /* Remove textarea resizer */
   textarea.no-resizer::-webkit-resizer {
     display: none;
