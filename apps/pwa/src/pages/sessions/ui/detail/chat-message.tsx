@@ -55,6 +55,7 @@ const ChatMessage = ({
       className={cn(
         "flex items-start gap-4 px-4 pb-4",
         isUser ? "flex-row-reverse" : "flex-row",
+        isLastMessage && "animate-fade-in-up",
       )}
     >
       <AvatarSimple
@@ -119,9 +120,9 @@ const ChatMessage = ({
             {isStreaming && (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1">
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-gray-500 [animation-delay:-0.3s]"></span>
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-gray-500 [animation-delay:-0.15s]"></span>
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-gray-500"></span>
+                  <span className="animate-bounce-typing h-2 w-2 rounded-full bg-gray-500 [animation-delay:0s]"></span>
+                  <span className="animate-bounce-typing h-2 w-2 rounded-full bg-gray-500 [animation-delay:0.2s]"></span>
+                  <span className="animate-bounce-typing h-2 w-2 rounded-full bg-gray-500 [animation-delay:0.4s]"></span>
                 </div>
 
                 <div>
@@ -129,10 +130,6 @@ const ChatMessage = ({
                     `${streamingAgentName} ${streamingModelName}`}
                 </div>
               </div>
-            )}
-
-            {isLastMessage && (
-              <span className="text-xs text-green-400">Last</span>
             )}
           </ChatBubble>
 
@@ -155,7 +152,7 @@ const ChatMessage = ({
               <button
                 type="button"
                 className={cn(
-                  "flexitems-center justify-center p-1",
+                  "flex items-center justify-center p-1",
                   isUser ? "hover:text-gray-900/70" : "hover:text-gray-200/70",
                 )}
                 aria-label="Edit"
@@ -187,6 +184,7 @@ export default memo(ChatMessage, (prev, next) => {
     prev.isStreaming === next.isStreaming &&
     prev.isLastMessage === next.isLastMessage &&
     prev.streamingAgentName === next.streamingAgentName &&
-    prev.streamingModelName === next.streamingModelName
+    prev.streamingModelName === next.streamingModelName &&
+    prev.translationConfig === next.translationConfig
   );
 });
