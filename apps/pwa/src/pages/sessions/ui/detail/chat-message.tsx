@@ -35,16 +35,17 @@ const ChatMessage = ({
   isLastMessage,
 }: ChatMessageProps) => {
   const { data: message } = useQuery(turnQueries.detail(messageId));
-  const selectedOption = message?.options[message.selectedOptionIndex];
 
   const [character] = useCard<CharacterCard>(message?.characterCardId);
   const [characterImageUrl] = useAsset(character?.props.iconAssetId);
 
+  if (!message) return null;
+
+  const selectedOption = message?.options[message.selectedOptionIndex];
+
   const content = selectedOption?.content;
   const language = translationConfig?.displayLanguage ?? "none";
   const translation = selectedOption?.translations.get(language);
-
-  if (!message) return null;
 
   const isUser = userCharacterId
     ? userCharacterId.equals(message?.characterCardId)
