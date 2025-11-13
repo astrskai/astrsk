@@ -7,24 +7,29 @@ import ChatShuffleButton from "./chat-shuffle-button";
 
 import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";
+import { AutoReply } from "@/shared/stores/session-store";
 
 interface ChatInputProps {
   aiCharacterIds: UniqueEntityID[];
   userCharacterId?: UniqueEntityID;
-  generateCharacterMessage?: (characterId: UniqueEntityID) => void;
   streamingMessageId?: UniqueEntityID | null;
+  autoReply: AutoReply;
+  onAutoReply: (autoReply: AutoReply) => void;
   onSendMessage?: (messageContent: string) => void;
   onStopGenerate?: () => void;
+  generateCharacterMessage?: (characterId: UniqueEntityID) => void;
   className?: string;
 }
 
 export default function ChatInput({
   aiCharacterIds,
   userCharacterId,
-  generateCharacterMessage,
   streamingMessageId,
+  autoReply,
+  onAutoReply,
   onSendMessage,
   onStopGenerate,
+  generateCharacterMessage,
   className,
 }: ChatInputProps) {
   const [isOpenGuide, setIsOpenGuide] = useState<boolean>(false);
@@ -55,7 +60,7 @@ export default function ChatInput({
         className,
       )}
     >
-      <div className="flex flex-row items-center justify-between gap-1">
+      <div className="flex flex-row items-start justify-between gap-1">
         <div className="flex flex-row gap-4">
           {userCharacterId && (
             <ChatCharacterButton
@@ -88,7 +93,11 @@ export default function ChatInput({
           />
         </div>
 
-        <ChatAutoReplyButton />
+        <ChatAutoReplyButton
+          characterCount={aiCharacterIds.length}
+          autoReply={autoReply}
+          onAutoReply={onAutoReply}
+        />
       </div>
 
       <div className="relative mt-4">

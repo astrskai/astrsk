@@ -56,8 +56,6 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
   const deleteMessageMutation = useDeleteMessage(data.id);
   const updateTurnMutation = useUpdateTurn();
 
-  console.log(data);
-
   const generateCharacterMessage = useCallback(
     async (
       characterId: UniqueEntityID,
@@ -87,7 +85,7 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
                 dataStoreForRegeneration = cloneDeep(turn.dataStore);
               }
             } catch (error) {
-              console.warn(
+              logger.warn(
                 `Failed to get turn for regeneration dataStore: ${error}`,
               );
               continue;
@@ -95,7 +93,7 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
           }
 
           lastDataStore = dataStoreForRegeneration;
-          console.log(
+          logger.info(
             `Using dataStore from regeneration context (${lastDataStore.length} fields)`,
           );
         } else if (data.turnIds.length > 0) {
@@ -105,7 +103,7 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
             const lastTurn = await fetchTurn(lastTurnId);
             lastDataStore = cloneDeep(lastTurn.dataStore);
           } catch (error) {
-            console.warn(`Failed to get last turn's dataStore: ${error}`);
+            logger.warn(`Failed to get last turn's dataStore: ${error}`);
           }
         }
 
@@ -321,6 +319,23 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
     ],
   );
 
+  const handleAutoReply = useCallback(
+    async (autoReply: AutoReply) => {
+      if (!data) {
+        return;
+      }
+
+      data.update({
+        autoReply,
+      });
+
+      await saveSessionMutation.mutate({
+        session: data,
+      });
+    },
+    [data, saveSessionMutation],
+  );
+
   const autoReply = data?.autoReply;
 
   const handleSendMessage = useCallback(
@@ -423,10 +438,12 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
         className="shrink-0"
         aiCharacterIds={data.aiCharacterCardIds}
         userCharacterId={data.userCharacterCardId}
+        autoReply={data.autoReply}
         generateCharacterMessage={generateCharacterMessage}
         streamingMessageId={streamingMessageId}
         onStopGenerate={handleStopGenerate}
         onSendMessage={handleSendMessage}
+        onAutoReply={handleAutoReply}
       />
     </div>
   );

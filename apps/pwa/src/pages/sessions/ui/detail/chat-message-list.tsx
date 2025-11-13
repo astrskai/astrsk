@@ -66,7 +66,7 @@ export default function ChatMessageList({
   // 새 메시지 추가 시 자동 스크롤 (맨 아래에 있을 때만)
   useEffect(() => {
     if (isAtBottom && messageCount > 0) {
-      scrollToBottom(50);
+      scrollToBottom(300);
     }
   }, [messageCount, isAtBottom, scrollToBottom]);
 
@@ -81,10 +81,7 @@ export default function ChatMessageList({
   }, [messageCount, scrollToBottom]);
 
   const handleScrollToBottom = () => {
-    virtualizer.scrollToIndex(messageCount - 1, {
-      // align: "end",
-      // behavior: "auto",
-    });
+    scrollToBottom();
   };
 
   const virtualItems = virtualizer.getVirtualItems();
@@ -120,13 +117,6 @@ export default function ChatMessageList({
             const messageId = data.turnIds[virtualItem.index];
             const isStreaming = streamingMessageId?.equals(messageId);
             const isLastMessage = virtualItem.index === messageCount - 1;
-
-            if (isStreaming) {
-              console.log("messageId!!!!!!!!!", messageId);
-              console.log("streamingMessageId!!!!!!!!!", streamingMessageId);
-              console.log("streamingAgentName!!!!!!!!!", streamingAgentName);
-              console.log("streamingModelName!!!!!!!!!", streamingModelName);
-            }
 
             return (
               <div
