@@ -89,7 +89,32 @@ const ChatMessage = ({
               : "text-text-secondary bg-gray-800",
           )}
         >
-          <Markdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+          <Markdown
+            className="markdown"
+            rehypePlugins={[rehypeRaw, rehypeSanitize]}
+            components={{
+              pre: ({ children }) => (
+                <pre
+                  tabIndex={0}
+                  className="my-2 max-w-full overflow-x-auto rounded-md p-3"
+                >
+                  {children}
+                </pre>
+              ),
+              code: ({ children, className }) => {
+                const isInlineCode = !className;
+                return isInlineCode ? (
+                  <code className="rounded px-1 py-0.5 text-sm">
+                    {children}
+                  </code>
+                ) : (
+                  <code className="text-sm break-words whitespace-pre-wrap">
+                    {children}
+                  </code>
+                );
+              },
+            }}
+          >
             {translation ?? content}
           </Markdown>
 
@@ -102,7 +127,8 @@ const ChatMessage = ({
                 <span className="h-2 w-2 animate-bounce rounded-full bg-gray-500"></span>
               </div>
               <div>
-                {streamingAgentName} {streamingModelName}
+                {streamingAgentName &&
+                  `${streamingAgentName} ${streamingModelName}`}
                 {/* {`${character?.props.title} is typing...`} */}
               </div>
             </div>

@@ -23,7 +23,7 @@ export default function SessionDataSidebar({
     >
       <div className="p-4">
         <div className="rounded-md border border-gray-50/20 bg-gray-50/20 p-4 backdrop-blur-lg">
-          apple
+          session-data-sidebar
         </div>
       </div>
     </aside>

@@ -362,6 +362,11 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
 
           // Random character reply
           case AutoReply.Random: {
+            if (data.aiCharacterCardIds.length === 0) {
+              toast.error("No characters available");
+              break;
+            }
+
             const randomIndex = Math.floor(
               Math.random() * data.aiCharacterCardIds.length,
             );

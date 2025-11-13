@@ -598,8 +598,12 @@
       sans-serif;
   }
 
-  button {
+  button:where(:not(:disabled)) {
     cursor: pointer;
+  }
+
+  button[aria-disabled="true"] {
+    cursor: not-allowed;
   }
 
   /* Remove textarea resizer */

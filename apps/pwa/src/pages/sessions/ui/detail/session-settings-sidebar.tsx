@@ -22,6 +22,7 @@ export default function SessionSettingsSidebar({
       <div className="flex items-center justify-between gap-2 p-4">
         <button
           type="button"
+          aria-label="Close settings panel"
           onClick={onClose}
           className="cursor-pointer text-gray-300 hover:text-gray-50"
         >
@@ -30,6 +31,7 @@ export default function SessionSettingsSidebar({
         <span className="text-base font-semibold text-gray-50">Settings</span>
         <button
           type="button"
+          aria-label="Close settings panel"
           onClick={onClose}
           className="cursor-pointer text-gray-300 hover:text-gray-50"
         >
@@ -37,7 +39,7 @@ export default function SessionSettingsSidebar({
         </button>
       </div>
 
-      <div className="p-4">content</div>
+      <div className="p-4">session-settings-sidebar</div>
     </aside>
   );
 }

@@ -76,6 +76,7 @@ export default function ChatMessageList({
   useEffect(() => {
     if (!hasInitialScrolled.current && messageCount > 0) {
       scrollToBottom(300);
+      hasInitialScrolled.current = true;
     }
   }, [messageCount, scrollToBottom]);
 
