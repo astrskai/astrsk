@@ -166,7 +166,7 @@ export function FixedNav() {
   return (
     <aside
       className={cn(
-        "hidden md:flex",
+        "z-30 hidden md:flex",
         "h-full flex-col items-center py-4",
         "bg-black-alternate border-border border-r",
       )}

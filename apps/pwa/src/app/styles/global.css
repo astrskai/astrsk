@@ -551,6 +551,26 @@
   }
 }
 
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce-typing {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-8px);
+  }
+}
+
 /* Custom Utilities - must be at top level, cannot be nested in @layer */
 @utility h-screen-minus-topbar {
   height: calc(100vh - var(--topbar-height));
@@ -576,6 +596,14 @@
   animation: tab-focus 2s ease-in-out;
 }
 
+@utility animate-fade-in-up {
+  animation: fade-in-up 0.3s ease-out 0.35s both;
+}
+
+@utility animate-bounce-typing {
+  animation: bounce-typing 1.4s ease-in-out infinite;
+}
+
 @layer base {
   * {
     border-color: var(--border);
@@ -596,6 +624,14 @@
       "Helvetica Neue",
       Arial,
       sans-serif;
+  }
+
+  button:where(:not(:disabled)) {
+    cursor: pointer;
+  }
+
+  button[aria-disabled="true"] {
+    cursor: not-allowed;
   }
 
   /* Remove textarea resizer */
