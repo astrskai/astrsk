@@ -230,11 +230,11 @@ export default function SettingsPage() {
                   ))}
                 </Authenticated>
                 <Unauthenticated>
-                  {/* <SettingsMenuItemComponent
+                  <SettingsMenuItemComponent
                     label="Sign in"
                     onClick={signUpWithDiscord}
                     showChevron={true}
-                  /> */}
+                  />
                   <SettingsMenuItemComponent
                     label="Providers"
                     onClick={() => navigate({ to: "/settings/providers" })}
