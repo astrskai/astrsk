@@ -7,7 +7,13 @@ import { cn } from "@/shared/lib";
 
 import { useForwardedRef } from "@/shared/hooks/use-forwarded-ref";
 import type { ButtonProps } from "@/shared/ui";
-import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@/shared/ui";
+import {
+  Button,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/ui";
 
 interface ColorPickerProps {
   value?: string | null;

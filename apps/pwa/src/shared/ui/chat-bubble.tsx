@@ -4,12 +4,14 @@ interface ChatBubbleProps {
   children: React.ReactNode;
   direction?: "left" | "right";
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export function ChatBubble({
   children,
   direction,
   className,
+  style,
 }: ChatBubbleProps) {
   return (
     <div
@@ -22,6 +24,7 @@ export function ChatBubble({
             : "rounded-2xl",
         className,
       )}
+      style={style}
     >
       {children}
     </div>

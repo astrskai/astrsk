@@ -20,10 +20,12 @@ import { cn } from "@/shared/lib";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import Markdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 import { TranslationConfig } from "@/entities/session/domain/translation-config";
 import { TextareaAutosize } from "@mui/material";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { useUpdateTurn } from "@/entities/turn/api/turn-queries";
+import { ChatStyles } from "@/entities/session/domain/chat-styles";
 
 interface ChatMessageProps {
   messageId: UniqueEntityID;
@@ -34,6 +36,7 @@ interface ChatMessageProps {
   streamingModelName?: string;
   dataSchemaOrder?: string[];
   isLastMessage?: boolean;
+  chatStyles?: ChatStyles;
   onEdit?: (messageId: UniqueEntityID, content: string) => void;
   onDelete?: (messageId: UniqueEntityID) => void;
   onRegenerate?: (messageId: UniqueEntityID) => void;
@@ -48,6 +51,7 @@ const ChatMessage = ({
   streamingModelName,
   dataSchemaOrder,
   isLastMessage,
+  chatStyles,
   onEdit,
   onDelete,
   onRegenerate,
@@ -171,12 +175,14 @@ const ChatMessage = ({
             direction={isUser ? "right" : "left"}
             className={cn(
               "max-w-full md:max-w-3xl",
-              isUser
-                ? "bg-gray-50 text-gray-900"
-                : "text-text-secondary bg-gray-800",
               isEditing && "w-full",
               isEditing && isUser && "ml-auto",
             )}
+            style={{
+              backgroundColor: isUser
+                ? chatStyles?.user?.chatBubble?.backgroundColor || "#f9fafb" // fallback
+                : chatStyles?.ai?.chatBubble?.backgroundColor || "#1f2937", // fallback
+            }}
           >
             {!isStreaming ? (
               isEditing ? (
@@ -200,8 +206,60 @@ const ChatMessage = ({
                 <>
                   <Markdown
                     className="markdown"
+                    remarkPlugins={[remarkBreaks]}
                     rehypePlugins={[rehypeRaw, rehypeSanitize]}
                     components={{
+                      p: ({ children }) => {
+                        const textStyle = isUser
+                          ? chatStyles?.user?.text
+                          : chatStyles?.ai?.text;
+                        return (
+                          <p
+                            style={{
+                              color: textStyle?.base?.color ?? "#000000",
+                              fontSize: textStyle?.base?.fontSize
+                                ? `${textStyle.base.fontSize}px`
+                                : undefined,
+                            }}
+                          >
+                            {children}
+                          </p>
+                        );
+                      },
+                      strong: ({ children }) => {
+                        const textStyle = isUser
+                          ? chatStyles?.user?.text
+                          : chatStyles?.ai?.text;
+                        return (
+                          <strong
+                            style={{
+                              color: textStyle?.bold?.color ?? "#000000",
+                              fontSize: textStyle?.bold?.fontSize
+                                ? `${textStyle.bold.fontSize}px`
+                                : undefined,
+                            }}
+                          >
+                            {children}
+                          </strong>
+                        );
+                      },
+                      em: ({ children }) => {
+                        const textStyle = isUser
+                          ? chatStyles?.user?.text
+                          : chatStyles?.ai?.text;
+                        return (
+                          <em
+                            style={{
+                              color: textStyle?.italic?.color ?? "#000000",
+                              fontSize: textStyle?.italic?.fontSize
+                                ? `${textStyle.italic.fontSize}px`
+                                : undefined,
+                            }}
+                          >
+                            {children}
+                          </em>
+                        );
+                      },
                       pre: ({ children }) => (
                         <pre
                           tabIndex={0}

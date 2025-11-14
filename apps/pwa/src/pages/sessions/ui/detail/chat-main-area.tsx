@@ -670,6 +670,7 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
         streamingMessageId={streamingMessageId}
         streamingAgentName={streamingAgentName}
         streamingModelName={streamingModelName}
+        chatStyles={data.chatStyles}
         onEditMessage={handleEditMessage}
         onDeleteMessage={handleDeleteMessage}
         onRegenerateMessage={handleRegenerateMessage}
