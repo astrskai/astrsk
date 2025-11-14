@@ -14,11 +14,6 @@ export default function SessionDataSidebar({
   isInitialDataStore,
   lastTurnDataStore,
 }: SessionDataSidebarProps) {
-  console.log(
-    "sortedDataSchemaFields",
-    sortedDataSchemaFields,
-    isInitialDataStore,
-  );
   return (
     <aside
       className={cn(

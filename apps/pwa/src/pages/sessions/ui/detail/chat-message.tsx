@@ -402,13 +402,4 @@ const ChatMessage = ({
 };
 
 // Memoization: Prevent re-render if messageId is the same
-export default memo(ChatMessage, (prev, next) => {
-  return (
-    prev.messageId.equals(next.messageId) &&
-    prev.isStreaming === next.isStreaming &&
-    // prev.isLastMessage === next.isLastMessage &&
-    prev.streamingAgentName === next.streamingAgentName &&
-    prev.streamingModelName === next.streamingModelName &&
-    prev.translationConfig === next.translationConfig
-  );
-});
+export default memo(ChatMessage);
