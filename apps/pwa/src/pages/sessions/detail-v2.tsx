@@ -134,6 +134,7 @@ export default function SessionDetailPage() {
       </div>
 
       <SessionSettingsSidebar
+        session={session}
         isOpen={isOpenSettings}
         onClose={() => setIsOpenSettings(false)}
       />

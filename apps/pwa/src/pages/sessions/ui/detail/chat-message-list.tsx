@@ -95,7 +95,7 @@ export default function ChatMessageList({
   return (
     <div
       ref={parentRef}
-      className={cn("flex-1", className)}
+      className={cn("custom-scrollbar flex-1", className)}
       style={{
         width: "100%",
         overflowY: "auto",
