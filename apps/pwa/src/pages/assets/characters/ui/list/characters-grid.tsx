@@ -140,22 +140,24 @@ export default function CharactersGrid({
           )}
 
           {/* Existing Characters */}
-          {characters.map((character) => {
-            const cardId = character.id.toString();
-            const loading = loadingStates[cardId] || {};
+          {characters
+            .filter((character) => character.id !== undefined)
+            .map((character) => {
+              const cardId = character.id.toString();
+              const loading = loadingStates[cardId] || {};
 
-            return (
-              <CharacterGridItem
-                key={cardId}
-                character={character}
-                loading={loading}
-                onCharacterClick={handleCharacterClick}
-                onExport={handleExport}
-                onCopy={handleCopy}
-                onDeleteClick={handleDeleteClick}
-              />
-            );
-          })}
+              return (
+                <CharacterGridItem
+                  key={cardId}
+                  character={character}
+                  loading={loading}
+                  onCharacterClick={handleCharacterClick}
+                  onExport={handleExport}
+                  onCopy={handleCopy}
+                  onDeleteClick={handleDeleteClick}
+                />
+              );
+            })}
         </div>
       </div>
 

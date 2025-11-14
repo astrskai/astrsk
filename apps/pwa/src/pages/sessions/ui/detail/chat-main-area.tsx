@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { cloneDeep } from "lodash-es";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ import { Session } from "@/entities/session/domain";
 import { Turn } from "@/entities/turn/domain/turn";
 import {
   fetchTurn,
+  fetchTurnOptional,
   turnQueries,
   useUpdateTurn,
 } from "@/entities/turn/api/turn-queries";
@@ -28,16 +29,38 @@ import {
 } from "@/entities/session/api";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
+import { AutoReply } from "@/shared/stores/session-store";
 import { queryClient } from "@/shared/api/query-client";
 import { parseAiSdkErrorMessage } from "@/shared/lib/error-utils";
 import { logger } from "@/shared/lib/logger";
+import { toastError } from "@/shared/ui/toast-error";
+import { TurnService } from "@/app/services/turn-service";
+import { PlotCard } from "@/entities/card/domain/plot-card";
+import { useCard } from "@/shared/hooks/use-card";
+import { cn } from "@/shared/lib";
+import SelectScenarioDialog from "./select-scenario-dialog";
+import { TemplateRenderer } from "@/shared/lib/template-renderer";
 
 interface ChatMainAreaProps {
   data: Session;
 }
 
 export default function ChatMainArea({ data }: ChatMainAreaProps) {
+  const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
+    useState<boolean>(false);
+  // Add plot card modal
+  const [plotCard] = useCard<PlotCard>(data?.plotCard?.id);
+  const messageCount = data?.turnIds.length ?? 0;
+  const plotCardId = data?.plotCard?.id.toString() ?? "";
+  const plotCardScenarioCount = plotCard?.props.scenarios?.length ?? 0;
+  // Render scenario
+  const [renderedScenarios, setRenderedScenarios] = useState<
+    {
+      name: string;
+      description: string;
+    }[]
+  >([]);
+
   const [streamingMessageId, setStreamingMessageId] =
     useState<UniqueEntityID | null>(null);
   const [streamingAgentName, setStreamingAgentName] = useState<string>("");
@@ -99,6 +122,7 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
         } else if (data.turnIds.length > 0) {
           // For new messages, use last turn's dataStore
           const lastTurnId = data.turnIds[data.turnIds.length - 1];
+
           try {
             const lastTurn = await fetchTurn(lastTurnId);
             lastDataStore = cloneDeep(lastTurn.dataStore);
@@ -122,9 +146,11 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
             characterName: character.props.name,
             options: [],
           });
+
           if (messageOrError.isFailure) {
             throw new Error(messageOrError.getError());
           }
+
           streamingMessage = messageOrError.getValue();
         }
 
@@ -134,9 +160,11 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
           tokenSize: 0,
           dataStore: lastDataStore,
         });
+
         if (emptyOptionOrError.isFailure) {
           throw new Error(emptyOptionOrError.getError());
         }
+
         streamingMessage.addOption(emptyOptionOrError.getValue());
 
         // Set query cache
@@ -188,6 +216,7 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
             turnQueries.detail(streamingMessage.id).queryKey,
             TurnDrizzleMapper.toPersistence(streamingMessage),
           );
+
           setStreamingAgentName(response.agentName ?? "");
           setStreamingModelName(response.modelName ?? "");
 
@@ -195,6 +224,7 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
           //  if (!regenerateMessageId) {
           //    scrollToBottom({ behavior: "smooth" });
           //  }
+
           if (response.translations) {
             for (const [lang, translation] of response.translations) {
               streamingMessage.setTranslation(lang, translation);
@@ -247,9 +277,12 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
         const parsedError = parseAiSdkErrorMessage(error);
         if (parsedError) {
           if (parsedError.level === "error") {
-            toast.error("Failed to generate message", {
-              description: parsedError.message,
+            toastError({
+              title: "Failed to generate message",
+              details: parsedError.message,
             });
+          } else {
+            toast.info(parsedError.message);
           }
         } else if (error instanceof Error) {
           if (error.message.includes("Stop generate by user")) {
@@ -268,36 +301,32 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
               errorDetails.metadata = (error as any).metadata;
             }
 
-            toast.error("Failed to generate message", {
-              description: JSON.stringify(errorDetails, null, 2),
+            toastError({
+              title: "Failed to generate message",
+              details: JSON.stringify(errorDetails, null, 2),
             });
           }
         }
         logger.error("Failed to generate message", error);
 
-        // Check streaming message exists
+        // Clean up failed message
         if (streamingMessage) {
-          // Delete empty streaming message or option
-          if (streamingContent.trim() === "") {
-            if (regenerateMessageId) {
-              // Refetch message
-              queryClient.invalidateQueries({
-                queryKey: turnQueries.detail(regenerateMessageId).queryKey,
-              });
-            } else {
-              // Delete empty message
-              await deleteMessageMutation.mutateAsync({
-                sessionId: data.id,
-                messageId: streamingMessage.id,
-              });
-            }
+          if (regenerateMessageId) {
+            // Regenerate case: invalidate to restore original message
+            queryClient.invalidateQueries({
+              queryKey: turnQueries.detail(regenerateMessageId).queryKey,
+            });
           } else {
-            // Update message to database
-            updateTurnMutation.mutate({
-              turn: streamingMessage,
+            // New message case: delete failed message regardless of content
+            await deleteMessageMutation.mutateAsync({
+              sessionId: data.id,
+              messageId: streamingMessage.id,
             });
           }
         }
+
+        // Re-throw error to stop auto-reply chain
+        throw error;
       } finally {
         setStreamingMessageId(null);
         setStreamingAgentName("");
@@ -386,14 +415,26 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
               Math.random() * data.aiCharacterCardIds.length,
             );
             const randomCharacterCardId = data.aiCharacterCardIds[randomIndex];
-            generateCharacterMessage(randomCharacterCardId);
+
+            try {
+              await generateCharacterMessage(randomCharacterCardId);
+            } catch (error) {
+              // Error already logged and displayed in generateCharacterMessage
+              logger.error("Auto-reply (random) failed", error);
+            }
             break;
           }
 
           // All characters reply by order
           case AutoReply.Rotate: {
             for (const charId of data.aiCharacterCardIds) {
-              await generateCharacterMessage(charId);
+              try {
+                await generateCharacterMessage(charId);
+              } catch (error) {
+                // Stop auto-reply chain on first error
+                logger.error("Auto-reply (rotate) stopped due to error", error);
+                break;
+              }
             }
             break;
           }
@@ -425,13 +466,213 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
     refStopGenerate.current?.abort("Stop generate by user");
   }, []);
 
+  // Edit message
+  const handleEditMessage = useCallback(
+    async (messageId: UniqueEntityID, content: string) => {
+      // Get message from DB
+      const message = await fetchTurn(messageId);
+
+      // Set content
+      message.setContent(content);
+
+      // Save message to DB
+      updateTurnMutation.mutate({
+        turn: message,
+      });
+    },
+    [updateTurnMutation],
+  );
+
+  const handleDeleteMessage = useCallback(
+    async (messageId: UniqueEntityID) => {
+      // Check if this is a placeholder turn and handle special deletion
+      const turnOrNull = await fetchTurnOptional(messageId);
+
+      if (turnOrNull) {
+        const turn = turnOrNull;
+        if (TurnService.isPlaceholderTurn(turn)) {
+          // Use special deletion for placeholder turns with assets
+          const deleteResult =
+            await TurnService.deletePlaceholderTurnWithAssets(
+              data.id,
+              messageId,
+            );
+          if (deleteResult.isFailure) {
+            logger.error(
+              "Failed to delete placeholder turn",
+              deleteResult.getError(),
+            );
+            return;
+          }
+          // Invalidate session query
+          invalidateSession();
+          return;
+        }
+      }
+
+      // Regular message deletion
+      deleteMessageMutation.mutate(
+        {
+          sessionId: data.id,
+          messageId: messageId,
+        },
+        {
+          onError: (error) => {
+            logger.error("Failed to delete message", error);
+          },
+        },
+      );
+    },
+    [data.id, deleteMessageMutation, invalidateSession],
+  );
+
+  const handleRegenerateMessage = useCallback(
+    async (messageId: UniqueEntityID) => {
+      // Generate option
+      const message = await fetchTurn(messageId);
+      await generateCharacterMessage(message.characterCardId!, messageId);
+    },
+    [generateCharacterMessage],
+  );
+
+  const handleAddScenario = useCallback(
+    async (scenarioIndex: number) => {
+      // Check session
+      if (!data) {
+        return;
+      }
+      // Get selected scenario
+      const scenario = renderedScenarios?.[scenarioIndex];
+      if (!scenario) {
+        return;
+      }
+      try {
+        // Create scenario message
+        const scenarioMessage = (
+          await createMessage({
+            sessionId: data.id,
+            messageContent: scenario.description,
+          })
+        )
+          .throwOnFailure()
+          .getValue();
+
+        // Add scenario
+        const scenarioMessageOrError = await addMessageMutation.mutateAsync({
+          sessionId: data.id,
+          message: scenarioMessage,
+        });
+        if (scenarioMessageOrError.isFailure) {
+          toastError({
+            title: "Failed to add scenario",
+            details: scenarioMessageOrError.getError(),
+          });
+          return;
+        }
+
+        // Close modal first to prevent flickering
+        setIsOpenSelectScenarioModal(false);
+
+        // Invalidate session to refetch with new message
+        invalidateSession();
+      } finally {
+        // Modal handles its own loading state
+      }
+    },
+    [addMessageMutation, invalidateSession, renderedScenarios, data],
+  );
+
+  const renderScenarios = useCallback(async () => {
+    logger.debug("[Hook] useEffect: Render scenario");
+
+    // Check session and plot card
+    if (!data || !plotCard) {
+      return;
+    }
+
+    // If no scenarios, set empty array
+    if (!plotCard.props.scenarios || plotCard.props.scenarios.length === 0) {
+      setRenderedScenarios([]);
+      return;
+    }
+
+    // Create context
+    const contextOrError = await makeContext({
+      session: data,
+      characterCardId: data.aiCharacterCardIds[0],
+      includeHistory: false,
+    });
+    if (contextOrError.isFailure) {
+      logger.error("Failed to create context", contextOrError.getError());
+      return;
+    }
+    const context = contextOrError.getValue();
+
+    // Replace undefined to variables
+    if (!context.char) {
+      context.char = {
+        id: "{{char.id}}",
+        name: "{{char.name}}",
+        description: "{{char.description}}",
+        example_dialog: "{{char.example_dialog}}",
+        entries: [],
+      };
+    }
+    if (!context.user) {
+      context.user = {
+        id: "{{user.id}}",
+        name: "{{user.name}}",
+        description: "{{user.description}}",
+        example_dialog: "{{user.example_dialog}}",
+        entries: [],
+      };
+    }
+
+    // Render scenarios
+    const renderedScenarios = await Promise.all(
+      plotCard.props.scenarios.map(
+        async (scenario: { name: string; description: string }) => {
+          const renderedScenario = await TemplateRenderer.render(
+            scenario.description,
+            context,
+          );
+          return {
+            name: scenario.name,
+            description: renderedScenario,
+          };
+        },
+      ),
+    );
+    setRenderedScenarios(renderedScenarios);
+  }, [data, plotCard]);
+
+  useEffect(() => {
+    // Check scenario count
+    if (plotCardScenarioCount === 0) {
+      setIsOpenSelectScenarioModal(false);
+      return;
+    }
+
+    // Check message ids
+    if (messageCount > 0) {
+      setIsOpenSelectScenarioModal(false);
+      return;
+    }
+
+    // Show select scenario modal
+    setIsOpenSelectScenarioModal(true);
+  }, [plotCardScenarioCount, messageCount]);
+
   return (
-    <div className="mx-auto flex h-dvh max-w-5xl flex-1 flex-col items-center justify-end md:justify-center">
+    <div className="mx-auto flex h-dvh max-w-5xl flex-1 flex-col items-center justify-end pt-10 md:justify-center">
       <ChatMessageList
         data={data}
         streamingMessageId={streamingMessageId}
         streamingAgentName={streamingAgentName}
         streamingModelName={streamingModelName}
+        onEditMessage={handleEditMessage}
+        onDeleteMessage={handleDeleteMessage}
+        onRegenerateMessage={handleRegenerateMessage}
       />
 
       <ChatInput
@@ -445,6 +686,32 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
         onSendMessage={handleSendMessage}
         onAutoReply={handleAutoReply}
       />
+
+      {/* Select Scenario Modal - absolute on mobile (inside scroll area), fixed on desktop (full viewport) */}
+      {isOpenSelectScenarioModal && (
+        <div
+          className={cn(
+            "z-[100] overflow-y-auto bg-black/50 px-[16px] py-[16px]",
+            // Mobile: absolute positioning inside scroll area (respects header)
+            "absolute inset-0",
+            // Desktop: fixed positioning (full viewport overlay)
+            "md:fixed md:inset-0",
+          )}
+        >
+          <div className="flex min-h-full items-center justify-center">
+            <SelectScenarioDialog
+              onSkip={() => {
+                setIsOpenSelectScenarioModal(false);
+              }}
+              onAdd={handleAddScenario}
+              renderedScenarios={renderedScenarios}
+              onRenderScenarios={renderScenarios}
+              sessionId={data.id.toString()}
+              plotCardId={plotCardId}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

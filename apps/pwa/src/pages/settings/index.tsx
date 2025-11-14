@@ -120,7 +120,7 @@ export default function SettingsPage() {
     }
 
     try {
-      // Try to sign up with google
+      // Try to sign up with Discord
       setIsLoading(true);
 
       await signUp.authenticateWithRedirect({

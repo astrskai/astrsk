@@ -20,7 +20,7 @@ interface ScenariosGridProps {
  * Wrapper component that handles useAsset hook
  */
 interface ScenarioGridItemProps {
-  plot: PlotCard;
+  scenario: PlotCard;
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   onScenarioClick: (plotId: string) => void;
   onExport: (cardId: string, title: string) => (e: React.MouseEvent) => void;
@@ -32,35 +32,35 @@ interface ScenarioGridItemProps {
 }
 
 function ScenarioGridItem({
-  plot,
+  scenario,
   loading,
   onScenarioClick,
   onExport,
   onCopy,
   onDeleteClick,
 }: ScenarioGridItemProps) {
-  const [imageUrl] = useAsset(plot.props.iconAssetId);
-  const cardId = plot.id.toString();
+  const [imageUrl] = useAsset(scenario.props.iconAssetId);
+  const cardId = scenario.id.toString();
 
   const actions: CharacterAction[] = [
     {
       icon: Upload,
       label: `Export`,
-      onClick: onExport(cardId, plot.props.title),
+      onClick: onExport(cardId, scenario.props.title),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
       label: `Copy`,
-      onClick: onCopy(cardId, plot.props.title),
+      onClick: onCopy(cardId, scenario.props.title),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
       label: `Delete`,
-      onClick: onDeleteClick(cardId, plot.props.title),
+      onClick: onDeleteClick(cardId, scenario.props.title),
       disabled: loading.deleting,
       loading: loading.deleting,
     },
@@ -69,11 +69,11 @@ function ScenarioGridItem({
   return (
     <ScenarioPreview
       imageUrl={imageUrl}
-      title={plot.props.title}
-      summary={plot.props.cardSummary}
-      tags={plot.props.tags || []}
-      tokenCount={plot.props.tokenCount}
-      firstMessages={plot.props.scenarios?.length || 0}
+      title={scenario.props.title}
+      summary={scenario.props.cardSummary}
+      tags={scenario.props.tags || []}
+      tokenCount={scenario.props.tokenCount}
+      firstMessages={scenario.props.scenarios?.length || 0}
       onClick={() => onScenarioClick(cardId)}
       actions={actions}
       isShowActions={true}
@@ -142,22 +142,24 @@ export function ScenariosGrid({
           )}
 
           {/* Existing Scenarios */}
-          {scenarios.map((plot) => {
-            const cardId = plot.id.toString();
-            const loading = loadingStates[cardId] || {};
+          {scenarios
+            .filter((scenario) => scenario.id !== undefined)
+            .map((scenario) => {
+              const cardId = scenario.id.toString();
+              const loading = loadingStates[cardId] || {};
 
-            return (
-              <ScenarioGridItem
-                key={cardId}
-                plot={plot}
-                loading={loading}
-                onScenarioClick={handleScenarioClick}
-                onExport={handleExport}
-                onCopy={handleCopy}
-                onDeleteClick={handleDeleteClick}
-              />
-            );
-          })}
+              return (
+                <ScenarioGridItem
+                  key={cardId}
+                  scenario={scenario}
+                  loading={loading}
+                  onScenarioClick={handleScenarioClick}
+                  onExport={handleExport}
+                  onCopy={handleCopy}
+                  onDeleteClick={handleDeleteClick}
+                />
+              );
+            })}
         </div>
       </div>
 

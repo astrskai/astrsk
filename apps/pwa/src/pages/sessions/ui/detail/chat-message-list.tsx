@@ -13,6 +13,9 @@ interface ChatMessageListProps {
   streamingMessageId?: UniqueEntityID | null;
   streamingAgentName?: string;
   streamingModelName?: string;
+  onEditMessage?: (messageId: UniqueEntityID, content: string) => void;
+  onDeleteMessage?: (messageId: UniqueEntityID) => void;
+  onRegenerateMessage?: (messageId: UniqueEntityID) => void;
   className?: string;
 }
 
@@ -21,6 +24,9 @@ export default function ChatMessageList({
   streamingMessageId,
   streamingAgentName,
   streamingModelName,
+  onEditMessage,
+  onDeleteMessage,
+  onRegenerateMessage,
   className,
 }: ChatMessageListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -116,7 +122,11 @@ export default function ChatMessageList({
           {virtualItems.map((virtualItem) => {
             const messageId = data.turnIds[virtualItem.index];
             const isStreaming = streamingMessageId?.equals(messageId);
-            const isLastMessage = virtualItem.index === messageCount - 1;
+            // Check if this is the last message
+            const isLastMessage =
+              virtualItem.index === messageCount - 1 &&
+              messageCount > 0 &&
+              virtualItem.index !== 0;
 
             return (
               <div
@@ -133,6 +143,9 @@ export default function ChatMessageList({
                   streamingAgentName={streamingAgentName}
                   streamingModelName={streamingModelName}
                   isLastMessage={isLastMessage}
+                  onEdit={onEditMessage}
+                  onDelete={onDeleteMessage}
+                  onRegenerate={onRegenerateMessage}
                 />
               </div>
             );

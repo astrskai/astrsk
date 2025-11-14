@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Route } from "@/routes/_layout/sessions/$sessionId";
 import { sessionQueries } from "@/entities/session/api";
+import { flowQueries } from "@/entities/flow/api";
+import { DataStoreSchemaField } from "@/entities/flow/domain";
+
 import { useBackgroundStore } from "@/shared/stores/background-store";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { UniqueEntityID } from "@/shared/domain";
@@ -13,6 +16,8 @@ import {
   SessionHeader,
   SessionSettingsSidebar,
 } from "./ui/detail";
+import { turnQueries } from "@/entities/turn/api/turn-queries";
+import { DataStoreSavedField } from "@/entities/turn/domain/option";
 
 export default function SessionDetailPage() {
   const [isOpenDataSidebar, setIsOpenDataSidebar] = useState<boolean>(false);
@@ -23,6 +28,16 @@ export default function SessionDetailPage() {
 
   const { data: session, isLoading } = useQuery(
     sessionQueries.detail(sessionIdEntity ?? undefined),
+  );
+
+  const { data: flow } = useQuery(
+    flowQueries.detail(session?.flowId?.toString() ?? ""),
+  );
+
+  const { data: lastTurn } = useQuery(
+    turnQueries.detail(
+      session?.turnIds[session?.turnIds.length - 1] ?? undefined,
+    ),
   );
 
   // Background
@@ -37,6 +52,57 @@ export default function SessionDetailPage() {
 
   const isLoadingBackground = backgroundAsset === "/img/skeleton.svg";
   const shouldShowBackground = backgroundSrc && !isLoadingBackground;
+
+  const isInitialDataStore = useMemo(() => {
+    if (!session || session.turnIds.length === 0) return true;
+
+    // Only scenario message exists if:
+    // 1. There's only one message
+    // 2. That message is a scenario (no characterCardId and no characterName)
+    if (session.turnIds.length === 1 && lastTurn) {
+      const isScenarioMessage =
+        !lastTurn.characterCardId && !lastTurn.characterName;
+      return isScenarioMessage;
+    }
+
+    // Multiple messages mean conversation has started
+    return false;
+  }, [session, lastTurn]);
+
+  const lastTurnDataStore: Record<string, string> = useMemo(() => {
+    if (!lastTurn) {
+      return {};
+    }
+    return Object.fromEntries(
+      lastTurn.dataStore.map((field: DataStoreSavedField) => [
+        field.name,
+        field.value,
+      ]),
+    );
+  }, [lastTurn]);
+
+  // Sort data schema fields according to dataSchemaOrder
+  const sortedDataSchemaFields = useMemo(() => {
+    const fields = flow?.props.dataStoreSchema?.fields || [];
+    const dataSchemaOrder = session?.dataSchemaOrder || [];
+
+    return [
+      // 1. Fields in dataSchemaOrder come first, in order
+      ...dataSchemaOrder
+        .map((name: string) =>
+          fields.find((f: DataStoreSchemaField) => f.name === name),
+        )
+        .filter(
+          (f: DataStoreSchemaField | undefined): f is NonNullable<typeof f> =>
+            f !== undefined,
+        ),
+
+      // 2. Fields not in dataSchemaOrder come after, in original order
+      ...fields.filter(
+        (f: DataStoreSchemaField) => !dataSchemaOrder.includes(f.name),
+      ),
+    ];
+  }, [flow?.props.dataStoreSchema?.fields, session?.dataSchemaOrder]);
 
   return isLoading ? (
     <Loading />
@@ -57,7 +123,12 @@ export default function SessionDetailPage() {
       />
 
       <div className="flex flex-1">
-        <SessionDataSidebar isOpen={isOpenDataSidebar} />
+        <SessionDataSidebar
+          isOpen={isOpenDataSidebar}
+          sortedDataSchemaFields={sortedDataSchemaFields}
+          isInitialDataStore={isInitialDataStore}
+          lastTurnDataStore={lastTurnDataStore}
+        />
 
         <ChatMainArea data={session} />
       </div>
