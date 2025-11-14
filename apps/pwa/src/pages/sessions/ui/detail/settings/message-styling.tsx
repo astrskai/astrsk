@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import { FormProvider, useForm, Controller } from "react-hook-form";
+import { toast } from "sonner";
+
+import { useSaveSession, fetchSession } from "@/entities/session/api";
 import { ChatStyles } from "@/entities/session/domain/chat-styles";
 import { ColorPicker } from "@/shared/ui";
 import { UniqueEntityID } from "@/shared/domain";
-import { useSaveSession, fetchSession } from "@/entities/session/api";
 
 interface MessageStylingProps {
   sessionId: UniqueEntityID;
@@ -116,7 +118,10 @@ export default function MessageStyling({
           session.update({ chatStyles: value.chatStyles });
           await saveSessionMutation.mutateAsync({ session });
         } catch (error) {
-          console.error("Failed to save chat styles:", error);
+          toast.error("Failed to save chat styles", {
+            description:
+              error instanceof Error ? error.message : "Unknown error",
+          });
           // Rollback on error
           methods.reset({ chatStyles });
         }
