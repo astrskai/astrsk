@@ -1,12 +1,24 @@
 import { cn } from "@/shared/lib";
+import { DataStoreSchemaField } from "@/entities/flow/domain";
 
 interface SessionDataSidebarProps {
   isOpen: boolean;
+  sortedDataSchemaFields: DataStoreSchemaField[];
+  isInitialDataStore: boolean;
+  lastTurnDataStore: Record<string, string>;
 }
 
 export default function SessionDataSidebar({
   isOpen,
+  sortedDataSchemaFields,
+  isInitialDataStore,
+  lastTurnDataStore,
 }: SessionDataSidebarProps) {
+  console.log(
+    "sortedDataSchemaFields",
+    sortedDataSchemaFields,
+    isInitialDataStore,
+  );
   return (
     <aside
       className={cn(
@@ -21,10 +33,23 @@ export default function SessionDataSidebar({
           : "md:max-w-0 md:overflow-hidden md:opacity-0",
       )}
     >
-      <div className="p-4">
-        <div className="rounded-md border border-gray-50/20 bg-gray-50/20 p-4 backdrop-blur-lg">
-          session-data-sidebar
-        </div>
+      <div className="flex flex-col gap-2 p-4">
+        {sortedDataSchemaFields.map((field, index) => (
+          <div
+            key={`${field.name}-${index}`}
+            className="flex w-fit flex-col items-center justify-center rounded-md border border-gray-50/20 bg-gray-50/20 p-4 backdrop-blur-lg"
+          >
+            <div className="text-sm">{field.name}</div>
+
+            <div className="text-md font-semibold">
+              {isInitialDataStore
+                ? field.initialValue
+                : field.name in lastTurnDataStore
+                  ? lastTurnDataStore[field.name]
+                  : "--"}
+            </div>
+          </div>
+        ))}
       </div>
     </aside>
   );

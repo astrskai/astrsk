@@ -39,7 +39,16 @@ export default function SessionSettingsSidebar({
         </button>
       </div>
 
-      <div className="p-4">session-settings-sidebar</div>
+      <div className="p-4">
+        <ul>
+          <li>AI Characters</li>
+          <li>User Character</li>
+          <li>Scenario</li>
+          <li>Workflow</li>
+          <li>Background image</li>
+          <li>Message styling</li>
+        </ul>
+      </div>
     </aside>
   );
 }

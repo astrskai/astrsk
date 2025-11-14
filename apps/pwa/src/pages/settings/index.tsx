@@ -120,7 +120,7 @@ export default function SettingsPage() {
     }
 
     try {
-      // Try to sign up with google
+      // Try to sign up with Discord
       setIsLoading(true);
 
       await signUp.authenticateWithRedirect({
@@ -230,11 +230,11 @@ export default function SettingsPage() {
                   ))}
                 </Authenticated>
                 <Unauthenticated>
-                  <SettingsMenuItemComponent
+                  {/* <SettingsMenuItemComponent
                     label="Sign in"
                     onClick={signUpWithDiscord}
                     showChevron={true}
-                  />
+                  /> */}
                   <SettingsMenuItemComponent
                     label="Providers"
                     onClick={() => navigate({ to: "/settings/providers" })}

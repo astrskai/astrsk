@@ -55,19 +55,19 @@ const ChatMessage = ({
   const [editedContent, setEditedContent] = useState<string>("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isShowDataStore, setIsShowDataStore] = useState<boolean>(false);
-  const updateTurnMutation = useUpdateTurn();
+
   const { data: message } = useQuery(turnQueries.detail(messageId));
 
   const [character] = useCard<CharacterCard>(message?.characterCardId);
   const [characterImageUrl] = useAsset(character?.props.iconAssetId);
+
+  const updateTurnMutation = useUpdateTurn();
 
   const handleEdit = () => {
     setEditedContent(content ?? "");
 
     setIsEditing(true);
   };
-
-  const selectedOption = message?.options[message.selectedOptionIndex];
 
   const handleEditDone = useCallback(async () => {
     await onEdit?.(messageId, editedContent);
@@ -101,6 +101,12 @@ const ChatMessage = ({
   );
 
   const sortedDataStoreFields = useMemo(() => {
+    if (!message) return undefined;
+
+    const selectedOptionIndex = message.selectedOptionIndex;
+
+    const selectedOption = message.options[selectedOptionIndex];
+
     const fields = selectedOption?.dataStore;
     if (!fields) return undefined;
 
@@ -118,16 +124,18 @@ const ChatMessage = ({
       // Fields not in dataSchemaOrder come after, in original order
       ...fields.filter((f: DataStoreSavedField) => !order.includes(f.name)),
     ];
-  }, [dataSchemaOrder, selectedOption?.dataStore]);
+  }, [dataSchemaOrder, message]);
 
   if (!message) return null;
 
-  const content = selectedOption?.content;
+  const selectedOption = message.options[message.selectedOptionIndex];
+
+  const content = selectedOption.content;
   const language = translationConfig?.displayLanguage ?? "none";
-  const translation = selectedOption?.translations.get(language);
+  const translation = selectedOption.translations.get(language);
 
   const isUser = userCharacterId
-    ? userCharacterId.equals(message?.characterCardId)
+    ? userCharacterId.equals(message.characterCardId)
     : typeof message.characterCardId === "undefined";
 
   return (
