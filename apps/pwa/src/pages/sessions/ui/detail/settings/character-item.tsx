@@ -9,8 +9,10 @@ interface CharacterItemProps {
 
 export default function CharacterItem({ characterId }: CharacterItemProps) {
   const [character] = useCard<CharacterCard>(characterId);
+  const iconAssetId = character?.props.iconAssetId ?? undefined;
+  const [imageUrl] = useAsset(iconAssetId);
 
-  const [imageUrl] = useAsset(character.props.iconAssetId);
+  if (!character) return null;
 
   return (
     <div className="flex h-[64px] overflow-hidden rounded-lg border border-gray-500">

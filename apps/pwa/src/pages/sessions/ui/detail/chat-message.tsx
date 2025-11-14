@@ -213,10 +213,12 @@ const ChatMessage = ({
                         const textStyle = isUser
                           ? chatStyles?.user?.text
                           : chatStyles?.ai?.text;
+                        const fallbackColor = isUser ? "#000000" : "#ffffff";
+
                         return (
                           <p
                             style={{
-                              color: textStyle?.base?.color ?? "#000000",
+                              color: textStyle?.base?.color ?? fallbackColor,
                               fontSize: textStyle?.base?.fontSize
                                 ? `${textStyle.base.fontSize}px`
                                 : undefined,
@@ -230,10 +232,12 @@ const ChatMessage = ({
                         const textStyle = isUser
                           ? chatStyles?.user?.text
                           : chatStyles?.ai?.text;
+                        const fallbackColor = isUser ? "#000000" : "#ffffff";
+
                         return (
                           <strong
                             style={{
-                              color: textStyle?.bold?.color ?? "#000000",
+                              color: textStyle?.bold?.color ?? fallbackColor,
                               fontSize: textStyle?.bold?.fontSize
                                 ? `${textStyle.bold.fontSize}px`
                                 : undefined,
@@ -247,10 +251,12 @@ const ChatMessage = ({
                         const textStyle = isUser
                           ? chatStyles?.user?.text
                           : chatStyles?.ai?.text;
+                        const fallbackColor = isUser ? "#000000" : "#ffffff";
+
                         return (
                           <em
                             style={{
-                              color: textStyle?.italic?.color ?? "#000000",
+                              color: textStyle?.italic?.color ?? fallbackColor,
                               fontSize: textStyle?.italic?.fontSize
                                 ? `${textStyle.italic.fontSize}px`
                                 : undefined,

@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { FormProvider, useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
+import { useDebouncedCallback } from "use-debounce";
 
 import { useSaveSession, fetchSession } from "@/entities/session/api";
 import { ChatStyles } from "@/entities/session/domain/chat-styles";
@@ -95,6 +96,12 @@ export default function MessageStyling({
 }: MessageStylingProps) {
   const saveSessionMutation = useSaveSession();
 
+  // Track last successfully saved state for error rollback
+  const lastSavedStateRef = useRef<ChatStyles | undefined>(chatStyles);
+
+  // Track if this is the initial mount to prevent auto-save on mount
+  const isInitialMountRef = useRef(true);
+
   // Use react-hook-form for state management
   const methods = useForm<MessageStylingFormData>({
     defaultValues: {
@@ -106,29 +113,52 @@ export default function MessageStyling({
   useEffect(() => {
     if (chatStyles) {
       methods.reset({ chatStyles });
+      lastSavedStateRef.current = chatStyles;
     }
   }, [chatStyles, methods]);
 
+  // Debounced save handler (500ms delay)
+  const debouncedSave = useDebouncedCallback(
+    async (updatedStyles: ChatStyles) => {
+      try {
+        const session = await fetchSession(sessionId);
+        session.update({ chatStyles: updatedStyles });
+        await saveSessionMutation.mutateAsync({ session });
+        // Update last saved state on success
+        lastSavedStateRef.current = updatedStyles;
+      } catch (error) {
+        toast.error("Failed to save chat styles", {
+          description:
+            error instanceof Error ? error.message : "Unknown error",
+        });
+        // Rollback to last successfully saved state without triggering watch
+        if (lastSavedStateRef.current) {
+          methods.reset(
+            { chatStyles: lastSavedStateRef.current },
+            { keepDefaultValues: false },
+          );
+        }
+      }
+    },
+    500, // 500ms debounce
+  );
+
   // Auto-save on form changes
   useEffect(() => {
-    const subscription = methods.watch(async (value) => {
-      if (value.chatStyles) {
-        try {
-          const session = await fetchSession(sessionId);
-          session.update({ chatStyles: value.chatStyles });
-          await saveSessionMutation.mutateAsync({ session });
-        } catch (error) {
-          toast.error("Failed to save chat styles", {
-            description:
-              error instanceof Error ? error.message : "Unknown error",
-          });
-          // Rollback on error
-          methods.reset({ chatStyles });
-        }
+    const subscription = methods.watch((value) => {
+      // Skip auto-save on initial mount
+      if (isInitialMountRef.current) {
+        isInitialMountRef.current = false;
+        return;
+      }
+
+      // Only save if form has been touched (user made changes)
+      if (value.chatStyles && methods.formState.isDirty) {
+        debouncedSave(value.chatStyles);
       }
     });
     return () => subscription.unsubscribe();
-  }, [methods, sessionId, saveSessionMutation, chatStyles]);
+  }, [methods, debouncedSave]);
 
   return (
     <FormProvider {...methods}>
