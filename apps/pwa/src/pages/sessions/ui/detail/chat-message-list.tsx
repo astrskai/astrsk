@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import delay from "lodash-es/delay";
 // import { ArrowDown } from "lucide-react";
 
-import delay from "lodash-es/delay";
 import { Session } from "@/entities/session/domain/session";
+import { ChatStyles } from "@/entities/session/domain/chat-styles";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";
 import ChatMessage from "./chat-message";
@@ -13,6 +14,7 @@ interface ChatMessageListProps {
   streamingMessageId?: UniqueEntityID | null;
   streamingAgentName?: string;
   streamingModelName?: string;
+  chatStyles?: ChatStyles;
   onEditMessage?: (messageId: UniqueEntityID, content: string) => void;
   onDeleteMessage?: (messageId: UniqueEntityID) => void;
   onRegenerateMessage?: (messageId: UniqueEntityID) => void;
@@ -24,6 +26,7 @@ export default function ChatMessageList({
   streamingMessageId,
   streamingAgentName,
   streamingModelName,
+  chatStyles,
   onEditMessage,
   onDeleteMessage,
   onRegenerateMessage,
@@ -143,6 +146,7 @@ export default function ChatMessageList({
                   streamingAgentName={streamingAgentName}
                   streamingModelName={streamingModelName}
                   isLastMessage={isLastMessage}
+                  chatStyles={chatStyles}
                   onEdit={onEditMessage}
                   onDelete={onDeleteMessage}
                   onRegenerate={onRegenerateMessage}
