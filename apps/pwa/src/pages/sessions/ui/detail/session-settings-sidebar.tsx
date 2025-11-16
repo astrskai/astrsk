@@ -68,7 +68,7 @@ const SessionSettingsSidebar = ({
   }, [background, backgroundAsset]);
 
   const handleChangeBackground = useCallback(
-    async (backgroundId: UniqueEntityID) => {
+    async (backgroundId: UniqueEntityID | undefined) => {
       try {
         // Fetch latest session data
         const latestSession = await fetchSession(session.id);

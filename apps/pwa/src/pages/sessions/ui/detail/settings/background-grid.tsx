@@ -11,7 +11,7 @@ import { Background } from "@/entities/background/domain/background";
 
 interface BackgroundGridProps {
   currentBackgroundId?: UniqueEntityID;
-  onSelect: (backgroundId: UniqueEntityID) => void;
+  onSelect: (backgroundId: UniqueEntityID | undefined) => void;
 }
 
 interface BackgroundItemProps {
@@ -89,31 +89,88 @@ export default function BackgroundGrid({
 }: BackgroundGridProps) {
   const { defaultBackgrounds, backgrounds } = useBackgroundStore();
 
-  // Combine default + user backgrounds
-  const allBackgrounds = useMemo(() => {
-    return [...defaultBackgrounds, ...backgrounds];
-  }, [defaultBackgrounds, backgrounds]);
+  const hasUserBackgrounds = backgrounds.length > 0;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-gray-200">
           Select Background
         </h4>
         <span className="text-xs text-gray-400">
-          {allBackgrounds.length} backgrounds
+          {defaultBackgrounds.length + backgrounds.length} backgrounds
         </span>
       </div>
 
-      <div className="custom-scrollbar grid max-h-96 grid-cols-3 gap-2 overflow-y-auto">
-        {allBackgrounds.map((background) => (
-          <BackgroundItem
-            key={background.id.toString()}
-            background={background}
-            isSelected={currentBackgroundId?.equals(background.id) ?? false}
-            onSelect={onSelect}
-          />
-        ))}
+      <div className="custom-scrollbar max-h-96 space-y-4 overflow-y-auto">
+        {/* User added backgrounds */}
+        {hasUserBackgrounds && (
+          <div className="space-y-2">
+            <h5 className="text-xs font-medium text-gray-400">
+              User added backgrounds
+            </h5>
+            <div className="grid grid-cols-3 gap-2">
+              {backgrounds.map((background) => (
+                <BackgroundItem
+                  key={background.id.toString()}
+                  background={background}
+                  isSelected={
+                    currentBackgroundId?.equals(background.id) ?? false
+                  }
+                  onSelect={onSelect}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* astrsk.ai provided backgrounds */}
+        <div className="space-y-2">
+          <h5 className="text-xs font-medium text-gray-400">
+            astrsk.ai provided backgrounds
+          </h5>
+          <div className="grid grid-cols-3 gap-2">
+            {/* No background option */}
+            <button
+              type="button"
+              onClick={() => onSelect(undefined)}
+              className={cn(
+                "relative aspect-video overflow-hidden rounded-lg border-2 transition-all",
+                "hover:border-blue-500 hover:brightness-110",
+                !currentBackgroundId ? "border-blue-500" : "border-gray-700",
+              )}
+            >
+              <div className="flex h-full w-full items-center justify-center bg-gray-900">
+                <p className="text-xs text-gray-400">No background</p>
+              </div>
+              {/* Selected indicator */}
+              {!currentBackgroundId && (
+                <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
+                  <svg
+                    className="h-4 w-4 text-white"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
+            </button>
+
+            {defaultBackgrounds.map((background) => (
+              <BackgroundItem
+                key={background.id.toString()}
+                background={background}
+                isSelected={currentBackgroundId?.equals(background.id) ?? false}
+                onSelect={onSelect}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
