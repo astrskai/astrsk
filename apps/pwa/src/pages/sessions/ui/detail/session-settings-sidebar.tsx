@@ -42,8 +42,10 @@ interface SessionSettingsSidebarProps {
 
 const ScenarioPreviewItem = ({
   scenarioId,
+  onClick,
 }: {
   scenarioId: UniqueEntityID;
+  onClick?: () => void;
 }) => {
   const [scenario] = useCard<PlotCard>(scenarioId);
   const [imageUrl] = useAsset(scenario.props.iconAssetId);
@@ -56,6 +58,7 @@ const ScenarioPreviewItem = ({
       tokenCount={scenario.props.tokenCount}
       firstMessages={scenario.props.scenarios?.length || 0}
       className="min-h-[200px]"
+      onClick={onClick}
     />
   );
 };
@@ -267,10 +270,16 @@ const SessionSettingsSidebar = ({
           <h3 className="font-semibold">AI Characters</h3>
           <div className="space-y-2">
             {session.aiCharacterCardIds.length > 0 ? (
-              session.aiCharacterCardIds.map((characterId) => (
+              session.aiCharacterCardIds.map((characterId, index) => (
                 <CharacterItem
-                  key={characterId.toString()}
+                  key={`ai-character-${index}-${characterId.toString()}`}
                   characterId={characterId}
+                  onClick={() => {
+                    navigate({
+                      to: "/assets/characters/$characterId",
+                      params: { characterId: characterId.toString() },
+                    });
+                  }}
                 />
               ))
             ) : (
@@ -286,8 +295,17 @@ const SessionSettingsSidebar = ({
           <div>
             {session.userCharacterCardId ? (
               <CharacterItem
-                key={session.userCharacterCardId.toString()}
+                key={`user-character-${session.userCharacterCardId.toString()}`}
                 characterId={session.userCharacterCardId}
+                onClick={() => {
+                  navigate({
+                    to: "/assets/characters/$characterId",
+                    params: {
+                      characterId:
+                        session.userCharacterCardId?.toString() ?? "",
+                    },
+                  });
+                }}
               />
             ) : (
               <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
@@ -301,7 +319,17 @@ const SessionSettingsSidebar = ({
           <h3 className="font-semibold">Scenario</h3>
           <div>
             {session.plotCard ? (
-              <ScenarioPreviewItem scenarioId={session.plotCard.id} />
+              <ScenarioPreviewItem
+                scenarioId={session.plotCard.id}
+                onClick={() => {
+                  navigate({
+                    to: "/assets/scenarios/$scenarioId",
+                    params: {
+                      scenarioId: session.plotCard?.id.toString() ?? "",
+                    },
+                  });
+                }}
+              />
             ) : (
               <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
                 <p className="text-sm text-gray-400">No scenario</p>
@@ -321,6 +349,12 @@ const SessionSettingsSidebar = ({
                 description={flow?.props.description}
                 nodeCount={flow?.props.nodes.length}
                 className="min-h-[140px]"
+                onClick={() => {
+                  navigate({
+                    to: "/assets/workflows/$workflowId",
+                    params: { workflowId: flow?.id.toString() },
+                  });
+                }}
               />
             )}
           </div>
@@ -335,7 +369,7 @@ const SessionSettingsSidebar = ({
             align="start"
             className="w-[480px]"
             trigger={
-              <div className="cursor-pointer rounded-lg transition-opacity hover:opacity-80">
+              <div className="cursor-pointer rounded-lg transition-opacity hover:brightness-110">
                 {backgroundImageSrc ? (
                   <img
                     className="h-32 w-full rounded-lg object-cover"

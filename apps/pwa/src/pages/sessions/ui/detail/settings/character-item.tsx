@@ -5,9 +5,13 @@ import { useAsset } from "@/shared/hooks/use-asset";
 
 interface CharacterItemProps {
   characterId: UniqueEntityID;
+  onClick?: () => void;
 }
 
-export default function CharacterItem({ characterId }: CharacterItemProps) {
+export default function CharacterItem({
+  characterId,
+  onClick,
+}: CharacterItemProps) {
   const [character] = useCard<CharacterCard>(characterId);
   const iconAssetId = character?.props.iconAssetId ?? undefined;
   const [imageUrl] = useAsset(iconAssetId);
@@ -15,7 +19,10 @@ export default function CharacterItem({ characterId }: CharacterItemProps) {
   if (!character) return null;
 
   return (
-    <div className="flex h-[64px] overflow-hidden rounded-lg border border-gray-500">
+    <div
+      className="flex h-[64px] cursor-pointer overflow-hidden rounded-lg border border-gray-500 hover:border-gray-300"
+      onClick={onClick}
+    >
       <img
         className="w-[25%] object-cover"
         src={imageUrl ?? "/img/placeholder/character-card-image.png"}
