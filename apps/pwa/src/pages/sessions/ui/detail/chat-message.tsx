@@ -1,5 +1,4 @@
 import { memo, useCallback, useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
   Trash2,
   Pencil,
@@ -10,7 +9,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
-import { fetchTurn, turnQueries } from "@/entities/turn/api/turn-queries";
+import { fetchTurn } from "@/entities/turn/api/turn-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { UniqueEntityID } from "@/shared/domain";
 import { useCard } from "@/shared/hooks/use-card";
@@ -26,9 +25,10 @@ import { TextareaAutosize } from "@mui/material";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { useUpdateTurn } from "@/entities/turn/api/turn-queries";
 import { ChatStyles } from "@/entities/session/domain/chat-styles";
+import { Turn } from "@/entities/turn/domain/turn";
 
 interface ChatMessageProps {
-  messageId: UniqueEntityID;
+  message: Turn;
   userCharacterId?: UniqueEntityID;
   translationConfig?: TranslationConfig;
   isStreaming?: boolean;
@@ -43,7 +43,7 @@ interface ChatMessageProps {
 }
 
 const ChatMessage = ({
-  messageId,
+  message,
   userCharacterId,
   translationConfig,
   isStreaming,
@@ -60,8 +60,6 @@ const ChatMessage = ({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isShowDataStore, setIsShowDataStore] = useState<boolean>(false);
 
-  const { data: message } = useQuery(turnQueries.detail(messageId));
-
   const [character] = useCard<CharacterCard>(message?.characterCardId);
   const [characterImageUrl] = useAsset(character?.props.iconAssetId);
 
@@ -74,10 +72,10 @@ const ChatMessage = ({
   };
 
   const handleEditDone = useCallback(async () => {
-    await onEdit?.(messageId, editedContent);
+    await onEdit?.(message.id, editedContent);
 
     setIsEditing(false);
-  }, [editedContent, messageId, onEdit]);
+  }, [editedContent, message.id, onEdit]);
 
   const handleShowDataStore = useCallback(() => {
     setIsShowDataStore((prev) => !prev);
@@ -377,7 +375,7 @@ const ChatMessage = ({
                       : "hover:text-gray-200/70",
                   )}
                   aria-label="Delete"
-                  onClick={() => onDelete?.(messageId)}
+                  onClick={() => onDelete?.(message.id)}
                 >
                   <Trash2 className="h-5 w-5" />
                 </button>
@@ -405,7 +403,7 @@ const ChatMessage = ({
                       // Mobile: larger touch target
                       "max-md:p-[4px]",
                     )}
-                    onClick={() => handleSelectOption(messageId, "prev")}
+                    onClick={() => handleSelectOption(message.id, "prev")}
                   >
                     <ChevronLeft
                       className={cn(
@@ -431,7 +429,7 @@ const ChatMessage = ({
                       // Mobile: larger touch target
                       "max-md:p-[4px]",
                     )}
-                    onClick={() => handleSelectOption(messageId, "next")}
+                    onClick={() => handleSelectOption(message.id, "next")}
                   >
                     <ChevronRight
                       className={cn(
@@ -452,7 +450,7 @@ const ChatMessage = ({
                       : "hover:text-gray-200/70",
                   )}
                   aria-label="Regenerate"
-                  onClick={() => onRegenerate?.(messageId)}
+                  onClick={() => onRegenerate?.(message.id)}
                 >
                   <RefreshCcw className="h-5 w-5" />
                 </button>

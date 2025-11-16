@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useQuery } from "@tanstack/react-query";
+import {
+  useVirtualizer,
+  VirtualItem,
+  Virtualizer,
+} from "@tanstack/react-virtual";
 import delay from "lodash-es/delay";
 // import { ArrowDown } from "lucide-react";
 
@@ -8,6 +13,8 @@ import { ChatStyles } from "@/entities/session/domain/chat-styles";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";
 import ChatMessage from "./chat-message";
+import { turnQueries } from "@/entities/turn/api/turn-queries";
+import ChatScenarioMessage from "./chat-scenario-message";
 
 interface ChatMessageListProps {
   data: Session;
@@ -20,6 +27,80 @@ interface ChatMessageListProps {
   onRegenerateMessage?: (messageId: UniqueEntityID) => void;
   className?: string;
 }
+
+interface RenderMessageProps {
+  session: Session;
+  messageId: UniqueEntityID;
+  virtualItem: VirtualItem;
+  virtualizer: Virtualizer<HTMLDivElement, Element>;
+  messageCount: number;
+  streamingMessageId: UniqueEntityID | null;
+  streamingAgentName: string | undefined;
+  streamingModelName: string | undefined;
+  chatStyles?: ChatStyles;
+  onEditMessage?: (messageId: UniqueEntityID, content: string) => void;
+  onDeleteMessage?: (messageId: UniqueEntityID) => void;
+  onRegenerateMessage?: (messageId: UniqueEntityID) => void;
+}
+
+const RenderMessage = ({
+  session,
+  messageId,
+  virtualItem,
+  virtualizer,
+  messageCount,
+  streamingMessageId,
+  streamingAgentName,
+  streamingModelName,
+  chatStyles,
+  onEditMessage,
+  onDeleteMessage,
+  onRegenerateMessage,
+}: RenderMessageProps) => {
+  const { data: message } = useQuery(turnQueries.detail(messageId));
+
+  const isStreaming = streamingMessageId?.equals(messageId);
+
+  const isLastMessage =
+    virtualItem.index === messageCount - 1 &&
+    messageCount > 0 &&
+    virtualItem.index !== 0;
+
+  if (
+    typeof message.characterCardId === "undefined" &&
+    typeof message.characterName === "undefined"
+  )
+    return (
+      <ChatScenarioMessage
+        content={message.content}
+        onEdit={(content) => onEditMessage?.(messageId, content)}
+        onDelete={() => onDeleteMessage?.(messageId)}
+      />
+    );
+
+  return (
+    <div
+      key={virtualItem.key}
+      data-index={virtualItem.index}
+      ref={virtualizer.measureElement}
+      style={{ paddingBottom: 4 }}
+    >
+      <ChatMessage
+        message={message}
+        userCharacterId={session.userCharacterCardId}
+        translationConfig={session.translation}
+        isStreaming={isStreaming}
+        streamingAgentName={streamingAgentName}
+        streamingModelName={streamingModelName}
+        isLastMessage={isLastMessage}
+        chatStyles={chatStyles}
+        onEdit={onEditMessage}
+        onDelete={onDeleteMessage}
+        onRegenerate={onRegenerateMessage}
+      />
+    </div>
+  );
+};
 
 export default function ChatMessageList({
   data,
@@ -35,15 +116,14 @@ export default function ChatMessageList({
   const parentRef = useRef<HTMLDivElement>(null);
   const messageCount = data.turnIds.length;
 
-  // Virtualizer 설정
+  // Virtualizer
   const virtualizer = useVirtualizer({
     count: messageCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 120, // 메시지 평균 높이
-    overscan: 5, // 버퍼: 위아래 5개씩 더 렌더링
+    estimateSize: () => 120,
+    overscan: 5,
   });
 
-  // 자동 스크롤 (사용자가 맨 아래에 있을 때만)
   const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
 
   const scrollToBottom = useCallback(
@@ -72,14 +152,12 @@ export default function ChatMessageList({
     return () => element?.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 새 메시지 추가 시 자동 스크롤 (맨 아래에 있을 때만)
   useEffect(() => {
     if (isAtBottom && messageCount > 0) {
       scrollToBottom(300);
     }
   }, [messageCount, isAtBottom, scrollToBottom]);
 
-  // 초기 로드 시 맨 아래로 스크롤 (최초 1회만)
   const hasInitialScrolled = useRef(false);
 
   useEffect(() => {
@@ -89,9 +167,9 @@ export default function ChatMessageList({
     }
   }, [messageCount, scrollToBottom]);
 
-  const handleScrollToBottom = () => {
-    scrollToBottom();
-  };
+  // const handleScrollToBottom = () => {
+  //   scrollToBottom();
+  // };
 
   const virtualItems = virtualizer.getVirtualItems();
 
@@ -124,12 +202,6 @@ export default function ChatMessageList({
         >
           {virtualItems.map((virtualItem) => {
             const messageId = data.turnIds[virtualItem.index];
-            const isStreaming = streamingMessageId?.equals(messageId);
-            // Check if this is the last message
-            const isLastMessage =
-              virtualItem.index === messageCount - 1 &&
-              messageCount > 0 &&
-              virtualItem.index !== 0;
 
             return (
               <div
@@ -138,18 +210,19 @@ export default function ChatMessageList({
                 ref={virtualizer.measureElement}
                 style={{ paddingBottom: 4 }}
               >
-                <ChatMessage
+                <RenderMessage
+                  session={data}
                   messageId={messageId}
-                  userCharacterId={data.userCharacterCardId}
-                  translationConfig={data.translation}
-                  isStreaming={isStreaming}
+                  virtualItem={virtualItem}
+                  virtualizer={virtualizer}
+                  messageCount={messageCount}
+                  streamingMessageId={streamingMessageId ?? null}
                   streamingAgentName={streamingAgentName}
                   streamingModelName={streamingModelName}
-                  isLastMessage={isLastMessage}
                   chatStyles={chatStyles}
-                  onEdit={onEditMessage}
-                  onDelete={onDeleteMessage}
-                  onRegenerate={onRegenerateMessage}
+                  onEditMessage={onEditMessage}
+                  onDeleteMessage={onDeleteMessage}
+                  onRegenerateMessage={onRegenerateMessage}
                 />
               </div>
             );
