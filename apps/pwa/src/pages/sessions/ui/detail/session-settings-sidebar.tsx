@@ -106,40 +106,54 @@ export default function SessionSettingsSidebar({
 
       <div className="space-y-4 p-4 [&>section]:flex [&>section]:flex-col [&>section]:gap-2">
         <section>
-          <h3>AI Characters</h3>
+          <h3 className="font-semibold">AI Characters</h3>
           <div className="space-y-2">
-            {session.aiCharacterCardIds.map((characterId) => (
-              <CharacterItem
-                key={characterId.toString()}
-                characterId={characterId}
-              />
-            ))}
+            {session.aiCharacterCardIds.length > 0 ? (
+              session.aiCharacterCardIds.map((characterId) => (
+                <CharacterItem
+                  key={characterId.toString()}
+                  characterId={characterId}
+                />
+              ))
+            ) : (
+              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
+                <p className="text-sm text-gray-400">No AI characters</p>
+              </div>
+            )}
           </div>
         </section>
 
         <section>
-          <h3>User Character</h3>
+          <h3 className="font-semibold">User Character</h3>
           <div>
-            {session.userCharacterCardId && (
+            {session.userCharacterCardId ? (
               <CharacterItem
                 key={session.userCharacterCardId.toString()}
                 characterId={session.userCharacterCardId}
               />
+            ) : (
+              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
+                <p className="text-sm text-gray-400">No user character</p>
+              </div>
             )}
           </div>
         </section>
 
         <section>
-          <h3>Scenario</h3>
+          <h3 className="font-semibold">Scenario</h3>
           <div>
-            {session.plotCard && (
+            {session.plotCard ? (
               <ScenarioPreviewItem scenarioId={session.plotCard.id} />
+            ) : (
+              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
+                <p className="text-sm text-gray-400">No scenario</p>
+              </div>
             )}
           </div>
         </section>
 
         <section>
-          <h3>Workflow</h3>
+          <h3 className="font-semibold">Workflow</h3>
           <div>
             {isLoadingFlow ? (
               <Loading size="sm" />
@@ -155,7 +169,7 @@ export default function SessionSettingsSidebar({
         </section>
 
         <section>
-          <h3>Background image</h3>
+          <h3 className="font-semibold">Background image</h3>
           <div>
             {backgroundImageSrc ? (
               <img
@@ -172,7 +186,7 @@ export default function SessionSettingsSidebar({
         </section>
 
         <section>
-          <h3>Message styling</h3>
+          <h3 className="font-semibold">Message styling</h3>
 
           <MessageStyling
             sessionId={session.id}

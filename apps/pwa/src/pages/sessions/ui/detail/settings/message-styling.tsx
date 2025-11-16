@@ -76,6 +76,7 @@ const ColorGrid = ({
                     }}
                     className="[&>div]:first:border-1 [&>div]:first:border-gray-700"
                     orientation="horizontal"
+                    isShowValue={false}
                   />
                 )}
               />
@@ -128,8 +129,7 @@ export default function MessageStyling({
         lastSavedStateRef.current = updatedStyles;
       } catch (error) {
         toast.error("Failed to save chat styles", {
-          description:
-            error instanceof Error ? error.message : "Unknown error",
+          description: error instanceof Error ? error.message : "Unknown error",
         });
         // Rollback to last successfully saved state without triggering watch
         if (lastSavedStateRef.current) {

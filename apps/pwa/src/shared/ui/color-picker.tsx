@@ -20,6 +20,7 @@ interface ColorPickerProps {
   onChange: (value: string | null) => void;
   onBlur?: () => void;
   orientation?: "horizontal" | "vertical";
+  isShowValue?: boolean;
 }
 
 const ColorPicker = forwardRef<
@@ -35,6 +36,7 @@ const ColorPicker = forwardRef<
       name,
       className,
       orientation = "vertical",
+      isShowValue = true,
       ...props
     },
     forwardedRef,
@@ -83,9 +85,11 @@ const ColorPicker = forwardRef<
                     backgroundColor: parsedValue ?? undefined,
                   }}
                 />
-                <div className="text-text-body min-h-[15px] text-[12px] leading-[15px] font-[400]">
-                  {parsedValue}
-                </div>
+                {isShowValue && (
+                  <div className="text-text-body min-h-[15px] text-[12px] leading-[15px] font-[400]">
+                    {parsedValue}
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -95,9 +99,11 @@ const ColorPicker = forwardRef<
                     backgroundColor: parsedValue ?? undefined,
                   }}
                 />
-                <div className="text-text-input-subtitle min-h-[15px] min-w-[60px] text-left text-[12px] leading-[15px] font-[400]">
-                  {parsedValue}
-                </div>
+                {isShowValue && (
+                  <div className="text-text-input-subtitle min-h-[15px] min-w-[60px] text-left text-[12px] leading-[15px] font-[400]">
+                    {parsedValue}
+                  </div>
+                )}
               </>
             )}
           </Button>
