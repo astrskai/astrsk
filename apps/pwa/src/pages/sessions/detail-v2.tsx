@@ -124,10 +124,12 @@ export default function SessionDetailPage() {
 
       <div className="flex flex-1">
         <SessionDataSidebar
+          sessionId={sessionIdEntity}
           isOpen={isOpenDataSidebar}
           sortedDataSchemaFields={sortedDataSchemaFields}
           isInitialDataStore={isInitialDataStore}
           lastTurnDataStore={lastTurnDataStore}
+          savedLayout={session.widgetLayout}
         />
 
         <ChatMainArea data={session} />
