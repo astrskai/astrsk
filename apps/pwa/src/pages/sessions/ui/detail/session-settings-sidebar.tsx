@@ -3,7 +3,14 @@ import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 
 import { cn } from "@/shared/lib";
-import { ChevronLeft, Ellipsis, Pencil, Check, X, Trash2 } from "lucide-react";
+import {
+  PanelRightClose,
+  Ellipsis,
+  Pencil,
+  Check,
+  X,
+  Trash2,
+} from "lucide-react";
 import { Session } from "@/entities/session/domain/session";
 import {
   isDefaultBackground,
@@ -175,7 +182,7 @@ const SessionSettingsSidebar = ({
           onClick={onClose}
           className="cursor-pointer text-gray-300 hover:text-gray-50"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <PanelRightClose className="h-5 w-5" />
         </button>
         {isEditingTitle ? (
           <div className="flex flex-1 items-center gap-2">
