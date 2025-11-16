@@ -19,6 +19,7 @@ export const sessions = pgTable(TableName.Sessions, {
   flow_id: uuid().notNull(),
   auto_reply: varchar().$type<AutoReply>().notNull().default(AutoReply.Off),
   data_schema_order: jsonb().$type<string[]>().notNull().default([]),
+  widget_layout: jsonb().$type<Array<{ i: string; x: number; y: number; w: number; h: number }>>(),
   ...timestamps,
 });
 

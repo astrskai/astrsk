@@ -52,6 +52,7 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
       flow_id: insertSession.flow_id,
       auto_reply: insertSession.auto_reply ?? AutoReply.Random,
       data_schema_order: insertSession.data_schema_order ?? [],
+      widget_layout: insertSession.widget_layout ?? null,
       created_at: new Date(),
       updated_at: new Date(),
     });

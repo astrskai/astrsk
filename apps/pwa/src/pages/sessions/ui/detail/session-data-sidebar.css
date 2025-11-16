@@ -1,0 +1,59 @@
+/* React Grid Layout - Required Styles */
+.react-grid-layout {
+  position: relative;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+
+.react-grid-item.resizing {
+  transition: none;
+  z-index: 100;
+  will-change: width, height;
+  user-select: none; /* Prevent text selection during resize */
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 100;
+  will-change: transform;
+  user-select: none; /* Prevent text selection during drag */
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0.2;
+  transition-duration: 100ms;
+  z-index: 2;
+  border-radius: 0.375rem;
+}
+
+/* Resize Handle Styles */
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid rgba(255, 255, 255, 0.4);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.react-resizable-handle-se {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}

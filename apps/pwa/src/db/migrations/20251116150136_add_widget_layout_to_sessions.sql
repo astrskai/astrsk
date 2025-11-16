@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" ADD COLUMN "widget_layout" jsonb;

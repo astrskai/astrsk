@@ -40,6 +40,15 @@ export interface SessionProps {
   // Data Schema
   dataSchemaOrder?: string[];
 
+  // Widget Layout (react-grid-layout)
+  widgetLayout?: Array<{
+    i: string; // field name (unique ID)
+    x: number; // column position
+    y: number; // row position
+    w: number; // width in columns
+    h: number; // height in rows
+  }>;
+
   // Set by system
   createdAt: Date;
   updatedAt: Date;
@@ -121,6 +130,10 @@ export class Session extends AggregateRoot<SessionProps> {
     return this.props.dataSchemaOrder || [];
   }
 
+  get widgetLayout(): Array<{ i: string; x: number; y: number; w: number; h: number }> | undefined {
+    return this.props.widgetLayout;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
@@ -149,6 +162,7 @@ export class Session extends AggregateRoot<SessionProps> {
       flowId: props.flowId!,
       autoReply: props.autoReply ?? AutoReply.Random,
       dataSchemaOrder: props.dataSchemaOrder || [],
+      widgetLayout: props.widgetLayout,
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date(),
     };
@@ -243,5 +257,9 @@ export class Session extends AggregateRoot<SessionProps> {
 
   public setDataSchemaOrder(order: string[]): void {
     this.props.dataSchemaOrder = order;
+  }
+
+  public setWidgetLayout(layout: Array<{ i: string; x: number; y: number; w: number; h: number }> | undefined): void {
+    this.props.widgetLayout = layout;
   }
 }

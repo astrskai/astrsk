@@ -272,6 +272,9 @@ importers:
       react-dropzone:
         specifier: ^14.3.8
         version: 14.3.8(react@18.3.1)
+      react-grid-layout:
+        specifier: ^1.5.2
+        version: 1.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-hook-form:
         specifier: ^7.53.1
         version: 7.61.0(react@18.3.1)
@@ -378,6 +381,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.7
         version: 18.3.7(@types/react@18.3.23)
+      '@types/react-grid-layout':
+        specifier: ^1.3.5
+        version: 1.3.5
       '@types/roll':
         specifier: ^1.2.3
         version: 1.2.3
@@ -3673,6 +3679,9 @@ packages:
     peerDependencies:
       '@types/react': ^18.0.0
 
+  '@types/react-grid-layout@1.3.5':
+    resolution: {integrity: sha512-WH/po1gcEcoR6y857yAnPGug+ZhkF4PaTUxgAbwfeSH/QOgVSakKHBXoPGad/sEznmkiaK3pqHk+etdWisoeBQ==}
+
   '@types/react-transition-group@4.4.12':
     resolution: {integrity: sha512-8TV6R3h2j7a91c+1DXdJi3Syo69zzIZbz7Lg5tORM5LEJG7X/E6a1V3drRyBRZq7/utz7A+c4OgYLiLcYGHG6w==}
     peerDependencies:
@@ -5168,6 +5177,9 @@ packages:
 
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
+
+  fast-equals@4.0.3:
+    resolution: {integrity: sha512-G3BSX9cfKttjr+2o1O22tYMLq0DPluZnYtq1rXumE1SpL/F/SLIfHx08WYQoWSIpeMYf8sRbJ8++71+v6Pnxfg==}
 
   fast-glob@3.3.3:
     resolution: {integrity: sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==}
@@ -6678,11 +6690,23 @@ packages:
     peerDependencies:
       react: ^18.3.1
 
+  react-draggable@4.5.0:
+    resolution: {integrity: sha512-VC+HBLEZ0XJxnOxVAZsdRi8rD04Iz3SiiKOoYzamjylUcju/hP9np/aZdLHf/7WOD268WMoNJMvYfB5yAK45cw==}
+    peerDependencies:
+      react: '>= 16.3.0'
+      react-dom: '>= 16.3.0'
+
   react-dropzone@14.3.8:
     resolution: {integrity: sha512-sBgODnq+lcA4P296DY4wacOZz3JFpD99fp+hb//iBO2HHnyeZU3FwWyXJ6salNpqQdsZrgMrotuko/BdJMV8Ug==}
     engines: {node: '>= 10.13'}
     peerDependencies:
       react: '>= 16.8 || 18.0.0'
+
+  react-grid-layout@1.5.2:
+    resolution: {integrity: sha512-vT7xmQqszTT+sQw/LfisrEO4le1EPNnSEMVHy6sBZyzS3yGkMywdOd+5iEFFwQwt0NSaGkxuRmYwa1JsP6OJdw==}
+    peerDependencies:
+      react: '>= 16.3.0'
+      react-dom: '>= 16.3.0'
 
   react-hook-form@7.61.0:
     resolution: {integrity: sha512-o8S/HcCeuaAQVib36fPCgOLaaQN/v7Anj8zlYjcLMcz+4FnNfMsoDAEvVCefLb3KDnS43wq3pwcifehhkwowuQ==}
@@ -6733,6 +6757,11 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  react-resizable@3.0.5:
+    resolution: {integrity: sha512-vKpeHhI5OZvYn82kXOs1bC8aOXktGU5AmKAgaZS4F5JPburCtbmDPqE7Pzp+1kN4+Wb81LlF33VpGwWwtXem+w==}
+    peerDependencies:
+      react: '>= 16.3'
 
   react-style-singleton@2.2.3:
     resolution: {integrity: sha512-b6jSvxvVnyptAiLjbkWLE/lOnR4lfTtDAl+eUC7RZy+QQWc6wRzIV2CE6xBuMmDxc2qIihtDCZD5NPOFl7fRBQ==}
@@ -6847,6 +6876,9 @@ packages:
 
   requires-port@1.0.0:
     resolution: {integrity: sha512-KigOCHcocU3XODJxsu8i/j8T9tzT4adHiecwORRQ0ZZFcp7ahwXuRU1m+yuO90C5ZUyGeGfocHDI14M3L3yDAQ==}
+
+  resize-observer-polyfill@1.5.1:
+    resolution: {integrity: sha512-LwZrotdHOo12nQuZlHEmtuXdqGoOD0OhaxopaNFxWzInpEgaLWoVuAMbTzixuosCx2nEG58ngzW3vxdWoxIgdg==}
 
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
@@ -11259,6 +11291,10 @@ snapshots:
     dependencies:
       '@types/react': 18.3.23
 
+  '@types/react-grid-layout@1.3.5':
+    dependencies:
+      '@types/react': 18.3.23
+
   '@types/react-transition-group@4.4.12(@types/react@18.3.23)':
     dependencies:
       '@types/react': 18.3.23
@@ -12864,6 +12900,8 @@ snapshots:
 
   fast-deep-equal@3.1.3: {}
 
+  fast-equals@4.0.3: {}
+
   fast-glob@3.3.3:
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -14466,12 +14504,30 @@ snapshots:
       react: 18.3.1
       scheduler: 0.23.2
 
+  react-draggable@4.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      clsx: 2.1.1
+      prop-types: 15.8.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   react-dropzone@14.3.8(react@18.3.1):
     dependencies:
       attr-accept: 2.2.5
       file-selector: 2.1.2
       prop-types: 15.8.1
       react: 18.3.1
+
+  react-grid-layout@1.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      clsx: 2.1.1
+      fast-equals: 4.0.3
+      prop-types: 15.8.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-draggable: 4.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-resizable: 3.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      resize-observer-polyfill: 1.5.1
 
   react-hook-form@7.61.0(react@18.3.1):
     dependencies:
@@ -14527,6 +14583,14 @@ snapshots:
       use-sidecar: 1.1.3(@types/react@18.3.23)(react@18.3.1)
     optionalDependencies:
       '@types/react': 18.3.23
+
+  react-resizable@3.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      prop-types: 15.8.1
+      react: 18.3.1
+      react-draggable: 4.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    transitivePeerDependencies:
+      - react-dom
 
   react-style-singleton@2.2.3(@types/react@18.3.23)(react@18.3.1):
     dependencies:
@@ -14694,6 +14758,8 @@ snapshots:
   require-from-string@2.0.2: {}
 
   requires-port@1.0.0: {}
+
+  resize-observer-polyfill@1.5.1: {}
 
   resolve-from@4.0.0: {}
 
