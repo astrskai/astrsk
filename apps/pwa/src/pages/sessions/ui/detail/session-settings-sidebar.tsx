@@ -2,7 +2,7 @@ import { useCallback, useMemo, memo, useState } from "react";
 import { toast } from "sonner";
 
 import { cn } from "@/shared/lib";
-import { ChevronLeft, Ellipsis, Pencil } from "lucide-react";
+import { ChevronLeft, Ellipsis, Pencil, Check, X } from "lucide-react";
 import { Session } from "@/entities/session/domain/session";
 import {
   isDefaultBackground,
@@ -55,6 +55,8 @@ const SessionSettingsSidebar = ({
   const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
   const saveSessionMutation = useSaveSession();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
 
   const { backgroundMap } = useBackgroundStore();
   const background = backgroundMap.get(session.backgroundId?.toString() ?? "");
@@ -93,6 +95,39 @@ const SessionSettingsSidebar = ({
     [session.id, saveSessionMutation],
   );
 
+  const handleSaveTitle = useCallback(async () => {
+    if (!editedTitle.trim()) {
+      toast.error("Title cannot be empty");
+      return;
+    }
+
+    try {
+      // Fetch latest session data
+      const latestSession = await fetchSession(session.id);
+
+      // Update title
+      latestSession.update({ title: editedTitle.trim() });
+
+      // Save to backend
+      await saveSessionMutation.mutateAsync({ session: latestSession });
+
+      // Exit editing mode
+      setIsEditingTitle(false);
+
+      // Show success message
+      toast.success("Title updated successfully");
+    } catch (error) {
+      toast.error("Failed to update title", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, [editedTitle, session.id, saveSessionMutation]);
+
+  const handleCancelEditTitle = useCallback(() => {
+    setEditedTitle("");
+    setIsEditingTitle(false);
+  }, []);
+
   return (
     <aside
       className={cn(
@@ -111,20 +146,56 @@ const SessionSettingsSidebar = ({
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <span className="flex items-center gap-2 text-base font-semibold text-gray-50">
-          {session.title ?? "Untitled Session"}
-          <button
-            type="button"
-            aria-label="Edit session title"
-            className="cursor-pointer text-gray-300 hover:text-gray-50"
-            onClick={() => {
-              // setIsEditingTitle(true);
-              // setEditedTitle(session.title ?? "");
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-        </span>
+        {isEditingTitle ? (
+          <div className="flex flex-1 items-center gap-2">
+            <input
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSaveTitle();
+                } else if (e.key === "Escape") {
+                  handleCancelEditTitle();
+                }
+              }}
+              className="flex-1 rounded-md border border-gray-600 bg-gray-800 px-2 py-1 text-sm text-gray-50 focus:border-blue-500 focus:outline-none"
+              autoFocus
+              placeholder="Enter session title"
+            />
+            <button
+              type="button"
+              onClick={handleSaveTitle}
+              className="cursor-pointer text-green-400 hover:text-green-300"
+              aria-label="Save title"
+            >
+              <Check className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleCancelEditTitle}
+              className="cursor-pointer text-red-400 hover:text-red-300"
+              aria-label="Cancel editing"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <span className="flex items-center gap-2 text-base font-semibold text-gray-50">
+            {session.title ?? "Untitled Session"}
+            <button
+              type="button"
+              aria-label="Edit session title"
+              className="cursor-pointer text-gray-300 hover:text-gray-50"
+              onClick={() => {
+                setIsEditingTitle(true);
+                setEditedTitle(session.title ?? "");
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+          </span>
+        )}
         <button
           type="button"
           aria-label="Close settings panel"
@@ -206,7 +277,7 @@ const SessionSettingsSidebar = ({
             onOpenChange={setIsPopoverOpen}
             side="left"
             align="start"
-            className="w-96"
+            className="w-[480px]"
             trigger={
               <div className="cursor-pointer rounded-lg transition-opacity hover:opacity-80">
                 {backgroundImageSrc ? (
