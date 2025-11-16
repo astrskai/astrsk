@@ -53,39 +53,59 @@ const RenderMessage = ({
   onDeleteMessage,
   onRegenerateMessage,
 }: RenderMessageProps) => {
-  const { data: message, isLoading } = useQuery(turnQueries.detail(messageId));
+  const {
+    data: message,
+    isLoading,
+    isError,
+  } = useQuery(turnQueries.detail(messageId));
 
-  if (isLoading) return <Loading />;
+  if (isLoading) {
+    return (
+      <div className="flex h-20 items-center justify-center">
+        <Loading />
+      </div>
+    );
+  }
+
+  // if (isError || !message) {
+  //   return (
+  //     <div className="px-4 pb-4">
+  //       <div className="mx-auto flex h-10 max-w-lg items-center justify-center rounded-lg bg-gray-800/20 text-sm text-red-500 backdrop-blur-md">
+  //         Failed to load message
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   const isStreaming = streamingMessageId?.equals(messageId);
 
   const isLastMessage =
-    virtualItem.index === messageCount - 1 &&
-    messageCount > 0 &&
-    virtualItem.index !== 0;
+    virtualItem.index === messageCount - 1 && messageCount > 0;
 
-  return !message ? null : typeof message.characterCardId === "undefined" &&
+  return message && !isError ? (
+    typeof message.characterCardId === "undefined" &&
     typeof message.characterName === "undefined" ? (
-    <ChatScenarioMessage
-      content={message.content}
-      onEdit={(content) => onEditMessage?.(messageId, content)}
-      onDelete={() => onDeleteMessage?.(messageId)}
-    />
-  ) : (
-    <ChatMessage
-      message={message}
-      userCharacterId={session.userCharacterCardId}
-      translationConfig={session.translation}
-      isStreaming={isStreaming}
-      streamingAgentName={streamingAgentName}
-      streamingModelName={streamingModelName}
-      isLastMessage={isLastMessage}
-      chatStyles={chatStyles}
-      onEdit={onEditMessage}
-      onDelete={onDeleteMessage}
-      onRegenerate={onRegenerateMessage}
-    />
-  );
+      <ChatScenarioMessage
+        content={message.content}
+        onEdit={(content) => onEditMessage?.(messageId, content)}
+        onDelete={() => onDeleteMessage?.(messageId)}
+      />
+    ) : (
+      <ChatMessage
+        message={message}
+        userCharacterId={session.userCharacterCardId}
+        translationConfig={session.translation}
+        isStreaming={isStreaming}
+        streamingAgentName={streamingAgentName}
+        streamingModelName={streamingModelName}
+        isLastMessage={isLastMessage}
+        chatStyles={chatStyles}
+        onEdit={onEditMessage}
+        onDelete={onDeleteMessage}
+        onRegenerate={onRegenerateMessage}
+      />
+    )
+  ) : null;
 };
 
 export default function ChatMessageList({

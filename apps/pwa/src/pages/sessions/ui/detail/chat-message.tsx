@@ -103,8 +103,6 @@ const ChatMessage = ({
   );
 
   const sortedDataStoreFields = useMemo(() => {
-    if (!message) return undefined;
-
     const selectedOptionIndex = message.selectedOptionIndex;
 
     const selectedOption = message.options[selectedOptionIndex];
@@ -127,8 +125,6 @@ const ChatMessage = ({
       ...fields.filter((f: DataStoreSavedField) => !order.includes(f.name)),
     ];
   }, [dataSchemaOrder, message]);
-
-  if (!message) return null;
 
   const selectedOption = message.options[message.selectedOptionIndex];
 
