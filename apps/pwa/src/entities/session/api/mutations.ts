@@ -233,10 +233,18 @@ export const useDeleteSession = () => {
     mutationKey: ["session", "deleteSession"],
     mutationFn: async ({ sessionId }: { sessionId: UniqueEntityID }) => {
       const result = await SessionService.deleteSession.execute(sessionId);
-      return result;
+
+      // Throw error if deletion failed
+      if (result.isFailure) {
+        throw new Error(result.getError());
+      }
+
+      // Result<void> has no value, just return undefined on success
+      return;
     },
 
     onSuccess: (data, variables, onMutateResult, context) => {
+      // Only runs on successful deletion
       // Invalidate session list queries
       context.client.invalidateQueries({
         queryKey: sessionQueries.lists(),

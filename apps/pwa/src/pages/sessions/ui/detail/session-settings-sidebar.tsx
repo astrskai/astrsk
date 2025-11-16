@@ -146,15 +146,11 @@ const SessionSettingsSidebar = ({
 
   const handleDeleteSession = useCallback(async () => {
     try {
-      const result = await deleteSessionMutation.mutateAsync({
+      await deleteSessionMutation.mutateAsync({
         sessionId: session.id,
       });
 
-      if (result.isFailure) {
-        toast.error("Failed to delete session");
-        return;
-      }
-
+      // Cache invalidation happens in mutation's onSuccess
       toast.success("Session deleted successfully");
 
       // Navigate to sessions list
