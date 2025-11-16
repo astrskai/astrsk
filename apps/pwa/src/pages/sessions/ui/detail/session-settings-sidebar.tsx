@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, memo, useState } from "react";
+import { toast } from "sonner";
 
 import { cn } from "@/shared/lib";
 import { ChevronLeft, Ellipsis, Pencil } from "lucide-react";
@@ -9,7 +10,7 @@ import {
 } from "@/shared/stores/background-store";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useFlow } from "@/shared/hooks/use-flow";
-import { Loading } from "@/shared/ui";
+import { Loading, PopoverBase } from "@/shared/ui";
 import CharacterItem from "./settings/character-item";
 import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
 import { PlotCard } from "@/entities/card/domain";
@@ -17,6 +18,8 @@ import { useCard } from "@/shared/hooks/use-card";
 import { UniqueEntityID } from "@/shared/domain";
 import FlowPreview from "@/features/flow/ui/flow-preview";
 import MessageStyling from "./settings/message-styling";
+import BackgroundGrid from "./settings/background-grid";
+import { fetchSession, useSaveSession } from "@/entities/session/api";
 
 interface SessionSettingsSidebarProps {
   session: Session;
@@ -44,12 +47,14 @@ const ScenarioPreviewItem = ({
   );
 };
 
-export default function SessionSettingsSidebar({
+const SessionSettingsSidebar = ({
   session,
   isOpen,
   onClose,
-}: SessionSettingsSidebarProps) {
+}: SessionSettingsSidebarProps) => {
   const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
+  const saveSessionMutation = useSaveSession();
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const { backgroundMap } = useBackgroundStore();
   const background = backgroundMap.get(session.backgroundId?.toString() ?? "");
@@ -61,6 +66,32 @@ export default function SessionSettingsSidebar({
     }
     return backgroundAsset; // undefined or string
   }, [background, backgroundAsset]);
+
+  const handleChangeBackground = useCallback(
+    async (backgroundId: UniqueEntityID | undefined) => {
+      try {
+        // Fetch latest session data
+        const latestSession = await fetchSession(session.id);
+
+        // Update background
+        latestSession.update({ backgroundId });
+
+        // Save to backend
+        await saveSessionMutation.mutateAsync({ session: latestSession });
+
+        // Close popover
+        setIsPopoverOpen(false);
+
+        // Show success message
+        toast.success("Background updated successfully");
+      } catch (error) {
+        toast.error("Failed to update background", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [session.id, saveSessionMutation],
+  );
 
   return (
     <aside
@@ -170,19 +201,34 @@ export default function SessionSettingsSidebar({
 
         <section>
           <h3 className="font-semibold">Background image</h3>
-          <div>
-            {backgroundImageSrc ? (
-              <img
-                className="h-full w-full rounded-lg object-cover"
-                src={backgroundImageSrc}
-                alt="Background image"
-              />
-            ) : (
-              <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
-                <p className="text-sm text-gray-400">No background image</p>
+          <PopoverBase
+            open={isPopoverOpen}
+            onOpenChange={setIsPopoverOpen}
+            side="left"
+            align="start"
+            className="w-96"
+            trigger={
+              <div className="cursor-pointer rounded-lg transition-opacity hover:opacity-80">
+                {backgroundImageSrc ? (
+                  <img
+                    className="h-32 w-full rounded-lg object-cover"
+                    src={backgroundImageSrc}
+                    alt="Background image"
+                  />
+                ) : (
+                  <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
+                    <p className="text-sm text-gray-400">No background image</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            }
+            content={
+              <BackgroundGrid
+                currentBackgroundId={session.backgroundId}
+                onSelect={handleChangeBackground}
+              />
+            }
+          />
         </section>
 
         <section>
@@ -196,4 +242,6 @@ export default function SessionSettingsSidebar({
       </div>
     </aside>
   );
-}
+};
+
+export default memo(SessionSettingsSidebar);
