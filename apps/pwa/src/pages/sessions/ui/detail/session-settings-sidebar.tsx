@@ -206,7 +206,7 @@ const SessionSettingsSidebar = ({
             onOpenChange={setIsPopoverOpen}
             side="left"
             align="start"
-            className="w-96"
+            className="w-[480px]"
             trigger={
               <div className="cursor-pointer rounded-lg transition-opacity hover:opacity-80">
                 {backgroundImageSrc ? (

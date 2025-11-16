@@ -1,13 +1,17 @@
-import { useMemo } from "react";
+import { useMemo, useCallback, useRef } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/shared/lib";
 import {
   useBackgroundStore,
   isDefaultBackground,
   DefaultBackground,
+  fetchBackgrounds,
 } from "@/shared/stores/background-store";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { UniqueEntityID } from "@/shared/domain";
 import { Background } from "@/entities/background/domain/background";
+import { BackgroundService } from "@/app/services/background-service";
 
 interface BackgroundGridProps {
   currentBackgroundId?: UniqueEntityID;
@@ -17,13 +21,17 @@ interface BackgroundGridProps {
 interface BackgroundItemProps {
   background: Background | DefaultBackground;
   isSelected: boolean;
+  isEditable?: boolean;
   onSelect: (backgroundId: UniqueEntityID) => void;
+  onDelete?: (backgroundId: UniqueEntityID) => void;
 }
 
 const BackgroundItem = ({
   background,
   isSelected,
+  isEditable = false,
   onSelect,
+  onDelete,
 }: BackgroundItemProps) => {
   const [assetUrl] = useAsset(
     isDefaultBackground(background) ? undefined : background.assetId,
@@ -41,7 +49,7 @@ const BackgroundItem = ({
       type="button"
       onClick={() => onSelect(background.id)}
       className={cn(
-        "relative aspect-video overflow-hidden rounded-lg border-2 transition-all",
+        "group relative aspect-video overflow-hidden rounded-lg border-2 transition-all",
         "hover:border-blue-500 hover:brightness-110",
         isSelected ? "border-blue-500" : "border-gray-700",
       )}
@@ -59,9 +67,11 @@ const BackgroundItem = ({
       )}
 
       {/* Name overlay */}
-      <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-        <p className="truncate text-xs text-white">{background.name}</p>
-      </div>
+      {!isEditable && (
+        <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+          <p className="truncate text-xs text-white">{background.name}</p>
+        </div>
+      )}
 
       {/* Selected indicator */}
       {isSelected && (
@@ -79,6 +89,21 @@ const BackgroundItem = ({
           </svg>
         </div>
       )}
+
+      {/* Delete button (only for editable items) */}
+      {isEditable && onDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(background.id);
+          }}
+          className="absolute top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/70 hover:opacity-100"
+          aria-label="Delete background"
+        >
+          <Trash2 className="h-3 w-3 text-white" />
+        </button>
+      )}
     </button>
   );
 };
@@ -88,8 +113,57 @@ export default function BackgroundGrid({
   onSelect,
 }: BackgroundGridProps) {
   const { defaultBackgrounds, backgrounds } = useBackgroundStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasUserBackgrounds = backgrounds.length > 0;
+
+  // Handle add new background
+  const handleAddBackground = useCallback(async (file: File) => {
+    try {
+      // Save file to background
+      const backgroundOrError =
+        await BackgroundService.saveFileToBackground.execute(file);
+
+      if (backgroundOrError.isFailure) {
+        toast.error("Failed to upload background");
+        return;
+      }
+
+      // Refresh backgrounds
+      await fetchBackgrounds();
+
+      toast.success("Background uploaded successfully");
+    } catch (error) {
+      toast.error("Failed to upload background", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, []);
+
+  // Handle delete background
+  const handleDeleteBackground = useCallback(
+    async (backgroundId: UniqueEntityID) => {
+      try {
+        const backgroundOrError =
+          await BackgroundService.deleteBackground.execute(backgroundId);
+
+        if (backgroundOrError.isFailure) {
+          toast.error("Failed to delete background");
+          return;
+        }
+
+        // Refresh backgrounds
+        await fetchBackgrounds();
+
+        toast.success("Background deleted successfully");
+      } catch (error) {
+        toast.error("Failed to delete background", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [],
+  );
 
   return (
     <div className="space-y-4">
@@ -97,10 +171,31 @@ export default function BackgroundGrid({
         <h4 className="text-sm font-semibold text-gray-200">
           Select Background
         </h4>
-        <span className="text-xs text-gray-400">
-          {defaultBackgrounds.length + backgrounds.length} backgrounds
-        </span>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center gap-1 rounded-md bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-600"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add Background
+        </button>
       </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp"
+        className="hidden"
+        onChange={async (e) => {
+          if (!e.target.files || e.target.files.length === 0) {
+            return;
+          }
+          const file = e.target.files[0];
+          await handleAddBackground(file);
+          e.target.value = "";
+        }}
+      />
 
       <div className="custom-scrollbar max-h-96 space-y-4 overflow-y-auto">
         {/* User added backgrounds */}
@@ -117,7 +212,9 @@ export default function BackgroundGrid({
                   isSelected={
                     currentBackgroundId?.equals(background.id) ?? false
                   }
+                  isEditable
                   onSelect={onSelect}
+                  onDelete={handleDeleteBackground}
                 />
               ))}
             </div>
