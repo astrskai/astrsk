@@ -73,7 +73,7 @@ export default function ChatScenarioMessage({
         {/* Action buttons - shown on hover at top-right corner */}
         <div
           className={cn(
-            "absolute top-2 right-2 z-10 hidden group-hover/scenario:flex",
+            "absolute top-2 right-2 z-10 hidden rounded-lg border border-gray-50/50 group-hover/scenario:flex",
           )}
         >
           <div className="flex items-center gap-1 rounded-lg bg-gray-500/30 px-2 py-1 text-gray-200">
