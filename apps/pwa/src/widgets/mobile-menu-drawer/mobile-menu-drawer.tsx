@@ -6,8 +6,8 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/shared/ui/sheet";
-import { Settings, LogIn } from "lucide-react";
-import { IconSessions, IconAssets } from "@/shared/assets/icons";
+import { Settings, LogIn, UserRound, BookOpen } from "lucide-react";
+import { IconSessions, IconWorkflow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 
 interface MobileMenuDrawerProps {
@@ -30,8 +30,18 @@ const MENU_ITEMS: Omit<MenuItemProps, "onClick">[] = [
   },
   {
     to: "/assets/characters",
-    icon: <IconAssets className="h-5 w-5" />,
-    label: "Assets",
+    icon: <UserRound className="h-5 w-5" />,
+    label: "Characters",
+  },
+  {
+    to: "/assets/scenarios",
+    icon: <BookOpen className="h-5 w-5" />,
+    label: "Scenarios",
+  },
+  {
+    to: "/assets/workflows",
+    icon: <IconWorkflow className="h-5 w-5" />,
+    label: "Workflows",
   },
   {
     to: "/settings",

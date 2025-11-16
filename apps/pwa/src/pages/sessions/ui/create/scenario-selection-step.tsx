@@ -1,12 +1,11 @@
 import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, Trash2 } from "lucide-react";
+import { ChevronLeft, Trash2, BookOpen } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
 import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { CardType } from "@/entities/card/domain";
-import { IconFlow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
 import Carousel from "@/shared/ui/carousel-v2";
@@ -365,7 +364,7 @@ export default function ScenarioSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <IconFlow className="text-text-secondary mb-3 min-h-12 min-w-12" />
+              <BookOpen className="text-text-secondary mb-3 min-h-12 min-w-12" />
               <h3 className="text-text-primary mb-2 text-lg font-semibold">
                 Select Scenario
               </h3>
@@ -483,7 +482,7 @@ export default function ScenarioSelectionStep({
                 <ScenarioDetailPanel plot={previewScenario} />
               ) : (
                 <div className="text-text-secondary flex h-full flex-col items-center justify-center text-center">
-                  <IconFlow className="mb-3 h-12 w-12 opacity-50" />
+                  <BookOpen className="mb-3 h-12 w-12 opacity-50" />
                   <p className="text-lg">Hover over a scenario</p>
                   <p className="text-sm">
                     Move your mouse over a scenario to see details
