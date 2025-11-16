@@ -21,8 +21,8 @@ export default function CharacterItem({ characterId }: CharacterItemProps) {
         src={imageUrl ?? "/img/placeholder/character-card-image.png"}
         alt={imageUrl ? character.props.title : "No image"}
       />
-      <div className="flex w-full items-center justify-between p-4">
-        <h3 className="text-base font-semibold text-gray-50">
+      <div className="flex w-full items-center justify-between gap-2 p-4">
+        <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-gray-50">
           {character.props.title}
         </h3>
 

@@ -54,7 +54,7 @@ export default function ChatCharacterButton({
               isDisabled ? "cursor-default" : "hover:border-gray-50",
             )}
           />
-          <div className="line-clamp-2 max-w-[48px] text-center text-xs leading-4 text-gray-50">
+          <div className="line-clamp-2 max-w-[48px] text-center text-xs leading-4 text-ellipsis text-gray-50">
             {character.props.title}
           </div>
 

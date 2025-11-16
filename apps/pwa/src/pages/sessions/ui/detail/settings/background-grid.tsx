@@ -45,37 +45,43 @@ const BackgroundItem = ({
   }, [background, assetUrl]);
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(background.id)}
+    <div
       className={cn(
         "group relative aspect-video overflow-hidden rounded-lg border-2 transition-all",
         "hover:border-blue-500 hover:brightness-110",
         isSelected ? "border-blue-500" : "border-gray-700",
       )}
     >
-      {imageSrc ? (
-        <img
-          src={imageSrc}
-          alt={background.name}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gray-800">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-600 border-t-blue-500" />
-        </div>
-      )}
+      {/* Main clickable area */}
+      <button
+        type="button"
+        onClick={() => onSelect(background.id)}
+        className="absolute inset-0 h-full w-full"
+        aria-label={`Select ${background.name}`}
+      >
+        {imageSrc ? (
+          <img
+            src={imageSrc}
+            alt={background.name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gray-800">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-600 border-t-blue-500" />
+          </div>
+        )}
 
-      {/* Name overlay */}
-      {!isEditable && (
-        <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-          <p className="truncate text-xs text-white">{background.name}</p>
-        </div>
-      )}
+        {/* Name overlay */}
+        {!isEditable && (
+          <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+            <p className="truncate text-xs text-white">{background.name}</p>
+          </div>
+        )}
+      </button>
 
       {/* Selected indicator */}
       {isSelected && (
-        <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
+        <div className="pointer-events-none absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
           <svg
             className="h-4 w-4 text-white"
             fill="none"
@@ -94,17 +100,14 @@ const BackgroundItem = ({
       {isEditable && onDelete && (
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(background.id);
-          }}
-          className="absolute top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/70 hover:opacity-100"
-          aria-label="Delete background"
+          onClick={() => onDelete(background.id)}
+          className="absolute top-2 left-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/70 hover:opacity-100"
+          aria-label={`Delete ${background.name}`}
         >
           <Trash2 className="h-3 w-3 text-white" />
         </button>
       )}
-    </button>
+    </div>
   );
 };
 
