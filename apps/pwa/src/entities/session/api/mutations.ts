@@ -1,5 +1,8 @@
 import { queryClient } from "@/shared/api/query-client";
-import { turnQueries, useTranslateTurn } from "@/entities/turn/api/turn-queries";
+import {
+  turnQueries,
+  useTranslateTurn,
+} from "@/entities/turn/api/turn-queries";
 import { SessionService } from "@/app/services/session-service";
 import { Session } from "@/entities/session/domain/session";
 import { SessionDrizzleMapper } from "@/entities/session/mappers/session-drizzle-mapper";
@@ -154,7 +157,6 @@ export const useAddMessage = (sessionId: UniqueEntityID) => {
         queryKey: turnQueryKey,
       });
     },
-
   });
 };
 
@@ -222,6 +224,32 @@ export const useDeleteMessage = (sessionId: UniqueEntityID) => {
       context.client.removeQueries({
         queryKey: turnQueryKey,
       });
+    },
+  });
+};
+
+export const useDeleteSession = () => {
+  return useMutation({
+    mutationKey: ["session", "deleteSession"],
+    mutationFn: async ({ sessionId }: { sessionId: UniqueEntityID }) => {
+      const result = await SessionService.deleteSession.execute(sessionId);
+      return result;
+    },
+
+    onSuccess: (data, variables, onMutateResult, context) => {
+      // Invalidate session list queries
+      context.client.invalidateQueries({
+        queryKey: sessionQueries.lists(),
+      });
+
+      // Remove session detail cache
+      context.client.removeQueries({
+        queryKey: sessionQueries.detail(variables.sessionId).queryKey,
+      });
+    },
+
+    onError: (error) => {
+      logger.error("Failed to delete session", error);
     },
   });
 };

@@ -1,8 +1,9 @@
 import { useCallback, useMemo, memo, useState } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 
 import { cn } from "@/shared/lib";
-import { ChevronLeft, Ellipsis, Pencil, Check, X } from "lucide-react";
+import { ChevronLeft, Ellipsis, Pencil, Check, X, Trash2 } from "lucide-react";
 import { Session } from "@/entities/session/domain/session";
 import {
   isDefaultBackground,
@@ -10,7 +11,8 @@ import {
 } from "@/shared/stores/background-store";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useFlow } from "@/shared/hooks/use-flow";
-import { Loading, PopoverBase } from "@/shared/ui";
+import { Loading, PopoverBase, DropdownMenuBase } from "@/shared/ui";
+import { DialogConfirm } from "@/shared/ui/dialogs/confirm";
 import CharacterItem from "./settings/character-item";
 import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
 import { PlotCard } from "@/entities/card/domain";
@@ -19,7 +21,11 @@ import { UniqueEntityID } from "@/shared/domain";
 import FlowPreview from "@/features/flow/ui/flow-preview";
 import MessageStyling from "./settings/message-styling";
 import BackgroundGrid from "./settings/background-grid";
-import { fetchSession, useSaveSession } from "@/entities/session/api";
+import {
+  fetchSession,
+  useSaveSession,
+  useDeleteSession,
+} from "@/entities/session/api";
 
 interface SessionSettingsSidebarProps {
   session: Session;
@@ -52,11 +58,14 @@ const SessionSettingsSidebar = ({
   isOpen,
   onClose,
 }: SessionSettingsSidebarProps) => {
+  const navigate = useNavigate();
   const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
   const saveSessionMutation = useSaveSession();
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editedTitle, setEditedTitle] = useState("");
+  const deleteSessionMutation = useDeleteSession();
+  const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
+  const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
+  const [editedTitle, setEditedTitle] = useState<string>(session.title ?? "");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
 
   const { backgroundMap } = useBackgroundStore();
   const background = backgroundMap.get(session.backgroundId?.toString() ?? "");
@@ -128,6 +137,28 @@ const SessionSettingsSidebar = ({
     setIsEditingTitle(false);
   }, []);
 
+  const handleDeleteSession = useCallback(async () => {
+    try {
+      const result = await deleteSessionMutation.mutateAsync({
+        sessionId: session.id,
+      });
+
+      if (result.isFailure) {
+        toast.error("Failed to delete session");
+        return;
+      }
+
+      toast.success("Session deleted successfully");
+
+      // Navigate to sessions list
+      navigate({ to: "/sessions" });
+    } catch (error) {
+      toast.error("Failed to delete session", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, [session.id, deleteSessionMutation, navigate]);
+
   return (
     <aside
       className={cn(
@@ -196,14 +227,36 @@ const SessionSettingsSidebar = ({
             </button>
           </span>
         )}
-        <button
-          type="button"
-          aria-label="Close settings panel"
-          onClick={onClose}
-          className="cursor-pointer text-gray-300 hover:text-gray-50"
-        >
-          <Ellipsis className="h-5 w-5" />
-        </button>
+        <DropdownMenuBase
+          trigger={
+            <button
+              type="button"
+              aria-label="More menu"
+              className="cursor-pointer text-gray-300 hover:text-gray-50"
+            >
+              <Ellipsis className="h-5 w-5" />
+            </button>
+          }
+          items={[
+            {
+              label: "Delete session",
+              icon: <Trash2 className="h-4 w-4" />,
+              onClick: () => setIsDeleteDialogOpen(true),
+              className: "text-red-400 hover:text-red-300 focus:text-red-300",
+            },
+          ]}
+          align="end"
+        />
+
+        <DialogConfirm
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          title="Delete Session"
+          description="Are you sure you want to delete this session? This action cannot be undone."
+          confirmLabel="Delete"
+          confirmVariant="destructive"
+          onConfirm={handleDeleteSession}
+        />
       </div>
 
       <div className="space-y-4 p-4 [&>section]:flex [&>section]:flex-col [&>section]:gap-2">

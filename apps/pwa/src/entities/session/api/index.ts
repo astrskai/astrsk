@@ -9,4 +9,9 @@
 export { sessionQueries, fetchSession } from "./query-factory";
 
 // Mutation hooks
-export { useSaveSession, useAddMessage, useDeleteMessage } from "./mutations";
+export {
+  useSaveSession,
+  useAddMessage,
+  useDeleteMessage,
+  useDeleteSession,
+} from "./mutations";
