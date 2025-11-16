@@ -37,7 +37,7 @@ interface ChatMessageProps {
   dataSchemaOrder?: string[];
   isLastMessage?: boolean;
   chatStyles?: ChatStyles;
-  onEdit?: (messageId: UniqueEntityID, content: string) => void;
+  onEdit?: (messageId: UniqueEntityID, content: string) => Promise<void> | void;
   onDelete?: (messageId: UniqueEntityID) => void;
   onRegenerate?: (messageId: UniqueEntityID) => void;
 }

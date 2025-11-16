@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  useVirtualizer,
-  VirtualItem,
-  Virtualizer,
-} from "@tanstack/react-virtual";
+import { useVirtualizer, VirtualItem } from "@tanstack/react-virtual";
 import delay from "lodash-es/delay";
+
 // import { ArrowDown } from "lucide-react";
 
 import { Session } from "@/entities/session/domain/session";
 import { ChatStyles } from "@/entities/session/domain/chat-styles";
 import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";
+import { Loading } from "@/shared/ui";
 import ChatMessage from "./chat-message";
 import { turnQueries } from "@/entities/turn/api/turn-queries";
 import ChatScenarioMessage from "./chat-scenario-message";
@@ -32,7 +30,6 @@ interface RenderMessageProps {
   session: Session;
   messageId: UniqueEntityID;
   virtualItem: VirtualItem;
-  virtualizer: Virtualizer<HTMLDivElement, Element>;
   messageCount: number;
   streamingMessageId: UniqueEntityID | null;
   streamingAgentName: string | undefined;
@@ -47,7 +44,6 @@ const RenderMessage = ({
   session,
   messageId,
   virtualItem,
-  virtualizer,
   messageCount,
   streamingMessageId,
   streamingAgentName,
@@ -57,7 +53,9 @@ const RenderMessage = ({
   onDeleteMessage,
   onRegenerateMessage,
 }: RenderMessageProps) => {
-  const { data: message } = useQuery(turnQueries.detail(messageId));
+  const { data: message, isLoading } = useQuery(turnQueries.detail(messageId));
+
+  if (isLoading) return <Loading />;
 
   const isStreaming = streamingMessageId?.equals(messageId);
 
@@ -66,39 +64,27 @@ const RenderMessage = ({
     messageCount > 0 &&
     virtualItem.index !== 0;
 
-  if (
-    typeof message.characterCardId === "undefined" &&
-    typeof message.characterName === "undefined"
-  )
-    return (
-      <ChatScenarioMessage
-        content={message.content}
-        onEdit={(content) => onEditMessage?.(messageId, content)}
-        onDelete={() => onDeleteMessage?.(messageId)}
-      />
-    );
-
-  return (
-    <div
-      key={virtualItem.key}
-      data-index={virtualItem.index}
-      ref={virtualizer.measureElement}
-      style={{ paddingBottom: 4 }}
-    >
-      <ChatMessage
-        message={message}
-        userCharacterId={session.userCharacterCardId}
-        translationConfig={session.translation}
-        isStreaming={isStreaming}
-        streamingAgentName={streamingAgentName}
-        streamingModelName={streamingModelName}
-        isLastMessage={isLastMessage}
-        chatStyles={chatStyles}
-        onEdit={onEditMessage}
-        onDelete={onDeleteMessage}
-        onRegenerate={onRegenerateMessage}
-      />
-    </div>
+  return !message ? null : typeof message.characterCardId === "undefined" &&
+    typeof message.characterName === "undefined" ? (
+    <ChatScenarioMessage
+      content={message.content}
+      onEdit={(content) => onEditMessage?.(messageId, content)}
+      onDelete={() => onDeleteMessage?.(messageId)}
+    />
+  ) : (
+    <ChatMessage
+      message={message}
+      userCharacterId={session.userCharacterCardId}
+      translationConfig={session.translation}
+      isStreaming={isStreaming}
+      streamingAgentName={streamingAgentName}
+      streamingModelName={streamingModelName}
+      isLastMessage={isLastMessage}
+      chatStyles={chatStyles}
+      onEdit={onEditMessage}
+      onDelete={onDeleteMessage}
+      onRegenerate={onRegenerateMessage}
+    />
   );
 };
 
@@ -214,7 +200,6 @@ export default function ChatMessageList({
                   session={data}
                   messageId={messageId}
                   virtualItem={virtualItem}
-                  virtualizer={virtualizer}
                   messageCount={messageCount}
                   streamingMessageId={streamingMessageId ?? null}
                   streamingAgentName={streamingAgentName}

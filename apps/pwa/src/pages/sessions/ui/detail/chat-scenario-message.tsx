@@ -9,7 +9,7 @@ import { cn } from "@/shared/lib";
 
 interface ChatScenarioMessageProps {
   content: string;
-  onEdit: (content: string) => void;
+  onEdit: (content: string) => Promise<void> | void;
   onDelete: () => void;
 }
 
