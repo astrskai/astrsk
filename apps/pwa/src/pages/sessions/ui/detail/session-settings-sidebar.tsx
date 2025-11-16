@@ -343,19 +343,25 @@ const SessionSettingsSidebar = ({
           <div>
             {isLoadingFlow ? (
               <Loading size="sm" />
-            ) : (
+            ) : flow ? (
               <FlowPreview
                 title={flow?.props.name ?? "No flow selected"}
                 description={flow?.props.description}
                 nodeCount={flow?.props.nodes.length}
                 className="min-h-[140px]"
                 onClick={() => {
+                  if (!flow?.id) return;
+
                   navigate({
                     to: "/assets/workflows/$workflowId",
-                    params: { workflowId: flow?.id.toString() },
+                    params: { workflowId: flow.id.toString() },
                   });
                 }}
               />
+            ) : (
+              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
+                <p className="text-sm text-gray-400">No flow selected</p>
+              </div>
             )}
           </div>
         </section>
