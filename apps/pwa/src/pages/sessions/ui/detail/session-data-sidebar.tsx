@@ -4,13 +4,13 @@ import { toast } from "sonner";
 import { RotateCcw } from "lucide-react";
 
 import { cn } from "@/shared/lib";
-import { UniqueEntityID } from "@/shared/domain";
 import { DataStoreSchemaField } from "@/entities/flow/domain";
-import { fetchSession, useSaveSession } from "@/entities/session/api";
+import { Session } from "@/entities/session/domain";
+import { useSaveSession } from "@/entities/session/api";
 import "./session-data-sidebar.css";
 
 interface SessionDataSidebarProps {
-  sessionId: UniqueEntityID;
+  session: Session;
   isOpen: boolean;
   sortedDataSchemaFields: DataStoreSchemaField[];
   isInitialDataStore: boolean;
@@ -25,7 +25,7 @@ interface SessionDataSidebarProps {
 }
 
 export default function SessionDataSidebar({
-  sessionId,
+  session,
   isOpen,
   sortedDataSchemaFields,
   isInitialDataStore,
@@ -57,17 +57,17 @@ export default function SessionDataSidebar({
 
   const [layout, setLayout] = useState<Layout[]>(initialLayout);
 
-  // Save layout to database
-  const handleLayoutChange = useCallback(
+  // Update layout state during drag/resize (no DB save)
+  const handleLayoutChange = useCallback((newLayout: Layout[]) => {
+    setLayout(newLayout);
+  }, []);
+
+  // Save layout to database only when drag stops
+  const handleDragStop = useCallback(
     async (newLayout: Layout[]) => {
-      setLayout(newLayout);
-
       try {
-        // Fetch latest session data
-        const latestSession = await fetchSession(sessionId);
-
-        // Update widget layout
-        latestSession.setWidgetLayout(
+        // Use session from props (avoid race condition)
+        session.setWidgetLayout(
           newLayout.map((item) => ({
             i: item.i,
             x: item.x,
@@ -77,30 +77,30 @@ export default function SessionDataSidebar({
           })),
         );
 
-        // Save to backend (optimistic update handled by mutation)
-        await saveSessionMutation.mutateAsync({ session: latestSession });
+        // Save to backend
+        await saveSessionMutation.mutateAsync({ session });
       } catch (error) {
         toast.error("Failed to save layout", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
     },
-    [sessionId, saveSessionMutation],
+    [session, saveSessionMutation],
   );
+
+  // Save layout to database only when resize stops
+  const handleResizeStop = handleDragStop;
 
   // Reset layout to default
   const handleResetLayout = useCallback(async () => {
     try {
       setLayout(defaultLayout);
 
-      // Fetch latest session data
-      const latestSession = await fetchSession(sessionId);
-
-      // Clear widget layout (set to undefined)
-      latestSession.setWidgetLayout([]);
+      // Clear widget layout using session from props (undefined = use default)
+      session.setWidgetLayout(undefined);
 
       // Save to backend
-      await saveSessionMutation.mutateAsync({ session: latestSession });
+      await saveSessionMutation.mutateAsync({ session });
 
       toast.success("Layout reset to default");
     } catch (error) {
@@ -108,7 +108,7 @@ export default function SessionDataSidebar({
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [sessionId, defaultLayout, saveSessionMutation]);
+  }, [session, defaultLayout, saveSessionMutation]);
 
   return (
     <aside
@@ -141,6 +141,8 @@ export default function SessionDataSidebar({
         <GridLayout
           layout={layout}
           onLayoutChange={handleLayoutChange}
+          onDragStop={handleDragStop}
+          onResizeStop={handleResizeStop}
           cols={12} // 12-column grid system
           rowHeight={60} // each row is 60px
           width={288} // 320px - 32px padding (16px * 2)

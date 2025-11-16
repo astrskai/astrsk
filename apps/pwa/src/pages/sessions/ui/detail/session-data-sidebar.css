@@ -16,12 +16,14 @@
   transition: none;
   z-index: 100;
   will-change: width, height;
+  user-select: none; /* Prevent text selection during resize */
 }
 
 .react-grid-item.react-draggable-dragging {
   transition: none;
   z-index: 100;
   will-change: transform;
+  user-select: none; /* Prevent text selection during drag */
 }
 
 .react-grid-item.react-grid-placeholder {

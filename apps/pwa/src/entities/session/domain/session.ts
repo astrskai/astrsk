@@ -259,7 +259,7 @@ export class Session extends AggregateRoot<SessionProps> {
     this.props.dataSchemaOrder = order;
   }
 
-  public setWidgetLayout(layout: Array<{ i: string; x: number; y: number; w: number; h: number }>): void {
+  public setWidgetLayout(layout: Array<{ i: string; x: number; y: number; w: number; h: number }> | undefined): void {
     this.props.widgetLayout = layout;
   }
 }

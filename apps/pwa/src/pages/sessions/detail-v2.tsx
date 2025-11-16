@@ -124,7 +124,7 @@ export default function SessionDetailPage() {
 
       <div className="flex flex-1">
         <SessionDataSidebar
-          sessionId={sessionIdEntity}
+          session={session}
           isOpen={isOpenDataSidebar}
           sortedDataSchemaFields={sortedDataSchemaFields}
           isInitialDataStore={isInitialDataStore}
