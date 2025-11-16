@@ -5,7 +5,7 @@ import { Button, SearchInput } from "@/shared/ui/forms";
 import FlowPreview from "@/features/flow/ui/flow-preview";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { Flow } from "@/entities/flow/domain/flow";
-import { IconFlow } from "@/shared/assets/icons";
+import { IconWorkflow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import {
   Dialog,
@@ -124,7 +124,7 @@ export function FlowSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <IconFlow className="text-text-secondary mb-3 h-12 w-12" />
+              <IconWorkflow className="text-text-secondary mb-3 h-12 w-12" />
               <h3 className="text-text-primary mb-2 text-lg font-semibold">
                 Add Flow
               </h3>
