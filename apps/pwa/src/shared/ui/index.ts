@@ -13,6 +13,7 @@ export * from "./checkbox";
 export * from "./command";
 export * from "./dialog";
 export * from "./dropdown-menu";
+export { default as DropdownMenuBase } from "./dropdown-menu-base";
 export * from "./input";
 export * from "./label";
 export * from "./popover";

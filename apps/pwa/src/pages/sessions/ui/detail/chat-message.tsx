@@ -1,13 +1,5 @@
 import { memo, useCallback, useState, useMemo } from "react";
-import {
-  Trash2,
-  Pencil,
-  Check,
-  History,
-  RefreshCcw,
-  ChevronRight,
-  ChevronLeft,
-} from "lucide-react";
+import { History } from "lucide-react";
 
 import { fetchTurn } from "@/entities/turn/api/turn-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
@@ -26,6 +18,7 @@ import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { useUpdateTurn } from "@/entities/turn/api/turn-queries";
 import { ChatStyles } from "@/entities/session/domain/chat-styles";
 import { Turn } from "@/entities/turn/domain/turn";
+import ChatMessageActions from "./chat-message-actions";
 
 interface ChatMessageProps {
   message: Turn;
@@ -164,7 +157,26 @@ const ChatMessage = ({
         >
           {character?.props.title || "User"}
         </div>
-        <div className="group/bubble relative max-w-full">
+        <div className="group/message flex max-w-full items-start gap-2">
+          {/* Action buttons - left side for AI */}
+          {!isStreaming && !isUser && (
+            <ChatMessageActions
+              messageId={message.id}
+              isUser={isUser}
+              isEditing={isEditing}
+              isShowDataStore={isShowDataStore}
+              sortedDataStoreFields={sortedDataStoreFields}
+              selectedOptionIndex={message.selectedOptionIndex}
+              totalOptions={message.options.length}
+              onEdit={handleEdit}
+              onEditDone={handleEditDone}
+              onDelete={(id) => onDelete?.(id)}
+              onShowDataStore={handleShowDataStore}
+              onSelectOption={handleSelectOption}
+              onRegenerate={(id) => onRegenerate?.(id)}
+            />
+          )}
+
           <ChatBubble
             direction={isUser ? "right" : "left"}
             className={cn(
@@ -328,130 +340,23 @@ const ChatMessage = ({
             )}
           </ChatBubble>
 
-          {/* Action buttons - shown on hover */}
-          {!isStreaming && (
-            <div
-              className={cn(
-                "absolute z-10 hidden group-hover/bubble:flex",
-                isUser ? "right-0" : "left-0",
-                isLastMessage ? "bottom-full pb-1" : "top-full pt-1",
-              )}
-            >
-              <div
-                className={cn(
-                  "flex items-center justify-center gap-1 rounded-lg px-2 py-1",
-                  isUser
-                    ? "bg-gray-50/80 text-gray-900"
-                    : "bg-gray-800/80 text-gray-200",
-                )}
-              >
-                <button
-                  type="button"
-                  className={cn(
-                    "flex items-center justify-center p-1",
-                    isUser
-                      ? "hover:text-gray-900/70"
-                      : "hover:text-gray-200/70",
-                  )}
-                  aria-label="Edit"
-                  onClick={isEditing ? handleEditDone : handleEdit}
-                >
-                  {isEditing ? (
-                    <Check className="h-5 w-5" />
-                  ) : (
-                    <Pencil className="h-5 w-5" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "flex items-center justify-center p-1",
-                    isUser
-                      ? "hover:text-gray-900/70"
-                      : "hover:text-gray-200/70",
-                  )}
-                  aria-label="Delete"
-                  onClick={() => onDelete?.(message.id)}
-                >
-                  <Trash2 className="h-5 w-5" />
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "flex items-center justify-center p-1",
-                    isUser
-                      ? "hover:text-gray-900/70"
-                      : "hover:text-gray-200/70",
-                    sortedDataStoreFields?.length === 0 && "hidden",
-                  )}
-                  aria-label="History"
-                  onClick={handleShowDataStore}
-                >
-                  <History
-                    className="h-5 w-5"
-                    color={isShowDataStore ? "#3e9392" : "currentColor"}
-                  />
-                </button>
-                <div className="flex flex-row items-center gap-[2px]">
-                  <button
-                    className={cn(
-                      "cursor-pointer",
-                      // Mobile: larger touch target
-                      "max-md:p-[4px]",
-                    )}
-                    onClick={() => handleSelectOption(message.id, "prev")}
-                  >
-                    <ChevronLeft
-                      className={cn(
-                        // Desktop
-                        "h-[16px] w-[16px]",
-                        // Mobile
-                        "max-md:h-[14px] max-md:w-[14px]",
-                      )}
-                    />
-                  </button>
-                  <div
-                    className={cn(
-                      "min-w-[24px] text-center font-[600] select-none",
-                      // Desktop
-                      "text-[10px] leading-[12px]",
-                      // Mobile
-                      "max-md:text-[9px] max-md:leading-[11px]",
-                    )}
-                  >{`${message.selectedOptionIndex + 1} / ${message.options.length}`}</div>
-                  <button
-                    className={cn(
-                      "cursor-pointer",
-                      // Mobile: larger touch target
-                      "max-md:p-[4px]",
-                    )}
-                    onClick={() => handleSelectOption(message.id, "next")}
-                  >
-                    <ChevronRight
-                      className={cn(
-                        // Desktop
-                        "h-[16px] w-[16px]",
-                        // Mobile
-                        "max-md:h-[14px] max-md:w-[14px]",
-                      )}
-                    />
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className={cn(
-                    "flex items-center justify-center p-1",
-                    isUser
-                      ? "hover:text-gray-900/70"
-                      : "hover:text-gray-200/70",
-                  )}
-                  aria-label="Regenerate"
-                  onClick={() => onRegenerate?.(message.id)}
-                >
-                  <RefreshCcw className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
+          {/* Action buttons - right side for user */}
+          {!isStreaming && isUser && (
+            <ChatMessageActions
+              messageId={message.id}
+              isUser={isUser}
+              isEditing={isEditing}
+              isShowDataStore={isShowDataStore}
+              sortedDataStoreFields={sortedDataStoreFields}
+              selectedOptionIndex={message.selectedOptionIndex}
+              totalOptions={message.options.length}
+              onEdit={handleEdit}
+              onEditDone={handleEditDone}
+              onDelete={(id) => onDelete?.(id)}
+              onShowDataStore={handleShowDataStore}
+              onSelectOption={handleSelectOption}
+              onRegenerate={(id) => onRegenerate?.(id)}
+            />
           )}
         </div>
       </div>
