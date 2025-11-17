@@ -327,9 +327,9 @@ const ChatMessage = ({
               <div className="flex flex-col gap-1">
                 {/* Typing indicator - only show when streaming */}
                 <div className="flex items-center gap-1">
-                  <span className="animate-bounce-typing h-2 w-2 rounded-full bg-gray-500 [animation-delay:0s]"></span>
-                  <span className="animate-bounce-typing h-2 w-2 rounded-full bg-gray-500 [animation-delay:0.2s]"></span>
-                  <span className="animate-bounce-typing h-2 w-2 rounded-full bg-gray-500 [animation-delay:0.4s]"></span>
+                  <span className="animate-bounce-typing h-1.5 w-1.5 rounded-full bg-gray-500 [animation-delay:0s] md:h-2 md:w-2"></span>
+                  <span className="animate-bounce-typing h-1.5 w-1.5 rounded-full bg-gray-500 [animation-delay:0.2s] md:h-2 md:w-2"></span>
+                  <span className="animate-bounce-typing h-1.5 w-1.5 rounded-full bg-gray-500 [animation-delay:0.4s] md:h-2 md:w-2"></span>
                 </div>
 
                 <div>

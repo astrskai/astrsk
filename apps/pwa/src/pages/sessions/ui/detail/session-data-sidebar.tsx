@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback } from "react";
-import GridLayout, { Layout } from "react-grid-layout";
+import GridLayout, { Layout, WidthProvider } from "react-grid-layout";
 import { toast } from "sonner";
 import { RotateCcw } from "lucide-react";
+
+const ResponsiveGridLayout = WidthProvider(GridLayout);
 
 import { cn } from "@/shared/lib";
 import { DataStoreSchemaField } from "@/entities/flow/domain";
@@ -140,14 +142,13 @@ export default function SessionDataSidebar({
           </button>
         </div>
 
-        <GridLayout
+        <ResponsiveGridLayout
           layout={layout}
           onLayoutChange={handleLayoutChange}
           onDragStop={handleDragStop}
           onResizeStop={handleResizeStop}
           cols={12} // 12-column grid system
           rowHeight={60} // each row is 60px
-          width={288} // 320px - 32px padding (16px * 2)
           compactType="vertical" // automatic vertical compaction (magnetic)
           preventCollision={false} // allow overlapping during drag
           isDraggable={true} // enable drag
@@ -203,7 +204,7 @@ export default function SessionDataSidebar({
               </div>
             </div>
           ))}
-        </GridLayout>
+        </ResponsiveGridLayout>
       </div>
     </aside>
   );

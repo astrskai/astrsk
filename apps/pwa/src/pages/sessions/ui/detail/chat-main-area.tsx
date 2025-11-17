@@ -670,7 +670,7 @@ export default function ChatMainArea({
   }, [plotCardScenarioCount, messageCount]);
 
   return (
-    <div className="mx-auto flex h-dvh max-w-5xl flex-1 flex-col items-center justify-end pt-10 md:justify-center">
+    <div className="mx-auto flex h-dvh max-w-5xl flex-1 flex-col items-center justify-end pt-12 md:justify-center">
       <ChatMessageList
         data={data}
         streamingMessageId={streamingMessageId}
