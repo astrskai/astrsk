@@ -117,7 +117,7 @@ export default function SessionDataSidebar({
         // Mobile: fixed overlay with slide animation + bottom offset for ChatInput
         // Don't use h-dvh - let top/bottom define height
         "fixed top-10 left-0 z-10",
-        "bottom-27", // Reserve space for ChatInput (80px = 20 * 4px)
+        "bottom-27", // Reserve space for ChatInput (108px = 27 * 4px)
         isOpen ? "translate-x-0" : "-translate-x-full",
         // Desktop: relative layout with opacity + max-width animation
         "md:relative md:top-0 md:bottom-auto md:h-dvh md:translate-x-0 md:pt-28",

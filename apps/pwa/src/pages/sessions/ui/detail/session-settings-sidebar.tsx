@@ -450,7 +450,7 @@ const SessionSettingsSidebar = ({
         </section>
 
         {/* Background image - Mobile (Dialog) */}
-        <section className="md:!hidden">
+        <section className="md:hidden!">
           <h3 className="font-semibold">Background image</h3>
           <div
             className="cursor-pointer rounded-lg transition-opacity hover:brightness-110"
@@ -483,7 +483,7 @@ const SessionSettingsSidebar = ({
         </section>
 
         {/* Background image - Desktop (Popover) */}
-        <section className="!hidden md:!flex">
+        <section className="hidden! md:flex!">
           <h3 className="font-semibold">Background image</h3>
           <PopoverBase
             open={isBackgroundPopoverOpen}

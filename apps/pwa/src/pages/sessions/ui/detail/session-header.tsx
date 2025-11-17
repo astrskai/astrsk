@@ -41,7 +41,7 @@ export default function SessionHeader({
         {/* Right: Settings button */}
         <button
           onClick={onSettingsClick}
-          className="text-text-primary hover:text-text-secondary -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
+          className="text-text-primary hover:text-text-secondary -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
           aria-label="Session settings"
         >
           <Pencil className="h-5 w-5" />
