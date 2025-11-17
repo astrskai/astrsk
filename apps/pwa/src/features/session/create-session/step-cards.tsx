@@ -77,7 +77,14 @@ const CardItem = ({
   );
 };
 
-type CardTab = "user" | "ai" | "plot";
+// Card tab constants - no hardcoded strings
+export const CardTabValue = {
+  User: "user",
+  AI: "ai",
+  Plot: "plot",
+} as const;
+
+export type CardTab = (typeof CardTabValue)[keyof typeof CardTabValue];
 
 const StepCards = () => {
   const { watch, setValue, trigger } = useFormContext<StepCardsSchemaType>();
@@ -87,7 +94,7 @@ const StepCards = () => {
 
   // Card pool
   const [keyword, setKeyword] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<CardTab>("ai");
+  const [activeTab, setActiveTab] = useState<CardTab>(CardTabValue.AI);
   const [showAiCardError, setShowAiCardError] = useState<boolean>(false);
   const [activeCardIdMap, setActiveCardIdMap] = useState<Map<string, boolean>>(
     new Map(),
@@ -120,18 +127,18 @@ const StepCards = () => {
     }
     const newActiveCardIdMap = new Map<string, boolean>();
     const newDisabledCardIdMap = new Map<string, boolean>();
-    if (activeTab === "user") {
+    if (activeTab === CardTabValue.User) {
       userCharacterCardId && newActiveCardIdMap.set(userCharacterCardId, true);
       for (const aiCharacterCardId of aiCharacterCardIds) {
         newDisabledCardIdMap.set(aiCharacterCardId, true);
       }
-    } else if (activeTab === "ai") {
+    } else if (activeTab === CardTabValue.AI) {
       for (const aiCharacterCardId of aiCharacterCardIds) {
         newActiveCardIdMap.set(aiCharacterCardId, true);
       }
       userCharacterCardId &&
         newDisabledCardIdMap.set(userCharacterCardId, true);
-    } else if (activeTab === "plot" && plotCardId) {
+    } else if (activeTab === CardTabValue.Plot && plotCardId) {
       newActiveCardIdMap.set(plotCardId, true);
     }
     setActiveCardIdMap(newActiveCardIdMap);
@@ -150,7 +157,7 @@ const StepCards = () => {
   // Handle card click
   const handleCardClick = (cardId: string) => {
     switch (activeTab) {
-      case "user":
+      case CardTabValue.User:
         if (userCharacterCardId === cardId) {
           setValue("userCharacterCardId", null);
         } else {
@@ -163,7 +170,7 @@ const StepCards = () => {
           }
         }
         break;
-      case "ai":
+      case CardTabValue.AI:
         if (aiCharacterCardIds.includes(cardId)) {
           setValue(
             "aiCharacterCardIds",
@@ -178,7 +185,7 @@ const StepCards = () => {
           setShowAiCardError(false);
         }
         break;
-      case "plot":
+      case CardTabValue.Plot:
         if (plotCardId === cardId) {
           setValue("plotCardId", null);
         } else {
@@ -194,11 +201,11 @@ const StepCards = () => {
       <div className="min-h-[600px] w-1/2 max-w-[744px] min-w-[440px]">
         <Accordion
           type="single"
-          defaultValue="ai"
+          defaultValue={CardTabValue.AI}
           value={activeTab}
           onValueChange={(newValue) => {
             // Check if trying to switch away from AI tab without selecting any AI character
-            if (newValue !== "ai" && aiCharacterCardIds.length === 0) {
+            if (newValue !== CardTabValue.AI && aiCharacterCardIds.length === 0) {
               setShowAiCardError(true);
               // Don't switch tabs if no AI character is selected
               return;
@@ -207,12 +214,12 @@ const StepCards = () => {
             setShowAiCardError(false);
           }}
         >
-          <AccordionItem value="ai" className="mb-[16px] border-b-0">
+          <AccordionItem value={CardTabValue.AI} className="mb-[16px] border-b-0">
             <AccordionTrigger className="py-0 hover:no-underline">
               <div
                 className={cn(
                   "bg-background-surface-3 w-full rounded-[16px] p-[24px]",
-                  activeTab === "ai"
+                  activeTab === CardTabValue.AI
                     ? "inset-ring-primary-normal inset-ring-2"
                     : "hover:bg-background-surface-4 cursor-pointer",
                 )}
@@ -256,12 +263,12 @@ const StepCards = () => {
               </div>
             </AccordionTrigger>
           </AccordionItem>
-          <AccordionItem value="user" className="mb-[16px] border-b-0">
+          <AccordionItem value={CardTabValue.User} className="mb-[16px] border-b-0">
             <AccordionTrigger className="py-0 hover:no-underline">
               <div
                 className={cn(
                   "bg-background-surface-3 w-full rounded-[16px] p-[24px]",
-                  activeTab === "user"
+                  activeTab === CardTabValue.User
                     ? "inset-ring-primary-normal inset-ring-2"
                     : "hover:bg-background-surface-4 cursor-pointer",
                 )}
@@ -298,12 +305,12 @@ const StepCards = () => {
               </div>
             </AccordionTrigger>
           </AccordionItem>
-          <AccordionItem value="plot" className="mb-[16px] border-b-0">
+          <AccordionItem value={CardTabValue.Plot} className="mb-[16px] border-b-0">
             <AccordionTrigger className="py-0 hover:no-underline">
               <div
                 className={cn(
                   "bg-background-surface-3 w-full rounded-[16px] p-[24px]",
-                  activeTab === "plot"
+                  activeTab === CardTabValue.Plot
                     ? "inset-ring-primary-normal inset-ring-2"
                     : "hover:bg-background-surface-4 cursor-pointer",
                 )}
@@ -347,7 +354,7 @@ const StepCards = () => {
         <div className="bg-background-surface-3 flex h-full flex-col gap-[24px] rounded-[24px] p-[24px]">
           <div className="flex flex-col gap-[8px]">
             <div className="text-text-primary text-[20px] leading-[32px] font-[500]">
-              {activeTab === "plot" ? "Plot" : "Character"} cards
+              {activeTab === CardTabValue.Plot ? "Plot" : "Character"} cards
             </div>
             {/* <div className="font-[400] text-[16px] leading-[19px] text-text-input-subtitle">
             Select characters by dragging cards into place
@@ -358,7 +365,7 @@ const StepCards = () => {
             onChange={(e) => setKeyword(e.target.value)}
           />
           <ScrollArea className="flex-1 pr-2">
-            {activeTab === "plot"
+            {activeTab === CardTabValue.Plot
               ? plotCards?.length === 0 && (
                   <div className="items-top flex w-full flex-col">
                     <NoCardsFound
@@ -382,7 +389,7 @@ const StepCards = () => {
                   </div>
                 )}
             <div className="flex flex-wrap justify-start gap-[24px]">
-              {(activeTab === "plot" ? plotCards : characterCards)?.map(
+              {(activeTab === CardTabValue.Plot ? plotCards : characterCards)?.map(
                 (card: Card) => (
                   <CardItem
                     key={card.id.toString()}
@@ -440,4 +447,4 @@ function convertCardsFormToSessionProps(
 }
 
 export { CardItem, convertCardsFormToSessionProps, StepCards, StepCardsSchema };
-export type { CardTab, StepCardsSchemaType };
+export type { StepCardsSchemaType };

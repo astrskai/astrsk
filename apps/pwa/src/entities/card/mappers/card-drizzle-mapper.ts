@@ -1,131 +1,157 @@
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain";
 
-import { InsertCard, SelectCard } from "@/db/schema/cards";
+import { SelectCharacter, InsertCharacter } from "@/db/schema/characters";
+import { SelectScenario, InsertScenario } from "@/db/schema/scenarios";
 import {
   Card,
   CardType,
   CharacterCard,
-  CreateCardProps,
-  PlotCard,
+  ScenarioCard,
+  normalizeCardType,
 } from "@/entities/card/domain";
 import { Lorebook } from "@/entities/card/domain/lorebook";
+
+// Union type for database rows
+type SelectCardRow = SelectCharacter | SelectScenario;
+type InsertCardRow = InsertCharacter | InsertScenario;
 
 export class CardDrizzleMapper {
   private constructor() {}
 
-  public static toDomain(row: SelectCard): Card {
-    // Create card
+  // Type guard to check if row is a character
+  private static isCharacterRow(row: SelectCardRow): row is SelectCharacter {
+    return "example_dialogue" in row; // Characters have example_dialogue, scenarios don't
+  }
+
+  // Type guard to check if row is a scenario
+  private static isScenarioRow(row: SelectCardRow): row is SelectScenario {
+    return "first_messages" in row; // Scenarios have first_messages, characters don't
+  }
+
+  public static toDomain(row: SelectCardRow): Card {
     let cardOrError: Result<Card>;
-    const commonProps: CreateCardProps = {
-      title: row.common.title,
-      iconAssetId: row.common.icon_asset_id
-        ? new UniqueEntityID(row.common.icon_asset_id)
-        : undefined,
-      tags: row.common.tags,
-      creator: row.common.creator ?? undefined,
-      cardSummary: row.common.card_summary ?? undefined,
-      version: row.common.version ?? undefined,
-      conceptualOrigin: row.common.conceptual_origin ?? undefined,
-      imagePrompt: row.common.image_prompt ?? undefined,
-      createdAt: row.common.created_at,
-      updatedAt: row.common.updated_at,
-    };
-    if (row.character) {
+
+    if (this.isCharacterRow(row)) {
+      // Map character from flat schema
       cardOrError = CharacterCard.create(
         {
-          ...commonProps,
-          type: row.common.type as CardType,
-          name: row.character.name,
-          description: row.character.description ?? undefined,
-          exampleDialogue: row.character.example_dialogue ?? undefined,
-          lorebook: row.character.lorebook
-            ? Lorebook.fromJSON(row.character.lorebook)
-                .throwOnFailure()
-                .getValue()
+          title: row.title,
+          iconAssetId: row.icon_asset_id
+            ? new UniqueEntityID(row.icon_asset_id)
             : undefined,
+          type: CardType.Character,
+          tags: row.tags,
+          creator: row.creator ?? undefined,
+          cardSummary: row.card_summary ?? undefined,
+          version: row.version ?? undefined,
+          conceptualOrigin: row.conceptual_origin ?? undefined,
+          vibeSessionId: row.vibe_session_id ?? undefined,
+          imagePrompt: row.image_prompt ?? undefined,
+          name: row.name,
+          description: row.description ?? undefined,
+          exampleDialogue: row.example_dialogue ?? undefined,
+          lorebook: row.lorebook
+            ? Lorebook.fromJSON(row.lorebook).throwOnFailure().getValue()
+            : undefined,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
         },
-        new UniqueEntityID(row.common.id),
+        new UniqueEntityID(row.id),
       );
-    } else if (row.plot) {
-      cardOrError = PlotCard.create(
+    } else if (this.isScenarioRow(row)) {
+      // Map scenario from flat schema
+      cardOrError = ScenarioCard.create(
         {
-          ...commonProps,
-          type: row.common.type as CardType,
-          description: row.plot.description ?? undefined,
-          scenarios: row.plot.scenarios ?? undefined,
-          lorebook: row.plot.lorebook
-            ? Lorebook.fromJSON(row.plot.lorebook).getValue()
+          title: row.title,
+          iconAssetId: row.icon_asset_id
+            ? new UniqueEntityID(row.icon_asset_id)
             : undefined,
+          type: CardType.Scenario,
+          tags: row.tags,
+          creator: row.creator ?? undefined,
+          cardSummary: row.card_summary ?? undefined,
+          version: row.version ?? undefined,
+          conceptualOrigin: row.conceptual_origin ?? undefined,
+          vibeSessionId: row.vibe_session_id ?? undefined,
+          imagePrompt: row.image_prompt ?? undefined,
+          name: row.name,
+          description: row.description ?? undefined,
+          firstMessages: row.first_messages ?? undefined,
+          lorebook: row.lorebook
+            ? Lorebook.fromJSON(row.lorebook).getValue()
+            : undefined,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
         },
-        new UniqueEntityID(row.common.id),
+        new UniqueEntityID(row.id),
       );
     } else {
-      throw new Error("Invalid card type");
+      throw new Error("Invalid card type: row must be either character or scenario");
     }
 
-    // Check error
     if (cardOrError.isFailure) {
       throw new Error(cardOrError.getError());
     }
 
-    // Return card
     return cardOrError.getValue();
   }
 
   private static isCharacterCard(card: Card): card is CharacterCard {
-    return card.props.type === CardType.Character;
+    return normalizeCardType(card.props.type) === CardType.Character;
   }
 
-  private static isPlotCard(card: Card): card is PlotCard {
-    return card.props.type === CardType.Plot;
+  private static isScenarioCard(card: Card): card is ScenarioCard {
+    return normalizeCardType(card.props.type) === CardType.Scenario;
   }
 
-  public static toPersistence(domain: Card): InsertCard {
-    // Set common props
-    const insertRow: InsertCard = {
-      common: {
+  public static toPersistence(domain: Card): InsertCardRow {
+    if (this.isCharacterCard(domain)) {
+      // Map to characters table
+      const insertRow: InsertCharacter = {
         id: domain.id.toString(),
         title: domain.props.title,
         icon_asset_id: domain.props.iconAssetId?.toString() ?? null,
-        type: domain.props.type,
         tags: domain.props.tags,
-        creator: domain.props.creator,
-        card_summary: domain.props.cardSummary,
-        version: domain.props.version,
-        conceptual_origin: domain.props.conceptualOrigin,
-        image_prompt: domain.props.imagePrompt,
-        created_at: domain.props.createdAt,
-        updated_at: domain.props.updatedAt,
-      },
-    };
-
-    // Set each card type props
-    if (this.isCharacterCard(domain)) {
-      insertRow.character = {
-        id: domain.id.toString(),
+        creator: domain.props.creator ?? null,
+        card_summary: domain.props.cardSummary ?? null,
+        version: domain.props.version ?? null,
+        conceptual_origin: domain.props.conceptualOrigin ?? null,
+        vibe_session_id: domain.props.vibeSessionId ?? null,
+        image_prompt: domain.props.imagePrompt ?? null,
         name: domain.props.name ?? "",
-        description: domain.props.description,
-        example_dialogue: domain.props.exampleDialogue,
+        description: domain.props.description ?? null,
+        example_dialogue: domain.props.exampleDialogue ?? null,
         lorebook: domain.props.lorebook ? domain.props.lorebook.toJSON() : null,
         created_at: domain.props.createdAt,
         updated_at: domain.props.updatedAt,
       };
-    } else if (this.isPlotCard(domain)) {
-      insertRow.plot = {
+      return insertRow;
+    } else if (this.isScenarioCard(domain)) {
+      // Map to scenarios table
+      const insertRow: InsertScenario = {
         id: domain.id.toString(),
-        description: domain.props.description,
-        scenarios: domain.props.scenarios,
+        title: domain.props.title,
+        icon_asset_id: domain.props.iconAssetId?.toString() ?? null,
+        tags: domain.props.tags,
+        creator: domain.props.creator ?? null,
+        card_summary: domain.props.cardSummary ?? null,
+        version: domain.props.version ?? null,
+        conceptual_origin: domain.props.conceptualOrigin ?? null,
+        vibe_session_id: domain.props.vibeSessionId ?? null,
+        image_prompt: domain.props.imagePrompt ?? null,
+        // Use name if available (ScenarioCard), otherwise use title (PlotCard fallback)
+        name: (domain.props as any).name ?? domain.props.title,
+        description: domain.props.description ?? null,
+        // Handle both new (firstMessages) and old (scenarios) field names
+        first_messages: (domain.props as any).firstMessages ?? (domain.props as any).scenarios ?? null,
         lorebook: domain.props.lorebook ? domain.props.lorebook.toJSON() : null,
         created_at: domain.props.createdAt,
         updated_at: domain.props.updatedAt,
       };
+      return insertRow;
     } else {
-      // Unknown card type
       throw new Error("Invalid card type");
     }
-
-    // Return insert row
-    return insertRow;
   }
 }

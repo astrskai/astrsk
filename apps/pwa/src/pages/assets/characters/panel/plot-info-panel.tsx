@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Editor } from "@/shared/ui";
 import type { editor } from "monaco-editor";
-import { PlotCard } from "@/entities/card/domain";
+import { PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 
@@ -43,7 +43,7 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
   useEffect(() => {
     // Initialize when card changes
     if (cardId && cardId !== lastInitializedCardId.current && card) {
-      if (card instanceof PlotCard) {
+      if (card instanceof PlotCard || card instanceof ScenarioCard) {
         setDescription(card.props.description || "");
       } else {
         setDescription("");
@@ -56,7 +56,7 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
       !updatePlotDescription.isEditing &&
       !updatePlotDescription.hasCursor
     ) {
-      if (card instanceof PlotCard) {
+      if (card instanceof PlotCard || card instanceof ScenarioCard) {
         const newDescription = card.props.description || "";
         // Only update if description actually changed
         if (description !== newDescription) {
@@ -111,7 +111,11 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
   // 8. Helper function to save description using mutation
   const saveDescription = useCallback(
     (newDescription: string) => {
-      if (!card || !(card instanceof PlotCard)) return;
+      if (
+        !card ||
+        !(card instanceof PlotCard || card instanceof ScenarioCard)
+      )
+        return;
 
       // Check for actual changes inline
       const currentDescription = card.props.description || "";
@@ -153,9 +157,9 @@ export function PlotInfoPanel({ cardId }: PlotInfoPanelProps) {
     return <CardPanelError message="Card not found" />;
   }
 
-  if (!(card instanceof PlotCard)) {
+  if (!(card instanceof PlotCard || card instanceof ScenarioCard)) {
     return (
-      <CardPanelError message="Plot info is only available for plot cards" />
+      <CardPanelError message="Scenario info is only available for scenario cards" />
     );
   }
 

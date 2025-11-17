@@ -35,7 +35,7 @@ import { parseAiSdkErrorMessage } from "@/shared/lib/error-utils";
 import { logger } from "@/shared/lib/logger";
 import { toastError } from "@/shared/ui/toast-error";
 import { TurnService } from "@/app/services/turn-service";
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { useCard } from "@/shared/hooks/use-card";
 import { cn } from "@/shared/lib";
 import SelectScenarioDialog from "./select-scenario-dialog";
@@ -49,10 +49,16 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState<boolean>(false);
   // Add plot card modal
-  const [plotCard] = useCard<PlotCard>(data?.plotCard?.id);
+  const [plotCard] = useCard<PlotCard | ScenarioCard>(data?.plotCard?.id);
   const messageCount = data?.turnIds.length ?? 0;
   const plotCardId = data?.plotCard?.id.toString() ?? "";
-  const plotCardScenarioCount = plotCard?.props.scenarios?.length ?? 0;
+  // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+  const plotCardScenarioCount =
+    (plotCard instanceof PlotCard
+      ? plotCard.props.scenarios?.length
+      : plotCard instanceof ScenarioCard
+        ? plotCard.props.firstMessages?.length
+        : 0) ?? 0;
   // Render scenario
   const [renderedScenarios, setRenderedScenarios] = useState<
     {
@@ -590,8 +596,17 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
       return;
     }
 
-    // If no scenarios, set empty array
-    if (!plotCard.props.scenarios || plotCard.props.scenarios.length === 0) {
+    // Get first messages based on card type
+    // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+    const firstMessages =
+      plotCard instanceof PlotCard
+        ? plotCard.props.scenarios
+        : plotCard instanceof ScenarioCard
+          ? plotCard.props.firstMessages
+          : undefined;
+
+    // If no first messages, set empty array
+    if (!firstMessages || firstMessages.length === 0) {
       setRenderedScenarios([]);
       return;
     }
@@ -628,17 +643,17 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
       };
     }
 
-    // Render scenarios
+    // Render first messages
     const renderedScenarios = await Promise.all(
-      plotCard.props.scenarios.map(
-        async (scenario: { name: string; description: string }) => {
-          const renderedScenario = await TemplateRenderer.render(
-            scenario.description,
+      firstMessages.map(
+        async (message: { name: string; description: string }) => {
+          const renderedMessage = await TemplateRenderer.render(
+            message.description,
             context,
           );
           return {
-            name: scenario.name,
-            description: renderedScenario,
+            name: message.name,
+            description: renderedMessage,
           };
         },
       ),

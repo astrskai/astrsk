@@ -1,7 +1,7 @@
 import { Plus, Upload, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { CardType, PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
 import { DialogConfirm } from "@/shared/ui/dialogs";
@@ -11,7 +11,7 @@ import { useCardActions } from "@/features/common/model/use-card-actions";
 import { useAsset } from "@/shared/hooks/use-asset";
 
 interface ScenariosGridProps {
-  scenarios: PlotCard[];
+  scenarios: (PlotCard | ScenarioCard)[];
   showNewScenarioCard: boolean;
 }
 
@@ -20,7 +20,7 @@ interface ScenariosGridProps {
  * Wrapper component that handles useAsset hook
  */
 interface ScenarioGridItemProps {
-  scenario: PlotCard;
+  scenario: PlotCard | ScenarioCard;
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   onScenarioClick: (plotId: string) => void;
   onExport: (cardId: string, title: string) => (e: React.MouseEvent) => void;
@@ -73,7 +73,13 @@ function ScenarioGridItem({
       summary={scenario.props.cardSummary}
       tags={scenario.props.tags || []}
       tokenCount={scenario.props.tokenCount}
-      firstMessages={scenario.props.scenarios?.length || 0}
+      firstMessages={
+        scenario instanceof PlotCard
+          ? scenario.props.scenarios?.length || 0
+          : scenario instanceof ScenarioCard
+            ? scenario.props.firstMessages?.length || 0
+            : 0
+      }
       onClick={() => onScenarioClick(cardId)}
       actions={actions}
       isShowActions={true}
@@ -103,7 +109,7 @@ export function ScenariosGrid({
     handleDeleteClick,
     handleDeleteConfirm,
     closeDeleteDialog,
-  } = useCardActions({ entityType: "plot" });
+  } = useCardActions({ entityType: CardType.Scenario });
 
   const handleScenarioClick = (plotId: string) => {
     navigate({

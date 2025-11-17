@@ -12,7 +12,10 @@ import { InitialScreen } from "@/shared/ui/initial-screen";
 import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
 import { Route } from "@/routes/_layout/sessions/$sessionId";
-import { CardTab } from "@/features/session/create-session/step-cards";
+import {
+  CardTab,
+  CardTabValue,
+} from "@/features/session/create-session/step-cards";
 import { SessionContent, SessionSettings } from "./ui/detail";
 import { FloatingActionButton, ScrollArea, SvgIcon } from "@/shared/ui";
 import { logger } from "@/shared/lib";
@@ -76,10 +79,10 @@ export default function SessionDetailPage({
 
   // Add plot card
   const refEditCards = useRef<HTMLDivElement>(null);
-  const refInitCardTab = useRef<CardTab>("ai");
+  const refInitCardTab = useRef<CardTab>(CardTabValue.AI);
   const onAddPlotCard = () => {
     setIsOpenSettings(true);
-    refInitCardTab.current = "plot";
+    refInitCardTab.current = CardTabValue.Plot;
     refEditCards.current?.click();
   };
 

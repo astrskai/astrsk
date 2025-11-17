@@ -26,7 +26,7 @@ const SelectScenarioDialog = ({
   >(null);
   const [isAddingScenario, setIsAddingScenario] = useState<boolean>(false);
 
-  // Render scenarios on mount and when plotCardId changes
+  // Render first messages on mount and when plotCardId changes
   useEffect(() => {
     onRenderScenarios();
   }, [plotCardId, onRenderScenarios]);
@@ -36,7 +36,7 @@ const SelectScenarioDialog = ({
     setSelectedScenarioIndex(null);
   }, [sessionId, plotCardId]);
 
-  // Handle adding scenario
+  // Handle adding first message
   const handleAddScenario = async () => {
     if (selectedScenarioIndex !== null) {
       setIsAddingScenario(true);
@@ -48,18 +48,18 @@ const SelectScenarioDialog = ({
     }
   };
 
-  // Always show scenario selection view directly
+  // Always show first message selection view directly
   if (renderedScenarios) {
-    // Scenario selection view
+    // First message selection view
     return (
       <div className="bg-background-surface-2 outline-border-light mx-auto inline-flex w-full max-w-[600px] flex-col items-start justify-start gap-2.5 overflow-hidden rounded-lg p-6 outline-1">
         <div className="flex flex-col items-end justify-start gap-6 self-stretch">
           <div className="flex flex-col items-start justify-start gap-2 self-stretch">
             <div className="text-text-primary justify-start self-stretch text-2xl font-semibold">
-              Scenario
+              First Message
             </div>
             <div className="text-text-body justify-start self-stretch text-base leading-tight font-medium">
-              Select a scenario for your new session.
+              Select a first message for your new session.
             </div>
           </div>
           <div className="relative self-stretch">
@@ -79,12 +79,12 @@ const SelectScenarioDialog = ({
               ) : (
                 <div className="inline-flex w-full flex-col items-start justify-start gap-4 self-stretch py-6">
                   <div className="text-text-body justify-start self-stretch text-center text-2xl font-bold">
-                    No scenarios yet
+                    No first messages yet
                   </div>
                   <div className="text-background-surface-5 justify-start self-stretch text-center text-base leading-normal font-medium">
-                    Start by adding a scenario to your plot card.
+                    Start by adding a first message to your scenario card.
                     <br />
-                    Scenarios set the opening scene for your session <br />—
+                    First messages set the opening scene for your session <br />—
                     like a narrator kicking things off.
                   </div>
                 </div>
@@ -121,7 +121,7 @@ const SelectScenarioDialog = ({
     );
   }
 
-  // Loading state while scenarios are being rendered
+  // Loading state while first messages are being rendered
   return null;
 };
 

@@ -12,7 +12,7 @@ import {
   StepChatStylingSchemaType,
   StylingPreview,
   StylingSettings,
-} from "@/features/session/mobile/create-session/step-chat-styling-mobile";
+} from "@/features/session/create-session/step-chat-styling";
 import { Button, SvgIcon, TypoLarge } from "@/shared/ui";
 import {
   ChatStyles,

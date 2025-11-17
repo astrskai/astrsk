@@ -29,7 +29,7 @@ import { fetchApiConnections } from "@/entities/api/api-connection-queries";
 import {
   fetchCharacterCard,
   fetchCharacterCardOptional,
-  fetchPlotCardOptional,
+  fetchScenarioCardOptional,
 } from "@/entities/card/api/query-factory";
 import { fetchDataStoreNode } from "@/entities/data-store-node/api/query-factory";
 import { fetchFlow } from "@/entities/flow/api/query-factory";
@@ -48,7 +48,7 @@ import {
   ApiConnection,
   OpenrouterProviderSort,
 } from "@/entities/api/domain/api-connection";
-import { PlotCard } from "@/entities/card/domain";
+import { PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { DataStoreFieldType } from "@/entities/flow/domain/flow";
 import { IfNode } from "@/entities/if-node/domain";
@@ -139,10 +139,10 @@ const makeContext = async ({
     history: [],
   };
 
-  // Get plot card
-  let plotCard: PlotCard | null = null;
+  // Get plot card (can be PlotCard or ScenarioCard)
+  let plotCard: PlotCard | ScenarioCard | null = null;
   if (session.plotCard && session.plotCard.enabled) {
-    plotCard = await fetchPlotCardOptional(session.plotCard.id);
+    plotCard = await fetchScenarioCardOptional(session.plotCard.id);
   }
 
   // Set `{{session.scenario}}`

@@ -32,7 +32,7 @@ import {
   TooltipTrigger,
 } from "@/shared/ui";
 
-import { PlotCard } from "@/entities/card/domain";
+import { PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { debounce } from "lodash-es";
 import { registerCardMonacoEditor } from "./variables-panel";
 
@@ -95,10 +95,18 @@ export function FirstMessagesPanel({ cardId }: CardPanelProps) {
       cardId &&
       cardId !== lastInitializedCardId.current &&
       card &&
-      card instanceof PlotCard
+      (card instanceof PlotCard || card instanceof ScenarioCard)
     ) {
+      // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+      let messagesData: { name: string; description: string }[] | undefined;
+      if (card instanceof PlotCard) {
+        messagesData = card.props.scenarios;
+      } else if (card instanceof ScenarioCard) {
+        messagesData = card.props.firstMessages;
+      }
+
       const firstMessageList =
-        card.props.scenarios?.map((message, index) => ({
+        messagesData?.map((message, index) => ({
           id: `first-message-${index}`,
           name: message.name || "",
           description: message.description || "",
@@ -112,12 +120,20 @@ export function FirstMessagesPanel({ cardId }: CardPanelProps) {
     // Sync when card changes externally (cross-tab sync) - but not during mutation
     else if (
       card &&
-      card instanceof PlotCard &&
+      (card instanceof PlotCard || card instanceof ScenarioCard) &&
       !updateFirstMessages.isPending &&
       !updateFirstMessages.hasCursor
     ) {
+      // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+      let messagesData: { name: string; description: string }[] | undefined;
+      if (card instanceof PlotCard) {
+        messagesData = card.props.scenarios;
+      } else if (card instanceof ScenarioCard) {
+        messagesData = card.props.firstMessages;
+      }
+
       const newFirstMessages =
-        card.props.scenarios?.map((message, index) => ({
+        messagesData?.map((message, index) => ({
           id: `first-message-${index}`,
           name: message.name || "",
           description: message.description || "",
@@ -157,10 +173,20 @@ export function FirstMessagesPanel({ cardId }: CardPanelProps) {
   // 6. Helper function to save first messages using mutation
   const saveFirstMessages = useCallback(
     (newFirstMessages: FirstMessage[]) => {
-      if (!card || !(card instanceof PlotCard)) return;
+      if (
+        !card ||
+        !(card instanceof PlotCard || card instanceof ScenarioCard)
+      )
+        return;
 
       // Check for actual changes inline
-      const currentFirstMessages = card.props.scenarios || [];
+      // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+      let currentFirstMessages: { name: string; description: string }[] = [];
+      if (card instanceof PlotCard) {
+        currentFirstMessages = card.props.scenarios || [];
+      } else if (card instanceof ScenarioCard) {
+        currentFirstMessages = card.props.firstMessages || [];
+      }
 
       // Convert first messages to domain objects
       const firstMessagesData = newFirstMessages.map((message) => ({
@@ -300,8 +326,12 @@ export function FirstMessagesPanel({ cardId }: CardPanelProps) {
   }
 
   if (!card) {
+    return <CardPanelError message="Card not found" />;
+  }
+
+  if (!(card instanceof PlotCard || card instanceof ScenarioCard)) {
     return (
-      <CardPanelError message="First messages are only available for plot cards" />
+      <CardPanelError message="First messages are only available for scenario cards" />
     );
   }
 

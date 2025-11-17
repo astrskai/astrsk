@@ -8,10 +8,11 @@ import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { TableName } from "@/db/schema/table-name";
+import { CardType } from "@/entities/card/domain";
 
 interface UseCardActionsOptions {
   /**
-   * Entity type name for toast messages (e.g., "character", "plot")
+   * Entity type name for toast messages (e.g., CardType.Character, CardType.Scenario)
    * Defaults to "card"
    */
   entityType?: string;
@@ -48,7 +49,7 @@ interface LoadingStates {
  *   handleDeleteClick,
  *   handleDeleteConfirm,
  *   closeDeleteDialog
- * } = useCardActions({ entityType: "character" });
+ * } = useCardActions({ entityType: CardType.Character });
  *
  * const actions = [
  *   { icon: Upload, onClick: handleExport(cardId, title), loading: loadingStates[cardId]?.exporting },
@@ -125,7 +126,8 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
         [cardId]: { ...(prev[cardId] ?? {}), copying: true },
       }));
 
-      const entityTypeText = entityType === "plot" ? "scenario" : entityType;
+      const entityTypeText =
+        entityType === CardType.Plot ? "scenario" : entityType;
 
       try {
         const result = await CardService.cloneCard.execute({
@@ -207,7 +209,8 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
       [cardId]: { ...(prev[cardId] ?? {}), deleting: true },
     }));
 
-    const entityTypeText = entityType === "plot" ? "scenario" : entityType;
+    const entityTypeText =
+      entityType === CardType.Plot ? "scenario" : entityType;
 
     try {
       const result = await CardService.deleteCard.execute(

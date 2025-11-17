@@ -22,7 +22,7 @@ import { Loading, PopoverBase, DropdownMenuBase } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs/confirm";
 import CharacterItem from "./settings/character-item";
 import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
-import { PlotCard } from "@/entities/card/domain";
+import { PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { useCard } from "@/shared/hooks/use-card";
 import { UniqueEntityID } from "@/shared/domain";
 import FlowPreview from "@/features/flow/ui/flow-preview";
@@ -47,8 +47,21 @@ const ScenarioPreviewItem = ({
   scenarioId: UniqueEntityID;
   onClick?: () => void;
 }) => {
-  const [scenario] = useCard<PlotCard>(scenarioId);
-  const [imageUrl] = useAsset(scenario.props.iconAssetId);
+  const [scenario] = useCard<PlotCard | ScenarioCard>(scenarioId);
+  const [imageUrl] = useAsset(scenario?.props.iconAssetId);
+
+  // Return loading state if scenario is not loaded
+  if (!scenario) {
+    return <div className="min-h-[200px]"><Loading /></div>;
+  }
+
+  // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+  const firstMessagesCount =
+    scenario instanceof PlotCard
+      ? scenario.props.scenarios?.length || 0
+      : scenario instanceof ScenarioCard
+        ? scenario.props.firstMessages?.length || 0
+        : 0;
 
   return (
     <ScenarioPreview
@@ -56,7 +69,7 @@ const ScenarioPreviewItem = ({
       imageUrl={imageUrl}
       tags={scenario.props.tags || []}
       tokenCount={scenario.props.tokenCount}
-      firstMessages={scenario.props.scenarios?.length || 0}
+      firstMessages={firstMessagesCount}
       className="min-h-[200px]"
       onClick={onClick}
     />

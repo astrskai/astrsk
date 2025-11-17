@@ -106,11 +106,11 @@ export function MainLayout({
 
   // Development mode: Log PWA status for debugging
   if (import.meta.env.DEV) {
-    console.log("[Dev Mode] PWA Install Screen bypassed:", {
-      isStandalone,
-      canInstall,
-      isDev: import.meta.env.DEV,
-    });
+    // console.log("[Dev Mode] PWA Install Screen bypassed:", {
+    //   isStandalone,
+    //   canInstall,
+    //   isDev: import.meta.env.DEV,
+    // });
   }
 
   // Loading PWA

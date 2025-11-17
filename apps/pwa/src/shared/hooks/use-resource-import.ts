@@ -74,15 +74,17 @@ export function useResourceImport() {
           const hasCharacter = importedCards.some(
             (card) => card.props.type === CardType.Character,
           );
-          const hasPlot = importedCards.some(
-            (card) => card.props.type === CardType.Plot,
+          const hasScenario = importedCards.some(
+            (card) =>
+              card.props.type === CardType.Plot ||
+              card.props.type === CardType.Scenario,
           );
 
-          if (hasCharacter && !hasPlot) {
+          if (hasCharacter && !hasScenario) {
             navigate({ to: "/assets/characters" });
-          } else if (hasPlot && !hasCharacter) {
+          } else if (hasScenario && !hasCharacter) {
             navigate({ to: "/assets/scenarios" });
-          } else if (hasCharacter && hasPlot) {
+          } else if (hasCharacter && hasScenario) {
             navigate({ to: "/assets/characters" });
           }
         } else if (isJSON) {
@@ -109,15 +111,17 @@ export function useResourceImport() {
             const hasCharacter = importedCards.some(
               (card) => card.props.type === CardType.Character,
             );
-            const hasPlot = importedCards.some(
-              (card) => card.props.type === CardType.Plot,
+            const hasScenario = importedCards.some(
+              (card) =>
+                card.props.type === CardType.Plot ||
+                card.props.type === CardType.Scenario,
             );
 
-            if (hasCharacter && !hasPlot) {
+            if (hasCharacter && !hasScenario) {
               navigate({ to: "/assets/characters" });
-            } else if (hasPlot && !hasCharacter) {
+            } else if (hasScenario && !hasCharacter) {
               navigate({ to: "/assets/scenarios" });
-            } else if (hasCharacter && hasPlot) {
+            } else if (hasCharacter && hasScenario) {
               navigate({ to: "/assets/characters" });
             }
           } else {

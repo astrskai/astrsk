@@ -13,10 +13,16 @@ import {
   CharacterCard,
   Lorebook,
   PlotCard,
+  ScenarioCard,
 } from "@/entities/card/domain";
 import { SaveCardRepo } from "@/entities/card/repos";
 
-const validSpecs = ["chara_card_v2", "chara_card_v3", "plot_card_v1"];
+const validSpecs = [
+  "chara_card_v2",
+  "chara_card_v3",
+  "plot_card_v1",
+  "scenario_card_v2",
+];
 
 // TODO: re-implement import and export card logics
 export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
@@ -56,6 +62,8 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
               })),
             }).getValue()
           : undefined,
+        createdAt: new Date(), // Always use current timestamp on import
+        updatedAt: new Date(), // Always use current timestamp on import
       },
       json.id ? new UniqueEntityID(json.id) : undefined,
     );
@@ -101,6 +109,8 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
               })),
             }).getValue()
           : undefined,
+        createdAt: new Date(), // Always use current timestamp on import
+        updatedAt: new Date(), // Always use current timestamp on import
       },
       json.id ? new UniqueEntityID(json.id) : undefined,
     );
@@ -114,6 +124,50 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
     );
     card.update({ tokenCount });
     return Result.ok(card as PlotCard);
+  }
+
+  private async importScenarioCard(json: any): Promise<Result<ScenarioCard>> {
+    const cardOrError = ScenarioCard.create(
+      {
+        iconAssetId: json.data.iconAssetId ? new UniqueEntityID(json.data.iconAssetId) : undefined,
+        title: json.data.title,
+        name: json.data.title, // ScenarioCard requires name field
+        type: CardType.Scenario,
+        tags: json.data.extensions?.tags ?? [],
+        creator: json.data.extensions?.creator,
+        cardSummary: json.data.extensions?.cardSummary,
+        version: json.data.extensions?.version,
+        conceptualOrigin: json.data.extensions?.conceptualOrigin,
+        description: json.data.description,
+        firstMessages: json.data.first_messages ?? [],
+        lorebook: json.data.entries
+          ? Lorebook.fromJSON({
+              entries: json.data.entries.map((entry: any) => ({
+                id: entry.extensions.id,
+                name: entry.name,
+                enabled: entry.enabled,
+                keys: entry.keys,
+                recallRange:
+                  entry.extensions.recallRange ?? entry.extensions.scanDepth,
+                content: entry.content,
+              })),
+            }).getValue()
+          : undefined,
+        createdAt: new Date(), // Always use current timestamp on import
+        updatedAt: new Date(), // Always use current timestamp on import
+      },
+      json.id ? new UniqueEntityID(json.id) : undefined,
+    );
+    if (cardOrError.isFailure) {
+      return Result.fail(cardOrError.getError());
+    }
+    const card = cardOrError.getValue();
+    const tokenCount = ScenarioCard.calculateTokenSize(
+      card.props,
+      await getTokenizer(),
+    );
+    card.update({ tokenCount });
+    return Result.ok(card as ScenarioCard);
   }
 
   async execute(file: File): Promise<Result<Card[]>> {
@@ -186,17 +240,17 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
           cards.push(savedCharacterCardResult.getValue());
         }
 
-        // If file has scenario data, Import plot card
+        // If file has scenario data, Import scenario card (new format)
         if (
           jsonData.data.scenario !== "" ||
           jsonData.data.first_mes !== "" ||
           (jsonData.data.alternate_greetings &&
             jsonData.data.alternate_greetings.length > 0)
         ) {
-          let scenarios = [];
+          let firstMessages = [];
           if (jsonData.data.first_mes) {
             // @ts-ignore
-            scenarios.push({
+            firstMessages.push({
               name: "firstMessage",
               description: jsonData.data.first_mes,
             });
@@ -206,7 +260,7 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
             isArray(jsonData.data.alternate_greetings) &&
             jsonData.data.alternate_greetings.length > 0
           ) {
-            scenarios = scenarios.concat(
+            firstMessages = firstMessages.concat(
               jsonData.data.alternate_greetings.map((greeting: string) => ({
                 name: "alternateGreeting",
                 description: greeting,
@@ -214,13 +268,13 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
             );
           }
 
-          const plotCardResult = await this.importPlotCard({
-            spec: "plot_card_v1",
-            version: "1.0",
+          const scenarioCardResult = await this.importScenarioCard({
+            spec: "scenario_card_v2",
+            version: "2.0",
             data: {
               title: jsonData.data.name,
               description: jsonData.data.scenario,
-              scenarios: scenarios,
+              first_messages: firstMessages,
               extensions: {
                 tags: jsonData.data.tags,
                 creator: jsonData.data.creator,
@@ -232,26 +286,33 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
                 conceptualOrigin:
                   jsonData.data.conceptualOrigin ??
                   jsonData.data.extensions?.source,
-                createdAt: jsonData.data.extensions?.createdAt,
-                updatedAt: jsonData.data.extensions?.updatedAt,
               },
             },
           });
-          if (plotCardResult.isSuccess) {
-            const savedPlotCardResult = await this.saveCardRepo.saveCard(
-              plotCardResult.getValue(),
+          if (scenarioCardResult.isSuccess) {
+            const savedScenarioCardResult = await this.saveCardRepo.saveCard(
+              scenarioCardResult.getValue(),
             );
-            cards.push(savedPlotCardResult.getValue());
+            cards.push(savedScenarioCardResult.getValue());
           }
         }
       } else if (jsonData.spec === "plot_card_v1") {
-        // Import plot card
+        // Import plot card (legacy)
         const plotCardResult = await this.importPlotCard(jsonData);
         if (plotCardResult.isSuccess) {
           const savedPlotCardResult = await this.saveCardRepo.saveCard(
             plotCardResult.getValue(),
           );
           cards.push(savedPlotCardResult.getValue());
+        }
+      } else if (jsonData.spec === "scenario_card_v2") {
+        // Import scenario card (new format)
+        const scenarioCardResult = await this.importScenarioCard(jsonData);
+        if (scenarioCardResult.isSuccess) {
+          const savedScenarioCardResult = await this.saveCardRepo.saveCard(
+            scenarioCardResult.getValue(),
+          );
+          cards.push(savedScenarioCardResult.getValue());
         }
       }
 

@@ -141,7 +141,17 @@ const usePanelVisibility = (card: Card | null) => {
     useState<CardPanelVisibility>(defaultPanelVisibility);
 
   const cardType = useMemo(() => {
-    return card?.props.type === CardType.Character ? "character" : "plot";
+    // Map card types to layout types
+    // Both Plot and Scenario cards use the same "plot" layout
+    if (card?.props.type === CardType.Character) {
+      return "character";
+    } else if (
+      card?.props.type === CardType.Plot ||
+      card?.props.type === CardType.Scenario
+    ) {
+      return "plot";
+    }
+    return "plot"; // Default fallback
   }, [card]);
 
   useEffect(() => {
@@ -359,8 +369,14 @@ export default function CharacterPlotDetailPage({
     try {
       const layout = api.toJSON();
       // Use the current card type from state
+      // Both Plot and Scenario cards use the same "plot" layout
       const currentCardType =
-        card?.props.type === CardType.Character ? "character" : "plot";
+        card?.props.type === CardType.Character
+          ? "character"
+          : card?.props.type === CardType.Plot ||
+              card?.props.type === CardType.Scenario
+            ? "plot"
+            : "plot"; // Default fallback
       setCardTypeLayout(currentCardType, layout);
     } catch (error) {
       console.error("Failed to save layout:", error);

@@ -1,5 +1,4 @@
-import { and, asc, desc, eq, gt, ilike, inArray, or, SQL } from "drizzle-orm";
-import { PgColumn } from "drizzle-orm/pg-core";
+import { and, asc, eq, gt, ilike, or } from "drizzle-orm";
 
 import { Result } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
@@ -7,12 +6,10 @@ import { formatFail } from "@/shared/lib";
 
 import { Drizzle } from "@/db/drizzle";
 import { getOneOrThrow } from "@/db/helpers/get-one-or-throw";
-import { cards, SelectCard } from "@/db/schema/cards";
-import { characterCards } from "@/db/schema/character-cards";
-import { plotCards } from "@/db/schema/plot-cards";
-import { TableName } from "@/db/schema/table-name";
+import { characters, SelectCharacter } from "@/db/schema/characters";
+import { scenarios, SelectScenario } from "@/db/schema/scenarios";
 import { Transaction } from "@/db/transaction";
-import { Card, CardType } from "@/entities/card/domain";
+import { Card, CardType, normalizeCardType } from "@/entities/card/domain";
 import { LorebookJSON } from "@/entities/card/domain/lorebook";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
 import { DeleteCardRepo } from "@/entities/card/repos/delete-card-repo";
@@ -22,21 +19,25 @@ import {
   SearchCardsSort,
 } from "@/entities/card/repos/load-card-repo";
 import { SaveCardRepo } from "@/entities/card/repos/save-card-repo";
-// import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 
 export class DrizzleCardRepo
   implements SaveCardRepo, LoadCardRepo, DeleteCardRepo
 {
-  // constructor(private updateLocalSyncMetadata: UpdateLocalSyncMetadata) {}
-
   async updateCardTitle(cardId: UniqueEntityID, title: string): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
-      await db
-        .update(cards)
-        .set({ title, updated_at: new Date() })
-        .where(eq(cards.id, cardId.toString()));
-      
+      // Update in both tables (try both, one will succeed)
+      await Promise.all([
+        db
+          .update(characters)
+          .set({ title, updated_at: new Date() })
+          .where(eq(characters.id, cardId.toString())),
+        db
+          .update(scenarios)
+          .set({ title, updated_at: new Date() })
+          .where(eq(scenarios.id, cardId.toString())),
+      ]);
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -50,11 +51,17 @@ export class DrizzleCardRepo
   async updateCardSummary(cardId: UniqueEntityID, summary: string): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
-      await db
-        .update(cards)
-        .set({ card_summary: summary, updated_at: new Date() })
-        .where(eq(cards.id, cardId.toString()));
-      
+      await Promise.all([
+        db
+          .update(characters)
+          .set({ card_summary: summary, updated_at: new Date() })
+          .where(eq(characters.id, cardId.toString())),
+        db
+          .update(scenarios)
+          .set({ card_summary: summary, updated_at: new Date() })
+          .where(eq(scenarios.id, cardId.toString())),
+      ]);
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -68,11 +75,17 @@ export class DrizzleCardRepo
   async updateCardVersion(cardId: UniqueEntityID, version: string): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
-      await db
-        .update(cards)
-        .set({ version, updated_at: new Date() })
-        .where(eq(cards.id, cardId.toString()));
-      
+      await Promise.all([
+        db
+          .update(characters)
+          .set({ version, updated_at: new Date() })
+          .where(eq(characters.id, cardId.toString())),
+        db
+          .update(scenarios)
+          .set({ version, updated_at: new Date() })
+          .where(eq(scenarios.id, cardId.toString())),
+      ]);
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -86,11 +99,17 @@ export class DrizzleCardRepo
   async updateCardConceptualOrigin(cardId: UniqueEntityID, conceptualOrigin: string): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
-      await db
-        .update(cards)
-        .set({ conceptual_origin: conceptualOrigin, updated_at: new Date() })
-        .where(eq(cards.id, cardId.toString()));
-      
+      await Promise.all([
+        db
+          .update(characters)
+          .set({ conceptual_origin: conceptualOrigin, updated_at: new Date() })
+          .where(eq(characters.id, cardId.toString())),
+        db
+          .update(scenarios)
+          .set({ conceptual_origin: conceptualOrigin, updated_at: new Date() })
+          .where(eq(scenarios.id, cardId.toString())),
+      ]);
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -104,11 +123,17 @@ export class DrizzleCardRepo
   async updateCardCreator(cardId: UniqueEntityID, creator: string): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
-      await db
-        .update(cards)
-        .set({ creator, updated_at: new Date() })
-        .where(eq(cards.id, cardId.toString()));
-      
+      await Promise.all([
+        db
+          .update(characters)
+          .set({ creator, updated_at: new Date() })
+          .where(eq(characters.id, cardId.toString())),
+        db
+          .update(scenarios)
+          .set({ creator, updated_at: new Date() })
+          .where(eq(scenarios.id, cardId.toString())),
+      ]);
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -122,11 +147,17 @@ export class DrizzleCardRepo
   async updateCardTags(cardId: UniqueEntityID, tags: string[]): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
-      await db
-        .update(cards)
-        .set({ tags, updated_at: new Date() })
-        .where(eq(cards.id, cardId.toString()));
-      
+      await Promise.all([
+        db
+          .update(characters)
+          .set({ tags, updated_at: new Date() })
+          .where(eq(characters.id, cardId.toString())),
+        db
+          .update(scenarios)
+          .set({ tags, updated_at: new Date() })
+          .where(eq(scenarios.id, cardId.toString())),
+      ]);
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -140,27 +171,18 @@ export class DrizzleCardRepo
   async updateCardLorebook(cardId: UniqueEntityID, lorebook: LorebookJSON): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
-      // First check if it's a character card or plot card
-      const cardRow = await db
-        .select({ type: cards.type })
-        .from(cards)
-        .where(eq(cards.id, cardId.toString()))
-        .then(getOneOrThrow);
+      // Try updating both tables (one will succeed)
+      await Promise.all([
+        db
+          .update(characters)
+          .set({ lorebook, updated_at: new Date() })
+          .where(eq(characters.id, cardId.toString())),
+        db
+          .update(scenarios)
+          .set({ lorebook, updated_at: new Date() })
+          .where(eq(scenarios.id, cardId.toString())),
+      ]);
 
-      if (cardRow.type === "character") {
-        await db
-          .update(characterCards)
-          .set({ lorebook, updated_at: new Date() })
-          .where(eq(characterCards.id, cardId.toString()));
-      } else if (cardRow.type === "plot") {
-        await db
-          .update(plotCards)
-          .set({ lorebook, updated_at: new Date() })
-          .where(eq(plotCards.id, cardId.toString()));
-      } else {
-        return Result.fail(`Card type ${cardRow.type} does not support lorebook`);
-      }
-      
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -171,19 +193,19 @@ export class DrizzleCardRepo
     }
   }
 
-  async updateCardScenarios(cardId: UniqueEntityID, scenarios: any[]): Promise<Result<void>> {
+  async updateCardScenarios(cardId: UniqueEntityID, firstMessages: any[]): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
-      // Scenarios only exist on plot cards
+      // Scenarios only exist on scenario cards (first_messages field)
       await db
-        .update(plotCards)
-        .set({ scenarios, updated_at: new Date() })
-        .where(eq(plotCards.id, cardId.toString()));
-      
+        .update(scenarios)
+        .set({ first_messages: firstMessages, updated_at: new Date() })
+        .where(eq(scenarios.id, cardId.toString()));
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
-        `Failed to update card scenarios: ${
+        `Failed to update card first messages: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -193,14 +215,23 @@ export class DrizzleCardRepo
   async updateCardIconAssetId(cardId: UniqueEntityID, iconAssetId: UniqueEntityID | null): Promise<Result<void>> {
     const db = await Drizzle.getInstance();
     try {
-      await db
-        .update(cards)
-        .set({ 
-          icon_asset_id: iconAssetId ? iconAssetId.toString() : null, 
-          updated_at: new Date() 
-        })
-        .where(eq(cards.id, cardId.toString()));
-      
+      await Promise.all([
+        db
+          .update(characters)
+          .set({
+            icon_asset_id: iconAssetId ? iconAssetId.toString() : null,
+            updated_at: new Date()
+          })
+          .where(eq(characters.id, cardId.toString())),
+        db
+          .update(scenarios)
+          .set({
+            icon_asset_id: iconAssetId ? iconAssetId.toString() : null,
+            updated_at: new Date()
+          })
+          .where(eq(scenarios.id, cardId.toString())),
+      ]);
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -215,10 +246,10 @@ export class DrizzleCardRepo
     const db = await Drizzle.getInstance();
     try {
       await db
-        .update(characterCards)
+        .update(characters)
         .set({ name, updated_at: new Date() })
-        .where(eq(characterCards.id, cardId.toString()));
-      
+        .where(eq(characters.id, cardId.toString()));
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -233,10 +264,10 @@ export class DrizzleCardRepo
     const db = await Drizzle.getInstance();
     try {
       await db
-        .update(characterCards)
+        .update(characters)
         .set({ description, updated_at: new Date() })
-        .where(eq(characterCards.id, cardId.toString()));
-      
+        .where(eq(characters.id, cardId.toString()));
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -251,10 +282,10 @@ export class DrizzleCardRepo
     const db = await Drizzle.getInstance();
     try {
       await db
-        .update(characterCards)
+        .update(characters)
         .set({ example_dialogue: exampleDialogue, updated_at: new Date() })
-        .where(eq(characterCards.id, cardId.toString()));
-      
+        .where(eq(characters.id, cardId.toString()));
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
@@ -269,14 +300,14 @@ export class DrizzleCardRepo
     const db = await Drizzle.getInstance();
     try {
       await db
-        .update(plotCards)
+        .update(scenarios)
         .set({ description, updated_at: new Date() })
-        .where(eq(plotCards.id, cardId.toString()));
-      
+        .where(eq(scenarios.id, cardId.toString()));
+
       return Result.ok();
     } catch (error) {
       return Result.fail(
-        `Failed to update plot description: ${
+        `Failed to update scenario description: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -286,73 +317,49 @@ export class DrizzleCardRepo
   async saveCard(card: Card, tx?: Transaction): Promise<Result<Card>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Convert to row
+      // Convert to row using mapper
       const row = CardDrizzleMapper.toPersistence(card);
 
-      // Insert or update card
-      const { created_at, ...commonWithoutCreatedAt } = row.common;
-      const savedRow: SelectCard = {
-        common: await db
-          .insert(cards)
-          .values(row.common)
-          .onConflictDoUpdate({
-            target: cards.id,
-            set: {
-              ...commonWithoutCreatedAt,
-              updated_at: new Date(), // Update timestamp on conflict
-            },
-          })
-          .returning()
-          .then(getOneOrThrow),
-      };
+      // Determine which table to insert into
+      const cardType = normalizeCardType(card.props.type);
 
-      // Insert or update each type
-      if (row.character) {
-        // Character card
-        const { created_at: _c, ...characterWithoutCreatedAt } = row.character;
-        const savedCharacterRow = await db
-          .insert(characterCards)
-          .values(row.character)
+      if (cardType === CardType.Character) {
+        // Insert/update character
+        const { created_at, ...rowWithoutCreatedAt } = row;
+        const savedRow = await db
+          .insert(characters)
+          .values(row)
           .onConflictDoUpdate({
-            target: characterCards.id,
+            target: characters.id,
             set: {
-              ...characterWithoutCreatedAt,
-              updated_at: new Date(), // Update timestamp on conflict
+              ...rowWithoutCreatedAt,
+              updated_at: new Date(),
             },
           })
           .returning()
           .then(getOneOrThrow);
-        savedRow.character = savedCharacterRow;
-      } else if (row.plot) {
-        // Plot card
-        const { created_at: _p, ...plotWithoutCreatedAt } = row.plot;
-        const savedPlotRow = await db
-          .insert(plotCards)
-          .values(row.plot)
+
+        return Result.ok(CardDrizzleMapper.toDomain(savedRow));
+      } else if (cardType === CardType.Scenario) {
+        // Insert/update scenario
+        const { created_at, ...rowWithoutCreatedAt } = row;
+        const savedRow = await db
+          .insert(scenarios)
+          .values(row)
           .onConflictDoUpdate({
-            target: plotCards.id,
+            target: scenarios.id,
             set: {
-              ...plotWithoutCreatedAt,
-              updated_at: new Date(), // Update timestamp on conflict
+              ...rowWithoutCreatedAt,
+              updated_at: new Date(),
             },
           })
           .returning()
           .then(getOneOrThrow);
-        savedRow.plot = savedPlotRow;
+
+        return Result.ok(CardDrizzleMapper.toDomain(savedRow));
       } else {
-        // Unknown card type
-        throw new Error("Invalid card type");
+        throw new Error(`Unknown card type: ${cardType}`);
       }
-
-      // Update local sync metadata
-      // await this.updateLocalSyncMetadata.execute({
-      //   tableName: TableName.Cards,
-      //   entityId: savedRow.common.id,
-      //   updatedAt: savedRow.common.updated_at,
-      // });
-
-      // Return saved card
-      return Result.ok(CardDrizzleMapper.toDomain(savedRow));
     } catch (error) {
       return formatFail("Failed to save card", error);
     }
@@ -364,26 +371,33 @@ export class DrizzleCardRepo
   ): Promise<Result<Card[]>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Select cards
-      const rows = await db
-        .select()
-        .from(cards)
-        .leftJoin(characterCards, eq(characterCards.id, cards.id))
-        .leftJoin(plotCards, eq(plotCards.id, cards.id))
-        .where(cursor ? gt(cards.id, cursor.toString()) : undefined)
-        .limit(pageSize)
-        .orderBy(asc(cards.id));
+      // Query both tables separately
+      const [characterRows, scenarioRows] = await Promise.all([
+        db
+          .select()
+          .from(characters)
+          .where(cursor ? gt(characters.id, cursor.toString()) : undefined)
+          .limit(pageSize)
+          .orderBy(asc(characters.id)),
+        db
+          .select()
+          .from(scenarios)
+          .where(cursor ? gt(scenarios.id, cursor.toString()) : undefined)
+          .limit(pageSize)
+          .orderBy(asc(scenarios.id)),
+      ]);
 
-      // Convert rows to entities
-      const entities = rows.map((row) =>
-        CardDrizzleMapper.toDomain({
-          common: row.cards,
-          character: row.character_cards ?? undefined,
-          plot: row.plot_cards ?? undefined,
-        }),
+      // Combine and sort by ID
+      const allRows = [...characterRows, ...scenarioRows].sort((a, b) =>
+        a.id.localeCompare(b.id)
       );
 
-      // Return cards
+      // Take only pageSize items
+      const limitedRows = allRows.slice(0, pageSize);
+
+      // Convert to domain entities
+      const entities = limitedRows.map((row) => CardDrizzleMapper.toDomain(row));
+
       return Result.ok(entities);
     } catch (error) {
       return formatFail("Failed to list cards", error);
@@ -396,44 +410,27 @@ export class DrizzleCardRepo
   ): Promise<Result<Card>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Select card by id
-      const commonRow = await db
+      // Try characters table first
+      const characterRows = await db
         .select()
-        .from(cards)
-        .where(eq(cards.id, id.toString()))
-        .then(getOneOrThrow);
+        .from(characters)
+        .where(eq(characters.id, id.toString()));
 
-      // Select each type
-      if (commonRow.type === CardType.Character) {
-        // Character card
-        const characterRow = await db
-          .select()
-          .from(characterCards)
-          .where(eq(characterCards.id, id.toString()))
-          .then(getOneOrThrow);
-
-        // Return card
-        return Result.ok(
-          CardDrizzleMapper.toDomain({
-            common: commonRow,
-            character: characterRow,
-          }),
-        );
-      } else if (commonRow.type === CardType.Plot) {
-        // Plot card
-        const plotRow = await db
-          .select()
-          .from(plotCards)
-          .where(eq(plotCards.id, id.toString()))
-          .then(getOneOrThrow);
-
-        // Return card
-        return Result.ok(
-          CardDrizzleMapper.toDomain({ common: commonRow, plot: plotRow }),
-        );
+      if (characterRows.length > 0) {
+        return Result.ok(CardDrizzleMapper.toDomain(characterRows[0]));
       }
 
-      throw new Error("Invalid card type");
+      // Try scenarios table
+      const scenarioRows = await db
+        .select()
+        .from(scenarios)
+        .where(eq(scenarios.id, id.toString()));
+
+      if (scenarioRows.length > 0) {
+        return Result.ok(CardDrizzleMapper.toDomain(scenarioRows[0]));
+      }
+
+      return Result.fail(`Card not found with id: ${id.toString()}`);
     } catch (error) {
       return formatFail("Failed to get card by id", error);
     }
@@ -445,69 +442,104 @@ export class DrizzleCardRepo
   ): Promise<Result<Card[]>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Make filters
-      const filters = [];
+      // Build filters for characters
+      const characterFilters = [];
       if (query.keyword) {
         const keywordFilter = or(
-          ilike(cards.title, `%${query.keyword}%`),
-          ilike(cards.creator, `%${query.keyword}%`),
-          ilike(cards.card_summary, `%${query.keyword}%`),
-          ilike(cards.version, `%${query.keyword}%`),
-          ilike(cards.conceptual_origin, `%${query.keyword}%`),
-          ilike(characterCards.name, `%${query.keyword}%`),
-          ilike(characterCards.description, `%${query.keyword}%`),
-          ilike(characterCards.example_dialogue, `%${query.keyword}%`),
-          ilike(plotCards.description, `%${query.keyword}%`),
+          ilike(characters.title, `%${query.keyword}%`),
+          ilike(characters.creator, `%${query.keyword}%`),
+          ilike(characters.card_summary, `%${query.keyword}%`),
+          ilike(characters.version, `%${query.keyword}%`),
+          ilike(characters.conceptual_origin, `%${query.keyword}%`),
+          ilike(characters.name, `%${query.keyword}%`),
+          ilike(characters.description, `%${query.keyword}%`),
+          ilike(characters.example_dialogue, `%${query.keyword}%`),
         );
-        // @ts-ignore
-        keywordFilter && filters.push(keywordFilter);
-      }
-      if (query.type && query.type.length > 0) {
-        // @ts-ignore
-        filters.push(inArray(cards.type, query.type));
+        keywordFilter && characterFilters.push(keywordFilter);
       }
 
-      // Make order by
-      let orderBy: PgColumn | SQL;
+      // Build filters for scenarios
+      const scenarioFilters = [];
+      if (query.keyword) {
+        const keywordFilter = or(
+          ilike(scenarios.title, `%${query.keyword}%`),
+          ilike(scenarios.creator, `%${query.keyword}%`),
+          ilike(scenarios.card_summary, `%${query.keyword}%`),
+          ilike(scenarios.version, `%${query.keyword}%`),
+          ilike(scenarios.conceptual_origin, `%${query.keyword}%`),
+          ilike(scenarios.name, `%${query.keyword}%`),
+          ilike(scenarios.description, `%${query.keyword}%`),
+        );
+        keywordFilter && scenarioFilters.push(keywordFilter);
+      }
+
+      // Determine which tables to query based on type filter
+      const shouldQueryCharacters =
+        !query.type ||
+        query.type.length === 0 ||
+        query.type.includes(CardType.Character);
+      const shouldQueryScenarios =
+        !query.type ||
+        query.type.length === 0 ||
+        query.type.includes(CardType.Scenario) ||
+        query.type.includes(CardType.Plot); // Backward compatibility
+
+      // Query tables in parallel
+      const queries = [];
+      if (shouldQueryCharacters) {
+        queries.push(
+          db
+            .select()
+            .from(characters)
+            .where(characterFilters.length > 0 ? and(...characterFilters) : undefined)
+            .limit(query.limit ?? 100)
+            .offset(query.offset ?? 0)
+        );
+      }
+      if (shouldQueryScenarios) {
+        queries.push(
+          db
+            .select()
+            .from(scenarios)
+            .where(scenarioFilters.length > 0 ? and(...scenarioFilters) : undefined)
+            .limit(query.limit ?? 100)
+            .offset(query.offset ?? 0)
+        );
+      }
+
+      const results = await Promise.all(queries);
+      let allRows: (SelectCharacter | SelectScenario)[] = results.flat();
+
+      // Sort combined results
       switch (query.sort) {
         case SearchCardsSort.Latest:
-          orderBy = desc(cards.created_at);
+          allRows.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
           break;
         case SearchCardsSort.Oldest:
-          orderBy = cards.created_at;
+          allRows.sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
           break;
         case SearchCardsSort.TitleAtoZ:
-          orderBy = cards.title;
+          allRows.sort((a, b) => a.title.localeCompare(b.title));
           break;
         case SearchCardsSort.TitleZtoA:
-          orderBy = desc(cards.title);
+          allRows.sort((a, b) => b.title.localeCompare(a.title));
           break;
         default:
-          orderBy = cards.id;
+          allRows.sort((a, b) => a.id.localeCompare(b.id));
           break;
       }
 
-      // Select cards
-      const rows = await db
-        .select()
-        .from(cards)
-        .leftJoin(characterCards, eq(characterCards.id, cards.id))
-        .leftJoin(plotCards, eq(plotCards.id, cards.id))
-        .where(and(...filters))
-        .limit(query.limit ?? 100)
-        .offset(query.offset ?? 0)
-        .orderBy(orderBy);
-
-      // Convert rows to entities
-      const entities = rows.map((row) =>
-        CardDrizzleMapper.toDomain({
-          common: row.cards,
-          character: row.character_cards ?? undefined,
-          plot: row.plot_cards ?? undefined,
-        }),
+      // Apply limit and offset to combined results
+      const limitedRows = allRows.slice(
+        query.offset ?? 0,
+        (query.offset ?? 0) + (query.limit ?? 100)
       );
 
-      // Return cards
+      // Convert to domain entities
+      const entities = limitedRows.map((row: SelectCharacter | SelectScenario) =>
+        CardDrizzleMapper.toDomain(row)
+      );
+
       return Result.ok(entities);
     } catch (error) {
       return formatFail("Failed to search cards", error);
@@ -520,42 +552,27 @@ export class DrizzleCardRepo
   ): Promise<Result<Card>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Delete card by id
-      const deletedCommonRow = await db
-        .delete(cards)
-        .where(eq(cards.id, id.toString()))
-        .returning()
-        .then(getOneOrThrow);
-      const deletedRow: SelectCard = {
-        common: deletedCommonRow,
-      };
+      // Try deleting from characters table first
+      const deletedCharacterRows = await db
+        .delete(characters)
+        .where(eq(characters.id, id.toString()))
+        .returning();
 
-      // Delete each type
-      if (deletedCommonRow.type === CardType.Character) {
-        const deletedCharacterRow = await db
-          .delete(characterCards)
-          .where(eq(characterCards.id, id.toString()))
-          .returning()
-          .then(getOneOrThrow);
-        deletedRow.character = deletedCharacterRow;
-      } else if (deletedCommonRow.type === CardType.Plot) {
-        const deletedPlotRow = await db
-          .delete(plotCards)
-          .where(eq(plotCards.id, id.toString()))
-          .returning()
-          .then(getOneOrThrow);
-        deletedRow.plot = deletedPlotRow;
+      if (deletedCharacterRows.length > 0) {
+        return Result.ok(CardDrizzleMapper.toDomain(deletedCharacterRows[0]));
       }
 
-      // Update local sync metadata
-      // await this.updateLocalSyncMetadata.execute({
-      //   tableName: TableName.Cards,
-      //   entityId: deletedRow.common.id,
-      //   updatedAt: null,
-      // });
+      // Try deleting from scenarios table
+      const deletedScenarioRows = await db
+        .delete(scenarios)
+        .where(eq(scenarios.id, id.toString()))
+        .returning();
 
-      // Return result
-      return Result.ok(CardDrizzleMapper.toDomain(deletedRow));
+      if (deletedScenarioRows.length > 0) {
+        return Result.ok(CardDrizzleMapper.toDomain(deletedScenarioRows[0]));
+      }
+
+      return Result.fail(`Card not found with id: ${id.toString()}`);
     } catch (error) {
       return formatFail("Failed to delete card by id", error);
     }

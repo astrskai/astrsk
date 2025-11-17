@@ -133,5 +133,14 @@
     "bps": true,
     "folderMillis": 1763308976627,
     "hash": "6e26e31b20febdebd742763763076b6915ec5b5485851a159a3a130539eb6999"
+  },
+  {
+    "sql": [
+      "CREATE TABLE \"characters\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"title\" varchar NOT NULL,\n\t\"icon_asset_id\" uuid,\n\t\"tags\" text[] DEFAULT '{}' NOT NULL,\n\t\"creator\" varchar,\n\t\"card_summary\" text,\n\t\"version\" varchar,\n\t\"conceptual_origin\" varchar,\n\t\"vibe_session_id\" uuid,\n\t\"image_prompt\" text,\n\t\"name\" varchar NOT NULL,\n\t\"description\" text,\n\t\"example_dialogue\" text,\n\t\"lorebook\" jsonb,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE \"scenarios\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"title\" varchar NOT NULL,\n\t\"icon_asset_id\" uuid,\n\t\"tags\" text[] DEFAULT '{}' NOT NULL,\n\t\"creator\" varchar,\n\t\"card_summary\" text,\n\t\"version\" varchar,\n\t\"conceptual_origin\" varchar,\n\t\"vibe_session_id\" uuid,\n\t\"image_prompt\" text,\n\t\"name\" varchar NOT NULL,\n\t\"description\" text,\n\t\"first_messages\" jsonb,\n\t\"lorebook\" jsonb,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n"
+    ],
+    "bps": true,
+    "folderMillis": 1763346923962,
+    "hash": "db3486a193441dfaaeb98032135fcfd9494b246af17ae90d0419c4e7c59ab09f"
   }
 ]

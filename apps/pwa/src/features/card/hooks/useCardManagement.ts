@@ -37,7 +37,7 @@ export const useCardManagement = () => {
   const [plotCards, invalidatePlotCards] = useCards({
     limit: 100,
     sort: sortsByType[CardType.Plot],
-    type: [CardType.Plot],
+    type: [CardType.Plot, CardType.Scenario],
     keyword: keywordsByType[CardType.Plot],
   });
 

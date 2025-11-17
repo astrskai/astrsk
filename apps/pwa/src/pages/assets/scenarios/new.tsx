@@ -14,7 +14,7 @@ import type { LorebookEntry } from "@/shared/ui/panels";
 import { AssetService } from "@/app/services/asset-service";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
 import { CardService } from "@/app/services/card-service";
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { ScenarioCard } from "@/entities/card/domain/scenario-card";
 import { CardType } from "@/entities/card/domain";
 import { Lorebook } from "@/entities/card/domain/lorebook";
 import { Entry } from "@/entities/card/domain/entry";
@@ -224,15 +224,16 @@ export default function CreateScenarioPage() {
         description: firstMessage.description,
       }));
 
-      // Step 4: Create scenario card
-      const cardResult = PlotCard.create({
+      // Step 4: Create scenario card (new format)
+      const cardResult = ScenarioCard.create({
         title: scenarioName,
+        name: scenarioName, // ScenarioCard requires name field
         description: description,
-        scenarios: firstMessagesData.length > 0 ? firstMessagesData : undefined,
+        firstMessages: firstMessagesData.length > 0 ? firstMessagesData : undefined,
         iconAssetId: uploadedAssetId
           ? new UniqueEntityID(uploadedAssetId)
           : undefined,
-        type: CardType.Plot,
+        type: CardType.Scenario,
         tags: [],
         lorebook: lorebook,
       });

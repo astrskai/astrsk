@@ -67,7 +67,7 @@ import {
   SvgIcon,
   toastError,
 } from "@/shared/ui";
-import { PlotCard } from "@/entities/card/domain";
+import { PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
 import { Turn } from "@/entities/turn/domain/turn";
 import { PlaceholderType } from "@/entities/turn/domain/placeholder-type";
@@ -579,7 +579,7 @@ const SessionContent = ({
   );
 
   // Add plot card modal
-  const [plotCard] = useCard<PlotCard>(session?.plotCard?.id);
+  const [plotCard] = useCard<PlotCard | ScenarioCard>(session?.plotCard?.id);
   const messageCount = session?.turnIds.length ?? 0;
   const plotCardId = session?.plotCard?.id.toString() ?? "";
   const sessionId = session?.id.toString() ?? "";
@@ -587,7 +587,13 @@ const SessionContent = ({
   // Select scenario modal
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState(false);
-  const plotCardScenarioCount = plotCard?.props.scenarios?.length ?? 0;
+  // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+  const plotCardScenarioCount =
+    (plotCard instanceof PlotCard
+      ? plotCard.props.scenarios?.length
+      : plotCard instanceof ScenarioCard
+        ? plotCard.props.firstMessages?.length
+        : 0) ?? 0;
   useEffect(() => {
     // Check scenario count
     if (plotCardScenarioCount === 0) {
@@ -614,7 +620,14 @@ const SessionContent = ({
   >([]);
   const sessionUserCardId = session?.userCharacterCardId?.toString() ?? "";
   const sessionAllCards = JSON.stringify(session?.allCards);
-  const plotCardScenario = JSON.stringify(plotCard?.props.scenarios);
+  // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+  const plotCardScenario = JSON.stringify(
+    plotCard instanceof PlotCard
+      ? plotCard.props.scenarios
+      : plotCard instanceof ScenarioCard
+        ? plotCard.props.firstMessages
+        : undefined,
+  );
   const renderScenarios = useCallback(async () => {
     logger.debug("[Hook] useEffect: Render scenario");
 
@@ -623,8 +636,17 @@ const SessionContent = ({
       return;
     }
 
-    // If no scenarios, set empty array
-    if (!plotCard.props.scenarios || plotCard.props.scenarios.length === 0) {
+    // Get first messages based on card type
+    // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+    const firstMessages =
+      plotCard instanceof PlotCard
+        ? plotCard.props.scenarios
+        : plotCard instanceof ScenarioCard
+          ? plotCard.props.firstMessages
+          : undefined;
+
+    // If no first messages, set empty array
+    if (!firstMessages || firstMessages.length === 0) {
       setRenderedScenarios([]);
       return;
     }
@@ -661,17 +683,17 @@ const SessionContent = ({
       };
     }
 
-    // Render scenarios
+    // Render first messages
     const renderedScenarios = await Promise.all(
-      plotCard.props.scenarios.map(
-        async (scenario: { name: string; description: string }) => {
-          const renderedScenario = await TemplateRenderer.render(
-            scenario.description,
+      firstMessages.map(
+        async (message: { name: string; description: string }) => {
+          const renderedMessage = await TemplateRenderer.render(
+            message.description,
             context,
           );
           return {
-            name: scenario.name,
-            description: renderedScenario,
+            name: message.name,
+            description: renderedMessage,
           };
         },
       ),

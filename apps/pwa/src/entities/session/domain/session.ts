@@ -88,7 +88,7 @@ export class Session extends AggregateRoot<SessionProps> {
   }
 
   get plotCard(): CardListItem | undefined {
-    return this.props.allCards.find((card) => card.type === CardType.Plot);
+    return this.props.allCards.find((card) => card.type === CardType.Plot || card.type === CardType.Scenario);
   }
 
   get userCharacterCardId(): UniqueEntityID | undefined {
@@ -193,8 +193,8 @@ export class Session extends AggregateRoot<SessionProps> {
   }
 
   public addCard(cardId: UniqueEntityID, cardType: CardType): Result<void> {
-    if (cardType === CardType.Plot && this.plotCard) {
-      return Result.fail("Plot card already exists");
+    if ((cardType === CardType.Plot || cardType === CardType.Scenario) && this.plotCard) {
+      return Result.fail("Scenario card already exists");
     }
     this.props.allCards.push({ id: cardId, type: cardType, enabled: true });
     return Result.ok();

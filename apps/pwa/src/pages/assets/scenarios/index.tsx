@@ -51,11 +51,14 @@ export function PlotsListPage() {
     cardQueries.list({ keyword, sort: sortOption }),
   );
 
-  // Filter by plot type
+  // Filter by scenario type (includes both Plot and Scenario types)
   const scenarios = useMemo(() => {
     return (
-      allCards?.filter((card: PlotCard) => card.props.type === CardType.Plot) ||
-      []
+      allCards?.filter(
+        (card: PlotCard) =>
+          card.props.type === CardType.Plot ||
+          card.props.type === CardType.Scenario,
+      ) || []
     );
   }, [allCards]);
 
