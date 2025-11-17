@@ -22,6 +22,8 @@ const ChatStatsButton = ({
         onClick={() => {
           onOpenStats(!isOpen);
         }}
+        aria-label="Toggle statistics panel"
+        aria-pressed={isOpen}
       >
         <ChartNoAxesColumnIncreasing
           className={cn("h-5 w-5", isOpen && "text-gray-900")}

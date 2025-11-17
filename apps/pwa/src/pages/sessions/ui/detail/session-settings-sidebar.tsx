@@ -224,7 +224,7 @@ const SessionSettingsSidebar = ({
   return (
     <aside
       className={cn(
-        "bg-background-primary fixed top-0 right-0 z-30 h-dvh max-w-dvw overflow-y-auto md:w-100",
+        "bg-background-primary fixed top-0 right-0 z-30 h-dvh max-w-dvw overflow-y-auto md:w-96",
         "transition-transform duration-300 ease-in-out",
         "shadow-[-8px_0_24px_-4px_rgba(0,0,0,0.5)]",
         isOpen ? "translate-x-0" : "translate-x-full",
