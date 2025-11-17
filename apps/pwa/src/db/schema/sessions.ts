@@ -14,6 +14,7 @@ export const sessions = pgTable(TableName.Sessions, {
   user_character_card_id: uuid(),
   turn_ids: jsonb().$type<string[]>().notNull(),
   background_id: uuid(),
+  cover_id: uuid(),
   translation: jsonb().$type<TranslationConfigJSON>(),
   chat_styles: jsonb().$type<ChatStyles>(),
   flow_id: uuid().notNull(),

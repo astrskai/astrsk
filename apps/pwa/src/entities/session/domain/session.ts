@@ -25,6 +25,7 @@ export interface SessionProps {
 
   // Images
   backgroundId?: UniqueEntityID; // Background image
+  coverId?: UniqueEntityID; // Cover image
 
   // Translation
   translation?: TranslationConfig;
@@ -110,6 +111,10 @@ export class Session extends AggregateRoot<SessionProps> {
     return this.props.backgroundId;
   }
 
+  get coverId(): UniqueEntityID | undefined {
+    return this.props.coverId;
+  }
+
   get translation(): TranslationConfig | undefined {
     return this.props.translation;
   }
@@ -152,6 +157,7 @@ export class Session extends AggregateRoot<SessionProps> {
       userCharacterCardId: props.userCharacterCardId,
       turnIds: props.turnIds || [],
       backgroundId: props.backgroundId,
+      coverId: props.coverId,
       translation:
         props.translation ||
         TranslationConfig.create({
@@ -249,6 +255,10 @@ export class Session extends AggregateRoot<SessionProps> {
 
   public setBackgroundId(backgroundId: UniqueEntityID | null): void {
     this.props.backgroundId = backgroundId || undefined;
+  }
+
+  public setCoverId(coverId: UniqueEntityID | null): void {
+    this.props.coverId = coverId || undefined;
   }
 
   public setTranslation(translation: TranslationConfig): void {

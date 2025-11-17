@@ -47,6 +47,7 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
       user_character_card_id: insertSession.user_character_card_id ?? null,
       turn_ids: [],
       background_id: insertSession.background_id ?? null,
+      cover_id: insertSession.cover_id ?? null,
       translation: insertSession.translation ?? null,
       chat_styles: insertSession.chat_styles ?? null,
       flow_id: insertSession.flow_id,
