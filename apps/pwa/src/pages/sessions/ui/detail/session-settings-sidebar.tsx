@@ -452,9 +452,11 @@ const SessionSettingsSidebar = ({
         {/* Background image - Mobile (Dialog) */}
         <section className="md:hidden!">
           <h3 className="font-semibold">Background image</h3>
-          <div
-            className="cursor-pointer rounded-lg transition-opacity hover:brightness-110"
+          <button
+            type="button"
+            className="w-full cursor-pointer rounded-lg border-0 bg-transparent p-0 text-left transition-opacity hover:brightness-110"
             onClick={() => setIsBackgroundDialogOpen(true)}
+            aria-label="Change background image"
           >
             {backgroundImageSrc ? (
               <img
@@ -467,7 +469,7 @@ const SessionSettingsSidebar = ({
                 <p className="text-sm text-gray-400">No background image</p>
               </div>
             )}
-          </div>
+          </button>
 
           <DialogBase
             open={isBackgroundDialogOpen}
@@ -477,6 +479,7 @@ const SessionSettingsSidebar = ({
               <BackgroundGrid
                 currentBackgroundId={session.backgroundId}
                 onSelect={handleChangeBackground}
+                isEditable={false}
               />
             }
           />
@@ -510,6 +513,7 @@ const SessionSettingsSidebar = ({
               <BackgroundGrid
                 currentBackgroundId={session.backgroundId}
                 onSelect={handleChangeBackground}
+                isEditable={true}
               />
             }
           />
