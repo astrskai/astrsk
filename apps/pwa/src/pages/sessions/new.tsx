@@ -204,6 +204,9 @@ export function CreateSessionPage() {
             associatedCardId: undefined,
           });
         } else {
+          toast.error("Failed to upload cover image", {
+            description: "Please try again or continue without an image.",
+          });
           logger.error("Failed to upload file:", assetResult.getError());
           setIsSaving(false);
           return;

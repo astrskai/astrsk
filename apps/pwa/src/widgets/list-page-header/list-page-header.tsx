@@ -151,7 +151,7 @@ export function ListPageHeader({
             </Button>
             {onHelpClick && (
               <Button
-                variant="ghost"
+                variant="secondary"
                 icon={
                   <CircleHelp
                     size={20}
