@@ -79,13 +79,13 @@ const SelectScenarioDialog = ({
               ) : (
                 <div className="inline-flex w-full flex-col items-start justify-start gap-4 self-stretch py-6">
                   <div className="text-text-body justify-start self-stretch text-center text-2xl font-bold">
-                    No scenarios yet
+                    No first messages yet
                   </div>
                   <div className="text-background-surface-5 justify-start self-stretch text-center text-base leading-normal font-medium">
-                    Start by adding a scenario to your plot card.
+                    Start by adding a first message to your session.
                     <br />
-                    Scenarios set the opening scene for your session <br />—
-                    like a narrator kicking things off.
+                    First messages set the opening scene for your session <br />
+                    — like a narrator kicking things off.
                   </div>
                 </div>
               )}
