@@ -221,6 +221,28 @@ const SessionSettingsSidebar = ({
     [session.id, saveSessionMutation],
   );
 
+  const handleDeleteCoverImage = useCallback(async () => {
+    try {
+      // Fetch latest session data
+      const latestSession = await fetchSession(session.id);
+
+      // Remove cover ID (set to undefined)
+      latestSession.update({
+        coverId: undefined,
+      });
+
+      // Save to backend
+      await saveSessionMutation.mutateAsync({ session: latestSession });
+
+      // Show success message
+      toast.success("Cover image deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete cover image", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, [session.id, saveSessionMutation]);
+
   return (
     <aside
       className={cn(
@@ -423,7 +445,19 @@ const SessionSettingsSidebar = ({
         </section>
 
         <section>
-          <h3 className="font-semibold">Cover image</h3>
+          <h3 className="flex items-center justify-between gap-2 font-semibold">
+            <span>Cover image</span>
+            {coverImageSrc && (
+              <button
+                type="button"
+                aria-label="Delete cover image"
+                className="cursor-pointer text-gray-300 hover:text-gray-50"
+                onClick={handleDeleteCoverImage}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </h3>
           <label
             htmlFor={coverImageInputId}
             className="transition-brightness block cursor-pointer duration-200 hover:brightness-110"
@@ -479,7 +513,7 @@ const SessionSettingsSidebar = ({
               <BackgroundGrid
                 currentBackgroundId={session.backgroundId}
                 onSelect={handleChangeBackground}
-                isEditable={false}
+                isEditable={true}
               />
             }
           />
