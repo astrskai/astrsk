@@ -115,7 +115,9 @@ export default function BackgroundGrid({
           await BackgroundService.saveFileToBackground.execute(file);
 
         if (backgroundOrError.isFailure) {
-          toast.error("Failed to upload background");
+          toast.error("Failed to upload background", {
+            description: backgroundOrError.getError() || "Unknown error",
+          });
           return;
         }
 
@@ -143,7 +145,9 @@ export default function BackgroundGrid({
           await BackgroundService.deleteBackground.execute(backgroundId);
 
         if (backgroundOrError.isFailure) {
-          toast.error("Failed to delete background");
+          toast.error("Failed to delete background", {
+            description: backgroundOrError.getError() || "Unknown error",
+          });
           return;
         }
 
