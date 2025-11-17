@@ -166,7 +166,7 @@ export default function SessionDataSidebar({
                 </div>
 
                 {/* Field name - always visible */}
-                <div className="flex-1 px-2 py-2 text-center text-sm font-semibold break-words text-gray-50">
+                <div className="flex-1 truncate px-2 py-2 text-center text-sm font-semibold break-words text-gray-50">
                   {field.name}
                 </div>
 

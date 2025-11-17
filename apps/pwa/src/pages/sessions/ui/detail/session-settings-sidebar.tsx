@@ -1,8 +1,6 @@
-import { useCallback, useMemo, memo, useState } from "react";
+import { useCallback, useMemo, memo, useState, useId } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
-
-import { cn } from "@/shared/lib";
 import {
   PanelRightClose,
   Ellipsis,
@@ -11,7 +9,20 @@ import {
   X,
   Trash2,
 } from "lucide-react";
+
+import { AssetService } from "@/app/services/asset-service";
+import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
+import FlowPreview from "@/features/flow/ui/flow-preview";
 import { Session } from "@/entities/session/domain/session";
+import { PlotCard } from "@/entities/card/domain";
+import {
+  fetchSession,
+  useSaveSession,
+  useDeleteSession,
+} from "@/entities/session/api";
+import CharacterItem from "./settings/character-item";
+
+import { cn } from "@/shared/lib";
 import {
   isDefaultBackground,
   useBackgroundStore,
@@ -20,19 +31,10 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { useFlow } from "@/shared/hooks/use-flow";
 import { Loading, PopoverBase, DropdownMenuBase } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs/confirm";
-import CharacterItem from "./settings/character-item";
-import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
-import { PlotCard } from "@/entities/card/domain";
 import { useCard } from "@/shared/hooks/use-card";
 import { UniqueEntityID } from "@/shared/domain";
-import FlowPreview from "@/features/flow/ui/flow-preview";
 import MessageStyling from "./settings/message-styling";
 import BackgroundGrid from "./settings/background-grid";
-import {
-  fetchSession,
-  useSaveSession,
-  useDeleteSession,
-} from "@/entities/session/api";
 
 interface SessionSettingsSidebarProps {
   session: Session;
@@ -87,6 +89,8 @@ const SessionSettingsSidebar = ({
     }
     return backgroundAsset; // undefined or string
   }, [background, backgroundAsset]);
+
+  const [coverImageSrc] = useAsset(session.coverId);
 
   const handleChangeBackground = useCallback(
     async (backgroundId: UniqueEntityID | undefined) => {
@@ -164,6 +168,53 @@ const SessionSettingsSidebar = ({
       });
     }
   }, [session.id, deleteSessionMutation, navigate]);
+
+  const coverImageInputId = useId();
+
+  const handleCoverImageChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        // 1. Upload file to asset
+        const assetResult = await AssetService.saveFileToAsset.execute({
+          file,
+        });
+
+        if (assetResult.isFailure) {
+          toast.error("Failed to upload cover image", {
+            description: assetResult.getError(),
+          });
+          return;
+        }
+
+        const asset = assetResult.getValue();
+
+        // 2. Fetch latest session data
+        const latestSession = await fetchSession(session.id);
+
+        // 3. Update cover ID
+        latestSession.update({
+          coverId: asset.id,
+        });
+
+        // 4. Save to backend
+        await saveSessionMutation.mutateAsync({ session: latestSession });
+
+        // Show success message
+        toast.success("Cover image updated successfully");
+      } catch (error) {
+        toast.error("Failed to update cover image", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+
+      // Reset input value to allow selecting the same file again
+      e.target.value = "";
+    },
+    [session.id, saveSessionMutation],
+  );
 
   return (
     <aside
@@ -364,6 +415,33 @@ const SessionSettingsSidebar = ({
               </div>
             )}
           </div>
+        </section>
+
+        <section>
+          <h3 className="font-semibold">Cover image</h3>
+          <label
+            htmlFor={coverImageInputId}
+            className="transition-brightness block cursor-pointer duration-200 hover:brightness-110"
+          >
+            {coverImageSrc ? (
+              <img
+                className="h-32 w-full rounded-lg object-cover"
+                src={coverImageSrc}
+                alt="Cover image"
+              />
+            ) : (
+              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
+                <p className="text-sm text-gray-400">No cover image</p>
+              </div>
+            )}
+          </label>
+          <input
+            id={coverImageInputId}
+            type="file"
+            accept=".jpg,.jpeg,.png"
+            onChange={handleCoverImageChange}
+            className="hidden"
+          />
         </section>
 
         <section>
