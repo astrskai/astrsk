@@ -56,10 +56,10 @@ const SelectScenarioDialog = ({
         <div className="flex flex-col items-end justify-start gap-6 self-stretch">
           <div className="flex flex-col items-start justify-start gap-2 self-stretch">
             <div className="text-text-primary justify-start self-stretch text-2xl font-semibold">
-              Scenario
+              First message
             </div>
             <div className="text-text-body justify-start self-stretch text-base leading-tight font-medium">
-              Select a scenario for your new session.
+              Select a first message for your new session.
             </div>
           </div>
           <div className="relative self-stretch">

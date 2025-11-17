@@ -24,7 +24,7 @@ interface CharacterPreviewProps {
   onClick?: () => void;
 }
 
-const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-card-image.png";
+const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
 
 const CharacterPreview = ({
   title,

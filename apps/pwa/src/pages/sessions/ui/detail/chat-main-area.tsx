@@ -43,9 +43,15 @@ import { TemplateRenderer } from "@/shared/lib/template-renderer";
 
 interface ChatMainAreaProps {
   data: Session;
+  isOpenStats: boolean;
+  onOpenStats: (isOpen: boolean) => void;
 }
 
-export default function ChatMainArea({ data }: ChatMainAreaProps) {
+export default function ChatMainArea({
+  data,
+  isOpenStats,
+  onOpenStats,
+}: ChatMainAreaProps) {
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState<boolean>(false);
   // Add plot card modal
@@ -683,6 +689,8 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
         autoReply={data.autoReply}
         generateCharacterMessage={generateCharacterMessage}
         streamingMessageId={streamingMessageId}
+        isOpenStats={isOpenStats}
+        onOpenStats={onOpenStats}
         onStopGenerate={handleStopGenerate}
         onSendMessage={handleSendMessage}
         onAutoReply={handleAutoReply}

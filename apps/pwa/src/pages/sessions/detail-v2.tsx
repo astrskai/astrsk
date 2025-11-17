@@ -20,7 +20,8 @@ import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
 
 export default function SessionDetailPage() {
-  const [isOpenDataSidebar, setIsOpenDataSidebar] = useState<boolean>(false);
+  const [isOpenSessionDataSidebar, setIsOpenSessionDataSidebar] =
+    useState<boolean>(false);
   const [isOpenSettings, setIsOpenSettings] = useState<boolean>(false);
 
   const { sessionId } = Route.useParams();
@@ -117,22 +118,26 @@ export default function SessionDetailPage() {
 
       <SessionHeader
         title={session.title ?? "Session"}
-        isOpenDataSidebar={isOpenDataSidebar}
-        onDataSidebarClick={() => setIsOpenDataSidebar((prev) => !prev)}
+        isOpenDataSidebar={isOpenSessionDataSidebar}
+        onDataSidebarClick={() => setIsOpenSessionDataSidebar((prev) => !prev)}
         onSettingsClick={() => setIsOpenSettings(true)}
       />
 
       <div className="flex flex-1">
         <SessionDataSidebar
           session={session}
-          isOpen={isOpenDataSidebar}
+          isOpen={isOpenSessionDataSidebar}
           sortedDataSchemaFields={sortedDataSchemaFields}
           isInitialDataStore={isInitialDataStore}
           lastTurnDataStore={lastTurnDataStore}
           savedLayout={session.widgetLayout}
         />
 
-        <ChatMainArea data={session} />
+        <ChatMainArea
+          data={session}
+          isOpenStats={isOpenSessionDataSidebar}
+          onOpenStats={setIsOpenSessionDataSidebar}
+        />
       </div>
 
       <SessionSettingsSidebar

@@ -25,7 +25,7 @@ interface ScenarioPreviewProps {
   onClick?: () => void;
 }
 
-const PLACEHOLDER_IMAGE_URL = "/img/placeholder/scenario-card-image.png";
+const PLACEHOLDER_IMAGE_URL = "/img/placeholder/scenario-placeholder.png";
 
 const ScenarioPreview = ({
   title,
@@ -180,7 +180,7 @@ const ScenarioPreview = ({
         </div>
       )}
 
-      <div className="flex min-h-0 flex-[1_1_50%] items-center border-b border-gray-800 bg-gray-900">
+      <div className="flex min-h-0 flex-[1_1_50%] items-center bg-gray-900">
         <img
           src={imageUrl || PLACEHOLDER_IMAGE_URL}
           alt={title}
@@ -218,7 +218,7 @@ const ScenarioPreview = ({
         </div>
       </div>
 
-      <div className="relative flex min-h-0 flex-[1_1_50%] flex-col justify-between gap-2 overflow-hidden bg-gray-900 p-4">
+      <div className="relative flex min-h-0 flex-[1_1_50%] flex-col justify-between gap-2 overflow-hidden bg-gray-800 p-4">
         <p
           className={cn(
             "line-clamp-2 text-xs lg:text-sm",

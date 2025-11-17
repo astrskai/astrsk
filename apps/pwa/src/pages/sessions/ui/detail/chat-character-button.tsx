@@ -54,12 +54,12 @@ export default function ChatCharacterButton({
               isDisabled ? "cursor-default" : "hover:border-gray-50",
             )}
           />
-          <div className="line-clamp-2 max-w-[48px] text-center text-xs leading-4 text-ellipsis text-gray-50">
+          <div className="line-clamp-1 max-w-[48px] text-center text-xs leading-4 text-gray-50 md:line-clamp-2 md:text-ellipsis">
             {character.props.title}
           </div>
 
           {isUser && (
-            <div className="absolute top-0 right-0 size-3 rounded-full border border-gray-50/10 bg-blue-100" />
+            <div className="border-background-primary absolute top-0 right-0 size-3 rounded-full border-2 bg-blue-100" />
           )}
         </>
       ) : (

@@ -1,17 +1,20 @@
 import { useCallback } from "react";
 import { Shuffle, RotateCw } from "lucide-react";
 import { AutoReply } from "@/shared/stores/session-store";
+import { cn } from "@/shared/lib";
 
 interface ChatAutoReplyButtonProps {
   characterCount: number;
   autoReply: AutoReply;
   onAutoReply: (autoReply: AutoReply) => void;
+  className?: string;
 }
 
 export default function ChatAutoReplyButton({
   characterCount,
   autoReply,
   onAutoReply,
+  className,
 }: ChatAutoReplyButtonProps) {
   const hasMultipleCharacters = characterCount > 1;
 
@@ -33,7 +36,12 @@ export default function ChatAutoReplyButton({
   }, [autoReply, onAutoReply, hasMultipleCharacters]);
 
   return (
-    <div className="flex min-w-[107px] flex-col items-center gap-1">
+    <div
+      className={cn(
+        "flex min-w-[107px] flex-col items-center gap-1",
+        className,
+      )}
+    >
       <button
         className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-50 bg-gray-50/20 text-base font-semibold text-gray-50 hover:bg-gray-50/30"
         onClick={handleAutoReply}
