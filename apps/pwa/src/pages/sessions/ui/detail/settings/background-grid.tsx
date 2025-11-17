@@ -167,7 +167,7 @@ export default function BackgroundGrid({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-200">
+        <h4 className="text-text-primary text-sm font-semibold">
           Select Background
         </h4>
         <button

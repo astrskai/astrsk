@@ -16,8 +16,11 @@ import {
 import { AssetService } from "@/app/services/asset-service";
 import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
 import FlowPreview from "@/features/flow/ui/flow-preview";
+import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
+import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
 import { Session } from "@/entities/session/domain/session";
-import { PlotCard } from "@/entities/card/domain";
+import { PlotCard, CardType } from "@/entities/card/domain";
+import { CharacterCard } from "@/entities/card/domain/character-card";
 import {
   fetchSession,
   useSaveSession,
@@ -85,6 +88,12 @@ const SessionSettingsSidebar = ({
   const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
   const [editedTitle, setEditedTitle] = useState<string>(session.title ?? "");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
+  const [isUserCharacterDialogOpen, setIsUserCharacterDialogOpen] =
+    useState<boolean>(false);
+  const [isAiCharacterDialogOpen, setIsAiCharacterDialogOpen] =
+    useState<boolean>(false);
+  const [isScenarioDialogOpen, setIsScenarioDialogOpen] =
+    useState<boolean>(false);
 
   const { backgroundMap } = useBackgroundStore();
   const background = backgroundMap.get(session.backgroundId?.toString() ?? "");
@@ -100,16 +109,162 @@ const SessionSettingsSidebar = ({
   const [coverImageSrc] = useAsset(session.coverId);
 
   const handleAddAICharacter = useCallback(() => {
-    console.log("add AI character");
+    setIsAiCharacterDialogOpen(true);
   }, []);
+
+  const handleConfirmAICharacters = useCallback(
+    async (characters: CharacterCard[]) => {
+      if (characters.length === 0) {
+        return;
+      }
+
+      try {
+        // Fetch latest session data
+        const latestSession = await fetchSession(session.id);
+
+        // Get new character IDs (only characters not already in the session)
+        const existingIds = latestSession.aiCharacterCardIds.map((id) =>
+          id.toString(),
+        );
+        const newCharacters = characters.filter(
+          (char) => !existingIds.includes(char.id.toString()),
+        );
+
+        // Add each new character to allCards array using addCard method
+        for (const character of newCharacters) {
+          const result = latestSession.addCard(character.id, CardType.Character);
+          if (result.isFailure) {
+            toast.error("Failed to add character", {
+              description: result.getError(),
+            });
+            return;
+          }
+        }
+
+        // Save to backend
+        await saveSessionMutation.mutateAsync({ session: latestSession });
+
+        // Show success message
+        toast.success(
+          `${newCharacters.length} AI character${newCharacters.length > 1 ? "s" : ""} added successfully`,
+        );
+      } catch (error) {
+        toast.error("Failed to add AI characters", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [session.id, saveSessionMutation],
+  );
 
   const handleAddUserCharacter = useCallback(() => {
-    console.log("add user character");
+    setIsUserCharacterDialogOpen(true);
   }, []);
 
+  const handleConfirmUserCharacter = useCallback(
+    async (characters: CharacterCard[]) => {
+      // Single selection mode - take first character or null
+      const selectedCharacter = characters.length > 0 ? characters[0] : null;
+
+      if (!selectedCharacter) {
+        return;
+      }
+
+      try {
+        // Fetch latest session data
+        const latestSession = await fetchSession(session.id);
+
+        // Check if character is already in allCards
+        const existingCard = latestSession.allCards.find((card) =>
+          card.id.equals(selectedCharacter.id),
+        );
+
+        // If not in allCards, add it first
+        if (!existingCard) {
+          const addResult = latestSession.addCard(
+            selectedCharacter.id,
+            CardType.Character,
+          );
+          if (addResult.isFailure) {
+            toast.error("Failed to add character", {
+              description: addResult.getError(),
+            });
+            return;
+          }
+        }
+
+        // Set as user character using validated method
+        const setResult = latestSession.setUserCharacterCardId(
+          selectedCharacter.id,
+        );
+        if (setResult.isFailure) {
+          toast.error("Failed to set user character", {
+            description: setResult.getError(),
+          });
+          return;
+        }
+
+        // Save to backend
+        await saveSessionMutation.mutateAsync({ session: latestSession });
+
+        // Show success message
+        toast.success("User character added successfully");
+      } catch (error) {
+        toast.error("Failed to add user character", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [session.id, saveSessionMutation],
+  );
+
   const handleAddScenario = useCallback(() => {
-    console.log("add scenario");
+    setIsScenarioDialogOpen(true);
   }, []);
+
+  const handleConfirmScenario = useCallback(
+    async (scenario: PlotCard | null) => {
+      if (!scenario) {
+        return;
+      }
+
+      try {
+        // Fetch latest session data
+        const latestSession = await fetchSession(session.id);
+
+        // Check if scenario is already in allCards
+        const existingCard = latestSession.allCards.find((card) =>
+          card.id.equals(scenario.id),
+        );
+
+        // If already exists, no need to add again
+        if (existingCard) {
+          toast.info("This scenario is already added to the session");
+          return;
+        }
+
+        // Add scenario to allCards using addCard method (validates Plot card uniqueness)
+        const addResult = latestSession.addCard(scenario.id, CardType.Plot);
+        if (addResult.isFailure) {
+          toast.error("Failed to add scenario", {
+            description: addResult.getError(),
+          });
+          return;
+        }
+
+        // Save to backend
+        await saveSessionMutation.mutateAsync({ session: latestSession });
+
+        // Show success message
+        toast.success("Scenario added successfully");
+      } catch (error) {
+        toast.error("Failed to add scenario", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [session.id, saveSessionMutation],
+  );
 
   const handleChangeBackground = useCallback(
     async (backgroundId: UniqueEntityID | undefined) => {
@@ -388,6 +543,26 @@ const SessionSettingsSidebar = ({
               <p>Add AI Character</p>
             </div>
           </div>
+
+          {/* AI Character Selection Dialog */}
+          <CharacterSelectionDialog
+            open={isAiCharacterDialogOpen}
+            onOpenChange={setIsAiCharacterDialogOpen}
+            selectedCharacters={[]}
+            onConfirm={handleConfirmAICharacters}
+            excludeCharacterIds={[
+              // Exclude user character if selected
+              ...(session.userCharacterCardId
+                ? [session.userCharacterCardId.toString()]
+                : []),
+              // Exclude already selected AI characters
+              ...session.aiCharacterCardIds.map((id) => id.toString()),
+            ]}
+            isMultipleSelect={true}
+            title="Choose AI Characters"
+            description="Choose one or more AI character cards"
+            confirmButtonText="Update"
+          />
         </section>
 
         <section>
@@ -417,6 +592,21 @@ const SessionSettingsSidebar = ({
               </div>
             )}
           </div>
+
+          {/* User Character Selection Dialog */}
+          <CharacterSelectionDialog
+            open={isUserCharacterDialogOpen}
+            onOpenChange={setIsUserCharacterDialogOpen}
+            selectedCharacters={[]}
+            onConfirm={handleConfirmUserCharacter}
+            excludeCharacterIds={session.aiCharacterCardIds.map((id) =>
+              id.toString(),
+            )}
+            isMultipleSelect={false}
+            title="Select User Character"
+            description="Choose a character to play as in this session"
+            confirmButtonText="Add"
+          />
         </section>
 
         <section>
@@ -444,6 +634,17 @@ const SessionSettingsSidebar = ({
               </div>
             )}
           </div>
+
+          {/* Scenario Selection Dialog */}
+          <ScenarioSelectionDialog
+            open={isScenarioDialogOpen}
+            onOpenChange={setIsScenarioDialogOpen}
+            selectedScenario={null}
+            onConfirm={handleConfirmScenario}
+            title="Select Scenario"
+            description="Choose a scenario to add to this session"
+            confirmButtonText="Add"
+          />
         </section>
 
         <section>

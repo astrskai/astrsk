@@ -56,7 +56,7 @@ export default function ChatCharacterButton({
             )}
           />
           <div className="line-clamp-1 max-w-[48px] text-center text-[9px] leading-4 text-gray-50 md:line-clamp-2 md:text-xs md:text-ellipsis">
-            {character.props.title}
+            {character.props.name ?? character.props.title}
           </div>
 
           {isUser && (
