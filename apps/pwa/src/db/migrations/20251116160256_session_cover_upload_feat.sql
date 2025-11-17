@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" ADD COLUMN "cover_id" uuid;

@@ -59,8 +59,8 @@ function SessionGridItem({
   const messageCount = session.props.turnIds.length;
 
   // Get session background image
-  const backgroundId = session.props.backgroundId;
-  const [coverImageUrl] = useAsset(backgroundId);
+  const coverId = session.props.coverId;
+  const [coverImageUrl] = useAsset(coverId);
 
   // Simple validation: check if session has AI character cards
   // Avoid expensive per-card queries (useSessionValidation with nested flow queries)

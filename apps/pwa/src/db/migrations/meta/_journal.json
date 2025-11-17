@@ -92,6 +92,13 @@
       "when": 1763305296348,
       "tag": "20251116150136_add_widget_layout_to_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1763308976627,
+      "tag": "20251116160256_session_cover_upload_feat",
+      "breakpoints": true
     }
   ]
 }

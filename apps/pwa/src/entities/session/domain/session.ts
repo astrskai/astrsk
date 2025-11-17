@@ -25,6 +25,7 @@ export interface SessionProps {
 
   // Images
   backgroundId?: UniqueEntityID; // Background image
+  coverId?: UniqueEntityID; // Cover image
 
   // Translation
   translation?: TranslationConfig;
@@ -59,15 +60,14 @@ export const SessionPropsKeys = [
   "allCards",
   "userCharacterCardId",
   "turnIds",
-  "promptToggle",
-  "isPlotBackground",
   "backgroundId",
+  "coverId",
   "translation",
-  "aiResponse",
-  "userResponse",
-  "titleId",
   "chatStyles",
   "flowId",
+  "autoReply",
+  "dataSchemaOrder",
+  "widgetLayout",
   "createdAt",
   "updatedAt",
 ];
@@ -108,6 +108,10 @@ export class Session extends AggregateRoot<SessionProps> {
 
   get backgroundId(): UniqueEntityID | undefined {
     return this.props.backgroundId;
+  }
+
+  get coverId(): UniqueEntityID | undefined {
+    return this.props.coverId;
   }
 
   get translation(): TranslationConfig | undefined {
@@ -152,6 +156,7 @@ export class Session extends AggregateRoot<SessionProps> {
       userCharacterCardId: props.userCharacterCardId,
       turnIds: props.turnIds || [],
       backgroundId: props.backgroundId,
+      coverId: props.coverId,
       translation:
         props.translation ||
         TranslationConfig.create({
@@ -249,6 +254,10 @@ export class Session extends AggregateRoot<SessionProps> {
 
   public setBackgroundId(backgroundId: UniqueEntityID | null): void {
     this.props.backgroundId = backgroundId || undefined;
+  }
+
+  public setCoverId(coverId: UniqueEntityID | null): void {
+    this.props.coverId = coverId || undefined;
   }
 
   public setTranslation(translation: TranslationConfig): void {

@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { Button } from "@/shared/ui/forms";
 import { CreatePageHeader } from "@/widgets/create-page-header";
 import {
@@ -64,8 +65,11 @@ export function CreateSessionPage() {
 
   // Basic Info state
   const [sessionName, setSessionName] = useState("New Session");
-  // const [imageFile, setImageFile] = useState<File | undefined>();
-  // const [imageAssetId, setImageAssetId] = useState<string | undefined>();
+  const [imageUrl, setImageUrl] = useState<string | undefined>();
+  const [imageFile, setImageFile] = useState<File | undefined>();
+  const [imageDimensions, setImageDimensions] = useState<
+    { width: number; height: number } | undefined
+  >();
 
   // Selection state (simplified - each step component handles its own UI state)
   const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
@@ -85,6 +89,7 @@ export function CreateSessionPage() {
   // Track if user has made changes
   const hasUnsavedChanges =
     sessionName !== "New Session" ||
+    !!imageFile ||
     !!selectedFlow ||
     selectedCharacters.length > 0;
 
@@ -95,14 +100,70 @@ export function CreateSessionPage() {
     enableBeforeUnload: hasUnsavedChanges && !isSaving,
   });
 
-  // const handleFileUpload = (file: File) => {
-  //   // Store the file for preview - actual upload happens on save
-  //   setImageFile(file);
+  // Cleanup blob URL on unmount or when imageUrl changes
+  useEffect(() => {
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl]);
 
-  //   // Create a temporary object URL for preview
-  //   const objectUrl = URL.createObjectURL(file);
-  //   setImageAssetId(objectUrl);
-  // };
+  const getImageDimensions = (
+    file: File,
+  ): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve({ width: img.width, height: img.height });
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Failed to load image"));
+      };
+
+      img.src = objectUrl;
+    });
+  };
+
+  const handleFileUpload = async (file: File | null) => {
+    if (!file) {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+
+      setImageFile(undefined);
+      setImageUrl(undefined);
+      setImageDimensions(undefined);
+      return;
+    }
+
+    if (imageUrl) {
+      URL.revokeObjectURL(imageUrl);
+    }
+
+    // Store the file for preview - actual upload happens on save
+    setImageFile(file);
+
+    // Create a temporary object URL for preview
+    const objectUrl = URL.createObjectURL(file);
+    setImageUrl(objectUrl);
+
+    // Get image dimensions
+    try {
+      const dimensions = await getImageDimensions(file);
+      setImageDimensions(dimensions);
+    } catch (error) {
+      toast.info("Failed to get image dimensions", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+      setImageDimensions(undefined);
+    }
+  };
 
   const handleCancel = () => {
     navigate({ to: "/sessions" });
@@ -123,30 +184,34 @@ export function CreateSessionPage() {
 
     setIsSaving(true);
     try {
-      // // Step 1: Upload image if exists
-      // let uploadedAssetId: string | undefined;
-      // if (imageFile) {
-      //   const assetResult = await AssetService.saveFileToAsset.execute({
-      //     file: imageFile,
-      //   });
+      // Step 1: Upload image if exists
+      let uploadedCoverId: string | undefined;
+      if (imageFile) {
+        const assetResult = await AssetService.saveFileToAsset.execute({
+          file: imageFile,
+        });
 
-      //   if (assetResult.isSuccess) {
-      //     const asset = assetResult.getValue();
-      //     uploadedAssetId = asset.id.toString();
+        if (assetResult.isSuccess) {
+          const asset = assetResult.getValue();
+          uploadedCoverId = asset.id.toString();
 
-      //     // Save to generated images gallery
-      //     await GeneratedImageService.saveGeneratedImageFromAsset.execute({
-      //       assetId: asset.id,
-      //       name: imageFile.name.replace(/\.[^/.]+$/, ""),
-      //       prompt: `Session cover image for ${sessionName}`,
-      //       style: "uploaded",
-      //       associatedCardId: undefined,
-      //     });
-      //   } else {
-      //     logger.error("Failed to upload file:", assetResult.getError());
-      //     return;
-      //   }
-      // }
+          // Save to generated images gallery
+          await GeneratedImageService.saveGeneratedImageFromAsset.execute({
+            assetId: asset.id,
+            name: imageFile.name.replace(/\.[^/.]+$/, ""),
+            prompt: `Session cover image for ${sessionName}`,
+            style: "uploaded",
+            associatedCardId: undefined,
+          });
+        } else {
+          toast.error("Failed to upload cover image", {
+            description: "Please try again or continue without an image.",
+          });
+          logger.error("Failed to upload file:", assetResult.getError());
+          setIsSaving(false);
+          return;
+        }
+      }
 
       // Step 2: Build allCards array from all selected cards
       const allCards: CardListItem[] = [];
@@ -184,9 +249,9 @@ export function CreateSessionPage() {
         flowId: selectedFlow.id,
         allCards,
         userCharacterCardId: selectedUserCharacter?.id,
-        // backgroundId: uploadedAssetId
-        //   ? new UniqueEntityID(uploadedAssetId)
-        //   : undefined,
+        coverId: uploadedCoverId
+          ? new UniqueEntityID(uploadedCoverId)
+          : undefined,
         turnIds: [],
         autoReply: AutoReply.Off,
         chatStyles: defaultChatStyles,
@@ -230,7 +295,7 @@ export function CreateSessionPage() {
     }
   }, [
     sessionName,
-    // imageFile,
+    imageFile,
     selectedFlow,
     selectedCharacters,
     selectedUserCharacter,
@@ -294,8 +359,9 @@ export function CreateSessionPage() {
             <BasicInfoStep
               sessionName={sessionName}
               onSessionNameChange={setSessionName}
-              // imageAssetId={imageAssetId}
-              // onFileUpload={handleFileUpload}
+              imageUrl={imageUrl}
+              imageDimensions={imageDimensions}
+              onFileUpload={handleFileUpload}
             />
           )}
 
