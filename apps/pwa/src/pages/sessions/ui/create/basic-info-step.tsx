@@ -84,8 +84,9 @@ export function BasicInfoStep({
                     "hidden cursor-pointer text-sm text-gray-200 hover:text-gray-50 md:block",
                   )}
                   onClick={handleDeleteImage}
+                  aria-label="Remove cover image"
                 >
-                  <Trash2 size={20} />
+                  <Trash2 size={20} aria-hidden="true" />
                 </button>
                 <FileUploadButton
                   accept={ACCEPTED_FILE_TYPES}

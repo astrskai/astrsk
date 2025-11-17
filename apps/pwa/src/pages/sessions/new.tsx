@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/shared/ui/forms";
@@ -99,6 +99,15 @@ export function CreateSessionPage() {
     withResolver: true,
     enableBeforeUnload: hasUnsavedChanges && !isSaving,
   });
+
+  // Cleanup blob URL on unmount or when imageUrl changes
+  useEffect(() => {
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl]);
 
   const getImageDimensions = (
     file: File,
