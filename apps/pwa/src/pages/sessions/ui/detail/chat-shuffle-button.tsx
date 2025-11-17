@@ -6,11 +6,13 @@ import { cn } from "@/shared/lib";
 interface ChatShuffleButtonProps {
   onClick: () => void;
   isDisabled?: boolean;
+  className?: string;
 }
 
 export default function ChatShuffleButton({
   onClick,
   isDisabled,
+  className,
 }: ChatShuffleButtonProps) {
   const handleClick = useCallback(() => {
     if (isDisabled) return;
@@ -23,6 +25,7 @@ export default function ChatShuffleButton({
       className={cn(
         "group/shuffle flex flex-col items-center gap-2",
         isDisabled && "pointer-events-none cursor-default opacity-50",
+        className,
       )}
     >
       <button

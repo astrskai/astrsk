@@ -31,6 +31,7 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { useFlow } from "@/shared/hooks/use-flow";
 import { Loading, PopoverBase, DropdownMenuBase } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs/confirm";
+import DialogBase from "@/shared/ui/dialogs/base";
 import { useCard } from "@/shared/hooks/use-card";
 import { UniqueEntityID } from "@/shared/domain";
 import MessageStyling from "./settings/message-styling";
@@ -74,7 +75,10 @@ const SessionSettingsSidebar = ({
   const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
   const saveSessionMutation = useSaveSession();
   const deleteSessionMutation = useDeleteSession();
-  const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
+  const [isBackgroundDialogOpen, setIsBackgroundDialogOpen] =
+    useState<boolean>(false);
+  const [isBackgroundPopoverOpen, setIsBackgroundPopoverOpen] =
+    useState<boolean>(false);
   const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
   const [editedTitle, setEditedTitle] = useState<string>(session.title ?? "");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
@@ -104,8 +108,9 @@ const SessionSettingsSidebar = ({
         // Save to backend
         await saveSessionMutation.mutateAsync({ session: latestSession });
 
-        // Close popover
-        setIsPopoverOpen(false);
+        // Close both dialog and popover
+        setIsBackgroundDialogOpen(false);
+        setIsBackgroundPopoverOpen(false);
 
         // Show success message
         toast.success("Background updated successfully");
@@ -219,7 +224,7 @@ const SessionSettingsSidebar = ({
   return (
     <aside
       className={cn(
-        "bg-background-primary fixed top-0 right-0 z-30 h-full w-100 overflow-y-auto",
+        "bg-background-primary fixed top-0 right-0 z-30 h-dvh max-w-dvw overflow-y-auto md:w-96",
         "transition-transform duration-300 ease-in-out",
         "shadow-[-8px_0_24px_-4px_rgba(0,0,0,0.5)]",
         isOpen ? "translate-x-0" : "translate-x-full",
@@ -444,14 +449,51 @@ const SessionSettingsSidebar = ({
           />
         </section>
 
-        <section>
+        {/* Background image - Mobile (Dialog) */}
+        <section className="md:hidden!">
+          <h3 className="font-semibold">Background image</h3>
+          <button
+            type="button"
+            className="w-full cursor-pointer rounded-lg border-0 bg-transparent p-0 text-left transition-opacity hover:brightness-110"
+            onClick={() => setIsBackgroundDialogOpen(true)}
+            aria-label="Change background image"
+          >
+            {backgroundImageSrc ? (
+              <img
+                className="h-32 w-full rounded-lg object-cover"
+                src={backgroundImageSrc}
+                alt="Background image"
+              />
+            ) : (
+              <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
+                <p className="text-sm text-gray-400">No background image</p>
+              </div>
+            )}
+          </button>
+
+          <DialogBase
+            open={isBackgroundDialogOpen}
+            onOpenChange={setIsBackgroundDialogOpen}
+            title="Select Background"
+            content={
+              <BackgroundGrid
+                currentBackgroundId={session.backgroundId}
+                onSelect={handleChangeBackground}
+                isEditable={false}
+              />
+            }
+          />
+        </section>
+
+        {/* Background image - Desktop (Popover) */}
+        <section className="hidden! md:flex!">
           <h3 className="font-semibold">Background image</h3>
           <PopoverBase
-            open={isPopoverOpen}
-            onOpenChange={setIsPopoverOpen}
+            open={isBackgroundPopoverOpen}
+            onOpenChange={setIsBackgroundPopoverOpen}
             side="left"
             align="start"
-            className="w-[480px]"
+            className="w-[calc(100dvw-2rem)] md:w-[480px]"
             trigger={
               <div className="cursor-pointer rounded-lg transition-opacity hover:brightness-110">
                 {backgroundImageSrc ? (
@@ -471,6 +513,7 @@ const SessionSettingsSidebar = ({
               <BackgroundGrid
                 currentBackgroundId={session.backgroundId}
                 onSelect={handleChangeBackground}
+                isEditable={true}
               />
             }
           />

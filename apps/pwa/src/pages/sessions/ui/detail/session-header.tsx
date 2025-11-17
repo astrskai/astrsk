@@ -27,7 +27,7 @@ export default function SessionHeader({
         {/* Left: Back button */}
         <button
           onClick={() => navigate({ to: "/sessions" })}
-          className="text-text-secondary hover:text-text-primary -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
+          className="text-text-primary hover:text-text-secondary -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
           aria-label="Go back to sessions list"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -38,18 +38,14 @@ export default function SessionHeader({
           {title}
         </h1>
 
-        {/* Right: Settings/Close button */}
-        {/* <button
-      onClick={() => setIsOpenSettings(!isOpenSettings)}
-      className="text-text-secondary hover:text-text-primary -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
-      aria-label={isOpenSettings ? "Close settings" : "Session settings"}
-      >
-      {isOpenSettings ? (
-          <X className="h-5 w-5" />
-      ) : (
-          <SvgIcon name="edit" size={20} />
-      )}
-      </button> */}
+        {/* Right: Settings button */}
+        <button
+          onClick={onSettingsClick}
+          className="text-text-primary hover:text-text-secondary -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
+          aria-label="Session settings"
+        >
+          <Pencil className="h-5 w-5" />
+        </button>
       </header>
 
       <div className="absolute top-4 left-4 z-30 hidden flex-col items-start gap-4 md:flex">

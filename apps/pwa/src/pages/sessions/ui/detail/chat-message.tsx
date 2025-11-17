@@ -132,7 +132,7 @@ const ChatMessage = ({
   return (
     <div
       className={cn(
-        "flex items-start gap-2 px-4 pb-4",
+        "flex items-start gap-2 px-4 pb-1 md:pb-4",
         isUser ? "flex-row-reverse" : "flex-row",
         isLastMessage && "animate-fade-in-up",
       )}
@@ -140,6 +140,7 @@ const ChatMessage = ({
       <AvatarSimple
         src={characterImageUrl || "/img/message-avatar-default.svg"}
         alt={character?.props.title ?? ""}
+        className="h-9 w-9 md:h-16 md:w-16"
         size="xl"
       />
 
@@ -151,7 +152,7 @@ const ChatMessage = ({
       >
         <div
           className={cn(
-            "w-fit rounded-full bg-gray-50/10 px-3 py-1 text-sm font-medium backdrop-blur-sm md:text-base",
+            "w-fit rounded-full bg-gray-50/10 px-3 py-1 text-xs font-medium backdrop-blur-sm md:text-base",
             isEditing && isUser && "ml-auto",
           )}
         >
@@ -198,6 +199,11 @@ const ChatMessage = ({
                     "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
                     "break-words",
                   )}
+                  style={{
+                    color: isUser
+                      ? (chatStyles?.user?.text?.base?.color ?? "#000000")
+                      : (chatStyles?.ai?.text?.base?.color ?? "#ffffff"),
+                  }}
                   autoFocus
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
@@ -225,9 +231,9 @@ const ChatMessage = ({
                           <p
                             style={{
                               color: textStyle?.base?.color ?? fallbackColor,
-                              fontSize: textStyle?.base?.fontSize
-                                ? `${textStyle.base.fontSize}px`
-                                : undefined,
+                              // fontSize: textStyle?.base?.fontSize
+                              //   ? `${textStyle.base.fontSize}px`
+                              //   : undefined,
                             }}
                           >
                             {children}
@@ -244,9 +250,9 @@ const ChatMessage = ({
                           <strong
                             style={{
                               color: textStyle?.bold?.color ?? fallbackColor,
-                              fontSize: textStyle?.bold?.fontSize
-                                ? `${textStyle.bold.fontSize}px`
-                                : undefined,
+                              // fontSize: textStyle?.bold?.fontSize
+                              //   ? `${textStyle.bold.fontSize}px`
+                              //   : undefined,
                             }}
                           >
                             {children}
@@ -263,9 +269,9 @@ const ChatMessage = ({
                           <em
                             style={{
                               color: textStyle?.italic?.color ?? fallbackColor,
-                              fontSize: textStyle?.italic?.fontSize
-                                ? `${textStyle.italic.fontSize}px`
-                                : undefined,
+                              // fontSize: textStyle?.italic?.fontSize
+                              //   ? `${textStyle.italic.fontSize}px`
+                              //   : undefined,
                             }}
                           >
                             {children}

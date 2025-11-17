@@ -113,12 +113,14 @@ export default function SessionDataSidebar({
   return (
     <aside
       className={cn(
-        "w-80 overflow-hidden bg-transparent transition-all duration-300 ease-in-out",
-        // Mobile: fixed overlay with slide animation
-        "fixed top-10 bottom-0 left-0 z-10",
+        "w-full max-w-dvw overflow-hidden bg-gray-800/30 backdrop-blur-md transition-all duration-300 ease-in-out md:w-80 md:bg-transparent md:backdrop-blur-none",
+        // Mobile: fixed overlay with slide animation + bottom offset for ChatInput
+        // Don't use h-dvh - let top/bottom define height
+        "fixed top-10 left-0 z-10",
+        "bottom-27", // Reserve space for ChatInput (108px = 27 * 4px)
         isOpen ? "translate-x-0" : "-translate-x-full",
         // Desktop: relative layout with opacity + max-width animation
-        "md:relative md:top-0 md:h-dvh md:translate-x-0 md:pt-28",
+        "md:relative md:top-0 md:bottom-auto md:h-dvh md:translate-x-0 md:pt-28",
         isOpen
           ? "md:max-w-80 md:opacity-100"
           : "md:max-w-0 md:overflow-hidden md:opacity-0",

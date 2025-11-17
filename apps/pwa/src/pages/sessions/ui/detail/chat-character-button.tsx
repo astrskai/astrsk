@@ -34,7 +34,7 @@ export default function ChatCharacterButton({
   return (
     <div
       className={cn(
-        "group relative flex cursor-pointer flex-col items-center gap-[4px]",
+        "group relative flex cursor-pointer flex-col items-center gap-0.5 md:gap-1",
         isDisabled && "pointer-events-none cursor-default opacity-50",
       )}
       onClick={() => {
@@ -51,15 +51,16 @@ export default function ChatCharacterButton({
             size="lg"
             className={cn(
               "border-1 border-gray-50/30",
+              "h-9 w-9 md:h-12 md:w-12",
               isDisabled ? "cursor-default" : "hover:border-gray-50",
             )}
           />
-          <div className="line-clamp-2 max-w-[48px] text-center text-xs leading-4 text-ellipsis text-gray-50">
+          <div className="line-clamp-1 max-w-[48px] text-center text-[9px] leading-4 text-gray-50 md:line-clamp-2 md:text-xs md:text-ellipsis">
             {character.props.title}
           </div>
 
           {isUser && (
-            <div className="absolute top-0 right-0 size-3 rounded-full border border-gray-50/10 bg-blue-100" />
+            <div className="border-background-primary absolute top-0 right-0 size-3 rounded-full border-2 bg-blue-100" />
           )}
         </>
       ) : (

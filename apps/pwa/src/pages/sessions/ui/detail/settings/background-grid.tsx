@@ -16,12 +16,13 @@ import { BackgroundService } from "@/app/services/background-service";
 interface BackgroundGridProps {
   currentBackgroundId?: UniqueEntityID;
   onSelect: (backgroundId: UniqueEntityID | undefined) => void;
+  isEditable?: boolean; // false = no delete button, no name overlay (mobile)
 }
 
 interface BackgroundItemProps {
   background: Background | DefaultBackground;
   isSelected: boolean;
-  isEditable?: boolean;
+  showNameOverlay?: boolean; // Show name overlay at bottom
   onSelect: (backgroundId: UniqueEntityID) => void;
   onDelete?: (backgroundId: UniqueEntityID) => void;
 }
@@ -29,7 +30,7 @@ interface BackgroundItemProps {
 const BackgroundItem = ({
   background,
   isSelected,
-  isEditable = false,
+  showNameOverlay = false,
   onSelect,
   onDelete,
 }: BackgroundItemProps) => {
@@ -72,7 +73,7 @@ const BackgroundItem = ({
         )}
 
         {/* Name overlay */}
-        {!isEditable && (
+        {showNameOverlay && (
           <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 to-transparent p-2">
             <p className="truncate text-xs text-white">{background.name}</p>
           </div>
@@ -96,8 +97,8 @@ const BackgroundItem = ({
         </div>
       )}
 
-      {/* Delete button (only for editable items) */}
-      {isEditable && onDelete && (
+      {/* Delete button */}
+      {onDelete && (
         <button
           type="button"
           onClick={() => onDelete(background.id)}
@@ -114,6 +115,7 @@ const BackgroundItem = ({
 export default function BackgroundGrid({
   currentBackgroundId,
   onSelect,
+  isEditable = false,
 }: BackgroundGridProps) {
   const { defaultBackgrounds, backgrounds } = useBackgroundStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -215,9 +217,9 @@ export default function BackgroundGrid({
                   isSelected={
                     currentBackgroundId?.equals(background.id) ?? false
                   }
-                  isEditable
+                  showNameOverlay={false}
                   onSelect={onSelect}
-                  onDelete={handleDeleteBackground}
+                  onDelete={isEditable ? handleDeleteBackground : undefined}
                 />
               ))}
             </div>
@@ -266,6 +268,7 @@ export default function BackgroundGrid({
                 key={background.id.toString()}
                 background={background}
                 isSelected={currentBackgroundId?.equals(background.id) ?? false}
+                showNameOverlay={!isEditable}
                 onSelect={onSelect}
               />
             ))}
