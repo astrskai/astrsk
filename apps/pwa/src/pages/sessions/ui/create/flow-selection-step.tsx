@@ -1,21 +1,11 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { Button, SearchInput } from "@/shared/ui/forms";
 import FlowPreview from "@/features/flow/ui/flow-preview";
-import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { Flow } from "@/entities/flow/domain/flow";
 import { IconWorkflow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui";
 import type { FlowAction } from "@/features/flow/ui/flow-preview";
+import { FlowSelectionDialog } from "@/features/flow/ui/flow-selection-dialog";
 
 interface FlowSelectionStepProps {
   selectedFlow: Flow | null;
@@ -32,39 +22,9 @@ export function FlowSelectionStep({
   onFlowSelected,
 }: FlowSelectionStepProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedFlowId, setSelectedFlowId] = useState<string | null>(null);
-  const { data: flows } = useQuery(flowQueries.list());
-
-  // Filter flows by search keyword
-  const filteredFlows = useMemo(() => {
-    if (!flows) return [];
-    if (!searchKeyword.trim()) return flows;
-
-    const keyword = searchKeyword.toLowerCase();
-    return flows.filter((flow: Flow) =>
-      flow.props.name?.toLowerCase().includes(keyword),
-    );
-  }, [flows, searchKeyword]);
 
   const handleAddFlowClick = () => {
     setIsDialogOpen(true);
-  };
-
-  const handleDialogAdd = () => {
-    if (selectedFlowId && flows) {
-      const flow = flows.find((f: Flow) => f.id.toString() === selectedFlowId);
-      if (flow) {
-        onFlowSelected(flow);
-        setIsDialogOpen(false);
-        setSearchKeyword("");
-      }
-    }
-  };
-
-  const handleDialogCancel = () => {
-    setIsDialogOpen(false);
-    setSearchKeyword("");
   };
 
   const handleRemoveFlow = (e: React.MouseEvent) => {
@@ -137,72 +97,15 @@ export function FlowSelectionStep({
       </div>
 
       {/* Flow Selection Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex h-[90dvh] max-h-[90dvh] max-w-5xl flex-col gap-2 md:max-w-6xl">
-          <DialogHeader>
-            <DialogTitle>Select Flow</DialogTitle>
-            <DialogDescription>
-              Choose a flow to use for this session
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex min-h-0 flex-1 flex-col gap-4 py-4">
-            {/* Search Input */}
-            <SearchInput
-              name="flow-search"
-              placeholder="Search flows..."
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              className="w-full max-w-md flex-shrink-0"
-            />
-
-            {/* Flow Cards Grid */}
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {filteredFlows.map((flow: Flow) => (
-                  <FlowPreview
-                    key={flow.id.toString()}
-                    title={flow.props.name || "Untitled Flow"}
-                    description={flow.props.description}
-                    nodeCount={flow.props.nodes.length}
-                    onClick={() => setSelectedFlowId(flow.id.toString())}
-                    className={cn(
-                      selectedFlowId === flow.id.toString() &&
-                        "!border-primary shadow-lg",
-                    )}
-                  />
-                ))}
-              </div>
-
-              {/* Empty State */}
-              {filteredFlows.length === 0 && (
-                <div className="text-text-secondary flex flex-col items-center justify-center py-12 text-center">
-                  {searchKeyword ? (
-                    <>
-                      <p className="mb-2 text-lg">No flows found</p>
-                      <p className="text-sm">Try a different search term</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="mb-2 text-lg">No flows available</p>
-                      <p className="text-sm">Create a flow first to continue</p>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={handleDialogCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleDialogAdd} disabled={!selectedFlowId}>
-              Add
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FlowSelectionDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        selectedFlow={selectedFlow}
+        onConfirm={onFlowSelected}
+        title="Select Flow"
+        description="Choose a flow to use for this session"
+        confirmButtonText="Add"
+      />
     </div>
   );
 }

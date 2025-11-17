@@ -23,12 +23,14 @@ export default function CharacterItem({
       className="flex h-[64px] cursor-pointer overflow-hidden rounded-lg border border-gray-500 hover:border-gray-300"
       onClick={onClick}
     >
-      <img
-        className="w-[25%] object-cover"
-        src={imageUrl ?? "/img/placeholder/character-card-image.png"}
-        alt={imageUrl ? character.props.title : "No image"}
-      />
-      <div className="flex w-full items-center justify-between gap-2 p-4">
+      <div className="relative w-[25%]">
+        <img
+          className="h-full w-full object-cover"
+          src={imageUrl ?? "/img/placeholder/character-placeholder.png"}
+          alt={imageUrl ? character.props.title : "No image"}
+        />
+      </div>
+      <div className="flex w-[75%] items-center justify-between gap-2 p-4">
         <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-gray-50">
           {character.props.title}
         </h3>

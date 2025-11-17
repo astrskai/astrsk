@@ -42,7 +42,7 @@ export default function ChatScenarioMessage({
 
   return (
     <div className="group/scenario relative p-4">
-      <div className="relative mx-auto max-w-full rounded-lg bg-gray-950/30 p-4 text-gray-200 backdrop-blur-xl md:max-w-4xl">
+      <div className="relative mx-auto max-w-full rounded-lg bg-gray-950/30 p-4 text-gray-200 backdrop-blur-3xl md:max-w-4xl">
         {isEditing ? (
           <TextareaAutosize
             className={cn(
