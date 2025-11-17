@@ -61,7 +61,7 @@ export default function ChatInput({
   return (
     <div
       className={cn(
-        "relative z-10 w-full max-w-dvw border-t border-gray-50/50 bg-gray-50/10 px-4 py-2 backdrop-blur-md md:max-w-4xl md:rounded-2xl md:border md:p-4",
+        "relative z-10 w-full max-w-dvw border-t border-gray-50/50 bg-gray-50/10 px-4 py-2 backdrop-blur-3xl md:max-w-4xl md:rounded-2xl md:border md:p-4",
         className,
       )}
     >

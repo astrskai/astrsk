@@ -10,6 +10,7 @@ interface DialogBaseProps {
   description?: string;
   content: React.ReactNode;
   isShowCloseButton?: boolean;
+  size?: "sm" | "md" | "lg" | "xl" | "2xl"; // Dialog size (default: "md")
 }
 
 const DialogBase = ({
@@ -20,7 +21,16 @@ const DialogBase = ({
   description = "",
   content,
   isShowCloseButton = true,
+  size = "md",
 }: DialogBaseProps) => {
+  // Map size to max-width classes
+  const sizeClasses = {
+    sm: "max-w-sm", // 384px
+    md: "max-w-lg", // 512px (default)
+    lg: "max-w-2xl", // 672px
+    xl: "max-w-4xl", // 896px
+    "2xl": "max-w-6xl", // 1152px
+  };
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
@@ -36,7 +46,8 @@ const DialogBase = ({
         />
         <Dialog.Content
           className={cn(
-            "bg-dark-surface fixed top-[50%] left-[50%] z-100 max-h-[85dvh] w-[90vw] max-w-lg translate-x-[-50%] translate-y-[-50%] rounded-lg p-6 shadow-lg focus:outline-none",
+            "bg-dark-surface fixed top-[50%] left-[50%] z-100 max-h-[85dvh] w-[90vw] translate-x-[-50%] translate-y-[-50%] rounded-lg p-6 shadow-lg focus:outline-none",
+            sizeClasses[size],
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
             "data-[state=closed]:duration-200 data-[state=open]:duration-200",

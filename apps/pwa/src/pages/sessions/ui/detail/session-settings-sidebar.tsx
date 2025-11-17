@@ -8,6 +8,9 @@ import {
   Check,
   X,
   Trash2,
+  Plus,
+  FileUp,
+  Image,
 } from "lucide-react";
 
 import { AssetService } from "@/app/services/asset-service";
@@ -95,6 +98,18 @@ const SessionSettingsSidebar = ({
   }, [background, backgroundAsset]);
 
   const [coverImageSrc] = useAsset(session.coverId);
+
+  const handleAddAICharacter = useCallback(() => {
+    console.log("add AI character");
+  }, []);
+
+  const handleAddUserCharacter = useCallback(() => {
+    console.log("add user character");
+  }, []);
+
+  const handleAddScenario = useCallback(() => {
+    console.log("add scenario");
+  }, []);
 
   const handleChangeBackground = useCallback(
     async (backgroundId: UniqueEntityID | undefined) => {
@@ -365,6 +380,13 @@ const SessionSettingsSidebar = ({
                 <p className="text-sm text-gray-400">No AI characters</p>
               </div>
             )}
+            <div
+              className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
+              onClick={handleAddAICharacter}
+            >
+              <Plus className="h-5 w-5" />
+              <p>Add AI Character</p>
+            </div>
           </div>
         </section>
 
@@ -386,8 +408,12 @@ const SessionSettingsSidebar = ({
                 }}
               />
             ) : (
-              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
-                <p className="text-sm text-gray-400">No user character</p>
+              <div
+                className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
+                onClick={handleAddUserCharacter}
+              >
+                <Plus className="h-5 w-5" />
+                <p>Add User Character</p>
               </div>
             )}
           </div>
@@ -409,8 +435,12 @@ const SessionSettingsSidebar = ({
                 }}
               />
             ) : (
-              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
-                <p className="text-sm text-gray-400">No scenario</p>
+              <div
+                className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
+                onClick={handleAddScenario}
+              >
+                <Plus className="h-5 w-5" />
+                <p>Add Scenario</p>
               </div>
             )}
           </div>
@@ -469,8 +499,9 @@ const SessionSettingsSidebar = ({
                 alt="Cover image"
               />
             ) : (
-              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
-                <p className="text-sm text-gray-400">No cover image</p>
+              <div className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
+                <FileUp className="h-5 w-5" />
+                <p>Upload Cover Image</p>
               </div>
             )}
           </label>
@@ -499,8 +530,9 @@ const SessionSettingsSidebar = ({
                 alt="Background image"
               />
             ) : (
-              <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
-                <p className="text-sm text-gray-400">No background image</p>
+              <div className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
+                <Image className="h-5 w-5" />
+                <p>Select Background Image</p>
               </div>
             )}
           </button>
@@ -537,8 +569,9 @@ const SessionSettingsSidebar = ({
                     alt="Background image"
                   />
                 ) : (
-                  <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
-                    <p className="text-sm text-gray-400">No background image</p>
+                  <div className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
+                    <Image className="h-5 w-5" />
+                    <p>Select Background Image</p>
                   </div>
                 )}
               </div>
