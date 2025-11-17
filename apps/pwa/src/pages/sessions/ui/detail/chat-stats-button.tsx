@@ -17,7 +17,7 @@ const ChatStatsButton = ({
     <div className={cn("flex flex-col items-center gap-1", className)}>
       <button
         className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-lg border border-gray-50/10 text-base font-semibold text-gray-50 hover:bg-gray-50/30",
+          "flex h-9 w-9 items-center justify-center rounded-lg border border-gray-50/10 text-base font-semibold text-gray-50 hover:bg-gray-50/30",
           isOpen ? "bg-gray-50" : "bg-gray-50/20",
         )}
         onClick={() => {
@@ -29,7 +29,7 @@ const ChatStatsButton = ({
         />
       </button>
 
-      <div className="text-center text-xs font-semibold text-gray-100">
+      <div className="text-center text-[9px] font-semibold text-gray-100">
         Stats
       </div>
     </div>

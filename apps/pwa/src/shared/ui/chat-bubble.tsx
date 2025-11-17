@@ -16,7 +16,7 @@ export function ChatBubble({
   return (
     <div
       className={cn(
-        "text-text-secondary w-fit max-w-full bg-gray-800 p-4 text-sm break-words md:text-base",
+        "text-text-secondary w-fit max-w-full bg-gray-800 p-2 text-xs break-words md:p-4 md:text-base",
         direction === "left"
           ? "rounded-tl-sm rounded-tr-2xl rounded-br-2xl rounded-bl-2xl"
           : direction === "right"

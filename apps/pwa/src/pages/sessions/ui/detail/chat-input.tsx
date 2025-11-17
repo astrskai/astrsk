@@ -117,7 +117,7 @@ export default function ChatInput({
         <input
           type="text"
           className={cn(
-            "w-full rounded-full border border-gray-50/30 bg-transparent px-4 py-1 pr-25 text-gray-50 placeholder:text-gray-300 focus:border-gray-50/50 focus:outline-none md:py-2",
+            "w-full rounded-full border border-gray-50/30 bg-transparent px-4 py-1 pr-25 text-sm text-gray-50 placeholder:text-sm placeholder:text-gray-300 focus:border-gray-50/50 focus:outline-none md:py-2 md:text-base md:placeholder:text-base",
           )}
           placeholder="Type a message..."
           value={messageContent}
@@ -152,7 +152,7 @@ export default function ChatInput({
             setMessageContent("");
           }}
           className={cn(
-            "absolute top-1/2 right-0.5 flex -translate-y-1/2 items-center gap-2 rounded-full border border-gray-50/30 bg-gray-50/10 px-4 py-1.5 font-semibold text-white transition-colors hover:bg-gray-50/20 md:right-1",
+            "absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-2 rounded-full border border-gray-50/30 bg-gray-50/10 px-4 py-1.5 font-semibold text-white transition-colors hover:bg-gray-50/20 md:right-1",
             !streamingMessageId && messageContent.trim() === ""
               ? "cursor-not-allowed opacity-50"
               : "",
