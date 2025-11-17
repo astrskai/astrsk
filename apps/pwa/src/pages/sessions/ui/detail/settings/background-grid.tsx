@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef } from "react";
+import { useMemo, useCallback, useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib";
@@ -80,32 +80,15 @@ const BackgroundItem = ({
         )}
       </button>
 
-      {/* Selected indicator */}
-      {isSelected && (
-        <div className="pointer-events-none absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
-          <svg
-            className="h-4 w-4 text-white"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-      )}
-
       {/* Delete button */}
       {onDelete && (
         <button
           type="button"
           onClick={() => onDelete(background.id)}
-          className="absolute top-2 left-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/70 hover:opacity-100"
+          className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-blue-200 transition-opacity hover:bg-blue-300"
           aria-label={`Delete ${background.name}`}
         >
-          <Trash2 className="h-3 w-3 text-white" />
+          <Trash2 className="h-3 w-3 text-blue-900" />
         </button>
       )}
     </div>
@@ -119,31 +102,38 @@ export default function BackgroundGrid({
 }: BackgroundGridProps) {
   const { defaultBackgrounds, backgrounds } = useBackgroundStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<"astrsk" | "user">("astrsk");
 
   const hasUserBackgrounds = backgrounds.length > 0;
 
   // Handle add new background
-  const handleAddBackground = useCallback(async (file: File) => {
-    try {
-      // Save file to background
-      const backgroundOrError =
-        await BackgroundService.saveFileToBackground.execute(file);
+  const handleAddBackground = useCallback(
+    async (file: File) => {
+      try {
+        // Save file to background
+        const backgroundOrError =
+          await BackgroundService.saveFileToBackground.execute(file);
 
-      if (backgroundOrError.isFailure) {
-        toast.error("Failed to upload background");
-        return;
+        if (backgroundOrError.isFailure) {
+          toast.error("Failed to upload background");
+          return;
+        }
+
+        // Refresh backgrounds
+        await fetchBackgrounds();
+
+        // Switch to user added tab
+        setActiveTab("user");
+
+        toast.success("Background uploaded successfully");
+      } catch (error) {
+        toast.error("Failed to upload background", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
       }
-
-      // Refresh backgrounds
-      await fetchBackgrounds();
-
-      toast.success("Background uploaded successfully");
-    } catch (error) {
-      toast.error("Failed to upload background", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  }, []);
+    },
+    [setActiveTab],
+  );
 
   // Handle delete background
   const handleDeleteBackground = useCallback(
@@ -179,7 +169,7 @@ export default function BackgroundGrid({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1 rounded-md bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-600"
+          className="flex items-center gap-1 rounded-full bg-blue-200 px-3 py-1.5 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-300"
         >
           <Plus className="h-3.5 w-3.5" />
           Add Background
@@ -202,36 +192,40 @@ export default function BackgroundGrid({
         }}
       />
 
-      <div className="custom-scrollbar max-h-96 space-y-4 overflow-y-auto">
-        {/* User added backgrounds */}
+      {/* Tab Navigation */}
+      <div className="flex border-b border-gray-700">
+        <button
+          type="button"
+          onClick={() => setActiveTab("astrsk")}
+          className={cn(
+            "flex-1 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
+            activeTab === "astrsk"
+              ? "border-blue-200 text-blue-200"
+              : "border-gray-800 text-gray-400 hover:text-gray-200",
+          )}
+        >
+          astrsk provided
+        </button>
         {hasUserBackgrounds && (
-          <div className="space-y-2">
-            <h5 className="text-xs font-medium text-gray-400">
-              User added backgrounds
-            </h5>
-            <div className="grid grid-cols-3 gap-2">
-              {backgrounds.map((background) => (
-                <BackgroundItem
-                  key={background.id.toString()}
-                  background={background}
-                  isSelected={
-                    currentBackgroundId?.equals(background.id) ?? false
-                  }
-                  showNameOverlay={false}
-                  onSelect={onSelect}
-                  onDelete={isEditable ? handleDeleteBackground : undefined}
-                />
-              ))}
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("user")}
+            className={cn(
+              "flex-1 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
+              activeTab === "user"
+                ? "border-blue-200 text-blue-200"
+                : "border-gray-800 text-gray-400 hover:text-gray-200",
+            )}
+          >
+            User added
+          </button>
         )}
+      </div>
 
-        {/* astrsk.ai provided backgrounds */}
-        <div className="space-y-2">
-          <h5 className="text-xs font-medium text-gray-400">
-            astrsk.ai provided backgrounds
-          </h5>
-          <div className="grid grid-cols-3 gap-2">
+      {/* Tab Content */}
+      <div className="custom-scrollbar max-h-96 overflow-y-auto">
+        {activeTab === "astrsk" ? (
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
             {/* No background option */}
             <button
               type="button"
@@ -245,22 +239,6 @@ export default function BackgroundGrid({
               <div className="flex h-full w-full items-center justify-center bg-gray-900">
                 <p className="text-xs text-gray-400">No background</p>
               </div>
-              {/* Selected indicator */}
-              {!currentBackgroundId && (
-                <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
-                  <svg
-                    className="h-4 w-4 text-white"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              )}
             </button>
 
             {defaultBackgrounds.map((background) => (
@@ -268,12 +246,25 @@ export default function BackgroundGrid({
                 key={background.id.toString()}
                 background={background}
                 isSelected={currentBackgroundId?.equals(background.id) ?? false}
-                showNameOverlay={!isEditable}
+                showNameOverlay={isEditable}
                 onSelect={onSelect}
               />
             ))}
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+            {backgrounds.map((background) => (
+              <BackgroundItem
+                key={background.id.toString()}
+                background={background}
+                isSelected={currentBackgroundId?.equals(background.id) ?? false}
+                showNameOverlay={false}
+                onSelect={onSelect}
+                onDelete={isEditable ? handleDeleteBackground : undefined}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
