@@ -59,15 +59,15 @@ const ScenarioPreviewItem = ({
   onClick?: () => void;
 }) => {
   const [scenario] = useCard<PlotCard>(scenarioId);
-  const [imageUrl] = useAsset(scenario.props.iconAssetId);
+  const [imageUrl] = useAsset(scenario?.props?.iconAssetId);
 
   return (
     <ScenarioPreview
-      title={scenario.props.title}
+      title={scenario?.props?.title}
       imageUrl={imageUrl}
-      tags={scenario.props.tags || []}
-      tokenCount={scenario.props.tokenCount}
-      firstMessages={scenario.props.scenarios?.length || 0}
+      tags={scenario?.props?.tags || []}
+      tokenCount={scenario?.props?.tokenCount}
+      firstMessages={scenario?.props?.scenarios?.length || 0}
       className="min-h-[200px]"
       onClick={onClick}
     />
