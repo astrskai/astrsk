@@ -103,6 +103,9 @@ export default function MessageStyling({
   // Track if this is the initial mount to prevent auto-save on mount
   const isInitialMountRef = useRef(true);
 
+  // Track programmatic resets to prevent autosave loops
+  const isProgrammaticResetRef = useRef(false);
+
   // Use react-hook-form for state management
   const methods = useForm<MessageStylingFormData>({
     defaultValues: {
@@ -113,8 +116,10 @@ export default function MessageStyling({
   // Sync form state with prop changes
   useEffect(() => {
     if (chatStyles) {
+      isProgrammaticResetRef.current = true;
       methods.reset({ chatStyles });
       lastSavedStateRef.current = chatStyles;
+      isProgrammaticResetRef.current = false;
     }
   }, [chatStyles, methods]);
 
@@ -133,10 +138,12 @@ export default function MessageStyling({
         });
         // Rollback to last successfully saved state without triggering watch
         if (lastSavedStateRef.current) {
+          isProgrammaticResetRef.current = true;
           methods.reset(
             { chatStyles: lastSavedStateRef.current },
             { keepDefaultValues: false },
           );
+          isProgrammaticResetRef.current = false;
         }
       }
     },
@@ -149,6 +156,11 @@ export default function MessageStyling({
       // Skip auto-save on initial mount
       if (isInitialMountRef.current) {
         isInitialMountRef.current = false;
+        return;
+      }
+
+      // Skip auto-save on programmatic reset
+      if (isProgrammaticResetRef.current) {
         return;
       }
 
