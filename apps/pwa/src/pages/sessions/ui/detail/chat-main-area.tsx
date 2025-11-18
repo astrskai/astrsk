@@ -4,6 +4,9 @@ import { toast } from "sonner";
 
 import ChatInput from "./chat-input";
 import ChatMessageList from "./chat-message-list";
+import { toastError } from "@/shared/ui/toast";
+import { showErrorDetails } from "@/shared/stores/error-dialog-store";
+import { ErrorDetailsDialog } from "@/shared/ui/dialogs";
 
 import {
   createMessage,
@@ -32,7 +35,7 @@ import { AutoReply } from "@/shared/stores/session-store";
 import { queryClient } from "@/shared/api/query-client";
 import { parseAiSdkErrorMessage } from "@/shared/lib/error-utils";
 import { logger } from "@/shared/lib/logger";
-import { toastError } from "@/shared/ui/toast-error";
+// import { toastError } from "@/shared/ui/toast-error";
 import { TurnService } from "@/app/services/turn-service";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { useCard } from "@/shared/hooks/use-card";
@@ -283,9 +286,17 @@ export default function ChatMainArea({
         const parsedError = parseAiSdkErrorMessage(error);
         if (parsedError) {
           if (parsedError.level === "error") {
-            toastError({
-              title: "Failed to generate message",
-              details: parsedError.message,
+            toastError("Failed to generate message", {
+              description: parsedError.message,
+              action: {
+                label: "View details",
+                onClick: () => {
+                  showErrorDetails(
+                    "Failed to generate message",
+                    parsedError.message,
+                  );
+                },
+              },
             });
           } else {
             toast.info(parsedError.message);
@@ -307,9 +318,18 @@ export default function ChatMainArea({
               errorDetails.metadata = (error as any).metadata;
             }
 
-            toastError({
-              title: "Failed to generate message",
-              details: JSON.stringify(errorDetails, null, 2),
+            const errorDetailsStr = JSON.stringify(errorDetails, null, 2);
+            toastError("Failed to generate message", {
+              description: errorDetailsStr,
+              action: {
+                label: "View details",
+                onClick: () => {
+                  showErrorDetails(
+                    "Failed to generate message",
+                    errorDetailsStr,
+                  );
+                },
+              },
             });
           }
         }
@@ -394,7 +414,7 @@ export default function ChatMainArea({
           // Random character reply
           case AutoReply.Random: {
             if (data.aiCharacterCardIds.length === 0) {
-              toast.error("No characters available");
+              toastError("No characters available");
               break;
             }
 
@@ -431,7 +451,7 @@ export default function ChatMainArea({
         }
       } catch (error) {
         if (error instanceof Error) {
-          toast.error("Failed to add user message", {
+          toastError("Failed to add user message", {
             description: JSON.stringify(
               {
                 name: error.name,
@@ -550,9 +570,15 @@ export default function ChatMainArea({
           message: scenarioMessage,
         });
         if (scenarioMessageOrError.isFailure) {
-          toastError({
-            title: "Failed to add scenario",
-            details: scenarioMessageOrError.getError(),
+          const errorMsg = scenarioMessageOrError.getError();
+          toastError("Failed to add scenario", {
+            description: errorMsg,
+            action: {
+              label: "View details",
+              onClick: () => {
+                showErrorDetails("Failed to add scenario", errorMsg);
+              },
+            },
           });
           return;
         }
@@ -702,6 +728,9 @@ export default function ChatMainArea({
           </div>
         </div>
       )}
+
+      {/* Error Details Dialog */}
+      <ErrorDetailsDialog />
     </div>
   );
 }
