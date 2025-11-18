@@ -173,6 +173,24 @@ export default function ChatMessageList({
     }
   }, [messageCount, scrollToBottom]);
 
+  // Scroll to bottom when streaming stops (message finalized)
+  const prevStreamingIdRef = useRef<UniqueEntityID | null | undefined>(
+    streamingMessageId,
+  );
+
+  useEffect(() => {
+    // Detect when streaming stops (streamingMessageId changes from something to null)
+    const wasStreaming = prevStreamingIdRef.current !== null && prevStreamingIdRef.current !== undefined;
+    const nowNotStreaming = streamingMessageId === null || streamingMessageId === undefined;
+
+    if (wasStreaming && nowNotStreaming && isAtBottom && messageCount > 0) {
+      // Streaming just finished - scroll to bottom to show finalized message
+      scrollToBottom(300);
+    }
+
+    prevStreamingIdRef.current = streamingMessageId;
+  }, [streamingMessageId, isAtBottom, messageCount, scrollToBottom]);
+
   // const handleScrollToBottom = () => {
   //   scrollToBottom();
   // };

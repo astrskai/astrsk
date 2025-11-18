@@ -48,19 +48,30 @@ const ColorPicker = forwardRef<
       return value?.toUpperCase();
     }, [value]);
 
-    const handleOnChange = (newValue: string | null) => {
-      if (newValue === "") {
+    const handleOnChange = (newValue: string) => {
+      // HexColorPicker always returns uppercase hex with #
+      onChange(newValue);
+    };
+
+    const handleInputChange = (inputValue: string) => {
+      if (inputValue === "") {
         onChange(null);
       } else {
-        // Ensure the value has a # prefix
+        // Ensure the value has a # prefix and convert to uppercase
         const formattedValue =
-          newValue && !newValue.startsWith("#") ? `#${newValue}` : newValue;
-        onChange(formattedValue);
+          inputValue && !inputValue.startsWith("#")
+            ? `#${inputValue}`
+            : inputValue;
+        onChange(formattedValue?.toUpperCase() ?? null);
       }
     };
 
+    const handleOpenChange = (newOpen: boolean) => {
+      setOpen(newOpen);
+    };
+
     return (
-      <Popover onOpenChange={setOpen} open={open} modal={true}>
+      <Popover onOpenChange={handleOpenChange} open={open} modal={true}>
         <PopoverTrigger asChild disabled={disabled} onBlur={onBlur}>
           <Button
             {...props}
@@ -110,7 +121,7 @@ const ColorPicker = forwardRef<
         </PopoverTrigger>
         <PopoverContent className="bg-text-primary w-full rounded-[8px] p-[4px]">
           <HexColorPicker
-            color={parsedValue ?? undefined}
+            color={parsedValue ?? "#000000"}
             onChange={handleOnChange}
           />
           <Input
@@ -118,17 +129,10 @@ const ColorPicker = forwardRef<
             maxLength={7}
             onChange={(e) => {
               const inputValue = e?.currentTarget?.value;
-              // If the input doesn't start with # and has content, add it
-              const formattedValue =
-                inputValue &&
-                inputValue.length > 0 &&
-                !inputValue.startsWith("#")
-                  ? `#${inputValue}`
-                  : inputValue;
-              handleOnChange(formattedValue);
+              handleInputChange(inputValue);
             }}
             ref={ref}
-            value={parsedValue ?? undefined}
+            value={parsedValue ?? ""}
           />
         </PopoverContent>
       </Popover>
