@@ -90,6 +90,12 @@ export async function initStores(): Promise<void> {
     for (const path of sessionFilePaths) {
       try {
         const response = await fetch(path);
+        if (!response.ok) {
+          console.error(
+            `Failed to fetch session file: ${path} (${response.status} ${response.statusText})`,
+          );
+          continue;
+        }
         const file = new File(
           [await response.blob()],
           path.split("/").pop() || path,
