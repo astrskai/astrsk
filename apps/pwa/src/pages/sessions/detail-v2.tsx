@@ -119,7 +119,7 @@ export default function SessionDetailPage() {
         autoReply,
       });
 
-      await saveSessionMutation.mutate({
+      await saveSessionMutation.mutateAsync({
         session: session,
       });
     },
