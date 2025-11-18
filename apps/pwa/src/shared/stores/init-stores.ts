@@ -54,24 +54,33 @@ export async function initStores(): Promise<void> {
     } else {
       const astrskaiProvider = astrskaiProviderResult.getValue();
       // Add astrsk.ai provider
-      await ApiService.saveApiConnection.execute(astrskaiProvider);
+      const saveResult = await ApiService.saveApiConnection.execute(
+        astrskaiProvider,
+      );
+      if (saveResult.isFailure) {
+        console.error(
+          "Failed to save astrsk.ai provider:",
+          saveResult.getError(),
+        );
+      }
     }
   }
 
   // Init default sessions - only for new users
+  // Check if user has any sessions (only need to check if 1 exists, not fetch all)
   let sessions;
   try {
-    sessions = (await SessionService.listSession.execute({}))
+    sessions = (await SessionService.listSession.execute({ limit: 1 }))
       .throwOnFailure()
       .getValue();
   } catch (error) {
-    console.error("Failed to list sessions:", error);
+    console.error("Failed to check sessions:", error);
     // Continue with background initialization even if session setup fails
     await fetchBackgrounds();
     return;
   }
 
-  if (sessions && sessions.length === 0) {
+  if (sessions.length === 0) {
     // Import default sessions
     const sessionFilePaths = [
       "/default/session/dice_of_fate.astrsk.session",
