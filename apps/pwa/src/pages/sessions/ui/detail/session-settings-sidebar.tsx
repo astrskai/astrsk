@@ -47,8 +47,7 @@ import { AutoReply } from "@/shared/stores/session-store";
 interface SessionSettingsSidebarProps {
   session: Session;
   isOpen: boolean;
-  autoReply: AutoReply;
-  onAutoReply: (autoReply: AutoReply) => void;
+  onAutoReply: () => void;
   onClose: () => void;
 }
 
@@ -78,7 +77,6 @@ const ScenarioPreviewItem = ({
 const SessionSettingsSidebar = ({
   session,
   isOpen,
-  autoReply,
   onAutoReply,
   onClose,
 }: SessionSettingsSidebarProps) => {
@@ -421,25 +419,6 @@ const SessionSettingsSidebar = ({
     }
   }, [session.id, saveSessionMutation]);
 
-  const handleAutoReply = useCallback(() => {
-    const hasMultipleCharacters = session.aiCharacterCardIds.length > 1;
-
-    switch (autoReply) {
-      case AutoReply.Off:
-        onAutoReply(AutoReply.Random);
-        break;
-      case AutoReply.Random:
-        // Skip Rotate option if only one character
-        onAutoReply(hasMultipleCharacters ? AutoReply.Rotate : AutoReply.Off);
-        break;
-      case AutoReply.Rotate:
-        onAutoReply(AutoReply.Off);
-        break;
-      default:
-        throw new Error("Unknown auto reply");
-    }
-  }, [autoReply, onAutoReply, session.aiCharacterCardIds.length]);
-
   return (
     <aside
       className={cn(
@@ -708,8 +687,8 @@ const SessionSettingsSidebar = ({
             <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-900 px-4 py-2">
               <span>Auto reply</span>
               <Switch
-                checked={autoReply === AutoReply.Random}
-                onCheckedChange={handleAutoReply}
+                checked={session.autoReply !== AutoReply.Off}
+                onCheckedChange={onAutoReply}
               />
             </div>
             <p className="text-xs text-gray-300">

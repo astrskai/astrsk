@@ -191,7 +191,6 @@ export default function SessionDetailPage() {
       <SessionSettingsSidebar
         session={session}
         isOpen={isOpenSettings}
-        autoReply={session.autoReply}
         onAutoReply={handleAutoReplyClick}
         onClose={() => setIsOpenSettings(false)}
       />
