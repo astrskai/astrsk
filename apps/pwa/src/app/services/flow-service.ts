@@ -5,7 +5,6 @@ import { DrizzleFlowRepo } from "@/entities/flow/repos/impl/drizzle-flow-repo";
 import { DrizzleDataStoreNodeRepo } from "@/entities/data-store-node/repos/impl/drizzle-data-store-node-repo";
 import { DrizzleIfNodeRepo } from "@/entities/if-node/repos/impl/drizzle-if-node-repo";
 import { CloneFlow } from "@/entities/flow/usecases/clone-flow";
-import { CloneFlowWithNodes } from "@/entities/flow/usecases/clone-flow-with-nodes";
 import { CreateFlow } from "@/entities/flow/usecases/create-flow";
 import { DeleteFlow } from "@/entities/flow/usecases/delete-flow";
 import { DeleteFlowWithNodes } from "@/entities/flow/usecases/delete-flow-with-nodes";
@@ -43,7 +42,6 @@ export class FlowService {
   public static ifNodeRepo: DrizzleIfNodeRepo;
 
   public static cloneFlow: CloneFlow;
-  public static cloneFlowWithNodes: CloneFlowWithNodes;
   public static createFlow: CreateFlow;
   public static deleteFlow: DeleteFlow;
   public static deleteFlowWithNodes: DeleteFlowWithNodes;
@@ -82,15 +80,14 @@ export class FlowService {
     this.ifNodeRepo = new DrizzleIfNodeRepo();
 
     // Initialize the use cases
-    this.cloneFlow = new CloneFlow(this.flowRepo, this.flowRepo, loadAgentRepo, saveAgentRepo);
-    this.cloneFlowWithNodes = new CloneFlowWithNodes(
-      this.flowRepo, 
-      this.flowRepo, 
-      loadAgentRepo, 
-      saveAgentRepo, 
-      this.dataStoreNodeRepo, 
-      this.dataStoreNodeRepo, 
-      this.ifNodeRepo, 
+    this.cloneFlow = new CloneFlow(
+      this.flowRepo,
+      this.flowRepo,
+      loadAgentRepo,
+      saveAgentRepo,
+      this.dataStoreNodeRepo,
+      this.dataStoreNodeRepo,
+      this.ifNodeRepo,
       this.ifNodeRepo
     );
     this.createFlow = new CreateFlow(saveAgentRepo, this.flowRepo);

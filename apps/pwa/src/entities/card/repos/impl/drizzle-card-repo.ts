@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, ilike, or } from "drizzle-orm";
+import { and, asc, eq, gt, ilike, isNull, or } from "drizzle-orm";
 
 import { Result } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
@@ -371,18 +371,28 @@ export class DrizzleCardRepo
   ): Promise<Result<Card[]>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Query both tables separately
+      // Query both tables separately - only global cards (session_id IS NULL)
       const [characterRows, scenarioRows] = await Promise.all([
         db
           .select()
           .from(characters)
-          .where(cursor ? gt(characters.id, cursor.toString()) : undefined)
+          .where(
+            and(
+              isNull(characters.session_id), // Only show global resources
+              cursor ? gt(characters.id, cursor.toString()) : undefined
+            )
+          )
           .limit(pageSize)
           .orderBy(asc(characters.id)),
         db
           .select()
           .from(scenarios)
-          .where(cursor ? gt(scenarios.id, cursor.toString()) : undefined)
+          .where(
+            and(
+              isNull(scenarios.session_id), // Only show global resources
+              cursor ? gt(scenarios.id, cursor.toString()) : undefined
+            )
+          )
           .limit(pageSize)
           .orderBy(asc(scenarios.id)),
       ]);
@@ -444,6 +454,9 @@ export class DrizzleCardRepo
     try {
       // Build filters for characters
       const characterFilters = [];
+      // Only show global resources (session_id IS NULL)
+      characterFilters.push(isNull(characters.session_id));
+
       if (query.keyword) {
         const keywordFilter = or(
           ilike(characters.title, `%${query.keyword}%`),
@@ -460,6 +473,9 @@ export class DrizzleCardRepo
 
       // Build filters for scenarios
       const scenarioFilters = [];
+      // Only show global resources (session_id IS NULL)
+      scenarioFilters.push(isNull(scenarios.session_id));
+
       if (query.keyword) {
         const keywordFilter = or(
           ilike(scenarios.title, `%${query.keyword}%`),

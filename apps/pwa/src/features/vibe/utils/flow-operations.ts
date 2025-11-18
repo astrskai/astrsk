@@ -485,6 +485,7 @@ export async function processFlowOperations(
                 color: nodeColor,
                 promptMessages: [],
                 schemaFields: [],
+                flowId: new UniqueEntityID(resourceId),
               },
               new UniqueEntityID(nodeId),
             );

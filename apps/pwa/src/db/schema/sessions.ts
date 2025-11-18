@@ -17,7 +17,7 @@ export const sessions = pgTable(TableName.Sessions, {
   cover_id: uuid(),
   translation: jsonb().$type<TranslationConfigJSON>(),
   chat_styles: jsonb().$type<ChatStyles>(),
-  flow_id: uuid().notNull(),
+  flow_id: uuid(), // Nullable - session can exist without a flow (during import)
   auto_reply: varchar().$type<AutoReply>().notNull().default(AutoReply.Off),
   data_schema_order: jsonb().$type<string[]>().notNull().default([]),
   widget_layout: jsonb().$type<Array<{ i: string; x: number; y: number; w: number; h: number }>>(),

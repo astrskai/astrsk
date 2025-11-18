@@ -34,7 +34,7 @@ export interface SessionProps {
   chatStyles?: ChatStyles;
 
   // Flow
-  flowId: UniqueEntityID;
+  flowId?: UniqueEntityID;
 
   autoReply: AutoReply;
 
@@ -164,7 +164,7 @@ export class Session extends AggregateRoot<SessionProps> {
           promptLanguage: "none",
         }).getValue(),
       chatStyles: props.chatStyles,
-      flowId: props.flowId!,
+      flowId: props.flowId,
       autoReply: props.autoReply ?? AutoReply.Random,
       dataSchemaOrder: props.dataSchemaOrder || [],
       widgetLayout: props.widgetLayout,

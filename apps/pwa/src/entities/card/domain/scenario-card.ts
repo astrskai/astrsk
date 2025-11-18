@@ -54,6 +54,7 @@ export class ScenarioCard extends AggregateRoot<CardProps & ScenarioCardProps> {
           description: props.description,
           firstMessages: props.firstMessages,
           lorebook: props.lorebook,
+          sessionId: props.sessionId,
           updatedAt: props.updatedAt || new Date(),
         },
         id ?? new UniqueEntityID(),

@@ -88,7 +88,7 @@ export class SessionDrizzleMapper {
         ? domain.props.translation
         : null,
       chat_styles: domain.props.chatStyles,
-      flow_id: domain.props.flowId.toString(),
+      flow_id: domain.props.flowId?.toString() ?? null,
       auto_reply: domain.props.autoReply,
       data_schema_order: domain.props.dataSchemaOrder || [],
       widget_layout: domain.props.widgetLayout || null,

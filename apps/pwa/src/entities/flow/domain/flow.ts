@@ -122,6 +122,11 @@ export interface FlowProps {
   // Vibe Session Reference (AI Assistant)
   vibeSessionId?: string;
 
+  // Session-local resource support
+  // undefined = global resource (shows in lists)
+  // UniqueEntityID = local to specific session (hidden from global lists)
+  sessionId?: UniqueEntityID;
+
   // Validation State
   readyState: ReadyState;
   validationIssues?: ValidationIssue[];

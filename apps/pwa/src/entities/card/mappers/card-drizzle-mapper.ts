@@ -48,6 +48,9 @@ export class CardDrizzleMapper {
           conceptualOrigin: row.conceptual_origin ?? undefined,
           vibeSessionId: row.vibe_session_id ?? undefined,
           imagePrompt: row.image_prompt ?? undefined,
+          sessionId: row.session_id
+            ? new UniqueEntityID(row.session_id)
+            : undefined,
           name: row.name,
           description: row.description ?? undefined,
           exampleDialogue: row.example_dialogue ?? undefined,
@@ -75,6 +78,9 @@ export class CardDrizzleMapper {
           conceptualOrigin: row.conceptual_origin ?? undefined,
           vibeSessionId: row.vibe_session_id ?? undefined,
           imagePrompt: row.image_prompt ?? undefined,
+          sessionId: row.session_id
+            ? new UniqueEntityID(row.session_id)
+            : undefined,
           name: row.name,
           description: row.description ?? undefined,
           firstMessages: row.first_messages ?? undefined,
@@ -119,6 +125,7 @@ export class CardDrizzleMapper {
         conceptual_origin: domain.props.conceptualOrigin ?? null,
         vibe_session_id: domain.props.vibeSessionId ?? null,
         image_prompt: domain.props.imagePrompt ?? null,
+        session_id: domain.props.sessionId?.toString() ?? null,
         name: domain.props.name ?? "",
         description: domain.props.description ?? null,
         example_dialogue: domain.props.exampleDialogue ?? null,
@@ -140,6 +147,7 @@ export class CardDrizzleMapper {
         conceptual_origin: domain.props.conceptualOrigin ?? null,
         vibe_session_id: domain.props.vibeSessionId ?? null,
         image_prompt: domain.props.imagePrompt ?? null,
+        session_id: domain.props.sessionId?.toString() ?? null,
         // Use name if available (ScenarioCard), otherwise use title (PlotCard fallback)
         name: (domain.props as any).name ?? domain.props.title,
         description: domain.props.description ?? null,

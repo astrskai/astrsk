@@ -38,9 +38,14 @@ export function useSessionImport() {
           throw new Error(importedSessionOrError.getError());
         }
 
+        const importedSession = importedSessionOrError.getValue();
+
         // Invalidate queries
         queryClient.invalidateQueries({
           queryKey: sessionQueries.lists(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: sessionQueries.detail(importedSession.id).queryKey,
         });
         queryClient.invalidateQueries({
           queryKey: flowQueries.lists(),

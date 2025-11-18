@@ -6,6 +6,33 @@ import { UniqueEntityID } from "@/shared/domain";
 import { FlowViewport } from "@/entities/flow/domain/flow";
 import { Flow } from "@/entities/flow/domain/flow";
 
+// Hook for creating flow
+export function useCreateFlow() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await FlowService.createFlow.execute();
+      if (result.isFailure) throw new Error(result.getError());
+      return result.getValue();
+    },
+    onSuccess: async (createdFlow: Flow) => {
+      const flowId = createdFlow.id.toString();
+
+      // Invalidate flow queries to refetch with all related data (agents, nodes, etc.)
+      await queryClient.invalidateQueries({
+        queryKey: flowKeys.detail(flowId),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: flowKeys.lists(),
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to create flow:", error);
+    },
+  });
+}
+
 // Hook for updating flow name with isEditing flag and optimistic updates
 export function useUpdateFlowName(flowId: string) {
   const queryClient = useQueryClient();
@@ -186,41 +213,7 @@ export function useUpdateFlowViewport(flowId: string) {
   });
 }
 
-// Hook for cloning flow with nodes
-export function useCloneFlowWithNodes() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (flowId: string) => {
-      const result = await FlowService.cloneFlowWithNodes.execute(
-        new UniqueEntityID(flowId),
-      );
-      if (result.isFailure) throw new Error(result.getError());
-      return result.getValue();
-    },
-    onSuccess: async (clonedFlow: Flow) => {
-      // Pre-populate the new flow's cache first
-      const flowId = clonedFlow.id.toString();
-      queryClient.setQueryData(flowKeys.detail(flowId), clonedFlow);
-      queryClient.setQueryData(flowKeys.metadata(flowId), {
-        id: clonedFlow.id,
-        name: clonedFlow.props.name,
-        createdAt: clonedFlow.props.createdAt,
-        updatedAt: clonedFlow.props.updatedAt,
-      });
-
-      // Invalidate and wait for flow queries to settle to include the new clone
-      await queryClient.invalidateQueries({
-        queryKey: flowKeys.lists(),
-      });
-    },
-    onError: (error) => {
-      console.error("Failed to clone flow:", error);
-    },
-  });
-}
-
-// Hook for cloning flow (legacy - without nodes)
+// Hook for cloning flow
 export function useCloneFlow() {
   const queryClient = useQueryClient();
 

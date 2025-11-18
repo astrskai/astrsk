@@ -90,6 +90,10 @@ export interface AgentProps {
   // Visual properties
   color: string;
 
+  // Flow association
+  // All agents must belong to a flow (for CASCADE DELETE)
+  flowId: UniqueEntityID;
+
   // Set by System
   createdAt: Date;
   updatedAt: Date;
@@ -110,6 +114,7 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
     const nullGuard = Guard.againstNullOrUndefinedBulk([
       { argument: props.name, argumentName: "name" },
       { argument: props.targetApiType, argumentName: "targetApiType" },
+      { argument: props.flowId, argumentName: "flowId" },
     ]);
     if (nullGuard.isFailure) {
       return Result.fail<Agent>(nullGuard.getError());
@@ -145,8 +150,11 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
         createdAt: new Date(),
         updatedAt: new Date(),
 
-        // Spread input props
+        // Spread input props (excluding flowId which we set explicitly below)
         ...props,
+
+        // flowId is required and validated by Guard above
+        flowId: props.flowId!,
       },
       id,
     );
@@ -454,6 +462,7 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
       ),
       enabledParameters: Object.fromEntries(this.props.enabledParameters),
       parameterValues: Object.fromEntries(this.props.parameterValues),
+      flowId: this.props.flowId.toString(),
     };
   }
 
@@ -505,6 +514,8 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
 
           tokenCount: json.tokenCount ?? 0,
           color: json.color ?? "#A5B4FC", // indigo-300
+
+          flowId: new UniqueEntityID(json.flowId),
 
           createdAt: json.createdAt ? new Date(json.createdAt) : new Date(),
           updatedAt: json.updatedAt ? new Date(json.updatedAt) : new Date(),

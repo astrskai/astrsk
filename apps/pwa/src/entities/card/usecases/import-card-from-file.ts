@@ -24,14 +24,19 @@ const validSpecs = [
   "scenario_card_v2",
 ];
 
+interface ImportCardCommand {
+  file: File;
+  sessionId?: UniqueEntityID; // Optional - if provided, creates session-local card
+}
+
 // TODO: re-implement import and export card logics
-export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
+export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Card[]>> {
   constructor(
     private saveFileToAsset: SaveFileToAsset,
     private saveCardRepo: SaveCardRepo,
   ) {}
 
-  private async importCharacterCard(json: any): Promise<Result<CharacterCard>> {
+  private async importCharacterCard(json: any, sessionId?: UniqueEntityID): Promise<Result<CharacterCard>> {
     const cardOrError = CharacterCard.create(
       {
         iconAssetId: json.data.iconAssetId ? new UniqueEntityID(json.data.iconAssetId) : undefined,
@@ -62,10 +67,11 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
               })),
             }).getValue()
           : undefined,
+        sessionId, // Add sessionId if provided (creates session-local card)
         createdAt: new Date(), // Always use current timestamp on import
         updatedAt: new Date(), // Always use current timestamp on import
       },
-      json.id ? new UniqueEntityID(json.id) : undefined,
+      undefined, // Always generate new ID for imports
     );
     if (cardOrError.isFailure) {
       return Result.fail(cardOrError.getError());
@@ -79,7 +85,7 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
     return Result.ok(card as CharacterCard);
   }
 
-  private async importPlotCard(json: any): Promise<Result<PlotCard>> {
+  private async importPlotCard(json: any, sessionId?: UniqueEntityID): Promise<Result<PlotCard>> {
     const cardOrError = PlotCard.create(
       {
         iconAssetId: json.data.iconAssetId ? new UniqueEntityID(json.data.iconAssetId) : undefined,
@@ -109,10 +115,11 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
               })),
             }).getValue()
           : undefined,
+        sessionId, // Add sessionId if provided (creates session-local card)
         createdAt: new Date(), // Always use current timestamp on import
         updatedAt: new Date(), // Always use current timestamp on import
       },
-      json.id ? new UniqueEntityID(json.id) : undefined,
+      undefined, // Always generate new ID for imports
     );
     if (cardOrError.isFailure) {
       return Result.fail(cardOrError.getError());
@@ -126,7 +133,7 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
     return Result.ok(card as PlotCard);
   }
 
-  private async importScenarioCard(json: any): Promise<Result<ScenarioCard>> {
+  private async importScenarioCard(json: any, sessionId?: UniqueEntityID): Promise<Result<ScenarioCard>> {
     const cardOrError = ScenarioCard.create(
       {
         iconAssetId: json.data.iconAssetId ? new UniqueEntityID(json.data.iconAssetId) : undefined,
@@ -153,10 +160,11 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
               })),
             }).getValue()
           : undefined,
+        sessionId, // Add sessionId if provided (creates session-local card)
         createdAt: new Date(), // Always use current timestamp on import
         updatedAt: new Date(), // Always use current timestamp on import
       },
-      json.id ? new UniqueEntityID(json.id) : undefined,
+      undefined, // Always generate new ID for imports
     );
     if (cardOrError.isFailure) {
       return Result.fail(cardOrError.getError());
@@ -170,7 +178,7 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
     return Result.ok(card as ScenarioCard);
   }
 
-  async execute(file: File): Promise<Result<Card[]>> {
+  async execute({ file, sessionId }: ImportCardCommand): Promise<Result<Card[]>> {
     try {
       let jsonData: any;
 
@@ -232,7 +240,7 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
         jsonData.spec === "chara_card_v3"
       ) {
         // Import character card
-        const characterCardResult = await this.importCharacterCard(jsonData);
+        const characterCardResult = await this.importCharacterCard(jsonData, sessionId);
         if (characterCardResult.isSuccess) {
           const savedCharacterCardResult = await this.saveCardRepo.saveCard(
             characterCardResult.getValue(),
@@ -288,7 +296,7 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
                   jsonData.data.extensions?.source,
               },
             },
-          });
+          }, sessionId);
           if (scenarioCardResult.isSuccess) {
             const savedScenarioCardResult = await this.saveCardRepo.saveCard(
               scenarioCardResult.getValue(),
@@ -298,7 +306,7 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
         }
       } else if (jsonData.spec === "plot_card_v1") {
         // Import plot card (legacy)
-        const plotCardResult = await this.importPlotCard(jsonData);
+        const plotCardResult = await this.importPlotCard(jsonData, sessionId);
         if (plotCardResult.isSuccess) {
           const savedPlotCardResult = await this.saveCardRepo.saveCard(
             plotCardResult.getValue(),
@@ -307,7 +315,7 @@ export class ImportCardFromFile implements UseCase<File, Result<Card[]>> {
         }
       } else if (jsonData.spec === "scenario_card_v2") {
         // Import scenario card (new format)
-        const scenarioCardResult = await this.importScenarioCard(jsonData);
+        const scenarioCardResult = await this.importScenarioCard(jsonData, sessionId);
         if (scenarioCardResult.isSuccess) {
           const savedScenarioCardResult = await this.saveCardRepo.saveCard(
             scenarioCardResult.getValue(),

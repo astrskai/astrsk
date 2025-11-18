@@ -11,7 +11,7 @@ import { Session } from "@/entities/session/domain/session";
 import { ModelTier, AgentModelTierInfo } from "@/entities/agent/domain";
 import {
   useDeleteFlowWithNodes,
-  useCloneFlowWithNodes,
+  useCloneFlow,
 } from "@/entities/flow/api/mutations/flow-mutations";
 
 interface DeleteDialogState {
@@ -71,7 +71,7 @@ export function useFlowActions(
   const queryClient = useQueryClient();
 
   const deleteFlowMutation = useDeleteFlowWithNodes();
-  const cloneFlowMutation = useCloneFlowWithNodes();
+  const cloneFlowMutation = useCloneFlow();
 
   const [deleteDialogState, setDeleteDialogState] = useState<DeleteDialogState>(
     {

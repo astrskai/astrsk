@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
 import { LorebookJSON } from "@/entities/card/domain/lorebook";
+import { sessions } from "@/db/schema/sessions";
 
 export const characters = pgTable(TableName.Characters, {
   id: uuid().primaryKey(),
@@ -24,6 +25,13 @@ export const characters = pgTable(TableName.Characters, {
   description: text(),
   example_dialogue: text(),
   lorebook: jsonb().$type<LorebookJSON>(),
+
+  // Session-local resource support
+  // NULL = global resource (shows in lists)
+  // Non-NULL = local to specific session (hidden from global lists)
+  session_id: uuid().references(() => sessions.id, {
+    onDelete: "cascade", // Auto-delete when session is deleted
+  }),
 
   ...timestamps,
 });

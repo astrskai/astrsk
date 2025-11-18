@@ -306,6 +306,11 @@ const SessionContent = ({
         setStreamingMessageId(streamingMessage.id);
         scrollToBottom({ behavior: "smooth" });
 
+        // Validate flow exists before executing
+        if (!session.props.flowId) {
+          throw new Error("Cannot play session without a flow. Please assign a flow to this session.");
+        }
+
         // Execute flow
         refStopGenerate.current = new AbortController();
         const flowResult = executeFlow({

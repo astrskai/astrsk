@@ -1,0 +1,1 @@
+ALTER TABLE "agents" ALTER COLUMN "flow_id" SET NOT NULL;

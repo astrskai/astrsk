@@ -99,7 +99,7 @@ export const useDefaultInitialized = () => {
           const file = new File([await response.blob()], path, {
             type: "image/png",
           });
-          await CardService.importCardFromFile.execute(file);
+          await CardService.importCardFromFile.execute({ file });
         }
 
         for (const path of plotFilePath) {
@@ -108,7 +108,7 @@ export const useDefaultInitialized = () => {
           const file = new File([await response.blob()], path, {
             type: "image/png",
           });
-          await CardService.importCardFromFile.execute(file);
+          await CardService.importCardFromFile.execute({ file });
         }
       }
       */

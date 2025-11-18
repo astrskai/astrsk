@@ -50,7 +50,7 @@ export function useResourceImport() {
       try {
         if (isPNG) {
           // Import card from PNG directly (no dialog needed)
-          const result = await CardService.importCardFromFile.execute(file);
+          const result = await CardService.importCardFromFile.execute({ file });
 
           if (result.isFailure) {
             toast.error("Failed to import card", {
@@ -92,7 +92,7 @@ export function useResourceImport() {
           // If that fails, try flow import
 
           // First attempt: Import as character card
-          const cardResult = await CardService.importCardFromFile.execute(file);
+          const cardResult = await CardService.importCardFromFile.execute({ file });
 
           if (cardResult.isSuccess) {
             // Successfully imported as character card

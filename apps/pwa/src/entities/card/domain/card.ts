@@ -41,6 +41,11 @@ export interface CardProps {
   // Image Generation
   imagePrompt?: string;
 
+  // Session-local resource support
+  // undefined = global resource (shows in lists)
+  // UniqueEntityID = local to specific session (hidden from global lists)
+  sessionId?: UniqueEntityID;
+
   // Set by System
   createdAt: Date;
   updatedAt: Date;
@@ -58,6 +63,7 @@ export const CardPropsKeys = [
   "conceptualOrigin",
   "vibeSessionId",
   "imagePrompt",
+  "sessionId",
   "createdAt",
   "updatedAt",
   "tokenCount",

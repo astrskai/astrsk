@@ -3,7 +3,6 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { queryClient } from "@/shared/api/query-client";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { initializeEnvironment } from "@/shared/lib/environment";
-import { runMigrations } from "@/db/migrations";
 
 import { routeTree } from "./routeTree.gen";
 
@@ -17,9 +16,6 @@ declare module "@tanstack/react-router" {
 
 // Initialize environment detection once at app startup
 initializeEnvironment();
-
-// Run data migrations (idempotent - safe to run on every startup)
-runMigrations();
 
 function App() {
   return (

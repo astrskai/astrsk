@@ -67,5 +67,7 @@ export async function initServices(): Promise<void> {
     BackgroundService.saveFileToBackground,
     FlowService.flowRepo,
     FlowService.getModelsFromFlowFile,
+    FlowService.cloneFlow,
+    CardService.cloneCard,
   );
 }

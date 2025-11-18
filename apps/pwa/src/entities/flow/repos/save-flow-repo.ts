@@ -1,9 +1,10 @@
 import { Result } from "@/shared/core/result";
 import { UniqueEntityID } from "@/shared/domain";
+import { Transaction } from "@/db/transaction";
 import { Flow, FlowViewport, PanelStructure } from "@/entities/flow/domain/flow";
 
 export interface SaveFlowRepo {
-  saveFlow(flow: Flow): Promise<Result<Flow>>;
+  saveFlow(flow: Flow, tx?: Transaction): Promise<Result<Flow>>;
   updateFlowName?(flowId: UniqueEntityID, name: string): Promise<Result<void>>;
   updateFlowViewport?(flowId: UniqueEntityID, viewport: FlowViewport): Promise<Result<void>>;
   updatePanelLayout?(flowId: UniqueEntityID, panelStructure: PanelStructure): Promise<Result<void>>;

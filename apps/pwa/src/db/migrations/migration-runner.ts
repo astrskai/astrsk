@@ -11,6 +11,8 @@
  */
 
 import { migrateCardsData } from "./migrate-cards-data";
+import { populateAgentFlowId } from "./20251117115504_populate_agent_flow_id";
+import { migrateSessionsToLocalResources } from "./20251117115505_migrate_sessions_to_local_resources";
 
 interface Migration {
   name: string;
@@ -25,6 +27,14 @@ const migrations: Migration[] = [
   {
     name: "migrate-cards-data",
     fn: migrateCardsData,
+  },
+  {
+    name: "populate-agent-flow-id",
+    fn: populateAgentFlowId,
+  },
+  {
+    name: "migrate-sessions-to-local-resources",
+    fn: migrateSessionsToLocalResources,
   },
   // Add future migrations here:
   // {

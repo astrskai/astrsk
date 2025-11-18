@@ -3,7 +3,7 @@ import { useAppStore } from "@/shared/stores/app-store.tsx";
 import { initStores } from "@/shared/stores/init-stores.ts";
 import { InitialLoading } from "@/shared/ui/initial-loading";
 import { PwaRegister } from "@/app/providers/pwa-register";
-import { migrate } from "@/db/migrate.ts";
+import { runUnifiedMigrations } from "@/db/migrations";
 import { logger } from "@/shared/lib/logger.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
@@ -76,8 +76,8 @@ async function initializeApp() {
     </StrictMode>,
   );
 
-  // Migrate database
-  await migrate();
+  // Run all migrations (SQL + TypeScript) in timestamp order
+  await runUnifiedMigrations();
 
   // Init services
   await initServices();

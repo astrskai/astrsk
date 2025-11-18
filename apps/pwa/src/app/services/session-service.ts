@@ -9,6 +9,8 @@ import {
 import { ExportFlowWithNodes } from "@/entities/flow/usecases/export-flow-with-nodes";
 import { GetModelsFromFlowFile } from "@/entities/flow/usecases/get-models-from-flow-file";
 import { ImportFlowWithNodes } from "@/entities/flow/usecases/import-flow-with-nodes";
+import { CloneFlow } from "@/entities/flow/usecases/clone-flow";
+import { CloneCard } from "@/entities/card/usecases/clone-card";
 import { DrizzleSessionRepo } from "@/entities/session/repos/impl/drizzle-session-repo";
 import {
   AddMessage,
@@ -65,6 +67,8 @@ export class SessionService {
     saveFileToBackground: SaveFileToBackground,
     saveFlowRepo: SaveFlowRepo,
     getModelsFromFlowFile: GetModelsFromFlowFile,
+    cloneFlow: CloneFlow,
+    cloneCard: CloneCard,
   ) {
     this.sessionRepo = new DrizzleSessionRepo();
 

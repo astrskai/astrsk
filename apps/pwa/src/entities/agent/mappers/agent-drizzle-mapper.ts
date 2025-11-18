@@ -35,6 +35,7 @@ export class AgentDrizzleMapper {
         tokenCount: row.token_count ?? 0,
         schemaFields: row.schema_fields ?? undefined,
         color: row.color,
+        flowId: new UniqueEntityID(row.flow_id),
         createdAt: row.created_at,
         updatedAt: row.updated_at,
       },
@@ -59,6 +60,7 @@ export class AgentDrizzleMapper {
 
     return {
       id: agent.id.toString(),
+      flow_id: props.flowId.toString(),
       name: props.name,
       description: props.description,
       target_api_type: props.targetApiType,

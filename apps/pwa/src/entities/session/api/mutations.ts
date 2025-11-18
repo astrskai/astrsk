@@ -13,6 +13,8 @@ import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { logger } from "@/shared/lib";
 import { useMutation } from "@tanstack/react-query";
 import { sessionQueries } from "./query-factory";
+import { cardQueries } from "@/entities/card/api/card-queries";
+import { flowQueries } from "@/entities/flow/api/flow-queries";
 
 /**
  * Mutations
@@ -203,7 +205,7 @@ export const useDeleteMessage = (sessionId: UniqueEntityID) => {
       return { previousSession };
     },
 
-    onError: (error, variables, onMutateResult, context) => {
+    onError: (error, _variables, onMutateResult, context) => {
       logger.error("Failed to mutate deleteMessage", error);
 
       // Get query key
@@ -216,7 +218,7 @@ export const useDeleteMessage = (sessionId: UniqueEntityID) => {
       );
     },
 
-    onSuccess: (data, variables, onMutateResult, context) => {
+    onSuccess: (_data, variables, _onMutateResult, context) => {
       // Get query key
       const turnQueryKey = turnQueries.detail(variables.messageId).queryKey;
 
@@ -243,7 +245,7 @@ export const useDeleteSession = () => {
       return;
     },
 
-    onSuccess: (data, variables, onMutateResult, context) => {
+    onSuccess: (_data, variables, _onMutateResult, context) => {
       // Only runs on successful deletion
       // Invalidate session list queries
       context.client.invalidateQueries({
@@ -253,6 +255,14 @@ export const useDeleteSession = () => {
       // Remove session detail cache
       context.client.removeQueries({
         queryKey: sessionQueries.detail(variables.sessionId).queryKey,
+      });
+
+      // Invalidate card and flow lists (CASCADE DELETE removes session-local resources)
+      context.client.invalidateQueries({
+        queryKey: cardQueries.lists(),
+      });
+      context.client.invalidateQueries({
+        queryKey: flowQueries.lists(),
       });
     },
 

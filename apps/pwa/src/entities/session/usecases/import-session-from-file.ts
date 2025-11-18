@@ -58,6 +58,7 @@ export class ImportSessionFromFile
 
   private async importFlowFromZip(
     zip: JSZip,
+    sessionId: UniqueEntityID,
     agentModelOverrides?: Command["agentModelOverrides"],
   ): Promise<Map<string, string>> {
     // Make ID map
@@ -76,9 +77,10 @@ export class ImportSessionFromFile
       const fileBlob = await fileEntry.async("blob");
       const file = new File([fileBlob], fileEntry.name);
 
-      // Import flow from file with nodes
+      // Import flow from file with nodes (as session-local)
       const flowOrError = await this.importFlowWithNodes.execute({
         file,
+        sessionId, // Import directly as session-local
         agentModelOverrides,
       });
       if (flowOrError.isFailure) {
@@ -95,7 +97,10 @@ export class ImportSessionFromFile
     return idMap;
   }
 
-  private async importCardFromZip(zip: JSZip): Promise<Map<string, string>> {
+  private async importCardFromZip(
+    zip: JSZip,
+    sessionId: UniqueEntityID,
+  ): Promise<Map<string, string>> {
     // Make ID map
     const idMap = new Map<string, string>();
 
@@ -113,17 +118,26 @@ export class ImportSessionFromFile
       const file = new File([fileBlob], fileEntry.name, {
         type: "image/png",
       });
-
-      // Import card from file
-      const cardOrError = await this.importCardFromFile.execute(file);
+      // Import card from file (as session-local)
+      const cardOrError = await this.importCardFromFile.execute({
+        file,
+        sessionId, // Import directly as session-local
+      });
       if (cardOrError.isFailure) {
         throw new Error(cardOrError.getError());
       }
 
-      // Set new ID
-      const card = cardOrError.getValue()[0];
+      // Handle ALL cards returned (PNG can contain character + scenario)
+      const cards = cardOrError.getValue();
       const oldId = fileEntry.name.split(".")[0].split("/")[1];
-      idMap.set(oldId, card.id.toString());
+
+      // Map the first card (main card from filename)
+      if (cards.length > 0) {
+        idMap.set(oldId, cards[0].id.toString());
+      }
+
+      // TODO: Handle embedded scenario cards (second card)
+      // Need to determine how to map scenario IDs when they're embedded in character cards
     }
 
     // Return ID map
@@ -250,11 +264,50 @@ export class ImportSessionFromFile
       // Import session from zip
       const sessionProps = await this.importSessionFromZip(zip);
 
-      // Import flow from zip
-      const flowIdMap = await this.importFlowFromZip(zip, agentModelOverrides);
+      // Create new session ID for session-local imports
+      const newSessionId = new UniqueEntityID();
 
-      // Import cards from zip
-      const cardIdMap = await this.importCardFromZip(zip);
+      // Parse translation if it exists
+      let translationConfig;
+      if (sessionProps.translation) {
+        const translationResult = TranslationConfig.fromJSON(sessionProps.translation);
+        if (translationResult.isSuccess) {
+          translationConfig = translationResult.getValue();
+        }
+      }
+
+      // Create session FIRST (without flows/cards) so it exists in database
+      const sessionOrError = Session.create({
+        title: sessionProps.title,
+        allCards: [], // Will be updated after importing cards
+        userCharacterCardId: undefined, // Will be updated after importing cards
+        turnIds: [],
+        backgroundId: undefined, // Will be updated after importing background
+        translation: translationConfig,
+        chatStyles: sessionProps.chat_styles
+          ? sessionProps.chat_styles
+          : undefined,
+        flowId: undefined, // Will be updated after importing flow
+      }, newSessionId);
+      if (sessionOrError.isFailure) {
+        throw new Error(sessionOrError.getError());
+      }
+      const session = sessionOrError.getValue();
+
+      // Save session to database FIRST (so foreign keys will work)
+      const savedSessionOrError =
+        await this.saveSessionRepo.saveSession(session);
+      if (savedSessionOrError.isFailure) {
+        throw new Error(savedSessionOrError.getError());
+      }
+      let savedSession = savedSessionOrError.getValue();
+
+      // NOW import flows and cards with the saved session ID
+      // Import flow from zip (as session-local)
+      const flowIdMap = await this.importFlowFromZip(zip, savedSession.id, agentModelOverrides);
+
+      // Import cards from zip (as session-local)
+      const cardIdMap = await this.importCardFromZip(zip, savedSession.id);
 
       // Import background from zip
       const backgroundIdMap = await this.importBackgroundFromZip(zip);
@@ -266,7 +319,7 @@ export class ImportSessionFromFile
         ...backgroundIdMap,
       ]);
 
-      // Replace IDs in session
+      // Replace IDs in session props
       if (sessionProps.flow_id) {
         const newFlowId = idMap.get(sessionProps.flow_id);
         if (!newFlowId) {
@@ -307,9 +360,8 @@ export class ImportSessionFromFile
         sessionProps.background_id = newBackgroundId;
       }
 
-      // Create session
-      const sessionOrError = Session.create({
-        title: sessionProps.title,
+      // Update session with imported resources
+      const updateResult = savedSession.update({
         allCards:
           sessionProps.all_cards?.map((cardJson) => ({
             id: new UniqueEntityID(cardJson.id),
@@ -319,34 +371,27 @@ export class ImportSessionFromFile
         userCharacterCardId: sessionProps.user_character_card_id
           ? new UniqueEntityID(sessionProps.user_character_card_id)
           : undefined,
-        turnIds: [],
         backgroundId: sessionProps.background_id
           ? new UniqueEntityID(sessionProps.background_id)
-          : undefined,
-        translation: sessionProps.translation
-          ? TranslationConfig.fromJSON(sessionProps.translation).getValue()
-          : undefined,
-        chatStyles: sessionProps.chat_styles
-          ? sessionProps.chat_styles
           : undefined,
         flowId: sessionProps.flow_id
           ? new UniqueEntityID(sessionProps.flow_id)
           : undefined,
       });
-      if (sessionOrError.isFailure) {
-        throw new Error(sessionOrError.getError());
+      if (updateResult.isFailure) {
+        throw new Error(updateResult.getError());
       }
-      const session = sessionOrError.getValue();
 
-      // Save session
-      const savedSessionOrError =
-        await this.saveSessionRepo.saveSession(session);
-      if (savedSessionOrError.isFailure) {
-        throw new Error(savedSessionOrError.getError());
+      // Save updated session with all resources
+      const updatedSavedSessionOrError =
+        await this.saveSessionRepo.saveSession(savedSession);
+      if (updatedSavedSessionOrError.isFailure) {
+        throw new Error(updatedSavedSessionOrError.getError());
       }
-      let savedSession = savedSessionOrError.getValue();
+      savedSession = updatedSavedSessionOrError.getValue();
 
       // If session has history, Add messages
+      // cardIdMap already contains session-local IDs since we imported directly
       if (
         includeHistory &&
         sessionProps.turn_ids &&
@@ -356,7 +401,7 @@ export class ImportSessionFromFile
           zip,
           savedSession.id,
           sessionProps.turn_ids,
-          cardIdMap,
+          cardIdMap, // Use cardIdMap directly (already has session-local IDs)
         );
       }
 

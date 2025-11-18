@@ -142,5 +142,31 @@
     "bps": true,
     "folderMillis": 1763346923962,
     "hash": "db3486a193441dfaaeb98032135fcfd9494b246af17ae90d0419c4e7c59ab09f"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" ALTER COLUMN \"flow_id\" DROP NOT NULL;",
+      "\nALTER TABLE \"agents\" ADD COLUMN \"flow_id\" uuid;",
+      "\nALTER TABLE \"characters\" ADD COLUMN \"session_id\" uuid;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"session_id\" uuid;",
+      "\nALTER TABLE \"scenarios\" ADD COLUMN \"session_id\" uuid;",
+      "\nALTER TABLE \"agents\" ADD CONSTRAINT \"agents_flow_id_flows_id_fk\" FOREIGN KEY (\"flow_id\") REFERENCES \"public\".\"flows\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"characters\" ADD CONSTRAINT \"characters_session_id_sessions_id_fk\" FOREIGN KEY (\"session_id\") REFERENCES \"public\".\"sessions\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"data_store_nodes\" ADD CONSTRAINT \"data_store_nodes_flow_id_flows_id_fk\" FOREIGN KEY (\"flow_id\") REFERENCES \"public\".\"flows\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"flows\" ADD CONSTRAINT \"flows_session_id_sessions_id_fk\" FOREIGN KEY (\"session_id\") REFERENCES \"public\".\"sessions\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"if_nodes\" ADD CONSTRAINT \"if_nodes_flow_id_flows_id_fk\" FOREIGN KEY (\"flow_id\") REFERENCES \"public\".\"flows\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"scenarios\" ADD CONSTRAINT \"scenarios_session_id_sessions_id_fk\" FOREIGN KEY (\"session_id\") REFERENCES \"public\".\"sessions\"(\"id\") ON DELETE cascade ON UPDATE no action;"
+    ],
+    "bps": true,
+    "folderMillis": 1763380503653,
+    "hash": "489c1a809df81f4253a4b6a0a0e876d889fd01fda1930cd2d7e69d58794bd850"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"agents\" ALTER COLUMN \"flow_id\" SET NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1763380613280,
+    "hash": "e863812e6eb66c883d7f8a1cb476052c8000556c0de10b3bbaf7e42312c79de2"
   }
 ]

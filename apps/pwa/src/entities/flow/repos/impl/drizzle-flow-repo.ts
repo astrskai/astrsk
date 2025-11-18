@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, isNull, or, sql, type SQL } from "drizzle-orm";
 import type { PgColumn } from "drizzle-orm/pg-core";
 
 import { Result } from "@/shared/core";
@@ -366,6 +366,8 @@ export class DrizzleFlowRepo
     try {
       // Make filters
       const filters = [];
+      // Only show global resources (session_id IS NULL)
+      filters.push(isNull(flows.session_id));
 
       if (query.taskType) {
         // @ts-ignore
@@ -431,11 +433,11 @@ export class DrizzleFlowRepo
   ): Promise<Result<boolean>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Check if flow with same name exists
+      // Check if flow with same name exists (only check global flows)
       const row = await db
         .select()
         .from(flows)
-        .where(eq(flows.name, name))
+        .where(and(eq(flows.name, name), isNull(flows.session_id)))
         .limit(1);
 
       // Return true if no flow with same name exists

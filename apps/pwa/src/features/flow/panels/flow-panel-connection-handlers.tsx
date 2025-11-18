@@ -109,6 +109,7 @@ export const createNodeWithConnection = async (
         name: uniqueName,
         targetApiType: ApiType.Chat,
         color: nextColor,
+        flowId: flow.id instanceof UniqueEntityID ? flow.id : new UniqueEntityID(flow.id),
       }).getValue();
 
       // Save the new agent

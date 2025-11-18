@@ -3,7 +3,8 @@
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import {
-  useCloneFlowWithNodes,
+  useCreateFlow,
+  useCloneFlow,
   useDeleteFlowWithNodes,
 } from "@/entities/flow/api/mutations/flow-mutations";
 import { queryClient } from "@/shared/api/query-client";
@@ -60,7 +61,7 @@ const FlowItem = ({
   const isInvalid = isFetched && !isValid;
 
   // Clone mutation
-  const cloneFlowMutation = useCloneFlowWithNodes();
+  const cloneFlowMutation = useCloneFlow();
 
   // Delete mutation
   const deleteFlowMutation = useDeleteFlowWithNodes();
@@ -427,6 +428,7 @@ const FlowSection = ({
       keyword,
     }),
   );
+  const createFlowMutation = useCreateFlow();
 
   // Selected flow
   const location = useLocation();
@@ -446,12 +448,8 @@ const FlowSection = ({
       try {
         setIsCreating(true);
 
-        // Create flow using the domain use case
-        const flowOrError = await FlowService.createFlow.execute();
-        if (flowOrError.isFailure) {
-          throw new Error(flowOrError.getError());
-        }
-        const flow = flowOrError.getValue();
+        // Create flow using the mutation hook (auto-invalidates flow list)
+        const flow = await createFlowMutation.mutateAsync();
 
         // Update the flow name if provided
         if (props.name && props.name !== "New Flow") {
@@ -486,11 +484,6 @@ const FlowSection = ({
           });
         }
 
-        // Invalidate flows
-        queryClient.invalidateQueries({
-          queryKey: flowQueries.lists(),
-        });
-
         toast.success("Flow created successfully");
       } catch (error) {
         logger.error(error);
@@ -501,7 +494,7 @@ const FlowSection = ({
         setIsCreating(false);
       }
     },
-    [navigate, selectFlowId],
+    [navigate, selectFlowId, createFlowMutation],
   );
   const handleDialogClose = useCallback(() => {
     setIsOpenCreate(false);
