@@ -152,8 +152,8 @@ export default function MessageStyling({
         return;
       }
 
-      // Only save if form has been touched (user made changes)
-      if (value.chatStyles && methods.formState.isDirty) {
+      // Save if chatStyles value exists (removed isDirty check)
+      if (value.chatStyles) {
         debouncedSave(value.chatStyles);
       }
     });
