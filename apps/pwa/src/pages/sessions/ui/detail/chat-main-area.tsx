@@ -192,6 +192,11 @@ export default function ChatMainArea({ data }: ChatMainAreaProps) {
         setStreamingMessageId(streamingMessage.id);
         //  scrollToBottom({ behavior: "smooth" }); // TODO: check if this is needed
 
+        // Check if flow exists
+        if (!data.props.flowId) {
+          throw new Error("Session has no flow assigned");
+        }
+
         // Execute flow
         refStopGenerate.current = new AbortController();
         const flowResult = executeFlow({

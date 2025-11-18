@@ -29,6 +29,9 @@ export class SessionDrizzleMapper {
     const sessionOrError = Session.create(
       {
         title: row.title,
+        name: row.name ?? undefined,
+        tags: row.tags || [],
+        summary: row.summary ?? undefined,
         allCards: row.all_cards.map((cardJson) => ({
           id: new UniqueEntityID(cardJson.id),
           type: cardJson.type as CardType,
@@ -50,7 +53,7 @@ export class SessionDrizzleMapper {
               .getValue()
           : undefined,
         chatStyles: row.chat_styles ? row.chat_styles : undefined,
-        flowId: new UniqueEntityID(row.flow_id),
+        flowId: row.flow_id ? new UniqueEntityID(row.flow_id) : undefined,
         autoReply: row.auto_reply,
         dataSchemaOrder: row.data_schema_order || [],
         widgetLayout: row.widget_layout || undefined,
@@ -74,6 +77,9 @@ export class SessionDrizzleMapper {
     return {
       id: domain.id.toString(),
       title: domain.props.title,
+      name: domain.props.name ?? null,
+      tags: domain.props.tags,
+      summary: domain.props.summary ?? null,
       all_cards: domain.props.allCards.map((card) => ({
         id: card.id.toString(),
         type: card.type,

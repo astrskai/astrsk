@@ -10,7 +10,7 @@
  * 3. Migrations run in array order
  */
 
-import { migrateCardsData } from "./migrate-cards-data";
+import { migrateCardsData } from "./20251117050000_migrate_cards_data";
 import { populateAgentFlowId } from "./20251117115504_populate_agent_flow_id";
 import { migrateSessionsToLocalResources } from "./20251117115505_migrate_sessions_to_local_resources";
 

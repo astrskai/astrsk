@@ -1,4 +1,5 @@
 import { boolean, jsonb, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
@@ -17,6 +18,13 @@ export const flows = pgTable(TableName.Flows, {
   id: uuid().primaryKey(),
   name: varchar().notNull(),
   description: text().notNull(),
+
+  // Metadata fields (similar to characters)
+  tags: text().array().notNull().default(sql`'{}'`),
+  summary: text(),
+  version: varchar(),
+  conceptual_origin: varchar(),
+
   nodes: jsonb().$type<Node[]>().notNull(),
   edges: jsonb().$type<Edge[]>().notNull(),
   response_template: text().notNull(),

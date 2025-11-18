@@ -1,4 +1,5 @@
-import { jsonb, pgTable, uuid, varchar } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 import { AutoReply } from "@/shared/stores/session-store";
 import { TableName } from "@/db/schema/table-name";
@@ -10,6 +11,12 @@ import { CardListItemJson } from "@/entities/session/mappers/session-drizzle-map
 export const sessions = pgTable(TableName.Sessions, {
   id: uuid().primaryKey(),
   title: varchar().notNull(),
+
+  // Metadata fields (similar to flows and characters)
+  name: varchar(),
+  tags: text().array().notNull().default(sql`'{}'`),
+  summary: text(),
+
   all_cards: jsonb().$type<CardListItemJson[]>().notNull(),
   user_character_card_id: uuid(),
   turn_ids: jsonb().$type<string[]>().notNull(),

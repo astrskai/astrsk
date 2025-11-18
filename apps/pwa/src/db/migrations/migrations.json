@@ -168,5 +168,19 @@
     "bps": true,
     "folderMillis": 1763380613280,
     "hash": "e863812e6eb66c883d7f8a1cb476052c8000556c0de10b3bbaf7e42312c79de2"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"flows\" ADD COLUMN \"tags\" text[] DEFAULT '{}' NOT NULL;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"summary\" text;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"version\" varchar;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"conceptual_origin\" varchar;",
+      "\nALTER TABLE \"sessions\" ADD COLUMN \"name\" varchar;",
+      "\nALTER TABLE \"sessions\" ADD COLUMN \"tags\" text[] DEFAULT '{}' NOT NULL;",
+      "\nALTER TABLE \"sessions\" ADD COLUMN \"summary\" text;"
+    ],
+    "bps": true,
+    "folderMillis": 1763470150932,
+    "hash": "65a16e0fd7dee12ee6909e60593267b5a1a13eb0a4337ff47a19c5eb4058a734"
   }
 ]

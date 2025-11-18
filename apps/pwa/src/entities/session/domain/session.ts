@@ -15,6 +15,9 @@ export interface CardListItem {
 export interface SessionProps {
   // Metadata
   title: string;
+  name?: string;
+  tags: string[];
+  summary?: string;
 
   // Cards
   allCards: CardListItem[];
@@ -57,6 +60,9 @@ export interface SessionProps {
 
 export const SessionPropsKeys = [
   "title",
+  "name",
+  "tags",
+  "summary",
   "allCards",
   "userCharacterCardId",
   "turnIds",
@@ -152,6 +158,9 @@ export class Session extends AggregateRoot<SessionProps> {
   ): Result<Session> {
     const propsWithDefaults: SessionProps = {
       title: props.title || "New Session",
+      name: props.name,
+      tags: props.tags || [],
+      summary: props.summary,
       allCards: props.allCards || [],
       userCharacterCardId: props.userCharacterCardId,
       turnIds: props.turnIds || [],
