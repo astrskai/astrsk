@@ -35,17 +35,19 @@ import {
 } from "@/shared/stores/background-store";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useFlow } from "@/shared/hooks/use-flow";
-import { Loading, PopoverBase, DropdownMenuBase } from "@/shared/ui";
+import { Loading, PopoverBase, DropdownMenuBase, Switch } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs/confirm";
 import DialogBase from "@/shared/ui/dialogs/base";
 import { useCard } from "@/shared/hooks/use-card";
 import { UniqueEntityID } from "@/shared/domain";
 import MessageStyling from "./settings/message-styling";
 import BackgroundGrid from "./settings/background-grid";
+import { AutoReply } from "@/shared/stores/session-store";
 
 interface SessionSettingsSidebarProps {
   session: Session;
   isOpen: boolean;
+  onAutoReply: () => void;
   onClose: () => void;
 }
 
@@ -75,6 +77,7 @@ const ScenarioPreviewItem = ({
 const SessionSettingsSidebar = ({
   session,
   isOpen,
+  onAutoReply,
   onClose,
 }: SessionSettingsSidebarProps) => {
   const navigate = useNavigate();
@@ -132,7 +135,10 @@ const SessionSettingsSidebar = ({
 
         // Add each new character to allCards array using addCard method
         for (const character of newCharacters) {
-          const result = latestSession.addCard(character.id, CardType.Character);
+          const result = latestSession.addCard(
+            character.id,
+            CardType.Character,
+          );
           if (result.isFailure) {
             toast.error("Failed to add character", {
               description: result.getError(),
@@ -672,6 +678,22 @@ const SessionSettingsSidebar = ({
                 <p className="text-sm text-gray-400">No flow selected</p>
               </div>
             )}
+          </div>
+        </section>
+
+        <section className="block md:hidden!">
+          <h3 className="font-semibold">Auto reply setting</h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-900 px-4 py-2">
+              <span>Auto reply</span>
+              <Switch
+                checked={session.autoReply !== AutoReply.Off}
+                onCheckedChange={onAutoReply}
+              />
+            </div>
+            <p className="text-xs text-gray-300">
+              Automatically responds after your message.
+            </p>
           </div>
         </section>
 

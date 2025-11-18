@@ -25,7 +25,6 @@ import {
   sessionQueries,
   useAddMessage,
   useDeleteMessage,
-  useSaveSession,
 } from "@/entities/session/api";
 
 import { UniqueEntityID } from "@/shared/domain";
@@ -43,12 +42,14 @@ import { TemplateRenderer } from "@/shared/lib/template-renderer";
 
 interface ChatMainAreaProps {
   data: Session;
+  onAutoReply: () => void;
   isOpenStats: boolean;
   onOpenStats: (isOpen: boolean) => void;
 }
 
 export default function ChatMainArea({
   data,
+  onAutoReply,
   isOpenStats,
   onOpenStats,
 }: ChatMainAreaProps) {
@@ -80,7 +81,6 @@ export default function ChatMainArea({
   }, [data.id]);
 
   // Mutations
-  const saveSessionMutation = useSaveSession();
   const addMessageMutation = useAddMessage(data.id);
   const deleteMessageMutation = useDeleteMessage(data.id);
   const updateTurnMutation = useUpdateTurn();
@@ -354,25 +354,6 @@ export default function ChatMainArea({
     ],
   );
 
-  const handleAutoReply = useCallback(
-    async (autoReply: AutoReply) => {
-      if (!data) {
-        return;
-      }
-
-      data.update({
-        autoReply,
-      });
-
-      await saveSessionMutation.mutate({
-        session: data,
-      });
-    },
-    [data, saveSessionMutation],
-  );
-
-  const autoReply = data?.autoReply;
-
   const handleSendMessage = useCallback(
     async (messageContent: string) => {
       try {
@@ -405,7 +386,7 @@ export default function ChatMainArea({
         // scrollToBottom({ behavior: "smooth" });
 
         // Auto reply
-        switch (autoReply) {
+        switch (data.autoReply) {
           // No auto reply
           case AutoReply.Off:
             break;
@@ -465,7 +446,7 @@ export default function ChatMainArea({
         logger.error("Failed to add user message", error);
       }
     },
-    [addMessageMutation, data, autoReply, generateCharacterMessage],
+    [addMessageMutation, data, generateCharacterMessage],
   );
 
   const handleStopGenerate = useCallback(() => {
@@ -693,7 +674,7 @@ export default function ChatMainArea({
         onOpenStats={onOpenStats}
         onStopGenerate={handleStopGenerate}
         onSendMessage={handleSendMessage}
-        onAutoReply={handleAutoReply}
+        onAutoReply={onAutoReply}
       />
 
       {/* Select Scenario Modal - absolute on mobile (inside scroll area), fixed on desktop (full viewport) */}

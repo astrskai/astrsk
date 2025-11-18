@@ -4,37 +4,16 @@ import { AutoReply } from "@/shared/stores/session-store";
 import { cn } from "@/shared/lib";
 
 interface ChatAutoReplyButtonProps {
-  characterCount: number;
   autoReply: AutoReply;
-  onAutoReply: (autoReply: AutoReply) => void;
+  onAutoReply: () => void;
   className?: string;
 }
 
 export default function ChatAutoReplyButton({
-  characterCount,
   autoReply,
   onAutoReply,
   className,
 }: ChatAutoReplyButtonProps) {
-  const hasMultipleCharacters = characterCount > 1;
-
-  const handleAutoReply = useCallback(() => {
-    switch (autoReply) {
-      case AutoReply.Off:
-        onAutoReply(AutoReply.Random);
-        break;
-      case AutoReply.Random:
-        // Skip Rotate option if only one character
-        onAutoReply(hasMultipleCharacters ? AutoReply.Rotate : AutoReply.Off);
-        break;
-      case AutoReply.Rotate:
-        onAutoReply(AutoReply.Off);
-        break;
-      default:
-        throw new Error("Unknown auto reply");
-    }
-  }, [autoReply, onAutoReply, hasMultipleCharacters]);
-
   return (
     <div
       className={cn(
@@ -44,7 +23,7 @@ export default function ChatAutoReplyButton({
     >
       <button
         className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-50 bg-gray-50/20 text-base font-semibold text-gray-50 hover:bg-gray-50/30"
-        onClick={handleAutoReply}
+        onClick={onAutoReply}
       >
         {autoReply === AutoReply.Off ? (
           "Off"

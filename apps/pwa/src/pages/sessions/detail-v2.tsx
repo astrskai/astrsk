@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Route } from "@/routes/_layout/sessions/$sessionId";
@@ -18,11 +18,15 @@ import {
 } from "./ui/detail";
 import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
+import { AutoReply } from "@/shared/stores/session-store";
+import { useSaveSession } from "@/entities/session/api/mutations";
 
 export default function SessionDetailPage() {
   const [isOpenSessionDataSidebar, setIsOpenSessionDataSidebar] =
     useState<boolean>(false);
   const [isOpenSettings, setIsOpenSettings] = useState<boolean>(false);
+
+  const saveSessionMutation = useSaveSession();
 
   const { sessionId } = Route.useParams();
   const sessionIdEntity = sessionId as unknown as UniqueEntityID;
@@ -105,6 +109,53 @@ export default function SessionDetailPage() {
     ];
   }, [flow?.props.dataStoreSchema?.fields, session?.dataSchemaOrder]);
 
+  const updateAutoReply = useCallback(
+    async (autoReply: AutoReply) => {
+      if (!session) {
+        return;
+      }
+
+      session.update({
+        autoReply,
+      });
+
+      await saveSessionMutation.mutateAsync({
+        session: session,
+      });
+    },
+    [session, saveSessionMutation],
+  );
+
+  const handleAutoReplyClick = useCallback(() => {
+    if (saveSessionMutation.isPending) return;
+
+    const hasMultipleCharacters =
+      (session?.aiCharacterCardIds?.length ?? 0) > 1;
+
+    switch (session?.autoReply) {
+      case AutoReply.Off:
+        updateAutoReply(AutoReply.Random);
+        break;
+      case AutoReply.Random:
+        // Skip Rotate option if only one character
+        updateAutoReply(
+          hasMultipleCharacters ? AutoReply.Rotate : AutoReply.Off,
+        );
+        break;
+      case AutoReply.Rotate:
+        updateAutoReply(AutoReply.Off);
+        break;
+      default:
+        console.error("Unknown auto reply value", session?.autoReply);
+        updateAutoReply(AutoReply.Off);
+    }
+  }, [
+    updateAutoReply,
+    session?.aiCharacterCardIds?.length,
+    session?.autoReply,
+    saveSessionMutation.isPending,
+  ]);
+
   return isLoading ? (
     <Loading />
   ) : session ? (
@@ -137,12 +188,14 @@ export default function SessionDetailPage() {
           data={session}
           isOpenStats={isOpenSessionDataSidebar}
           onOpenStats={setIsOpenSessionDataSidebar}
+          onAutoReply={handleAutoReplyClick}
         />
       </div>
 
       <SessionSettingsSidebar
         session={session}
         isOpen={isOpenSettings}
+        onAutoReply={handleAutoReplyClick}
         onClose={() => setIsOpenSettings(false)}
       />
     </div>

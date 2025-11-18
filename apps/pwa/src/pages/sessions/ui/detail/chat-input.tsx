@@ -17,7 +17,7 @@ interface ChatInputProps {
   autoReply: AutoReply;
   isOpenStats: boolean;
   onOpenStats: (isOpen: boolean) => void;
-  onAutoReply: (autoReply: AutoReply) => void;
+  onAutoReply: () => void;
   onSendMessage?: (messageContent: string) => void;
   onStopGenerate?: () => void;
   generateCharacterMessage?: (characterId: UniqueEntityID) => void;
@@ -106,7 +106,6 @@ export default function ChatInput({
         />
 
         <ChatAutoReplyButton
-          characterCount={aiCharacterIds.length}
           autoReply={autoReply}
           onAutoReply={onAutoReply}
           className="hidden md:flex"

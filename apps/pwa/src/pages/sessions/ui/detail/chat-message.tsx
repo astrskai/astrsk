@@ -129,6 +129,10 @@ const ChatMessage = ({
     ? userCharacterId.equals(message.characterCardId)
     : typeof message.characterCardId === "undefined";
 
+  const contentColor = isUser
+    ? (chatStyles?.user?.text?.base?.color ?? "#000000")
+    : (chatStyles?.ai?.text?.base?.color ?? "#ffffff");
+
   return (
     <div
       className={cn(
@@ -200,9 +204,7 @@ const ChatMessage = ({
                     "break-words",
                   )}
                   style={{
-                    color: isUser
-                      ? (chatStyles?.user?.text?.base?.color ?? "#000000")
-                      : (chatStyles?.ai?.text?.base?.color ?? "#ffffff"),
+                    color: contentColor,
                   }}
                   autoFocus
                   value={editedContent}
@@ -222,15 +224,10 @@ const ChatMessage = ({
                     rehypePlugins={[rehypeRaw, rehypeSanitize]}
                     components={{
                       p: ({ children }) => {
-                        const textStyle = isUser
-                          ? chatStyles?.user?.text
-                          : chatStyles?.ai?.text;
-                        const fallbackColor = isUser ? "#000000" : "#ffffff";
-
                         return (
                           <p
                             style={{
-                              color: textStyle?.base?.color ?? fallbackColor,
+                              color: contentColor,
                               // fontSize: textStyle?.base?.fontSize
                               //   ? `${textStyle.base.fontSize}px`
                               //   : undefined,
@@ -241,15 +238,10 @@ const ChatMessage = ({
                         );
                       },
                       strong: ({ children }) => {
-                        const textStyle = isUser
-                          ? chatStyles?.user?.text
-                          : chatStyles?.ai?.text;
-                        const fallbackColor = isUser ? "#000000" : "#ffffff";
-
                         return (
                           <strong
                             style={{
-                              color: textStyle?.bold?.color ?? fallbackColor,
+                              color: contentColor,
                               // fontSize: textStyle?.bold?.fontSize
                               //   ? `${textStyle.bold.fontSize}px`
                               //   : undefined,
@@ -260,15 +252,10 @@ const ChatMessage = ({
                         );
                       },
                       em: ({ children }) => {
-                        const textStyle = isUser
-                          ? chatStyles?.user?.text
-                          : chatStyles?.ai?.text;
-                        const fallbackColor = isUser ? "#000000" : "#ffffff";
-
                         return (
                           <em
                             style={{
-                              color: textStyle?.italic?.color ?? fallbackColor,
+                              color: contentColor,
                               // fontSize: textStyle?.italic?.fontSize
                               //   ? `${textStyle.italic.fontSize}px`
                               //   : undefined,
@@ -327,12 +314,31 @@ const ChatMessage = ({
               <div className="flex flex-col gap-1">
                 {/* Typing indicator - only show when streaming */}
                 <div className="flex items-center gap-1">
-                  <span className="animate-bounce-typing h-1.5 w-1.5 rounded-full bg-gray-500 [animation-delay:0s] md:h-2 md:w-2"></span>
-                  <span className="animate-bounce-typing h-1.5 w-1.5 rounded-full bg-gray-500 [animation-delay:0.2s] md:h-2 md:w-2"></span>
-                  <span className="animate-bounce-typing h-1.5 w-1.5 rounded-full bg-gray-500 [animation-delay:0.4s] md:h-2 md:w-2"></span>
+                  <span
+                    className="animate-bounce-typing h-1.5 w-1.5 rounded-full [animation-delay:0s] md:h-2 md:w-2"
+                    style={{
+                      backgroundColor: contentColor,
+                    }}
+                  ></span>
+                  <span
+                    className="animate-bounce-typing h-1.5 w-1.5 rounded-full [animation-delay:0.2s] md:h-2 md:w-2"
+                    style={{
+                      backgroundColor: contentColor,
+                    }}
+                  ></span>
+                  <span
+                    className="animate-bounce-typing h-1.5 w-1.5 rounded-full [animation-delay:0.4s] md:h-2 md:w-2"
+                    style={{
+                      backgroundColor: contentColor,
+                    }}
+                  ></span>
                 </div>
 
-                <div>
+                <div
+                  style={{
+                    color: contentColor,
+                  }}
+                >
                   {streamingAgentName && (
                     <>
                       {streamingAgentName}{" "}
