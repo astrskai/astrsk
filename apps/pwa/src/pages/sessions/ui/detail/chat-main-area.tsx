@@ -274,8 +274,8 @@ export default function ChatMainArea({
           }
         }
 
-        // Update message to database
-        updateTurnMutation.mutate({
+        // Update message to database and scroll to bottom after completion
+        await updateTurnMutation.mutateAsync({
           turn: streamingMessage,
         });
       } catch (error) {
