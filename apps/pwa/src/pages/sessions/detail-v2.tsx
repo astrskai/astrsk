@@ -127,6 +127,8 @@ export default function SessionDetailPage() {
   );
 
   const handleAutoReplyClick = useCallback(() => {
+    if (saveSessionMutation.isPending) return;
+
     const hasMultipleCharacters =
       (session?.aiCharacterCardIds?.length ?? 0) > 1;
 
@@ -144,12 +146,14 @@ export default function SessionDetailPage() {
         updateAutoReply(AutoReply.Off);
         break;
       default:
-        throw new Error("Unknown auto reply");
+        console.error("Unknown auto reply value", session?.autoReply);
+        updateAutoReply(AutoReply.Off);
     }
   }, [
     updateAutoReply,
     session?.aiCharacterCardIds?.length,
     session?.autoReply,
+    saveSessionMutation.isPending,
   ]);
 
   return isLoading ? (
