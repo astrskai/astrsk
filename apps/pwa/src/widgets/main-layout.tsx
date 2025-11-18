@@ -92,7 +92,8 @@ export function MainLayout({
   // Set loading to false when everything is initialized
   useEffect(() => {
     setIsLoading(false);
-  }, [setIsLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Show InstallPwa screen only in production for mobile non-standalone users
   // deprecated since we don't have a install screen anymore

@@ -5,9 +5,18 @@ import { ApiConnection, ApiSource } from "@/entities/api/domain";
 
 export async function initStores(): Promise<void> {
   // Init astrsk.ai provider
-  const apiConnections = (await ApiService.listApiConnection.execute({}))
-    .throwOnFailure()
-    .getValue();
+  let apiConnections;
+  try {
+    apiConnections = (await ApiService.listApiConnection.execute({}))
+      .throwOnFailure()
+      .getValue();
+  } catch (error) {
+    console.error("Failed to list API connections:", error);
+    // Continue with background initialization even if provider setup fails
+    await fetchBackgrounds();
+    return;
+  }
+
   let addAstrskaiProvider = false;
 
   if (apiConnections && apiConnections.length === 0) {
@@ -28,22 +37,40 @@ export async function initStores(): Promise<void> {
     import.meta.env.VITE_ASTRSK_FREE_BASE_URL
   ) {
     // Create astrsk.ai provider
-    const astrskaiProvider = ApiConnection.create({
+    const astrskaiProviderResult = ApiConnection.create({
       source: ApiSource.AstrskAi,
       title: "astrsk.ai free",
       apiKey: import.meta.env.VITE_ASTRSK_FREE_API_KEY,
       baseUrl: import.meta.env.VITE_ASTRSK_FREE_BASE_URL,
       updatedAt: new Date(),
-    }).getValue();
+    });
 
-    // Add astrsk.ai provider
-    await ApiService.saveApiConnection.execute(astrskaiProvider);
+    if (astrskaiProviderResult.isFailure) {
+      console.error(
+        "Failed to create astrsk.ai provider:",
+        astrskaiProviderResult.getError(),
+      );
+      // Continue with other initialization steps
+    } else {
+      const astrskaiProvider = astrskaiProviderResult.getValue();
+      // Add astrsk.ai provider
+      await ApiService.saveApiConnection.execute(astrskaiProvider);
+    }
   }
 
   // Init default sessions - only for new users
-  const sessions = (await SessionService.listSession.execute({}))
-    .throwOnFailure()
-    .getValue();
+  let sessions;
+  try {
+    sessions = (await SessionService.listSession.execute({}))
+      .throwOnFailure()
+      .getValue();
+  } catch (error) {
+    console.error("Failed to list sessions:", error);
+    // Continue with background initialization even if session setup fails
+    await fetchBackgrounds();
+    return;
+  }
+
   if (sessions && sessions.length === 0) {
     // Import default sessions
     const sessionFilePaths = [
@@ -69,7 +96,7 @@ export async function initStores(): Promise<void> {
           },
         );
         if (importResult.isFailure) {
-          console.log(
+          console.error(
             "Failed to import session:",
             path,
             importResult.getError(),
@@ -77,7 +104,7 @@ export async function initStores(): Promise<void> {
           continue;
         }
       } catch (error) {
-        console.log("Error fetching session file:", path, error);
+        console.error("Error fetching session file:", path, error);
         continue;
       }
     }
