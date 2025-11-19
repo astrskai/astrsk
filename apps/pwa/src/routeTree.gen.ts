@@ -18,10 +18,10 @@ import { Route as LayoutSettingsIndexRouteImport } from './routes/_layout/settin
 import { Route as LayoutSessionsIndexRouteImport } from './routes/_layout/sessions/index'
 import { Route as LayoutAssetsIndexRouteImport } from './routes/_layout/assets/index'
 import { Route as LayoutSettingsProvidersRouteImport } from './routes/_layout/settings/providers'
-import { Route as LayoutSettingsAdvancedRouteImport } from './routes/_layout/settings/advanced'
 import { Route as LayoutSessionsNewRouteImport } from './routes/_layout/sessions/new'
 import { Route as LayoutSessionsSessionIdRouteImport } from './routes/_layout/sessions/$sessionId'
 import { Route as LayoutSettingsLegalIndexRouteImport } from './routes/_layout/settings/legal/index'
+import { Route as LayoutSettingsAdvancedIndexRouteImport } from './routes/_layout/settings/advanced/index'
 import { Route as LayoutSettingsAccountIndexRouteImport } from './routes/_layout/settings/account/index'
 import { Route as LayoutAssetsWorkflowsIndexRouteImport } from './routes/_layout/assets/workflows/index'
 import { Route as LayoutAssetsScenariosIndexRouteImport } from './routes/_layout/assets/scenarios/index'
@@ -31,6 +31,7 @@ import { Route as LayoutSettingsLegalRefundPolicyRouteImport } from './routes/_l
 import { Route as LayoutSettingsLegalPrivacyPolicyRouteImport } from './routes/_layout/settings/legal/privacy-policy'
 import { Route as LayoutSettingsLegalOssNoticeRouteImport } from './routes/_layout/settings/legal/oss-notice'
 import { Route as LayoutSettingsLegalContentPolicyRouteImport } from './routes/_layout/settings/legal/content-policy'
+import { Route as LayoutSettingsAdvancedInitializationLogsRouteImport } from './routes/_layout/settings/advanced/initialization-logs'
 import { Route as LayoutSettingsAccountCreditUsageRouteImport } from './routes/_layout/settings/account/credit-usage'
 import { Route as LayoutAssetsWorkflowsWorkflowIdRouteImport } from './routes/_layout/assets/workflows/$workflowId'
 import { Route as LayoutAssetsScenariosNewRouteImport } from './routes/_layout/assets/scenarios/new'
@@ -82,11 +83,6 @@ const LayoutSettingsProvidersRoute = LayoutSettingsProvidersRouteImport.update({
   path: '/providers',
   getParentRoute: () => LayoutSettingsRoute,
 } as any)
-const LayoutSettingsAdvancedRoute = LayoutSettingsAdvancedRouteImport.update({
-  id: '/advanced',
-  path: '/advanced',
-  getParentRoute: () => LayoutSettingsRoute,
-} as any)
 const LayoutSessionsNewRoute = LayoutSessionsNewRouteImport.update({
   id: '/sessions/new',
   path: '/sessions/new',
@@ -101,6 +97,12 @@ const LayoutSettingsLegalIndexRoute =
   LayoutSettingsLegalIndexRouteImport.update({
     id: '/legal/',
     path: '/legal/',
+    getParentRoute: () => LayoutSettingsRoute,
+  } as any)
+const LayoutSettingsAdvancedIndexRoute =
+  LayoutSettingsAdvancedIndexRouteImport.update({
+    id: '/advanced/',
+    path: '/advanced/',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
 const LayoutSettingsAccountIndexRoute =
@@ -157,6 +159,12 @@ const LayoutSettingsLegalContentPolicyRoute =
     path: '/legal/content-policy',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
+const LayoutSettingsAdvancedInitializationLogsRoute =
+  LayoutSettingsAdvancedInitializationLogsRouteImport.update({
+    id: '/advanced/initialization-logs',
+    path: '/advanced/initialization-logs',
+    getParentRoute: () => LayoutSettingsRoute,
+  } as any)
 const LayoutSettingsAccountCreditUsageRoute =
   LayoutSettingsAccountCreditUsageRouteImport.update({
     id: '/account/credit-usage',
@@ -201,7 +209,6 @@ export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/sessions/new': typeof LayoutSessionsNewRoute
-  '/settings/advanced': typeof LayoutSettingsAdvancedRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
   '/assets': typeof LayoutAssetsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
   '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
+  '/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
   '/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
   '/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
@@ -221,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/assets/scenarios': typeof LayoutAssetsScenariosIndexRoute
   '/assets/workflows': typeof LayoutAssetsWorkflowsIndexRoute
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
+  '/settings/advanced': typeof LayoutSettingsAdvancedIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
 export interface FileRoutesByTo {
@@ -229,7 +238,6 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/sessions/new': typeof LayoutSessionsNewRoute
-  '/settings/advanced': typeof LayoutSettingsAdvancedRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
   '/assets': typeof LayoutAssetsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
@@ -240,6 +248,7 @@ export interface FileRoutesByTo {
   '/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
   '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
+  '/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
   '/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
   '/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
@@ -249,6 +258,7 @@ export interface FileRoutesByTo {
   '/assets/scenarios': typeof LayoutAssetsScenariosIndexRoute
   '/assets/workflows': typeof LayoutAssetsWorkflowsIndexRoute
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
+  '/settings/advanced': typeof LayoutSettingsAdvancedIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
 export interface FileRoutesById {
@@ -260,7 +270,6 @@ export interface FileRoutesById {
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/_layout/sessions/new': typeof LayoutSessionsNewRoute
-  '/_layout/settings/advanced': typeof LayoutSettingsAdvancedRoute
   '/_layout/settings/providers': typeof LayoutSettingsProvidersRoute
   '/_layout/assets/': typeof LayoutAssetsIndexRoute
   '/_layout/sessions/': typeof LayoutSessionsIndexRoute
@@ -271,6 +280,7 @@ export interface FileRoutesById {
   '/_layout/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
   '/_layout/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/_layout/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
+  '/_layout/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
   '/_layout/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/_layout/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
   '/_layout/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
@@ -280,6 +290,7 @@ export interface FileRoutesById {
   '/_layout/assets/scenarios/': typeof LayoutAssetsScenariosIndexRoute
   '/_layout/assets/workflows/': typeof LayoutAssetsWorkflowsIndexRoute
   '/_layout/settings/account/': typeof LayoutSettingsAccountIndexRoute
+  '/_layout/settings/advanced/': typeof LayoutSettingsAdvancedIndexRoute
   '/_layout/settings/legal/': typeof LayoutSettingsLegalIndexRoute
 }
 export interface FileRouteTypes {
@@ -291,7 +302,6 @@ export interface FileRouteTypes {
     | '/'
     | '/sessions/$sessionId'
     | '/sessions/new'
-    | '/settings/advanced'
     | '/settings/providers'
     | '/assets'
     | '/sessions'
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/assets/scenarios/new'
     | '/assets/workflows/$workflowId'
     | '/settings/account/credit-usage'
+    | '/settings/advanced/initialization-logs'
     | '/settings/legal/content-policy'
     | '/settings/legal/oss-notice'
     | '/settings/legal/privacy-policy'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/assets/scenarios'
     | '/assets/workflows'
     | '/settings/account'
+    | '/settings/advanced'
     | '/settings/legal'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -319,7 +331,6 @@ export interface FileRouteTypes {
     | '/'
     | '/sessions/$sessionId'
     | '/sessions/new'
-    | '/settings/advanced'
     | '/settings/providers'
     | '/assets'
     | '/sessions'
@@ -330,6 +341,7 @@ export interface FileRouteTypes {
     | '/assets/scenarios/new'
     | '/assets/workflows/$workflowId'
     | '/settings/account/credit-usage'
+    | '/settings/advanced/initialization-logs'
     | '/settings/legal/content-policy'
     | '/settings/legal/oss-notice'
     | '/settings/legal/privacy-policy'
@@ -339,6 +351,7 @@ export interface FileRouteTypes {
     | '/assets/scenarios'
     | '/assets/workflows'
     | '/settings/account'
+    | '/settings/advanced'
     | '/settings/legal'
   id:
     | '__root__'
@@ -349,7 +362,6 @@ export interface FileRouteTypes {
     | '/_layout/'
     | '/_layout/sessions/$sessionId'
     | '/_layout/sessions/new'
-    | '/_layout/settings/advanced'
     | '/_layout/settings/providers'
     | '/_layout/assets/'
     | '/_layout/sessions/'
@@ -360,6 +372,7 @@ export interface FileRouteTypes {
     | '/_layout/assets/scenarios/new'
     | '/_layout/assets/workflows/$workflowId'
     | '/_layout/settings/account/credit-usage'
+    | '/_layout/settings/advanced/initialization-logs'
     | '/_layout/settings/legal/content-policy'
     | '/_layout/settings/legal/oss-notice'
     | '/_layout/settings/legal/privacy-policy'
@@ -369,6 +382,7 @@ export interface FileRouteTypes {
     | '/_layout/assets/scenarios/'
     | '/_layout/assets/workflows/'
     | '/_layout/settings/account/'
+    | '/_layout/settings/advanced/'
     | '/_layout/settings/legal/'
   fileRoutesById: FileRoutesById
 }
@@ -441,13 +455,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsProvidersRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
-    '/_layout/settings/advanced': {
-      id: '/_layout/settings/advanced'
-      path: '/advanced'
-      fullPath: '/settings/advanced'
-      preLoaderRoute: typeof LayoutSettingsAdvancedRouteImport
-      parentRoute: typeof LayoutSettingsRoute
-    }
     '/_layout/sessions/new': {
       id: '/_layout/sessions/new'
       path: '/sessions/new'
@@ -467,6 +474,13 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/settings/legal'
       preLoaderRoute: typeof LayoutSettingsLegalIndexRouteImport
+      parentRoute: typeof LayoutSettingsRoute
+    }
+    '/_layout/settings/advanced/': {
+      id: '/_layout/settings/advanced/'
+      path: '/advanced'
+      fullPath: '/settings/advanced'
+      preLoaderRoute: typeof LayoutSettingsAdvancedIndexRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
     '/_layout/settings/account/': {
@@ -532,6 +546,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsLegalContentPolicyRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
+    '/_layout/settings/advanced/initialization-logs': {
+      id: '/_layout/settings/advanced/initialization-logs'
+      path: '/advanced/initialization-logs'
+      fullPath: '/settings/advanced/initialization-logs'
+      preLoaderRoute: typeof LayoutSettingsAdvancedInitializationLogsRouteImport
+      parentRoute: typeof LayoutSettingsRoute
+    }
     '/_layout/settings/account/credit-usage': {
       id: '/_layout/settings/account/credit-usage'
       path: '/account/credit-usage'
@@ -578,24 +599,26 @@ declare module '@tanstack/react-router' {
 }
 
 interface LayoutSettingsRouteChildren {
-  LayoutSettingsAdvancedRoute: typeof LayoutSettingsAdvancedRoute
   LayoutSettingsProvidersRoute: typeof LayoutSettingsProvidersRoute
   LayoutSettingsIndexRoute: typeof LayoutSettingsIndexRoute
   LayoutSettingsAccountCreditUsageRoute: typeof LayoutSettingsAccountCreditUsageRoute
+  LayoutSettingsAdvancedInitializationLogsRoute: typeof LayoutSettingsAdvancedInitializationLogsRoute
   LayoutSettingsLegalContentPolicyRoute: typeof LayoutSettingsLegalContentPolicyRoute
   LayoutSettingsLegalOssNoticeRoute: typeof LayoutSettingsLegalOssNoticeRoute
   LayoutSettingsLegalPrivacyPolicyRoute: typeof LayoutSettingsLegalPrivacyPolicyRoute
   LayoutSettingsLegalRefundPolicyRoute: typeof LayoutSettingsLegalRefundPolicyRoute
   LayoutSettingsLegalTermsOfServiceRoute: typeof LayoutSettingsLegalTermsOfServiceRoute
   LayoutSettingsAccountIndexRoute: typeof LayoutSettingsAccountIndexRoute
+  LayoutSettingsAdvancedIndexRoute: typeof LayoutSettingsAdvancedIndexRoute
   LayoutSettingsLegalIndexRoute: typeof LayoutSettingsLegalIndexRoute
 }
 
 const LayoutSettingsRouteChildren: LayoutSettingsRouteChildren = {
-  LayoutSettingsAdvancedRoute: LayoutSettingsAdvancedRoute,
   LayoutSettingsProvidersRoute: LayoutSettingsProvidersRoute,
   LayoutSettingsIndexRoute: LayoutSettingsIndexRoute,
   LayoutSettingsAccountCreditUsageRoute: LayoutSettingsAccountCreditUsageRoute,
+  LayoutSettingsAdvancedInitializationLogsRoute:
+    LayoutSettingsAdvancedInitializationLogsRoute,
   LayoutSettingsLegalContentPolicyRoute: LayoutSettingsLegalContentPolicyRoute,
   LayoutSettingsLegalOssNoticeRoute: LayoutSettingsLegalOssNoticeRoute,
   LayoutSettingsLegalPrivacyPolicyRoute: LayoutSettingsLegalPrivacyPolicyRoute,
@@ -603,6 +626,7 @@ const LayoutSettingsRouteChildren: LayoutSettingsRouteChildren = {
   LayoutSettingsLegalTermsOfServiceRoute:
     LayoutSettingsLegalTermsOfServiceRoute,
   LayoutSettingsAccountIndexRoute: LayoutSettingsAccountIndexRoute,
+  LayoutSettingsAdvancedIndexRoute: LayoutSettingsAdvancedIndexRoute,
   LayoutSettingsLegalIndexRoute: LayoutSettingsLegalIndexRoute,
 }
 

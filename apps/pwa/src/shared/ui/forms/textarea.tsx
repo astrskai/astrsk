@@ -5,8 +5,9 @@ interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
-  labelPosition?: "top" | "left";
+  labelPosition?: "top" | "left" | "inner";
   autoResize?: boolean;
+  caption?: string;
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
@@ -18,6 +19,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       className,
       required,
       autoResize = false,
+      caption,
       ...props
     },
     ref,
@@ -51,6 +53,47 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       };
     }, [autoResize, props.value]);
 
+    // Inner label layout
+    if (labelPosition === "inner" && label) {
+      return (
+        <div className="relative w-full">
+          <div className="flex flex-col gap-1 rounded-lg bg-gray-800 px-4 py-2">
+            <label className="text-text-secondary flex items-center gap-1.5 text-xs font-medium">
+              <span>
+                {label}
+                {required && (
+                  <span className="text-status-required ml-1">*</span>
+                )}
+              </span>
+            </label>
+            <textarea
+              ref={internalRef}
+              required={required}
+              className={cn(
+                "text-text-primary placeholder:text-text-placeholder min-h-[120px] bg-transparent text-base transition-colors outline-none",
+                // Resize behavior
+                autoResize ? "resize-none overflow-hidden" : "resize-vertical",
+                // Disabled styles
+                "disabled:cursor-not-allowed disabled:opacity-50",
+                className,
+              )}
+              {...props}
+            />
+          </div>
+          {/* Error message */}
+          {error && (
+            <p className="text-status-destructive-light mt-1 text-xs">
+              {error}
+            </p>
+          )}
+          {/* Caption */}
+          {!error && caption && (
+            <p className="text-text-secondary mt-1 pl-2 text-xs">{caption}</p>
+          )}
+        </div>
+      );
+    }
+
     const textareaElement = (
       <div className="relative w-full">
         <textarea
@@ -75,6 +118,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {error && (
           <p className="text-status-destructive-light mt-1 text-xs">{error}</p>
         )}
+        {caption && (
+          <p className="text-text-secondary pl-2 text-xs">{caption}</p>
+        )}
       </div>
     );
 
@@ -87,7 +133,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div
         className={cn(
-          "flex",
+          "flex w-full",
           labelPosition === "top"
             ? "flex-col gap-2"
             : "flex-row items-start gap-4",

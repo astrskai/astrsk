@@ -574,6 +574,24 @@
   }
 }
 
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
 /* Custom Utilities - must be at top level, cannot be nested in @layer */
 @utility h-screen-minus-topbar {
   height: calc(100vh - var(--topbar-height));
@@ -605,6 +623,14 @@
 
 @utility animate-bounce-typing {
   animation: bounce-typing 1.4s ease-in-out infinite;
+}
+
+@utility animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+@utility animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
 }
 
 @layer base {

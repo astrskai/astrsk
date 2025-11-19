@@ -1,9 +1,10 @@
 import { initServices } from "@/app/services/init-services.ts";
 import { useAppStore } from "@/shared/stores/app-store.tsx";
 import { initStores } from "@/shared/stores/init-stores.ts";
-import { InitialLoading } from "@/shared/ui/initial-loading";
+import { useInitializationStore } from "@/shared/stores/initialization-store.tsx";
+import { InitializationScreen } from "@/shared/ui/initialization-screen";
 import { PwaRegister } from "@/app/providers/pwa-register";
-import { migrate } from "@/db/migrate.ts";
+import { migrate, isDatabaseInitialized } from "@/db/migrate.ts";
 import { logger } from "@/shared/lib/logger.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
@@ -67,56 +68,123 @@ async function initializeApp() {
   // Create root
   const root = createRoot(document.getElementById("root")!);
 
-  // Helper function to update progress
-  const updateProgress = (progress: number) => {
+  // Verify database migration status
+  const dbInitialized = await isDatabaseInitialized();
+
+  // Services and stores must ALWAYS be initialized (they're in-memory)
+  // Only database migration can be skipped if already completed
+
+  logger.debug(`🔍 Database initialized: ${dbInitialized}`);
+
+  // Track initialization time
+  const startTime = performance.now();
+  let shouldShowInitScreen = false;
+  let initScreenTimeout: number | null = null;
+
+  // Initialize steps in the store
+  const { initializeSteps, startStep, completeStep, failStep, saveLog } =
+    useInitializationStore.getState();
+
+  // Define all initialization steps
+  initializeSteps([
+    { id: "database-init", label: "Initialize database" },
+    { id: "migration-schema", label: "Setup migration schema" },
+    { id: "check-migrations", label: "Check pending migrations" },
+    { id: "run-migrations", label: "Run database migrations" },
+    { id: "asset-service", label: "Initialize asset service" },
+    { id: "api-service", label: "Initialize API service" },
+    { id: "agent-service", label: "Initialize agent service" },
+    { id: "node-services", label: "Initialize node services" },
+    { id: "vibe-service", label: "Initialize vibe service" },
+    { id: "flow-service", label: "Initialize flow service" },
+    { id: "image-service", label: "Initialize image service" },
+    { id: "card-service", label: "Initialize card service" },
+    { id: "session-service", label: "Initialize session service" },
+    { id: "api-connections", label: "Load API connections" },
+    { id: "free-provider", label: "Setup free AI provider (if needed)" },
+    { id: "check-sessions", label: "Check existing sessions" },
+    { id: "default-sessions", label: "Import default sessions (new users)" },
+    { id: "backgrounds", label: "Load background assets" },
+  ]);
+
+  // Helper function to render initialization screen
+  const renderInitScreen = () => {
+    if (!shouldShowInitScreen) return;
     root.render(
       <StrictMode>
-        <div className="bg-background-screen flex h-dvh items-center justify-center">
-          <InitialLoading progress={progress} />
-        </div>
+        <InitializationScreen />
       </StrictMode>,
     );
   };
 
-  // Helper function to show error
-  const showError = (errorMessage: string) => {
-    root.render(
-      <StrictMode>
-        <div className="bg-background-screen flex h-dvh items-center justify-center">
-          <div className="flex flex-col items-center gap-4 p-8">
-            <div className="text-red-500 text-xl font-semibold">
-              Initialization Failed
-            </div>
-            <div className="text-gray-400 text-sm max-w-md text-center">
-              {errorMessage}
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </StrictMode>,
-    );
+  // Progress callback for all initialization functions
+  const onProgress = (
+    stepId: string,
+    status: "start" | "success" | "warning" | "error",
+    error?: string,
+  ) => {
+    if (status === "start") {
+      startStep(stepId);
+    } else if (status === "success") {
+      completeStep(stepId);
+    } else if (status === "warning") {
+      failStep(stepId, error || "Unknown warning");
+    } else if (status === "error") {
+      failStep(stepId, error || "Unknown error");
+    }
+    renderInitScreen();
   };
 
   try {
-    // Start: 0%
-    updateProgress(0);
+    // Show initialization screen after 1 second if still initializing
+    initScreenTimeout = window.setTimeout(() => {
+      shouldShowInitScreen = true;
+      renderInitScreen();
+    }, 1000);
 
-    // Step 1: Migrate database (0% → 33%)
-    await migrate();
-    updateProgress(33);
+    // Step 1: Migrate database (only if not already done)
+    if (!dbInitialized) {
+      logger.debug("🔨 Running database migrations...");
+      await migrate(onProgress);
+    } else {
+      logger.debug("⏭️ Database already migrated, skipping migration steps");
+      // Mark migration steps as success immediately
+      onProgress?.("database-init", "start");
+      onProgress?.("database-init", "success");
+      onProgress?.("migration-schema", "start");
+      onProgress?.("migration-schema", "success");
+      onProgress?.("check-migrations", "start");
+      onProgress?.("check-migrations", "success");
+      onProgress?.("run-migrations", "start");
+      onProgress?.("run-migrations", "success");
+    }
 
-    // Step 2: Init services (33% → 66%)
-    await initServices();
-    updateProgress(66);
+    // Step 2: Init services (ALWAYS run - in-memory initialization)
+    logger.debug("🔧 Initializing services...");
+    await initServices(onProgress);
 
-    // Step 3: Init stores (66% → 100%)
-    await initStores();
-    updateProgress(100);
+    // Step 3: Init stores (ALWAYS run - loads data into memory)
+    logger.debug("📦 Initializing stores...");
+    await initStores(onProgress);
+
+    // Calculate initialization time
+    const initTime = performance.now() - startTime;
+    logger.debug(`✅ Initialization completed in ${Math.round(initTime)}ms`);
+
+    // Save initialization log only on first run
+    if (!dbInitialized) {
+      saveLog(Math.round(initTime));
+    }
+
+    // Clear timeout if initialization finished quickly
+    if (initScreenTimeout) {
+      clearTimeout(initScreenTimeout);
+    }
+
+    // If we showed the init screen, wait a bit to show completion
+    if (shouldShowInitScreen) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
 
     // Render app
     if (isConvexReady && convex) {
@@ -146,11 +214,8 @@ async function initializeApp() {
     }
   } catch (error) {
     logger.error("Failed to initialize app:", error);
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : "An unknown error occurred during initialization";
-    showError(errorMessage);
+    // Error screen is already rendered by InitializationScreen
+    renderInitScreen();
   }
 }
 initializeApp();

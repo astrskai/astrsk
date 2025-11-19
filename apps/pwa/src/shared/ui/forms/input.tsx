@@ -14,6 +14,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   labelPosition?: "top" | "left" | "inner";
   helpTooltip?: string;
   helperText?: string;
+  caption?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -26,6 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       required,
       helpTooltip,
       helperText,
+      caption,
       ...props
     },
     ref,
@@ -75,6 +77,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {/* Helper text */}
           {!error && helperText && (
             <p className="text-text-secondary mt-1 text-xs">{helperText}</p>
+          )}
+          {caption && (
+            <p className="text-text-secondary mt-1 pl-2 text-xs">{caption}</p>
           )}
         </div>
       );

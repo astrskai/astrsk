@@ -10,62 +10,89 @@ import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { VibeSessionService } from "@/app/services/vibe-session-service";
 
-export async function initServices(): Promise<void> {
-  // Common
-  AssetService.init();
+export async function initServices(
+  onProgress?: (service: string, status: "start" | "success" | "error", error?: string) => void,
+): Promise<void> {
+  try {
+    // Common
+    onProgress?.("asset-service", "start");
+    AssetService.init();
+    onProgress?.("asset-service", "success");
 
-  // API
-  ApiService.init();
+    // API
+    onProgress?.("api-service", "start");
+    ApiService.init();
+    onProgress?.("api-service", "success");
 
-  // Agent
-  AgentService.init();
+    // Agent
+    onProgress?.("agent-service", "start");
+    AgentService.init();
+    onProgress?.("agent-service", "success");
 
-  // Node Data Services
-  DataStoreNodeService.init();
-  IfNodeService.init();
+    // Node Data Services
+    onProgress?.("node-services", "start");
+    DataStoreNodeService.init();
+    IfNodeService.init();
+    onProgress?.("node-services", "success");
 
-  // Vibe Session Service
-  VibeSessionService.init();
+    // Vibe Session Service
+    onProgress?.("vibe-service", "start");
+    VibeSessionService.init();
+    onProgress?.("vibe-service", "success");
 
-  // Flow
-  FlowService.init(
-    AgentService.agentRepo,
-    AgentService.agentRepo,
-    AgentService.agentRepo,
-  );
+    // Flow
+    onProgress?.("flow-service", "start");
+    FlowService.init(
+      AgentService.agentRepo,
+      AgentService.agentRepo,
+      AgentService.agentRepo,
+    );
+    onProgress?.("flow-service", "success");
 
-  // Generated Image - Initialize BEFORE CardService since CardService depends on it
-  GeneratedImageService.init(
-    AssetService.saveFileToAsset,
-    AssetService.deleteAsset,
-  );
+    // Generated Image - Initialize BEFORE CardService since CardService depends on it
+    onProgress?.("image-service", "start");
+    GeneratedImageService.init(
+      AssetService.saveFileToAsset,
+      AssetService.deleteAsset,
+    );
+    onProgress?.("image-service", "success");
 
-  // Card - Now can use GeneratedImageService.generatedImageRepo
-  CardService.init(
-    AssetService.assetRepo,
-    AssetService.saveFileToAsset,
-    AssetService.cloneAsset,
-    GeneratedImageService.generatedImageRepo,
-  );
+    // Card - Now can use GeneratedImageService.generatedImageRepo
+    onProgress?.("card-service", "start");
+    CardService.init(
+      AssetService.assetRepo,
+      AssetService.saveFileToAsset,
+      AssetService.cloneAsset,
+      GeneratedImageService.generatedImageRepo,
+    );
+    onProgress?.("card-service", "success");
 
-  // Session
-  TurnService.init();
-  BackgroundService.init(
-    AssetService.saveFileToAsset,
-    AssetService.deleteAsset,
-  );
-  SessionService.init(
-    TurnService.turnRepo,
-    CardService.getCard,
-    FlowService.exportFlowWithNodes,
-    CardService.exportCardToFile,
-    BackgroundService.getBackground,
-    AssetService.getAsset,
-    TurnService.getTurn,
-    FlowService.importFlowWithNodes,
-    CardService.importCardFromFile,
-    BackgroundService.saveFileToBackground,
-    FlowService.flowRepo,
-    FlowService.getModelsFromFlowFile,
-  );
+    // Session
+    onProgress?.("session-service", "start");
+    TurnService.init();
+    BackgroundService.init(
+      AssetService.saveFileToAsset,
+      AssetService.deleteAsset,
+    );
+    SessionService.init(
+      TurnService.turnRepo,
+      CardService.getCard,
+      FlowService.exportFlowWithNodes,
+      CardService.exportCardToFile,
+      BackgroundService.getBackground,
+      AssetService.getAsset,
+      TurnService.getTurn,
+      FlowService.importFlowWithNodes,
+      CardService.importCardFromFile,
+      BackgroundService.saveFileToBackground,
+      FlowService.flowRepo,
+      FlowService.getModelsFromFlowFile,
+    );
+    onProgress?.("session-service", "success");
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    // Report error for the current service being initialized
+    onProgress?.("services-init", "error", errorMessage);
+    throw error;
+  }
 }

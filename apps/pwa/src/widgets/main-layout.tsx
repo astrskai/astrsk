@@ -18,18 +18,12 @@ import {
 } from "@/shared/ui";
 import { isElectronEnvironment } from "@/shared/lib/environment";
 import { ThemeProvider } from "@/app/providers/theme-provider";
-// import { SidebarLeftProvider } from "@/widgets/both-sidebar";
-// import { LeftNavigationMobile } from "@/widgets/collapsible-sidebar/left-navigation-mobile";
+import {
+  ScrollContainerProvider,
+  useScrollContainer,
+} from "@/shared/contexts/scroll-container-context";
 import { cn } from "@/shared/lib";
-// import {
-//   CollapsibleSidebar,
-//   CollapsibleSidebarTrigger,
-// } from "@/widgets/collapsible-sidebar";
 import { FixedNav } from "@/widgets/fixed-nav";
-// import { SidebarInset } from "@/widgets/both-sidebar";
-// import { MobileNavigationContext } from "@/shared/stores/mobile-navigation-context";
-// import CreateSessionPage from "@/features/session/create-session-page";
-// import { createPortal } from "react-dom";
 
 export function MainLayout({
   children,
@@ -140,39 +134,56 @@ export function MainLayout({
 
   return (
     <ThemeProvider>
-      <div
-        className={cn(
-          "h-dvh max-h-dvh min-h-dvh w-full",
-          "flex flex-col antialiased",
-        )}
-      >
-        <LoadingOverlay />
-        {/* Electron: TopBar (window controls), Web: WebTopBar (mobile menu, root page only) */}
-        {isElectron ? <TopBar /> : isRootPage && <WebTopBar />}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Fixed sidebar - always visible on desktop, independent of CollapsibleSidebar state */}
-          <FixedNav />
-
-          {/* Collapsible navigation area */}
-          <div className="flex flex-1 overflow-hidden">
-            {/* <SidebarLeftProvider> */}
-            <TooltipProvider delayDuration={0}>
-              {/* <CollapsibleSidebar />
-              <CollapsibleSidebarTrigger /> */}
-              <main className="relative z-0 flex flex-1 flex-col overflow-y-auto">
-                {children}
-              </main>
-              <Toaster
-                expand
-                closeButton
-                className="!z-[9999]"
-                position="top-right"
-              />
-            </TooltipProvider>
-            {/* </SidebarLeftProvider> */}
-          </div>
-        </div>
-      </div>
+      <ScrollContainerProvider>
+        <MainLayoutContent isElectron={isElectron} isRootPage={isRootPage}>
+          {children}
+        </MainLayoutContent>
+      </ScrollContainerProvider>
     </ThemeProvider>
+  );
+}
+
+function MainLayoutContent({
+  children,
+  isElectron,
+  isRootPage,
+}: {
+  children: React.ReactNode;
+  isElectron: boolean;
+  isRootPage: boolean;
+}) {
+  const { scrollContainerRef } = useScrollContainer();
+
+  return (
+    <div
+      className={cn(
+        "h-dvh max-h-dvh min-h-dvh w-full",
+        "flex flex-col antialiased",
+      )}
+    >
+      <LoadingOverlay />
+      {/* Electron: TopBar (window controls), Web: WebTopBar (mobile menu, root page only) */}
+      {isElectron ? <TopBar /> : isRootPage && <WebTopBar />}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Fixed sidebar - always visible on desktop, independent of CollapsibleSidebar state */}
+        <FixedNav />
+
+        {/* Main content area with scroll */}
+        <TooltipProvider delayDuration={0}>
+          <main
+            ref={scrollContainerRef}
+            className="relative z-0 flex flex-1 flex-col overflow-y-auto"
+          >
+            {children}
+          </main>
+          <Toaster
+            expand
+            closeButton
+            className="!z-[9999]"
+            position="top-right"
+          />
+        </TooltipProvider>
+      </div>
+    </div>
   );
 }
