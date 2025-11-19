@@ -146,8 +146,6 @@ This project uses the following third-party software. The full text of each lice
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 20 * 1024 * 1024, // 20MB
-        navigateFallback: "/index.html", // SPA fallback for production
-        navigateFallbackDenylist: [/^\/api/, /\.[^/]+$/], // Exclude API calls and files with extensions
       },
 
       devOptions: {
