@@ -3,6 +3,7 @@
 import { Drizzle } from "@/db/drizzle";
 import migrations from "@/db/migrations/migrations.json";
 import { logger } from "@/shared/lib";
+import { useMigrationLogStore } from "@/shared/stores/migration-log-store";
 
 const MIGRATION_TABLE = "__drizzle_migrations";
 const MIGRATION_SCHEMA = "drizzle";
@@ -31,13 +32,15 @@ export async function listAllTables(): Promise<void> {
 }
 
 /**
- * Check if database has been initialized by verifying:
- * 1. Migration table exists
- * 2. Migration records exist
- * 3. Essential application tables exist (sessions, flows, etc.)
- * This is used to detect if initialization is truly needed (e.g., after cache clear)
+ * Check if database has pending migrations by verifying:
+ * 1. Migration table exists (if not, migrations needed)
+ * 2. Essential application tables exist (if not, migrations needed)
+ * 3. Unexecuted migration files exist (if yes, migrations needed)
+ *
+ * Returns true if migrations are needed, false otherwise.
+ * This ensures app updates with new migration files will execute them.
  */
-export async function isDatabaseInitialized(): Promise<boolean> {
+export async function hasPendingMigrations(): Promise<boolean> {
   try {
     const db = await Drizzle.getInstance();
 
@@ -52,24 +55,11 @@ export async function isDatabaseInitialized(): Promise<boolean> {
 
     const tableExists = tableExistsResult.rows[0]?.table_exists === true;
     if (!tableExists) {
-      logger.debug("❌ Migration table does not exist");
-      return false;
+      logger.debug("✅ Migration table does not exist - migrations needed");
+      return true; // Migrations needed
     }
 
-    // Step 2: Check migration records
-    const recordsResult = await db.execute(`
-      SELECT COUNT(*) as count
-      FROM "${MIGRATION_SCHEMA}"."${MIGRATION_TABLE}"
-    `);
-
-    const recordCount = Number(recordsResult.rows[0]?.count || 0);
-
-    if (recordCount === 0) {
-      logger.debug("❌ No migration records found");
-      return false;
-    }
-
-    // Step 3: Check essential application tables
+    // Step 2: Check essential application tables
     // These tables should exist if migrations ran successfully
     const essentialTables = [
       'sessions',
@@ -90,17 +80,39 @@ export async function isDatabaseInitialized(): Promise<boolean> {
     const missingTables = essentialTables.filter(t => !foundTables.includes(t));
 
     if (missingTables.length > 0) {
-      logger.warn(`❌ Missing essential tables: ${missingTables.join(', ')}`);
-      return false;
+      logger.warn(`✅ Missing essential tables: ${missingTables.join(', ')} - migrations needed`);
+      return true; // Migrations needed
     }
 
-    // All checks passed - database is initialized
-    return true;
-  } catch (error) {
-    // If any error occurs, assume database is not initialized
-    logger.error("❌ Error checking database initialization:", error);
+    // Step 3: Check for unexecuted migration files
+    const executedHashes = await getMigratedHashes();
+    const pendingMigrations = migrations.filter(
+      (migration) => !executedHashes.includes(migration.hash),
+    );
+
+    if (pendingMigrations.length > 0) {
+      logger.debug(`✅ Found ${pendingMigrations.length} pending migration(s) - migrations needed`);
+      return true; // Migrations needed
+    }
+
+    // All checks passed - no migrations needed
+    logger.debug("⏭️ No pending migrations found");
     return false;
+  } catch (error) {
+    // If any error occurs, assume migrations are needed (safe default)
+    logger.error("⚠️ Error checking pending migrations, will run migrations:", error);
+    return true;
   }
+}
+
+/**
+ * @deprecated Use hasPendingMigrations() instead
+ * Check if database has been initialized.
+ * This function is kept for backward compatibility but returns the inverse of hasPendingMigrations.
+ */
+export async function isDatabaseInitialized(): Promise<boolean> {
+  const pending = await hasPendingMigrations();
+  return !pending;
 }
 
 async function ensureMigrationsSchema() {
@@ -166,6 +178,18 @@ async function recordMigration(hash: string) {
   `);
 }
 
+// Helper to extract filename from folderMillis timestamp
+function getFileNameFromTimestamp(folderMillis: number): string {
+  const date = new Date(folderMillis);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}${month}${day}${hours}${minutes}${seconds}`;
+}
+
 export async function migrate(
   onProgress?: (
     step: string,
@@ -174,6 +198,11 @@ export async function migrate(
   ) => void,
 ) {
   let currentStep: string | undefined;
+
+  // Start migration log
+  const { startMigrationLog, recordMigration: recordMigrationLog, finalizeMigrationLog } =
+    useMigrationLogStore.getState();
+
   try {
     // Get db instance
     currentStep = "database-init";
@@ -207,19 +236,32 @@ export async function migrate(
     logger.debug(`📦 Found ${pendingMigrations.length} pending migrations`);
     onProgress?.(currentStep, "success");
 
+    // Start migration log only if there are migrations to execute
+    startMigrationLog();
+
     // Execute migrations in sequence
     currentStep = "run-migrations";
     onProgress?.(currentStep, "start");
     for (const migration of pendingMigrations) {
+      const migrationStartTime = performance.now();
       logger.debug(`⚡ Executing migration: ${migration.hash}`);
+
+      // Generate filename from folderMillis
+      const fileName = getFileNameFromTimestamp(migration.folderMillis);
+
       try {
         // Execute each SQL statement in sequence
         for (const sql of migration.sql) {
           await db.execute(sql);
         }
 
-        // Record successful migration
+        // Record successful migration in DB
         await recordMigration(migration.hash);
+
+        // Record in migration log (with SQL statements)
+        const duration = Math.round(performance.now() - migrationStartTime);
+        recordMigrationLog(migration.hash, fileName, duration, "success", undefined, migration.sql);
+
         logger.debug(`✅ Successfully completed migration: ${migration.hash}`);
       } catch (error) {
         const errorMessage =
@@ -228,12 +270,23 @@ export async function migrate(
           `❌ Failed to execute migration ${migration.hash}:`,
           error,
         );
+
+        // Record failed migration in log (with SQL statements)
+        const duration = Math.round(performance.now() - migrationStartTime);
+        recordMigrationLog(migration.hash, fileName, duration, "error", errorMessage, migration.sql);
+
+        // Finalize log even on error
+        finalizeMigrationLog();
+
         onProgress?.(currentStep, "error", errorMessage);
         throw error;
       }
     }
     logger.debug("🎉 All migrations completed successfully");
     onProgress?.(currentStep, "success");
+
+    // Finalize migration log
+    finalizeMigrationLog();
   } catch (error) {
     logger.error("Migration error:", error);
     const msg = error instanceof Error ? error.message : String(error);

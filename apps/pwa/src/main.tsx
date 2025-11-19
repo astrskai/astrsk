@@ -4,7 +4,7 @@ import { initStores } from "@/shared/stores/init-stores.ts";
 import { useInitializationStore } from "@/shared/stores/initialization-store.tsx";
 import { InitializationScreen } from "@/shared/ui/initialization-screen";
 import { PwaRegister } from "@/app/providers/pwa-register";
-import { migrate, isDatabaseInitialized } from "@/db/migrate.ts";
+import { migrate, hasPendingMigrations } from "@/db/migrate.ts";
 import { logger } from "@/shared/lib/logger.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
@@ -68,13 +68,13 @@ async function initializeApp() {
   // Create root
   const root = createRoot(document.getElementById("root")!);
 
-  // Verify database migration status
-  const dbInitialized = await isDatabaseInitialized();
+  // Check if database has pending migrations
+  const needsMigration = await hasPendingMigrations();
 
   // Services and stores must ALWAYS be initialized (they're in-memory)
-  // Only database migration can be skipped if already completed
+  // Database migration runs only when there are pending migrations (new install or app update)
 
-  logger.debug(`🔍 Database initialized: ${dbInitialized}`);
+  logger.debug(`🔍 Pending migrations: ${needsMigration}`);
 
   // Track initialization time
   const startTime = performance.now();
@@ -142,12 +142,12 @@ async function initializeApp() {
       renderInitScreen();
     }, 1000);
 
-    // Step 1: Migrate database (only if not already done)
-    if (!dbInitialized) {
+    // Step 1: Migrate database (only if there are pending migrations)
+    if (needsMigration) {
       logger.debug("🔨 Running database migrations...");
       await migrate(onProgress);
     } else {
-      logger.debug("⏭️ Database already migrated, skipping migration steps");
+      logger.debug("⏭️ No pending migrations, skipping migration steps");
       // Mark migration steps as success immediately
       onProgress?.("database-init", "start");
       onProgress?.("database-init", "success");
@@ -171,8 +171,8 @@ async function initializeApp() {
     const initTime = performance.now() - startTime;
     logger.debug(`✅ Initialization completed in ${Math.round(initTime)}ms`);
 
-    // Save initialization log only on first run
-    if (!dbInitialized) {
+    // Save initialization log only when migrations were executed (first run or app update)
+    if (needsMigration) {
       saveLog(Math.round(initTime));
     }
 
@@ -218,8 +218,8 @@ async function initializeApp() {
   } catch (error) {
     logger.error("Failed to initialize app:", error);
 
-    // On failure, persist the current step states as a log (first-run only)
-    if (!dbInitialized) {
+    // On failure, persist the current step states as a log (when migrations were attempted)
+    if (needsMigration) {
       const initTime = performance.now() - startTime;
       saveLog(Math.round(initTime));
     }
