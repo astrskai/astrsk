@@ -56,7 +56,7 @@
   ],
   "rewrites": [
     {
-      "source": "/:path((?!.*\\..*).*)",
+      "source": "/(.*)",
       "destination": "/"
     }
   ]
