@@ -144,7 +144,7 @@ async function initializeApp() {
 export async function migrate(
   onProgress?: (
     step: string,
-    status: "start" | "success" | "error",
+    status: "start" | "success" | "warning" | "error",
     error?: string,
   ) => void,
 ) {
@@ -173,7 +173,7 @@ export async function migrate(
 export async function initServices(
   onProgress?: (
     service: string,
-    status: "start" | "success" | "error",
+    status: "start" | "success" | "warning" | "error",
     error?: string,
   ) => void,
 ): Promise<void> {
@@ -208,7 +208,7 @@ export async function initServices(
 export async function initStores(
   onProgress?: (
     step: string,
-    status: "start" | "success" | "error",
+    status: "start" | "success" | "warning" | "error",
     error?: string,
   ) => void,
 ): Promise<void> {
@@ -354,24 +354,40 @@ interface InitializationState {
   initializeSteps: (steps) => void; // Initialize step list
   startStep: (stepId) => void; // Start step (status: "running")
   completeStep: (stepId) => void; // Complete step (status: "success")
+  warnStep: (stepId, error) => void; // Warn step (status: "warning")
   failStep: (stepId, error) => void; // Fail step (status: "error")
   saveLog: (totalTime) => void; // Save log to localStorage
   reset: () => void; // Reset state
 }
 ```
 
-### InitializationStep
+### InitializationStep (Runtime)
 
 ```typescript
 interface InitializationStep {
   id: string; // Step ID (unique)
   label: string; // User-facing text
   status: "pending" | "running" | "success" | "error" | "warning";
-  error?: string; // Error message (on failure)
+  error?: string; // Error/warning message
   startedAt?: Date; // Start time
   completedAt?: Date; // Completion time
 }
 ```
+
+### PersistedInitializationStep (localStorage)
+
+```typescript
+interface PersistedInitializationStep {
+  id: string; // Step ID (unique)
+  label: string; // User-facing text
+  status: "pending" | "running" | "success" | "error" | "warning";
+  error?: string; // Error/warning message
+  startedAt?: string; // Start time (ISO 8601 string)
+  completedAt?: string; // Completion time (ISO 8601 string)
+}
+```
+
+**Note**: `PersistedInitializationStep` uses ISO string timestamps instead of Date objects because `JSON.stringify()` converts Date to string. This prevents type/runtime mismatches when loading logs from localStorage.
 
 ### InitializationLog (localStorage)
 
@@ -379,8 +395,9 @@ interface InitializationStep {
 interface InitializationLog {
   timestamp: string; // ISO 8601 format
   totalTime: number; // Total initialization time (ms)
-  hasError: boolean; // Has error
-  steps: InitializationStep[]; // Full step snapshot
+  hasError: boolean; // Has at least one error
+  hasWarning: boolean; // Has at least one warning (no errors)
+  steps: PersistedInitializationStep[]; // Full step snapshot (with ISO string timestamps)
 }
 ```
 

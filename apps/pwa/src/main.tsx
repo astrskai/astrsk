@@ -214,7 +214,18 @@ async function initializeApp() {
     }
   } catch (error) {
     logger.error("Failed to initialize app:", error);
-    // Error screen is already rendered by InitializationScreen
+
+    // On failure, persist the current step states as a log (first-run only)
+    if (!dbInitialized) {
+      const initTime = performance.now() - startTime;
+      saveLog(Math.round(initTime));
+    }
+
+    // Ensure the initialization screen (with error state) is visible
+    shouldShowInitScreen = true;
+    if (initScreenTimeout) {
+      clearTimeout(initScreenTimeout);
+    }
     renderInitScreen();
   }
 }
