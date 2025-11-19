@@ -6,7 +6,6 @@ import ChatInput from "./chat-input";
 import ChatMessageList from "./chat-message-list";
 import { toastError } from "@/shared/ui/toast";
 import { showErrorDetails } from "@/shared/stores/error-dialog-store";
-import { ErrorDetailsDialog } from "@/shared/ui/dialogs";
 
 import {
   createMessage,
@@ -728,9 +727,6 @@ export default function ChatMainArea({
           </div>
         </div>
       )}
-
-      {/* Error Details Dialog */}
-      <ErrorDetailsDialog />
     </div>
   );
 }
