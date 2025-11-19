@@ -1,5 +1,4 @@
 import { cn } from "@/shared/lib";
-import type { LucideIcon } from "lucide-react";
 import { MessageCircle, CircleAlert, EllipsisVertical } from "lucide-react";
 import { SessionPlaceholder } from "@/shared/assets/placeholders";
 import {
@@ -10,7 +9,7 @@ import {
 } from "@/shared/ui/dropdown-menu";
 
 export interface SessionAction {
-  icon: LucideIcon;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   onClick: (e: React.MouseEvent) => void;
   disabled?: boolean;
