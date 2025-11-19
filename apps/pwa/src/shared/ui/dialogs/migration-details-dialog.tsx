@@ -129,6 +129,7 @@ export function MigrationDetailsDialog() {
           : `Failed after ${migration.duration}ms`
       }
       size="xl"
+      isShowCloseButton={false}
       content={
         <div className="flex flex-col gap-4">
           {/* Status Badge */}
