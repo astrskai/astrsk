@@ -186,6 +186,9 @@ async function initializeApp() {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
+    // Mark app as ready (bypass MainLayout's PWA loading screen)
+    useAppStore.getState().setIsOfflineReady(true);
+
     // Render app
     if (isConvexReady && convex) {
       // Convex ready
