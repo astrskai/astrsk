@@ -11,7 +11,6 @@ import { useLocation } from "@tanstack/react-router";
 import { TopBar } from "@/widgets/top-bar";
 import { WebTopBar } from "@/widgets/web-top-bar";
 import {
-  InitialLoading,
   LoadingOverlay,
   Toaster,
   TooltipProvider,
@@ -89,45 +88,18 @@ export function MainLayout({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Show InstallPwa screen only in production for mobile non-standalone users
-  // deprecated since we don't have a install screen anymore
-  // if (isMobile && !isStandalone && !import.meta.env.DEV) {
-  //   return <InstallPwa canInstall={canInstall} install={install} />;
-  // }
-
   // Development mode: Log PWA status for debugging
   if (import.meta.env.DEV) {
-    console.log("[Dev Mode] PWA Install Screen bypassed:", {
+    console.log("[Dev Mode] PWA status:", {
       isStandalone,
       canInstall,
       isDev: import.meta.env.DEV,
     });
   }
 
-  // Loading PWA
-  const isOfflineReady = useAppStore.use.isOfflineReady();
-  if (!isOfflineReady) {
-    return (
-      <>
-        <TopBar />
-        <div className="bg-background-screen flex h-[calc(100dvh-var(--topbar-height))] items-center justify-center">
-          <InitialLoading isTimer />
-        </div>
-      </>
-    );
-  }
-
-  // Loading default - removed (now handled in main.tsx initStores)
-  // if (!defaultInitialized) {
-  //   return (
-  //     <>
-  //       <TopBar />
-  //       <div className="bg-background-screen flex h-[calc(100dvh-var(--topbar-height))] items-center justify-center">
-  //         <InitialLoading />
-  //       </div>
-  //     </>
-  //   );
-  // }
+  // Note: All initialization (DB migration, services, stores) is now handled in main.tsx
+  // The isOfflineReady flag is set to true after initialization completes
+  // PWA loading screen removed - initialization is shown via InitializationScreen in main.tsx
 
   const isElectron = isElectronEnvironment();
   const isRootPage = location.pathname === "/";
