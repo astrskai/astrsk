@@ -4,7 +4,7 @@ import {
   loadInitializationLog,
   clearInitializationLog,
   type InitializationLog,
-  type InitializationStep,
+  type PersistedInitializationStep,
 } from "@/shared/stores/initialization-store";
 import { showErrorDetails } from "@/shared/stores/error-dialog-store";
 import { TypoXLarge, TypoBase } from "@/shared/ui";
@@ -44,7 +44,7 @@ ${errorSteps ? `Errors:\n${errorSteps}` : "All steps completed successfully"}`;
     toast.success("Logs cleared");
   };
 
-  const handleStepClick = (step: InitializationStep) => {
+  const handleStepClick = (step: PersistedInitializationStep) => {
     console.log("handleStepClick", step);
     if (!step.error) return;
 
@@ -189,7 +189,7 @@ ${errorSteps ? `Errors:\n${errorSteps}` : "All steps completed successfully"}`;
               Initialization Steps ({log.steps.length})
             </TypoBase>
 
-            {log.steps.map((step: InitializationStep, index: number) => {
+            {log.steps.map((step: PersistedInitializationStep, index: number) => {
               const Icon =
                 step.status === "success"
                   ? CheckCircle2

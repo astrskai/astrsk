@@ -13,62 +13,72 @@ import { VibeSessionService } from "@/app/services/vibe-session-service";
 export async function initServices(
   onProgress?: (service: string, status: "start" | "success" | "error", error?: string) => void,
 ): Promise<void> {
+  let currentService: string | undefined;
   try {
     // Common
-    onProgress?.("asset-service", "start");
+    currentService = "asset-service";
+    onProgress?.(currentService, "start");
     AssetService.init();
-    onProgress?.("asset-service", "success");
+    onProgress?.(currentService, "success");
 
     // API
-    onProgress?.("api-service", "start");
+    currentService = "api-service";
+    onProgress?.(currentService, "start");
     ApiService.init();
-    onProgress?.("api-service", "success");
+    onProgress?.(currentService, "success");
 
     // Agent
-    onProgress?.("agent-service", "start");
+    currentService = "agent-service";
+    onProgress?.(currentService, "start");
     AgentService.init();
-    onProgress?.("agent-service", "success");
+    onProgress?.(currentService, "success");
 
     // Node Data Services
-    onProgress?.("node-services", "start");
+    currentService = "node-services";
+    onProgress?.(currentService, "start");
     DataStoreNodeService.init();
     IfNodeService.init();
-    onProgress?.("node-services", "success");
+    onProgress?.(currentService, "success");
 
     // Vibe Session Service
-    onProgress?.("vibe-service", "start");
+    currentService = "vibe-service";
+    onProgress?.(currentService, "start");
     VibeSessionService.init();
-    onProgress?.("vibe-service", "success");
+    onProgress?.(currentService, "success");
 
     // Flow
-    onProgress?.("flow-service", "start");
+    currentService = "flow-service";
+    onProgress?.(currentService, "start");
     FlowService.init(
       AgentService.agentRepo,
       AgentService.agentRepo,
       AgentService.agentRepo,
     );
-    onProgress?.("flow-service", "success");
+    onProgress?.(currentService, "success");
 
     // Generated Image - Initialize BEFORE CardService since CardService depends on it
-    onProgress?.("image-service", "start");
+    currentService = "image-service";
+    onProgress?.(currentService, "start");
     GeneratedImageService.init(
       AssetService.saveFileToAsset,
       AssetService.deleteAsset,
     );
-    onProgress?.("image-service", "success");
+    onProgress?.(currentService, "success");
 
     // Card - Now can use GeneratedImageService.generatedImageRepo
-    onProgress?.("card-service", "start");
+    currentService = "card-service";
+    onProgress?.(currentService, "start");
     CardService.init(
       AssetService.assetRepo,
       AssetService.saveFileToAsset,
       AssetService.cloneAsset,
       GeneratedImageService.generatedImageRepo,
     );
-    onProgress?.("card-service", "success");
+    onProgress?.(currentService, "success");
 
     // Session
-    onProgress?.("session-service", "start");
+    currentService = "session-service";
+    onProgress?.(currentService, "start");
     TurnService.init();
     BackgroundService.init(
       AssetService.saveFileToAsset,
@@ -88,11 +98,13 @@ export async function initServices(
       FlowService.flowRepo,
       FlowService.getModelsFromFlowFile,
     );
-    onProgress?.("session-service", "success");
+    onProgress?.(currentService, "success");
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    // Report error for the current service being initialized
-    onProgress?.("services-init", "error", errorMessage);
+    // Report error for the specific service that failed
+    if (currentService) {
+      onProgress?.(currentService, "error", errorMessage);
+    }
     throw error;
   }
 }

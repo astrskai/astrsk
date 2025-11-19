@@ -13,13 +13,15 @@ const OnboardingStepOnePage = () => {
     <div className={cn("absolute inset-0 top-[var(--topbar-height)] z-40")}>
       {/* Close */}
       <button
+        type="button"
+        aria-label="Close onboarding"
         className="text-text-subtle absolute top-4 right-4 z-50 cursor-pointer md:top-[34px] md:right-[40px]"
         onClick={() => {
           setActivePage(Page.Init);
           navigate({ to: "/settings/providers", replace: true });
         }}
       >
-        <X className="h-5 w-5" />
+        <X className="h-5 w-5" aria-hidden="true" />
       </button>
 
       {/* Main */}

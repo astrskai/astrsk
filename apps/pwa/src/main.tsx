@@ -82,7 +82,7 @@ async function initializeApp() {
   let initScreenTimeout: number | null = null;
 
   // Initialize steps in the store
-  const { initializeSteps, startStep, completeStep, failStep, saveLog } =
+  const { initializeSteps, startStep, completeStep, warnStep, failStep, saveLog } =
     useInitializationStore.getState();
 
   // Define all initialization steps
@@ -128,7 +128,7 @@ async function initializeApp() {
     } else if (status === "success") {
       completeStep(stepId);
     } else if (status === "warning") {
-      failStep(stepId, error || "Unknown warning");
+      warnStep(stepId, error || "Unknown warning");
     } else if (status === "error") {
       failStep(stepId, error || "Unknown error");
     }

@@ -24,11 +24,11 @@ const TAG_DEFAULT = [
   "Famous",
   "Anime",
   "Game",
-  "book",
+  "Book",
   "Movie & TV",
   "Celebrity",
   "Real",
-  "Non-Humab",
+  "Non-Human",
   "NSFW",
 ];
 
@@ -114,8 +114,6 @@ const CharacterDetailPage = () => {
   const { data: character } = useQuery(
     cardQueries.detail(characterIdEntity.toString()),
   );
-
-  console.log(character?.props.lorebook);
 
   // Type guard to ensure character is CharacterCard
   const characterCard = character instanceof CharacterCard ? character : null;

@@ -12,12 +12,22 @@ export interface InitializationStep {
   completedAt?: Date;
 }
 
+// Persisted version with Date fields serialized as ISO strings
+export interface PersistedInitializationStep {
+  id: string;
+  label: string;
+  status: InitializationStepStatus;
+  error?: string;
+  startedAt?: string;
+  completedAt?: string;
+}
+
 export interface InitializationLog {
   timestamp: string;
   totalTime: number;
   hasError: boolean;
   hasWarning: boolean;
-  steps: InitializationStep[];
+  steps: PersistedInitializationStep[];
 }
 
 // Step groups for simplified UI
@@ -77,6 +87,7 @@ interface InitializationState {
   initializeSteps: (steps: Omit<InitializationStep, "status">[]) => void;
   startStep: (stepId: string) => void;
   completeStep: (stepId: string) => void;
+  warnStep: (stepId: string, error: string) => void;
   failStep: (stepId: string, error: string) => void;
   saveLog: (totalTime: number) => void;
   reset: () => void;
@@ -163,6 +174,24 @@ const useInitializationStoreBase = create<InitializationState>((set) => ({
       };
     }),
 
+  warnStep: (stepId, error) =>
+    set((state) => {
+      const stepIndex = state.steps.findIndex((s) => s.id === stepId);
+      if (stepIndex === -1) return state;
+
+      const newSteps = [...state.steps];
+      newSteps[stepIndex] = {
+        ...newSteps[stepIndex],
+        status: "warning",
+        error,
+        completedAt: new Date(),
+      };
+
+      return {
+        steps: newSteps,
+      };
+    }),
+
   failStep: (stepId, error) =>
     set((state) => {
       const stepIndex = state.steps.findIndex((s) => s.id === stepId);
@@ -185,12 +214,20 @@ const useInitializationStoreBase = create<InitializationState>((set) => ({
     set((state) => {
       const hasError = state.steps.some((s) => s.status === "error");
       const hasWarning = state.steps.some((s) => s.status === "warning");
+
+      // Convert Date fields to ISO strings for persistence
+      const persistedSteps: PersistedInitializationStep[] = state.steps.map((step) => ({
+        ...step,
+        startedAt: step.startedAt?.toISOString(),
+        completedAt: step.completedAt?.toISOString(),
+      }));
+
       const log: InitializationLog = {
         timestamp: new Date().toISOString(),
         totalTime,
         hasError,
         hasWarning,
-        steps: state.steps,
+        steps: persistedSteps,
       };
       saveInitializationLog(log);
       return state;

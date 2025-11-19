@@ -20,8 +20,15 @@ export async function initStores(
     onProgress?.("api-connections", "error", errorMessage);
     // Continue with background initialization even if provider setup fails
     onProgress?.("backgrounds", "start");
-    await fetchBackgrounds();
-    onProgress?.("backgrounds", "success");
+    try {
+      await fetchBackgrounds();
+      onProgress?.("backgrounds", "success");
+    } catch (bgError) {
+      const bgErrorMessage =
+        bgError instanceof Error ? bgError.message : String(bgError);
+      console.error("Failed to fetch backgrounds:", bgError);
+      onProgress?.("backgrounds", "error", bgErrorMessage);
+    }
     return;
   }
 
@@ -99,8 +106,15 @@ export async function initStores(
     onProgress?.("check-sessions", "error", errorMessage);
     // Continue with background initialization even if session setup fails
     onProgress?.("backgrounds", "start");
-    await fetchBackgrounds();
-    onProgress?.("backgrounds", "success");
+    try {
+      await fetchBackgrounds();
+      onProgress?.("backgrounds", "success");
+    } catch (bgError) {
+      const bgErrorMessage =
+        bgError instanceof Error ? bgError.message : String(bgError);
+      console.error("Failed to fetch backgrounds:", bgError);
+      onProgress?.("backgrounds", "error", bgErrorMessage);
+    }
     return;
   }
 

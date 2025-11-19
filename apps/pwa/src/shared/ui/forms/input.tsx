@@ -111,6 +111,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {!error && helperText && (
           <p className="text-text-secondary mt-1 text-xs">{helperText}</p>
         )}
+        {/* Caption */}
+        {caption && (
+          <p className="text-text-secondary mt-1 pl-2 text-xs">{caption}</p>
+        )}
       </div>
     );
 

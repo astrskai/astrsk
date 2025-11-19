@@ -173,21 +173,25 @@ export async function migrate(
     error?: string,
   ) => void,
 ) {
+  let currentStep: string | undefined;
   try {
     // Get db instance
-    onProgress?.("database-init", "start");
+    currentStep = "database-init";
+    onProgress?.(currentStep, "start");
     const db = await Drizzle.getInstance();
     logger.debug("🚀 Starting pglite migration...");
-    onProgress?.("database-init", "success");
+    onProgress?.(currentStep, "success");
 
     // Ensure migrations schema and table exists
-    onProgress?.("migration-schema", "start");
+    currentStep = "migration-schema";
+    onProgress?.(currentStep, "start");
     await ensureMigrationsSchema();
     await ensureMigrationsTable();
-    onProgress?.("migration-schema", "success");
+    onProgress?.(currentStep, "success");
 
     // Get already executed migrations
-    onProgress?.("check-migrations", "start");
+    currentStep = "check-migrations";
+    onProgress?.(currentStep, "start");
     const executedHashes = await getMigratedHashes();
 
     // Filter and execute pending migrations
@@ -196,15 +200,16 @@ export async function migrate(
     );
     if (pendingMigrations.length === 0) {
       logger.debug("✨ No pending migrations found.");
-      onProgress?.("check-migrations", "success");
+      onProgress?.(currentStep, "success");
       onProgress?.("run-migrations", "success"); // Mark as success when skipped
       return;
     }
     logger.debug(`📦 Found ${pendingMigrations.length} pending migrations`);
-    onProgress?.("check-migrations", "success");
+    onProgress?.(currentStep, "success");
 
     // Execute migrations in sequence
-    onProgress?.("run-migrations", "start");
+    currentStep = "run-migrations";
+    onProgress?.(currentStep, "start");
     for (const migration of pendingMigrations) {
       logger.debug(`⚡ Executing migration: ${migration.hash}`);
       try {
@@ -223,14 +228,18 @@ export async function migrate(
           `❌ Failed to execute migration ${migration.hash}:`,
           error,
         );
-        onProgress?.("run-migrations", "error", errorMessage);
+        onProgress?.(currentStep, "error", errorMessage);
         throw error;
       }
     }
     logger.debug("🎉 All migrations completed successfully");
-    onProgress?.("run-migrations", "success");
+    onProgress?.(currentStep, "success");
   } catch (error) {
     logger.error("Migration error:", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    if (currentStep) {
+      onProgress?.(currentStep, "error", msg);
+    }
     throw error;
   }
 }

@@ -118,8 +118,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {error && (
           <p className="text-status-destructive-light mt-1 text-xs">{error}</p>
         )}
-        {caption && (
-          <p className="text-text-secondary pl-2 text-xs">{caption}</p>
+        {/* Caption */}
+        {!error && caption && (
+          <p className="text-text-secondary mt-1 pl-2 text-xs">{caption}</p>
         )}
       </div>
     );
