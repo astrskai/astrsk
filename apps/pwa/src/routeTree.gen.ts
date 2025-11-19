@@ -31,6 +31,7 @@ import { Route as LayoutSettingsLegalRefundPolicyRouteImport } from './routes/_l
 import { Route as LayoutSettingsLegalPrivacyPolicyRouteImport } from './routes/_layout/settings/legal/privacy-policy'
 import { Route as LayoutSettingsLegalOssNoticeRouteImport } from './routes/_layout/settings/legal/oss-notice'
 import { Route as LayoutSettingsLegalContentPolicyRouteImport } from './routes/_layout/settings/legal/content-policy'
+import { Route as LayoutSettingsAdvancedMigrationHistoryRouteImport } from './routes/_layout/settings/advanced/migration-history'
 import { Route as LayoutSettingsAdvancedInitializationLogsRouteImport } from './routes/_layout/settings/advanced/initialization-logs'
 import { Route as LayoutSettingsAccountCreditUsageRouteImport } from './routes/_layout/settings/account/credit-usage'
 import { Route as LayoutAssetsWorkflowsWorkflowIdRouteImport } from './routes/_layout/assets/workflows/$workflowId'
@@ -159,6 +160,12 @@ const LayoutSettingsLegalContentPolicyRoute =
     path: '/legal/content-policy',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
+const LayoutSettingsAdvancedMigrationHistoryRoute =
+  LayoutSettingsAdvancedMigrationHistoryRouteImport.update({
+    id: '/advanced/migration-history',
+    path: '/advanced/migration-history',
+    getParentRoute: () => LayoutSettingsRoute,
+  } as any)
 const LayoutSettingsAdvancedInitializationLogsRoute =
   LayoutSettingsAdvancedInitializationLogsRouteImport.update({
     id: '/advanced/initialization-logs',
@@ -220,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
+  '/settings/advanced/migration-history': typeof LayoutSettingsAdvancedMigrationHistoryRoute
   '/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
   '/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
@@ -249,6 +257,7 @@ export interface FileRoutesByTo {
   '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
+  '/settings/advanced/migration-history': typeof LayoutSettingsAdvancedMigrationHistoryRoute
   '/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
   '/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
@@ -281,6 +290,7 @@ export interface FileRoutesById {
   '/_layout/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/_layout/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/_layout/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
+  '/_layout/settings/advanced/migration-history': typeof LayoutSettingsAdvancedMigrationHistoryRoute
   '/_layout/settings/legal/content-policy': typeof LayoutSettingsLegalContentPolicyRoute
   '/_layout/settings/legal/oss-notice': typeof LayoutSettingsLegalOssNoticeRoute
   '/_layout/settings/legal/privacy-policy': typeof LayoutSettingsLegalPrivacyPolicyRoute
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/assets/workflows/$workflowId'
     | '/settings/account/credit-usage'
     | '/settings/advanced/initialization-logs'
+    | '/settings/advanced/migration-history'
     | '/settings/legal/content-policy'
     | '/settings/legal/oss-notice'
     | '/settings/legal/privacy-policy'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/assets/workflows/$workflowId'
     | '/settings/account/credit-usage'
     | '/settings/advanced/initialization-logs'
+    | '/settings/advanced/migration-history'
     | '/settings/legal/content-policy'
     | '/settings/legal/oss-notice'
     | '/settings/legal/privacy-policy'
@@ -373,6 +385,7 @@ export interface FileRouteTypes {
     | '/_layout/assets/workflows/$workflowId'
     | '/_layout/settings/account/credit-usage'
     | '/_layout/settings/advanced/initialization-logs'
+    | '/_layout/settings/advanced/migration-history'
     | '/_layout/settings/legal/content-policy'
     | '/_layout/settings/legal/oss-notice'
     | '/_layout/settings/legal/privacy-policy'
@@ -546,6 +559,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsLegalContentPolicyRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
+    '/_layout/settings/advanced/migration-history': {
+      id: '/_layout/settings/advanced/migration-history'
+      path: '/advanced/migration-history'
+      fullPath: '/settings/advanced/migration-history'
+      preLoaderRoute: typeof LayoutSettingsAdvancedMigrationHistoryRouteImport
+      parentRoute: typeof LayoutSettingsRoute
+    }
     '/_layout/settings/advanced/initialization-logs': {
       id: '/_layout/settings/advanced/initialization-logs'
       path: '/advanced/initialization-logs'
@@ -603,6 +623,7 @@ interface LayoutSettingsRouteChildren {
   LayoutSettingsIndexRoute: typeof LayoutSettingsIndexRoute
   LayoutSettingsAccountCreditUsageRoute: typeof LayoutSettingsAccountCreditUsageRoute
   LayoutSettingsAdvancedInitializationLogsRoute: typeof LayoutSettingsAdvancedInitializationLogsRoute
+  LayoutSettingsAdvancedMigrationHistoryRoute: typeof LayoutSettingsAdvancedMigrationHistoryRoute
   LayoutSettingsLegalContentPolicyRoute: typeof LayoutSettingsLegalContentPolicyRoute
   LayoutSettingsLegalOssNoticeRoute: typeof LayoutSettingsLegalOssNoticeRoute
   LayoutSettingsLegalPrivacyPolicyRoute: typeof LayoutSettingsLegalPrivacyPolicyRoute
@@ -619,6 +640,8 @@ const LayoutSettingsRouteChildren: LayoutSettingsRouteChildren = {
   LayoutSettingsAccountCreditUsageRoute: LayoutSettingsAccountCreditUsageRoute,
   LayoutSettingsAdvancedInitializationLogsRoute:
     LayoutSettingsAdvancedInitializationLogsRoute,
+  LayoutSettingsAdvancedMigrationHistoryRoute:
+    LayoutSettingsAdvancedMigrationHistoryRoute,
   LayoutSettingsLegalContentPolicyRoute: LayoutSettingsLegalContentPolicyRoute,
   LayoutSettingsLegalOssNoticeRoute: LayoutSettingsLegalOssNoticeRoute,
   LayoutSettingsLegalPrivacyPolicyRoute: LayoutSettingsLegalPrivacyPolicyRoute,

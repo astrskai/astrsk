@@ -83,6 +83,30 @@ export default function AdvancedPage() {
               </div>
             </div>
 
+            <div className="flex justify-between">
+              <div className="flex flex-col gap-2">
+                <TypoBase className="text-text-body font-semibold">
+                  View migration history
+                </TypoBase>
+
+                <div className="text-text-secondary text-[12px]">
+                  View history of database migrations executed during app updates,
+                  including timing and success/failure status
+                </div>
+              </div>
+              <div>
+                <button
+                  type="button"
+                  className="cursor-pointer p-2 hover:text-blue-200"
+                  onClick={() =>
+                    navigate({ to: "/settings/advanced/migration-history" })
+                  }
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
             <div className="hidden justify-between md:flex">
               <div className="flex flex-col gap-2">
                 <TypoBase className="text-text-body font-semibold">

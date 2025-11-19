@@ -1,6 +1,5 @@
 import { EllipsisVertical } from "lucide-react";
 import { cn } from "@/shared/lib";
-import type { LucideIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +9,7 @@ import {
 import { Button } from "@/shared/ui/forms";
 
 export interface FlowAction {
-  icon: LucideIcon;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   onClick: (e: React.MouseEvent) => void;
   disabled?: boolean;
