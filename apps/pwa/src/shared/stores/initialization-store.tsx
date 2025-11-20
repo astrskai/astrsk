@@ -42,6 +42,7 @@ export const STEP_GROUPS: StepGroup[] = [
     id: "database",
     label: "Database Setup",
     stepIds: [
+      "database-engine",
       "database-init",
       "migration-schema",
       "check-migrations",
