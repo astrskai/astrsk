@@ -4,10 +4,10 @@ import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { ApiConnection, ApiSource } from "@/entities/api/domain";
 
 export async function initStores(
-  onProgress?: (step: string, status: "start" | "success" | "warning" | "error", error?: string) => void,
+  onProgress: (step: string, status: "start" | "success" | "warning" | "error", error?: string) => void,
 ): Promise<void> {
   // Init astrsk.ai provider
-  onProgress?.("api-connections", "start");
+  onProgress("api-connections", "start");
   let apiConnections;
   try {
     apiConnections = (await ApiService.listApiConnection.execute({}))
@@ -104,6 +104,11 @@ export async function initStores(
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Failed to check sessions:", error);
     onProgress?.("check-sessions", "error", errorMessage);
+
+    // Skip default-sessions since we couldn't check existing sessions
+    onProgress?.("default-sessions", "start");
+    onProgress?.("default-sessions", "error", "Skipped due to session check failure");
+
     // Continue with background initialization even if session setup fails
     onProgress?.("backgrounds", "start");
     try {
