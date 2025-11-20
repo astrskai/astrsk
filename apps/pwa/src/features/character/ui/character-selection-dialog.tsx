@@ -78,7 +78,7 @@ const CharacterPreviewItem = ({
       >
         <CharacterPreview
           imageUrl={imageUrl}
-          title={card.props.title}
+          name={card.props.name || ""}
           summary={card.props.cardSummary}
           tags={card.props.tags || []}
           tokenCount={card.props.tokenCount}
@@ -105,14 +105,14 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
     <div className="flex flex-col gap-4">
       {/* Title */}
       <h3 className="hidden text-lg font-semibold text-gray-50 md:block">
-        {character.props.title}
+        {character.props.name || ""}
       </h3>
 
       {/* Character Image */}
       <div className="relative mx-auto aspect-[3/4] max-w-[200px] overflow-hidden rounded-lg md:max-w-xs">
         <img
           src={characterImageUrl || "/img/placeholder/character-card-image.png"}
-          alt={character.props.title}
+          alt={character.props.name || ""}
           className="h-full w-full object-cover"
         />
       </div>
@@ -250,8 +250,8 @@ export function CharacterSelectionDialog({
 
     const keyword = searchKeyword.toLowerCase();
     return characterCards.filter((card: CharacterCard) => {
-      const title = card.props.title?.toLowerCase() || "";
-      return title.includes(keyword);
+      const name = card.props.name?.toLowerCase() || "";
+      return name.includes(keyword);
     });
   }, [characterCards, searchKeyword]);
 
@@ -325,7 +325,7 @@ export function CharacterSelectionDialog({
               >
                 <ChevronLeft className="min-h-5 min-w-5" />
                 <h3 className="text-lg font-semibold text-gray-50">
-                  {mobileDetailCharacter.props.title}
+                  {mobileDetailCharacter.props.name || ""}
                 </h3>
               </button>
             </div>

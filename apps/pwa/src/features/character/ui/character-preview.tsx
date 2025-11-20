@@ -10,7 +10,7 @@ import {
 } from "@/shared/ui/dropdown-menu";
 
 interface CharacterPreviewProps {
-  title: string;
+  name: string;
   imageUrl?: string | null;
   summary?: string;
   tags: string[];
@@ -27,7 +27,7 @@ interface CharacterPreviewProps {
 const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
 
 const CharacterPreview = ({
-  title,
+  name,
   imageUrl,
   summary,
   tags,
@@ -44,7 +44,7 @@ const CharacterPreview = ({
     const compactedTags = tags.slice(0, 3).map((tag, index) => {
       return (
         <span
-          key={`${title}-tag-${index}-${tag}`}
+          key={`${name}-tag-${index}-${tag}`}
           className={cn(
             "truncate rounded-md bg-gray-800/80 px-2.5 py-0.5 text-xs font-semibold text-gray-300 lg:text-sm",
             "transition-all duration-300 group-hover/preview:bg-gray-900/50 group-hover/preview:text-gray-50",
@@ -59,7 +59,7 @@ const CharacterPreview = ({
     if (tags.length > 2) {
       compactedTags.push(
         <span
-          key={`${title}-tag-mobile-count-${tags.length}`}
+          key={`${name}-tag-mobile-count-${tags.length}`}
           className="text-xs text-gray-300 transition-all duration-300 group-hover/preview:text-gray-50 lg:hidden"
         >
           +{tags.length - 2}
@@ -70,7 +70,7 @@ const CharacterPreview = ({
     if (tags.length > 3) {
       compactedTags.push(
         <span
-          key={`${title}-tag-desktop-count-${tags.length}`}
+          key={`${name}-tag-desktop-count-${tags.length}`}
           className="hidden text-xs text-gray-300 transition-all duration-300 group-hover/preview:text-gray-50 lg:inline-flex"
         >
           +{tags.length - 3}
@@ -180,7 +180,7 @@ const CharacterPreview = ({
 
       <img
         src={imageUrl || PLACEHOLDER_IMAGE_URL}
-        alt={title}
+        alt={name}
         className={cn(
           "h-full w-1/4 flex-shrink-0 object-cover transition-transform duration-300",
           !isDisabled && "group-hover/preview:scale-105",
@@ -209,7 +209,7 @@ const CharacterPreview = ({
                 : "w-full",
             )}
           >
-            {title}
+            {name}
           </h3>
           <p
             className={cn(

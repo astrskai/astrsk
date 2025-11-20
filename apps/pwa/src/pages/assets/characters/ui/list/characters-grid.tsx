@@ -69,7 +69,7 @@ function CharacterGridItem({
   return (
     <CharacterPreview
       imageUrl={imageUrl}
-      title={character.props.title}
+      name={character.props.name || ""}
       summary={character.props.cardSummary}
       tags={character.props.tags || []}
       tokenCount={character.props.tokenCount}

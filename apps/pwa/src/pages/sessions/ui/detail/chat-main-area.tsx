@@ -34,7 +34,6 @@ import { AutoReply } from "@/shared/stores/session-store";
 import { queryClient } from "@/shared/api/query-client";
 import { parseAiSdkErrorMessage } from "@/shared/lib/error-utils";
 import { logger } from "@/shared/lib/logger";
-// import { toastError } from "@/shared/ui/toast-error";
 import { TurnService } from "@/app/services/turn-service";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { useCard } from "@/shared/hooks/use-card";
