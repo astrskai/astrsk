@@ -8,7 +8,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/apps/pwa/index.html"
+      "destination": "/index.html"
     }
   ]
 }
