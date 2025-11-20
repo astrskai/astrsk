@@ -4,5 +4,11 @@
     "deploymentEnabled": {
       "gh-pages": false
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/apps/pwa/index.html"
+    }
+  ]
 }
