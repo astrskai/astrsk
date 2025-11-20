@@ -1531,6 +1531,14 @@ export const useUpdateCardIconAsset = (cardId: string) => {
 
 /**
  * Hook for updating entire character card (batch update)
+ *
+ * @remarks
+ * This mutation is non-atomic: individual field updates are executed in parallel.
+ * If some updates succeed and others fail, the successful updates will be persisted.
+ * Any failures will be aggregated and thrown as a single error.
+ *
+ * Lorebook validation errors will cause the entire mutation to fail immediately,
+ * preventing partial updates in that case.
  */
 export const useUpdateCharacterCard = (cardId: string) => {
   const queryClient = useQueryClient();
@@ -1652,14 +1660,17 @@ export const useUpdateCharacterCard = (cardId: string) => {
           })),
         };
         const lorebookResult = Lorebook.fromJSON(lorebookJSON);
-        if (lorebookResult.isSuccess) {
-          promises.push(
-            CardService.updateCardLorebook.execute({
-              cardId,
-              lorebook: lorebookResult.getValue(),
-            }),
+        if (!lorebookResult.isSuccess) {
+          throw new Error(
+            `Invalid lorebook data: ${lorebookResult.getError()}`,
           );
         }
+        promises.push(
+          CardService.updateCardLorebook.execute({
+            cardId,
+            lorebook: lorebookResult.getValue(),
+          }),
+        );
       }
 
       const results = await Promise.all(promises);

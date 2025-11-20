@@ -81,6 +81,22 @@ const LorebookItemTitle = ({
     onCopy?.(e);
   };
 
+  const handleCopyKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      onCopy?.(e as unknown as React.MouseEvent);
+    }
+  };
+
+  const handleDeleteKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      onDelete?.(e as unknown as React.MouseEvent);
+    }
+  };
+
   return (
     <div className="flex items-center justify-between">
       <div>{name}</div>
@@ -89,8 +105,9 @@ const LorebookItemTitle = ({
           role="button"
           tabIndex={0}
           onClick={handleCopy}
+          onKeyDown={handleCopyKeyDown}
           className="cursor-pointer text-gray-500 hover:text-gray-400"
-          aria-label="Delete lorebook entry"
+          aria-label="Copy lorebook entry"
         >
           <Copy className="h-4 w-4" />
         </div>
@@ -99,6 +116,7 @@ const LorebookItemTitle = ({
           role="button"
           tabIndex={0}
           onClick={handleDelete}
+          onKeyDown={handleDeleteKeyDown}
           className="cursor-pointer text-gray-500 hover:text-gray-400"
           aria-label="Delete lorebook entry"
         >
@@ -356,6 +374,15 @@ const CharacterDetailPage = () => {
     }
   }, [fields, pendingLorebookId]);
 
+  // Cleanup: Revoke preview URL on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, [previewImage]);
+
   const handleGoBack = () => {
     navigate({ to: "/assets/characters" });
   };
@@ -367,6 +394,24 @@ const CharacterDetailPage = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Only allow PNG, JPEG, or WebP for previews (disallow SVG for security)
+      const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        toastError("Invalid file type", {
+          description: "Only PNG, JPEG, or WebP images are allowed.",
+        });
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
+      // Revoke previous preview URL to prevent memory leak
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+
       // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewImage(url);
@@ -385,6 +430,11 @@ const CharacterDetailPage = () => {
   };
 
   const handleRemoveImage = () => {
+    // Revoke preview URL to prevent memory leak
+    if (previewImage) {
+      URL.revokeObjectURL(previewImage);
+    }
+
     setPreviewImage(null);
     setImageFile(null);
     setIsImageRemoved(true);
@@ -476,6 +526,10 @@ const CharacterDetailPage = () => {
       });
 
       // Clear image file state after successful save
+      // Revoke preview URL to prevent memory leak
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
       setImageFile(null);
       setPreviewImage(null);
 

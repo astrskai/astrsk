@@ -127,8 +127,7 @@ const AccordionBase = ({
           ...(defaultValue !== undefined && {
             defaultValue: defaultValue as string,
           }),
-          // Always pass value for controlled mode (use empty string if undefined)
-          value: (value as string | undefined) ?? "",
+          ...(value !== undefined && { value: value as string }),
           ...(onValueChange && {
             onValueChange: onValueChange as (value: string) => void,
           }),

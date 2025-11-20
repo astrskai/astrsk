@@ -38,6 +38,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
+        aria-busy={loading}
+        aria-live={loading ? "polite" : undefined}
         className={cn(
           // Base styles
           "focus:ring-primary/50 inline-flex cursor-pointer items-center justify-center rounded-full font-medium transition-colors focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
@@ -74,6 +76,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {displayIcon}
         {children}
+        {loading && <span className="sr-only">Loading</span>}
       </button>
     );
   },

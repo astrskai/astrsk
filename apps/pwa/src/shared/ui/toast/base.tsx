@@ -14,6 +14,7 @@ interface ToastOptions {
   };
   duration?: number;
   position?: ExternalToast["position"];
+  closeButton?: boolean;
 }
 
 /**
@@ -26,7 +27,7 @@ export const toastError = (message: string, options?: ToastOptions) => {
     action: options?.action,
     duration: options?.duration ?? 4000,
     position: options?.position ?? "top-right",
-    closeButton: true,
+    closeButton: options?.closeButton ?? true,
     descriptionClassName: "!text-red-200 !line-clamp-2 !overflow-hidden",
     classNames: {
       closeButton:
@@ -50,6 +51,7 @@ export const toastSuccess = (message: string, options?: ToastOptions) => {
     action: options?.action,
     duration: options?.duration ?? 3000,
     position: options?.position ?? "top-right",
+    closeButton: options?.closeButton ?? true,
     classNames: {
       closeButton:
         "!bg-green-900 !text-green-200 hover:!bg-green-800 !border-green-700",
@@ -72,6 +74,7 @@ export const toastInfo = (message: string, options?: ToastOptions) => {
     action: options?.action,
     duration: options?.duration ?? 3000,
     position: options?.position ?? "top-right",
+    closeButton: options?.closeButton ?? true,
     classNames: {
       closeButton:
         "!bg-blue-900 !text-blue-200 hover:!bg-blue-800 !border-blue-700",
@@ -94,6 +97,7 @@ export const toastWarning = (message: string, options?: ToastOptions) => {
     action: options?.action,
     duration: options?.duration ?? 4000,
     position: options?.position ?? "top-right",
+    closeButton: options?.closeButton ?? true,
     classNames: {
       closeButton:
         "!bg-amber-900 !text-amber-200 hover:!bg-amber-800 !border-amber-700",
