@@ -5,10 +5,11 @@
       "gh-pages": false
     }
   },
+  "outputDirectory": "apps/pwa/dist",
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/apps/pwa/index.html"
+      "destination": "/index.html"
     }
   ]
 }
