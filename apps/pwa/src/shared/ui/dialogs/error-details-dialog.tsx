@@ -23,6 +23,7 @@ export function ErrorDetailsDialog() {
       title={title}
       description="Error details"
       size="lg"
+      isShowCloseButton={false}
       content={
         <div className="flex flex-col gap-4">
           {/* Error content */}

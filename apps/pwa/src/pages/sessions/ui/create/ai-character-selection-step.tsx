@@ -43,7 +43,7 @@ const SelectedCharacterCard = ({
   return (
     <CharacterPreview
       imageUrl={imageUrl}
-      title={card.props.title}
+      name={card.props.name || ""}
       summary={card.props.cardSummary}
       tags={card.props.tags || []}
       tokenCount={card.props.tokenCount}
@@ -54,7 +54,6 @@ const SelectedCharacterCard = ({
     />
   );
 };
-
 
 /**
  * AI Character Selection Step

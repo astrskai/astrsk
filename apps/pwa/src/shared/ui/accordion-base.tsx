@@ -47,10 +47,10 @@ export interface AccordionBaseProps {
   defaultValue?: string | string[];
   /**
    * Controlled value(s)
-   * - For "single": string
+   * - For "single": string | undefined
    * - For "multiple": string[]
    */
-  value?: string | string[];
+  value?: string | string[] | undefined;
   /**
    * Callback when value changes
    */

@@ -15,6 +15,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   helpTooltip?: string;
   helperText?: string;
   caption?: string;
+  isRequired?: boolean; // For display purposes only (shows * indicator)
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -25,6 +26,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       labelPosition = "top",
       className,
       required,
+      isRequired,
       helpTooltip,
       helperText,
       caption,
@@ -32,15 +34,24 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref,
   ) => {
+    // Show * indicator if either required or isRequired is true
+    const showRequiredIndicator = required || isRequired;
     // Inner label layout
-    if (labelPosition === "inner" && label) {
+    if (labelPosition === "inner") {
       return (
         <div className="relative w-full">
-          <div className="flex flex-col gap-1 rounded-lg bg-gray-800 px-4 py-2">
+          <div
+            className={cn(
+              "flex flex-col gap-1 rounded-lg bg-gray-800 px-4 py-2 border",
+              error
+                ? "border-status-destructive-light"
+                : "border-transparent",
+            )}
+          >
             <label className="text-text-secondary flex items-center gap-1.5 text-xs font-medium">
               <span>
                 {label}
-                {required && (
+                {showRequiredIndicator && (
                   <span className="text-status-required ml-1">*</span>
                 )}
               </span>
@@ -136,7 +147,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <label className="text-text-body flex items-center gap-1.5 text-sm font-medium">
           <span>
             {label}
-            {required && <span className="text-status-required ml-1">*</span>}
+            {showRequiredIndicator && (
+              <span className="text-status-required ml-1">*</span>
+            )}
           </span>
           {helpTooltip && (
             <TooltipProvider>

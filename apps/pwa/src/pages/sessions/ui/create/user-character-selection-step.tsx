@@ -45,7 +45,7 @@ const SelectedCharacterCard = ({
   return (
     <CharacterPreview
       imageUrl={imageUrl}
-      title={card.props.title}
+      name={card.props.name || ""}
       summary={card.props.cardSummary}
       tags={card.props.tags || []}
       tokenCount={card.props.tokenCount}
@@ -132,7 +132,9 @@ export default function UserCharacterSelectionStep({
       <CharacterSelectionDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        selectedCharacters={selectedUserCharacter ? [selectedUserCharacter] : []}
+        selectedCharacters={
+          selectedUserCharacter ? [selectedUserCharacter] : []
+        }
         onConfirm={handleConfirm}
         excludeCharacterIds={selectedAiCharacterIds}
         isMultipleSelect={false}

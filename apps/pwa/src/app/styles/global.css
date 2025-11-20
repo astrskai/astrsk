@@ -89,18 +89,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Chart colors */
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-
   /* Sidebar colors */
-  --color-sidebar-background: var(--sidebar-background);
   --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
@@ -113,22 +103,17 @@
   --color-background-surface-3: var(--background-surface-3);
   --color-background-surface-4: var(--background-surface-4);
   --color-background-surface-5: var(--background-surface-5);
-  --color-background-surface-10: var(--background-surface-10);
   --color-background-surface-light: var(--background-surface-light);
   --color-background-card: var(--background-card);
   --color-background-container: var(--background-container);
   --color-background-dialog: var(--background-dialog);
   --color-background-input: var(--background-input);
   --color-background-screen: var(--background-screen);
-  --color-background-screen2: var(--background-screen2);
-  --color-background-tooltip: var(--background-tooltip);
-  --color-background-user-message: var(--background-user-message);
 
   /* Border colors */
   --color-border-light: var(--border-light);
   --color-border-dark: var(--border-dark);
   --color-border-normal: var(--border-normal);
-  --color-border-black: var(--border-black);
   --color-border-selected-primary: var(--border-selected-primary);
   --color-border-selected-secondary: var(--border-selected-secondary);
   --color-border-selected-inverse: var(--border-selected-inverse);
@@ -153,7 +138,6 @@
   --color-text-contrast-text: var(--text-contrast-text);
   --color-text-muted-title: var(--text-muted-title);
   --color-text-input-subtitle: var(--text-input-subtitle);
-  --color-text-user-message: var(--text-user-message);
 
   /* Primary colors */
   --color-primary-normal: var(--primary-normal);
@@ -175,8 +159,6 @@
   --color-status-ready: var(--status-ready);
   --color-status-ready-dark: var(--status-ready-dark);
   --color-status-succeed: var(--status-succeed);
-  --color-status-syncing: var(--status-syncing);
-  --color-status-warning-dark: var(--status-warning-dark);
   --color-status-warning-light: var(--status-warning-light);
   --color-status-warning: var(--status-warning);
 

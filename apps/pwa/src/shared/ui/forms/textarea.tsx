@@ -8,6 +8,7 @@ interface TextareaProps
   labelPosition?: "top" | "left" | "inner";
   autoResize?: boolean;
   caption?: string;
+  isRequired?: boolean; // For display purposes only (shows * indicator)
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
@@ -18,12 +19,15 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       labelPosition = "top",
       className,
       required,
+      isRequired,
       autoResize = false,
       caption,
       ...props
     },
     ref,
   ) => {
+    // Show * indicator if either required or isRequired is true
+    const showRequiredIndicator = required || isRequired;
     const internalRef = useRef<HTMLTextAreaElement>(null);
 
     // Expose the internal ref to the parent via forwardRef
@@ -57,11 +61,18 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     if (labelPosition === "inner" && label) {
       return (
         <div className="relative w-full">
-          <div className="flex flex-col gap-1 rounded-lg bg-gray-800 px-4 py-2">
+          <div
+            className={cn(
+              "flex flex-col gap-1 rounded-lg bg-gray-800 px-4 py-2 border",
+              error
+                ? "border-status-destructive-light"
+                : "border-transparent",
+            )}
+          >
             <label className="text-text-secondary flex items-center gap-1.5 text-xs font-medium">
               <span>
                 {label}
-                {required && (
+                {showRequiredIndicator && (
                   <span className="text-status-required ml-1">*</span>
                 )}
               </span>
@@ -142,7 +153,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       >
         <label className="text-text-secondary text-xs font-medium">
           {label}
-          {required && <span className="text-status-required ml-1">*</span>}
+          {showRequiredIndicator && (
+            <span className="text-status-required ml-1">*</span>
+          )}
         </label>
         {textareaElement}
       </div>
