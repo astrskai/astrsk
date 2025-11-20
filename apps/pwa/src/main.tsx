@@ -1,7 +1,7 @@
 import { initServices } from "@/app/services/init-services.ts";
 import { useAppStore } from "@/shared/stores/app-store.tsx";
 import { initStores } from "@/shared/stores/init-stores.ts";
-import { useInitializationStore } from "@/shared/stores/initialization-store.tsx";
+import { useInitializationStore, loadInitializationLog } from "@/shared/stores/initialization-store.tsx";
 import { InitializationScreen } from "@/shared/ui/initialization-screen";
 import { PwaRegister } from "@/app/providers/pwa-register";
 import { migrate, hasPendingMigrations } from "@/db/migrate.ts";
@@ -68,18 +68,8 @@ async function initializeApp() {
   // Create root
   const root = createRoot(document.getElementById("root")!);
 
-  // Check if database has pending migrations
-  const needsMigration = await hasPendingMigrations();
-
-  // Services and stores must ALWAYS be initialized (they're in-memory)
-  // Database migration runs only when there are pending migrations (new install or app update)
-
-  logger.debug(`🔍 Pending migrations: ${needsMigration}`);
-
   // Track initialization time
   const startTime = performance.now();
-  let shouldShowInitScreen = false;
-  let initScreenTimeout: number | null = null;
 
   // Initialize steps in the store
   const { initializeSteps, startStep, completeStep, warnStep, failStep, saveLog } =
@@ -87,6 +77,7 @@ async function initializeApp() {
 
   // Define all initialization steps
   initializeSteps([
+    { id: "database-engine", label: "Initialize database engine" },
     { id: "database-init", label: "Initialize database" },
     { id: "migration-schema", label: "Setup migration schema" },
     { id: "check-migrations", label: "Check pending migrations" },
@@ -107,12 +98,35 @@ async function initializeApp() {
     { id: "backgrounds", label: "Load background assets" },
   ]);
 
-  // Helper function to render initialization screen
-  const renderInitScreen = () => {
-    if (!shouldShowInitScreen) return;
+  // Initialization overlay component (blocks interaction during init)
+  const InitOverlay = ({ showProgressScreen }: { showProgressScreen: boolean }) => {
+    if (showProgressScreen) {
+      return <InitializationScreen />;
+    }
+
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+        <div className="flex items-center gap-3 rounded-full bg-background-surface-0 px-5 py-3 shadow-lg">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <span className="text-text-secondary text-sm">Initializing...</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Check if this is the first install (no previous initialization log)
+  const isFirstInstall = !loadInitializationLog();
+
+  // Track whether to show detailed progress screen or simple spinner
+  // First install: show progress screen immediately
+  // Subsequent loads: show simple spinner, upgrade to progress screen if needed
+  let showProgressScreen = isFirstInstall;
+
+  // Helper function to render initialization overlay (without App)
+  const renderInitOverlay = () => {
     root.render(
       <StrictMode>
-        <InitializationScreen />
+        <InitOverlay showProgressScreen={showProgressScreen} />
       </StrictMode>,
     );
   };
@@ -132,17 +146,35 @@ async function initializeApp() {
     } else if (status === "error") {
       failStep(stepId, error || "Unknown error");
     }
-    renderInitScreen();
+    // Re-render to update progress (only when progress screen is shown)
+    if (showProgressScreen) {
+      renderInitOverlay();
+    }
   };
 
-  try {
-    // Show initialization screen after 1 second if still initializing
-    initScreenTimeout = window.setTimeout(() => {
-      shouldShowInitScreen = true;
-      renderInitScreen();
-    }, 1000);
+  // Variable to track if migrations were needed (for logging)
+  let needsMigration = false;
 
-    // Step 1: Migrate database (only if there are pending migrations)
+  try {
+    // Render initialization overlay immediately
+    // If first install, shows full InitScreen; otherwise shows simple spinner
+    renderInitOverlay();
+
+    // Step 1: Initialize database engine (PGlite)
+    onProgress("database-engine", "start");
+    needsMigration = await hasPendingMigrations();
+    onProgress("database-engine", "success");
+
+    if (needsMigration && !showProgressScreen) {
+      // App update with new migrations: upgrade to progress screen
+      showProgressScreen = true;
+      renderInitOverlay();
+    }
+    // Otherwise: keep current overlay (progress screen or simple spinner)
+
+    logger.debug(`🔍 Pending migrations: ${needsMigration}`);
+
+    // Step 2: Migrate database (only if there are pending migrations)
     if (needsMigration) {
       logger.debug("🔨 Running database migrations...");
       await migrate(onProgress);
@@ -159,11 +191,11 @@ async function initializeApp() {
       onProgress?.("run-migrations", "success");
     }
 
-    // Step 2: Init services (ALWAYS run - in-memory initialization)
+    // Step 3: Init services (ALWAYS run - in-memory initialization)
     logger.debug("🔧 Initializing services...");
     await initServices(onProgress);
 
-    // Step 3: Init stores (ALWAYS run - loads data into memory)
+    // Step 4: Init stores (ALWAYS run - loads data into memory)
     logger.debug("📦 Initializing stores...");
     await initStores(onProgress);
 
@@ -176,20 +208,15 @@ async function initializeApp() {
       saveLog(Math.round(initTime));
     }
 
-    // Clear timeout if initialization finished quickly
-    if (initScreenTimeout) {
-      clearTimeout(initScreenTimeout);
-    }
-
-    // If we showed the init screen, wait a bit to show completion
-    if (shouldShowInitScreen) {
+    // Wait a bit to show completion state (only if progress screen was shown)
+    if (showProgressScreen) {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
-    // Mark app as ready (bypass MainLayout's PWA loading screen)
+    // Mark app as ready
     useAppStore.getState().setIsOfflineReady(true);
 
-    // Render app
+    // Render final app with providers
     if (isConvexReady && convex) {
       // Convex ready
       root.render(
@@ -224,12 +251,9 @@ async function initializeApp() {
       saveLog(Math.round(initTime));
     }
 
-    // Ensure the initialization screen (with error state) is visible
-    shouldShowInitScreen = true;
-    if (initScreenTimeout) {
-      clearTimeout(initScreenTimeout);
-    }
-    renderInitScreen();
+    // Show progress screen with error state
+    showProgressScreen = true;
+    renderInitOverlay();
   }
 }
 initializeApp();
