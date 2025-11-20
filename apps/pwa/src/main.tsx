@@ -146,23 +146,27 @@ async function initializeApp() {
     } else if (status === "error") {
       failStep(stepId, error || "Unknown error");
     }
-    // Re-render to update progress (only when progress screen is shown)
-    if (showProgressScreen) {
-      renderInitOverlay();
-    }
+    // No need to re-render: InitializationScreen subscribes to store changes via Zustand
   };
 
   // Variable to track if migrations were needed (for logging)
   let needsMigration = false;
 
   try {
-    // Render initialization overlay immediately
-    // If first install, shows full InitScreen; otherwise shows simple spinner
+    // Step 1: Initialize database engine (PGlite)
+    // This can take ~2 seconds on first load (PGlite initialization polling)
+    onProgress("database-engine", "start");
+
+    // Show loading overlay before DB check
+    // - First install: full progress screen
+    // - Normal loads: simple spinner during DB initialization
     renderInitOverlay();
 
-    // Step 1: Initialize database engine (PGlite)
-    onProgress("database-engine", "start");
+    const dbCheckStart = performance.now();
     needsMigration = await hasPendingMigrations();
+    const dbCheckDuration = performance.now() - dbCheckStart;
+
+    logger.debug(`⏱️ DB initialization took ${Math.round(dbCheckDuration)}ms`);
     onProgress("database-engine", "success");
 
     if (needsMigration && !showProgressScreen) {
@@ -181,14 +185,14 @@ async function initializeApp() {
     } else {
       logger.debug("⏭️ No pending migrations, skipping migration steps");
       // Mark migration steps as success immediately
-      onProgress?.("database-init", "start");
-      onProgress?.("database-init", "success");
-      onProgress?.("migration-schema", "start");
-      onProgress?.("migration-schema", "success");
-      onProgress?.("check-migrations", "start");
-      onProgress?.("check-migrations", "success");
-      onProgress?.("run-migrations", "start");
-      onProgress?.("run-migrations", "success");
+      onProgress("database-init", "start");
+      onProgress("database-init", "success");
+      onProgress("migration-schema", "start");
+      onProgress("migration-schema", "success");
+      onProgress("check-migrations", "start");
+      onProgress("check-migrations", "success");
+      onProgress("run-migrations", "start");
+      onProgress("run-migrations", "success");
     }
 
     // Step 3: Init services (ALWAYS run - in-memory initialization)
@@ -206,11 +210,6 @@ async function initializeApp() {
     // Save initialization log only when migrations were executed (first run or app update)
     if (needsMigration) {
       saveLog(Math.round(initTime));
-    }
-
-    // Wait a bit to show completion state (only if progress screen was shown)
-    if (showProgressScreen) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     // Mark app as ready
