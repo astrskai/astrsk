@@ -128,6 +128,9 @@ importers:
       '@radix-ui/react-visually-hidden':
         specifier: ^1.2.3
         version: 1.2.3(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@supabase/supabase-js':
+        specifier: ^2.47.10
+        version: 2.83.0
       '@tailwindcss/vite':
         specifier: ^4.1.8
         version: 4.1.11(vite@6.3.6(@types/node@20.19.9)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.0))
@@ -3220,6 +3223,30 @@ packages:
       typescript:
         optional: true
 
+  '@supabase/auth-js@2.83.0':
+    resolution: {integrity: sha512-xmyFcglbAo6C2ox5T9FjZryqk50xU23QqoNKnEYn7mjgxghP/A13W64lL3/TF8HtbuCt3Esk9d3Jw5afXTO/ew==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/functions-js@2.83.0':
+    resolution: {integrity: sha512-fRfPbyWB6MsovTINpSC21HhU1hfY/4mcXLsDV34sC2b/5i0mZYTBaCbuy4yfTG1vcxCzKDqMgAIC//lewnafrg==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/postgrest-js@2.83.0':
+    resolution: {integrity: sha512-qjVwbP9JXwgd/YbOj/soWvOUl5c/jyI/L7zs7VDxl5HEq64Gs4ZI5OoDcml+HcOwxFFxVytYeyQLd0rSWWNRIQ==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/realtime-js@2.83.0':
+    resolution: {integrity: sha512-mT+QeXAD2gLoqNeQFLjTloDM62VR+VFV8OVdF8RscYpXZriBhabTLE2Auff5lkEJetFFclP1B8j+YtgrWqSmeA==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/storage-js@2.83.0':
+    resolution: {integrity: sha512-qmOM8E6HH/+dm6tW0Tu9Q/TuM035pI3AuKegvQERZRLLk3HtPms5O8UaYh6zi5LZaPtM9u5fldv1W6AUKkKLDQ==}
+    engines: {node: '>=20.0.0'}
+
+  '@supabase/supabase-js@2.83.0':
+    resolution: {integrity: sha512-X0OOgJQfD9BDNhxfslozuq/26fPyBt+TsMX+YkI2T6Hc4M2bkCDho/D4LC8nV9gNtviuejWdhit8YzHwnKOQoQ==}
+    engines: {node: '>=20.0.0'}
+
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     resolution: {integrity: sha512-lR8q/9W7hZpMWweNiAKU7NQerBnzQQLvi8qnTDU/fxItPhtZVMbPV3lbCwjhIlNBe9Bbr5V+KHshvWmVSG9cxQ==}
 
@@ -3665,6 +3692,9 @@ packages:
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
 
+  '@types/phoenix@1.6.6':
+    resolution: {integrity: sha512-PIzZZlEppgrpoT2QgbnDU+MMzuR6BbCjllj0bM70lWoejMeNJAxCchxnv7J3XFkI8MpygtRpzXrIlmWUBclP5A==}
+
   '@types/png-chunks-encode@1.0.2':
     resolution: {integrity: sha512-Dxn0aXEcSg1wVeHjvNlygm/+fKBDzWMCdxJYhjGUTeefFW/jYxWcrg+W7ppLBfH44iJMqeVBHtHBwtYQUeYvgw==}
 
@@ -3716,6 +3746,9 @@ packages:
 
   '@types/uuid@10.0.0':
     resolution: {integrity: sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ==}
+
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@typescript-eslint/eslint-plugin@8.38.0':
     resolution: {integrity: sha512-CPoznzpuAnIOl4nhj4tRr4gIPj5AfKgkiJmGQDaq+fQnRJTYlcBjbX3wbciGmpoPf8DREufuPRe1tNMZnGdanA==}
@@ -10790,6 +10823,43 @@ snapshots:
     optionalDependencies:
       typescript: 5.7.3
 
+  '@supabase/auth-js@2.83.0':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/functions-js@2.83.0':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/postgrest-js@2.83.0':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/realtime-js@2.83.0':
+    dependencies:
+      '@types/phoenix': 1.6.6
+      '@types/ws': 8.18.1
+      tslib: 2.8.1
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@supabase/storage-js@2.83.0':
+    dependencies:
+      tslib: 2.8.1
+
+  '@supabase/supabase-js@2.83.0':
+    dependencies:
+      '@supabase/auth-js': 2.83.0
+      '@supabase/functions-js': 2.83.0
+      '@supabase/postgrest-js': 2.83.0
+      '@supabase/realtime-js': 2.83.0
+      '@supabase/storage-js': 2.83.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     dependencies:
       ejs: 3.1.10
@@ -11281,6 +11351,8 @@ snapshots:
 
   '@types/parse-json@4.0.2': {}
 
+  '@types/phoenix@1.6.6': {}
+
   '@types/png-chunks-encode@1.0.2': {}
 
   '@types/png-chunks-extract@1.0.2': {}
@@ -11321,6 +11393,10 @@ snapshots:
   '@types/unist@3.0.3': {}
 
   '@types/uuid@10.0.0': {}
+
+  '@types/ws@8.18.1':
+    dependencies:
+      '@types/node': 20.19.24
 
   '@typescript-eslint/eslint-plugin@8.38.0(@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.6.1))(typescript@5.7.3))(eslint@9.31.0(jiti@2.6.1))(typescript@5.7.3)':
     dependencies:

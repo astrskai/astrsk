@@ -120,9 +120,10 @@ const useBackgroundStoreBase = create<BackgroundState>()(
   })),
 );
 
-export const fetchBackgrounds = async () => {
-  // Get backgrounds
+export const fetchBackgrounds = async (sessionId?: UniqueEntityID) => {
+  // Get backgrounds filtered by sessionId if provided
   const backgroundsOrError = await BackgroundService.listBackground.execute({
+    sessionId,
     limit: 100,
   });
 

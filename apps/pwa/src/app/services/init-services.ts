@@ -69,5 +69,13 @@ export async function initServices(): Promise<void> {
     FlowService.getModelsFromFlowFile,
     FlowService.cloneFlow,
     CardService.cloneCard,
+    AssetService.cloneAsset,
+    BackgroundService.cloneBackground,
+    AssetService.assetRepo,
+    CardService.cardRepo,
+    FlowService.flowRepo,
+    AgentService.agentRepo,
+    DataStoreNodeService.dataStoreNodeRepo,
+    IfNodeService.ifNodeRepo,
   );
 }

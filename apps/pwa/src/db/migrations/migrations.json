@@ -182,5 +182,22 @@
     "bps": true,
     "folderMillis": 1763470150932,
     "hash": "65a16e0fd7dee12ee6909e60593267b5a1a13eb0a4337ff47a19c5eb4058a734"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"backgrounds\" ADD COLUMN \"session_id\" uuid;",
+      "\nALTER TABLE \"backgrounds\" ADD CONSTRAINT \"backgrounds_session_id_sessions_id_fk\" FOREIGN KEY (\"session_id\") REFERENCES \"public\".\"sessions\"(\"id\") ON DELETE cascade ON UPDATE no action;"
+    ],
+    "bps": true,
+    "folderMillis": 1763694671957,
+    "hash": "4b2666b5d5d71f3226340278cce4f0a90add2261bfd1d5685f32474a497fc6f8"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"backgrounds\" ALTER COLUMN \"session_id\" SET NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1763694696450,
+    "hash": "1a09b4fa74cd06a040bf94ea7d3993b44776633b020d72ce664bbf6cbbafecd0"
   }
 ]

@@ -9,6 +9,7 @@ import CharacterPreview from "@/features/character/ui/character-preview";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 import { useCardActions } from "@/features/common/model/use-card-actions";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { ExportType } from "@/shared/lib/cloud-upload-helpers";
 
 interface CharactersGridProps {
   characters: CharacterCard[];
@@ -23,7 +24,11 @@ interface CharacterGridItemProps {
   character: CharacterCard;
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   onCharacterClick: (characterId: string) => void;
-  onExport: (cardId: string, title: string) => (e: React.MouseEvent) => void;
+  onExport: (
+    cardId: string,
+    title: string,
+    exportType: ExportType,
+  ) => (e: React.MouseEvent) => void;
   onCopy: (cardId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
     cardId: string,
@@ -46,7 +51,14 @@ function CharacterGridItem({
     {
       icon: Upload,
       label: `Export`,
-      onClick: onExport(cardId, character.props.title),
+      onClick: onExport(cardId, character.props.title, "file"),
+      disabled: loading.exporting,
+      loading: loading.exporting,
+    },
+    {
+      icon: Upload,
+      label: `Harpy`,
+      onClick: onExport(cardId, character.props.title, "cloud"),
       disabled: loading.exporting,
       loading: loading.exporting,
     },

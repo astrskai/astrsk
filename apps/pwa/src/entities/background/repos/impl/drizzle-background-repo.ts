@@ -59,16 +59,25 @@ export class DrizzleBackgroundRepo
   }
 
   async listBackgrounds(
-    { cursor, pageSize = 100 }: { cursor?: UniqueEntityID; pageSize?: number },
+    { sessionId, cursor, pageSize = 100 }: { sessionId?: UniqueEntityID; cursor?: UniqueEntityID; pageSize?: number },
     tx?: Transaction,
   ): Promise<Result<Background[]>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
+      // Build where conditions
+      const conditions = [];
+      if (sessionId) {
+        conditions.push(eq(backgrounds.session_id, sessionId.toString()));
+      }
+      if (cursor) {
+        conditions.push(gt(backgrounds.id, cursor.toString()));
+      }
+
       // Select backgrounds
       const rows = await db
         .select()
         .from(backgrounds)
-        .where(cursor ? gt(backgrounds.id, cursor.toString()) : undefined)
+        .where(conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : undefined) : undefined)
         .limit(pageSize)
         .orderBy(asc(backgrounds.id));
 
@@ -111,6 +120,7 @@ export class DrizzleBackgroundRepo
       const rows = await db
         .select()
         .from(backgrounds)
+        .where(query.sessionId ? eq(backgrounds.session_id, query.sessionId.toString()) : undefined)
         .limit(query.limit ?? 100)
         .offset(query.offset ?? 0)
         .orderBy(desc(backgrounds.id));
@@ -122,6 +132,29 @@ export class DrizzleBackgroundRepo
       return Result.ok(entities);
     } catch (error) {
       return formatFail("Failed to get Backgrounds", error);
+    }
+  }
+
+  async getBackgroundsBySessionId(
+    sessionId: UniqueEntityID,
+    tx?: Transaction,
+  ): Promise<Result<Background[]>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      // Select backgrounds by session_id
+      const rows = await db
+        .select()
+        .from(backgrounds)
+        .where(eq(backgrounds.session_id, sessionId.toString()))
+        .orderBy(desc(backgrounds.created_at));
+
+      // Convert rows to entities
+      const entities = rows.map((row) => BackgroundDrizzleMapper.toDomain(row));
+
+      // Return backgrounds
+      return Result.ok(entities);
+    } catch (error) {
+      return formatFail("Failed to get backgrounds by session ID", error);
     }
   }
 

@@ -127,6 +127,20 @@
       "when": 1763470150932,
       "tag": "20251118124910_gray_ender_wiggin",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1763694671957,
+      "tag": "20251121031111_magenta_tigra",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1763694696450,
+      "tag": "20251121031136_flimsy_kabuki",
+      "breakpoints": true
     }
   ]
 }

@@ -10,6 +10,7 @@ import { DeleteFlow } from "@/entities/flow/usecases/delete-flow";
 import { DeleteFlowWithNodes } from "@/entities/flow/usecases/delete-flow-with-nodes";
 import { ExportFlowToFile } from "@/entities/flow/usecases/export-flow-to-file";
 import { ExportFlowWithNodes } from "@/entities/flow/usecases/export-flow-with-nodes";
+import { ExportFlowToCloud } from "@/entities/flow/usecases/export-flow-to-cloud";
 import { GetFlow } from "@/entities/flow/usecases/get-flow";
 import { GetFlowWithNodes } from "@/entities/flow/usecases/get-flow-with-nodes";
 import { GetModelsFromFlowFile } from "@/entities/flow/usecases/get-models-from-flow-file";
@@ -34,6 +35,10 @@ import { UpdateNodesAndEdges } from "@/entities/flow/usecases/update-nodes-and-e
 import { UpdateFlowValidation } from "@/entities/flow/usecases/update-flow-validation";
 import { UpdateFlowReadyState } from "@/entities/flow/usecases/update-flow-ready-state";
 import { RestoreFlowFromSnapshot } from "@/entities/flow/usecases/restore-flow-from-snapshot";
+import { PrepareFlowCloudData } from "@/entities/flow/usecases/prepare-flow-cloud-data";
+import { PrepareAgentsCloudData } from "@/entities/agent/usecases/prepare-agents-cloud-data";
+import { PrepareDataStoreNodesCloudData } from "@/entities/data-store-node/usecases/prepare-data-store-nodes-cloud-data";
+import { PrepareIfNodesCloudData } from "@/entities/if-node/usecases/prepare-if-nodes-cloud-data";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 
 export class FlowService {
@@ -47,6 +52,7 @@ export class FlowService {
   public static deleteFlowWithNodes: DeleteFlowWithNodes;
   public static exportFlowToFile: ExportFlowToFile;
   public static exportFlowWithNodes: ExportFlowWithNodes;
+  public static exportFlowToCloud: ExportFlowToCloud;
   public static getFlow: GetFlow;
   public static getFlowWithNodes: GetFlowWithNodes;
   public static getModelsFromFlowFile: GetModelsFromFlowFile;
@@ -72,7 +78,7 @@ export class FlowService {
   public static updateFlowReadyState: UpdateFlowReadyState;
   public static restoreFlowFromSnapshot: RestoreFlowFromSnapshot;
 
-  private constructor() {}
+  private constructor() { }
 
   public static init(loadAgentRepo: LoadAgentRepo, saveAgentRepo: SaveAgentRepo, deleteAgentRepo: DeleteAgentRepo) {
     this.flowRepo = new DrizzleFlowRepo();
@@ -93,14 +99,22 @@ export class FlowService {
     this.createFlow = new CreateFlow(saveAgentRepo, this.flowRepo);
     this.deleteFlow = new DeleteFlow(this.flowRepo, this.flowRepo, deleteAgentRepo);
     this.deleteFlowWithNodes = new DeleteFlowWithNodes(
-      this.flowRepo, 
-      this.flowRepo, 
+      this.flowRepo,
+      this.flowRepo,
       deleteAgentRepo,
       this.dataStoreNodeRepo,
       this.ifNodeRepo
     );
     this.exportFlowToFile = new ExportFlowToFile(this.flowRepo, loadAgentRepo);
     this.exportFlowWithNodes = new ExportFlowWithNodes(this.flowRepo, loadAgentRepo, this.dataStoreNodeRepo, this.ifNodeRepo);
+    this.exportFlowToCloud = new ExportFlowToCloud(
+      this.cloneFlow,
+      this.deleteFlowWithNodes,
+      new PrepareFlowCloudData(this.flowRepo),
+      new PrepareAgentsCloudData(loadAgentRepo),
+      new PrepareDataStoreNodesCloudData(this.dataStoreNodeRepo),
+      new PrepareIfNodesCloudData(this.ifNodeRepo)
+    );
     this.getFlow = new GetFlow(this.flowRepo);
     this.getFlowWithNodes = new GetFlowWithNodes(this.flowRepo, this.dataStoreNodeRepo, this.ifNodeRepo);
     this.getModelsFromFlowFile = new GetModelsFromFlowFile();

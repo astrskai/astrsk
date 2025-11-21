@@ -32,15 +32,14 @@ interface Command {
 }
 
 export class ImportSessionFromFile
-  implements UseCase<Command, Result<Session>>
-{
+  implements UseCase<Command, Result<Session>> {
   constructor(
     private saveSessionRepo: SaveSessionRepo,
     private importFlowWithNodes: ImportFlowWithNodes,
     private importCardFromFile: ImportCardFromFile,
     private saveFileToBackground: SaveFileToBackground,
     private addMessage: AddMessage,
-  ) {}
+  ) { }
 
   private async importSessionFromZip(
     zip: JSZip,
@@ -146,6 +145,7 @@ export class ImportSessionFromFile
 
   private async importBackgroundFromZip(
     zip: JSZip,
+    sessionId: UniqueEntityID,
   ): Promise<Map<string, string>> {
     // Make ID map
     const idMap = new Map<string, string>(
@@ -165,8 +165,11 @@ export class ImportSessionFromFile
       const fileBlob = await fileEntry.async("blob");
       const file = new File([fileBlob], fileEntry.name);
 
-      // Import background from file
-      const backgroundOrError = await this.saveFileToBackground.execute(file);
+      // Import background from file (as session-local)
+      const backgroundOrError = await this.saveFileToBackground.execute({
+        file,
+        sessionId, // Pass sessionId for session-local background
+      });
       if (backgroundOrError.isFailure) {
         throw new Error(backgroundOrError.getError());
       }
@@ -309,8 +312,8 @@ export class ImportSessionFromFile
       // Import cards from zip (as session-local)
       const cardIdMap = await this.importCardFromZip(zip, savedSession.id);
 
-      // Import background from zip
-      const backgroundIdMap = await this.importBackgroundFromZip(zip);
+      // Import background from zip (as session-local)
+      const backgroundIdMap = await this.importBackgroundFromZip(zip, savedSession.id);
 
       // Merge ID maps
       const idMap = new Map<string, string>([

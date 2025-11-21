@@ -9,6 +9,7 @@ import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 import { useCardActions } from "@/features/common/model/use-card-actions";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { ExportType } from "@/shared/lib/cloud-upload-helpers";
 
 interface ScenariosGridProps {
   scenarios: (PlotCard | ScenarioCard)[];
@@ -23,7 +24,11 @@ interface ScenarioGridItemProps {
   scenario: PlotCard | ScenarioCard;
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   onScenarioClick: (plotId: string) => void;
-  onExport: (cardId: string, title: string) => (e: React.MouseEvent) => void;
+  onExport: (
+    cardId: string,
+    title: string,
+    exportType: ExportType,
+  ) => (e: React.MouseEvent) => void;
   onCopy: (cardId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
     cardId: string,
@@ -46,7 +51,14 @@ function ScenarioGridItem({
     {
       icon: Upload,
       label: `Export`,
-      onClick: onExport(cardId, scenario.props.title),
+      onClick: onExport(cardId, scenario.props.title, "file"),
+      disabled: loading.exporting,
+      loading: loading.exporting,
+    },
+    {
+      icon: Upload,
+      label: `Harpy`,
+      onClick: onExport(cardId, scenario.props.title, "cloud"),
       disabled: loading.exporting,
       loading: loading.exporting,
     },

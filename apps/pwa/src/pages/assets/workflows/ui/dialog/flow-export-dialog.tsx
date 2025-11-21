@@ -37,8 +37,8 @@ export function FlowExportDialog({
   onOpenChange,
   onExport,
   agents,
-  title = "Export flow",
-  description = "Choose model tier for each agent. Light models are faster and cheaper, Heavy models are more powerful.",
+  title = "Export flow to cloud",
+  description = "Share your flow with others. A shareable link will be generated and copied to your clipboard.",
 }: FlowExportDialogProps) {
   const [modelTierSelections, setModelTierSelections] = useState<
     Map<string, ModelTier>

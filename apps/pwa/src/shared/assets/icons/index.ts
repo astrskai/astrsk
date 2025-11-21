@@ -6,3 +6,5 @@ export { default as IconAssets } from "./icon-assets.svg?react";
 
 export { default as IconCardTypeCharacter } from "./card-type-character.svg?react";
 export { default as IconCardTypePlot } from "./card-type-plot.svg?react";
+
+export { default as IconHarpyLogo } from "./harpy-logo.svg?react";

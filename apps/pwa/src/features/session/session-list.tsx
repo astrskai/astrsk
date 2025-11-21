@@ -494,7 +494,7 @@ const SessionListItemMobile = ({
       className={cn(
         "flex flex-col items-center justify-start self-stretch outline-1",
         hasError &&
-          "bg-background-surface-2 border-status-destrctive-light border-l-[3px]",
+        "bg-background-surface-2 border-status-destrctive-light border-l-[3px]",
       )}
     >
       <button
@@ -505,7 +505,7 @@ const SessionListItemMobile = ({
           isActive && !isSelectionMode && "bg-background-card-hover",
           isSelected && "bg-background-card",
         )}
-        // disabled={!!streamingMessageId && !selectedSessionId?.equals(sessionId)}
+      // disabled={!!streamingMessageId && !selectedSessionId?.equals(sessionId)}
       >
         {/* Checkbox for selection mode */}
         {isSelectionMode && (

@@ -1,6 +1,8 @@
 export * from "./clone-card";
 export * from "./delete-card";
 export * from "./export-card-to-file";
+export * from "./export-character-to-cloud";
+export * from "./export-scenario-to-cloud";
 export * from "./get-card";
 export * from "./import-card-from-file";
 // export * from "./import-card-from-web";

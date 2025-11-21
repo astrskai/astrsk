@@ -9,7 +9,7 @@ import { SaveDataStoreNodeRepo } from "../save-data-store-node-repo";
 import { LoadDataStoreNodeRepo } from "../load-data-store-node-repo";
 import { DeleteDataStoreNodeRepo } from "../delete-data-store-node-repo";
 
-export class DrizzleDataStoreNodeRepo 
+export class DrizzleDataStoreNodeRepo
   implements SaveDataStoreNodeRepo, LoadDataStoreNodeRepo, DeleteDataStoreNodeRepo {
 
   async saveDataStoreNode(dataStoreNode: DataStoreNode): Promise<Result<DataStoreNode>> {
@@ -109,6 +109,10 @@ export class DrizzleDataStoreNodeRepo
       console.error("Failed to get data store nodes by flow:", error);
       return Result.fail(`Failed to get data store nodes by flow: ${error}`);
     }
+  }
+
+  async getDataStoreNodesByFlowId(flowId: UniqueEntityID): Promise<Result<DataStoreNode[]>> {
+    return this.getAllDataStoreNodesByFlow(flowId.toString());
   }
 
   async deleteDataStoreNode(id: UniqueEntityID): Promise<Result<void>> {

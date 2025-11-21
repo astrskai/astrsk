@@ -404,6 +404,7 @@ const SessionSettingsSidebar = ({
             }
             content={
               <BackgroundGrid
+                sessionId={session.id}
                 currentBackgroundId={session.backgroundId}
                 onSelect={handleChangeBackground}
               />

@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib";
@@ -14,6 +14,7 @@ import { Background } from "@/entities/background/domain/background";
 import { BackgroundService } from "@/app/services/background-service";
 
 interface BackgroundGridProps {
+  sessionId: UniqueEntityID;
   currentBackgroundId?: UniqueEntityID;
   onSelect: (backgroundId: UniqueEntityID | undefined) => void;
 }
@@ -22,6 +23,7 @@ interface BackgroundItemProps {
   background: Background | DefaultBackground;
   isSelected: boolean;
   isEditable?: boolean;
+  isLoading?: boolean;
   onSelect: (backgroundId: UniqueEntityID) => void;
   onDelete?: (backgroundId: UniqueEntityID) => void;
 }
@@ -30,6 +32,7 @@ const BackgroundItem = ({
   background,
   isSelected,
   isEditable = false,
+  isLoading = false,
   onSelect,
   onDelete,
 }: BackgroundItemProps) => {
@@ -56,7 +59,8 @@ const BackgroundItem = ({
       <button
         type="button"
         onClick={() => onSelect(background.id)}
-        className="absolute inset-0 h-full w-full"
+        disabled={isLoading}
+        className="absolute inset-0 h-full w-full disabled:cursor-wait"
         aria-label={`Select ${background.name}`}
       >
         {imageSrc ? (
@@ -75,6 +79,13 @@ const BackgroundItem = ({
         {!isEditable && (
           <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 to-transparent p-2">
             <p className="truncate text-xs text-white">{background.name}</p>
+          </div>
+        )}
+
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-400 border-t-blue-500" />
           </div>
         )}
       </button>
@@ -112,28 +123,84 @@ const BackgroundItem = ({
 };
 
 export default function BackgroundGrid({
+  sessionId,
   currentBackgroundId,
   onSelect,
 }: BackgroundGridProps) {
   const { defaultBackgrounds, backgrounds } = useBackgroundStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [copyingBackgroundId, setCopyingBackgroundId] = useState<string | null>(null);
 
   const hasUserBackgrounds = backgrounds.length > 0;
+
+  // Fetch backgrounds for this session when component mounts or sessionId changes
+  useEffect(() => {
+    fetchBackgrounds(sessionId);
+  }, [sessionId]);
+
+  // Handle selecting a default background by copying it to session-local
+  const handleDefaultBackgroundSelect = useCallback(
+    async (defaultBackground: DefaultBackground) => {
+      setCopyingBackgroundId(defaultBackground.id.toString());
+      try {
+        // Fetch the image from CDN
+        const response = await fetch(defaultBackground.src);
+        if (!response.ok) {
+          throw new Error("Failed to fetch background image");
+        }
+
+        const blob = await response.blob();
+        const file = new File([blob], `${defaultBackground.name}.jpg`, {
+          type: blob.type || "image/jpeg",
+        });
+
+        // Save as session-local background
+        const backgroundOrError =
+          await BackgroundService.saveFileToBackground.execute({
+            file,
+            sessionId,
+          });
+
+        if (backgroundOrError.isFailure) {
+          toast.error("Failed to copy background");
+          return;
+        }
+
+        const newBackground = backgroundOrError.getValue();
+
+        // Refresh backgrounds for this session
+        await fetchBackgrounds(sessionId);
+
+        // Select the newly created background
+        onSelect(newBackground.id);
+      } catch (error) {
+        toast.error("Failed to copy background", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      } finally {
+        setCopyingBackgroundId(null);
+      }
+    },
+    [sessionId, onSelect],
+  );
 
   // Handle add new background
   const handleAddBackground = useCallback(async (file: File) => {
     try {
-      // Save file to background
+      // Save file to background with sessionId
       const backgroundOrError =
-        await BackgroundService.saveFileToBackground.execute(file);
+        await BackgroundService.saveFileToBackground.execute({
+          file,
+          sessionId,
+        });
 
       if (backgroundOrError.isFailure) {
         toast.error("Failed to upload background");
         return;
       }
 
-      // Refresh backgrounds
-      await fetchBackgrounds();
+      // Refresh backgrounds for this session
+      await fetchBackgrounds(sessionId);
 
       toast.success("Background uploaded successfully");
     } catch (error) {
@@ -141,12 +208,16 @@ export default function BackgroundGrid({
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, []);
+  }, [sessionId]);
 
   // Handle delete background
   const handleDeleteBackground = useCallback(
     async (backgroundId: UniqueEntityID) => {
       try {
+        // Check if the background being deleted is currently selected
+        const isDeletingCurrentBackground =
+          currentBackgroundId?.equals(backgroundId) ?? false;
+
         const backgroundOrError =
           await BackgroundService.deleteBackground.execute(backgroundId);
 
@@ -155,8 +226,13 @@ export default function BackgroundGrid({
           return;
         }
 
-        // Refresh backgrounds
-        await fetchBackgrounds();
+        // If we deleted the currently selected background, clear the selection
+        if (isDeletingCurrentBackground) {
+          onSelect(undefined);
+        }
+
+        // Refresh backgrounds for this session
+        await fetchBackgrounds(sessionId);
 
         toast.success("Background deleted successfully");
       } catch (error) {
@@ -165,7 +241,7 @@ export default function BackgroundGrid({
         });
       }
     },
-    [],
+    [sessionId, currentBackgroundId, onSelect],
   );
 
   return (
@@ -265,8 +341,9 @@ export default function BackgroundGrid({
               <BackgroundItem
                 key={background.id.toString()}
                 background={background}
-                isSelected={currentBackgroundId?.equals(background.id) ?? false}
-                onSelect={onSelect}
+                isSelected={false}
+                isLoading={copyingBackgroundId === background.id.toString()}
+                onSelect={() => handleDefaultBackgroundSelect(background)}
               />
             ))}
           </div>

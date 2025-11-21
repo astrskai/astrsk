@@ -1,6 +1,7 @@
 import { DeleteAsset } from "@/entities/asset/usecases/delete-asset";
 import { SaveFileToAsset } from "@/entities/asset/usecases/save-file-to-asset";
 import { DrizzleBackgroundRepo } from "@/entities/background/repos/impl/drizzle-background-repo";
+import { CloneBackground } from "@/entities/background/usecases/clone-background";
 import { DeleteBackground } from "@/entities/background/usecases/delete-background";
 import { GetBackground } from "@/entities/background/usecases/get-background";
 import { ListBackground } from "@/entities/background/usecases/list-background";
@@ -11,6 +12,7 @@ import { SaveFileToBackground } from "@/entities/background/usecases/save-file-t
 export class BackgroundService {
   public static backgroundRepo: DrizzleBackgroundRepo;
 
+  public static cloneBackground: CloneBackground;
   public static deleteBackground: DeleteBackground;
   public static getBackground: GetBackground;
   public static listBackground: ListBackground;
@@ -24,6 +26,10 @@ export class BackgroundService {
   ) {
     this.backgroundRepo = new DrizzleBackgroundRepo();
 
+    this.cloneBackground = new CloneBackground(
+      this.backgroundRepo,
+      this.backgroundRepo,
+    );
     this.deleteBackground = new DeleteBackground(
       this.backgroundRepo,
       deleteAsset,

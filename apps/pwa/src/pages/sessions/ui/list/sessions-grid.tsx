@@ -70,7 +70,14 @@ function SessionGridItem({
     {
       icon: Upload,
       label: `Export`,
-      onClick: onExportClick(sessionId, session.props.title, session.flowId),
+      onClick: onExportClick(sessionId, session.props.title, session.flowId, "file"),
+      disabled: loading.exporting,
+      loading: loading.exporting,
+    },
+    {
+      icon: Upload,
+      label: `Harpy`,
+      onClick: onExportClick(sessionId, session.props.title, session.flowId, "cloud"),
       disabled: loading.exporting,
       loading: loading.exporting,
     },

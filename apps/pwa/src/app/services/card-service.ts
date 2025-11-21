@@ -8,6 +8,8 @@ import {
   CloneCard,
   DeleteCard,
   ExportCardToFile,
+  ExportCharacterToCloud,
+  ExportScenarioToCloud,
   GetCard,
   ImportCardFromFile,
   SaveCard,
@@ -36,6 +38,8 @@ export class CardService {
   public static cloneCard: CloneCard;
   public static deleteCard: DeleteCard;
   public static exportCardToFile: ExportCardToFile;
+  public static exportCharacterToCloud: ExportCharacterToCloud;
+  public static exportScenarioToCloud: ExportScenarioToCloud;
   public static getCard: GetCard;
   public static importCardFromFile: ImportCardFromFile;
   public static saveCard: SaveCard;
@@ -74,6 +78,18 @@ export class CardService {
       this.cardRepo,
       loadAssetRepo,
       generatedImageRepo,
+    );
+    this.exportCharacterToCloud = new ExportCharacterToCloud(
+      this.cardRepo,
+      loadAssetRepo,
+      this.cloneCard,
+      this.deleteCard,
+    );
+    this.exportScenarioToCloud = new ExportScenarioToCloud(
+      this.cardRepo,
+      loadAssetRepo,
+      this.cloneCard,
+      this.deleteCard,
     );
     this.getCard = new GetCard(this.cardRepo);
     this.importCardFromFile = new ImportCardFromFile(

@@ -4,11 +4,16 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { downloadFile, logger } from "@/shared/lib";
+import {
+  DEFAULT_SHARE_EXPIRATION_DAYS,
+  ExportType,
+} from "@/shared/lib/cloud-upload-helpers";
 import { SessionService } from "@/app/services/session-service";
 import { FlowService } from "@/app/services/flow-service";
 import { AgentService } from "@/app/services/agent-service";
 import { sessionQueries } from "@/entities/session/api";
 import { ModelTier, AgentModelTierInfo } from "@/entities/agent/domain";
+import { fetchBackgrounds } from "@/shared/stores/background-store";
 
 interface DeleteDialogState {
   isOpen: boolean;
@@ -21,6 +26,7 @@ interface ExportDialogState {
   sessionId: string | null;
   title: string;
   agents: AgentModelTierInfo[];
+  exportType: ExportType;
 }
 
 interface CopyDialogState {
@@ -97,6 +103,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
       sessionId: null,
       title: "",
       agents: [],
+      exportType: "file",
     },
   );
 
@@ -111,9 +118,10 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
   /**
    * Open export dialog and fetch agent info from flow
+   * @param exportType - "file" for JSON download, "cloud" for Harpy cloud upload
    */
   const handleExportClick = useCallback(
-    (sessionId: string, title: string, flowId: UniqueEntityID | undefined) =>
+    (sessionId: string, title: string, flowId: UniqueEntityID | undefined, exportType: ExportType = "file") =>
       async (e: MouseEvent) => {
         e.stopPropagation();
 
@@ -178,7 +186,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
             }
           }
 
-          setExportDialogState({ isOpen: true, sessionId, title, agents });
+          setExportDialogState({ isOpen: true, sessionId, title, agents, exportType });
         } catch (error) {
           logger.error("Failed to prepare export:", error);
           toast.error("Failed to prepare export", {
@@ -196,7 +204,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
   );
 
   /**
-   * Export session with tier selections and optional chat history
+   * Export session (either to file or cloud) with tier selections and optional chat history
    */
   const handleExportConfirm = useCallback(
     async (
@@ -205,44 +213,73 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
       modelTierSelections: Map<string, ModelTier>,
       includeHistory: boolean,
     ) => {
+      const { exportType } = exportDialogState;
+
       try {
-        // Export session to file with model tier selections
-        const fileOrError = await SessionService.exportSessionToFile.execute({
-          sessionId: new UniqueEntityID(sessionId),
-          includeHistory,
-          modelTierSelections,
-        });
+        if (exportType === "cloud") {
+          // Export session to cloud (Supabase)
+          const shareResult = await SessionService.exportSessionToCloud.execute({
+            sessionId: new UniqueEntityID(sessionId),
+            expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS,
+          });
 
-        if (fileOrError.isFailure) {
-          throw new Error(fileOrError.getError());
+          if (shareResult.isFailure) {
+            throw new Error(shareResult.getError());
+          }
+
+          const shareLink = shareResult.getValue();
+
+          // Copy share URL to clipboard
+          await navigator.clipboard.writeText(shareLink.shareUrl);
+
+          toast.success("Successfully exported to cloud!", {
+            description: `Share link copied to clipboard. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
+            duration: 5000,
+          });
+        } else {
+          // Export session to file (JSON download)
+          const fileOrError = await SessionService.exportSessionToFile.execute({
+            sessionId: new UniqueEntityID(sessionId),
+            includeHistory,
+            modelTierSelections,
+          });
+
+          if (fileOrError.isFailure) {
+            throw new Error(fileOrError.getError());
+          }
+
+          const file = fileOrError.getValue();
+          if (!file) {
+            throw new Error("Export returned empty file");
+          }
+
+          // Download session file
+          downloadFile(file);
+
+          toast.success("Successfully exported!", {
+            description: `"${title}" exported`,
+          });
         }
-
-        const file = fileOrError.getValue();
-        if (!file) {
-          throw new Error("Export returned empty file");
-        }
-
-        // Download session file
-        downloadFile(file);
-
-        toast.success("Successfully exported!", {
-          description: `"${title}" exported`,
-        });
 
         setExportDialogState({
           isOpen: false,
           sessionId: null,
           title: "",
           agents: [],
+          exportType: "file",
         });
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to export", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
+        toast.error(
+          `Failed to export ${exportType === "cloud" ? "to cloud" : "to file"}`,
+          {
+            description:
+              error instanceof Error ? error.message : "Unknown error",
+          },
+        );
       }
     },
-    [],
+    [exportDialogState],
   );
 
   /**
@@ -295,6 +332,9 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
       }
 
       const copiedSession = copiedSessionOrError.getValue();
+
+      // Fetch backgrounds for the newly cloned session
+      await fetchBackgrounds(copiedSession.id);
 
       // Notify parent of successful copy for animation
       onCopySuccess?.(copiedSession.id.toString());
@@ -401,6 +441,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
       sessionId: null,
       title: "",
       agents: [],
+      exportType: "file",
     });
   }, []);
 

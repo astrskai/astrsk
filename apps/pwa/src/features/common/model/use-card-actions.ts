@@ -4,6 +4,10 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { downloadFile } from "@/shared/lib";
+import {
+  DEFAULT_SHARE_EXPIRATION_DAYS,
+  ExportType,
+} from "@/shared/lib/cloud-upload-helpers";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
 import { cardQueries } from "@/entities/card/api/card-queries";
@@ -74,44 +78,83 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
   const [loadingStates, setLoadingStates] = useState<LoadingStates>({});
 
   /**
-   * Export card to PNG file
+   * Export card (either to file or cloud)
+   * @param exportType - "file" for PNG download, "cloud" for Harpy cloud upload
    */
   const handleExport = useCallback(
-    (cardId: string, title: string) => async (e: MouseEvent) => {
-      e.stopPropagation();
+    (cardId: string, title: string, exportType: ExportType = "file") =>
+      async (e: MouseEvent) => {
+        e.stopPropagation();
 
-      setLoadingStates((prev) => ({
-        ...prev,
-        [cardId]: { ...(prev[cardId] ?? {}), exporting: true },
-      }));
-
-      try {
-        const result = await CardService.exportCardToFile.execute({
-          cardId: new UniqueEntityID(cardId),
-          options: { format: "png" },
-        });
-
-        if (result.isFailure) {
-          toast.error("Failed to export", { description: result.getError() });
-          return;
-        }
-
-        downloadFile(result.getValue());
-        toast.success("Successfully exported!", {
-          description: `"${title}" exported`,
-        });
-      } catch (error) {
-        toast.error("Failed to export", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      } finally {
         setLoadingStates((prev) => ({
           ...prev,
-          [cardId]: { ...(prev[cardId] ?? {}), exporting: false },
+          [cardId]: { ...(prev[cardId] ?? {}), exporting: true },
         }));
-      }
-    },
-    [],
+
+        const entityTypeText =
+          entityType === CardType.Plot ? "scenario" : entityType;
+
+        try {
+          if (exportType === "cloud") {
+            // Export to cloud (Supabase)
+            const exportMethod =
+              entityType === CardType.Character
+                ? CardService.exportCharacterToCloud
+                : CardService.exportScenarioToCloud;
+
+            const shareResult = await exportMethod.execute({
+              cardId: new UniqueEntityID(cardId),
+              expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS,
+            });
+
+            if (shareResult.isFailure) {
+              throw new Error(shareResult.getError());
+            }
+
+            const shareLink = shareResult.getValue();
+
+            // Copy share URL to clipboard
+            await navigator.clipboard.writeText(shareLink.shareUrl);
+
+            toast.success("Successfully exported to cloud!", {
+              description: `Share link copied to clipboard. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
+              duration: 5000,
+            });
+          } else {
+            // Export to file (PNG)
+            const result = await CardService.exportCardToFile.execute({
+              cardId: new UniqueEntityID(cardId),
+              options: { format: "png" },
+            });
+
+            if (result.isFailure) {
+              toast.error("Failed to export", {
+                description: result.getError(),
+              });
+              return;
+            }
+
+            downloadFile(result.getValue());
+            toast.success("Successfully exported!", {
+              description: `"${title}" exported`,
+            });
+          }
+        } catch (error) {
+          toast.error(
+            `Failed to export ${exportType === "cloud" ? "to cloud" : "to file"}`,
+            {
+              description:
+                error instanceof Error ? error.message : "Unknown error",
+            },
+          );
+        } finally {
+          setLoadingStates((prev) => ({
+            ...prev,
+            [cardId]: { ...(prev[cardId] ?? {}), exporting: false },
+          }));
+        }
+      },
+    [entityType],
   );
 
   /**

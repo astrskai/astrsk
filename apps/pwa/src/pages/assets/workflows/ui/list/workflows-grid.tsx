@@ -12,6 +12,7 @@ import { useFlowActions } from "@/features/flow/model/use-flow-actions";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
 import { FlowExportDialog } from "../dialog/flow-export-dialog";
 import { cn } from "@/shared/lib";
+import { ExportType } from "@/shared/lib/cloud-upload-helpers";
 
 interface FlowsGridProps {
   flows: Flow[];
@@ -32,6 +33,7 @@ interface FlowGridItemProps {
   onExportClick: (
     flowId: string,
     title: string,
+    exportType: ExportType,
   ) => (e: React.MouseEvent) => void;
   onCopy: (flowId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
@@ -56,7 +58,14 @@ function FlowGridItem({
     {
       icon: Upload,
       label: `Export`,
-      onClick: onExportClick(flowId, flow.props.name),
+      onClick: onExportClick(flowId, flow.props.name, "file"),
+      disabled: loading.exporting,
+      loading: loading.exporting,
+    },
+    {
+      icon: Upload,
+      label: `Harpy`,
+      onClick: onExportClick(flowId, flow.props.name, "cloud"),
       disabled: loading.exporting,
       loading: loading.exporting,
     },

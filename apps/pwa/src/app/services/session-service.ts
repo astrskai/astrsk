@@ -1,15 +1,20 @@
 import { GetAsset } from "@/entities/asset/usecases/get-asset";
+import { CloneAsset } from "@/entities/asset/usecases/clone-asset";
 import { GetBackground } from "@/entities/background/usecases/get-background";
+import { CloneBackground } from "@/entities/background/usecases/clone-background";
 import { SaveFileToBackground } from "@/entities/background/usecases/save-file-to-background";
 import {
   ExportCardToFile,
   GetCard,
   ImportCardFromFile,
 } from "@/entities/card/usecases";
+import { PrepareCharacterCloudData } from "@/entities/card/usecases/prepare-character-cloud-data";
+import { PrepareScenarioCloudData } from "@/entities/card/usecases/prepare-scenario-cloud-data";
 import { ExportFlowWithNodes } from "@/entities/flow/usecases/export-flow-with-nodes";
 import { GetModelsFromFlowFile } from "@/entities/flow/usecases/get-models-from-flow-file";
 import { ImportFlowWithNodes } from "@/entities/flow/usecases/import-flow-with-nodes";
 import { CloneFlow } from "@/entities/flow/usecases/clone-flow";
+import { PrepareFlowCloudData } from "@/entities/flow/usecases/prepare-flow-cloud-data";
 import { CloneCard } from "@/entities/card/usecases/clone-card";
 import { DrizzleSessionRepo } from "@/entities/session/repos/impl/drizzle-session-repo";
 import {
@@ -22,6 +27,8 @@ import {
   SaveSession,
 } from "@/entities/session/usecases";
 import { ExportSessionToFile } from "@/entities/session/usecases/export-session-to-file";
+import { ExportSessionToCloud } from "@/entities/session/usecases/export-session-to-cloud";
+import { PrepareSessionCloudData } from "@/entities/session/usecases/prepare-session-cloud-data";
 import { GetModelsFromSessionFile } from "@/entities/session/usecases/get-models-from-session-file";
 import { GetSession } from "@/entities/session/usecases/get-session";
 import { ImportCharactersFromSessionFile } from "@/entities/session/usecases/import-characters-from-session-file";
@@ -29,6 +36,15 @@ import { ImportSessionFromFile } from "@/entities/session/usecases/import-sessio
 import { ListSessionByCard } from "@/entities/session/usecases/list-session-by-card";
 import { ListSessionByFlow } from "@/entities/session/usecases/list-session-by-flow";
 import { SearchSession } from "@/entities/session/usecases/search-session";
+import { PrepareAgentsCloudData } from "@/entities/agent/usecases/prepare-agents-cloud-data";
+import { PrepareDataStoreNodesCloudData } from "@/entities/data-store-node/usecases/prepare-data-store-nodes-cloud-data";
+import { PrepareIfNodesCloudData } from "@/entities/if-node/usecases/prepare-if-nodes-cloud-data";
+import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
+import { LoadCardRepo } from "@/entities/card/repos";
+import { LoadFlowRepo } from "@/entities/flow/repos";
+import { LoadAgentRepo } from "@/entities/agent/repos";
+import { LoadDataStoreNodeRepo } from "@/entities/data-store-node/repos";
+import { LoadIfNodeRepo } from "@/entities/if-node/repos";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 import { SaveFlowRepo } from "@/entities/flow/repos";
 import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
@@ -49,6 +65,7 @@ export class SessionService {
   public static saveSession: SaveSession;
   public static searchSession: SearchSession;
   public static exportSessionToFile: ExportSessionToFile;
+  public static exportSessionToCloud: ExportSessionToCloud;
   public static importSessionFromFile: ImportSessionFromFile;
   public static listSessionByCard: ListSessionByCard;
   public static listSessionByFlow: ListSessionByFlow;
@@ -69,6 +86,14 @@ export class SessionService {
     getModelsFromFlowFile: GetModelsFromFlowFile,
     cloneFlow: CloneFlow,
     cloneCard: CloneCard,
+    cloneAsset: CloneAsset,
+    cloneBackground: CloneBackground,
+    loadAssetRepo: LoadAssetRepo,
+    loadCardRepo: LoadCardRepo,
+    loadFlowRepo: LoadFlowRepo,
+    loadAgentRepo: LoadAgentRepo,
+    loadDataStoreNodeRepo: LoadDataStoreNodeRepo,
+    loadIfNodeRepo: LoadIfNodeRepo,
   ) {
     this.sessionRepo = new DrizzleSessionRepo();
 
@@ -87,6 +112,10 @@ export class SessionService {
       this.sessionRepo,
       turnRepo,
       this.addMessage,
+      cloneCard,
+      cloneFlow,
+      cloneAsset,
+      cloneBackground,
     );
     this.deleteMessage = new DeleteMessage(
       turnRepo,
@@ -115,6 +144,45 @@ export class SessionService {
       getAsset,
       getTurn,
     );
+
+    // Cloud export initialization
+    const prepareCharacterData = new PrepareCharacterCloudData(
+      loadCardRepo,
+      loadAssetRepo,
+    );
+    const prepareScenarioData = new PrepareScenarioCloudData(
+      loadCardRepo,
+      loadAssetRepo,
+    );
+    const prepareFlowData = new PrepareFlowCloudData(
+      loadFlowRepo,
+    );
+    const prepareAgentsData = new PrepareAgentsCloudData(
+      loadAgentRepo,
+    );
+    const prepareDataStoreNodesData = new PrepareDataStoreNodesCloudData(
+      loadDataStoreNodeRepo,
+    );
+    const prepareIfNodesData = new PrepareIfNodesCloudData(
+      loadIfNodeRepo,
+    );
+    const prepareSessionData = new PrepareSessionCloudData(
+      this.sessionRepo,
+      loadAssetRepo,
+      prepareCharacterData,
+      prepareScenarioData,
+      prepareFlowData,
+      prepareAgentsData,
+      prepareDataStoreNodesData,
+      prepareIfNodesData,
+    );
+
+    this.exportSessionToCloud = new ExportSessionToCloud(
+      this.cloneSession,
+      this.deleteSession,
+      prepareSessionData,
+    );
+
     this.importSessionFromFile = new ImportSessionFromFile(
       this.sessionRepo,
       importFlowWithNodes,
