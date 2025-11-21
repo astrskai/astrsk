@@ -537,6 +537,9 @@ const CharacterDetailPage = () => {
       reset({ ...data, iconAssetId: uploadedAssetId });
 
       toastSuccess("Character saved successfully!");
+
+      // Navigate back to characters list page
+      navigate({ to: "/assets/characters" });
     } catch (error) {
       toastError("Failed to save character", {
         description:
@@ -573,7 +576,16 @@ const CharacterDetailPage = () => {
           />
           <h1 className="text-base font-semibold">{character?.props.title}</h1>
         </div>
-        <div>
+        <div className="flex items-center gap-3">
+          {isDirty && (
+            <span className="flex items-center gap-2 text-xs text-yellow-500">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-yellow-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-yellow-500"></span>
+              </span>
+              <span className="hidden sm:inline">Unsaved changes</span>
+            </span>
+          )}
           <Button
             icon={<Save className="h-4 w-4" />}
             type="submit"
