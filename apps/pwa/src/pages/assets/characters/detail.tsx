@@ -200,7 +200,7 @@ const LorebookItemContent = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <Input
         {...register(`lorebookEntries.${index}.name`, {
           required: "Lorebook name is required",
