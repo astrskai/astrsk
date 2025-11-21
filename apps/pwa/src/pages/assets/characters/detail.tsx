@@ -158,10 +158,16 @@ const LorebookItemContent = ({
 
   const handleAddKeyword = () => {
     if (newKeyword.trim()) {
-      // Get current keys and add new one
-      const keys = [...currentKeys, newKeyword.trim()];
+      // Get current keys from form (fresh value)
+      const keys = getValues(`lorebookEntries.${index}.keys`) || [];
+      // Check for duplicates
+      if (keys.includes(newKeyword.trim())) {
+        return; // Don't add duplicate
+      }
+      // Add new keyword
+      const updatedKeys = [...keys, newKeyword.trim()];
       // Update the entire keys array
-      setValue(`lorebookEntries.${index}.keys`, keys, {
+      setValue(`lorebookEntries.${index}.keys`, updatedKeys, {
         shouldDirty: true,
         shouldValidate: true,
       });
@@ -172,11 +178,12 @@ const LorebookItemContent = ({
   };
 
   const handleRemoveKeyword = (keyIndex: number) => {
-    // Get current keys and remove the one at keyIndex
-    const keys = [...currentKeys];
-    keys.splice(keyIndex, 1);
+    // Get current keys from form (fresh value)
+    const keys = getValues(`lorebookEntries.${index}.keys`) || [];
+    const updatedKeys = [...keys];
+    updatedKeys.splice(keyIndex, 1);
     // Update the entire keys array
-    setValue(`lorebookEntries.${index}.keys`, keys, {
+    setValue(`lorebookEntries.${index}.keys`, updatedKeys, {
       shouldDirty: true,
       shouldValidate: true,
     });
@@ -210,7 +217,6 @@ const LorebookItemContent = ({
             value={newKeyword}
             onChange={(e) => setNewKeyword(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Enter keyword"
             error={errors?.lorebookEntries?.[index]?.keys?.message}
             isRequired
             className="pr-20"
@@ -306,6 +312,7 @@ const CharacterDetailPage = () => {
   } = useForm<CharacterFormData>();
 
   const cardSummary = watch("cardSummary") || "";
+  const tags = watch("tags") || [];
 
   const { fields, remove, prepend } = useFieldArray({
     control,
@@ -444,10 +451,9 @@ const CharacterDetailPage = () => {
 
   const handleAddTag = () => {
     if (newTag.trim()) {
-      const currentTags = getValues("tags") || [];
       // Don't add duplicate tags
-      if (!currentTags.includes(newTag.trim())) {
-        setValue("tags", [...currentTags, newTag.trim()], {
+      if (!tags.includes(newTag.trim())) {
+        setValue("tags", [...tags, newTag.trim()], {
           shouldDirty: true,
         });
       }
@@ -688,13 +694,13 @@ const CharacterDetailPage = () => {
 
               <div className="flex flex-wrap gap-2">
                 {TAG_DEFAULT.map((tag, index) => {
-                  const isSelected = (getValues("tags") || []).includes(tag);
+                  const isSelected = tags.includes(tag);
                   return (
                     <button
                       key={`${tag}-${index}`}
                       type="button"
                       onClick={() => {
-                        const currentTags = getValues("tags") || [];
+                        const currentTags = tags;
                         if (isSelected) {
                           // Remove tag
                           setValue(
@@ -721,7 +727,7 @@ const CharacterDetailPage = () => {
                 })}
 
                 {/* Custom tags (can be deleted) */}
-                {(getValues("tags") || [])
+                {tags
                   .filter((tag) => !TAG_DEFAULT.includes(tag))
                   .map((tag, index) => (
                     <span
@@ -732,10 +738,9 @@ const CharacterDetailPage = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          const currentTags = getValues("tags") || [];
                           setValue(
                             "tags",
-                            currentTags.filter((t) => t !== tag),
+                            tags.filter((t) => t !== tag),
                             { shouldDirty: true },
                           );
                         }}
@@ -750,7 +755,6 @@ const CharacterDetailPage = () => {
               <div className="relative">
                 <Input
                   labelPosition="inner"
-                  placeholder="Enter custom tag"
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyDown={(e) => {
