@@ -140,7 +140,7 @@ const ChatMessageActions = ({
 
           <div
             className={cn(
-              "flex items-center gap-1 rounded px-2 py-1",
+              "flex items-center gap-1 rounded p-1",
               isUser ? "bg-gray-100/80" : "bg-gray-700/80",
             )}
           >
