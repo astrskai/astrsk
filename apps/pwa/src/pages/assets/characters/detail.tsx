@@ -6,8 +6,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { Trash2, ArrowLeft, X, Save, Upload, Plus, Copy } from "lucide-react";
 import { Route } from "@/routes/_layout/assets/characters/$characterId";
 
-import { characterQueries } from "@/entities/character/api";
-import { useUpdateCharacterCard } from "@/entities/card/api/mutations";
+import { characterQueries, useUpdateCharacterCard } from "@/entities/character/api";
 
 import { Loading, DropdownMenuBase } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";

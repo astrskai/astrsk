@@ -150,7 +150,7 @@ const ChatMessage = ({
     >
       <AvatarSimple
         src={characterImageUrl || "/img/message-avatar-default.svg"}
-        alt={character?.props.name ?? ""}
+        alt={character?.props.name ?? character?.props.title ?? ""}
         className="h-9 w-9 md:h-16 md:w-16"
         size="xl"
       />
@@ -167,7 +167,7 @@ const ChatMessage = ({
             isEditing && isUser && "ml-auto",
           )}
         >
-          {character?.props.name || "User"}
+          {character?.props.name ?? character?.props.title ?? "User"}
         </div>
         <div
           className={cn(

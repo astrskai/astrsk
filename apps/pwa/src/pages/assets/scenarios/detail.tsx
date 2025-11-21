@@ -6,8 +6,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { Trash2, ArrowLeft, X, Save, Upload, Plus, Copy } from "lucide-react";
 import { Route } from "@/routes/_layout/assets/scenarios/$scenarioId";
 
-import { scenarioQueries } from "@/entities/scenario/api";
-import { useUpdatePlotCard } from "@/entities/card/api/mutations";
+import { scenarioQueries, useUpdatePlotCard } from "@/entities/scenario/api";
 
 import { Loading, DropdownMenuBase } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";

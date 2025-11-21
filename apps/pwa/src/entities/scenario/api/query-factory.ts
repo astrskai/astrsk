@@ -32,7 +32,9 @@ export const scenarioQueries = {
         const cardOrError = await CardService.getCard.execute(
           new UniqueEntityID(id),
         );
-        if (cardOrError.isFailure) return null;
+        if (cardOrError.isFailure) {
+          throw new Error("Scenario not found");
+        }
 
         const card = cardOrError.getValue();
 

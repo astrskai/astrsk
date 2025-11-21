@@ -32,7 +32,9 @@ export const characterQueries = {
         const cardOrError = await CardService.getCard.execute(
           new UniqueEntityID(id),
         );
-        if (cardOrError.isFailure) return null;
+        if (cardOrError.isFailure) {
+          throw new Error("Character not found");
+        }
 
         const card = cardOrError.getValue();
 
