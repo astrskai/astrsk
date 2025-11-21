@@ -56,6 +56,7 @@ export const toastSuccess = (message: string, options?: ToastOptions) => {
       closeButton:
         "!bg-green-900 !text-green-200 hover:!bg-green-800 !border-green-700",
     },
+    descriptionClassName: "!text-green-200 !line-clamp-2 !overflow-hidden",
     style: {
       color: "rgb(255 255 255 / 0.9)",
       borderColor: "rgb(34 197 94 / 0.5)",
@@ -79,6 +80,7 @@ export const toastInfo = (message: string, options?: ToastOptions) => {
       closeButton:
         "!bg-blue-900 !text-blue-200 hover:!bg-blue-800 !border-blue-700",
     },
+    descriptionClassName: "!text-blue-200 !line-clamp-2 !overflow-hidden",
     style: {
       color: "rgb(255 255 255 / 0.9)",
       borderColor: "rgb(59 130 246 / 0.5)",
@@ -102,6 +104,7 @@ export const toastWarning = (message: string, options?: ToastOptions) => {
       closeButton:
         "!bg-amber-900 !text-amber-200 hover:!bg-amber-800 !border-amber-700",
     },
+    descriptionClassName: "!text-amber-200 !line-clamp-2 !overflow-hidden",
     style: {
       color: "rgb(255 255 255 / 0.9)",
       borderColor: "rgb(245 158 11 / 0.5)",

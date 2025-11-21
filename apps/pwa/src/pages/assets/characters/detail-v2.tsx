@@ -546,7 +546,9 @@ const CharacterDetailPage = () => {
         iconAssetId: uploadedAssetId,
       });
 
-      toastSuccess("Character saved successfully!");
+      toastSuccess("Character updated!", {
+        description: "Your character has been updated successfully.",
+      });
 
       // Navigate back to characters list page
       navigate({ to: "/assets/characters" });
