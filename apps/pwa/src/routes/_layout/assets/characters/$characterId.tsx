@@ -1,7 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
-// import CharacterDetailPage from "@/pages/assets/characters/detail";
-import CharacterDetailPage from "@/pages/assets/characters/detail-v2";
+import CharacterDetailPage from "@/pages/assets/characters/detail";
 import ErrorPage from "@/pages/error";
 
 function CharacterDetailPageWrapper() {

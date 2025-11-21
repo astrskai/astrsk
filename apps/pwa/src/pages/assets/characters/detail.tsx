@@ -1,547 +1,871 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { Card, CardType } from "@/entities/card/domain";
-import { UniqueEntityID } from "@/shared/domain";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { cardQueries } from "@/entities/card/api";
-import {
-  DockviewReact,
-  IDockviewPanelProps,
-  DockviewReadyEvent,
-  DockviewApi,
-} from "dockview";
-import type { IDockviewPanel, DockviewGroupPanel } from "dockview-core";
-import { queryClient } from "@/shared/api/query-client";
-import {
-  useCardUIStore,
-  CardPanelVisibility,
-} from "@/entities/card/stores/card-ui-store";
-import { CardPanelProvider } from "@/features/card/panels/card-panel-provider";
-import { invalidateSingleCardQueries } from "@/features/card/utils/invalidate-card-queries";
-import { extractCardPanelType } from "@/features/card/utils/panel-id-utils";
-import "@/app/styles/dockview-detail.css";
+import { useNavigate, useBlocker } from "@tanstack/react-router";
+import { useForm, useFieldArray } from "react-hook-form";
+import { Trash2, ArrowLeft, X, Save, Upload, Plus, Copy } from "lucide-react";
+import { Route } from "@/routes/_layout/assets/characters/$characterId";
 
-// Import panel components
-import { CardPanel } from "@/pages/assets/characters/panel";
-import { MetadataPanel } from "@/pages/assets/characters/panel/metadata-panel";
-import { LorebookPanel } from "@/pages/assets/characters/panel/lorebook-panel";
-import { CharacterInfoPanel } from "@/pages/assets/characters/panel/character-info-panel";
-import { PlotInfoPanel } from "@/pages/assets/characters/panel/plot-info-panel";
-import { VariablesPanel } from "@/pages/assets/characters/panel/variables-panel";
-import { FirstMessagesPanel } from "@/pages/assets/characters/panel/scenarios-panel";
-import { ImageGeneratorPanel } from "@/pages/assets/characters/panel/image-generator-panel";
-import { CardVibePanel } from "@/pages/assets/characters/panel/vibe-panel";
-import { SvgIcon, FloatingActionButton } from "@/shared/ui";
-import { cn } from "@/shared/lib";
-import { logger } from "@/shared/lib";
-import CustomDockviewTab from "@/widgets/dockview-default-tab";
-import { PanelFocusAnimationWrapper } from "@/widgets/dockview-panel-focus-animation";
-import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { characterQueries } from "@/entities/character/api";
+import { useUpdateCharacterCard } from "@/entities/card/api/mutations";
 
-interface CharacterPlotDetailPageProps {
-  cardId: string;
+import { Loading, DropdownMenuBase } from "@/shared/ui";
+import { Button } from "@/shared/ui/forms";
+import { useAsset } from "@/shared/hooks/use-asset";
+import { Input, Textarea } from "@/shared/ui/forms";
+import { useScrollToTop } from "@/shared/hooks/use-scroll-to-top";
+import { AccordionBase } from "@/shared/ui";
+import { DialogConfirm } from "@/shared/ui/dialogs";
+import { toastSuccess, toastError } from "@/shared/ui/toast/base";
+import { AssetService } from "@/app/services/asset-service";
+
+interface LorebookEntryFormData {
+  id: string;
+  name: string;
+  enabled: boolean;
+  keys: string[];
+  recallRange: number;
+  content: string;
 }
 
-// Panel wrapper component that preserves state and handles invalidation
-const PanelWrapper: React.FC<{
-  children: React.ReactNode;
-  cardId: string;
-  panelType: string;
-  preserveState?: boolean;
-}> = ({ children, cardId, preserveState = true }) => {
-  // Only invalidate other panels on unmount, not the current panel
-  useEffect(() => {
-    return () => {
-      if (!preserveState) {
-        // Invalidate queries for this specific panel type
-        invalidateSingleCardQueries(queryClient, new UniqueEntityID(cardId));
-      }
-    };
-  }, [cardId, preserveState]);
+interface CharacterFormData {
+  // CardProps
+  title: string;
+  tags: string[];
+  creator?: string;
+  cardSummary?: string;
+  version?: string;
+  conceptualOrigin?: string;
+  iconAssetId?: string;
 
-  return <>{children}</>;
-};
+  // CharacterCardProps
+  name: string;
+  description: string;
+  exampleDialogue?: string;
 
-// Main Card Panel Component (kept separate - no PanelWrapper)
-const CardPanelComponent: React.FC<IDockviewPanelProps> = ({ params }) => {
-  const { cardId } = params;
-  return <CardPanel cardId={cardId} />;
-};
+  // Lorebook
+  lorebookEntries: LorebookEntryFormData[];
+}
 
-// Panel component factory for sub-panels (with PanelWrapper and focus animation)
-const createCardPanelComponent = (
-  panelType: string,
-  Component: React.FC<{ cardId: string }>,
-): React.FC<IDockviewPanelProps> => {
-  return (props) => {
-    const { cardId } = props.params;
-    return (
-      <PanelFocusAnimationWrapper
-        api={props.api}
-        containerApi={props.containerApi}
-      >
-        <PanelWrapper cardId={cardId} panelType={panelType}>
-          <Component cardId={cardId} />
-        </PanelWrapper>
-      </PanelFocusAnimationWrapper>
-    );
+const TAG_DEFAULT = [
+  "Female",
+  "Male",
+  "Villain",
+  "Fictional",
+  "OC",
+  "LGBTQA+",
+  "Platonic",
+  "Angst",
+  "Dead Dove",
+  "Fluff",
+  "Historical",
+  "Royalty",
+];
+
+const LorebookItemTitle = ({
+  name,
+  onDelete,
+  onCopy,
+}: {
+  name: string;
+  onDelete?: (e: React.MouseEvent) => void;
+  onCopy?: (e: React.MouseEvent) => void;
+}) => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent accordion from toggling
+    onDelete?.(e);
   };
-};
 
-// Panel component registry
-const CARD_PANEL_COMPONENTS = {
-  "card-panel": CardPanelComponent,
-  metadata: createCardPanelComponent("metadata", MetadataPanel),
-  "character-info": createCardPanelComponent(
-    "character-info",
-    CharacterInfoPanel,
-  ),
-  "plot-info": createCardPanelComponent("plot-info", PlotInfoPanel),
-  lorebooks: createCardPanelComponent("lorebooks", LorebookPanel),
-  variables: createCardPanelComponent("variables", VariablesPanel),
-  scenarios: createCardPanelComponent("scenarios", FirstMessagesPanel),
-  imageGenerator: createCardPanelComponent(
-    "imageGenerator",
-    ImageGeneratorPanel,
-  ),
-  vibe: createCardPanelComponent("vibe", CardVibePanel),
-};
-
-// Constants
-const CARD_PANEL_ID = "card-panel-main";
-const MIN_GROUP_WIDTH = 384;
-
-// Custom hook for card loading
-const useCardLoader = (cardId: string) => {
-  // Use React Query to fetch card data
-  const {
-    data: card,
-    isLoading,
-    error,
-  } = useQuery({
-    ...cardQueries.detail(cardId),
-    enabled: !!cardId,
-  });
-
-  return {
-    card: card || null,
-    isLoading,
-    error: error ? `Failed to load card: ${error}` : null,
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent accordion from toggling
+    onCopy?.(e);
   };
-};
 
-// Custom hook for panel visibility management
-const usePanelVisibility = (card: Card | null) => {
-  const getCardTypePanelVisibility =
-    useCardUIStore.use.getCardTypePanelVisibility();
-  const setCardTypePanelVisibilityStore =
-    useCardUIStore.use.setCardTypePanelVisibility();
-  const defaultPanelVisibility = useCardUIStore.use.defaultPanelVisibility();
-  const [panelVisibility, setPanelVisibilityState] =
-    useState<CardPanelVisibility>(defaultPanelVisibility);
-
-  const cardType = useMemo(() => {
-    return card?.props.type === CardType.Character ? "character" : "plot";
-  }, [card]);
-
-  useEffect(() => {
-    if (card) {
-      const newPanelVisibility = getCardTypePanelVisibility(cardType);
-      setPanelVisibilityState(newPanelVisibility);
+  const handleCopyKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      onCopy?.(e as unknown as React.MouseEvent);
     }
-  }, [card, cardType, getCardTypePanelVisibility]);
+  };
 
-  const setPanelVisibility = useCallback(
-    (panel: keyof CardPanelVisibility, visible: boolean) => {
-      setPanelVisibilityState((prev) => ({
-        ...prev,
-        [panel]: visible,
-      }));
+  const handleDeleteKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      onDelete?.(e as unknown as React.MouseEvent);
+    }
+  };
 
-      if (card) {
-        setCardTypePanelVisibilityStore(cardType, panel, visible);
-      }
-    },
-    [card, cardType, setCardTypePanelVisibilityStore],
+  return (
+    <div className="flex items-center justify-between">
+      <div>{name}</div>
+      <div className="flex items-center gap-2">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleCopy}
+          onKeyDown={handleCopyKeyDown}
+          className="cursor-pointer text-gray-500 hover:text-gray-400"
+          aria-label="Copy lorebook entry"
+        >
+          <Copy className="h-4 w-4" />
+        </div>
+
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleDelete}
+          onKeyDown={handleDeleteKeyDown}
+          className="cursor-pointer text-gray-500 hover:text-gray-400"
+          aria-label="Delete lorebook entry"
+        >
+          <Trash2 className="h-4 w-4" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const LorebookItemContent = ({
+  index,
+  register,
+  errors,
+  setValue,
+  getValues,
+  trigger,
+}: {
+  index: number;
+  register: ReturnType<typeof useForm<CharacterFormData>>["register"];
+  errors: ReturnType<typeof useForm<CharacterFormData>>["formState"]["errors"];
+  setValue: ReturnType<typeof useForm<CharacterFormData>>["setValue"];
+  getValues: ReturnType<typeof useForm<CharacterFormData>>["getValues"];
+  trigger: ReturnType<typeof useForm<CharacterFormData>>["trigger"];
+}) => {
+  const [newKeyword, setNewKeyword] = useState<string>("");
+
+  // Get current keys from form state
+  const currentKeys = getValues(`lorebookEntries.${index}.keys`) || [];
+
+  // Register the keys field with validation
+  useEffect(() => {
+    register(`lorebookEntries.${index}.keys`, {
+      validate: (value) =>
+        value && value.length > 0
+          ? true
+          : "At least one trigger keyword is required",
+    });
+  }, [index, register]);
+
+  const handleAddKeyword = () => {
+    if (newKeyword.trim()) {
+      // Get current keys and add new one
+      const keys = [...currentKeys, newKeyword.trim()];
+      // Update the entire keys array
+      setValue(`lorebookEntries.${index}.keys`, keys, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      // Trigger validation for this field
+      trigger(`lorebookEntries.${index}.keys`);
+      setNewKeyword("");
+    }
+  };
+
+  const handleRemoveKeyword = (keyIndex: number) => {
+    // Get current keys and remove the one at keyIndex
+    const keys = [...currentKeys];
+    keys.splice(keyIndex, 1);
+    // Update the entire keys array
+    setValue(`lorebookEntries.${index}.keys`, keys, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    // Trigger validation for this field
+    trigger(`lorebookEntries.${index}.keys`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddKeyword();
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Input
+        {...register(`lorebookEntries.${index}.name`, {
+          required: "Lorebook name is required",
+        })}
+        label="Lorebook name"
+        labelPosition="inner"
+        error={errors?.lorebookEntries?.[index]?.name?.message}
+      />
+
+      <div className="space-y-2">
+        <div className="relative">
+          <Input
+            label="Trigger keywords"
+            labelPosition="inner"
+            value={newKeyword}
+            onChange={(e) => setNewKeyword(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter keyword"
+            error={errors?.lorebookEntries?.[index]?.keys?.message}
+            isRequired
+            className="pr-20"
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleAddKeyword}
+            className="absolute right-2 bottom-2"
+          >
+            Add
+          </Button>
+        </div>
+
+        {currentKeys.length > 0 && (
+          <ul className="flex flex-wrap gap-2">
+            {currentKeys.map((key, keyIndex) => (
+              <li
+                key={`${index}-${key}-${keyIndex}`}
+                className="bg-background-primary flex items-center justify-between gap-2 rounded-md px-2 py-1 text-sm text-gray-50"
+              >
+                <span className="text-xs text-gray-200">{key}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveKeyword(keyIndex)}
+                  className="text-gray-500 hover:text-gray-400"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <Textarea
+        {...register(`lorebookEntries.${index}.content`, {
+          required: "Lorebook description is required",
+        })}
+        label="Description"
+        labelPosition="inner"
+        autoResize
+        error={errors?.lorebookEntries?.[index]?.content?.message}
+      />
+
+      <Input
+        {...register(`lorebookEntries.${index}.recallRange`, {
+          valueAsNumber: true,
+          required: "Recall range is required",
+        })}
+        label="Recall range"
+        labelPosition="inner"
+        type="number"
+        helpTooltip="Set the scan depth to determine how many messages are checked for triggers."
+        caption="Min 0 / Max 10"
+        error={errors?.lorebookEntries?.[index]?.recallRange?.message}
+        isRequired
+      />
+    </div>
+  );
+};
+
+const CharacterDetailPage = () => {
+  const navigate = useNavigate();
+  const { characterId } = Route.useParams();
+
+  const { data: character, isLoading } = useQuery(
+    characterQueries.detail(characterId),
   );
 
-  return { panelVisibility, setPanelVisibility, cardType };
-};
+  const [imageUrl] = useAsset(character?.props.iconAssetId);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isImageRemoved, setIsImageRemoved] = useState<boolean>(false);
+  const [newTag, setNewTag] = useState<string>("");
+  const [openAccordionId, setOpenAccordionId] = useState<string>("");
+  const [pendingLorebookId, setPendingLorebookId] = useState<string | null>(
+    null,
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-export default function CharacterPlotDetailPage({
-  cardId,
-}: CharacterPlotDetailPageProps) {
-  const navigate = useNavigate();
-  const [api, setApi] = useState<DockviewApi | null>(null);
-  const setSelectedCardId = useCardUIStore.use.setSelectedCardId();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    setValue,
+    getValues,
+    trigger,
+    watch,
+    formState: { errors, isDirty },
+  } = useForm<CharacterFormData>();
 
-  // Use custom hooks
-  const { card, isLoading, error } = useCardLoader(cardId);
-  const { panelVisibility, setPanelVisibility, cardType } =
-    usePanelVisibility(card);
+  const cardSummary = watch("cardSummary") || "";
 
-  // Set selected card ID when cardId changes
+  const { fields, remove, prepend } = useFieldArray({
+    control,
+    name: "lorebookEntries",
+    keyName: "_rhfId", // Use custom key name to avoid conflict with our 'id' field
+  });
+
+  const updateCharacterMutation = useUpdateCharacterCard(characterId);
+
+  // Block navigation when there are unsaved changes (but not during save)
+  const {
+    proceed,
+    reset: resetBlocker,
+    status,
+  } = useBlocker({
+    shouldBlockFn: () => isDirty && !updateCharacterMutation.isPending,
+    withResolver: true,
+    enableBeforeUnload: isDirty && !updateCharacterMutation.isPending,
+  });
+
+  // Reset form when character data loads
   useEffect(() => {
-    setSelectedCardId(cardId);
-  }, [cardId, setSelectedCardId]);
-
-  // Check card exists
-  useEffect(() => {
-    if (!isLoading && !card) {
-      logger.error("Card not found");
-      navigate({ to: "/", replace: true });
+    if (character) {
+      reset({
+        title: character.props.title || "",
+        tags: character.props.tags || [],
+        creator: character.props.creator || "",
+        cardSummary: character.props.cardSummary || "",
+        version: character.props.version || "",
+        conceptualOrigin: character.props.conceptualOrigin || "",
+        iconAssetId: character.props.iconAssetId?.toString() || undefined,
+        name: character.props.name || "",
+        description: character.props.description || "",
+        exampleDialogue: character.props.exampleDialogue || "",
+        lorebookEntries:
+          character.props.lorebook?.props.entries.map((entry) => ({
+            id: entry.id.toString(),
+            name: entry.name || "",
+            enabled: entry.enabled,
+            keys: entry.keys || [],
+            recallRange: entry.recallRange || 2,
+            content: entry.content || "",
+          })) || [],
+      });
     }
-  }, [card, isLoading, navigate]);
+  }, [character, reset]);
 
-  // Layout management
-  const getCardTypeLayout = useCardUIStore.use.getCardTypeLayout();
-  const setCardTypeLayout = useCardUIStore.use.setCardTypeLayout();
-  const defaultPanelVisibility = useCardUIStore.use.defaultPanelVisibility();
+  // Scroll to top when character changes
+  useScrollToTop([characterId]);
 
-  // Handle dockview ready event
-  const handleReady = useCallback(
-    (event: DockviewReadyEvent) => {
-      const dockviewApi = event.api;
-      setApi(dockviewApi);
+  // Auto-expand accordion when new lorebook is added
+  useEffect(() => {
+    if (pendingLorebookId) {
+      // Check if the pending lorebook ID exists in fields
+      const exists = fields.some((field) => {
+        const entry = field as unknown as LorebookEntryFormData;
+        return entry.id === pendingLorebookId;
+      });
 
-      // Check if card panel already exists
-      const existingCardPanel = dockviewApi.getPanel(CARD_PANEL_ID);
-      if (existingCardPanel) {
+      if (exists) {
+        setOpenAccordionId(pendingLorebookId);
+        setPendingLorebookId(null);
+      }
+    }
+  }, [fields, pendingLorebookId]);
+
+  // Cleanup: Revoke preview URL on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, [previewImage]);
+
+  const handleGoBack = () => {
+    navigate({ to: "/assets/characters" });
+  };
+
+  const handleUploadImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Only allow PNG, JPEG, or WebP for previews (disallow SVG for security)
+      const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        toastError("Invalid file type", {
+          description: "Only PNG, JPEG, or WebP images are allowed.",
+        });
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
         return;
       }
 
-      // Always create the main card panel first
-      const cardPanel = dockviewApi.addPanel({
-        id: CARD_PANEL_ID,
-        component: "card-panel",
-        tabComponent: "colored",
-        title: "Card",
-        params: { cardId },
-      });
-
-      // Make the card panel non-closeable
-      if (cardPanel) {
-        // Get the panel's group
-        const group = cardPanel.group;
-        if (group) {
-          // Lock this group completely - prevent any new panels from being added
-          group.model.locked = true;
-        }
+      // Revoke previous preview URL to prevent memory leak
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
       }
 
-      // Restore saved layout or use defaults
-      if (card) {
-        const savedLayout = getCardTypeLayout(cardType);
-        if (savedLayout) {
-          try {
-            // Validate the saved layout has the required structure
-            if (!savedLayout.grid || !savedLayout.panels) {
-              console.warn(
-                "Invalid saved layout structure, skipping restoration",
-              );
-              return;
-            }
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setPreviewImage(url);
+      setImageFile(file);
+      setIsImageRemoved(false);
 
-            // Check if the saved layout contains the card panel
-            const hasCardPanel =
-              savedLayout.panels[CARD_PANEL_ID] ||
-              (Array.isArray(savedLayout.panels) &&
-                savedLayout.panels.some((p: any) => p.id === CARD_PANEL_ID));
+      // Mark form as dirty
+      setValue(
+        "iconAssetId",
+        character?.props.iconAssetId?.toString() || undefined,
+        {
+          shouldDirty: true,
+        },
+      );
+    }
+  };
 
-            if (!hasCardPanel) {
-              console.warn(
-                "Saved layout missing card panel, adding it before restoration",
-              );
-              // Modify the saved layout to include the card panel
-              if (
-                typeof savedLayout.panels === "object" &&
-                !Array.isArray(savedLayout.panels)
-              ) {
-                savedLayout.panels[CARD_PANEL_ID] = {
-                  id: CARD_PANEL_ID,
-                  component: "card-panel",
-                  title: "Card",
-                  params: { cardId },
-                };
-              }
-            }
+  const handleRemoveImage = () => {
+    // Revoke preview URL to prevent memory leak
+    if (previewImage) {
+      URL.revokeObjectURL(previewImage);
+    }
 
-            // Restore the saved layout directly
-            dockviewApi.fromJSON(savedLayout);
+    setPreviewImage(null);
+    setImageFile(null);
+    setIsImageRemoved(true);
+    setValue("iconAssetId", "", { shouldDirty: true });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
-            // Ensure card-panel-main exists after restoration
-            const restoredCardPanel = dockviewApi.getPanel(CARD_PANEL_ID);
-            if (!restoredCardPanel) {
-              // Card panel was not in the saved layout, recreate it
-              const newCardPanel = dockviewApi.addPanel({
-                id: CARD_PANEL_ID,
-                component: "card-panel",
-                tabComponent: "colored",
-                title: "Card",
-                params: { cardId },
-              });
-
-              if (newCardPanel) {
-                // Lock the group
-                const group = newCardPanel.group;
-                if (group) {
-                  group.model.locked = true;
-                }
-              }
-            } else {
-              // Ensure the restored card panel's group is locked
-              const group = restoredCardPanel.group;
-              if (group) {
-                group.model.locked = true;
-              }
-            }
-
-            // Update visibility state based on restored panels
-            const restoredPanels = Object.values(dockviewApi.panels);
-            const newVisibility = { ...defaultPanelVisibility };
-
-            restoredPanels.forEach((panel: IDockviewPanel) => {
-              // Extract the panel type using utility function
-              const panelType = extractCardPanelType(panel.id);
-
-              // Map panel types to visibility keys
-              if (panelType === "plot-info" || panelType === "character-info") {
-                newVisibility.content = true;
-              } else if (panelType in newVisibility) {
-                newVisibility[panelType as keyof CardPanelVisibility] = true;
-              }
-            });
-
-            // Already handled by usePanelVisibility hook
-          } catch (error) {
-            console.warn(
-              "Failed to restore layout, ensuring card panel exists:",
-              error,
-            );
-
-            // Restoration failed, ensure we at least have the card panel
-            const fallbackCardPanel = dockviewApi.getPanel(CARD_PANEL_ID);
-            if (!fallbackCardPanel) {
-              // Try to create the card panel as a fallback
-              try {
-                const newCardPanel = dockviewApi.addPanel({
-                  id: CARD_PANEL_ID,
-                  component: "card-panel",
-                  tabComponent: "colored",
-                  title: "Card",
-                  params: { cardId },
-                });
-
-                if (newCardPanel) {
-                  const group = newCardPanel.group;
-                  if (group) {
-                    group.model.locked = true;
-                  }
-                }
-              } catch (fallbackError) {
-                console.error(
-                  "Failed to create fallback card panel:",
-                  fallbackError,
-                );
-              }
-            }
-          }
-        }
+  const handleAddTag = () => {
+    if (newTag.trim()) {
+      const currentTags = getValues("tags") || [];
+      // Don't add duplicate tags
+      if (!currentTags.includes(newTag.trim())) {
+        setValue("tags", [...currentTags, newTag.trim()], {
+          shouldDirty: true,
+        });
       }
-    },
-    [card, cardId, cardType, getCardTypeLayout, defaultPanelVisibility],
-  );
+      setNewTag("");
+    }
+  };
 
-  // Save layout when it changes
-  const handleLayoutChange = useCallback(() => {
-    if (!api) return;
+  const handleAddLorebook = () => {
+    const newId = crypto.randomUUID();
 
+    prepend({
+      id: newId,
+      name: "New Entry",
+      enabled: true,
+      keys: [],
+      recallRange: 2,
+      content: "",
+    });
+
+    setPendingLorebookId(newId);
+  };
+
+  const handleCopyLorebook = (index: number) => {
+    const lorebookEntries = getValues("lorebookEntries");
+    const entryToCopy = lorebookEntries[index];
+
+    if (entryToCopy) {
+      const newId = crypto.randomUUID();
+      const copiedEntry = {
+        ...entryToCopy,
+        id: newId,
+        name: `${entryToCopy.name} (Copy)`,
+      };
+
+      prepend(copiedEntry);
+      setPendingLorebookId(newId);
+    }
+  };
+
+  const onSubmit = async (data: CharacterFormData) => {
     try {
-      const layout = api.toJSON();
-      // Use the current card type from state
-      const currentCardType =
-        card?.props.type === CardType.Character ? "character" : "plot";
-      setCardTypeLayout(currentCardType, layout);
-    } catch (error) {
-      console.error("Failed to save layout:", error);
-    }
-  }, [api, card, setCardTypeLayout]);
+      // Upload new image if user selected one
+      let uploadedAssetId = data.iconAssetId;
 
-  // Setup layout change listener
-  useEffect(() => {
-    if (!api) return;
+      if (imageFile) {
+        const assetResult = await AssetService.saveFileToAsset.execute({
+          file: imageFile,
+        });
 
-    const disposable = api.onDidLayoutChange(() => {
-      handleLayoutChange();
-    });
-
-    return () => {
-      disposable.dispose();
-    };
-  }, [api, handleLayoutChange]);
-
-  // Set minimum width for all groups
-  useEffect(() => {
-    if (!api) return;
-
-    const setGroupConstraints = () => {
-      api.groups.forEach((group: DockviewGroupPanel) => {
-        if (group.api && typeof group.api.setConstraints === "function") {
-          group.api.setConstraints({
-            minimumWidth: MIN_GROUP_WIDTH,
+        if (assetResult.isSuccess) {
+          const asset = assetResult.getValue();
+          uploadedAssetId = asset.id.toString();
+        } else {
+          toastError("Failed to upload image", {
+            description: "Please try again",
           });
+          return;
         }
-      });
-    };
+      }
 
-    // Set constraints for existing groups
-    setGroupConstraints();
+      // Convert empty strings to undefined for optional fields
+      const normalizeField = (value: string | undefined) =>
+        value === "" ? undefined : value;
 
-    // Listen for new groups being added
-    const disposable = api.onDidAddGroup(() => setGroupConstraints());
-
-    return () => disposable.dispose();
-  }, [api]);
-
-  // Sync panel visibility with actual open panels
-  useEffect(() => {
-    if (!api) return;
-
-    const syncPanelVisibility = () => {
-      const openPanels = Object.values(api.panels);
-      const newVisibility = { ...defaultPanelVisibility };
-
-      openPanels.forEach((panel: IDockviewPanel) => {
-        if (panel.id === CARD_PANEL_ID) return; // Skip the main card panel
-
-        // Extract the panel type using utility function
-        const panelType = extractCardPanelType(panel.id);
-
-        // Map panel types to visibility keys
-        if (panelType === "plot-info" || panelType === "character-info") {
-          newVisibility.content = true;
-        } else if (panelType in newVisibility) {
-          newVisibility[panelType as keyof CardPanelVisibility] = true;
-        }
+      await updateCharacterMutation.mutateAsync({
+        title: data.name, // Use name as title (unified)
+        name: data.name,
+        description: data.description,
+        exampleDialogue: normalizeField(data.exampleDialogue),
+        tags: data.tags,
+        creator: normalizeField(data.creator),
+        cardSummary: normalizeField(data.cardSummary),
+        version: normalizeField(data.version),
+        conceptualOrigin: normalizeField(data.conceptualOrigin),
+        iconAssetId: uploadedAssetId,
+        lorebookEntries: data.lorebookEntries,
       });
 
-      // Update the visibility state
-      Object.entries(newVisibility).forEach(([key, value]) => {
-        if (panelVisibility[key as keyof CardPanelVisibility] !== value) {
-          setPanelVisibility(key as keyof CardPanelVisibility, value);
-        }
+      // Clear image file state after successful save
+      // Revoke preview URL to prevent memory leak
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+      setImageFile(null);
+      setPreviewImage(null);
+
+      // Reset form to mark as not dirty after successful save
+      // Normalize empty strings to undefined to match initial state
+      reset({
+        ...data,
+        exampleDialogue: normalizeField(data.exampleDialogue),
+        creator: normalizeField(data.creator),
+        cardSummary: normalizeField(data.cardSummary),
+        version: normalizeField(data.version),
+        conceptualOrigin: normalizeField(data.conceptualOrigin),
+        iconAssetId: uploadedAssetId,
       });
-    };
 
-    // Initial sync
-    syncPanelVisibility();
+      toastSuccess("Character updated!", {
+        description: "Your character has been updated successfully.",
+      });
 
-    // Listen for panel additions and removals
-    const disposables = [
-      api.onDidAddPanel(() => syncPanelVisibility()),
-      api.onDidRemovePanel(() => syncPanelVisibility()),
-    ];
-
-    return () => disposables.forEach((d) => d.dispose());
-  }, [api, defaultPanelVisibility, panelVisibility, setPanelVisibility]);
-
-  // Update panel params when cardId changes
-  useEffect(() => {
-    if (!api || !cardId) return;
-
-    // Update params for all panels with the new cardId
-    Object.values(api.panels).forEach((panel: IDockviewPanel) => {
-      panel.api.updateParameters({ cardId });
-    });
-  }, [api, cardId]);
-
-  // Invalidate queries for external components when panel updates
-  const invalidateExternalQueries = useCallback(async () => {
-    if (card) {
-      await invalidateSingleCardQueries(queryClient, card.id);
+      // Navigate back to characters list page
+      navigate({ to: "/assets/characters" });
+    } catch (error) {
+      toastError("Failed to save character", {
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      });
     }
-  }, [card]);
+  };
 
-  // Render loading or error states
-  if (isLoading || error || !card) {
-    return (
-      <div
-        className={cn(
-          "fixed inset-0 z-[120]",
-          "bg-screen/50 backdrop-blur-sm",
-          "transition-opacity duration-200",
-          "flex items-center justify-center",
-        )}
-      >
-        <div className="flex flex-col items-center justify-center gap-8 px-4">
-          <div
-            className="animate-spin-slow"
-            style={{
-              width: "120px",
-              height: "120px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <SvgIcon name="astrsk_symbol" size={120} />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <Loading />;
+
+  const displayImage = isImageRemoved ? null : previewImage || imageUrl;
 
   return (
-    <CardPanelProvider
-      cardId={cardId}
-      api={api}
-      panelVisibility={panelVisibility}
-      setPanelVisibility={setPanelVisibility}
-      invalidateExternalQueries={invalidateExternalQueries}
-      card={card}
-    >
-      <FloatingActionButton
-        icon={<ArrowLeft className="min-h-[24px] min-w-[24px]" />}
-        position="top-left"
-        className="!z-50 !left-[16px] !top-[24px]"
-        onClick={() => {
-          window.history.back();
-        }}
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full bg-gray-900">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
       />
-      <div
-        className="h-full w-full"
-        style={{ height: "calc(100% - var(--topbar-height))" }}
-      >
-        <DockviewReact
-          components={CARD_PANEL_COMPONENTS}
-          tabComponents={{ colored: CustomDockviewTab }}
-          onReady={(event) => {
-            // Fix for tab overflow causing parent container scroll
-            event.api.onDidLayoutChange(() => {
-              const container = document.querySelector(
-                ".dv-dockview",
-              ) as HTMLElement;
-              if (container) {
-                setTimeout(() => {
-                  let parent = container.parentElement;
-                  while (parent && parent !== document.body) {
-                    if (parent.scrollTop > 0) {
-                      parent.scrollTop = 0;
-                    }
-                    parent = parent.parentElement;
-                  }
-                }, 0);
-              }
-            });
 
-            handleReady(event);
-          }}
-          className="dockview-theme-abyss"
-          disableFloatingGroups
-          defaultRenderer="always"
-          hideBorders={false}
-        />
+      <div className="sticky top-0 z-10 flex items-center justify-between bg-gray-800 px-4 py-2">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="secondary"
+            icon={<ArrowLeft className="h-5 w-5" />}
+            size="sm"
+            onClick={handleGoBack}
+            type="button"
+          />
+          <h1 className="text-base font-semibold">{character?.props.title}</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          {isDirty && (
+            <span className="flex items-center gap-2 text-xs text-yellow-500">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-yellow-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-yellow-500"></span>
+              </span>
+              <span className="hidden sm:inline">Unsaved changes</span>
+            </span>
+          )}
+          <Button
+            icon={<Save className="h-4 w-4" />}
+            type="submit"
+            disabled={!isDirty || updateCharacterMutation.isPending}
+            loading={updateCharacterMutation.isPending}
+          >
+            Save
+          </Button>
+        </div>
       </div>
-    </CardPanelProvider>
+
+      <div className="mx-auto w-full max-w-4xl space-y-6 p-4">
+        <section className="flex w-full flex-col items-center justify-center gap-4">
+          <div className="max-w-[200px] space-y-2 overflow-hidden rounded-lg">
+            <DropdownMenuBase
+              trigger={
+                <img
+                  src={
+                    displayImage ?? "/img/placeholder/character-placeholder.png"
+                  }
+                  alt={character?.props.title ?? ""}
+                  className="h-full w-full cursor-pointer object-cover"
+                />
+              }
+              items={[
+                {
+                  label: "Upload image",
+                  icon: <Upload className="h-4 w-4" />,
+                  onClick: handleUploadImage,
+                },
+                {
+                  label: "Remove image",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  onClick: handleRemoveImage,
+                  disabled: !displayImage,
+                },
+              ]}
+              align="center"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-text-primary text-base font-semibold">
+              Metadata
+            </h2>
+
+            <div className="space-y-4">
+              <Input
+                {...register("name", {
+                  required: "Character name is required",
+                })}
+                label="Character Name"
+                labelPosition="inner"
+                maxLength={50}
+                error={errors.name?.message}
+                isRequired
+              />
+              <div className="space-y-1">
+                <Input
+                  {...register("cardSummary")}
+                  label="Character Summary"
+                  labelPosition="inner"
+                  maxLength={50}
+                  error={errors.cardSummary?.message}
+                />
+                <div className="text-text-secondary px-2 text-left text-xs">
+                  {`(${cardSummary.length}/50)`}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 md:flex-row">
+                <Input
+                  {...register("version")}
+                  label="Version"
+                  labelPosition="inner"
+                  maxLength={10}
+                  error={errors.version?.message}
+                />
+                <Input
+                  {...register("conceptualOrigin")}
+                  label="Conceptual Origin"
+                  labelPosition="inner"
+                  maxLength={50}
+                  error={errors.conceptualOrigin?.message}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xs text-gray-200">Tags</h3>
+
+              <div className="flex flex-wrap gap-2">
+                {TAG_DEFAULT.map((tag, index) => {
+                  const isSelected = (getValues("tags") || []).includes(tag);
+                  return (
+                    <button
+                      key={`${tag}-${index}`}
+                      type="button"
+                      onClick={() => {
+                        const currentTags = getValues("tags") || [];
+                        if (isSelected) {
+                          // Remove tag
+                          setValue(
+                            "tags",
+                            currentTags.filter((t) => t !== tag),
+                            { shouldDirty: true },
+                          );
+                        } else {
+                          // Add tag
+                          setValue("tags", [...currentTags, tag], {
+                            shouldDirty: true,
+                          });
+                        }
+                      }}
+                      className={`rounded-md p-2 text-sm font-medium shadow-sm transition-colors ${
+                        isSelected
+                          ? "bg-blue-200 text-blue-900"
+                          : "bg-gray-800 text-gray-50 hover:bg-gray-700"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+
+                {/* Custom tags (can be deleted) */}
+                {(getValues("tags") || [])
+                  .filter((tag) => !TAG_DEFAULT.includes(tag))
+                  .map((tag, index) => (
+                    <span
+                      key={`custom-${tag}-${index}`}
+                      className="flex items-center gap-2 rounded-md bg-blue-200 p-2 text-sm font-medium text-blue-900"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentTags = getValues("tags") || [];
+                          setValue(
+                            "tags",
+                            currentTags.filter((t) => t !== tag),
+                            { shouldDirty: true },
+                          );
+                        }}
+                        className="hover:text-gray-200"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+              </div>
+
+              <div className="relative">
+                <Input
+                  labelPosition="inner"
+                  placeholder="Enter custom tag"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
+                  className="pr-20"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddTag}
+                  variant="secondary"
+                  size="sm"
+                  className="absolute right-2 bottom-2"
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-text-primary text-base font-semibold">
+            Character Info
+          </h2>
+
+          <Textarea
+            {...register("description", {
+              required: "Character description is required",
+            })}
+            label="Character Description"
+            labelPosition="inner"
+            autoResize
+            error={errors.description?.message}
+            isRequired
+          />
+          <Textarea
+            {...register("exampleDialogue")}
+            label="Example Dialogue"
+            labelPosition="inner"
+            autoResize
+            error={errors.exampleDialogue?.message}
+          />
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-text-primary text-base font-semibold">
+              Lorebook
+            </h2>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleAddLorebook}
+            >
+              <Plus className="h-4 w-4" />
+              Add lorebook
+            </Button>
+          </div>
+
+          <AccordionBase
+            type="single"
+            collapsible
+            value={openAccordionId}
+            onValueChange={(value) => setOpenAccordionId(value as string)}
+            items={fields.map((field, index) => {
+              // Cast to get the actual lorebook entry data
+              const entry = field as unknown as LorebookEntryFormData;
+              return {
+                title: (
+                  <LorebookItemTitle
+                    name={entry.name}
+                    onDelete={() => remove(index)}
+                    onCopy={() => handleCopyLorebook(index)}
+                  />
+                ),
+                content: (
+                  <LorebookItemContent
+                    index={index}
+                    register={register}
+                    errors={errors}
+                    setValue={setValue}
+                    getValues={getValues}
+                    trigger={trigger}
+                  />
+                ),
+                value: entry.id, // Use actual lorebook entry ID
+              };
+            })}
+          />
+        </section>
+      </div>
+
+      {/* Navigation Confirmation Dialog */}
+      {status === "blocked" && (
+        <DialogConfirm
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) resetBlocker();
+          }}
+          title="You've got unsaved changes!"
+          description="Are you sure you want to leave? Your changes will be lost."
+          cancelLabel="Go back"
+          confirmLabel="Yes, leave"
+          confirmVariant="destructive"
+          onConfirm={proceed}
+        />
+      )}
+    </form>
   );
-}
+};
+
+export default CharacterDetailPage;
