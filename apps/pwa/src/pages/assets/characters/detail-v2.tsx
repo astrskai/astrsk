@@ -35,13 +35,12 @@ interface CharacterFormData {
   cardSummary?: string;
   version?: string;
   conceptualOrigin?: string;
-  imagePrompt?: string;
   iconAssetId?: string;
 
   // CharacterCardProps
   name: string;
   description: string;
-  exampleDialogue: string;
+  exampleDialogue?: string;
 
   // Lorebook
   lorebookEntries: LorebookEntryFormData[];
@@ -333,11 +332,10 @@ const CharacterDetailPage = () => {
       reset({
         title: character.props.title || "",
         tags: character.props.tags || [],
-        creator: character.props.creator || undefined,
-        cardSummary: character.props.cardSummary || undefined,
-        version: character.props.version || undefined,
-        conceptualOrigin: character.props.conceptualOrigin || undefined,
-        imagePrompt: character.props.imagePrompt || undefined,
+        creator: character.props.creator || "",
+        cardSummary: character.props.cardSummary || "",
+        version: character.props.version || "",
+        conceptualOrigin: character.props.conceptualOrigin || "",
         iconAssetId: character.props.iconAssetId?.toString() || undefined,
         name: character.props.name || "",
         description: character.props.description || "",
@@ -510,17 +508,20 @@ const CharacterDetailPage = () => {
         }
       }
 
+      // Convert empty strings to undefined for optional fields
+      const normalizeField = (value: string | undefined) =>
+        value === "" ? undefined : value;
+
       await updateCharacterMutation.mutateAsync({
         title: data.name, // Use name as title (unified)
         name: data.name,
         description: data.description,
-        exampleDialogue: data.exampleDialogue,
+        exampleDialogue: normalizeField(data.exampleDialogue),
         tags: data.tags,
-        creator: data.creator,
-        cardSummary: data.cardSummary,
-        version: data.version,
-        conceptualOrigin: data.conceptualOrigin,
-        imagePrompt: data.imagePrompt,
+        creator: normalizeField(data.creator),
+        cardSummary: normalizeField(data.cardSummary),
+        version: normalizeField(data.version),
+        conceptualOrigin: normalizeField(data.conceptualOrigin),
         iconAssetId: uploadedAssetId,
         lorebookEntries: data.lorebookEntries,
       });
@@ -534,9 +535,20 @@ const CharacterDetailPage = () => {
       setPreviewImage(null);
 
       // Reset form to mark as not dirty after successful save
-      reset({ ...data, iconAssetId: uploadedAssetId });
+      // Normalize empty strings to undefined to match initial state
+      reset({
+        ...data,
+        exampleDialogue: normalizeField(data.exampleDialogue),
+        creator: normalizeField(data.creator),
+        cardSummary: normalizeField(data.cardSummary),
+        version: normalizeField(data.version),
+        conceptualOrigin: normalizeField(data.conceptualOrigin),
+        iconAssetId: uploadedAssetId,
+      });
 
-      toastSuccess("Character saved successfully!");
+      toastSuccess("Character updated!", {
+        description: "Your character has been updated successfully.",
+      });
 
       // Navigate back to characters list page
       navigate({ to: "/assets/characters" });
@@ -553,10 +565,7 @@ const CharacterDetailPage = () => {
   const displayImage = isImageRemoved ? null : previewImage || imageUrl;
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="w-full bg-gray-900"
-    >
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full bg-gray-900">
       <input
         ref={fileInputRef}
         type="file"

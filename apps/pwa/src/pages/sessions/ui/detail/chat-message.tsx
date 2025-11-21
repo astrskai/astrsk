@@ -59,10 +59,17 @@ const ChatMessage = ({
   const updateTurnMutation = useUpdateTurn();
 
   const handleEdit = () => {
-    setEditedContent(content ?? "");
+    const selectedOption = message.options[message.selectedOptionIndex];
+    setEditedContent(selectedOption.content ?? "");
 
     setIsEditing(true);
   };
+
+  const handleEditCancel = useCallback(() => {
+    const selectedOption = message.options[message.selectedOptionIndex];
+    setEditedContent(selectedOption.content ?? "");
+    setIsEditing(false);
+  }, [message.options, message.selectedOptionIndex]);
 
   const handleEditDone = useCallback(async () => {
     await onEdit?.(message.id, editedContent);
@@ -150,7 +157,7 @@ const ChatMessage = ({
 
       <div
         className={cn(
-          "flex min-w-0 flex-1 flex-col gap-2",
+          "group/message flex min-w-0 flex-1 flex-col gap-2",
           isEditing ? "items-stretch" : isUser ? "items-end" : "items-start",
         )}
       >
@@ -162,26 +169,12 @@ const ChatMessage = ({
         >
           {character?.props.title || "User"}
         </div>
-        <div className="group/message flex max-w-full items-start gap-2">
-          {/* Action buttons - left side for AI */}
-          {!isStreaming && !isUser && (
-            <ChatMessageActions
-              messageId={message.id}
-              isUser={isUser}
-              isEditing={isEditing}
-              isShowDataStore={isShowDataStore}
-              sortedDataStoreFields={sortedDataStoreFields}
-              selectedOptionIndex={message.selectedOptionIndex}
-              totalOptions={message.options.length}
-              onEdit={handleEdit}
-              onEditDone={handleEditDone}
-              onDelete={(id) => onDelete?.(id)}
-              onShowDataStore={handleShowDataStore}
-              onSelectOption={handleSelectOption}
-              onRegenerate={(id) => onRegenerate?.(id)}
-            />
+        <div
+          className={cn(
+            "flex max-w-full flex-col gap-2",
+            isUser && "items-end",
           )}
-
+        >
           <ChatBubble
             direction={isUser ? "right" : "left"}
             className={cn(
@@ -352,23 +345,26 @@ const ChatMessage = ({
             )}
           </ChatBubble>
 
-          {/* Action buttons - right side for user */}
-          {!isStreaming && isUser && (
-            <ChatMessageActions
-              messageId={message.id}
-              isUser={isUser}
-              isEditing={isEditing}
-              isShowDataStore={isShowDataStore}
-              sortedDataStoreFields={sortedDataStoreFields}
-              selectedOptionIndex={message.selectedOptionIndex}
-              totalOptions={message.options.length}
-              onEdit={handleEdit}
-              onEditDone={handleEditDone}
-              onDelete={(id) => onDelete?.(id)}
-              onShowDataStore={handleShowDataStore}
-              onSelectOption={handleSelectOption}
-              onRegenerate={(id) => onRegenerate?.(id)}
-            />
+          {/* Action buttons - below bubble for both user and AI */}
+          {!isStreaming && (
+            <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
+              <ChatMessageActions
+                messageId={message.id}
+                isUser={isUser}
+                isEditing={isEditing}
+                isShowDataStore={isShowDataStore}
+                sortedDataStoreFields={sortedDataStoreFields}
+                selectedOptionIndex={message.selectedOptionIndex}
+                totalOptions={message.options.length}
+                onEdit={handleEdit}
+                onEditDone={handleEditDone}
+                onEditCancel={handleEditCancel}
+                onDelete={(id) => onDelete?.(id)}
+                onShowDataStore={handleShowDataStore}
+                onSelectOption={handleSelectOption}
+                onRegenerate={(id) => onRegenerate?.(id)}
+              />
+            </div>
           )}
         </div>
       </div>
