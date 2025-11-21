@@ -33,7 +33,7 @@ export function FileDropZone({
       className={cn(
         "cursor-pointer rounded-lg border-2 border-dashed bg-gray-900 px-8 py-16 text-center transition-colors",
         isDragReject && isDragActive
-          ? "border-status-error bg-status-error/10"
+          ? "border-status-destructive-light bg-status-destructive/10"
           : isDragActive
             ? "border-gray-100 bg-gray-100/10"
             : "border-gray-700 hover:border-gray-500",
@@ -45,7 +45,7 @@ export function FileDropZone({
       {children || (
         <div className="flex flex-col items-center gap-2 text-gray-300">
           {isDragReject && isDragActive ? (
-            <FileX className="text-status-error/80 h-8 w-8" />
+            <FileX className="text-status-destructive-light/80 h-8 w-8" />
           ) : (
             <Import
               className={cn(
@@ -56,7 +56,7 @@ export function FileDropZone({
           )}
           <p className="text-base">
             {isDragReject && isDragActive ? (
-              <span className="text-status-error/80">
+              <span className="text-status-destructive-light/80">
                 {maxFiles > 1
                   ? "Contains unsupported file type"
                   : "Unsupported file type"}
