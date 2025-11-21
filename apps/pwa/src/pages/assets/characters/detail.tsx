@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { MouseEvent, KeyboardEvent, ChangeEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -67,32 +68,32 @@ const LorebookItemTitle = ({
   onCopy,
 }: {
   name: string;
-  onDelete?: (e: React.MouseEvent) => void;
-  onCopy?: (e: React.MouseEvent) => void;
+  onDelete?: (e: MouseEvent | KeyboardEvent) => void;
+  onCopy?: (e: MouseEvent | KeyboardEvent) => void;
 }) => {
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e: MouseEvent | KeyboardEvent) => {
     e.stopPropagation(); // Prevent accordion from toggling
     onDelete?.(e);
   };
 
-  const handleCopy = (e: React.MouseEvent) => {
+  const handleCopy = (e: MouseEvent | KeyboardEvent) => {
     e.stopPropagation(); // Prevent accordion from toggling
     onCopy?.(e);
   };
 
-  const handleCopyKeyDown = (e: React.KeyboardEvent) => {
+  const handleCopyKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       e.stopPropagation();
-      onCopy?.(e as unknown as React.MouseEvent);
+      onCopy?.(e);
     }
   };
 
-  const handleDeleteKeyDown = (e: React.KeyboardEvent) => {
+  const handleDeleteKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       e.stopPropagation();
-      onDelete?.(e as unknown as React.MouseEvent);
+      onDelete?.(e);
     }
   };
 
@@ -191,7 +192,7 @@ const LorebookItemContent = ({
     trigger(`lorebookEntries.${index}.keys`);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleAddKeyword();
@@ -267,12 +268,14 @@ const LorebookItemContent = ({
         {...register(`lorebookEntries.${index}.recallRange`, {
           valueAsNumber: true,
           required: "Recall range is required",
+          min: { value: 0, message: "Recall range must be at least 0" },
+          max: { value: 100, message: "Recall range cannot exceed 100" },
         })}
         label="Recall range"
         labelPosition="inner"
         type="number"
         helpTooltip="Set the scan depth to determine how many messages are checked for triggers."
-        caption="Min 0 / Max 10"
+        caption="Min 0 / Max 100"
         error={errors?.lorebookEntries?.[index]?.recallRange?.message}
         isRequired
       />
@@ -396,7 +399,7 @@ const CharacterDetailPage = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Only allow PNG, JPEG, or WebP for previews (disallow SVG for security)
