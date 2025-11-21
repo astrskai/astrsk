@@ -36,49 +36,70 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ) => {
     // Show * indicator if either required or isRequired is true
     const showRequiredIndicator = required || isRequired;
-    // Inner label layout
+    // Inner label layout (floating label on border)
     if (labelPosition === "inner") {
       return (
         <div className="relative w-full">
-          <div
+          {/* Input field with consistent padding */}
+          <input
+            ref={ref}
+            required={required}
+            placeholder={props.placeholder || " "} // Space ensures label floats even when empty
             className={cn(
-              "flex flex-col gap-1 rounded-lg bg-gray-800 px-4 py-2 border",
+              // Base styles with consistent padding
+              "text-text-primary placeholder:text-text-placeholder w-full rounded-lg border bg-gray-800 px-4 py-3 text-base transition-all outline-none",
+              // Focus styles
+              "focus:ring-2 focus:ring-offset-0",
+              // Border and ring colors
               error
-                ? "border-status-destructive-light"
-                : "border-transparent",
+                ? "border-status-destructive-light focus:border-status-destructive-light focus:ring-status-destructive-light/20"
+                : "border-border-normal focus:border-primary-normal focus:ring-primary-normal/20",
+              // Disabled styles
+              "disabled:cursor-not-allowed disabled:opacity-50",
+              className,
             )}
-          >
-            <label className="text-text-secondary flex items-center gap-1.5 text-xs font-medium">
-              <span>
-                {label}
-                {showRequiredIndicator && (
-                  <span className="text-status-required ml-1">*</span>
+            {...props}
+          />
+
+          {/* Floating label on border */}
+          {label && (
+            <label
+              className={cn(
+                // Positioning: absolute positioned on top border
+                "absolute left-3 top-0 -translate-y-1/2",
+                // Visual styles
+                "bg-gray-800 px-1 text-xs font-medium transition-all rounded-sm",
+                // Text color
+                error
+                  ? "text-status-destructive-light"
+                  : "text-text-secondary",
+                // Pointer events to allow clicking through to input
+                "pointer-events-none",
+              )}
+            >
+              <span className="flex items-center gap-1.5">
+                <span>
+                  {label}
+                  {showRequiredIndicator && (
+                    <span className="text-status-required ml-1">*</span>
+                  )}
+                </span>
+                {helpTooltip && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="text-text-secondary hover:text-text-primary pointer-events-auto h-3.5 w-3.5 cursor-help transition-colors" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">{helpTooltip}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </span>
-              {helpTooltip && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="text-text-secondary hover:text-text-primary h-4 w-4 cursor-help transition-colors" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">{helpTooltip}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
             </label>
-            <input
-              ref={ref}
-              required={required}
-              className={cn(
-                "text-text-primary placeholder:text-text-placeholder bg-transparent text-base transition-colors outline-none",
-                "disabled:cursor-not-allowed disabled:opacity-50",
-                className,
-              )}
-              {...props}
-            />
-          </div>
+          )}
+
           {/* Error message */}
           {error && (
             <p className="text-status-destructive-light mt-1 text-xs">
@@ -89,6 +110,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {!error && helperText && (
             <p className="text-text-secondary mt-1 text-xs">{helperText}</p>
           )}
+          {/* Caption */}
           {caption && (
             <p className="text-text-secondary mt-1 pl-2 text-xs">{caption}</p>
           )}
