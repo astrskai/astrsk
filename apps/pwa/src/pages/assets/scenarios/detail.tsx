@@ -3,12 +3,21 @@ import type { MouseEvent, KeyboardEvent, ChangeEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { useForm, useFieldArray } from "react-hook-form";
-import { Trash2, ArrowLeft, X, Save, Upload, Plus, Copy } from "lucide-react";
+import {
+  Trash2,
+  ArrowLeft,
+  X,
+  Save,
+  Upload,
+  Plus,
+  Copy,
+  Pencil,
+} from "lucide-react";
 import { Route } from "@/routes/_layout/assets/scenarios/$scenarioId";
 
 import { scenarioQueries, useUpdatePlotCard } from "@/entities/scenario/api";
 
-import { Loading, DropdownMenuBase } from "@/shared/ui";
+import { Loading } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { Input, Textarea } from "@/shared/ui/forms";
@@ -394,7 +403,6 @@ const ScenarioDetailPage = () => {
   const [imageUrl] = useAsset(scenario?.props.iconAssetId);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isImageRemoved, setIsImageRemoved] = useState<boolean>(false);
   const [newTag, setNewTag] = useState<string>("");
   const [openAccordionId, setOpenAccordionId] = useState<string>("");
   const [pendingLorebookId, setPendingLorebookId] = useState<string | null>(
@@ -566,26 +574,11 @@ const ScenarioDetailPage = () => {
       const url = URL.createObjectURL(file);
       setPreviewImage(url);
       setImageFile(file);
-      setIsImageRemoved(false);
 
       // Mark form as dirty by setting a temporary value (file will be uploaded on submit)
       setValue("iconAssetId", `pending-upload-${Date.now()}`, {
         shouldDirty: true,
       });
-    }
-  };
-
-  const handleRemoveImage = () => {
-    if (previewImage) {
-      URL.revokeObjectURL(previewImage);
-    }
-
-    setPreviewImage(null);
-    setImageFile(null);
-    setIsImageRemoved(true);
-    setValue("iconAssetId", "", { shouldDirty: true });
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
     }
   };
 
@@ -733,10 +726,18 @@ const ScenarioDetailPage = () => {
 
   if (isLoading) return <Loading />;
 
-  const displayImage = isImageRemoved ? null : previewImage || imageUrl;
+  const displayImage = previewImage || imageUrl;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full bg-gray-900">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+          e.preventDefault();
+        }
+      }}
+      className="w-full bg-gray-900"
+    >
       <input
         ref={fileInputRef}
         type="file"
@@ -779,33 +780,32 @@ const ScenarioDetailPage = () => {
 
       <div className="mx-auto w-full max-w-4xl space-y-6 p-4">
         <section className="flex w-full flex-col items-center justify-center gap-4">
-          <div className="max-w-[200px] space-y-2 overflow-hidden rounded-lg">
-            <DropdownMenuBase
-              trigger={
-                <img
-                  src={
-                    displayImage ?? "/img/placeholder/scenario-placeholder.png"
-                  }
-                  alt={scenario?.props.title ?? ""}
-                  className="h-full w-full cursor-pointer object-cover"
-                />
-              }
-              items={[
-                {
-                  label: "Upload image",
-                  icon: <Upload className="h-4 w-4" />,
-                  onClick: handleUploadImage,
-                },
-                {
-                  label: "Remove image",
-                  icon: <Trash2 className="h-4 w-4" />,
-                  onClick: handleRemoveImage,
-                  disabled: !displayImage,
-                },
-              ]}
-              align="center"
-            />
-          </div>
+          {displayImage ? (
+            <div className="relative max-w-[200px]">
+              <img
+                src={displayImage}
+                alt={scenario?.props.title ?? ""}
+                className="h-full w-full rounded-lg object-cover"
+              />
+              <button
+                type="button"
+                onClick={handleUploadImage}
+                className="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full border border-gray-500 bg-gray-900 text-white shadow-md transition-colors hover:bg-gray-700"
+                aria-label="Edit image"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleUploadImage}
+              className="flex h-[200px] w-[200px] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-500 bg-gray-800 text-gray-400 transition-colors hover:border-gray-400 hover:bg-gray-700 hover:text-gray-300"
+            >
+              <Upload className="h-8 w-8" />
+              <span className="text-sm">Add scenario image</span>
+            </button>
+          )}
 
           <div className="space-y-4">
             <h2 className="text-text-primary text-base font-semibold">
@@ -1038,20 +1038,20 @@ const ScenarioDetailPage = () => {
                       onDelete={() => removeLorebook(index)}
                       onCopy={() => handleCopyLorebook(index)}
                     />
-                ),
-                content: (
-                  <LorebookItemContent
-                    index={index}
-                    register={register}
-                    errors={errors}
-                    setValue={setValue}
-                    getValues={getValues}
-                    trigger={trigger}
-                  />
-                ),
-                value: entry.id,
-              };
-            })}
+                  ),
+                  content: (
+                    <LorebookItemContent
+                      index={index}
+                      register={register}
+                      errors={errors}
+                      setValue={setValue}
+                      getValues={getValues}
+                      trigger={trigger}
+                    />
+                  ),
+                  value: entry.id,
+                };
+              })}
             />
           )}
         </section>

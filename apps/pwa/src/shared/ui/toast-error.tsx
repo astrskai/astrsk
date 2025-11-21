@@ -55,7 +55,7 @@ const CustomError = ({
           <Button
             size="lg"
             variant="destructive"
-            className="bg-status-destructive-dark" // TODO: hover bg color
+            className="bg-status-destructive" // TODO: hover bg color
             onClick={() => {
               setIsOpenDetails(true);
             }}
