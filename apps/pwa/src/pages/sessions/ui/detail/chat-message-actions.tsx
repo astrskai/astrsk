@@ -51,7 +51,9 @@ const ChatMessageActions = ({
   // Show edit mode buttons always, other buttons on hover
   const shouldAlwaysShow = isEditing;
 
-  const buttonVariants = isUser ? "hover:bg-gray-200" : "hover:bg-gray-500";
+  const buttonVariants = isUser
+    ? "hover:bg-gray-100/80"
+    : "hover:bg-gray-500/80";
 
   return (
     <div
@@ -141,7 +143,7 @@ const ChatMessageActions = ({
           <div
             className={cn(
               "flex items-center gap-1 rounded p-1",
-              isUser ? "bg-gray-100/80" : "bg-gray-700/80",
+              isUser ? "bg-gray-200/80" : "bg-gray-700/80",
             )}
           >
             <button
