@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { MouseEvent, KeyboardEvent, ChangeEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
@@ -98,9 +98,11 @@ const LorebookItemTitle = ({
   };
 
   return (
-    <div className="flex items-center justify-between">
-      <div>{name}</div>
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between gap-2">
+      <div className="max-w-[200px] truncate sm:max-w-sm md:max-w-full">
+        {name}
+      </div>
+      <div className="flex flex-shrink-0 items-center gap-2">
         <div
           role="button"
           tabIndex={0}
@@ -227,7 +229,8 @@ const LorebookItemContent = ({
             variant="secondary"
             size="sm"
             onClick={handleAddKeyword}
-            className="absolute right-2 bottom-2"
+            disabled={!newKeyword.trim()}
+            className="absolute top-1/2 right-2 -translate-y-1/2"
           >
             Add
           </Button>
@@ -325,6 +328,38 @@ const CharacterDetailPage = () => {
 
   const updateCharacterMutation = useUpdateCharacterCard(characterId);
 
+  // Helper function to sort tags by TAG_DEFAULT order, then alphabetically for custom tags
+  const sortTags = useCallback((tags: string[]) => {
+    return [...tags].sort((a, b) => {
+      const aIndex = TAG_DEFAULT.indexOf(a);
+      const bIndex = TAG_DEFAULT.indexOf(b);
+
+      // Both are default tags - sort by TAG_DEFAULT order
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      }
+
+      // a is default, b is custom - default comes first
+      if (aIndex !== -1) return -1;
+
+      // b is default, a is custom - default comes first
+      if (bIndex !== -1) return 1;
+
+      // Both are custom tags - sort alphabetically
+      return a.localeCompare(b);
+    });
+  }, []);
+
+  // Helper to update tags with consistent sorting and defensive null handling
+  const updateTags = useCallback(
+    (updater: (current: string[]) => string[]) => {
+      const current = getValues("tags") || [];
+      const next = sortTags(updater(current));
+      setValue("tags", next, { shouldDirty: true });
+    },
+    [getValues, setValue, sortTags],
+  );
+
   // Block navigation when there are unsaved changes (but not during save)
   const {
     proceed,
@@ -339,9 +374,11 @@ const CharacterDetailPage = () => {
   // Reset form when character data loads
   useEffect(() => {
     if (character) {
+      const initialTags = sortTags(character.props.tags || []);
+
       reset({
         title: character.props.title || "",
-        tags: character.props.tags || [],
+        tags: initialTags,
         creator: character.props.creator || "",
         cardSummary: character.props.cardSummary || "",
         version: character.props.version || "",
@@ -361,7 +398,7 @@ const CharacterDetailPage = () => {
           })) || [],
       });
     }
-  }, [character, reset]);
+  }, [character, reset, sortTags]);
 
   // Scroll to top when character changes
   useScrollToTop([characterId]);
@@ -453,13 +490,11 @@ const CharacterDetailPage = () => {
   };
 
   const handleAddTag = () => {
-    if (newTag.trim()) {
-      // Don't add duplicate tags
-      if (!tags.includes(newTag.trim())) {
-        setValue("tags", [...tags, newTag.trim()], {
-          shouldDirty: true,
-        });
-      }
+    const trimmed = newTag.trim();
+    if (trimmed) {
+      updateTags((current) =>
+        current.includes(trimmed) ? current : [...current, trimmed],
+      );
       setNewTag("");
     }
   };
@@ -547,6 +582,7 @@ const CharacterDetailPage = () => {
       // Normalize empty strings to undefined to match initial state
       reset({
         ...data,
+        tags: sortTags(data.tags),
         exampleDialogue: normalizeField(data.exampleDialogue),
         creator: normalizeField(data.creator),
         cardSummary: normalizeField(data.cardSummary),
@@ -702,23 +738,14 @@ const CharacterDetailPage = () => {
                     <button
                       key={`${tag}-${index}`}
                       type="button"
-                      onClick={() => {
-                        const currentTags = tags;
-                        if (isSelected) {
-                          // Remove tag
-                          setValue(
-                            "tags",
-                            currentTags.filter((t) => t !== tag),
-                            { shouldDirty: true },
-                          );
-                        } else {
-                          // Add tag
-                          setValue("tags", [...currentTags, tag], {
-                            shouldDirty: true,
-                          });
-                        }
-                      }}
-                      className={`rounded-md p-2 text-sm font-medium shadow-sm transition-colors ${
+                      onClick={() =>
+                        updateTags((current) =>
+                          isSelected
+                            ? current.filter((t) => t !== tag)
+                            : [...current, tag],
+                        )
+                      }
+                      className={`rounded-md p-1 text-xs font-medium shadow-sm transition-colors md:px-2 md:py-1 md:text-sm ${
                         isSelected
                           ? "bg-blue-200 text-blue-900"
                           : "bg-gray-800 text-gray-50 hover:bg-gray-700"
@@ -735,18 +762,14 @@ const CharacterDetailPage = () => {
                   .map((tag, index) => (
                     <span
                       key={`custom-${tag}-${index}`}
-                      className="flex items-center gap-2 rounded-md bg-blue-200 p-2 text-sm font-medium text-blue-900"
+                      className="flex items-center gap-2 rounded-md bg-blue-200 p-1 text-xs font-medium text-blue-900 md:px-2 md:py-1 md:text-sm"
                     >
                       {tag}
                       <button
                         type="button"
-                        onClick={() => {
-                          setValue(
-                            "tags",
-                            tags.filter((t) => t !== tag),
-                            { shouldDirty: true },
-                          );
-                        }}
+                        onClick={() =>
+                          updateTags((current) => current.filter((t) => t !== tag))
+                        }
                         className="hover:text-gray-200"
                       >
                         <X className="h-3 w-3" />
@@ -773,7 +796,8 @@ const CharacterDetailPage = () => {
                   onClick={handleAddTag}
                   variant="secondary"
                   size="sm"
-                  className="absolute right-2 bottom-2"
+                  disabled={!newTag.trim()}
+                  className="absolute top-1/2 right-2 -translate-y-1/2"
                 >
                   Add
                 </Button>
