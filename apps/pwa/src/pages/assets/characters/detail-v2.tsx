@@ -40,7 +40,7 @@ interface CharacterFormData {
   // CharacterCardProps
   name: string;
   description: string;
-  exampleDialogue: string;
+  exampleDialogue?: string;
 
   // Lorebook
   lorebookEntries: LorebookEntryFormData[];
@@ -516,7 +516,7 @@ const CharacterDetailPage = () => {
         title: data.name, // Use name as title (unified)
         name: data.name,
         description: data.description,
-        exampleDialogue: data.exampleDialogue,
+        exampleDialogue: normalizeField(data.exampleDialogue),
         tags: data.tags,
         creator: normalizeField(data.creator),
         cardSummary: normalizeField(data.cardSummary),
@@ -538,6 +538,7 @@ const CharacterDetailPage = () => {
       // Normalize empty strings to undefined to match initial state
       reset({
         ...data,
+        exampleDialogue: normalizeField(data.exampleDialogue),
         creator: normalizeField(data.creator),
         cardSummary: normalizeField(data.cardSummary),
         version: normalizeField(data.version),
