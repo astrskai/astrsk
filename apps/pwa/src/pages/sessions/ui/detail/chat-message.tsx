@@ -150,7 +150,7 @@ const ChatMessage = ({
     >
       <AvatarSimple
         src={characterImageUrl || "/img/message-avatar-default.svg"}
-        alt={character?.props.title ?? ""}
+        alt={character?.props.name ?? ""}
         className="h-9 w-9 md:h-16 md:w-16"
         size="xl"
       />
@@ -167,7 +167,7 @@ const ChatMessage = ({
             isEditing && isUser && "ml-auto",
           )}
         >
-          {character?.props.title || "User"}
+          {character?.props.name || "User"}
         </div>
         <div
           className={cn(
@@ -347,7 +347,9 @@ const ChatMessage = ({
 
           {/* Action buttons - below bubble for both user and AI */}
           {!isStreaming && (
-            <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
+            <div
+              className={cn("flex", isUser ? "justify-end" : "justify-start")}
+            >
               <ChatMessageActions
                 messageId={message.id}
                 isUser={isUser}

@@ -218,7 +218,7 @@ const ScenarioPreview = ({
         </div>
       </div>
 
-      <div className="relative flex min-h-0 flex-[1_1_50%] flex-col justify-between gap-2 overflow-hidden bg-gray-800 p-4">
+      <div className="bg-dark-surface relative flex min-h-0 flex-[1_1_50%] flex-col justify-between gap-2 overflow-hidden p-4">
         <p
           className={cn(
             "line-clamp-2 text-xs lg:text-sm",
