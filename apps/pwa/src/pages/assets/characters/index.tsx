@@ -97,7 +97,7 @@ export function CharactersListPage() {
 
       {/* Header - Sticky */}
       <ListPageHeader
-        title="Assets"
+        title="Characters"
         tabs={ASSET_TABS}
         activeTab="character"
         keyword={keyword}

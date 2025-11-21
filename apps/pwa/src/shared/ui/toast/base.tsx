@@ -54,13 +54,13 @@ export const toastSuccess = (message: string, options?: ToastOptions) => {
     closeButton: options?.closeButton ?? true,
     classNames: {
       closeButton:
-        "!bg-green-900 !text-green-200 hover:!bg-green-800 !border-green-700",
+        "!bg-green-700 !text-green-200 hover:!bg-green-800 !border-green-700",
     },
     descriptionClassName: "!text-green-200 !line-clamp-2 !overflow-hidden",
     style: {
       color: "rgb(255 255 255 / 0.9)",
-      borderColor: "rgb(34 197 94 / 0.5)",
-      backgroundColor: "rgb(5 46 22 / 0.9)",
+      borderColor: "rgb(5 46 22 / 0.8)",
+      backgroundColor: "rgb(34 197 94 / 0.7)",
     },
   });
 };

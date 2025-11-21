@@ -968,32 +968,38 @@ const ScenarioDetailPage = () => {
             </Button>
           </div>
 
-          <AccordionBase
-            type="single"
-            collapsible
-            value={openAccordionId}
-            onValueChange={(value) => setOpenAccordionId(value as string)}
-            items={firstMessageFields.map((field, index) => {
-              const entry = field as unknown as FirstMessageFormData;
-              return {
-                title: (
-                  <FirstMessageItemTitle
-                    name={entry.name}
-                    onDelete={() => removeFirstMessage(index)}
-                    onCopy={() => handleCopyFirstMessage(index)}
-                  />
-                ),
-                content: (
-                  <FirstMessageItemContent
-                    index={index}
-                    register={register}
-                    errors={errors}
-                  />
-                ),
-                value: entry.id,
-              };
-            })}
-          />
+          {firstMessageFields.length === 0 ? (
+            <p className="text-text-secondary text-sm">
+              No first messages yet. Add one to get started.
+            </p>
+          ) : (
+            <AccordionBase
+              type="single"
+              collapsible
+              value={openAccordionId}
+              onValueChange={(value) => setOpenAccordionId(value as string)}
+              items={firstMessageFields.map((field, index) => {
+                const entry = field as unknown as FirstMessageFormData;
+                return {
+                  title: (
+                    <FirstMessageItemTitle
+                      name={entry.name}
+                      onDelete={() => removeFirstMessage(index)}
+                      onCopy={() => handleCopyFirstMessage(index)}
+                    />
+                  ),
+                  content: (
+                    <FirstMessageItemContent
+                      index={index}
+                      register={register}
+                      errors={errors}
+                    />
+                  ),
+                  value: entry.id,
+                };
+              })}
+            />
+          )}
         </section>
 
         <section className="space-y-4">
@@ -1013,20 +1019,25 @@ const ScenarioDetailPage = () => {
             </Button>
           </div>
 
-          <AccordionBase
-            type="single"
-            collapsible
-            value={openAccordionId}
-            onValueChange={(value) => setOpenAccordionId(value as string)}
-            items={lorebookFields.map((field, index) => {
-              const entry = field as unknown as LorebookEntryFormData;
-              return {
-                title: (
-                  <LorebookItemTitle
-                    name={entry.name}
-                    onDelete={() => removeLorebook(index)}
-                    onCopy={() => handleCopyLorebook(index)}
-                  />
+          {lorebookFields.length === 0 ? (
+            <p className="text-text-secondary text-sm">
+              No lorebook entries yet. Add one to get started.
+            </p>
+          ) : (
+            <AccordionBase
+              type="single"
+              collapsible
+              value={openAccordionId}
+              onValueChange={(value) => setOpenAccordionId(value as string)}
+              items={lorebookFields.map((field, index) => {
+                const entry = field as unknown as LorebookEntryFormData;
+                return {
+                  title: (
+                    <LorebookItemTitle
+                      name={entry.name}
+                      onDelete={() => removeLorebook(index)}
+                      onCopy={() => handleCopyLorebook(index)}
+                    />
                 ),
                 content: (
                   <LorebookItemContent
@@ -1041,7 +1052,8 @@ const ScenarioDetailPage = () => {
                 value: entry.id,
               };
             })}
-          />
+            />
+          )}
         </section>
       </div>
 

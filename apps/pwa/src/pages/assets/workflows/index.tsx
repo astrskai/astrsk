@@ -157,7 +157,7 @@ export default function WorkflowsListPage() {
 
       {/* Header */}
       <ListPageHeader
-        title="Assets"
+        title="Workflows"
         tabs={ASSET_TABS}
         activeTab="workflow"
         keyword={keyword}
