@@ -350,6 +350,16 @@ const CharacterDetailPage = () => {
     });
   }, []);
 
+  // Helper to update tags with consistent sorting and defensive null handling
+  const updateTags = useCallback(
+    (updater: (current: string[]) => string[]) => {
+      const current = getValues("tags") || [];
+      const next = sortTags(updater(current));
+      setValue("tags", next, { shouldDirty: true });
+    },
+    [getValues, setValue, sortTags],
+  );
+
   // Block navigation when there are unsaved changes (but not during save)
   const {
     proceed,
@@ -480,14 +490,11 @@ const CharacterDetailPage = () => {
   };
 
   const handleAddTag = () => {
-    if (newTag.trim()) {
-      const currentTags = getValues("tags");
-      // Don't add duplicate tags
-      if (!currentTags.includes(newTag.trim())) {
-        const newTags = [...currentTags, newTag.trim()];
-        const sortedTags = sortTags(newTags);
-        setValue("tags", sortedTags, { shouldDirty: true });
-      }
+    const trimmed = newTag.trim();
+    if (trimmed) {
+      updateTags((current) =>
+        current.includes(trimmed) ? current : [...current, trimmed],
+      );
       setNewTag("");
     }
   };
@@ -731,24 +738,13 @@ const CharacterDetailPage = () => {
                     <button
                       key={`${tag}-${index}`}
                       type="button"
-                      onClick={() => {
-                        const currentTags = getValues("tags");
-                        let newTags: string[];
-
-                        if (isSelected) {
-                          // Remove tag
-                          newTags = currentTags.filter((t) => t !== tag);
-                        } else {
-                          // Add tag
-                          newTags = [...currentTags, tag];
-                        }
-
-                        // Sort tags to maintain consistent order
-                        const sortedTags = sortTags(newTags);
-
-                        // Set value - React Hook Form will auto-track dirty state
-                        setValue("tags", sortedTags, { shouldDirty: true });
-                      }}
+                      onClick={() =>
+                        updateTags((current) =>
+                          isSelected
+                            ? current.filter((t) => t !== tag)
+                            : [...current, tag],
+                        )
+                      }
                       className={`rounded-md p-1 text-xs font-medium shadow-sm transition-colors md:px-2 md:py-1 md:text-sm ${
                         isSelected
                           ? "bg-blue-200 text-blue-900"
@@ -771,12 +767,9 @@ const CharacterDetailPage = () => {
                       {tag}
                       <button
                         type="button"
-                        onClick={() => {
-                          const currentTags = getValues("tags");
-                          const newTags = currentTags.filter((t) => t !== tag);
-                          const sortedTags = sortTags(newTags);
-                          setValue("tags", sortedTags, { shouldDirty: true });
-                        }}
+                        onClick={() =>
+                          updateTags((current) => current.filter((t) => t !== tag))
+                        }
                         className="hover:text-gray-200"
                       >
                         <X className="h-3 w-3" />
