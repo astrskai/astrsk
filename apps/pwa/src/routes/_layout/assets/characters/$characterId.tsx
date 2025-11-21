@@ -3,16 +3,12 @@ import { z } from "zod";
 import CharacterDetailPage from "@/pages/assets/characters/detail";
 import ErrorPage from "@/pages/error";
 
-function CharacterDetailPageWrapper() {
-  return <CharacterDetailPage />;
-}
-
 export const Route = createFileRoute("/_layout/assets/characters/$characterId")(
   {
     params: z.object({
       characterId: z.string().uuid(),
     }),
-    component: CharacterDetailPageWrapper,
+    component: CharacterDetailPage,
     beforeLoad: async ({ params }) => {
       const uuid = z.string().uuid().safeParse(params.characterId);
 

@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { useForm, useFieldArray } from "react-hook-form";
 import { Trash2, ArrowLeft, X, Save, Upload, Plus, Copy } from "lucide-react";
-import { Route } from "@/routes/_layout/assets/characters/$characterId";
+import { Route } from "@/routes/_layout/assets/scenarios/$scenarioId";
 
-import { characterQueries, useUpdateCharacterCard } from "@/entities/character/api";
+import { scenarioQueries, useUpdatePlotCard } from "@/entities/scenario/api";
 
 import { Loading, DropdownMenuBase } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
@@ -27,7 +27,13 @@ interface LorebookEntryFormData {
   content: string;
 }
 
-interface CharacterFormData {
+interface FirstMessageFormData {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface ScenarioFormData {
   // CardProps
   title: string;
   tags: string[];
@@ -37,10 +43,10 @@ interface CharacterFormData {
   conceptualOrigin?: string;
   iconAssetId?: string;
 
-  // CharacterCardProps
-  name: string;
+  // PlotCardProps
   description: string;
-  exampleDialogue?: string;
+  // scenarios stored as "first message" - DB column is scenarios but UI shows "First Message"
+  firstMessages: FirstMessageFormData[];
 
   // Lorebook
   lorebookEntries: LorebookEntryFormData[];
@@ -61,6 +67,108 @@ const TAG_DEFAULT = [
   "Royalty",
 ];
 
+const FirstMessageItemTitle = ({
+  name,
+  onDelete,
+  onCopy,
+}: {
+  name: string;
+  onDelete?: (e: MouseEvent | KeyboardEvent) => void;
+  onCopy?: (e: MouseEvent | KeyboardEvent) => void;
+}) => {
+  const handleDelete = (e: MouseEvent | KeyboardEvent) => {
+    e.stopPropagation();
+    onDelete?.(e);
+  };
+
+  const handleCopy = (e: MouseEvent | KeyboardEvent) => {
+    e.stopPropagation();
+    onCopy?.(e);
+  };
+
+  const handleCopyKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      onCopy?.(e);
+    }
+  };
+
+  const handleDeleteKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      onDelete?.(e);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <div className="max-w-[200px] truncate sm:max-w-sm md:max-w-full">
+        {name}
+      </div>
+      <div className="flex flex-shrink-0 items-center gap-2">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleCopy}
+          onKeyDown={handleCopyKeyDown}
+          className="cursor-pointer text-gray-500 hover:text-gray-400"
+          aria-label="Copy first message"
+        >
+          <Copy className="h-4 w-4" />
+        </div>
+
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleDelete}
+          onKeyDown={handleDeleteKeyDown}
+          className="cursor-pointer text-gray-500 hover:text-gray-400"
+          aria-label="Delete first message"
+        >
+          <Trash2 className="h-4 w-4" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const FirstMessageItemContent = ({
+  index,
+  register,
+  errors,
+}: {
+  index: number;
+  register: ReturnType<typeof useForm<ScenarioFormData>>["register"];
+  errors: ReturnType<typeof useForm<ScenarioFormData>>["formState"]["errors"];
+}) => {
+  return (
+    <div className="space-y-4">
+      <Input
+        {...register(`firstMessages.${index}.name`, {
+          required: "First message name is required",
+        })}
+        label="Name"
+        labelPosition="inner"
+        error={errors?.firstMessages?.[index]?.name?.message}
+        isRequired
+      />
+
+      <Textarea
+        {...register(`firstMessages.${index}.description`, {
+          required: "First message content is required",
+        })}
+        label="Content"
+        labelPosition="inner"
+        autoResize
+        error={errors?.firstMessages?.[index]?.description?.message}
+        isRequired
+      />
+    </div>
+  );
+};
+
 const LorebookItemTitle = ({
   name,
   onDelete,
@@ -71,12 +179,12 @@ const LorebookItemTitle = ({
   onCopy?: (e: MouseEvent | KeyboardEvent) => void;
 }) => {
   const handleDelete = (e: MouseEvent | KeyboardEvent) => {
-    e.stopPropagation(); // Prevent accordion from toggling
+    e.stopPropagation();
     onDelete?.(e);
   };
 
   const handleCopy = (e: MouseEvent | KeyboardEvent) => {
-    e.stopPropagation(); // Prevent accordion from toggling
+    e.stopPropagation();
     onCopy?.(e);
   };
 
@@ -137,18 +245,16 @@ const LorebookItemContent = ({
   trigger,
 }: {
   index: number;
-  register: ReturnType<typeof useForm<CharacterFormData>>["register"];
-  errors: ReturnType<typeof useForm<CharacterFormData>>["formState"]["errors"];
-  setValue: ReturnType<typeof useForm<CharacterFormData>>["setValue"];
-  getValues: ReturnType<typeof useForm<CharacterFormData>>["getValues"];
-  trigger: ReturnType<typeof useForm<CharacterFormData>>["trigger"];
+  register: ReturnType<typeof useForm<ScenarioFormData>>["register"];
+  errors: ReturnType<typeof useForm<ScenarioFormData>>["formState"]["errors"];
+  setValue: ReturnType<typeof useForm<ScenarioFormData>>["setValue"];
+  getValues: ReturnType<typeof useForm<ScenarioFormData>>["getValues"];
+  trigger: ReturnType<typeof useForm<ScenarioFormData>>["trigger"];
 }) => {
   const [newKeyword, setNewKeyword] = useState<string>("");
 
-  // Get current keys from form state
   const currentKeys = getValues(`lorebookEntries.${index}.keys`) || [];
 
-  // Register the keys field with validation
   useEffect(() => {
     register(`lorebookEntries.${index}.keys`, {
       validate: (value) =>
@@ -160,36 +266,28 @@ const LorebookItemContent = ({
 
   const handleAddKeyword = () => {
     if (newKeyword.trim()) {
-      // Get current keys from form (fresh value)
       const keys = getValues(`lorebookEntries.${index}.keys`) || [];
-      // Check for duplicates
       if (keys.includes(newKeyword.trim())) {
-        return; // Don't add duplicate
+        return;
       }
-      // Add new keyword
       const updatedKeys = [...keys, newKeyword.trim()];
-      // Update the entire keys array
       setValue(`lorebookEntries.${index}.keys`, updatedKeys, {
         shouldDirty: true,
         shouldValidate: true,
       });
-      // Trigger validation for this field
       trigger(`lorebookEntries.${index}.keys`);
       setNewKeyword("");
     }
   };
 
   const handleRemoveKeyword = (keyIndex: number) => {
-    // Get current keys from form (fresh value)
     const keys = getValues(`lorebookEntries.${index}.keys`) || [];
     const updatedKeys = [...keys];
     updatedKeys.splice(keyIndex, 1);
-    // Update the entire keys array
     setValue(`lorebookEntries.${index}.keys`, updatedKeys, {
       shouldDirty: true,
       shouldValidate: true,
     });
-    // Trigger validation for this field
     trigger(`lorebookEntries.${index}.keys`);
   };
 
@@ -285,15 +383,15 @@ const LorebookItemContent = ({
   );
 };
 
-const CharacterDetailPage = () => {
+const ScenarioDetailPage = () => {
   const navigate = useNavigate();
-  const { characterId } = Route.useParams();
+  const { scenarioId } = Route.useParams();
 
-  const { data: character, isLoading } = useQuery(
-    characterQueries.detail(characterId),
+  const { data: scenario, isLoading } = useQuery(
+    scenarioQueries.detail(scenarioId),
   );
 
-  const [imageUrl] = useAsset(character?.props.iconAssetId);
+  const [imageUrl] = useAsset(scenario?.props.iconAssetId);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isImageRemoved, setIsImageRemoved] = useState<boolean>(false);
@@ -314,18 +412,32 @@ const CharacterDetailPage = () => {
     trigger,
     watch,
     formState: { errors, isDirty },
-  } = useForm<CharacterFormData>();
+  } = useForm<ScenarioFormData>();
 
   const cardSummary = watch("cardSummary") || "";
   const tags = watch("tags") || [];
 
-  const { fields, remove, prepend } = useFieldArray({
+  const {
+    fields: lorebookFields,
+    remove: removeLorebook,
+    prepend: prependLorebook,
+  } = useFieldArray({
     control,
     name: "lorebookEntries",
-    keyName: "_rhfId", // Use custom key name to avoid conflict with our 'id' field
+    keyName: "_rhfId",
   });
 
-  const updateCharacterMutation = useUpdateCharacterCard(characterId);
+  const {
+    fields: firstMessageFields,
+    remove: removeFirstMessage,
+    prepend: prependFirstMessage,
+  } = useFieldArray({
+    control,
+    name: "firstMessages",
+    keyName: "_rhfId",
+  });
+
+  const updatePlotMutation = useUpdatePlotCard(scenarioId);
 
   // Helper function to sort tags by TAG_DEFAULT order, then alphabetically for custom tags
   const sortTags = useCallback((tags: string[]) => {
@@ -333,18 +445,13 @@ const CharacterDetailPage = () => {
       const aIndex = TAG_DEFAULT.indexOf(a);
       const bIndex = TAG_DEFAULT.indexOf(b);
 
-      // Both are default tags - sort by TAG_DEFAULT order
       if (aIndex !== -1 && bIndex !== -1) {
         return aIndex - bIndex;
       }
 
-      // a is default, b is custom - default comes first
       if (aIndex !== -1) return -1;
-
-      // b is default, a is custom - default comes first
       if (bIndex !== -1) return 1;
 
-      // Both are custom tags - sort alphabetically
       return a.localeCompare(b);
     });
   }, []);
@@ -365,29 +472,33 @@ const CharacterDetailPage = () => {
     reset: resetBlocker,
     status,
   } = useBlocker({
-    shouldBlockFn: () => isDirty && !updateCharacterMutation.isPending,
+    shouldBlockFn: () => isDirty && !updatePlotMutation.isPending,
     withResolver: true,
-    enableBeforeUnload: isDirty && !updateCharacterMutation.isPending,
+    enableBeforeUnload: isDirty && !updatePlotMutation.isPending,
   });
 
-  // Reset form when character data loads
+  // Reset form when scenario data loads
   useEffect(() => {
-    if (character) {
-      const initialTags = sortTags(character.props.tags || []);
+    if (scenario) {
+      const initialTags = sortTags(scenario.props.tags || []);
 
       reset({
-        title: character.props.title || "",
+        title: scenario.props.title || "",
         tags: initialTags,
-        creator: character.props.creator || "",
-        cardSummary: character.props.cardSummary || "",
-        version: character.props.version || "",
-        conceptualOrigin: character.props.conceptualOrigin || "",
-        iconAssetId: character.props.iconAssetId?.toString() || undefined,
-        name: character.props.name || "",
-        description: character.props.description || "",
-        exampleDialogue: character.props.exampleDialogue || "",
+        creator: scenario.props.creator || "",
+        cardSummary: scenario.props.cardSummary || "",
+        version: scenario.props.version || "",
+        conceptualOrigin: scenario.props.conceptualOrigin || "",
+        iconAssetId: scenario.props.iconAssetId?.toString() || undefined,
+        description: scenario.props.description || "",
+        firstMessages:
+          scenario.props.scenarios?.map((s, idx) => ({
+            id: crypto.randomUUID(),
+            name: s.name || `First Message ${idx + 1}`,
+            description: s.description || "",
+          })) || [],
         lorebookEntries:
-          character.props.lorebook?.props.entries.map((entry) => ({
+          scenario.props.lorebook?.props.entries.map((entry) => ({
             id: entry.id.toString(),
             name: entry.name || "",
             enabled: entry.enabled,
@@ -397,16 +508,15 @@ const CharacterDetailPage = () => {
           })) || [],
       });
     }
-  }, [character, reset, sortTags]);
+  }, [scenario, reset, sortTags]);
 
-  // Scroll to top when character changes
-  useScrollToTop([characterId]);
+  // Scroll to top when scenario changes
+  useScrollToTop([scenarioId]);
 
   // Auto-expand accordion when new lorebook is added
   useEffect(() => {
     if (pendingLorebookId) {
-      // Check if the pending lorebook ID exists in fields
-      const exists = fields.some((field) => {
+      const exists = lorebookFields.some((field) => {
         const entry = field as unknown as LorebookEntryFormData;
         return entry.id === pendingLorebookId;
       });
@@ -416,7 +526,7 @@ const CharacterDetailPage = () => {
         setPendingLorebookId(null);
       }
     }
-  }, [fields, pendingLorebookId]);
+  }, [lorebookFields, pendingLorebookId]);
 
   // Cleanup: Revoke preview URL on unmount to prevent memory leak
   useEffect(() => {
@@ -428,7 +538,7 @@ const CharacterDetailPage = () => {
   }, [previewImage]);
 
   const handleGoBack = () => {
-    navigate({ to: "/assets/characters" });
+    navigate({ to: "/assets/scenarios" });
   };
 
   const handleUploadImage = () => {
@@ -438,25 +548,21 @@ const CharacterDetailPage = () => {
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Only allow PNG, JPEG, or WebP for previews (disallow SVG for security)
       const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
       if (!allowedTypes.includes(file.type)) {
         toastError("Invalid file type", {
           description: "Only PNG, JPEG, or WebP images are allowed.",
         });
-        // Reset file input
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
         return;
       }
 
-      // Revoke previous preview URL to prevent memory leak
       if (previewImage) {
         URL.revokeObjectURL(previewImage);
       }
 
-      // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewImage(url);
       setImageFile(file);
@@ -470,7 +576,6 @@ const CharacterDetailPage = () => {
   };
 
   const handleRemoveImage = () => {
-    // Revoke preview URL to prevent memory leak
     if (previewImage) {
       URL.revokeObjectURL(previewImage);
     }
@@ -497,7 +602,7 @@ const CharacterDetailPage = () => {
   const handleAddLorebook = () => {
     const newId = crypto.randomUUID();
 
-    prepend({
+    prependLorebook({
       id: newId,
       name: "New Entry",
       enabled: true,
@@ -521,14 +626,42 @@ const CharacterDetailPage = () => {
         name: `${entryToCopy.name} (Copy)`,
       };
 
-      prepend(copiedEntry);
+      prependLorebook(copiedEntry);
       setPendingLorebookId(newId);
     }
   };
 
-  const onSubmit = async (data: CharacterFormData) => {
+  const handleAddFirstMessage = () => {
+    const newId = crypto.randomUUID();
+
+    prependFirstMessage({
+      id: newId,
+      name: "New First Message",
+      description: "",
+    });
+
+    setOpenAccordionId(newId);
+  };
+
+  const handleCopyFirstMessage = (index: number) => {
+    const firstMessages = getValues("firstMessages");
+    const entryToCopy = firstMessages[index];
+
+    if (entryToCopy) {
+      const newId = crypto.randomUUID();
+      const copiedEntry = {
+        ...entryToCopy,
+        id: newId,
+        name: `${entryToCopy.name} (Copy)`,
+      };
+
+      prependFirstMessage(copiedEntry);
+      setOpenAccordionId(newId);
+    }
+  };
+
+  const onSubmit = async (data: ScenarioFormData) => {
     try {
-      // Upload new image if user selected one
       let uploadedAssetId = data.iconAssetId;
 
       if (imageFile) {
@@ -547,15 +680,19 @@ const CharacterDetailPage = () => {
         }
       }
 
-      // Convert empty strings to undefined for optional fields
       const normalizeField = (value: string | undefined) =>
         value === "" ? undefined : value;
 
-      await updateCharacterMutation.mutateAsync({
-        title: data.name, // Use name as title (unified)
-        name: data.name,
+      // Convert firstMessages to scenarios format for DB
+      const scenariosForDB = data.firstMessages.map((fm) => ({
+        name: fm.name,
+        description: fm.description,
+      }));
+
+      await updatePlotMutation.mutateAsync({
+        title: data.title,
         description: data.description,
-        exampleDialogue: normalizeField(data.exampleDialogue),
+        scenarios: scenariosForDB,
         tags: data.tags,
         creator: normalizeField(data.creator),
         cardSummary: normalizeField(data.cardSummary),
@@ -565,20 +702,15 @@ const CharacterDetailPage = () => {
         lorebookEntries: data.lorebookEntries,
       });
 
-      // Clear image file state after successful save
-      // Revoke preview URL to prevent memory leak
       if (previewImage) {
         URL.revokeObjectURL(previewImage);
       }
       setImageFile(null);
       setPreviewImage(null);
 
-      // Reset form to mark as not dirty after successful save
-      // Normalize empty strings to undefined to match initial state
       reset({
         ...data,
         tags: sortTags(data.tags),
-        exampleDialogue: normalizeField(data.exampleDialogue),
         creator: normalizeField(data.creator),
         cardSummary: normalizeField(data.cardSummary),
         version: normalizeField(data.version),
@@ -586,14 +718,13 @@ const CharacterDetailPage = () => {
         iconAssetId: uploadedAssetId,
       });
 
-      toastSuccess("Character updated!", {
-        description: "Your character has been updated successfully.",
+      toastSuccess("Scenario updated!", {
+        description: "Your scenario has been updated successfully.",
       });
 
-      // Navigate back to characters list page
-      navigate({ to: "/assets/characters" });
+      navigate({ to: "/assets/scenarios" });
     } catch (error) {
-      toastError("Failed to save character", {
+      toastError("Failed to save scenario", {
         description:
           error instanceof Error ? error.message : "An unknown error occurred",
       });
@@ -623,7 +754,7 @@ const CharacterDetailPage = () => {
             onClick={handleGoBack}
             type="button"
           />
-          <h1 className="text-base font-semibold">{character?.props.title}</h1>
+          <h1 className="text-base font-semibold">{scenario?.props.title}</h1>
         </div>
         <div className="flex items-center gap-3">
           {isDirty && (
@@ -638,8 +769,8 @@ const CharacterDetailPage = () => {
           <Button
             icon={<Save className="h-4 w-4" />}
             type="submit"
-            disabled={!isDirty || updateCharacterMutation.isPending}
-            loading={updateCharacterMutation.isPending}
+            disabled={!isDirty || updatePlotMutation.isPending}
+            loading={updatePlotMutation.isPending}
           >
             Save
           </Button>
@@ -653,9 +784,9 @@ const CharacterDetailPage = () => {
               trigger={
                 <img
                   src={
-                    displayImage ?? "/img/placeholder/character-placeholder.png"
+                    displayImage ?? "/img/placeholder/scenario-placeholder.png"
                   }
-                  alt={character?.props.title ?? ""}
+                  alt={scenario?.props.title ?? ""}
                   className="h-full w-full cursor-pointer object-cover"
                 />
               }
@@ -683,19 +814,19 @@ const CharacterDetailPage = () => {
 
             <div className="space-y-4">
               <Input
-                {...register("name", {
-                  required: "Character name is required",
+                {...register("title", {
+                  required: "Scenario title is required",
                 })}
-                label="Character Name"
+                label="Scenario Title"
                 labelPosition="inner"
                 maxLength={50}
-                error={errors.name?.message}
+                error={errors.title?.message}
                 isRequired
               />
               <div className="space-y-1">
                 <Input
                   {...register("cardSummary")}
-                  label="Character Summary"
+                  label="Scenario Summary"
                   labelPosition="inner"
                   maxLength={50}
                   error={errors.cardSummary?.message}
@@ -805,25 +936,63 @@ const CharacterDetailPage = () => {
 
         <section className="space-y-4">
           <h2 className="text-text-primary text-base font-semibold">
-            Character Info
+            Scenario Info
           </h2>
 
           <Textarea
             {...register("description", {
-              required: "Character description is required",
+              required: "Scenario description is required",
             })}
-            label="Character Description"
+            label="Scenario Description"
             labelPosition="inner"
             autoResize
             error={errors.description?.message}
             isRequired
           />
-          <Textarea
-            {...register("exampleDialogue")}
-            label="Example Dialogue"
-            labelPosition="inner"
-            autoResize
-            error={errors.exampleDialogue?.message}
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-text-primary text-base font-semibold">
+              First Messages
+            </h2>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleAddFirstMessage}
+            >
+              <Plus className="h-4 w-4" />
+              Add first message
+            </Button>
+          </div>
+
+          <AccordionBase
+            type="single"
+            collapsible
+            value={openAccordionId}
+            onValueChange={(value) => setOpenAccordionId(value as string)}
+            items={firstMessageFields.map((field, index) => {
+              const entry = field as unknown as FirstMessageFormData;
+              return {
+                title: (
+                  <FirstMessageItemTitle
+                    name={entry.name}
+                    onDelete={() => removeFirstMessage(index)}
+                    onCopy={() => handleCopyFirstMessage(index)}
+                  />
+                ),
+                content: (
+                  <FirstMessageItemContent
+                    index={index}
+                    register={register}
+                    errors={errors}
+                  />
+                ),
+                value: entry.id,
+              };
+            })}
           />
         </section>
 
@@ -849,14 +1018,13 @@ const CharacterDetailPage = () => {
             collapsible
             value={openAccordionId}
             onValueChange={(value) => setOpenAccordionId(value as string)}
-            items={fields.map((field, index) => {
-              // Cast to get the actual lorebook entry data
+            items={lorebookFields.map((field, index) => {
               const entry = field as unknown as LorebookEntryFormData;
               return {
                 title: (
                   <LorebookItemTitle
                     name={entry.name}
-                    onDelete={() => remove(index)}
+                    onDelete={() => removeLorebook(index)}
                     onCopy={() => handleCopyLorebook(index)}
                   />
                 ),
@@ -870,7 +1038,7 @@ const CharacterDetailPage = () => {
                     trigger={trigger}
                   />
                 ),
-                value: entry.id, // Use actual lorebook entry ID
+                value: entry.id,
               };
             })}
           />
@@ -896,4 +1064,4 @@ const CharacterDetailPage = () => {
   );
 };
 
-export default CharacterDetailPage;
+export default ScenarioDetailPage;

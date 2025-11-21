@@ -1,54 +1,54 @@
 /**
- * Character Query Factory
+ * Scenario Query Factory
  *
- * Character-specific query factory that wraps card queries
- * with proper type safety for CharacterCard.
+ * Scenario-specific query factory that wraps card queries
+ * with proper type safety for PlotCard.
  */
 
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardService } from "@/app/services/card-service";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
-import { CharacterCard } from "@/entities/card/domain";
+import { PlotCard } from "@/entities/card/domain";
 import { cardKeys } from "@/entities/card/api/query-factory";
 
 // WeakMap cache for preventing unnecessary re-renders
-const selectResultCache = new WeakMap<object, CharacterCard>();
+const selectResultCache = new WeakMap<object, PlotCard>();
 
 // Query Keys (reuse card keys for cache consistency)
-export const characterKeys = {
-  all: () => [...cardKeys.all, "character"] as const,
-  details: () => [...characterKeys.all(), "detail"] as const,
+export const scenarioKeys = {
+  all: () => [...cardKeys.all, "scenario"] as const,
+  details: () => [...scenarioKeys.all(), "detail"] as const,
   detail: (id: string) => cardKeys.detail(id), // Reuse card key for shared cache
 };
 
 // Query Options Factory
-export const characterQueries = {
-  // Character detail with type safety
+export const scenarioQueries = {
+  // Scenario detail with type safety
   detail: (id: string) =>
     queryOptions({
-      queryKey: characterKeys.detail(id),
+      queryKey: scenarioKeys.detail(id),
       queryFn: async () => {
         const cardOrError = await CardService.getCard.execute(
           new UniqueEntityID(id),
         );
         if (cardOrError.isFailure) {
-          throw new Error("Character not found");
+          throw new Error("Scenario not found");
         }
 
         const card = cardOrError.getValue();
 
         // Type guard at query level
-        if (!(card instanceof CharacterCard)) {
+        if (!(card instanceof PlotCard)) {
           throw new Error(
-            `Expected CharacterCard but got ${card.constructor.name}`,
+            `Expected PlotCard but got ${card.constructor.name}`,
           );
         }
 
         // Transform to persistence format for consistent caching
         return CardDrizzleMapper.toPersistence(card);
       },
-      select: (data): CharacterCard | null => {
+      select: (data): PlotCard | null => {
         if (!data) return null;
 
         // Check cache first
@@ -59,7 +59,7 @@ export const characterQueries = {
         const result = CardDrizzleMapper.toDomain(data as any);
 
         // Type guard after domain conversion
-        if (!(result instanceof CharacterCard)) {
+        if (!(result instanceof PlotCard)) {
           return null;
         }
 
@@ -74,6 +74,6 @@ export const characterQueries = {
 /**
  * Usage:
  *
- * const { data: character } = useQuery(characterQueries.detail(characterId));
- * // character is typed as CharacterCard | null - no type guard needed!
+ * const { data: scenario } = useQuery(scenarioQueries.detail(scenarioId));
+ * // scenario is typed as PlotCard | null - no type guard needed!
  */
