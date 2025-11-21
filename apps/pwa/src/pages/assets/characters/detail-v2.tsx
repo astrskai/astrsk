@@ -142,7 +142,7 @@ const LorebookItemContent = ({
   getValues: ReturnType<typeof useForm<CharacterFormData>>["getValues"];
   trigger: ReturnType<typeof useForm<CharacterFormData>>["trigger"];
 }) => {
-  const [newKeyword, setNewKeyword] = useState("");
+  const [newKeyword, setNewKeyword] = useState<string>("");
 
   // Get current keys from form state
   const currentKeys = getValues(`lorebookEntries.${index}.keys`) || [];
@@ -286,8 +286,8 @@ const CharacterDetailPage = () => {
   const [imageUrl] = useAsset(character?.props.iconAssetId);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isImageRemoved, setIsImageRemoved] = useState(false);
-  const [newTag, setNewTag] = useState("");
+  const [isImageRemoved, setIsImageRemoved] = useState<boolean>(false);
+  const [newTag, setNewTag] = useState<string>("");
   const [openAccordionId, setOpenAccordionId] = useState<string>("");
   const [pendingLorebookId, setPendingLorebookId] = useState<string | null>(
     null,
@@ -550,7 +550,10 @@ const CharacterDetailPage = () => {
   const displayImage = isImageRemoved ? null : previewImage || imageUrl;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-900">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="w-full bg-gray-900"
+    >
       <input
         ref={fileInputRef}
         type="file"
@@ -582,7 +585,7 @@ const CharacterDetailPage = () => {
         </div>
       </div>
 
-      <div className="mx-auto max-w-4xl space-y-6 p-4">
+      <div className="mx-auto w-full max-w-4xl space-y-6 p-4">
         <section className="flex w-full flex-col items-center justify-center gap-4">
           <div className="max-w-[200px] space-y-2 overflow-hidden rounded-lg">
             <DropdownMenuBase
@@ -641,7 +644,7 @@ const CharacterDetailPage = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-4 md:flex-row">
                 <Input
                   {...register("version")}
                   label="Version"
