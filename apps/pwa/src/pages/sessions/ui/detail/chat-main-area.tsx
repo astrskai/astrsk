@@ -688,7 +688,7 @@ export default function ChatMainArea({
       />
 
       <ChatInput
-        className="shrink-0"
+        className="shrink-0 md:mb-4"
         aiCharacterIds={data.aiCharacterCardIds}
         userCharacterId={data.userCharacterCardId}
         autoReply={data.autoReply}
