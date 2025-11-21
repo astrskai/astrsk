@@ -403,7 +403,6 @@ const ScenarioDetailPage = () => {
   const [imageUrl] = useAsset(scenario?.props.iconAssetId);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isImageRemoved, setIsImageRemoved] = useState<boolean>(false);
   const [newTag, setNewTag] = useState<string>("");
   const [openAccordionId, setOpenAccordionId] = useState<string>("");
   const [pendingLorebookId, setPendingLorebookId] = useState<string | null>(
@@ -575,7 +574,6 @@ const ScenarioDetailPage = () => {
       const url = URL.createObjectURL(file);
       setPreviewImage(url);
       setImageFile(file);
-      setIsImageRemoved(false);
 
       // Mark form as dirty by setting a temporary value (file will be uploaded on submit)
       setValue("iconAssetId", `pending-upload-${Date.now()}`, {
@@ -728,7 +726,7 @@ const ScenarioDetailPage = () => {
 
   if (isLoading) return <Loading />;
 
-  const displayImage = isImageRemoved ? null : previewImage || imageUrl;
+  const displayImage = previewImage || imageUrl;
 
   return (
     <form
@@ -783,16 +781,16 @@ const ScenarioDetailPage = () => {
       <div className="mx-auto w-full max-w-4xl space-y-6 p-4">
         <section className="flex w-full flex-col items-center justify-center gap-4">
           {displayImage ? (
-            <div className="relative max-w-[200px] overflow-hidden rounded-lg">
+            <div className="relative max-w-[200px]">
               <img
                 src={displayImage}
                 alt={scenario?.props.title ?? ""}
-                className="h-full w-full object-cover"
+                className="h-full w-full rounded-lg object-cover"
               />
               <button
                 type="button"
                 onClick={handleUploadImage}
-                className="absolute right-2 bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-900/70 text-white transition-colors hover:bg-gray-900"
+                className="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full border border-gray-500 bg-gray-900 text-white shadow-md transition-colors hover:bg-gray-700"
                 aria-label="Edit image"
               >
                 <Pencil className="h-4 w-4" />
