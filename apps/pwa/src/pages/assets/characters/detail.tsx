@@ -6,7 +6,10 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { Trash2, ArrowLeft, X, Save, Upload, Plus, Copy } from "lucide-react";
 import { Route } from "@/routes/_layout/assets/characters/$characterId";
 
-import { characterQueries, useUpdateCharacterCard } from "@/entities/character/api";
+import {
+  characterQueries,
+  useUpdateCharacterCard,
+} from "@/entities/character/api";
 
 import { Loading, DropdownMenuBase } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
@@ -605,7 +608,15 @@ const CharacterDetailPage = () => {
   const displayImage = isImageRemoved ? null : previewImage || imageUrl;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full bg-gray-900">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+          e.preventDefault();
+        }
+      }}
+      className="w-full bg-gray-900"
+    >
       <input
         ref={fileInputRef}
         type="file"

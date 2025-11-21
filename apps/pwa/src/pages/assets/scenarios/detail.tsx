@@ -736,7 +736,15 @@ const ScenarioDetailPage = () => {
   const displayImage = isImageRemoved ? null : previewImage || imageUrl;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full bg-gray-900">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+          e.preventDefault();
+        }
+      }}
+      className="w-full bg-gray-900"
+    >
       <input
         ref={fileInputRef}
         type="file"
