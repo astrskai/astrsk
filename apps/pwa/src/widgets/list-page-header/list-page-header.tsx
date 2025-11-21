@@ -97,18 +97,7 @@ export function ListPageHeader({
       <div className="bg-dark-surface sticky top-0 z-50 flex flex-col shadow-md">
         {/* Desktop Header */}
         <div className="mx-auto hidden w-full max-w-7xl items-center justify-between p-4 md:flex">
-          {/* Left: Title or Navigation Links */}
-          {tabs && tabs.length > 0 ? (
-            <NavigationTabs
-              tabs={tabs}
-              activeTab={activeTab || ""}
-              variant="desktop"
-            />
-          ) : (
-            <h1 className="text-text-primary text-2xl font-semibold">
-              {title}
-            </h1>
-          )}
+          <h1 className="text-text-primary text-2xl font-semibold">{title}</h1>
 
           {/* Right: Search, Import, Export, Help */}
           <div className="flex items-center gap-3">
@@ -178,14 +167,14 @@ export function ListPageHeader({
           </div>
 
           {/* Tab Navigation (if provided) */}
-          {tabs && tabs.length > 0 && (
+          {/* {tabs && tabs.length > 0 && (
             <NavigationTabs
               tabs={tabs}
               activeTab={activeTab || ""}
               variant="mobile"
               className="px-4"
             />
-          )}
+          )} */}
 
           {/* Bottom Row: Search Input */}
           <div className="px-4 pt-4 pb-4">

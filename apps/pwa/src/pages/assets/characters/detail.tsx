@@ -844,36 +844,42 @@ const CharacterDetailPage = () => {
             </Button>
           </div>
 
-          <AccordionBase
-            type="single"
-            collapsible
-            value={openAccordionId}
-            onValueChange={(value) => setOpenAccordionId(value as string)}
-            items={fields.map((field, index) => {
-              // Cast to get the actual lorebook entry data
-              const entry = field as unknown as LorebookEntryFormData;
-              return {
-                title: (
-                  <LorebookItemTitle
-                    name={entry.name}
-                    onDelete={() => remove(index)}
-                    onCopy={() => handleCopyLorebook(index)}
-                  />
-                ),
-                content: (
-                  <LorebookItemContent
-                    index={index}
-                    register={register}
-                    errors={errors}
-                    setValue={setValue}
-                    getValues={getValues}
-                    trigger={trigger}
-                  />
-                ),
-                value: entry.id, // Use actual lorebook entry ID
-              };
-            })}
-          />
+          {fields.length === 0 ? (
+            <p className="text-text-secondary text-sm">
+              No lorebook entries yet. Add one to get started.
+            </p>
+          ) : (
+            <AccordionBase
+              type="single"
+              collapsible
+              value={openAccordionId}
+              onValueChange={(value) => setOpenAccordionId(value as string)}
+              items={fields.map((field, index) => {
+                // Cast to get the actual lorebook entry data
+                const entry = field as unknown as LorebookEntryFormData;
+                return {
+                  title: (
+                    <LorebookItemTitle
+                      name={entry.name}
+                      onDelete={() => remove(index)}
+                      onCopy={() => handleCopyLorebook(index)}
+                    />
+                  ),
+                  content: (
+                    <LorebookItemContent
+                      index={index}
+                      register={register}
+                      errors={errors}
+                      setValue={setValue}
+                      getValues={getValues}
+                      trigger={trigger}
+                    />
+                  ),
+                  value: entry.id, // Use actual lorebook entry ID
+                };
+              })}
+            />
+          )}
         </section>
       </div>
 
