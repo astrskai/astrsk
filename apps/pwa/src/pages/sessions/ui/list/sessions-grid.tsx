@@ -38,6 +38,7 @@ interface SessionGridItemProps {
     sessionId: string,
     title: string,
     flowId: UniqueEntityID | undefined,
+    exportType?: "file" | "cloud",
   ) => (e: React.MouseEvent) => void;
   onCopy: (sessionId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
