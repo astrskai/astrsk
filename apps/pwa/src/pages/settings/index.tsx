@@ -174,7 +174,7 @@ export default function SettingsPage() {
     },
     {
       label: "About astrsk.ai",
-      onClick: () => openInNewTab("https://join.astrsk.ai"),
+      onClick: () => openInNewTab("https://about.astrsk.ai"),
       showChevron: false,
     },
     {
