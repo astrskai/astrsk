@@ -1,5 +1,13 @@
+import { EllipsisVertical } from "lucide-react";
 import { cn } from "@/shared/lib";
 import type { CharacterAction } from "@/features/character/model/character-actions";
+import { Button } from "@/shared/ui/forms";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu";
 
 interface ScenarioPreviewProps {
   title: string;
@@ -12,10 +20,12 @@ interface ScenarioPreviewProps {
   className?: string;
   isShowActions?: boolean;
   isDisabled?: boolean;
+  bottomActions?: CharacterAction[];
+  moreActionsClassName?: string;
   onClick?: () => void;
 }
 
-const PLACEHOLDER_IMAGE_URL = "/img/placeholder/scenario-card-image.png";
+const PLACEHOLDER_IMAGE_URL = "/img/placeholder/scenario-placeholder.png";
 
 const ScenarioPreview = ({
   title,
@@ -28,6 +38,8 @@ const ScenarioPreview = ({
   isShowActions = false,
   actions = [],
   isDisabled = false,
+  bottomActions = [],
+  moreActionsClassName,
   onClick,
 }: ScenarioPreviewProps) => {
   const getCompactedTagString = (tags: string[]) => {
@@ -36,7 +48,7 @@ const ScenarioPreview = ({
         <span
           key={`${title}-tag-${index}-${tag}`}
           className={cn(
-            "rounded-md bg-gray-800/80 px-2.5 py-0.5 text-xs font-semibold text-gray-300 lg:text-sm",
+            "truncate rounded-md bg-gray-800/80 px-2.5 py-0.5 text-xs font-semibold text-gray-300 lg:text-sm",
             "transition-all duration-300 group-hover/preview:bg-black/50 group-hover/preview:text-gray-50",
             index === 2 && "hidden lg:inline-flex",
           )}
@@ -88,9 +100,9 @@ const ScenarioPreview = ({
         <div className="absolute inset-0 z-20 bg-white opacity-40" />
       )}
 
-      {/* Action buttons */}
+      {/* Action buttons - Desktop (hover) */}
       {isShowActions && actions.length > 0 && (
-        <div className="absolute top-2 right-2 z-30 flex -translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover/preview:translate-y-0 group-hover/preview:opacity-100">
+        <div className="absolute top-2 right-2 z-30 hidden -translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover/preview:translate-y-0 group-hover/preview:opacity-100 md:flex">
           {actions.map((action, index) => (
             <button
               key={index}
@@ -107,15 +119,68 @@ const ScenarioPreview = ({
                   : "cursor-pointer",
               )}
             >
-              <action.icon
-                className={cn("h-4", action.loading && "animate-pulse")}
-              />
+              {action.icon ? (
+                <action.icon
+                  className={cn("h-4", action.loading && "animate-pulse")}
+                />
+              ) : (
+                <span className="text-xs">{action.label.charAt(0)}</span>
+              )}
             </button>
           ))}
         </div>
       )}
 
-      <div className="flex min-h-0 flex-[1_1_50%] items-center border-b border-gray-800 bg-gray-900">
+      {/* Action buttons - Mobile (dropdown menu) */}
+      {isShowActions && actions.length > 0 && (
+        <div
+          className={cn(
+            "absolute top-2 right-2 z-30 md:hidden",
+            moreActionsClassName,
+          )}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                aria-label="More actions"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-gray-50 hover:bg-gray-800/80"
+              >
+                <EllipsisVertical className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-gray-700 md:hidden"
+            >
+              {actions.map((action, index) => (
+                <DropdownMenuItem
+                  key={index}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    action.onClick(e);
+                  }}
+                  disabled={action.disabled}
+                  className="flex items-center gap-2"
+                >
+                  {action.icon && (
+                    <action.icon
+                      className={cn(
+                        "h-4 w-4",
+                        action.loading && "animate-pulse",
+                      )}
+                    />
+                  )}
+                  <span>{action.label}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+      <div className="flex min-h-0 flex-[1_1_50%] items-center bg-gray-900">
         <img
           src={imageUrl || PLACEHOLDER_IMAGE_URL}
           alt={title}
@@ -129,6 +194,9 @@ const ScenarioPreview = ({
           <h3
             className={cn(
               "z-10 truncate text-base font-semibold text-gray-50 lg:text-lg",
+              isShowActions && actions.length > 0
+                ? "w-[90%] md:w-full"
+                : "w-full",
             )}
           >
             {title}
@@ -150,7 +218,7 @@ const ScenarioPreview = ({
         </div>
       </div>
 
-      <div className="relative flex min-h-0 flex-[1_1_50%] flex-col justify-between gap-2 overflow-hidden bg-gray-900 p-4">
+      <div className="bg-dark-surface relative flex min-h-0 flex-[1_1_50%] flex-col justify-between gap-2 overflow-hidden p-4">
         <p
           className={cn(
             "line-clamp-2 text-xs lg:text-sm",
@@ -161,15 +229,40 @@ const ScenarioPreview = ({
           {summary || "No summary"}
         </p>
 
-        <div className="flex items-center gap-3 text-xs lg:text-sm">
-          <p>
-            <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
-            Tokens
-          </p>
-          <p>
-            <span className="font-semibold text-gray-50">{firstMessages}</span>{" "}
-            First messages
-          </p>
+        <div className="flex items-center justify-between gap-1 text-xs lg:text-sm">
+          <div className="flex items-center gap-3">
+            <p>
+              <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
+              Tokens
+            </p>
+            <p>
+              <span className="font-semibold text-gray-50">
+                {firstMessages}
+              </span>{" "}
+              First messages
+            </p>
+          </div>
+
+          {bottomActions.length > 0 && (
+            <div className="flex items-center gap-1 text-xs lg:text-sm">
+              {bottomActions.map((action, index) => (
+                <Button
+                  key={index}
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    action.onClick(e);
+                  }}
+                  disabled={action.disabled}
+                  aria-label={action.label}
+                  className={cn(action.bottomActionsClassName, "px-2 py-1")}
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </article>

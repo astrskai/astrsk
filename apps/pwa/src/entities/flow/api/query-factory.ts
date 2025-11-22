@@ -206,6 +206,7 @@ export const flowQueries = {
         selectResultCache.set(data as object, result);
         return result;
       },
+      enabled: !!id,
       gcTime: 1000 * 60 * 5, // 5 minutes cache
       staleTime: 0, // Always consider stale - force refetch
     }),

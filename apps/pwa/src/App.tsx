@@ -6,7 +6,7 @@ import { initializeEnvironment } from "@/shared/lib/environment";
 
 import { routeTree } from "./routeTree.gen";
 
-const router = createRouter({ routeTree });
+const router = createRouter({ routeTree, basepath: "/" });
 
 declare module "@tanstack/react-router" {
   interface Register {

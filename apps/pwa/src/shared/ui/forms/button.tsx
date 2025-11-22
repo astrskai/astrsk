@@ -1,24 +1,45 @@
 import { forwardRef } from "react";
 import { cn } from "@/shared/lib";
+import { Loader2 } from "lucide-react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "secondary" | "ghost" | "destructive" | "outline";
   size?: "sm" | "md" | "lg";
   icon?: React.ReactNode;
+  loading?: boolean;
   children?: React.ReactNode;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { variant = "default", size = "md", icon, className, children, ...props },
+    {
+      variant = "default",
+      size = "md",
+      icon,
+      loading = false,
+      className,
+      children,
+      disabled,
+      ...props
+    },
     ref,
   ) => {
     // Icon-only button: no children, only icon
     const isIconOnly = icon && !children;
 
+    // Show loading spinner or icon
+    const displayIcon = loading ? (
+      <Loader2 className="h-4 w-4 animate-spin" />
+    ) : (
+      icon
+    );
+
     return (
       <button
         ref={ref}
+        disabled={disabled || loading}
+        aria-busy={loading}
+        aria-live={loading ? "polite" : undefined}
         className={cn(
           // Base styles
           "focus:ring-primary/50 inline-flex cursor-pointer items-center justify-center rounded-full font-medium transition-colors focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
@@ -53,8 +74,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         {...props}
       >
-        {icon}
+        {displayIcon}
         {children}
+        {loading && <span className="sr-only">Loading</span>}
       </button>
     );
   },

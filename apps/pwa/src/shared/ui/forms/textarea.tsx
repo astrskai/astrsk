@@ -5,9 +5,62 @@ interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
-  labelPosition?: "top" | "left";
+  labelPosition?: "top" | "left" | "inner";
   autoResize?: boolean;
+  caption?: string;
+  isRequired?: boolean; // For display purposes only (shows * indicator)
 }
+
+// Shared style constants
+const STYLES = {
+  textarea: {
+    base: "text-text-primary placeholder:text-text-placeholder min-h-[120px] w-full rounded-lg border bg-gray-800 px-4 py-3 text-base outline-none",
+    focus: "focus:ring-2 focus:ring-offset-0",
+    transition: "transition-all",
+    disabled: "disabled:cursor-not-allowed disabled:opacity-50",
+  },
+  resize: {
+    auto: "resize-none overflow-hidden",
+    manual: "resize-vertical",
+  },
+  border: {
+    error:
+      "border-status-destructive-light focus:border-status-destructive-light focus:ring-status-destructive-light/20",
+    normal: "border-gray-500 focus:border-primary-normal focus:ring-primary-normal/20",
+  },
+  label: {
+    floating:
+      "absolute left-3 top-0 -translate-y-1/2 rounded-sm bg-gray-800 px-1 text-xs font-medium transition-all pointer-events-none",
+    standard: "text-text-secondary text-xs font-medium",
+  },
+  text: {
+    error: "text-status-destructive-light",
+    secondary: "text-text-secondary",
+    required: "text-status-required ml-1",
+    small: "mt-1 text-xs",
+    caption: "mt-1 pl-2 text-xs",
+  },
+} as const;
+
+// Sub-components
+const RequiredIndicator = () => (
+  <span className={STYLES.text.required}>*</span>
+);
+
+const FeedbackMessages = ({
+  error,
+  caption,
+}: {
+  error?: string;
+  caption?: string;
+}) => (
+  <>
+    {error && <p className={cn(STYLES.text.error, STYLES.text.small)}>{error}</p>}
+    {!error && caption && (
+      <p className={cn(STYLES.text.secondary, STYLES.text.caption)}>{caption}</p>
+    )}
+  </>
+);
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   (
@@ -17,11 +70,14 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       labelPosition = "top",
       className,
       required,
+      isRequired,
       autoResize = false,
+      caption,
       ...props
     },
     ref,
   ) => {
+    const showRequiredIndicator = required || isRequired;
     const internalRef = useRef<HTMLTextAreaElement>(null);
 
     // Expose the internal ref to the parent via forwardRef
@@ -34,16 +90,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       const textarea = internalRef.current;
 
       const adjustHeight = () => {
-        // Reset height to auto to get the correct scrollHeight
         textarea.style.height = "auto";
-        // Set height to scrollHeight to fit content
         textarea.style.height = `${textarea.scrollHeight}px`;
       };
 
-      // Adjust on mount and when value changes
       adjustHeight();
-
-      // Listen to input events for real-time adjustment
       textarea.addEventListener("input", adjustHeight);
 
       return () => {
@@ -51,51 +102,74 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       };
     }, [autoResize, props.value]);
 
+    // Shared textarea classes
+    const textareaClasses = cn(
+      STYLES.textarea.base,
+      STYLES.textarea.focus,
+      STYLES.textarea.transition,
+      STYLES.textarea.disabled,
+      autoResize ? STYLES.resize.auto : STYLES.resize.manual,
+      error ? STYLES.border.error : STYLES.border.normal,
+      className,
+    );
+
+    // Inner label layout (floating label on border)
+    if (labelPosition === "inner" && label) {
+      return (
+        <div className="relative w-full">
+          <textarea
+            ref={internalRef}
+            required={required}
+            placeholder={props.placeholder || " "}
+            className={textareaClasses}
+            {...props}
+          />
+
+          {/* Floating label on border */}
+          <label
+            className={cn(
+              STYLES.label.floating,
+              error ? STYLES.text.error : STYLES.text.secondary,
+            )}
+          >
+            {label}
+            {showRequiredIndicator && <RequiredIndicator />}
+          </label>
+
+          <FeedbackMessages error={error} caption={caption} />
+        </div>
+      );
+    }
+
+    // Textarea element with feedback (no label or top/left label)
     const textareaElement = (
       <div className="relative w-full">
         <textarea
           ref={internalRef}
           required={required}
-          className={cn(
-            // Base styles
-            "text-text-primary placeholder:text-text-placeholder min-h-[120px] w-full rounded-lg border bg-gray-800 px-4 py-3 text-base transition-colors focus:ring-2 focus:outline-none",
-            // Resize behavior
-            autoResize ? "resize-none overflow-hidden" : "resize-vertical",
-            // Border and focus styles
-            error
-              ? "border-status-destructive-light focus:border-status-destructive-light focus:ring-status-destructive-light/20"
-              : "border-border focus:border-primary-normal focus:ring-primary-normal/20",
-            // Disabled styles
-            "disabled:cursor-not-allowed disabled:opacity-50",
-            className,
-          )}
+          className={textareaClasses}
           {...props}
         />
-        {/* Error message */}
-        {error && (
-          <p className="text-status-destructive-light mt-1 text-xs">{error}</p>
-        )}
+        <FeedbackMessages error={error} caption={caption} />
       </div>
     );
 
-    // If no label, return textarea only
+    // No label - return textarea only
     if (!label) {
       return textareaElement;
     }
 
-    // With label
+    // With label (top or left)
     return (
       <div
         className={cn(
-          "flex",
-          labelPosition === "top"
-            ? "flex-col gap-2"
-            : "flex-row items-start gap-4",
+          "flex w-full",
+          labelPosition === "top" ? "flex-col gap-2" : "flex-row items-start gap-4",
         )}
       >
-        <label className="text-text-secondary text-xs font-medium">
+        <label className={STYLES.label.standard}>
           {label}
-          {required && <span className="text-status-required ml-1">*</span>}
+          {showRequiredIndicator && <RequiredIndicator />}
         </label>
         {textareaElement}
       </div>

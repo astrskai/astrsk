@@ -86,7 +86,7 @@ export default function SessionDetailPage({
   return (
     <div
       className={cn(
-        "bg-background-screen relative flex h-dvh flex-col",
+        "bg-background-screen relative flex h-dvh flex-col overflow-hidden",
         className,
       )}
     >

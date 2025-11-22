@@ -14,7 +14,93 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   labelPosition?: "top" | "left" | "inner";
   helpTooltip?: string;
   helperText?: string;
+  caption?: string;
+  isRequired?: boolean; // For display purposes only (shows * indicator)
 }
+
+// Shared style constants
+const STYLES = {
+  input: {
+    base: "text-text-primary placeholder:text-text-placeholder w-full rounded-lg border bg-gray-800 px-4 py-3 text-base outline-none",
+    focus: "focus:ring-2 focus:ring-offset-0",
+    transition: "transition-all",
+    disabled: "disabled:cursor-not-allowed disabled:opacity-50",
+  },
+  border: {
+    error:
+      "border-status-destructive-light focus:border-status-destructive-light focus:ring-status-destructive-light/20",
+    normal: "border-gray-500 focus:border-primary-normal focus:ring-primary-normal/20",
+  },
+  label: {
+    floating: "absolute top-0 left-3 -translate-y-1/2 rounded-sm bg-gray-800 px-1 text-xs font-medium transition-all pointer-events-none",
+    standard: "text-text-body flex items-center gap-1.5 text-sm font-medium",
+  },
+  text: {
+    error: "text-status-destructive-light",
+    secondary: "text-text-secondary",
+    required: "text-status-required ml-1",
+    small: "mt-1 text-xs",
+    caption: "mt-1 pl-2 text-xs",
+  },
+  helpIcon: {
+    base: "cursor-help transition-colors pointer-events-auto",
+    size: "h-3.5 w-3.5",
+    sizeStandard: "h-4 w-4",
+    colors: "text-text-secondary hover:text-text-primary",
+  },
+} as const;
+
+// Sub-components
+const RequiredIndicator = () => (
+  <span className={STYLES.text.required}>*</span>
+);
+
+const HelpTooltipIcon = ({
+  tooltip,
+  size = "standard",
+}: {
+  tooltip: string;
+  size?: "small" | "standard";
+}) => (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <HelpCircle
+          className={cn(
+            STYLES.helpIcon.base,
+            STYLES.helpIcon.colors,
+            size === "small" ? STYLES.helpIcon.size : STYLES.helpIcon.sizeStandard,
+          )}
+        />
+      </TooltipTrigger>
+      <TooltipContent>
+        <p className="max-w-xs">{tooltip}</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
+
+const FeedbackMessages = ({
+  error,
+  helperText,
+  caption,
+}: {
+  error?: string;
+  helperText?: string;
+  caption?: string;
+}) => (
+  <>
+    {error && (
+      <p className={cn(STYLES.text.error, STYLES.text.small)}>{error}</p>
+    )}
+    {!error && helperText && (
+      <p className={cn(STYLES.text.secondary, STYLES.text.small)}>{helperText}</p>
+    )}
+    {caption && (
+      <p className={cn(STYLES.text.secondary, STYLES.text.caption)}>{caption}</p>
+    )}
+  </>
+);
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
@@ -24,92 +110,68 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       labelPosition = "top",
       className,
       required,
+      isRequired,
       helpTooltip,
       helperText,
+      caption,
       ...props
     },
     ref,
   ) => {
-    // Inner label layout
-    if (labelPosition === "inner" && label) {
+    const showRequiredIndicator = required || isRequired;
+
+    // Shared input classes
+    const inputClasses = cn(
+      STYLES.input.base,
+      STYLES.input.focus,
+      STYLES.input.transition,
+      STYLES.input.disabled,
+      error ? STYLES.border.error : STYLES.border.normal,
+      className,
+    );
+
+    // Inner label layout (floating label on border)
+    if (label && labelPosition === "inner") {
       return (
         <div className="relative w-full">
-          <div className="flex flex-col gap-1 rounded-lg bg-gray-800 px-4 py-2">
-            <label className="text-text-secondary flex items-center gap-1.5 text-xs font-medium">
+          <input
+            ref={ref}
+            required={required}
+            placeholder={props.placeholder || " "}
+            className={inputClasses}
+            {...props}
+          />
+
+          {/* Floating label on border */}
+          <label
+            className={cn(
+              STYLES.label.floating,
+              error ? STYLES.text.error : STYLES.text.secondary,
+            )}
+          >
+            <span className="flex items-center gap-1.5">
               <span>
                 {label}
-                {required && (
-                  <span className="text-status-required ml-1">*</span>
-                )}
+                {showRequiredIndicator && <RequiredIndicator />}
               </span>
-              {helpTooltip && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="text-text-secondary hover:text-text-primary h-4 w-4 cursor-help transition-colors" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">{helpTooltip}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </label>
-            <input
-              ref={ref}
-              required={required}
-              className={cn(
-                "text-text-primary placeholder:text-text-placeholder bg-transparent text-base transition-colors outline-none",
-                "disabled:cursor-not-allowed disabled:opacity-50",
-                className,
-              )}
-              {...props}
-            />
-          </div>
-          {/* Error message */}
-          {error && (
-            <p className="text-status-destructive-light mt-1 text-xs">
-              {error}
-            </p>
-          )}
-          {/* Helper text */}
-          {!error && helperText && (
-            <p className="text-text-secondary mt-1 text-xs">{helperText}</p>
-          )}
+              {helpTooltip && <HelpTooltipIcon tooltip={helpTooltip} size="small" />}
+            </span>
+          </label>
+
+          <FeedbackMessages error={error} helperText={helperText} caption={caption} />
         </div>
       );
     }
 
+    // Input element with feedback (no label or top/left label)
     const inputElement = (
       <div className="relative w-full">
-        <input
-          ref={ref}
-          required={required}
-          className={cn(
-            // Base styles
-            "bg-background-surface-0 text-text-primary placeholder:text-text-placeholder w-full rounded-lg border px-4 py-3 text-base transition-colors focus:ring-2 focus:outline-none",
-            // Border and focus styles
-            error
-              ? "border-status-destructive-light focus:border-status-destructive-light focus:ring-status-destructive-light/20"
-              : "border-border-normal focus:border-primary-normal focus:ring-primary-normal/20",
-            // Disabled styles
-            "disabled:cursor-not-allowed disabled:opacity-50",
-            className,
-          )}
-          {...props}
-        />
-        {/* Error message */}
-        {error && (
-          <p className="text-status-destructive-light mt-1 text-xs">{error}</p>
-        )}
-        {/* Helper text */}
-        {!error && helperText && (
-          <p className="text-text-secondary mt-1 text-xs">{helperText}</p>
-        )}
+        <input ref={ref} required={required} className={inputClasses} {...props} />
+        <FeedbackMessages error={error} helperText={helperText} caption={caption} />
       </div>
     );
 
-    // If no label, return input only
+    // No label - return input only
     if (!label) {
       return inputElement;
     }
@@ -119,28 +181,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <div
         className={cn(
           "flex",
-          labelPosition === "top"
-            ? "flex-col gap-2"
-            : "flex-row items-center gap-4",
+          labelPosition === "top" ? "flex-col gap-2" : "flex-row items-center gap-4",
         )}
       >
-        <label className="text-text-body flex items-center gap-1.5 text-sm font-medium">
+        <label className={STYLES.label.standard}>
           <span>
             {label}
-            {required && <span className="text-status-required ml-1">*</span>}
+            {showRequiredIndicator && <RequiredIndicator />}
           </span>
-          {helpTooltip && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <HelpCircle className="text-text-secondary hover:text-text-primary h-4 w-4 cursor-help transition-colors" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">{helpTooltip}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          {helpTooltip && <HelpTooltipIcon tooltip={helpTooltip} />}
         </label>
         {inputElement}
       </div>

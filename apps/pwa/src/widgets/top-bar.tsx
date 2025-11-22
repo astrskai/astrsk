@@ -1,4 +1,4 @@
-import { useDefaultInitialized } from "@/shared/hooks/use-default-initialized";
+// import { useDefaultInitialized } from "@/shared/hooks/use-default-initialized";
 import { useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/shared/ui";
@@ -34,8 +34,9 @@ export function TopBar() {
 
   // Check loading
   const isLoadingScreen = useAppStore.use.isLoading();
-  const defaultInitialized = useDefaultInitialized();
-  const isLoading = isLoadingScreen || !defaultInitialized;
+  // defaultInitialized is now handled in main.tsx initStores()
+  // const defaultInitialized = useDefaultInitialized();
+  const isLoading = isLoadingScreen;
 
   // Electron window controls
   // Track maximized state for toggle icon

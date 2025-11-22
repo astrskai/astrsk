@@ -1,40 +1,52 @@
+import { EllipsisVertical } from "lucide-react";
 import { cn } from "@/shared/lib";
 import type { CharacterAction } from "@/features/character/model/character-actions";
+import { Button } from "@/shared/ui/forms";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu";
 
 interface CharacterPreviewProps {
-  title: string;
+  name: string;
   imageUrl?: string | null;
   summary?: string;
   tags: string[];
   tokenCount?: number;
   actions?: CharacterAction[];
+  bottomActions?: CharacterAction[];
   className?: string;
   isShowActions?: boolean;
   isDisabled?: boolean;
+  moreActionsClassName?: string;
   onClick?: () => void;
 }
 
-const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-card-image.png";
+const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
 
 const CharacterPreview = ({
-  title,
+  name,
   imageUrl,
   summary,
   tags,
   tokenCount = 0,
   actions = [],
+  bottomActions = [],
   className,
   isShowActions = false,
   isDisabled = false,
+  moreActionsClassName,
   onClick,
 }: CharacterPreviewProps) => {
   const getCompactedTagString = (tags: string[]) => {
     const compactedTags = tags.slice(0, 3).map((tag, index) => {
       return (
         <span
-          key={`${title}-tag-${index}-${tag}`}
+          key={`${name}-tag-${index}-${tag}`}
           className={cn(
-            "rounded-md bg-gray-800/80 px-2.5 py-0.5 text-xs font-semibold text-gray-300 lg:text-sm",
+            "truncate rounded-md bg-gray-800/80 px-2.5 py-0.5 text-xs font-semibold text-gray-300 lg:text-sm",
             "transition-all duration-300 group-hover/preview:bg-gray-900/50 group-hover/preview:text-gray-50",
             index === 2 && "hidden lg:inline-flex",
           )}
@@ -47,7 +59,7 @@ const CharacterPreview = ({
     if (tags.length > 2) {
       compactedTags.push(
         <span
-          key={`${title}-tag-mobile-count-${tags.length}`}
+          key={`${name}-tag-mobile-count-${tags.length}`}
           className="text-xs text-gray-300 transition-all duration-300 group-hover/preview:text-gray-50 lg:hidden"
         >
           +{tags.length - 2}
@@ -58,7 +70,7 @@ const CharacterPreview = ({
     if (tags.length > 3) {
       compactedTags.push(
         <span
-          key={`${title}-tag-desktop-count-${tags.length}`}
+          key={`${name}-tag-desktop-count-${tags.length}`}
           className="hidden text-xs text-gray-300 transition-all duration-300 group-hover/preview:text-gray-50 lg:inline-flex"
         >
           +{tags.length - 3}
@@ -86,9 +98,9 @@ const CharacterPreview = ({
         <div className="absolute inset-0 z-20 bg-white opacity-40" />
       )}
 
-      {/* Action buttons */}
+      {/* Action buttons - Desktop (hover) */}
       {isShowActions && actions.length > 0 && (
-        <div className="absolute top-2 right-2 z-30 flex -translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover/preview:translate-y-0 group-hover/preview:opacity-100">
+        <div className="absolute top-2 right-2 z-30 hidden -translate-y-4 gap-2 opacity-0 transition-all duration-300 group-hover/preview:translate-y-0 group-hover/preview:opacity-100 md:flex">
           {actions.map((action, index) => (
             <button
               key={index}
@@ -105,17 +117,70 @@ const CharacterPreview = ({
                   : "cursor-pointer",
               )}
             >
-              <action.icon
-                className={cn("h-4", action.loading && "animate-pulse")}
-              />
+              {action.icon ? (
+                <action.icon
+                  className={cn("h-4", action.loading && "animate-pulse")}
+                />
+              ) : (
+                <span className="text-xs">{action.label.charAt(0)}</span>
+              )}
             </button>
           ))}
         </div>
       )}
 
+      {/* Action buttons - Mobile (dropdown menu) */}
+      {isShowActions && actions.length > 0 && (
+        <div
+          className={cn(
+            "absolute top-2 right-2 z-30 md:hidden",
+            moreActionsClassName,
+          )}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                aria-label="More actions"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-gray-50 hover:bg-gray-800/80"
+              >
+                <EllipsisVertical className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onClick={(e) => e.stopPropagation()}
+              className="bg-gray-700 md:hidden"
+            >
+              {actions.map((action, index) => (
+                <DropdownMenuItem
+                  key={index}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    action.onClick(e);
+                  }}
+                  disabled={action.disabled}
+                  className="flex items-center gap-2"
+                >
+                  {action.icon && (
+                    <action.icon
+                      className={cn(
+                        "h-4 w-4",
+                        action.loading && "animate-pulse",
+                      )}
+                    />
+                  )}
+                  <span>{action.label}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
       <img
         src={imageUrl || PLACEHOLDER_IMAGE_URL}
-        alt={title}
+        alt={name}
         className={cn(
           "h-full w-1/4 flex-shrink-0 object-cover transition-transform duration-300",
           !isDisabled && "group-hover/preview:scale-105",
@@ -139,9 +204,12 @@ const CharacterPreview = ({
           <h3
             className={cn(
               "line-clamp-2 text-base font-semibold text-ellipsis text-gray-50 lg:text-lg",
+              isShowActions && actions.length > 0
+                ? "w-[90%] md:w-full"
+                : "w-full",
             )}
           >
-            {title}
+            {name}
           </h3>
           <p
             className={cn(
@@ -155,12 +223,33 @@ const CharacterPreview = ({
           <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm">
             {tags.length > 0 ? getCompactedTagString(tags) : "No tags"}
           </div>
-          <div className="flex items-center gap-1 text-xs lg:text-sm">
+          <div className="flex items-center justify-between gap-1 text-xs lg:text-sm">
             {tokenCount > 0 && (
-              <>
+              <div>
                 <span className="font-semibold text-gray-50">{tokenCount}</span>{" "}
                 Tokens
-              </>
+              </div>
+            )}
+
+            {bottomActions.length > 0 && (
+              <div className="flex items-center gap-1 text-xs lg:text-sm">
+                {bottomActions.map((action, index) => (
+                  <Button
+                    key={index}
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      action.onClick(e);
+                    }}
+                    disabled={action.disabled}
+                    aria-label={action.label}
+                    className={cn(action.bottomActionsClassName, "px-2 py-1")}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
             )}
           </div>
         </div>

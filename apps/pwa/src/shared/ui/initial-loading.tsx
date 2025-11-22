@@ -22,23 +22,37 @@ const description2 = [
   "and exclusive control over its use and distribution.",
 ];
 
-export const InitialLoading = ({ isTimer }: { isTimer?: boolean }) => {
-  const [progress, setProgress] = useState(0);
+export const InitialLoading = ({
+  isTimer,
+  progress: externalProgress,
+}: {
+  isTimer?: boolean;
+  progress?: number;
+}) => {
+  const [internalProgress, setInternalProgress] = useState(0);
   const timer = useRef<number | null>(null);
   const isMobile = useIsMobile();
 
+  // Use external progress if provided, otherwise use internal timer-based progress
+  const progress = externalProgress !== undefined ? externalProgress : internalProgress;
+
   useEffect(() => {
+    // Only run timer if external progress is not provided
+    if (externalProgress !== undefined) {
+      return;
+    }
+
     const totalTime = 20000; // 20 seconds in milliseconds
     const interval = 200; // Update every 200ms
     const incrementPerInterval = (100 * interval) / totalTime;
 
     timer.current = window.setInterval(() => {
-      if (progress < 100) {
-        const nextProgress = Math.min(progress + incrementPerInterval, 100);
-        setProgress(nextProgress);
+      if (internalProgress < 100) {
+        const nextProgress = Math.min(internalProgress + incrementPerInterval, 100);
+        setInternalProgress(nextProgress);
       } else {
         if (isTimer) {
-          setProgress(0);
+          setInternalProgress(0);
         } else if (timer.current) {
           clearInterval(timer.current);
         }
@@ -50,7 +64,7 @@ export const InitialLoading = ({ isTimer }: { isTimer?: boolean }) => {
         clearInterval(timer.current);
       }
     };
-  }, [progress]);
+  }, [internalProgress, externalProgress, isTimer]);
 
   return (
     <div

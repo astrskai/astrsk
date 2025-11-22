@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Flow } from "@/entities/flow/domain/flow";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
-import { ActionConfirm } from "@/shared/ui/dialogs";
+import { DialogConfirm } from "@/shared/ui/dialogs";
 import FlowPreview from "@/features/flow/ui/flow-preview";
 import type { FlowAction } from "@/features/flow/ui/flow-preview";
 import { useFlowActions } from "@/features/flow/model/use-flow-actions";
@@ -55,21 +55,21 @@ function FlowGridItem({
   const actions: FlowAction[] = [
     {
       icon: Upload,
-      label: `Export ${flow.props.name}`,
+      label: `Export`,
       onClick: onExportClick(flowId, flow.props.name),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
-      label: `Copy ${flow.props.name}`,
+      label: `Copy`,
       onClick: onCopy(flowId, flow.props.name),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
-      label: `Delete ${flow.props.name}`,
+      label: `Delete`,
       onClick: onDeleteClick(flowId, flow.props.name),
       disabled: loading.deleting,
       loading: loading.deleting,
@@ -155,7 +155,6 @@ export function FlowsGrid({
           {showNewFlowCard && (
             <CreateItemCard
               title="New Workflow"
-              description="Create a new workflow"
               onClick={onCreateFlow}
               className="hidden aspect-[2/1] md:flex lg:aspect-[3/1]"
             />
@@ -203,7 +202,7 @@ export function FlowsGrid({
       />
 
       {/* Delete Confirmation Dialog */}
-      <ActionConfirm
+      <DialogConfirm
         open={deleteDialogState.isOpen}
         onOpenChange={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}

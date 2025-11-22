@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
-import { ActionConfirm } from "@/shared/ui/dialogs";
+import { DialogConfirm } from "@/shared/ui/dialogs";
 import CharacterPreview from "@/features/character/ui/character-preview";
 import type { CharacterAction } from "@/features/character/model/character-actions";
 import { useCardActions } from "@/features/common/model/use-card-actions";
@@ -45,21 +45,21 @@ function CharacterGridItem({
   const actions: CharacterAction[] = [
     {
       icon: Upload,
-      label: `Export ${character.props.title}`,
+      label: `Export`,
       onClick: onExport(cardId, character.props.title),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
-      label: `Copy ${character.props.title}`,
+      label: `Copy`,
       onClick: onCopy(cardId, character.props.title),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
-      label: `Delete ${character.props.title}`,
+      label: `Delete`,
       onClick: onDeleteClick(cardId, character.props.title),
       disabled: loading.deleting,
       loading: loading.deleting,
@@ -69,7 +69,7 @@ function CharacterGridItem({
   return (
     <CharacterPreview
       imageUrl={imageUrl}
-      title={character.props.title}
+      name={character.props.name || ""}
       summary={character.props.cardSummary}
       tags={character.props.tags || []}
       tokenCount={character.props.tokenCount}
@@ -134,33 +134,34 @@ export default function CharactersGrid({
           {showNewCharacterCard && (
             <CreateItemCard
               title="New Character"
-              description="Create a new character"
               onClick={handleCreateCharacter}
               className="hidden aspect-[2/1] md:flex lg:aspect-[3/1]"
             />
           )}
 
           {/* Existing Characters */}
-          {characters.map((character) => {
-            const cardId = character.id.toString();
-            const loading = loadingStates[cardId] || {};
+          {characters
+            .filter((character) => character.id !== undefined)
+            .map((character) => {
+              const cardId = character.id.toString();
+              const loading = loadingStates[cardId] || {};
 
-            return (
-              <CharacterGridItem
-                key={cardId}
-                character={character}
-                loading={loading}
-                onCharacterClick={handleCharacterClick}
-                onExport={handleExport}
-                onCopy={handleCopy}
-                onDeleteClick={handleDeleteClick}
-              />
-            );
-          })}
+              return (
+                <CharacterGridItem
+                  key={cardId}
+                  character={character}
+                  loading={loading}
+                  onCharacterClick={handleCharacterClick}
+                  onExport={handleExport}
+                  onCopy={handleCopy}
+                  onDeleteClick={handleDeleteClick}
+                />
+              );
+            })}
         </div>
       </div>
 
-      <ActionConfirm
+      <DialogConfirm
         open={deleteDialogState.isOpen}
         onOpenChange={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}

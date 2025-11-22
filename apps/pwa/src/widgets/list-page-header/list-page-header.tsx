@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Upload, Download, Menu, Ellipsis, CircleHelp } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { SearchInput, Button } from "@/shared/ui/forms";
-import { cn } from "@/shared/lib";
+import { NavigationTabs } from "@/shared/ui";
 import { MobileMenuDrawer } from "@/widgets/mobile-menu-drawer";
 
 export interface TabConfig {
@@ -98,33 +97,7 @@ export function ListPageHeader({
       <div className="bg-dark-surface sticky top-0 z-50 flex flex-col shadow-md">
         {/* Desktop Header */}
         <div className="mx-auto hidden w-full max-w-7xl items-center justify-between p-4 md:flex">
-          {/* Left: Title or Navigation Links */}
-          {tabs && tabs.length > 0 ? (
-            <nav className="flex items-center gap-2">
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.value;
-                return (
-                  <Link
-                    key={tab.value}
-                    to={tab.to}
-                    className={cn(
-                      "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
-                      "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-                      isActive
-                        ? "bg-blue-900 text-gray-50 shadow hover:bg-blue-900/80"
-                        : "bg-black-alternate text-text-secondary hover:bg-black-alternate/80",
-                    )}
-                  >
-                    {tab.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          ) : (
-            <h1 className="text-text-primary text-2xl font-semibold">
-              {title}
-            </h1>
-          )}
+          <h1 className="text-text-primary text-2xl font-semibold">{title}</h1>
 
           {/* Right: Search, Import, Export, Help */}
           <div className="flex items-center gap-3">
@@ -151,7 +124,7 @@ export function ListPageHeader({
             </Button>
             {onHelpClick && (
               <Button
-                variant="ghost"
+                variant="secondary"
                 icon={
                   <CircleHelp
                     size={20}
@@ -181,40 +154,27 @@ export function ListPageHeader({
                 ? tabs.find((t) => t.value === activeTab)?.label || title
                 : title}
             </h1>
+            {/* TODO: Add more options button */}
+            <div className="w-4">&nbsp;</div>
             <Button
               variant="secondary"
               icon={<Ellipsis size={20} />}
               size="sm"
               aria-label="More options"
-              className="border-0 bg-transparent"
+              className="hidden border-0 bg-transparent"
               onClick={onMoreClick}
             />
           </div>
 
           {/* Tab Navigation (if provided) */}
-          {tabs && tabs.length > 0 && (
-            <div className="border-border flex border-b px-4">
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.value;
-                return (
-                  <Link
-                    key={tab.value}
-                    to={tab.to}
-                    className={cn(
-                      "text-text-secondary relative flex flex-1 items-center justify-center py-3 text-center text-sm font-medium transition-colors",
-                      isActive && "text-text-primary font-semibold",
-                    )}
-                  >
-                    {tab.label}
-                    {/* Active Tab Indicator */}
-                    {isActive && (
-                      <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+          {/* {tabs && tabs.length > 0 && (
+            <NavigationTabs
+              tabs={tabs}
+              activeTab={activeTab || ""}
+              variant="mobile"
+              className="px-4"
+            />
+          )} */}
 
           {/* Bottom Row: Search Input */}
           <div className="px-4 pt-4 pb-4">

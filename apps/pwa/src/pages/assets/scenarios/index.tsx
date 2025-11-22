@@ -96,7 +96,7 @@ export function PlotsListPage() {
 
       {/* Header */}
       <ListPageHeader
-        title="Assets"
+        title="Scenarios"
         tabs={ASSET_TABS}
         activeTab="scenario"
         keyword={keyword}

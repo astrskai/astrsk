@@ -23,7 +23,7 @@ export function CreateFlowDialog({
   onOpenChange,
   onCreate,
 }: CreateFlowDialogProps) {
-  const [name, setName] = useState("New Flow");
+  const [name, setName] = useState("New Workflow");
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreate = async () => {
@@ -33,7 +33,7 @@ export function CreateFlowDialog({
       // Close dialog on success
       onOpenChange(false);
       // Reset name for next time
-      setName("New Flow");
+      setName("New Workflow");
     } finally {
       setIsCreating(false);
     }
@@ -42,7 +42,7 @@ export function CreateFlowDialog({
   const handleCancel = () => {
     onOpenChange(false);
     // Reset name
-    setName("New Flow");
+    setName("New Workflow");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

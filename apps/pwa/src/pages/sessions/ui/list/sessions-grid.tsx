@@ -6,7 +6,7 @@ import { Session } from "@/entities/session/domain/session";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
-import { ActionConfirm } from "@/shared/ui/dialogs";
+import { DialogConfirm } from "@/shared/ui/dialogs";
 import { Checkbox, Label } from "@/shared/ui";
 
 import SessionPreview from "@/features/session/ui/session-preview";
@@ -59,8 +59,8 @@ function SessionGridItem({
   const messageCount = session.props.turnIds.length;
 
   // Get session background image
-  const backgroundId = session.props.backgroundId;
-  const [coverImageUrl] = useAsset(backgroundId);
+  const coverId = session.props.coverId;
+  const [coverImageUrl] = useAsset(coverId);
 
   // Simple validation: check if session has AI character cards
   // Avoid expensive per-card queries (useSessionValidation with nested flow queries)
@@ -69,21 +69,21 @@ function SessionGridItem({
   const actions: SessionAction[] = [
     {
       icon: Upload,
-      label: `Export ${session.props.title}`,
+      label: `Export`,
       onClick: onExportClick(sessionId, session.props.title, session.flowId),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
-      label: `Copy ${session.props.title}`,
+      label: `Copy`,
       onClick: onCopy(sessionId, session.props.title),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
-      label: `Delete ${session.props.title}`,
+      label: `Delete`,
       onClick: onDeleteClick(sessionId, session.props.title),
       disabled: loading.deleting,
       loading: loading.deleting,
@@ -179,7 +179,6 @@ export function SessionsGrid({
           {showNewSessionCard && (
             <CreateItemCard
               title="New Session"
-              description="Make your own story"
               onClick={onCreateSession}
               className="hidden max-w-[340px] md:flex"
             />
@@ -232,7 +231,7 @@ export function SessionsGrid({
       />
 
       {/* Copy Confirmation Dialog */}
-      <ActionConfirm
+      <DialogConfirm
         open={copyDialogState.isOpen}
         onOpenChange={closeCopyDialog}
         title="Copy session"
@@ -253,7 +252,7 @@ export function SessionsGrid({
       />
 
       {/* Delete Confirmation Dialog */}
-      <ActionConfirm
+      <DialogConfirm
         open={deleteDialogState.isOpen}
         onOpenChange={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}

@@ -1,7 +1,9 @@
 // This file provides a centralized export point for all shared UI components
 
 export * from "./accordion";
+export { default as AccordionBase } from "./accordion-base";
 export * from "./aspect-ratio";
+export * from "./initialization-screen";
 export * from "./avatar";
 export * from "./avatar-simple";
 export * from "./badge";
@@ -13,9 +15,11 @@ export * from "./checkbox";
 export * from "./command";
 export * from "./dialog";
 export * from "./dropdown-menu";
+export { default as DropdownMenuBase } from "./dropdown-menu-base";
 export * from "./input";
 export * from "./label";
 export * from "./popover";
+export { default as PopoverBase } from "./popover-base";
 export * from "./progress";
 export * from "./radio-group";
 export * from "./scroll-area";
@@ -29,6 +33,7 @@ export * from "./slider";
 export * from "./switch";
 export * from "./table";
 export * from "./tabs";
+export * from "./navigation-tabs";
 export * from "./textarea";
 export * from "./tooltip";
 

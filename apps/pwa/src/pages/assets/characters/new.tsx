@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/forms";
 import { StepIndicator, type StepConfig } from "@/shared/ui";
 import { CreatePageHeader } from "@/widgets/create-page-header";
@@ -20,6 +20,7 @@ import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { useQueryClient } from "@tanstack/react-query";
 import { cardKeys } from "@/entities/card/api";
 import { toast } from "sonner";
+import { DialogConfirm } from "@/shared/ui/dialogs";
 
 type CharacterStep = "basic-info" | "info" | "lorebook";
 
@@ -48,6 +49,21 @@ export function CreateCharacterPage() {
   const [lorebookEntries, setLorebookEntries] = useState<LorebookEntry[]>([]);
 
   const [isCreatingCard, setIsCreatingCard] = useState<boolean>(false);
+
+  // Track if user has made changes
+  const hasUnsavedChanges =
+    characterName !== "New Character" ||
+    !!imageFile ||
+    description.trim().length > 0 ||
+    exampleDialogue.trim().length > 0 ||
+    lorebookEntries.length > 0;
+
+  // Block navigation when there are unsaved changes (but not during save)
+  const { proceed, reset, status } = useBlocker({
+    shouldBlockFn: () => hasUnsavedChanges && !isCreatingCard,
+    withResolver: true,
+    enableBeforeUnload: hasUnsavedChanges && !isCreatingCard,
+  });
 
   const STEPS: StepConfig<CharacterStep>[] = [
     { id: "basic-info", number: 1, label: "Basic Info", required: true },
@@ -220,7 +236,7 @@ export function CreateCharacterPage() {
           queryKey: cardKeys.lists(),
         });
 
-        // Step 6: Navigate to characters list page
+        // Navigate to character list (no unsaved changes after successful save)
         navigate({ to: "/assets/characters" });
       } catch (error) {
         toast.error("Failed to create character card", {
@@ -348,6 +364,22 @@ export function CreateCharacterPage() {
           </Button>
         </div>
       </div>
+
+      {/* Navigation Confirmation Dialog */}
+      {status === "blocked" && (
+        <DialogConfirm
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) reset();
+          }}
+          title="You've got unsaved changes!"
+          description="Are you sure you want to leave? Your changes will be lost."
+          cancelLabel="Go back"
+          confirmLabel="Yes, leave"
+          confirmVariant="destructive"
+          onConfirm={proceed}
+        />
+      )}
     </div>
   );
 }

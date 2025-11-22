@@ -54,6 +54,7 @@ Maintained development guidelines. Last updated: 2025-10-24
 - **Domain Folders**: session/, flow/, card/, setting/, shared/ with barrel exports
 - **Quality Gates**: CI/CD automation for size, duplication, coverage checks
 - **Incremental Approach**: Small, safe changes with frequent testing
+- **Initialization System**: 18-step initialization with progress tracking and logging
 
 ---
 
@@ -82,6 +83,23 @@ Maintained development guidelines. Last updated: 2025-10-24
 - **Query Factory**: Centralized, type-safe query key management
 - **Mutations**: Optimistic updates with automatic rollback on error
 - **Reference**: `apps/pwa/src/app/queries/card/` (complete implementation)
+
+### Initialization System
+
+> 📚 **Complete Guide**: See [apps/pwa/INITIALIZATION_SYSTEM.md](./apps/pwa/INITIALIZATION_SYSTEM.md) for comprehensive documentation on:
+>
+> - 18-step initialization flow (DB migration → Services → Stores)
+> - Adding new initialization steps
+> - Error handling and logging
+> - InitializationScreen UI (1s+ threshold)
+> - Initialization Logs page (Settings > Advanced)
+
+**Quick Reference**:
+
+- **3 Phases**: `migrate()` → `initServices()` → `initStores()`
+- **Progress Tracking**: Zustand store + localStorage persistence
+- **User Visibility**: InitializationScreen (runtime) + Logs page (post-mortem)
+- **Adding Steps**: Update init function + `main.tsx` step definitions
 
 ---
 

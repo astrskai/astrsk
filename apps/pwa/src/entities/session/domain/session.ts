@@ -25,6 +25,7 @@ export interface SessionProps {
 
   // Images
   backgroundId?: UniqueEntityID; // Background image
+  coverId?: UniqueEntityID; // Cover image
 
   // Translation
   translation?: TranslationConfig;
@@ -40,6 +41,15 @@ export interface SessionProps {
   // Data Schema
   dataSchemaOrder?: string[];
 
+  // Widget Layout (react-grid-layout)
+  widgetLayout?: Array<{
+    i: string; // field name (unique ID)
+    x: number; // column position
+    y: number; // row position
+    w: number; // width in columns
+    h: number; // height in rows
+  }>;
+
   // Set by system
   createdAt: Date;
   updatedAt: Date;
@@ -50,15 +60,14 @@ export const SessionPropsKeys = [
   "allCards",
   "userCharacterCardId",
   "turnIds",
-  "promptToggle",
-  "isPlotBackground",
   "backgroundId",
+  "coverId",
   "translation",
-  "aiResponse",
-  "userResponse",
-  "titleId",
   "chatStyles",
   "flowId",
+  "autoReply",
+  "dataSchemaOrder",
+  "widgetLayout",
   "createdAt",
   "updatedAt",
 ];
@@ -101,6 +110,10 @@ export class Session extends AggregateRoot<SessionProps> {
     return this.props.backgroundId;
   }
 
+  get coverId(): UniqueEntityID | undefined {
+    return this.props.coverId;
+  }
+
   get translation(): TranslationConfig | undefined {
     return this.props.translation;
   }
@@ -121,6 +134,10 @@ export class Session extends AggregateRoot<SessionProps> {
     return this.props.dataSchemaOrder || [];
   }
 
+  get widgetLayout(): Array<{ i: string; x: number; y: number; w: number; h: number }> | undefined {
+    return this.props.widgetLayout;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
@@ -139,6 +156,7 @@ export class Session extends AggregateRoot<SessionProps> {
       userCharacterCardId: props.userCharacterCardId,
       turnIds: props.turnIds || [],
       backgroundId: props.backgroundId,
+      coverId: props.coverId,
       translation:
         props.translation ||
         TranslationConfig.create({
@@ -149,6 +167,7 @@ export class Session extends AggregateRoot<SessionProps> {
       flowId: props.flowId!,
       autoReply: props.autoReply ?? AutoReply.Random,
       dataSchemaOrder: props.dataSchemaOrder || [],
+      widgetLayout: props.widgetLayout,
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date(),
     };
@@ -237,11 +256,19 @@ export class Session extends AggregateRoot<SessionProps> {
     this.props.backgroundId = backgroundId || undefined;
   }
 
+  public setCoverId(coverId: UniqueEntityID | null): void {
+    this.props.coverId = coverId || undefined;
+  }
+
   public setTranslation(translation: TranslationConfig): void {
     this.props.translation = translation;
   }
 
   public setDataSchemaOrder(order: string[]): void {
     this.props.dataSchemaOrder = order;
+  }
+
+  public setWidgetLayout(layout: Array<{ i: string; x: number; y: number; w: number; h: number }> | undefined): void {
+    this.props.widgetLayout = layout;
   }
 }

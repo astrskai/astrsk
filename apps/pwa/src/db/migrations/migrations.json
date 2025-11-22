@@ -117,5 +117,21 @@
     "bps": true,
     "folderMillis": 1758216748714,
     "hash": "b4e0d123a01e9ec664c53d5f7c6e284a150c464c422934d868a5770f8399f672"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" ADD COLUMN \"widget_layout\" jsonb;"
+    ],
+    "bps": true,
+    "folderMillis": 1763305296348,
+    "hash": "298cf3a151e513c406d404db714f8959da2d99a7ef51286aeb01dcace1983c8e"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" ADD COLUMN \"cover_id\" uuid;"
+    ],
+    "bps": true,
+    "folderMillis": 1763308976627,
+    "hash": "6e26e31b20febdebd742763763076b6915ec5b5485851a159a3a130539eb6999"
   }
 ]

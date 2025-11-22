@@ -41,6 +41,9 @@ export class SessionDrizzleMapper {
         backgroundId: row.background_id
           ? new UniqueEntityID(row.background_id)
           : undefined,
+        coverId: row.cover_id
+          ? new UniqueEntityID(row.cover_id)
+          : undefined,
         translation: row.translation
           ? TranslationConfig.fromJSON(row.translation)
               .throwOnFailure()
@@ -50,6 +53,7 @@ export class SessionDrizzleMapper {
         flowId: new UniqueEntityID(row.flow_id),
         autoReply: row.auto_reply,
         dataSchemaOrder: row.data_schema_order || [],
+        widgetLayout: row.widget_layout || undefined,
         createdAt: new Date(row.created_at),
         updatedAt: new Date(row.updated_at),
       },
@@ -79,6 +83,7 @@ export class SessionDrizzleMapper {
         domain.props.userCharacterCardId?.toString() ?? null,
       turn_ids: domain.props.turnIds.map((id) => id.toString()),
       background_id: domain.props.backgroundId?.toString() ?? null,
+      cover_id: domain.props.coverId?.toString() ?? null,
       translation: domain.props.translation
         ? domain.props.translation
         : null,
@@ -86,6 +91,7 @@ export class SessionDrizzleMapper {
       flow_id: domain.props.flowId.toString(),
       auto_reply: domain.props.autoReply,
       data_schema_order: domain.props.dataSchemaOrder || [],
+      widget_layout: domain.props.widgetLayout || null,
       created_at: domain.props.createdAt,
       updated_at: domain.props.updatedAt,
     };

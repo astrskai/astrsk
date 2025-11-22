@@ -1,89 +1,16 @@
-import { useMemo, useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, Trash2 } from "lucide-react";
-import { Button, SearchInput } from "@/shared/ui/forms";
+import { useState } from "react";
+import { Trash2, BookOpen } from "lucide-react";
 import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
-import { cardQueries } from "@/entities/card/api/card-queries";
 import { PlotCard } from "@/entities/card/domain/plot-card";
-import { CardType } from "@/entities/card/domain";
-import { IconFlow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
 import type { CharacterAction } from "@/features/character/model/character-actions";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui";
+import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
 
 interface ScenarioSelectionStepProps {
   selectedScenario: PlotCard | null;
   onScenarioSelected: (plot: PlotCard | null) => void;
 }
-
-/**
- * Scenario Preview Item (for dialog selection list)
- * Wrapper component that handles useAsset hook and passes imageUrl to ScenarioPreview
- */
-interface ScenarioPreviewItemProps {
-  card: PlotCard;
-  cardId: string;
-  isSelected: boolean;
-  onCardClick: (cardId: string) => void;
-  onDetailClick: (cardId: string) => void;
-  onMouseEnter: () => void;
-}
-
-const ScenarioPreviewItem = ({
-  card,
-  cardId,
-  isSelected,
-  onCardClick,
-  onDetailClick,
-  onMouseEnter,
-}: ScenarioPreviewItemProps) => {
-  const [imageUrl] = useAsset(card.props.iconAssetId);
-
-  return (
-    <div className="relative transition-all">
-      <div
-        onClick={() => onCardClick(cardId)}
-        onMouseEnter={onMouseEnter}
-        className="pointer-events-auto"
-      >
-        <ScenarioPreview
-          imageUrl={imageUrl}
-          title={card.props.title}
-          summary={card.props.cardSummary}
-          tags={card.props.tags || []}
-          tokenCount={card.props.tokenCount}
-          firstMessages={card.props.scenarios?.length || 0}
-          className={cn(
-            isSelected && "border-normal-primary border-2 shadow-lg",
-          )}
-        />
-      </div>
-
-      {/* Mobile Detail Button */}
-      <div className="absolute right-2 bottom-2 z-10 md:hidden">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onDetailClick(cardId);
-          }}
-        >
-          Detail
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 /**
  * Selected Scenario Card
@@ -105,11 +32,12 @@ const SelectedScenarioCard = ({
   const actions: CharacterAction[] = [
     {
       icon: Trash2,
-      label: `Remove ${card.props.title}`,
+      label: `Remove`,
       onClick: (e) => {
         e.stopPropagation();
         onRemove(e);
       },
+      bottomActionsClassName: "block md:hidden",
     },
   ];
 
@@ -123,67 +51,10 @@ const SelectedScenarioCard = ({
       firstMessages={card.props.scenarios?.length || 0}
       actions={actions}
       isShowActions={true}
+      bottomActions={actions}
       onClick={onClick}
+      moreActionsClassName="hidden"
     />
-  );
-};
-
-/**
- * Scenario Detail Panel
- * Displays detailed information about a selected scenario
- */
-const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
-  const [scenarioImageUrl] = useAsset(plot.props.iconAssetId);
-
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Title */}
-      <h3 className="hidden text-lg font-semibold text-gray-50 md:block">
-        {plot.props.title}
-      </h3>
-
-      {/* Scenario Image */}
-      <div className="relative mx-auto aspect-[3/4] max-w-[200px] overflow-hidden rounded-lg md:max-w-xs">
-        <img
-          src={scenarioImageUrl || "/img/placeholder/scenario-card-image.png"}
-          alt={plot.props.title}
-          className="h-full w-full object-cover"
-        />
-      </div>
-
-      {/* Description */}
-      <div className="flex flex-col gap-2">
-        <h4 className="text-text-primary text-lg font-semibold">Description</h4>
-        <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
-          {plot.props.description || "No description available"}
-        </p>
-      </div>
-
-      {/* Tags */}
-      {plot.props.tags && plot.props.tags.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <h4 className="text-text-primary text-lg font-semibold">Tags</h4>
-          <div className="flex flex-wrap gap-2">
-            {plot.props.tags.map((tag, index) => (
-              <span
-                key={`${plot.props.title}-tag-${index}-${tag}`}
-                className="text-black-alternate rounded-md bg-gray-300 px-2.5 py-0.5 text-sm"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Token Count */}
-      {plot.props.tokenCount && plot.props.tokenCount > 0 && (
-        <div className="text-text-secondary flex items-center gap-2 text-sm">
-          <span className="font-semibold">Token Count:</span>
-          <span>{plot.props.tokenCount}</span>
-        </div>
-      )}
-    </div>
   );
 };
 
@@ -197,87 +68,9 @@ export default function ScenarioSelectionStep({
   onScenarioSelected,
 }: ScenarioSelectionStepProps) {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [searchKeyword, setSearchKeyword] = useState<string>("");
-  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(
-    selectedScenario?.id.toString() || null,
-  );
-  const [previewScenarioId, setPreviewScenarioId] = useState<string | null>(
-    null,
-  );
-  const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
-  const [mobileDetailScenarioId, setMobileDetailScenarioId] = useState<
-    string | null
-  >(null);
-
-  const { data: scenarioCards } = useQuery(
-    cardQueries.list({ type: [CardType.Plot] }),
-  );
-
-  // Sync local selection state with prop
-  useEffect(() => {
-    setSelectedScenarioId(selectedScenario?.id.toString() || null);
-  }, [selectedScenario]);
-
-  // Get preview plot details (desktop)
-  const previewScenario = useMemo(() => {
-    if (!previewScenarioId || !scenarioCards) return null;
-    return scenarioCards.find(
-      (card: PlotCard) => card.id.toString() === previewScenarioId,
-    ) as PlotCard | null;
-  }, [previewScenarioId, scenarioCards]);
-
-  // Get mobile detail plot
-  const mobileDetailScenario = useMemo(() => {
-    if (!mobileDetailScenarioId || !scenarioCards) return null;
-    return scenarioCards.find(
-      (card: PlotCard) => card.id.toString() === mobileDetailScenarioId,
-    ) as PlotCard | null;
-  }, [mobileDetailScenarioId, scenarioCards]);
-
-  // Filter scenario cards by search keyword
-  const filteredScenarioCards = useMemo(() => {
-    if (!scenarioCards) return [];
-    if (!searchKeyword.trim()) return scenarioCards;
-
-    const keyword = searchKeyword.toLowerCase();
-    return scenarioCards.filter((card: PlotCard) => {
-      const title = card.props.title?.toLowerCase() || "";
-      return title.includes(keyword);
-    });
-  }, [scenarioCards, searchKeyword]);
 
   const handleAddScenarioClick = () => {
-    // Reset mobile detail state
-    setShowMobileDetail(false);
-    setMobileDetailScenarioId(null);
     setIsDialogOpen(true);
-  };
-
-  const handleScenarioCardClick = (cardId: string) => {
-    // Single select - toggle or replace
-    setSelectedScenarioId((prev) => (prev === cardId ? null : cardId));
-  };
-
-  const handleDialogAdd = () => {
-    if (selectedScenarioId && scenarioCards) {
-      const card = scenarioCards.find(
-        (c: PlotCard) => c.id.toString() === selectedScenarioId,
-      ) as PlotCard | undefined;
-      onScenarioSelected(card || null);
-      setIsDialogOpen(false);
-      setSearchKeyword("");
-      // Reset mobile detail state
-      setShowMobileDetail(false);
-      setMobileDetailScenarioId(null);
-    }
-  };
-
-  const handleDialogCancel = () => {
-    setIsDialogOpen(false);
-    setSearchKeyword("");
-    // Reset mobile detail state
-    setShowMobileDetail(false);
-    setMobileDetailScenarioId(null);
   };
 
   const handleRemoveScenario = (e: React.MouseEvent) => {
@@ -316,7 +109,7 @@ export default function ScenarioSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <IconFlow className="text-text-secondary mb-3 min-h-12 min-w-12" />
+              <BookOpen className="text-text-secondary mb-3 min-h-12 min-w-12" />
               <h3 className="text-text-primary mb-2 text-lg font-semibold">
                 Select Scenario
               </h3>
@@ -329,131 +122,15 @@ export default function ScenarioSelectionStep({
       </div>
 
       {/* Scenario Selection Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="flex h-[90dvh] max-h-[90dvh] max-w-5xl flex-col gap-2 md:max-w-6xl">
-          <DialogHeader>
-            {showMobileDetail && mobileDetailScenario ? (
-              <div className="flex items-center gap-2 md:hidden">
-                <button
-                  onClick={() => setShowMobileDetail(false)}
-                  className="text-text-primary hover:text-primary flex items-center gap-2 transition-colors"
-                >
-                  <ChevronLeft className="min-h-5 min-w-5" />
-                  <DialogTitle className="text-left">
-                    {mobileDetailScenario.props.title}
-                  </DialogTitle>
-                </button>
-              </div>
-            ) : null}
-            <div className={cn(showMobileDetail && "hidden md:block")}>
-              <DialogTitle>Select Scenario</DialogTitle>
-              <DialogDescription>
-                Choose a scenario (optional)
-              </DialogDescription>
-            </div>
-          </DialogHeader>
-
-          {/* Split Layout */}
-          <div className="flex min-h-0 flex-1 gap-6 py-4">
-            {/* Mobile Detail View */}
-            {showMobileDetail && mobileDetailScenario && (
-              <div className="flex min-h-0 w-full flex-col md:hidden">
-                {/* Scenario Detail Content */}
-                <div className="min-h-0 flex-1 overflow-y-auto">
-                  <ScenarioDetailPanel plot={mobileDetailScenario} />
-                </div>
-              </div>
-            )}
-
-            {/* Left Side: Search + Scenario List */}
-            <div
-              className={cn(
-                "flex min-h-0 w-full flex-col gap-4 md:w-1/2",
-                showMobileDetail && "hidden md:flex",
-              )}
-            >
-              {/* Search Input */}
-              <SearchInput
-                name="scenario-search"
-                placeholder="Search scenarios..."
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                className="flex-shrink-0"
-              />
-
-              {/* Scenario Preview List */}
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="flex flex-col gap-3">
-                  {filteredScenarioCards.map((card: PlotCard) => {
-                    const cardId = card.id.toString();
-                    const isSelected = selectedScenarioId === cardId;
-
-                    return (
-                      <ScenarioPreviewItem
-                        key={`${card.props.title}-${card.id.toString()}`}
-                        card={card}
-                        cardId={cardId}
-                        isSelected={isSelected}
-                        onCardClick={handleScenarioCardClick}
-                        onDetailClick={(cardId) => {
-                          setMobileDetailScenarioId(cardId);
-                          setShowMobileDetail(true);
-                        }}
-                        onMouseEnter={() => {
-                          setPreviewScenarioId(cardId);
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-
-                {/* Empty State */}
-                {filteredScenarioCards.length === 0 && (
-                  <div className="text-text-secondary flex flex-col items-center justify-center py-12 text-center">
-                    {searchKeyword ? (
-                      <>
-                        <p className="mb-2 text-lg">No scenarios found</p>
-                        <p className="text-sm">Try a different search term</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="mb-2 text-lg">No scenarios available</p>
-                        <p className="text-sm">
-                          Create a scenario first to continue
-                        </p>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Side: Scenario Detail (Desktop only) */}
-            <div className="hidden w-1/2 flex-col overflow-y-auto rounded-lg bg-gray-900 p-4 md:flex">
-              {previewScenario ? (
-                <ScenarioDetailPanel plot={previewScenario} />
-              ) : (
-                <div className="text-text-secondary flex h-full flex-col items-center justify-center text-center">
-                  <IconFlow className="mb-3 h-12 w-12 opacity-50" />
-                  <p className="text-lg">Hover over a scenario</p>
-                  <p className="text-sm">
-                    Move your mouse over a scenario to see details
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={handleDialogCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleDialogAdd} disabled={!selectedScenarioId}>
-              Select
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ScenarioSelectionDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        selectedScenario={selectedScenario}
+        onConfirm={onScenarioSelected}
+        title="Select Scenario"
+        description="Choose a scenario (optional)"
+        confirmButtonText="Select"
+      />
     </div>
   );
 }

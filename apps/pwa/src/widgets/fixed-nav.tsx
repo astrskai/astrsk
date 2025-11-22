@@ -1,45 +1,72 @@
-import { useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Settings, LogIn } from "lucide-react";
-import { IconSessions, IconAssets } from "@/shared/assets/icons";
+import { Settings, LogIn, UserRound, BookOpen } from "lucide-react";
+import { IconSessions, IconWorkflow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { UpdaterNew } from "@/widgets/updater-new";
 
 // Constants
-const FIXED_NAV_WIDTH = 80; // px
+const FIXED_NAV_WIDTH = 70; // px
 
 interface NavItem {
   id: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  label: string;
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  path: string;
+  submenu?: SubmenuItem[];
+}
+
+interface SubmenuItem {
+  id: string;
   label: string;
   path: string;
-  submenu?: { id: string; label: string; path: string }[];
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 // Top navigation items (Sessions, Assets)
 const TOP_NAV_ITEMS: NavItem[] = [
   {
     id: "sessions",
-    icon: IconSessions,
     label: "Sessions",
     path: "/sessions",
+    submenu: [
+      {
+        id: "play",
+        label: "Play",
+        path: "/sessions",
+        icon: IconSessions,
+      },
+    ],
   },
   {
     id: "assets",
-    icon: IconAssets,
     label: "Assets",
     path: "/assets",
     submenu: [
-      { id: "characters", label: "Characters", path: "/assets/characters" },
-      { id: "scenarios", label: "Scenarios", path: "/assets/scenarios" },
-      { id: "workflows", label: "Workflows", path: "/assets/workflows" },
+      {
+        id: "characters",
+        label: "Characters",
+        path: "/assets/characters",
+        icon: UserRound,
+      },
+      {
+        id: "scenarios",
+        label: "Scenarios",
+        path: "/assets/scenarios",
+        icon: BookOpen,
+      },
+      {
+        id: "workflows",
+        label: "Workflows",
+        path: "/assets/workflows",
+        icon: IconWorkflow,
+      },
     ],
   },
 ] as const;
 
 // Bottom navigation items (Settings, Log in)
 // TODO: Implement a login system
-const BOTTOM_NAV_ITEMS: NavItem[] = [
+const BOTTOM_NAV_ITEMS: SubmenuItem[] = [
   {
     id: "settings",
     icon: Settings,
@@ -65,32 +92,11 @@ const BOTTOM_NAV_ITEMS: NavItem[] = [
  * Uses Tailwind's responsive classes for true viewport-based responsiveness.
  * This works correctly for PWA standalone mode, as viewport size is the same.
  */
+
 export function FixedNav() {
   const location = useLocation();
 
-  const [hoveredItem, setHoveredItem] = useState<string | undefined>();
-
-  // Check if we should show submenu:
-  // - NOT on assets list pages (/assets/characters, /assets/scenarios, /assets/workflows) - they have tabs
-  // - YES on assets detail pages (/assets/characters/123)
-  // - YES on other pages (e.g., /sessions)
-  const shouldShowSubmenu = (() => {
-    const pathname = location.pathname;
-
-    // Check if we're on an assets list page (exactly 2 segments like /assets/characters)
-    if (pathname.startsWith("/assets/")) {
-      const segments = pathname.split("/").filter(Boolean);
-      // If exactly ["assets", "characters"], it's a list page - don't show submenu
-      if (segments.length === 2) return false;
-      // If more segments (e.g., ["assets", "characters", "123"]), it's a detail page - show submenu
-      return true;
-    }
-
-    // For non-assets pages (like /sessions), show submenu
-    return true;
-  })();
-
-  const renderNavItem = (item: NavItem) => {
+  const renderNavItem = (item: SubmenuItem) => {
     const { icon: Icon, label, path } = item;
     const isActive = location.pathname.startsWith(path);
 
@@ -98,8 +104,8 @@ export function FixedNav() {
       <Link
         to={path}
         className={cn(
-          "flex flex-col items-center justify-center gap-1",
-          "h-16 w-16 transition-all",
+          "flex w-full flex-col items-center justify-center gap-1",
+          "h-16 transition-all",
           "hover:text-text-primary",
           isActive
             ? [
@@ -126,85 +132,33 @@ export function FixedNav() {
     );
   };
 
-  const renderSubmenu = (item: NavItem) => {
-    return (
-      hoveredItem === item.id &&
-      item.submenu &&
-      shouldShowSubmenu && (
-        <div
-          data-submenu
-          role="menu"
-          aria-label={`Submenu for ${item.label}`}
-          className="absolute top-0 left-full z-50 min-w-[160px] rounded-lg border border-gray-700 bg-gray-900 py-2 shadow-lg"
-          onMouseLeave={() => setHoveredItem(undefined)}
-        >
-          {item.submenu.map((subItem, index) => {
-            const isSubItemActive = location.pathname.startsWith(subItem.path);
-
-            return (
-              <Link
-                key={`${subItem.id}-${index}`}
-                role="menuitem"
-                to={subItem.path}
-                onClick={() => setHoveredItem(undefined)}
-                className={cn(
-                  "block px-4 py-2 text-sm transition-colors",
-                  isSubItemActive
-                    ? "bg-gray-800 font-medium text-gray-50"
-                    : "text-gray-200 hover:bg-gray-800 hover:text-gray-50",
-                )}
-              >
-                {subItem.label}
-              </Link>
-            );
-          })}
-        </div>
-      )
-    );
-  };
-
   return (
     <aside
       className={cn(
-        "hidden md:flex",
+        "z-30 hidden md:flex",
         "h-full flex-col items-center py-4",
         "bg-black-alternate border-border border-r",
       )}
       style={{ width: FIXED_NAV_WIDTH }}
     >
       {/* Top section: Sessions, Assets */}
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex w-full flex-col items-center gap-4">
         {TOP_NAV_ITEMS.map((item, index) => (
-          <div key={`${item.id}-${index}`}>
-            <div
-              className="relative"
-              onMouseEnter={() => setHoveredItem(item.id)}
-              onMouseLeave={(e) => {
-                // Check if we're moving to the submenu
-                const relatedTarget = e.relatedTarget;
-                const submenu = e.currentTarget.querySelector("[data-submenu]");
-
-                // Type guard: ensure relatedTarget is a Node and submenu exists
-                const isMovingToSubmenu =
-                  submenu &&
-                  relatedTarget instanceof Node &&
-                  submenu.contains(relatedTarget);
-
-                // Only clear hover if we're not moving to the submenu
-                if (!isMovingToSubmenu) {
-                  setHoveredItem(undefined);
-                }
-              }}
-            >
-              {renderNavItem(item)}
-
-              {/* Submenu - only show on hover when shouldShowSubmenu is true */}
-              {renderSubmenu(item)}
+          <div
+            key={`${item.id}-${index}`}
+            className="flex w-full flex-col items-center gap-2"
+          >
+            <div className="text-xs font-semibold text-gray-500">
+              {item.label}
             </div>
-
+            {item.submenu?.map((subItem, subIndex) => (
+              <div key={`${subItem.id}-${subIndex}`} className="w-full">
+                {renderNavItem(subItem)}
+              </div>
+            ))}
             {/* Divider after each item except last */}
             {index < TOP_NAV_ITEMS.length - 1 && (
-              <div className="bg-border-light mx-auto my-2 h-px w-10" />
+              <div className="bg-border-light mx-auto h-px w-10" />
             )}
           </div>
         ))}
@@ -214,12 +168,14 @@ export function FixedNav() {
       <div className="flex-1" />
 
       {/* Bottom section: UpdaterNew, Settings, Log in, Version */}
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex w-full flex-col items-center gap-2">
         {/* UpdaterNew - shows only when update is available/downloading */}
         <UpdaterNew />
 
         {BOTTOM_NAV_ITEMS.map((item, index) => (
-          <div key={`${item.id}-${index}`}>{renderNavItem(item)}</div>
+          <div key={`${item.id}-${index}`} className="w-full">
+            {renderNavItem(item)}
+          </div>
         ))}
 
         {/* Version info */}
