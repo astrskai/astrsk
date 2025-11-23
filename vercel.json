@@ -5,6 +5,7 @@
       "gh-pages": false
     }
   },
+  "buildCommand": "cd apps/pwa && pnpm run build",
   "outputDirectory": "apps/pwa/dist",
   "rewrites": [
     {
