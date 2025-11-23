@@ -116,7 +116,11 @@ This project uses the following third-party software. The full text of each lice
     svgr({
       include: "**/*.svg?react",
     }),
-    tsconfigPaths(),
+    tsconfigPaths({
+      root: ".",
+      projects: ["./tsconfig.json"],
+      ignoreConfigErrors: true,
+    }),
     tailwindcss(),
     react(),
     VitePWA({
