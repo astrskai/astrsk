@@ -631,7 +631,7 @@ const makeProvider = ({
         apiKey: apiKey,
         baseURL: baseUrl,
         headers: {
-          "HTTP-Referer": "https://astrsk.ai",
+          "HTTP-Referer": "https://app.astrsk.ai",
           "X-Title": "astrsk",
         },
       };
@@ -1448,9 +1448,9 @@ async function generateTextOutput({
     "chat" in provider
       ? provider.chat(parsedModelId, modelSettings)
       : (provider.languageModel(
-          parsedModelId,
-          modelSettings,
-        ) as LanguageModelV1);
+        parsedModelId,
+        modelSettings,
+      ) as LanguageModelV1);
 
   // Make settings
   const settings = makeSettings({
@@ -1480,10 +1480,10 @@ async function generateTextOutput({
       ...settings,
       ...(Object.keys(providerOptions).length > 0 && modelProvider
         ? {
-            providerOptions: {
-              [modelProvider]: providerOptions,
-            },
-          }
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }
         : {}),
       experimental_transform: smoothStream({
         delayInMs: 20,
@@ -1504,10 +1504,10 @@ async function generateTextOutput({
       ...settings,
       ...(Object.keys(providerOptions).length > 0 && modelProvider
         ? {
-            providerOptions: {
-              [modelProvider]: providerOptions,
-            },
-          }
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }
         : {}),
       ...(apiConnection.source === ApiSource.AstrskAi && {
         headers: headers,
@@ -1633,9 +1633,9 @@ async function generateStructuredOutput({
     "chat" in provider
       ? provider.chat(parsedModelId, modelSettings)
       : (provider.languageModel(
-          parsedModelId,
-          modelSettings,
-        ) as LanguageModelV1);
+        parsedModelId,
+        modelSettings,
+      ) as LanguageModelV1);
 
   // Make settings
   const settings = makeSettings({
@@ -1651,9 +1651,9 @@ async function generateStructuredOutput({
 
   let mode = model.defaultObjectGenerationMode;
   if (apiConnection.source === ApiSource.OpenRouter ||
-      apiConnection.source === ApiSource.Ollama ||
-      apiConnection.source === ApiSource.KoboldCPP ||
-      apiConnection.source === ApiSource.OpenAICompatible
+    apiConnection.source === ApiSource.Ollama ||
+    apiConnection.source === ApiSource.KoboldCPP ||
+    apiConnection.source === ApiSource.OpenAICompatible
   ) {
     mode = "json";
   }
@@ -1678,10 +1678,10 @@ async function generateStructuredOutput({
       ...settings,
       ...(Object.keys(providerOptions).length > 0 && modelProvider
         ? {
-            providerOptions: {
-              [modelProvider]: providerOptions,
-            },
-          }
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }
         : {}),
       mode,
       onError: (error) => {
@@ -1703,10 +1703,10 @@ async function generateStructuredOutput({
       ...settings,
       ...(Object.keys(providerOptions).length > 0 && modelProvider
         ? {
-            providerOptions: {
-              [modelProvider]: providerOptions,
-            },
-          }
+          providerOptions: {
+            [modelProvider]: providerOptions,
+          },
+        }
         : {}),
       ...(apiConnection.source === ApiSource.AstrskAi && {
         headers: headers,
@@ -1801,8 +1801,8 @@ async function* executeAgentNode({
           if (fallbackModel) {
             logger.info(
               `[AutoModelMapping] No API connection found for ${apiSource}. ` +
-                `Automatically mapping to AstrskAi with model: ${fallbackModel} ` +
-                `(original: ${apiModelId}, tier: ${agent.props.modelTier || "not specified"})`,
+              `Automatically mapping to AstrskAi with model: ${fallbackModel} ` +
+              `(original: ${apiModelId}, tier: ${agent.props.modelTier || "not specified"})`,
             );
 
             // Update to use AstrskAi connection and fallback model
@@ -1969,13 +1969,13 @@ async function* executeAgentNode({
             // Check if value is meaningful (not null, not undefined, not empty object)
             const isEmptyObject = value && typeof value === 'object' && Object.keys(value).length === 0;
 
-              if (value !== null && value !== undefined && !isEmptyObject) {
-                metadata[propName] = value;
-              }
-            } catch (err) {
-              // Silently skip unavailable promises
+            if (value !== null && value !== undefined && !isEmptyObject) {
+              metadata[propName] = value;
             }
+          } catch (err) {
+            // Silently skip unavailable promises
           }
+        }
 
         if (Object.keys(metadata).length > 0) {
           merge(result, { metadata });
@@ -2475,11 +2475,10 @@ async function evaluateSingleCondition(
       convertedValue2,
     );
   } catch (error) {
-    const debugInfo = `value1="${value1}"${
-      condition.operator && !isUnaryOperator(condition.operator)
+    const debugInfo = `value1="${value1}"${condition.operator && !isUnaryOperator(condition.operator)
         ? ` value2="${value2}"`
         : ""
-    } dataType="${condition.dataType}"`;
+      } dataType="${condition.dataType}"`;
     console.warn(
       `Failed to evaluate condition ${condition.id} (${condition.operator}): ${debugInfo} - ${error}`,
     );

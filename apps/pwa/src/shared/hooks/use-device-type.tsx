@@ -17,7 +17,7 @@ export function useDeviceType() {
   // Check mobile
   const [isMobile, setIsMobile] = useState(getInitialMobileState);
   const [isMobileChecked, setIsMobileChecked] = useState(false);
-  
+
   useEffect(() => {
     // Double-check mobile detection after mount
     const nav = navigator as any;
