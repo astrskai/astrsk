@@ -377,6 +377,8 @@ export async function uploadFlowToCloud(
 
 /**
  * Helper: Create shared resource entry
+ *
+ * Gets database time via raw SQL query and adds expiration delta on client side.
  */
 export async function createSharedResource(
   resourceType: "session" | "flow" | "character" | "scenario",
@@ -384,19 +386,28 @@ export async function createSharedResource(
   expirationDays: number = DEFAULT_SHARE_EXPIRATION_DAYS,
 ): Promise<Result<ShareLinkResult>> {
   try {
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + expirationDays);
+    // 1. Get database time using RPC function
+    const { data: timeData, error: timeError } = await supabaseClient
+      .rpc('get_current_timestamp');
 
-    const sharedResourceRecord = {
-      resource_type: resourceType,
-      resource_id: resourceId,
-      expires_at: expiresAt.toISOString(),
-      claimed_by: null,
-    };
+    if (timeError) {
+      return Result.fail(`Failed to get database time: ${timeError.message}`);
+    }
 
-    const { error: shareError } = await supabaseClient
+    const dbTime = new Date(timeData);
+    const expiresAt = new Date(dbTime.getTime() + expirationDays * 24 * 60 * 60 * 1000);
+
+    // 2. Insert shared resource with calculated expiration
+    const { data: insertData, error: shareError } = await supabaseClient
       .from("astrsk_shared_resources")
-      .insert(sharedResourceRecord);
+      .insert({
+        resource_type: resourceType,
+        resource_id: resourceId,
+        expires_at: expiresAt.toISOString(),
+        claimed_by: null,
+      })
+      .select('id, expires_at')
+      .single();
 
     if (shareError) {
       return Result.fail(`Failed to create share link: ${shareError.message}`);
@@ -404,12 +415,12 @@ export async function createSharedResource(
 
     // Generate share URL
     // TODO: Replace with actual harpy.chat domain
-    const shareUrl = `https://harpy.chat/${resourceType}/${resourceId}`;
+    const shareUrl = `https://harpy.chat/shared/${resourceType}/${resourceId}`;
 
     return Result.ok({
       shareUrl,
-      resourceId,
-      expiresAt,
+      resourceId: insertData?.id || resourceId,
+      expiresAt: new Date(insertData?.expires_at || expiresAt),
     });
   } catch (error) {
     return Result.fail(`Unexpected error creating shared resource: ${error}`);

@@ -1,11 +1,7 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import {
-  ScenarioCloudData,
-  uploadAssetIfExists,
-} from "@/shared/lib/cloud-upload-helpers";
+import { ScenarioCloudData } from "@/shared/lib/cloud-upload-helpers";
 
-import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
 import { ScenarioCard, PlotCard } from "@/entities/card/domain";
 import { LoadCardRepo } from "@/entities/card/repos";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
@@ -24,7 +20,6 @@ export class PrepareScenarioCloudData
 {
   constructor(
     private loadCardRepo: LoadCardRepo,
-    private loadAssetRepo: LoadAssetRepo,
   ) {}
 
   async execute({
@@ -50,13 +45,7 @@ export class PrepareScenarioCloudData
         console.log(`Migrating PlotCard ${card.id.toString()} to ScenarioCard format for cloud export`);
       }
 
-      // 2. Upload icon asset if exists
-      const iconAssetId = await uploadAssetIfExists(
-        card.props.iconAssetId,
-        (id) => this.loadAssetRepo.getAssetById(id),
-      );
-
-      // 3. Use mapper to convert domain → persistence format
+      // 2. Use mapper to convert domain → persistence format
       const persistenceData = CardDrizzleMapper.toPersistence(card);
 
       // Extract only the fields we need (type-safe)
@@ -86,11 +75,11 @@ export class PrepareScenarioCloudData
         first_messages = (persistenceData as any).first_messages ?? [];
       }
 
-      // 4. Build Supabase data with explicit fields
+      // 3. Build Supabase data with icon_asset_id reference (asset upload happens later)
       const scenarioData: ScenarioCloudData = {
         id,
         title,
-        icon_asset_id: iconAssetId,
+        icon_asset_id: card.props.iconAssetId?.toString() || null, // Use cloned asset ID
         tags,
         creator,
         card_summary,

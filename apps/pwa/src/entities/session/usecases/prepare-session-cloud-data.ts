@@ -8,13 +8,11 @@ import {
   AgentCloudData,
   DataStoreNodeCloudData,
   IfNodeCloudData,
-  uploadAssetIfExists,
 } from '@/shared/lib/cloud-upload-helpers';
 
 import { Session } from '@/entities/session/domain';
 import { LoadSessionRepo } from '@/entities/session/repos/load-session-repo';
 import { SessionDrizzleMapper } from '@/entities/session/mappers/session-drizzle-mapper';
-import { LoadAssetRepo } from '@/entities/asset/repos/load-asset-repo';
 import { PrepareCharacterCloudData } from '@/entities/card/usecases/prepare-character-cloud-data';
 import { PrepareScenarioCloudData } from '@/entities/card/usecases/prepare-scenario-cloud-data';
 import { PrepareFlowCloudData } from '@/entities/flow/usecases/prepare-flow-cloud-data';
@@ -45,7 +43,6 @@ export class PrepareSessionCloudData
 {
   constructor(
     private loadSessionRepo: LoadSessionRepo,
-    private loadAssetRepo: LoadAssetRepo,
     private prepareCharacterData: PrepareCharacterCloudData,
     private prepareScenarioData: PrepareScenarioCloudData,
     private prepareFlowData: PrepareFlowCloudData,
@@ -64,18 +61,7 @@ export class PrepareSessionCloudData
 
       const session = sessionResult.getValue();
 
-      // 2. Upload background and cover assets if they exist
-      const backgroundAssetId = await uploadAssetIfExists(
-        session.props.backgroundId,
-        (id) => this.loadAssetRepo.getAssetById(id)
-      );
-
-      const coverAssetId = await uploadAssetIfExists(
-        session.props.coverId,
-        (id) => this.loadAssetRepo.getAssetById(id)
-      );
-
-      // 3. Use mapper to convert session domain → persistence format
+      // 2. Use mapper to convert session domain → persistence format
       const persistenceData = SessionDrizzleMapper.toPersistence(session);
 
       // Extract only the fields we need (type-safe)
@@ -96,7 +82,7 @@ export class PrepareSessionCloudData
         summary,
       } = persistenceData as any; // Cast only for extraction
 
-      // 4. Build session cloud data with explicit fields
+      // 3. Build session cloud data with asset ID references (asset upload happens later)
       const sessionData: SessionCloudData = {
         id,
         title,
@@ -104,8 +90,8 @@ export class PrepareSessionCloudData
         all_cards,
         user_character_card_id,
         turn_ids,
-        background_id: backgroundAssetId,
-        cover_id: coverAssetId,
+        background_id: session.props.backgroundId?.toString() || null, // Use cloned asset ID
+        cover_id: session.props.coverId?.toString() || null, // Use cloned asset ID
         translation,
         chat_styles,
         flow_id,
@@ -121,7 +107,7 @@ export class PrepareSessionCloudData
           session.props.updatedAt?.toISOString() || new Date().toISOString(),
       };
 
-      // 5. Prepare all characters in this session
+      // 4. Prepare all characters in this session
       const characters: CharacterCloudData[] = [];
       for (const card of session.props.allCards) {
         if (card.type === 'character') {
@@ -135,7 +121,7 @@ export class PrepareSessionCloudData
         }
       }
 
-      // 6. Prepare all scenarios in this session
+      // 5. Prepare all scenarios in this session
       // Note: Legacy 'plot' cards are automatically migrated to 'scenario' during export
       const scenarios: ScenarioCloudData[] = [];
       console.log(`Session has ${session.props.allCards.length} total cards`);
@@ -161,7 +147,7 @@ export class PrepareSessionCloudData
       }
       console.log(`Total scenarios prepared: ${scenarios.length}`);
 
-      // 7. Prepare flow and all its nodes if session has a flow
+      // 6. Prepare flow and all its nodes if session has a flow
       let flowData: FlowCloudData | null = null;
       let agents: AgentCloudData[] = [];
       let dataStoreNodes: DataStoreNodeCloudData[] = [];

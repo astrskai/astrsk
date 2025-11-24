@@ -10,15 +10,27 @@ export interface SupabaseAssetRecord {
   size_byte: number;
   mime_type: string;
   file_path: string;
+  session_id: string | null;
+  character_id: string | null;
+  scenario_id: string | null;
   created_at: string;
   updated_at: string;
 }
 
+export interface AssetUploadContext {
+  sessionId?: string | null;
+  characterId?: string | null;
+  scenarioId?: string | null;
+}
+
 /**
  * Upload an asset to Supabase Storage and insert metadata into astrsk_assets table
+ * @param asset - The asset to upload
+ * @param context - Optional foreign key context for cascade delete (sessionId, characterId, scenarioId)
  */
 export async function uploadAssetToSupabase(
   asset: Asset,
+  context?: AssetUploadContext,
 ): Promise<Result<SupabaseAssetRecord>> {
   try {
     // Get asset file from OPFS
@@ -58,14 +70,17 @@ export async function uploadAssetToSupabase(
 
     // Insert metadata into astrsk_assets table
     const assetRecord: Omit<SupabaseAssetRecord, "created_at" | "updated_at"> =
-      {
-        id: asset.id.toString(),
-        hash: asset.props.hash,
-        name: asset.props.name,
-        size_byte: asset.props.sizeByte,
-        mime_type: asset.props.mimeType,
-        file_path: publicUrl, // Use Supabase public URL
-      };
+    {
+      id: asset.id.toString(),
+      hash: asset.props.hash,
+      name: asset.props.name,
+      size_byte: asset.props.sizeByte,
+      mime_type: asset.props.mimeType,
+      file_path: publicUrl, // Use Supabase public URL
+      session_id: context?.sessionId ?? null,
+      character_id: context?.characterId ?? null,
+      scenario_id: context?.scenarioId ?? null,
+    };
 
     const { data: insertData, error: insertError } = await supabaseClient
       .from("astrsk_assets")

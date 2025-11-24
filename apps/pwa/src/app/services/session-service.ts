@@ -148,11 +148,9 @@ export class SessionService {
     // Cloud export initialization
     const prepareCharacterData = new PrepareCharacterCloudData(
       loadCardRepo,
-      loadAssetRepo,
     );
     const prepareScenarioData = new PrepareScenarioCloudData(
       loadCardRepo,
-      loadAssetRepo,
     );
     const prepareFlowData = new PrepareFlowCloudData(
       loadFlowRepo,
@@ -168,7 +166,6 @@ export class SessionService {
     );
     const prepareSessionData = new PrepareSessionCloudData(
       this.sessionRepo,
-      loadAssetRepo,
       prepareCharacterData,
       prepareScenarioData,
       prepareFlowData,
@@ -181,6 +178,7 @@ export class SessionService {
       this.cloneSession,
       this.deleteSession,
       prepareSessionData,
+      loadAssetRepo,
     );
 
     this.importSessionFromFile = new ImportSessionFromFile(

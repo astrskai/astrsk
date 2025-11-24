@@ -8,11 +8,13 @@ import {
   uploadFlowToCloud,
   createSharedResource,
 } from '@/shared/lib/cloud-upload-helpers';
+import { uploadAssetToSupabase } from '@/shared/lib/supabase-asset-uploader';
 import { DEFAULT_SHARE_EXPIRATION_DAYS } from '@/shared/lib/supabase-client';
 
 import { PrepareSessionCloudData } from './prepare-session-cloud-data';
 import { CloneSession } from './clone-session';
 import { DeleteSession } from './delete-session';
+import { LoadAssetRepo } from '@/entities/asset/repos/load-asset-repo';
 
 interface Command {
   sessionId: UniqueEntityID;
@@ -34,6 +36,7 @@ export class ExportSessionToCloud
     private cloneSession: CloneSession,
     private deleteSession: DeleteSession,
     private prepareSessionData: PrepareSessionCloudData,
+    private loadAssetRepo: LoadAssetRepo,
   ) { }
 
   async execute({
@@ -68,13 +71,13 @@ export class ExportSessionToCloud
 
       const bundle = bundleResult.getValue();
 
-      // 3. Upload session
+      // 3. Upload session (with asset ID references set)
       const sessionUploadResult = await uploadSessionToCloud(bundle.session);
       if (sessionUploadResult.isFailure) {
         return Result.fail<ShareLinkResult>(sessionUploadResult.getError());
       }
 
-      // 4. Upload all characters
+      // 4. Upload all characters (with asset ID references set)
       for (const character of bundle.characters) {
         const uploadResult = await uploadCharacterToCloud(character);
         if (uploadResult.isFailure) {
@@ -84,7 +87,7 @@ export class ExportSessionToCloud
         }
       }
 
-      // 5. Upload all scenarios
+      // 5. Upload all scenarios (with asset ID references set)
       for (const scenario of bundle.scenarios) {
         const uploadResult = await uploadScenarioToCloud(scenario);
         if (uploadResult.isFailure) {
@@ -94,7 +97,60 @@ export class ExportSessionToCloud
         }
       }
 
-      // 6. Upload flow and all its nodes (if session has a flow)
+      // 6. Now upload the actual assets with correct FKs
+      // 6a. Upload session assets (background, cover)
+      if (bundle.session.background_id) {
+        const backgroundAsset = await this.loadAssetRepo.getAssetById(
+          new UniqueEntityID(bundle.session.background_id)
+        );
+        if (backgroundAsset.isSuccess) {
+          await uploadAssetToSupabase(backgroundAsset.getValue(), {
+            sessionId: bundle.session.id,
+          });
+        }
+      }
+      if (bundle.session.cover_id) {
+        const coverAsset = await this.loadAssetRepo.getAssetById(
+          new UniqueEntityID(bundle.session.cover_id)
+        );
+        if (coverAsset.isSuccess) {
+          await uploadAssetToSupabase(coverAsset.getValue(), {
+            sessionId: bundle.session.id,
+          });
+        }
+      }
+
+      // 6b. Upload character icon assets
+      for (const character of bundle.characters) {
+        if (character.icon_asset_id) {
+          const iconAsset = await this.loadAssetRepo.getAssetById(
+            new UniqueEntityID(character.icon_asset_id)
+          );
+          if (iconAsset.isSuccess) {
+            await uploadAssetToSupabase(iconAsset.getValue(), {
+              characterId: character.id,
+              sessionId: character.session_id,
+            });
+          }
+        }
+      }
+
+      // 6c. Upload scenario icon assets
+      for (const scenario of bundle.scenarios) {
+        if (scenario.icon_asset_id) {
+          const iconAsset = await this.loadAssetRepo.getAssetById(
+            new UniqueEntityID(scenario.icon_asset_id)
+          );
+          if (iconAsset.isSuccess) {
+            await uploadAssetToSupabase(iconAsset.getValue(), {
+              scenarioId: scenario.id,
+              sessionId: scenario.session_id,
+            });
+          }
+        }
+      }
+
+      // 7. Upload flow and all its nodes (if session has a flow)
       if (bundle.flow) {
         const flowUploadResult = await uploadFlowToCloud(
           bundle.flow,
@@ -107,7 +163,7 @@ export class ExportSessionToCloud
         }
       }
 
-      // 7. Create shared resource entry using the NEW session ID
+      // 8. Create shared resource entry using the NEW session ID
       const shareResult = await createSharedResource(
         'session',
         clonedSessionId.toString(),
@@ -123,7 +179,7 @@ export class ExportSessionToCloud
         `Unexpected error exporting session to cloud: ${error}`
       );
     } finally {
-      // 8. Cleanup: Delete the temporary cloned session and all its resources (cards, flow, nodes, backgrounds)
+      // 9. Cleanup: Delete the temporary cloned session and all its resources (cards, flow, nodes, backgrounds)
       if (clonedSessionId) {
         try {
           await this.deleteSession.execute(clonedSessionId);

@@ -1,11 +1,7 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
-import {
-  CharacterCloudData,
-  uploadAssetIfExists,
-} from "@/shared/lib/cloud-upload-helpers";
+import { CharacterCloudData } from "@/shared/lib/cloud-upload-helpers";
 
-import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
 import { CharacterCard } from "@/entities/card/domain";
 import { LoadCardRepo } from "@/entities/card/repos";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
@@ -24,7 +20,6 @@ export class PrepareCharacterCloudData
 {
   constructor(
     private loadCardRepo: LoadCardRepo,
-    private loadAssetRepo: LoadAssetRepo,
   ) {}
 
   async execute({
@@ -43,13 +38,7 @@ export class PrepareCharacterCloudData
         return Result.fail<CharacterCloudData>("Card is not a character card");
       }
 
-      // 2. Upload icon asset if exists
-      const iconAssetId = await uploadAssetIfExists(
-        card.props.iconAssetId,
-        (id) => this.loadAssetRepo.getAssetById(id),
-      );
-
-      // 3. Use mapper to convert domain → persistence format
+      // 2. Use mapper to convert domain → persistence format
       const persistenceData = CardDrizzleMapper.toPersistence(card);
 
       // Extract only the fields we need (type-safe)
@@ -70,11 +59,11 @@ export class PrepareCharacterCloudData
 
       const { example_dialogue } = persistenceData as any; // Character-specific field
 
-      // 4. Build Supabase data with explicit fields
+      // 3. Build Supabase data with icon_asset_id reference (asset upload happens later)
       const characterData: CharacterCloudData = {
         id,
         title,
-        icon_asset_id: iconAssetId, // Override with uploaded asset ID
+        icon_asset_id: card.props.iconAssetId?.toString() || null, // Use cloned asset ID
         tags,
         creator,
         card_summary,
