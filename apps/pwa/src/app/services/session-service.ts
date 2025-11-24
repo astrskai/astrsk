@@ -154,6 +154,7 @@ export class SessionService {
     );
     const prepareFlowData = new PrepareFlowCloudData(
       loadFlowRepo,
+      loadAgentRepo,
     );
     const prepareAgentsData = new PrepareAgentsCloudData(
       loadAgentRepo,

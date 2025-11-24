@@ -5,6 +5,7 @@ import { FlowCloudData } from '@/shared/lib/cloud-upload-helpers';
 import { Flow } from '@/entities/flow/domain';
 import { LoadFlowRepo } from '@/entities/flow/repos/load-flow-repo';
 import { FlowDrizzleMapper } from '@/entities/flow/mappers/flow-drizzle-mapper';
+import { LoadAgentRepo } from '@/entities/agent/repos/load-agent-repo';
 
 interface Command {
   flowId: UniqueEntityID;
@@ -17,7 +18,10 @@ interface Command {
  */
 export class PrepareFlowCloudData
   implements UseCase<Command, Result<FlowCloudData>> {
-  constructor(private loadFlowRepo: LoadFlowRepo) { }
+  constructor(
+    private loadFlowRepo: LoadFlowRepo,
+    private loadAgentRepo: LoadAgentRepo,
+  ) { }
 
   async execute({
     flowId,
@@ -55,7 +59,19 @@ export class PrepareFlowCloudData
         conceptual_origin,
       } = persistenceData as any; // Cast only for extraction
 
-      // 3. Build Supabase data with explicit fields
+      // 3. Calculate token_count as sum of all agents' token_count
+      const agentsResult = await this.loadAgentRepo.getAgentsByFlowId(flowId);
+      let tokenCount = 0;
+
+      if (agentsResult.isSuccess) {
+        const agents = agentsResult.getValue();
+        tokenCount = agents.reduce(
+          (sum, agent) => sum + (agent.props.tokenCount || 0),
+          0
+        );
+      }
+
+      // 4. Build Supabase data with explicit fields
       const flowData: FlowCloudData = {
         id,
         name,
@@ -69,6 +85,7 @@ export class PrepareFlowCloudData
         vibe_session_id,
         ready_state,
         validation_issues,
+        token_count: tokenCount,
         tags,
         summary,
         version,

@@ -36,6 +36,7 @@ export interface CharacterCloudData {
   description: string | null;
   example_dialogue: string | null;
   lorebook: any;
+  token_count: number;
   session_id: string | null;
   is_public: boolean;
   owner_id: string | null;
@@ -58,6 +59,7 @@ export interface ScenarioCloudData {
   description: string | null;
   first_messages: any;
   lorebook: any;
+  token_count: number;
   session_id: string | null;
   is_public: boolean;
   owner_id: string | null;
@@ -101,6 +103,7 @@ export interface FlowCloudData {
   vibe_session_id: string | null;
   ready_state: string;
   validation_issues: any;
+  token_count: number;
   session_id: string | null;
   tags: string[];
   summary: string | null;

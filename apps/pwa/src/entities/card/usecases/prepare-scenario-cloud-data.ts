@@ -91,6 +91,7 @@ export class PrepareScenarioCloudData
         description,
         first_messages,
         lorebook,
+        token_count: card.props.tokenCount || 0,
         session_id: sessionId?.toString() || null,
         is_public: false,
         owner_id: null,

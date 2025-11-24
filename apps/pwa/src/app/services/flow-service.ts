@@ -110,7 +110,7 @@ export class FlowService {
     this.exportFlowToCloud = new ExportFlowToCloud(
       this.cloneFlow,
       this.deleteFlowWithNodes,
-      new PrepareFlowCloudData(this.flowRepo),
+      new PrepareFlowCloudData(this.flowRepo, loadAgentRepo),
       new PrepareAgentsCloudData(loadAgentRepo),
       new PrepareDataStoreNodesCloudData(this.dataStoreNodeRepo),
       new PrepareIfNodesCloudData(this.ifNodeRepo)
