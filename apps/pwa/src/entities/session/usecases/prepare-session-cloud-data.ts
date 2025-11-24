@@ -136,18 +136,30 @@ export class PrepareSessionCloudData
       }
 
       // 6. Prepare all scenarios in this session
+      // Note: Legacy 'plot' cards are automatically migrated to 'scenario' during export
       const scenarios: ScenarioCloudData[] = [];
+      console.log(`Session has ${session.props.allCards.length} total cards`);
+      console.log(`Card types:`, session.props.allCards.map(c => `${c.id.toString()}: ${c.type}`));
       for (const card of session.props.allCards) {
-        if (card.type === 'scenario') {
+        if (card.type === 'scenario' || card.type === 'plot') {
+          const cardType = card.type === 'plot' ? 'plot (migrating to scenario)' : 'scenario';
+          console.log(`Preparing scenario data for card ${card.id.toString()} (type: ${cardType})`);
           const scenarioDataResult = await this.prepareScenarioData.execute({
             cardId: card.id,
             sessionId: sessionId, // Mark as belonging to this session
           });
           if (scenarioDataResult.isSuccess) {
             scenarios.push(scenarioDataResult.getValue());
+            console.log(`Successfully prepared scenario: ${scenarioDataResult.getValue().title}`);
+            if (card.type === 'plot') {
+              console.log(`✓ Migrated plot card → scenario card during export`);
+            }
+          } else {
+            console.error(`Failed to prepare scenario ${card.id.toString()}:`, scenarioDataResult.getError());
           }
         }
       }
+      console.log(`Total scenarios prepared: ${scenarios.length}`);
 
       // 7. Prepare flow and all its nodes if session has a flow
       let flowData: FlowCloudData | null = null;

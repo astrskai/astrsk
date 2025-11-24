@@ -6,7 +6,7 @@ import {
 } from "@/shared/lib/cloud-upload-helpers";
 
 import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
-import { ScenarioCard } from "@/entities/card/domain";
+import { ScenarioCard, PlotCard } from "@/entities/card/domain";
 import { LoadCardRepo } from "@/entities/card/repos";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
 
@@ -39,8 +39,15 @@ export class PrepareScenarioCloudData
       }
 
       const card = cardResult.getValue();
-      if (!(card instanceof ScenarioCard)) {
-        return Result.fail<ScenarioCloudData>("Card is not a scenario card");
+
+      // Accept both ScenarioCard and PlotCard (legacy, auto-migrate to scenario during export)
+      if (!(card instanceof ScenarioCard) && !(card instanceof PlotCard)) {
+        return Result.fail<ScenarioCloudData>("Card is not a scenario or plot card");
+      }
+
+      // Log migration for plot cards
+      if (card instanceof PlotCard) {
+        console.log(`Migrating PlotCard ${card.id.toString()} to ScenarioCard format for cloud export`);
       }
 
       // 2. Upload icon asset if exists
@@ -68,7 +75,16 @@ export class PrepareScenarioCloudData
         lorebook,
       } = persistenceData as any; // Cast only for extraction
 
-      const { first_messages } = persistenceData as any; // Scenario-specific field
+      // Handle PlotCard → ScenarioCard migration
+      // PlotCard has 'scenarios' field, ScenarioCard has 'first_messages' field
+      let first_messages;
+      if (card instanceof PlotCard) {
+        // Migrate: PlotCard.scenarios → ScenarioCard.first_messages
+        first_messages = (persistenceData as any).scenarios ?? [];
+      } else {
+        // ScenarioCard: use first_messages directly
+        first_messages = (persistenceData as any).first_messages ?? [];
+      }
 
       // 4. Build Supabase data with explicit fields
       const scenarioData: ScenarioCloudData = {

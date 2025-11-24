@@ -229,12 +229,22 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
           const shareLink = shareResult.getValue();
 
-          // Copy share URL to clipboard
-          await navigator.clipboard.writeText(shareLink.shareUrl);
+          // Try to copy share URL to clipboard, but don't fail if it doesn't work
+          // (clipboard access may be blocked after async operations)
+          let clipboardSuccess = false;
+          try {
+            await navigator.clipboard.writeText(shareLink.shareUrl);
+            clipboardSuccess = true;
+          } catch (clipboardError) {
+            // Clipboard access failed - user will need to copy manually
+            logger.warn("Clipboard access denied:", clipboardError);
+          }
 
           toast.success("Successfully exported to cloud!", {
-            description: `Share link copied to clipboard. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
-            duration: 5000,
+            description: clipboardSuccess
+              ? `Share link copied to clipboard. Expires: ${shareLink.expiresAt.toLocaleDateString()}`
+              : `${shareLink.shareUrl}\n\nExpires: ${shareLink.expiresAt.toLocaleDateString()}`,
+            duration: 10000, // Longer duration to allow manual copy
           });
         } else {
           // Export session to file (JSON download)

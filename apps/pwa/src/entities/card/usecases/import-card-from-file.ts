@@ -12,7 +12,6 @@ import {
   CardType,
   CharacterCard,
   Lorebook,
-  PlotCard,
   ScenarioCard,
 } from "@/entities/card/domain";
 import { SaveCardRepo } from "@/entities/card/repos";
@@ -34,7 +33,7 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
   constructor(
     private saveFileToAsset: SaveFileToAsset,
     private saveCardRepo: SaveCardRepo,
-  ) {}
+  ) { }
 
   private async importCharacterCard(json: any, sessionId?: UniqueEntityID): Promise<Result<CharacterCard>> {
     const cardOrError = CharacterCard.create(
@@ -56,16 +55,16 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
         exampleDialogue: json.data.mes_example,
         lorebook: json.data.character_book?.entries
           ? Lorebook.fromJSON({
-              entries: json.data.character_book.entries.map((entry: any) => ({
-                id: entry.extensions.id,
-                name: entry.name,
-                enabled: entry.enabled,
-                keys: entry.keys,
-                recallRange:
-                  entry.extensions.recallRange ?? entry.extensions.scanDepth,
-                content: entry.content,
-              })),
-            }).getValue()
+            entries: json.data.character_book.entries.map((entry: any) => ({
+              id: entry.extensions.id,
+              name: entry.name,
+              enabled: entry.enabled,
+              keys: entry.keys,
+              recallRange:
+                entry.extensions.recallRange ?? entry.extensions.scanDepth,
+              content: entry.content,
+            })),
+          }).getValue()
           : undefined,
         sessionId, // Add sessionId if provided (creates session-local card)
         createdAt: new Date(), // Always use current timestamp on import
@@ -85,54 +84,6 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
     return Result.ok(card as CharacterCard);
   }
 
-  private async importPlotCard(json: any, sessionId?: UniqueEntityID): Promise<Result<PlotCard>> {
-    const cardOrError = PlotCard.create(
-      {
-        iconAssetId: json.data.iconAssetId ? new UniqueEntityID(json.data.iconAssetId) : undefined,
-        title: json.data.title,
-        type: CardType.Plot,
-        tags: json.data.extensions.tags,
-        creator: json.data.extensions.creator,
-        cardSummary:
-          json.data.extensions?.cardSummary ??
-          json.data.creator_notes ??
-          json.data.extensions?.creatorNote,
-        version: json.data.extensions.version,
-        conceptualOrigin:
-          json.data.conceptualOrigin ?? json.data.extensions?.source,
-        description: json.data.description ?? json.data.scenario,
-        scenarios: json.data.scenarios ?? [],
-        lorebook: json.data.entries
-          ? Lorebook.fromJSON({
-              entries: json.data.entries.map((entry: any) => ({
-                id: entry.extensions.id,
-                name: entry.name,
-                enabled: entry.enabled,
-                keys: entry.keys,
-                recallRange:
-                  entry.extensions.recallRange ?? entry.extensions.scanDepth,
-                content: entry.content,
-              })),
-            }).getValue()
-          : undefined,
-        sessionId, // Add sessionId if provided (creates session-local card)
-        createdAt: new Date(), // Always use current timestamp on import
-        updatedAt: new Date(), // Always use current timestamp on import
-      },
-      undefined, // Always generate new ID for imports
-    );
-    if (cardOrError.isFailure) {
-      return Result.fail(cardOrError.getError());
-    }
-    const card = cardOrError.getValue();
-    const tokenCount = PlotCard.calculateTokenSize(
-      card.props,
-      await getTokenizer(),
-    );
-    card.update({ tokenCount });
-    return Result.ok(card as PlotCard);
-  }
-
   private async importScenarioCard(json: any, sessionId?: UniqueEntityID): Promise<Result<ScenarioCard>> {
     const cardOrError = ScenarioCard.create(
       {
@@ -149,16 +100,16 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
         firstMessages: json.data.first_messages ?? [],
         lorebook: json.data.entries
           ? Lorebook.fromJSON({
-              entries: json.data.entries.map((entry: any) => ({
-                id: entry.extensions.id,
-                name: entry.name,
-                enabled: entry.enabled,
-                keys: entry.keys,
-                recallRange:
-                  entry.extensions.recallRange ?? entry.extensions.scanDepth,
-                content: entry.content,
-              })),
-            }).getValue()
+            entries: json.data.entries.map((entry: any) => ({
+              id: entry.extensions.id,
+              name: entry.name,
+              enabled: entry.enabled,
+              keys: entry.keys,
+              recallRange:
+                entry.extensions.recallRange ?? entry.extensions.scanDepth,
+              content: entry.content,
+            })),
+          }).getValue()
           : undefined,
         sessionId, // Add sessionId if provided (creates session-local card)
         createdAt: new Date(), // Always use current timestamp on import
@@ -305,13 +256,31 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
           }
         }
       } else if (jsonData.spec === "plot_card_v1") {
-        // Import plot card (legacy)
-        const plotCardResult = await this.importPlotCard(jsonData, sessionId);
-        if (plotCardResult.isSuccess) {
-          const savedPlotCardResult = await this.saveCardRepo.saveCard(
-            plotCardResult.getValue(),
+        // Import plot card (legacy) → MIGRATE to ScenarioCard
+        // Convert plot_card_v1 to scenario_card_v2 format
+        const scenarioCardResult = await this.importScenarioCard({
+          spec: "scenario_card_v2",
+          version: "2.0",
+          data: {
+            title: jsonData.data.title,
+            description: jsonData.data.description ?? jsonData.data.scenario,
+            first_messages: jsonData.data.scenarios ?? [], // Plot card scenarios → first messages
+            entries: jsonData.data.entries, // Lorebook entries
+            extensions: {
+              tags: jsonData.data.extensions?.tags ?? [],
+              creator: jsonData.data.extensions?.creator,
+              cardSummary: jsonData.data.extensions?.cardSummary,
+              version: jsonData.data.extensions?.version,
+              conceptualOrigin: jsonData.data.conceptualOrigin ?? jsonData.data.extensions?.source,
+            },
+          },
+        }, sessionId);
+        if (scenarioCardResult.isSuccess) {
+          const savedScenarioCardResult = await this.saveCardRepo.saveCard(
+            scenarioCardResult.getValue(),
           );
-          cards.push(savedPlotCardResult.getValue());
+          cards.push(savedScenarioCardResult.getValue());
+          console.log(`Migrated plot_card_v1 → scenario_card_v2: ${jsonData.data.title}`);
         }
       } else if (jsonData.spec === "scenario_card_v2") {
         // Import scenario card (new format)
