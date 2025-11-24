@@ -6,6 +6,7 @@ import {
   createSharedResource,
   DEFAULT_SHARE_EXPIRATION_DAYS,
 } from "@/shared/lib/cloud-upload-helpers";
+import { uploadAssetToSupabase } from "@/shared/lib/supabase-asset-uploader";
 
 import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
 import { LoadCardRepo } from "@/entities/card/repos";
@@ -37,7 +38,6 @@ export class ExportCharacterToCloud
   ) {
     this.prepareCharacterData = new PrepareCharacterCloudData(
       loadCardRepo,
-      loadAssetRepo,
     );
   }
 
@@ -73,13 +73,25 @@ export class ExportCharacterToCloud
 
       const characterData = dataResult.getValue();
 
-      // 3. Upload to cloud
+      // 3. Upload character record to cloud
       const uploadResult = await uploadCharacterToCloud(characterData);
       if (uploadResult.isFailure) {
         return Result.fail<ShareLinkResult>(uploadResult.getError());
       }
 
-      // 4. Create shared resource entry using the NEW card ID
+      // 4. Upload character icon asset (if exists)
+      if (characterData.icon_asset_id) {
+        const iconAsset = await this.loadAssetRepo.getAssetById(
+          new UniqueEntityID(characterData.icon_asset_id)
+        );
+        if (iconAsset.isSuccess) {
+          await uploadAssetToSupabase(iconAsset.getValue(), {
+            characterId: characterData.id,
+          });
+        }
+      }
+
+      // 5. Create shared resource entry using the NEW card ID
       const shareResult = await createSharedResource(
         "character",
         clonedCardId.toString(),

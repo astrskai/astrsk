@@ -6,6 +6,7 @@ import {
   createSharedResource,
   DEFAULT_SHARE_EXPIRATION_DAYS,
 } from "@/shared/lib/cloud-upload-helpers";
+import { uploadAssetToSupabase } from "@/shared/lib/supabase-asset-uploader";
 
 import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
 import { LoadCardRepo } from "@/entities/card/repos";
@@ -38,7 +39,6 @@ export class ExportScenarioToCloud
   ) {
     this.prepareScenarioData = new PrepareScenarioCloudData(
       loadCardRepo,
-      loadAssetRepo,
     );
   }
 
@@ -74,13 +74,25 @@ export class ExportScenarioToCloud
 
       const scenarioData = dataResult.getValue();
 
-      // 3. Upload to cloud
+      // 3. Upload scenario record to cloud
       const uploadResult = await uploadScenarioToCloud(scenarioData);
       if (uploadResult.isFailure) {
         return Result.fail<ShareLinkResult>(uploadResult.getError());
       }
 
-      // 4. Create shared resource entry using the NEW card ID
+      // 4. Upload scenario icon asset (if exists)
+      if (scenarioData.icon_asset_id) {
+        const iconAsset = await this.loadAssetRepo.getAssetById(
+          new UniqueEntityID(scenarioData.icon_asset_id)
+        );
+        if (iconAsset.isSuccess) {
+          await uploadAssetToSupabase(iconAsset.getValue(), {
+            scenarioId: scenarioData.id,
+          });
+        }
+      }
+
+      // 5. Create shared resource entry using the NEW card ID
       const shareResult = await createSharedResource(
         "scenario",
         clonedCardId.toString(),
