@@ -37,7 +37,6 @@ const DropdownMenuBase = ({
         asChild
         onClick={(e) => {
           e.stopPropagation();
-          console.log("trigger clicked");
         }}
       >
         {trigger}

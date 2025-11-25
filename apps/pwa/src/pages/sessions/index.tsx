@@ -39,8 +39,6 @@ export function SessionsPage() {
       sort: sortOption,
     });
 
-  console.log("sessions with character metadata!!", sessions);
-
   // Import dialog hook - manages file input and parsing
   const {
     fileInputRef,

@@ -16,15 +16,18 @@ const TypewriterText = ({
 
   useEffect(() => {
     let i = 0;
+    let interval: ReturnType<typeof setInterval> | undefined;
     const timer = setTimeout(() => {
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         setDisplayedText(text.slice(0, i + 1));
         i++;
         if (i === text.length) clearInterval(interval);
       }, 30);
-      return () => clearInterval(interval);
     }, delay);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (interval) clearInterval(interval);
+    };
   }, [text, delay]);
 
   return <span>{displayedText}</span>;

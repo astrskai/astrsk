@@ -3,7 +3,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { Session } from "@/entities/session/domain/session";
-import type { SessionWithCharacterMetadata } from "@/entities/session/api";
+import type {
+  SessionWithCharacterMetadata,
+  CharacterMetadata,
+} from "@/entities/session/api";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 import { Checkbox, Label } from "@/shared/ui";
@@ -18,7 +21,7 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { cn } from "@/shared/lib";
 
 interface SessionsGridV2Props {
-  sessions: Session[];
+  sessions: SessionWithCharacterMetadata[];
   newlyCreatedSessionId?: string | null;
   areCharactersLoading?: boolean;
 }
@@ -29,6 +32,7 @@ interface SessionsGridV2Props {
  */
 interface SessionGridItemProps {
   session: Session;
+  characterAvatars: CharacterMetadata[];
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   className?: string;
   areCharactersLoading?: boolean;
@@ -47,6 +51,7 @@ interface SessionGridItemProps {
 
 function SessionGridItem({
   session,
+  characterAvatars,
   loading,
   className,
   areCharactersLoading,
@@ -65,11 +70,6 @@ function SessionGridItem({
   // Simple validation: check if session has AI character cards
   // Avoid expensive per-card queries (useSessionValidation with nested flow queries)
   const isInvalid = session.aiCharacterCardIds.length === 0;
-
-  // Character avatars are provided by useSessionsWithCharacterMetadata hook
-  // The session object is enriched with characterAvatars by the hook
-  const characterAvatars =
-    (session as SessionWithCharacterMetadata).characterAvatars || [];
 
   const actions: CardAction[] = [
     {
@@ -157,9 +157,9 @@ export function SessionsGridV2({
   }, [newlyCreatedSessionId, triggerAnimation]);
 
   const handleSessionClick = (sessionId: string) => {
-    const session = sessions.find((s) => s.id.toString() === sessionId);
-    if (session) {
-      selectSession(session.id, session.props.title);
+    const item = sessions.find((s) => s.session.id.toString() === sessionId);
+    if (item) {
+      selectSession(item.session.id, item.session.props.title);
     }
     navigate({
       to: "/sessions/$sessionId",
@@ -171,7 +171,7 @@ export function SessionsGridV2({
     <>
       {/* Sessions Grid - Uses auto-fill with minmax to ensure stable card sizes */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
-        {sessions.map((session) => {
+        {sessions.map(({ session, characterAvatars }) => {
           const sessionId = session.id.toString();
           const loading = loadingStates[sessionId] || {};
           const isNewlyCreated = animatingId === sessionId;
@@ -180,10 +180,11 @@ export function SessionsGridV2({
             <SessionGridItem
               key={sessionId}
               session={session}
+              characterAvatars={characterAvatars}
               loading={loading}
               className={cn(
                 isNewlyCreated && [
-                  "!border-green-500",
+                  "border-green-500!",
                   "shadow-[0_0_20px_rgba(34,197,94,0.5)]",
                   "animate-pulse",
                 ],

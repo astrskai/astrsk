@@ -37,7 +37,8 @@ export interface CharacterMetadata {
   iconAssetId?: string;
 }
 
-export interface SessionWithCharacterMetadata extends Session {
+export interface SessionWithCharacterMetadata {
+  session: Session;
   characterAvatars: CharacterMetadata[];
 }
 
@@ -56,9 +57,10 @@ export interface SessionListFilters {
  *   sort: "updated_at_desc"
  * });
  *
- * sessions.map(session => (
+ * sessions.map(({ session, characterAvatars }) => (
  *   <SessionPreview
- *     characterAvatars={session.characterAvatars}
+ *     session={session}
+ *     characterAvatars={characterAvatars}
  *   />
  * ))
  * ```
@@ -102,14 +104,13 @@ export function useSessionsWithCharacterMetadata(filters: SessionListFilters = {
     }
   }
 
-  // 5. Enrich sessions with character metadata
-  const enrichedSessions: SessionWithCharacterMetadata[] = sessions.map((session) =>
-    Object.assign(session, {
-      characterAvatars: session.characterCards
-        .map((card) => characterMetadataMap.get(card.id.toString()))
-        .filter((metadata): metadata is CharacterMetadata => metadata !== undefined),
-    })
-  );
+  // 5. Enrich sessions with character metadata (without mutating cached Session objects)
+  const enrichedSessions: SessionWithCharacterMetadata[] = sessions.map((session) => ({
+    session,
+    characterAvatars: session.characterCards
+      .map((card) => characterMetadataMap.get(card.id.toString()))
+      .filter((metadata): metadata is CharacterMetadata => metadata !== undefined),
+  }));
 
   return {
     sessions: enrichedSessions,

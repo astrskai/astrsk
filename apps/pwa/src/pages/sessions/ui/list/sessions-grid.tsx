@@ -3,6 +3,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { Session } from "@/entities/session/domain/session";
+import type {
+  SessionWithCharacterMetadata,
+  CharacterMetadata,
+} from "@/entities/session/api";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { CreateItemCard } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
@@ -19,7 +23,7 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { cn } from "@/shared/lib";
 
 interface SessionsGridProps {
-  sessions: Session[];
+  sessions: SessionWithCharacterMetadata[];
   onCreateSession: () => void;
   showNewSessionCard: boolean;
   newlyCreatedSessionId?: string | null;
@@ -31,6 +35,7 @@ interface SessionsGridProps {
  */
 interface SessionGridItemProps {
   session: Session;
+  characterAvatars: CharacterMetadata[];
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   className?: string;
   onSessionClick: (sessionId: string) => void;
@@ -48,6 +53,7 @@ interface SessionGridItemProps {
 
 function SessionGridItem({
   session,
+  characterAvatars,
   loading,
   className,
   onSessionClick,
@@ -65,10 +71,6 @@ function SessionGridItem({
   // Simple validation: check if session has AI character cards
   // Avoid expensive per-card queries (useSessionValidation with nested flow queries)
   const isInvalid = session.aiCharacterCardIds.length === 0;
-
-  // Character avatars are provided by useSessionsWithCharacterMetadata hook
-  // The session object is enriched with characterAvatars by the hook
-  const characterAvatars = (session as any).characterAvatars || [];
 
   const actions: CardAction[] = [
     {
@@ -154,9 +156,9 @@ export function SessionsGrid({
   }, [newlyCreatedSessionId, triggerAnimation]);
 
   const handleSessionClick = (sessionId: string) => {
-    const session = sessions.find((s) => s.id.toString() === sessionId);
-    if (session) {
-      selectSession(session.id, session.props.title);
+    const item = sessions.find((s) => s.session.id.toString() === sessionId);
+    if (item) {
+      selectSession(item.session.id, item.session.props.title);
     }
     navigate({
       to: "/sessions/$sessionId",
@@ -190,7 +192,7 @@ export function SessionsGrid({
           )}
 
           {/* Existing Sessions */}
-          {sessions.map((session) => {
+          {sessions.map(({ session, characterAvatars }) => {
             const sessionId = session.id.toString();
             const loading = loadingStates[sessionId] || {};
             const isNewlyCreated = animatingId === sessionId;
@@ -199,6 +201,7 @@ export function SessionsGrid({
               <SessionGridItem
                 key={sessionId}
                 session={session}
+                characterAvatars={characterAvatars}
                 loading={loading}
                 className={cn(
                   isNewlyCreated && [
