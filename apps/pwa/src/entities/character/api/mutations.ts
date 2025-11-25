@@ -57,20 +57,25 @@ export const useCreateCharacterCard = () => {
       // Step 2: Create lorebook if entries exist
       let lorebook: Lorebook | undefined;
       if (data.lorebookEntries && data.lorebookEntries.length > 0) {
-        const entries = data.lorebookEntries.map((entry) =>
-          Entry.create({
+        const entries = data.lorebookEntries.map((entry) => {
+          const entryResult = Entry.create({
             name: entry.name,
             content: entry.content,
             keys: entry.keys,
             enabled: entry.enabled,
             recallRange: entry.recallRange,
-          }).getValue(),
-        );
+          });
+          if (entryResult.isFailure) {
+            throw new Error(`Failed to create lorebook entry: ${entryResult.getError()}`);
+          }
+          return entryResult.getValue();
+        });
 
         const lorebookResult = Lorebook.create({ entries });
-        if (lorebookResult.isSuccess) {
-          lorebook = lorebookResult.getValue();
+        if (lorebookResult.isFailure) {
+          throw new Error(`Failed to create lorebook: ${lorebookResult.getError()}`);
         }
+        lorebook = lorebookResult.getValue();
       }
 
       // Step 3: Create character card
