@@ -176,7 +176,9 @@ export class ImportSessionFromFile
 
       // Set new ID
       const background = backgroundOrError.getValue();
-      const oldId = fileEntry.name.split(".")[0].split("/")[1];
+      // Extract old ID from filename: "backgrounds/UUID.astrsk.background" or "UUID.astrsk.background"
+      const nameParts = fileEntry.name.split(".")[0].split("/");
+      const oldId = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
       idMap.set(oldId, background.id.toString());
     }
 

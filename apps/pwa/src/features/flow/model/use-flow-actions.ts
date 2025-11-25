@@ -134,8 +134,11 @@ export function useFlowActions(
           // Get agents for this flow
           const agents: AgentModelTierInfo[] = [];
 
+          // Handle both domain format (props.nodes) and persistence format (nodes)
+          const nodes = flowQuery.props?.nodes || (flowQuery as any).nodes || [];
+
           // Get agent data from flow nodes
-          for (const node of flowQuery.props.nodes) {
+          for (const node of nodes) {
             if (node.type === "agent") {
               // Agent nodes store agentId in node.data.agentId, fallback to node.id
               const agentId = (node.data as any)?.agentId || node.id;
@@ -157,12 +160,14 @@ export function useFlowActions(
               });
 
               if (agentQuery) {
+                // Handle both domain format (props.X) and persistence format (direct X)
+                const agentProps = agentQuery.props || agentQuery;
                 agents.push({
                   agentId: agentId,
-                  agentName: agentQuery.props.name,
-                  modelName: agentQuery.props.modelName || "",
+                  agentName: agentProps.name || (agentQuery as any).name || "",
+                  modelName: agentProps.modelName || (agentQuery as any).model_name || "",
                   recommendedTier: ModelTier.Light,
-                  selectedTier: agentQuery.props.modelTier || ModelTier.Light,
+                  selectedTier: agentProps.modelTier || (agentQuery as any).model_tier || ModelTier.Light,
                 });
               }
             }
@@ -224,10 +229,11 @@ export function useFlowActions(
             duration: 5000,
           });
         } else {
-          // Export flow to file (JSON download)
-          const result = await FlowService.exportFlowToFile.execute(
-            new UniqueEntityID(flowId),
-          );
+          // Export flow to file (JSON download) with all nodes (agents, dataStore, if nodes)
+          const result = await FlowService.exportFlowWithNodes.execute({
+            flowId: new UniqueEntityID(flowId),
+            modelTierSelections,
+          });
 
           if (result.isFailure) {
             throw new Error(result.getError());

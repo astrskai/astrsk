@@ -72,6 +72,7 @@ export async function initServices(): Promise<void> {
     AssetService.cloneAsset,
     BackgroundService.cloneBackground,
     AssetService.assetRepo,
+    BackgroundService.backgroundRepo,
     CardService.cardRepo,
     FlowService.flowRepo,
     AgentService.agentRepo,

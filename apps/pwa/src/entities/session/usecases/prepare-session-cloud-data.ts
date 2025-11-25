@@ -19,6 +19,7 @@ import { PrepareFlowCloudData } from '@/entities/flow/usecases/prepare-flow-clou
 import { PrepareAgentsCloudData } from '@/entities/agent/usecases/prepare-agents-cloud-data';
 import { PrepareDataStoreNodesCloudData } from '@/entities/data-store-node/usecases/prepare-data-store-nodes-cloud-data';
 import { PrepareIfNodesCloudData } from '@/entities/if-node/usecases/prepare-if-nodes-cloud-data';
+import { LoadBackgroundRepo } from '@/entities/background/repos/load-background-repo';
 
 interface Command {
   sessionId: UniqueEntityID;
@@ -48,7 +49,8 @@ export class PrepareSessionCloudData
     private prepareFlowData: PrepareFlowCloudData,
     private prepareAgentsData: PrepareAgentsCloudData,
     private prepareDataStoreNodesData: PrepareDataStoreNodesCloudData,
-    private prepareIfNodesData: PrepareIfNodesCloudData
+    private prepareIfNodesData: PrepareIfNodesCloudData,
+    private loadBackgroundRepo: LoadBackgroundRepo,
   ) {}
 
   async execute({ sessionId }: Command): Promise<Result<SessionCloudDataBundle>> {
@@ -82,7 +84,18 @@ export class PrepareSessionCloudData
         summary,
       } = persistenceData as any; // Cast only for extraction
 
-      // 3. Build session cloud data with asset ID references (asset upload happens later)
+      // 3. Resolve background entity ID to asset ID for cloud storage
+      // The session stores backgroundId (Background entity ID), but Supabase needs the asset ID directly
+      let backgroundAssetId: string | null = null;
+      if (session.props.backgroundId) {
+        const backgroundResult = await this.loadBackgroundRepo.getBackgroundById(session.props.backgroundId);
+        if (backgroundResult.isSuccess) {
+          const background = backgroundResult.getValue();
+          backgroundAssetId = background.assetId.toString();
+        }
+      }
+
+      // 4. Build session cloud data with asset ID references (asset upload happens later)
       const sessionData: SessionCloudData = {
         id,
         title,
@@ -90,8 +103,8 @@ export class PrepareSessionCloudData
         all_cards,
         user_character_card_id,
         turn_ids,
-        background_id: session.props.backgroundId?.toString() || null, // Use cloned asset ID
-        cover_id: session.props.coverId?.toString() || null, // Use cloned asset ID
+        background_id: backgroundAssetId, // Use asset ID directly for cloud storage
+        cover_id: session.props.coverId?.toString() || null, // Cover is already an asset ID
         translation,
         chat_styles,
         flow_id,

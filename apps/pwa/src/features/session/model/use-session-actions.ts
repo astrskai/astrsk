@@ -153,7 +153,11 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
           // Get agents for this flow
           const agents: AgentModelTierInfo[] = [];
-          for (const node of flowQuery.props.nodes) {
+
+          // Handle both domain format (props.nodes) and persistence format (nodes)
+          const nodes = flowQuery.props?.nodes || (flowQuery as any).nodes || [];
+
+          for (const node of nodes) {
             if (node.type === "agent") {
               // Agent nodes store agentId in node.data.agentId, fallback to node.id
               const agentId = (node.data as any)?.agentId || node.id;
@@ -175,12 +179,14 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
               });
 
               if (agentQuery) {
+                // Handle both domain format (props.X) and persistence format (direct X)
+                const agentProps = agentQuery.props || agentQuery;
                 agents.push({
                   agentId: agentId,
-                  agentName: agentQuery.props.name,
-                  modelName: agentQuery.props.modelName || "",
+                  agentName: agentProps.name || (agentQuery as any).name || "",
+                  modelName: agentProps.modelName || (agentQuery as any).model_name || "",
                   recommendedTier: ModelTier.Light,
-                  selectedTier: agentQuery.props.modelTier || ModelTier.Light,
+                  selectedTier: agentProps.modelTier || (agentQuery as any).model_tier || ModelTier.Light,
                 });
               }
             }

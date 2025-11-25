@@ -107,8 +107,11 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
     // Check if background is default background
     if (defaultBackgrounds.some((bg) => bg.id.equals(backgroundId))) {
       // Default backgrounds are not exported
+      console.log(`[EXPORT] Skipping default background: ${backgroundId.toString()}`);
       return;
     }
+
+    console.log(`[EXPORT] Exporting background: ${backgroundId.toString()}`);
 
     // Get background
     const backgroundOrError = await this.getBackground.execute(backgroundId);
@@ -131,10 +134,9 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
     }
 
     // Add background to zip
-    zip.file(
-      `backgrounds/${backgroundId.toString()}.astrsk.background`,
-      assetFile,
-    );
+    const filename = `backgrounds/${backgroundId.toString()}.astrsk.background`;
+    console.log(`[EXPORT] Adding background to zip: ${filename}`);
+    zip.file(filename, assetFile);
   }
 
   private async exportTurnToZip(

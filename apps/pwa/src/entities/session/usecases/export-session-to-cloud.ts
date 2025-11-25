@@ -99,6 +99,7 @@ export class ExportSessionToCloud
 
       // 6. Now upload the actual assets with correct FKs
       // 6a. Upload session assets (background, cover)
+      // Note: background_id is now the asset ID directly (resolved in PrepareSessionCloudData)
       if (bundle.session.background_id) {
         const backgroundAsset = await this.loadAssetRepo.getAssetById(
           new UniqueEntityID(bundle.session.background_id)
