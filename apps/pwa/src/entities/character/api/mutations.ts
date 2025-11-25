@@ -1,13 +1,117 @@
 /**
  * Character Mutations
  *
- * Character-specific mutation hooks for updating CharacterCard.
+ * Character-specific mutation hooks for creating and updating CharacterCard.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CardService } from "@/app/services/card-service";
-import { Lorebook } from "@/entities/card/domain";
+import { AssetService } from "@/app/services/asset-service";
+import { Lorebook, CardType, Entry } from "@/entities/card/domain";
+import { CharacterCard } from "@/entities/card/domain/character-card";
 import { cardKeys } from "@/entities/card/api/query-factory";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+
+export interface CreateCharacterData {
+  name: string;
+  description: string;
+  exampleDialogue?: string;
+  tags?: string[];
+  creator?: string;
+  cardSummary?: string;
+  version?: string;
+  conceptualOrigin?: string;
+  imageFile?: File;
+  lorebookEntries?: Array<{
+    id: string;
+    name: string;
+    enabled: boolean;
+    keys: string[];
+    recallRange: number;
+    content: string;
+  }>;
+}
+
+/**
+ * Hook for creating a new character card
+ */
+export const useCreateCharacterCard = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateCharacterData) => {
+      // Step 1: Upload image if exists
+      let uploadedAssetId: string | undefined;
+      if (data.imageFile) {
+        const assetResult = await AssetService.saveFileToAsset.execute({
+          file: data.imageFile,
+        });
+
+        if (assetResult.isFailure) {
+          throw new Error(`Failed to upload image: ${assetResult.getError()}`);
+        }
+
+        uploadedAssetId = assetResult.getValue().id.toString();
+      }
+
+      // Step 2: Create lorebook if entries exist
+      let lorebook: Lorebook | undefined;
+      if (data.lorebookEntries && data.lorebookEntries.length > 0) {
+        const entries = data.lorebookEntries.map((entry) =>
+          Entry.create({
+            name: entry.name,
+            content: entry.content,
+            keys: entry.keys,
+            enabled: entry.enabled,
+            recallRange: entry.recallRange,
+          }).getValue(),
+        );
+
+        const lorebookResult = Lorebook.create({ entries });
+        if (lorebookResult.isSuccess) {
+          lorebook = lorebookResult.getValue();
+        }
+      }
+
+      // Step 3: Create character card
+      const cardResult = CharacterCard.create({
+        title: data.name,
+        name: data.name,
+        description: data.description,
+        exampleDialogue: data.exampleDialogue,
+        iconAssetId: uploadedAssetId
+          ? new UniqueEntityID(uploadedAssetId)
+          : undefined,
+        type: CardType.Character,
+        tags: data.tags || [],
+        creator: data.creator,
+        cardSummary: data.cardSummary,
+        version: data.version,
+        conceptualOrigin: data.conceptualOrigin,
+        lorebook,
+      });
+
+      if (cardResult.isFailure) {
+        throw new Error(`Failed to create card: ${cardResult.getError()}`);
+      }
+
+      const card = cardResult.getValue();
+
+      // Step 4: Save card to database
+      const saveResult = await CardService.saveCard.execute(card);
+
+      if (saveResult.isFailure) {
+        throw new Error(`Failed to save card: ${saveResult.getError()}`);
+      }
+
+      return card;
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
+    },
+  });
+};
 
 /**
  * Hook for updating entire character card (batch update)

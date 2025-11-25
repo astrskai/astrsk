@@ -68,7 +68,8 @@ export function CharactersListPage() {
   };
 
   const handleCreateCharacter = () => {
-    navigate({ to: "/assets/characters/new" });
+    // Navigate to the unified create/edit page with "new" as special value (create mode)
+    navigate({ to: "/assets/characters/{-$characterId}", params: { characterId: "new" } });
   };
 
   return (

@@ -37,8 +37,7 @@ import { Route as LayoutSettingsAccountCreditUsageRouteImport } from './routes/_
 import { Route as LayoutAssetsWorkflowsWorkflowIdRouteImport } from './routes/_layout/assets/workflows/$workflowId'
 import { Route as LayoutAssetsScenariosNewRouteImport } from './routes/_layout/assets/scenarios/new'
 import { Route as LayoutAssetsScenariosScenarioIdRouteImport } from './routes/_layout/assets/scenarios/$scenarioId'
-import { Route as LayoutAssetsCharactersNewRouteImport } from './routes/_layout/assets/characters/new'
-import { Route as LayoutAssetsCharactersCharacterIdRouteImport } from './routes/_layout/assets/characters/$characterId'
+import { Route as LayoutAssetsCharactersChar123CharacterIdChar125RouteImport } from './routes/_layout/assets/characters/{-$characterId}'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -196,16 +195,10 @@ const LayoutAssetsScenariosScenarioIdRoute =
     path: '/assets/scenarios/$scenarioId',
     getParentRoute: () => LayoutRoute,
   } as any)
-const LayoutAssetsCharactersNewRoute =
-  LayoutAssetsCharactersNewRouteImport.update({
-    id: '/assets/characters/new',
-    path: '/assets/characters/new',
-    getParentRoute: () => LayoutRoute,
-  } as any)
-const LayoutAssetsCharactersCharacterIdRoute =
-  LayoutAssetsCharactersCharacterIdRouteImport.update({
-    id: '/assets/characters/$characterId',
-    path: '/assets/characters/$characterId',
+const LayoutAssetsCharactersChar123CharacterIdChar125Route =
+  LayoutAssetsCharactersChar123CharacterIdChar125RouteImport.update({
+    id: '/assets/characters/{-$characterId}',
+    path: '/assets/characters/{-$characterId}',
     getParentRoute: () => LayoutRoute,
   } as any)
 
@@ -220,8 +213,7 @@ export interface FileRoutesByFullPath {
   '/assets': typeof LayoutAssetsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
   '/settings/': typeof LayoutSettingsIndexRoute
-  '/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
-  '/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
+  '/assets/characters/{-$characterId}': typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
   '/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
   '/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
   '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
@@ -250,8 +242,7 @@ export interface FileRoutesByTo {
   '/assets': typeof LayoutAssetsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
   '/settings': typeof LayoutSettingsIndexRoute
-  '/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
-  '/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
+  '/assets/characters/{-$characterId}': typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
   '/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
   '/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
   '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
@@ -283,8 +274,7 @@ export interface FileRoutesById {
   '/_layout/assets/': typeof LayoutAssetsIndexRoute
   '/_layout/sessions/': typeof LayoutSessionsIndexRoute
   '/_layout/settings/': typeof LayoutSettingsIndexRoute
-  '/_layout/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
-  '/_layout/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
+  '/_layout/assets/characters/{-$characterId}': typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
   '/_layout/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
   '/_layout/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
   '/_layout/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
@@ -316,8 +306,7 @@ export interface FileRouteTypes {
     | '/assets'
     | '/sessions'
     | '/settings/'
-    | '/assets/characters/$characterId'
-    | '/assets/characters/new'
+    | '/assets/characters/{-$characterId}'
     | '/assets/scenarios/$scenarioId'
     | '/assets/scenarios/new'
     | '/assets/workflows/$workflowId'
@@ -346,8 +335,7 @@ export interface FileRouteTypes {
     | '/assets'
     | '/sessions'
     | '/settings'
-    | '/assets/characters/$characterId'
-    | '/assets/characters/new'
+    | '/assets/characters/{-$characterId}'
     | '/assets/scenarios/$scenarioId'
     | '/assets/scenarios/new'
     | '/assets/workflows/$workflowId'
@@ -378,8 +366,7 @@ export interface FileRouteTypes {
     | '/_layout/assets/'
     | '/_layout/sessions/'
     | '/_layout/settings/'
-    | '/_layout/assets/characters/$characterId'
-    | '/_layout/assets/characters/new'
+    | '/_layout/assets/characters/{-$characterId}'
     | '/_layout/assets/scenarios/$scenarioId'
     | '/_layout/assets/scenarios/new'
     | '/_layout/assets/workflows/$workflowId'
@@ -601,18 +588,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAssetsScenariosScenarioIdRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/assets/characters/new': {
-      id: '/_layout/assets/characters/new'
-      path: '/assets/characters/new'
-      fullPath: '/assets/characters/new'
-      preLoaderRoute: typeof LayoutAssetsCharactersNewRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/assets/characters/$characterId': {
-      id: '/_layout/assets/characters/$characterId'
-      path: '/assets/characters/$characterId'
-      fullPath: '/assets/characters/$characterId'
-      preLoaderRoute: typeof LayoutAssetsCharactersCharacterIdRouteImport
+    '/_layout/assets/characters/{-$characterId}': {
+      id: '/_layout/assets/characters/{-$characterId}'
+      path: '/assets/characters/{-$characterId}'
+      fullPath: '/assets/characters/{-$characterId}'
+      preLoaderRoute: typeof LayoutAssetsCharactersChar123CharacterIdChar125RouteImport
       parentRoute: typeof LayoutRoute
     }
   }
@@ -666,8 +646,7 @@ interface LayoutRouteChildren {
   LayoutSessionsNewRoute: typeof LayoutSessionsNewRoute
   LayoutAssetsIndexRoute: typeof LayoutAssetsIndexRoute
   LayoutSessionsIndexRoute: typeof LayoutSessionsIndexRoute
-  LayoutAssetsCharactersCharacterIdRoute: typeof LayoutAssetsCharactersCharacterIdRoute
-  LayoutAssetsCharactersNewRoute: typeof LayoutAssetsCharactersNewRoute
+  LayoutAssetsCharactersChar123CharacterIdChar125Route: typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
   LayoutAssetsScenariosScenarioIdRoute: typeof LayoutAssetsScenariosScenarioIdRoute
   LayoutAssetsScenariosNewRoute: typeof LayoutAssetsScenariosNewRoute
   LayoutAssetsWorkflowsWorkflowIdRoute: typeof LayoutAssetsWorkflowsWorkflowIdRoute
@@ -685,9 +664,8 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutSessionsNewRoute: LayoutSessionsNewRoute,
   LayoutAssetsIndexRoute: LayoutAssetsIndexRoute,
   LayoutSessionsIndexRoute: LayoutSessionsIndexRoute,
-  LayoutAssetsCharactersCharacterIdRoute:
-    LayoutAssetsCharactersCharacterIdRoute,
-  LayoutAssetsCharactersNewRoute: LayoutAssetsCharactersNewRoute,
+  LayoutAssetsCharactersChar123CharacterIdChar125Route:
+    LayoutAssetsCharactersChar123CharacterIdChar125Route,
   LayoutAssetsScenariosScenarioIdRoute: LayoutAssetsScenariosScenarioIdRoute,
   LayoutAssetsScenariosNewRoute: LayoutAssetsScenariosNewRoute,
   LayoutAssetsWorkflowsWorkflowIdRoute: LayoutAssetsWorkflowsWorkflowIdRoute,

@@ -13,11 +13,12 @@ import {
   Copy,
   Pencil,
 } from "lucide-react";
-import { Route } from "@/routes/_layout/assets/characters/$characterId";
+import { Route } from "@/routes/_layout/assets/characters/{-$characterId}";
 
 import {
   characterQueries,
   useUpdateCharacterCard,
+  useCreateCharacterCard,
 } from "@/entities/character/api";
 
 import { Loading } from "@/shared/ui";
@@ -297,13 +298,18 @@ const LorebookItemContent = ({
   );
 };
 
-const CharacterDetailPage = () => {
+const CharacterEditorPage = () => {
   const navigate = useNavigate();
   const { characterId } = Route.useParams();
 
-  const { data: character, isLoading } = useQuery(
-    characterQueries.detail(characterId),
-  );
+  // Determine if we're in create mode (no characterId or "new")
+  const isCreateMode = !characterId || characterId === "new";
+
+  // Only fetch character data in edit mode
+  const { data: character, isLoading } = useQuery({
+    ...characterQueries.detail(characterId!),
+    enabled: !isCreateMode,
+  });
 
   const [imageUrl] = useAsset(character?.props.iconAssetId);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -325,7 +331,23 @@ const CharacterDetailPage = () => {
     trigger,
     watch,
     formState: { errors, isDirty },
-  } = useForm<CharacterFormData>();
+  } = useForm<CharacterFormData>({
+    defaultValues: isCreateMode
+      ? {
+          name: "",
+          title: "",
+          description: "",
+          exampleDialogue: "",
+          tags: [],
+          creator: "",
+          cardSummary: "",
+          version: "",
+          conceptualOrigin: "",
+          iconAssetId: undefined,
+          lorebookEntries: [],
+        }
+      : undefined,
+  });
 
   const cardSummary = watch("cardSummary") || "";
   const tags = watch("tags") || [];
@@ -336,7 +358,13 @@ const CharacterDetailPage = () => {
     keyName: "_rhfId", // Use custom key name to avoid conflict with our 'id' field
   });
 
-  const updateCharacterMutation = useUpdateCharacterCard(characterId);
+  // Mutations
+  const updateCharacterMutation = useUpdateCharacterCard(characterId ?? "");
+  const createCharacterMutation = useCreateCharacterCard();
+
+  // Combined pending state
+  const isSaving =
+    updateCharacterMutation.isPending || createCharacterMutation.isPending;
 
   // Helper function to sort tags by TAG_DEFAULT order, then alphabetically for custom tags
   const sortTags = useCallback((tags: string[]) => {
@@ -376,9 +404,9 @@ const CharacterDetailPage = () => {
     reset: resetBlocker,
     status,
   } = useBlocker({
-    shouldBlockFn: () => isDirty && !updateCharacterMutation.isPending,
+    shouldBlockFn: () => isDirty && !isSaving,
     withResolver: true,
-    enableBeforeUnload: isDirty && !updateCharacterMutation.isPending,
+    enableBeforeUnload: isDirty && !isSaving,
   });
 
   // Reset form when character data loads
@@ -522,71 +550,105 @@ const CharacterDetailPage = () => {
   };
 
   const onSubmit = async (data: CharacterFormData) => {
-    try {
-      // Upload new image if user selected one
-      let uploadedAssetId = data.iconAssetId;
+    // Convert empty strings to undefined for optional fields
+    const normalizeField = (value: string | undefined) =>
+      value === "" ? undefined : value;
 
-      if (imageFile) {
-        const assetResult = await AssetService.saveFileToAsset.execute({
-          file: imageFile,
+    try {
+      if (isCreateMode) {
+        // CREATE MODE
+        await createCharacterMutation.mutateAsync({
+          name: data.name,
+          description: data.description,
+          exampleDialogue: normalizeField(data.exampleDialogue),
+          tags: data.tags,
+          creator: normalizeField(data.creator),
+          cardSummary: normalizeField(data.cardSummary),
+          version: normalizeField(data.version),
+          conceptualOrigin: normalizeField(data.conceptualOrigin),
+          imageFile: imageFile ?? undefined,
+          lorebookEntries: data.lorebookEntries,
         });
 
-        if (assetResult.isSuccess) {
-          const asset = assetResult.getValue();
-          uploadedAssetId = asset.id.toString();
-        } else {
-          toastError("Failed to upload image", {
-            description: "Please try again",
-          });
-          return;
+        // Clear image file state after successful save
+        if (previewImage) {
+          URL.revokeObjectURL(previewImage);
         }
+        setImageFile(null);
+        setPreviewImage(null);
+
+        // Reset form to prevent navigation block
+        reset(data);
+
+        toastSuccess("Character created!", {
+          description: "Your character has been created successfully.",
+        });
+
+        // Navigate back to characters list page
+        navigate({ to: "/assets/characters" });
+      } else {
+        // EDIT MODE
+        // Upload new image if user selected one
+        let uploadedAssetId = data.iconAssetId;
+
+        if (imageFile) {
+          const assetResult = await AssetService.saveFileToAsset.execute({
+            file: imageFile,
+          });
+
+          if (assetResult.isSuccess) {
+            const asset = assetResult.getValue();
+            uploadedAssetId = asset.id.toString();
+          } else {
+            toastError("Failed to upload image", {
+              description: "Please try again",
+            });
+            return;
+          }
+        }
+
+        await updateCharacterMutation.mutateAsync({
+          title: data.name, // Use name as title (unified)
+          name: data.name,
+          description: data.description,
+          exampleDialogue: normalizeField(data.exampleDialogue),
+          tags: data.tags,
+          creator: normalizeField(data.creator),
+          cardSummary: normalizeField(data.cardSummary),
+          version: normalizeField(data.version),
+          conceptualOrigin: normalizeField(data.conceptualOrigin),
+          iconAssetId: uploadedAssetId,
+          lorebookEntries: data.lorebookEntries,
+        });
+
+        // Clear image file state after successful save
+        // Revoke preview URL to prevent memory leak
+        if (previewImage) {
+          URL.revokeObjectURL(previewImage);
+        }
+        setImageFile(null);
+        setPreviewImage(null);
+
+        // Reset form to mark as not dirty after successful save
+        // Normalize empty strings to undefined to match initial state
+        reset({
+          ...data,
+          tags: sortTags(data.tags),
+          exampleDialogue: normalizeField(data.exampleDialogue),
+          creator: normalizeField(data.creator),
+          cardSummary: normalizeField(data.cardSummary),
+          version: normalizeField(data.version),
+          conceptualOrigin: normalizeField(data.conceptualOrigin),
+          iconAssetId: uploadedAssetId,
+        });
+
+        toastSuccess("Character updated!", {
+          description: "Your character has been updated successfully.",
+        });
+
+        // Navigate back to characters list page
+        navigate({ to: "/assets/characters" });
       }
-
-      // Convert empty strings to undefined for optional fields
-      const normalizeField = (value: string | undefined) =>
-        value === "" ? undefined : value;
-
-      await updateCharacterMutation.mutateAsync({
-        title: data.name, // Use name as title (unified)
-        name: data.name,
-        description: data.description,
-        exampleDialogue: normalizeField(data.exampleDialogue),
-        tags: data.tags,
-        creator: normalizeField(data.creator),
-        cardSummary: normalizeField(data.cardSummary),
-        version: normalizeField(data.version),
-        conceptualOrigin: normalizeField(data.conceptualOrigin),
-        iconAssetId: uploadedAssetId,
-        lorebookEntries: data.lorebookEntries,
-      });
-
-      // Clear image file state after successful save
-      // Revoke preview URL to prevent memory leak
-      if (previewImage) {
-        URL.revokeObjectURL(previewImage);
-      }
-      setImageFile(null);
-      setPreviewImage(null);
-
-      // Reset form to mark as not dirty after successful save
-      // Normalize empty strings to undefined to match initial state
-      reset({
-        ...data,
-        tags: sortTags(data.tags),
-        exampleDialogue: normalizeField(data.exampleDialogue),
-        creator: normalizeField(data.creator),
-        cardSummary: normalizeField(data.cardSummary),
-        version: normalizeField(data.version),
-        conceptualOrigin: normalizeField(data.conceptualOrigin),
-        iconAssetId: uploadedAssetId,
-      });
-
-      toastSuccess("Character updated!", {
-        description: "Your character has been updated successfully.",
-      });
-
-      // Navigate back to characters list page
-      navigate({ to: "/assets/characters" });
     } catch (error) {
       toastError("Failed to save character", {
         description:
@@ -595,7 +657,8 @@ const CharacterDetailPage = () => {
     }
   };
 
-  if (isLoading) return <Loading />;
+  // Only show loading in edit mode when fetching character data
+  if (!isCreateMode && isLoading) return <Loading />;
 
   const displayImage = previewImage || imageUrl;
 
@@ -607,7 +670,7 @@ const CharacterDetailPage = () => {
           e.preventDefault();
         }
       }}
-      className="w-full bg-neutral-900"
+      className="flex w-full flex-1 flex-col bg-neutral-900"
     >
       <input
         ref={fileInputRef}
@@ -627,7 +690,9 @@ const CharacterDetailPage = () => {
             type="button"
           />
           <h1 className="text-base font-semibold">
-            {character?.props.name ?? character?.props.title}
+            {isCreateMode
+              ? "New Character"
+              : (character?.props.name ?? character?.props.title)}
           </h1>
         </div>
         <div className="flex items-center gap-3">
@@ -643,10 +708,10 @@ const CharacterDetailPage = () => {
           <Button
             icon={<Save className="h-4 w-4" />}
             type="submit"
-            disabled={!isDirty || updateCharacterMutation.isPending}
-            loading={updateCharacterMutation.isPending}
+            disabled={isCreateMode ? isSaving : !isDirty || isSaving}
+            loading={isSaving}
           >
-            Save
+            {isCreateMode ? "Create" : "Save"}
           </Button>
         </div>
       </div>
@@ -906,4 +971,4 @@ const CharacterDetailPage = () => {
   );
 };
 
-export default CharacterDetailPage;
+export default CharacterEditorPage;
