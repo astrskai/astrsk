@@ -24,12 +24,12 @@ export const SORT_VALUES = {
 export const SORT_OPTIONS: SelectOption[] = [
   {
     value: SORT_VALUES.LATEST,
-    label: "Newest first",
+    label: "Newest",
     icon: CalendarArrowUp,
   },
   {
     value: SORT_VALUES.OLDEST,
-    label: "Oldest first",
+    label: "Oldest",
     icon: CalendarArrowDown,
   },
   {

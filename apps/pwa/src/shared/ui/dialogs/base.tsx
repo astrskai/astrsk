@@ -9,6 +9,7 @@ interface DialogBaseProps {
   title?: string;
   description?: string;
   content: React.ReactNode;
+  footer?: React.ReactNode; // Optional footer (always visible, not scrollable)
   isShowCloseButton?: boolean;
   size?: "sm" | "md" | "lg" | "xl" | "2xl"; // Dialog size (default: "md")
 }
@@ -20,6 +21,7 @@ const DialogBase = ({
   title = "",
   description = "",
   content,
+  footer,
   isShowCloseButton = true,
   size = "md",
 }: DialogBaseProps) => {
@@ -46,7 +48,7 @@ const DialogBase = ({
         />
         <Dialog.Content
           className={cn(
-            "bg-dark-surface fixed top-[50%] left-[50%] z-100 max-h-[85dvh] w-[90vw] translate-x-[-50%] translate-y-[-50%] rounded-lg p-6 shadow-lg focus:outline-none",
+            "bg-surface-raised fixed top-[50%] left-[50%] z-100 flex max-h-[85dvh] w-[90vw] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-lg p-6 shadow-lg focus:outline-none",
             sizeClasses[size],
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
@@ -54,23 +56,27 @@ const DialogBase = ({
           )}
         >
           {title && (
-            <Dialog.Title className="m-0 text-lg font-semibold text-gray-50 md:text-xl">
+            <Dialog.Title className="m-0 flex-shrink-0 text-lg font-semibold text-fg-default md:text-xl">
               {title}
             </Dialog.Title>
           )}
 
-          <Dialog.Description className="mx-0 mt-2 mb-4 text-sm text-gray-200">
+          <Dialog.Description className="mx-0 mt-2 mb-4 flex-shrink-0 text-sm text-fg-muted">
             {description}
           </Dialog.Description>
 
-          {content}
+          {/* Scrollable Content */}
+          <div className="min-h-0 flex-1 overflow-y-auto">{content}</div>
+
+          {/* Fixed Footer (always visible) */}
+          {footer && <div className="mt-4 flex-shrink-0">{footer}</div>}
 
           {isShowCloseButton && (
             <Dialog.Close asChild>
               <button
                 type="button"
                 aria-label="Close"
-                className="absolute top-3 right-3 inline-flex cursor-pointer items-center text-gray-100 hover:text-gray-50"
+                className="absolute top-3 right-3 inline-flex cursor-pointer items-center text-fg-muted hover:text-fg-default"
               >
                 <X className="h-6 w-6" />
               </button>

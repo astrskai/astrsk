@@ -21,24 +21,24 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 // Shared style constants
 const STYLES = {
   input: {
-    base: "text-text-primary placeholder:text-text-placeholder w-full rounded-lg border bg-gray-800 px-4 py-3 text-base outline-none",
+    base: "w-full rounded-lg border bg-neutral-800 px-4 py-3 text-base text-neutral-100 placeholder:text-neutral-500 outline-none",
     focus: "focus:ring-2 focus:ring-offset-0",
     transition: "transition-all",
     disabled: "disabled:cursor-not-allowed disabled:opacity-50",
   },
   border: {
     error:
-      "border-status-destructive-light focus:border-status-destructive-light focus:ring-status-destructive-light/20",
-    normal: "border-gray-500 focus:border-primary-normal focus:ring-primary-normal/20",
+      "border-status-error focus:border-status-error focus:ring-status-error/20",
+    normal: "border-neutral-600 focus:border-brand-500 focus:ring-brand-500/20",
   },
   label: {
-    floating: "absolute top-0 left-3 -translate-y-1/2 rounded-sm bg-gray-800 px-1 text-xs font-medium transition-all pointer-events-none",
-    standard: "text-text-body flex items-center gap-1.5 text-sm font-medium",
+    floating: "absolute top-0 left-3 -translate-y-1/2 rounded-sm bg-neutral-800 px-1 text-xs font-medium transition-all pointer-events-none",
+    standard: "flex items-center gap-1.5 text-sm font-medium text-neutral-200",
   },
   text: {
-    error: "text-status-destructive-light",
-    secondary: "text-text-secondary",
-    required: "text-status-required ml-1",
+    error: "text-status-error",
+    secondary: "text-neutral-400",
+    required: "text-accent-purple ml-1",
     small: "mt-1 text-xs",
     caption: "mt-1 pl-2 text-xs",
   },
@@ -46,7 +46,7 @@ const STYLES = {
     base: "cursor-help transition-colors pointer-events-auto",
     size: "h-3.5 w-3.5",
     sizeStandard: "h-4 w-4",
-    colors: "text-text-secondary hover:text-text-primary",
+    colors: "text-neutral-400 hover:text-neutral-100",
   },
 } as const;
 

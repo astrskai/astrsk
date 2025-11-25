@@ -1,0 +1,213 @@
+/* ==============================================
+   ASTRSK DESIGN SYSTEM v2
+   Tailwind CSS v4 + Custom Theme Tokens
+   ============================================== */
+
+@import "tailwindcss";
+
+/* -----------------------------------------------
+   1. PRIMITIVE COLOR TOKENS
+   Define in :root for CSS var() access
+   Also register in @theme for Tailwind utilities
+   ----------------------------------------------- */
+:root {
+  /* Neutral Scale (cool-toned, pairs with blue brand) */
+  --color-neutral-0: #000000;
+  --color-neutral-950: #0a0a0c;
+  --color-neutral-900: #141416;
+  --color-neutral-800: #232328;
+  --color-neutral-700: #3a3a42;
+  --color-neutral-600: #4e4e58;
+  --color-neutral-500: #6b6b76;
+  --color-neutral-400: #9898a4;
+  --color-neutral-300: #c8c8d0;
+  --color-neutral-200: #e2e2e8;
+  --color-neutral-100: #f0f0f4;
+  --color-neutral-50: #f8f8fa;
+  --color-white: #ffffff;
+
+  /* Brand - Muted Blue */
+  --color-brand-700: #3a5a8a;
+  --color-brand-600: #4a6fa5;
+  --color-brand-500: #5b82ba;
+  --color-brand-400: #7a9cc9;
+  --color-brand-300: #a3bdd9;
+
+  /* Accent - Asset Types */
+  --color-accent-indigo: #818cf8;
+  --color-accent-orange: #fb923c;
+  --color-accent-purple: #c084fc;
+  --color-accent-cyan: #22d3ee;
+
+  /* Status */
+  --color-status-success: #34d399;
+  --color-status-warning: #fbbf24;
+  --color-status-error: #f87171;
+  --color-status-info: #60a5fa;
+
+  /* -----------------------------------------------
+     2. SEMANTIC TOKENS - Dark theme (default)
+     Naming convention follows Material Design & GitHub Primer
+     ----------------------------------------------- */
+
+  /* === Backgrounds === */
+  /* canvas: Base page background */
+  --bg-canvas: var(--color-neutral-0);
+  /* surface: Layered backgrounds (cards, panels, sidebars) */
+  --bg-surface: var(--color-neutral-950);
+  --bg-surface-raised: var(--color-neutral-900);
+  --bg-surface-overlay: var(--color-neutral-800);
+  /* hover/active states */
+  --bg-hover: var(--color-neutral-700);
+  --bg-active: var(--color-neutral-600);
+  /* overlay: Modal/dialog backdrop */
+  --bg-overlay: rgba(0, 0, 0, 0.8);
+  --bg-scrim: rgba(0, 0, 0, 0.6);
+
+  /* === Foreground (Text) === */
+  /* fg: Foreground/text colors (GitHub Primer convention) */
+  --fg-default: var(--color-white);
+  --fg-muted: var(--color-neutral-200);
+  --fg-subtle: var(--color-neutral-400);
+  --fg-disabled: var(--color-neutral-600);
+  --fg-on-emphasis: var(--color-neutral-900);
+
+  /* === Borders === */
+  --border-default: var(--color-neutral-800);
+  --border-muted: var(--color-neutral-700);
+  --border-subtle: var(--color-neutral-600);
+  --border-focus: var(--color-brand-500);
+
+  /* === Interactive (Buttons, Links) === */
+  --btn-primary-bg: var(--color-brand-600);
+  --btn-primary-bg-hover: var(--color-brand-500);
+  --btn-primary-bg-active: var(--color-brand-700);
+  --btn-secondary-bg: var(--color-neutral-800);
+  --btn-secondary-bg-hover: var(--color-neutral-700);
+
+  /* === Component Specific === */
+  --card-bg: var(--color-neutral-900);
+  --card-border: var(--color-neutral-800);
+  --input-bg: var(--color-neutral-800);
+  --input-border: var(--color-neutral-700);
+  --sidebar-bg: var(--color-neutral-950);
+  --header-bg: var(--color-neutral-950);
+}
+
+/* -----------------------------------------------
+   3. LIGHT THEME (ready for future)
+   ----------------------------------------------- */
+:root.light {
+  /* === Backgrounds === */
+  --bg-canvas: var(--color-white);
+  --bg-surface: var(--color-neutral-50);
+  --bg-surface-raised: var(--color-white);
+  --bg-surface-overlay: var(--color-neutral-100);
+  --bg-hover: var(--color-neutral-200);
+  --bg-active: var(--color-neutral-300);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --bg-scrim: rgba(0, 0, 0, 0.3);
+
+  /* === Foreground (Text) === */
+  --fg-default: var(--color-neutral-900);
+  --fg-muted: var(--color-neutral-700);
+  --fg-subtle: var(--color-neutral-500);
+  --fg-disabled: var(--color-neutral-300);
+  --fg-on-emphasis: var(--color-white);
+
+  /* === Borders === */
+  --border-default: var(--color-neutral-200);
+  --border-muted: var(--color-neutral-100);
+  --border-subtle: var(--color-neutral-300);
+  --border-focus: var(--color-brand-500);
+
+  /* === Interactive === */
+  --btn-primary-bg: var(--color-brand-600);
+  --btn-primary-bg-hover: var(--color-brand-700);
+  --btn-primary-bg-active: var(--color-brand-800);
+  --btn-secondary-bg: var(--color-neutral-100);
+  --btn-secondary-bg-hover: var(--color-neutral-200);
+
+  /* === Component Specific === */
+  --card-bg: var(--color-white);
+  --card-border: var(--color-neutral-200);
+  --input-bg: var(--color-white);
+  --input-border: var(--color-neutral-300);
+  --sidebar-bg: var(--color-neutral-50);
+  --header-bg: var(--color-white);
+}
+
+/* -----------------------------------------------
+   4. TAILWIND THEME REGISTRATION
+   Register primitive colors for Tailwind utilities
+   Usage: bg-neutral-900, text-brand-500, etc.
+   ----------------------------------------------- */
+@theme {
+  /* Neutral Scale */
+  --color-neutral-0: #000000;
+  --color-neutral-950: #0a0a0c;
+  --color-neutral-900: #141416;
+  --color-neutral-800: #232328;
+  --color-neutral-700: #3a3a42;
+  --color-neutral-600: #4e4e58;
+  --color-neutral-500: #6b6b76;
+  --color-neutral-400: #9898a4;
+  --color-neutral-300: #c8c8d0;
+  --color-neutral-200: #e2e2e8;
+  --color-neutral-100: #f0f0f4;
+  --color-neutral-50: #f8f8fa;
+
+  /* Brand - Muted Blue */
+  --color-brand-700: #3a5a8a;
+  --color-brand-600: #4a6fa5;
+  --color-brand-500: #5b82ba;
+  --color-brand-400: #7a9cc9;
+  --color-brand-300: #a3bdd9;
+
+  /* Accent - Asset Types */
+  --color-accent-indigo: #818cf8;
+  --color-accent-orange: #fb923c;
+  --color-accent-purple: #c084fc;
+  --color-accent-cyan: #22d3ee;
+
+  /* Status */
+  --color-status-success: #34d399;
+  --color-status-warning: #fbbf24;
+  --color-status-error: #f87171;
+  --color-status-info: #60a5fa;
+}
+
+/* -----------------------------------------------
+   5. TAILWIND SEMANTIC MAPPING
+   Maps semantic tokens to Tailwind utility classes
+   Usage: bg-canvas, bg-surface, text-fg-default, etc.
+   ----------------------------------------------- */
+@theme inline {
+  /* Background utilities: bg-canvas, bg-surface, bg-surface-raised, etc. */
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-surface-raised: var(--bg-surface-raised);
+  --color-surface-overlay: var(--bg-surface-overlay);
+
+  /* Foreground utilities: text-fg-default, text-fg-muted, etc. */
+  --color-fg-default: var(--fg-default);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-disabled: var(--fg-disabled);
+
+  /* Border utilities: border-default, border-muted, etc. */
+  --color-border-default: var(--border-default);
+  --color-border-muted: var(--border-muted);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-focus: var(--border-focus);
+}
+
+/* -----------------------------------------------
+   6. BASE STYLES
+   ----------------------------------------------- */
+@layer base {
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--fg-muted);
+  }
+}

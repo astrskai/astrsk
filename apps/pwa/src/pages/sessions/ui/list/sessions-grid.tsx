@@ -10,7 +10,7 @@ import { DialogConfirm } from "@/shared/ui/dialogs";
 import { Checkbox, Label } from "@/shared/ui";
 
 import SessionPreview from "@/features/session/ui/session-preview";
-import type { SessionAction } from "@/features/session/ui/session-preview";
+import type { CardAction } from "@/features/common/ui";
 import { useSessionActions } from "@/features/session/model/use-session-actions";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
 import { SessionExportDialog } from "../dialog/session-export-dialog";
@@ -66,7 +66,11 @@ function SessionGridItem({
   // Avoid expensive per-card queries (useSessionValidation with nested flow queries)
   const isInvalid = session.aiCharacterCardIds.length === 0;
 
-  const actions: SessionAction[] = [
+  // Character avatars are provided by useSessionsWithCharacterMetadata hook
+  // The session object is enriched with characterAvatars by the hook
+  const characterAvatars = (session as any).characterAvatars || [];
+
+  const actions: CardAction[] = [
     {
       icon: Upload,
       label: `Export`,
@@ -100,6 +104,7 @@ function SessionGridItem({
       actions={actions}
       isShowActions={true}
       className={className}
+      characterAvatars={characterAvatars}
     />
   );
 }

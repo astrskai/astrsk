@@ -1,12 +1,11 @@
 import { X } from "lucide-react";
-import { Page, useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 
 import { useNavigate } from "@tanstack/react-router";
 
 const OnboardingStepOnePage = () => {
   // Page navigation
-  const setActivePage = useAppStore.use.setActivePage();
+
   const navigate = useNavigate();
 
   return (
@@ -17,7 +16,6 @@ const OnboardingStepOnePage = () => {
         aria-label="Close onboarding"
         className="text-text-subtle absolute top-4 right-4 z-50 cursor-pointer md:top-[34px] md:right-[40px]"
         onClick={() => {
-          setActivePage(Page.Init);
           navigate({ to: "/settings/providers", replace: true });
         }}
       >
@@ -27,7 +25,7 @@ const OnboardingStepOnePage = () => {
       {/* Main */}
       <div className="from-background-surface-0 to-background-surface-3 absolute inset-0 grid place-content-center gap-6 bg-linear-to-b px-4 md:gap-[49px] md:px-0">
         <div className="flex flex-col items-center gap-2 md:gap-[8px]">
-          <div className="text-text-primary text-center text-xl font-semibold leading-tight md:text-[32px] md:leading-[40px] md:font-[600]">
+          <div className="text-text-primary text-center text-xl leading-tight font-semibold md:text-[32px] md:leading-[40px] md:font-[600]">
             Two short minutes to understand how astrsk works!
           </div>
           <div className="text-text-placeholder text-center text-sm leading-relaxed md:text-[16px] md:leading-[25.6px] md:font-[400]">

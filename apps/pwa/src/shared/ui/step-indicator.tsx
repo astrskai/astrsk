@@ -39,8 +39,8 @@ export function StepIndicator<T extends string = string>({
               key={step.id}
               className={cn(
                 "h-1 flex-1 rounded-full transition-colors",
-                isCompleted && "bg-normal-primary",
-                !isCompleted && "bg-gray-800",
+                isCompleted && "bg-brand-600",
+                !isCompleted && "bg-neutral-800",
               )}
             />
           );
@@ -71,18 +71,18 @@ export function StepIndicator<T extends string = string>({
                           ? "bg-transparent"
                           : steps.findIndex((s) => s.id === currentStep) >=
                               index
-                            ? "bg-normal-primary/50"
-                            : "bg-gray-500",
+                            ? "bg-brand-600/50"
+                            : "bg-neutral-500",
                       )}
                     />
 
                     {/* Circle */}
                     <div
                       className={cn(
-                        "text-dark-surface flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-all duration-300 xl:h-12 xl:w-12 xl:text-base",
-                        isActive && "bg-normal-primary scale-110",
-                        isCompleted && "bg-normal-primary/50 scale-100",
-                        !isActive && !isCompleted && "scale-100 bg-gray-500",
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-fg-on-emphasis transition-all duration-300 xl:h-12 xl:w-12 xl:text-base",
+                        isActive && "scale-110 bg-brand-600",
+                        isCompleted && "scale-100 bg-brand-600/50",
+                        !isActive && !isCompleted && "scale-100 bg-neutral-500",
                       )}
                     >
                       {isCompleted ? <Check size={20} /> : step.number}
@@ -95,8 +95,8 @@ export function StepIndicator<T extends string = string>({
                         index === steps.length - 1
                           ? "bg-transparent"
                           : steps.findIndex((s) => s.id === currentStep) > index
-                            ? "bg-normal-primary/50"
-                            : "bg-gray-500",
+                            ? "bg-brand-600/50"
+                            : "bg-neutral-500",
                       )}
                     />
                   </div>
@@ -105,8 +105,8 @@ export function StepIndicator<T extends string = string>({
                   <span
                     className={cn(
                       "mt-2 text-center text-sm font-medium transition-all duration-300 xl:text-base",
-                      isActive && "scale-105 text-gray-50",
-                      !isActive && "scale-100 text-gray-200",
+                      isActive && "scale-105 text-fg-default",
+                      !isActive && "scale-100 text-fg-muted",
                     )}
                   >
                     {step.label}

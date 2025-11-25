@@ -1,20 +1,12 @@
 import { useAppStore } from "@/shared/stores/app-store";
-// import { useState } from "react";
 import { usePwa } from "@/shared/hooks/use-pwa";
-// import { useDefaultInitialized } from "@/shared/hooks/use-default-initialized";
 import { useGlobalErrorHandler } from "@/shared/hooks/use-global-error-handler";
 import { useSessionStore } from "@/shared/stores/session-store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { useLocation } from "@tanstack/react-router";
-// import { InstallPwa } from "@/shared/ui/install-pwa";
 import { TopBar } from "@/widgets/top-bar";
-import { WebTopBar } from "@/widgets/web-top-bar";
-import {
-  LoadingOverlay,
-  Toaster,
-  TooltipProvider,
-} from "@/shared/ui";
+import { LoadingOverlay, Toaster, TooltipProvider } from "@/shared/ui";
 import { isElectronEnvironment } from "@/shared/lib/environment";
 import { ThemeProvider } from "@/app/providers/theme-provider";
 import {
@@ -22,7 +14,10 @@ import {
   useScrollContainer,
 } from "@/shared/contexts/scroll-container-context";
 import { cn } from "@/shared/lib";
-import { FixedNav } from "@/widgets/fixed-nav";
+import {
+  LeftMainSidebarContainer,
+  MobileHeader,
+} from "@/widgets/sidebar/left-main-sidebar";
 
 export function MainLayout({
   children,
@@ -125,20 +120,30 @@ function MainLayoutContent({
   isRootPage: boolean;
 }) {
   const { scrollContainerRef } = useScrollContainer();
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div
       className={cn(
         "h-dvh max-h-dvh min-h-dvh w-full",
-        "flex flex-col antialiased",
+        "flex overflow-hidden antialiased",
       )}
     >
       <LoadingOverlay />
-      {/* Electron: TopBar (window controls), Web: WebTopBar (mobile menu, root page only) */}
-      {isElectron ? <TopBar /> : isRootPage && <WebTopBar />}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Fixed sidebar - always visible on desktop, independent of CollapsibleSidebar state */}
-        <FixedNav />
+
+      {/* Sidebar - responsive design for desktop and mobile */}
+      <LeftMainSidebarContainer
+        isMobileOpen={isMobileMenuOpen}
+        setIsMobileOpen={setMobileMenuOpen}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Electron: TopBar (window controls) */}
+        {isElectron && <TopBar />}
+
+        {/* Mobile Header - Only visible on mobile */}
+        <MobileHeader onMenuClick={() => setMobileMenuOpen(true)} />
 
         {/* Main content area with scroll */}
         <TooltipProvider delayDuration={0}>

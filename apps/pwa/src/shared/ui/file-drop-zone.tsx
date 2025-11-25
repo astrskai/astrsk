@@ -31,38 +31,38 @@ export function FileDropZone({
     <div
       {...getRootProps()}
       className={cn(
-        "cursor-pointer rounded-lg border-2 border-dashed bg-gray-900 px-8 py-16 text-center transition-colors",
+        "cursor-pointer rounded-lg border-2 border-dashed bg-surface-raised px-8 py-16 text-center transition-colors",
         isDragReject && isDragActive
-          ? "border-status-destructive-light bg-status-destructive/10"
+          ? "border-status-error bg-status-error/10"
           : isDragActive
-            ? "border-gray-100 bg-gray-100/10"
-            : "border-gray-700 hover:border-gray-500",
+            ? "border-neutral-100 bg-neutral-100/10"
+            : "border-default hover:border-subtle",
         disabled && "cursor-not-allowed opacity-50",
         className,
       )}
     >
       <input {...getInputProps()} />
       {children || (
-        <div className="flex flex-col items-center gap-2 text-gray-300">
+        <div className="flex flex-col items-center gap-2 text-fg-muted">
           {isDragReject && isDragActive ? (
-            <FileX className="text-status-destructive-light/80 h-8 w-8" />
+            <FileX className="h-8 w-8 text-status-error/80" />
           ) : (
             <Import
               className={cn(
                 "h-8 w-8",
-                isDragActive && "animate-pulse text-gray-100",
+                isDragActive && "animate-pulse text-fg-default",
               )}
             />
           )}
           <p className="text-base">
             {isDragReject && isDragActive ? (
-              <span className="text-status-destructive-light/80">
+              <span className="text-status-error/80">
                 {maxFiles > 1
                   ? "Contains unsupported file type"
                   : "Unsupported file type"}
               </span>
             ) : isDragActive ? (
-              <span className="text-gray-100">
+              <span className="text-fg-default">
                 Drop file{maxFiles > 1 ? "s" : ""} here
               </span>
             ) : (
