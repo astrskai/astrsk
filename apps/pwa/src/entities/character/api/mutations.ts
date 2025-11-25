@@ -136,6 +136,7 @@ export const useUpdateCharacterCard = (cardId: string) => {
       conceptualOrigin?: string;
       imagePrompt?: string;
       iconAssetId?: string;
+      imageFile?: File;
       lorebookEntries?: Array<{
         id: string;
         name: string;
@@ -145,7 +146,21 @@ export const useUpdateCharacterCard = (cardId: string) => {
         content: string;
       }>;
     }) => {
-      // Use thunks to defer execution until all validation passes
+      // Step 1: Upload image if new file provided
+      let uploadedAssetId: string | undefined;
+      if (data.imageFile) {
+        const assetResult = await AssetService.saveFileToAsset.execute({
+          file: data.imageFile,
+        });
+
+        if (assetResult.isFailure) {
+          throw new Error(`Failed to upload image: ${assetResult.getError()}`);
+        }
+
+        uploadedAssetId = assetResult.getValue().id.toString();
+      }
+
+      // Step 2: Use thunks to defer execution until all validation passes
       const operations: Array<() => Promise<unknown>> = [];
 
       if (data.title !== undefined) {
@@ -217,11 +232,13 @@ export const useUpdateCharacterCard = (cardId: string) => {
           CardService.updateCardImagePrompt.execute({ cardId, imagePrompt }),
         );
       }
-      if (data.iconAssetId !== undefined) {
+      // Use uploaded asset ID if new image was uploaded, otherwise use provided iconAssetId
+      const finalIconAssetId = uploadedAssetId ?? data.iconAssetId;
+      if (finalIconAssetId !== undefined || uploadedAssetId) {
         operations.push(() =>
           CardService.updateCardIconAsset.execute({
             cardId,
-            iconAssetId: data.iconAssetId || null,
+            iconAssetId: finalIconAssetId || null,
           }),
         );
       }

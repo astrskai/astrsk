@@ -96,10 +96,10 @@ export function CharactersGridV2({ characters }: CharactersGridV2Props) {
     closeDeleteDialog,
   } = useCardActions({ entityType: "character" });
 
-  const handleCharacterClick = (characterId: string) => {
+  const handleCharacterClick = (id: string) => {
     navigate({
-      to: "/assets/characters/$characterId",
-      params: { characterId },
+      to: "/assets/characters/{-$characterId}",
+      params: { characterId: id },
     });
   };
 

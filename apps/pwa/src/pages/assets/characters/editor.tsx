@@ -29,7 +29,6 @@ import { useScrollToTop } from "@/shared/hooks/use-scroll-to-top";
 import { AccordionBase } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 import { toastSuccess, toastError } from "@/shared/ui/toast/base";
-import { AssetService } from "@/app/services/asset-service";
 
 interface LorebookEntryFormData {
   id: string;
@@ -42,7 +41,6 @@ interface LorebookEntryFormData {
 
 interface CharacterFormData {
   // CardProps
-  title: string;
   tags: string[];
   creator?: string;
   cardSummary?: string;
@@ -59,7 +57,8 @@ interface CharacterFormData {
   lorebookEntries: LorebookEntryFormData[];
 }
 
-const TAG_DEFAULT = [
+// Constants
+const TAG_DEFAULT: readonly string[] = [
   "Female",
   "Male",
   "Villain",
@@ -73,6 +72,8 @@ const TAG_DEFAULT = [
   "Historical",
   "Royalty",
 ];
+
+const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 
 const LorebookItemTitle = ({
   name,
@@ -146,20 +147,20 @@ const LorebookItemContent = ({
   register,
   errors,
   setValue,
-  getValues,
+  watch,
   trigger,
 }: {
   index: number;
   register: ReturnType<typeof useForm<CharacterFormData>>["register"];
   errors: ReturnType<typeof useForm<CharacterFormData>>["formState"]["errors"];
   setValue: ReturnType<typeof useForm<CharacterFormData>>["setValue"];
-  getValues: ReturnType<typeof useForm<CharacterFormData>>["getValues"];
+  watch: ReturnType<typeof useForm<CharacterFormData>>["watch"];
   trigger: ReturnType<typeof useForm<CharacterFormData>>["trigger"];
 }) => {
   const [newKeyword, setNewKeyword] = useState<string>("");
 
-  // Get current keys from form state
-  const currentKeys = getValues(`lorebookEntries.${index}.keys`) || [];
+  // Watch current keys for real-time updates
+  const currentKeys = watch(`lorebookEntries.${index}.keys`) || [];
 
   // Register the keys field with validation
   useEffect(() => {
@@ -173,36 +174,27 @@ const LorebookItemContent = ({
 
   const handleAddKeyword = () => {
     if (newKeyword.trim()) {
-      // Get current keys from form (fresh value)
-      const keys = getValues(`lorebookEntries.${index}.keys`) || [];
-      // Check for duplicates
-      if (keys.includes(newKeyword.trim())) {
+      // Check for duplicates using watched value
+      if (currentKeys.includes(newKeyword.trim())) {
         return; // Don't add duplicate
       }
       // Add new keyword
-      const updatedKeys = [...keys, newKeyword.trim()];
-      // Update the entire keys array
+      const updatedKeys = [...currentKeys, newKeyword.trim()];
       setValue(`lorebookEntries.${index}.keys`, updatedKeys, {
         shouldDirty: true,
         shouldValidate: true,
       });
-      // Trigger validation for this field
       trigger(`lorebookEntries.${index}.keys`);
       setNewKeyword("");
     }
   };
 
   const handleRemoveKeyword = (keyIndex: number) => {
-    // Get current keys from form (fresh value)
-    const keys = getValues(`lorebookEntries.${index}.keys`) || [];
-    const updatedKeys = [...keys];
-    updatedKeys.splice(keyIndex, 1);
-    // Update the entire keys array
+    const updatedKeys = currentKeys.filter((_, i) => i !== keyIndex);
     setValue(`lorebookEntries.${index}.keys`, updatedKeys, {
       shouldDirty: true,
       shouldValidate: true,
     });
-    // Trigger validation for this field
     trigger(`lorebookEntries.${index}.keys`);
   };
 
@@ -335,7 +327,6 @@ const CharacterEditorPage = () => {
     defaultValues: isCreateMode
       ? {
           name: "",
-          title: "",
           description: "",
           exampleDialogue: "",
           tags: [],
@@ -415,7 +406,6 @@ const CharacterEditorPage = () => {
       const initialTags = sortTags(character.props.tags || []);
 
       reset({
-        title: character.props.title || "",
         tags: initialTags,
         creator: character.props.creator || "",
         cardSummary: character.props.cardSummary || "",
@@ -478,8 +468,7 @@ const CharacterEditorPage = () => {
     const file = e.target.files?.[0];
     if (file) {
       // Only allow PNG, JPEG, or WebP for previews (disallow SVG for security)
-      const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
-      if (!allowedTypes.includes(file.type)) {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type as typeof ALLOWED_IMAGE_TYPES[number])) {
         toastError("Invalid file type", {
           description: "Only PNG, JPEG, or WebP images are allowed.",
         });
@@ -554,101 +543,56 @@ const CharacterEditorPage = () => {
     const normalizeField = (value: string | undefined) =>
       value === "" ? undefined : value;
 
+    // Build common mutation payload
+    const payload = {
+      name: data.name,
+      description: data.description,
+      exampleDialogue: normalizeField(data.exampleDialogue),
+      tags: data.tags,
+      creator: normalizeField(data.creator),
+      cardSummary: normalizeField(data.cardSummary),
+      version: normalizeField(data.version),
+      conceptualOrigin: normalizeField(data.conceptualOrigin),
+      imageFile: imageFile ?? undefined,
+      lorebookEntries: data.lorebookEntries,
+    };
+
     try {
       if (isCreateMode) {
-        // CREATE MODE
-        await createCharacterMutation.mutateAsync({
-          name: data.name,
-          description: data.description,
-          exampleDialogue: normalizeField(data.exampleDialogue),
-          tags: data.tags,
-          creator: normalizeField(data.creator),
-          cardSummary: normalizeField(data.cardSummary),
-          version: normalizeField(data.version),
-          conceptualOrigin: normalizeField(data.conceptualOrigin),
-          imageFile: imageFile ?? undefined,
-          lorebookEntries: data.lorebookEntries,
-        });
-
-        // Clear image file state after successful save
-        if (previewImage) {
-          URL.revokeObjectURL(previewImage);
-        }
-        setImageFile(null);
-        setPreviewImage(null);
-
-        // Reset form to prevent navigation block
-        reset(data);
-
+        await createCharacterMutation.mutateAsync(payload);
         toastSuccess("Character created!", {
           description: "Your character has been created successfully.",
         });
-
-        // Navigate back to characters list page
-        navigate({ to: "/assets/characters" });
       } else {
-        // EDIT MODE
-        // Upload new image if user selected one
-        let uploadedAssetId = data.iconAssetId;
-
-        if (imageFile) {
-          const assetResult = await AssetService.saveFileToAsset.execute({
-            file: imageFile,
-          });
-
-          if (assetResult.isSuccess) {
-            const asset = assetResult.getValue();
-            uploadedAssetId = asset.id.toString();
-          } else {
-            toastError("Failed to upload image", {
-              description: "Please try again",
-            });
-            return;
-          }
-        }
-
         await updateCharacterMutation.mutateAsync({
+          ...payload,
           title: data.name, // Use name as title (unified)
-          name: data.name,
-          description: data.description,
-          exampleDialogue: normalizeField(data.exampleDialogue),
-          tags: data.tags,
-          creator: normalizeField(data.creator),
-          cardSummary: normalizeField(data.cardSummary),
-          version: normalizeField(data.version),
-          conceptualOrigin: normalizeField(data.conceptualOrigin),
-          iconAssetId: uploadedAssetId,
-          lorebookEntries: data.lorebookEntries,
         });
-
-        // Clear image file state after successful save
-        // Revoke preview URL to prevent memory leak
-        if (previewImage) {
-          URL.revokeObjectURL(previewImage);
-        }
-        setImageFile(null);
-        setPreviewImage(null);
-
-        // Reset form to mark as not dirty after successful save
-        // Normalize empty strings to undefined to match initial state
-        reset({
-          ...data,
-          tags: sortTags(data.tags),
-          exampleDialogue: normalizeField(data.exampleDialogue),
-          creator: normalizeField(data.creator),
-          cardSummary: normalizeField(data.cardSummary),
-          version: normalizeField(data.version),
-          conceptualOrigin: normalizeField(data.conceptualOrigin),
-          iconAssetId: uploadedAssetId,
-        });
-
         toastSuccess("Character updated!", {
           description: "Your character has been updated successfully.",
         });
-
-        // Navigate back to characters list page
-        navigate({ to: "/assets/characters" });
       }
+
+      // Clear image file state after successful save
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+      setImageFile(null);
+      setPreviewImage(null);
+
+      // Reset form to prevent navigation block
+      reset({
+        ...data,
+        tags: sortTags(data.tags),
+        exampleDialogue: normalizeField(data.exampleDialogue),
+        creator: normalizeField(data.creator),
+        cardSummary: normalizeField(data.cardSummary),
+        version: normalizeField(data.version),
+        conceptualOrigin: normalizeField(data.conceptualOrigin),
+      });
+
+      // Navigate back to characters list page
+      navigate({ to: "/assets/characters" });
     } catch (error) {
       toastError("Failed to save character", {
         description:
@@ -675,7 +619,7 @@ const CharacterEditorPage = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/png,image/jpeg,image/webp"
         onChange={handleFileChange}
         className="hidden"
       />
@@ -940,7 +884,7 @@ const CharacterEditorPage = () => {
                       register={register}
                       errors={errors}
                       setValue={setValue}
-                      getValues={getValues}
+                      watch={watch}
                       trigger={trigger}
                     />
                   ),

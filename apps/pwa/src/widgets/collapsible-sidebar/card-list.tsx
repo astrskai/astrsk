@@ -77,7 +77,7 @@ const CardItem = ({
     // Navigate based on card type
     if (card.props.type === CardType.Character) {
       navigate({
-        to: "/assets/characters/$characterId",
+        to: "/assets/characters/{-$characterId}",
         params: { characterId: cardId.toString() },
       });
     } else if (card.props.type === CardType.Plot) {
@@ -128,16 +128,17 @@ const CardItem = ({
       setSelectedCardId(clonedCard.id.toString());
 
       // Navigate to cloned card
-      navigate({
-        to:
-          clonedCard.props.type === CardType.Character
-            ? "/assets/characters/$characterId"
-            : "/assets/scenarios/$scenarioId",
-        params:
-          clonedCard.props.type === CardType.Character
-            ? { characterId: clonedCard.id.toString() }
-            : { scenarioId: clonedCard.id.toString() },
-      });
+      if (clonedCard.props.type === CardType.Character) {
+        navigate({
+          to: "/assets/characters/{-$characterId}",
+          params: { characterId: clonedCard.id.toString() },
+        });
+      } else {
+        navigate({
+          to: "/assets/scenarios/$scenarioId",
+          params: { scenarioId: clonedCard.id.toString() },
+        });
+      }
 
       // Invalidate card queries
       queryClient.invalidateQueries({
@@ -515,7 +516,7 @@ const CardSection = ({
       setSelectedCardId(savedCard.id.toString());
 
       navigate({
-        to: "/assets/characters/$characterId",
+        to: "/assets/characters/{-$characterId}",
         params: { characterId: savedCard.id.toString() },
       });
     } catch (error) {
