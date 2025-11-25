@@ -239,11 +239,11 @@ export const useUpdateCharacterCard = (cardId: string) => {
       }
       // Use uploaded asset ID if new image was uploaded, otherwise use provided iconAssetId
       const finalIconAssetId = uploadedAssetId ?? data.iconAssetId;
-      if (finalIconAssetId !== undefined || uploadedAssetId) {
+      if (finalIconAssetId !== undefined) {
         operations.push(() =>
           CardService.updateCardIconAsset.execute({
             cardId,
-            iconAssetId: finalIconAssetId || null,
+            iconAssetId: finalIconAssetId ?? null,
           }),
         );
       }
