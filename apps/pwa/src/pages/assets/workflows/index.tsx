@@ -26,10 +26,10 @@ import {
 } from "@/shared/config/sort-options";
 
 /**
- * Flows List Page
+ * Workflows Page
  * Displays all flows with search and create functionality
  */
-export default function WorkflowsListPage() {
+export function WorkflowsPage() {
   const navigate = useNavigate();
 
   // 1. State hooks

@@ -104,15 +104,15 @@ export default function CharactersGrid({
     closeDeleteDialog,
   } = useCardActions({ entityType: "character" });
 
-  const handleCharacterClick = (characterId: string) => {
+  const handleCharacterClick = (id: string) => {
     navigate({
-      to: "/assets/characters/$characterId",
-      params: { characterId },
+      to: "/assets/characters/{-$characterId}",
+      params: { characterId: id },
     });
   };
 
   const handleCreateCharacter = () => {
-    navigate({ to: "/assets/characters/new" });
+    navigate({ to: "/assets/characters/{-$characterId}", params: { characterId: "new" } });
   };
 
   return (

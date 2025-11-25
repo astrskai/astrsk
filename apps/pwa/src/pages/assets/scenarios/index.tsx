@@ -21,10 +21,10 @@ import { useResourceImport } from "@/shared/hooks/use-resource-import";
 import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
 
 /**
- * Plots List Page
- * Displays all plot cards with search and import functionality
+ * Scenarios Page
+ * Displays all scenario cards with search and import functionality
  */
-export function PlotsListPage() {
+export function ScenariosPage() {
   const navigate = useNavigate();
 
   const [keyword, setKeyword] = useState<string>("");
@@ -49,7 +49,7 @@ export function PlotsListPage() {
     cardQueries.list({ keyword, sort: sortOption }),
   );
 
-  // Filter by plot type
+  // Filter by scenario type
   const scenarios = useMemo(() => {
     return (
       allCards?.filter((card: PlotCard) => card.props.type === CardType.Plot) ||

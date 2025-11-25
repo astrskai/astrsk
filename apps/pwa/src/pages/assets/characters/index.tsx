@@ -21,10 +21,10 @@ import { useResourceImport } from "@/shared/hooks/use-resource-import";
 import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
 
 /**
- * Characters List Page
+ * Characters Page
  * Displays all character cards with search and import functionality
  */
-export function CharactersListPage() {
+export function CharactersPage() {
   const navigate = useNavigate();
 
   const [keyword, setKeyword] = useState<string>("");
@@ -68,7 +68,11 @@ export function CharactersListPage() {
   };
 
   const handleCreateCharacter = () => {
-    navigate({ to: "/assets/characters/new" });
+    // Navigate to the unified create/edit page with "new" as special value (create mode)
+    navigate({
+      to: "/assets/characters/{-$characterId}",
+      params: { characterId: "new" },
+    });
   };
 
   return (

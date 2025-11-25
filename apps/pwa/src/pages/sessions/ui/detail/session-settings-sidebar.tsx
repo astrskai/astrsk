@@ -530,7 +530,7 @@ const SessionSettingsSidebar = ({
                   characterId={characterId}
                   onClick={() => {
                     navigate({
-                      to: "/assets/characters/$characterId",
+                      to: "/assets/characters/{-$characterId}",
                       params: { characterId: characterId.toString() },
                     });
                   }}
@@ -580,7 +580,7 @@ const SessionSettingsSidebar = ({
                 characterId={session.userCharacterCardId}
                 onClick={() => {
                   navigate({
-                    to: "/assets/characters/$characterId",
+                    to: "/assets/characters/{-$characterId}",
                     params: {
                       characterId:
                         session.userCharacterCardId?.toString() ?? "",

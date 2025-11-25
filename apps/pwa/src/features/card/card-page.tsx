@@ -77,7 +77,7 @@ export default function CardPage({ className }: { className?: string }) {
   const handleCharacterClick = (id: string) => {
     console.log("Navigate to character detail page for card:", id);
     navigate({
-      to: "/assets/characters/$characterId",
+      to: "/assets/characters/{-$characterId}",
       params: { characterId: id },
     });
   };
