@@ -1,21 +1,19 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ListPageHeader } from "@/widgets/list-page-header";
-import { ASSET_TABS } from "@/shared/config/asset-tabs";
+import { ListPageHeader } from "@/widgets/header";
 import {
   SORT_OPTIONS,
   DEFAULT_SORT_VALUE,
   type SortOptionValue,
 } from "@/shared/config/sort-options";
-import { CharactersGrid } from "./ui/list";
+import { CharactersGridV2 } from "./ui/list/characters-grid-v2";
 import {
   HelpVideoDialog,
   Loading,
   SearchEmptyState,
   EmptyState,
 } from "@/shared/ui";
-import { Select } from "@/shared/ui/forms";
 import { cardQueries } from "@/entities/card/api";
 import { CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
@@ -60,20 +58,9 @@ export function CharactersListPage() {
     );
   }, [allCards]);
 
-  const handleSortOptionChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    setSortOption(event.target.value);
-  };
-
   // Event handlers
   const handleImport = () => {
     triggerImport();
-  };
-
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log("Export clicked for: characters");
   };
 
   const handleHelpClick = () => {
@@ -95,16 +82,18 @@ export function CharactersListPage() {
         className="hidden"
       />
 
-      {/* Header - Sticky */}
+      {/* Header */}
       <ListPageHeader
         title="Characters"
-        tabs={ASSET_TABS}
-        activeTab="character"
         keyword={keyword}
         onKeywordChange={setKeyword}
         onImportClick={handleImport}
-        onExportClick={handleExport}
         onHelpClick={handleHelpClick}
+        createLabel="New Character"
+        onCreateClick={handleCreateCharacter}
+        sortOptions={SORT_OPTIONS}
+        sortValue={sortOption}
+        onSortChange={setSortOption}
       />
 
       {/* Import Flow Dialog - for JSON imports */}
@@ -124,7 +113,7 @@ export function CharactersListPage() {
       />
 
       {/* Content */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-4">
+      <div className="flex w-full flex-1 flex-col gap-4 p-4 md:p-8">
         {isLoadingCards ? (
           <Loading />
         ) : keyword && characters.length === 0 ? (
@@ -140,30 +129,7 @@ export function CharactersListPage() {
             onButtonClick={handleCreateCharacter}
           />
         ) : (
-          <>
-            {/* Sort Controls */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-200">
-                <span className="font-semibold text-gray-50">
-                  {characters.length}
-                </span>{" "}
-                {characters.length === 1 ? "character" : "characters"}
-              </span>
-              <Select
-                options={SORT_OPTIONS}
-                value={sortOption}
-                onChange={handleSortOptionChange}
-                selectSize="sm"
-                className="w-[150px] md:w-[180px]"
-              />
-            </div>
-
-            {/* Characters Grid */}
-            <CharactersGrid
-              characters={characters}
-              showNewCharacterCard={!keyword}
-            />
-          </>
+          <CharactersGridV2 characters={characters} />
         )}
       </div>
     </div>

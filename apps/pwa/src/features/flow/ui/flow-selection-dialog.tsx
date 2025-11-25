@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button, SearchInput } from "@/shared/ui/forms";
-import FlowPreview from "@/features/flow/ui/flow-preview";
+import WorkflowCard from "@/features/flow/ui/workflow-card";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { Flow } from "@/entities/flow/domain/flow";
 import { cn } from "@/shared/lib";
@@ -27,8 +27,8 @@ export function FlowSelectionDialog({
   onOpenChange,
   selectedFlow,
   onConfirm,
-  title = "Select Flow",
-  description = "Choose a flow to use for this session",
+  title = "Select Workflow",
+  description = "Choose a workflow to use for this session",
   confirmButtonText = "Add",
 }: FlowSelectionDialogProps) {
   const [searchKeyword, setSearchKeyword] = useState<string>("");
@@ -105,11 +105,11 @@ export function FlowSelectionDialog({
       isShowCloseButton={false}
       size="2xl"
       content={
-        <div className="flex h-[70dvh] max-h-[70dvh] flex-col gap-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Search Input */}
           <SearchInput
             name="flow-search"
-            placeholder="Search flows..."
+            placeholder="Search workflows..."
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             className="w-full max-w-md flex-shrink-0"
@@ -123,13 +123,19 @@ export function FlowSelectionDialog({
                 const isSelected = tempSelectedId === flowId;
 
                 return (
-                  <FlowPreview
+                  <WorkflowCard
                     key={flowId}
                     title={flow.props.name || "Untitled Flow"}
                     description={flow.props.description}
                     nodeCount={flow.props.nodes.length}
+                    // TODO: Add tags when FlowProps supports it
+                    // tags={flow.props.tags || []}
                     onClick={() => handleFlowClick(flowId)}
-                    className={cn(isSelected && "!border-blue-200 shadow-lg")}
+                    className={cn(
+                      isSelected
+                        ? "border-brand-500 hover:border-brand-400 border-2 shadow-lg"
+                        : "border-2 border-transparent",
+                    )}
                   />
                 );
               })}
@@ -137,32 +143,34 @@ export function FlowSelectionDialog({
 
             {/* Empty State */}
             {filteredFlows.length === 0 && (
-              <div className="text-text-secondary flex flex-col items-center justify-center py-12 text-center">
+              <div className="text-fg-muted flex flex-col items-center justify-center py-12 text-center">
                 {searchKeyword ? (
                   <>
-                    <p className="mb-2 text-lg">No flows found</p>
+                    <p className="mb-2 text-lg">No workflows found</p>
                     <p className="text-sm">Try a different search term</p>
                   </>
                 ) : (
                   <>
-                    <p className="mb-2 text-lg">No flows available</p>
-                    <p className="text-sm">Create a flow first to continue</p>
+                    <p className="mb-2 text-lg">No workflows available</p>
+                    <p className="text-sm">
+                      Create a workflow first to continue
+                    </p>
                   </>
                 )}
               </div>
             )}
           </div>
-
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-2 border-t border-gray-700 pt-4">
-            <Button variant="ghost" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleConfirm}>
-              {confirmButtonText}
-              {tempSelectedId ? " (1)" : ""}
-            </Button>
-          </div>
+        </div>
+      }
+      footer={
+        <div className="flex justify-end gap-2 border-t border-border-muted pt-4">
+          <Button variant="ghost" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm}>
+            {confirmButtonText}
+            {tempSelectedId ? " (1)" : ""}
+          </Button>
         </div>
       }
     />

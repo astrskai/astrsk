@@ -1,21 +1,19 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ListPageHeader } from "@/widgets/list-page-header";
-import { ASSET_TABS } from "@/shared/config/asset-tabs";
+import { ListPageHeader } from "@/widgets/header";
 import {
   SORT_OPTIONS,
   DEFAULT_SORT_VALUE,
   type SortOptionValue,
 } from "@/shared/config/sort-options";
-import { ScenariosGrid } from "./ui/list";
+import { ScenariosGridV2 } from "./ui/list/scenarios-grid-v2";
 import {
   HelpVideoDialog,
   Loading,
   SearchEmptyState,
   EmptyState,
 } from "@/shared/ui";
-import { Select } from "@/shared/ui/forms";
 import { cardQueries } from "@/entities/card/api";
 import { CardType } from "@/entities/card/domain";
 import { PlotCard } from "@/entities/card/domain/plot-card";
@@ -59,20 +57,9 @@ export function PlotsListPage() {
     );
   }, [allCards]);
 
-  const handleSortOptionChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    setSortOption(event.target.value);
-  };
-
   // Event handlers
   const handleImport = () => {
     triggerImport();
-  };
-
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log("Export clicked for: plots");
   };
 
   const handleHelpClick = () => {
@@ -97,13 +84,15 @@ export function PlotsListPage() {
       {/* Header */}
       <ListPageHeader
         title="Scenarios"
-        tabs={ASSET_TABS}
-        activeTab="scenario"
         keyword={keyword}
         onKeywordChange={setKeyword}
         onImportClick={handleImport}
-        onExportClick={handleExport}
         onHelpClick={handleHelpClick}
+        createLabel="New Scenario"
+        onCreateClick={handleCreateScenario}
+        sortOptions={SORT_OPTIONS}
+        sortValue={sortOption}
+        onSortChange={setSortOption}
       />
 
       {/* Import Flow Dialog - for JSON imports */}
@@ -123,7 +112,7 @@ export function PlotsListPage() {
       />
 
       {/* Content */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-4">
+      <div className="flex w-full flex-1 flex-col gap-4 p-4 md:p-8">
         {isLoadingCards ? (
           <Loading />
         ) : keyword && scenarios.length === 0 ? (
@@ -136,28 +125,7 @@ export function PlotsListPage() {
             onButtonClick={handleCreateScenario}
           />
         ) : (
-          <>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-200">
-                <span className="font-semibold text-gray-50">
-                  {scenarios.length}
-                </span>{" "}
-                {scenarios.length === 1 ? "scenario" : "scenarios"}
-              </span>
-              <Select
-                options={SORT_OPTIONS}
-                value={sortOption}
-                onChange={handleSortOptionChange}
-                selectSize="sm"
-                className="w-[150px] md:w-[180px]"
-              />
-            </div>
-
-            <ScenariosGrid
-              scenarios={scenarios}
-              showNewScenarioCard={!keyword}
-            />
-          </>
+          <ScenariosGridV2 scenarios={scenarios} />
         )}
       </div>
     </div>

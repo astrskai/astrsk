@@ -192,11 +192,18 @@ export class Session extends AggregateRoot<SessionProps> {
     this.props.title = name;
   }
 
-  public addCard(cardId: UniqueEntityID, cardType: CardType): Result<void> {
+  public addCard(
+    cardId: UniqueEntityID,
+    cardType: CardType,
+  ): Result<void> {
     if (cardType === CardType.Plot && this.plotCard) {
       return Result.fail("Plot card already exists");
     }
-    this.props.allCards.push({ id: cardId, type: cardType, enabled: true });
+    this.props.allCards.push({
+      id: cardId,
+      type: cardType,
+      enabled: true,
+    });
     return Result.ok();
   }
 

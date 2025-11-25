@@ -67,7 +67,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           {SelectedIcon && (
             <SelectedIcon
               className={cn(
-                "pointer-events-none absolute top-1/2 -translate-y-1/2 text-gray-50",
+                "pointer-events-none absolute top-1/2 -translate-y-1/2 text-neutral-100",
                 iconSize,
                 iconLeftPosition,
               )}
@@ -81,7 +81,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             required={required}
             className={cn(
               // Base styles
-              "w-full appearance-none rounded-lg border bg-gray-800 text-gray-50 transition-colors focus:ring-2 focus:outline-none",
+              "w-full appearance-none rounded-lg border bg-neutral-800 text-neutral-100 transition-colors focus:ring-2 focus:outline-none",
               // Size styles
               {
                 "py-1.5 text-sm": selectSize === "sm",
@@ -102,12 +102,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                   },
               // Border and focus styles
               error
-                ? "border-status-destructive-light focus:border-status-destructive-light focus:ring-status-destructive-light/20"
-                : "focus:border-primary-normal focus:ring-primary-normal/20 border-gray-500",
+                ? "border-status-error focus:border-status-error focus:ring-status-error/20"
+                : "border-neutral-600 focus:border-brand-500 focus:ring-brand-500/20",
               // Disabled styles
               "disabled:cursor-not-allowed disabled:opacity-50",
               // Placeholder styles
-              !value && "text-text-placeholder",
+              !value && "text-neutral-500",
             )}
             {...props}
           >
@@ -120,7 +120,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           {/* Chevron icon */}
           <ChevronDown
             className={cn(
-              "pointer-events-none absolute top-1/2 -translate-y-1/2 text-gray-50",
+              "pointer-events-none absolute top-1/2 -translate-y-1/2 text-neutral-400",
               iconSize,
               iconRightPosition,
             )}
@@ -128,11 +128,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         </div>
         {/* Error message */}
         {error && (
-          <p className="text-status-destructive-light mt-1 text-xs">{error}</p>
+          <p className="mt-1 text-xs text-status-error">{error}</p>
         )}
         {/* Helper text */}
         {!error && helperText && (
-          <p className="text-text-secondary mt-1 text-xs">{helperText}</p>
+          <p className="mt-1 text-xs text-neutral-400">{helperText}</p>
         )}
       </div>
     );
@@ -147,11 +147,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       <div className="flex flex-col gap-2">
         <label
           htmlFor={selectId}
-          className="text-text-body flex items-center gap-1.5 text-sm font-medium"
+          className="flex items-center gap-1.5 text-sm font-medium text-neutral-200"
         >
           <span>
             {label}
-            {required && <span className="text-status-required ml-1">*</span>}
+            {required && <span className="ml-1 text-accent-purple">*</span>}
           </span>
         </label>
         {selectElement}

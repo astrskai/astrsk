@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Trash2, BookOpen } from "lucide-react";
-import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
+import ScenarioCardUI from "@/features/scenario/ui/scenario-card";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
-import type { CharacterAction } from "@/features/character/model/character-actions";
+import type { CardAction } from "@/features/common/ui";
 import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
 
 interface ScenarioSelectionStepProps {
@@ -29,7 +29,7 @@ const SelectedScenarioCard = ({
 }: SelectedScenarioCardProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
-  const actions: CharacterAction[] = [
+  const actions: CardAction[] = [
     {
       icon: Trash2,
       label: `Remove`,
@@ -37,12 +37,12 @@ const SelectedScenarioCard = ({
         e.stopPropagation();
         onRemove(e);
       },
-      bottomActionsClassName: "block md:hidden",
+      className: "text-red-400 hover:text-red-300",
     },
   ];
 
   return (
-    <ScenarioPreview
+    <ScenarioCardUI
       imageUrl={imageUrl}
       title={card.props.title}
       summary={card.props.cardSummary}
@@ -50,10 +50,7 @@ const SelectedScenarioCard = ({
       tokenCount={card.props.tokenCount}
       firstMessages={card.props.scenarios?.length || 0}
       actions={actions}
-      isShowActions={true}
-      bottomActions={actions}
       onClick={onClick}
-      moreActionsClassName="hidden"
     />
   );
 };
@@ -91,15 +88,17 @@ export default function ScenarioSelectionStep({
       </div>
 
       {/* Selected Scenario Display */}
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-        {selectedScenario ? (
+      {selectedScenario ? (
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-4">
           <SelectedScenarioCard
             card={selectedScenario}
             onClick={handleAddScenarioClick}
             onRemove={handleRemoveScenario}
           />
-        ) : (
-          /* Empty State - Show Select Button Card */
+        </div>
+      ) : (
+        /* Empty State - Show Select Button Card */
+        <div className="mx-auto w-full max-w-2xl">
           <div
             onClick={handleAddScenarioClick}
             className={cn(
@@ -118,8 +117,8 @@ export default function ScenarioSelectionStep({
               </p>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Scenario Selection Dialog */}
       <ScenarioSelectionDialog

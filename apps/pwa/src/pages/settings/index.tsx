@@ -83,24 +83,10 @@ const SettingsSectionComponent = ({
 
 export default function SettingsPage() {
   // 1. State hooks
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // 2. Context hooks
   const navigate = useNavigate();
-
-  // Close mobile menu when viewport changes to desktop size
-  useEffect(() => {
-    const handleResize = () => {
-      // Close menu when viewport width is >= 768px (md breakpoint)
-      if (window.innerWidth >= 768 && isMobileMenuOpen) {
-        setIsMobileMenuOpen(false);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [isMobileMenuOpen]);
 
   // 3. Event handlers
   // Sign up with SSO
@@ -194,19 +180,9 @@ export default function SettingsPage() {
 
   return (
     <>
-      {/* Mobile Menu Drawer */}
-      <MobileMenuDrawer
-        open={isMobileMenuOpen}
-        onOpenChange={setIsMobileMenuOpen}
-      />
-
       <div className="flex h-full flex-col overflow-hidden">
-        {/* Mobile Header - settings root only (with menu button) */}
-        <div className="md:hidden">
-          <TopNavigation
-            title="Settings"
-            onMenuClick={() => setIsMobileMenuOpen(true)}
-          />
+        <div className="text-text-primary p-4 text-2xl font-semibold">
+          Settings
         </div>
 
         {/* Content */}
@@ -230,11 +206,11 @@ export default function SettingsPage() {
                   ))}
                 </Authenticated>
                 <Unauthenticated>
-                  {/* <SettingsMenuItemComponent
+                  <SettingsMenuItemComponent
                     label="Sign in"
                     onClick={signUpWithDiscord}
                     showChevron={true}
-                  /> */}
+                  />
                   <SettingsMenuItemComponent
                     label="Providers"
                     onClick={() => navigate({ to: "/settings/providers" })}

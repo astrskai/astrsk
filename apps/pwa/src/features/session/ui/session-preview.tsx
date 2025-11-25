@@ -1,5 +1,10 @@
 import { cn } from "@/shared/lib";
-import { MessageCircle, CircleAlert, EllipsisVertical } from "lucide-react";
+import {
+  MessageCircle,
+  CircleAlert,
+  EllipsisVertical,
+  User,
+} from "lucide-react";
 import { SessionPlaceholder } from "@/shared/assets/placeholders";
 import {
   DropdownMenu,
@@ -7,25 +12,48 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { useAsset } from "@/shared/hooks/use-asset";
+import type { CardAction } from "@/features/common/ui";
 
-export interface SessionAction {
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  label: string;
-  onClick: (e: React.MouseEvent) => void;
-  disabled?: boolean;
-  loading?: boolean;
+interface CharacterAvatar {
+  name: string;
+  iconAssetId?: string;
 }
+
+/**
+ * Character Avatar Component
+ * Displays character avatar with useAsset hook
+ */
+const CharacterAvatarImage = ({ iconAssetId, name }: CharacterAvatar) => {
+  // Convert string to UniqueEntityID if exists
+  const assetId = iconAssetId ? { toString: () => iconAssetId } : undefined;
+  const [imageUrl] = useAsset(assetId as any);
+
+  return (
+    <div
+      className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-gray-700 bg-gray-800"
+      title={name}
+    >
+      {imageUrl ? (
+        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+      ) : (
+        <User className="h-4 w-4 text-gray-500" />
+      )}
+    </div>
+  );
+};
 
 interface SessionPreviewProps {
   title: string;
   imageUrl?: string | null;
   messageCount?: number;
   isInvalid?: boolean;
-  actions?: SessionAction[];
+  actions?: CardAction[];
   className?: string;
   isShowActions?: boolean;
   isDisabled?: boolean;
   onClick?: () => void;
+  characterAvatars?: CharacterAvatar[];
 }
 
 const SessionPreview = ({
@@ -38,6 +66,7 @@ const SessionPreview = ({
   isShowActions = false,
   isDisabled = false,
   onClick,
+  characterAvatars = [],
 }: SessionPreviewProps) => {
   return (
     <article
@@ -192,6 +221,24 @@ const SessionPreview = ({
               </>
             )}
           </div>
+
+          {/* Character Avatars */}
+          {characterAvatars.length > 0 && (
+            <div className="flex items-center gap-1">
+              {characterAvatars.slice(0, 3).map((avatar, idx) => (
+                <CharacterAvatarImage
+                  key={`${avatar.iconAssetId}-${idx}`}
+                  iconAssetId={avatar.iconAssetId}
+                  name={avatar.name}
+                />
+              ))}
+              {characterAvatars.length > 3 && (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-700 bg-gray-800 text-xs text-gray-400">
+                  +{characterAvatars.length - 3}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </article>

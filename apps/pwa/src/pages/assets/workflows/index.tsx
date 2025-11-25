@@ -3,19 +3,17 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { FlowsGrid } from "./ui/list";
+import { WorkflowsGridV2 } from "./ui/list/workflows-grid-v2";
 import { CreateFlowDialog } from "./ui/create";
 import { FlowImportDialog } from "./ui/dialog/flow-import-dialog";
 
-import { ListPageHeader } from "@/widgets/list-page-header";
-import { ASSET_TABS } from "@/shared/config/asset-tabs";
+import { ListPageHeader } from "@/widgets/header";
 import {
   HelpVideoDialog,
   Loading,
   SearchEmptyState,
   EmptyState,
 } from "@/shared/ui";
-import { Select } from "@/shared/ui/forms";
 import { Flow } from "@/entities/flow/domain/flow";
 import { flowQueries } from "@/entities/flow/api";
 import { FlowService } from "@/app/services/flow-service";
@@ -60,12 +58,6 @@ export default function WorkflowsListPage() {
   const { data: workflows = [], isLoading: isLoadingFlows } = useQuery(
     flowQueries.list({ keyword, sort: sortOption }),
   );
-
-  const handleSortOptionChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    setSortOption(event.target.value);
-  };
 
   // 4. Memoized callbacks - functions passed as props to child components
   const handleCreateFlow = useCallback(
@@ -135,11 +127,6 @@ export default function WorkflowsListPage() {
     setIsOpenCreateDialog(true);
   };
 
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log("Export clicked for: flows");
-  };
-
   const handleHelpClick = () => {
     setIsOpenHelpDialog(true);
   };
@@ -158,13 +145,15 @@ export default function WorkflowsListPage() {
       {/* Header */}
       <ListPageHeader
         title="Workflows"
-        tabs={ASSET_TABS}
-        activeTab="workflow"
         keyword={keyword}
         onKeywordChange={setKeyword}
         onImportClick={handleImportClick}
-        onExportClick={handleExport}
         onHelpClick={handleHelpClick}
+        createLabel="New Workflow"
+        onCreateClick={handleCreateClick}
+        sortOptions={SORT_OPTIONS}
+        sortValue={sortOption}
+        onSortChange={setSortOption}
       />
 
       {/* Create Flow Dialog */}
@@ -191,7 +180,7 @@ export default function WorkflowsListPage() {
       />
 
       {/* Content */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-4">
+      <div className="flex w-full flex-1 flex-col gap-4 p-4 md:p-8">
         {isLoadingFlows ? (
           <Loading />
         ) : keyword && workflows.length === 0 ? (
@@ -204,31 +193,10 @@ export default function WorkflowsListPage() {
             onButtonClick={handleCreateClick}
           />
         ) : (
-          <>
-            {/* Sort Controls */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-200">
-                <span className="font-semibold text-gray-50">
-                  {workflows.length}
-                </span>{" "}
-                {workflows.length === 1 ? "workflow" : "workflows"}
-              </span>
-              <Select
-                options={SORT_OPTIONS}
-                value={sortOption}
-                onChange={handleSortOptionChange}
-                selectSize="sm"
-                className="w-[150px] md:w-[180px]"
-              />
-            </div>
-
-            <FlowsGrid
-              flows={workflows}
-              onCreateFlow={handleCreateClick}
-              showNewFlowCard={!keyword}
-              newlyCreatedFlowId={newlyCreatedFlowId}
-            />
-          </>
+          <WorkflowsGridV2
+            flows={workflows}
+            newlyCreatedFlowId={newlyCreatedFlowId}
+          />
         )}
       </div>
     </div>

@@ -3,7 +3,6 @@
 /* Dockview core styles */
 @import "dockview-core/dist/styles/dockview.css";
 
-@import "tailwindcss";
 @import "tw-animate-css";
 
 @theme {
@@ -979,15 +978,16 @@
 
 /* Global scrollbar styles - applied to all scrollable elements */
 *::-webkit-scrollbar {
-  @apply w-2;
+  width: 0.5rem; /* w-2 */
 }
 
 *::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background-color: transparent;
 }
 
 *::-webkit-scrollbar-thumb {
-  @apply rounded bg-white/50;
+  border-radius: 0.25rem; /* rounded */
+  background-color: rgb(255 255 255 / 0.5); /* bg-white/50 */
 }
 
 /* chat message list scrollbar */

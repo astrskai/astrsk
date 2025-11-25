@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { UserIcon, Trash2 } from "lucide-react";
-import CharacterPreview from "@/features/character/ui/character-preview";
+import CharacterCardUI from "@/features/character/ui/character-card";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
-import type { CharacterAction } from "@/features/character/model/character-actions";
+import type { CardAction } from "@/features/common/ui";
 import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
 
 interface UserCharacterSelectionStepProps {
@@ -30,7 +30,7 @@ const SelectedCharacterCard = ({
 }: SelectedCharacterCardProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
-  const actions: CharacterAction[] = [
+  const actions: CardAction[] = [
     {
       icon: Trash2,
       label: `Remove`,
@@ -38,22 +38,18 @@ const SelectedCharacterCard = ({
         e.stopPropagation();
         onRemove(e);
       },
-      bottomActionsClassName: "block md:hidden",
     },
   ];
 
   return (
-    <CharacterPreview
+    <CharacterCardUI
       imageUrl={imageUrl}
       name={card.props.name || ""}
       summary={card.props.cardSummary}
       tags={card.props.tags || []}
       tokenCount={card.props.tokenCount}
       actions={actions}
-      isShowActions={true}
-      bottomActions={actions}
       onClick={onClick}
-      moreActionsClassName="hidden"
     />
   );
 };
@@ -98,15 +94,17 @@ export default function UserCharacterSelectionStep({
       </div>
 
       {/* Selected Character Display */}
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-        {selectedUserCharacter ? (
+      {selectedUserCharacter ? (
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-4">
           <SelectedCharacterCard
             card={selectedUserCharacter}
             onClick={handleAddUserCharacterClick}
             onRemove={handleRemoveUserCharacter}
           />
-        ) : (
-          /* Empty State - Show Select Button Card */
+        </div>
+      ) : (
+        /* Empty State - Show Select Button Card */
+        <div className="mx-auto w-full max-w-2xl">
           <div
             onClick={handleAddUserCharacterClick}
             className={cn(
@@ -125,8 +123,8 @@ export default function UserCharacterSelectionStep({
               </p>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* User Character Selection Dialog */}
       <CharacterSelectionDialog

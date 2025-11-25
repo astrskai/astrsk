@@ -86,7 +86,6 @@ export async function initServices(
     );
     SessionService.init(
       TurnService.turnRepo,
-      CardService.getCard,
       FlowService.exportFlowWithNodes,
       CardService.exportCardToFile,
       BackgroundService.getBackground,
@@ -95,7 +94,6 @@ export async function initServices(
       FlowService.importFlowWithNodes,
       CardService.importCardFromFile,
       BackgroundService.saveFileToBackground,
-      FlowService.flowRepo,
       FlowService.getModelsFromFlowFile,
     );
     onProgress?.(currentService, "success");

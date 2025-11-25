@@ -122,7 +122,7 @@ const FirstMessageItemTitle = ({
           tabIndex={0}
           onClick={handleCopy}
           onKeyDown={handleCopyKeyDown}
-          className="cursor-pointer text-gray-500 hover:text-gray-400"
+          className="cursor-pointer text-neutral-500 hover:text-neutral-400"
           aria-label="Copy first message"
         >
           <Copy className="h-4 w-4" />
@@ -133,7 +133,7 @@ const FirstMessageItemTitle = ({
           tabIndex={0}
           onClick={handleDelete}
           onKeyDown={handleDeleteKeyDown}
-          className="cursor-pointer text-gray-500 hover:text-gray-400"
+          className="cursor-pointer text-neutral-500 hover:text-neutral-400"
           aria-label="Delete first message"
         >
           <Trash2 className="h-4 w-4" />
@@ -224,7 +224,7 @@ const LorebookItemTitle = ({
           tabIndex={0}
           onClick={handleCopy}
           onKeyDown={handleCopyKeyDown}
-          className="cursor-pointer text-gray-500 hover:text-gray-400"
+          className="cursor-pointer text-neutral-500 hover:text-neutral-400"
           aria-label="Copy lorebook entry"
         >
           <Copy className="h-4 w-4" />
@@ -235,7 +235,7 @@ const LorebookItemTitle = ({
           tabIndex={0}
           onClick={handleDelete}
           onKeyDown={handleDeleteKeyDown}
-          className="cursor-pointer text-gray-500 hover:text-gray-400"
+          className="cursor-pointer text-neutral-500 hover:text-neutral-400"
           aria-label="Delete lorebook entry"
         >
           <Trash2 className="h-4 w-4" />
@@ -347,13 +347,13 @@ const LorebookItemContent = ({
             {currentKeys.map((key, keyIndex) => (
               <li
                 key={`${index}-${key}-${keyIndex}`}
-                className="bg-background-primary flex items-center justify-between gap-2 rounded-md px-2 py-1 text-sm text-gray-50"
+                className="flex items-center justify-between gap-2 rounded-md bg-neutral-800 px-2 py-1 text-sm text-neutral-100"
               >
-                <span className="text-xs text-gray-200">{key}</span>
+                <span className="text-xs text-neutral-200">{key}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveKeyword(keyIndex)}
-                  className="text-gray-500 hover:text-gray-400"
+                  className="text-neutral-500 hover:text-neutral-400"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -736,7 +736,7 @@ const ScenarioDetailPage = () => {
           e.preventDefault();
         }
       }}
-      className="w-full bg-gray-900"
+      className="w-full bg-neutral-900"
     >
       <input
         ref={fileInputRef}
@@ -746,7 +746,7 @@ const ScenarioDetailPage = () => {
         className="hidden"
       />
 
-      <div className="sticky top-0 z-10 flex items-center justify-between bg-gray-800 px-4 py-2">
+      <div className="sticky top-0 z-10 flex items-center justify-between bg-neutral-800 px-4 py-2">
         <div className="flex items-center gap-4">
           <Button
             variant="secondary"
@@ -759,10 +759,10 @@ const ScenarioDetailPage = () => {
         </div>
         <div className="flex items-center gap-3">
           {isDirty && (
-            <span className="flex items-center gap-2 text-xs text-yellow-500">
+            <span className="text-status-warning flex items-center gap-2 text-xs">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-yellow-400 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-yellow-500"></span>
+                <span className="bg-status-warning absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
+                <span className="bg-status-warning relative inline-flex h-2 w-2 rounded-full"></span>
               </span>
               <span className="hidden sm:inline">Unsaved changes</span>
             </span>
@@ -790,7 +790,7 @@ const ScenarioDetailPage = () => {
               <button
                 type="button"
                 onClick={handleUploadImage}
-                className="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full border border-gray-500 bg-gray-900 text-white shadow-md transition-colors hover:bg-gray-700"
+                className="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full border border-neutral-600 bg-neutral-900 text-white shadow-md transition-colors hover:bg-neutral-700"
                 aria-label="Edit image"
               >
                 <Pencil className="h-4 w-4" />
@@ -800,7 +800,7 @@ const ScenarioDetailPage = () => {
             <button
               type="button"
               onClick={handleUploadImage}
-              className="flex h-[200px] w-[200px] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-500 bg-gray-800 text-gray-400 transition-colors hover:border-gray-400 hover:bg-gray-700 hover:text-gray-300"
+              className="flex h-[200px] w-[200px] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-neutral-600 bg-neutral-800 text-neutral-400 transition-colors hover:border-neutral-500 hover:bg-neutral-700 hover:text-neutral-300"
             >
               <Upload className="h-8 w-8" />
               <span className="text-sm">Add scenario image</span>
@@ -808,7 +808,7 @@ const ScenarioDetailPage = () => {
           )}
 
           <div className="space-y-4">
-            <h2 className="text-text-primary text-base font-semibold">
+            <h2 className="text-base font-semibold text-neutral-100">
               Metadata
             </h2>
 
@@ -831,7 +831,7 @@ const ScenarioDetailPage = () => {
                   maxLength={50}
                   error={errors.cardSummary?.message}
                 />
-                <div className="text-text-secondary px-2 text-left text-xs">
+                <div className="px-2 text-left text-xs text-neutral-400">
                   {`(${cardSummary.length}/50)`}
                 </div>
               </div>
@@ -855,7 +855,7 @@ const ScenarioDetailPage = () => {
             </div>
 
             <div className="flex flex-col gap-2">
-              <h3 className="text-xs text-gray-200">Tags</h3>
+              <h3 className="text-xs text-neutral-200">Tags</h3>
 
               <div className="flex flex-wrap gap-2">
                 {TAG_DEFAULT.map((tag, index) => {
@@ -873,8 +873,8 @@ const ScenarioDetailPage = () => {
                       }
                       className={`rounded-md p-1 text-xs font-medium shadow-sm transition-colors md:px-2 md:py-1 md:text-sm ${
                         isSelected
-                          ? "bg-blue-200 text-blue-900"
-                          : "bg-gray-800 text-gray-50 hover:bg-gray-700"
+                          ? "bg-brand-500/20 text-brand-400"
+                          : "bg-neutral-800 text-neutral-100 hover:bg-neutral-700"
                       }`}
                     >
                       {tag}
@@ -888,7 +888,7 @@ const ScenarioDetailPage = () => {
                   .map((tag, index) => (
                     <span
                       key={`custom-${tag}-${index}`}
-                      className="flex items-center gap-2 rounded-md bg-blue-200 p-1 text-xs font-medium text-blue-900 md:px-2 md:py-1 md:text-sm"
+                      className="bg-brand-500/20 text-brand-400 flex items-center gap-2 rounded-md p-1 text-xs font-medium md:px-2 md:py-1 md:text-sm"
                     >
                       {tag}
                       <button
@@ -898,7 +898,7 @@ const ScenarioDetailPage = () => {
                             current.filter((t) => t !== tag),
                           )
                         }
-                        className="hover:text-gray-200"
+                        className="hover:text-brand-300"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -935,7 +935,7 @@ const ScenarioDetailPage = () => {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-text-primary text-base font-semibold">
+          <h2 className="text-base font-semibold text-neutral-100">
             Scenario Info
           </h2>
 
@@ -953,7 +953,7 @@ const ScenarioDetailPage = () => {
 
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-text-primary text-base font-semibold">
+            <h2 className="text-base font-semibold text-neutral-100">
               First Messages
             </h2>
 
@@ -969,7 +969,7 @@ const ScenarioDetailPage = () => {
           </div>
 
           {firstMessageFields.length === 0 ? (
-            <p className="text-text-secondary text-sm">
+            <p className="text-sm text-neutral-400">
               No first messages yet. Add one to get started.
             </p>
           ) : (
@@ -1004,7 +1004,7 @@ const ScenarioDetailPage = () => {
 
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-text-primary text-base font-semibold">
+            <h2 className="text-base font-semibold text-neutral-100">
               Lorebook
             </h2>
 
@@ -1020,7 +1020,7 @@ const ScenarioDetailPage = () => {
           </div>
 
           {lorebookFields.length === 0 ? (
-            <p className="text-text-secondary text-sm">
+            <p className="text-sm text-neutral-400">
               No lorebook entries yet. Add one to get started.
             </p>
           ) : (

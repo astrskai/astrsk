@@ -8,7 +8,6 @@ import {
   SearchableSidebar,
   SessionListItem,
 } from "@/widgets/searchable-sidebar";
-import { InitialScreen } from "@/shared/ui/initial-screen";
 import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
 import { Route } from "@/routes/_layout/sessions/$sessionId";
@@ -154,11 +153,6 @@ export default function SessionDetailPage({
 
         {/* Main Content */}
         <div className="flex flex-1 flex-col bg-transparent">
-          {/* No selected session */}
-          {selectedSessionId === null && sessions.length === 0 && (
-            <InitialScreen />
-          )}
-
           {/* Session content */}
           <SessionContent
             onAddPlotCard={onAddPlotCard}

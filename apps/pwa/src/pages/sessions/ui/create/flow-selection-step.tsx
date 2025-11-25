@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import FlowPreview from "@/features/flow/ui/flow-preview";
+import WorkflowCard from "@/features/flow/ui/workflow-card";
 import { Flow } from "@/entities/flow/domain/flow";
 import { IconWorkflow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
-import type { FlowAction } from "@/features/flow/ui/flow-preview";
+import type { CardAction } from "@/features/common/ui";
 import { FlowSelectionDialog } from "@/features/flow/ui/flow-selection-dialog";
 
 interface FlowSelectionStepProps {
@@ -27,17 +27,14 @@ export function FlowSelectionStep({
     setIsDialogOpen(true);
   };
 
-  const handleRemoveFlow = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onFlowSelected(null);
-  };
-
-  const bottomActions: FlowAction[] = [
+  const actions: CardAction[] = [
     {
       icon: Trash2,
-      label: `Remove`,
-      onClick: handleRemoveFlow,
-      bottomActionsClassName: "block md:hidden",
+      label: "Remove",
+      onClick: (e) => {
+        e.stopPropagation();
+        onFlowSelected(null);
+      },
     },
   ];
 
@@ -57,21 +54,14 @@ export function FlowSelectionStep({
       {/* Selected Flow Display */}
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         {selectedFlow ? (
-          <FlowPreview
+          <WorkflowCard
             title={selectedFlow.props.name || "Untitled Flow"}
             description={selectedFlow.props.description}
             nodeCount={selectedFlow.props.nodes.length}
+            // TODO: Add tags when FlowProps supports it
+            // tags={selectedFlow.props.tags || []}
             onClick={handleAddFlowClick}
-            actions={[
-              {
-                icon: Trash2,
-                label: `Remove ${selectedFlow.props.name || "flow"}`,
-                onClick: handleRemoveFlow,
-              },
-            ]}
-            bottomActions={bottomActions}
-            moreActionsClassName="hidden"
-            isShowActions={true}
+            actions={actions}
           />
         ) : (
           /* Empty State - Show Select Button Card */
@@ -102,8 +92,8 @@ export function FlowSelectionStep({
         onOpenChange={setIsDialogOpen}
         selectedFlow={selectedFlow}
         onConfirm={onFlowSelected}
-        title="Select Flow"
-        description="Choose a flow to use for this session"
+        title="Select Workflow"
+        description="Choose a workflow to use for this session"
         confirmButtonText="Add"
       />
     </div>

@@ -14,6 +14,7 @@ import { StrictMode, useCallback, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "@/app/styles/global.css";
+import "@/app/styles/theme.css";
 
 // Convex
 const isConvexReady =
