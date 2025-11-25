@@ -13,9 +13,13 @@ import {
   Copy,
   Pencil,
 } from "lucide-react";
-import { Route } from "@/routes/_layout/assets/scenarios/$scenarioId";
+import { Route } from "@/routes/_layout/assets/scenarios/{-$scenarioId}";
 
-import { scenarioQueries, useUpdatePlotCard } from "@/entities/scenario/api";
+import {
+  scenarioQueries,
+  useUpdatePlotCard,
+  useCreatePlotCard,
+} from "@/entities/scenario/api";
 
 import { Loading } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
@@ -25,7 +29,6 @@ import { useScrollToTop } from "@/shared/hooks/use-scroll-to-top";
 import { AccordionBase } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 import { toastSuccess, toastError } from "@/shared/ui/toast/base";
-import { AssetService } from "@/app/services/asset-service";
 
 interface LorebookEntryFormData {
   id: string;
@@ -61,7 +64,8 @@ interface ScenarioFormData {
   lorebookEntries: LorebookEntryFormData[];
 }
 
-const TAG_DEFAULT = [
+// Constants
+const TAG_DEFAULT: readonly string[] = [
   "Female",
   "Male",
   "Villain",
@@ -250,20 +254,22 @@ const LorebookItemContent = ({
   register,
   errors,
   setValue,
-  getValues,
+  watch,
   trigger,
 }: {
   index: number;
   register: ReturnType<typeof useForm<ScenarioFormData>>["register"];
   errors: ReturnType<typeof useForm<ScenarioFormData>>["formState"]["errors"];
   setValue: ReturnType<typeof useForm<ScenarioFormData>>["setValue"];
-  getValues: ReturnType<typeof useForm<ScenarioFormData>>["getValues"];
+  watch: ReturnType<typeof useForm<ScenarioFormData>>["watch"];
   trigger: ReturnType<typeof useForm<ScenarioFormData>>["trigger"];
 }) => {
   const [newKeyword, setNewKeyword] = useState<string>("");
 
-  const currentKeys = getValues(`lorebookEntries.${index}.keys`) || [];
+  // Watch current keys for real-time updates
+  const currentKeys = watch(`lorebookEntries.${index}.keys`) || [];
 
+  // Register the keys field with validation
   useEffect(() => {
     register(`lorebookEntries.${index}.keys`, {
       validate: (value) =>
@@ -275,11 +281,12 @@ const LorebookItemContent = ({
 
   const handleAddKeyword = () => {
     if (newKeyword.trim()) {
-      const keys = getValues(`lorebookEntries.${index}.keys`) || [];
-      if (keys.includes(newKeyword.trim())) {
-        return;
+      // Check for duplicates using watched value
+      if (currentKeys.includes(newKeyword.trim())) {
+        return; // Don't add duplicate
       }
-      const updatedKeys = [...keys, newKeyword.trim()];
+      // Add new keyword
+      const updatedKeys = [...currentKeys, newKeyword.trim()];
       setValue(`lorebookEntries.${index}.keys`, updatedKeys, {
         shouldDirty: true,
         shouldValidate: true,
@@ -290,9 +297,7 @@ const LorebookItemContent = ({
   };
 
   const handleRemoveKeyword = (keyIndex: number) => {
-    const keys = getValues(`lorebookEntries.${index}.keys`) || [];
-    const updatedKeys = [...keys];
-    updatedKeys.splice(keyIndex, 1);
+    const updatedKeys = currentKeys.filter((_, i) => i !== keyIndex);
     setValue(`lorebookEntries.${index}.keys`, updatedKeys, {
       shouldDirty: true,
       shouldValidate: true,
@@ -392,13 +397,20 @@ const LorebookItemContent = ({
   );
 };
 
-const ScenarioDetailPage = () => {
+const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
+
+const ScenarioEditorPage = () => {
   const navigate = useNavigate();
   const { scenarioId } = Route.useParams();
 
-  const { data: scenario, isLoading } = useQuery(
-    scenarioQueries.detail(scenarioId),
-  );
+  // Determine if we're in create mode (no scenarioId or "new")
+  const isCreateMode = !scenarioId || scenarioId === "new";
+
+  // Only fetch scenario data in edit mode
+  const { data: scenario, isLoading } = useQuery({
+    ...scenarioQueries.detail(scenarioId!),
+    enabled: !isCreateMode,
+  });
 
   const [imageUrl] = useAsset(scenario?.props.iconAssetId);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -420,7 +432,22 @@ const ScenarioDetailPage = () => {
     trigger,
     watch,
     formState: { errors, isDirty },
-  } = useForm<ScenarioFormData>();
+  } = useForm<ScenarioFormData>({
+    defaultValues: isCreateMode
+      ? {
+          title: "",
+          description: "",
+          tags: [],
+          creator: "",
+          cardSummary: "",
+          version: "",
+          conceptualOrigin: "",
+          iconAssetId: undefined,
+          firstMessages: [],
+          lorebookEntries: [],
+        }
+      : undefined,
+  });
 
   const cardSummary = watch("cardSummary") || "";
   const tags = watch("tags") || [];
@@ -445,7 +472,12 @@ const ScenarioDetailPage = () => {
     keyName: "_rhfId",
   });
 
-  const updatePlotMutation = useUpdatePlotCard(scenarioId);
+  // Mutations
+  const updatePlotMutation = useUpdatePlotCard(scenarioId ?? "");
+  const createPlotMutation = useCreatePlotCard();
+
+  // Combined pending state
+  const isSaving = updatePlotMutation.isPending || createPlotMutation.isPending;
 
   // Helper function to sort tags by TAG_DEFAULT order, then alphabetically for custom tags
   const sortTags = useCallback((tags: string[]) => {
@@ -480,9 +512,9 @@ const ScenarioDetailPage = () => {
     reset: resetBlocker,
     status,
   } = useBlocker({
-    shouldBlockFn: () => isDirty && !updatePlotMutation.isPending,
+    shouldBlockFn: () => isDirty && !isSaving,
     withResolver: true,
-    enableBeforeUnload: isDirty && !updatePlotMutation.isPending,
+    enableBeforeUnload: isDirty && !isSaving,
   });
 
   // Reset form when scenario data loads
@@ -556,11 +588,12 @@ const ScenarioDetailPage = () => {
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
-      if (!allowedTypes.includes(file.type)) {
+      // Only allow PNG, JPEG, or WebP for previews (disallow SVG for security)
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type as typeof ALLOWED_IMAGE_TYPES[number])) {
         toastError("Invalid file type", {
           description: "Only PNG, JPEG, or WebP images are allowed.",
         });
+        // Reset file input
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -654,53 +687,54 @@ const ScenarioDetailPage = () => {
   };
 
   const onSubmit = async (data: ScenarioFormData) => {
+    // Convert empty strings to undefined for optional fields
+    const normalizeField = (value: string | undefined) =>
+      value === "" ? undefined : value;
+
+    // Convert firstMessages to scenarios format for DB
+    const scenariosForDB = data.firstMessages.map((fm) => ({
+      name: fm.name,
+      description: fm.description,
+    }));
+
+    // Build common mutation payload
+    const payload = {
+      title: data.title,
+      description: data.description,
+      scenarios: scenariosForDB,
+      tags: data.tags,
+      creator: normalizeField(data.creator),
+      cardSummary: normalizeField(data.cardSummary),
+      version: normalizeField(data.version),
+      conceptualOrigin: normalizeField(data.conceptualOrigin),
+      imageFile: imageFile ?? undefined,
+      lorebookEntries: data.lorebookEntries,
+    };
+
     try {
-      let uploadedAssetId = data.iconAssetId;
-
-      if (imageFile) {
-        const assetResult = await AssetService.saveFileToAsset.execute({
-          file: imageFile,
+      if (isCreateMode) {
+        await createPlotMutation.mutateAsync(payload);
+        toastSuccess("Scenario created!", {
+          description: "Your scenario has been created successfully.",
         });
-
-        if (assetResult.isSuccess) {
-          const asset = assetResult.getValue();
-          uploadedAssetId = asset.id.toString();
-        } else {
-          toastError("Failed to upload image", {
-            description: "Please try again",
-          });
-          return;
-        }
+      } else {
+        await updatePlotMutation.mutateAsync({
+          ...payload,
+          iconAssetId: data.iconAssetId,
+        });
+        toastSuccess("Scenario updated!", {
+          description: "Your scenario has been updated successfully.",
+        });
       }
 
-      const normalizeField = (value: string | undefined) =>
-        value === "" ? undefined : value;
-
-      // Convert firstMessages to scenarios format for DB
-      const scenariosForDB = data.firstMessages.map((fm) => ({
-        name: fm.name,
-        description: fm.description,
-      }));
-
-      await updatePlotMutation.mutateAsync({
-        title: data.title,
-        description: data.description,
-        scenarios: scenariosForDB,
-        tags: data.tags,
-        creator: normalizeField(data.creator),
-        cardSummary: normalizeField(data.cardSummary),
-        version: normalizeField(data.version),
-        conceptualOrigin: normalizeField(data.conceptualOrigin),
-        iconAssetId: uploadedAssetId,
-        lorebookEntries: data.lorebookEntries,
-      });
-
+      // Clear image file state after successful save
       if (previewImage) {
         URL.revokeObjectURL(previewImage);
       }
       setImageFile(null);
       setPreviewImage(null);
 
+      // Reset form to prevent navigation block
       reset({
         ...data,
         tags: sortTags(data.tags),
@@ -708,13 +742,9 @@ const ScenarioDetailPage = () => {
         cardSummary: normalizeField(data.cardSummary),
         version: normalizeField(data.version),
         conceptualOrigin: normalizeField(data.conceptualOrigin),
-        iconAssetId: uploadedAssetId,
       });
 
-      toastSuccess("Scenario updated!", {
-        description: "Your scenario has been updated successfully.",
-      });
-
+      // Navigate back to scenarios list page
       navigate({ to: "/assets/scenarios" });
     } catch (error) {
       toastError("Failed to save scenario", {
@@ -724,7 +754,8 @@ const ScenarioDetailPage = () => {
     }
   };
 
-  if (isLoading) return <Loading />;
+  // Only show loading in edit mode when fetching scenario data
+  if (!isCreateMode && isLoading) return <Loading />;
 
   const displayImage = previewImage || imageUrl;
 
@@ -736,12 +767,12 @@ const ScenarioDetailPage = () => {
           e.preventDefault();
         }
       }}
-      className="w-full bg-neutral-900"
+      className="flex w-full flex-1 flex-col bg-neutral-900"
     >
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/png,image/jpeg,image/webp"
         onChange={handleFileChange}
         className="hidden"
       />
@@ -755,7 +786,9 @@ const ScenarioDetailPage = () => {
             onClick={handleGoBack}
             type="button"
           />
-          <h1 className="text-base font-semibold">{scenario?.props.title}</h1>
+          <h1 className="text-base font-semibold">
+            {isCreateMode ? "New Scenario" : scenario?.props.title}
+          </h1>
         </div>
         <div className="flex items-center gap-3">
           {isDirty && (
@@ -770,10 +803,10 @@ const ScenarioDetailPage = () => {
           <Button
             icon={<Save className="h-4 w-4" />}
             type="submit"
-            disabled={!isDirty || updatePlotMutation.isPending}
-            loading={updatePlotMutation.isPending}
+            disabled={isCreateMode ? isSaving : !isDirty || isSaving}
+            loading={isSaving}
           >
-            Save
+            {isCreateMode ? "Create" : "Save"}
           </Button>
         </div>
       </div>
@@ -1045,7 +1078,7 @@ const ScenarioDetailPage = () => {
                       register={register}
                       errors={errors}
                       setValue={setValue}
-                      getValues={getValues}
+                      watch={watch}
                       trigger={trigger}
                     />
                   ),
@@ -1076,4 +1109,4 @@ const ScenarioDetailPage = () => {
   );
 };
 
-export default ScenarioDetailPage;
+export default ScenarioEditorPage;

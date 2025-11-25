@@ -82,7 +82,7 @@ const CardItem = ({
       });
     } else if (card.props.type === CardType.Plot) {
       navigate({
-        to: "/assets/scenarios/$scenarioId",
+        to: "/assets/scenarios/{-$scenarioId}",
         params: { scenarioId: cardId.toString() },
       });
     }
@@ -135,7 +135,7 @@ const CardItem = ({
         });
       } else {
         navigate({
-          to: "/assets/scenarios/$scenarioId",
+          to: "/assets/scenarios/{-$scenarioId}",
           params: { scenarioId: clonedCard.id.toString() },
         });
       }

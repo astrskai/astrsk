@@ -73,9 +73,8 @@ export default function CardPage({ className }: { className?: string }) {
     [createCard, setActiveCardType, setIsSheetOpen],
   );
 
-  // Handle card click to navigate to CardPanel
+  // Handle card click to navigate to editor page
   const handleCharacterClick = (id: string) => {
-    console.log("Navigate to character detail page for card:", id);
     navigate({
       to: "/assets/characters/{-$characterId}",
       params: { characterId: id },
@@ -83,8 +82,10 @@ export default function CardPage({ className }: { className?: string }) {
   };
 
   const handlePlotClick = (id: string) => {
-    console.log("Navigate to scenario detail page for card:", id);
-    navigate({ to: "/assets/scenarios/$scenarioId", params: { scenarioId: id } });
+    navigate({
+      to: "/assets/scenarios/{-$scenarioId}",
+      params: { scenarioId: id },
+    });
   };
 
   useEffect(() => {

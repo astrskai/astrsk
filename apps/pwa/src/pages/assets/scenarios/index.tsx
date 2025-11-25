@@ -67,7 +67,7 @@ export function ScenariosPage() {
   };
 
   const handleCreateScenario = () => {
-    navigate({ to: "/assets/scenarios/new" });
+    navigate({ to: "/assets/scenarios/{-$scenarioId}", params: { scenarioId: "new" } });
   };
 
   return (
