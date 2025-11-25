@@ -623,7 +623,7 @@ const SessionSettingsSidebar = ({
                 scenarioId={session.plotCard.id}
                 onClick={() => {
                   navigate({
-                    to: "/assets/scenarios/$scenarioId",
+                    to: "/assets/scenarios/{-$scenarioId}",
                     params: {
                       scenarioId: session.plotCard?.id.toString() ?? "",
                     },

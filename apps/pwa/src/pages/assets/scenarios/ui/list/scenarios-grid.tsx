@@ -107,13 +107,13 @@ export function ScenariosGrid({
 
   const handleScenarioClick = (plotId: string) => {
     navigate({
-      to: "/assets/scenarios/$scenarioId",
+      to: "/assets/scenarios/{-$scenarioId}",
       params: { scenarioId: plotId },
     });
   };
 
   const handleCreateScenario = () => {
-    navigate({ to: "/assets/scenarios/new" });
+    navigate({ to: "/assets/scenarios/{-$scenarioId}", params: { scenarioId: "new" } });
   };
 
   return (

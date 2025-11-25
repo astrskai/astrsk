@@ -12,6 +12,21 @@ import { CharacterCard } from "@/entities/card/domain/character-card";
 import { cardKeys } from "@/entities/card/api/query-factory";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
+/**
+ * Lorebook entry data structure for mutations
+ */
+export interface LorebookEntryData {
+  id: string;
+  name: string;
+  enabled: boolean;
+  keys: string[];
+  recallRange: number;
+  content: string;
+}
+
+/**
+ * Data for creating a new character
+ */
 export interface CreateCharacterData {
   name: string;
   description: string;
@@ -22,14 +37,66 @@ export interface CreateCharacterData {
   version?: string;
   conceptualOrigin?: string;
   imageFile?: File;
-  lorebookEntries?: Array<{
-    id: string;
-    name: string;
-    enabled: boolean;
-    keys: string[];
-    recallRange: number;
-    content: string;
-  }>;
+  lorebookEntries?: LorebookEntryData[];
+}
+
+/**
+ * Data for updating an existing character
+ */
+export interface UpdateCharacterData {
+  title?: string;
+  name?: string;
+  description?: string;
+  exampleDialogue?: string;
+  tags?: string[];
+  creator?: string;
+  cardSummary?: string;
+  version?: string;
+  conceptualOrigin?: string;
+  imagePrompt?: string;
+  iconAssetId?: string;
+  imageFile?: File;
+  lorebookEntries?: LorebookEntryData[];
+}
+
+/**
+ * Helper function to upload image file and return asset ID
+ */
+async function uploadImageFile(file: File): Promise<string> {
+  const assetResult = await AssetService.saveFileToAsset.execute({ file });
+
+  if (assetResult.isFailure) {
+    throw new Error(`Failed to upload image: ${assetResult.getError()}`);
+  }
+
+  return assetResult.getValue().id.toString();
+}
+
+/**
+ * Helper function to create lorebook from entry data
+ */
+function createLorebookFromEntries(entries: LorebookEntryData[]): Lorebook {
+  const lorebookEntries = entries.map((entry) => {
+    const entryResult = Entry.create({
+      name: entry.name,
+      content: entry.content,
+      keys: entry.keys,
+      enabled: entry.enabled,
+      recallRange: entry.recallRange,
+    });
+    if (entryResult.isFailure) {
+      throw new Error(
+        `Failed to create lorebook entry: ${entryResult.getError()}`,
+      );
+    }
+    return entryResult.getValue();
+  });
+
+  const lorebookResult = Lorebook.create({ entries: lorebookEntries });
+  if (lorebookResult.isFailure) {
+    throw new Error(`Failed to create lorebook: ${lorebookResult.getError()}`);
+  }
+  return lorebookResult.getValue();
 }
 
 /**
@@ -41,42 +108,15 @@ export const useCreateCharacterCard = () => {
   return useMutation({
     mutationFn: async (data: CreateCharacterData) => {
       // Step 1: Upload image if exists
-      let uploadedAssetId: string | undefined;
-      if (data.imageFile) {
-        const assetResult = await AssetService.saveFileToAsset.execute({
-          file: data.imageFile,
-        });
-
-        if (assetResult.isFailure) {
-          throw new Error(`Failed to upload image: ${assetResult.getError()}`);
-        }
-
-        uploadedAssetId = assetResult.getValue().id.toString();
-      }
+      const uploadedAssetId = data.imageFile
+        ? await uploadImageFile(data.imageFile)
+        : undefined;
 
       // Step 2: Create lorebook if entries exist
-      let lorebook: Lorebook | undefined;
-      if (data.lorebookEntries && data.lorebookEntries.length > 0) {
-        const entries = data.lorebookEntries.map((entry) => {
-          const entryResult = Entry.create({
-            name: entry.name,
-            content: entry.content,
-            keys: entry.keys,
-            enabled: entry.enabled,
-            recallRange: entry.recallRange,
-          });
-          if (entryResult.isFailure) {
-            throw new Error(`Failed to create lorebook entry: ${entryResult.getError()}`);
-          }
-          return entryResult.getValue();
-        });
-
-        const lorebookResult = Lorebook.create({ entries });
-        if (lorebookResult.isFailure) {
-          throw new Error(`Failed to create lorebook: ${lorebookResult.getError()}`);
-        }
-        lorebook = lorebookResult.getValue();
-      }
+      const lorebook =
+        data.lorebookEntries && data.lorebookEntries.length > 0
+          ? createLorebookFromEntries(data.lorebookEntries)
+          : undefined;
 
       // Step 3: Create character card
       const cardResult = CharacterCard.create({
@@ -88,7 +128,7 @@ export const useCreateCharacterCard = () => {
           ? new UniqueEntityID(uploadedAssetId)
           : undefined,
         type: CardType.Character,
-        tags: data.tags || [],
+        tags: data.tags ?? [],
         creator: data.creator,
         cardSummary: data.cardSummary,
         version: data.version,
@@ -129,41 +169,11 @@ export const useUpdateCharacterCard = (cardId: string) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async (data: {
-      title?: string;
-      name?: string;
-      description?: string;
-      exampleDialogue?: string;
-      tags?: string[];
-      creator?: string;
-      cardSummary?: string;
-      version?: string;
-      conceptualOrigin?: string;
-      imagePrompt?: string;
-      iconAssetId?: string;
-      imageFile?: File;
-      lorebookEntries?: Array<{
-        id: string;
-        name: string;
-        enabled: boolean;
-        keys: string[];
-        recallRange: number;
-        content: string;
-      }>;
-    }) => {
+    mutationFn: async (data: UpdateCharacterData) => {
       // Step 1: Upload image if new file provided
-      let uploadedAssetId: string | undefined;
-      if (data.imageFile) {
-        const assetResult = await AssetService.saveFileToAsset.execute({
-          file: data.imageFile,
-        });
-
-        if (assetResult.isFailure) {
-          throw new Error(`Failed to upload image: ${assetResult.getError()}`);
-        }
-
-        uploadedAssetId = assetResult.getValue().id.toString();
-      }
+      const uploadedAssetId = data.imageFile
+        ? await uploadImageFile(data.imageFile)
+        : undefined;
 
       // Step 2: Use thunks to defer execution until all validation passes
       const operations: Array<() => Promise<unknown>> = [];
