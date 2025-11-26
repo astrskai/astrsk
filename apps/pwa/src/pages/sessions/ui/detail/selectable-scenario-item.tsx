@@ -20,18 +20,18 @@ const SelectableScenarioItem = ({
   return (
     <div
       className={cn(
-        "bg-background-surface-4 flex cursor-pointer flex-col items-start justify-start gap-2 self-stretch rounded border-2 p-4",
-        active ? "border-border-selected-primary" : "border-transparent",
+        "bg-hover flex cursor-pointer flex-col items-start justify-start gap-2 self-stretch rounded border-2 p-4",
+        active ? "border-accent-primary" : "border-transparent",
       )}
       onClick={onClick}
     >
-      <div className="text-text-body justify-start self-stretch text-base font-normal break-words">
+      <div className="text-fg-muted justify-start self-stretch text-base font-normal break-words">
         {name}
       </div>
       {contents && (
         <Markdown
           rehypePlugins={[rehypeRaw, rehypeSanitize]}
-          className="markdown text-text-body overflow-wrap-anywhere justify-start self-stretch text-sm font-normal break-words opacity-70"
+          className="markdown text-fg-muted overflow-wrap-anywhere justify-start self-stretch text-sm font-normal break-words opacity-70"
         >
           {contents}
         </Markdown>

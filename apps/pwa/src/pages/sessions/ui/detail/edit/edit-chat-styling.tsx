@@ -34,7 +34,7 @@ const ColorItem = ({ color }: { color?: string | null }) => {
 const ColorTable = ({ chatStyles }: { chatStyles?: ChatStyles }) => {
   return (
     <div className="flex flex-row items-end">
-      <div className="text-text-primary mr-[16px] flex flex-col items-end gap-[16px]">
+      <div className="text-fg-default mr-[16px] flex flex-col items-end gap-[16px]">
         <div className="text-[16px] leading-[19px] font-[500]">Base</div>
         <div className="text-[16px] leading-[19px] font-[500]">Italic</div>
         <div className="text-[16px] leading-[19px] font-[500]">Bold</div>
@@ -43,10 +43,10 @@ const ColorTable = ({ chatStyles }: { chatStyles?: ChatStyles }) => {
         </div>
       </div>
       <div className="mr-[12px] flex flex-col items-center">
-        <div className="text-text-input-subtitle mb-[8px] text-[12px] leading-[15px] font-[500]">
+        <div className="text-fg-subtle mb-[8px] text-[12px] leading-[15px] font-[500]">
           AI character
         </div>
-        <div className="bg-background-surface-4 text-text-primary flex flex-row gap-[16px] rounded-[14px] px-[8px] py-[8px]">
+        <div className="bg-hover text-fg-default flex flex-row gap-[16px] rounded-[14px] px-[8px] py-[8px]">
           <div className="flex flex-col items-center gap-[17px]">
             <div className="text-[12px] leading-[15px] font-[500] whitespace-nowrap">
               Font size
@@ -73,10 +73,10 @@ const ColorTable = ({ chatStyles }: { chatStyles?: ChatStyles }) => {
         </div>
       </div>
       <div className="flex flex-col items-center">
-        <div className="text-text-input-subtitle mb-[8px] text-[12px] leading-[15px] font-[500]">
+        <div className="text-fg-subtle mb-[8px] text-[12px] leading-[15px] font-[500]">
           User character
         </div>
-        <div className="bg-background-surface-4 text-text-primary flex flex-row gap-[16px] rounded-[14px] px-[8px] py-[8px]">
+        <div className="bg-hover text-fg-default flex flex-row gap-[16px] rounded-[14px] px-[8px] py-[8px]">
           <div className="flex flex-col items-center gap-[17px]">
             <div className="text-[12px] leading-[15px] font-[500] whitespace-nowrap">
               Font size
@@ -163,7 +163,7 @@ const EditChatStyling = ({
         <div className="flex flex-col gap-4">
           <TypoLarge>Size and color</TypoLarge>
           <FormProvider {...methods}>
-            <StylingSettings className="bg-background-surface-2" />
+            <StylingSettings className="bg-surface-raised" />
           </FormProvider>
         </div>
         <div className="flex flex-col gap-4">

@@ -31,11 +31,11 @@ export default function EndNode({ id }: NodeProps<EndNode>) {
 
   return (
     <div className="group/node relative">
-      <div className="bg-background-surface-2 outline-background-surface-2 inline-flex w-56 flex-col items-start justify-center gap-2 rounded-lg px-4 py-3.5 shadow-[0px_1px_12px_0px_rgba(125,125,125,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px]">
-        <div className="text-text-primary justify-start text-2xl leading-10 font-medium">
+      <div className="bg-surface-raised outline-surface-raised inline-flex w-56 flex-col items-start justify-center gap-2 rounded-lg px-4 py-3.5 shadow-[0px_1px_12px_0px_rgba(125,125,125,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px]">
+        <div className="text-fg-default justify-start text-2xl leading-10 font-medium">
           End
         </div>
-        <div className="bg-background-surface-3 flex flex-col items-start justify-start gap-4 self-stretch rounded-lg p-2">
+        <div className="bg-surface-overlay flex flex-col items-start justify-start gap-4 self-stretch rounded-lg p-2">
           <ButtonPill
             onClick={handleOpenResponseDesign}
             // onDoubleClick={handleCloseResponseDesign}
@@ -45,7 +45,7 @@ export default function EndNode({ id }: NodeProps<EndNode>) {
           >
             Response design
           </ButtonPill>
-          <div className="text-text-placeholder justify-start self-stretch text-xs font-normal">
+          <div className="text-fg-subtle justify-start self-stretch text-xs font-normal">
             Design the exact format and structure of AI responses
           </div>
         </div>

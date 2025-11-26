@@ -12,8 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSsoCallbackRouteImport } from './routes/_layout/sso-callback'
+import { Route as LayoutSignInRouteImport } from './routes/_layout/sign-in'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
-import { Route as LayoutLoginRouteImport } from './routes/_layout/login'
 import { Route as LayoutSettingsIndexRouteImport } from './routes/_layout/settings/index'
 import { Route as LayoutSessionsIndexRouteImport } from './routes/_layout/sessions/index'
 import { Route as LayoutAssetsIndexRouteImport } from './routes/_layout/assets/index'
@@ -52,14 +52,14 @@ const LayoutSsoCallbackRoute = LayoutSsoCallbackRouteImport.update({
   path: '/sso-callback',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutSignInRoute = LayoutSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutLoginRoute = LayoutLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsIndexRoute = LayoutSettingsIndexRouteImport.update({
@@ -196,8 +196,8 @@ const LayoutAssetsCharactersChar123CharacterIdChar125Route =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/login': typeof LayoutLoginRoute
   '/settings': typeof LayoutSettingsRouteWithChildren
+  '/sign-in': typeof LayoutSignInRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/': typeof LayoutIndexRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
@@ -225,7 +225,7 @@ export interface FileRoutesByFullPath {
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
 export interface FileRoutesByTo {
-  '/login': typeof LayoutLoginRoute
+  '/sign-in': typeof LayoutSignInRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/': typeof LayoutIndexRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
@@ -255,8 +255,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
-  '/_layout/login': typeof LayoutLoginRoute
   '/_layout/settings': typeof LayoutSettingsRouteWithChildren
+  '/_layout/sign-in': typeof LayoutSignInRoute
   '/_layout/sso-callback': typeof LayoutSsoCallbackRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
@@ -286,8 +286,8 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/login'
     | '/settings'
+    | '/sign-in'
     | '/sso-callback'
     | '/'
     | '/sessions/$sessionId'
@@ -315,7 +315,7 @@ export interface FileRouteTypes {
     | '/settings/legal'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/login'
+    | '/sign-in'
     | '/sso-callback'
     | '/'
     | '/sessions/$sessionId'
@@ -344,8 +344,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_layout'
-    | '/_layout/login'
     | '/_layout/settings'
+    | '/_layout/sign-in'
     | '/_layout/sso-callback'
     | '/_layout/'
     | '/_layout/sessions/$sessionId'
@@ -400,18 +400,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSsoCallbackRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/sign-in': {
+      id: '/_layout/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof LayoutSignInRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/settings': {
       id: '/_layout/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof LayoutSettingsRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/login': {
-      id: '/_layout/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LayoutLoginRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings/': {
@@ -618,8 +618,8 @@ const LayoutSettingsRouteWithChildren = LayoutSettingsRoute._addFileChildren(
 )
 
 interface LayoutRouteChildren {
-  LayoutLoginRoute: typeof LayoutLoginRoute
   LayoutSettingsRoute: typeof LayoutSettingsRouteWithChildren
+  LayoutSignInRoute: typeof LayoutSignInRoute
   LayoutSsoCallbackRoute: typeof LayoutSsoCallbackRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutSessionsSessionIdRoute: typeof LayoutSessionsSessionIdRoute
@@ -635,8 +635,8 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
-  LayoutLoginRoute: LayoutLoginRoute,
   LayoutSettingsRoute: LayoutSettingsRouteWithChildren,
+  LayoutSignInRoute: LayoutSignInRoute,
   LayoutSsoCallbackRoute: LayoutSsoCallbackRoute,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutSessionsSessionIdRoute: LayoutSessionsSessionIdRoute,

@@ -422,7 +422,7 @@ const SessionSettingsSidebar = ({
   return (
     <aside
       className={cn(
-        "bg-background-primary fixed top-0 right-0 z-30 h-dvh max-w-dvw overflow-y-auto md:w-96",
+        "bg-surface fixed top-0 right-0 z-30 h-dvh max-w-dvw overflow-y-auto md:w-96",
         "transition-transform duration-300 ease-in-out",
         "shadow-[-8px_0_24px_-4px_rgba(0,0,0,0.5)]",
         isOpen ? "translate-x-0" : "translate-x-full",
@@ -542,7 +542,7 @@ const SessionSettingsSidebar = ({
               </div>
             )}
             <div
-              className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
+              className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
               onClick={handleAddAICharacter}
             >
               <Plus className="h-5 w-5" />
@@ -590,7 +590,7 @@ const SessionSettingsSidebar = ({
               />
             ) : (
               <div
-                className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
+                className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
                 onClick={handleAddUserCharacter}
               >
                 <Plus className="h-5 w-5" />
@@ -632,7 +632,7 @@ const SessionSettingsSidebar = ({
               />
             ) : (
               <div
-                className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
+                className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
                 onClick={handleAddScenario}
               >
                 <Plus className="h-5 w-5" />
@@ -722,7 +722,7 @@ const SessionSettingsSidebar = ({
                 alt="Cover image"
               />
             ) : (
-              <div className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
+              <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
                 <FileUp className="h-5 w-5" />
                 <p>Upload Cover Image</p>
               </div>
@@ -753,7 +753,7 @@ const SessionSettingsSidebar = ({
                 alt="Background image"
               />
             ) : (
-              <div className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
+              <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
                 <Image className="h-5 w-5" />
                 <p>Select Background Image</p>
               </div>
@@ -792,7 +792,7 @@ const SessionSettingsSidebar = ({
                     alt="Background image"
                   />
                 ) : (
-                  <div className="bg-black-alternate text-text-secondary hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
+                  <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
                     <Image className="h-5 w-5" />
                     <p>Select Background Image</p>
                   </div>

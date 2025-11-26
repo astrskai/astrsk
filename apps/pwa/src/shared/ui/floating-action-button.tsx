@@ -1,4 +1,3 @@
-import { useSidebarLeft } from "@/widgets/both-sidebar";
 import { cn } from "@/shared/lib";
 import { Button } from "@/shared/ui";
 
@@ -33,7 +32,7 @@ function FloatingActionButton({
         {/* Onboarding Tooltip */}
         <div
           className={cn(
-            "bg-background-surface-2 border-border-selected-primary absolute top-[16px] z-20 rounded-2xl border-1 px-4 py-3 whitespace-nowrap shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+            "bg-surface-raised border-accent-primary absolute top-[16px] z-20 rounded-2xl border-1 px-4 py-3 whitespace-nowrap shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
             "transition-all duration-300 ease-out",
             "group-hover/fab-parent:opacity-0",
             // Default tooltip positioning based on button position
@@ -59,7 +58,7 @@ function FloatingActionButton({
             tooltipClassName,
           )}
         >
-          <div className="text-text-primary text-xs font-medium">
+          <div className="text-fg-default text-xs font-medium">
             {onboardingTooltip}
           </div>
         </div>
@@ -67,14 +66,14 @@ function FloatingActionButton({
         <Button
           className={cn(
             "group/fab absolute top-[16px] z-10 cursor-pointer rounded-full",
-            "bg-button-background-floating border-border-light text-text-primary border-[1px]",
-            "hover:bg-background-card hover:text-text-primary",
+            "bg-surface-overlay border-border-subtle text-fg-default border-[1px]",
+            "hover:bg-surface-raised hover:text-fg-default",
             position === "top-left" ? "left-[96px]" : "right-[32px]",
             "!transition-all duration-300 ease-out",
             position === "top-left",
             "h-[40px] min-w-[40px] p-0",
             onboarding &&
-              "border-border-selected-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)]",
+              "border-accent-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)] hover:shadow-[0px_0px_20px_-1px_rgba(152,215,249,1.00)]",
             className,
           )}
           onClick={(event) => {
@@ -115,8 +114,8 @@ function FloatingActionButton({
     <Button
       className={cn(
         "group/fab absolute top-[16px] z-10 cursor-pointer rounded-full",
-        "bg-button-background-floating border-border-light text-text-primary border-[1px]",
-        "hover:bg-background-card hover:text-text-primary",
+        "bg-surface-overlay border-border-subtle text-fg-default border-[1px]",
+        "hover:bg-surface-raised hover:text-fg-default",
         position === "top-left" ? "left-[96px]" : "right-[32px]",
         "!transition-all duration-300 ease-out",
         position === "top-left",

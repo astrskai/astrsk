@@ -807,15 +807,9 @@
 
   /* Consolidated Dockview styles */
   .dockview-theme-abyss {
-    --dv-separator-border: var(--background-surface-0, #1b1b1b) !important;
-    --dv-sash-color: var(
-      --background-surface-0,
-      #1b1b1b
-    ) !important; /* visible sash color */
-    --dv-active-sash-color: var(
-      --background-surface-0,
-      #1b1b1b
-    ) !important; /* hover/active color (abyss accent) */
+    --dv-separator-border: var(--bg-canvas, #111111) !important;
+    --dv-sash-color: var(--bg-canvas, #111111) !important; /* visible sash color */
+    --dv-active-sash-color: var(--bg-canvas, #111111) !important; /* hover/active color */
   }
 
   /* Tab containers */
@@ -826,16 +820,16 @@
   /* Tab Coloring */
   /* Maximum specificity override for tab backgrounds and borders */
   .dockview-theme-abyss .dv-groupview .dv-tabs-container .dv-tab {
-    background-color: var(--background-surface-1) !important;
+    background-color: var(--bg-surface, #0a0a0c) !important;
   }
 
   .dockview-theme-abyss .dv-groupview .dv-tabs-container .dv-tab.dv-active-tab {
-    background-color: var(--background-surface-2) !important;
+    background-color: var(--bg-surface-raised, #141416) !important;
   }
 
   /* Void container and backgrounds */
   .dockview-theme-abyss .dv-void-container {
-    background-color: var(--background-surface-0) !important;
+    background-color: var(--bg-canvas, #111111) !important;
   }
 
   /* Prevent Dockview from growing beyond screen size */

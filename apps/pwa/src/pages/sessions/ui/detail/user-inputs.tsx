@@ -69,7 +69,7 @@ const UserInputCharacterButton = ({
           />
           <div
             className={cn(
-              "text-text-primary truncate text-[12px] leading-[15px] font-[500]",
+              "text-fg-default truncate text-[12px] leading-[15px] font-[500]",
               "max-w-[48px]",
             )}
           >
@@ -90,8 +90,8 @@ const UserInputCharacterButton = ({
         <>
           <div
             className={cn(
-              "text-text-primary grid size-[48px] place-items-center rounded-full",
-              "bg-background-surface-4 group-hover:bg-background-surface-5 border-border-normal border-1 transition-colors duration-300 ease-out",
+              "text-fg-default grid size-[48px] place-items-center rounded-full",
+              "bg-hover group-hover:bg-active border-border-muted border-1 transition-colors duration-300 ease-out",
               isHighLighted &&
                 "border-primary-normal border-2 shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)]",
             )}
@@ -100,7 +100,7 @@ const UserInputCharacterButton = ({
           </div>
           <div
             className={cn(
-              "text-text-body text-center text-[12px] leading-[15px] font-[500]",
+              "text-fg-muted text-center text-[12px] leading-[15px] font-[500]",
               "max-w-[72px]",
             )}
           >
@@ -148,17 +148,17 @@ const UserInputAutoReplyButton = ({
       <div
         className={cn(
           "m-[2px] grid size-[44px] place-items-center rounded-[5.25px]",
-          "border-border-normal border-1 transition-colors duration-300 ease-out",
+          "border-border-muted border-1 transition-colors duration-300 ease-out",
           autoReply === AutoReply.Off
-            ? "bg-background-surface-4 group-hover:bg-background-surface-3"
-            : "bg-background-surface-5 group-hover:bg-background-surface-4",
+            ? "bg-hover group-hover:bg-surface-overlay"
+            : "bg-active group-hover:bg-hover",
         )}
       >
         {autoReply === AutoReply.Off && (
           <div
             className={cn(
-              "text-text-subtle text-[15.75px] leading-[19px] font-[600]",
-              "group-hover:text-text-primary transition-colors",
+              "text-fg-subtle text-[15.75px] leading-[19px] font-[600]",
+              "group-hover:text-fg-default transition-colors",
             )}
           >
             Off
@@ -169,7 +169,7 @@ const UserInputAutoReplyButton = ({
       </div>
       <div
         className={cn(
-          "text-text-body w-[105px] text-center text-[12px] leading-[15px] font-[600] select-none",
+          "text-fg-muted w-[105px] text-center text-[12px] leading-[15px] font-[600] select-none",
         )}
       >
         {autoReply === AutoReply.Off ? "Auto-reply off" : "Auto-reply on"}
@@ -402,9 +402,9 @@ const UserInputs = ({
             <TooltipContent
               side="top"
               align="start"
-              className="bg-background-surface-2 border-border-selected-primary mb-[12px] ml-[-16px] border-1 px-[16px] py-[12px] shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
+              className="bg-surface-raised border-accent-primary mb-[12px] ml-[-16px] border-1 px-[16px] py-[12px] shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
             >
-              <div className="text-text-primary text-[14px] leading-[20px] font-[600]">
+              <div className="text-fg-default text-[14px] leading-[20px] font-[600]">
                 Select to prompt a response
               </div>
             </TooltipContent>
@@ -414,7 +414,7 @@ const UserInputs = ({
         <div className="p-0">
           <div
             className={cn(
-              "flex flex-row items-center rounded-[28px] bg-background-surface-2 border-border-dark border",
+              "flex flex-row items-center rounded-[28px] bg-surface-raised border-border-dark border",
               // Desktop: gap and padding
               "gap-[16px] p-[8px] pl-[32px]",
               // Mobile: smaller gap and padding
@@ -430,7 +430,7 @@ const UserInputs = ({
                 className={cn(
                   "no-resizer w-full rounded-none border-0 bg-transparent p-0 outline-0",
                   "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
-                  "text-text-primary placeholder:text-text-placeholder font-normal",
+                  "text-fg-default placeholder:text-fg-subtle font-normal",
                   // Desktop: size
                   "h-[25.6px] min-h-[25.6px] pt-[4.8px]",
                   "text-[16px] leading-[1.6]",
@@ -455,9 +455,9 @@ const UserInputs = ({
                   onStopGenerate?.();
                 }}
                 className={cn(
-                  "bg-background-surface-3 text-text-primary shrink-0",
-                  "hover:bg-background-card hover:text-text-primary",
-                  "disabled:bg-background-surface-3 disabled:text-text-primary",
+                  "bg-surface-overlay text-fg-default shrink-0",
+                  "hover:bg-surface-raised hover:text-fg-default",
+                  "disabled:bg-surface-overlay disabled:text-fg-default",
                   // Desktop: height
                   "h-[40px]",
                   // Mobile: smaller height
@@ -483,9 +483,9 @@ const UserInputs = ({
                   setMessageContent("");
                 }}
                 className={cn(
-                  "bg-background-surface-3 text-text-primary shrink-0",
-                  "hover:bg-background-card hover:text-text-primary",
-                  "disabled:bg-background-surface-3 disabled:text-text-primary",
+                  "bg-surface-overlay text-fg-default shrink-0",
+                  "hover:bg-surface-raised hover:text-fg-default",
+                  "disabled:bg-surface-overlay disabled:text-fg-default",
                   // Desktop: height
                   "h-[40px]",
                   // Mobile: smaller height and text

@@ -86,7 +86,7 @@ export function SessionExportDialog({
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">{title}</DialogTitle>
           {description && (
-            <p className="text-text-subtle mt-2 text-base">{description}</p>
+            <p className="text-fg-subtle mt-2 text-base">{description}</p>
           )}
         </DialogHeader>
 
@@ -118,11 +118,11 @@ export function SessionExportDialog({
                       <div className="inline-flex flex-col items-start justify-center gap-1.5">
                         <Label
                           htmlFor={`${agent.agentId}-light`}
-                          className="text-text-primary cursor-pointer justify-start text-base leading-relaxed font-medium"
+                          className="text-fg-default cursor-pointer justify-start text-base leading-relaxed font-medium"
                         >
                           Light
                         </Label>
-                        <div className="text-text-info justify-start text-base leading-relaxed font-medium">
+                        <div className="text-status-info justify-start text-base leading-relaxed font-medium">
                           Faster, efficient models for basic tasks
                         </div>
                       </div>
@@ -136,11 +136,11 @@ export function SessionExportDialog({
                       <div className="inline-flex flex-col items-start justify-center gap-1.5">
                         <Label
                           htmlFor={`${agent.agentId}-heavy`}
-                          className="text-text-primary cursor-pointer justify-start text-base leading-relaxed font-medium"
+                          className="text-fg-default cursor-pointer justify-start text-base leading-relaxed font-medium"
                         >
                           Heavy
                         </Label>
-                        <div className="text-text-info justify-start text-base leading-relaxed font-medium">
+                        <div className="text-status-info justify-start text-base leading-relaxed font-medium">
                           Advanced models with higher capabilities
                         </div>
                       </div>
@@ -165,7 +165,7 @@ export function SessionExportDialog({
           />
           <Label
             htmlFor="include-history"
-            className="text-text-primary cursor-pointer text-base leading-relaxed font-normal"
+            className="text-fg-default cursor-pointer text-base leading-relaxed font-normal"
           >
             Include chat messages
           </Label>

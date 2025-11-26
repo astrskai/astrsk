@@ -133,22 +133,22 @@ export function OperatorCombobox({
       <div
         ref={triggerRef}
         onClick={handleToggle}
-        className="bg-background-surface-0 outline-border-normal hover:outline-border-selected-inverse focus:outline-border-selected-inverse flex min-h-8 w-full cursor-pointer items-center justify-between overflow-hidden rounded-md p-2 outline outline-1 outline-offset-[-1px] transition-all"
+        className="bg-canvas outline-border-muted hover:outline-border-emphasis focus:outline-border-emphasis flex min-h-8 w-full cursor-pointer items-center justify-between overflow-hidden rounded-md p-2 outline outline-1 outline-offset-[-1px] transition-all"
       >
         <div className="flex flex-1 items-center justify-start gap-1">
           {value.dataType && value.operator ? (
             <>
-              <div className="text-text-primary h-4 w-4">
+              <div className="text-fg-default h-4 w-4">
                 {getIconForType(value.dataType)}
               </div>
               <div className="flex flex-1 items-center justify-start gap-4">
-                <div className="text-text-primary flex-1 justify-start truncate text-xs font-normal">
+                <div className="text-fg-default flex-1 justify-start truncate text-xs font-normal">
                   {OPERATOR_LABELS[value.operator]}
                 </div>
               </div>
             </>
           ) : (
-            <div className="text-text-placeholder flex-1 justify-start text-xs font-normal">
+            <div className="text-fg-subtle flex-1 justify-start text-xs font-normal">
               {placeholder}
             </div>
           )}
@@ -173,7 +173,7 @@ export function OperatorCombobox({
               : "bottom-full mb-1",
           )}
         >
-          <div className="bg-background-surface-1 inline-flex max-h-[650px] w-full flex-col items-start justify-start overflow-y-auto rounded-lg p-1 shadow-lg">
+          <div className="bg-surface inline-flex max-h-[650px] w-full flex-col items-start justify-start overflow-y-auto rounded-lg p-1 shadow-lg">
             {dataTypes.map((dataType, index) => (
               <div
                 key={dataType.type}
@@ -184,9 +184,9 @@ export function OperatorCombobox({
                   onClick={() => handleTypeClick(dataType.type)}
                   className={cn(
                     "group inline-flex cursor-pointer items-center justify-between self-stretch p-2 transition-colors",
-                    index > 0 && "border-border-dark border-t",
+                    index > 0 && "border-border-default border-t",
                     value.dataType === dataType.type && !expandedType
-                      ? "bg-background-surface-3 rounded-md shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)]"
+                      ? "bg-surface-overlay rounded-md shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)]"
                       : "",
                   )}
                 >
@@ -195,8 +195,8 @@ export function OperatorCombobox({
                       className={cn(
                         "h-4 w-4",
                         value.dataType === dataType.type
-                          ? "text-text-primary"
-                          : "text-text-subtle group-hover:text-text-primary",
+                          ? "text-fg-default"
+                          : "text-fg-subtle group-hover:text-fg-default",
                       )}
                     >
                       {dataType.icon}
@@ -205,8 +205,8 @@ export function OperatorCombobox({
                       className={cn(
                         "justify-start text-xs",
                         value.dataType === dataType.type
-                          ? "text-text-primary font-semibold"
-                          : "text-text-subtle group-hover:text-text-primary font-normal",
+                          ? "text-fg-default font-semibold"
+                          : "text-fg-subtle group-hover:text-fg-default font-normal",
                       )}
                     >
                       {dataType.label}
@@ -217,8 +217,8 @@ export function OperatorCombobox({
                       className={cn(
                         "absolute top-[-2px] left-[-1px] max-h-4 max-w-4",
                         value.dataType === dataType.type
-                          ? "text-text-primary"
-                          : "text-background-surface-5 group-hover:text-text-primary",
+                          ? "text-fg-default"
+                          : "text-background-surface-5 group-hover:text-fg-default",
                         expandedType === dataType.type && "rotate-180",
                       )}
                     />
@@ -238,7 +238,7 @@ export function OperatorCombobox({
                           "group inline-flex cursor-pointer items-center justify-start gap-2 self-stretch rounded-md p-2 transition-colors",
                           value.operator === operator &&
                             value.dataType === dataType.type
-                            ? "bg-background-surface-3 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)]"
+                            ? "bg-surface-overlay shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)]"
                             : "",
                         )}
                       >
@@ -247,8 +247,8 @@ export function OperatorCombobox({
                             "justify-start text-xs",
                             value.operator === operator &&
                               value.dataType === dataType.type
-                              ? "text-text-primary font-semibold"
-                              : "text-text-subtle group-hover:text-text-primary font-normal",
+                              ? "text-fg-default font-semibold"
+                              : "text-fg-subtle group-hover:text-fg-default font-normal",
                           )}
                         >
                           {OPERATOR_LABELS[operator]}

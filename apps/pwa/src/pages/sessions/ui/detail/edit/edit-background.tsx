@@ -35,7 +35,7 @@ const SelectedBackground = ({
   const [asset] = useAsset(background?.assetId);
 
   return (
-    <div className="bg-background-screen h-[198px] overflow-hidden rounded-[14px]">
+    <div className="bg-canvas h-[198px] overflow-hidden rounded-[14px]">
       {background && isDefaultBackground(background) ? (
         <div style={{ height: "198px", position: "relative" }}>
           <img
@@ -163,7 +163,7 @@ const EditBackground = ({
             <DialogContent className="pt-14">
               <DialogTitle>Add background</DialogTitle>
               <div
-                className="bg-background-card hover:bg-background-input flex cursor-pointer flex-col items-center justify-center rounded-2xl border-dashed p-8"
+                className="bg-surface-raised hover:bg-surface-overlay flex cursor-pointer flex-col items-center justify-center rounded-2xl border-dashed p-8"
                 onClick={() => refBackgroundFileInput.current?.click()}
                 onDragOver={(e) => {
                   e.preventDefault();

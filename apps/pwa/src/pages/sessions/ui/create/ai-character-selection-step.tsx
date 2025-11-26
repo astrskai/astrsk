@@ -78,11 +78,11 @@ export function AiCharacterSelectionStep({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-text-primary mb-2 text-base font-semibold md:text-[1.2rem]">
+        <h2 className="text-fg-default mb-2 text-base font-semibold md:text-[1.2rem]">
           Add AI Characters&nbsp;
           <span className="text-status-required">(Minimum 1)*</span>
         </h2>
-        <p className="text-text-secondary text-sm">
+        <p className="text-fg-muted text-sm">
           Choose one or more AI characters to add to your session.
         </p>
       </div>
@@ -131,11 +131,11 @@ export function AiCharacterSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <UserIcon className="text-text-secondary mb-3 min-h-12 min-w-12" />
-              <h3 className="text-text-primary mb-2 text-lg font-semibold">
+              <UserIcon className="text-fg-muted mb-3 min-h-12 min-w-12" />
+              <h3 className="text-fg-default mb-2 text-lg font-semibold">
                 Add AI Characters
               </h3>
-              <p className="text-text-secondary text-sm">
+              <p className="text-fg-muted text-sm">
                 Click to select AI characters
               </p>
             </div>

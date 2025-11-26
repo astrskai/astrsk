@@ -82,7 +82,7 @@ const MessageAvatar = ({
       <div
         className={cn(
           "border-border-selected-inverse/50 flex shrink-0 items-center justify-center overflow-hidden rounded-full border-1 select-none",
-          !icon && "bg-background-surface-3",
+          !icon && "bg-surface-overlay",
           // Desktop: 80px
           "h-[80px] w-[80px]",
           // Mobile: 48px
@@ -118,7 +118,7 @@ const MessageAvatar = ({
       </div>
       <div
         className={cn(
-          "text-text-primary truncate font-medium",
+          "text-fg-default truncate font-medium",
           // Desktop: size
           "max-w-[80px] text-[16px] leading-[19px]",
           // Mobile: smaller
@@ -351,8 +351,8 @@ const MessageItemInternal = ({
                   {translation ?? content}
                 </Markdown>
                 {!streaming && isShowDataStore && (
-                  <div className="bg-background-surface-0/5 data-history mt-[10px] rounded-[12px] border-[1px] p-[16px]">
-                    <div className="text-text-subtle mb-[16px] flex flex-row items-center gap-[8px]">
+                  <div className="bg-canvas/5 data-history mt-[10px] rounded-[12px] border-[1px] p-[16px]">
+                    <div className="text-fg-subtle mb-[16px] flex flex-row items-center gap-[8px]">
                       <History size={20} />
                       <div className="text-[14px] leading-[20px] font-[500]">
                         Data history
@@ -924,12 +924,12 @@ const SortableDataSchemaFieldItem = ({
           {...attributes}
           {...listeners}
         >
-          <GripVertical size={16} className="text-text-info" />
+          <GripVertical size={16} className="text-status-info" />
         </div>
       </div>
       <div className="flex grow flex-col gap-[8px]">
         <div className="group/field-name flex flex-row items-center justify-between">
-          <div className="text-text-subtle group-hover/field-name:text-text-primary flex flex-row items-center gap-[8px]">
+          <div className="text-fg-subtle group-hover/field-name:text-fg-default flex flex-row items-center gap-[8px]">
             {getSchemaTypeIcon(type)}
             <div className="text-[14px] leading-[20px] font-[500]">{name}</div>
             {onEdit &&
@@ -937,14 +937,14 @@ const SortableDataSchemaFieldItem = ({
                 <>
                   <Check
                     size={20}
-                    className="!text-text-body"
+                    className="!text-fg-muted"
                     onClick={() => {
                       onEditDone();
                     }}
                   />
                   <X
                     size={20}
-                    className="!text-text-body"
+                    className="!text-fg-muted"
                     onClick={() => {
                       onEditCancel();
                     }}
@@ -953,7 +953,7 @@ const SortableDataSchemaFieldItem = ({
               ) : (
                 <Pencil
                   size={20}
-                  className="!text-text-body hidden group-hover/field-name:inline-block"
+                  className="!text-fg-muted hidden group-hover/field-name:inline-block"
                   onClick={() => {
                     setIsEditing(true);
                   }}
@@ -994,7 +994,7 @@ const SortableDataSchemaFieldItem = ({
         ) : (
           <div
             ref={valueRef}
-            className={cn("text-text-primary", !isOpenValue && "line-clamp-3")}
+            className={cn("text-fg-default", !isOpenValue && "line-clamp-3")}
           >
             {value}
           </div>

@@ -399,8 +399,8 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   // Loading states
   if (dataStoreNodeLoading || schemaLoading) {
     return (
-      <div className="bg-background-surface-2 flex h-full items-center justify-center">
-        <div className="text-text-subtle flex items-center gap-2">
+      <div className="bg-surface-raised flex h-full items-center justify-center">
+        <div className="text-fg-subtle flex items-center gap-2">
           <span>Loading data store...</span>
         </div>
       </div>
@@ -413,10 +413,10 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   // Show "No schema available" page if no schema fields exist
   if (hasNoSchema) {
     return (
-      <div className="bg-background-surface-2 flex h-full">
+      <div className="bg-surface-raised flex h-full">
         <div className="flex flex-1 flex-col items-center justify-center gap-8 p-2">
           <div className="flex flex-col items-center justify-start gap-2">
-            <div className="text-text-body text-center text-base leading-relaxed font-semibold">
+            <div className="text-fg-muted text-center text-base leading-relaxed font-semibold">
               No schema fields available
             </div>
             <div className="text-background-surface-5 text-center text-xs font-normal">
@@ -432,11 +432,11 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   }
 
   return (
-    <div className="bg-background-surface-2 flex h-full flex-col">
+    <div className="bg-surface-raised flex h-full flex-col">
       {/* Header with description */}
-      {/* <div className="self-stretch px-2 py-2.5 bg-background-surface-2 border-b border-border-dark inline-flex flex-col justify-start items-start gap-2.5">
+      {/* <div className="self-stretch px-2 py-2.5 bg-surface-raised border-b border-border-default inline-flex flex-col justify-start items-start gap-2.5">
         <div className="self-stretch inline-flex justify-start items-center gap-10">
-          <div className="flex-1 justify-start text-text-subtle text-xs font-normal leading-none">
+          <div className="flex-1 justify-start text-fg-subtle text-xs font-normal leading-none">
             This panel uses the schema you defined in the Data Store Schema panel.<br/>
             Each field here is linked to those definitions, allowing you to configure and manage values directly for this node.
           </div>
@@ -451,13 +451,13 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
       </div> */}
 
       {/* Main content */}
-      <div className="bg-background-surface-2 flex flex-1 gap-2 p-2">
+      <div className="bg-surface-raised flex flex-1 gap-2 p-2">
         {/* Left panel - Import and fields list */}
         <div className="flex max-w-64 min-w-36 flex-1 flex-col gap-4">
           {/* Import dropdown section - single row layout */}
           <div className="flex flex-col items-start justify-start gap-2 self-stretch">
             <div className="inline-flex items-center justify-start gap-2 self-stretch">
-              <div className="text-text-body justify-start text-[10px] leading-none font-medium">
+              <div className="text-fg-muted justify-start text-[10px] leading-none font-medium">
                 Select data
               </div>
             </div>
@@ -467,12 +467,12 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                   value={selectedSchemaFieldId}
                   onValueChange={setSelectedSchemaFieldId}
                 >
-                  <SelectTrigger className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]">
+                  <SelectTrigger className="bg-canvas outline-border-muted text-fg-default h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableSchemaFields.length === 0 ? (
-                      <div className="text-text-subtle px-4 py-2 text-xs">
+                      <div className="text-fg-subtle px-4 py-2 text-xs">
                         No fields available to import
                       </div>
                     ) : (
@@ -550,7 +550,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                         onClick={handleDeleteField}
                         className="relative h-6 w-6 rounded-sm transition-opacity hover:opacity-80"
                       >
-                        <Trash2 className="text-text-subtle size-[24px]" />
+                        <Trash2 className="text-fg-subtle size-[24px]" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent variant="button">
@@ -563,7 +563,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
               {/* Logic field */}
               <div className="flex flex-1 flex-col gap-2">
                 <div className="inline-flex items-center justify-start gap-1 self-stretch">
-                  <div className="text-text-body justify-start text-[10px] leading-none font-medium">
+                  <div className="text-fg-muted justify-start text-[10px] leading-none font-medium">
                     Logic
                   </div>
                   <TooltipProvider>
@@ -571,7 +571,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                       <TooltipTrigger asChild>
                         <div className="relative h-4 w-4 cursor-pointer overflow-hidden transition-opacity hover:opacity-80">
                           <Info
-                            className="text-text-info absolute top-[1.33px] left-[1.33px] h-3.5 w-3.5"
+                            className="text-fg-subtle absolute top-[1.33px] left-[1.33px] h-3.5 w-3.5"
                             strokeWidth={2}
                           />
                         </div>
@@ -590,19 +590,19 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <div className="bg-background-surface-0 outline-border-normal relative flex flex-1 flex-col overflow-hidden rounded-md outline-1 outline-offset-[-1px]">
+                <div className="bg-canvas outline-border-muted relative flex flex-1 flex-col overflow-hidden rounded-md outline-1 outline-offset-[-1px]">
                   {/* Expand button */}
                   <div className="absolute top-2 right-2 z-10">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
-                            className="hover:bg-background-surface-1 inline-flex items-center justify-start gap-2 rounded p-2 transition-colors"
+                            className="hover:bg-surface inline-flex items-center justify-start gap-2 rounded p-2 transition-colors"
                             onClick={() => {
                               // TODO: Implement expand functionality
                             }}
                           >
-                            <Maximize2 className="text-text-subtle h-4 w-4" />
+                            <Maximize2 className="text-fg-subtle h-4 w-4" />
                           </button>
                         </TooltipTrigger>
                         <TooltipContent variant="button">
@@ -650,7 +650,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
           ) : (
             <div className="flex flex-1 items-center justify-center">
               <div className="text-center">
-                <div className="text-text-subtle mb-2 text-xs">
+                <div className="text-fg-subtle mb-2 text-xs">
                   {dataStoreFields.length === 0
                     ? "Import schema fields to get started"
                     : "Select a field to configure its logic"}

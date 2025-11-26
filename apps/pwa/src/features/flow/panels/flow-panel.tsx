@@ -1548,7 +1548,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
   if (!flow) {
     return (
-      <div className="text-text-subtle bg-background-surface-2 h-full w-full p-4">
+      <div className="text-fg-subtle bg-surface-raised h-full w-full p-4">
         Flow not found
       </div>
     );
@@ -1561,7 +1561,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         {/* Flow header - conditional left margin */}
         <div
           className={cn(
-            "bg-background-surface-3 inline-flex items-center justify-start gap-2 rounded-lg px-4 py-2 transition-all duration-200",
+            "bg-surface-overlay inline-flex items-center justify-start gap-2 rounded-lg px-4 py-2 transition-all duration-200",
             // {
             //   "ml-0": isMobile || isExpanded, // Normal left margin when mobile or navigation expanded
             //   "ml-12": !isMobile && !isExpanded, // Larger left margin when navigation collapsed
@@ -1569,7 +1569,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           )}
         >
           <div className="flex min-w-0 flex-1 items-center justify-start gap-2">
-            <div className="text-text-body text-xs font-normal whitespace-nowrap">
+            <div className="text-fg-muted text-xs font-normal whitespace-nowrap">
               Flow name
             </div>
             {isEditingTitle ? (
@@ -1582,7 +1582,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                     if (e.key === "Enter") handleSaveTitle();
                     if (e.key === "Escape") handleCancelEdit();
                   }}
-                  className="text-text-primary max-w-full min-w-[80px] bg-transparent text-xs font-semibold outline-none"
+                  className="text-fg-default max-w-full min-w-[80px] bg-transparent text-xs font-semibold outline-none"
                   style={{
                     width: `${Math.max(editedTitle.length * 6 + 16, 80)}px`,
                   }}
@@ -1591,20 +1591,20 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 <button
                   onClick={handleSaveTitle}
                   disabled={isSavingTitle}
-                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
+                  className="hover:bg-hover flex-shrink-0 rounded p-1 transition-colors"
                 >
                   <Check className="text-status-success h-3 w-3" />
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
+                  className="hover:bg-hover flex-shrink-0 rounded p-1 transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </>
             ) : (
               <>
-                <div className="text-text-primary truncate text-xs font-semibold">
+                <div className="text-fg-default truncate text-xs font-semibold">
                   {flow.props.name || "Untitled Flow"}
                 </div>
                 <button
@@ -1612,9 +1612,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                     setEditedTitle(flow.props.name || "");
                     setIsEditingTitle(true);
                   }}
-                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
+                  className="hover:bg-hover flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <Pencil className="text-text-subtle hover:text-text-primary h-3 w-3 transition-colors" />
+                  <Pencil className="text-fg-subtle hover:text-fg-default h-3 w-3 transition-colors" />
                 </button>
               </>
             )}
@@ -1625,7 +1625,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             <TooltipProvider>
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <HelpCircle className="text-text-info min-h-4 min-w-4 cursor-help" />
+                  <HelpCircle className="text-fg-subtle min-h-4 min-w-4 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent variant="button" side="bottom">
                   <p className="max-w-xs text-xs">
@@ -1640,7 +1640,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               value={previewSessionId || "none"}
               onValueChange={handleSessionChange}
             >
-              <SelectTrigger className="bg-background-surface-0 outline-border-normal min-h-8 w-[242px] rounded-md px-4 py-2 outline-1 outline-offset-[-1px]">
+              <SelectTrigger className="bg-canvas outline-border-muted min-h-8 w-[242px] rounded-md px-4 py-2 outline-1 outline-offset-[-1px]">
                 <SelectValue placeholder="Select session" />
               </SelectTrigger>
               <SelectContent>
@@ -1698,9 +1698,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               >
                 <button
                   onClick={() => openPanel(PANEL_TYPES.DATA_STORE_SCHEMA)}
-                  className="bg-background-surface-4 border-border-normal hover:bg-background-surface-5 inline-flex h-[31px] w-[92px] items-center justify-center border-b transition-colors"
+                  className="bg-hover border-border-muted hover:bg-active inline-flex h-[31px] w-[92px] items-center justify-center border-b transition-colors"
                 >
-                  <div className="text-text-primary text-center text-xs font-normal whitespace-nowrap">
+                  <div className="text-fg-default text-center text-xs font-normal whitespace-nowrap">
                     Schema
                   </div>
                 </button>

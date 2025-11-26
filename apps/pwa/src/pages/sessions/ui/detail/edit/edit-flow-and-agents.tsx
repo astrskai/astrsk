@@ -31,18 +31,18 @@ const AgentListItem = ({ agentId }: { agentId: UniqueEntityID }) => {
       <div
         className={cn(
           "flex flex-col gap-6 rounded-lg p-6",
-          "bg-background-surface-3 outline-border-light outline-1",
+          "bg-surface-overlay outline-border-subtle outline-1",
         )}
       >
         <div className="flex flex-col gap-2">
-          <div className="text-text-body text-base font-normal">Agent</div>
-          <div className="text-text-primary text-base font-medium">
+          <div className="text-fg-muted text-base font-normal">Agent</div>
+          <div className="text-fg-default text-base font-medium">
             {agent.props.name}
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <div className="text-text-body text-base font-normal">Model</div>
-          <div className="text-text-primary text-base font-medium">
+          <div className="text-fg-muted text-base font-normal">Model</div>
+          <div className="text-fg-default text-base font-medium">
             {`${apiSourceLabel.get((agent.props.apiSource as ApiSource) ?? "openai")} - ${agent.props.modelName}`}
           </div>
         </div>
@@ -57,7 +57,7 @@ const EmptyFlow = () => {
       <div
         className={cn(
           "relative grid h-[164px] w-[280px] place-content-center rounded-[8px]",
-          "bg-background-input",
+          "bg-surface-overlay",
         )}
       >
         <div className="text-background-dialog flex flex-col items-center gap-[16px]">

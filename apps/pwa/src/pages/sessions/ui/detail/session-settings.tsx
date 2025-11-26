@@ -73,11 +73,11 @@ const Section = forwardRef<
       <div
         ref={ref}
         className={cn(
-          "group/section bg-background-surface-3 relative cursor-pointer rounded-[8px]",
+          "group/section bg-surface-overlay relative cursor-pointer rounded-[8px]",
           "transition-all duration-200 ease-in-out",
-          "border-border-normal hover:border-text-primary hover:ring-text-primary border hover:ring",
+          "border-border-muted hover:border-text-primary hover:ring-text-primary border hover:ring",
           onboarding &&
-            "border-border-selected-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+            "border-accent-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
           className,
         )}
         {...props}
@@ -89,7 +89,7 @@ const Section = forwardRef<
         )}>
           <div className="flex flex-row gap-[16px]">
             <div className={cn(
-              "text-text-primary font-[600] break-words",
+              "text-fg-default font-[600] break-words",
               "text-[20px] leading-[24px]",
               "max-md:text-[18px] max-md:leading-[22px]",
             )}>
@@ -97,7 +97,7 @@ const Section = forwardRef<
             </div>
             {subtitle && (
               <div className={cn(
-                "text-text-primary font-[500]",
+                "text-fg-default font-[500]",
                 "text-[20px] leading-[24px]",
                 "max-md:text-[18px] max-md:leading-[22px]",
               )}>
@@ -142,7 +142,7 @@ const SectionCarousel = ({ children }: { children?: React.ReactNode }) => {
       )}>{children}</CarouselContent>
       <CarouselPrevious
         className={cn(
-          "bg-background-card border-border-container border disabled:hidden",
+          "bg-surface-raised border-border-muted border disabled:hidden",
           "left-4",
           "max-md:left-2 max-md:h-8 max-md:w-8",
         )}
@@ -150,7 +150,7 @@ const SectionCarousel = ({ children }: { children?: React.ReactNode }) => {
       />
       <CarouselNext
         className={cn(
-          "bg-background-card border-border-container border disabled:hidden",
+          "bg-surface-raised border-border-muted border disabled:hidden",
           "right-4",
           "max-md:right-2 max-md:h-8 max-md:w-8",
         )}
@@ -339,13 +339,13 @@ const SessionSettings = ({
   return (
     <div
       className={cn(
-        "relative mx-auto flex w-full flex-col rounded-[16px] bg-background-surface-2",
+        "relative mx-auto flex w-full flex-col rounded-[16px] bg-surface-raised",
         // Desktop: margin, max-width, padding
         "my-[80px] max-w-[1024px] p-[16px]",
         // Mobile: no margin, full width, smaller padding
         "max-md:my-0 max-md:rounded-none max-md:p-[12px]",
         shouldShowResourceManagementTooltip &&
-          "border-border-selected-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+          "border-accent-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
       )}
     >
       <div className={cn(
@@ -368,7 +368,7 @@ const SessionSettings = ({
             "max-md:flex-col max-md:items-start max-md:gap-[8px] max-md:pr-0 max-md:w-full",
           )}>
             <div className={cn(
-              "text-text-secondary font-[600]",
+              "text-fg-muted font-[600]",
               "text-[16px] leading-[25.6px]",
               "max-md:text-[14px] max-md:leading-[20px]",
             )}>
@@ -391,7 +391,7 @@ const SessionSettings = ({
                     if (e.key === "Escape") handleCancelEdit();
                   }}
                   className={cn(
-                    "text-text-primary border-text-primary border-b bg-transparent font-[400] outline-none",
+                    "text-fg-default border-text-primary border-b bg-transparent font-[400] outline-none",
                     // Desktop: larger size
                     "text-[16px] leading-[25.6px] max-w-[820px] min-w-[200px]",
                     // Mobile: smaller size and full width
@@ -405,13 +405,13 @@ const SessionSettings = ({
                 )}>
                   <button
                     onClick={handleSaveTitle}
-                    className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
+                    className="hover:bg-hover flex-shrink-0 rounded p-1 transition-colors"
                   >
                     <Check className="text-status-success h-4 w-4" />
                   </button>
                   <button
                     onClick={handleCancelEdit}
-                    className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
+                    className="hover:bg-hover flex-shrink-0 rounded p-1 transition-colors"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -426,7 +426,7 @@ const SessionSettings = ({
                 "max-md:w-full max-md:gap-[8px]",
               )}>
                 <div className={cn(
-                  "text-text-primary truncate font-[400]",
+                  "text-fg-default truncate font-[400]",
                   // Desktop: max-w
                   "max-w-[870px] text-[16px] leading-[25.6px]",
                   // Mobile: smaller text, full width
@@ -439,9 +439,9 @@ const SessionSettings = ({
                     setEditedTitle(session.title || "");
                     setIsEditingTitle(true);
                   }}
-                  className="hover:bg-background-surface-4 flex-shrink-0 rounded p-1 transition-colors"
+                  className="hover:bg-hover flex-shrink-0 rounded p-1 transition-colors"
                 >
-                  <Pencil className="text-text-subtle hover:text-text-primary h-4 w-4 transition-colors" />
+                  <Pencil className="text-fg-subtle hover:text-fg-default h-4 w-4 transition-colors" />
                 </button>
               </div>
             )}
@@ -565,20 +565,20 @@ const SessionSettings = ({
                   <div className="w-full">
                     <div className="flex flex-col gap-[16px]">
                       <div className="flex flex-col gap-[8px]">
-                        <div className="text-text-input-subtitle text-[16px] leading-[19px] font-[400]">
+                        <div className="text-fg-subtle text-[16px] leading-[19px] font-[400]">
                           Displayed language
                         </div>
-                        <div className="text-text-primary max-w-[150px] text-[16px] leading-[19px] font-[600]">
+                        <div className="text-fg-default max-w-[150px] text-[16px] leading-[19px] font-[600]">
                           {languagesLabelMap.get(
                             session?.translation?.displayLanguage ?? "",
                           )}
                         </div>
                       </div>
                       <div className="flex flex-col gap-[8px]">
-                        <div className="text-text-input-subtitle text-[16px] leading-[19px] font-[400]">
+                        <div className="text-fg-subtle text-[16px] leading-[19px] font-[400]">
                           AI understanding language
                         </div>
-                        <div className="text-text-primary max-w-[150px] text-[16px] leading-[19px] font-[600]">
+                        <div className="text-fg-default max-w-[150px] text-[16px] leading-[19px] font-[600]">
                           {languagesLabelMap.get(
                             session?.translation?.promptLanguage ?? "",
                           )}
@@ -647,7 +647,7 @@ const SessionSettings = ({
       {showResourceTooltip && (
         <div
           className={cn(
-            "bg-background-surface-2 border-border-selected-primary absolute z-10 flex flex-col items-end justify-center gap-2 rounded-2xl border-1 px-4 py-3 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
+            "bg-surface-raised border-accent-primary absolute z-10 flex flex-col items-end justify-center gap-2 rounded-2xl border-1 px-4 py-3 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
             // Desktop: left side if space, inside top if no space
             hasSpaceForTooltip
               ? "top-4 left-[-340px] w-80 max-w-80"
@@ -656,19 +656,19 @@ const SessionSettings = ({
             "max-md:top-2 max-md:right-2 max-md:left-2 max-md:w-auto max-md:max-w-none",
           )}
         >
-          <div className="text-text-primary justify-start self-stretch text-sm leading-tight font-semibold">
+          <div className="text-fg-default justify-start self-stretch text-sm leading-tight font-semibold">
             Local resource management
           </div>
-          <div className="text-text-primary justify-start self-stretch text-xs font-normal">
+          <div className="text-fg-default justify-start self-stretch text-xs font-normal">
             This area manages local resources specific to this session only.
             Session-specific assets & tools.
           </div>
           <div className="inline-flex items-start justify-start gap-2">
             <button
               onClick={handleResourceManagementGotIt}
-              className="bg-background-surface-light hover:bg-background-surface-4 inline-flex min-w-20 flex-col items-center justify-center gap-2 rounded-[20px] px-3 py-1.5 transition-colors"
+              className="bg-emphasis hover:bg-hover inline-flex min-w-20 flex-col items-center justify-center gap-2 rounded-[20px] px-3 py-1.5 transition-colors"
             >
-              <div className="text-text-contrast-text justify-center text-xs font-semibold">
+              <div className="text-fg-on-emphasis justify-center text-xs font-semibold">
                 Got it
               </div>
             </button>

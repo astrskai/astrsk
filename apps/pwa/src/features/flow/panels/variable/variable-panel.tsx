@@ -693,7 +693,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
 
   return (
     <div
-      className="bg-background-surface-2 flex h-full flex-col items-center justify-start gap-4 overflow-hidden p-4"
+      className="bg-surface-raised flex h-full flex-col items-center justify-start gap-4 overflow-hidden p-4"
       onClick={handlePanelInteraction}
     >
       <SearchInput
@@ -810,11 +810,11 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                 )}
                                 {contextValues[variable.variable] && (
                                   <div className="mt-2 w-full overflow-hidden">
-                                    <div className="bg-background-surface-4 w-full max-w-full overflow-hidden rounded-md px-2 py-1">
-                                      <div className="text-text-subtle mb-1 text-[12px] leading-[15px] font-[500]">
+                                    <div className="bg-hover w-full max-w-full overflow-hidden rounded-md px-2 py-1">
+                                      <div className="text-fg-subtle mb-1 text-[12px] leading-[15px] font-[500]">
                                         Data from session
                                       </div>
-                                      <div className="font-fira-code text-text-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
+                                      <div className="font-fira-code text-fg-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
                                         {String(
                                           contextValues[variable.variable],
                                         )}
@@ -839,7 +839,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
           {aggregatedStructuredVariables.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <div className="inline-flex flex-col items-center justify-start gap-2">
-                <div className="text-text-body justify-start text-center text-base leading-relaxed font-semibold">
+                <div className="text-fg-muted justify-start text-center text-base leading-relaxed font-semibold">
                   {searchQuery
                     ? "No structured output variables found matching your search"
                     : "No structured output variables found"}
@@ -881,8 +881,8 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         <button
                           className={`relative ml-[2px] flex w-full flex-col items-start justify-start gap-1 rounded-lg p-2 text-left transition-all duration-200 ${
                             clickedVariable === variableKey
-                              ? "bg-background-surface-3"
-                              : "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
+                              ? "bg-surface-overlay"
+                              : "bg-surface-overlay hover:bg-hover cursor-pointer"
                           }`}
                           onClick={(e) =>
                             handleInsertStructuredVariable(
@@ -904,7 +904,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                               >
                                 {`{{${variable.variablePath}}}`}
                               </div>
-                              <div className="text-text-body text-xs font-normal">
+                              <div className="text-fg-muted text-xs font-normal">
                                 {variable.field.type}
                                 {variable.field.array && "[]"}
                               </div>
@@ -921,17 +921,17 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                                 ))}
                             </div>
                             {variable.field.description && (
-                              <div className="text-text-subtle line-clamp-3 text-left text-xs leading-none font-medium">
+                              <div className="text-fg-subtle line-clamp-3 text-left text-xs leading-none font-medium">
                                 {variable.field.description}
                               </div>
                             )}
                             {contextValues[variable.variablePath] && (
                               <div className="mt-2 w-full overflow-hidden">
-                                <div className="bg-background-surface-4 w-full max-w-full overflow-hidden rounded-md px-2 py-1">
-                                  <div className="text-text-subtle mb-1 text-[12px] leading-[15px] font-[500]">
+                                <div className="bg-hover w-full max-w-full overflow-hidden rounded-md px-2 py-1">
+                                  <div className="text-fg-subtle mb-1 text-[12px] leading-[15px] font-[500]">
                                     Data from session
                                   </div>
-                                  <div className="font-fira-code text-text-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
+                                  <div className="font-fira-code text-fg-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
                                     {String(
                                       contextValues[variable.variablePath],
                                     )}
@@ -979,10 +979,10 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                     return (
                       <button
                         key={field.id}
-                        className={`bg-background-surface-3 outline-border-normal relative flex w-full flex-col items-start justify-start gap-1 rounded-lg p-2 text-left outline outline-1 outline-offset-[-1px] transition-all duration-200 ${
+                        className={`bg-surface-overlay outline-border-muted relative flex w-full flex-col items-start justify-start gap-1 rounded-lg p-2 text-left outline outline-1 outline-offset-[-1px] transition-all duration-200 ${
                           clickedVariable === variableName
-                            ? "bg-background-surface-3"
-                            : "bg-background-surface-3 hover:bg-background-surface-4 cursor-pointer"
+                            ? "bg-surface-overlay"
+                            : "bg-surface-overlay hover:bg-hover cursor-pointer"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -1025,10 +1025,10 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                         <div className="flex flex-col items-start justify-start gap-4 self-stretch">
                           <div className="flex flex-col items-start justify-start gap-1 self-stretch">
                             <div className="flex w-full items-center justify-start gap-2">
-                              <div className="text-text-primary justify-start text-xs font-medium">
+                              <div className="text-fg-default justify-start text-xs font-medium">
                                 {variableName}
                               </div>
-                              <div className="text-text-body justify-start text-xs font-normal">
+                              <div className="text-fg-muted justify-start text-xs font-normal">
                                 {field.type}
                               </div>
                               {hasEditor &&
@@ -1044,11 +1044,11 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                             displayValue !== null &&
                             displayValue !== undefined && (
                               <div className="mt-2 w-full overflow-hidden">
-                                <div className="bg-background-surface-4 w-full max-w-full overflow-hidden rounded-md px-2 py-1">
-                                  <div className="text-text-subtle mb-1 text-[12px] leading-[15px] font-[500]">
+                                <div className="bg-hover w-full max-w-full overflow-hidden rounded-md px-2 py-1">
+                                  <div className="text-fg-subtle mb-1 text-[12px] leading-[15px] font-[500]">
                                     Most recent data from session
                                   </div>
-                                  <div className="font-fira-code text-text-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
+                                  <div className="font-fira-code text-fg-subtle line-clamp-2 overflow-hidden text-[12px] leading-[16px] font-[400] break-all">
                                     {typeof displayValue === "object"
                                       ? JSON.stringify(displayValue)
                                       : String(displayValue)}
@@ -1065,7 +1065,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
           ) : (
             <div className="flex h-full items-center justify-center">
               <div className="inline-flex flex-col items-center justify-start gap-2">
-                <div className="text-text-body justify-start text-center text-base leading-relaxed font-semibold">
+                <div className="text-fg-muted justify-start text-center text-base leading-relaxed font-semibold">
                   No data fields defined
                 </div>
                 <div className="text-background-surface-5 w-52 justify-start text-center text-xs font-normal">

@@ -41,11 +41,11 @@ export function FlowSelectionStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-2xl">
-        <h2 className="text-text-primary mb-2 text-base font-semibold md:text-[1.2rem]">
+        <h2 className="text-fg-default mb-2 text-base font-semibold md:text-[1.2rem]">
           Select a Roleplay Workflow
           <span className="text-status-required">*</span>
         </h2>
-        <p className="text-text-secondary text-xs md:text-sm">
+        <p className="text-fg-muted text-xs md:text-sm">
           A workflow is a bundle of prompt presets and AI models that defines
           your roleplay progression.
         </p>
@@ -74,11 +74,11 @@ export function FlowSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <IconWorkflow className="text-text-secondary mb-3 h-12 w-12" />
-              <h3 className="text-text-primary mb-2 text-lg font-semibold">
+              <IconWorkflow className="text-fg-muted mb-3 h-12 w-12" />
+              <h3 className="text-fg-default mb-2 text-lg font-semibold">
                 Add Flow
               </h3>
-              <p className="text-text-secondary text-sm">
+              <p className="text-fg-muted text-sm">
                 Click to select a flow
               </p>
             </div>

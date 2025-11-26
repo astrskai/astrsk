@@ -18,10 +18,10 @@ export function AgentModelCard({
   children,
 }: AgentModelCardProps) {
   return (
-    <div className="w-full p-4 bg-background-surface-3 rounded outline-0 inline-flex flex-col justify-start items-start gap-2">
+    <div className="w-full p-4 bg-surface-overlay rounded outline-0 inline-flex flex-col justify-start items-start gap-2">
       <div className="self-stretch flex flex-col justify-start items-start gap-4">
         <div className="self-stretch flex flex-col justify-start items-start gap-2">
-          <div className="self-stretch justify-start text-text-subtle text-base font-normal leading-relaxed">
+          <div className="self-stretch justify-start text-fg-subtle text-base font-normal leading-relaxed">
             Agent : {agentName}
           </div>
         </div>
@@ -29,10 +29,10 @@ export function AgentModelCard({
         {isExportMode ? (
           // Export mode - only show Model
           <div className="w-full flex flex-col justify-start items-start gap-2">
-            <div className="self-stretch justify-start text-text-subtle text-base font-normal leading-relaxed">
+            <div className="self-stretch justify-start text-fg-subtle text-base font-normal leading-relaxed">
               Model
             </div>
-            <div className="self-stretch justify-start text-text-primary text-base font-normal leading-relaxed">
+            <div className="self-stretch justify-start text-fg-default text-base font-normal leading-relaxed">
               {originalModel || "No model"}
             </div>
           </div>
@@ -40,19 +40,19 @@ export function AgentModelCard({
           // Import mode - show both Flow original model and Recommended model tier
           <div className="self-stretch inline-flex justify-start items-start gap-4">
             <div className="flex-1 inline-flex flex-col justify-start items-start gap-2">
-              <div className="self-stretch justify-start text-text-subtle text-base font-normal leading-relaxed">
+              <div className="self-stretch justify-start text-fg-subtle text-base font-normal leading-relaxed">
                 Flow original model
               </div>
-              <div className="self-stretch flex-1 justify-start text-text-primary text-base font-normal leading-relaxed">
+              <div className="self-stretch flex-1 justify-start text-fg-default text-base font-normal leading-relaxed">
                 {originalModel || "No model"}
               </div>
             </div>
             {recommendedTier && (
               <div className="flex-1 inline-flex flex-col justify-start items-start gap-2">
-                <div className="self-stretch justify-start text-text-subtle text-base font-normal leading-relaxed">
+                <div className="self-stretch justify-start text-fg-subtle text-base font-normal leading-relaxed">
                   Recommended model tier
                 </div>
-                <div className="self-stretch justify-start text-text-primary text-base font-normal leading-relaxed capitalize">
+                <div className="self-stretch justify-start text-fg-default text-base font-normal leading-relaxed capitalize">
                   {recommendedTier}
                 </div>
               </div>
@@ -64,7 +64,7 @@ export function AgentModelCard({
           <div className="self-stretch flex flex-col justify-start items-start gap-2">
             {isExportMode ? (
               <div className="self-stretch inline-flex justify-start items-center gap-1.5">
-                <div className="justify-start text-text-subtle text-base font-medium leading-relaxed">
+                <div className="justify-start text-fg-subtle text-base font-medium leading-relaxed">
                   Recommended model tier
                 </div>
                 <TooltipProvider>
@@ -76,7 +76,7 @@ export function AgentModelCard({
                         tabIndex={-1}
                         onFocus={(e) => e.preventDefault()}
                       >
-                        <CircleHelp className="w-4 h-4 text-text-info cursor-help" />
+                        <CircleHelp className="w-4 h-4 text-fg-subtle cursor-help" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs z-[9999]">
@@ -89,7 +89,7 @@ export function AgentModelCard({
                 </TooltipProvider>
               </div>
             ) : (
-              <div className="self-stretch justify-start text-text-subtle text-base font-medium leading-relaxed">
+              <div className="self-stretch justify-start text-fg-subtle text-base font-medium leading-relaxed">
                 Select model to connect
               </div>
             )}

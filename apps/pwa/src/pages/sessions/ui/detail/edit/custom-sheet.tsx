@@ -54,7 +54,7 @@ const CustomSheet = ({
     >
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
-        className="bg-background-surface-3 min-w-[780px] p-0"
+        className="bg-surface-overlay min-w-[780px] p-0"
         hideClose
       >
         <div className="relative flex h-full w-full flex-col">
@@ -62,7 +62,7 @@ const CustomSheet = ({
           <div className={cn("shrink-0 px-8 py-6", hideHeader && "hidden")}>
             <div className="flex flex-row justify-between">
               <SheetTitle>
-                <div className="text-text-primary text-[24px] leading-[32px] font-[600]">
+                <div className="text-fg-default text-[24px] leading-[32px] font-[600]">
                   {title}
                 </div>
               </SheetTitle>
@@ -81,7 +81,7 @@ const CustomSheet = ({
 
           {/* Sheet footer */}
           {!hideFooter && (
-            <div className="bg-background-surface-2 flex shrink-0 flex-row justify-end px-8 py-3">
+            <div className="bg-surface-raised flex shrink-0 flex-row justify-end px-8 py-3">
               <SheetClose asChild>
                 <Button size="lg" variant="ghost">
                   Close

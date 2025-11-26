@@ -13,15 +13,15 @@ const buttonVariants = cva(
         default:
           "bg-button-background-primary text-button-foreground-primary shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] hover:bg-primary-strong hover:text-button-foreground-primary hover:shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] hover:shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] disabled:bg-button-foreground-disabled disabled:text-button-background-disabled disabled:opacity-50",
         destructive:
-          "bg-status-destructive text-text-primary shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] hover:bg-status-destructive/90 disabled:opacity-50",
+          "bg-status-error text-fg-default shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] hover:bg-status-error/90 disabled:opacity-50",
         outline:
-          "bg-transparent text-button-background-primary shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px] outline-button-background-primary hover:bg-background-surface-3 hover:text-button-background-primary disabled:bg-transparent disabled:text-button-background-primary disabled:opacity-50",
+          "bg-transparent text-button-background-primary shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px] outline-button-background-primary hover:bg-surface-overlay hover:text-button-background-primary disabled:bg-transparent disabled:text-button-background-primary disabled:opacity-50",
         secondary:
-          "bg-background-surface-4 text-text-primary font-semibold shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px] outline-border-light hover:bg-black/20 hover:text-text-primary hover:outline-0 disabled:bg-background-surface-1 disabled:opacity-50 disabled:outline-0",
+          "bg-hover text-fg-default font-semibold shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px] outline-border-subtle hover:bg-black/20 hover:text-fg-default hover:outline-0 disabled:bg-surface disabled:opacity-50 disabled:outline-0",
         ghost:
-          "bg-transparent text-button-background-primary hover:bg-background-surface-2 hover:text-primary-strong disabled:opacity-50",
+          "bg-transparent text-button-background-primary hover:bg-surface-raised hover:text-primary-strong disabled:opacity-50",
         ghost_white:
-          "text-text-primary hover:text-text-placeholder disabled:opacity-50",
+          "text-fg-default hover:text-fg-subtle disabled:opacity-50",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

@@ -201,7 +201,7 @@ export default function SessionDetailPage() {
     </div>
   ) : (
     <div className="flex h-full items-center justify-center">
-      <p className="text-text-secondary text-center text-xl leading-8 font-normal">
+      <p className="text-fg-muted text-center text-xl leading-8 font-normal">
         Not found session
       </p>
     </div>

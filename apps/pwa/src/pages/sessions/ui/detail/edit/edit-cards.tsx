@@ -56,7 +56,7 @@ const CardListItem = ({
       <div className="flex min-w-[154px] flex-col items-center justify-start gap-[8px]">
         {cardId && <TradingCard cardId={cardId?.toString()} />}
         {label && (
-          <div className="text-text-input-subtitle text-[16px] leading-[19px] font-[500]">
+          <div className="text-fg-subtle text-[16px] leading-[19px] font-[500]">
             {label}
           </div>
         )}
@@ -88,7 +88,7 @@ const EmptyCard = ({
         <div
           className={cn(
             "grid h-[230px] w-[154px] place-content-center rounded-[8px]",
-            "bg-background-input",
+            "bg-surface-overlay",
           )}
         >
           <div className="text-background-dialog flex flex-col items-center gap-[13px] text-center">
@@ -98,7 +98,7 @@ const EmptyCard = ({
           </div>
         </div>
         {label && (
-          <div className="text-text-input-subtitle text-[16px] leading-[19px] font-[500]">
+          <div className="text-fg-subtle text-[16px] leading-[19px] font-[500]">
             {label}
           </div>
         )}
@@ -319,7 +319,7 @@ const EditCards = ({
           <TabsTrigger value="plot">Plot</TabsTrigger>
         </TabsList>
         <TabsContent value="ai">
-          <div className="bg-background-surface-2 flex flex-row flex-wrap justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
+          <div className="bg-surface-raised flex flex-row flex-wrap justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
             {aiCharacterCardIds &&
               aiCharacterCardIds.map((cardId) => (
                 <CardItem
@@ -333,7 +333,7 @@ const EditCards = ({
           </div>
         </TabsContent>
         <TabsContent value="user">
-          <div className="bg-background-surface-2 flex flex-row justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
+          <div className="bg-surface-raised flex flex-row justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
             {userCharacterCardId ? (
               <CardItem
                 cardId={userCharacterCardId}
@@ -346,7 +346,7 @@ const EditCards = ({
           </div>
         </TabsContent>
         <TabsContent value="plot">
-          <div className="bg-background-surface-2 flex flex-row justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
+          <div className="bg-surface-raised flex flex-row justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
             {plotCardId ? (
               <CardItem
                 cardId={plotCardId}

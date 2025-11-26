@@ -230,8 +230,8 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
 
   if (ifNodeLoading) {
     return (
-      <div className="bg-background-surface-2 flex h-full items-center justify-center">
-        <div className="text-text-subtle flex items-center gap-2">
+      <div className="bg-surface-raised flex h-full items-center justify-center">
+        <div className="text-fg-subtle flex items-center gap-2">
           <span>Loading if node...</span>
         </div>
       </div>
@@ -239,7 +239,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
   }
 
   return (
-    <div className="bg-background-surface-2 flex h-full flex-col">
+    <div className="bg-surface-raised flex h-full flex-col">
       <ScrollAreaSimple className="flex-1">
         <div className="flex w-full flex-col items-start justify-start gap-8 p-4">
           {/* Header with Logic Operator and Add Button */}
@@ -251,7 +251,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                   handleLogicOperatorChange(value as "AND" | "OR")
                 }
               >
-                <SelectTrigger className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]">
+                <SelectTrigger className="bg-canvas outline-border-muted text-fg-default h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -262,10 +262,10 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
             </div>
             <button
               onClick={addCondition}
-              className="bg-background-surface-4 outline-border-light hover:bg-background-surface-5 flex h-7 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
+              className="bg-hover outline-border-subtle hover:bg-active flex h-7 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
             >
-              <Plus className="text-text-body h-4 w-4" />
-              <div className="text-text-primary justify-center text-xs leading-none font-semibold">
+              <Plus className="text-fg-muted h-4 w-4" />
+              <div className="text-fg-default justify-center text-xs leading-none font-semibold">
                 Add condition
               </div>
             </button>
@@ -280,7 +280,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
               >
                 {/* Logic Operator Separator */}
                 {index > 0 && (
-                  <div className="text-text-subtle h-3.5 justify-start self-stretch text-xs font-normal">
+                  <div className="text-fg-subtle h-3.5 justify-start self-stretch text-xs font-normal">
                     {logicOperator}
                   </div>
                 )}
@@ -317,7 +317,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                             // Don't clear on blur - let the next focus event handle it
                           }}
                           placeholder="Variable or value"
-                          className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
+                          className="bg-canvas outline-border-muted text-fg-default h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
                         />
                       </div>
                       {/* Unified Operator Combobox */}
@@ -377,7 +377,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                                 ? "true/false"
                                 : "Compare value"
                             }
-                            className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
+                            className="bg-canvas outline-border-muted text-fg-default h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
                           />
                         </div>
                       )}
@@ -390,7 +390,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
                       className="inline-flex cursor-pointer items-start justify-start"
                     >
                       <div className="relative h-5 w-5 overflow-hidden rounded-[5px]">
-                        <X className="text-text-placeholder absolute top-[0.5px] left-[0.5px] h-4 w-4" />
+                        <X className="text-fg-subtle absolute top-[0.5px] left-[0.5px] h-4 w-4" />
                       </div>
                     </div>
                   )}

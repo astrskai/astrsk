@@ -577,10 +577,10 @@ function AgentNodeComponent({
     <div
       className={`group/node inline-flex w-80 items-center justify-between rounded-lg ${
         !isCurrentAgentValid
-          ? "bg-background-surface-2 outline-status-destructive-light outline-2"
+          ? "bg-surface-raised outline-status-error outline-2"
           : selected
-            ? "bg-background-surface-3 outline-accent-primary shadow-lg outline-2"
-            : "bg-background-surface-3 outline-border-light outline-1"
+            ? "bg-surface-overlay outline-accent-primary shadow-lg outline-2"
+            : "bg-surface-overlay outline-border-subtle outline-1"
       }`}
     >
       <div className="inline-flex flex-1 flex-col items-start justify-start gap-4 p-4">
@@ -588,13 +588,13 @@ function AgentNodeComponent({
         <div className="flex flex-col items-start justify-start gap-2 self-stretch">
           <div className="inline-flex items-center justify-start gap-1 self-stretch">
             {shouldShowValidation && !hasAgentName && (
-              <AlertCircle className="text-status-destructive-light min-h-4 min-w-4" />
+              <AlertCircle className="text-status-error min-h-4 min-w-4" />
             )}
             <div className="justify-start">
-              <span className="text-text-body text-[10px] font-medium">
+              <span className="text-fg-muted text-[10px] font-medium">
                 Agent node name
               </span>
-              <span className="text-status-required text-[10px] font-medium">
+              <span className="text-accent-secondary text-[10px] font-medium">
                 *
               </span>
             </div>
@@ -608,7 +608,7 @@ function AgentNodeComponent({
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="Enter agent name"
             disabled={updateNameMutation.isPending}
-            className={`nodrag ${shouldShowValidation && !hasAgentName ? "outline-status-destructive-light" : ""}`}
+            className={`nodrag ${shouldShowValidation && !hasAgentName ? "outline-status-error" : ""}`}
           />
         </div>
 
@@ -616,13 +616,13 @@ function AgentNodeComponent({
         <div className="flex flex-col items-start justify-start gap-2 self-stretch">
           <div className="inline-flex items-center justify-start gap-1 self-stretch">
             {shouldShowValidation && !hasModel && (
-              <AlertCircle className="text-status-destructive-light min-h-4 min-w-4" />
+              <AlertCircle className="text-status-error min-h-4 min-w-4" />
             )}
             <div className="justify-start">
-              <span className="text-text-body text-[10px] font-medium">
+              <span className="text-fg-muted text-[10px] font-medium">
                 Model
               </span>
-              <span className="text-status-required text-xs font-medium">
+              <span className="text-accent-secondary text-xs font-medium">
                 *
               </span>
             </div>
@@ -653,29 +653,29 @@ function AgentNodeComponent({
               className={`inline-flex h-20 flex-1 flex-col items-center justify-center rounded-lg px-2 pt-1.5 pb-2.5 outline outline-offset-[-1px] transition-all ${
                 shouldShowValidation && !hasPrompt
                   ? panelStates.prompt
-                    ? "bg-background-surface-light outline-status-destructive-light hover:opacity-70"
-                    : "bg-background-surface-4 outline-status-destructive-light hover:bg-background-surface-5"
+                    ? "bg-emphasis outline-status-error hover:opacity-70"
+                    : "bg-hover outline-status-error hover:bg-active"
                   : panelStates.prompt
-                    ? "bg-background-surface-light outline-border-light hover:opacity-70"
-                    : "bg-background-surface-4 outline-border-light hover:bg-background-surface-5"
+                    ? "bg-emphasis outline-border-subtle hover:opacity-70"
+                    : "bg-hover outline-border-subtle hover:bg-active"
               }`}
             >
               <div
                 className={`justify-start self-stretch text-center text-2xl leading-10 font-medium ${
                   panelStates.prompt
-                    ? "text-text-contrast-text"
-                    : "text-text-primary"
+                    ? "text-fg-on-emphasis"
+                    : "text-fg-default"
                 }`}
               >
                 {promptType}
               </div>
               <div className="justify-start self-stretch text-center">
                 <span
-                  className={`text-xs font-medium ${panelStates.prompt ? "text-text-info" : "text-text-secondary"}`}
+                  className={`text-xs font-medium ${panelStates.prompt ? "text-fg-subtle" : "text-fg-muted"}`}
                 >
                   Prompt
                 </span>
-                <span className="text-status-required text-xs font-medium">
+                <span className="text-accent-secondary text-xs font-medium">
                   *
                 </span>
               </div>
@@ -686,15 +686,15 @@ function AgentNodeComponent({
               onClick={handleParametersClick}
               className={`inline-flex h-20 flex-1 flex-col items-center justify-center rounded-lg px-2 pt-1.5 pb-2.5 outline outline-offset-[-1px] transition-all ${
                 panelStates.parameter
-                  ? "bg-background-surface-light outline-border-light hover:opacity-70"
-                  : "bg-background-surface-4 outline-border-light hover:bg-background-surface-5"
+                  ? "bg-emphasis outline-border-subtle hover:opacity-70"
+                  : "bg-hover outline-border-subtle hover:bg-active"
               }`}
             >
               <div
                 className={`justify-start self-stretch text-center text-2xl leading-10 font-medium ${
                   panelStates.parameter
-                    ? "text-text-contrast-text"
-                    : "text-text-primary"
+                    ? "text-fg-on-emphasis"
+                    : "text-fg-default"
                 }`}
               >
                 {parameterCount}
@@ -702,8 +702,8 @@ function AgentNodeComponent({
               <div
                 className={`justify-start self-stretch text-center text-xs font-medium ${
                   panelStates.parameter
-                    ? "text-text-info"
-                    : "text-text-secondary"
+                    ? "text-fg-subtle"
+                    : "text-fg-muted"
                 }`}
               >
                 Parameters
@@ -720,18 +720,18 @@ function AgentNodeComponent({
                 outputData?.enabledStructuredOutput &&
                 !hasStructuredOutput
                   ? panelStates.structuredOutput
-                    ? "bg-background-surface-light outline-status-destructive-light hover:opacity-70"
-                    : "bg-background-surface-4 outline-status-destructive-light hover:bg-background-surface-5"
+                    ? "bg-emphasis outline-status-error hover:opacity-70"
+                    : "bg-hover outline-status-error hover:bg-active"
                   : panelStates.structuredOutput
-                    ? "bg-background-surface-light outline-border-light hover:opacity-70"
-                    : "bg-background-surface-4 outline-border-light hover:bg-background-surface-5"
+                    ? "bg-emphasis outline-border-subtle hover:opacity-70"
+                    : "bg-hover outline-border-subtle hover:bg-active"
               }`}
             >
               <div
                 className={`justify-start self-stretch text-center text-xl leading-9 font-medium ${
                   panelStates.structuredOutput
-                    ? "text-text-contrast-text"
-                    : "text-text-primary"
+                    ? "text-fg-on-emphasis"
+                    : "text-fg-default"
                 }`}
               >
                 {!outputData?.enabledStructuredOutput
@@ -740,11 +740,11 @@ function AgentNodeComponent({
               </div>
               <div className="justify-start self-stretch text-center">
                 <span
-                  className={`text-xs font-medium ${panelStates.structuredOutput ? "text-text-info" : "text-text-secondary"}`}
+                  className={`text-xs font-medium ${panelStates.structuredOutput ? "text-fg-subtle" : "text-fg-muted"}`}
                 >
                   Output
                 </span>
-                <span className="text-status-required text-xs font-medium">
+                <span className="text-accent-secondary text-xs font-medium">
                   *
                 </span>
               </div>
@@ -755,8 +755,8 @@ function AgentNodeComponent({
               onClick={handlePreviewClick}
               className={`inline-flex h-20 flex-1 flex-col items-center justify-center gap-2 rounded-lg px-2 pt-1.5 pb-2.5 outline outline-offset-[-1px] transition-all ${
                 panelStates.preview
-                  ? "bg-background-surface-light outline-border-light hover:opacity-70"
-                  : "bg-background-surface-4 outline-border-light hover:bg-background-surface-5"
+                  ? "bg-emphasis outline-border-subtle hover:opacity-70"
+                  : "bg-hover outline-border-subtle hover:bg-active"
               }`}
             >
               <div className="pt-[1px]" />
@@ -765,14 +765,14 @@ function AgentNodeComponent({
                   name="preview"
                   className={`min-h-4 min-w-4 ${
                     panelStates.preview
-                      ? "text-text-contrast-text"
-                      : "text-text-primary"
+                      ? "text-fg-on-emphasis"
+                      : "text-fg-default"
                   }`}
                 />
               </div>
               <div
                 className={`justify-start self-stretch text-center text-xs font-medium ${
-                  panelStates.preview ? "text-text-info" : "text-text-secondary"
+                  panelStates.preview ? "text-fg-subtle" : "text-fg-muted"
                 }`}
               >
                 Preview
@@ -793,7 +793,7 @@ function AgentNodeComponent({
               onClick={handleCopyClick}
               className="group/copy relative h-6 w-6 overflow-hidden transition-opacity hover:opacity-80"
             >
-              <Copy className="text-text-contrast-text min-h-5 min-w-4" />
+              <Copy className="text-fg-on-emphasis min-h-5 min-w-4" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="left" variant="button">
@@ -806,7 +806,7 @@ function AgentNodeComponent({
               onClick={handleDeleteClick}
               className="group/delete relative h-6 w-6 overflow-hidden transition-opacity hover:opacity-80"
             >
-              <Trash2 className="text-text-contrast-text min-h-5 min-w-4" />
+              <Trash2 className="text-fg-on-emphasis min-h-5 min-w-4" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="left" variant="button">

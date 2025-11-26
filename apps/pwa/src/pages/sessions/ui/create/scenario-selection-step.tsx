@@ -78,10 +78,10 @@ export default function ScenarioSelectionStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-2xl">
-        <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-[1.2rem]">
+        <h2 className="text-fg-default mb-2 text-base font-semibold lg:text-[1.2rem]">
           Select a Scenario&nbsp;(optional)
         </h2>
-        <p className="text-text-secondary text-xs md:text-sm">
+        <p className="text-fg-muted text-xs md:text-sm">
           A scenario provides story context and starting messages for your
           session.
         </p>
@@ -108,11 +108,11 @@ export default function ScenarioSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <BookOpen className="text-text-secondary mb-3 min-h-12 min-w-12" />
-              <h3 className="text-text-primary mb-2 text-lg font-semibold">
+              <BookOpen className="text-fg-muted mb-3 min-h-12 min-w-12" />
+              <h3 className="text-fg-default mb-2 text-lg font-semibold">
                 Select Scenario
               </h3>
-              <p className="text-text-secondary text-sm">
+              <p className="text-fg-muted text-sm">
                 Click to select a scenario (optional)
               </p>
             </div>

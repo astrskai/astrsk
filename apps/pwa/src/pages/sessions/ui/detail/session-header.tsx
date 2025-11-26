@@ -27,21 +27,21 @@ export default function SessionHeader({
         {/* Left: Back button */}
         <button
           onClick={() => navigate({ to: "/sessions" })}
-          className="text-text-primary hover:text-text-secondary -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
+          className="text-fg-default hover:text-fg-muted -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
           aria-label="Go back to sessions list"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
 
         {/* Center: Session title */}
-        <h1 className="text-text-primary flex-1 truncate text-center text-base font-semibold">
+        <h1 className="text-fg-default flex-1 truncate text-center text-base font-semibold">
           {title}
         </h1>
 
         {/* Right: Settings button */}
         <button
           onClick={onSettingsClick}
-          className="text-text-primary hover:text-text-secondary -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
+          className="text-fg-default hover:text-fg-muted -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
           aria-label="Session settings"
         >
           <Pencil className="h-5 w-5" />
@@ -72,7 +72,7 @@ export default function SessionHeader({
       <button
         type="button"
         onClick={onSettingsClick}
-        className="text-text-secondary hover:text-text-primary absolute top-4 right-4 z-30 hidden h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-500 bg-gray-900 transition-colors hover:bg-gray-800 md:flex"
+        className="text-fg-muted hover:text-fg-default absolute top-4 right-4 z-30 hidden h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-500 bg-gray-900 transition-colors hover:bg-gray-800 md:flex"
         aria-label="Session settings"
       >
         <Pencil className="h-5 w-5" />

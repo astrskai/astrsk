@@ -68,10 +68,10 @@ export function BasicInfoStep({
         <div className="mx-auto flex max-w-3xl flex-col gap-6">
           <div className="flex flex-col justify-between gap-1 md:flex-row">
             <div>
-              <h3 className="text-text-primary mb-1 text-base font-semibold md:text-[1.2rem]">
+              <h3 className="text-fg-default mb-1 text-base font-semibold md:text-[1.2rem]">
                 Upload session cover image
               </h3>
-              <p className="text-text-secondary text-xs md:text-sm">
+              <p className="text-fg-muted text-xs md:text-sm">
                 Any JPG, JPEG, or PNG. Recommended 1920x1080 pixels for best display.
               </p>
             </div>
@@ -118,7 +118,7 @@ export function BasicInfoStep({
                 )}
               />
               {imageDimensions && (
-                <p className="text-text-secondary text-xs">
+                <p className="text-fg-muted text-xs">
                   {imageDimensions.width} x {imageDimensions.height} pixels
                 </p>
               )}

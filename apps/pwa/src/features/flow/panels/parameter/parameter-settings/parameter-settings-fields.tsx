@@ -8,8 +8,14 @@ import { useState, useEffect } from "react";
 import { Parameter, parameterList } from "@/shared/task/domain/parameter";
 
 import {
-  Card, CardContent, Input, ScrollArea,
-  SearchInput, Switch, Typo2XLarge, TypoBase,
+  Card,
+  CardContent,
+  Input,
+  ScrollArea,
+  SearchInput,
+  Switch,
+  Typo2XLarge,
+  TypoBase,
 } from "@/shared/ui";
 import {
   Select,
@@ -138,8 +144,8 @@ const ParameterItem = ({
           onCheckedChange={handleEnabledChange}
           size="small"
         />
-        <div className="bg-background-surface-2 outline-border-normal inline-flex flex-1 items-center justify-start gap-2 rounded-lg p-2 outline outline-1 outline-offset-[-1px]">
-          <div className="text-text-secondary justify-start text-xs font-normal">
+        <div className="bg-surface-raised outline-border-muted inline-flex flex-1 items-center justify-start gap-2 rounded-lg p-2 outline outline-offset-[-1px]">
+          <div className="text-fg-muted justify-start text-xs font-normal">
             {parameter.label}
           </div>
         </div>
@@ -156,18 +162,18 @@ const ParameterItem = ({
           onCheckedChange={handleEnabledChange}
           size="small"
         />
-        <div className="bg-background-surface-2 outline-border-normal inline-flex flex-1 items-center justify-start gap-2 rounded-lg p-2 outline outline-1 outline-offset-[-1px]">
+        <div className="bg-surface-raised outline-border-muted inline-flex flex-1 items-center justify-start gap-2 rounded-lg p-2 outline outline-offset-[-1px]">
           <button
             onClick={() => handleValueChange(!value)}
-            className="bg-background-surface-3 flex items-center justify-start gap-1.5 rounded p-[1.33px]"
+            className="bg-surface-overlay flex items-center justify-start gap-1.5 rounded p-[1.33px]"
           >
             <div className="relative flex h-3.5 w-3.5 items-center justify-center overflow-hidden rounded">
               {Boolean(value) && (
-                <Check className="text-text-primary h-2.5 min-h-2.5 w-2.5 min-w-2.5" />
+                <Check className="text-fg-default h-2.5 min-h-2.5 w-2.5 min-w-2.5" />
               )}
             </div>
           </button>
-          <div className="text-text-primary justify-start text-xs font-medium">
+          <div className="text-fg-default justify-start text-xs font-medium">
             {parameter.label}
           </div>
         </div>
@@ -183,16 +189,16 @@ const ParameterItem = ({
         onCheckedChange={handleEnabledChange}
         size="small"
       />
-      <div className="bg-background-surface-2 outline-border-normal inline-flex flex-1 flex-col items-start justify-start gap-2 rounded-lg p-2 outline outline-1 outline-offset-[-1px]">
+      <div className="bg-surface-raised outline-border-muted inline-flex flex-1 flex-col items-start justify-start gap-2 rounded-lg p-2 outline outline-offset-[-1px]">
         <div className="inline-flex items-center justify-start gap-2 self-stretch">
-          <div className="text-text-primary justify-start text-xs font-medium">
+          <div className="text-fg-default justify-start text-xs font-medium">
             {parameter.label}
           </div>
         </div>
         <div className="flex flex-col items-start justify-start gap-1 self-stretch">
           {parameter.type === "number" && (
             <>
-              <div className="bg-background-surface-0 outline-border-normal inline-flex min-h-8 items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline outline-1 outline-offset-[-1px]">
+              <div className="bg-canvas outline-border-muted inline-flex min-h-8 items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline outline-offset-[-1px]">
                 <div className="flex flex-1 items-center justify-start gap-4">
                   <input
                     type="number"
@@ -201,18 +207,18 @@ const ParameterItem = ({
                     max={parameter.max}
                     step={parameter.step}
                     onChange={(e) => handleValueChange(Number(e.target.value))}
-                    className="text-text-primary w-full [appearance:textfield] justify-start bg-transparent text-xs font-normal outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="text-fg-default w-full [appearance:textfield] justify-start bg-transparent text-xs font-normal outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                 </div>
                 <div
                   className="relative h-4 w-4 cursor-pointer overflow-hidden"
                   onClick={() => handleValueChange(parameter.default)}
                 >
-                  <RefreshCcw className="text-background-surface-5 absolute top-[2px] left-[2px] h-3 w-3" />
+                  <RefreshCcw className="text-fg-subtle absolute top-[2px] left-[2px] h-3 w-3" />
                 </div>
               </div>
               <div className="inline-flex items-center justify-center gap-2 self-stretch px-4">
-                <div className="text-text-info flex-1 justify-start text-[10px] leading-none font-medium">
+                <div className="text-fg-subtle flex-1 justify-start text-[10px] leading-none font-medium">
                   {parameter.min !== undefined && parameter.max !== undefined
                     ? `Minimum is ${parameter.min}, maximum is ${parameter.max}`
                     : parameter.min !== undefined
@@ -242,10 +248,10 @@ const ParameterItem = ({
                     const fieldValue = JSON.stringify(newLogitBiases);
                     handleValueChange(fieldValue);
                   }}
-                  className="bg-background-surface-0 outline-border-normal inline-flex h-7 w-48 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px]"
+                  className="bg-canvas outline-border-muted inline-flex h-7 w-48 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-offset-[-1px]"
                 >
-                  <Plus className="text-text-primary min-h-4 min-w-4" />
-                  <div className="text-text-primary justify-center text-xs leading-none font-semibold">
+                  <Plus className="text-fg-default min-h-4 min-w-4" />
+                  <div className="text-fg-default justify-center text-xs leading-none font-semibold">
                     Logit bias
                   </div>
                 </button>
@@ -271,11 +277,11 @@ const ParameterItem = ({
                           className="flex-1"
                         />
                         <div className="inline-flex w-28 flex-col items-start justify-start">
-                          <div className="bg-background-surface-0 outline-border-normal inline-flex min-h-8 items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline outline-1 outline-offset-[-1px]">
+                          <div className="bg-canvas outline-border-muted inline-flex min-h-8 items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline outline-offset-[-1px]">
                             <div className="flex flex-1 items-center justify-start gap-4">
                               <input
                                 type="number"
-                                className="text-text-primary w-full [appearance:textfield] justify-start bg-transparent text-xs font-normal outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                className="text-fg-default w-full [appearance:textfield] justify-start bg-transparent text-xs font-normal outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                 min={parameter.min}
                                 max={parameter.max}
                                 step={parameter.step}
@@ -294,7 +300,7 @@ const ParameterItem = ({
                               />
                             </div>
                             <div className="relative h-4 w-4 overflow-hidden">
-                              <div className="outline-background-surface-5 absolute top-[2.67px] left-[4.67px] h-2.5 w-1.5 outline outline-[1.33px] outline-offset-[-0.67px]"></div>
+                              <div className="outline-border-muted absolute top-[2.67px] left-[4.67px] h-2.5 w-1.5 outline-[1.33px] outline-offset-[-0.67px]"></div>
                             </div>
                           </div>
                         </div>
@@ -308,7 +314,7 @@ const ParameterItem = ({
                           }}
                           className="relative h-6 w-6 flex-shrink-0 rounded-sm"
                         >
-                          <X className="text-text-subtle absolute top-[4px] left-[5px] min-h-4 min-w-3.5" />
+                          <X className="text-fg-subtle absolute top-[4px] left-[5px] min-h-4 min-w-3.5" />
                         </button>
                       </div>
                       {parameter.min !== undefined &&
@@ -316,7 +322,7 @@ const ParameterItem = ({
                         index === logitBiases.length - 1 && (
                           <div className="inline-flex items-center justify-center gap-1.5 self-stretch">
                             <div className="h-2.5 flex-1"></div>
-                            <div className="text-text-info w-28 justify-start text-[10px] leading-none font-medium">
+                            <div className="text-fg-subtle w-28 justify-start text-[10px] leading-none font-medium">
                               Min {parameter.min} / Max {parameter.max}
                             </div>
                             <div className="h-2.5 w-6"></div>
@@ -339,10 +345,10 @@ const ParameterItem = ({
                     const fieldValue = JSON.stringify(newSafetySettings);
                     handleValueChange(fieldValue);
                   }}
-                  className="bg-background-surface-0 outline-border-normal inline-flex h-7 w-48 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px]"
+                  className="bg-canvas outline-border-muted inline-flex h-7 w-48 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-offset-[-1px]"
                 >
-                  <Plus className="text-text-primary min-h-4 min-w-4" />
-                  <div className="text-text-primary justify-center text-xs leading-none font-semibold">
+                  <Plus className="text-fg-default min-h-4 min-w-4" />
+                  <div className="text-fg-default justify-center text-xs leading-none font-semibold">
                     Safety settings
                   </div>
                 </button>
@@ -392,7 +398,7 @@ const ParameterItem = ({
                           }}
                           className="relative h-6 w-6 flex-shrink-0 rounded-sm"
                         >
-                          <X className="text-text-subtle absolute top-[4px] left-[5px] min-h-4 min-w-3.5" />
+                          <X className="text-fg-subtle absolute top-[4px] left-[5px] min-h-4 min-w-3.5" />
                         </button>
                       </div>
                     </div>
@@ -406,7 +412,7 @@ const ParameterItem = ({
               value={value}
               onValueChange={(value) => handleValueChange(value)}
             >
-              <SelectTrigger className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]">
+              <SelectTrigger className="bg-canvas outline-border-muted text-fg-default h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline outline-offset-[-1px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -441,7 +447,7 @@ export function ParameterSettingsFields({
 
   return (
     <ScrollArea className={`h-full ${className}`}>
-      <div className="bg-background-surface-2 flex flex-col gap-2">
+      <div className="bg-surface-raised flex flex-col gap-2">
         {filteredParameters.map((parameter) => (
           <ParameterItem
             key={parameter.id}
@@ -470,7 +476,7 @@ export function ParameterSettingsPage({
           <Typo2XLarge>Set Parameters</Typo2XLarge>
           <Typo2XLarge className="text-status-optional">(Optional)</Typo2XLarge>
         </div>
-        <TypoBase className="text-text-input-subtitle mask-clip-content">
+        <TypoBase className="text-fg-subtle mask-clip-content">
           Optimize agent performance by adjusting parameters.
         </TypoBase>
       </div>
