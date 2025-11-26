@@ -7,7 +7,7 @@ interface DialogBaseProps {
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
   title?: string;
-  description?: string;
+  description?: React.ReactNode;
   content: React.ReactNode;
   footer?: React.ReactNode; // Optional footer (always visible, not scrollable)
   isShowCloseButton?: boolean;

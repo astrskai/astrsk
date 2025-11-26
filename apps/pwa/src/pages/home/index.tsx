@@ -182,15 +182,24 @@ export function HomePage({ className }: HomePageProps) {
         className,
       )}
     >
+      {/* Hero Text */}
+      <h1 className="text-fg-default text-center text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-7xl">
+        Chat Privately.
+        <br />
+        <span className="bg-gradient-to-r from-brand-400 to-brand-600 bg-clip-text text-transparent">
+          Run Locally.
+        </span>
+      </h1>
+
       {/* Privacy Badge */}
-      <div className="bg-surface-raised/50 text-fg-muted hover:border-status-success/50 hover:bg-status-success/5 flex items-center gap-2 rounded-full border border-neutral-800 px-4 py-2 text-xs backdrop-blur-xl transition-all sm:gap-3 sm:px-5 sm:py-2.5 sm:text-sm">
+      <div className="bg-surface-raised/50 text-fg-muted hover:border-brand-500/50 hover:bg-brand-500/5 flex items-center gap-2 rounded-full border border-neutral-800 px-4 py-2 text-xs backdrop-blur-xl transition-all sm:gap-3 sm:px-5 sm:py-2.5 sm:text-sm">
         <ShieldCheck
           size={16}
-          className="text-status-success shrink-0 sm:size-[18px]"
+          className="text-brand-400 shrink-0 sm:size-[18px]"
         />
         <span className="text-center sm:text-left">
           Your sessions are stored locally — <br className="sm:hidden" />
-          <span className="text-status-success font-bold">
+          <span className="text-brand-400 font-bold">
             only on your device
           </span>
         </span>
@@ -200,15 +209,15 @@ export function HomePage({ className }: HomePageProps) {
       <div className="flex flex-col items-center gap-4 sm:flex-row">
         <button
           onClick={handleStartSession}
-          className="bg-fg-default text-canvas flex h-12 items-center gap-2 rounded-lg px-8 text-base font-bold transition-transform hover:scale-105 hover:bg-neutral-200"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-lg shadow-brand-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-500 active:scale-95 sm:w-auto"
         >
           Start Creating Session
         </button>
         <button
           onClick={handleWatchTutorial}
-          className="bg-surface-raised text-fg-default hover:bg-surface-overlay hover:text-fg-default flex h-12 items-center gap-2 rounded-lg border border-neutral-800 px-8 text-base font-medium transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border-default bg-transparent px-6 py-3 font-semibold text-fg-muted transition-all duration-300 hover:border-brand-500 hover:text-brand-500 active:scale-95 sm:w-auto"
         >
-          <Play size={16} /> Watch Tutorial
+          <Play size={18} /> Watch Tutorial
         </button>
       </div>
 

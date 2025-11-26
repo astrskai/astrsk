@@ -108,7 +108,7 @@ export function ListPageHeader({
             {/* Create (Primary Action) */}
             <button
               onClick={onCreateClick}
-              className="bg-brand-600 shadow-brand-500/20 hover:bg-brand-500 flex h-8 items-center gap-2 rounded-lg px-3 text-xs font-bold text-white shadow-lg transition-all active:scale-95 md:h-9 md:px-4"
+              className="bg-brand-600 shadow-brand-500/20 hover:bg-brand-500 flex h-8 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-white shadow-lg transition-all active:scale-95 md:h-9 md:px-4"
             >
               <Plus size={14} />
               <span>{createLabel}</span>
