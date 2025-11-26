@@ -8,16 +8,8 @@ import {
   TypoBase,
   SvgIcon,
 } from "@/shared/ui";
-import { TopNavigation } from "@/widgets/top-navigation";
-import { MobileMenuDrawer } from "@/widgets/mobile-menu-drawer";
-import { useEffect, useState } from "react";
 import { ConvexReady } from "@/shared/ui/convex-ready";
 import { Authenticated, Unauthenticated } from "convex/react";
-import { useAuth } from "@clerk/clerk-react";
-import { useSignUp } from "@clerk/clerk-react";
-import { useCallback } from "react";
-import { toast } from "sonner";
-import { logger } from "@/shared/lib/logger";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -82,46 +74,7 @@ const SettingsSectionComponent = ({
 };
 
 export default function SettingsPage() {
-  // 1. State hooks
-  const [isLoading, setIsLoading] = useState(false);
-
-  // 2. Context hooks
   const navigate = useNavigate();
-
-  // 3. Event handlers
-  // Sign up with SSO
-  const { userId } = useAuth();
-  const { isLoaded: isLoadedSignUp, signUp } = useSignUp();
-
-  const signUpWithDiscord = useCallback(async () => {
-    // Check sign up is loaded
-    if (!isLoadedSignUp) {
-      return;
-    }
-
-    // Check already signed in
-    if (userId) {
-      toast.info("You already signed in");
-      return;
-    }
-
-    try {
-      // Try to sign up with Discord
-      setIsLoading(true);
-
-      await signUp.authenticateWithRedirect({
-        strategy: "oauth_discord",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
-      });
-    } catch (error) {
-      setIsLoading(false);
-      logger.error(error);
-      toast.error("Failed to sign up", {
-        description: JSON.stringify(error),
-      });
-    }
-  }, [isLoadedSignUp, signUp, userId]);
 
   // Settings menu configuration
   const appPreferencesItems: SettingsMenuItem[] = [
@@ -206,11 +159,6 @@ export default function SettingsPage() {
                   ))}
                 </Authenticated>
                 <Unauthenticated>
-                  <SettingsMenuItemComponent
-                    label="Sign in"
-                    onClick={signUpWithDiscord}
-                    showChevron={true}
-                  />
                   <SettingsMenuItemComponent
                     label="Providers"
                     onClick={() => navigate({ to: "/settings/providers" })}

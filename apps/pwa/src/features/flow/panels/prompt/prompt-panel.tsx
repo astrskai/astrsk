@@ -529,7 +529,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                   <div className="text-fg-muted justify-start text-center text-base leading-relaxed font-semibold">
                     No Message
                   </div>
-                  <div className="text-background-surface-5 w-44 justify-start text-center text-xs font-normal">
+                  <div className="text-fg-subtle w-44 justify-start text-center text-xs font-normal">
                     Guide how your agent responds, from tone to context
                   </div>
                 </div>

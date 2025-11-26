@@ -63,7 +63,7 @@ export function FormatSelectorAccordion({
               >
                 <div className="w-3 h-3 p-0.5 bg-active rounded-md flex justify-center items-center gap-2">
                   {value === ApiType.Chat && (
-                    <div className="w-1.5 h-1.5 bg-text-primary rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-fg-default rounded-full"></div>
                   )}
                 </div>
                 <div className="justify-start text-fg-default text-xs font-medium">Chat completion</div>
@@ -74,7 +74,7 @@ export function FormatSelectorAccordion({
               >
                 <div className="w-3 h-3 p-0.5 bg-active rounded-md flex justify-center items-center gap-2">
                   {value === ApiType.Text && (
-                    <div className="w-1.5 h-1.5 bg-text-primary rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-fg-default rounded-full"></div>
                   )}
                 </div>
                 <div className="justify-start text-fg-default text-xs font-medium">Text completion</div>

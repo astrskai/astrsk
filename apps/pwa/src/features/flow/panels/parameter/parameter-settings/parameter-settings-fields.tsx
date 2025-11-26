@@ -8,8 +8,14 @@ import { useState, useEffect } from "react";
 import { Parameter, parameterList } from "@/shared/task/domain/parameter";
 
 import {
-  Card, CardContent, Input, ScrollArea,
-  SearchInput, Switch, Typo2XLarge, TypoBase,
+  Card,
+  CardContent,
+  Input,
+  ScrollArea,
+  SearchInput,
+  Switch,
+  Typo2XLarge,
+  TypoBase,
 } from "@/shared/ui";
 import {
   Select,
@@ -138,7 +144,7 @@ const ParameterItem = ({
           onCheckedChange={handleEnabledChange}
           size="small"
         />
-        <div className="bg-surface-raised outline-border-muted inline-flex flex-1 items-center justify-start gap-2 rounded-lg p-2 outline outline-1 outline-offset-[-1px]">
+        <div className="bg-surface-raised outline-border-muted inline-flex flex-1 items-center justify-start gap-2 rounded-lg p-2 outline outline-offset-[-1px]">
           <div className="text-fg-muted justify-start text-xs font-normal">
             {parameter.label}
           </div>
@@ -156,7 +162,7 @@ const ParameterItem = ({
           onCheckedChange={handleEnabledChange}
           size="small"
         />
-        <div className="bg-surface-raised outline-border-muted inline-flex flex-1 items-center justify-start gap-2 rounded-lg p-2 outline outline-1 outline-offset-[-1px]">
+        <div className="bg-surface-raised outline-border-muted inline-flex flex-1 items-center justify-start gap-2 rounded-lg p-2 outline outline-offset-[-1px]">
           <button
             onClick={() => handleValueChange(!value)}
             className="bg-surface-overlay flex items-center justify-start gap-1.5 rounded p-[1.33px]"
@@ -183,7 +189,7 @@ const ParameterItem = ({
         onCheckedChange={handleEnabledChange}
         size="small"
       />
-      <div className="bg-surface-raised outline-border-muted inline-flex flex-1 flex-col items-start justify-start gap-2 rounded-lg p-2 outline outline-1 outline-offset-[-1px]">
+      <div className="bg-surface-raised outline-border-muted inline-flex flex-1 flex-col items-start justify-start gap-2 rounded-lg p-2 outline outline-offset-[-1px]">
         <div className="inline-flex items-center justify-start gap-2 self-stretch">
           <div className="text-fg-default justify-start text-xs font-medium">
             {parameter.label}
@@ -192,7 +198,7 @@ const ParameterItem = ({
         <div className="flex flex-col items-start justify-start gap-1 self-stretch">
           {parameter.type === "number" && (
             <>
-              <div className="bg-canvas outline-border-muted inline-flex min-h-8 items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline outline-1 outline-offset-[-1px]">
+              <div className="bg-canvas outline-border-muted inline-flex min-h-8 items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline outline-offset-[-1px]">
                 <div className="flex flex-1 items-center justify-start gap-4">
                   <input
                     type="number"
@@ -242,7 +248,7 @@ const ParameterItem = ({
                     const fieldValue = JSON.stringify(newLogitBiases);
                     handleValueChange(fieldValue);
                   }}
-                  className="bg-canvas outline-border-muted inline-flex h-7 w-48 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px]"
+                  className="bg-canvas outline-border-muted inline-flex h-7 w-48 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-offset-[-1px]"
                 >
                   <Plus className="text-fg-default min-h-4 min-w-4" />
                   <div className="text-fg-default justify-center text-xs leading-none font-semibold">
@@ -271,7 +277,7 @@ const ParameterItem = ({
                           className="flex-1"
                         />
                         <div className="inline-flex w-28 flex-col items-start justify-start">
-                          <div className="bg-canvas outline-border-muted inline-flex min-h-8 items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline outline-1 outline-offset-[-1px]">
+                          <div className="bg-canvas outline-border-muted inline-flex min-h-8 items-center justify-between self-stretch overflow-hidden rounded-md px-4 py-2 outline outline-offset-[-1px]">
                             <div className="flex flex-1 items-center justify-start gap-4">
                               <input
                                 type="number"
@@ -294,7 +300,7 @@ const ParameterItem = ({
                               />
                             </div>
                             <div className="relative h-4 w-4 overflow-hidden">
-                              <div className="outline-background-surface-5 absolute top-[2.67px] left-[4.67px] h-2.5 w-1.5 outline outline-[1.33px] outline-offset-[-0.67px]"></div>
+                              <div className="outline-background-surface-5 absolute top-[2.67px] left-[4.67px] h-2.5 w-1.5 outline-[1.33px] outline-offset-[-0.67px]"></div>
                             </div>
                           </div>
                         </div>
@@ -339,7 +345,7 @@ const ParameterItem = ({
                     const fieldValue = JSON.stringify(newSafetySettings);
                     handleValueChange(fieldValue);
                   }}
-                  className="bg-canvas outline-border-muted inline-flex h-7 w-48 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px]"
+                  className="bg-canvas outline-border-muted inline-flex h-7 w-48 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-offset-[-1px]"
                 >
                   <Plus className="text-fg-default min-h-4 min-w-4" />
                   <div className="text-fg-default justify-center text-xs leading-none font-semibold">
@@ -406,7 +412,7 @@ const ParameterItem = ({
               value={value}
               onValueChange={(value) => handleValueChange(value)}
             >
-              <SelectTrigger className="bg-canvas outline-border-muted text-fg-default h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]">
+              <SelectTrigger className="bg-canvas outline-border-muted text-fg-default h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline outline-offset-[-1px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

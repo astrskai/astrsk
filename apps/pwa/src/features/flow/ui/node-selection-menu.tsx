@@ -42,7 +42,7 @@ export function NodeSelectionMenuItems({
       {showAgent && (
         <button
           onClick={() => onSelectNodeType("agent")}
-          className={cn("w-[92px] h-[31px] bg-hover border-b border-border-muted inline-flex justify-center items-center hover:bg-active transition-colors", className)}
+          className={cn("w-[92px] h-[31px] bg-hover inline-flex justify-center items-center hover:bg-active transition-colors", showDataStore || showIf ? "border-b border-border-muted" : "", className)}
         >
           <div className="text-center text-fg-default text-xs font-normal whitespace-nowrap">
             {customAgentLabel || "Agent node"}

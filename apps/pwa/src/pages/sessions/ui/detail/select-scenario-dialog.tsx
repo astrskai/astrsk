@@ -52,7 +52,7 @@ const SelectScenarioDialog = ({
   if (renderedScenarios) {
     // Scenario selection view
     return (
-      <div className="bg-surface-raised outline-border-subtle mx-auto inline-flex w-full max-w-[600px] flex-col items-start justify-start gap-2.5 overflow-hidden rounded-lg p-6 outline-1">
+      <div className="bg-surface-raised outline outline-1 outline-border-subtle mx-auto inline-flex w-full max-w-[600px] flex-col items-start justify-start gap-2.5 overflow-hidden rounded-lg p-6">
         <div className="flex flex-col items-end justify-start gap-6 self-stretch">
           <div className="flex flex-col items-start justify-start gap-2 self-stretch">
             <div className="text-fg-default justify-start self-stretch text-2xl font-semibold">
@@ -81,7 +81,7 @@ const SelectScenarioDialog = ({
                   <div className="text-fg-muted justify-start self-stretch text-center text-2xl font-bold">
                     No first messages yet
                   </div>
-                  <div className="text-background-surface-5 justify-start self-stretch text-center text-base leading-normal font-medium">
+                  <div className="text-fg-muted justify-start self-stretch text-center text-base leading-normal font-medium">
                     Start by adding a first message to your session.
                     <br />
                     First messages set the opening scene for your session <br />
