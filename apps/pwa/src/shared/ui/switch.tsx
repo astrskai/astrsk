@@ -40,8 +40,8 @@ const Switch = React.forwardRef<
   return (
     <SwitchPrimitives.Root
       className={cn(
-        "inline-flex",
-        isSmall ? "h-6 w-10 min-h-[24px]" : "h-8 w-12 min-h-[32px]",
+        "inline-flex shrink-0",
+        isSmall ? "h-6 w-10 min-w-[40px]" : "h-8 w-12 min-w-[48px]",
         "cursor-pointer items-center rounded-full transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         "disabled:cursor-not-allowed disabled:opacity-40",

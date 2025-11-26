@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Loader2 } from "lucide-react";
+import { Info, Key, Link, Loader2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
@@ -12,25 +12,12 @@ import { ApiService } from "@/app/services";
 import { queryClient } from "@/shared/api/query-client";
 import { apiConnectionQueries } from "@/entities/api/api-connection-queries";
 import { Button } from "@/shared/ui/forms";
-import { cn } from "@/shared/lib";
 import {
   ProviderDisplay,
   ProviderDisplayDetailProps,
 } from "./provider-display";
-import {
-  Combobox,
-  FloatingLabelInput,
-  TypoBase,
-  TypoTiny,
-  TypoXLarge,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui";
+import { Combobox } from "@/shared/ui";
+import { DialogBase } from "@/shared/ui/dialogs";
 
 import { TableName } from "@/db/schema/table-name";
 import {
@@ -273,7 +260,7 @@ const providerOrder: ApiSource[] = [
   ApiSource.OpenAICompatible,
 ];
 
-export default function ModelPage({ className }: { className?: string }) {
+export default function ProvidersPage() {
   // 1. State hooks
   const [isOpenEdit, setIsOpenEdit] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -576,16 +563,17 @@ export default function ModelPage({ className }: { className?: string }) {
   );
 
   return (
-    <div className={cn("flex h-full flex-col overflow-hidden", className)}>
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full px-4 py-4 md:max-w-6xl md:py-20">
-          {/* Desktop title - hidden on mobile */}
-          <TypoXLarge className="text-text-primary mb-8 hidden font-semibold md:block">
-            Providers
-          </TypoXLarge>
+    <div className="py-8">
+      {/* Info notice */}
+      <div className="mb-6 rounded-xl border border-border-default bg-surface p-4">
+        <p className="text-sm leading-relaxed text-fg-muted">
+          Configure external model providers. API requests are sent directly from
+          your browser to the provider API.
+        </p>
+      </div>
 
-          <div className="flex flex-col items-center gap-4 pb-4 md:mt-8 md:flex-row md:flex-wrap md:justify-center">
+      {/* Provider list */}
+      <div className="space-y-3">
             {apiConnections
               ?.filter(
                 (apiConnection: ApiConnection) =>
@@ -622,160 +610,191 @@ export default function ModelPage({ className }: { className?: string }) {
                 onOpenEdit: () => handleOnOpenEdit({ apiSource }),
               });
             })}
-            <div className="bg-background-surface-3 relative w-full shrink-0 rounded-lg md:h-[186px] md:w-[335px]">
-              <div className="flex w-full flex-col justify-start gap-2 p-6 md:justify-center md:p-8">
-                <div className="text-text-secondary text-left text-base leading-5 font-semibold">
-                  Don&apos;t see your favorite provider?
-                </div>
-                <div className="text-text-input-subtitle [&>a]:text-secondary-normal text-left text-xs leading-[15px] font-normal">
-                  Drop a request in our{" "}
-                  <a href="https://discord.gg/J6ry7w8YCF" target="_blank">
-                    Discord!
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <Dialog open={isOpenEdit} onOpenChange={setIsOpenEdit}>
-        <DialogContent
-          className="bg-background-surface-2 border-border-light border"
-          hideClose
-        >
-          <DialogHeader>
-            <DialogTitle>Connect provider</DialogTitle>
-            <DialogDescription>
-              <TypoBase className="text-text-subtle [&>a]:text-secondary-normal font-[400]">
-                {editingApiConnection?.source &&
-                  descriptionBySource.get(editingApiConnection.source)}
-              </TypoBase>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-2">
-            <TypoTiny className="text-text-input-subtitle">Provider</TypoTiny>
-            <TypoBase className="text-text-primary">
-              {editingApiConnection &&
-                apiSourceLabel.get(editingApiConnection.source)}
-            </TypoBase>
+      {/* Request provider card */}
+      <div className="mt-6 rounded-xl border border-dashed border-border-default bg-surface p-4">
+        <p className="text-sm font-medium text-fg-default">
+          Don&apos;t see your favorite provider?
+        </p>
+        <p className="mt-1 text-xs text-fg-muted">
+          Drop a request in our{" "}
+          <a
+            href="https://discord.gg/J6ry7w8YCF"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-400 hover:text-brand-500"
+          >
+            Discord!
+          </a>
+        </p>
+      </div>
+
+      <DialogBase
+        open={isOpenEdit}
+        onOpenChange={setIsOpenEdit}
+        title={`Connect ${editingApiConnection ? apiSourceLabel.get(editingApiConnection.source) : "Provider"}`}
+        description={
+          editingApiConnection?.source &&
+          descriptionBySource.get(editingApiConnection.source) ? (
+            <span className="text-sm leading-relaxed text-fg-muted [&>a]:text-brand-400 [&>a]:hover:text-brand-500">
+              {descriptionBySource.get(editingApiConnection.source)}
+            </span>
+          ) : (
+            "Enter your API credentials to enable this provider."
+          )
+        }
+        size="md"
+        content={
+          <div className="space-y-4">
+            {/* Base URL Input */}
+            {editingApiConnection?.source &&
+              showBaseUrl.get(editingApiConnection?.source) && (
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-fg-subtle">
+                    Base URL
+                  </label>
+                  <div className="relative flex items-center">
+                    <Link size={16} className="absolute left-3 text-fg-subtle" />
+                    <input
+                      type="text"
+                      value={baseUrl}
+                      onChange={(e) => setBaseUrl(e.target.value)}
+                      placeholder="http://localhost:11434"
+                      className="h-10 w-full rounded-lg border border-border-default bg-surface pr-4 pl-9 text-sm text-fg-default placeholder-fg-subtle focus:border-brand-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+            {/* OpenAI Compatible Base URL hint */}
+            {editingApiConnection?.source === ApiSource.OpenAICompatible && (
+              <div className="flex items-start gap-2 rounded-lg border border-border-default bg-surface p-3 text-xs text-fg-muted">
+                <Info size={14} className="mt-0.5 shrink-0" />
+                <span>
+                  If the Base URL with <code className="rounded bg-surface-overlay px-1">/v1</code> doesn't work, try without{" "}
+                  <code className="rounded bg-surface-overlay px-1">/v1</code>, or vice versa.
+                </span>
+              </div>
+            )}
+
+            {/* API Key Input */}
+            {editingApiConnection?.source &&
+              showApiKey.get(editingApiConnection?.source) && (
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-fg-subtle">
+                    API Key
+                  </label>
+                  <div className="relative flex items-center">
+                    <Key size={16} className="absolute left-3 text-fg-subtle" />
+                    <input
+                      type="password"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder="sk-..."
+                      className="h-10 w-full rounded-lg border border-border-default bg-surface pr-4 pl-9 text-sm text-fg-default placeholder-fg-subtle focus:border-brand-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+            {/* Model URL Input */}
+            {editingApiConnection?.source &&
+              showModelUrl.get(editingApiConnection?.source) && (
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-fg-subtle">
+                    Model ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={modelUrl}
+                    onChange={(e) => setModelUrl(e.target.value)}
+                    placeholder="model-name"
+                    className="h-10 w-full rounded-lg border border-border-default bg-surface px-4 text-sm text-fg-default placeholder-fg-subtle focus:border-brand-500 focus:outline-none"
+                  />
+                </div>
+              )}
+
+            {/* OpenRouter Provider Sorting */}
+            {editingApiConnection?.source === ApiSource.OpenRouter && (
+              <div className="space-y-2">
+                <Combobox
+                  label="Provider sorting option"
+                  triggerPlaceholder="Provider sorting option"
+                  searchPlaceholder=""
+                  searchEmpty="No provider sorting found."
+                  options={Array.from(openrouterProviderSortLabel.entries()).map(
+                    ([value, label]) => ({
+                      value: value,
+                      label: label,
+                    }),
+                  )}
+                  value={openrouterProviderSort?.toString()}
+                  onValueChange={(value) => {
+                    setOpenrouterProviderSort(value as OpenrouterProviderSort);
+                  }}
+                />
+                <div className="flex items-center gap-1.5 text-xs text-fg-muted">
+                  <Info size={12} />
+                  <a
+                    href="https://openrouter.ai/docs/features/provider-routing#price-based-load-balancing-default-strategy"
+                    target="_blank"
+                    className="text-brand-400 hover:text-brand-500"
+                  >
+                    Learn more
+                  </a>{" "}
+                  about provider sorting
+                </div>
+              </div>
+            )}
+
+            {/* Mistral hint */}
+            {editingApiConnection?.source === ApiSource.Mistral && (
+              <div className="flex items-start gap-2 rounded-lg border border-border-default bg-surface p-3 text-xs text-fg-muted">
+                <Info size={14} className="mt-0.5 shrink-0" />
+                <span>
+                  It takes about a minute or two for Mistral to fully register a new API key.
+                </span>
+              </div>
+            )}
+
+            {/* OpenAI Compatible Title */}
+            {editingApiConnection?.source === ApiSource.OpenAICompatible && (
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-fg-subtle">
+                  Title (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g., DeepSeek Production, Together.ai"
+                  className="h-10 w-full rounded-lg border border-border-default bg-surface px-4 text-sm text-fg-default placeholder-fg-subtle focus:border-brand-500 focus:outline-none"
+                />
+              </div>
+            )}
           </div>
-          {editingApiConnection?.source &&
-            showBaseUrl.get(editingApiConnection?.source) && (
-              <FloatingLabelInput
-                label="Base URL*"
-                value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
-              />
-            )}
-          {editingApiConnection?.source === ApiSource.OpenAICompatible && (
-            <div
-              className={cn(
-                "mt-[-16px] flex flex-row items-start gap-[4px]",
-                "text-text-secondary text-[16px] leading-[19px] font-[400]",
-                "[&>a]:text-secondary-normal",
-              )}
-            >
-              <div className="pt-[1px]">
-                <Info size={16} />
-              </div>
-              <div>
-                If the Base URL with <code>/v1</code> doesn't work, try without{" "}
-                <code>/v1</code>, or vice versa.
-              </div>
-            </div>
-          )}
-          {editingApiConnection?.source &&
-            showApiKey.get(editingApiConnection?.source) && (
-              <FloatingLabelInput
-                label="API key*"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-            )}
-          {editingApiConnection?.source &&
-            showModelUrl.get(editingApiConnection?.source) && (
-              <FloatingLabelInput
-                label="Model ID (Optional)"
-                value={modelUrl}
-                onChange={(e) => setModelUrl(e.target.value)}
-              />
-            )}
-          {editingApiConnection?.source === ApiSource.OpenRouter && (
-            <div className="flex flex-col gap-[8px]">
-              <Combobox
-                label="Provider sorting option"
-                triggerPlaceholder="Provider sorting option"
-                searchPlaceholder=""
-                searchEmpty="No provider sorting found."
-                options={Array.from(openrouterProviderSortLabel.entries()).map(
-                  ([value, label]) => ({
-                    value: value,
-                    label: label,
-                  }),
-                )}
-                value={openrouterProviderSort?.toString()}
-                onValueChange={(value) => {
-                  setOpenrouterProviderSort(value as OpenrouterProviderSort);
-                }}
-              />
-              <div
-                className={cn(
-                  "flex flex-row items-center gap-[4px]",
-                  "text-text-secondary text-[16px] leading-[19px] font-[400]",
-                  "[&>a]:text-secondary-normal",
-                )}
-              >
-                <Info size={16} />
-                <a
-                  href="https://openrouter.ai/docs/features/provider-routing#price-based-load-balancing-default-strategy"
-                  target="_blank"
-                >
-                  Learn more
-                </a>{" "}
-                about the OpenRouter sorting options
-              </div>
-            </div>
-          )}
-          {editingApiConnection?.source === ApiSource.Mistral && (
-            <div
-              className={cn(
-                "mt-[-16px] flex flex-row items-start gap-[4px]",
-                "text-text-secondary text-[16px] leading-[19px] font-[400]",
-                "[&>a]:text-secondary-normal",
-              )}
-            >
-              <div className="pt-[1px]">
-                <Info size={16} />
-              </div>
-              <div>
-                Please notes that it takes about a minute or two for Mistral to
-                fully register a new API on their system.
-              </div>
-            </div>
-          )}
-          {editingApiConnection?.source === ApiSource.OpenAICompatible && (
-            <FloatingLabelInput
-              label="Title (Optional)"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., DeepSeek Production, Together.ai, My Custom API"
-            />
-          )}
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="ghost">Cancel</Button>
-            </DialogClose>
+        }
+        footer={
+          <div className="flex gap-3">
             <Button
+              variant="ghost"
+              className="flex-1"
+              onClick={() => setIsOpenEdit(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
               disabled={!validateEditForm() || isLoading}
               onClick={handleOnConnect}
             >
-              {isLoading && <Loader2 className="animate-spin" />}
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Connect
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      />
     </div>
   );
 }
