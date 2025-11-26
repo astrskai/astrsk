@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { SessionsGridV2 } from "./ui/list/sessions-grid-v2";
+import { SessionsGrid } from "./ui/list/sessions-grid";
 import { SessionImportDialog } from "./ui/dialog/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
 import { useSessionImportDialog } from "@/shared/hooks/use-session-import-dialog";
@@ -119,7 +119,7 @@ export function SessionsPage() {
             onButtonClick={handleCreateSession}
           />
         ) : (
-          <SessionsGridV2
+          <SessionsGrid
             sessions={sessions}
             areCharactersLoading={areCharactersLoading}
           />

@@ -1,4 +1,4 @@
-import { Plus, Upload, Copy, Trash2 } from "lucide-react";
+import { Upload, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -8,12 +8,10 @@ import type {
   CharacterMetadata,
 } from "@/entities/session/api";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { CreateItemCard } from "@/shared/ui";
-import { Button } from "@/shared/ui/forms";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 import { Checkbox, Label } from "@/shared/ui";
 
-import SessionPreview from "@/features/session/ui/session-preview";
+import SessionCard from "@/features/session/ui/session-card";
 import type { CardAction } from "@/features/common/ui";
 import { useSessionActions } from "@/features/session/model/use-session-actions";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
@@ -24,20 +22,20 @@ import { cn } from "@/shared/lib";
 
 interface SessionsGridProps {
   sessions: SessionWithCharacterMetadata[];
-  onCreateSession: () => void;
-  showNewSessionCard: boolean;
   newlyCreatedSessionId?: string | null;
+  areCharactersLoading?: boolean;
 }
 
 /**
  * Session Grid Item
- * Wrapper component for SessionPreview with actions
+ * Wrapper component for SessionCard with actions
  */
 interface SessionGridItemProps {
   session: Session;
   characterAvatars: CharacterMetadata[];
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   className?: string;
+  areCharactersLoading?: boolean;
   onSessionClick: (sessionId: string) => void;
   onExportClick: (
     sessionId: string,
@@ -56,6 +54,7 @@ function SessionGridItem({
   characterAvatars,
   loading,
   className,
+  areCharactersLoading,
   onSessionClick,
   onExportClick,
   onCopy,
@@ -75,55 +74,57 @@ function SessionGridItem({
   const actions: CardAction[] = [
     {
       icon: Upload,
-      label: `Export`,
+      label: "Export",
       onClick: onExportClick(sessionId, session.props.title, session.flowId),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
-      label: `Copy`,
+      label: "Copy",
       onClick: onCopy(sessionId, session.props.title),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
-      label: `Delete`,
+      label: "Delete",
       onClick: onDeleteClick(sessionId, session.props.title),
       disabled: loading.deleting,
       loading: loading.deleting,
+      className: "text-red-400 hover:text-red-300",
     },
   ];
 
   return (
-    <SessionPreview
+    <SessionCard
       title={session.props.title || "Untitled Session"}
       imageUrl={coverImageUrl}
       messageCount={messageCount}
       isInvalid={isInvalid}
       onClick={() => onSessionClick(sessionId)}
       actions={actions}
-      isShowActions={true}
       className={className}
       characterAvatars={characterAvatars}
+      areCharactersLoading={areCharactersLoading}
     />
   );
 }
 
 /**
  * Sessions grid component
- * Displays sessions in a responsive grid with optional New Session Card
+ * Displays session cards in a responsive grid
  *
  * Layout:
- * - Mobile: Button above grid + 2 columns per row
- * - Desktop: New card inside grid + up to 5 columns per row
+ * - Mobile (sm): 1 column
+ * - Tablet (md): 2 columns
+ * - Desktop (lg): 3 columns
+ * - Large Desktop (xl): 4 columns
  */
 export function SessionsGrid({
   sessions,
-  onCreateSession,
-  showNewSessionCard,
   newlyCreatedSessionId = null,
+  areCharactersLoading = false,
 }: SessionsGridProps) {
   const navigate = useNavigate();
   const selectSession = useSessionStore.use.selectSession();
@@ -168,56 +169,34 @@ export function SessionsGrid({
 
   return (
     <>
-      <div className="flex w-full flex-col gap-4">
-        {/* Mobile: Create Button (outside grid) */}
-        {showNewSessionCard && (
-          <Button
-            onClick={onCreateSession}
-            icon={<Plus className="min-h-4 min-w-4" />}
-            className="w-full md:hidden"
-          >
-            Create new session
-          </Button>
-        )}
+      {/* Sessions Grid - Uses auto-fill with minmax to ensure stable card sizes */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
+        {sessions.map(({ session, characterAvatars }) => {
+          const sessionId = session.id.toString();
+          const loading = loadingStates[sessionId] || {};
+          const isNewlyCreated = animatingId === sessionId;
 
-        {/* Sessions Grid */}
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-2 justify-center gap-2 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-          {/* Desktop: New Session Card (inside grid) */}
-          {showNewSessionCard && (
-            <CreateItemCard
-              title="New Session"
-              onClick={onCreateSession}
-              className="hidden max-w-[340px] md:flex"
+          return (
+            <SessionGridItem
+              key={sessionId}
+              session={session}
+              characterAvatars={characterAvatars}
+              loading={loading}
+              className={cn(
+                isNewlyCreated && [
+                  "border-green-500!",
+                  "shadow-[0_0_20px_rgba(34,197,94,0.5)]",
+                  "animate-pulse",
+                ],
+              )}
+              areCharactersLoading={areCharactersLoading}
+              onSessionClick={handleSessionClick}
+              onExportClick={handleExportClick}
+              onCopy={handleCopyClick}
+              onDeleteClick={handleDeleteClick}
             />
-          )}
-
-          {/* Existing Sessions */}
-          {sessions.map(({ session, characterAvatars }) => {
-            const sessionId = session.id.toString();
-            const loading = loadingStates[sessionId] || {};
-            const isNewlyCreated = animatingId === sessionId;
-
-            return (
-              <SessionGridItem
-                key={sessionId}
-                session={session}
-                characterAvatars={characterAvatars}
-                loading={loading}
-                className={cn(
-                  isNewlyCreated && [
-                    "!border-green-500",
-                    "shadow-[0_0_20px_rgba(34,197,94,0.5)]",
-                    "animate-pulse",
-                  ],
-                )}
-                onSessionClick={handleSessionClick}
-                onExportClick={handleExportClick}
-                onCopy={handleCopyClick}
-                onDeleteClick={handleDeleteClick}
-              />
-            );
-          })}
-        </div>
+          );
+        })}
       </div>
 
       {/* Export Dialog */}

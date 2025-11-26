@@ -32,7 +32,8 @@ export default function OssNoticePage() {
           return;
         }
         setLicenses(await response.json());
-      } catch {
+      } catch (error) {
+        console.error("License fetch error:", error);
         toastError("Failed to load license information");
       }
     };

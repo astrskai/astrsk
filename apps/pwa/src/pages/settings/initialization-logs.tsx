@@ -25,7 +25,7 @@ export default function InitializationLogsPage() {
     setLog(loadedLog);
   }, []);
 
-  const handleCopyLogs = () => {
+  const handleCopyLogs = async () => {
     if (!log) return;
 
     const errorSteps = log.steps
@@ -40,14 +40,12 @@ Status: ${log.hasError ? "❌ Failed" : "✅ Success"}
 
 ${errorSteps ? `Errors:\n${errorSteps}` : "All steps completed successfully"}`;
 
-    navigator.clipboard
-      .writeText(logText)
-      .then(() => {
-        toast.success("Logs copied to clipboard");
-      })
-      .catch(() => {
-        toast.error("Failed to copy logs to clipboard");
-      });
+    try {
+      await navigator.clipboard.writeText(logText);
+      toast.success("Logs copied to clipboard");
+    } catch {
+      toast.error("Failed to copy logs to clipboard");
+    }
   };
 
   const handleClearLogs = () => {
