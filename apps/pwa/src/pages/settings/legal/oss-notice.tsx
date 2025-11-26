@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Search, ExternalLink, ChevronRight, Package } from "lucide-react";
 import DialogBase from "@/shared/ui/dialogs/base";
+import { toastError } from "@/shared/ui/toast/base";
 
 interface LicenseInfo {
   name: string;
@@ -24,11 +25,16 @@ export default function OssNoticePage() {
 
   useEffect(() => {
     const fetchLicenses = async () => {
-      const response = await fetch("/licenses.json");
-      if (!response.ok) {
-        throw new Error("Failed to fetch licenses.json");
+      try {
+        const response = await fetch("/licenses.json");
+        if (!response.ok) {
+          toastError("Failed to load license information");
+          return;
+        }
+        setLicenses(await response.json());
+      } catch {
+        toastError("Failed to load license information");
       }
-      setLicenses(await response.json());
     };
     fetchLicenses();
   }, []);

@@ -74,11 +74,11 @@ const descriptionBySource = new Map<ApiSource, React.ReactNode>([
     ApiSource.GoogleGenerativeAI,
     <>
       If you do not have an API key, 1){" "}
-      <a href="https://ai.google.dev/aistudio" target="_blank">
+      <a href="https://ai.google.dev/aistudio" target="_blank" rel="noopener noreferrer">
         signin to Google AI studio
       </a>{" "}
       and 2){" "}
-      <a href="https://aistudio.google.com/app/apikey" target="_blank">
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">
         get API key here
       </a>
       .
@@ -88,11 +88,11 @@ const descriptionBySource = new Map<ApiSource, React.ReactNode>([
     ApiSource.DeepSeek,
     <>
       If you do not have an API key, 1){" "}
-      <a href="https://platform.deepseek.com/sign_in" target="_blank">
+      <a href="https://platform.deepseek.com/sign_in" target="_blank" rel="noopener noreferrer">
         signin to Deepseek
       </a>{" "}
       and 2){" "}
-      <a href="https://platform.deepseek.com/api_keys" target="_blank">
+      <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">
         get API key here
       </a>
       .
@@ -102,11 +102,11 @@ const descriptionBySource = new Map<ApiSource, React.ReactNode>([
     ApiSource.Anthropic,
     <>
       If you do not have an API key, 1){" "}
-      <a href="https://claude.ai/login" target="_blank">
+      <a href="https://claude.ai/login" target="_blank" rel="noopener noreferrer">
         signin to Anthropic
       </a>{" "}
       and 2){" "}
-      <a href="https://console.anthropic.com/settings/keys" target="_blank">
+      <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">
         get API key here
       </a>
       .
@@ -116,11 +116,11 @@ const descriptionBySource = new Map<ApiSource, React.ReactNode>([
     ApiSource.OpenAI,
     <>
       If you do not have an API key, 1){" "}
-      <a href="https://auth.openai.com/log-in" target="_blank">
+      <a href="https://auth.openai.com/log-in" target="_blank" rel="noopener noreferrer">
         signin to OpenAI
       </a>{" "}
       and 2){" "}
-      <a href="https://platform.openai.com/api-keys" target="_blank">
+      <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">
         get API key here
       </a>
       .
@@ -130,11 +130,11 @@ const descriptionBySource = new Map<ApiSource, React.ReactNode>([
     ApiSource.Mistral,
     <>
       If you do not have an API key, 1){" "}
-      <a href="https://auth.mistral.ai/ui/login" target="_blank">
+      <a href="https://auth.mistral.ai/ui/login" target="_blank" rel="noopener noreferrer">
         signin to Mistral
       </a>{" "}
       and 2){" "}
-      <a href="https://console.mistral.ai/api-keys" target="_blank">
+      <a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener noreferrer">
         get API key here
       </a>
       .
@@ -144,11 +144,11 @@ const descriptionBySource = new Map<ApiSource, React.ReactNode>([
     ApiSource.xAI,
     <>
       If you do not have an API key, 1){" "}
-      <a href="https://accounts.x.ai/sign-in" target="_blank">
+      <a href="https://accounts.x.ai/sign-in" target="_blank" rel="noopener noreferrer">
         signin to xAI
       </a>{" "}
       and 2){" "}
-      <a href="https://console.x.ai/team/default/api-keys" target="_blank">
+      <a href="https://console.x.ai/team/default/api-keys" target="_blank" rel="noopener noreferrer">
         get API key here
       </a>
       .
@@ -158,11 +158,11 @@ const descriptionBySource = new Map<ApiSource, React.ReactNode>([
     ApiSource.OpenRouter,
     <>
       If you do not have an API key, 1){" "}
-      <a href="https://openrouter.ai/" target="_blank">
+      <a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer">
         signin to OpenRouter
       </a>{" "}
       and 2){" "}
-      <a href="https://openrouter.ai/settings/keys" target="_blank">
+      <a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener noreferrer">
         get API key here
       </a>
       .
@@ -739,6 +739,7 @@ export default function ProvidersPage() {
                   <a
                     href="https://openrouter.ai/docs/features/provider-routing#price-based-load-balancing-default-strategy"
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="text-brand-400 hover:text-brand-500"
                   >
                     Learn more

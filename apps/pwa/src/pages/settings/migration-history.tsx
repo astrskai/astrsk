@@ -46,8 +46,14 @@ export default function MigrationHistoryPage() {
       })
       .join("\n\n");
 
-    navigator.clipboard.writeText(logText);
-    toast.success("Migration history copied to clipboard");
+    navigator.clipboard
+      .writeText(logText)
+      .then(() => {
+        toast.success("Migration history copied to clipboard");
+      })
+      .catch(() => {
+        toast.error("Failed to copy migration history to clipboard");
+      });
   };
 
   const handleClearLogs = () => {

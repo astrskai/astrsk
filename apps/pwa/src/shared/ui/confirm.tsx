@@ -116,7 +116,7 @@ const DeleteConfirm = ({
 }: {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  title?: React.ReactNode;
+  title?: string;
   description?: React.ReactNode;
   children?: React.ReactNode;
   deleteLabel?: string;
@@ -127,7 +127,7 @@ const DeleteConfirm = ({
       open={open}
       onOpenChange={onOpenChange}
       trigger={children}
-      title={typeof title === "string" ? title : undefined}
+      title={title}
       description={description}
       size="md"
       isShowCloseButton={false}
