@@ -48,6 +48,7 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
       "all_cards",
       "user_character_card_id",
       "background_id",
+      "cover_id",
       "translation",
       "chat_styles",
       "flow_id",
@@ -139,6 +140,31 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
     zip.file(filename, assetFile);
   }
 
+  private async exportCoverToZip(
+    zip: JSZip,
+    coverId: UniqueEntityID,
+  ): Promise<void> {
+    console.log(`[EXPORT] Exporting cover image: ${coverId.toString()}`);
+
+    // Get cover asset directly (coverId is already an asset ID)
+    const assetOrError = await this.getAsset.execute(coverId);
+    if (assetOrError.isFailure) {
+      throw new Error(assetOrError.getError());
+    }
+    const asset = assetOrError.getValue();
+
+    // Get asset file
+    const assetFile = await file(asset.filePath).getOriginFile();
+    if (!assetFile) {
+      throw new Error("Cover image file not found");
+    }
+
+    // Add cover to zip
+    const filename = `covers/${coverId.toString()}.astrsk.cover`;
+    console.log(`[EXPORT] Adding cover to zip: ${filename}`);
+    zip.file(filename, assetFile);
+  }
+
   private async exportTurnToZip(
     zip: JSZip,
     turnId: UniqueEntityID,
@@ -216,6 +242,11 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
       // Export background to zip
       if (session.backgroundId) {
         await this.exportBackgroundToZip(zip, session.backgroundId);
+      }
+
+      // Export cover to zip
+      if (session.coverId) {
+        await this.exportCoverToZip(zip, session.coverId);
       }
 
       // Export history to zip

@@ -65,6 +65,7 @@ export async function initServices(): Promise<void> {
     FlowService.importFlowWithNodes,
     CardService.importCardFromFile,
     BackgroundService.saveFileToBackground,
+    AssetService.saveFileToAsset,
     FlowService.flowRepo,
     FlowService.getModelsFromFlowFile,
     FlowService.cloneFlow,

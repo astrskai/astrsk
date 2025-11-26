@@ -1,5 +1,6 @@
 import { GetAsset } from "@/entities/asset/usecases/get-asset";
 import { CloneAsset } from "@/entities/asset/usecases/clone-asset";
+import { SaveFileToAsset } from "@/entities/asset/usecases/save-file-to-asset";
 import { GetBackground } from "@/entities/background/usecases/get-background";
 import { CloneBackground } from "@/entities/background/usecases/clone-background";
 import { SaveFileToBackground } from "@/entities/background/usecases/save-file-to-background";
@@ -83,6 +84,7 @@ export class SessionService {
     importFlowWithNodes: ImportFlowWithNodes,
     importCardFromFile: ImportCardFromFile,
     saveFileToBackground: SaveFileToBackground,
+    saveFileToAsset: SaveFileToAsset,
     saveFlowRepo: SaveFlowRepo,
     getModelsFromFlowFile: GetModelsFromFlowFile,
     cloneFlow: CloneFlow,
@@ -190,6 +192,7 @@ export class SessionService {
       importFlowWithNodes,
       importCardFromFile,
       saveFileToBackground,
+      saveFileToAsset,
       this.addMessage,
     );
     this.listSessionByCard = new ListSessionByCard(this.sessionRepo);

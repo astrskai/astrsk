@@ -7,6 +7,7 @@ import { formatFail } from "@/shared/lib";
 
 import { defaultBackgrounds } from "@/shared/stores/background-store";
 import { InsertSession } from "@/db/schema/sessions";
+import { SaveFileToAsset } from "@/entities/asset/usecases/save-file-to-asset";
 import { SaveFileToBackground } from "@/entities/background/usecases/save-file-to-background";
 import { CardType } from "@/entities/card/domain/card";
 import { ImportCardFromFile } from "@/entities/card/usecases/import-card-from-file";
@@ -38,6 +39,7 @@ export class ImportSessionFromFile
     private importFlowWithNodes: ImportFlowWithNodes,
     private importCardFromFile: ImportCardFromFile,
     private saveFileToBackground: SaveFileToBackground,
+    private saveFileToAsset: SaveFileToAsset,
     private addMessage: AddMessage,
   ) { }
 
@@ -186,6 +188,45 @@ export class ImportSessionFromFile
     return idMap;
   }
 
+  private async importCoverFromZip(
+    zip: JSZip,
+  ): Promise<Map<string, string>> {
+    // Make ID map
+    const idMap = new Map<string, string>();
+
+    // Get covers folder
+    const folder = zip.folder("covers");
+    if (!folder) {
+      return idMap;
+    }
+
+    // Get all files in the folder
+    const fileEntries = folder.filter(() => true);
+    for (const fileEntry of fileEntries) {
+      // Read file
+      const fileBlob = await fileEntry.async("blob");
+      const file = new File([fileBlob], fileEntry.name);
+
+      // Import cover as asset
+      const assetOrError = await this.saveFileToAsset.execute({
+        file,
+      });
+      if (assetOrError.isFailure) {
+        throw new Error(assetOrError.getError());
+      }
+
+      // Set new ID
+      const asset = assetOrError.getValue();
+      // Extract old ID from filename: "covers/UUID.astrsk.cover" or "UUID.astrsk.cover"
+      const nameParts = fileEntry.name.split(".")[0].split("/");
+      const oldId = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
+      idMap.set(oldId, asset.id.toString());
+    }
+
+    // Return ID map
+    return idMap;
+  }
+
   private async addMessageFromZip(
     zip: JSZip,
     sessionId: UniqueEntityID,
@@ -317,11 +358,15 @@ export class ImportSessionFromFile
       // Import background from zip (as session-local)
       const backgroundIdMap = await this.importBackgroundFromZip(zip, savedSession.id);
 
+      // Import cover from zip (as asset)
+      const coverIdMap = await this.importCoverFromZip(zip);
+
       // Merge ID maps
       const idMap = new Map<string, string>([
         ...flowIdMap,
         ...cardIdMap,
         ...backgroundIdMap,
+        ...coverIdMap,
       ]);
 
       // Replace IDs in session props
@@ -364,6 +409,15 @@ export class ImportSessionFromFile
         }
         sessionProps.background_id = newBackgroundId;
       }
+      if (sessionProps.cover_id) {
+        const newCoverId = idMap.get(sessionProps.cover_id);
+        if (!newCoverId) {
+          throw new Error(
+            `Cover ID ${sessionProps.cover_id} not found in ID map`,
+          );
+        }
+        sessionProps.cover_id = newCoverId;
+      }
 
       // Update session with imported resources
       const updateResult = savedSession.update({
@@ -378,6 +432,9 @@ export class ImportSessionFromFile
           : undefined,
         backgroundId: sessionProps.background_id
           ? new UniqueEntityID(sessionProps.background_id)
+          : undefined,
+        coverId: sessionProps.cover_id
+          ? new UniqueEntityID(sessionProps.cover_id)
           : undefined,
         flowId: sessionProps.flow_id
           ? new UniqueEntityID(sessionProps.flow_id)
