@@ -270,12 +270,12 @@ function DataStoreNodeComponent({
   return (
     <div
       className={`group/node relative inline-flex w-80 items-center justify-between rounded-lg ${
-        // "bg-background-surface-3 outline-2 outline-status-destructive-light"
+        // "bg-surface-overlay outline-2 outline-status-error"
         // isNodeInvalid
-        // ? "bg-background-surface-3 outline-2 outline-status-destructive-light"
+        // ? "bg-surface-overlay outline-2 outline-status-error"
         selected
-          ? "bg-background-surface-3 outline-accent-primary shadow-lg outline-2"
-          : "bg-background-surface-3 outline-border-light outline-1"
+          ? "bg-surface-overlay outline-accent-primary shadow-lg outline-2"
+          : "bg-surface-overlay outline-border-subtle outline-1"
       }`}
     >
       <div className="inline-flex flex-1 flex-col items-start justify-start gap-4 p-4">
@@ -283,10 +283,10 @@ function DataStoreNodeComponent({
         <div className="flex flex-col items-start justify-start gap-2 self-stretch">
           <div className="inline-flex items-center justify-start gap-2 self-stretch">
             <div className="justify-start">
-              <span className="text-text-body text-[10px] font-medium">
+              <span className="text-fg-muted text-[10px] font-medium">
                 Data update node name
               </span>
-              <span className="text-secondary-normal text-[10px] font-medium">
+              <span className="text-accent-secondary text-[10px] font-medium">
                 *
               </span>
             </div>
@@ -318,19 +318,19 @@ function DataStoreNodeComponent({
           className={`flex h-20 flex-col items-center justify-center gap-2 self-stretch rounded-lg px-2 outline outline-offset-[-1px] transition-all ${
             hasNoFields
               ? isPanelActive
-                ? "bg-background-surface-light outline-status-destructive-light hover:opacity-70"
-                : "bg-background-surface-4 outline-status-destructive-light hover:bg-background-surface-5"
+                ? "bg-emphasis outline-status-error hover:opacity-70"
+                : "bg-hover outline-status-error hover:bg-active"
               : isPanelActive
-                ? "bg-background-surface-light outline-border-light hover:opacity-70"
-                : "bg-background-surface-4 outline-border-light hover:bg-background-surface-5"
+                ? "bg-emphasis outline-border-subtle hover:opacity-70"
+                : "bg-hover outline-border-subtle hover:bg-active"
           }`}
         >
           <Pencil
-            className={`h-5 w-5 ${isPanelActive ? "text-text-contrast-text" : "text-text-primary"}`}
+            className={`h-5 w-5 ${isPanelActive ? "text-fg-on-emphasis" : "text-fg-default"}`}
           />
           <div
             className={`justify-start self-stretch text-center text-xs font-medium ${
-              isPanelActive ? "text-text-info" : "text-text-secondary"
+              isPanelActive ? "text-fg-subtle" : "text-fg-muted"
             }`}
           >
             Edit data fields
@@ -359,7 +359,7 @@ function DataStoreNodeComponent({
                 onClick={handleCopyClick}
                 className="group/copy relative h-6 w-6 overflow-hidden transition-opacity hover:opacity-80"
               >
-                <Copy className="text-text-contrast-text min-h-5 min-w-4" />
+                <Copy className="text-fg-on-emphasis min-h-5 min-w-4" />
               </button>
             </TooltipTrigger>
             <TooltipContent side="left" variant="button">
@@ -375,7 +375,7 @@ function DataStoreNodeComponent({
                 onClick={handleDeleteClick}
                 className="group/delete relative h-6 w-6 overflow-hidden transition-opacity hover:opacity-80"
               >
-                <Trash2 className="text-text-contrast-text min-h-5 min-w-4" />
+                <Trash2 className="text-fg-on-emphasis min-h-5 min-w-4" />
               </button>
             </TooltipTrigger>
             <TooltipContent side="left" variant="button">

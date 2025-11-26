@@ -479,8 +479,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   // Early returns for loading/error states - only show when truly loading, not during editing
   if (isLoading && !promptData) {
     return (
-      <div className="bg-background-surface-2 flex h-full items-center justify-center">
-        <div className="text-text-subtle flex items-center gap-2">
+      <div className="bg-surface-raised flex h-full items-center justify-center">
+        <div className="text-fg-subtle flex items-center gap-2">
           <span>Loading prompt panel...</span>
         </div>
       </div>
@@ -489,8 +489,8 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
   if (error && !promptData) {
     return (
-      <div className="bg-background-surface-2 flex h-full items-center justify-center">
-        <div className="text-text-subtle flex items-center gap-2">
+      <div className="bg-surface-raised flex h-full items-center justify-center">
+        <div className="text-fg-subtle flex items-center gap-2">
           <span>Failed to load prompt data</span>
         </div>
       </div>
@@ -506,7 +506,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   return (
     <div
       ref={containerRef}
-      className="bg-background-surface-2 flex h-full flex-col"
+      className="bg-surface-raised flex h-full flex-col"
     >
       <FormatSelectorAccordion
         value={completionMode === "chat" ? ApiType.Chat : ApiType.Text}
@@ -526,7 +526,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
             <div className="flex h-full w-full items-center justify-center">
               <div className="flex flex-col items-center justify-center gap-8">
                 <div className="flex flex-col items-center justify-start gap-2">
-                  <div className="text-text-body justify-start text-center text-base leading-relaxed font-semibold">
+                  <div className="text-fg-muted justify-start text-center text-base leading-relaxed font-semibold">
                     No Message
                   </div>
                   <div className="text-background-surface-5 w-44 justify-start text-center text-xs font-normal">
@@ -556,19 +556,19 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                 <div className="mb-2 inline-flex flex-wrap content-start items-start justify-start gap-2 self-stretch">
                   <button
                     onClick={addNewMessage}
-                    className="bg-background-surface-4 outline-border-light hover:bg-background-surface-5 flex h-7 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
+                    className="bg-hover outline-border-subtle hover:bg-active flex h-7 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
                   >
-                    <Plus className="text-text-body h-4 w-4" />
-                    <div className="text-text-primary justify-center text-xs leading-none font-semibold">
+                    <Plus className="text-fg-muted h-4 w-4" />
+                    <div className="text-fg-default justify-center text-xs leading-none font-semibold">
                       Message
                     </div>
                   </button>
                   <button
                     onClick={addNewHistoryMessage}
-                    className="bg-background-surface-4 outline-border-light hover:bg-background-surface-5 flex h-7 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
+                    className="bg-hover outline-border-subtle hover:bg-active flex h-7 items-center justify-center gap-2 rounded-full px-3 py-2 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] transition-colors"
                   >
-                    <Plus className="text-text-body h-4 w-4" />
-                    <div className="text-text-primary justify-center text-xs leading-none font-semibold">
+                    <Plus className="text-fg-muted h-4 w-4" />
+                    <div className="text-fg-default justify-center text-xs leading-none font-semibold">
                       History message
                     </div>
                   </button>
@@ -632,7 +632,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                             onClick={() => deleteMessage(selectedItem.id)}
                             className="absolute top-1 right-1 z-10 h-6 w-6 rounded-sm transition-opacity hover:opacity-80"
                           >
-                            <Trash2 className="text-text-subtle min-h-4 min-w-3.5" />
+                            <Trash2 className="text-fg-subtle min-h-4 min-w-3.5" />
                           </button>
                         </TooltipTrigger>
                         <TooltipContent variant="button">
@@ -644,7 +644,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                     {/* Title header */}
                     <div className="inline-flex items-center justify-start gap-2 self-stretch">
                       <div className="flex flex-1 items-center justify-start gap-4">
-                        <div className="text-text-body justify-start text-xs font-medium">
+                        <div className="text-fg-muted justify-start text-xs font-medium">
                           {selectedItem.type === "history"
                             ? "History message"
                             : "Message"}
@@ -657,7 +657,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                         <div className="inline-flex items-start justify-start gap-2 self-stretch">
                           <div className="inline-flex flex-1 flex-col items-start justify-start gap-2">
                             <div className="inline-flex items-center justify-start gap-2 self-stretch">
-                              <div className="text-text-body justify-start text-[10px] leading-none font-medium">
+                              <div className="text-fg-muted justify-start text-[10px] leading-none font-medium">
                                 Name
                               </div>
                             </div>
@@ -679,7 +679,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 onBlur={() =>
                                   updatePromptMessages.setCursorActive(false)
                                 }
-                                className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px] @md:min-w-[200px]"
+                                className="bg-canvas outline-border-muted text-fg-default h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px] @md:min-w-[200px]"
                                 placeholder="History message"
                               />
                             </div>
@@ -690,13 +690,13 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                         <div className="flex flex-col items-start justify-start gap-2 self-stretch">
                           <div className="flex flex-col items-start justify-start gap-1 self-stretch">
                             <div className="inline-flex items-start justify-start gap-1 self-stretch">
-                              <div className="text-text-body justify-start text-[10px] leading-none font-medium">
+                              <div className="text-fg-muted justify-start text-[10px] leading-none font-medium">
                                 History range
                               </div>
                               <TooltipProvider>
                                 <Tooltip delayDuration={0}>
                                   <TooltipTrigger asChild>
-                                    <HelpCircle className="text-text-info h-4 w-4 cursor-help" />
+                                    <HelpCircle className="text-fg-subtle h-4 w-4 cursor-help" />
                                   </TooltipTrigger>
                                   <TooltipContent variant="button">
                                     <p className="max-w-xs text-xs">
@@ -727,12 +727,12 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 }}
                                 className="inline-flex cursor-pointer items-center justify-start gap-2 self-stretch"
                               >
-                                <div className="bg-background-surface-5 flex h-3 w-3 items-center justify-center gap-2 rounded-md p-0.5">
+                                <div className="bg-active flex h-3 w-3 items-center justify-center gap-2 rounded-md p-0.5">
                                   {selectedItem.countFromEnd !== false && (
                                     <div className="bg-text-primary h-1.5 w-1.5 rounded-full"></div>
                                   )}
                                 </div>
-                                <div className="text-text-primary justify-start text-[10px] leading-none font-medium">
+                                <div className="text-fg-default justify-start text-[10px] leading-none font-medium">
                                   Count from end (newest → oldest)
                                 </div>
                               </button>
@@ -748,19 +748,19 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 }}
                                 className="mt-1 inline-flex cursor-pointer items-center justify-start gap-2 self-stretch"
                               >
-                                <div className="bg-background-surface-5 flex h-3 w-3 items-center justify-center gap-2 rounded-md p-0.5">
+                                <div className="bg-active flex h-3 w-3 items-center justify-center gap-2 rounded-md p-0.5">
                                   {selectedItem.countFromEnd === false && (
                                     <div className="bg-text-primary h-1.5 w-1.5 rounded-full"></div>
                                   )}
                                 </div>
-                                <div className="text-text-primary justify-start text-[10px] leading-none font-medium">
+                                <div className="text-fg-default justify-start text-[10px] leading-none font-medium">
                                   Count from start (oldest → newest)
                                 </div>
                               </button>
                             </div>
                           </div>
                           <div className="inline-flex items-center justify-start gap-2 self-stretch">
-                            <div className="text-text-subtle justify-start text-[10px] leading-none font-medium">
+                            <div className="text-fg-subtle justify-start text-[10px] leading-none font-medium">
                               Messages
                             </div>
                             <div className="inline-flex w-16 flex-col items-start justify-start gap-2">
@@ -783,11 +783,11 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 onBlur={() =>
                                   updatePromptMessages.setCursorActive(false)
                                 }
-                                className="bg-background-surface-0 outline-border-normal text-text-primary min-h-8 self-stretch rounded-md px-4 py-2 text-center text-xs font-normal outline-1 outline-offset-[-1px]"
+                                className="bg-canvas outline-border-muted text-fg-default min-h-8 self-stretch rounded-md px-4 py-2 text-center text-xs font-normal outline-1 outline-offset-[-1px]"
                                 min="0"
                               />
                             </div>
-                            <div className="text-text-subtle justify-start text-[10px] leading-none font-medium">
+                            <div className="text-fg-subtle justify-start text-[10px] leading-none font-medium">
                               to
                             </div>
                             <div className="inline-flex w-16 flex-col items-start justify-start gap-2">
@@ -810,7 +810,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 onBlur={() =>
                                   updatePromptMessages.setCursorActive(false)
                                 }
-                                className="bg-background-surface-0 outline-border-normal text-text-primary min-h-8 self-stretch rounded-md px-4 py-2 text-center text-xs font-normal outline-1 outline-offset-[-1px]"
+                                className="bg-canvas outline-border-muted text-fg-default min-h-8 self-stretch rounded-md px-4 py-2 text-center text-xs font-normal outline-1 outline-offset-[-1px]"
                                 min="1"
                               />
                             </div>
@@ -824,7 +824,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                       <div className="inline-flex items-start justify-start gap-2 self-stretch">
                         <div className="inline-flex flex-1 flex-col items-start justify-start gap-2">
                           <div className="inline-flex items-center justify-start gap-2 self-stretch">
-                            <div className="text-text-body justify-start text-[10px] leading-none font-medium">
+                            <div className="text-fg-muted justify-start text-[10px] leading-none font-medium">
                               Name
                             </div>
                           </div>
@@ -846,14 +846,14 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                               onBlur={() =>
                                 updatePromptMessages.setCursorActive(false)
                               }
-                              className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
+                              className="bg-canvas outline-border-muted text-fg-default h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]"
                               placeholder="Enter message name"
                             />
                           </div>
                         </div>
                         <div className="inline-flex flex-1 flex-col items-start justify-start gap-2">
                           <div className="inline-flex items-center justify-start gap-2 self-stretch">
-                            <div className="text-text-body justify-start text-[10px] leading-none font-medium">
+                            <div className="text-fg-muted justify-start text-[10px] leading-none font-medium">
                               Role
                             </div>
                           </div>
@@ -867,7 +867,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
                                 )
                               }
                             >
-                              <SelectTrigger className="bg-background-surface-0 outline-border-normal text-text-primary h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]">
+                              <SelectTrigger className="bg-canvas outline-border-muted text-fg-default h-8 self-stretch rounded-md px-4 py-2 text-xs font-normal outline-1 outline-offset-[-1px]">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -885,19 +885,19 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
                     {/* Description field */}
                     <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2 self-stretch overflow-hidden">
-                      <div className="text-text-body justify-start self-stretch text-[10px] leading-none font-medium">
+                      <div className="text-fg-muted justify-start self-stretch text-[10px] leading-none font-medium">
                         Description
                       </div>
                       <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-1 self-stretch overflow-hidden">
-                        <div className="bg-background-surface-0 outline-border-normal relative flex min-w-0 flex-1 flex-col items-start justify-start self-stretch overflow-hidden rounded-md outline-1 outline-offset-[-1px]">
+                        <div className="bg-canvas outline-border-muted relative flex min-w-0 flex-1 flex-col items-start justify-start self-stretch overflow-hidden rounded-md outline-1 outline-offset-[-1px]">
                           <button
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className="hover:bg-background-surface-1 absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-sm transition-colors"
+                            className="hover:bg-surface absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-sm transition-colors"
                           >
                             {isExpanded ? (
-                              <Minimize2 className="text-text-subtle h-4 w-4" />
+                              <Minimize2 className="text-fg-subtle h-4 w-4" />
                             ) : (
-                              <Maximize2 className="text-text-subtle h-4 w-4" />
+                              <Maximize2 className="text-fg-subtle h-4 w-4" />
                             )}
                           </button>
                           <div className="h-full w-full">
@@ -928,13 +928,13 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
               {/* Expanded Editor View */}
               {isExpanded && selectedItem && (
-                <div className="bg-background-surface-2 absolute inset-0 z-20 p-4">
-                  <div className="bg-background-surface-0 outline-border-normal relative flex h-full w-full flex-col items-start justify-start overflow-hidden rounded-md outline-1 outline-offset-[-1px]">
+                <div className="bg-surface-raised absolute inset-0 z-20 p-4">
+                  <div className="bg-canvas outline-border-muted relative flex h-full w-full flex-col items-start justify-start overflow-hidden rounded-md outline-1 outline-offset-[-1px]">
                     <button
                       onClick={() => setIsExpanded(false)}
-                      className="hover:bg-background-surface-1 absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-sm transition-colors"
+                      className="hover:bg-surface absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-sm transition-colors"
                     >
-                      <Minimize2 className="text-text-subtle h-4 w-4" />
+                      <Minimize2 className="text-fg-subtle h-4 w-4" />
                     </button>
                     <div className="h-full w-full">
                       <Editor
@@ -978,7 +978,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
             {/* Expanded Editor View for text mode */}
             {isExpanded && (
-              <div className="bg-background-surface-2 absolute inset-0 z-20 p-4">
+              <div className="bg-surface-raised absolute inset-0 z-20 p-4">
                 <div className="h-full w-full">
                   <Editor
                     value={editorContent}

@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   LogOut,
+  LogIn,
 } from "lucide-react";
 import { IconSessions, IconWorkflow, Logo } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
@@ -235,18 +236,22 @@ const SidebarHeader = ({
 const UserProfile = ({
   isCollapsed,
   onSignOut,
+  onSignIn,
   closeMobileMenu,
 }: {
   isCollapsed: boolean;
   onSignOut: () => void;
+  onSignIn: () => void;
   closeMobileMenu: () => void;
 }) => {
   const { user } = useClerk();
   const subscription = useQuery(api.payment.public.getSubscription);
 
-  const userName =
-    user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "Guest";
-  const planName = subscription?.name || "Free Plan";
+  const isLoggedIn = !!user;
+  const userName = isLoggedIn
+    ? user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "User"
+    : "Guest";
+  const planName = isLoggedIn ? subscription?.name || "Free Plan" : "Sign in";
 
   return (
     <div className="border-t border-zinc-800 p-4">
@@ -277,19 +282,35 @@ const UserProfile = ({
           </h4>
           <p className="truncate text-xs text-zinc-500">{planName}</p>
         </div>
-        <button
-          onClick={() => {
-            onSignOut();
-            closeMobileMenu();
-          }}
-          className={cn(
-            "text-zinc-500 transition-colors hover:text-zinc-300",
-            isCollapsed ? "hidden" : "block",
-          )}
-          title="Sign out"
-        >
-          <LogOut size={16} />
-        </button>
+        {isLoggedIn ? (
+          <button
+            onClick={() => {
+              onSignOut();
+              closeMobileMenu();
+            }}
+            className={cn(
+              "text-zinc-500 transition-colors hover:text-zinc-300",
+              isCollapsed ? "hidden" : "block",
+            )}
+            title="Sign out"
+          >
+            <LogOut size={16} />
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              onSignIn();
+              closeMobileMenu();
+            }}
+            className={cn(
+              "text-zinc-500 transition-colors hover:text-zinc-300",
+              isCollapsed ? "hidden" : "block",
+            )}
+            title="Sign in"
+          >
+            <LogIn size={16} />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -318,6 +339,10 @@ export const LeftMainSidebar = ({
   const handleSignOut = () => {
     signOut();
     navigate({ to: "/settings", replace: true });
+  };
+
+  const handleSignIn = () => {
+    navigate({ to: "/sign-in" });
   };
 
   return (
@@ -374,6 +399,7 @@ export const LeftMainSidebar = ({
         <UserProfile
           isCollapsed={isCollapsed}
           onSignOut={handleSignOut}
+          onSignIn={handleSignIn}
           closeMobileMenu={closeMobileMenu}
         />
 

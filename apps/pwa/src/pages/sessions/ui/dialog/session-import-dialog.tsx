@@ -165,7 +165,7 @@ export function SessionImportDialog({
           }}
           disabled={isImporting}
         />
-        <span className="text-text-primary justify-start text-base leading-relaxed font-normal">
+        <span className="text-fg-default justify-start text-base leading-relaxed font-normal">
           Include chat messages
         </span>
       </Label>

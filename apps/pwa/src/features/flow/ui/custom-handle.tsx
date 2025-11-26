@@ -31,10 +31,10 @@ export function CustomHandle({
         // Active state - menu is open
         return (
           <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-            <div className="w-6 h-6 p-[5px] bg-background-surface-3 rounded-xl outline outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center">
-              <Plus className="w-4 h-4 text-text-primary" />
+            <div className="w-6 h-6 p-[5px] bg-surface-overlay rounded-xl outline outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center">
+              <Plus className="w-4 h-4 text-fg-default" />
             </div>
-            {label && <span className="ml-1 text-text-primary text-xs font-semibold">{label}</span>}
+            {label && <span className="ml-1 text-fg-default text-xs font-semibold">{label}</span>}
           </div>
         );
       }
@@ -49,10 +49,10 @@ export function CustomHandle({
           </div>
           {/* Large handle on hover with plus icon */}
           <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 hidden group-hover/node:flex items-center pointer-events-none">
-            <div className="w-6 h-6 p-[5px] bg-background-surface-light rounded-xl flex justify-center items-center">
-              <Plus className="w-4 h-4 text-text-contrast-text" />
+            <div className="w-6 h-6 p-[5px] bg-emphasis rounded-xl flex justify-center items-center">
+              <Plus className="w-4 h-4 text-fg-on-emphasis" />
             </div>
-            {label && <span className="ml-1 text-text-primary text-xs font-semibold">{label}</span>}
+            {label && <span className="ml-1 text-fg-default text-xs font-semibold">{label}</span>}
           </div>
         </>
       );
@@ -70,8 +70,8 @@ export function CustomHandle({
         type={isOutput ? "source" : "target"}
         className={
           isOutput 
-            ? "!w-3 !h-3 !border-0 !bg-transparent hover:!bg-background-surface-light group-hover/node:!w-6 group-hover/node:!h-6 transition-all duration-200"
-            : "!w-3 !h-3 !bg-white !border-0 hover:!bg-background-surface-light transition-all duration-200"
+            ? "!w-3 !h-3 !border-0 !bg-transparent hover:!bg-emphasis group-hover/node:!w-6 group-hover/node:!h-6 transition-all duration-200"
+            : "!w-3 !h-3 !bg-white !border-0 hover:!bg-emphasis transition-all duration-200"
         }
         title={
           isOutput 
@@ -114,7 +114,7 @@ export function CustomIfHandle({
         type="source"
         id={handleId}
         style={{ top: topPosition }}
-        className="!w-3 !h-3 !border-0 !bg-transparent hover:!bg-background-surface-light group-hover/node:!w-6 group-hover/node:!h-6 transition-all duration-200"
+        className="!w-3 !h-3 !border-0 !bg-transparent hover:!bg-emphasis group-hover/node:!w-6 group-hover/node:!h-6 transition-all duration-200"
         title={`Click or drag to create new node (${label} path)`}
         onClick={(e) => {
           e.stopPropagation();
@@ -127,13 +127,13 @@ export function CustomIfHandle({
         // Active state - menu is open
         <>
           <div 
-            className="absolute right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-background-surface-3 rounded-xl outline outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center pointer-events-none"
+            className="absolute right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-surface-overlay rounded-xl outline outline-1 outline-offset-[-1px] outline-background-surface-2 flex justify-center items-center pointer-events-none"
             style={{ top: topPosition }}
           >
-            <Plus className="w-4 h-4 text-text-primary" />
+            <Plus className="w-4 h-4 text-fg-default" />
           </div>
           <span 
-            className="absolute right-0 translate-x-[150%] -translate-y-1/2 text-text-primary text-xs font-semibold pointer-events-none"
+            className="absolute right-0 translate-x-[150%] -translate-y-1/2 text-fg-default text-xs font-semibold pointer-events-none"
             style={{ top: topPosition }}
           >
             {label}
@@ -152,14 +152,14 @@ export function CustomIfHandle({
           </div>
           {/* Large handle on hover with plus icon */}
           <div 
-            className="absolute right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-background-surface-light rounded-xl hidden group-hover/node:flex justify-center items-center pointer-events-none"
+            className="absolute right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 p-[5px] bg-emphasis rounded-xl hidden group-hover/node:flex justify-center items-center pointer-events-none"
             style={{ top: topPosition }}
           >
-            <Plus className="w-4 h-4 text-text-contrast-text" />
+            <Plus className="w-4 h-4 text-fg-on-emphasis" />
           </div>
           {/* Label positioned separately */}
           <span 
-            className="absolute right-0 translate-x-[150%] -translate-y-1/2 text-text-primary text-xs font-semibold hidden group-hover/node:block pointer-events-none"
+            className="absolute right-0 translate-x-[150%] -translate-y-1/2 text-fg-default text-xs font-semibold hidden group-hover/node:block pointer-events-none"
             style={{ top: topPosition }}
           >
             {label}

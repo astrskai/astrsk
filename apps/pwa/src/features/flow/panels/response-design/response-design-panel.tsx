@@ -131,7 +131,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center bg-[#111111]">
-        <div className="flex items-center gap-2 text-text-subtle">
+        <div className="flex items-center gap-2 text-fg-subtle">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span>Loading response design panel...</span>
         </div>
@@ -142,7 +142,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
   if (error) {
     return (
       <div className="h-full flex items-center justify-center bg-[#111111]">
-        <div className="text-text-subtle">
+        <div className="text-fg-subtle">
           Error loading response template
         </div>
       </div>

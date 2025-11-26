@@ -65,14 +65,14 @@ export const MediaPlaceholderMessage = ({
       <div
         className={cn(
           "relative mx-auto w-full max-w-[890px] rounded-[8px]",
-          "bg-background-container",
+          "bg-surface-overlay",
         )}
       >
         {isLoading ? (
           // Loading state
           <div className="relative flex flex-col items-center justify-center gap-4 p-[48px]">
-            <Loader2 className="text-text-body h-8 w-8 animate-spin" />
-            <div className="text-text-placeholder text-[16px] leading-[19px] font-[400]">
+            <Loader2 className="text-fg-muted h-8 w-8 animate-spin" />
+            <div className="text-fg-subtle text-[16px] leading-[19px] font-[400]">
               {content}
             </div>
 
@@ -81,12 +81,12 @@ export const MediaPlaceholderMessage = ({
               <div
                 className={cn(
                   "absolute top-[0px] -right-[42px] flex items-center gap-[8px]",
-                  "bg-background-container/90 rounded-[6px] p-[6px] backdrop-blur-sm",
+                  "bg-surface-overlay/90 rounded-[6px] p-[6px] backdrop-blur-sm",
                   "shadow-lg",
                 )}
               >
                 <button
-                  className="text-text-body hover:text-text-primary cursor-pointer transition-colors"
+                  className="text-fg-muted hover:text-fg-default cursor-pointer transition-colors"
                   onClick={onDelete}
                   title="Cancel generation"
                 >
@@ -118,7 +118,7 @@ export const MediaPlaceholderMessage = ({
                 >
                   {/* Aspect ratio container 16:9 */}
                   <div
-                    className="bg-background-container relative w-full overflow-hidden rounded-[8px]"
+                    className="bg-surface-overlay relative w-full overflow-hidden rounded-[8px]"
                     style={{
                       paddingBottom: "56.25%",
                       contain: "layout style paint",
@@ -152,7 +152,7 @@ export const MediaPlaceholderMessage = ({
             ) : (
               // Regular image with 16:9 aspect ratio container
               <div
-                className="bg-background-container relative w-full overflow-hidden rounded-[8px]"
+                className="bg-surface-overlay relative w-full overflow-hidden rounded-[8px]"
                 style={{
                   paddingBottom: "56.25%",
                   contain: "layout style paint",
@@ -194,8 +194,8 @@ export const MediaPlaceholderMessage = ({
                 {onDelete && (
                   <button
                     className={cn(
-                      "text-text-body hover:text-text-primary cursor-pointer transition-colors",
-                      "bg-background-container/90 rounded-[6px] p-[6px] backdrop-blur-sm",
+                      "text-fg-muted hover:text-fg-default cursor-pointer transition-colors",
+                      "bg-surface-overlay/90 rounded-[6px] p-[6px] backdrop-blur-sm",
                       "shadow-lg",
                     )}
                     onClick={onDelete}
@@ -209,8 +209,8 @@ export const MediaPlaceholderMessage = ({
                 {onGenerateVideo && (
                   <button
                     className={cn(
-                      "text-text-body hover:text-text-primary cursor-pointer transition-colors",
-                      "bg-background-container/90 rounded-[6px] p-[6px] backdrop-blur-sm",
+                      "text-fg-muted hover:text-fg-default cursor-pointer transition-colors",
+                      "bg-surface-overlay/90 rounded-[6px] p-[6px] backdrop-blur-sm",
                       "shadow-lg",
                       isGeneratingVideo && "pointer-events-none opacity-50",
                     )}

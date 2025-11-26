@@ -283,8 +283,8 @@ const ChatMessage = ({
                     {translation ?? content}
                   </Markdown>
                   {isShowDataStore && (
-                    <div className="bg-background-surface-0/5 data-history mt-[10px] rounded-[12px] border-[1px] p-[16px]">
-                      <div className="text-text-subtle mb-[16px] flex flex-row items-center gap-[8px]">
+                    <div className="bg-canvas/5 data-history mt-[10px] rounded-[12px] border-[1px] p-[16px]">
+                      <div className="text-fg-subtle mb-[16px] flex flex-row items-center gap-[8px]">
                         <History size={20} />
                         <div className="text-[14px] leading-[20px] font-[500]">
                           Data history

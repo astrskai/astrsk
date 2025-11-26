@@ -84,10 +84,10 @@ export default function UserCharacterSelectionStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-2xl">
-        <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-[1.2rem]">
+        <h2 className="text-fg-default mb-2 text-base font-semibold lg:text-[1.2rem]">
           Select User Character&nbsp;(optional)
         </h2>
-        <p className="text-text-secondary text-xs md:text-sm">
+        <p className="text-fg-muted text-xs md:text-sm">
           Select one character to play as in this session, or skip to continue
           without one.
         </p>
@@ -114,11 +114,11 @@ export default function UserCharacterSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <UserIcon className="text-text-secondary mb-3 min-h-12 min-w-12" />
-              <h3 className="text-text-primary mb-2 text-lg font-semibold">
+              <UserIcon className="text-fg-muted mb-3 min-h-12 min-w-12" />
+              <h3 className="text-fg-default mb-2 text-lg font-semibold">
                 Select User Character
               </h3>
-              <p className="text-text-secondary text-sm">
+              <p className="text-fg-muted text-sm">
                 Click to select a user character (optional)
               </p>
             </div>

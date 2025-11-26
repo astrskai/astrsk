@@ -401,8 +401,8 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
   // 16. Early returns for loading/error states
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center bg-background-surface-2">
-        <div className="flex items-center gap-2 text-text-subtle">
+      <div className="h-full flex items-center justify-center bg-surface-raised">
+        <div className="flex items-center gap-2 text-fg-subtle">
           <span>Loading output panel...</span>
         </div>
       </div>
@@ -411,8 +411,8 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
 
   if (error || !outputData) {
     return (
-      <div className="h-full flex items-center justify-center bg-background-surface-2">
-        <div className="flex items-center gap-2 text-text-subtle">
+      <div className="h-full flex items-center justify-center bg-surface-raised">
+        <div className="flex items-center gap-2 text-fg-subtle">
           <span>Failed to load output data</span>
         </div>
       </div>
@@ -421,7 +421,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
 
   // 17. Main render
   return (
-    <div ref={containerRef} className="h-full flex flex-col bg-background-surface-2">
+    <div ref={containerRef} className="h-full flex flex-col bg-surface-raised">
       {/* Output Format Selector */}
       <OutputFormatSelector
         value={{
@@ -446,7 +446,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
         {!outputData?.enabledStructuredOutput ? (
           <div className="flex h-full justify-center items-center">
             <div className="inline-flex flex-col justify-center items-center gap-2">
-              <div className="text-center font-[600] text-[14px] leading-[20px] text-text-body">
+              <div className="text-center font-[600] text-[14px] leading-[20px] text-fg-muted">
                 Agent output is represented by {`{{${agentKey}.response}}`}
               </div>
             </div>
@@ -456,7 +456,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
             <div className="h-full w-full flex items-center justify-center">
               <div className="flex flex-col justify-center items-center gap-8">
                 <div className="flex flex-col justify-start items-center gap-2">
-                  <div className="text-center justify-start text-text-body text-base font-semibold leading-relaxed">No schema field</div>
+                  <div className="text-center justify-start text-fg-muted text-base font-semibold leading-relaxed">No schema field</div>
                   <div className="w-40 text-center justify-start text-background-surface-5 text-xs font-normal">Define the structure of your agent's output</div>
                 </div>
                 <Button
@@ -477,10 +477,10 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                 <div className="self-stretch inline-flex justify-start items-start gap-2 flex-wrap content-start mb-2">
                   <button
                     onClick={addNewField}
-                    className="h-7 px-3 py-2 bg-background-surface-4 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-light flex justify-center items-center gap-2 hover:bg-background-surface-5 transition-colors"
+                    className="h-7 px-3 py-2 bg-hover rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-subtle flex justify-center items-center gap-2 hover:bg-active transition-colors"
                   >
-                    <Plus className="w-4 h-4 text-text-body" />
-                    <div className="justify-center text-text-primary text-xs font-semibold leading-none">Schema Field(s)</div>
+                    <Plus className="w-4 h-4 text-fg-muted" />
+                    <div className="justify-center text-fg-default text-xs font-semibold leading-none">Schema Field(s)</div>
                   </button>
                 </div>
                 
@@ -532,7 +532,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                           onClick={() => deleteField(selectedField.id)}
                           className="absolute top-1 right-1 w-6 h-6 rounded-sm hover:opacity-80 transition-opacity z-10"
                         >
-                          <Trash2 className="min-w-3.5 min-h-4 text-text-subtle" />
+                          <Trash2 className="min-w-3.5 min-h-4 text-fg-subtle" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent variant="button">
@@ -544,7 +544,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                     <div className="self-stretch inline-flex justify-start items-start gap-2 mt-8">
                       <div className="flex-1 inline-flex flex-col justify-start items-start gap-2">
                         <div className="self-stretch inline-flex justify-start items-center gap-2">
-                          <div className="justify-start text-text-body text-[10px] font-medium leading-none">Name</div>
+                          <div className="justify-start text-fg-muted text-[10px] font-medium leading-none">Name</div>
                         </div>
                         <div className="self-stretch flex flex-col justify-start items-start gap-1">
                           <Input
@@ -552,7 +552,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                             onChange={(e) => updateField(selectedField.id, { name: e.target.value })}
                             onFocus={() => updateOutput.setCursorActive(true)}
                             onBlur={() => updateOutput.setCursorActive(false)}
-                            className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+                            className="self-stretch h-8 px-4 py-2 bg-canvas rounded-md outline-1 outline-offset-[-1px] outline-border-muted text-fg-default text-xs font-normal"
                             placeholder="variable_name"
                           />
                         </div>
@@ -560,7 +560,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                       
                       <div className="flex-1 inline-flex flex-col justify-start items-start gap-2">
                         <div className="self-stretch inline-flex justify-start items-center gap-2">
-                          <div className="justify-start text-text-body text-[10px] font-medium leading-none">Data type</div>
+                          <div className="justify-start text-fg-muted text-[10px] font-medium leading-none">Data type</div>
                         </div>
                         <div className="self-stretch flex flex-col justify-start items-start gap-1">
                           <Select 
@@ -575,7 +575,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                               });
                             }}
                           >
-                            <SelectTrigger className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal">
+                            <SelectTrigger className="self-stretch h-8 px-4 py-2 bg-canvas rounded-md outline-1 outline-offset-[-1px] outline-border-muted text-fg-default text-xs font-normal">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -600,7 +600,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                       <div className="self-stretch inline-flex justify-start items-start gap-2">
                         <div className="flex-1 inline-flex flex-col justify-start items-start gap-2">
                           <div className="self-stretch inline-flex justify-start items-center gap-2">
-                            <div className="justify-start text-text-body text-[10px] font-medium leading-none">Minimum</div>
+                            <div className="justify-start text-fg-muted text-[10px] font-medium leading-none">Minimum</div>
                           </div>
                           <div className="self-stretch flex flex-col justify-start items-start gap-1">
                             <Input
@@ -609,14 +609,14 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                               onChange={(e) => updateField(selectedField.id, { minimum: e.target.value ? Number(e.target.value) : undefined })}
                               onFocus={() => updateOutput.setCursorActive(true)}
                               onBlur={() => updateOutput.setCursorActive(false)}
-                              className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+                              className="self-stretch h-8 px-4 py-2 bg-canvas rounded-md outline-1 outline-offset-[-1px] outline-border-muted text-fg-default text-xs font-normal"
                               placeholder="0"
                             />
                           </div>
                         </div>
                         <div className="flex-1 inline-flex flex-col justify-start items-start gap-2">
                           <div className="self-stretch inline-flex justify-start items-center gap-2">
-                            <div className="justify-start text-text-body text-[10px] font-medium leading-none">Maximum</div>
+                            <div className="justify-start text-fg-muted text-[10px] font-medium leading-none">Maximum</div>
                           </div>
                           <div className="self-stretch flex flex-col justify-start items-start gap-1">
                             <Input
@@ -625,7 +625,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                               onChange={(e) => updateField(selectedField.id, { maximum: e.target.value ? Number(e.target.value) : undefined })}
                               onFocus={() => updateOutput.setCursorActive(true)}
                               onBlur={() => updateOutput.setCursorActive(false)}
-                              className="self-stretch h-8 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+                              className="self-stretch h-8 px-4 py-2 bg-canvas rounded-md outline-1 outline-offset-[-1px] outline-border-muted text-fg-default text-xs font-normal"
                               placeholder="0"
                             />
                           </div>
@@ -644,10 +644,10 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                                 enum: [...currentEnum, ''] 
                               });
                             }}
-                            className="self-stretch h-7 px-3 py-2 bg-background-surface-0 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-center items-center gap-2 hover:bg-background-surface-1 transition-colors"
+                            className="self-stretch h-7 px-3 py-2 bg-canvas rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline-1 outline-offset-[-1px] outline-border-subtle inline-flex justify-center items-center gap-2 hover:bg-surface transition-colors"
                           >
-                            <Plus className="w-4 h-4 text-text-body" />
-                            <div className="justify-center text-text-primary text-xs font-semibold leading-none">Enum</div>
+                            <Plus className="w-4 h-4 text-fg-muted" />
+                            <div className="justify-center text-fg-default text-xs font-semibold leading-none">Enum</div>
                           </button>
                         </div>
                         <div className="self-stretch flex flex-col justify-start items-start gap-1">
@@ -670,7 +670,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                                     updateField(selectedField.id, { enum: newEnum });
                                   }
                                 }}
-                                className="flex-1 px-4 py-2 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal text-text-primary text-xs font-normal"
+                                className="flex-1 px-4 py-2 bg-canvas rounded-md outline-1 outline-offset-[-1px] outline-border-muted text-fg-default text-xs font-normal"
                                 placeholder="Option value"
                               />
                               <Tooltip>
@@ -682,7 +682,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                                     }}
                                     className="w-6 h-6 relative rounded-sm flex-shrink-0"
                                   >
-                                    <X className="w-3.5 h-4 absolute left-[5px] top-[4px] text-text-subtle" />
+                                    <X className="w-3.5 h-4 absolute left-[5px] top-[4px] text-fg-subtle" />
                                   </button>
                                 </TooltipTrigger>
                                 <TooltipContent variant="button">
@@ -697,16 +697,16 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
                     
                     {/* Description field */}
                     <div className="self-stretch flex-1 flex flex-col justify-start items-start gap-2 min-w-0 overflow-hidden">
-                      <div className="self-stretch justify-start text-text-body text-[10px] font-medium leading-none">Description</div>
+                      <div className="self-stretch justify-start text-fg-muted text-[10px] font-medium leading-none">Description</div>
                       <div className="self-stretch flex-1 flex flex-col justify-start items-start gap-1 min-w-0 overflow-hidden">
-                        <div className="self-stretch flex-1 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start overflow-hidden relative min-w-0">
+                        <div className="self-stretch flex-1 bg-canvas rounded-md outline-1 outline-offset-[-1px] outline-border-muted flex flex-col justify-start items-start overflow-hidden relative min-w-0">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
                                 onClick={() => setIsExpanded(!isExpanded)}
-                                className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-background-surface-1 flex items-center justify-center transition-colors"
+                                className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-surface flex items-center justify-center transition-colors"
                               >
-                                {isExpanded ? <Minimize2 className="w-4 h-4 text-text-subtle" /> : <Maximize2 className="w-4 h-4 text-text-subtle" />}
+                                {isExpanded ? <Minimize2 className="w-4 h-4 text-fg-subtle" /> : <Maximize2 className="w-4 h-4 text-fg-subtle" />}
                               </button>
                             </TooltipTrigger>
                             <TooltipContent variant="button">
@@ -743,15 +743,15 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
               
               {/* Expanded Editor View */}
               {isExpanded && selectedField && (
-                <div className="absolute inset-0 z-20 bg-background-surface-2 p-4">
-                  <div className="w-full h-full bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start overflow-hidden relative">
+                <div className="absolute inset-0 z-20 bg-surface-raised p-4">
+                  <div className="w-full h-full bg-canvas rounded-md outline-1 outline-offset-[-1px] outline-border-muted flex flex-col justify-start items-start overflow-hidden relative">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => setIsExpanded(false)}
-                          className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-background-surface-1 flex items-center justify-center transition-colors"
+                          className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-surface flex items-center justify-center transition-colors"
                         >
-                          <Minimize2 className="w-4 h-4 text-text-subtle" />
+                          <Minimize2 className="w-4 h-4 text-fg-subtle" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent variant="button">

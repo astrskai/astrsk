@@ -5,16 +5,16 @@ import { LogIn } from "lucide-react";
 import { useState } from "react";
 
 /**
- * Simple login page
+ * Simple sign in page
  * TODO: Implement actual authentication logic
  */
-export function LoginPage() {
+export function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt:", { email, password });
+    console.log("Sign in attempt:", { email, password });
     // TODO: Implement actual login logic
   };
 
@@ -33,7 +33,7 @@ export function LoginPage() {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleSignIn} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">
               Email
@@ -63,7 +63,7 @@ export function LoginPage() {
           </div>
 
           <Button type="submit" className="w-full" size="lg">
-            Sign in
+            Sign In
           </Button>
         </form>
 
@@ -71,7 +71,7 @@ export function LoginPage() {
         <div className="text-text-secondary text-center text-sm">
           Don't have an account?{" "}
           <a href="/settings/account" className="text-primary hover:underline">
-            Sign up
+            Sign Up
           </a>
         </div>
       </Card>

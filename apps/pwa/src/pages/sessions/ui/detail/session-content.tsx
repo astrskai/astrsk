@@ -1488,7 +1488,7 @@ const SessionContent = ({
               : "pointer-events-none invisible opacity-0",
           )}
         >
-          <div className="border-text-primary/10 text-text-primary flex h-[72px] shrink-0 flex-row items-center border-b-1 p-[16px]">
+          <div className="border-text-primary/10 text-fg-default flex h-[72px] shrink-0 flex-row items-center border-b-1 p-[16px]">
             {streamingMessageId ? (
               <>
                 <SvgIcon

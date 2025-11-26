@@ -38,7 +38,7 @@ const ScenarioMessage = ({
       <div
         className={cn(
           "relative mx-auto w-full rounded-[4px] p-[24px]",
-          "bg-background-container text-text-placeholder text-[16px] leading-[19px] font-[400]",
+          "bg-surface-overlay text-fg-subtle text-[16px] leading-[19px] font-[400]",
           "transition-all duration-200 ease-in-out",
           "group-hover/scenario:inset-ring-text-primary group-hover/scenario:inset-ring-1",
           isEditing && "inset-ring-text-primary inset-ring-1",
@@ -84,8 +84,8 @@ const ScenarioMessage = ({
           <div
             className={cn(
               "cursor-pointer rounded-[8px] p-[8px]",
-              "bg-background-container text-text-input-subtitle",
-              "hover:text-text-primary hover:inset-ring-text-primary hover:inset-ring-1",
+              "bg-surface-overlay text-fg-subtle",
+              "hover:text-fg-default hover:inset-ring-text-primary hover:inset-ring-1",
               "transition-all duration-200 ease-in-out",
               "opacity-0 group-hover/scenario:block group-hover/scenario:opacity-100",
               isEditing && "opacity-100",
@@ -107,8 +107,8 @@ const ScenarioMessage = ({
           <div
             className={cn(
               "cursor-pointer rounded-[8px] p-[8px]",
-              "bg-background-container text-text-input-subtitle",
-              "hover:text-text-primary hover:inset-ring-text-primary hover:inset-ring-1",
+              "bg-surface-overlay text-fg-subtle",
+              "hover:text-fg-default hover:inset-ring-text-primary hover:inset-ring-1",
               "transition-all duration-200 ease-in-out",
               "opacity-0 group-hover/scenario:block group-hover/scenario:opacity-100",
               isEditing && "opacity-100",
@@ -138,8 +138,8 @@ const ScenarioMessage = ({
           <div
             className={cn(
               "cursor-pointer rounded-[8px] p-[8px]",
-              "bg-background-surface-3 text-text-input-subtitle",
-              "active:text-text-primary active:inset-ring-text-primary active:inset-ring-1",
+              "bg-surface-overlay text-fg-subtle",
+              "active:text-fg-default active:inset-ring-text-primary active:inset-ring-1",
               "transition-all duration-200 ease-in-out",
             )}
             onClick={() => {
@@ -159,8 +159,8 @@ const ScenarioMessage = ({
           <div
             className={cn(
               "cursor-pointer rounded-[8px] p-[8px]",
-              "bg-background-surface-3 text-text-input-subtitle",
-              "active:text-text-primary active:inset-ring-text-primary active:inset-ring-1",
+              "bg-surface-overlay text-fg-subtle",
+              "active:text-fg-default active:inset-ring-text-primary active:inset-ring-1",
               "transition-all duration-200 ease-in-out",
             )}
             onClick={() => {

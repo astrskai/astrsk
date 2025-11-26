@@ -85,7 +85,7 @@ export default function SessionDetailPage({
   return (
     <div
       className={cn(
-        "bg-background-screen relative flex h-dvh flex-col overflow-hidden",
+        "bg-canvas relative flex h-dvh flex-col overflow-hidden",
         className,
       )}
     >
@@ -104,21 +104,21 @@ export default function SessionDetailPage({
         {/* Left: Back button */}
         <button
           onClick={() => navigate({ to: "/sessions" })}
-          className="text-text-secondary hover:text-text-primary -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
+          className="text-fg-muted hover:text-fg-default -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
           aria-label="Go back to sessions list"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
 
         {/* Center: Session title */}
-        <h1 className="text-text-primary flex-1 truncate text-center text-base font-semibold">
+        <h1 className="text-fg-default flex-1 truncate text-center text-base font-semibold">
           {session?.title ?? "Session"}
         </h1>
 
         {/* Right: Settings/Close button */}
         <button
           onClick={() => setIsOpenSettings(!isOpenSettings)}
-          className="text-text-secondary hover:text-text-primary -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
+          className="text-fg-muted hover:text-fg-default -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
           aria-label={isOpenSettings ? "Close settings" : "Session settings"}
         >
           {isOpenSettings ? (
@@ -206,18 +206,18 @@ export default function SessionDetailPage({
             )}
           >
             {/* Mobile Settings Header - only visible on mobile */}
-            <header className="border-border bg-background-surface-1 relative z-10 flex h-14 items-center justify-between border-b px-4 md:hidden">
+            <header className="border-border-default bg-surface relative z-10 flex h-14 items-center justify-between border-b px-4 md:hidden">
               {/* Left: Back button */}
               <button
                 onClick={() => setIsOpenSettings(false)}
-                className="text-text-secondary hover:text-text-primary -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
+                className="text-fg-muted hover:text-fg-default -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
                 aria-label="Back to session"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
 
               {/* Center: Settings title */}
-              <h1 className="text-text-primary flex-1 truncate text-center text-base font-semibold">
+              <h1 className="text-fg-default flex-1 truncate text-center text-base font-semibold">
                 Session Settings
               </h1>
 

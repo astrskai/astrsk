@@ -42,9 +42,9 @@ export function NodeSelectionMenuItems({
       {showAgent && (
         <button
           onClick={() => onSelectNodeType("agent")}
-          className={cn("w-[92px] h-[31px] bg-background-surface-4 border-b border-border-normal inline-flex justify-center items-center hover:bg-background-surface-5 transition-colors", className)}
+          className={cn("w-[92px] h-[31px] bg-hover border-b border-border-muted inline-flex justify-center items-center hover:bg-active transition-colors", className)}
         >
-          <div className="text-center text-text-primary text-xs font-normal whitespace-nowrap">
+          <div className="text-center text-fg-default text-xs font-normal whitespace-nowrap">
             {customAgentLabel || "Agent node"}
           </div>
         </button>
@@ -53,9 +53,9 @@ export function NodeSelectionMenuItems({
       {showDataStore && (
         <button
           onClick={() => onSelectNodeType("dataStore")}
-          className={cn(`w-[92px] h-[31px] bg-background-surface-4 ${showIf ? 'border-b border-border-normal' : ''} inline-flex justify-center items-center hover:bg-background-surface-5 transition-colors`, className)}
+          className={cn(`w-[92px] h-[31px] bg-hover ${showIf ? 'border-b border-border-muted' : ''} inline-flex justify-center items-center hover:bg-active transition-colors`, className)}
         >
-          <div className="text-center text-text-primary text-xs font-normal whitespace-nowrap">
+          <div className="text-center text-fg-default text-xs font-normal whitespace-nowrap">
             {customDataStoreLabel || "Data update node"}
           </div>
         </button>
@@ -64,9 +64,9 @@ export function NodeSelectionMenuItems({
       {showIf && (
         <button
           onClick={() => onSelectNodeType("if")}
-          className={cn("w-[92px] h-[31px] bg-background-surface-4 inline-flex justify-center items-center hover:bg-background-surface-5 transition-colors", className)}
+          className={cn("w-[92px] h-[31px] bg-hover inline-flex justify-center items-center hover:bg-active transition-colors", className)}
         >
-          <div className="text-center text-text-primary text-xs font-normal whitespace-nowrap">
+          <div className="text-center text-fg-default text-xs font-normal whitespace-nowrap">
             {customIfLabel || "If node"}
           </div>
         </button>

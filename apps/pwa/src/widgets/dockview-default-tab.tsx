@@ -176,8 +176,8 @@ const CustomDockviewTab = React.memo(
           agentColor
             ? "" // Don't apply CSS classes when agent color is available
             : isActive || isVisible
-              ? "bg-background-surface-2" // Active or visible
-              : "bg-background-surface-1" // Not visible
+              ? "bg-surface-raised" // Active or visible
+              : "bg-surface" // Not visible
         }`}
         onClick={() => api.setActive()}
         style={{
@@ -191,8 +191,8 @@ const CustomDockviewTab = React.memo(
         <span
           className={`truncate ${
             agentColor && !agentInactive
-              ? "text-text-contrast-text text-sm font-medium"
-              : "text-text-primary text-sm font-medium"
+              ? "text-fg-on-emphasis text-sm font-medium"
+              : "text-fg-default text-sm font-medium"
           }`}
         >
           {displayTitle}
@@ -209,10 +209,10 @@ const CustomDockviewTab = React.memo(
             fill="none"
             className={
               agentInactive
-                ? "text-text-primary"
+                ? "text-fg-default"
                 : agentColor
-                  ? "text-text-contrast-text"
-                  : "text-text-primary"
+                  ? "text-fg-on-emphasis"
+                  : "text-fg-default"
             }
           >
             <path
