@@ -78,7 +78,7 @@ export function SignInPage() {
     e.preventDefault();
     setIsLoading(true);
     // TODO: Implement actual login logic
-    console.log("Sign in attempt:", { email, password });
+
     setTimeout(() => setIsLoading(false), 2000);
   };
 
@@ -103,7 +103,8 @@ export function SignInPage() {
       setIsLoading(false);
       logger.error(error);
       toast.error("Failed to sign in", {
-        description: "Please try again or contact support if the issue persists.",
+        description:
+          "Please try again or contact support if the issue persists.",
       });
     }
   }, [isLoadedSignUp, signUp, userId]);
