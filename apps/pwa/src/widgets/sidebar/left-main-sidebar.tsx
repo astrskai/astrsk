@@ -322,13 +322,11 @@ export const LeftMainSidebar = ({
   toggleSidebar,
   isMobileOpen,
   closeMobileMenu,
-  openMobileMenu,
 }: {
   isCollapsed: boolean;
   toggleSidebar: () => void;
   isMobileOpen: boolean;
   closeMobileMenu: () => void;
-  openMobileMenu: () => void;
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -447,7 +445,6 @@ export function LeftMainSidebarContainer({
       toggleSidebar={() => setInternalIsCollapsed(!internalIsCollapsed)}
       isMobileOpen={isMobileOpen}
       closeMobileMenu={() => setIsMobileOpen(false)}
-      openMobileMenu={() => setIsMobileOpen(true)}
     />
   );
 }

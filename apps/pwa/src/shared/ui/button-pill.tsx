@@ -104,7 +104,7 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
       return (
         <button
           className={cn(
-            "outline-status-required relative inline-flex w-28 items-center justify-center rounded-lg shadow-[0px_0px_10px_0px_rgba(181,158,255,0.50)] shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] outline outline-2 outline-offset-[-2px] transition-all",
+            "outline-status-error relative inline-flex w-28 items-center justify-center rounded-lg shadow-[0px_0px_10px_0px_rgba(248,113,113,0.50),0px_1px_8px_0px_rgba(117,117,117,1.00)] outline-2 outline-offset-[-2px] transition-all",
             size === "default" ? "gap-2 px-3 py-2" : "gap-2 px-6 py-3",
             className,
           )}
@@ -126,7 +126,7 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
           {/* Foreground content layer */}
           <div
             className={cn(
-              "bg-hover px relative flex items-center justify-center gap-2 rounded-[6px]",
+              "bg-hover relative flex items-center justify-center gap-2 rounded-[6px] px-3",
               "absolute inset-[2px]",
               isActive && "bg-emphasis",
               isActive && isHovered && "opacity-70",

@@ -103,7 +103,7 @@ export function SignInPage() {
       setIsLoading(false);
       logger.error(error);
       toast.error("Failed to sign in", {
-        description: JSON.stringify(error),
+        description: "Please try again or contact support if the issue persists.",
       });
     }
   }, [isLoadedSignUp, signUp, userId]);

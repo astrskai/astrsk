@@ -214,7 +214,7 @@ const ParameterItem = ({
                   className="relative h-4 w-4 cursor-pointer overflow-hidden"
                   onClick={() => handleValueChange(parameter.default)}
                 >
-                  <RefreshCcw className="text-background-surface-5 absolute top-[2px] left-[2px] h-3 w-3" />
+                  <RefreshCcw className="text-fg-subtle absolute top-[2px] left-[2px] h-3 w-3" />
                 </div>
               </div>
               <div className="inline-flex items-center justify-center gap-2 self-stretch px-4">
@@ -300,7 +300,7 @@ const ParameterItem = ({
                               />
                             </div>
                             <div className="relative h-4 w-4 overflow-hidden">
-                              <div className="outline-background-surface-5 absolute top-[2.67px] left-[4.67px] h-2.5 w-1.5 outline-[1.33px] outline-offset-[-0.67px]"></div>
+                              <div className="outline-border-muted absolute top-[2.67px] left-[4.67px] h-2.5 w-1.5 outline-[1.33px] outline-offset-[-0.67px]"></div>
                             </div>
                           </div>
                         </div>

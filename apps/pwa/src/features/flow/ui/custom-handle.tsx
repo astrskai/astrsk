@@ -47,7 +47,7 @@ export function CustomHandle({
       return (
         <>
           {/* Default small handle */}
-          <div className="bg-text-primary pointer-events-none absolute top-1/2 right-0 flex h-3 w-3 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl p-[1.5px] group-hover/node:hidden">
+          <div className="bg-fg-default pointer-events-none absolute top-1/2 right-0 flex h-3 w-3 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl p-[1.5px] group-hover/node:hidden">
             <div className="relative h-2 w-2 overflow-hidden">
               <div className="absolute top-[1px] left-[1px] h-1.5 w-1.5"></div>
             </div>
@@ -156,7 +156,7 @@ export function CustomIfHandle({
         <>
           {/* Default small handle */}
           <div
-            className="bg-text-primary pointer-events-none absolute right-0 flex h-3 w-3 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl p-[1.5px] group-hover/node:hidden"
+            className="bg-fg-default pointer-events-none absolute right-0 flex h-3 w-3 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl p-[1.5px] group-hover/node:hidden"
             style={{ top: topPosition }}
           >
             <div className="relative h-2 w-2 overflow-hidden">
