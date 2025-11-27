@@ -49,7 +49,7 @@ const ColorGrid = ({
 
   return (
     <div>
-      <h4 className="mb-2 text-sm font-medium text-fg-subtle">{title}</h4>
+      <h4 className="text-fg-subtle mb-2 text-sm font-medium">{title}</h4>
       <div className="grid grid-cols-2 gap-2">
         {fields.map((item) => {
           const fieldName = getFieldName(userType, item.field);
@@ -64,7 +64,7 @@ const ColorGrid = ({
           return (
             <div
               key={item.field}
-              className="flex items-center gap-2 rounded-lg border border-border-muted bg-surface-raised/50 p-2"
+              className="border-border-muted bg-surface-raised/50 flex items-center gap-2 rounded-lg border p-2"
             >
               <Controller
                 name={fieldName}
@@ -74,14 +74,14 @@ const ColorGrid = ({
                     onChange={(newValue) => {
                       onChange(newValue);
                     }}
-                    className="[&>div]:first:border-1 [&>div]:first:border-border-muted"
+                    className="[&>div]:first:border-border-muted [&>div]:first:border"
                     orientation="horizontal"
                     isShowValue={false}
                   />
                 )}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs text-fg-subtle">{item.label}</p>
+                <p className="text-fg-subtle truncate text-xs">{item.label}</p>
               </div>
             </div>
           );
