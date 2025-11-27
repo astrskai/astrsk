@@ -39,7 +39,7 @@ import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
 // import { ScenarioItem } from "@/features/session/components/scenario/scenario-item";
-import { InlineChatStyles } from "@/pages/sessions/ui/detail/inline-chat-styles";
+import { InlineChatStyles } from "@/pages/sessions/ui/chat/inline-chat-styles";
 
 import {
   Avatar,

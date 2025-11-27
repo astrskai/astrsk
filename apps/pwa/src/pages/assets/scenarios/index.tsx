@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ListPageHeader } from "@/widgets/header";
@@ -14,9 +14,7 @@ import {
   SearchEmptyState,
   EmptyState,
 } from "@/shared/ui";
-import { cardQueries } from "@/entities/card/api";
-import { CardType } from "@/entities/card/domain";
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { scenarioQueries } from "@/entities/scenario/api";
 import { useResourceImport } from "@/shared/hooks/use-resource-import";
 import { FlowImportDialog } from "@/features/flow/ui/flow-import-dialog";
 
@@ -44,18 +42,10 @@ export function ScenariosPage() {
     triggerImport,
   } = useResourceImport();
 
-  // Fetch cards
-  const { data: allCards, isLoading: isLoadingCards } = useQuery(
-    cardQueries.list({ keyword, sort: sortOption }),
+  // Fetch scenarios directly (DB-level filtering by CardType.Plot)
+  const { data: scenarios = [], isLoading: isLoadingCards } = useQuery(
+    scenarioQueries.list({ keyword, sort: sortOption }),
   );
-
-  // Filter by scenario type
-  const scenarios = useMemo(() => {
-    return (
-      allCards?.filter((card: PlotCard) => card.props.type === CardType.Plot) ||
-      []
-    );
-  }, [allCards]);
 
   // Event handlers
   const handleImport = () => {
