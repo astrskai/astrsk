@@ -80,7 +80,7 @@ const CardItem = ({
         to: "/assets/characters/{-$characterId}",
         params: { characterId: cardId.toString() },
       });
-    } else if (card.props.type === CardType.Plot) {
+    } else if (card.props.type === CardType.Plot || card.props.type === CardType.Scenario) {
       navigate({
         to: "/assets/scenarios/{-$scenarioId}",
         params: { scenarioId: cardId.toString() },
@@ -280,13 +280,13 @@ const CardItem = ({
           className={cn(
             "z-0 mr-1 grid size-[20px] shrink-0 place-items-center rounded-full",
             card?.props.type === CardType.Character && "bg-[#B59EFF]",
-            card?.props.type === CardType.Plot && "bg-[#98D7F9]",
+            (card?.props.type === CardType.Plot || card?.props.type === CardType.Scenario) && "bg-[#98D7F9]",
           )}
         >
           {card?.props.type === CardType.Character && (
             <SvgIcon name="character_icon" size={12} />
           )}
-          {card?.props.type === CardType.Plot && (
+          {(card?.props.type === CardType.Plot || card?.props.type === CardType.Scenario) && (
             <SvgIcon name="plot_icon" size={12} />
           )}
         </div>
@@ -398,7 +398,7 @@ const CardFilter = ({
                   className={cn(
                     "absolute top-0 right-[-2px] size-[6px] rounded-full",
                     type === CardType.Character && "bg-status-required",
-                    type === CardType.Plot && "bg-status-optional",
+                    (type === CardType.Plot || type === CardType.Scenario) && "bg-status-optional",
                   )}
                 />
               </button>

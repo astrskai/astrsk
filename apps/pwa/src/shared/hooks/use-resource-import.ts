@@ -51,7 +51,7 @@ export function useResourceImport() {
       try {
         if (isPNG) {
           // Import card from PNG directly (no dialog needed)
-          const result = await CardService.importCardFromFile.execute(file);
+          const result = await CardService.importCardFromFile.execute({ file });
 
           if (result.isFailure) {
             toastError("Failed to import card", {
@@ -66,8 +66,10 @@ export function useResourceImport() {
           const hasCharacter = importedCards.some(
             (card) => card.props.type === CardType.Character,
           );
-          const hasPlot = importedCards.some(
-            (card) => card.props.type === CardType.Plot,
+          const hasScenario = importedCards.some(
+            (card) =>
+              card.props.type === CardType.Plot ||
+              card.props.type === CardType.Scenario,
           );
 
           if (hasCharacter) {
@@ -75,7 +77,7 @@ export function useResourceImport() {
               queryKey: characterKeys.lists(),
             });
           }
-          if (hasPlot) {
+          if (hasScenario) {
             await queryClient.invalidateQueries({
               queryKey: scenarioKeys.lists(),
             });
@@ -86,11 +88,11 @@ export function useResourceImport() {
           });
 
           // Navigate to appropriate card page
-          if (hasCharacter && !hasPlot) {
+          if (hasCharacter && !hasScenario) {
             navigate({ to: "/assets/characters" });
-          } else if (hasPlot && !hasCharacter) {
+          } else if (hasScenario && !hasCharacter) {
             navigate({ to: "/assets/scenarios" });
-          } else if (hasCharacter && hasPlot) {
+          } else if (hasCharacter && hasScenario) {
             navigate({ to: "/assets/characters" });
           }
         } else if (isJSON) {
@@ -98,7 +100,7 @@ export function useResourceImport() {
           // If that fails, try flow import
 
           // First attempt: Import as character card
-          const cardResult = await CardService.importCardFromFile.execute(file);
+          const cardResult = await CardService.importCardFromFile.execute({ file });
 
           if (cardResult.isSuccess) {
             // Successfully imported as character card
@@ -108,8 +110,10 @@ export function useResourceImport() {
             const hasCharacter = importedCards.some(
               (card) => card.props.type === CardType.Character,
             );
-            const hasPlot = importedCards.some(
-              (card) => card.props.type === CardType.Plot,
+            const hasScenario = importedCards.some(
+              (card) =>
+                card.props.type === CardType.Plot ||
+                card.props.type === CardType.Scenario,
             );
 
             if (hasCharacter) {
@@ -117,7 +121,7 @@ export function useResourceImport() {
                 queryKey: characterKeys.lists(),
               });
             }
-            if (hasPlot) {
+            if (hasScenario) {
               await queryClient.invalidateQueries({
                 queryKey: scenarioKeys.lists(),
               });
@@ -128,11 +132,11 @@ export function useResourceImport() {
             });
 
             // Navigate to appropriate card page
-            if (hasCharacter && !hasPlot) {
+            if (hasCharacter && !hasScenario) {
               navigate({ to: "/assets/characters" });
-            } else if (hasPlot && !hasCharacter) {
+            } else if (hasScenario && !hasCharacter) {
               navigate({ to: "/assets/scenarios" });
-            } else if (hasCharacter && hasPlot) {
+            } else if (hasCharacter && hasScenario) {
               navigate({ to: "/assets/characters" });
             }
           } else {
@@ -180,7 +184,7 @@ export function useResourceImport() {
         }
       }
     },
-    [navigate],
+    [queryClient, navigate],
   );
 
   /**

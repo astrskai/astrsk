@@ -7,6 +7,7 @@ import CharacterCard from "@/features/character/ui/character-card";
 import type { CardAction } from "@/features/common/ui";
 import { useCardActions } from "@/features/common/model/use-card-actions";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { IconHarpyLogo } from "@/shared/assets/icons";
 
 interface CharactersGridProps {
   characters: CharacterCardDomain[];
@@ -20,7 +21,11 @@ interface CharacterGridItemProps {
   character: CharacterCardDomain;
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   onCharacterClick: (characterId: string) => void;
-  onExport: (cardId: string, title: string) => (e: React.MouseEvent) => void;
+  onExport: (
+    cardId: string,
+    title: string,
+    exportType?: "file" | "cloud",
+  ) => (e: React.MouseEvent) => void;
   onCopy: (cardId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
     cardId: string,
@@ -43,7 +48,14 @@ function CharacterGridItem({
     {
       icon: Upload,
       label: "Export",
-      onClick: onExport(cardId, character.props.name || ""),
+      onClick: onExport(cardId, character.props.name || "", "file"),
+      disabled: loading.exporting,
+      loading: loading.exporting,
+    },
+    {
+      icon: IconHarpyLogo,
+      label: "Harpy",
+      onClick: onExport(cardId, character.props.name || "", "cloud"),
       disabled: loading.exporting,
       loading: loading.exporting,
     },

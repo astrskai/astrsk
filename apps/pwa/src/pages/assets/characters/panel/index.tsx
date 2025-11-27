@@ -315,7 +315,8 @@ export function CardPanel({ cardId }: CardPanelProps) {
               size="default"
               className="whitespace-nowrap"
             >
-              {card.props.type === CardType.Plot
+              {card.props.type === CardType.Plot ||
+              card.props.type === CardType.Scenario
                 ? "Plot info"
                 : "Character info"}
             </ButtonPill>
@@ -330,8 +331,9 @@ export function CardPanel({ cardId }: CardPanelProps) {
               Lorebook
             </ButtonPill>
 
-            {/* Show First Message button only for Plot cards */}
-            {card.props.type === CardType.Plot && (
+            {/* Show First Message button for Plot and Scenario cards */}
+            {(card.props.type === CardType.Plot ||
+              card.props.type === CardType.Scenario) && (
               <ButtonPill
                 onClick={() => handleOpenPanel("scenarios")}
                 // onDoubleClick={() => handleClosePanel("scenarios")}
@@ -393,8 +395,9 @@ export function CardPanel({ cardId }: CardPanelProps) {
       {/* Main content area with avatar and trading card - takes remaining space */}
       <div className="flex flex-1 items-center justify-center">
         <div className="inline-flex items-center justify-center gap-12">
-          {/* Avatar section */}
-          {card?.props.type !== CardType.Plot && (
+          {/* Avatar section - only for Character cards */}
+          {card?.props.type !== CardType.Plot &&
+            card?.props.type !== CardType.Scenario && (
             <div className="inline-flex w-28 flex-col items-center justify-center">
               <div className="flex flex-col items-center justify-center gap-1.5">
                 <div className="relative">

@@ -66,7 +66,7 @@ export const NoCardsFound: React.FC<NoCardsFoundProps> = ({
           type: "image/png",
         });
 
-        const result = await CardService.importCardFromFile.execute(file);
+        const result = await CardService.importCardFromFile.execute({ file });
         if (result.isFailure) {
           throw new Error(result.getError());
         }

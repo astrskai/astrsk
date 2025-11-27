@@ -7,7 +7,6 @@ import { formatFail } from "@/shared/lib";
 import { Drizzle } from "@/db/drizzle";
 import { getOneOrThrow } from "@/db/helpers/get-one-or-throw";
 import { backgrounds } from "@/db/schema/backgrounds";
-import { TableName } from "@/db/schema/table-name";
 import { Transaction } from "@/db/transaction";
 import { Background } from "@/entities/background/domain";
 import { BackgroundDrizzleMapper } from "@/entities/background/mappers/background-drizzle-mapper";
@@ -59,16 +58,25 @@ export class DrizzleBackgroundRepo
   }
 
   async listBackgrounds(
-    { cursor, pageSize = 100 }: { cursor?: UniqueEntityID; pageSize?: number },
+    { sessionId, cursor, pageSize = 100 }: { sessionId?: UniqueEntityID; cursor?: UniqueEntityID; pageSize?: number },
     tx?: Transaction,
   ): Promise<Result<Background[]>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
+      // Build where conditions
+      const conditions = [];
+      if (sessionId) {
+        conditions.push(eq(backgrounds.session_id, sessionId.toString()));
+      }
+      if (cursor) {
+        conditions.push(gt(backgrounds.id, cursor.toString()));
+      }
+
       // Select backgrounds
       const rows = await db
         .select()
         .from(backgrounds)
-        .where(cursor ? gt(backgrounds.id, cursor.toString()) : undefined)
+        .where(conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : undefined) : undefined)
         .limit(pageSize)
         .orderBy(asc(backgrounds.id));
 
@@ -107,10 +115,17 @@ export class DrizzleBackgroundRepo
   ): Promise<Result<Background[]>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Select backgrounds
+      // sessionId is required to filter backgrounds - if not provided, return empty array
+      // This prevents accidentally returning backgrounds from other sessions
+      if (!query.sessionId) {
+        return Result.ok([]);
+      }
+
+      // Select backgrounds filtered by sessionId
       const rows = await db
         .select()
         .from(backgrounds)
+        .where(eq(backgrounds.session_id, query.sessionId.toString()))
         .limit(query.limit ?? 100)
         .offset(query.offset ?? 0)
         .orderBy(desc(backgrounds.id));
@@ -122,6 +137,29 @@ export class DrizzleBackgroundRepo
       return Result.ok(entities);
     } catch (error) {
       return formatFail("Failed to get Backgrounds", error);
+    }
+  }
+
+  async getBackgroundsBySessionId(
+    sessionId: UniqueEntityID,
+    tx?: Transaction,
+  ): Promise<Result<Background[]>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      // Select backgrounds by session_id
+      const rows = await db
+        .select()
+        .from(backgrounds)
+        .where(eq(backgrounds.session_id, sessionId.toString()))
+        .orderBy(desc(backgrounds.created_at));
+
+      // Convert rows to entities
+      const entities = rows.map((row) => BackgroundDrizzleMapper.toDomain(row));
+
+      // Return backgrounds
+      return Result.ok(entities);
+    } catch (error) {
+      return formatFail("Failed to get backgrounds by session ID", error);
     }
   }
 

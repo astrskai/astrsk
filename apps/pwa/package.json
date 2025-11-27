@@ -61,6 +61,7 @@
     "@radix-ui/react-tabs": "^1.1.9",
     "@radix-ui/react-tooltip": "^1.2.4",
     "@radix-ui/react-visually-hidden": "^1.2.3",
+    "@supabase/supabase-js": "^2.47.10",
     "@tailwindcss/vite": "^4.1.8",
     "@tanstack/query-async-storage-persister": "5.90.2",
     "@tanstack/query-broadcast-client-experimental": "5.90.2",

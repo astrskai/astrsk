@@ -56,6 +56,7 @@ export class CharacterCard extends AggregateRoot<
           description: props.description,
           exampleDialogue: props.exampleDialogue,
           lorebook: props.lorebook,
+          sessionId: props.sessionId,
           updatedAt: props.updatedAt || new Date(),
         },
         id ?? new UniqueEntityID(),

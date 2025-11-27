@@ -13,6 +13,7 @@ export class BackgroundDrizzleMapper {
       {
         name: row.name,
         assetId: new UniqueEntityID(row.asset_id),
+        sessionId: new UniqueEntityID(row.session_id),
         updatedAt: new Date(row.updated_at),
       },
       new UniqueEntityID(row.id),
@@ -33,6 +34,7 @@ export class BackgroundDrizzleMapper {
       id: domain.id.toString(),
       name: domain.name,
       asset_id: domain.assetId.toString(),
+      session_id: domain.sessionId.toString(),
     };
   }
 

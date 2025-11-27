@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useCallback } from "react";
-import { Card } from "@/entities/card/domain";
+import { Card, CardType } from "@/entities/card/domain";
 import { DockviewApi } from "dockview";
 import type { IDockviewPanel, DockviewGroupPanel } from "dockview-core";
 import { CardPanelVisibility } from "@/entities/card/stores/card-ui-store";
@@ -90,9 +90,12 @@ export function CardPanelProvider({
           break;
         case "content":
           // Map "content" to the appropriate panel type based on card type
-          if (card?.props.type === "plot") {
+          if (
+            card?.props.type === CardType.Plot ||
+            card?.props.type === CardType.Scenario
+          ) {
             actualPanelType = "plot-info";
-            title = "Plot Info";
+            title = "Scenario info";
           } else {
             actualPanelType = "character-info";
             title = "Character Info";
@@ -218,7 +221,10 @@ export function CardPanelProvider({
       // Map "content" to the appropriate panel type based on card type
       let actualPanelType = panelType;
       if (panelType === "content") {
-        if (card?.props.type === "plot") {
+        if (
+          card?.props.type === CardType.Plot ||
+          card?.props.type === CardType.Scenario
+        ) {
           actualPanelType = "plot-info";
         } else {
           actualPanelType = "character-info";

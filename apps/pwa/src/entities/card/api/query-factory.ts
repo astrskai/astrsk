@@ -19,6 +19,7 @@ import {
   CardType,
   CharacterCard,
   PlotCard,
+  ScenarioCard,
 } from "@/entities/card/domain";
 import { queryClient } from "@/shared/api/query-client";
 import {
@@ -43,8 +44,8 @@ const selectResultCache = new WeakMap<object, any>();
  *   - content: ['cards', 'detail', id, 'content']
  *   - lorebook: ['cards', 'detail', id, 'lorebook']
  *     - entry(entryId): ['cards', 'detail', id, 'lorebook', 'entry', entryId]
- *   - scenarios: ['cards', 'detail', id, 'scenarios']
- *     - scenario(scenarioId): ['cards', 'detail', id, 'scenarios', scenarioId]
+ *   - firstMessages: ['cards', 'detail', id, 'firstMessages']
+ *     - firstMessage(firstMessageId): ['cards', 'detail', id, 'firstMessages', firstMessageId]
  *   - variables: ['cards', 'detail', id, 'variables']
  *     - variable(variableId): ['cards', 'detail', id, 'variables', variableId]
  */
@@ -76,10 +77,11 @@ export const cardKeys = {
   // Lorebook queries
   lorebook: (id: string) => [...cardKeys.detail(id), "lorebook"] as const,
 
-  // Scenarios queries (for plot cards)
-  scenarios: (id: string) => [...cardKeys.detail(id), "scenarios"] as const,
-  scenario: (id: string, scenarioId: string) =>
-    [...cardKeys.scenarios(id), scenarioId] as const,
+  // First messages queries (for scenario cards)
+  // Note: PlotCard uses "scenarios", ScenarioCard uses "firstMessages" - both use this key
+  firstMessages: (id: string) => [...cardKeys.detail(id), "firstMessages"] as const,
+  firstMessage: (id: string, firstMessageId: string) =>
+    [...cardKeys.firstMessages(id), firstMessageId] as const,
 };
 
 // Query Options Factory
@@ -174,10 +176,10 @@ export const cardQueries = {
       staleTime: 1000 * 30,
     }),
 
-  // Scenarios (for plot cards)
-  scenarios: (id: string) =>
+  // First messages (for scenario cards)
+  firstMessages: (id: string) =>
     queryOptions({
-      queryKey: cardKeys.scenarios(id),
+      queryKey: cardKeys.firstMessages(id),
       queryFn: async () => {
         const cardOrError = await CardService.getCard.execute(
           new UniqueEntityID(id),
@@ -185,8 +187,11 @@ export const cardQueries = {
         if (cardOrError.isFailure) return [];
 
         const card = cardOrError.getValue();
+        // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
         if (card instanceof PlotCard) {
           return card.props.scenarios || [];
+        } else if (card instanceof ScenarioCard) {
+          return card.props.firstMessages || [];
         }
         return [];
       },
@@ -196,7 +201,7 @@ export const cardQueries = {
         const cached = selectResultCache.get(data as object);
         if (cached) return cached;
 
-        // For scenarios, data is already in the right format, just cache it
+        // For first messages, data is already in the right format, just cache it
         const result = data;
         selectResultCache.set(data as object, result);
         return result;
@@ -204,10 +209,10 @@ export const cardQueries = {
       staleTime: 1000 * 30,
     }),
 
-  // Single scenario
-  scenario: (id: string, scenarioId: string) =>
+  // Single first message
+  firstMessage: (id: string, firstMessageId: string) =>
     queryOptions({
-      queryKey: cardKeys.scenario(id, scenarioId),
+      queryKey: cardKeys.firstMessage(id, firstMessageId),
       queryFn: async () => {
         const cardOrError = await CardService.getCard.execute(
           new UniqueEntityID(id),
@@ -215,9 +220,15 @@ export const cardQueries = {
         if (cardOrError.isFailure) return null;
 
         const card = cardOrError.getValue();
+        // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
         if (card instanceof PlotCard) {
           return (
-            card.props.scenarios?.find((s: any) => s.name === scenarioId) ||
+            card.props.scenarios?.find((s: any) => s.name === firstMessageId) ||
+            null
+          );
+        } else if (card instanceof ScenarioCard) {
+          return (
+            card.props.firstMessages?.find((s: any) => s.name === firstMessageId) ||
             null
           );
         }
@@ -264,19 +275,21 @@ export async function fetchCard(id: UniqueEntityID): Promise<Card> {
   return CardDrizzleMapper.toDomain(data as any);
 }
 
-export async function fetchPlotCard(id: UniqueEntityID): Promise<PlotCard> {
+export async function fetchScenarioCard(
+  id: UniqueEntityID,
+): Promise<PlotCard | ScenarioCard> {
   const card = await fetchCard(id);
-  if (!(card instanceof PlotCard)) {
-    throw new Error(`Card is not a PlotCard: ${id.toString()}`);
+  if (!(card instanceof PlotCard || card instanceof ScenarioCard)) {
+    throw new Error(`Card is not a PlotCard or ScenarioCard: ${id.toString()}`);
   }
   return card;
 }
 
-export async function fetchPlotCardOptional(
+export async function fetchScenarioCardOptional(
   id: UniqueEntityID,
-): Promise<PlotCard | null> {
+): Promise<PlotCard | ScenarioCard | null> {
   try {
-    return await fetchPlotCard(id);
+    return await fetchScenarioCard(id);
   } catch {
     return null;
   }

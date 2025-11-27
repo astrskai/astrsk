@@ -337,9 +337,9 @@ export default function FlowPageMobile({ className }: { className?: string }) {
         const flow = flows?.find((f: Flow) => f.id.toString() === flowId);
         if (!flow) continue;
 
-        const exportResult = await FlowService.exportFlowToFile.execute(
-          new UniqueEntityID(flowId),
-        );
+        const exportResult = await FlowService.exportFlowWithNodes.execute({
+          flowId: new UniqueEntityID(flowId),
+        });
         if (exportResult.isSuccess) {
           const file = exportResult.getValue();
           // Create download link

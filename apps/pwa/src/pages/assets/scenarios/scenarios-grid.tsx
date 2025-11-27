@@ -1,15 +1,17 @@
 import { Upload, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { CardType, ScenarioCard } from "@/entities/card/domain";
+import { IconHarpyLogo } from "@/shared/assets/icons";
 import { DialogConfirm } from "@/shared/ui/dialogs";
-import ScenarioCard from "@/features/scenario/ui/scenario-card";
+import ScenarioCardUI from "@/features/scenario/ui/scenario-card";
 import type { CardAction } from "@/features/common/ui";
 import { useCardActions } from "@/features/common/model/use-card-actions";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { ExportType } from "@/shared/lib/cloud-upload-helpers";
 
 interface ScenariosGridProps {
-  scenarios: PlotCard[];
+  scenarios: ScenarioCard[];
 }
 
 /**
@@ -17,10 +19,14 @@ interface ScenariosGridProps {
  * Wrapper component that handles useAsset hook
  */
 interface ScenarioGridItemProps {
-  scenario: PlotCard;
+  scenario: ScenarioCard;
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   onScenarioClick: (plotId: string) => void;
-  onExport: (cardId: string, title: string) => (e: React.MouseEvent) => void;
+  onExport: (
+    cardId: string,
+    title: string,
+    exportType: ExportType,
+  ) => (e: React.MouseEvent) => void;
   onCopy: (cardId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
     cardId: string,
@@ -43,7 +49,14 @@ function ScenarioGridItem({
     {
       icon: Upload,
       label: "Export",
-      onClick: onExport(cardId, scenario.props.title),
+      onClick: onExport(cardId, scenario.props.title, "file"),
+      disabled: loading.exporting,
+      loading: loading.exporting,
+    },
+    {
+      icon: IconHarpyLogo,
+      label: "Harpy",
+      onClick: onExport(cardId, scenario.props.title, "cloud"),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
@@ -65,13 +78,13 @@ function ScenarioGridItem({
   ];
 
   return (
-    <ScenarioCard
+    <ScenarioCardUI
       imageUrl={imageUrl}
       title={scenario.props.title}
       summary={scenario.props.cardSummary}
       tags={scenario.props.tags || []}
       tokenCount={scenario.props.tokenCount}
-      firstMessages={scenario.props.scenarios?.length || 0}
+      firstMessages={scenario.props.firstMessages?.length || 0}
       onClick={() => onScenarioClick(cardId)}
       actions={actions}
     />
@@ -95,7 +108,7 @@ export function ScenariosGrid({ scenarios }: ScenariosGridProps) {
     handleDeleteClick,
     handleDeleteConfirm,
     closeDeleteDialog,
-  } = useCardActions({ entityType: "plot" });
+  } = useCardActions({ entityType: CardType.Scenario });
 
   const handleScenarioClick = (plotId: string) => {
     navigate({

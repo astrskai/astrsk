@@ -94,7 +94,19 @@ export async function initServices(
       FlowService.importFlowWithNodes,
       CardService.importCardFromFile,
       BackgroundService.saveFileToBackground,
+      AssetService.saveFileToAsset,
       FlowService.getModelsFromFlowFile,
+      FlowService.cloneFlow,
+      CardService.cloneCard,
+      AssetService.cloneAsset,
+      BackgroundService.cloneBackground,
+      AssetService.assetRepo,
+      BackgroundService.backgroundRepo,
+      CardService.cardRepo,
+      FlowService.flowRepo,
+      AgentService.agentRepo,
+      DataStoreNodeService.dataStoreNodeRepo,
+      IfNodeService.ifNodeRepo,
     );
     onProgress?.(currentService, "success");
   } catch (error) {

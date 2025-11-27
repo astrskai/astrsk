@@ -18,4 +18,5 @@ export interface LoadAgentRepo {
   getAgentById(id: UniqueEntityID): Promise<Result<Agent>>;
   searchAgents(query: SearchAgentQuery): Promise<Result<Agent[]>>;
   canUseAgentName(name: string): Promise<Result<boolean>>;
+  getAgentsByFlowId(flowId: UniqueEntityID): Promise<Result<Agent[]>>;
 }

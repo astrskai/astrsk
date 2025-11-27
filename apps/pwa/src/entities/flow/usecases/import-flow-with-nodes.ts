@@ -19,6 +19,7 @@ import {
 
 interface ImportCommand {
   file: File;
+  sessionId?: UniqueEntityID; // Optional - if provided, creates session-local flow
   agentModelOverrides?: Map<
     string,
     {
@@ -43,6 +44,43 @@ interface STPrompt {
     }[];
   }[];
 }
+
+
+
+const defaultHistoryMessage = 
+    {
+      "type": "history",
+      "enabled": true,
+      "historyType": "split",
+      "start": 0,
+      "end": 10,
+      "countFromEnd": true,
+      "userPromptBlocks": [
+        {
+          "name": "History (last 10 messages)",
+          "template": "{{turn.char_name}}: {{turn.content}}",
+          "type": "plain",
+          "createdAt": "2025-08-25T01:48:58.974Z",
+          "updatedAt": "2025-08-25T01:48:58.974Z",
+          "id": "0198deea-12de-7ee8-b913-8288ec1a683f"
+        }
+      ],
+      "assistantPromptBlocks": [
+        {
+          "name": "History (last 10 messages)",
+          "template": "{{turn.char_name}}: {{turn.content}}",
+          "type": "plain",
+          "createdAt": "2025-08-25T01:48:58.974Z",
+          "updatedAt": "2025-08-25T01:48:58.974Z",
+          "id": "0198deea-12de-7ee8-b913-8bfa8a2cbcd2"
+        }
+      ],
+      "userMessageRole": "user",
+      "charMessageRole": "assistant",
+      "subCharMessageRole": "user",
+      "createdAt": "2025-08-25T01:48:58.974Z",
+      "id": "history-1754640010968"
+    }
 
 export class ImportFlowWithNodes
   implements UseCase<ImportCommand, Result<Flow>>
@@ -97,31 +135,52 @@ export class ImportFlowWithNodes
     prompt.prompts.forEach((p) => {
       promptMap.set(p.identifier, p);
     });
-
+    
     // Filter and order prompts based on the order configuration
+    // Map order config with prompt data to preserve enabled state
     const orderedPrompts = orderConfig.order
-      .filter((order) => order.enabled && promptMap.has(order.identifier))
-      .map((order) => promptMap.get(order.identifier))
-      .filter((p) => p.content && p.content.trim() !== "");
+      .filter((order) =>
+        // Allow chatHistory marker or identifiers that exist in promptMap
+        order.identifier === "chatHistory" || promptMap.has(order.identifier)
+      )
+      .map((order) => ({
+        prompt: promptMap.get(order.identifier) || { identifier: order.identifier },
+        enabled: order.enabled,
+      }))
+      .filter(({ prompt }) =>
+        // Allow chatHistory marker (has no content) or prompts with valid content
+        prompt.identifier === "chatHistory" ||
+        (prompt.content && prompt.content.trim() !== "")
+      );
 
     // Convert orderedPrompts to plain promptMessages with single text block
-    const promptMessages = orderedPrompts.map((p) => ({
-      type: "plain",
-      enabled: true,
-      role: p.role || "user",
-      promptBlocks: [
-        {
-          name: p.name || "Imported Block",
-          template: p.content,
-          isDeleteUnnecessaryCharacters: false,
-          type: "plain",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
+    const promptMessages = orderedPrompts.map(({ prompt: p, enabled }) => {
+      // Check if this is a chatHistory marker - replace with defaultHistoryMessage
+      if (p.identifier === "chatHistory") {
+        return {
+          ...defaultHistoryMessage,
+          enabled: enabled,
+        };
+      }
+
+      return {
+        type: "plain",
+        enabled: enabled,
+        role: p.role || "user",
+        promptBlocks: [
+          {
+            name: p.name || "Imported Block",
+            template: p.content,
+            isDeleteUnnecessaryCharacters: false,
+            type: "plain",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    });
 
     // Generate a clean name from filename
     const baseName = filename
@@ -129,11 +188,14 @@ export class ImportFlowWithNodes
       .replace(/[^a-zA-Z0-9\s_-]/g, "");
     const flowName = baseName || "Imported SillyTavern Flow";
     const agentName = "New Agent";
-    const agentId = `new_agent`;
+    const agentId = new UniqueEntityID().toString();
+    const flowId = new UniqueEntityID().toString();
+
 
     // Create agent structure
     const agent = {
       name: agentName,
+      flowId: flowId,
       description: `Agent imported from SillyTavern prompt: ${filename}`,
       targetApiType: "chat",
       apiSource: "openai",
@@ -208,6 +270,7 @@ export class ImportFlowWithNodes
 
   private async importEnhancedFormat(
     data: any,
+    sessionId?: UniqueEntityID,
     agentModelOverrides?: Map<string, any>,
   ): Promise<Result<Flow>> {
     try {
@@ -243,12 +306,58 @@ export class ImportFlowWithNodes
 
       const newFlowId = new UniqueEntityID().toString();
 
-      // Import agents with new IDs
+      // Update flow nodes and edges with new IDs FIRST (before saving nodes)
+      const newNodes = flowData.nodes.map((node: any) => {
+        const newId = nodeIdMap.get(node.id) || node.id;
+
+        // For dataStore nodes, update the flowId in data if present
+        let nodeData = {};
+        if (node.type === "dataStore" && node.data && node.data.flowId) {
+          nodeData = { flowId: newFlowId };
+        }
+
+        return {
+          ...node,
+          id: newId,
+          data: nodeData,
+        };
+      });
+
+      const newEdges = this.remapEdgeIds(flowData.edges, nodeIdMap);
+
+      // Create and save flow FIRST (so nodes can reference it via foreign key)
+      const flow = Flow.create(
+        {
+          ...flowData,
+          sessionId: sessionId?.toString(), // If provided, creates session-local flow
+          nodes: newNodes,
+          edges: newEdges,
+        },
+        new UniqueEntityID(newFlowId),
+      );
+
+      if (flow.isFailure) {
+        return Result.fail(flow.getError());
+      }
+
+      const savedFlow = await this.saveFlowRepo.saveFlow(flow.getValue());
+
+      if (savedFlow.isFailure) {
+        return Result.fail(savedFlow.getError());
+      }
+
+      // NOW import agents with new IDs (after flow exists in database)
       for (const [oldNodeId, agentData] of Object.entries(agents || {})) {
         const newNodeId = nodeIdMap.get(oldNodeId);
         if (!newNodeId) continue;
 
-        let agent = Agent.fromJSON(agentData);
+        // Add flowId to agentData before creating agent (required field)
+        const agentDataWithFlowId = {
+          ...(agentData as Record<string, any>),
+          flowId: newFlowId,
+        };
+
+        let agent = Agent.fromJSON(agentDataWithFlowId);
         if (agent.isFailure) continue;
 
         // Apply model overrides if provided
@@ -319,45 +428,7 @@ export class ImportFlowWithNodes
         }
       }
 
-      // Update flow nodes and edges with new IDs
-      const newNodes = flowData.nodes.map((node: any) => {
-        const newId = nodeIdMap.get(node.id) || node.id;
-
-        // For dataStore nodes, update the flowId in data if present
-        let nodeData = {};
-        if (node.type === "dataStore" && node.data && node.data.flowId) {
-          nodeData = { flowId: newFlowId };
-        }
-
-        return {
-          ...node,
-          id: newId,
-          data: nodeData,
-        };
-      });
-
-      const newEdges = this.remapEdgeIds(flowData.edges, nodeIdMap);
-
-      // Create and save flow (without panelStructure/viewport - user sets their own layout)
-      const flow = Flow.create(
-        {
-          ...flowData,
-          nodes: newNodes,
-          edges: newEdges,
-        },
-        new UniqueEntityID(newFlowId),
-      );
-
-      if (flow.isFailure) {
-        return Result.fail(flow.getError());
-      }
-
-      const savedFlow = await this.saveFlowRepo.saveFlow(flow.getValue());
-
-      if (savedFlow.isFailure) {
-        return Result.fail(savedFlow.getError());
-      }
-
+      // Flow was already saved above, just return it
       return savedFlow;
     } catch (error) {
       return Result.fail(
@@ -366,13 +437,24 @@ export class ImportFlowWithNodes
     }
   }
 
+  /**
+   * @deprecated Legacy import method - kept for reference only
+   * All imports now go through migrateLegacyToEnhanced() → importEnhancedFormat()
+   * This ensures single code path and proper ID management
+   */
   private async importLegacyFormat(
     data: any,
+    sessionId?: UniqueEntityID,
     agentModelOverrides?: Map<string, any>,
   ): Promise<Result<Flow>> {
     try {
       // Use existing legacy import logic for current user flows
       const { agents, panelStructure, viewport, ...flowJson } = data;
+
+      // Add sessionId if provided (creates session-local flow)
+      if (sessionId) {
+        flowJson.sessionId = sessionId.toString();
+      }
 
       // Import agent with new id
       const agentIdMap = new Map<string, string>();
@@ -481,8 +563,87 @@ export class ImportFlowWithNodes
     });
   }
 
+  /**
+   * Migrates legacy format (embedded node data) to enhanced format (separate sections)
+   *
+   * Legacy format:
+   *   - DataStore/If node data embedded in node.data
+   *   - No separate dataStoreNodes or ifNodes sections
+   *
+   * Enhanced format:
+   *   - Separate dataStoreNodes and ifNodes objects
+   *   - Node data only contains flowId reference
+   *
+   * CRITICAL: Maintains ID invariant - node.id becomes entity.id
+   */
+  private migrateLegacyToEnhanced(legacyData: any): any {
+    const dataStoreNodes: Record<string, any> = {};
+    const ifNodes: Record<string, any> = {};
+
+    // Extract embedded data from nodes and create separate sections
+    const migratedNodes = legacyData.nodes.map((node: any) => {
+      if (node.type === NodeType.DATA_STORE && node.data) {
+        // Extract data store node data (everything except flowId)
+        const { flowId, ...nodeData } = node.data;
+
+        // Only create separate entry if there's actual data
+        if (Object.keys(nodeData).length > 0) {
+          // CRITICAL: Use node.id as key to maintain ID invariant
+          dataStoreNodes[node.id] = {
+            name: nodeData.name || "Untitled Data Store",
+            color: nodeData.color || "#60A5FA",
+            dataStoreFields: nodeData.dataStoreFields || [],
+          };
+
+          // Clean node data - only keep flowId
+          return {
+            ...node,
+            data: flowId ? { flowId } : {},
+          };
+        }
+      }
+
+      if (node.type === NodeType.IF && node.data) {
+        // Extract if node data (everything except flowId)
+        const { flowId, ...nodeData } = node.data;
+
+        // Only create separate entry if there's actual data
+        if (Object.keys(nodeData).length > 0) {
+          // CRITICAL: Use node.id as key to maintain ID invariant
+          ifNodes[node.id] = {
+            name: nodeData.name || "Untitled Condition",
+            color: nodeData.color || "#F87171",
+            logicOperator: nodeData.logicOperator || "and",
+            conditions: nodeData.conditions || [],
+          };
+
+          // Clean node data - only keep flowId
+          return {
+            ...node,
+            data: flowId ? { flowId } : {},
+          };
+        }
+      }
+
+      // Other nodes (agent, start, end) remain unchanged
+      return node;
+    });
+
+    // Create enhanced format structure
+    // IMPORTANT: Always add dataStoreNodes and ifNodes (even if empty)
+    // This ensures the format is detected as enhanced by isEnhancedFormat()
+    // Fixes SillyTavern imports which have no dataStore/if nodes
+    return {
+      ...legacyData,
+      nodes: migratedNodes,
+      dataStoreNodes, // Always include (even if empty object)
+      ifNodes,        // Always include (even if empty object)
+    };
+  }
+
   async execute({
     file,
+    sessionId,
     agentModelOverrides,
   }: ImportCommand): Promise<Result<Flow>> {
     try {
@@ -506,12 +667,17 @@ export class ImportFlowWithNodes
         parsedData = migrationResult.getValue();
       }
 
-      // Route to appropriate import method based on format
+      // Migrate legacy format to enhanced format if needed
+      if (this.isLegacyFormat(parsedData)) {
+        console.log("📦 Migrating legacy format to enhanced format...");
+        parsedData = this.migrateLegacyToEnhanced(parsedData);
+      }
+
+      // Now import using enhanced format (single code path)
       if (this.isEnhancedFormat(parsedData)) {
-        return this.importEnhancedFormat(parsedData, agentModelOverrides);
-      } else if (this.isLegacyFormat(parsedData)) {
-        return this.importLegacyFormat(parsedData, agentModelOverrides);
+        return this.importEnhancedFormat(parsedData, sessionId, agentModelOverrides);
       } else {
+        // Should never reach here after migration, but handle gracefully
         console.error("❌ Unknown flow format detected:", {
           isEnhanced: this.isEnhancedFormat(parsedData),
           isLegacy: this.isLegacyFormat(parsedData),

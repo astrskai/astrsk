@@ -1,0 +1,1 @@
+ALTER TABLE "backgrounds" ALTER COLUMN "session_id" SET NOT NULL;

@@ -102,6 +102,10 @@ export interface FlowProps {
   // Metadata
   name: string;
   description: string;
+  tags: string[];
+  summary?: string;
+  version?: string;
+  conceptualOrigin?: string;
 
   // Agent Graph
   nodes: Node[];
@@ -121,6 +125,11 @@ export interface FlowProps {
 
   // Vibe Session Reference (AI Assistant)
   vibeSessionId?: string;
+
+  // Session-local resource support
+  // undefined = global resource (shows in lists)
+  // UniqueEntityID = local to specific session (hidden from global lists)
+  sessionId?: UniqueEntityID;
 
   // Validation State
   readyState: ReadyState;
@@ -177,6 +186,7 @@ export class Flow extends AggregateRoot<FlowProps> {
         // Default values for required props
         name: "",
         description: "",
+        tags: [],
         nodes: [],
         edges: [],
         responseTemplate: "",
@@ -318,6 +328,7 @@ export class Flow extends AggregateRoot<FlowProps> {
       const flow = new Flow(
         {
           ...props,
+          tags: props.tags || [], // Default to empty array for old flows
           createdAt,
           updatedAt,
           nodes: (() => {

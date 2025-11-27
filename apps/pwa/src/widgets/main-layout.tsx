@@ -86,11 +86,11 @@ export function MainLayout({
 
   // Development mode: Log PWA status for debugging
   if (import.meta.env.DEV) {
-    console.log("[Dev Mode] PWA status:", {
-      isStandalone,
-      canInstall,
-      isDev: import.meta.env.DEV,
-    });
+    // console.log("[Dev Mode] PWA status:", {
+    //   isStandalone,
+    //   canInstall,
+    //   isDev: import.meta.env.DEV,
+    // });
   }
 
   // Note: All initialization (DB migration, services, stores) is now handled in main.tsx

@@ -595,6 +595,7 @@ const SessionSettings = ({
             "max-md:w-full",
           )}>
             <EditBackground
+              sessionId={session.id}
               defaultValue={{
                 backgroundId: session?.backgroundId,
               }}

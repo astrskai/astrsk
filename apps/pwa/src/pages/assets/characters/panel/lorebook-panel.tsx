@@ -31,7 +31,7 @@ import {
   TooltipTrigger,
 } from "@/shared/ui";
 
-import { CharacterCard, PlotCard } from "@/entities/card/domain";
+import { CharacterCard, PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { Lorebook } from "@/entities/card/domain/lorebook";
 import { Entry } from "@/entities/card/domain/entry";
 import { UniqueEntityID } from "@/shared/domain";
@@ -104,7 +104,9 @@ export function LorebookPanel({ cardId, className }: LorebookPanelProps) {
     // Initialize when card changes
     if (cardId && cardId !== lastInitializedCardId.current && card) {
       if (
-        (card instanceof CharacterCard || card instanceof PlotCard) &&
+        (card instanceof CharacterCard ||
+          card instanceof PlotCard ||
+          card instanceof ScenarioCard) &&
         card.props.lorebook
       ) {
         const lorebookEntries = card.props.lorebook.entries.map((entry) => ({
@@ -129,7 +131,9 @@ export function LorebookPanel({ cardId, className }: LorebookPanelProps) {
     // Sync when card changes externally (cross-tab sync) - but not during mutation
     else if (card && !updateLorebook.isPending && !updateLorebook.hasCursor) {
       if (
-        (card instanceof CharacterCard || card instanceof PlotCard) &&
+        (card instanceof CharacterCard ||
+          card instanceof PlotCard ||
+          card instanceof ScenarioCard) &&
         card.props.lorebook
       ) {
         const newEntries = card.props.lorebook.entries.map((entry) => ({
@@ -172,7 +176,14 @@ export function LorebookPanel({ cardId, className }: LorebookPanelProps) {
   // 6. Helper function to convert entries to lorebook and save using mutation
   const saveLorebook = useCallback(
     (newEntries: LorebookEntry[]) => {
-      if (!card || !(card instanceof CharacterCard || card instanceof PlotCard))
+      if (
+        !card ||
+        !(
+          card instanceof CharacterCard ||
+          card instanceof PlotCard ||
+          card instanceof ScenarioCard
+        )
+      )
         return;
 
       // Check for actual changes inline
@@ -321,9 +332,15 @@ export function LorebookPanel({ cardId, className }: LorebookPanelProps) {
     return <CardPanelError message="Card not found" />;
   }
 
-  if (!(card instanceof CharacterCard || card instanceof PlotCard)) {
+  if (
+    !(
+      card instanceof CharacterCard ||
+      card instanceof PlotCard ||
+      card instanceof ScenarioCard
+    )
+  ) {
     return (
-      <CardPanelError message="Lorebook is only available for character and plot cards" />
+      <CardPanelError message="Lorebook is only available for character and scenario cards" />
     );
   }
 

@@ -5,6 +5,7 @@ import { Transaction } from "@/db/transaction";
 import { Background } from "@/entities/background/domain";
 
 export type ListBackgroundQuery = {
+  sessionId?: UniqueEntityID;
   limit?: number;
   offset?: number;
 };
@@ -12,6 +13,7 @@ export type ListBackgroundQuery = {
 export interface LoadBackgroundRepo {
   listBackgrounds(
     query: {
+      sessionId?: UniqueEntityID;
       cursor?: UniqueEntityID;
       pageSize?: number;
     },
@@ -23,6 +25,10 @@ export interface LoadBackgroundRepo {
   ): Promise<Result<Background>>;
   getBackgrounds(
     query: ListBackgroundQuery,
+    tx?: Transaction,
+  ): Promise<Result<Background[]>>;
+  getBackgroundsBySessionId(
+    sessionId: UniqueEntityID,
     tx?: Transaction,
   ): Promise<Result<Background[]>>;
 }

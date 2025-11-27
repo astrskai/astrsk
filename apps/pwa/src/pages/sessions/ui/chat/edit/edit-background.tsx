@@ -60,10 +60,12 @@ const SelectedBackground = ({
 };
 
 const EditBackground = ({
+  sessionId,
   defaultValue,
   onSave,
   trigger,
 }: {
+  sessionId: UniqueEntityID;
   defaultValue: { backgroundId?: UniqueEntityID };
   onSave: (newValue: Partial<SessionProps>) => Promise<void>;
   trigger?: React.ReactNode;
@@ -100,20 +102,26 @@ const EditBackground = ({
   // Handle add new background
   const refBackgroundFileInput = useRef<HTMLInputElement>(null);
   const [isOpenImportDialog, setIsOpenImportDialog] = useState(false);
-  const handleAddNewBackground = useCallback(async (file: File) => {
-    // Save file to background
-    const backgroundOrError =
-      await BackgroundService.saveFileToBackground.execute(file);
-    if (backgroundOrError.isFailure) {
-      return;
-    }
+  const handleAddNewBackground = useCallback(
+    async (file: File) => {
+      // Save file to background with session ID
+      const backgroundOrError =
+        await BackgroundService.saveFileToBackground.execute({
+          file,
+          sessionId,
+        });
+      if (backgroundOrError.isFailure) {
+        return;
+      }
 
-    // Refresh backgrounds
-    fetchBackgrounds();
+      // Refresh backgrounds for this session
+      fetchBackgrounds(sessionId);
 
-    // Close dialog
-    setIsOpenImportDialog(false);
-  }, []);
+      // Close dialog
+      setIsOpenImportDialog(false);
+    },
+    [sessionId],
+  );
 
   // Handle delete background
   const handleDeleteBackground = useCallback(
@@ -124,10 +132,10 @@ const EditBackground = ({
         return;
       }
 
-      // Refresh backgrounds
-      fetchBackgrounds();
+      // Refresh backgrounds for this session
+      fetchBackgrounds(sessionId);
     },
-    [],
+    [sessionId],
   );
 
   // Handle save

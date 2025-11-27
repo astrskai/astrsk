@@ -62,36 +62,30 @@ export const useUpdateCardTitle = (cardId: string) => {
         queryKey: cardKeys.lists(),
       });
 
-      // Optimistic update - detail (in persistence format)
+      // Optimistic update - detail (flat schema: title is at root level)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          common: {
-            ...old.common,
-            title: title,
-            updated_at: new Date(),
-          },
+          title: title,
+          updated_at: new Date(),
         };
       });
 
-      // Optimistic update - all list queries (in persistence format)
+      // Optimistic update - all list queries (flat schema)
       queryClient.setQueriesData(
         { queryKey: cardKeys.lists() },
         (oldData: any) => {
           if (!oldData || !Array.isArray(oldData)) return oldData;
 
           // Find and update the specific card in the list
-          // Must update in persistence format: common.title (ID is in common.id)
+          // Flat schema: id and title are at root level
           return oldData.map((card) =>
-            card.common?.id === cardId || card.common?.id?.toString() === cardId
+            card.id === cardId || card.id?.toString() === cardId
               ? {
                   ...card,
-                  common: {
-                    ...card.common,
-                    title: title,
-                    updated_at: new Date(),
-                  },
+                  title: title,
+                  updated_at: new Date(),
                 }
               : card,
           );
@@ -200,16 +194,13 @@ export const useUpdateCardSummary = (cardId: string) => {
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
-      // Optimistic updates - metadata
+      // Optimistic updates - metadata (flat schema: card_summary at root level)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          common: {
-            ...old.common,
-            card_summary: cardSummary,
-            updated_at: new Date(),
-          },
+          card_summary: cardSummary,
+          updated_at: new Date(),
         };
       });
       return { previousCard };
@@ -305,44 +296,32 @@ export const useUpdateCharacterName = (cardId: string) => {
         queryKey: cardKeys.lists(),
       });
 
-      // Optimistic update - detail (in persistence format)
+      // Optimistic update - detail (flat schema: name at root level for characters)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
-        if (!old || !old.character) return old;
+        if (!old) return old;
+        // Check if this is a character (has example_dialogue field)
+        if (!('example_dialogue' in old)) return old;
         return {
           ...old,
-          character: {
-            ...old.character,
-            name: name,
-          },
-          common: {
-            ...old.common,
-            updated_at: new Date(),
-          },
+          name: name,
+          updated_at: new Date(),
         };
       });
 
-      // Optimistic update - all list queries (in persistence format)
+      // Optimistic update - all list queries (flat schema)
       queryClient.setQueriesData(
         { queryKey: cardKeys.lists() },
         (oldData: any) => {
           if (!oldData || !Array.isArray(oldData)) return oldData;
 
           // Find and update the specific card in the list
-          // Must update in persistence format: character.name (ID is in common.id)
+          // Flat schema: id and name are at root level
           return oldData.map((card) =>
-            card.common?.id === cardId || card.common?.id?.toString() === cardId
+            card.id === cardId || card.id?.toString() === cardId
               ? {
                   ...card,
-                  character: card.character
-                    ? {
-                        ...card.character,
-                        name: name,
-                      }
-                    : undefined,
-                  common: {
-                    ...card.common,
-                    updated_at: new Date(),
-                  },
+                  name: name,
+                  updated_at: new Date(),
                 }
               : card,
           );
@@ -453,19 +432,15 @@ export const useUpdateCharacterDescription = (cardId: string) => {
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
-      // Optimistic update
+      // Optimistic update (flat schema: description at root level for characters)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
-        if (!old || !old.character) return old;
+        if (!old) return old;
+        // Check if this is a character (has example_dialogue field)
+        if (!('example_dialogue' in old)) return old;
         return {
           ...old,
-          character: {
-            ...old.character,
-            description: description,
-          },
-          common: {
-            ...old.common,
-            updated_at: new Date(),
-          },
+          description: description,
+          updated_at: new Date(),
         };
       });
 
@@ -558,19 +533,15 @@ export const useUpdateCharacterExampleDialogue = (cardId: string) => {
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
-      // Optimistic update
+      // Optimistic update (flat schema: example_dialogue at root level for characters)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
-        if (!old || !old.character) return old;
+        if (!old) return old;
+        // Check if this is a character (has example_dialogue field)
+        if (!('example_dialogue' in old)) return old;
         return {
           ...old,
-          character: {
-            ...old.character,
-            example_dialogue: exampleDialogue,
-          },
-          common: {
-            ...old.common,
-            updated_at: new Date(),
-          },
+          example_dialogue: exampleDialogue,
+          updated_at: new Date(),
         };
       });
 
@@ -663,16 +634,13 @@ export const useUpdateCardTags = (cardId: string) => {
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
-      // Optimistic update
+      // Optimistic update (flat schema: tags at root level)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          common: {
-            ...old.common,
-            tags: tags,
-            updated_at: new Date(),
-          },
+          tags: tags,
+          updated_at: new Date(),
         };
       });
 
@@ -765,16 +733,13 @@ export const useUpdateCardVersion = (cardId: string) => {
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
-      // Optimistic update
+      // Optimistic update (flat schema: version at root level)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          common: {
-            ...old.common,
-            version: version,
-            updated_at: new Date(),
-          },
+          version: version,
+          updated_at: new Date(),
         };
       });
 
@@ -867,16 +832,13 @@ export const useUpdateCardConceptualOrigin = (cardId: string) => {
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
-      // Optimistic update
+      // Optimistic update (flat schema: conceptual_origin at root level)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          common: {
-            ...old.common,
-            conceptual_origin: conceptualOrigin,
-            updated_at: new Date(),
-          },
+          conceptual_origin: conceptualOrigin,
+          updated_at: new Date(),
         };
       });
 
@@ -969,16 +931,13 @@ export const useUpdateCardCreator = (cardId: string) => {
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
-      // Optimistic update
+      // Optimistic update (flat schema: creator at root level)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          common: {
-            ...old.common,
-            creator: creator,
-            updated_at: new Date(),
-          },
+          creator: creator,
+          updated_at: new Date(),
         };
       });
 
@@ -1075,69 +1034,25 @@ export const useUpdateCardLorebook = (cardId: string) => {
         cardKeys.lorebook(cardId),
       );
 
-      // Optimistic update for lorebook queries
+      // Optimistic update for lorebook queries (flat schema: lorebook at root level)
       if (lorebook) {
         queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
           if (!old) return old;
-          // Lorebook can be in either character or plot
-          if (old.character) {
-            return {
-              ...old,
-              character: {
-                ...old.character,
-                lorebook: lorebook,
-              },
-              common: {
-                ...old.common,
-                updated_at: new Date(),
-              },
-            };
-          } else if (old.plot) {
-            return {
-              ...old,
-              plot: {
-                ...old.plot,
-                lorebook: lorebook,
-              },
-              common: {
-                ...old.common,
-                updated_at: new Date(),
-              },
-            };
-          }
-          return old;
+          return {
+            ...old,
+            lorebook: lorebook,
+            updated_at: new Date(),
+          };
         });
         queryClient.setQueryData(cardKeys.lorebook(cardId), lorebook);
       } else {
         queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
           if (!old) return old;
-          // Clear lorebook from either character or plot
-          if (old.character) {
-            return {
-              ...old,
-              character: {
-                ...old.character,
-                lorebook: null,
-              },
-              common: {
-                ...old.common,
-                updated_at: new Date(),
-              },
-            };
-          } else if (old.plot) {
-            return {
-              ...old,
-              plot: {
-                ...old.plot,
-                lorebook: null,
-              },
-              common: {
-                ...old.common,
-                updated_at: new Date(),
-              },
-            };
-          }
-          return old;
+          return {
+            ...old,
+            lorebook: null,
+            updated_at: new Date(),
+          };
         });
         queryClient.setQueryData(cardKeys.lorebook(cardId), null);
       }
@@ -1237,29 +1152,25 @@ export const useUpdateCardScenarios = (cardId: string) => {
       startEditing();
 
       await queryClient.cancelQueries({ queryKey: cardKeys.detail(cardId) });
-      await queryClient.cancelQueries({ queryKey: cardKeys.scenarios(cardId) });
+      await queryClient.cancelQueries({ queryKey: cardKeys.firstMessages(cardId) });
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
       const previousScenarios = queryClient.getQueryData(
-        cardKeys.scenarios(cardId),
+        cardKeys.firstMessages(cardId),
       );
 
-      // Optimistic update for scenarios queries
+      // Optimistic update for first messages queries (flat schema: first_messages at root level)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
+        // Check if this is a scenario (has first_messages field)
+        if (!('first_messages' in old)) return old;
         return {
           ...old,
-          plot: {
-            ...old.plot,
-            scenarios: scenarios,
-          },
-          common: {
-            ...old.common,
-            updated_at: new Date(),
-          },
+          first_messages: scenarios,
+          updated_at: new Date(),
         };
       });
-      queryClient.setQueryData(cardKeys.scenarios(cardId), scenarios || []);
+      queryClient.setQueryData(cardKeys.firstMessages(cardId), scenarios || []);
 
       return { previousCard, previousScenarios };
     },
@@ -1270,7 +1181,7 @@ export const useUpdateCardScenarios = (cardId: string) => {
       }
       if (context?.previousScenarios) {
         queryClient.setQueryData(
-          cardKeys.scenarios(cardId),
+          cardKeys.firstMessages(cardId),
           context.previousScenarios,
         );
       }
@@ -1359,18 +1270,15 @@ export const useUpdatePlotDescription = (cardId: string) => {
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
+      // Optimistic update (flat schema: description at root level for scenarios)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
-        if (!old || !old.plot) return old;
+        if (!old) return old;
+        // Check if this is a scenario (has first_messages field)
+        if (!('first_messages' in old)) return old;
         return {
           ...old,
-          plot: {
-            ...old.plot,
-            description: description,
-          },
-          common: {
-            ...old.common,
-            updated_at: new Date(),
-          },
+          description: description,
+          updated_at: new Date(),
         };
       });
 
@@ -1432,7 +1340,7 @@ export const useDeleteCard = () => {
       // Remove from all caches
       queryClient.removeQueries({ queryKey: cardKeys.detail(cardId) });
       queryClient.removeQueries({ queryKey: cardKeys.lorebook(cardId) });
-      queryClient.removeQueries({ queryKey: cardKeys.scenarios(cardId) });
+      queryClient.removeQueries({ queryKey: cardKeys.firstMessages(cardId) });
 
       // Invalidate list queries to remove from lists
       queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
@@ -1489,16 +1397,13 @@ export const useUpdateCardIconAsset = (cardId: string) => {
 
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
-      // Optimistic update - metadata
+      // Optimistic update - metadata (flat schema: icon_asset_id at root level)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          common: {
-            ...old.common,
-            icon_asset_id: iconAssetId,
-            updated_at: new Date(),
-          },
+          icon_asset_id: iconAssetId,
+          updated_at: new Date(),
         };
       });
 
@@ -1586,16 +1491,13 @@ export const useUpdateCardImagePrompt = (cardId: string) => {
       );
       const previousCard = queryClient.getQueryData(cardKeys.detail(cardId));
 
-      // Optimistic update
+      // Optimistic update (flat schema: image_prompt at root level)
       queryClient.setQueryData(cardKeys.detail(cardId), (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          common: {
-            ...old.common,
-            image_prompt: imagePrompt,
-            updated_at: new Date(),
-          },
+          image_prompt: imagePrompt,
+          updated_at: new Date(),
         };
       });
       queryClient.setQueryData(cardKeys.imagePrompt(cardId), imagePrompt);

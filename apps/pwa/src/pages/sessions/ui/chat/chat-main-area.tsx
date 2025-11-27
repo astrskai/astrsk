@@ -34,7 +34,7 @@ import { queryClient } from "@/shared/api/query-client";
 import { parseAiSdkErrorMessage } from "@/shared/lib/error-utils";
 import { logger } from "@/shared/lib/logger";
 import { TurnService } from "@/app/services/turn-service";
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { ScenarioCard } from "@/entities/card/domain";
 import { useCard } from "@/shared/hooks/use-card";
 import { cn } from "@/shared/lib";
 import SelectScenarioDialog from "./select-scenario-dialog";
@@ -55,11 +55,14 @@ export default function ChatMainArea({
 }: ChatMainAreaProps) {
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState<boolean>(false);
-  // Add plot card modal
-  const [plotCard] = useCard<PlotCard>(data?.plotCard?.id);
+  // Add scenario card modal
+  const [scenarioCard] = useCard<ScenarioCard>(data?.plotCard?.id);
   const messageCount = data?.turnIds.length ?? 0;
-  const plotCardId = data?.plotCard?.id.toString() ?? "";
-  const plotCardScenarioCount = plotCard?.props.scenarios?.length ?? 0;
+  const scenarioCardId = data?.plotCard?.id.toString() ?? "";
+  const scenarioCardFirstMessageCount =
+    (scenarioCard instanceof ScenarioCard
+      ? scenarioCard.props.firstMessages?.length
+      : 0) ?? 0;
   // Render scenario
   const [renderedScenarios, setRenderedScenarios] = useState<
     {
@@ -191,6 +194,11 @@ export default function ChatMainArea({
         // Set streaming message id (now session.turnIds includes this message)
         setStreamingMessageId(streamingMessage.id);
         //  scrollToBottom({ behavior: "smooth" }); // TODO: check if this is needed
+
+        // Check if flow exists
+        if (!data.props.flowId) {
+          throw new Error("Session has no flow assigned");
+        }
 
         // Execute flow
         refStopGenerate.current = new AbortController();
@@ -580,13 +588,19 @@ export default function ChatMainArea({
   const renderScenarios = useCallback(async () => {
     logger.debug("[Hook] useEffect: Render scenario");
 
-    // Check session and plot card
-    if (!data || !plotCard) {
+    // Check session and scenario card
+    if (!data || !scenarioCard) {
       return;
     }
 
-    // If no scenarios, set empty array
-    if (!plotCard.props.scenarios || plotCard.props.scenarios.length === 0) {
+    // Get first messages
+    const firstMessages =
+      scenarioCard instanceof ScenarioCard
+        ? scenarioCard.props.firstMessages
+        : undefined;
+
+    // If no first messages, set empty array
+    if (!firstMessages || firstMessages.length === 0) {
       setRenderedScenarios([]);
       return;
     }
@@ -623,27 +637,27 @@ export default function ChatMainArea({
       };
     }
 
-    // Render scenarios
+    // Render first messages
     const renderedScenarios = await Promise.all(
-      plotCard.props.scenarios.map(
-        async (scenario: { name: string; description: string }) => {
-          const renderedScenario = await TemplateRenderer.render(
-            scenario.description,
+      firstMessages.map(
+        async (message: { name: string; description: string }) => {
+          const renderedMessage = await TemplateRenderer.render(
+            message.description,
             context,
           );
           return {
-            name: scenario.name,
-            description: renderedScenario,
+            name: message.name,
+            description: renderedMessage,
           };
         },
       ),
     );
     setRenderedScenarios(renderedScenarios);
-  }, [data, plotCard]);
+  }, [data, scenarioCard]);
 
   useEffect(() => {
     // Check scenario count
-    if (plotCardScenarioCount === 0) {
+    if (scenarioCardFirstMessageCount === 0) {
       setIsOpenSelectScenarioModal(false);
       return;
     }
@@ -656,7 +670,7 @@ export default function ChatMainArea({
 
     // Show select scenario modal
     setIsOpenSelectScenarioModal(true);
-  }, [plotCardScenarioCount, messageCount]);
+  }, [scenarioCardFirstMessageCount, messageCount]);
 
   return (
     <div className="mx-auto flex h-dvh max-w-5xl flex-1 flex-col items-center justify-end pt-12 md:justify-center">
@@ -695,7 +709,7 @@ export default function ChatMainArea({
         renderedScenarios={renderedScenarios}
         onRenderScenarios={renderScenarios}
         sessionId={data.id.toString()}
-        plotCardId={plotCardId}
+        scenarioCardId={scenarioCardId}
       />
     </div>
   );

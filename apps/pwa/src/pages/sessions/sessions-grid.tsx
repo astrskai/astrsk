@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { Session } from "@/entities/session/domain/session";
+import { IconHarpyLogo } from "@/shared/assets/icons";
 import type {
   SessionWithCharacterMetadata,
   CharacterMetadata,
@@ -41,6 +42,7 @@ interface SessionGridItemProps {
     sessionId: string,
     title: string,
     flowId: UniqueEntityID | undefined,
+    exportType?: "file" | "cloud",
   ) => (e: React.MouseEvent) => void;
   onCopy: (sessionId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
@@ -75,7 +77,14 @@ function SessionGridItem({
     {
       icon: Upload,
       label: "Export",
-      onClick: onExportClick(sessionId, session.props.title, session.flowId),
+      onClick: onExportClick(sessionId, session.props.title, session.flowId, "file"),
+      disabled: loading.exporting,
+      loading: loading.exporting,
+    },
+    {
+      icon: IconHarpyLogo,
+      label: "Harpy",
+      onClick: onExportClick(sessionId, session.props.title, session.flowId, "cloud"),
       disabled: loading.exporting,
       loading: loading.exporting,
     },

@@ -4,12 +4,16 @@ import { formatFail } from "@/shared/lib";
 import { Card } from "@/entities/card/domain";
 import { SaveCardRepo } from "@/entities/card/repos/save-card-repo";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
-import { SelectCard } from "@/db/schema/cards";
+import { SelectCharacter } from "@/db/schema/characters";
+import { SelectScenario } from "@/db/schema/scenarios";
 
-export class RestoreCardFromSnapshot implements UseCase<SelectCard, Result<Card>> {
+// Union type for database rows (2-table schema)
+type SelectCardRow = SelectCharacter | SelectScenario;
+
+export class RestoreCardFromSnapshot implements UseCase<SelectCardRow, Result<Card>> {
   constructor(private saveCardRepo: SaveCardRepo) {}
 
-  async execute(cardDbFormat: SelectCard): Promise<Result<Card>> {
+  async execute(cardDbFormat: SelectCardRow): Promise<Result<Card>> {
     try {
       // Use CardDrizzleMapper to convert database format to domain object
       // This handles all the complex object reconstruction properly

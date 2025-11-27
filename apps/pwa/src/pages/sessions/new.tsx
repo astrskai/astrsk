@@ -14,7 +14,7 @@ import { StepIndicator } from "@/shared/ui/step-indicator";
 import { logger } from "@/shared/lib";
 import { Flow } from "@/entities/flow/domain/flow";
 import { CharacterCard } from "@/entities/card/domain/character-card";
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { ScenarioCard } from "@/entities/card/domain/scenario-card";
 import { CardType } from "@/entities/card/domain";
 import { Session, CardListItem } from "@/entities/session/domain";
 import { defaultChatStyles } from "@/entities/session/domain/chat-styles";
@@ -78,7 +78,7 @@ export function CreateSessionPage() {
   );
   const [selectedUserCharacter, setSelectedUserCharacter] =
     useState<CharacterCard | null>(null);
-  const [selectedScenario, setSelectedScenario] = useState<PlotCard | null>(
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioCard | null>(
     null,
   );
 
@@ -234,11 +234,11 @@ export function CreateSessionPage() {
         });
       }
 
-      // Add plot card if selected
+      // Add scenario card if selected
       if (selectedScenario) {
         allCards.push({
           id: selectedScenario.id,
-          type: CardType.Plot,
+          type: selectedScenario.props.type, // Use actual card type (Plot or Scenario)
           enabled: true,
         });
       }

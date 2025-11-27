@@ -15,6 +15,9 @@ export interface CardListItem {
 export interface SessionProps {
   // Metadata
   title: string;
+  name?: string;
+  tags: string[];
+  summary?: string;
 
   // Cards
   allCards: CardListItem[];
@@ -34,7 +37,7 @@ export interface SessionProps {
   chatStyles?: ChatStyles;
 
   // Flow
-  flowId: UniqueEntityID;
+  flowId?: UniqueEntityID;
 
   autoReply: AutoReply;
 
@@ -57,6 +60,9 @@ export interface SessionProps {
 
 export const SessionPropsKeys = [
   "title",
+  "name",
+  "tags",
+  "summary",
   "allCards",
   "userCharacterCardId",
   "turnIds",
@@ -88,7 +94,7 @@ export class Session extends AggregateRoot<SessionProps> {
   }
 
   get plotCard(): CardListItem | undefined {
-    return this.props.allCards.find((card) => card.type === CardType.Plot);
+    return this.props.allCards.find((card) => card.type === CardType.Plot || card.type === CardType.Scenario);
   }
 
   get userCharacterCardId(): UniqueEntityID | undefined {
@@ -152,6 +158,9 @@ export class Session extends AggregateRoot<SessionProps> {
   ): Result<Session> {
     const propsWithDefaults: SessionProps = {
       title: props.title || "New Session",
+      name: props.name,
+      tags: props.tags || [],
+      summary: props.summary,
       allCards: props.allCards || [],
       userCharacterCardId: props.userCharacterCardId,
       turnIds: props.turnIds || [],
@@ -164,7 +173,7 @@ export class Session extends AggregateRoot<SessionProps> {
           promptLanguage: "none",
         }).getValue(),
       chatStyles: props.chatStyles,
-      flowId: props.flowId!,
+      flowId: props.flowId,
       autoReply: props.autoReply ?? AutoReply.Random,
       dataSchemaOrder: props.dataSchemaOrder || [],
       widgetLayout: props.widgetLayout,
@@ -196,8 +205,8 @@ export class Session extends AggregateRoot<SessionProps> {
     cardId: UniqueEntityID,
     cardType: CardType,
   ): Result<void> {
-    if (cardType === CardType.Plot && this.plotCard) {
-      return Result.fail("Plot card already exists");
+    if ((cardType === CardType.Plot || cardType === CardType.Scenario) && this.plotCard) {
+      return Result.fail("Scenario card already exists");
     }
     this.props.allCards.push({
       id: cardId,

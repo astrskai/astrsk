@@ -19,6 +19,7 @@ import { cn } from "@/shared/lib";
 import {
   CardItem,
   CardTab,
+  CardTabValue,
   convertCardsFormToSessionProps,
   StepCardsSchema,
   StepCardsSchemaType,
@@ -151,7 +152,7 @@ const EditCards = ({
   );
   const { data: plotCards } = useQuery(
     cardQueries.list({
-      type: [CardType.Plot],
+      type: [CardType.Plot, CardType.Scenario],
       keyword: keyword,
     }),
   );
@@ -169,18 +170,18 @@ const EditCards = ({
     }
     const newActiveCardIdMap = new Map<string, boolean>();
     const newDisabledCardIdMap = new Map<string, boolean>();
-    if (activeTab === "user") {
+    if (activeTab === CardTabValue.User) {
       userCharacterCardId && newActiveCardIdMap.set(userCharacterCardId, true);
       for (const aiCharacterCardId of aiCharacterCardIds) {
         newDisabledCardIdMap.set(aiCharacterCardId, true);
       }
-    } else if (activeTab === "ai") {
+    } else if (activeTab === CardTabValue.AI) {
       for (const aiCharacterCardId of aiCharacterCardIds) {
         newActiveCardIdMap.set(aiCharacterCardId, true);
       }
       userCharacterCardId &&
         newDisabledCardIdMap.set(userCharacterCardId, true);
-    } else if (activeTab === "plot" && plotCardId) {
+    } else if (activeTab === CardTabValue.Plot && plotCardId) {
       newActiveCardIdMap.set(plotCardId, true);
     }
     setActiveCardIdMap(newActiveCardIdMap);
@@ -202,7 +203,7 @@ const EditCards = ({
       let newValues: Partial<StepCardsSchemaType> = {};
 
       switch (activeTab) {
-        case "user":
+        case CardTabValue.User:
           if (userCharacterCardId === cardId) {
             setValue("userCharacterCardId", null);
             newValues.userCharacterCardId = null;
@@ -218,7 +219,7 @@ const EditCards = ({
             }
           }
           break;
-        case "ai":
+        case CardTabValue.AI:
           if (aiCharacterCardIds?.includes(cardId)) {
             const newAiCardIds = aiCharacterCardIds.filter(
               (id) => id !== cardId,
@@ -235,7 +236,7 @@ const EditCards = ({
             }
           }
           break;
-        case "plot":
+        case CardTabValue.Plot:
           if (plotCardId === cardId) {
             setValue("plotCardId", null);
             newValues.plotCardId = null;
@@ -299,13 +300,13 @@ const EditCards = ({
             plotCardId: defaultValue.plotCardId?.toString() ?? null,
           });
           setActiveTab(refInitCardTab.current);
-          refInitCardTab.current = "ai";
+          refInitCardTab.current = CardTabValue.AI;
         }
       }}
       fill
     >
       <Tabs
-        defaultValue="ai"
+        defaultValue={CardTabValue.AI}
         className="w-full px-8 py-4"
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as CardTab)}
@@ -314,11 +315,11 @@ const EditCards = ({
           variant="dark-mobile"
           className="mb-4 grid w-full grid-cols-3"
         >
-          <TabsTrigger value="ai">AI characters</TabsTrigger>
-          <TabsTrigger value="user">User character</TabsTrigger>
-          <TabsTrigger value="plot">Plot</TabsTrigger>
+          <TabsTrigger value={CardTabValue.AI}>AI characters</TabsTrigger>
+          <TabsTrigger value={CardTabValue.User}>User character</TabsTrigger>
+          <TabsTrigger value={CardTabValue.Plot}>Plot</TabsTrigger>
         </TabsList>
-        <TabsContent value="ai">
+        <TabsContent value={CardTabValue.AI}>
           <div className="bg-surface-raised flex flex-row flex-wrap justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
             {aiCharacterCardIds &&
               aiCharacterCardIds.map((cardId) => (
@@ -332,7 +333,7 @@ const EditCards = ({
             <CardItem />
           </div>
         </TabsContent>
-        <TabsContent value="user">
+        <TabsContent value={CardTabValue.User}>
           <div className="bg-surface-raised flex flex-row justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
             {userCharacterCardId ? (
               <CardItem
@@ -345,7 +346,7 @@ const EditCards = ({
             )}
           </div>
         </TabsContent>
-        <TabsContent value="plot">
+        <TabsContent value={CardTabValue.Plot}>
           <div className="bg-surface-raised flex flex-row justify-center gap-4 rounded-[16px] px-[24px] py-[16px]">
             {plotCardId ? (
               <CardItem
@@ -367,7 +368,7 @@ const EditCards = ({
         />
       </div>
       <div className="px-8 py-4">
-        {activeTab === "plot"
+        {activeTab === CardTabValue.Plot
           ? plotCards?.length === 0 && (
               <div className="items-top flex w-full flex-col">
                 <NoCardsFound
@@ -391,7 +392,7 @@ const EditCards = ({
               </div>
             )}
         <div className="grid grid-cols-4 gap-[24px]">
-          {(activeTab === "plot" ? plotCards : characterCards)?.map(
+          {(activeTab === CardTabValue.Plot ? plotCards : characterCards)?.map(
             (card: Card) => (
               <CardItem
                 key={card.id.toString()}

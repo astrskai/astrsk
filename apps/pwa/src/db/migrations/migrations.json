@@ -133,5 +133,71 @@
     "bps": true,
     "folderMillis": 1763308976627,
     "hash": "6e26e31b20febdebd742763763076b6915ec5b5485851a159a3a130539eb6999"
+  },
+  {
+    "sql": [
+      "CREATE TABLE \"characters\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"title\" varchar NOT NULL,\n\t\"icon_asset_id\" uuid,\n\t\"tags\" text[] DEFAULT '{}' NOT NULL,\n\t\"creator\" varchar,\n\t\"card_summary\" text,\n\t\"version\" varchar,\n\t\"conceptual_origin\" varchar,\n\t\"vibe_session_id\" uuid,\n\t\"image_prompt\" text,\n\t\"name\" varchar NOT NULL,\n\t\"description\" text,\n\t\"example_dialogue\" text,\n\t\"lorebook\" jsonb,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n",
+      "\nCREATE TABLE \"scenarios\" (\n\t\"id\" uuid PRIMARY KEY NOT NULL,\n\t\"title\" varchar NOT NULL,\n\t\"icon_asset_id\" uuid,\n\t\"tags\" text[] DEFAULT '{}' NOT NULL,\n\t\"creator\" varchar,\n\t\"card_summary\" text,\n\t\"version\" varchar,\n\t\"conceptual_origin\" varchar,\n\t\"vibe_session_id\" uuid,\n\t\"image_prompt\" text,\n\t\"name\" varchar NOT NULL,\n\t\"description\" text,\n\t\"first_messages\" jsonb,\n\t\"lorebook\" jsonb,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL\n);\n"
+    ],
+    "bps": true,
+    "folderMillis": 1763346923962,
+    "hash": "db3486a193441dfaaeb98032135fcfd9494b246af17ae90d0419c4e7c59ab09f"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" ALTER COLUMN \"flow_id\" DROP NOT NULL;",
+      "\nALTER TABLE \"agents\" ADD COLUMN \"flow_id\" uuid;",
+      "\nALTER TABLE \"characters\" ADD COLUMN \"session_id\" uuid;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"session_id\" uuid;",
+      "\nALTER TABLE \"scenarios\" ADD COLUMN \"session_id\" uuid;",
+      "\nALTER TABLE \"agents\" ADD CONSTRAINT \"agents_flow_id_flows_id_fk\" FOREIGN KEY (\"flow_id\") REFERENCES \"public\".\"flows\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"characters\" ADD CONSTRAINT \"characters_session_id_sessions_id_fk\" FOREIGN KEY (\"session_id\") REFERENCES \"public\".\"sessions\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"data_store_nodes\" ADD CONSTRAINT \"data_store_nodes_flow_id_flows_id_fk\" FOREIGN KEY (\"flow_id\") REFERENCES \"public\".\"flows\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"flows\" ADD CONSTRAINT \"flows_session_id_sessions_id_fk\" FOREIGN KEY (\"session_id\") REFERENCES \"public\".\"sessions\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"if_nodes\" ADD CONSTRAINT \"if_nodes_flow_id_flows_id_fk\" FOREIGN KEY (\"flow_id\") REFERENCES \"public\".\"flows\"(\"id\") ON DELETE cascade ON UPDATE no action;",
+      "\nALTER TABLE \"scenarios\" ADD CONSTRAINT \"scenarios_session_id_sessions_id_fk\" FOREIGN KEY (\"session_id\") REFERENCES \"public\".\"sessions\"(\"id\") ON DELETE cascade ON UPDATE no action;"
+    ],
+    "bps": true,
+    "folderMillis": 1763380503653,
+    "hash": "489c1a809df81f4253a4b6a0a0e876d889fd01fda1930cd2d7e69d58794bd850"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"agents\" ALTER COLUMN \"flow_id\" SET NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1763380613280,
+    "hash": "e863812e6eb66c883d7f8a1cb476052c8000556c0de10b3bbaf7e42312c79de2"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"flows\" ADD COLUMN \"tags\" text[] DEFAULT '{}' NOT NULL;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"summary\" text;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"version\" varchar;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"conceptual_origin\" varchar;",
+      "\nALTER TABLE \"sessions\" ADD COLUMN \"name\" varchar;",
+      "\nALTER TABLE \"sessions\" ADD COLUMN \"tags\" text[] DEFAULT '{}' NOT NULL;",
+      "\nALTER TABLE \"sessions\" ADD COLUMN \"summary\" text;"
+    ],
+    "bps": true,
+    "folderMillis": 1763470150932,
+    "hash": "65a16e0fd7dee12ee6909e60593267b5a1a13eb0a4337ff47a19c5eb4058a734"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"backgrounds\" ADD COLUMN \"session_id\" uuid;",
+      "\nALTER TABLE \"backgrounds\" ADD CONSTRAINT \"backgrounds_session_id_sessions_id_fk\" FOREIGN KEY (\"session_id\") REFERENCES \"public\".\"sessions\"(\"id\") ON DELETE cascade ON UPDATE no action;"
+    ],
+    "bps": true,
+    "folderMillis": 1763694671957,
+    "hash": "4b2666b5d5d71f3226340278cce4f0a90add2261bfd1d5685f32474a497fc6f8"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"backgrounds\" ALTER COLUMN \"session_id\" SET NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1763694696450,
+    "hash": "1a09b4fa74cd06a040bf94ea7d3993b44776633b020d72ce664bbf6cbbafecd0"
   }
 ]

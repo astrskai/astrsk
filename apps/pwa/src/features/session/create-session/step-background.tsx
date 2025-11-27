@@ -140,6 +140,9 @@ const StepBackground = () => {
 
   const { defaultBackgrounds, backgrounds } = useBackgroundStore();
 
+  // Generate a stable temporary session ID for background uploads during session creation
+  const [tempSessionId] = useState(() => new UniqueEntityID());
+
   // Set default background (first one) on initial mount only
   useEffect(() => {
     if (backgroundId === undefined && defaultBackgrounds.length > 0) {
@@ -161,20 +164,26 @@ const StepBackground = () => {
   // Handle add new background
   const refBackgroundFileInput = useRef<HTMLInputElement>(null);
   const [isOpenImportDialog, setIsOpenImportDialog] = useState(false);
-  const handleAddNewBackground = useCallback(async (file: File) => {
-    // Save file to background
-    const backgroundOrError =
-      await BackgroundService.saveFileToBackground.execute(file);
-    if (backgroundOrError.isFailure) {
-      return;
-    }
+  const handleAddNewBackground = useCallback(
+    async (file: File) => {
+      // Save file to background with temporary session ID
+      const backgroundOrError =
+        await BackgroundService.saveFileToBackground.execute({
+          file,
+          sessionId: tempSessionId,
+        });
+      if (backgroundOrError.isFailure) {
+        return;
+      }
 
-    // Refresh backgrounds
-    fetchBackgrounds();
+      // Refresh backgrounds for this temporary session
+      fetchBackgrounds(tempSessionId);
 
-    // Close dialog
-    setIsOpenImportDialog(false);
-  }, []);
+      // Close dialog
+      setIsOpenImportDialog(false);
+    },
+    [tempSessionId],
+  );
 
   // Handle delete background
   const handleDeleteBackground = useCallback(
@@ -185,11 +194,16 @@ const StepBackground = () => {
         return;
       }
 
-      // Refresh backgrounds
-      fetchBackgrounds();
+      // Refresh backgrounds for this temporary session
+      fetchBackgrounds(tempSessionId);
     },
-    [],
+    [tempSessionId],
   );
+
+  // Fetch backgrounds for this temporary session on mount
+  useEffect(() => {
+    fetchBackgrounds(tempSessionId);
+  }, [tempSessionId]);
 
   if (isMobile) {
     return (

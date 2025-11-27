@@ -4,7 +4,7 @@ import { PNGMetadata } from "@/shared/lib/png-metadata";
 
 import { Asset } from "@/entities/asset/domain/asset";
 import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
-import { Card, CharacterCard, PlotCard } from "@/entities/card/domain";
+import { Card, CharacterCard, PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { LoadCardRepo } from "@/entities/card/repos";
 import { LoadGeneratedImageRepo } from "@/entities/generated-image/repos/load-generated-image-repo";
 //TODO: replace them with electron path
@@ -45,8 +45,8 @@ export class ExportCardToFile
 
     if (card instanceof CharacterCard) {
       fileContent = this.exportCharacterCard(card);
-    } else if (card instanceof PlotCard) {
-      fileContent = this.exportPlotCard(card);
+    } else if (card instanceof PlotCard || card instanceof ScenarioCard) {
+      fileContent = this.exportScenarioCard(card);
     } else {
       return Result.fail<File>("Unsupported card type");
     }
@@ -232,14 +232,21 @@ export class ExportCardToFile
     };
   }
 
-  private exportPlotCard(card: PlotCard): any {
+  private exportScenarioCard(card: PlotCard | ScenarioCard): any {
+    // Get first messages based on card type
+    // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+    const firstMessages =
+      card instanceof PlotCard
+        ? card.props.scenarios
+        : card.props.firstMessages;
+
     return {
-      spec: "plot_card_v1",
-      version: "1.0",
+      spec: "scenario_card_v2",
+      spec_version: "2.0",
       data: {
         title: card.props.title,
         description: card.props.description,
-        scenarios: card.props.scenarios,
+        first_messages: firstMessages,
         entries: this.exportLorebook(card.props.lorebook)?.entries,
         extensions: {
           ...this.getCommonExtensions(card),
@@ -282,7 +289,7 @@ export class ExportCardToFile
     let svgContent;
     if (card instanceof CharacterCard) {
       svgContent = character_card_placeholder;
-    } else if (card instanceof PlotCard) {
+    } else if (card instanceof PlotCard || card instanceof ScenarioCard) {
       svgContent = plot_card_placeholder;
     }
     const placeholderBlob = new Blob([svgContent!], {

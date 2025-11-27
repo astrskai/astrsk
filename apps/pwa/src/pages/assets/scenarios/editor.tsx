@@ -532,7 +532,7 @@ const ScenarioEditorPage = () => {
         iconAssetId: scenario.props.iconAssetId?.toString() || undefined,
         description: scenario.props.description || "",
         firstMessages:
-          scenario.props.scenarios?.map((s, idx) => ({
+          scenario.props.firstMessages?.map((s, idx) => ({
             id: crypto.randomUUID(),
             name: s.name || `First Message ${idx + 1}`,
             description: s.description || "",

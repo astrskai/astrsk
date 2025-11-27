@@ -12,7 +12,7 @@ interface SelectScenarioDialogProps {
   renderedScenarios: Array<{ name: string; description: string }> | null;
   onRenderScenarios: () => void;
   sessionId: string;
-  plotCardId: string;
+  scenarioCardId: string;
 }
 
 const SelectScenarioDialog = ({
@@ -22,26 +22,26 @@ const SelectScenarioDialog = ({
   renderedScenarios,
   onRenderScenarios,
   sessionId,
-  plotCardId,
+  scenarioCardId,
 }: SelectScenarioDialogProps) => {
   const [selectedScenarioIndex, setSelectedScenarioIndex] = useState<
     number | null
   >(null);
   const [isAddingScenario, setIsAddingScenario] = useState<boolean>(false);
 
-  // Render scenarios on mount and when plotCardId changes
+  // Render first messages on mount and when scenarioCardId changes
   useEffect(() => {
     if (open) {
       onRenderScenarios();
     }
-  }, [open, plotCardId, onRenderScenarios]);
+  }, [open, scenarioCardId, onRenderScenarios]);
 
-  // Reset selected index when sessionId or plotCardId changes
+  // Reset selected index when sessionId or scenarioCardId changes
   useEffect(() => {
     setSelectedScenarioIndex(null);
-  }, [sessionId, plotCardId]);
+  }, [sessionId, scenarioCardId]);
 
-  // Handle adding scenario
+  // Handle adding first message
   const handleAddScenario = async () => {
     if (selectedScenarioIndex !== null) {
       setIsAddingScenario(true);

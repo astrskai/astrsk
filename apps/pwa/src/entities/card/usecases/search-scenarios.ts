@@ -1,18 +1,18 @@
 import { Result, UseCase } from "@/shared/core";
 
-import { PlotCard } from "@/entities/card/domain";
+import { ScenarioCard } from "@/entities/card/domain";
 import { LoadCardRepo, SearchScenariosQuery } from "@/entities/card/repos";
 
 export class SearchScenarios
-  implements UseCase<SearchScenariosQuery, Result<PlotCard[]>>
+  implements UseCase<SearchScenariosQuery, Result<ScenarioCard[]>>
 {
   constructor(private loadCardRepo: LoadCardRepo) {}
 
-  async execute(query: SearchScenariosQuery): Promise<Result<PlotCard[]>> {
+  async execute(query: SearchScenariosQuery): Promise<Result<ScenarioCard[]>> {
     try {
       return await this.loadCardRepo.searchScenarios(query);
     } catch (error) {
-      return Result.fail<PlotCard[]>(
+      return Result.fail<ScenarioCard[]>(
         `Failed to search scenarios: ${
           error instanceof Error ? error.message : String(error)
         }`,

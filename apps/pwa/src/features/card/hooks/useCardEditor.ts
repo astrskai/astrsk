@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 
 import { useCardsStore } from "@/shared/stores/cards-store";
-import { Card, CardType, CharacterCard, PlotCard } from "@/entities/card/domain";
+import { Card, CardType, CharacterCard, PlotCard, ScenarioCard } from "@/entities/card/domain";
 
 /**
  * Hook to manage card creation and editing
@@ -48,6 +48,9 @@ export const useCardEditor = () => {
           break;
         case CardType.Plot:
           card = PlotCard.create({}).getValue();
+          break;
+        case CardType.Scenario:
+          card = ScenarioCard.create({}).getValue();
           break;
         default:
           throw new Error(`Unknown card type: ${type}`);

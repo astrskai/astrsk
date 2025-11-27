@@ -2,10 +2,12 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { PlotCard } from "@/entities/card/domain/plot-card";
+import { ScenarioCard } from "@/entities/card/domain/scenario-card";
 
 export const CardType = {
   Character: "character",
-  Plot: "plot",
+  Plot: "plot",         // ⚠️ Deprecated: Use 'Scenario' instead (kept for backward compatibility)
+  Scenario: "scenario", // ✅ Preferred: Use this for new code
 } as const;
 
 export const FilterCardType = {
@@ -14,6 +16,11 @@ export const FilterCardType = {
 } as const;
 
 export type CardType = (typeof CardType)[keyof typeof CardType];
+
+// Backward compatibility: Map 'plot' to 'scenario'
+export const normalizeCardType = (type: CardType): CardType => {
+  return type === "plot" ? "scenario" : type;
+};
 
 export interface CardProps {
   // Metadata
@@ -34,6 +41,11 @@ export interface CardProps {
   // Image Generation
   imagePrompt?: string;
 
+  // Session-local resource support
+  // undefined = global resource (shows in lists)
+  // UniqueEntityID = local to specific session (hidden from global lists)
+  sessionId?: UniqueEntityID;
+
   // Set by System
   createdAt: Date;
   updatedAt: Date;
@@ -51,6 +63,7 @@ export const CardPropsKeys = [
   "conceptualOrigin",
   "vibeSessionId",
   "imagePrompt",
+  "sessionId",
   "createdAt",
   "updatedAt",
   "tokenCount",
@@ -58,4 +71,5 @@ export const CardPropsKeys = [
 
 export type CreateCardProps = Partial<CardProps>;
 
-export type Card = CharacterCard | PlotCard;
+// Union type supporting both old and new card types
+export type Card = CharacterCard | PlotCard | ScenarioCard;

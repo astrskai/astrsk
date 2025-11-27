@@ -4,7 +4,7 @@ import { initStores } from "@/shared/stores/init-stores.ts";
 import { useInitializationStore, loadInitializationLog } from "@/shared/stores/initialization-store.tsx";
 import { InitializationScreen } from "@/shared/ui/initialization-screen";
 import { PwaRegister } from "@/app/providers/pwa-register";
-import { migrate, hasPendingMigrations } from "@/db/migrate.ts";
+import { runUnifiedMigrations, hasPendingMigrations } from "@/db/migrations";
 import { logger } from "@/shared/lib/logger.ts";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
@@ -182,7 +182,7 @@ async function initializeApp() {
     // Step 2: Migrate database (only if there are pending migrations)
     if (needsMigration) {
       logger.debug("🔨 Running database migrations...");
-      await migrate(onProgress);
+      await runUnifiedMigrations(onProgress);
     } else {
       logger.debug("⏭️ No pending migrations, skipping migration steps");
       // Mark migration steps as success immediately

@@ -26,7 +26,7 @@ export const useCardImport = (handleInvalidation: () => void) => {
   const onImportCardFromFile = useCallback(
     async (file: File) => {
       // Import card from file
-      const importResult = await CardService.importCardFromFile.execute(file);
+      const importResult = await CardService.importCardFromFile.execute({ file });
       if (importResult.isFailure) {
         toastError("Failed to import card from file", {
           description: importResult.getError(),
