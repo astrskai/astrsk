@@ -1,6 +1,7 @@
 import { Page, useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
-import { Button, SvgIcon } from "@/shared/ui";
+import { Button } from "@/shared/ui";
+import { X } from "lucide-react";
 import { toastSuccess } from "@/shared/ui/toast";
 
 const PaymentPage = () => {
@@ -16,7 +17,7 @@ const PaymentPage = () => {
           setActivePage(Page.Subscribe);
         }}
       >
-        <SvgIcon name="window_close" size={40} />
+        <X size={40} />
       </button>
 
       {/* Main */}

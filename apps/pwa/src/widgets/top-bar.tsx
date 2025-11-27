@@ -2,9 +2,10 @@
 import { useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/shared/ui";
-import { SquareArrowUpRight } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { SquareArrowUpRight, X } from "lucide-react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { isElectronEnvironment } from "@/shared/lib/environment";
+import { useLocation } from "@tanstack/react-router";
 
 const NewWindowButton = () => {
   const handleNewWindow = useCallback(() => {
@@ -78,8 +79,18 @@ export function TopBar() {
     window.api?.topBar?.windowClose();
   };
 
-  // Window title
-  const { activeMenu } = useAppStore();
+  // Window title based on current route
+  const location = useLocation();
+  const pageTitle = useMemo(() => {
+    const pathname = location.pathname;
+    if (pathname.startsWith("/sessions")) return "Sessions";
+    if (pathname.startsWith("/assets/characters")) return "Characters";
+    if (pathname.startsWith("/assets/scenarios")) return "Scenarios";
+    if (pathname.startsWith("/assets/workflows")) return "Workflows";
+    if (pathname.startsWith("/settings")) return "Settings";
+    if (pathname === "/") return "Home";
+    return "astrsk";
+  }, [location.pathname]);
 
   // Check if we're in Electron environment - hide topbar in web browsers
   if (!isElectronEnvironment()) {
@@ -116,7 +127,7 @@ export function TopBar() {
                 <SvgIcon name="window_maximize" size={24} />
               </button>
               <button tabIndex={-1} onClick={handleClose}>
-                <SvgIcon name="window_close" size={24} />
+                <X size={24} />
               </button>
             </div>
           )}
@@ -132,7 +143,7 @@ export function TopBar() {
 
           {/* Window title */}
           <div className="absolute inset-x-[160px] inset-y-[6px] flex flex-row items-center justify-center gap-[8px] text-[16px] leading-[20px] font-[500]">
-            <span className="text-text-body">{activeMenu}</span>
+            <span className="text-text-body">{pageTitle}</span>
           </div>
 
           {/* Windows: Window controls */}
@@ -150,7 +161,7 @@ export function TopBar() {
                 <SvgIcon name="window_maximize" size={24} />
               </button>
               <button tabIndex={-1} onClick={handleClose}>
-                <SvgIcon name="window_close" size={24} />
+                <X size={24} />
               </button>
             </div>
           )}

@@ -10,7 +10,7 @@ import { Button, FloatingLabelInput, SvgIcon } from "@/shared/ui";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { logger } from "@/shared/lib";
 import { useSignIn, useSignUp } from "@clerk/clerk-react";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, X } from "lucide-react";
 import { useCallback, useState } from "react";
 
 const SignUpStep = {
@@ -343,7 +343,7 @@ const SignUpPage = () => {
           setActivePage(Page.Subscribe);
         }}
       >
-        <SvgIcon name="window_close" size={40} />
+        <X size={40} />
       </button>
 
       {/* Back */}
