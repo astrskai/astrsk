@@ -10,7 +10,7 @@ import {
   LogOut,
   LogIn,
 } from "lucide-react";
-import { IconSessions, IconWorkflow, Logo } from "@/shared/assets/icons";
+import { IconSessions, IconWorkflow, AstrskLogo } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { UpdaterNew } from "@/widgets/updater-new";
 import { useClerk } from "@clerk/clerk-react";
@@ -200,17 +200,12 @@ const SidebarHeader = ({
     >
       <div
         className={cn(
-          "flex cursor-pointer items-center gap-3 overflow-hidden",
+          "flex cursor-pointer items-center overflow-hidden",
           isCollapsed ? "hidden" : "flex",
         )}
         onClick={handleGoToHome}
       >
-        <div className="flex flex-shrink-0 items-center justify-center rounded-lg text-white shadow-lg">
-          <Logo className="h-4 w-4" />
-        </div>
-        <span className="text-sm font-bold tracking-wide whitespace-nowrap text-zinc-100">
-          ASTRSK
-        </span>
+        <AstrskLogo className="h-5" />
       </div>
 
       {/* Desktop Collapse Toggle */}
@@ -411,12 +406,12 @@ export const LeftMainSidebar = ({
           </div>
         </div>
 
-        <UserProfile
+        {/* <UserProfile
           isCollapsed={isCollapsed}
           onSignOut={handleSignOut}
           onSignIn={handleSignIn}
           closeMobileMenu={closeMobileMenu}
-        />
+        /> */}
 
         {/* Footer with UpdaterNew and Version */}
         <div className="flex flex-col gap-2 border-t border-zinc-800 px-4 py-2">
@@ -447,8 +442,7 @@ export function LeftMainSidebarContainer({
   isMobileOpen: externalMobileOpen,
   setIsMobileOpen: externalSetMobileOpen,
 }: LeftMainSidebarContainerProps = {}) {
-  const [internalIsCollapsed, setInternalIsCollapsed] =
-    useState<boolean>(true);
+  const [internalIsCollapsed, setInternalIsCollapsed] = useState<boolean>(true);
   const [internalIsMobileOpen, setInternalIsMobileOpen] =
     useState<boolean>(false);
 
@@ -480,11 +474,7 @@ export function LeftMainSidebarContainer({
 }
 
 // --- Mobile Header Component (exported for use in MainLayout) ---
-export function MobileHeader({
-  onMenuClick,
-}: {
-  onMenuClick: () => void;
-}) {
+export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const { user } = useClerk();
   const navigate = useNavigate();
 
@@ -507,10 +497,7 @@ export function MobileHeader({
         >
           <Menu size={20} />
         </button>
-        <div className="flex items-center gap-2">
-          <Logo className="h-4 w-4" />
-          <span className="font-bold text-zinc-100">ASTRSK</span>
-        </div>
+        <AstrskLogo className="h-4" />
       </div>
       <div
         className="h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"

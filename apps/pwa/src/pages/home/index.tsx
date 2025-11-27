@@ -183,10 +183,10 @@ export function HomePage({ className }: HomePageProps) {
       )}
     >
       {/* Hero Text */}
-      <h1 className="text-fg-default text-center text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-7xl">
+      <h1 className="text-fg-default text-center text-4xl leading-[1.1] font-extrabold tracking-tight sm:text-5xl lg:text-7xl">
         Chat Privately.
         <br />
-        <span className="bg-gradient-to-r from-brand-400 to-brand-600 bg-clip-text text-transparent">
+        <span className="from-brand-400 to-brand-600 bg-gradient-to-r bg-clip-text text-transparent">
           Run Locally.
         </span>
       </h1>
@@ -199,9 +199,7 @@ export function HomePage({ className }: HomePageProps) {
         />
         <span className="text-center sm:text-left">
           Your sessions are stored locally — <br className="sm:hidden" />
-          <span className="text-brand-400 font-bold">
-            only on your device
-          </span>
+          <span className="text-brand-400 font-bold">only on your device</span>
         </span>
       </div>
 
@@ -209,13 +207,13 @@ export function HomePage({ className }: HomePageProps) {
       <div className="flex flex-col items-center gap-4 sm:flex-row">
         <button
           onClick={handleStartSession}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-lg shadow-brand-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-500 active:scale-95 sm:w-auto"
+          className="bg-brand-600 shadow-brand-600/25 hover:bg-brand-500 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:scale-95 sm:w-auto"
         >
           Start Creating Session
         </button>
         <button
           onClick={handleWatchTutorial}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border-default bg-transparent px-6 py-3 font-semibold text-fg-muted transition-all duration-300 hover:border-brand-500 hover:text-brand-500 active:scale-95 sm:w-auto"
+          className="border-border-default text-fg-muted hover:border-brand-500 hover:text-brand-500 flex w-full items-center justify-center gap-2 rounded-xl border bg-transparent px-6 py-3 font-semibold transition-all duration-300 active:scale-95 sm:w-auto"
         >
           <Play size={18} /> Watch Tutorial
         </button>
@@ -225,7 +223,7 @@ export function HomePage({ className }: HomePageProps) {
       <TutorialDialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen} />
 
       {/* Chat Demo */}
-      <div className="w-full max-w-2xl">
+      <div className="hidden w-full max-w-2xl">
         <div className="transform transition-transform duration-500 hover:scale-[1.01]">
           <ChatDemo />
         </div>
