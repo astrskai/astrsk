@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSsoCallbackRouteImport } from './routes/_layout/sso-callback'
+import { Route as LayoutSignUpRouteImport } from './routes/_layout/sign-up'
 import { Route as LayoutSignInRouteImport } from './routes/_layout/sign-in'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutForgotPasswordRouteImport } from './routes/_layout/forgot-password'
 import { Route as LayoutSettingsIndexRouteImport } from './routes/_layout/settings/index'
 import { Route as LayoutSessionsIndexRouteImport } from './routes/_layout/sessions/index'
 import { Route as LayoutAssetsIndexRouteImport } from './routes/_layout/assets/index'
@@ -52,6 +54,11 @@ const LayoutSsoCallbackRoute = LayoutSsoCallbackRouteImport.update({
   path: '/sso-callback',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutSignUpRoute = LayoutSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSignInRoute = LayoutSignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
@@ -60,6 +67,11 @@ const LayoutSignInRoute = LayoutSignInRouteImport.update({
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutForgotPasswordRoute = LayoutForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsIndexRoute = LayoutSettingsIndexRouteImport.update({
@@ -196,8 +208,10 @@ const LayoutAssetsCharactersChar123CharacterIdChar125Route =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/forgot-password': typeof LayoutForgotPasswordRoute
   '/settings': typeof LayoutSettingsRouteWithChildren
   '/sign-in': typeof LayoutSignInRoute
+  '/sign-up': typeof LayoutSignUpRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/': typeof LayoutIndexRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
@@ -225,7 +239,9 @@ export interface FileRoutesByFullPath {
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
 export interface FileRoutesByTo {
+  '/forgot-password': typeof LayoutForgotPasswordRoute
   '/sign-in': typeof LayoutSignInRoute
+  '/sign-up': typeof LayoutSignUpRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/': typeof LayoutIndexRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
@@ -255,8 +271,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/forgot-password': typeof LayoutForgotPasswordRoute
   '/_layout/settings': typeof LayoutSettingsRouteWithChildren
   '/_layout/sign-in': typeof LayoutSignInRoute
+  '/_layout/sign-up': typeof LayoutSignUpRoute
   '/_layout/sso-callback': typeof LayoutSsoCallbackRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
@@ -286,8 +304,10 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/forgot-password'
     | '/settings'
     | '/sign-in'
+    | '/sign-up'
     | '/sso-callback'
     | '/'
     | '/sessions/$sessionId'
@@ -315,7 +335,9 @@ export interface FileRouteTypes {
     | '/settings/legal'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/forgot-password'
     | '/sign-in'
+    | '/sign-up'
     | '/sso-callback'
     | '/'
     | '/sessions/$sessionId'
@@ -344,8 +366,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_layout'
+    | '/_layout/forgot-password'
     | '/_layout/settings'
     | '/_layout/sign-in'
+    | '/_layout/sign-up'
     | '/_layout/sso-callback'
     | '/_layout/'
     | '/_layout/sessions/$sessionId'
@@ -400,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSsoCallbackRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/sign-up': {
+      id: '/_layout/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof LayoutSignUpRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/sign-in': {
       id: '/_layout/sign-in'
       path: '/sign-in'
@@ -412,6 +443,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof LayoutSettingsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/forgot-password': {
+      id: '/_layout/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof LayoutForgotPasswordRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings/': {
@@ -618,8 +656,10 @@ const LayoutSettingsRouteWithChildren = LayoutSettingsRoute._addFileChildren(
 )
 
 interface LayoutRouteChildren {
+  LayoutForgotPasswordRoute: typeof LayoutForgotPasswordRoute
   LayoutSettingsRoute: typeof LayoutSettingsRouteWithChildren
   LayoutSignInRoute: typeof LayoutSignInRoute
+  LayoutSignUpRoute: typeof LayoutSignUpRoute
   LayoutSsoCallbackRoute: typeof LayoutSsoCallbackRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutSessionsSessionIdRoute: typeof LayoutSessionsSessionIdRoute
@@ -635,8 +675,10 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutForgotPasswordRoute: LayoutForgotPasswordRoute,
   LayoutSettingsRoute: LayoutSettingsRouteWithChildren,
   LayoutSignInRoute: LayoutSignInRoute,
+  LayoutSignUpRoute: LayoutSignUpRoute,
   LayoutSsoCallbackRoute: LayoutSsoCallbackRoute,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutSessionsSessionIdRoute: LayoutSessionsSessionIdRoute,

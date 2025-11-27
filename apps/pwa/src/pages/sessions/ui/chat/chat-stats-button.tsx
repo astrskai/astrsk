@@ -16,8 +16,8 @@ const ChatStatsButton = ({
     <div className={cn("flex flex-col items-center gap-1", className)}>
       <button
         className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-lg border border-gray-50/10 text-base font-semibold text-gray-50 hover:bg-gray-50/30",
-          isOpen ? "bg-gray-50" : "bg-gray-50/20",
+          "flex h-9 w-9 items-center justify-center rounded-lg border border-fg-default/10 text-base font-semibold text-fg-default hover:bg-fg-default/30",
+          isOpen ? "bg-fg-default" : "bg-fg-default/20",
         )}
         onClick={() => {
           onOpenStats(!isOpen);
@@ -26,11 +26,11 @@ const ChatStatsButton = ({
         aria-pressed={isOpen}
       >
         <ChartNoAxesColumnIncreasing
-          className={cn("h-5 w-5", isOpen && "text-gray-900")}
+          className={cn("h-5 w-5", isOpen && "text-surface")}
         />
       </button>
 
-      <div className="text-center text-[9px] font-semibold text-gray-100">
+      <div className="text-center text-[9px] font-semibold text-fg-muted">
         Stats
       </div>
     </div>

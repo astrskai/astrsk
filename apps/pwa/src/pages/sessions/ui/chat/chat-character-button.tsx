@@ -50,23 +50,23 @@ export default function ChatCharacterButton({
             alt={character?.props.name?.at(0)?.toUpperCase() ?? ""}
             size="lg"
             className={cn(
-              "border-1 border-gray-50/30",
+              "border-1 border-fg-default/30",
               "h-9 w-9 md:h-12 md:w-12",
-              isDisabled ? "cursor-default" : "hover:border-gray-50",
+              isDisabled ? "cursor-default" : "hover:border-fg-default",
             )}
           />
-          <div className="line-clamp-1 max-w-[48px] text-center text-[9px] leading-4 text-gray-50 md:line-clamp-2 md:text-xs md:text-ellipsis">
+          <div className="line-clamp-1 max-w-[48px] text-center text-[9px] leading-4 text-fg-default md:line-clamp-2 md:text-xs md:text-ellipsis">
             {character.props.name ?? character.props.title}
           </div>
 
           {isUser && (
-            <div className="border-background-primary absolute top-0 right-0 size-3 rounded-full border-2 bg-blue-100" />
+            <div className="border-background-primary absolute top-0 right-0 size-3 rounded-full border-2 bg-brand-300" />
           )}
         </>
       ) : (
         <>
           <div className="size-[48px] rounded-full">{icon}</div>
-          <div className="line-clamp-2 max-w-[48px] text-center text-sm text-gray-50">
+          <div className="line-clamp-2 max-w-[48px] text-center text-sm text-fg-default">
             {label}
           </div>
         </>

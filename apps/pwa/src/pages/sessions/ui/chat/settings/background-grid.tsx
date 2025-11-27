@@ -49,8 +49,8 @@ const BackgroundItem = ({
     <div
       className={cn(
         "group relative aspect-video overflow-hidden rounded-lg border-2 transition-all",
-        "hover:border-blue-500 hover:brightness-110",
-        isSelected ? "border-blue-500" : "border-gray-700",
+        "hover:border-brand-500 hover:brightness-110",
+        isSelected ? "border-brand-500" : "border-border-muted",
       )}
     >
       {/* Main clickable area */}
@@ -67,8 +67,8 @@ const BackgroundItem = ({
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gray-800">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-600 border-t-blue-500" />
+          <div className="flex h-full w-full items-center justify-center bg-surface-raised">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-fg-disabled border-t-brand-500" />
           </div>
         )}
 
@@ -85,10 +85,10 @@ const BackgroundItem = ({
         <button
           type="button"
           onClick={() => onDelete(background.id)}
-          className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-blue-200 transition-opacity hover:bg-blue-300"
+          className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-brand-300 transition-opacity hover:bg-brand-400"
           aria-label={`Delete ${background.name}`}
         >
-          <Trash2 className="h-3 w-3 text-blue-900" />
+          <Trash2 className="h-3 w-3 text-brand-700" />
         </button>
       )}
     </div>
@@ -173,7 +173,7 @@ export default function BackgroundGrid({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1 rounded-full bg-blue-200 px-3 py-1.5 text-xs font-medium text-blue-900 transition-colors hover:bg-blue-300"
+          className="flex items-center gap-1 rounded-full bg-brand-300 px-3 py-1.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-400"
         >
           <Plus className="h-3.5 w-3.5" />
           Add Background
@@ -197,15 +197,15 @@ export default function BackgroundGrid({
       />
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-700">
+      <div className="flex border-b border-border-muted">
         <button
           type="button"
           onClick={() => setActiveTab("astrsk")}
           className={cn(
             "flex-1 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
             activeTab === "astrsk"
-              ? "border-blue-200 text-blue-200"
-              : "border-gray-800 text-gray-400 hover:text-gray-200",
+              ? "border-brand-300 text-brand-300"
+              : "border-surface-raised text-fg-subtle hover:text-fg-muted",
           )}
         >
           astrsk provided
@@ -217,8 +217,8 @@ export default function BackgroundGrid({
             className={cn(
               "flex-1 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
               activeTab === "user"
-                ? "border-blue-200 text-blue-200"
-                : "border-gray-800 text-gray-400 hover:text-gray-200",
+                ? "border-brand-300 text-brand-300"
+                : "border-surface-raised text-fg-subtle hover:text-fg-muted",
             )}
           >
             User added
@@ -236,12 +236,12 @@ export default function BackgroundGrid({
               onClick={() => onSelect(undefined)}
               className={cn(
                 "relative aspect-video overflow-hidden rounded-lg border-2 transition-all",
-                "hover:border-blue-500 hover:brightness-110",
-                !currentBackgroundId ? "border-blue-500" : "border-gray-700",
+                "hover:border-brand-500 hover:brightness-110",
+                !currentBackgroundId ? "border-brand-500" : "border-border-muted",
               )}
             >
-              <div className="flex h-full w-full items-center justify-center bg-gray-900">
-                <p className="text-xs text-gray-400">No background</p>
+              <div className="flex h-full w-full items-center justify-center bg-surface">
+                <p className="text-xs text-fg-subtle">No background</p>
               </div>
             </button>
 

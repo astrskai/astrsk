@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Switch } from "@/shared/ui";
 import { useNavigate } from "@tanstack/react-router";
-import { toastInfo, toastError } from "@/shared/ui/toast/base";
+import { toastInfo, toastError } from "@/shared/ui/toast";
 
 const SectionTitle = ({ title }: { title: string }) => (
   <h3 className="mb-3 px-2 text-[11px] font-bold uppercase tracking-widest text-fg-subtle">

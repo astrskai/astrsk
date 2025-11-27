@@ -30,14 +30,14 @@ export default function ChatShuffleButton({
     >
       <button
         type="button"
-        className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-50/30 bg-gray-50/10 hover:bg-gray-50/20"
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-fg-default/30 bg-fg-default/10 hover:bg-fg-default/20"
         onClick={handleClick}
         disabled={isDisabled}
       >
         <Shuffle className="h-6 w-6" />
       </button>
 
-      <span className="text-xs text-gray-200 group-hover/shuffle:text-gray-50">
+      <span className="text-xs text-fg-muted group-hover/shuffle:text-fg-default">
         Shuffle
       </span>
     </div>

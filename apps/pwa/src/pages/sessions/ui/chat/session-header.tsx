@@ -53,11 +53,11 @@ export default function SessionHeader({
           <button
             type="button"
             onClick={() => navigate({ to: "/sessions" })}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-500 bg-gray-900 text-gray-50 transition-colors hover:bg-gray-800 hover:text-white"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border-subtle bg-surface text-fg-default transition-colors hover:bg-surface-raised hover:text-fg-default"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="text-lg font-semibold text-gray-50">{title}</div>
+          <div className="text-lg font-semibold text-fg-default">{title}</div>
         </div>
 
         <Button
@@ -72,7 +72,7 @@ export default function SessionHeader({
       <button
         type="button"
         onClick={onSettingsClick}
-        className="text-fg-muted hover:text-fg-default absolute top-4 right-4 z-30 hidden h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-500 bg-gray-900 transition-colors hover:bg-gray-800 md:flex"
+        className="text-fg-muted hover:text-fg-default absolute top-4 right-4 z-30 hidden h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border-subtle bg-surface transition-colors hover:bg-surface-raised md:flex"
         aria-label="Session settings"
       >
         <Pencil className="h-5 w-5" />

@@ -6,12 +6,13 @@ interface DialogBaseProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
-  title?: string;
+  title?: React.ReactNode;
   description?: React.ReactNode;
   content: React.ReactNode;
   footer?: React.ReactNode; // Optional footer (always visible, not scrollable)
   isShowCloseButton?: boolean;
   size?: "sm" | "md" | "lg" | "xl" | "2xl"; // Dialog size (default: "md")
+  className?: string; // Custom className for dialog content container
 }
 
 const DialogBase = ({
@@ -24,6 +25,7 @@ const DialogBase = ({
   footer,
   isShowCloseButton = true,
   size = "md",
+  className,
 }: DialogBaseProps) => {
   // Map size to max-width classes
   const sizeClasses = {
@@ -53,6 +55,7 @@ const DialogBase = ({
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
             "data-[state=closed]:duration-200 data-[state=open]:duration-200",
+            className,
           )}
         >
           {title && (

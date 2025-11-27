@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Search, ExternalLink, ChevronRight, Package } from "lucide-react";
 import DialogBase from "@/shared/ui/dialogs/base";
-import { toastError } from "@/shared/ui/toast/base";
+import { toastError } from "@/shared/ui/toast";
 
 interface LicenseInfo {
   name: string;

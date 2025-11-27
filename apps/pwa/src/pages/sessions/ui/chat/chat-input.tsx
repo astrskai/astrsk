@@ -61,7 +61,7 @@ export default function ChatInput({
   return (
     <div
       className={cn(
-        "relative z-10 w-full max-w-dvw border-t border-gray-50/50 bg-gray-50/10 px-4 py-2 backdrop-blur-3xl md:max-w-4xl md:rounded-2xl md:border md:p-4",
+        "relative z-10 w-full max-w-dvw border-t border-fg-default/50 bg-fg-default/10 px-4 py-2 backdrop-blur-3xl md:max-w-4xl md:rounded-2xl md:border md:p-4",
         className,
       )}
     >
@@ -116,7 +116,7 @@ export default function ChatInput({
         <input
           type="text"
           className={cn(
-            "w-full rounded-full border border-gray-50/30 bg-transparent px-4 py-1 pr-25 text-sm text-gray-50 placeholder:text-sm placeholder:text-gray-300 focus:border-gray-50/50 focus:outline-none md:py-2 md:text-base md:placeholder:text-base",
+            "w-full rounded-full border border-fg-default/30 bg-transparent px-4 py-1 pr-25 text-sm text-fg-default placeholder:text-sm placeholder:text-fg-subtle focus:border-fg-default/50 focus:outline-none md:py-2 md:text-base md:placeholder:text-base",
           )}
           placeholder="Type a message..."
           value={messageContent}
@@ -151,7 +151,7 @@ export default function ChatInput({
             setMessageContent("");
           }}
           className={cn(
-            "absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-2 rounded-full border border-gray-50/30 bg-gray-50/10 px-4 py-1.5 font-semibold text-white transition-colors hover:bg-gray-50/20 md:right-1",
+            "absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-2 rounded-full border border-fg-default/30 bg-fg-default/10 px-4 py-1.5 font-semibold text-fg-default transition-colors hover:bg-fg-default/20 md:right-1",
             !streamingMessageId && messageContent.trim() === ""
               ? "cursor-not-allowed opacity-50"
               : "",

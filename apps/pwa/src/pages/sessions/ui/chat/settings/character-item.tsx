@@ -20,7 +20,7 @@ export default function CharacterItem({
 
   return (
     <div
-      className="flex h-[64px] cursor-pointer overflow-hidden rounded-lg border border-gray-500 hover:border-gray-300"
+      className="flex h-[64px] cursor-pointer overflow-hidden rounded-lg border border-border-subtle hover:border-fg-subtle"
       onClick={onClick}
     >
       <div className="relative w-[25%]">
@@ -31,12 +31,12 @@ export default function CharacterItem({
         />
       </div>
       <div className="flex w-[75%] items-center justify-between gap-2 p-4">
-        <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-gray-50">
+        <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-fg-default">
           {character.props.title}
         </h3>
 
-        <p className="text-sm text-gray-400">
-          <span className="font-semibold text-gray-50">
+        <p className="text-sm text-fg-subtle">
+          <span className="font-semibold text-fg-default">
             {character.props.tokenCount}
           </span>{" "}
           <span>Tokens</span>

@@ -22,7 +22,7 @@ export default function ChatAutoReplyButton({
       )}
     >
       <button
-        className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-50 bg-gray-50/20 text-base font-semibold text-gray-50 hover:bg-gray-50/30"
+        className="flex h-10 w-10 items-center justify-center rounded-lg border border-fg-default bg-fg-default/20 text-base font-semibold text-fg-default hover:bg-fg-default/30"
         onClick={onAutoReply}
       >
         {autoReply === AutoReply.Off ? (
@@ -36,7 +36,7 @@ export default function ChatAutoReplyButton({
         )}
       </button>
 
-      <div className="text-center text-xs font-semibold text-gray-100">
+      <div className="text-center text-xs font-semibold text-fg-muted">
         <div>
           {autoReply === AutoReply.Off ? "Auto-reply off" : "Auto-reply on"}
         </div>

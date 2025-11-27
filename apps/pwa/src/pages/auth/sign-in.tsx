@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
-import { ArrowRight, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/shared/ui/forms/button";
 import { Input } from "@/shared/ui/input";
@@ -113,15 +114,15 @@ export function SignInPage() {
     <div className="bg-canvas text-fg-default flex min-h-screen w-full items-center justify-center p-6">
       {/* Ambient Background */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute top-[-10%] right-[-5%] h-[700px] w-[700px] rounded-full bg-[#3a5a8a] opacity-20 blur-[140px]" />
-        <div className="absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-[#5b82ba] opacity-10 blur-[120px]" />
+        <div className="bg-brand-700 absolute top-[-10%] right-[-5%] h-[700px] w-[700px] rounded-full opacity-20 blur-[140px]" />
+        <div className="bg-brand-500 absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full opacity-10 blur-[120px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-sm">
         {/* Brand Badge */}
         <div className="mb-6 flex justify-center">
           <div className="border-border-default bg-surface/50 text-brand-300 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur-md">
-            <CheckCircle2 size={14} className="text-brand-300" />
+            <CheckCircle2 size={14} className="text-accent-cyan" />
             <span>Encrypted Local Storage</span>
           </div>
         </div>
@@ -131,7 +132,7 @@ export function SignInPage() {
           <h1 className="text-fg-default mb-2 text-3xl font-extrabold tracking-tight">
             Your stories,
             <br />
-            <span className="bg-gradient-to-r from-[#7a9cc9] to-[#4a6fa5] bg-clip-text text-transparent">
+            <span className="from-brand-400 to-brand-600 bg-gradient-to-r bg-clip-text text-transparent">
               exclusively yours.
             </span>
           </h1>
@@ -195,12 +196,12 @@ export function SignInPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
             <div className="flex justify-end">
-              <a
-                href="#"
+              <Link
+                to="/forgot-password"
                 className="text-brand-400 hover:text-brand-300 text-xs font-medium transition-colors"
               >
                 Forgot your password?
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -208,21 +209,21 @@ export function SignInPage() {
             type="submit"
             size="lg"
             loading={isLoading}
-            className="w-full shadow-lg shadow-[rgba(74,111,165,0.2)] transition-all hover:-translate-y-0.5 active:scale-95"
+            className="shadow-brand-600/20 w-full font-semibold shadow-lg transition-all hover:-translate-y-0.5 active:scale-95"
           >
-            Log In <ArrowRight size={16} />
+            Log In
           </Button>
         </form>
 
         {/* Sign Up Prompt */}
         <div className="text-fg-subtle mt-8 text-center text-sm">
           Don't have an account?{" "}
-          <a
-            href="#"
+          <Link
+            to="/sign-up"
             className="text-fg-default decoration-border-muted hover:text-brand-400 font-semibold underline underline-offset-4 transition-all"
           >
             Sign up for free
-          </a>
+          </Link>
         </div>
       </div>
     </div>

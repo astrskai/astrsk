@@ -115,7 +115,7 @@ export default function SessionDataSidebar({
   return (
     <aside
       className={cn(
-        "w-full max-w-dvw overflow-hidden bg-gray-800/30 backdrop-blur-md transition-all duration-300 ease-in-out md:w-80 md:bg-transparent md:backdrop-blur-none",
+        "w-full max-w-dvw overflow-hidden bg-surface-raised/30 backdrop-blur-md transition-all duration-300 ease-in-out md:w-80 md:bg-transparent md:backdrop-blur-none",
         // Mobile: fixed overlay with slide animation + bottom offset for ChatInput
         // Don't use h-dvh - let top/bottom define height
         "fixed top-10 left-0 z-10",
@@ -134,7 +134,7 @@ export default function SessionDataSidebar({
           <button
             type="button"
             onClick={handleResetLayout}
-            className="flex items-center gap-1 rounded-md border border-gray-500 bg-gray-800/80 px-2 py-1 text-xs text-gray-300 transition-colors hover:border-gray-400 hover:bg-gray-700/80 hover:text-gray-100"
+            className="flex items-center gap-1 rounded-md border border-border-subtle bg-surface-raised/80 px-2 py-1 text-xs text-fg-subtle transition-colors hover:border-fg-subtle hover:bg-hover/80 hover:text-fg-muted"
             aria-label="Reset layout to default"
           >
             <RotateCcw className="h-3 w-3" />
@@ -159,17 +159,17 @@ export default function SessionDataSidebar({
           {sortedDataSchemaFields.map((field) => (
             <div
               key={field.name}
-              className="group relative flex h-full w-full flex-col overflow-hidden rounded-md border border-gray-50/20 bg-gray-50/20 backdrop-blur-lg transition-shadow hover:shadow-lg"
+              className="group relative flex h-full w-full flex-col overflow-hidden rounded-md border border-fg-default/20 bg-fg-default/20 backdrop-blur-lg transition-shadow hover:shadow-lg"
             >
               {/* Header: Field name + Drag handle */}
-              <div className="flex items-center border-b border-gray-50/10 bg-gray-50/5">
+              <div className="flex items-center border-b border-fg-default/10 bg-fg-default/5">
                 {/* Drag handle - left side */}
                 <div className="drag-handle flex cursor-move items-center justify-center px-1 py-2 opacity-0 transition-opacity group-hover:opacity-100">
-                  <div className="text-xs text-gray-50">⋮⋮</div>
+                  <div className="text-xs text-fg-default">⋮⋮</div>
                 </div>
 
                 {/* Field name - always visible */}
-                <div className="flex-1 truncate px-2 py-2 text-center text-sm font-semibold break-words text-gray-50">
+                <div className="flex-1 truncate px-2 py-2 text-center text-sm font-semibold break-words text-fg-default">
                   {field.name}
                 </div>
 
@@ -179,7 +179,7 @@ export default function SessionDataSidebar({
 
               {/* Content area: Value only */}
               <div className="flex flex-1 items-center justify-center overflow-auto p-3">
-                <div className="w-full text-center text-base font-semibold break-words text-gray-50">
+                <div className="w-full text-center text-base font-semibold break-words text-fg-default">
                   {isInitialDataStore
                     ? field.initialValue
                     : field.name in lastTurnDataStore
@@ -192,7 +192,7 @@ export default function SessionDataSidebar({
               <div className="absolute right-0 bottom-0 h-4 w-4 cursor-se-resize opacity-0 transition-opacity group-hover:opacity-50">
                 <svg
                   viewBox="0 0 16 16"
-                  className="h-full w-full text-gray-400"
+                  className="h-full w-full text-fg-subtle"
                 >
                   <path
                     d="M15 15L15 10M15 15L10 15M15 15L11 11"

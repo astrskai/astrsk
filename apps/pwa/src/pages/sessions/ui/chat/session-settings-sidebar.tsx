@@ -434,7 +434,7 @@ const SessionSettingsSidebar = ({
           type="button"
           aria-label="Close settings panel"
           onClick={onClose}
-          className="cursor-pointer text-gray-300 hover:text-gray-50"
+          className="cursor-pointer text-fg-subtle hover:text-fg-default"
         >
           <PanelRightClose className="h-5 w-5" />
         </button>
@@ -451,14 +451,14 @@ const SessionSettingsSidebar = ({
                   handleCancelEditTitle();
                 }
               }}
-              className="flex-1 rounded-md border border-gray-600 bg-gray-800 px-2 py-1 text-sm text-gray-50 focus:border-blue-500 focus:outline-none"
+              className="flex-1 rounded-md border border-fg-disabled bg-surface-raised px-2 py-1 text-sm text-fg-default focus:border-brand-500 focus:outline-none"
               autoFocus
               placeholder="Enter session title"
             />
             <button
               type="button"
               onClick={handleSaveTitle}
-              className="cursor-pointer text-green-400 hover:text-green-300"
+              className="cursor-pointer text-status-success hover:text-status-success/80"
               aria-label="Save title"
             >
               <Check className="h-4 w-4" />
@@ -466,19 +466,19 @@ const SessionSettingsSidebar = ({
             <button
               type="button"
               onClick={handleCancelEditTitle}
-              className="cursor-pointer text-red-400 hover:text-red-300"
+              className="cursor-pointer text-status-error hover:text-status-error/80"
               aria-label="Cancel editing"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
         ) : (
-          <span className="flex items-center gap-2 text-base font-semibold text-gray-50">
+          <span className="flex items-center gap-2 text-base font-semibold text-fg-default">
             {session.title ?? "Untitled Session"}
             <button
               type="button"
               aria-label="Edit session title"
-              className="cursor-pointer text-gray-300 hover:text-gray-50"
+              className="cursor-pointer text-fg-subtle hover:text-fg-default"
               onClick={() => {
                 setIsEditingTitle(true);
                 setEditedTitle(session.title ?? "");
@@ -493,7 +493,7 @@ const SessionSettingsSidebar = ({
             <button
               type="button"
               aria-label="More menu"
-              className="cursor-pointer text-gray-300 hover:text-gray-50"
+              className="cursor-pointer text-fg-subtle hover:text-fg-default"
             >
               <Ellipsis className="h-5 w-5" />
             </button>
@@ -503,7 +503,7 @@ const SessionSettingsSidebar = ({
               label: "Delete session",
               icon: <Trash2 className="h-4 w-4" />,
               onClick: () => setIsDeleteDialogOpen(true),
-              className: "text-red-400 hover:text-red-300 focus:text-red-300",
+              className: "text-status-error hover:text-status-error/80 focus:text-status-error/80",
             },
           ]}
           align="end"
@@ -538,12 +538,12 @@ const SessionSettingsSidebar = ({
                 />
               ))
             ) : (
-              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
-                <p className="text-sm text-gray-400">No AI characters</p>
+              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-surface-raised/50">
+                <p className="text-sm text-fg-subtle">No AI characters</p>
               </div>
             )}
             <div
-              className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
+              className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base"
               onClick={handleAddAICharacter}
             >
               <Plus className="h-5 w-5" />
@@ -591,7 +591,7 @@ const SessionSettingsSidebar = ({
               />
             ) : (
               <div
-                className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
+                className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base"
                 onClick={handleAddUserCharacter}
               >
                 <Plus className="h-5 w-5" />
@@ -633,7 +633,7 @@ const SessionSettingsSidebar = ({
               />
             ) : (
               <div
-                className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base"
+                className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base"
                 onClick={handleAddScenario}
               >
                 <Plus className="h-5 w-5" />
@@ -675,8 +675,8 @@ const SessionSettingsSidebar = ({
                 }}
               />
             ) : (
-              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-gray-500 bg-gray-800/50">
-                <p className="text-sm text-gray-400">No flow selected</p>
+              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-surface-raised/50">
+                <p className="text-sm text-fg-subtle">No flow selected</p>
               </div>
             )}
           </div>
@@ -685,14 +685,14 @@ const SessionSettingsSidebar = ({
         <section className="block md:hidden!">
           <h3 className="font-semibold">Auto reply setting</h3>
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-900 px-4 py-2">
+            <div className="flex items-center justify-between gap-2 rounded-lg bg-surface px-4 py-2">
               <span>Auto reply</span>
               <Switch
                 checked={session.autoReply !== AutoReply.Off}
                 onCheckedChange={onAutoReply}
               />
             </div>
-            <p className="text-xs text-gray-300">
+            <p className="text-xs text-fg-subtle">
               Automatically responds after your message.
             </p>
           </div>
@@ -705,7 +705,7 @@ const SessionSettingsSidebar = ({
               <button
                 type="button"
                 aria-label="Delete cover image"
-                className="cursor-pointer text-gray-300 hover:text-gray-50"
+                className="cursor-pointer text-fg-subtle hover:text-fg-default"
                 onClick={handleDeleteCoverImage}
               >
                 <Trash2 className="h-4 w-4" />
@@ -723,7 +723,7 @@ const SessionSettingsSidebar = ({
                 alt="Cover image"
               />
             ) : (
-              <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
+              <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base">
                 <FileUp className="h-5 w-5" />
                 <p>Upload Cover Image</p>
               </div>
@@ -754,7 +754,7 @@ const SessionSettingsSidebar = ({
                 alt="Background image"
               />
             ) : (
-              <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
+              <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base">
                 <Image className="h-5 w-5" />
                 <p>Select Background Image</p>
               </div>
@@ -793,7 +793,7 @@ const SessionSettingsSidebar = ({
                     alt="Background image"
                   />
                 ) : (
-                  <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-700 text-sm font-medium transition-colors md:text-base">
+                  <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base">
                     <Image className="h-5 w-5" />
                     <p>Select Background Image</p>
                   </div>
