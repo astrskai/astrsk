@@ -127,35 +127,38 @@ function MainLayoutContent({
     <div
       className={cn(
         "h-dvh max-h-dvh min-h-dvh w-full",
-        "flex overflow-hidden antialiased",
+        "flex flex-col overflow-hidden antialiased",
       )}
     >
       <LoadingOverlay />
 
-      {/* Sidebar - responsive design for desktop and mobile */}
-      <LeftMainSidebarContainer
-        isMobileOpen={isMobileMenuOpen}
-        setIsMobileOpen={setMobileMenuOpen}
-      />
+      {/* Electron: TopBar (window controls) - Full width at top */}
+      {isElectron && <TopBar />}
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Electron: TopBar (window controls) */}
-        {isElectron && <TopBar />}
+      {/* Content area below TopBar */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - responsive design for desktop and mobile */}
+        <LeftMainSidebarContainer
+          isMobileOpen={isMobileMenuOpen}
+          setIsMobileOpen={setMobileMenuOpen}
+        />
 
-        {/* Mobile Header - Only visible on mobile */}
-        <MobileHeader onMenuClick={() => setMobileMenuOpen(true)} />
+        {/* Main Content Area */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Mobile Header - Only visible on mobile */}
+          <MobileHeader onMenuClick={() => setMobileMenuOpen(true)} />
 
-        {/* Main content area with scroll */}
-        <TooltipProvider delayDuration={0}>
-          <main
-            ref={scrollContainerRef}
-            className="relative z-0 flex flex-1 flex-col overflow-y-auto"
-          >
-            {children}
-          </main>
-          <Toaster closeButton className="!z-[9999]" position="bottom-right" />
-        </TooltipProvider>
+          {/* Main content area with scroll */}
+          <TooltipProvider delayDuration={0}>
+            <main
+              ref={scrollContainerRef}
+              className="relative z-0 flex flex-1 flex-col overflow-y-auto"
+            >
+              {children}
+            </main>
+            <Toaster closeButton className="!z-[9999]" position="bottom-right" />
+          </TooltipProvider>
+        </div>
       </div>
     </div>
   );

@@ -24,7 +24,6 @@ type IconName =
   | "preview"
   | "window_minimize"
   | "window_maximize"
-  | "window_close"
   | "astrsk_symbol"
   | "astrsk_symbol_fit"
   | "astrsk_logo_full"
@@ -372,25 +371,6 @@ const SvgIcon = forwardRef<
           strokeWidth="1.425"
           d="M5.713 5v14.255M18.063 5v14.255m.659-13.542H5m13.722 12.829H5"
         />
-      );
-      break;
-    case "window_close":
-      viewbox = "0 0 24 24";
-      icon = (
-        <>
-          <path
-            stroke="currentColor"
-            strokeWidth="1.425"
-            d="M0-.713h17.808"
-            transform="matrix(.69351 .72045 -.69351 .72045 5 6)"
-          />
-          <path
-            stroke="currentColor"
-            strokeWidth="1.425"
-            d="M0-.713h17.808"
-            transform="matrix(-.69351 .72045 .69351 .72045 18.722 6)"
-          />
-        </>
       );
       break;
     case "astrsk_symbol":

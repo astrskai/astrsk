@@ -2,7 +2,7 @@
 import { useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { SvgIcon } from "@/shared/ui";
-import { SquareArrowUpRight } from "lucide-react";
+import { SquareArrowUpRight, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { isElectronEnvironment } from "@/shared/lib/environment";
 
@@ -116,7 +116,7 @@ export function TopBar() {
                 <SvgIcon name="window_maximize" size={24} />
               </button>
               <button tabIndex={-1} onClick={handleClose}>
-                <SvgIcon name="window_close" size={24} />
+                <X size={24} />
               </button>
             </div>
           )}
@@ -150,7 +150,7 @@ export function TopBar() {
                 <SvgIcon name="window_maximize" size={24} />
               </button>
               <button tabIndex={-1} onClick={handleClose}>
-                <SvgIcon name="window_close" size={24} />
+                <X size={24} />
               </button>
             </div>
           )}

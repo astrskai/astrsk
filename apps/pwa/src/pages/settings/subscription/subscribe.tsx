@@ -14,7 +14,7 @@ import { api } from "@/convex";
 import { logger } from "@/shared/lib/logger";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "convex/react";
-import { Ban, Bot, ChevronDown, Coins, UserRoundPlus, Zap } from "lucide-react";
+import { Ban, Bot, ChevronDown, Coins, UserRoundPlus, X, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toastError, toastSuccess, toastInfo } from "@/shared/ui/toast";
 
@@ -147,7 +147,7 @@ const SubscribePage = () => {
           backToReturnPage();
         }}
       >
-        <SvgIcon name="window_close" size={40} />
+        <X size={40} />
       </button>
 
       <ScrollArea className="h-full">
