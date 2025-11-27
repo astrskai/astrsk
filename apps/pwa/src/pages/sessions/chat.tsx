@@ -15,7 +15,7 @@ import {
   SessionDataSidebar,
   SessionHeader,
   SessionSettingsSidebar,
-} from "./ui/detail";
+} from "./ui/chat";
 import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { AutoReply } from "@/shared/stores/session-store";
