@@ -538,17 +538,6 @@
   }
 }
 
-@keyframes bounce-typing {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-  }
-  30% {
-    transform: translateY(-8px);
-  }
-}
-
 @keyframes accordion-down {
   from {
     height: 0;
@@ -594,10 +583,6 @@
 
 @utility animate-fade-in-up {
   animation: fade-in-up 0.3s ease-out 0.35s both;
-}
-
-@utility animate-bounce-typing {
-  animation: bounce-typing 1.4s ease-in-out infinite;
 }
 
 @utility animate-accordion-down {

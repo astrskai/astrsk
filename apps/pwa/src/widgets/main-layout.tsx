@@ -122,6 +122,10 @@ function MainLayoutContent({
 }) {
   const { scrollContainerRef } = useScrollContainer();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+
+  // Hide mobile header on session chat page (has its own header)
+  const isSessionChatPage = /^\/sessions\/[^/]+$/.test(location.pathname);
 
   return (
     <div
@@ -145,8 +149,10 @@ function MainLayoutContent({
 
         {/* Main Content Area */}
         <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Mobile Header - Only visible on mobile */}
-          <MobileHeader onMenuClick={() => setMobileMenuOpen(true)} />
+          {/* Mobile Header - Only visible on mobile, hidden on session chat page */}
+          {!isSessionChatPage && (
+            <MobileHeader onMenuClick={() => setMobileMenuOpen(true)} />
+          )}
 
           {/* Main content area with scroll */}
           <TooltipProvider delayDuration={0}>
