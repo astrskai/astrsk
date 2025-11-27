@@ -58,8 +58,8 @@ export interface SessionListFilters {
  * });
  *
  * sessions.map(({ session, characterAvatars }) => (
- *   <SessionPreview
- *     session={session}
+ *   <SessionCard
+ *     title={session.title}
  *     characterAvatars={characterAvatars}
  *   />
  * ))
