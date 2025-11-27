@@ -154,7 +154,7 @@ function MainLayoutContent({
           >
             {children}
           </main>
-          <Toaster closeButton className="!z-[9999]" position="top-right" />
+          <Toaster closeButton className="!z-[9999]" position="bottom-right" />
         </TooltipProvider>
       </div>
     </div>
