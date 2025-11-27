@@ -12,7 +12,7 @@ import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
 import { Route } from "@/routes/_layout/sessions/$sessionId";
 import { CardTab } from "@/features/session/create-session/step-cards";
-import { SessionContent, SessionSettings } from "./ui/detail";
+import { SessionContent, SessionSettings } from "./ui/chat";
 import { FloatingActionButton, ScrollArea, SvgIcon } from "@/shared/ui";
 import { logger } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";

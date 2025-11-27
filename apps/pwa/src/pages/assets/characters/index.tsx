@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ListPageHeader } from "@/widgets/header";
@@ -14,9 +14,7 @@ import {
   SearchEmptyState,
   EmptyState,
 } from "@/shared/ui";
-import { cardQueries } from "@/entities/card/api";
-import { CardType } from "@/entities/card/domain";
-import { CharacterCard } from "@/entities/card/domain/character-card";
+import { characterQueries } from "@/entities/character/api";
 import { useResourceImport } from "@/shared/hooks/use-resource-import";
 import { FlowImportDialog } from "@/features/flow/ui/flow-import-dialog";
 
@@ -44,19 +42,10 @@ export function CharactersPage() {
     triggerImport,
   } = useResourceImport();
 
-  // Fetch cards with sorting
-  const { data: allCards, isLoading: isLoadingCards } = useQuery(
-    cardQueries.list({ keyword, sort: sortOption }),
+  // Fetch characters directly (DB-level filtering by CardType.Character)
+  const { data: characters = [], isLoading: isLoadingCards } = useQuery(
+    characterQueries.list({ keyword, sort: sortOption }),
   );
-
-  // Filter by character type
-  const characters = useMemo(() => {
-    return (
-      allCards?.filter(
-        (card: CharacterCard) => card.props.type === CardType.Character,
-      ) || []
-    );
-  }, [allCards]);
 
   // Event handlers
   const handleImport = () => {

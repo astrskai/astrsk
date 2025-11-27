@@ -1,5 +1,5 @@
 import {
-  boolean,
+  index,
   jsonb,
   pgTable,
   text,
@@ -15,20 +15,27 @@ import { InsertPlotCard, SelectPlotCard } from "@/db/schema/plot-cards";
 import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
 
-export const cards = pgTable(TableName.Cards, {
-  id: uuid().primaryKey(),
-  title: varchar().notNull(),
-  icon_asset_id: uuid(),
-  type: varchar().notNull(),
-  tags: jsonb().$type<string[]>().default([]).notNull(),
-  creator: varchar(),
-  card_summary: text(),
-  version: varchar(),
-  conceptual_origin: varchar(),
-  vibe_session_id: uuid(), // Reference to active vibe session
-  image_prompt: text(), // Prompt for image generation
-  ...timestamps,
-});
+export const cards = pgTable(
+  TableName.Cards,
+  {
+    id: uuid().primaryKey(),
+    title: varchar().notNull(),
+    icon_asset_id: uuid(),
+    type: varchar().notNull(),
+    tags: jsonb().$type<string[]>().default([]).notNull(),
+    creator: varchar(),
+    card_summary: text(),
+    version: varchar(),
+    conceptual_origin: varchar(),
+    vibe_session_id: uuid(), // Reference to active vibe session
+    image_prompt: text(), // Prompt for image generation
+    ...timestamps,
+  },
+  (table) => [
+    // Index for type-based filtering (searchCharacters, searchPlots)
+    index("cards_type_idx").on(table.type),
+  ],
+);
 
 export type SelectCommonCard = typeof cards.$inferSelect;
 export type InsertCommonCard = typeof cards.$inferInsert;

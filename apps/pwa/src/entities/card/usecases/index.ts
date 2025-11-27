@@ -6,6 +6,8 @@ export * from "./import-card-from-file";
 // export * from "./import-card-from-web";
 export * from "./save-card";
 export * from "./search-card";
+export * from "./search-characters";
+export * from "./search-scenarios";
 export * from "./update-card-title";
 export * from "./update-card-summary";
 export * from "./update-card-version";

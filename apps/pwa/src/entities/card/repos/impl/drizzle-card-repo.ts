@@ -12,7 +12,7 @@ import { characterCards } from "@/db/schema/character-cards";
 import { plotCards } from "@/db/schema/plot-cards";
 import { TableName } from "@/db/schema/table-name";
 import { Transaction } from "@/db/transaction";
-import { Card, CardType } from "@/entities/card/domain";
+import { Card, CardType, CharacterCard, PlotCard } from "@/entities/card/domain";
 import { LorebookJSON } from "@/entities/card/domain/lorebook";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
 import { DeleteCardRepo } from "@/entities/card/repos/delete-card-repo";
@@ -20,6 +20,8 @@ import {
   LoadCardRepo,
   SearchCardsQuery,
   SearchCardsSort,
+  SearchCharactersQuery,
+  SearchScenariosQuery,
 } from "@/entities/card/repos/load-card-repo";
 import { SaveCardRepo } from "@/entities/card/repos/save-card-repo";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
@@ -511,6 +513,148 @@ export class DrizzleCardRepo
       return Result.ok(entities);
     } catch (error) {
       return formatFail("Failed to search cards", error);
+    }
+  }
+
+  /**
+   * Optimized character search - only JOINs characterCards table
+   * and searches only character-specific fields
+   */
+  async searchCharacters(
+    query: SearchCharactersQuery,
+    tx?: Transaction,
+  ): Promise<Result<CharacterCard[]>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      // Build filters
+      const filters: SQL[] = [eq(cards.type, CardType.Character)];
+
+      if (query.keyword) {
+        const keywordFilter = or(
+          // Common card fields
+          ilike(cards.title, `%${query.keyword}%`),
+          ilike(cards.creator, `%${query.keyword}%`),
+          ilike(cards.card_summary, `%${query.keyword}%`),
+          // Character-specific fields only
+          ilike(characterCards.name, `%${query.keyword}%`),
+          ilike(characterCards.description, `%${query.keyword}%`),
+          ilike(characterCards.example_dialogue, `%${query.keyword}%`),
+        );
+        if (keywordFilter) filters.push(keywordFilter);
+      }
+
+      // Build order by
+      let orderBy: PgColumn | SQL;
+      switch (query.sort) {
+        case SearchCardsSort.Latest:
+          orderBy = desc(cards.created_at);
+          break;
+        case SearchCardsSort.Oldest:
+          orderBy = asc(cards.created_at);
+          break;
+        case SearchCardsSort.TitleAtoZ:
+          orderBy = asc(cards.title);
+          break;
+        case SearchCardsSort.TitleZtoA:
+          orderBy = desc(cards.title);
+          break;
+        default:
+          orderBy = desc(cards.created_at);
+          break;
+      }
+
+      // Single JOIN - characterCards only
+      const rows = await db
+        .select()
+        .from(cards)
+        .innerJoin(characterCards, eq(characterCards.id, cards.id))
+        .where(and(...filters))
+        .limit(query.limit ?? 100)
+        .offset(query.offset ?? 0)
+        .orderBy(orderBy);
+
+      // Convert to domain entities
+      const entities = rows.map((row) => {
+        const card = CardDrizzleMapper.toDomain({
+          common: row.cards,
+          character: row.character_cards,
+        });
+        return card as CharacterCard;
+      });
+
+      return Result.ok(entities);
+    } catch (error) {
+      return formatFail("Failed to search characters", error);
+    }
+  }
+
+  /**
+   * Optimized scenario search - only JOINs plotCards table
+   * and searches only scenario-specific fields
+   */
+  async searchScenarios(
+    query: SearchScenariosQuery,
+    tx?: Transaction,
+  ): Promise<Result<PlotCard[]>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      // Build filters
+      const filters: SQL[] = [eq(cards.type, CardType.Plot)];
+
+      if (query.keyword) {
+        const keywordFilter = or(
+          // Common card fields
+          ilike(cards.title, `%${query.keyword}%`),
+          ilike(cards.creator, `%${query.keyword}%`),
+          ilike(cards.card_summary, `%${query.keyword}%`),
+          // Scenario-specific fields only
+          ilike(plotCards.description, `%${query.keyword}%`),
+        );
+        if (keywordFilter) filters.push(keywordFilter);
+      }
+
+      // Build order by
+      let orderBy: PgColumn | SQL;
+      switch (query.sort) {
+        case SearchCardsSort.Latest:
+          orderBy = desc(cards.created_at);
+          break;
+        case SearchCardsSort.Oldest:
+          orderBy = asc(cards.created_at);
+          break;
+        case SearchCardsSort.TitleAtoZ:
+          orderBy = asc(cards.title);
+          break;
+        case SearchCardsSort.TitleZtoA:
+          orderBy = desc(cards.title);
+          break;
+        default:
+          orderBy = desc(cards.created_at);
+          break;
+      }
+
+      // Single JOIN - plotCards only (scenarios use plotCards table)
+      const rows = await db
+        .select()
+        .from(cards)
+        .innerJoin(plotCards, eq(plotCards.id, cards.id))
+        .where(and(...filters))
+        .limit(query.limit ?? 100)
+        .offset(query.offset ?? 0)
+        .orderBy(orderBy);
+
+      // Convert to domain entities
+      const entities = rows.map((row) => {
+        const card = CardDrizzleMapper.toDomain({
+          common: row.cards,
+          plot: row.plot_cards,
+        });
+        return card as PlotCard;
+      });
+
+      return Result.ok(entities);
+    } catch (error) {
+      return formatFail("Failed to search scenarios", error);
     }
   }
 
