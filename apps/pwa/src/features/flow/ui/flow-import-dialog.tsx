@@ -101,8 +101,6 @@ export function FlowImportDialog({
       description={description}
       accept=".json"
       fileIcon={<SvgIcon name="agents_solid" size={24} />}
-      className="p-2 pt-8"
-      contentClassName="px-4 pb-4 flex flex-col justify-start items-start gap-6"
       hideCloseWhenFile={true}
       file={importingFile}
       onFileSelect={handleFileSelect}

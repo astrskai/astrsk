@@ -1,7 +1,7 @@
 import React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/shared/ui/forms";
-import DialogBase from "./base";
+import { DialogBase } from "./base";
 
 interface ConfirmProps {
   open?: boolean;

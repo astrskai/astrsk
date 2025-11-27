@@ -1,13 +1,6 @@
 import { useRef, ReactNode } from "react";
 import { Import, X, Loader2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/shared/ui";
+import { DialogBase } from "@/shared/ui/dialogs/base";
 import { Button, TypoBase } from "@/shared/ui";
 import { cn } from "@/shared/lib";
 
@@ -28,7 +21,6 @@ export interface ImportDialogProps {
   accept?: string;
   fileIcon?: ReactNode;
   className?: string;
-  contentClassName?: string;
   hideCloseWhenFile?: boolean;
   // File handling
   file: File | null;
@@ -49,7 +41,6 @@ export function ImportDialog({
   accept = ".json",
   fileIcon,
   className,
-  contentClassName,
   hideCloseWhenFile = true,
   file,
   onFileSelect,
@@ -97,118 +88,95 @@ export function ImportDialog({
     await onImport();
   };
 
+  const renderContent = () => {
+    if (!file) {
+      // File selection state
+      return (
+        <div
+          className={cn(
+            "bg-surface-overlay hover:bg-surface-raised flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-border-default p-8",
+          )}
+          onClick={handleClick}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          <Import size={64} className="text-fg-subtle" />
+          <div>
+            <TypoBase className="text-fg-subtle">
+              Choose a file or drag it here
+            </TypoBase>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={accept}
+            className="hidden"
+            onChange={handleFileInputChange}
+          />
+        </div>
+      );
+    }
+
+    // File selected state
+    return (
+      <div className="flex flex-col gap-4">
+        {/* Selected file info */}
+        <div className="bg-surface-overlay outline-border-default inline-flex items-center justify-between gap-2 self-stretch rounded px-4 py-3 outline outline-offset-[-1px]">
+          <div className="flex min-w-0 flex-1 items-center justify-start gap-2">
+            <div className="flex-shrink-0">{fileIcon}</div>
+            <div className="text-fg-default min-w-0 flex-1 truncate text-base leading-relaxed font-medium">
+              {file.name} {`(${humanizeBytes(file.size)})`}
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            <Button
+              variant="ghost_white"
+              onClick={handleRemoveFile}
+              className="h-6 w-6 p-0"
+            >
+              <X className="min-h-4 min-w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Custom content (agent models, checkboxes, etc.) */}
+        {children}
+      </div>
+    );
+  };
+
+  const renderFooter = () => {
+    if (!file) return undefined;
+
+    return (
+      <div className="flex justify-end gap-2">
+        <Button
+          size="lg"
+          disabled={isImporting}
+          variant="ghost"
+          onClick={() => onOpenChange(false)}
+        >
+          Cancel
+        </Button>
+        <Button size="lg" disabled={isImporting} onClick={handleImportClick}>
+          {isImporting && <Loader2 className="animate-spin" />}
+          Import
+        </Button>
+      </div>
+    );
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn("w-[624px] pt-14", file && "pt-[24px]", className)}
-        hideClose={hideCloseWhenFile && !!file}
-      >
-        {/* Always use DialogTitle for accessibility */}
-        {!file && !contentClassName && <DialogTitle>{title}</DialogTitle>}
-
-        {!file ? (
-          <div className={contentClassName}>
-            {/* Title inside content wrapper when custom layout is used */}
-            {contentClassName && (
-              <div className="flex flex-col items-start justify-start gap-2 self-stretch">
-                <DialogTitle className="text-fg-default h-9 justify-start self-stretch text-2xl leading-10 font-semibold">
-                  {title}
-                </DialogTitle>
-                {description && (
-                  <div className="text-fg-subtle justify-start self-stretch text-base leading-relaxed font-normal">
-                    {description.split("\n").map((line, i) => (
-                      <span key={i}>
-                        {line}
-                        {i < description.split("\n").length - 1 && <br />}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {/* Default description for non-custom layouts */}
-            {!contentClassName && description && (
-              <DialogDescription>{description}</DialogDescription>
-            )}
-            <div
-              className={cn(
-                "bg-surface-raised hover:bg-surface-overlay flex cursor-pointer flex-col items-center justify-center rounded-2xl border-dashed p-8",
-                contentClassName && "self-stretch px-16 py-8",
-              )}
-              onClick={handleClick}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            >
-              <Import
-                size={contentClassName ? 64 : 72}
-                className="text-fg-subtle"
-              />
-              <div>
-                <TypoBase className="text-fg-subtle">
-                  Choose a file or drag it here
-                </TypoBase>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={accept}
-                className="hidden"
-                onChange={handleFileInputChange}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className={contentClassName || "flex flex-col gap-[24px]"}>
-            {/* Title for file selected state */}
-            <DialogTitle
-              className={cn(
-                contentClassName &&
-                  "text-fg-default h-9 justify-start self-stretch text-2xl leading-10 font-semibold",
-              )}
-            >
-              {title}
-            </DialogTitle>
-
-            <div className="bg-surface-raised outline-border-default inline-flex items-center justify-between gap-2 self-stretch rounded px-4 py-3 outline outline-offset-[-1px]">
-              <div className="flex items-center justify-start gap-2">
-                {fileIcon}
-                <div className="text-fg-default justify-start text-base leading-relaxed font-medium">
-                  {file.name} {`(${humanizeBytes(file.size)})`}
-                </div>
-              </div>
-              <div className="relative h-6 w-6 overflow-hidden rounded-sm opacity-70">
-                <Button
-                  variant="ghost_white"
-                  onClick={handleRemoveFile}
-                  className="h-6 w-6 p-0"
-                >
-                  <X className="min-h-4 min-w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {children}
-
-            <div className="self-stretch">
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button size="lg" disabled={isImporting} variant="ghost">
-                    Cancel
-                  </Button>
-                </DialogClose>
-                <Button
-                  size="lg"
-                  disabled={isImporting}
-                  onClick={handleImportClick}
-                >
-                  {isImporting && <Loader2 className="animate-spin" />}
-                  Import
-                </Button>
-              </DialogFooter>
-            </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+    <DialogBase
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description={description}
+      content={renderContent()}
+      footer={renderFooter()}
+      isShowCloseButton={!(hideCloseWhenFile && !!file)}
+      size="lg"
+      className={className}
+    />
   );
 }
