@@ -11,7 +11,7 @@ import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
 import type { CardAction } from "@/features/common/ui";
 import { Info } from "lucide-react";
-import DialogBase from "@/shared/ui/dialogs/base";
+import { DialogBase } from "@/shared/ui/dialogs/base";
 
 interface ScenarioSelectionDialogProps {
   open: boolean;

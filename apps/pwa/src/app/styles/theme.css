@@ -204,6 +204,8 @@
   --color-hover: var(--bg-hover);
   --color-active: var(--bg-active);
   --color-emphasis: var(--bg-emphasis);
+  --color-overlay: var(--bg-overlay);
+  --color-scrim: var(--bg-scrim);
 
   /* Foreground utilities: text-fg-default, text-fg-muted, etc. */
   --color-fg-default: var(--fg-default);
@@ -232,4 +234,22 @@
     background-color: var(--bg-canvas);
     color: var(--fg-muted);
   }
+}
+
+/* -----------------------------------------------
+   7. KEYFRAMES & ANIMATIONS
+   ----------------------------------------------- */
+@keyframes bounce-typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-8px);
+  }
+}
+
+@utility animate-bounce-typing {
+  animation: bounce-typing 1.4s ease-in-out infinite;
 }

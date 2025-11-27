@@ -39,8 +39,10 @@ export async function uploadAssetToSupabase(
       return Result.fail("Asset file not found");
     }
 
-    // Generate storage path: {asset_id}/{filename}
-    const storagePath = `${asset.id.toString()}/${asset.props.name}`;
+    // Generate storage path: {asset_id}.{extension}
+    // Use only asset ID to avoid issues with non-ASCII characters in filenames
+    const extension = asset.props.name.split('.').pop() || 'bin';
+    const storagePath = `${asset.id.toString()}.${extension}`;
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabaseClient.storage

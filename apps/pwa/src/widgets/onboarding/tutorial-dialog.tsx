@@ -1,6 +1,5 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/shared/lib";
 import { useAppStore } from "@/shared/stores/app-store";
 
@@ -25,7 +24,6 @@ interface TutorialDialogProps {
  * 2. Controlled mode: Pass `open` and `onOpenChange` props for external control
  */
 export function TutorialDialog({ open, onOpenChange }: TutorialDialogProps) {
-  const navigate = useNavigate();
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
   const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
 
@@ -37,9 +35,8 @@ export function TutorialDialog({ open, onOpenChange }: TutorialDialogProps) {
     if (isControlled) {
       onOpenChange?.(false);
     } else {
-      // Onboarding mode: mark as complete and navigate
+      // Onboarding mode: mark as complete
       setSessionOnboardingStep("tutorialVideo", true);
-      navigate({ to: "/settings/providers", replace: true });
     }
   };
 

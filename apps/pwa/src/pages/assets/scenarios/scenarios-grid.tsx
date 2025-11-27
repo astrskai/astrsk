@@ -2,6 +2,7 @@ import { Upload, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { CardType, PlotCard, ScenarioCard } from "@/entities/card/domain";
+import { IconHarpyLogo } from "@/shared/assets/icons";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 import ScenarioCardUI from "@/features/scenario/ui/scenario-card";
 import type { CardAction } from "@/features/common/ui";
@@ -53,7 +54,7 @@ function ScenarioGridItem({
       loading: loading.exporting,
     },
     {
-      icon: Upload,
+      icon: IconHarpyLogo,
       label: "Harpy",
       onClick: onExport(cardId, scenario.props.title, "cloud"),
       disabled: loading.exporting,

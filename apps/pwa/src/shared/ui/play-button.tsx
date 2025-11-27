@@ -1,6 +1,6 @@
 import * as React from "react";
+import { Pause, Play } from "lucide-react";
 import { cn } from "@/shared/lib";
-import { SvgIcon } from "@/shared/ui";
 import { PlayButtonIconSize } from "./media-display";
 
 export interface PlayButtonProps
@@ -32,14 +32,9 @@ PlayButton.displayName = "PlayButton";
 
 const Icon = ({ isPlaying, size }: IconProps) => {
   const iconSize = size === "small" ? 32 : size === "medium" ? 48 : 76;
+  const IconComponent = isPlaying ? Pause : Play;
 
-  return (
-    <SvgIcon
-      name={isPlaying ? "pause" : "play"}
-      width={iconSize}
-      height={iconSize}
-    />
-  );
+  return <IconComponent size={iconSize} />;
 };
 
 export { PlayButton };

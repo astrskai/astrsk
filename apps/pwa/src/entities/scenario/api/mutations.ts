@@ -1,14 +1,14 @@
 /**
- * Scenario (PlotCard) Mutations
+ * Scenario Mutations
  *
- * Scenario-specific mutation hooks for creating and updating PlotCard.
+ * Scenario-specific mutation hooks for creating and updating ScenarioCard.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CardService } from "@/app/services/card-service";
 import { AssetService } from "@/app/services/asset-service";
 import { Lorebook, CardType, Entry } from "@/entities/card/domain";
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { ScenarioCard } from "@/entities/card/domain/scenario-card";
 import { cardKeys } from "@/entities/card/api/query-factory";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
@@ -30,7 +30,7 @@ export interface LorebookEntryData {
 export interface CreateScenarioData {
   title: string;
   description: string;
-  scenarios?: Array<{ name: string; description: string }>;
+  firstMessages?: Array<{ name: string; description: string }>;
   tags?: string[];
   creator?: string;
   cardSummary?: string;
@@ -46,7 +46,7 @@ export interface CreateScenarioData {
 export interface UpdateScenarioData {
   title?: string;
   description?: string;
-  scenarios?: Array<{ name: string; description: string }>;
+  firstMessages?: Array<{ name: string; description: string }>;
   tags?: string[];
   creator?: string;
   cardSummary?: string;
@@ -99,9 +99,9 @@ function createLorebookFromEntries(entries: LorebookEntryData[]): Lorebook {
 }
 
 /**
- * Hook for creating a new scenario (plot) card
+ * Hook for creating a new scenario card
  */
-export const useCreatePlotCard = () => {
+export const useCreateScenarioCard = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -117,15 +117,16 @@ export const useCreatePlotCard = () => {
           ? createLorebookFromEntries(data.lorebookEntries)
           : undefined;
 
-      // Step 3: Create plot card
-      const cardResult = PlotCard.create({
+      // Step 3: Create scenario card
+      const cardResult = ScenarioCard.create({
         title: data.title,
+        name: data.title,
         description: data.description,
-        scenarios: data.scenarios,
+        firstMessages: data.firstMessages,
         iconAssetId: uploadedAssetId
           ? new UniqueEntityID(uploadedAssetId)
           : undefined,
-        type: CardType.Plot,
+        type: CardType.Scenario,
         tags: data.tags ?? [],
         creator: data.creator,
         cardSummary: data.cardSummary,
@@ -157,13 +158,13 @@ export const useCreatePlotCard = () => {
 };
 
 /**
- * Hook for updating entire plot card (batch update)
+ * Hook for updating entire scenario card (batch update)
  *
  * @remarks
  * Non-atomic batch update - individual field updates are executed in parallel.
  * Uses thunks to defer execution until all validation passes.
  */
-export const useUpdatePlotCard = (cardId: string) => {
+export const useUpdateScenarioCard = (cardId: string) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -188,10 +189,10 @@ export const useUpdatePlotCard = (cardId: string) => {
           CardService.updatePlotDescription.execute({ cardId, description }),
         );
       }
-      if (data.scenarios !== undefined) {
-        const scenarios = data.scenarios;
+      if (data.firstMessages !== undefined) {
+        const firstMessages = data.firstMessages;
         operations.push(() =>
-          CardService.updateCardScenarios.execute({ cardId, scenarios }),
+          CardService.updateCardScenarios.execute({ cardId, scenarios: firstMessages }),
         );
       }
       if (data.tags !== undefined) {
@@ -310,3 +311,7 @@ export const useUpdatePlotCard = (cardId: string) => {
     error: mutation.error,
   };
 };
+
+// Backward compatibility aliases
+export const useCreatePlotCard = useCreateScenarioCard;
+export const useUpdatePlotCard = useUpdateScenarioCard;

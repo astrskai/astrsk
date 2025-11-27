@@ -9,7 +9,7 @@ import { getOneOrThrow } from "@/db/helpers/get-one-or-throw";
 import { characters, SelectCharacter } from "@/db/schema/characters";
 import { scenarios, SelectScenario } from "@/db/schema/scenarios";
 import { Transaction } from "@/db/transaction";
-import { Card, CardType, CharacterCard, PlotCard, normalizeCardType } from "@/entities/card/domain";
+import { Card, CardType, CharacterCard, ScenarioCard, normalizeCardType } from "@/entities/card/domain";
 import { LorebookJSON } from "@/entities/card/domain/lorebook";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
 import { DeleteCardRepo } from "@/entities/card/repos/delete-card-repo";
@@ -631,7 +631,7 @@ export class DrizzleCardRepo
   async searchScenarios(
     query: SearchScenariosQuery,
     tx?: Transaction,
-  ): Promise<Result<PlotCard[]>> {
+  ): Promise<Result<ScenarioCard[]>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
       // Build filters - only global resources (session_id IS NULL)
@@ -676,7 +676,7 @@ export class DrizzleCardRepo
         .orderBy(...orderByClause);
 
       // Convert to domain entities
-      const entities = rows.map((row) => CardDrizzleMapper.toDomain(row) as PlotCard);
+      const entities = rows.map((row) => CardDrizzleMapper.toDomain(row) as ScenarioCard);
 
       return Result.ok(entities);
     } catch (error) {

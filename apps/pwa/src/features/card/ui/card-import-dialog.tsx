@@ -20,7 +20,7 @@ export function CardImportDialog({
 }: CardImportDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = (file: File | null) => {
     if (accept && file) {
       const acceptedTypes = accept.split(",").map((ext) => {
         if (ext.startsWith(".")) {
@@ -73,8 +73,6 @@ export function CardImportDialog({
       }
       accept={accept}
       fileIcon={<SvgIcon name="cards_solid" size={24} />}
-      className="p-2 pt-8"
-      contentClassName="px-4 pb-4 flex flex-col justify-start items-center gap-6"
       hideCloseWhenFile={false}
       file={selectedFile}
       onFileSelect={handleFileSelect}

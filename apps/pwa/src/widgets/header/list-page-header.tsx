@@ -83,8 +83,8 @@ export function ListPageHeader({
   const showSort = sortOptions && sortValue !== undefined && onSortChange;
 
   return (
-    <div className="sticky top-0 z-30 flex-shrink-0 border-b border-zinc-800 bg-black p-4 md:px-8">
-      <div className="flex flex-col gap-4 md:gap-6">
+    <div className="sticky top-0 z-30 flex-shrink-0 bg-black p-2 md:px-8">
+      <div className="flex flex-col gap-2 md:gap-4">
         {/* Top Row: Title & Primary Actions */}
         <div className="flex items-center justify-between">
           <div>

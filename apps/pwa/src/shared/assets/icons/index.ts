@@ -1,4 +1,5 @@
 export { default as Logo } from "./logo.svg?react";
+export { default as AstrskLogo } from "./astrsk-logo.svg?react";
 
 export { default as IconWorkflow } from "./icon-workflow.svg?react";
 export { default as IconSessions } from "./icon-sessions.svg?react";

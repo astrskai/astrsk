@@ -7,7 +7,6 @@ import { formatFail } from "@/shared/lib";
 import { Drizzle } from "@/db/drizzle";
 import { getOneOrThrow } from "@/db/helpers/get-one-or-throw";
 import { backgrounds } from "@/db/schema/backgrounds";
-import { TableName } from "@/db/schema/table-name";
 import { Transaction } from "@/db/transaction";
 import { Background } from "@/entities/background/domain";
 import { BackgroundDrizzleMapper } from "@/entities/background/mappers/background-drizzle-mapper";
@@ -116,11 +115,17 @@ export class DrizzleBackgroundRepo
   ): Promise<Result<Background[]>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Select backgrounds
+      // sessionId is required to filter backgrounds - if not provided, return empty array
+      // This prevents accidentally returning backgrounds from other sessions
+      if (!query.sessionId) {
+        return Result.ok([]);
+      }
+
+      // Select backgrounds filtered by sessionId
       const rows = await db
         .select()
         .from(backgrounds)
-        .where(query.sessionId ? eq(backgrounds.session_id, query.sessionId.toString()) : undefined)
+        .where(eq(backgrounds.session_id, query.sessionId.toString()))
         .limit(query.limit ?? 100)
         .offset(query.offset ?? 0)
         .orderBy(desc(backgrounds.id));

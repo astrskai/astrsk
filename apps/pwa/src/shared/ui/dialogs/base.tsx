@@ -15,7 +15,7 @@ interface DialogBaseProps {
   className?: string; // Custom className for dialog content container
 }
 
-const DialogBase = ({
+export const DialogBase = ({
   open,
   onOpenChange,
   trigger,
@@ -91,4 +91,3 @@ const DialogBase = ({
   );
 };
 
-export default DialogBase;

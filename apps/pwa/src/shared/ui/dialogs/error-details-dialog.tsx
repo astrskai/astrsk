@@ -1,6 +1,6 @@
 import { AlertCircle, Copy, Check } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import DialogBase from "./base";
+import { DialogBase } from "./base";
 import { Button, ScrollArea } from "@/shared/ui";
 import { useErrorDialogStore } from "@/shared/stores/error-dialog-store";
 

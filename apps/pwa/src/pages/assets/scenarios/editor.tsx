@@ -589,7 +589,11 @@ const ScenarioEditorPage = () => {
     const file = e.target.files?.[0];
     if (file) {
       // Only allow PNG, JPEG, or WebP for previews (disallow SVG for security)
-      if (!ALLOWED_IMAGE_TYPES.includes(file.type as typeof ALLOWED_IMAGE_TYPES[number])) {
+      if (
+        !ALLOWED_IMAGE_TYPES.includes(
+          file.type as (typeof ALLOWED_IMAGE_TYPES)[number],
+        )
+      ) {
         toastError("Invalid file type", {
           description: "Only PNG, JPEG, or WebP images are allowed.",
         });
@@ -767,7 +771,7 @@ const ScenarioEditorPage = () => {
           e.preventDefault();
         }
       }}
-      className="flex w-full flex-1 flex-col bg-neutral-900"
+      className="flex w-full flex-1 flex-col"
     >
       <input
         ref={fileInputRef}
@@ -777,7 +781,7 @@ const ScenarioEditorPage = () => {
         className="hidden"
       />
 
-      <div className="sticky top-0 z-10 flex items-center justify-between bg-neutral-800 px-4 py-2">
+      <div className="sticky top-0 z-10 flex items-center justify-between bg-zinc-950 px-4 py-2">
         <div className="flex items-center gap-4">
           <Button
             variant="secondary"

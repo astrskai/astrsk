@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { Session } from "@/entities/session/domain/session";
+import { IconHarpyLogo } from "@/shared/assets/icons";
 import type {
   SessionWithCharacterMetadata,
   CharacterMetadata,
@@ -81,7 +82,7 @@ function SessionGridItem({
       loading: loading.exporting,
     },
     {
-      icon: Upload,
+      icon: IconHarpyLogo,
       label: "Harpy",
       onClick: onExportClick(sessionId, session.props.title, session.flowId, "cloud"),
       disabled: loading.exporting,

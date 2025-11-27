@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Page, useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { Button, SvgIcon } from "@/shared/ui";
-import { ArrowLeft, Key, Sparkles } from "lucide-react";
+import { ArrowLeft, Key, Sparkles, X } from "lucide-react";
 
 function FloatingActionButton({
   className,
@@ -88,7 +88,7 @@ const OnboardingStepTwoPage = () => {
           navigate({ to: "/", replace: true });
         }}
       >
-        <SvgIcon name="window_close" size={40} />
+        <X size={40} />
       </button>
 
       {/* Main */}

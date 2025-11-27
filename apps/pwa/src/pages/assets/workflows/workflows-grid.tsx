@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { Flow } from "@/entities/flow/domain/flow";
+import { IconHarpyLogo } from "@/shared/assets/icons";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 import WorkflowCard from "@/features/flow/ui/workflow-card";
 import type { CardAction } from "@/features/common/ui";
@@ -59,7 +60,7 @@ function WorkflowGridItem({
       loading: loading.exporting,
     },
     {
-      icon: Upload,
+      icon: IconHarpyLogo,
       label: "Harpy",
       onClick: onExportClick(flowId, flow.props.name, "cloud"),
       disabled: loading.exporting,

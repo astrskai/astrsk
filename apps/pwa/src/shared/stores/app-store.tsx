@@ -319,8 +319,8 @@ const useAppStoreBase = create<AppState>()(
 
       // Session Onboarding Steps
       sessionOnboardingSteps: {
-        tutorialVideo: false,
-        genreSelection: false,
+        tutorialVideo: true,
+        genreSelection: true,
         inferenceButton: false,
         sessionEdit: true,
         openResource: true,

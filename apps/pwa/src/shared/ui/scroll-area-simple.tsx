@@ -8,7 +8,7 @@ interface ScrollAreaSimpleProps extends React.HTMLAttributes<HTMLDivElement> {
 const ScrollAreaSimple = React.forwardRef<HTMLDivElement, ScrollAreaSimpleProps>(
   ({ className, children, orientation = "vertical", style, ...props }, ref) => {
     const scrollStyles: React.CSSProperties = {
-      scrollbarColor: "color-mix(in srgb, var(--text-primary) 50%, transparent) transparent",
+      scrollbarColor: "color-mix(in srgb, var(--fg-muted) 50%, transparent) transparent",
       scrollbarWidth: "thin",
       ...style,
     };

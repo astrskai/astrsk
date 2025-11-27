@@ -10,7 +10,8 @@ import {
 } from "@/shared/lib/cloud-upload-helpers";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
-import { cardQueries } from "@/entities/card/api/card-queries";
+import { characterKeys } from "@/entities/character/api";
+import { scenarioKeys } from "@/entities/scenario/api";
 import { TableName } from "@/db/schema/table-name";
 import { CardType } from "@/entities/card/domain";
 
@@ -189,7 +190,12 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
             description: `Created copy of "${title}"`,
           },
         );
-        await queryClient.invalidateQueries({ queryKey: cardQueries.lists() });
+        // Invalidate based on entity type
+        if (entityType === "character") {
+          await queryClient.invalidateQueries({ queryKey: characterKeys.lists() });
+        } else if (entityType === "plot") {
+          await queryClient.invalidateQueries({ queryKey: scenarioKeys.lists() });
+        }
       } catch (error) {
         toastError(`Failed to copy ${entityTypeText}`, {
           description: error instanceof Error ? error.message : "Unknown error",
@@ -272,7 +278,12 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
           description: title,
         },
       );
-      await queryClient.invalidateQueries({ queryKey: cardQueries.lists() });
+      // Invalidate based on entity type
+      if (entityType === "character") {
+        await queryClient.invalidateQueries({ queryKey: characterKeys.lists() });
+      } else if (entityType === "plot") {
+        await queryClient.invalidateQueries({ queryKey: scenarioKeys.lists() });
+      }
 
       if (usedSessionsCount > 0) {
         await queryClient.invalidateQueries({

@@ -216,6 +216,12 @@ async function initializeApp() {
     // Mark app as ready
     useAppStore.getState().setIsOfflineReady(true);
 
+    // Navigate to home on first install (before router initializes)
+    // This ensures users start from "/" after initial setup, regardless of URL
+    if (isFirstInstall && window.location.pathname !== "/") {
+      window.history.replaceState(null, "", "/");
+    }
+
     // Render final app with providers
     if (isConvexReady && convex) {
       // Convex ready

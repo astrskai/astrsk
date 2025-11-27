@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import SessionDetailPage from "@/pages/sessions/detail";
-import { UniqueEntityID } from "@/shared/domain";
+import ChatPage from "@/pages/sessions/chat";
 import { z } from "zod";
 import ErrorPage from "@/pages/error";
 
@@ -8,7 +7,7 @@ export const Route = createFileRoute("/_layout/sessions/$sessionId")({
   params: z.object({
     sessionId: z.string().uuid(),
   }),
-  component: SessionDetailPage,
+  component: ChatPage,
   beforeLoad: async ({ params }) => {
     const uuid = z.string().uuid().safeParse(params.sessionId);
 

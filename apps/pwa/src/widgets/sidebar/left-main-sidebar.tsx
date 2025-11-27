@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Settings,
@@ -10,7 +10,7 @@ import {
   LogOut,
   LogIn,
 } from "lucide-react";
-import { IconSessions, IconWorkflow, Logo } from "@/shared/assets/icons";
+import { IconSessions, IconWorkflow, AstrskLogo } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { UpdaterNew } from "@/widgets/updater-new";
 import { useClerk } from "@clerk/clerk-react";
@@ -200,17 +200,12 @@ const SidebarHeader = ({
     >
       <div
         className={cn(
-          "flex cursor-pointer items-center gap-3 overflow-hidden",
+          "flex cursor-pointer items-center overflow-hidden",
           isCollapsed ? "hidden" : "flex",
         )}
         onClick={handleGoToHome}
       >
-        <div className="flex flex-shrink-0 items-center justify-center rounded-lg text-white shadow-lg">
-          <Logo className="h-4 w-4" />
-        </div>
-        <span className="text-sm font-bold tracking-wide whitespace-nowrap text-zinc-100">
-          ASTRSK
-        </span>
+        <AstrskLogo className="h-5" />
       </div>
 
       {/* Desktop Collapse Toggle */}
@@ -245,6 +240,7 @@ const UserProfile = ({
   closeMobileMenu: () => void;
 }) => {
   const { user } = useClerk();
+  const navigate = useNavigate();
   const subscription = useQuery(api.payment.public.getSubscription);
 
   const isLoggedIn = !!user;
@@ -252,6 +248,16 @@ const UserProfile = ({
     ? user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "User"
     : "Guest";
   const planName = isLoggedIn ? subscription?.name || "Free Plan" : "Sign in";
+
+  const handleAvatarClick = () => {
+    if (isLoggedIn) {
+      navigate({ to: "/settings/account" });
+      closeMobileMenu();
+    } else {
+      onSignIn();
+      closeMobileMenu();
+    }
+  };
 
   return (
     <div className="border-t border-zinc-800 p-4">
@@ -261,7 +267,10 @@ const UserProfile = ({
           isCollapsed ? "justify-center" : "",
         )}
       >
-        <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-zinc-700 bg-zinc-800">
+        <div
+          className="h-9 w-9 flex-shrink-0 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
+          onClick={handleAvatarClick}
+        >
           {user?.hasImage ? (
             <div
               className="h-full w-full bg-cover bg-center"
@@ -318,7 +327,7 @@ const UserProfile = ({
 
 // --- Left Main Sidebar ---
 export const LeftMainSidebar = ({
-  isCollapsed,
+  isCollapsed: isCollapsedProp,
   toggleSidebar,
   isMobileOpen,
   closeMobileMenu,
@@ -331,6 +340,9 @@ export const LeftMainSidebar = ({
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useClerk();
+
+  // Mobile always shows expanded sidebar, collapse only applies to desktop
+  const isCollapsed = isMobileOpen ? false : isCollapsedProp;
 
   const isActivePath = (path: string) => location.pathname.startsWith(path);
 
@@ -394,12 +406,12 @@ export const LeftMainSidebar = ({
           </div>
         </div>
 
-        <UserProfile
+        {/* <UserProfile
           isCollapsed={isCollapsed}
           onSignOut={handleSignOut}
           onSignIn={handleSignIn}
           closeMobileMenu={closeMobileMenu}
-        />
+        /> */}
 
         {/* Footer with UpdaterNew and Version */}
         <div className="flex flex-col gap-2 border-t border-zinc-800 px-4 py-2">
@@ -430,14 +442,26 @@ export function LeftMainSidebarContainer({
   isMobileOpen: externalMobileOpen,
   setIsMobileOpen: externalSetMobileOpen,
 }: LeftMainSidebarContainerProps = {}) {
-  const [internalIsCollapsed, setInternalIsCollapsed] =
-    useState<boolean>(false);
+  const [internalIsCollapsed, setInternalIsCollapsed] = useState<boolean>(true);
   const [internalIsMobileOpen, setInternalIsMobileOpen] =
     useState<boolean>(false);
 
   // Use external state if provided, otherwise use internal state
   const isMobileOpen = externalMobileOpen ?? internalIsMobileOpen;
   const setIsMobileOpen = externalSetMobileOpen ?? setInternalIsMobileOpen;
+
+  // Close mobile menu when viewport changes to desktop
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        setIsMobileOpen(false);
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [setIsMobileOpen]);
 
   return (
     <LeftMainSidebar
@@ -450,12 +474,19 @@ export function LeftMainSidebarContainer({
 }
 
 // --- Mobile Header Component (exported for use in MainLayout) ---
-export function MobileHeader({
-  onMenuClick,
-}: {
-  onMenuClick: () => void;
-}) {
+export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const { user } = useClerk();
+  const navigate = useNavigate();
+
+  const isLoggedIn = !!user;
+
+  const handleAvatarClick = () => {
+    if (isLoggedIn) {
+      navigate({ to: "/settings/account" });
+    } else {
+      navigate({ to: "/sign-in" });
+    }
+  };
 
   return (
     <header className="flex flex-shrink-0 items-center justify-between border-b border-zinc-800 bg-zinc-950 px-4 py-3 md:hidden">
@@ -466,12 +497,15 @@ export function MobileHeader({
         >
           <Menu size={20} />
         </button>
-        <div className="flex items-center gap-2">
-          <Logo className="h-4 w-4" />
-          <span className="font-bold text-zinc-100">ASTRSK</span>
-        </div>
+        <AstrskLogo
+          className="h-4 cursor-pointer"
+          onClick={() => navigate({ to: "/" })}
+        />
       </div>
-      <div className="h-8 w-8 overflow-hidden rounded-full border border-zinc-700 bg-zinc-800">
+      <div
+        className="hidden h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
+        onClick={handleAvatarClick}
+      >
         {user?.hasImage ? (
           <div
             className="h-full w-full bg-cover bg-center"
