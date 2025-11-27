@@ -64,7 +64,7 @@ export default function OssNoticePage() {
   return (
     <div className="py-8">
       {/* Notice header */}
-      <div className="mb-6 text-sm text-fg-muted">
+      <div className="text-fg-muted mb-6 text-sm">
         <p className="mb-2">
           This application is Copyright © astrsk.ai All rights reserved.
         </p>
@@ -85,19 +85,23 @@ export default function OssNoticePage() {
       <div className="relative mb-4">
         <Search
           size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-subtle"
+          className="text-fg-subtle absolute top-1/2 left-3 -translate-y-1/2"
         />
+        <label htmlFor="package-search" className="sr-only">
+          Search packages
+        </label>
         <input
+          id="package-search"
           type="text"
           placeholder="Search packages..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-xl border border-border-default bg-surface py-2.5 pl-9 pr-4 text-sm text-fg-default placeholder:text-fg-subtle focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+          className="border-border-default bg-surface text-fg-default placeholder:text-fg-subtle focus:border-brand-400 focus:ring-brand-400 w-full rounded-xl border py-2.5 pr-4 pl-9 text-sm focus:ring-1 focus:outline-none"
         />
       </div>
 
       {/* Count display */}
-      <div className="mb-4 text-xs text-fg-subtle">
+      <div className="text-fg-subtle mb-4 text-xs">
         {searchQuery ? (
           <>
             Showing {filteredCount} of {totalCount} packages
@@ -108,31 +112,31 @@ export default function OssNoticePage() {
       </div>
 
       {/* Licenses list */}
-      <div className="overflow-hidden rounded-2xl border border-border-default bg-surface-raised">
+      <div className="border-border-default bg-surface-raised overflow-hidden rounded-2xl border">
         {filteredLicenses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-fg-muted">
+          <div className="text-fg-muted flex flex-col items-center justify-center gap-2 py-12">
             <Package size={32} className="opacity-50" />
             <p className="text-sm">No packages found</p>
           </div>
         ) : (
-          <div className="divide-y divide-border-default">
+          <div className="divide-border-default divide-y">
             {filteredLicenses.map(({ nameWithVersion, info }) => (
               <button
                 key={nameWithVersion}
                 onClick={() => setSelectedLicense({ nameWithVersion, info })}
-                className="group flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-surface-overlay"
+                className="group hover:bg-surface-overlay flex w-full items-center justify-between px-4 py-3 text-left transition-colors"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-fg-default">
+                  <div className="text-fg-default truncate text-sm font-medium">
                     {nameWithVersion}
                   </div>
-                  <div className="mt-0.5 text-xs text-fg-subtle">
+                  <div className="text-fg-subtle mt-0.5 text-xs">
                     {info.licenses}
                   </div>
                 </div>
                 <ChevronRight
                   size={16}
-                  className="ml-2 shrink-0 text-fg-subtle transition-colors group-hover:text-fg-default"
+                  className="text-fg-subtle group-hover:text-fg-default ml-2 shrink-0 transition-colors"
                 />
               </button>
             ))}
@@ -148,21 +152,21 @@ export default function OssNoticePage() {
         content={
           <div className="space-y-4">
             {/* License type badge */}
-            <div className="inline-block rounded-full bg-brand-400/20 px-3 py-1 text-xs font-medium text-brand-400">
+            <div className="bg-brand-400/20 text-brand-400 inline-block rounded-full px-3 py-1 text-xs font-medium">
               {selectedLicense?.info.licenses}
             </div>
 
             {/* Repository link */}
             {selectedLicense?.info.repository && (
               <div>
-                <div className="mb-1 text-xs font-medium text-fg-subtle">
+                <div className="text-fg-subtle mb-1 text-xs font-medium">
                   Repository
                 </div>
                 <a
                   href={selectedLicense.info.repository}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm text-brand-400 hover:text-brand-500"
+                  className="text-brand-400 hover:text-brand-500 inline-flex items-center gap-1 text-sm"
                 >
                   <span className="truncate">
                     {selectedLicense.info.repository}
@@ -175,10 +179,10 @@ export default function OssNoticePage() {
             {/* Copyright */}
             {selectedLicense?.info.copyright && (
               <div>
-                <div className="mb-1 text-xs font-medium text-fg-subtle">
+                <div className="text-fg-subtle mb-1 text-xs font-medium">
                   Copyright
                 </div>
-                <p className="text-sm text-fg-muted">
+                <p className="text-fg-muted text-sm">
                   {selectedLicense.info.copyright}
                 </p>
               </div>
@@ -186,10 +190,10 @@ export default function OssNoticePage() {
 
             {/* License text */}
             <div>
-              <div className="mb-2 text-xs font-medium text-fg-subtle">
+              <div className="text-fg-subtle mb-2 text-xs font-medium">
                 License Text
               </div>
-              <pre className="max-h-[300px] overflow-x-hidden overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-border-default bg-surface p-3 text-xs text-fg-muted">
+              <pre className="border-border-default bg-surface text-fg-muted max-h-[300px] overflow-x-hidden overflow-y-auto rounded-lg border p-3 text-xs break-words whitespace-pre-wrap">
                 {selectedLicense?.info.licenseText}
               </pre>
             </div>

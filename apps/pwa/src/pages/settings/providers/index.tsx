@@ -573,7 +573,7 @@ export default function ProvidersPage() {
       </div>
 
       {/* Provider list */}
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {apiConnections
               ?.filter(
                 (apiConnection: ApiConnection) =>
