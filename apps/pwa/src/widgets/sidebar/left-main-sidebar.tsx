@@ -497,10 +497,13 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
         >
           <Menu size={20} />
         </button>
-        <AstrskLogo className="h-4" />
+        <AstrskLogo
+          className="h-4 cursor-pointer"
+          onClick={() => navigate({ to: "/" })}
+        />
       </div>
       <div
-        className="h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
+        className="hidden h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
         onClick={handleAvatarClick}
       >
         {user?.hasImage ? (
