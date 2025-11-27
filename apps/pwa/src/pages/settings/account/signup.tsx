@@ -6,7 +6,8 @@ import {
   useAppStore,
 } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
-import { Button, FloatingLabelInput, SvgIcon, toastSuccess } from "@/shared/ui";
+import { Button, FloatingLabelInput, SvgIcon } from "@/shared/ui";
+import { toastSuccess } from "@/shared/ui/toast";
 import { logger } from "@/shared/lib";
 import { useSignIn, useSignUp } from "@clerk/clerk-react";
 import { ArrowLeft, Check } from "lucide-react";
@@ -217,9 +218,8 @@ const SignUpPage = () => {
         await setActiveSignUp({
           session: signUpAttempt.createdSessionId,
         });
-        toastSuccess({
-          title: "Welcome to astrsk!",
-          details: "Your account is ready to use",
+        toastSuccess("Welcome to astrsk!", {
+          description: "Your account is ready to use",
         });
         setActivePage(Page.Payment);
       } else {

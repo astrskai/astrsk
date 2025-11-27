@@ -348,9 +348,6 @@ export default function ChatMainArea({
             });
           }
         }
-
-        // Re-throw error to stop auto-reply chain
-        throw error;
       } finally {
         setStreamingMessageId(null);
         setStreamingAgentName("");
@@ -420,26 +417,14 @@ export default function ChatMainArea({
               Math.random() * data.aiCharacterCardIds.length,
             );
             const randomCharacterCardId = data.aiCharacterCardIds[randomIndex];
-
-            try {
-              await generateCharacterMessage(randomCharacterCardId);
-            } catch (error) {
-              // Error already logged and displayed in generateCharacterMessage
-              logger.error("Auto-reply (random) failed", error);
-            }
+            await generateCharacterMessage(randomCharacterCardId);
             break;
           }
 
           // All characters reply by order
           case AutoReply.Rotate: {
             for (const charId of data.aiCharacterCardIds) {
-              try {
-                await generateCharacterMessage(charId);
-              } catch (error) {
-                // Stop auto-reply chain on first error
-                logger.error("Auto-reply (rotate) stopped due to error", error);
-                break;
-              }
+              await generateCharacterMessage(charId);
             }
             break;
           }

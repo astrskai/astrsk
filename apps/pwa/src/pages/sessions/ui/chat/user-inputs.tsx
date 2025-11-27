@@ -64,7 +64,7 @@ const UserInputCharacterButton = ({
             isDisabled={isDisabled}
             className={cn(
               isHighLighted &&
-                "border-primary-normal border-2 shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)]",
+                "border-accent-primary border-2 shadow-lg shadow-accent-primary/50",
             )}
           />
           <div
@@ -78,12 +78,12 @@ const UserInputCharacterButton = ({
           <div
             className={cn(
               "pointer-events-none absolute top-0 left-0 size-[48px]",
-              "border-border-selected-inverse rounded-full border-[3px]",
+              "border-border-emphasis rounded-full border-[3px]",
               "opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100",
             )}
           />
           {isUser && (
-            <div className="bg-status-optional absolute top-0 right-0 size-[12px] rounded-full border-[2px]" />
+            <div className="bg-status-info absolute top-0 right-0 size-[12px] rounded-full border-[2px]" />
           )}
         </>
       ) : (
@@ -93,7 +93,7 @@ const UserInputCharacterButton = ({
               "text-fg-default grid size-[48px] place-items-center rounded-full",
               "bg-hover group-hover:bg-active border-border-muted border-1 transition-colors duration-300 ease-out",
               isHighLighted &&
-                "border-primary-normal border-2 shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)]",
+                "border-accent-primary border-2 shadow-lg shadow-accent-primary/50",
             )}
           >
             {icon}
@@ -277,7 +277,7 @@ const UserInputs = ({
         className={cn(
           // Desktop styling
           "mx-auto flex w-full max-w-[892px] flex-col gap-[16px] rounded-[40px] p-[24px]",
-          "border-text-primary/10 border bg-[#3b3b3b]/50 backdrop-blur-xl",
+          "border-border-muted/20 border bg-neutral-700/50 backdrop-blur-xl",
           // Mobile styling: remove rounded corners, full width, adjust padding
           "md:min-w-[400px] md:rounded-[40px] md:p-[24px]",
           "max-md:rounded-none max-md:rounded-t-[20px] max-md:px-[16px] max-md:py-[16px] max-md:pb-[calc(16px+env(safe-area-inset-bottom))]",
@@ -402,7 +402,7 @@ const UserInputs = ({
             <TooltipContent
               side="top"
               align="start"
-              className="bg-surface-raised border-accent-primary mb-[12px] ml-[-16px] border-1 px-[16px] py-[12px] shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]"
+              className="bg-surface-raised border-accent-primary mb-[12px] ml-[-16px] border-1 px-[16px] py-[12px] shadow-lg shadow-accent-primary/40"
             >
               <div className="text-fg-default text-[14px] leading-[20px] font-[600]">
                 Select to prompt a response
@@ -414,13 +414,13 @@ const UserInputs = ({
         <div className="p-0">
           <div
             className={cn(
-              "flex flex-row items-center rounded-[28px] bg-surface-raised border-border-dark border",
+              "flex flex-row items-center rounded-[28px] bg-surface-overlay border-border-default border",
               // Desktop: gap and padding
               "gap-[16px] p-[8px] pl-[32px]",
               // Mobile: smaller gap and padding
               "max-md:gap-[8px] max-md:p-[6px] max-md:pl-[16px]",
               // Desktop: Add border with 50% opacity
-              "md:border-border-selected-inverse/30 md:border-1",
+              "md:border-border-emphasis/30 md:border-1",
             )}
           >
             <div className="grow">
@@ -455,9 +455,9 @@ const UserInputs = ({
                   onStopGenerate?.();
                 }}
                 className={cn(
-                  "bg-surface-overlay text-fg-default shrink-0",
-                  "hover:bg-surface-raised hover:text-fg-default",
-                  "disabled:bg-surface-overlay disabled:text-fg-default",
+                  "bg-hover text-fg-default shrink-0",
+                  "hover:bg-active hover:text-fg-default",
+                  "disabled:bg-hover disabled:text-fg-default",
                   // Desktop: height
                   "h-[40px]",
                   // Mobile: smaller height
@@ -466,7 +466,7 @@ const UserInputs = ({
               >
                 <div
                   className={cn(
-                    "bg-text-primary rounded-[1px]",
+                    "bg-fg-default rounded-[1px]",
                     // Desktop
                     "size-[10px]",
                     // Mobile
@@ -483,9 +483,9 @@ const UserInputs = ({
                   setMessageContent("");
                 }}
                 className={cn(
-                  "bg-surface-overlay text-fg-default shrink-0",
-                  "hover:bg-surface-raised hover:text-fg-default",
-                  "disabled:bg-surface-overlay disabled:text-fg-default",
+                  "bg-hover text-fg-default shrink-0",
+                  "hover:bg-active hover:text-fg-default",
+                  "disabled:bg-hover disabled:text-fg-default",
                   // Desktop: height
                   "h-[40px]",
                   // Mobile: smaller height and text

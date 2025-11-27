@@ -65,8 +65,9 @@ import {
   FloatingActionButton,
   ScrollArea,
   SvgIcon,
-  toastError,
 } from "@/shared/ui";
+import { toastError } from "@/shared/ui/toast";
+import { showErrorDetails } from "@/shared/stores/error-dialog-store";
 import { PlotCard } from "@/entities/card/domain";
 import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
 import { Turn } from "@/entities/turn/domain/turn";
@@ -403,9 +404,14 @@ const SessionContent = ({
         const parsedError = parseAiSdkErrorMessage(error);
         if (parsedError) {
           if (parsedError.level === "error") {
-            toastError({
-              title: "Failed to generate message",
-              details: parsedError.message,
+            toastError("Failed to generate message", {
+              description: parsedError.message,
+              action: {
+                label: "View details",
+                onClick: () => {
+                  showErrorDetails("Failed to generate message", parsedError.message);
+                },
+              },
             });
           } else {
             toast.info(parsedError.message);
@@ -427,9 +433,15 @@ const SessionContent = ({
               errorDetails.metadata = (error as any).metadata;
             }
 
-            toastError({
-              title: "Failed to generate message",
-              details: JSON.stringify(errorDetails, null, 2),
+            const errorDetailsStr = JSON.stringify(errorDetails, null, 2);
+            toastError("Failed to generate message", {
+              description: errorDetailsStr,
+              action: {
+                label: "View details",
+                onClick: () => {
+                  showErrorDetails("Failed to generate message", errorDetailsStr);
+                },
+              },
             });
           }
         }
@@ -543,17 +555,23 @@ const SessionContent = ({
         }
       } catch (error) {
         if (error instanceof Error) {
-          toastError({
-            title: "Failed to add user message",
-            details: JSON.stringify(
-              {
-                name: error.name,
-                message: error.message,
-                stack: error.stack,
+          const errorDetailsStr = JSON.stringify(
+            {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            },
+            null,
+            2,
+          );
+          toastError("Failed to add user message", {
+            description: errorDetailsStr,
+            action: {
+              label: "View details",
+              onClick: () => {
+                showErrorDetails("Failed to add user message", errorDetailsStr);
               },
-              null,
-              2,
-            ),
+            },
           });
         }
         logger.error("Failed to add user message", error);
@@ -708,9 +726,15 @@ const SessionContent = ({
           message: scenarioMessage,
         });
         if (scenarioMessageOrError.isFailure) {
-          toastError({
-            title: "Failed to add scenario",
-            details: scenarioMessageOrError.getError(),
+          const errorMsg = scenarioMessageOrError.getError();
+          toastError("Failed to add scenario", {
+            description: errorMsg,
+            action: {
+              label: "View details",
+              onClick: () => {
+                showErrorDetails("Failed to add scenario", errorMsg);
+              },
+            },
           });
           return;
         }
