@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { SessionsGrid } from "./ui/list/sessions-grid";
-import { SessionImportDialog } from "./ui/dialog/session-import-dialog";
+import { SessionsGrid } from "./sessions-grid";
+import { SessionImportDialog } from "@/features/session/ui/session-import-dialog";
 import { useSessionImport } from "@/features/session/hooks/use-session-import";
 import { useSessionImportDialog } from "@/shared/hooks/use-session-import-dialog";
 

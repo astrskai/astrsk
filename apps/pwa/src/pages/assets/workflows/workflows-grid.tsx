@@ -1,30 +1,26 @@
-import { Plus, Upload, Copy, Trash2 } from "lucide-react";
+import { Upload, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { Flow } from "@/entities/flow/domain/flow";
-import { CreateItemCard } from "@/shared/ui";
-import { Button } from "@/shared/ui/forms";
 import { DialogConfirm } from "@/shared/ui/dialogs";
-import FlowPreview from "@/features/flow/ui/flow-preview";
-import type { FlowAction } from "@/features/flow/ui/flow-preview";
+import WorkflowCard from "@/features/flow/ui/workflow-card";
+import type { CardAction } from "@/features/common/ui";
 import { useFlowActions } from "@/features/flow/model/use-flow-actions";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
-import { FlowExportDialog } from "../dialog/flow-export-dialog";
+import { FlowExportDialog } from "@/features/flow/ui/flow-export-dialog";
 import { cn } from "@/shared/lib";
 
-interface FlowsGridProps {
+interface WorkflowsGridProps {
   flows: Flow[];
-  onCreateFlow: () => void;
-  showNewFlowCard: boolean;
   newlyCreatedFlowId?: string | null;
 }
 
 /**
- * Flow Grid Item
- * Wrapper component for FlowPreview with actions
+ * Workflow Grid Item
+ * Wrapper component for WorkflowCard with actions
  */
-interface FlowGridItemProps {
+interface WorkflowGridItemProps {
   flow: Flow;
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   className?: string;
@@ -40,7 +36,7 @@ interface FlowGridItemProps {
   ) => (e: React.MouseEvent) => void;
 }
 
-function FlowGridItem({
+function WorkflowGridItem({
   flow,
   loading,
   className,
@@ -48,61 +44,58 @@ function FlowGridItem({
   onExportClick,
   onCopy,
   onDeleteClick,
-}: FlowGridItemProps) {
+}: WorkflowGridItemProps) {
   const flowId = flow.id.toString();
   const nodeCount = flow.props.nodes.length;
 
-  const actions: FlowAction[] = [
+  const actions: CardAction[] = [
     {
       icon: Upload,
-      label: `Export`,
+      label: "Export",
       onClick: onExportClick(flowId, flow.props.name),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
-      label: `Copy`,
+      label: "Copy",
       onClick: onCopy(flowId, flow.props.name),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
-      label: `Delete`,
+      label: "Delete",
       onClick: onDeleteClick(flowId, flow.props.name),
       disabled: loading.deleting,
       loading: loading.deleting,
+      className: "text-red-400 hover:text-red-300",
     },
   ];
 
   return (
-    <FlowPreview
-      title={flow.props.name || "Untitled Flow"}
+    <WorkflowCard
+      title={flow.props.name || "Untitled Workflow"}
       description={flow.props.description}
       nodeCount={nodeCount}
+      isValid={true}
       onClick={() => onFlowClick(flowId)}
       actions={actions}
-      isShowActions={true}
       className={className}
     />
   );
 }
 
 /**
- * Flows grid component
- * Displays flow cards in a responsive grid with optional New Flow Card
+ * Workflows grid component v2
+ * Displays workflow cards in a responsive grid
  *
- * Layout:
- * - Mobile: Button above grid + 1 column
- * - Desktop: New card inside grid + 2-3 columns
+ * Layout: Uses auto-fill with minmax to ensure stable card sizes
  */
-export function FlowsGrid({
+export function WorkflowsGrid({
   flows,
-  onCreateFlow,
-  showNewFlowCard,
   newlyCreatedFlowId = null,
-}: FlowsGridProps) {
+}: WorkflowsGridProps) {
   const navigate = useNavigate();
   const { animatingId, triggerAnimation } = useNewItemAnimation();
 
@@ -137,55 +130,32 @@ export function FlowsGrid({
 
   return (
     <>
-      <div className="flex w-full flex-col gap-4">
-        {/* Mobile: Create Button (outside grid) */}
-        {showNewFlowCard && (
-          <Button
-            onClick={onCreateFlow}
-            icon={<Plus className="min-h-4 min-w-4" />}
-            className="w-full md:hidden"
-          >
-            Create new flow
-          </Button>
-        )}
+      {/* Workflows Grid - Uses auto-fill with minmax to ensure stable card sizes */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
+        {flows.map((flow) => {
+          const flowId = flow.id.toString();
+          const loading = loadingStates[flowId] || {};
+          const isNewlyCreated = animatingId === flowId;
 
-        {/* Flows Grid */}
-        <div className="grid w-full grid-cols-1 justify-center gap-4 md:grid-cols-2">
-          {/* Desktop: New Flow Card (inside grid) */}
-          {showNewFlowCard && (
-            <CreateItemCard
-              title="New Workflow"
-              onClick={onCreateFlow}
-              className="hidden aspect-[2/1] md:flex lg:aspect-[3/1]"
+          return (
+            <WorkflowGridItem
+              key={flowId}
+              flow={flow}
+              loading={loading}
+              className={cn(
+                isNewlyCreated && [
+                  "!border-green-500",
+                  "shadow-[0_0_20px_rgba(34,197,94,0.5)]",
+                  "animate-pulse",
+                ],
+              )}
+              onFlowClick={handleFlowClick}
+              onExportClick={handleExportClick}
+              onCopy={handleCopy}
+              onDeleteClick={handleDeleteClick}
             />
-          )}
-
-          {/* Existing Flows */}
-          {flows.map((flow) => {
-            const flowId = flow.id.toString();
-            const loading = loadingStates[flowId] || {};
-            const isNewlyCreated = animatingId === flowId;
-
-            return (
-              <FlowGridItem
-                key={flowId}
-                flow={flow}
-                loading={loading}
-                className={cn(
-                  isNewlyCreated && [
-                    "!border-green-500",
-                    "shadow-[0_0_20px_rgba(34,197,94,0.5)]",
-                    "animate-pulse",
-                  ],
-                )}
-                onFlowClick={handleFlowClick}
-                onExportClick={handleExportClick}
-                onCopy={handleCopy}
-                onDeleteClick={handleDeleteClick}
-              />
-            );
-          })}
-        </div>
+          );
+        })}
       </div>
 
       {/* Export Dialog */}
@@ -206,11 +176,11 @@ export function FlowsGrid({
         open={deleteDialogState.isOpen}
         onOpenChange={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}
-        title="Delete Flow"
+        title="Delete Workflow"
         description={
           deleteDialogState.usedSessions.length > 0
-            ? `This flow is used in ${deleteDialogState.usedSessions.length} session(s). Deleting it may affect those sessions.`
-            : "This flow will be permanently deleted and cannot be recovered."
+            ? `This workflow is used in ${deleteDialogState.usedSessions.length} session(s). Deleting it may affect those sessions.`
+            : "This workflow will be permanently deleted and cannot be recovered."
         }
         confirmLabel="Delete"
         cancelLabel="Cancel"

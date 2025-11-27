@@ -7,7 +7,7 @@ import {
   DEFAULT_SORT_VALUE,
   type SortOptionValue,
 } from "@/shared/config/sort-options";
-import { CharactersGrid } from "./ui/list/characters-grid";
+import { CharactersGrid } from "./characters-grid";
 import {
   HelpVideoDialog,
   Loading,
@@ -18,7 +18,7 @@ import { cardQueries } from "@/entities/card/api";
 import { CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { useResourceImport } from "@/shared/hooks/use-resource-import";
-import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
+import { FlowImportDialog } from "@/features/flow/ui/flow-import-dialog";
 
 /**
  * Characters Page

@@ -3,9 +3,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { WorkflowsGridV2 } from "./ui/list/workflows-grid-v2";
-import { CreateFlowDialog } from "./ui/create";
-import { FlowImportDialog } from "./ui/dialog/flow-import-dialog";
+import { WorkflowsGrid } from "./workflows-grid";
+import { CreateFlowDialog } from "./create-flow-dialog";
+import { FlowImportDialog } from "@/features/flow/ui/flow-import-dialog";
 
 import { ListPageHeader } from "@/widgets/header";
 import {
@@ -193,7 +193,7 @@ export function WorkflowsPage() {
             onButtonClick={handleCreateClick}
           />
         ) : (
-          <WorkflowsGridV2
+          <WorkflowsGrid
             flows={workflows}
             newlyCreatedFlowId={newlyCreatedFlowId}
           />

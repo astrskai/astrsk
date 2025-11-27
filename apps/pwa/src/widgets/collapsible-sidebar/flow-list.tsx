@@ -14,11 +14,11 @@ import { useAgentStore } from "@/shared/stores/agent-store";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 // import { FlowDialog } from "@/features/flow/flow-dialog";
-import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
+import { FlowImportDialog } from "@/features/flow/ui/flow-import-dialog";
 import {
   FlowExportDialog,
   AgentModelTierInfo,
-} from "@/pages/assets/workflows/ui/dialog/flow-export-dialog";
+} from "@/features/flow/ui/flow-export-dialog";
 import { ModelTier } from "@/entities/agent/domain/agent";
 import { SectionHeader } from "./index";
 import {

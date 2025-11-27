@@ -15,7 +15,7 @@ import SessionCard from "@/features/session/ui/session-card";
 import type { CardAction } from "@/features/common/ui";
 import { useSessionActions } from "@/features/session/model/use-session-actions";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
-import { SessionExportDialog } from "../dialog/session-export-dialog";
+import { SessionExportDialog } from "@/features/session/ui/session-export-dialog";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { cn } from "@/shared/lib";
