@@ -1,12 +1,13 @@
 import { useState, useCallback, MouseEvent } from "react";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { downloadFile } from "@/shared/lib";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
-import { cardQueries } from "@/entities/card/api/card-queries";
+import { characterKeys } from "@/entities/character/api";
+import { scenarioKeys } from "@/entities/scenario/api";
 import { TableName } from "@/db/schema/table-name";
 
 interface UseCardActionsOptions {
@@ -91,16 +92,16 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
         });
 
         if (result.isFailure) {
-          toast.error("Failed to export", { description: result.getError() });
+          toastError("Failed to export", { description: result.getError() });
           return;
         }
 
         downloadFile(result.getValue());
-        toast.success("Successfully exported!", {
+        toastSuccess("Successfully exported!", {
           description: `"${title}" exported`,
         });
       } catch (error) {
-        toast.error("Failed to export", {
+        toastError("Failed to export", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       } finally {
@@ -133,21 +134,26 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
         });
 
         if (result.isFailure) {
-          toast.error(`Failed to copy ${entityTypeText}`, {
+          toastError(`Failed to copy ${entityTypeText}`, {
             description: result.getError(),
           });
           return;
         }
 
-        toast.success(
+        toastSuccess(
           `${entityTypeText.charAt(0).toUpperCase() + entityTypeText.slice(1)} copied`,
           {
             description: `Created copy of "${title}"`,
           },
         );
-        await queryClient.invalidateQueries({ queryKey: cardQueries.lists() });
+        // Invalidate based on entity type
+        if (entityType === "character") {
+          await queryClient.invalidateQueries({ queryKey: characterKeys.lists() });
+        } else if (entityType === "plot") {
+          await queryClient.invalidateQueries({ queryKey: scenarioKeys.lists() });
+        }
       } catch (error) {
-        toast.error(`Failed to copy ${entityTypeText}`, {
+        toastError(`Failed to copy ${entityTypeText}`, {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       } finally {
@@ -215,19 +221,24 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
       );
 
       if (result.isFailure) {
-        toast.error(`Failed to delete ${entityTypeText}`, {
+        toastError(`Failed to delete ${entityTypeText}`, {
           description: result.getError(),
         });
         return;
       }
 
-      toast.success(
+      toastSuccess(
         `${entityTypeText.charAt(0).toUpperCase() + entityTypeText.slice(1)} deleted`,
         {
           description: title,
         },
       );
-      await queryClient.invalidateQueries({ queryKey: cardQueries.lists() });
+      // Invalidate based on entity type
+      if (entityType === "character") {
+        await queryClient.invalidateQueries({ queryKey: characterKeys.lists() });
+      } else if (entityType === "plot") {
+        await queryClient.invalidateQueries({ queryKey: scenarioKeys.lists() });
+      }
 
       if (usedSessionsCount > 0) {
         await queryClient.invalidateQueries({
@@ -242,7 +253,7 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
         usedSessionsCount: 0,
       });
     } catch (error) {
-      toast.error(`Failed to delete ${entityTypeText}`, {
+      toastError(`Failed to delete ${entityTypeText}`, {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {

@@ -49,7 +49,7 @@ import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import { Copy, Settings2, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 import { getUniqueEntityIDFromPath } from "@/shared/lib/url-utils";
 
 const CardItem = ({
@@ -77,12 +77,12 @@ const CardItem = ({
     // Navigate based on card type
     if (card.props.type === CardType.Character) {
       navigate({
-        to: "/assets/characters/$characterId",
+        to: "/assets/characters/{-$characterId}",
         params: { characterId: cardId.toString() },
       });
     } else if (card.props.type === CardType.Plot) {
       navigate({
-        to: "/assets/scenarios/$scenarioId",
+        to: "/assets/scenarios/{-$scenarioId}",
         params: { scenarioId: cardId.toString() },
       });
     }
@@ -106,7 +106,7 @@ const CardItem = ({
     } catch (error) {
       logger.error("Failed to export card", error);
       if (error instanceof Error) {
-        toast.error("Failed to export card", {
+        toastError("Failed to export card", {
           description: error.message,
         });
       }
@@ -128,16 +128,17 @@ const CardItem = ({
       setSelectedCardId(clonedCard.id.toString());
 
       // Navigate to cloned card
-      navigate({
-        to:
-          clonedCard.props.type === CardType.Character
-            ? "/assets/characters/$characterId"
-            : "/assets/scenarios/$scenarioId",
-        params:
-          clonedCard.props.type === CardType.Character
-            ? { characterId: clonedCard.id.toString() }
-            : { scenarioId: clonedCard.id.toString() },
-      });
+      if (clonedCard.props.type === CardType.Character) {
+        navigate({
+          to: "/assets/characters/{-$characterId}",
+          params: { characterId: clonedCard.id.toString() },
+        });
+      } else {
+        navigate({
+          to: "/assets/scenarios/{-$scenarioId}",
+          params: { scenarioId: clonedCard.id.toString() },
+        });
+      }
 
       // Invalidate card queries
       queryClient.invalidateQueries({
@@ -146,7 +147,7 @@ const CardItem = ({
     } catch (error) {
       logger.error("Failed to copy card", error);
       if (error instanceof Error) {
-        toast.error("Failed to copy card", {
+        toastError("Failed to copy card", {
           description: error.message,
         });
       }
@@ -211,7 +212,7 @@ const CardItem = ({
     } catch (error) {
       logger.error("Failed to delete card", error);
       if (error instanceof Error) {
-        toast.error("Failed to delete card", {
+        toastError("Failed to delete card", {
           description: error.message,
         });
       }
@@ -515,13 +516,13 @@ const CardSection = ({
       setSelectedCardId(savedCard.id.toString());
 
       navigate({
-        to: "/assets/characters/$characterId",
+        to: "/assets/characters/{-$characterId}",
         params: { characterId: savedCard.id.toString() },
       });
     } catch (error) {
       logger.error("Failed to create card", error);
       if (error instanceof Error) {
-        toast.error("Failed to create card", {
+        toastError("Failed to create card", {
           description: error.message,
         });
       }

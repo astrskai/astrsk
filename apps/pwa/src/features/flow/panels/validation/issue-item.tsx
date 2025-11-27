@@ -20,14 +20,14 @@ export function IssueItem({ variant, title, description, suggestion }: IssueItem
       case 'success':
         return 'bg-status-ready/30';
       case 'draft':
-        return 'bg-background-surface-5/30';
+        return 'bg-active/30';
     }
   };
 
   const getIcon = () => {
     switch (variant) {
       case 'error':
-        return <AlertCircle className="max-w-4 max-h-4 text-status-destructive-light" />;
+        return <AlertCircle className="max-w-4 max-h-4 text-status-error" />;
       case 'warning':
         return <AlertTriangle className="max-w-4 max-h-4 text-status-warning-light" />;
       case 'success':
@@ -39,7 +39,7 @@ export function IssueItem({ variant, title, description, suggestion }: IssueItem
 
   return (
     <div className={cn(
-      "px-4 py-2 border-b border-border-dark flex gap-1",
+      "px-4 py-2 border-b border-border-default flex gap-1",
       (variant === 'success' || variant === 'draft') ? "justify-start items-center min-h-[75px]" : "justify-start items-start",
       getBackgroundClass()
     )}>
@@ -47,17 +47,17 @@ export function IssueItem({ variant, title, description, suggestion }: IssueItem
         <div className="self-stretch flex justify-start items-center gap-2">
           {getIcon()}
           <div className={cn(
-            "text-text-primary text-xs font-semibold",
+            "text-fg-default text-xs font-semibold",
             variant === 'draft' ? "" : "flex-1"
           )}>
             {title}
           </div>
         </div>
-        <div className="self-stretch text-text-secondary text-xs font-normal">
+        <div className="self-stretch text-fg-muted text-xs font-normal">
           {description}
         </div>
         {suggestion && (
-          <div className="self-stretch text-text-subtle text-[10px] font-normal leading-none">
+          <div className="self-stretch text-fg-subtle text-[10px] font-normal leading-none">
             → {suggestion}
           </div>
         )}

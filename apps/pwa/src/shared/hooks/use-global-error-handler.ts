@@ -1,6 +1,6 @@
 import { logger } from "@/shared/lib/logger";
 import { useEffect, useRef } from "react";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 
 export const useGlobalErrorHandler = () => {
   const lastErrorTime = useRef<number>(0);
@@ -25,7 +25,7 @@ export const useGlobalErrorHandler = () => {
       // Show error toast
       const errorMessage =
         event.error?.message || event.message || "An unexpected error occurred";
-      toast.error(errorMessage);
+      toastError(errorMessage);
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
@@ -48,7 +48,7 @@ export const useGlobalErrorHandler = () => {
         event.reason?.message ||
         String(event.reason) ||
         "An unexpected error occurred";
-      toast.error(errorMessage);
+      toastError(errorMessage);
     };
 
     // Add event listeners

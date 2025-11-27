@@ -5,7 +5,7 @@ import { isUndefined, omitBy } from "lodash-es";
 import { ChevronLeft, Save } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { UseFormGetValues, UseFormTrigger } from "react-hook-form";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 import { cn } from "@/shared/lib";
 import { downloadFile, logger } from "@/shared/lib";
@@ -248,7 +248,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
     }
 
     // Toast
-    toast("Saved!");
+    toastSuccess("Saved!");
 
     return true;
   }, [
@@ -262,7 +262,6 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
     setTryedValidation,
     onOpenChange,
     source,
-    toast,
     tokenCount,
     trigger,
     isNewCard,
@@ -309,7 +308,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
 
       if (fileOrError.isFailure) {
         logger.error(fileOrError.getError());
-        toast.error("Failed to export card", {
+        toastError("Failed to export card", {
           description: fileOrError.getError(),
         });
         return;
@@ -318,7 +317,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
       const file = fileOrError.getValue();
       downloadFile(file);
     },
-    [cardService.exportCardToFile, selectedCard, toast],
+    [cardService.exportCardToFile, selectedCard],
   );
 
   // Delete confirm
@@ -460,7 +459,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
                       })
                       .catch((err) => {
                         setIsLoading(false);
-                        toast.error("Failed to save card", {
+                        toastError("Failed to save card", {
                           description: err.message,
                         });
                       });
@@ -470,7 +469,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
                     }
                   } catch (error) {
                     setIsLoading(false);
-                    toast.error("Failed to save card", {
+                    toastError("Failed to save card", {
                       description: (error as Error).message,
                     });
                     if (cardEditOpen) {
@@ -591,7 +590,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
                         })
                         .catch((err) => {
                           setIsLoading(false);
-                          toast.error("Failed to save card", {
+                          toastError("Failed to save card", {
                             description: err.message,
                           });
                         });
@@ -601,7 +600,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
                       }
                     } catch (error) {
                       setIsLoading(false);
-                      toast.error("Failed to save card", {
+                      toastError("Failed to save card", {
                         description: (error as Error).message,
                       });
                       if (cardEditOpen) {

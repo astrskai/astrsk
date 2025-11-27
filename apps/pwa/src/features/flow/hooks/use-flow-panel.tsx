@@ -116,8 +116,8 @@ export function FlowPanelLoading({
   message?: string;
 }) {
   return (
-    <div className="bg-background-surface-2 flex h-full w-full items-center justify-center">
-      <div className="text-text-subtle">{message}</div>
+    <div className="bg-surface-raised flex h-full w-full items-center justify-center">
+      <div className="text-fg-subtle">{message}</div>
     </div>
   );
 }
@@ -125,7 +125,7 @@ export function FlowPanelLoading({
 // Common error component for flow panels
 export function FlowPanelError({ message }: { message: string }) {
   return (
-    <div className="bg-background-surface-2 flex h-full w-full items-center justify-center">
+    <div className="bg-surface-raised flex h-full w-full items-center justify-center">
       <div className="text-status-destructive">{message}</div>
     </div>
   );
@@ -134,8 +134,8 @@ export function FlowPanelError({ message }: { message: string }) {
 // Common empty state component for flow panels
 export function FlowPanelEmpty({ message }: { message: string }) {
   return (
-    <div className="bg-background-surface-2 flex h-full w-full items-center justify-center">
-      <div className="text-text-subtle px-4 text-center">{message}</div>
+    <div className="bg-surface-raised flex h-full w-full items-center justify-center">
+      <div className="text-fg-subtle px-4 text-center">{message}</div>
     </div>
   );
 }

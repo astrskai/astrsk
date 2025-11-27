@@ -1,16 +1,16 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { UserIcon, ChevronLeft } from "lucide-react";
+import { UserIcon, ChevronLeft, Info } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
-import CharacterPreview from "@/features/character/ui/character-preview";
+import CharacterCardUI from "@/features/character/ui/character-card";
 import Carousel from "@/shared/ui/carousel-v2";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
-import type { CharacterAction } from "@/features/character/model/character-actions";
-import DialogBase from "@/shared/ui/dialogs/base";
+import type { CardAction } from "@/features/common/ui";
+import { DialogBase } from "@/shared/ui/dialogs/base";
 
 interface CharacterSelectionDialogProps {
   open: boolean;
@@ -49,14 +49,16 @@ const CharacterPreviewItem = ({
 }: CharacterPreviewItemProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
-  const bottomActions: CharacterAction[] = [
+  const actions: CardAction[] = [
     {
-      label: `Detail >`,
+      icon: Info,
+      label: "Detail",
       onClick: (e) => {
         e.stopPropagation();
         onDetailClick(cardId);
       },
-      bottomActionsClassName: "block md:hidden",
+      title: "View Details",
+      className: "md:hidden", // Only visible on mobile
     },
   ];
 
@@ -76,18 +78,19 @@ const CharacterPreviewItem = ({
         onMouseEnter={onMouseEnter}
         className="pointer-events-auto"
       >
-        <CharacterPreview
+        <CharacterCardUI
           imageUrl={imageUrl}
           name={card.props.name || ""}
           summary={card.props.cardSummary}
           tags={card.props.tags || []}
           tokenCount={card.props.tokenCount}
           className={cn(
-            isSelected &&
-              "border-normal-primary hover:border-normal-primary/70 border-2 shadow-lg",
+            isSelected
+              ? "border-brand-500 hover:border-brand-400 border-2 shadow-lg"
+              : "border-2 border-transparent",
           )}
           isDisabled={isDisabled}
-          bottomActions={bottomActions}
+          actions={actions}
         />
       </div>
     </div>
@@ -104,7 +107,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
   return (
     <div className="flex flex-col gap-4">
       {/* Title */}
-      <h3 className="hidden text-lg font-semibold text-gray-50 md:block">
+      <h3 className="hidden text-lg font-semibold text-fg-default md:block">
         {character.props.name || ""}
       </h3>
 
@@ -118,7 +121,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
       </div>
 
       {/* Description */}
-      <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
+      <p className="text-fg-muted text-sm leading-relaxed whitespace-pre-wrap">
         {character.props.description || "No description available"}
       </p>
 
@@ -128,7 +131,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
           {character.props.tags.map((tag, index) => (
             <span
               key={`${tag}-${index}`}
-              className="rounded-md bg-gray-800 px-2.5 py-0.5 text-sm font-semibold text-gray-300"
+              className="rounded-md bg-neutral-800 px-2.5 py-0.5 text-sm font-semibold text-neutral-300"
             >
               {tag}
             </span>
@@ -138,8 +141,8 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
 
       {/* Token Count */}
       {character.props.tokenCount && character.props.tokenCount > 0 && (
-        <div className="text-text-secondary flex items-center gap-2 text-sm">
-          <span className="font-semibold text-gray-50">
+        <div className="text-fg-muted flex items-center gap-2 text-sm">
+          <span className="font-semibold text-fg-default">
             {character.props.tokenCount}
           </span>
           <span>Tokens</span>
@@ -149,7 +152,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
       {character.props.lorebook &&
         character.props.lorebook.props.entries.length > 0 && (
           <div>
-            <h4 className="text-text-secondary text-center text-xs">
+            <h4 className="text-fg-subtle text-center text-xs">
               Lorebook
             </h4>
             <Carousel
@@ -162,13 +165,13 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
                         {entry.keys.map((key, keyIndex) => (
                           <span
                             key={`${index}-${key}-${keyIndex}`}
-                            className="rounded-md bg-gray-700/80 px-2.5 py-1 text-sm font-semibold text-white"
+                            className="rounded-md bg-neutral-700/80 px-2.5 py-1 text-sm font-semibold text-fg-default"
                           >
                             {key}
                           </span>
                         ))}
                       </div>
-                      <div className="text-text-secondary p-2 text-sm whitespace-pre-wrap">
+                      <div className="text-fg-muted p-2 text-sm whitespace-pre-wrap">
                         {entry.props.content || "No content"}
                       </div>
                     </div>
@@ -314,17 +317,17 @@ export function CharacterSelectionDialog({
       isShowCloseButton={false}
       size="2xl"
       content={
-        <div className="flex h-[70dvh] max-h-[70dvh] flex-col gap-4">
+        <>
           {/* Mobile Detail Header */}
           {showMobileDetail && mobileDetailCharacter && (
-            <div className="flex items-center gap-2 md:hidden">
+            <div className="flex flex-shrink-0 items-center gap-2 md:hidden">
               <button
                 onClick={() => setShowMobileDetail(false)}
                 className="text-text-primary hover:text-primary flex items-center gap-2 transition-colors"
                 aria-label="Back to character list"
               >
                 <ChevronLeft className="min-h-5 min-w-5" />
-                <h3 className="text-lg font-semibold text-gray-50">
+                <h3 className="text-lg font-semibold text-fg-default">
                   {mobileDetailCharacter.props.name || ""}
                 </h3>
               </button>
@@ -332,7 +335,7 @@ export function CharacterSelectionDialog({
           )}
 
           {/* Split Layout */}
-          <div className="flex min-h-0 flex-1 gap-6">
+          <div className="flex min-h-0 flex-1 gap-6 overflow-hidden">
             {/* Mobile Detail View */}
             {showMobileDetail && mobileDetailCharacter && (
               <div className="flex min-h-0 w-full flex-col md:hidden">
@@ -361,7 +364,7 @@ export function CharacterSelectionDialog({
 
               {/* Character Preview List */}
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {filteredCharacterCards.map(
                     (card: CharacterCard, index: number) => {
                       const cardId = card.id.toString();
@@ -413,11 +416,11 @@ export function CharacterSelectionDialog({
             </div>
 
             {/* Right Side: Character Detail (Desktop only) */}
-            <div className="hidden w-1/2 flex-col overflow-y-auto rounded-lg bg-gray-900 p-4 md:flex">
+            <div className="hidden w-1/2 flex-col overflow-y-auto rounded-lg bg-surface-raised p-4 md:flex">
               {previewCharacter ? (
                 <CharacterDetailPanel character={previewCharacter} />
               ) : (
-                <div className="text-text-secondary flex h-full flex-col items-center justify-center text-center">
+                <div className="text-fg-subtle flex h-full flex-col items-center justify-center text-center">
                   <UserIcon className="mb-3 h-12 w-12 opacity-50" />
                   <p className="text-lg">Hover over a character</p>
                   <p className="text-sm">
@@ -427,19 +430,19 @@ export function CharacterSelectionDialog({
               )}
             </div>
           </div>
-
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-2 border-t border-gray-700 pt-4">
-            <Button variant="ghost" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={tempSelectedIds.length === 0}
-            >
-              {confirmButtonText} ({tempSelectedIds.length})
-            </Button>
-          </div>
+        </>
+      }
+      footer={
+        <div className="flex justify-end gap-2 border-t border-border-muted pt-4">
+          <Button variant="ghost" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={tempSelectedIds.length === 0}
+          >
+            {confirmButtonText} ({tempSelectedIds.length})
+          </Button>
         </div>
       }
     />

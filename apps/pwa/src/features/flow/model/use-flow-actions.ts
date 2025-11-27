@@ -1,5 +1,5 @@
 import { useState, useCallback, MouseEvent } from "react";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
@@ -120,7 +120,7 @@ export function useFlowActions(
           });
 
           if (!flowQuery) {
-            toast.error("Failed to load flow");
+            toastError("Failed to load flow");
             return;
           }
 
@@ -164,7 +164,7 @@ export function useFlowActions(
           setExportDialogState({ isOpen: true, flowId, title, agents });
         } catch (error) {
           logger.error("Failed to prepare export:", error);
-          toast.error("Failed to prepare export", {
+          toastError("Failed to prepare export", {
             description:
               error instanceof Error ? error.message : "Unknown error",
           });
@@ -206,7 +206,7 @@ export function useFlowActions(
         // Export flow file
         downloadFile(file);
 
-        toast.success("Successfully exported!", {
+        toastSuccess("Successfully exported!", {
           description: `"${title}" exported`,
         });
 
@@ -218,7 +218,7 @@ export function useFlowActions(
         });
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to export", {
+        toastError("Failed to export", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -245,12 +245,12 @@ export function useFlowActions(
         // Notify parent of successful copy for animation
         onCopySuccess?.(copiedFlow.id.toString());
 
-        toast.success("Flow copied", {
+        toastSuccess("Flow copied", {
           description: `Created copy of "${title}"`,
         });
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to copy", {
+        toastError("Failed to copy", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       } finally {
@@ -315,7 +315,7 @@ export function useFlowActions(
       // Delete flow with all nodes
       await deleteFlowMutation.mutateAsync(flowId);
 
-      toast.success("Flow deleted", {
+      toastSuccess("Flow deleted", {
         description: `"${title}" deleted`,
       });
 
@@ -327,7 +327,7 @@ export function useFlowActions(
       });
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to delete", {
+      toastError("Failed to delete", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {

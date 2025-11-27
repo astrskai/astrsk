@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Trash2, BookOpen } from "lucide-react";
-import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
+import ScenarioCardUI from "@/features/scenario/ui/scenario-card";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
-import type { CharacterAction } from "@/features/character/model/character-actions";
+import type { CardAction } from "@/features/common/ui";
 import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
 
 interface ScenarioSelectionStepProps {
@@ -29,7 +29,7 @@ const SelectedScenarioCard = ({
 }: SelectedScenarioCardProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
-  const actions: CharacterAction[] = [
+  const actions: CardAction[] = [
     {
       icon: Trash2,
       label: `Remove`,
@@ -37,12 +37,12 @@ const SelectedScenarioCard = ({
         e.stopPropagation();
         onRemove(e);
       },
-      bottomActionsClassName: "block md:hidden",
+      className: "text-red-400 hover:text-red-300",
     },
   ];
 
   return (
-    <ScenarioPreview
+    <ScenarioCardUI
       imageUrl={imageUrl}
       title={card.props.title}
       summary={card.props.cardSummary}
@@ -50,10 +50,7 @@ const SelectedScenarioCard = ({
       tokenCount={card.props.tokenCount}
       firstMessages={card.props.scenarios?.length || 0}
       actions={actions}
-      isShowActions={true}
-      bottomActions={actions}
       onClick={onClick}
-      moreActionsClassName="hidden"
     />
   );
 };
@@ -81,25 +78,27 @@ export default function ScenarioSelectionStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-2xl">
-        <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-[1.2rem]">
+        <h2 className="text-fg-default mb-2 text-base font-semibold lg:text-[1.2rem]">
           Select a Scenario&nbsp;(optional)
         </h2>
-        <p className="text-text-secondary text-xs md:text-sm">
+        <p className="text-fg-muted text-xs md:text-sm">
           A scenario provides story context and starting messages for your
           session.
         </p>
       </div>
 
       {/* Selected Scenario Display */}
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-        {selectedScenario ? (
+      {selectedScenario ? (
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-4">
           <SelectedScenarioCard
             card={selectedScenario}
             onClick={handleAddScenarioClick}
             onRemove={handleRemoveScenario}
           />
-        ) : (
-          /* Empty State - Show Select Button Card */
+        </div>
+      ) : (
+        /* Empty State - Show Select Button Card */
+        <div className="mx-auto w-full max-w-2xl">
           <div
             onClick={handleAddScenarioClick}
             className={cn(
@@ -109,17 +108,17 @@ export default function ScenarioSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <BookOpen className="text-text-secondary mb-3 min-h-12 min-w-12" />
-              <h3 className="text-text-primary mb-2 text-lg font-semibold">
+              <BookOpen className="text-fg-muted mb-3 min-h-12 min-w-12" />
+              <h3 className="text-fg-default mb-2 text-lg font-semibold">
                 Select Scenario
               </h3>
-              <p className="text-text-secondary text-sm">
+              <p className="text-fg-muted text-sm">
                 Click to select a scenario (optional)
               </p>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Scenario Selection Dialog */}
       <ScenarioSelectionDialog

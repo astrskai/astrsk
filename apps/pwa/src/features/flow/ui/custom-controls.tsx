@@ -19,14 +19,14 @@ export function CustomReactFlowControls() {
 
   return (
     <Panel position="bottom-left">
-      <div className="px-6 py-3 bg-background-surface-4 rounded-full shadow-[0px_1px_12px_0px_rgba(117,117,117,1.00),0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-start items-center gap-6">
+      <div className="px-6 py-3 bg-hover rounded-full shadow-[0px_1px_12px_0px_rgba(117,117,117,1.00),0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-subtle inline-flex justify-start items-center gap-6">
         <button
           onClick={handleZoomIn}
           className="w-6 h-6 relative overflow-hidden hover:opacity-70 transition-opacity group"
           title="Zoom in"
           aria-label="Zoom in"
         >
-          <ZoomIn className="min-w-4 min-h-4 text-text-primary stroke-2" />
+          <ZoomIn className="min-w-4 min-h-4 text-fg-default stroke-2" />
         </button>
         <button
           onClick={handleZoomOut}
@@ -34,7 +34,7 @@ export function CustomReactFlowControls() {
           title="Zoom out"
           aria-label="Zoom out"
         >
-          <ZoomOut className="min-w-4 min-h-4 text-text-primary stroke-2" />
+          <ZoomOut className="min-w-4 min-h-4 text-fg-default stroke-2" />
         </button>
         <button
           onClick={handleFitView}
@@ -42,7 +42,7 @@ export function CustomReactFlowControls() {
           title="Fit view"
           aria-label="Fit view"
         >
-          <Fullscreen className="min-w-4 min-h-4 text-text-primary stroke-2" />
+          <Fullscreen className="min-w-4 min-h-4 text-fg-default stroke-2" />
         </button>
       </div>
     </Panel>

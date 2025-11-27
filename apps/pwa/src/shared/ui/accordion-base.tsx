@@ -154,8 +154,8 @@ const AccordionBase = ({
           value={item.value}
           disabled={item.disabled}
           className={cn(
-            "overflow-hidden rounded-lg border border-gray-500 bg-transparent",
-            "data-[state=open]:bg-gray-900",
+            "overflow-hidden rounded-lg border border-neutral-600 bg-transparent",
+            "data-[state=open]:bg-neutral-900",
             "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
             itemClassName,
           )}
@@ -164,18 +164,18 @@ const AccordionBase = ({
             <AccordionPrimitive.Trigger
               className={cn(
                 "group flex flex-1 items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium transition-all",
-                "hover:bg-gray-800",
-                "data-[state=open]:bg-gray-900",
-                "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                "hover:bg-neutral-800",
+                "data-[state=open]:bg-neutral-900",
+                "focus-visible:ring-brand-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
                 "disabled:pointer-events-none disabled:opacity-50",
                 triggerClassName,
               )}
             >
-              <span className="flex-1 text-gray-200">{item.title}</span>
+              <span className="flex-1 text-neutral-200">{item.title}</span>
               {showChevron && (
                 <ChevronDown
                   className={cn(
-                    "text-text-secondary h-5 w-5 shrink-0 transition-transform duration-200",
+                    "h-5 w-5 shrink-0 text-neutral-400 transition-transform duration-200",
                     "group-data-[state=open]:rotate-180",
                   )}
                 />
@@ -191,7 +191,7 @@ const AccordionBase = ({
           >
             <div
               className={cn(
-                "text-text-secondary px-4 pt-2 pb-4 text-sm",
+                "px-4 pt-2 pb-4 text-sm text-neutral-400",
                 contentClassName,
               )}
             >

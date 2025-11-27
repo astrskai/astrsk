@@ -1,7 +1,7 @@
 import React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/shared/ui/forms";
-import DialogBase from "./base";
+import { DialogBase } from "./base";
 
 interface ConfirmProps {
   open?: boolean;
@@ -97,7 +97,7 @@ export function DialogConfirm({
           )}
 
           {/* Footer */}
-          <div className="mt-6 flex flex-row justify-end gap-2">
+          <div className="flex flex-row justify-end gap-2 py-4">
             <Dialog.Close asChild>
               <Button variant="ghost" onClick={handleCancel}>
                 {cancelLabel}

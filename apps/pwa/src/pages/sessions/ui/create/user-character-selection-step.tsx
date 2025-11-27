@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { UserIcon, Trash2 } from "lucide-react";
-import CharacterPreview from "@/features/character/ui/character-preview";
+import CharacterCardUI from "@/features/character/ui/character-card";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
-import type { CharacterAction } from "@/features/character/model/character-actions";
+import type { CardAction } from "@/features/common/ui";
 import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
 
 interface UserCharacterSelectionStepProps {
@@ -30,7 +30,7 @@ const SelectedCharacterCard = ({
 }: SelectedCharacterCardProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
-  const actions: CharacterAction[] = [
+  const actions: CardAction[] = [
     {
       icon: Trash2,
       label: `Remove`,
@@ -38,22 +38,18 @@ const SelectedCharacterCard = ({
         e.stopPropagation();
         onRemove(e);
       },
-      bottomActionsClassName: "block md:hidden",
     },
   ];
 
   return (
-    <CharacterPreview
+    <CharacterCardUI
       imageUrl={imageUrl}
       name={card.props.name || ""}
       summary={card.props.cardSummary}
       tags={card.props.tags || []}
       tokenCount={card.props.tokenCount}
       actions={actions}
-      isShowActions={true}
-      bottomActions={actions}
       onClick={onClick}
-      moreActionsClassName="hidden"
     />
   );
 };
@@ -88,25 +84,27 @@ export default function UserCharacterSelectionStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-2xl">
-        <h2 className="text-text-primary mb-2 text-base font-semibold lg:text-[1.2rem]">
+        <h2 className="text-fg-default mb-2 text-base font-semibold lg:text-[1.2rem]">
           Select User Character&nbsp;(optional)
         </h2>
-        <p className="text-text-secondary text-xs md:text-sm">
+        <p className="text-fg-muted text-xs md:text-sm">
           Select one character to play as in this session, or skip to continue
           without one.
         </p>
       </div>
 
       {/* Selected Character Display */}
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-        {selectedUserCharacter ? (
+      {selectedUserCharacter ? (
+        <div className="mx-auto flex w-full max-w-xs flex-col gap-4">
           <SelectedCharacterCard
             card={selectedUserCharacter}
             onClick={handleAddUserCharacterClick}
             onRemove={handleRemoveUserCharacter}
           />
-        ) : (
-          /* Empty State - Show Select Button Card */
+        </div>
+      ) : (
+        /* Empty State - Show Select Button Card */
+        <div className="mx-auto w-full max-w-2xl">
           <div
             onClick={handleAddUserCharacterClick}
             className={cn(
@@ -116,17 +114,17 @@ export default function UserCharacterSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <UserIcon className="text-text-secondary mb-3 min-h-12 min-w-12" />
-              <h3 className="text-text-primary mb-2 text-lg font-semibold">
+              <UserIcon className="text-fg-muted mb-3 min-h-12 min-w-12" />
+              <h3 className="text-fg-default mb-2 text-lg font-semibold">
                 Select User Character
               </h3>
-              <p className="text-text-secondary text-sm">
+              <p className="text-fg-muted text-sm">
                 Click to select a user character (optional)
               </p>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* User Character Selection Dialog */}
       <CharacterSelectionDialog

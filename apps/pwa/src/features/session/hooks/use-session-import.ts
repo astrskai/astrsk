@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 import { SessionService } from "@/app/services/session-service";
 import { queryClient } from "@/shared/api/query-client";
 import { sessionQueries } from "@/entities/session/api";
@@ -7,7 +7,7 @@ import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { logger } from "@/shared/lib";
-import type { AgentModel } from "@/pages/sessions/ui/dialog/session-import-dialog";
+import type { AgentModel } from "@/features/session/ui/session-import-dialog";
 
 /**
  * Hook for handling session import functionality
@@ -53,7 +53,7 @@ export function useSessionImport() {
         fetchBackgrounds();
       } catch (error) {
         if (error instanceof Error) {
-          toast.error("Failed to import session", {
+          toastError("Failed to import session", {
             description: error.message,
           });
         }
@@ -72,7 +72,7 @@ export function useSessionImport() {
         const modelNameOrError =
           await SessionService.getModelsFromSessionFile.execute(file);
         if (modelNameOrError.isFailure) {
-          toast.error("Failed to import session", {
+          toastError("Failed to import session", {
             description: modelNameOrError.getError(),
           });
           return;
@@ -91,7 +91,7 @@ export function useSessionImport() {
         return enhancedModels;
       } catch (error) {
         console.error("Error reading session file:", error);
-        toast.error("Failed to read session file");
+        toastError("Failed to read session file");
       }
     },
     [],

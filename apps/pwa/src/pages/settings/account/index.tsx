@@ -1,15 +1,21 @@
 import { Page, useAppStore } from "@/shared/stores/app-store";
-import { ScrollArea, ScrollBar, TypoBase, TypoXLarge } from "@/shared/ui";
 import { api } from "@/convex";
 import { Datetime } from "@/shared/lib";
 import { useClerk } from "@clerk/clerk-react";
 import { useQuery } from "convex/react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LogOut, User } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { ConvexReady } from "@/shared/ui/convex-ready";
 
 function formatCreditNumber(num: number): string {
   return num.toLocaleString();
 }
+
+const SectionTitle = ({ title }: { title: string }) => (
+  <h3 className="mb-3 px-2 text-[11px] font-bold uppercase tracking-widest text-fg-subtle">
+    {title}
+  </h3>
+);
 
 const SubscriptionSection = () => {
   const setActivePage = useAppStore.use.setActivePage();
@@ -18,146 +24,152 @@ const SubscriptionSection = () => {
   const subscription = useQuery(api.payment.public.getSubscription);
   const balance = useQuery(api.credit.public.getCreditBalance);
 
-  return (
-    <div className="text-text-primary mb-12 flex flex-col gap-8">
-      <TypoXLarge className="text-text-primary font-semibold">
-        Subscription
-      </TypoXLarge>
-
-      {subscription && balance ? (
-        <>
-          <div className="flex flex-col gap-[16px]">
-            <div className="text-text-body text-[16px] leading-[25.6px] font-[600]">
-              Current plan
-            </div>
-            <div className="flex flex-col gap-[8px]">
-              <div className="text-text-placeholder text-[14px] leading-[20px] font-[700]">
-                {subscription.name}
-              </div>
-              <div className="text-text-placeholder text-[14px] leading-[20px] font-[500]">
-                Next billing date:{" "}
-                {subscription.next_billing_date
-                  ? Datetime(subscription.next_billing_date).format(
-                      "MMMM D, YYYY",
-                    )
-                  : "-"}
-              </div>
-              <div className="text-text-placeholder text-[12px] leading-[15px] font-[400]">
-                Plan renews every month - $18.00/month
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-[16px]">
-            <div className="text-text-body text-[16px] leading-[25.6px] font-[600]">
-              Credits remaining
-            </div>
-            <div className="flex flex-col gap-[8px]">
-              <div className="flex flex-row items-center gap-[8px] text-[14px] leading-[20px] font-[500]">
-                <div className="text-text-placeholder">Subscription</div>
-                <div className="text-text-primary font-[600]">
-                  {formatCreditNumber(balance.subscription_balance ?? 0)}
-                </div>
-                <div className="text-text-subtle ml-[-4px]">
-                  / {formatCreditNumber(subscription.reserved_credits)}
-                </div>
-              </div>
-              <div className="flex flex-row items-center gap-[8px] text-[14px] leading-[20px] font-[500]">
-                <div className="text-text-placeholder">Additional</div>
-                <div className="text-text-primary font-[600]">
-                  {formatCreditNumber(balance.additional_balance ?? 0)}
-                </div>
-                {/* <Button size="sm" variant="secondary">
-                  Buy more credits
-                </Button> */}
-              </div>
-              {balance.overdraft_amount !== 0 && (
-                <div className="flex flex-row items-center gap-[8px] text-[14px] leading-[20px] font-[500]">
-                  <div className="text-text-placeholder">Overdraft</div>
-                  <div className="text-text-primary font-[600]">
-                    {formatCreditNumber(balance.overdraft_amount)}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div
-            className="flex cursor-pointer items-center justify-between"
-            onClick={() => {
-              navigate({ to: "/settings/account/credit-usage" });
-            }}
-          >
-            <TypoBase className="text-text-body font-semibold">
-              Credit usage history
-            </TypoBase>
-            <ChevronRight className="text-text-secondary h-5 w-5" />
-          </div>
-        </>
-      ) : (
-        <>
+  if (!subscription || !balance) {
+    return (
+      <section>
+        <SectionTitle title="Subscription" />
+        <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
           <button
-            className="text-button-background-primary py-[4px] text-left text-[16px] leading-[25.6px] font-[600]"
-            onClick={() => {
-              setActivePage(Page.Subscribe);
-            }}
+            className="text-sm font-semibold text-brand-400 hover:text-brand-500"
+            onClick={() => setActivePage(Page.Subscribe)}
           >
             Subscribe to astrsk+
           </button>
-        </>
-      )}
-    </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="space-y-6">
+      <SectionTitle title="Subscription" />
+      <div className="rounded-2xl border border-border-default bg-surface-raised">
+        {/* Current Plan */}
+        <div className="border-b border-border-default p-4">
+          <div className="text-sm font-semibold text-fg-default">
+            Current plan
+          </div>
+          <div className="mt-2 space-y-1">
+            <div className="text-sm font-bold text-fg-muted">
+              {subscription.name}
+            </div>
+            <div className="text-xs text-fg-subtle">
+              Next billing date:{" "}
+              {subscription.next_billing_date
+                ? Datetime(subscription.next_billing_date).format("MMMM D, YYYY")
+                : "-"}
+            </div>
+            <div className="text-xs text-fg-subtle">
+              Plan renews every month - $18.00/month
+            </div>
+          </div>
+        </div>
+
+        {/* Credits Remaining */}
+        <div className="border-b border-border-default p-4">
+          <div className="text-sm font-semibold text-fg-default">
+            Credits remaining
+          </div>
+          <div className="mt-2 space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-fg-subtle">Subscription</span>
+              <span className="font-semibold text-fg-default">
+                {formatCreditNumber(balance.subscription_balance ?? 0)}
+              </span>
+              <span className="text-fg-subtle">
+                / {formatCreditNumber(subscription.reserved_credits)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-fg-subtle">Additional</span>
+              <span className="font-semibold text-fg-default">
+                {formatCreditNumber(balance.additional_balance ?? 0)}
+              </span>
+            </div>
+            {balance.overdraft_amount !== 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-fg-subtle">Overdraft</span>
+                <span className="font-semibold text-fg-default">
+                  {formatCreditNumber(balance.overdraft_amount)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Credit Usage History */}
+        <button
+          className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-surface-overlay"
+          onClick={() => navigate({ to: "/settings/account/credit-usage" })}
+        >
+          <span className="text-sm font-medium text-fg-default">
+            Credit usage history
+          </span>
+          <ChevronRight
+            size={16}
+            className="text-fg-subtle transition-colors group-hover:text-fg-default"
+          />
+        </button>
+      </div>
+    </section>
   );
 };
 
-const AccountPage = () => {
+export default function AccountPage() {
   const { signOut, user } = useClerk();
   const navigate = useNavigate();
 
   return (
-    <ScrollArea className="h-full">
-      <div className="mx-auto my-6 w-full max-w-[587px] pt-[80px]">
-        <div className="font-600 text-text-body mb-[54px] text-[24px] leading-[40px]">
-          Account and subscription
-        </div>
-
-        <div className="text-text-primary mb-12 flex flex-col gap-8">
-          <TypoXLarge className="text-text-primary font-semibold">
-            Account
-          </TypoXLarge>
-
-          <div className="flex flex-row items-center gap-[8px]">
-            <div className="grid size-[40px] place-items-center overflow-hidden rounded-full">
-              {user?.hasImage ? (
-                <div
-                  className="h-full w-full bg-cover bg-center"
-                  style={{ backgroundImage: `url('${user.imageUrl}')` }}
-                ></div>
-              ) : (
-                <div className="h-full w-full bg-[url(/img/placeholder/avatar.png)] bg-size-[60px] bg-center" />
-              )}
+    <ConvexReady>
+      <div className="space-y-8 py-8">
+        {/* Account Section */}
+        <section>
+          <SectionTitle title="Account" />
+          <div className="rounded-2xl border border-border-default bg-surface-raised">
+            {/* User Info */}
+            <div className="flex items-center gap-4 border-b border-border-default p-4">
+              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-border-muted bg-surface-overlay">
+                {user?.hasImage ? (
+                  <img
+                    src={user.imageUrl}
+                    alt="User"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User size={24} className="text-fg-muted" />
+                )}
+              </div>
+              <div>
+                <div className="text-sm font-medium text-fg-default">
+                  {user?.fullName || "User"}
+                </div>
+                <div className="text-xs text-fg-subtle">
+                  {user?.primaryEmailAddress?.emailAddress}
+                </div>
+              </div>
             </div>
-            <div className="text-text-placeholder text-[14px] leading-[20px] font-[500]">
-              {user?.primaryEmailAddress?.emailAddress}
-            </div>
+
+            {/* Sign Out */}
+            <button
+              className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-surface-overlay"
+              onClick={() => {
+                signOut();
+                navigate({ to: "/settings", replace: true });
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <LogOut size={18} className="text-status-error" />
+                <span className="text-sm font-medium text-status-error">
+                  Sign out
+                </span>
+              </div>
+            </button>
           </div>
+        </section>
 
-          <button
-            className="text-status-destructive-light py-[4px] text-left text-[16px] leading-[25.6px] font-[600]"
-            onClick={() => {
-              signOut();
-              navigate({ to: "/settings", replace: true });
-            }}
-          >
-            Sign out
-          </button>
-        </div>
-
-        <div className="border-border-dark my-[40px] border-b" />
-
+        {/* Subscription Section */}
         <SubscriptionSection />
       </div>
-      <ScrollBar orientation="vertical" className="w-1.5" />
-    </ScrollArea>
+    </ConvexReady>
   );
-};
-
-export { AccountPage };
+}

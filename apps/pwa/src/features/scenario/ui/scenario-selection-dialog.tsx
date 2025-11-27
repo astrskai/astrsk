@@ -2,15 +2,16 @@ import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, ChevronLeft } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
-import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
+import ScenarioCardUI from "@/features/scenario/ui/scenario-card";
 import Carousel from "@/shared/ui/carousel-v2";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { CardType } from "@/entities/card/domain";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
-import type { CharacterAction } from "@/features/character/model/character-actions";
-import DialogBase from "@/shared/ui/dialogs/base";
+import type { CardAction } from "@/features/common/ui";
+import { Info } from "lucide-react";
+import { DialogBase } from "@/shared/ui/dialogs/base";
 
 interface ScenarioSelectionDialogProps {
   open: boolean;
@@ -45,25 +46,27 @@ const ScenarioPreviewItem = ({
 }: ScenarioPreviewItemProps) => {
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
-  const bottomActions: CharacterAction[] = [
+  const actions: CardAction[] = [
     {
-      label: `Detail >`,
+      icon: Info,
+      label: "Detail",
       onClick: (e) => {
         e.stopPropagation();
         onDetailClick(cardId);
       },
-      bottomActionsClassName: "block md:hidden",
+      title: "View Details",
+      className: "md:hidden", // Only visible on mobile
     },
   ];
 
   return (
-    <div className="relative transition-all">
+    <div className="relative h-full transition-all">
       <div
         onClick={() => onCardClick(cardId)}
         onMouseEnter={onMouseEnter}
-        className="pointer-events-auto"
+        className="pointer-events-auto h-full"
       >
-        <ScenarioPreview
+        <ScenarioCardUI
           imageUrl={imageUrl}
           title={card.props.title}
           summary={card.props.cardSummary}
@@ -71,10 +74,11 @@ const ScenarioPreviewItem = ({
           tokenCount={card.props.tokenCount}
           firstMessages={card.props.scenarios?.length || 0}
           className={cn(
-            isSelected &&
-              "border-normal-primary hover:border-normal-primary/70 border-2 shadow-lg",
+            isSelected
+              ? "border-brand-500 hover:border-brand-400 border-2 shadow-lg"
+              : "border-2 border-transparent",
           )}
-          bottomActions={bottomActions}
+          actions={actions}
         />
       </div>
     </div>
@@ -91,7 +95,7 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
   return (
     <div className="flex flex-col gap-4">
       {/* Title */}
-      <h3 className="hidden text-lg font-semibold text-gray-50 md:block">
+      <h3 className="hidden text-lg font-semibold text-fg-default md:block">
         {plot.props.title}
       </h3>
 
@@ -105,7 +109,7 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
       </div>
 
       {/* Description */}
-      <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">
+      <p className="text-fg-muted text-sm leading-relaxed whitespace-pre-wrap">
         {plot.props.description || "No description available"}
       </p>
 
@@ -115,7 +119,7 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
           {plot.props.tags.map((tag, index) => (
             <span
               key={`${tag}-${index}`}
-              className="rounded-md bg-gray-800 px-2.5 py-0.5 text-sm font-semibold text-gray-300"
+              className="rounded-md bg-neutral-800 px-2.5 py-0.5 text-sm font-semibold text-neutral-300"
             >
               {tag}
             </span>
@@ -125,8 +129,8 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
 
       {/* Token Count */}
       {plot.props.tokenCount && plot.props.tokenCount > 0 && (
-        <div className="text-text-secondary flex items-center gap-2 text-sm">
-          <span className="font-semibold text-gray-50">
+        <div className="text-fg-muted flex items-center gap-2 text-sm">
+          <span className="font-semibold text-fg-default">
             {plot.props.tokenCount}
           </span>
           <span>Tokens</span>
@@ -135,7 +139,7 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
 
       {plot.props.scenarios && plot.props.scenarios.length > 0 && (
         <div>
-          <h4 className="text-text-secondary text-center text-xs">
+          <h4 className="text-fg-subtle text-center text-xs">
             First message
           </h4>
           <Carousel
@@ -144,7 +148,7 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
               content: (
                 <div
                   key={`${index}-${scenario.name}`}
-                  className="text-text-secondary p-2 text-sm whitespace-pre-wrap"
+                  className="text-fg-muted p-2 text-sm whitespace-pre-wrap"
                 >
                   {scenario.description || "No content"}
                 </div>
@@ -157,7 +161,7 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
 
       {plot.props.lorebook && plot.props.lorebook.props.entries.length > 0 && (
         <div>
-          <h4 className="text-text-secondary text-center text-xs">Lorebook</h4>
+          <h4 className="text-fg-subtle text-center text-xs">Lorebook</h4>
           <Carousel
             slides={plot.props.lorebook.props.entries.map((entry, index) => ({
               title: entry.name,
@@ -167,13 +171,13 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
                     {entry.keys.map((key, keyIndex) => (
                       <span
                         key={`${index}-${key}-${keyIndex}`}
-                        className="rounded-md bg-gray-700/80 px-2.5 py-1 text-sm font-semibold text-white"
+                        className="rounded-md bg-neutral-700/80 px-2.5 py-1 text-sm font-semibold text-fg-default"
                       >
                         {key}
                       </span>
                     ))}
                   </div>
-                  <div className="text-text-secondary p-2 text-sm whitespace-pre-wrap">
+                  <div className="text-fg-muted p-2 text-sm whitespace-pre-wrap">
                     {entry.props.content || "No content"}
                   </div>
                 </div>
@@ -301,17 +305,17 @@ export function ScenarioSelectionDialog({
       isShowCloseButton={false}
       size="2xl"
       content={
-        <div className="flex h-[70dvh] max-h-[70dvh] flex-col gap-4">
+        <>
           {/* Mobile Detail Header */}
           {showMobileDetail && mobileDetailScenario && (
-            <div className="flex items-center gap-2 md:hidden">
+            <div className="flex flex-shrink-0 items-center gap-2 md:hidden">
               <button
                 onClick={() => setShowMobileDetail(false)}
-                className="text-text-primary hover:text-primary flex items-center gap-2 transition-colors"
+                className="text-fg-default hover:text-brand-500 flex items-center gap-2 transition-colors"
                 aria-label="Back to scenario list"
               >
                 <ChevronLeft className="min-h-5 min-w-5" />
-                <h3 className="text-lg font-semibold text-gray-50">
+                <h3 className="text-lg font-semibold text-fg-default">
                   {mobileDetailScenario.props.title}
                 </h3>
               </button>
@@ -348,7 +352,7 @@ export function ScenarioSelectionDialog({
 
               {/* Scenario Preview List */}
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {filteredScenarioCards.map((card: PlotCard) => {
                     const cardId = card.id.toString();
                     const isSelected = tempSelectedId === cardId;
@@ -374,7 +378,7 @@ export function ScenarioSelectionDialog({
 
                 {/* Empty State */}
                 {filteredScenarioCards.length === 0 && (
-                  <div className="text-text-secondary flex flex-col items-center justify-center py-12 text-center">
+                  <div className="text-fg-muted flex flex-col items-center justify-center py-12 text-center">
                     {searchKeyword ? (
                       <>
                         <p className="mb-2 text-lg">No scenarios found</p>
@@ -394,11 +398,11 @@ export function ScenarioSelectionDialog({
             </div>
 
             {/* Right Side: Scenario Detail (Desktop only) */}
-            <div className="hidden w-1/2 flex-col overflow-y-auto rounded-lg bg-gray-900 p-4 md:flex">
+            <div className="hidden w-1/2 flex-col overflow-y-auto rounded-lg bg-surface-raised p-4 md:flex">
               {previewScenario ? (
                 <ScenarioDetailPanel plot={previewScenario} />
               ) : (
-                <div className="text-text-secondary flex h-full flex-col items-center justify-center text-center">
+                <div className="text-fg-subtle flex h-full flex-col items-center justify-center text-center">
                   <BookOpen className="mb-3 h-12 w-12 opacity-50" />
                   <p className="text-lg">Hover over a scenario</p>
                   <p className="text-sm">
@@ -408,17 +412,17 @@ export function ScenarioSelectionDialog({
               )}
             </div>
           </div>
-
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-2 border-t border-gray-700 pt-4">
-            <Button variant="ghost" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleConfirm}>
-              {confirmButtonText}
-              {tempSelectedId ? " (1)" : ""}
-            </Button>
-          </div>
+        </>
+      }
+      footer={
+        <div className="flex justify-end gap-2 border-t border-border-muted pt-4">
+          <Button variant="ghost" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm}>
+            {confirmButtonText}
+            {tempSelectedId ? " (1)" : ""}
+          </Button>
         </div>
       }
     />

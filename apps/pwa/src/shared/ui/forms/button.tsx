@@ -42,7 +42,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         aria-live={loading ? "polite" : undefined}
         className={cn(
           // Base styles
-          "focus:ring-primary/50 inline-flex cursor-pointer items-center justify-center rounded-full font-medium transition-colors focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+          "inline-flex cursor-pointer items-center justify-center rounded-xl font-medium transition-colors focus:ring-1 focus:ring-brand-500/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
           // Gap only when both icon and children exist
           !isIconOnly && "gap-2",
           // Size styles - different for icon-only vs with text
@@ -59,15 +59,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               },
           // Variant styles
           {
-            "bg-button-background-primary hover:bg-primary-strong text-button-foreground-primary":
+            "bg-brand-600 text-white hover:bg-brand-500":
               variant === "default",
-            "border border-gray-500 bg-gray-800 text-gray-50 hover:bg-gray-700":
+            "border border-neutral-600 bg-neutral-800 text-neutral-100 hover:bg-neutral-700":
               variant === "secondary",
-            "text-button-background-primary hover:bg-background-surface-2 hover:text-primary-strong bg-transparent":
+            "bg-transparent text-brand-500 hover:bg-neutral-800 hover:text-brand-400":
               variant === "ghost",
-            "bg-status-destructive text-text-primary hover:bg-status-destructive/90":
+            "bg-status-error text-white hover:bg-status-error/90":
               variant === "destructive",
-            "border-button-background-primary text-button-background-primary hover:bg-button-background-primary hover:text-button-foreground-primary border-1 bg-transparent":
+            "border border-brand-500 bg-transparent text-brand-500 hover:bg-brand-500 hover:text-white":
               variant === "outline",
           },
           className,

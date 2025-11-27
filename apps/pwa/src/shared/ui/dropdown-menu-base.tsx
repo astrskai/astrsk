@@ -33,7 +33,14 @@ const DropdownMenuBase = ({
 }: DropdownMenuBaseProps) => {
   return (
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
-      <DropdownMenu.Trigger asChild>{trigger}</DropdownMenu.Trigger>
+      <DropdownMenu.Trigger
+        asChild
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        {trigger}
+      </DropdownMenu.Trigger>
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content
@@ -56,7 +63,7 @@ const DropdownMenuBase = ({
               onClick={item.onClick}
               disabled={item.disabled}
               className={cn(
-                "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-gray-200 outline-none transition-colors",
+                "relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm text-gray-200 transition-colors outline-none select-none",
                 "hover:bg-gray-700 hover:text-gray-50",
                 "focus:bg-gray-700 focus:text-gray-50",
                 "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",

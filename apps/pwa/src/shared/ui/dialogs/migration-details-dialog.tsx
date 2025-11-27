@@ -1,4 +1,4 @@
-import DialogBase from "./base";
+import { DialogBase } from "./base";
 import { Button, ScrollArea } from "@/shared/ui";
 import { useMigrationDetailsDialogStore } from "@/shared/stores/migration-details-dialog-store";
 import { CheckCircle2, XCircle, Table, Code } from "lucide-react";

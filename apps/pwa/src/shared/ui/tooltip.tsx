@@ -26,8 +26,8 @@ const TooltipContent = React.forwardRef<
   TooltipContentProps
 >(({ className, sideOffset = 4, variant = 'default', ...props }, ref) => {
   const variantStyles = {
-    default: "rounded-2xl bg-background-surface-2 px-3 py-3 outline outline-1 outline-offset-[-1px] outline-border-normal",
-    button: "px-2.5 py-1.5 bg-background-surface-2 rounded-lg outline outline-1 outline-offset-[-1px] outline-border-normal"
+    default: "rounded-2xl bg-surface-raised px-3 py-3 outline outline-1 outline-offset-[-1px] outline-border-muted",
+    button: "px-2.5 py-1.5 bg-surface-raised rounded-lg outline outline-1 outline-offset-[-1px] outline-border-muted"
   };
   
   return (
@@ -37,7 +37,7 @@ const TooltipContent = React.forwardRef<
         sideOffset={sideOffset}
         hideWhenDetached={true}
         className={cn(
-          "z-40 overflow-hidden text-xs text-text-primary",
+          "z-40 overflow-hidden text-xs text-fg-default",
           "data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           "data-[state=instant-open]:animate-in data-[state=instant-open]:fade-in-0 data-[state=instant-open]:zoom-in-95",

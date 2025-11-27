@@ -33,6 +33,40 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React
+          'react-vendor': ['react', 'react-dom'],
+
+          // Router & Query
+          'tanstack-vendor': ['@tanstack/react-router', '@tanstack/react-query'],
+
+          // UI Libraries
+          'ui-vendor': [
+            '@mui/material',
+            '@emotion/react',
+            '@emotion/styled',
+          ],
+
+          // Monaco Editor (very large)
+          'monaco-vendor': ['monaco-editor', '@monaco-editor/react'],
+
+          // Flow Editor
+          'flow-vendor': ['@xyflow/react'],
+
+          // Database (PGLite is huge)
+          'db-vendor': ['@electric-sql/pglite', 'drizzle-orm'],
+
+          // AI SDK
+          'ai-vendor': [
+            'ai',
+            '@ai-sdk/anthropic',
+            '@ai-sdk/openai',
+            '@ai-sdk/google',
+            '@ai-sdk/mistral',
+          ],
+        },
+      },
       plugins: [
         license({
           thirdParty: {
@@ -116,7 +150,11 @@ This project uses the following third-party software. The full text of each lice
     svgr({
       include: "**/*.svg?react",
     }),
-    tsconfigPaths(),
+    tsconfigPaths({
+      root: ".",
+      projects: ["./tsconfig.json"],
+      ignoreConfigErrors: true,
+    }),
     tailwindcss(),
     react(),
     VitePWA({

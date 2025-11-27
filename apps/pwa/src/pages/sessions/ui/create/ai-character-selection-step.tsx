@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { UserIcon, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
-import CharacterPreview from "@/features/character/ui/character-preview";
+import CharacterCardUI from "@/features/character/ui/character-card";
 import { CreateItemCard } from "@/shared/ui";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
-import type { CharacterAction } from "@/features/character/model/character-actions";
+import type { CardAction } from "@/features/common/ui";
 import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
 
 interface AiCharacterSelectionStepProps {
@@ -31,26 +31,22 @@ const SelectedCharacterCard = ({
   const [imageUrl] = useAsset(card.props.iconAssetId);
   const cardId = card.id.toString();
 
-  const actions: CharacterAction[] = [
+  const actions: CardAction[] = [
     {
       icon: Trash2,
       label: `Remove`,
       onClick: onRemove(cardId),
-      bottomActionsClassName: "block md:hidden",
     },
   ];
 
   return (
-    <CharacterPreview
+    <CharacterCardUI
       imageUrl={imageUrl}
       name={card.props.name || ""}
       summary={card.props.cardSummary}
       tags={card.props.tags || []}
       tokenCount={card.props.tokenCount}
       actions={actions}
-      isShowActions={true}
-      bottomActions={actions}
-      moreActionsClassName="hidden"
     />
   );
 };
@@ -82,11 +78,11 @@ export function AiCharacterSelectionStep({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-text-primary mb-2 text-base font-semibold md:text-[1.2rem]">
+        <h2 className="text-fg-default mb-2 text-base font-semibold md:text-[1.2rem]">
           Add AI Characters&nbsp;
           <span className="text-status-required">(Minimum 1)*</span>
         </h2>
-        <p className="text-text-secondary text-sm">
+        <p className="text-fg-muted text-sm">
           Choose one or more AI characters to add to your session.
         </p>
       </div>
@@ -104,15 +100,15 @@ export function AiCharacterSelectionStep({
           </Button>
         )}
 
-        {/* Characters Grid */}
+        {/* Characters Grid - Responsive 1/2/3/4 columns */}
         {selectedCharacters.length > 0 ? (
-          <div className="mx-auto grid w-full max-w-7xl grid-cols-1 justify-center gap-4 md:grid-cols-2">
+          <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {/* Desktop: Add Character Card (inside grid) */}
             <CreateItemCard
               title="Add Character"
               description="Add more characters"
               onClick={handleAddCharacterClick}
-              className="hidden aspect-[2/1] md:flex lg:aspect-[3/1]"
+              className="hidden md:flex"
             />
 
             {/* Selected Characters */}
@@ -135,11 +131,11 @@ export function AiCharacterSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <UserIcon className="text-text-secondary mb-3 min-h-12 min-w-12" />
-              <h3 className="text-text-primary mb-2 text-lg font-semibold">
+              <UserIcon className="text-fg-muted mb-3 min-h-12 min-w-12" />
+              <h3 className="text-fg-default mb-2 text-lg font-semibold">
                 Add AI Characters
               </h3>
-              <p className="text-text-secondary text-sm">
+              <p className="text-fg-muted text-sm">
                 Click to select AI characters
               </p>
             </div>

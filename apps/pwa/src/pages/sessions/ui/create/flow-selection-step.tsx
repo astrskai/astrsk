@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import FlowPreview from "@/features/flow/ui/flow-preview";
+import WorkflowCard from "@/features/flow/ui/workflow-card";
 import { Flow } from "@/entities/flow/domain/flow";
 import { IconWorkflow } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
-import type { FlowAction } from "@/features/flow/ui/flow-preview";
+import type { CardAction } from "@/features/common/ui";
 import { FlowSelectionDialog } from "@/features/flow/ui/flow-selection-dialog";
 
 interface FlowSelectionStepProps {
@@ -27,28 +27,25 @@ export function FlowSelectionStep({
     setIsDialogOpen(true);
   };
 
-  const handleRemoveFlow = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onFlowSelected(null);
-  };
-
-  const bottomActions: FlowAction[] = [
+  const actions: CardAction[] = [
     {
       icon: Trash2,
-      label: `Remove`,
-      onClick: handleRemoveFlow,
-      bottomActionsClassName: "block md:hidden",
+      label: "Remove",
+      onClick: (e) => {
+        e.stopPropagation();
+        onFlowSelected(null);
+      },
     },
   ];
 
   return (
     <div className="flex flex-col gap-6">
       <div className="mx-auto w-full max-w-2xl">
-        <h2 className="text-text-primary mb-2 text-base font-semibold md:text-[1.2rem]">
+        <h2 className="text-fg-default mb-2 text-base font-semibold md:text-[1.2rem]">
           Select a Roleplay Workflow
           <span className="text-status-required">*</span>
         </h2>
-        <p className="text-text-secondary text-xs md:text-sm">
+        <p className="text-fg-muted text-xs md:text-sm">
           A workflow is a bundle of prompt presets and AI models that defines
           your roleplay progression.
         </p>
@@ -57,21 +54,14 @@ export function FlowSelectionStep({
       {/* Selected Flow Display */}
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         {selectedFlow ? (
-          <FlowPreview
+          <WorkflowCard
             title={selectedFlow.props.name || "Untitled Flow"}
             description={selectedFlow.props.description}
             nodeCount={selectedFlow.props.nodes.length}
+            // TODO: Add tags when FlowProps supports it
+            // tags={selectedFlow.props.tags || []}
             onClick={handleAddFlowClick}
-            actions={[
-              {
-                icon: Trash2,
-                label: `Remove ${selectedFlow.props.name || "flow"}`,
-                onClick: handleRemoveFlow,
-              },
-            ]}
-            bottomActions={bottomActions}
-            moreActionsClassName="hidden"
-            isShowActions={true}
+            actions={actions}
           />
         ) : (
           /* Empty State - Show Select Button Card */
@@ -84,11 +74,11 @@ export function FlowSelectionStep({
             )}
           >
             <div className="flex flex-col items-center justify-center py-8">
-              <IconWorkflow className="text-text-secondary mb-3 h-12 w-12" />
-              <h3 className="text-text-primary mb-2 text-lg font-semibold">
+              <IconWorkflow className="text-fg-muted mb-3 h-12 w-12" />
+              <h3 className="text-fg-default mb-2 text-lg font-semibold">
                 Add Flow
               </h3>
-              <p className="text-text-secondary text-sm">
+              <p className="text-fg-muted text-sm">
                 Click to select a flow
               </p>
             </div>
@@ -102,8 +92,8 @@ export function FlowSelectionStep({
         onOpenChange={setIsDialogOpen}
         selectedFlow={selectedFlow}
         onConfirm={onFlowSelected}
-        title="Select Flow"
-        description="Choose a flow to use for this session"
+        title="Select Workflow"
+        description="Choose a workflow to use for this session"
         confirmButtonText="Add"
       />
     </div>

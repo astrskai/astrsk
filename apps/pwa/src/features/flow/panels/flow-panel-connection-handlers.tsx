@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 import { Agent, ApiType } from "@/entities/agent/domain/agent";
 import { AgentService } from "@/app/services/agent-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
@@ -236,7 +236,7 @@ export const createNodeWithConnection = async (
     };
   } catch (error) {
     console.error(`Error creating ${nodeType} node:`, error);
-    toast.error(`Failed to create ${nodeType} node`);
+    toastError(`Failed to create ${nodeType} node`);
     return null;
   }
 };

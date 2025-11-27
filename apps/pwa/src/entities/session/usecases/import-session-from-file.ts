@@ -16,7 +16,6 @@ import { TranslationConfig } from "@/entities/session/domain/translation-config"
 import { SaveSessionRepo } from "@/entities/session/repos";
 import { AddMessage } from "@/entities/session/usecases/add-message";
 import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
-import { ApiSource } from "@/entities/api/domain";
 
 interface Command {
   file: File;
@@ -307,15 +306,17 @@ export class ImportSessionFromFile
         sessionProps.background_id = newBackgroundId;
       }
 
+      // Build allCards array (simple ID mapping, no metadata)
+      const allCards = (sessionProps.all_cards ?? []).map((cardJson) => ({
+        id: new UniqueEntityID(cardJson.id),
+        type: cardJson.type as CardType,
+        enabled: cardJson.enabled,
+      }));
+
       // Create session
       const sessionOrError = Session.create({
         title: sessionProps.title,
-        allCards:
-          sessionProps.all_cards?.map((cardJson) => ({
-            id: new UniqueEntityID(cardJson.id),
-            type: cardJson.type as CardType,
-            enabled: cardJson.enabled,
-          })) ?? [],
+        allCards,
         userCharacterCardId: sessionProps.user_character_card_id
           ? new UniqueEntityID(sessionProps.user_character_card_id)
           : undefined,

@@ -34,18 +34,18 @@ export function SortableField({
     >
       {/* Hidden drag handle - completely hidden */}
       <div className="hidden">
-        <GripVertical className="min-w-4 min-h-4 text-text-info" />
+        <GripVertical className="min-w-4 min-h-4 text-fg-subtle" />
       </div>
       <div 
         className={`flex-1 min-w-px inline-flex flex-col justify-start items-start gap-2 cursor-pointer`}
         onClick={onClick}
       >
-        <div className={`self-stretch px-4 py-2 bg-background-surface-3 rounded-md inline-flex justify-start items-center gap-2 overflow-hidden ${
+        <div className={`self-stretch px-4 py-2 bg-surface-overlay rounded-md inline-flex justify-start items-center gap-2 overflow-hidden ${
           isSelected 
-            ? 'outline outline-2 outline-offset-[-2px] outline-border-selected-inverse' 
+            ? 'outline outline-2 outline-offset-[-2px] outline-border-emphasis' 
             : ''
         }`}>
-          <div className="flex-1 min-w-px justify-start text-text-body text-xs font-normal">
+          <div className="flex-1 min-w-px justify-start text-fg-muted text-xs font-normal">
             {`{{${field.name}}}`}
           </div>
         </div>

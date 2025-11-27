@@ -137,6 +137,7 @@ interface AppState {
 
   // Session Onboarding Steps (complete onboarding flow)
   sessionOnboardingSteps: {
+    tutorialVideo: boolean; // Initial tutorial video dialog (first launch)
     genreSelection: boolean; // Initial genre selection dialog
     inferenceButton: boolean; // Guide for using the inference button
     sessionEdit: boolean; // Guide for editing session
@@ -147,6 +148,7 @@ interface AppState {
   };
   setSessionOnboardingStep: (
     step:
+      | "tutorialVideo"
       | "genreSelection"
       | "inferenceButton"
       | "sessionEdit"
@@ -317,7 +319,8 @@ const useAppStoreBase = create<AppState>()(
 
       // Session Onboarding Steps
       sessionOnboardingSteps: {
-        genreSelection: false,
+        tutorialVideo: true,
+        genreSelection: true,
         inferenceButton: false,
         sessionEdit: true,
         openResource: true,
@@ -440,6 +443,7 @@ const useAppStoreBase = create<AppState>()(
         if (state && state.isPassedOnboarding === true) {
           // For existing users who already passed onboarding, mark all steps as completed
           state.sessionOnboardingSteps = {
+            tutorialVideo: true,
             genreSelection: true,
             inferenceButton: true,
             sessionEdit: true,

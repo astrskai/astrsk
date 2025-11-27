@@ -6,12 +6,12 @@ import {
   useAppStore,
 } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
-import { Button, FloatingLabelInput, SvgIcon, toastSuccess } from "@/shared/ui";
+import { Button, FloatingLabelInput, SvgIcon } from "@/shared/ui";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { logger } from "@/shared/lib";
 import { useSignIn, useSignUp } from "@clerk/clerk-react";
 import { ArrowLeft, Check } from "lucide-react";
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
 
 const SignUpStep = {
   SignUp: "sign_up",
@@ -146,7 +146,7 @@ const SignUpPage = () => {
       });
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to sign up", {
+      toastError("Failed to sign up", {
         description: JSON.stringify(error),
       });
     }
@@ -166,7 +166,7 @@ const SignUpPage = () => {
       });
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to sign up", {
+      toastError("Failed to sign up", {
         description: JSON.stringify(error),
       });
     }
@@ -195,7 +195,7 @@ const SignUpPage = () => {
       setStep(SignUpStep.VerifySignUpEmail);
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to sign up", {
+      toastError("Failed to sign up", {
         description: JSON.stringify(error),
       });
     }
@@ -217,18 +217,17 @@ const SignUpPage = () => {
         await setActiveSignUp({
           session: signUpAttempt.createdSessionId,
         });
-        toastSuccess({
-          title: "Welcome to astrsk!",
-          details: "Your account is ready to use",
+        toastSuccess("Welcome to astrsk!", {
+          description: "Your account is ready to use",
         });
         setActivePage(Page.Payment);
       } else {
         // Failed to sign up
-        toast.error(signUpAttempt.status);
+        toastError(signUpAttempt.status ?? "Sign up failed");
       }
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to verify email code", {
+      toastError("Failed to verify email code", {
         description: JSON.stringify(error),
       });
     }
@@ -261,11 +260,11 @@ const SignUpPage = () => {
         setActivePage(Page.Payment);
       } else {
         // Failed to sign in
-        toast.error(signInAttempt.status);
+        toastError(signInAttempt.status ?? "Sign in failed");
       }
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to sign in", {
+      toastError("Failed to sign in", {
         description: JSON.stringify(error),
       });
     }
@@ -291,7 +290,7 @@ const SignUpPage = () => {
       setStep(SignUpStep.NewPassword);
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to reset password", {
+      toastError("Failed to reset password", {
         description: JSON.stringify(error),
       });
     }
@@ -318,11 +317,11 @@ const SignUpPage = () => {
         setActivePage(Page.Payment);
       } else {
         // Failed to reset password
-        toast.error(signInAttempt.status);
+        toastError(signInAttempt.status ?? "Password reset failed");
       }
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to reset password", {
+      toastError("Failed to reset password", {
         description: JSON.stringify(error),
       });
     }

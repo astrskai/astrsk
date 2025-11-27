@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSsoCallbackRouteImport } from './routes/_layout/sso-callback'
+import { Route as LayoutSignUpRouteImport } from './routes/_layout/sign-up'
+import { Route as LayoutSignInRouteImport } from './routes/_layout/sign-in'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
-import { Route as LayoutLoginRouteImport } from './routes/_layout/login'
+import { Route as LayoutForgotPasswordRouteImport } from './routes/_layout/forgot-password'
 import { Route as LayoutSettingsIndexRouteImport } from './routes/_layout/settings/index'
 import { Route as LayoutSessionsIndexRouteImport } from './routes/_layout/sessions/index'
 import { Route as LayoutAssetsIndexRouteImport } from './routes/_layout/assets/index'
@@ -35,10 +37,8 @@ import { Route as LayoutSettingsAdvancedMigrationHistoryRouteImport } from './ro
 import { Route as LayoutSettingsAdvancedInitializationLogsRouteImport } from './routes/_layout/settings/advanced/initialization-logs'
 import { Route as LayoutSettingsAccountCreditUsageRouteImport } from './routes/_layout/settings/account/credit-usage'
 import { Route as LayoutAssetsWorkflowsWorkflowIdRouteImport } from './routes/_layout/assets/workflows/$workflowId'
-import { Route as LayoutAssetsScenariosNewRouteImport } from './routes/_layout/assets/scenarios/new'
-import { Route as LayoutAssetsScenariosScenarioIdRouteImport } from './routes/_layout/assets/scenarios/$scenarioId'
-import { Route as LayoutAssetsCharactersNewRouteImport } from './routes/_layout/assets/characters/new'
-import { Route as LayoutAssetsCharactersCharacterIdRouteImport } from './routes/_layout/assets/characters/$characterId'
+import { Route as LayoutAssetsScenariosChar123ScenarioIdChar125RouteImport } from './routes/_layout/assets/scenarios/{-$scenarioId}'
+import { Route as LayoutAssetsCharactersChar123CharacterIdChar125RouteImport } from './routes/_layout/assets/characters/{-$characterId}'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -54,14 +54,24 @@ const LayoutSsoCallbackRoute = LayoutSsoCallbackRouteImport.update({
   path: '/sso-callback',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutSignUpRoute = LayoutSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutSignInRoute = LayoutSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutLoginRoute = LayoutLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const LayoutForgotPasswordRoute = LayoutForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsIndexRoute = LayoutSettingsIndexRouteImport.update({
@@ -184,34 +194,24 @@ const LayoutAssetsWorkflowsWorkflowIdRoute =
     path: '/assets/workflows/$workflowId',
     getParentRoute: () => LayoutRoute,
   } as any)
-const LayoutAssetsScenariosNewRoute =
-  LayoutAssetsScenariosNewRouteImport.update({
-    id: '/assets/scenarios/new',
-    path: '/assets/scenarios/new',
+const LayoutAssetsScenariosChar123ScenarioIdChar125Route =
+  LayoutAssetsScenariosChar123ScenarioIdChar125RouteImport.update({
+    id: '/assets/scenarios/{-$scenarioId}',
+    path: '/assets/scenarios/{-$scenarioId}',
     getParentRoute: () => LayoutRoute,
   } as any)
-const LayoutAssetsScenariosScenarioIdRoute =
-  LayoutAssetsScenariosScenarioIdRouteImport.update({
-    id: '/assets/scenarios/$scenarioId',
-    path: '/assets/scenarios/$scenarioId',
-    getParentRoute: () => LayoutRoute,
-  } as any)
-const LayoutAssetsCharactersNewRoute =
-  LayoutAssetsCharactersNewRouteImport.update({
-    id: '/assets/characters/new',
-    path: '/assets/characters/new',
-    getParentRoute: () => LayoutRoute,
-  } as any)
-const LayoutAssetsCharactersCharacterIdRoute =
-  LayoutAssetsCharactersCharacterIdRouteImport.update({
-    id: '/assets/characters/$characterId',
-    path: '/assets/characters/$characterId',
+const LayoutAssetsCharactersChar123CharacterIdChar125Route =
+  LayoutAssetsCharactersChar123CharacterIdChar125RouteImport.update({
+    id: '/assets/characters/{-$characterId}',
+    path: '/assets/characters/{-$characterId}',
     getParentRoute: () => LayoutRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/login': typeof LayoutLoginRoute
+  '/forgot-password': typeof LayoutForgotPasswordRoute
   '/settings': typeof LayoutSettingsRouteWithChildren
+  '/sign-in': typeof LayoutSignInRoute
+  '/sign-up': typeof LayoutSignUpRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/': typeof LayoutIndexRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
@@ -220,10 +220,8 @@ export interface FileRoutesByFullPath {
   '/assets': typeof LayoutAssetsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
   '/settings/': typeof LayoutSettingsIndexRoute
-  '/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
-  '/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
-  '/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
-  '/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
+  '/assets/characters/{-$characterId}': typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
+  '/assets/scenarios/{-$scenarioId}': typeof LayoutAssetsScenariosChar123ScenarioIdChar125Route
   '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
@@ -241,7 +239,9 @@ export interface FileRoutesByFullPath {
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
 export interface FileRoutesByTo {
-  '/login': typeof LayoutLoginRoute
+  '/forgot-password': typeof LayoutForgotPasswordRoute
+  '/sign-in': typeof LayoutSignInRoute
+  '/sign-up': typeof LayoutSignUpRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/': typeof LayoutIndexRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
@@ -250,10 +250,8 @@ export interface FileRoutesByTo {
   '/assets': typeof LayoutAssetsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
   '/settings': typeof LayoutSettingsIndexRoute
-  '/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
-  '/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
-  '/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
-  '/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
+  '/assets/characters/{-$characterId}': typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
+  '/assets/scenarios/{-$scenarioId}': typeof LayoutAssetsScenariosChar123ScenarioIdChar125Route
   '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
@@ -273,8 +271,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
-  '/_layout/login': typeof LayoutLoginRoute
+  '/_layout/forgot-password': typeof LayoutForgotPasswordRoute
   '/_layout/settings': typeof LayoutSettingsRouteWithChildren
+  '/_layout/sign-in': typeof LayoutSignInRoute
+  '/_layout/sign-up': typeof LayoutSignUpRoute
   '/_layout/sso-callback': typeof LayoutSsoCallbackRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
@@ -283,10 +283,8 @@ export interface FileRoutesById {
   '/_layout/assets/': typeof LayoutAssetsIndexRoute
   '/_layout/sessions/': typeof LayoutSessionsIndexRoute
   '/_layout/settings/': typeof LayoutSettingsIndexRoute
-  '/_layout/assets/characters/$characterId': typeof LayoutAssetsCharactersCharacterIdRoute
-  '/_layout/assets/characters/new': typeof LayoutAssetsCharactersNewRoute
-  '/_layout/assets/scenarios/$scenarioId': typeof LayoutAssetsScenariosScenarioIdRoute
-  '/_layout/assets/scenarios/new': typeof LayoutAssetsScenariosNewRoute
+  '/_layout/assets/characters/{-$characterId}': typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
+  '/_layout/assets/scenarios/{-$scenarioId}': typeof LayoutAssetsScenariosChar123ScenarioIdChar125Route
   '/_layout/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
   '/_layout/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/_layout/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
@@ -306,8 +304,10 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/login'
+    | '/forgot-password'
     | '/settings'
+    | '/sign-in'
+    | '/sign-up'
     | '/sso-callback'
     | '/'
     | '/sessions/$sessionId'
@@ -316,10 +316,8 @@ export interface FileRouteTypes {
     | '/assets'
     | '/sessions'
     | '/settings/'
-    | '/assets/characters/$characterId'
-    | '/assets/characters/new'
-    | '/assets/scenarios/$scenarioId'
-    | '/assets/scenarios/new'
+    | '/assets/characters/{-$characterId}'
+    | '/assets/scenarios/{-$scenarioId}'
     | '/assets/workflows/$workflowId'
     | '/settings/account/credit-usage'
     | '/settings/advanced/initialization-logs'
@@ -337,7 +335,9 @@ export interface FileRouteTypes {
     | '/settings/legal'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/login'
+    | '/forgot-password'
+    | '/sign-in'
+    | '/sign-up'
     | '/sso-callback'
     | '/'
     | '/sessions/$sessionId'
@@ -346,10 +346,8 @@ export interface FileRouteTypes {
     | '/assets'
     | '/sessions'
     | '/settings'
-    | '/assets/characters/$characterId'
-    | '/assets/characters/new'
-    | '/assets/scenarios/$scenarioId'
-    | '/assets/scenarios/new'
+    | '/assets/characters/{-$characterId}'
+    | '/assets/scenarios/{-$scenarioId}'
     | '/assets/workflows/$workflowId'
     | '/settings/account/credit-usage'
     | '/settings/advanced/initialization-logs'
@@ -368,8 +366,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_layout'
-    | '/_layout/login'
+    | '/_layout/forgot-password'
     | '/_layout/settings'
+    | '/_layout/sign-in'
+    | '/_layout/sign-up'
     | '/_layout/sso-callback'
     | '/_layout/'
     | '/_layout/sessions/$sessionId'
@@ -378,10 +378,8 @@ export interface FileRouteTypes {
     | '/_layout/assets/'
     | '/_layout/sessions/'
     | '/_layout/settings/'
-    | '/_layout/assets/characters/$characterId'
-    | '/_layout/assets/characters/new'
-    | '/_layout/assets/scenarios/$scenarioId'
-    | '/_layout/assets/scenarios/new'
+    | '/_layout/assets/characters/{-$characterId}'
+    | '/_layout/assets/scenarios/{-$scenarioId}'
     | '/_layout/assets/workflows/$workflowId'
     | '/_layout/settings/account/credit-usage'
     | '/_layout/settings/advanced/initialization-logs'
@@ -426,6 +424,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSsoCallbackRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/sign-up': {
+      id: '/_layout/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof LayoutSignUpRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/sign-in': {
+      id: '/_layout/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof LayoutSignInRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/settings': {
       id: '/_layout/settings'
       path: '/settings'
@@ -433,11 +445,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/login': {
-      id: '/_layout/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LayoutLoginRouteImport
+    '/_layout/forgot-password': {
+      id: '/_layout/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof LayoutForgotPasswordRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings/': {
@@ -587,32 +599,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAssetsWorkflowsWorkflowIdRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/assets/scenarios/new': {
-      id: '/_layout/assets/scenarios/new'
-      path: '/assets/scenarios/new'
-      fullPath: '/assets/scenarios/new'
-      preLoaderRoute: typeof LayoutAssetsScenariosNewRouteImport
+    '/_layout/assets/scenarios/{-$scenarioId}': {
+      id: '/_layout/assets/scenarios/{-$scenarioId}'
+      path: '/assets/scenarios/{-$scenarioId}'
+      fullPath: '/assets/scenarios/{-$scenarioId}'
+      preLoaderRoute: typeof LayoutAssetsScenariosChar123ScenarioIdChar125RouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/assets/scenarios/$scenarioId': {
-      id: '/_layout/assets/scenarios/$scenarioId'
-      path: '/assets/scenarios/$scenarioId'
-      fullPath: '/assets/scenarios/$scenarioId'
-      preLoaderRoute: typeof LayoutAssetsScenariosScenarioIdRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/assets/characters/new': {
-      id: '/_layout/assets/characters/new'
-      path: '/assets/characters/new'
-      fullPath: '/assets/characters/new'
-      preLoaderRoute: typeof LayoutAssetsCharactersNewRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/assets/characters/$characterId': {
-      id: '/_layout/assets/characters/$characterId'
-      path: '/assets/characters/$characterId'
-      fullPath: '/assets/characters/$characterId'
-      preLoaderRoute: typeof LayoutAssetsCharactersCharacterIdRouteImport
+    '/_layout/assets/characters/{-$characterId}': {
+      id: '/_layout/assets/characters/{-$characterId}'
+      path: '/assets/characters/{-$characterId}'
+      fullPath: '/assets/characters/{-$characterId}'
+      preLoaderRoute: typeof LayoutAssetsCharactersChar123CharacterIdChar125RouteImport
       parentRoute: typeof LayoutRoute
     }
   }
@@ -658,18 +656,18 @@ const LayoutSettingsRouteWithChildren = LayoutSettingsRoute._addFileChildren(
 )
 
 interface LayoutRouteChildren {
-  LayoutLoginRoute: typeof LayoutLoginRoute
+  LayoutForgotPasswordRoute: typeof LayoutForgotPasswordRoute
   LayoutSettingsRoute: typeof LayoutSettingsRouteWithChildren
+  LayoutSignInRoute: typeof LayoutSignInRoute
+  LayoutSignUpRoute: typeof LayoutSignUpRoute
   LayoutSsoCallbackRoute: typeof LayoutSsoCallbackRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutSessionsSessionIdRoute: typeof LayoutSessionsSessionIdRoute
   LayoutSessionsNewRoute: typeof LayoutSessionsNewRoute
   LayoutAssetsIndexRoute: typeof LayoutAssetsIndexRoute
   LayoutSessionsIndexRoute: typeof LayoutSessionsIndexRoute
-  LayoutAssetsCharactersCharacterIdRoute: typeof LayoutAssetsCharactersCharacterIdRoute
-  LayoutAssetsCharactersNewRoute: typeof LayoutAssetsCharactersNewRoute
-  LayoutAssetsScenariosScenarioIdRoute: typeof LayoutAssetsScenariosScenarioIdRoute
-  LayoutAssetsScenariosNewRoute: typeof LayoutAssetsScenariosNewRoute
+  LayoutAssetsCharactersChar123CharacterIdChar125Route: typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
+  LayoutAssetsScenariosChar123ScenarioIdChar125Route: typeof LayoutAssetsScenariosChar123ScenarioIdChar125Route
   LayoutAssetsWorkflowsWorkflowIdRoute: typeof LayoutAssetsWorkflowsWorkflowIdRoute
   LayoutAssetsCharactersIndexRoute: typeof LayoutAssetsCharactersIndexRoute
   LayoutAssetsScenariosIndexRoute: typeof LayoutAssetsScenariosIndexRoute
@@ -677,19 +675,20 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
-  LayoutLoginRoute: LayoutLoginRoute,
+  LayoutForgotPasswordRoute: LayoutForgotPasswordRoute,
   LayoutSettingsRoute: LayoutSettingsRouteWithChildren,
+  LayoutSignInRoute: LayoutSignInRoute,
+  LayoutSignUpRoute: LayoutSignUpRoute,
   LayoutSsoCallbackRoute: LayoutSsoCallbackRoute,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutSessionsSessionIdRoute: LayoutSessionsSessionIdRoute,
   LayoutSessionsNewRoute: LayoutSessionsNewRoute,
   LayoutAssetsIndexRoute: LayoutAssetsIndexRoute,
   LayoutSessionsIndexRoute: LayoutSessionsIndexRoute,
-  LayoutAssetsCharactersCharacterIdRoute:
-    LayoutAssetsCharactersCharacterIdRoute,
-  LayoutAssetsCharactersNewRoute: LayoutAssetsCharactersNewRoute,
-  LayoutAssetsScenariosScenarioIdRoute: LayoutAssetsScenariosScenarioIdRoute,
-  LayoutAssetsScenariosNewRoute: LayoutAssetsScenariosNewRoute,
+  LayoutAssetsCharactersChar123CharacterIdChar125Route:
+    LayoutAssetsCharactersChar123CharacterIdChar125Route,
+  LayoutAssetsScenariosChar123ScenarioIdChar125Route:
+    LayoutAssetsScenariosChar123ScenarioIdChar125Route,
   LayoutAssetsWorkflowsWorkflowIdRoute: LayoutAssetsWorkflowsWorkflowIdRoute,
   LayoutAssetsCharactersIndexRoute: LayoutAssetsCharactersIndexRoute,
   LayoutAssetsScenariosIndexRoute: LayoutAssetsScenariosIndexRoute,

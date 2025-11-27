@@ -1,0 +1,12 @@
+export { default as IconOpenAI } from "./openai.svg?react";
+export { default as IconGoogleAIStudio } from "./google-ai-studio.svg?react";
+export { default as IconAnthropic } from "./anthropic.svg?react";
+export { default as IconDeepSeek } from "./deepseek.svg?react";
+export { default as IconMistral } from "./mistral.svg?react";
+export { default as IconXAI } from "./xai.svg?react";
+export { default as IconOpenRouter } from "./openrouter.svg?react";
+export { default as IconOllama } from "./ollama.svg?react";
+export { default as IconKoboldCPP } from "./koboldcpp.svg?react";
+export { default as IconAIHorde } from "./aihorde.svg?react";
+export { default as IconCohere } from "./cohere.svg?react";
+export { default as IconLMStudio } from "./lmstudio.svg?react";

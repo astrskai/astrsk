@@ -1,13 +1,160 @@
 /**
  * Scenario (PlotCard) Mutations
  *
- * Scenario-specific mutation hooks for updating PlotCard.
+ * Scenario-specific mutation hooks for creating and updating PlotCard.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CardService } from "@/app/services/card-service";
-import { Lorebook } from "@/entities/card/domain";
+import { AssetService } from "@/app/services/asset-service";
+import { Lorebook, CardType, Entry } from "@/entities/card/domain";
+import { PlotCard } from "@/entities/card/domain/plot-card";
 import { cardKeys } from "@/entities/card/api/query-factory";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+
+/**
+ * Lorebook entry data structure for mutations
+ */
+export interface LorebookEntryData {
+  id: string;
+  name: string;
+  enabled: boolean;
+  keys: string[];
+  recallRange: number;
+  content: string;
+}
+
+/**
+ * Data for creating a new scenario
+ */
+export interface CreateScenarioData {
+  title: string;
+  description: string;
+  scenarios?: Array<{ name: string; description: string }>;
+  tags?: string[];
+  creator?: string;
+  cardSummary?: string;
+  version?: string;
+  conceptualOrigin?: string;
+  imageFile?: File;
+  lorebookEntries?: LorebookEntryData[];
+}
+
+/**
+ * Data for updating an existing scenario
+ */
+export interface UpdateScenarioData {
+  title?: string;
+  description?: string;
+  scenarios?: Array<{ name: string; description: string }>;
+  tags?: string[];
+  creator?: string;
+  cardSummary?: string;
+  version?: string;
+  conceptualOrigin?: string;
+  imagePrompt?: string;
+  iconAssetId?: string;
+  imageFile?: File;
+  lorebookEntries?: LorebookEntryData[];
+}
+
+/**
+ * Helper function to upload image file and return asset ID
+ */
+async function uploadImageFile(file: File): Promise<string> {
+  const assetResult = await AssetService.saveFileToAsset.execute({ file });
+
+  if (assetResult.isFailure) {
+    throw new Error(`Failed to upload image: ${assetResult.getError()}`);
+  }
+
+  return assetResult.getValue().id.toString();
+}
+
+/**
+ * Helper function to create lorebook from entry data
+ */
+function createLorebookFromEntries(entries: LorebookEntryData[]): Lorebook {
+  const lorebookEntries = entries.map((entry) => {
+    const entryResult = Entry.create({
+      name: entry.name,
+      content: entry.content,
+      keys: entry.keys,
+      enabled: entry.enabled,
+      recallRange: entry.recallRange,
+    });
+    if (entryResult.isFailure) {
+      throw new Error(
+        `Failed to create lorebook entry: ${entryResult.getError()}`,
+      );
+    }
+    return entryResult.getValue();
+  });
+
+  const lorebookResult = Lorebook.create({ entries: lorebookEntries });
+  if (lorebookResult.isFailure) {
+    throw new Error(`Failed to create lorebook: ${lorebookResult.getError()}`);
+  }
+  return lorebookResult.getValue();
+}
+
+/**
+ * Hook for creating a new scenario (plot) card
+ */
+export const useCreatePlotCard = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateScenarioData) => {
+      // Step 1: Upload image if exists
+      const uploadedAssetId = data.imageFile
+        ? await uploadImageFile(data.imageFile)
+        : undefined;
+
+      // Step 2: Create lorebook if entries exist
+      const lorebook =
+        data.lorebookEntries && data.lorebookEntries.length > 0
+          ? createLorebookFromEntries(data.lorebookEntries)
+          : undefined;
+
+      // Step 3: Create plot card
+      const cardResult = PlotCard.create({
+        title: data.title,
+        description: data.description,
+        scenarios: data.scenarios,
+        iconAssetId: uploadedAssetId
+          ? new UniqueEntityID(uploadedAssetId)
+          : undefined,
+        type: CardType.Plot,
+        tags: data.tags ?? [],
+        creator: data.creator,
+        cardSummary: data.cardSummary,
+        version: data.version,
+        conceptualOrigin: data.conceptualOrigin,
+        lorebook,
+      });
+
+      if (cardResult.isFailure) {
+        throw new Error(`Failed to create card: ${cardResult.getError()}`);
+      }
+
+      const card = cardResult.getValue();
+
+      // Step 4: Save card to database
+      const saveResult = await CardService.saveCard.execute(card);
+
+      if (saveResult.isFailure) {
+        throw new Error(`Failed to save card: ${saveResult.getError()}`);
+      }
+
+      return card;
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
+    },
+  });
+};
 
 /**
  * Hook for updating entire plot card (batch update)
@@ -20,27 +167,13 @@ export const useUpdatePlotCard = (cardId: string) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async (data: {
-      title?: string;
-      description?: string;
-      scenarios?: Array<{ name: string; description: string }>;
-      tags?: string[];
-      creator?: string;
-      cardSummary?: string;
-      version?: string;
-      conceptualOrigin?: string;
-      imagePrompt?: string;
-      iconAssetId?: string;
-      lorebookEntries?: Array<{
-        id: string;
-        name: string;
-        enabled: boolean;
-        keys: string[];
-        recallRange: number;
-        content: string;
-      }>;
-    }) => {
-      // Use thunks to defer execution until all validation passes
+    mutationFn: async (data: UpdateScenarioData) => {
+      // Step 1: Upload image if new file provided
+      const uploadedAssetId = data.imageFile
+        ? await uploadImageFile(data.imageFile)
+        : undefined;
+
+      // Step 2: Use thunks to defer execution until all validation passes
       const operations: Array<() => Promise<unknown>> = [];
 
       if (data.title !== undefined) {
@@ -100,11 +233,13 @@ export const useUpdatePlotCard = (cardId: string) => {
           CardService.updateCardImagePrompt.execute({ cardId, imagePrompt }),
         );
       }
-      if (data.iconAssetId !== undefined) {
+      // Use uploaded asset ID if new image was uploaded, otherwise use provided iconAssetId
+      const finalIconAssetId = uploadedAssetId ?? data.iconAssetId;
+      if (finalIconAssetId !== undefined) {
         operations.push(() =>
           CardService.updateCardIconAsset.execute({
             cardId,
-            iconAssetId: data.iconAssetId || null,
+            iconAssetId: finalIconAssetId ?? null,
           }),
         );
       }
