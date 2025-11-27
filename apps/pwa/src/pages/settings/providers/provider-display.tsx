@@ -113,7 +113,12 @@ const ProviderDisplay = ({
     }
     // Show first detail value (usually API key or Base URL)
     if (details && details.length > 0) {
-      return details[0].value;
+      const firstDetail = details[0];
+      // For OpenAI Compatible, show label to distinguish from API key
+      if (apiSource === ApiSource.OpenAICompatible && firstDetail.label === "Base URL") {
+        return `URL: ${firstDetail.value}`;
+      }
+      return firstDetail.value;
     }
     return "Connected";
   };
@@ -151,11 +156,11 @@ const ProviderDisplay = ({
           </div>
 
           {/* Text */}
-          <div className="text-left">
+          <div className="min-w-0 text-left">
             <h4 className="text-sm font-semibold text-fg-default">
               {providerName}
             </h4>
-            <p className="mt-0.5 truncate text-xs text-fg-muted">
+            <p className="mt-0.5 max-w-[100px] truncate text-xs text-fg-muted">
               {getSubtitle()}
             </p>
           </div>
