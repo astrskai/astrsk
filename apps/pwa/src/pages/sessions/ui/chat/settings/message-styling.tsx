@@ -74,7 +74,7 @@ const ColorGrid = ({
                     onChange={(newValue) => {
                       onChange(newValue);
                     }}
-                    className="[&>div]:first:border-border-muted [&>div]:first:border"
+                    className="[&>div:first-child]:border [&>div:first-child]:border-border-muted"
                     orientation="horizontal"
                     isShowValue={false}
                   />

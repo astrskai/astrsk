@@ -1,6 +1,7 @@
 import { Page, useAppStore } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
-import { Button, SvgIcon, toastSuccess } from "@/shared/ui";
+import { Button, SvgIcon } from "@/shared/ui";
+import { toastSuccess } from "@/shared/ui/toast";
 
 const PaymentPage = () => {
   // Page navigation
@@ -24,9 +25,8 @@ const PaymentPage = () => {
         <Button
           size="lg"
           onClick={() => {
-            toastSuccess({
-              title: "Payment successful!",
-              details: "Welcome to astrsk+ - enjoy your premium features",
+            toastSuccess("Payment successful!", {
+              description: "Welcome to astrsk+ - enjoy your premium features",
             });
             setActivePage(Page.Init);
           }}
