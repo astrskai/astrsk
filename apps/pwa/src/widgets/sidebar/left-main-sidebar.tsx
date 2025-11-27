@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Settings,
@@ -245,6 +245,7 @@ const UserProfile = ({
   closeMobileMenu: () => void;
 }) => {
   const { user } = useClerk();
+  const navigate = useNavigate();
   const subscription = useQuery(api.payment.public.getSubscription);
 
   const isLoggedIn = !!user;
@@ -252,6 +253,16 @@ const UserProfile = ({
     ? user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "User"
     : "Guest";
   const planName = isLoggedIn ? subscription?.name || "Free Plan" : "Sign in";
+
+  const handleAvatarClick = () => {
+    if (isLoggedIn) {
+      navigate({ to: "/settings/account" });
+      closeMobileMenu();
+    } else {
+      onSignIn();
+      closeMobileMenu();
+    }
+  };
 
   return (
     <div className="border-t border-zinc-800 p-4">
@@ -261,7 +272,10 @@ const UserProfile = ({
           isCollapsed ? "justify-center" : "",
         )}
       >
-        <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-zinc-700 bg-zinc-800">
+        <div
+          className="h-9 w-9 flex-shrink-0 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
+          onClick={handleAvatarClick}
+        >
           {user?.hasImage ? (
             <div
               className="h-full w-full bg-cover bg-center"
@@ -318,7 +332,7 @@ const UserProfile = ({
 
 // --- Left Main Sidebar ---
 export const LeftMainSidebar = ({
-  isCollapsed,
+  isCollapsed: isCollapsedProp,
   toggleSidebar,
   isMobileOpen,
   closeMobileMenu,
@@ -331,6 +345,9 @@ export const LeftMainSidebar = ({
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useClerk();
+
+  // Mobile always shows expanded sidebar, collapse only applies to desktop
+  const isCollapsed = isMobileOpen ? false : isCollapsedProp;
 
   const isActivePath = (path: string) => location.pathname.startsWith(path);
 
@@ -431,13 +448,26 @@ export function LeftMainSidebarContainer({
   setIsMobileOpen: externalSetMobileOpen,
 }: LeftMainSidebarContainerProps = {}) {
   const [internalIsCollapsed, setInternalIsCollapsed] =
-    useState<boolean>(false);
+    useState<boolean>(true);
   const [internalIsMobileOpen, setInternalIsMobileOpen] =
     useState<boolean>(false);
 
   // Use external state if provided, otherwise use internal state
   const isMobileOpen = externalMobileOpen ?? internalIsMobileOpen;
   const setIsMobileOpen = externalSetMobileOpen ?? setInternalIsMobileOpen;
+
+  // Close mobile menu when viewport changes to desktop
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        setIsMobileOpen(false);
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [setIsMobileOpen]);
 
   return (
     <LeftMainSidebar
@@ -456,6 +486,17 @@ export function MobileHeader({
   onMenuClick: () => void;
 }) {
   const { user } = useClerk();
+  const navigate = useNavigate();
+
+  const isLoggedIn = !!user;
+
+  const handleAvatarClick = () => {
+    if (isLoggedIn) {
+      navigate({ to: "/settings/account" });
+    } else {
+      navigate({ to: "/sign-in" });
+    }
+  };
 
   return (
     <header className="flex flex-shrink-0 items-center justify-between border-b border-zinc-800 bg-zinc-950 px-4 py-3 md:hidden">
@@ -471,7 +512,10 @@ export function MobileHeader({
           <span className="font-bold text-zinc-100">ASTRSK</span>
         </div>
       </div>
-      <div className="h-8 w-8 overflow-hidden rounded-full border border-zinc-700 bg-zinc-800">
+      <div
+        className="h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
+        onClick={handleAvatarClick}
+      >
         {user?.hasImage ? (
           <div
             className="h-full w-full bg-cover bg-center"
