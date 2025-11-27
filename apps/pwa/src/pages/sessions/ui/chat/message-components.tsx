@@ -21,7 +21,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 import { UniqueEntityID } from "@/shared/domain";
 
@@ -747,10 +747,10 @@ const MessageItem = ({
           content || "",
         );
 
-        toast.success("Video generated successfully!");
+        toastSuccess("Video generated successfully!");
       } catch (error) {
         console.error("[VIDEO FROM IMAGE] Failed to generate video:", error);
-        toast.error("Failed to generate video from image");
+        toastError("Failed to generate video from image");
         // On failure, we keep the original image (no changes needed)
       } finally {
         setIsGeneratingVideoFromImage(false);

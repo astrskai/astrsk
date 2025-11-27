@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 
 import { downloadFile, logger } from "@/shared/lib";
 import { languagesLabelMap } from "@/shared/lib/translate-utils";
@@ -262,7 +262,7 @@ const SessionSettings = ({
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {
-        toast.error("Failed to export session", {
+        toastError("Failed to export session", {
           description: error.message,
         });
       }
@@ -286,7 +286,7 @@ const SessionSettings = ({
       setIsEditingTitle(false);
     } catch (error) {
       console.error("Error saving session title:", error);
-      toast.error("Failed to save session title");
+      toastError("Failed to save session title");
     }
   }, [session, editedTitle, updateSession]);
 

@@ -2,7 +2,7 @@
 
 import { Info, Key, Link, Loader2 } from "lucide-react";
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { logger } from "@/shared/lib";
@@ -500,7 +500,7 @@ export default function ProvidersPage() {
     } catch (error) {
       logger.error("Failed to connect provider", error);
       if (error instanceof Error) {
-        toast.error("Failed to connect provider", {
+        toastError("Failed to connect provider", {
           description: error.message,
         });
       }
@@ -553,7 +553,7 @@ export default function ProvidersPage() {
       } catch (error) {
         logger.error("Failed to disconnect provider", error);
         if (error instanceof Error) {
-          toast.error("Failed to disconnect provider", {
+          toastError("Failed to disconnect provider", {
             description: error.message,
           });
         }

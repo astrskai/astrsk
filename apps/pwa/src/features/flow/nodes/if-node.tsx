@@ -40,7 +40,7 @@ import {
   applyOpacityToHexColor,
 } from "@/features/flow/utils/node-color-assignment";
 import { traverseFlowCached } from "@/features/flow/utils/flow-traversal";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 /**
  * If node condition definition
@@ -173,11 +173,11 @@ export default function IfNode({ data, id, selected }: NodeProps<IfNode>) {
         updateNodePanelStates(id, newName);
 
         // Show success toast
-        toast.success("Node name updated");
+        toastSuccess("Node name updated");
       } catch (error) {
         // Reset to original title on error
         setEditingTitle(title);
-        toast.error("Failed to update node name");
+        toastError("Failed to update node name");
       }
     },
     [

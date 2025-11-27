@@ -46,7 +46,7 @@ import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import { CircleAlert, Copy, Trash2, Upload } from "lucide-react";
 import { useCallback, useState, useRef } from "react";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { getUniqueEntityIDFromPath } from "@/shared/lib/url-utils";
 
@@ -85,7 +85,7 @@ const SessionItem = ({
   const handleExportClick = useCallback(async () => {
     try {
       if (!session || !session.flowId) {
-        toast.error("No flow associated with this session");
+        toastError("No flow associated with this session");
         return;
       }
 
@@ -100,7 +100,7 @@ const SessionItem = ({
       });
 
       if (!flowQuery) {
-        toast.error("Failed to load flow");
+        toastError("Failed to load flow");
         return;
       }
 
@@ -136,7 +136,7 @@ const SessionItem = ({
       setIsOpenExport(true);
     } catch (error) {
       console.error("Failed to prepare export:", error);
-      toast.error("Failed to prepare export");
+      toastError("Failed to prepare export");
     }
   }, [session]);
 
@@ -160,12 +160,12 @@ const SessionItem = ({
 
         // Download session file
         downloadFile(file);
-        toast.success("Session exported successfully");
+        toastSuccess("Session exported successfully");
         setIsOpenExport(false);
       } catch (error) {
         logger.error(error);
         if (error instanceof Error) {
-          toast.error("Failed to export session", {
+          toastError("Failed to export session", {
             description: error.message,
           });
         }
@@ -204,7 +204,7 @@ const SessionItem = ({
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {
-        toast.error("Failed to copy session", {
+        toastError("Failed to copy session", {
           description: error.message,
         });
       }
@@ -244,7 +244,7 @@ const SessionItem = ({
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {
-        toast.error("Failed to delete session", {
+        toastError("Failed to delete session", {
           description: error.message,
         });
       }
@@ -479,7 +479,7 @@ const SessionSection = ({
         });
       } catch (error) {
         if (error instanceof Error) {
-          toast.error("Failed to import session", {
+          toastError("Failed to import session", {
             description: error.message,
           });
         }

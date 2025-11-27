@@ -26,7 +26,7 @@ import {
   generatedImageKeys,
 } from "@/entities/generated-image/api/query-factory";
 import { useModelStore, IMAGE_MODELS } from "@/shared/stores/model-store";
-import { toast } from "sonner";
+import { toastError, toastWarning } from "@/shared/ui/toast";
 import { VIDEO_SETTINGS, GALLERY_LAYOUT } from "./image-generator/constants";
 import { ImageItem } from "./image-generator/image-item";
 import { ImageToImageSetting } from "./image-generator/image-to-image-setting";
@@ -185,7 +185,7 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
 
     // Check if we need card image but it's not available
     if (useCardImage && !imageToUseForGeneration) {
-      toast(
+      toastWarning(
         "Card image is required but not available. Please upload an image to the card first.",
       );
       return;
@@ -281,7 +281,7 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
           },
           onError: (error) => {
             console.error("❌ Failed to update card image:", error);
-            toast.error("Failed to set card image", {
+            toastError("Failed to set card image", {
               description:
                 error instanceof Error
                   ? error.message
@@ -293,7 +293,7 @@ export function ImageGeneratorPanel({ cardId }: CardPanelProps) {
         });
       } catch (error) {
         console.error("❌ Error setting card image:", error);
-        toast.error("Failed to set card image", {
+        toastError("Failed to set card image", {
           description:
             error instanceof Error ? error.message : "Unknown error occurred",
         });

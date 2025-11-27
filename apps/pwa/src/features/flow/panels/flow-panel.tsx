@@ -61,7 +61,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { ButtonPill, Card } from "@/shared/ui";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 // import { useCollapsibleSidebarWidth } from "@/widgets/collapsible-sidebar/hooks/use-collapsible-sidebar-width";
 import {
@@ -253,11 +253,11 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     updateFlowNameMutation.mutate(editedTitle, {
       onSuccess: () => {
         setIsEditingTitle(false);
-        toast.success("Flow name updated");
+        toastSuccess("Flow name updated");
       },
       onError: (error) => {
         console.error("Error saving flow title:", error);
-        toast.error("Failed to update flow name");
+        toastError("Failed to update flow name");
       },
       onSettled: () => {
         setIsSavingTitle(false);
@@ -368,7 +368,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               }
             },
             onError: (error) => {
-              toast.error("Failed to save flow changes");
+              toastError("Failed to save flow changes");
             },
           },
         );
@@ -700,13 +700,13 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           (n) => n.id === nodeId,
         );
         if (!nodeToCopy) {
-          toast.error("Node not found");
+          toastError("Node not found");
           return;
         }
 
         // Don't allow copying start or end nodes
         if (nodeToCopy.type === "start" || nodeToCopy.type === "end") {
-          toast.error(`Cannot copy ${nodeToCopy.type} node`);
+          toastError(`Cannot copy ${nodeToCopy.type} node`);
           return;
         }
 
@@ -730,7 +730,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 : null;
 
         if (!nodeTypeForName) {
-          toast.error(`Cannot copy node type: ${nodeToCopy.type}`);
+          toastError(`Cannot copy node type: ${nodeToCopy.type}`);
           return;
         }
 
@@ -783,12 +783,12 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             break;
 
           default:
-            toast.error(`Cannot copy node type: ${nodeType}`);
+            toastError(`Cannot copy node type: ${nodeType}`);
             return;
         }
 
         if (!result?.node) {
-          toast.error("Failed to copy node");
+          toastError("Failed to copy node");
           return;
         }
 
@@ -808,9 +808,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
         // Get node display name for success message
         const nodeDisplayName = getNodeDisplayName(nodeType);
-        toast.success(`${nodeDisplayName} copied successfully`);
+        toastSuccess(`${nodeDisplayName} copied successfully`);
       } catch (error) {
-        toast.error("Failed to copy node", {
+        toastError("Failed to copy node", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -838,13 +838,13 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           (n) => n.id === nodeId,
         );
         if (!nodeToDelete) {
-          toast.error("Node not found");
+          toastError("Node not found");
           return;
         }
 
         // Don't allow deletion of start or end nodes
         if (nodeToDelete.type === "start" || nodeToDelete.type === "end") {
-          toast.error(`Cannot delete ${nodeToDelete.type} node`);
+          toastError(`Cannot delete ${nodeToDelete.type} node`);
           return;
         }
 
@@ -897,7 +897,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             break;
 
           default:
-            toast.error(`Cannot delete node type: ${nodeType}`);
+            toastError(`Cannot delete node type: ${nodeType}`);
             return;
         }
 
@@ -911,9 +911,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
 
         // Get node display name for success message
         const nodeDisplayName = getNodeDisplayName(nodeType);
-        toast.success(`${nodeDisplayName} deleted successfully`);
+        toastSuccess(`${nodeDisplayName} deleted successfully`);
       } catch (error) {
-        toast.error("Failed to delete node", {
+        toastError("Failed to delete node", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -998,7 +998,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
       // Validate the new data before applying
       if (!newData || typeof newData !== "object") {
         console.error("[updateNodeData] Invalid data provided:", newData);
-        toast.error("Cannot update node: Invalid data");
+        toastError("Cannot update node: Invalid data");
         return;
       }
 
@@ -1012,7 +1012,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           "[updateNodeData] Attempted to update protected fields:",
           Object.keys(newData),
         );
-        toast.error("Cannot update protected node fields");
+        toastError("Cannot update protected node fields");
         return;
       }
 
@@ -1270,13 +1270,13 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               return updatedEdges;
             });
 
-            toast.success(
+            toastSuccess(
               `${nodeType === "agent" ? "Agent" : nodeType === "dataStore" ? "Data Update" : "If"} node created with connection`,
             );
           }
         } catch (error) {
           console.error(`Failed to create ${nodeType} node:`, error);
-          toast.error(`Failed to create ${nodeType} node`);
+          toastError(`Failed to create ${nodeType} node`);
         }
       }
       setShowNodeSelection(false);

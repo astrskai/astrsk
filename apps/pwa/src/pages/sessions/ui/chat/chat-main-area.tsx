@@ -1,10 +1,9 @@
 import { useCallback, useRef, useState, useEffect } from "react";
 import { cloneDeep } from "lodash-es";
-import { toast } from "sonner";
+import { toastError, toastInfo } from "@/shared/ui/toast";
 
 import ChatInput from "./chat-input";
 import ChatMessageList from "./chat-message-list";
-import { toastError } from "@/shared/ui/toast";
 import { showErrorDetails } from "@/shared/stores/error-dialog-store";
 
 import {
@@ -297,11 +296,11 @@ export default function ChatMainArea({
               },
             });
           } else {
-            toast.info(parsedError.message);
+            toastInfo(parsedError.message);
           }
         } else if (error instanceof Error) {
           if (error.message.includes("Stop generate by user")) {
-            toast.info("Generation stopped.");
+            toastInfo("Generation stopped.");
           } else {
             // Build error details
             const errorDetails: any = {

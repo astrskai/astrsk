@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { useLocation } from "@tanstack/react-router";
 import { TopBar } from "@/widgets/top-bar";
-import { LoadingOverlay, Toaster, TooltipProvider } from "@/shared/ui";
+import { LoadingOverlay, TooltipProvider } from "@/shared/ui";
+import { Toaster } from "sonner";
 import { isElectronEnvironment } from "@/shared/lib/environment";
 import { ThemeProvider } from "@/app/providers/theme-provider";
 import {

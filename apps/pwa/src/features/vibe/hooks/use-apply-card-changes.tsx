@@ -6,7 +6,7 @@
  */
 
 import { useCallback } from "react";
-import { toast } from "sonner";
+import { toastSuccess, toastWarning } from "@/shared/ui/toast";
 import { useQuery } from "@tanstack/react-query";
 import { CardService } from "@/app/services/card-service";
 import { CardType, Card, Lorebook, Entry } from "@/entities/card/domain";
@@ -319,12 +319,12 @@ export const useApplyCardChanges = ({
 
       // Report results
       if (result.errors.length === 0) {
-        toast.success(
+        toastSuccess(
           `Successfully applied ${result.appliedFields.length} changes`,
         );
         onSuccess?.();
       } else {
-        toast.warning(
+        toastWarning(
           `Applied ${result.appliedFields.length} changes with ${result.errors.length} errors`,
         );
         result.errors.forEach((error) => console.error(error));

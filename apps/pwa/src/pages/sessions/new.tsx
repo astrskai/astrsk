@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
-import { toast } from "sonner";
 import { Button } from "@/shared/ui/forms";
+import { toastError, toastInfo } from "@/shared/ui/toast";
 import { CreatePageHeader } from "@/widgets/create-page-header";
 import {
   BasicInfoStep,
@@ -158,7 +158,7 @@ export function CreateSessionPage() {
       const dimensions = await getImageDimensions(file);
       setImageDimensions(dimensions);
     } catch (error) {
-      toast.info("Failed to get image dimensions", {
+      toastInfo("Failed to get image dimensions", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
       setImageDimensions(undefined);
@@ -204,7 +204,7 @@ export function CreateSessionPage() {
             associatedCardId: undefined,
           });
         } else {
-          toast.error("Failed to upload cover image", {
+          toastError("Failed to upload cover image", {
             description: "Please try again or continue without an image.",
           });
           logger.error("Failed to upload file:", assetResult.getError());

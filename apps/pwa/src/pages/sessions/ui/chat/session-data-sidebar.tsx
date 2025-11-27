@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import GridLayout, { Layout, WidthProvider } from "react-grid-layout";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { RotateCcw } from "lucide-react";
 
 const ResponsiveGridLayout = WidthProvider(GridLayout);
@@ -82,7 +82,7 @@ export default function SessionDataSidebar({
         // Save to backend
         await saveSessionMutation.mutateAsync({ session });
       } catch (error) {
-        toast.error("Failed to save layout", {
+        toastError("Failed to save layout", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -104,9 +104,9 @@ export default function SessionDataSidebar({
       // Save to backend
       await saveSessionMutation.mutateAsync({ session });
 
-      toast.success("Layout reset to default");
+      toastSuccess("Layout reset to default");
     } catch (error) {
-      toast.error("Failed to reset layout", {
+      toastError("Failed to reset layout", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }

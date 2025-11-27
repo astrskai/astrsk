@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { FormProvider, useForm, Controller } from "react-hook-form";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 import { useDebouncedCallback } from "use-debounce";
 
 import { useSaveSession, fetchSession } from "@/entities/session/api";
@@ -133,7 +133,7 @@ export default function MessageStyling({
         // Update last saved state on success
         lastSavedStateRef.current = updatedStyles;
       } catch (error) {
-        toast.error("Failed to save chat styles", {
+        toastError("Failed to save chat styles", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
         // Rollback to last successfully saved state without triggering watch

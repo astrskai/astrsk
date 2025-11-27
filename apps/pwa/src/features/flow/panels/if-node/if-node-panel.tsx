@@ -25,7 +25,7 @@ import {
   isValidOperatorForDataType,
 } from "@/features/flow/types/condition-types";
 import { OperatorCombobox } from "@/features/flow/ui/operator-combobox";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 
 interface IfNodePanelProps {
   flowId: string;
@@ -75,7 +75,7 @@ export function IfNodePanel({ flowId, nodeId }: IfNodePanelProps) {
             setLogicOperator(newOperator);
           },
           onError: (error) => {
-            toast.error("Failed to save conditions", {
+            toastError("Failed to save conditions", {
               description:
                 error instanceof Error ? error.message : "Unknown error",
             });

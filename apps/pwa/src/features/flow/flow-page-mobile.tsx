@@ -2,7 +2,7 @@
 
 import { Import } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib";
@@ -249,7 +249,7 @@ export default function FlowPageMobile({ className }: { className?: string }) {
 
         const resultOrError = await FlowService.cloneFlow.execute(flow.id);
         if (resultOrError.isFailure) {
-          toast.error(`Failed to copy flow: ${resultOrError.getError()}`);
+          toastError(`Failed to copy flow: ${resultOrError.getError()}`);
           continue;
         }
 
@@ -271,7 +271,7 @@ export default function FlowPageMobile({ className }: { className?: string }) {
             newAgents.set(newAgent.id.toString(), newAgent);
           }
         } catch (error) {
-          toast.error(
+          toastError(
             "Failed to clone agents" +
               (error instanceof Error ? `: ${error.message}` : ""),
           );
@@ -298,7 +298,7 @@ export default function FlowPageMobile({ className }: { className?: string }) {
 
       if (successCount > 0) {
         invalidate();
-        toast.success(`Copied ${successCount} of ${totalCount} flow(s)`);
+        toastSuccess(`Copied ${successCount} of ${totalCount} flow(s)`);
       }
     } else if (selectionAction === "delete") {
       for (const flowId of selectedFlows) {
@@ -325,7 +325,7 @@ export default function FlowPageMobile({ className }: { className?: string }) {
 
       if (successCount > 0) {
         invalidate();
-        toast.success(`Deleted ${successCount} of ${totalCount} flow(s)`);
+        toastSuccess(`Deleted ${successCount} of ${totalCount} flow(s)`);
 
         // Clear selection if current flow was deleted
         if (selectedFlowId && selectedFlows.has(selectedFlowId.toString())) {
@@ -353,12 +353,12 @@ export default function FlowPageMobile({ className }: { className?: string }) {
           URL.revokeObjectURL(url);
           successCount++;
         } else {
-          toast.error(`Failed to export flow: ${exportResult.getError()}`);
+          toastError(`Failed to export flow: ${exportResult.getError()}`);
         }
       }
 
       if (successCount > 0) {
-        toast.success(`Exported ${successCount} of ${totalCount} flow(s)`);
+        toastSuccess(`Exported ${successCount} of ${totalCount} flow(s)`);
       }
     }
 
@@ -388,7 +388,7 @@ export default function FlowPageMobile({ className }: { className?: string }) {
     const modelNameOrError =
       await FlowService.getModelsFromFlowFile.execute(file);
     if (modelNameOrError.isFailure) {
-      toast.error("Failed to read flow file", {
+      toastError("Failed to read flow file", {
         description: modelNameOrError.getError(),
       });
       return;
@@ -421,7 +421,7 @@ export default function FlowPageMobile({ className }: { className?: string }) {
           typeof FlowService.importFlowFromFile.execute !== "function"
         ) {
           console.error("FlowService.importFlowFromFile not initialized");
-          toast.error("Import service not initialized yet. Please try again.");
+          toastError("Import service not initialized yet. Please try again.");
           return;
         }
 
@@ -432,7 +432,7 @@ export default function FlowPageMobile({ className }: { className?: string }) {
               agentModelOverrides.size > 0 ? agentModelOverrides : undefined,
           });
         if (importedFlowOrError.isFailure) {
-          toast.error(
+          toastError(
             `Failed to import flow from file: ${importedFlowOrError.getError()}`,
           );
           return;
@@ -446,7 +446,7 @@ export default function FlowPageMobile({ className }: { className?: string }) {
 
         await FlowService.saveFlow.execute(importedFlow);
 
-        toast.success("Flow imported successfully!");
+        toastSuccess("Flow imported successfully!");
 
         // Close popup
         setIsOpenImportFlowPopup(false);
@@ -454,7 +454,7 @@ export default function FlowPageMobile({ className }: { className?: string }) {
         setAgentModelOverrides(new Map());
       } catch (error) {
         if (error instanceof Error) {
-          toast.error("Failed to import flow", {
+          toastError("Failed to import flow", {
             description: error.message,
           });
         }
@@ -488,9 +488,9 @@ export default function FlowPageMobile({ className }: { className?: string }) {
         queryKey: [TableName.Flows],
       });
       setDialogOpen(false);
-      toast.success("Flow created successfully");
+      toastSuccess("Flow created successfully");
     } catch (error) {
-      toast.error(
+      toastError(
         error instanceof Error ? error.message : "Failed to create flow",
       );
     } finally {

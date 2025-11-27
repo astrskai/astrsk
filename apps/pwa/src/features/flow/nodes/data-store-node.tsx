@@ -33,7 +33,7 @@ import {
   getDataStoreNodeOpacity,
   applyOpacityToHexColor,
 } from "@/features/flow/utils/node-color-assignment";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import type {
   DataStoreSchemaField,
   DataStoreField,
@@ -150,11 +150,11 @@ function DataStoreNodeComponent({
         updateNodePanelStates(id, newName);
 
         // Show success toast
-        toast.success("Node name updated");
+        toastSuccess("Node name updated");
       } catch (error) {
         // Reset to original title on error
         setEditingTitle(title);
-        toast.error("Failed to update node name");
+        toastError("Failed to update node name");
       }
     },
     [

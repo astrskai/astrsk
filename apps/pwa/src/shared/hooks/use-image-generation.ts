@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 import { useNanoBananaGenerator } from "@/shared/hooks/use-nano-banana-generator";
 import { useSeedreamGenerator } from "@/shared/hooks/use-seedream-generator";
 import { useFallbackGenerator } from "@/shared/hooks/use-fallback-generator";
@@ -333,7 +333,7 @@ export const useImageGeneration = ({
         }
       } catch (error) {
         console.error("Error generating image:", error);
-        toast.error(
+        toastError(
           error instanceof Error ? error.message : "Failed to generate image",
         );
         // Clear loading state on error

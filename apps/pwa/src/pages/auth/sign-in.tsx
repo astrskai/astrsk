@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
-import { toast } from "sonner";
+import { toastError, toastInfo } from "@/shared/ui/toast";
 import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/shared/ui/forms/button";
@@ -89,7 +89,7 @@ export function SignInPage() {
     }
 
     if (userId) {
-      toast.info("You are already signed in");
+      toastInfo("You are already signed in");
       return;
     }
 
@@ -103,7 +103,7 @@ export function SignInPage() {
     } catch (error) {
       setIsLoading(false);
       logger.error(error);
-      toast.error("Failed to sign in", {
+      toastError("Failed to sign in", {
         description:
           "Please try again or contact support if the issue persists.",
       });

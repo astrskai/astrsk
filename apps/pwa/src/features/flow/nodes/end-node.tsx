@@ -1,7 +1,6 @@
 import { type Node, type NodeProps } from "@xyflow/react";
 import { CustomHandle } from "@/features/flow/ui/custom-handle";
 import { useCallback } from "react";
-import { toast } from "sonner";
 
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { PANEL_TYPES } from "@/features/flow/ui/panel-types";

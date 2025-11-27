@@ -42,7 +42,7 @@ import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import { CircleAlert, Copy, Loader2, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { getUniqueEntityIDFromPath } from "@/shared/lib/url-utils";
 
 const FlowItem = ({
@@ -137,7 +137,7 @@ const FlowItem = ({
       setIsExportDialogOpen(true);
     } catch (error) {
       console.error("Failed to prepare export:", error);
-      toast.error("Failed to prepare export");
+      toastError("Failed to prepare export");
     }
   }, [flow]);
 
@@ -154,7 +154,7 @@ const FlowItem = ({
             "FlowService.exportFlowWithNodes not initialized:",
             FlowService.exportFlowWithNodes,
           );
-          toast.error("Export service not initialized yet. Please try again.");
+          toastError("Export service not initialized yet. Please try again.");
           return;
         }
 
@@ -174,13 +174,13 @@ const FlowItem = ({
 
         // Download flow file
         downloadFile(file);
-        toast.success("Flow exported successfully");
+        toastSuccess("Flow exported successfully");
         setIsExportDialogOpen(false);
       } catch (error) {
         console.error("Export error:", error);
         logger.error(error);
         if (error instanceof Error) {
-          toast.error("Failed to export flow", {
+          toastError("Failed to export flow", {
             description: error.message,
           });
         }
@@ -203,11 +203,11 @@ const FlowItem = ({
         params: { workflowId: copiedFlow.id.toString() },
       });
 
-      toast.success("Flow copied successfully");
+      toastSuccess("Flow copied successfully");
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {
-        toast.error("Failed to copy flow", {
+        toastError("Failed to copy flow", {
           description: error.message,
         });
       }
@@ -240,11 +240,11 @@ const FlowItem = ({
         navigate({ to: "/" });
       }
 
-      toast.success("Flow deleted successfully");
+      toastSuccess("Flow deleted successfully");
     } catch (error) {
       logger.error(error);
       if (error instanceof Error) {
-        toast.error("Failed to delete flow", {
+        toastError("Failed to delete flow", {
           description: error.message,
         });
       }
@@ -491,10 +491,10 @@ const FlowSection = ({
           queryKey: flowQueries.lists(),
         });
 
-        toast.success("Flow created successfully");
+        toastSuccess("Flow created successfully");
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to create flow", {
+        toastError("Failed to create flow", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       } finally {
@@ -540,7 +540,7 @@ const FlowSection = ({
         typeof FlowService.getModelsFromFlowFile.execute !== "function"
       ) {
         console.error("FlowService.getModelsFromFlowFile not initialized");
-        toast.error("Service not initialized yet. Please try again.");
+        toastError("Service not initialized yet. Please try again.");
         return;
       }
 
@@ -548,7 +548,7 @@ const FlowSection = ({
       const modelNameOrError =
         await FlowService.getModelsFromFlowFile.execute(file);
       if (modelNameOrError.isFailure) {
-        toast.error("Failed to read flow file", {
+        toastError("Failed to read flow file", {
           description: modelNameOrError.getError(),
         });
         return;
@@ -568,7 +568,7 @@ const FlowSection = ({
       setAgentModels(enhancedModels);
     } catch (error) {
       console.error("Error reading flow file:", error);
-      toast.error("Failed to read flow file");
+      toastError("Failed to read flow file");
     }
   }, []);
 
@@ -589,7 +589,7 @@ const FlowSection = ({
           typeof FlowService.importFlowWithNodes.execute !== "function"
         ) {
           console.error("FlowService.importFlowWithNodes not initialized");
-          toast.error("Import service not initialized yet. Please try again.");
+          toastError("Import service not initialized yet. Please try again.");
           return;
         }
 
@@ -604,14 +604,14 @@ const FlowSection = ({
               modelOverrides.size > 0 ? modelOverrides : undefined,
           });
         if (importedFlowOrError.isFailure) {
-          toast.error(
+          toastError(
             `Failed to import flow from file: ${importedFlowOrError.getError()}`,
           );
           return;
         }
         const importedFlow = importedFlowOrError.getValue();
 
-        toast.success("Flow Imported!");
+        toastSuccess("Flow Imported!");
 
         // Invalidate flows
         await queryClient.invalidateQueries({
@@ -634,7 +634,7 @@ const FlowSection = ({
         setAgentModelOverrides(new Map());
       } catch (error) {
         if (error instanceof Error) {
-          toast.error("Failed to import flow", {
+          toastError("Failed to import flow", {
             description: error.message,
           });
         }
@@ -691,7 +691,7 @@ const FlowSection = ({
                 !FlowService.importFlowWithNodes ||
                 !FlowService.getModelsFromFlowFile
               ) {
-                toast.error(
+                toastError(
                   "Services not initialized yet. Please wait a moment and try again.",
                 );
                 return;
@@ -713,7 +713,7 @@ const FlowSection = ({
                   const modelNameOrError =
                     await FlowService.getModelsFromFlowFile.execute(file);
                   if (modelNameOrError.isFailure) {
-                    toast.error("Failed to read flow file", {
+                    toastError("Failed to read flow file", {
                       description: modelNameOrError.getError(),
                     });
                     return [];
@@ -737,7 +737,7 @@ const FlowSection = ({
                   return enhancedModels;
                 } catch (error) {
                   console.error("Error reading flow file:", error);
-                  toast.error("Failed to read flow file");
+                  toastError("Failed to read flow file");
                   return [];
                 }
               } else {

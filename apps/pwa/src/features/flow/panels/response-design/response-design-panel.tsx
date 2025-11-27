@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 
 import { Editor } from "@/shared/ui";
 import type { editor } from "monaco-editor";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 
 // Import flow queries and mutations
 import { useQuery } from "@tanstack/react-query";
@@ -78,7 +78,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
     () => debounce((template: string) => {
       updateResponseTemplate.mutate(template, {
         onError: (error) => {
-          toast.error("Failed to save response template", {
+          toastError("Failed to save response template", {
             description: error instanceof Error ? error.message : "Unknown error",
           });
         }
