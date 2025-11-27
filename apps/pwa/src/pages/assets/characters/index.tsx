@@ -7,7 +7,7 @@ import {
   DEFAULT_SORT_VALUE,
   type SortOptionValue,
 } from "@/shared/config/sort-options";
-import { CharactersGridV2 } from "./ui/list/characters-grid-v2";
+import { CharactersGrid } from "./ui/list/characters-grid";
 import {
   HelpVideoDialog,
   Loading,
@@ -133,7 +133,7 @@ export function CharactersPage() {
             onButtonClick={handleCreateCharacter}
           />
         ) : (
-          <CharactersGridV2 characters={characters} />
+          <CharactersGrid characters={characters} />
         )}
       </div>
     </div>

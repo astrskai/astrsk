@@ -7,7 +7,7 @@ import {
   DEFAULT_SORT_VALUE,
   type SortOptionValue,
 } from "@/shared/config/sort-options";
-import { ScenariosGridV2 } from "./ui/list/scenarios-grid-v2";
+import { ScenariosGrid } from "./ui/list/scenarios-grid";
 import {
   HelpVideoDialog,
   Loading,
@@ -125,7 +125,7 @@ export function ScenariosPage() {
             onButtonClick={handleCreateScenario}
           />
         ) : (
-          <ScenariosGridV2 scenarios={scenarios} />
+          <ScenariosGrid scenarios={scenarios} />
         )}
       </div>
     </div>
