@@ -19,7 +19,6 @@ type FormRegister = ReturnType<typeof useForm<SignUpFormData>>["register"];
 interface PasswordInputProps {
   id: string;
   error?: string;
-  placeholder?: string;
   register: FormRegister;
   name: "password" | "confirmPassword";
   rules?: Parameters<FormRegister>[1];
@@ -28,7 +27,6 @@ interface PasswordInputProps {
 const PasswordInput = ({
   id,
   error,
-  placeholder = "••••••••",
   register,
   name,
   rules,
@@ -40,7 +38,6 @@ const PasswordInput = ({
       <Input
         id={id}
         type={showPassword ? "text" : "password"}
-        placeholder={placeholder}
         className={`bg-surface-raised h-11 rounded-xl pr-16 ${error ? "border-status-error" : ""}`}
         {...register(name, rules)}
       />
@@ -179,14 +176,13 @@ export function SignUpPage() {
           <div className="space-y-1.5">
             <label
               htmlFor="email"
-              className={`block text-xs font-medium ${errors.email ? "text-status-error" : "text-fg-subtle"}`}
+              className="text-fg-subtle block text-xs font-medium"
             >
               Email Address
             </label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
               className={`bg-surface-raised h-11 rounded-xl ${errors.email ? "border-status-error" : ""}`}
               {...register("email", {
                 required: "Email is required",
@@ -207,7 +203,7 @@ export function SignUpPage() {
           <div className="space-y-1.5">
             <label
               htmlFor="password"
-              className={`block text-xs font-medium ${errors.password ? "text-status-error" : "text-fg-subtle"}`}
+              className="text-fg-subtle block text-xs font-medium"
             >
               Password
             </label>
@@ -230,7 +226,7 @@ export function SignUpPage() {
           <div className="space-y-1.5">
             <label
               htmlFor="confirmPassword"
-              className={`block text-xs font-medium ${errors.confirmPassword ? "text-status-error" : "text-fg-subtle"}`}
+              className="text-fg-subtle block text-xs font-medium"
             >
               Confirm Password
             </label>
