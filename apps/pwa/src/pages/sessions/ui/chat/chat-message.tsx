@@ -163,7 +163,7 @@ const ChatMessage = ({
       >
         <div
           className={cn(
-            "w-fit rounded-full bg-gray-50/10 px-3 py-1 text-xs font-medium backdrop-blur-sm md:text-base",
+            "w-fit rounded-full bg-fg-default/10 px-3 py-1 text-xs font-medium backdrop-blur-sm md:text-base",
             isEditing && isUser && "ml-auto",
           )}
         >

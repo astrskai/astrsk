@@ -42,7 +42,7 @@ export default function ChatScenarioMessage({
 
   return (
     <div className="group/scenario relative p-4">
-      <div className="relative mx-auto max-w-full rounded-lg bg-gray-950/30 p-4 text-gray-200 backdrop-blur-3xl md:max-w-4xl">
+      <div className="relative mx-auto max-w-full rounded-lg bg-surface/30 p-4 text-fg-muted backdrop-blur-3xl md:max-w-4xl">
         {isEditing ? (
           <TextareaAutosize
             className={cn(
@@ -73,13 +73,13 @@ export default function ChatScenarioMessage({
         {/* Action buttons - shown on hover at top-right corner */}
         <div
           className={cn(
-            "absolute top-2 right-2 z-10 hidden rounded-lg border border-gray-50/50 group-hover/scenario:flex",
+            "absolute top-2 right-2 z-10 hidden rounded-lg border border-fg-default/50 group-hover/scenario:flex",
           )}
         >
-          <div className="flex items-center gap-1 rounded-lg bg-gray-500/30 px-2 py-1 text-gray-200">
+          <div className="flex items-center gap-1 rounded-lg bg-border-subtle/30 px-2 py-1 text-fg-muted">
             <button
               type="button"
-              className="flex items-center justify-center p-1 hover:text-gray-200/70"
+              className="flex items-center justify-center p-1 hover:text-fg-muted/70"
               aria-label="Edit"
               onClick={isEditing ? handleEditDone : handleEdit}
             >
@@ -91,7 +91,7 @@ export default function ChatScenarioMessage({
             </button>
             <button
               type="button"
-              className="flex items-center justify-center p-1 hover:text-gray-200/70"
+              className="flex items-center justify-center p-1 hover:text-fg-muted/70"
               aria-label={isEditing ? "Cancel" : "Delete"}
               onClick={isEditing ? handleEditCancel : handleDelete}
             >

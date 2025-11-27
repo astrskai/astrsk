@@ -1,5 +1,5 @@
 import { AlertCircle, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import DialogBase from "./base";
 import { Button, ScrollArea } from "@/shared/ui";
 import { useErrorDialogStore } from "@/shared/stores/error-dialog-store";
@@ -12,11 +12,35 @@ import { useErrorDialogStore } from "@/shared/stores/error-dialog-store";
 export function ErrorDetailsDialog() {
   const { isOpen, title, details, close } = useErrorDialogStore();
   const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleCopyDetails = () => {
-    navigator.clipboard.writeText(details);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  useEffect(() => {
+    // Reset copied state when dialog closes
+    if (!isOpen) {
+      setCopied(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    // Cleanup timeout on unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopyDetails = async () => {
+    try {
+      await navigator.clipboard.writeText(details);
+      setCopied(true);
+      timeoutRef.current = setTimeout(() => {
+        setCopied(false);
+        timeoutRef.current = null;
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+    }
   };
 
   return (

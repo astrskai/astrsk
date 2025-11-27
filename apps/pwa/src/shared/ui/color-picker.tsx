@@ -91,13 +91,13 @@ const ColorPicker = forwardRef<
             {orientation === "vertical" ? (
               <>
                 <div
-                  className="border-border-light w-full grow rounded-[8px] border"
+                  className="border-border-muted w-full grow rounded-[8px] border"
                   style={{
                     backgroundColor: parsedValue ?? undefined,
                   }}
                 />
                 {isShowValue && (
-                  <div className="text-text-body min-h-[15px] text-[12px] leading-[15px] font-[400]">
+                  <div className="text-fg-muted min-h-[15px] text-[12px] leading-[15px] font-[400]">
                     {parsedValue}
                   </div>
                 )}
@@ -111,7 +111,7 @@ const ColorPicker = forwardRef<
                   }}
                 />
                 {isShowValue && (
-                  <div className="text-text-input-subtitle min-h-[15px] min-w-[60px] text-left text-[12px] leading-[15px] font-[400]">
+                  <div className="text-fg-subtle min-h-[15px] min-w-[60px] text-left text-[12px] leading-[15px] font-[400]">
                     {parsedValue}
                   </div>
                 )}
@@ -119,13 +119,13 @@ const ColorPicker = forwardRef<
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="bg-text-primary w-full rounded-[8px] p-[4px]">
+        <PopoverContent className="bg-fg-default w-full rounded-[8px] p-[4px]">
           <HexColorPicker
             color={parsedValue ?? "#000000"}
             onChange={handleOnChange}
           />
           <Input
-            className="text-background-card bg-transparent text-[12px] leading-[15px] font-[400] outline-none"
+            className="text-surface bg-transparent text-[12px] leading-[15px] font-[400] outline-none"
             maxLength={7}
             onChange={(e) => {
               const inputValue = e?.currentTarget?.value;

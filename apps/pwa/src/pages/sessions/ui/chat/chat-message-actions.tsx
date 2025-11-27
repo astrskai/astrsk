@@ -52,16 +52,16 @@ const ChatMessageActions = ({
   const shouldAlwaysShow = isEditing;
 
   const buttonVariants = isUser
-    ? "hover:bg-gray-100/80"
-    : "hover:bg-gray-500/80";
+    ? "hover:bg-fg-muted/80"
+    : "hover:bg-border-subtle/80";
 
   return (
     <div
       className={cn(
         "flex items-center gap-1 rounded-lg p-1",
         isUser
-          ? "bg-gray-200/80 text-gray-900"
-          : "bg-gray-800/80 text-gray-200",
+          ? "bg-fg-muted/80 text-surface"
+          : "bg-surface-raised/80 text-fg-muted",
         shouldAlwaysShow ? "flex" : "hidden group-hover/message:flex",
       )}
     >
@@ -72,9 +72,7 @@ const ChatMessageActions = ({
             type="button"
             className={cn(
               "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors",
-              isUser
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-green-600 text-white hover:bg-green-700",
+              "bg-status-success text-fg-default hover:bg-status-success/80",
             )}
             aria-label="Save"
             onClick={onEditDone}
@@ -87,8 +85,8 @@ const ChatMessageActions = ({
             className={cn(
               "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors",
               isUser
-                ? "bg-gray-300 text-gray-900 hover:bg-gray-400"
-                : "bg-gray-700 text-gray-200 hover:bg-gray-600",
+                ? "bg-fg-subtle text-surface hover:bg-fg-subtle/80"
+                : "bg-border-muted text-fg-muted hover:bg-border-subtle",
             )}
             aria-label="Cancel"
             onClick={onEditCancel}
@@ -134,8 +132,7 @@ const ChatMessageActions = ({
               onClick={onShowDataStore}
             >
               <History
-                className="h-4 w-4"
-                color={isShowDataStore ? "#3e9392" : "currentColor"}
+                className={cn("h-4 w-4", isShowDataStore && "text-accent-cyan")}
               />
             </button>
           )}
@@ -143,7 +140,7 @@ const ChatMessageActions = ({
           <div
             className={cn(
               "flex items-center gap-1 rounded p-1",
-              isUser ? "bg-gray-200/80" : "bg-gray-700/80",
+              isUser ? "bg-fg-muted/80" : "bg-border-muted/80",
             )}
           >
             <button
