@@ -14,7 +14,6 @@ import { StepIndicator } from "@/shared/ui/step-indicator";
 import { logger } from "@/shared/lib";
 import { Flow } from "@/entities/flow/domain/flow";
 import { CharacterCard } from "@/entities/card/domain/character-card";
-import { PlotCard } from "@/entities/card/domain/plot-card";
 import { ScenarioCard } from "@/entities/card/domain/scenario-card";
 import { CardType } from "@/entities/card/domain";
 import { Session, CardListItem } from "@/entities/session/domain";
@@ -79,9 +78,9 @@ export function CreateSessionPage() {
   );
   const [selectedUserCharacter, setSelectedUserCharacter] =
     useState<CharacterCard | null>(null);
-  const [selectedScenario, setSelectedScenario] = useState<
-    PlotCard | ScenarioCard | null
-  >(null);
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioCard | null>(
+    null,
+  );
 
   const selectSession = useSessionStore.use.selectSession();
 
@@ -235,7 +234,7 @@ export function CreateSessionPage() {
         });
       }
 
-      // Add scenario card if selected (PlotCard or ScenarioCard)
+      // Add scenario card if selected
       if (selectedScenario) {
         allCards.push({
           id: selectedScenario.id,

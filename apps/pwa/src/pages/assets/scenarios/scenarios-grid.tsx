@@ -1,7 +1,7 @@
 import { Upload, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { CardType, PlotCard, ScenarioCard } from "@/entities/card/domain";
+import { CardType, ScenarioCard } from "@/entities/card/domain";
 import { IconHarpyLogo } from "@/shared/assets/icons";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 import ScenarioCardUI from "@/features/scenario/ui/scenario-card";
@@ -11,7 +11,7 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { ExportType } from "@/shared/lib/cloud-upload-helpers";
 
 interface ScenariosGridProps {
-  scenarios: (PlotCard | ScenarioCard)[];
+  scenarios: ScenarioCard[];
 }
 
 /**
@@ -19,7 +19,7 @@ interface ScenariosGridProps {
  * Wrapper component that handles useAsset hook
  */
 interface ScenarioGridItemProps {
-  scenario: PlotCard | ScenarioCard;
+  scenario: ScenarioCard;
   loading: { exporting?: boolean; copying?: boolean; deleting?: boolean };
   onScenarioClick: (plotId: string) => void;
   onExport: (
@@ -84,13 +84,7 @@ function ScenarioGridItem({
       summary={scenario.props.cardSummary}
       tags={scenario.props.tags || []}
       tokenCount={scenario.props.tokenCount}
-      firstMessages={
-        scenario instanceof PlotCard
-          ? scenario.props.scenarios?.length || 0
-          : scenario instanceof ScenarioCard
-            ? scenario.props.firstMessages?.length || 0
-            : 0
-      }
+      firstMessages={scenario.props.firstMessages?.length || 0}
       onClick={() => onScenarioClick(cardId)}
       actions={actions}
     />

@@ -67,7 +67,7 @@ import {
   SvgIcon,
 } from "@/shared/ui";
 import { showErrorDetails } from "@/shared/stores/error-dialog-store";
-import { PlotCard, ScenarioCard } from "@/entities/card/domain";
+import { ScenarioCard } from "@/entities/card/domain";
 import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
 import { Turn } from "@/entities/turn/domain/turn";
 import { PlaceholderType } from "@/entities/turn/domain/placeholder-type";
@@ -600,25 +600,22 @@ const SessionContent = ({
     [session, saveSessionMutation],
   );
 
-  // Add plot card modal
-  const [plotCard] = useCard<PlotCard | ScenarioCard>(session?.plotCard?.id);
+  // Add scenario card modal
+  const [scenarioCard] = useCard<ScenarioCard>(session?.plotCard?.id);
   const messageCount = session?.turnIds.length ?? 0;
-  const plotCardId = session?.plotCard?.id.toString() ?? "";
+  const scenarioCardId = session?.plotCard?.id.toString() ?? "";
   const sessionId = session?.id.toString() ?? "";
 
   // Select scenario modal
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState(false);
-  // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
-  const plotCardScenarioCount =
-    (plotCard instanceof PlotCard
-      ? plotCard.props.scenarios?.length
-      : plotCard instanceof ScenarioCard
-        ? plotCard.props.firstMessages?.length
-        : 0) ?? 0;
+  const scenarioCardFirstMessageCount =
+    (scenarioCard instanceof ScenarioCard
+      ? scenarioCard.props.firstMessages?.length
+      : 0) ?? 0;
   useEffect(() => {
     // Check scenario count
-    if (plotCardScenarioCount === 0) {
+    if (scenarioCardFirstMessageCount === 0) {
       setIsOpenSelectScenarioModal(false);
       return;
     }
@@ -631,7 +628,7 @@ const SessionContent = ({
 
     // Show select scenario modal
     setIsOpenSelectScenarioModal(true);
-  }, [messageCount, plotCardScenarioCount, sessionId, plotCardId]);
+  }, [messageCount, scenarioCardFirstMessageCount, sessionId, scenarioCardId]);
 
   // Render scenario
   const [renderedScenarios, setRenderedScenarios] = useState<
@@ -642,30 +639,24 @@ const SessionContent = ({
   >([]);
   const sessionUserCardId = session?.userCharacterCardId?.toString() ?? "";
   const sessionAllCards = JSON.stringify(session?.allCards);
-  // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
-  const plotCardScenario = JSON.stringify(
-    plotCard instanceof PlotCard
-      ? plotCard.props.scenarios
-      : plotCard instanceof ScenarioCard
-        ? plotCard.props.firstMessages
-        : undefined,
+  const scenarioCardFirstMessages = JSON.stringify(
+    scenarioCard instanceof ScenarioCard
+      ? scenarioCard.props.firstMessages
+      : undefined,
   );
   const renderScenarios = useCallback(async () => {
     logger.debug("[Hook] useEffect: Render scenario");
 
-    // Check session and plot card
-    if (!session || !plotCard) {
+    // Check session and scenario card
+    if (!session || !scenarioCard) {
       return;
     }
 
-    // Get first messages based on card type
-    // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+    // Get first messages
     const firstMessages =
-      plotCard instanceof PlotCard
-        ? plotCard.props.scenarios
-        : plotCard instanceof ScenarioCard
-          ? plotCard.props.firstMessages
-          : undefined;
+      scenarioCard instanceof ScenarioCard
+        ? scenarioCard.props.firstMessages
+        : undefined;
 
     // If no first messages, set empty array
     if (!firstMessages || firstMessages.length === 0) {
@@ -721,7 +712,7 @@ const SessionContent = ({
       ),
     );
     setRenderedScenarios(renderedScenarios);
-  }, [sessionUserCardId, sessionAllCards, plotCardScenario]);
+  }, [sessionUserCardId, sessionAllCards, scenarioCardFirstMessages]);
 
   // Select scenario - no longer needed as state is managed within SelectScenarioModal
   const addScenario = useCallback(
@@ -1453,7 +1444,7 @@ const SessionContent = ({
           renderedScenarios={renderedScenarios}
           onRenderScenarios={renderScenarios}
           sessionId={sessionId}
-          plotCardId={plotCardId}
+          scenarioCardId={scenarioCardId}
         />
       </div>
 

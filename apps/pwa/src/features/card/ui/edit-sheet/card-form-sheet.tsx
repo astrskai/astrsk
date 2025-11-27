@@ -39,7 +39,7 @@ import {
   CardType,
   CharacterCard,
   Lorebook,
-  PlotCard,
+  ScenarioCard,
 } from "@/entities/card/domain";
 import { Session } from "@/entities/session/domain/session";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
@@ -181,7 +181,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
         setInvalidItemIds(invalidEntries.map((entry) => entry.id.toString()));
         return false;
       }
-    } else if (selectedCard.props.type === CardType.Plot) {
+    } else if (selectedCard.props.type === CardType.Scenario) {
       // Validate entries props
       const invalidEntries = formValues.entries?.filter((entry) => {
         return (
@@ -430,7 +430,7 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
         {/* Mobile Top Bar */}
         {isMobile && (
           <TopNavigation
-            title={`${isNewCard ? "Create" : "Edit"} ${cardType === CardType.Character ? "Character" : "Plot"}`}
+            title={`${isNewCard ? "Create" : "Edit"} ${cardType === CardType.Character ? "Character" : "Scenario"}`}
             leftAction={
               <Button
                 variant="ghost_white"
@@ -502,10 +502,10 @@ const CardFormSheet: React.FC<CardFormSheetProps> = ({
                 isMobile={isMobile}
               />
             )}
-            {selectedCard && cardType === CardType.Plot && (
+            {selectedCard && cardType === CardType.Scenario && (
               <PlotForm
                 store={store}
-                card={selectedCard as PlotCard}
+                card={selectedCard as ScenarioCard}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 setIsFormDirty={setIsFormDirty}

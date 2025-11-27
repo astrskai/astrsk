@@ -24,12 +24,12 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/ui";
-import { CardType, PlotCard } from "@/entities/card/domain";
+import { CardType, ScenarioCard } from "@/entities/card/domain";
 import { cn } from "@/shared/lib";
 
 interface PlotFormV2Props {
   store: CardStore;
-  card: PlotCard;
+  card: ScenarioCard;
   activeTab: ActiveTabType;
   setActiveTab: (tab: ActiveTabType) => void;
   setIsFormDirty: (isDirty: boolean) => void;
@@ -59,7 +59,7 @@ export const PlotForm = ({
       conceptualOrigin: card.props.conceptualOrigin || "",
       newIcon: undefined,
       entries: card.props.lorebook?.entries || [],
-      scenarios: card.props.scenarios || [],
+      scenarios: card.props.firstMessages || [],
     },
   });
 
@@ -67,8 +67,8 @@ export const PlotForm = ({
   const [expandedMessages, setExpandedMessages] = useState<
     Record<number, boolean>
   >(
-    card.props.scenarios?.reduce(
-      (acc, _, index) => {
+    card.props.firstMessages?.reduce(
+      (acc: Record<number, boolean>, _, index: number) => {
         acc[index] = true;
         return acc;
       },

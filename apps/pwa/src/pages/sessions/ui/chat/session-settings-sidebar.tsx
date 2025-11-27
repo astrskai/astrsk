@@ -14,12 +14,12 @@ import {
 } from "lucide-react";
 
 import { AssetService } from "@/app/services/asset-service";
-import ScenarioCard from "@/features/scenario/ui/scenario-card";
+import ScenarioCardUI from "@/features/scenario/ui/scenario-card";
 import WorkflowCard from "@/features/flow/ui/workflow-card";
 import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
 import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
 import { Session } from "@/entities/session/domain/session";
-import { PlotCard, CardType } from "@/entities/card/domain";
+import { ScenarioCard, CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import {
   fetchSession,
@@ -58,17 +58,17 @@ const ScenarioPreviewItem = ({
   scenarioId: UniqueEntityID;
   onClick?: () => void;
 }) => {
-  const [scenario] = useCard<PlotCard>(scenarioId);
+  const [scenario] = useCard<ScenarioCard>(scenarioId);
   const [imageUrl] = useAsset(scenario?.props?.iconAssetId);
 
   return (
-    <ScenarioCard
+    <ScenarioCardUI
       title={scenario?.props?.title ?? ""}
       imageUrl={imageUrl}
       summary={scenario?.props?.summary}
       tags={scenario?.props?.tags || []}
       tokenCount={scenario?.props?.tokenCount}
-      firstMessages={scenario?.props?.scenarios?.length || 0}
+      firstMessages={scenario?.props?.firstMessages?.length || 0}
       className="min-h-[200px]"
       onClick={onClick}
     />
@@ -230,7 +230,7 @@ const SessionSettingsSidebar = ({
   }, []);
 
   const handleConfirmScenario = useCallback(
-    async (scenario: PlotCard | null) => {
+    async (scenario: ScenarioCard | null) => {
       if (!scenario) {
         return;
       }
