@@ -49,7 +49,7 @@ export const SearchInput = forwardRef<
         placeholder={placeholder}
         value={currentValue}
         onChange={handleChange}
-        className="focus:ring-brand-500/50 h-9 w-full rounded-lg bg-neutral-800 pr-10 pl-10 text-sm text-neutral-100 placeholder:text-neutral-500 focus:ring-1 focus:outline-none md:h-10"
+        className="h-9 w-full rounded-lg bg-neutral-800 pr-10 pl-10 text-sm text-neutral-100 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-brand-500/50 focus:outline-none md:h-10"
         {...props}
       />
       {hasValue && (

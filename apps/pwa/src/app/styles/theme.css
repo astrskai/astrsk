@@ -235,3 +235,21 @@
     color: var(--fg-muted);
   }
 }
+
+/* -----------------------------------------------
+   7. KEYFRAMES & ANIMATIONS
+   ----------------------------------------------- */
+@keyframes bounce-typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-8px);
+  }
+}
+
+@utility animate-bounce-typing {
+  animation: bounce-typing 1.4s ease-in-out infinite;
+}

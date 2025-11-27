@@ -1416,31 +1416,18 @@ const SessionContent = ({
           </div>
         </div>
 
-        {/* Select Scenario Modal - absolute on mobile (inside scroll area), fixed on desktop (full viewport) */}
-        {isOpenSelectScenarioModal && (
-          <div
-            className={cn(
-              "z-[100] overflow-y-auto bg-black/50 px-[16px] py-[16px]",
-              // Mobile: absolute positioning inside scroll area (respects header)
-              "absolute inset-0",
-              // Desktop: fixed positioning (full viewport overlay)
-              "md:fixed md:inset-0",
-            )}
-          >
-            <div className="flex min-h-full items-center justify-center">
-              <SelectScenarioDialog
-                onSkip={() => {
-                  setIsOpenSelectScenarioModal(false);
-                }}
-                onAdd={addScenario}
-                renderedScenarios={renderedScenarios}
-                onRenderScenarios={renderScenarios}
-                sessionId={sessionId}
-                plotCardId={plotCardId}
-              />
-            </div>
-          </div>
-        )}
+        {/* Select Scenario Dialog */}
+        <SelectScenarioDialog
+          open={isOpenSelectScenarioModal}
+          onSkip={() => {
+            setIsOpenSelectScenarioModal(false);
+          }}
+          onAdd={addScenario}
+          renderedScenarios={renderedScenarios}
+          onRenderScenarios={renderScenarios}
+          sessionId={sessionId}
+          plotCardId={plotCardId}
+        />
       </div>
 
       {!isOpenSelectScenarioModal && (

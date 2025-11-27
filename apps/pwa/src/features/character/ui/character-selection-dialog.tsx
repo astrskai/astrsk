@@ -107,7 +107,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
   return (
     <div className="flex flex-col gap-4">
       {/* Title */}
-      <h3 className="hidden text-lg font-semibold text-fg-default md:block">
+      <h3 className="hidden text-center text-lg font-semibold text-fg-default md:block">
         {character.props.name || ""}
       </h3>
 
