@@ -111,11 +111,11 @@ export function ImportDialog({
             {/* Title inside content wrapper when custom layout is used */}
             {contentClassName && (
               <div className="flex flex-col items-start justify-start gap-2 self-stretch">
-                <DialogTitle className="text-text-primary h-9 justify-start self-stretch text-2xl leading-10 font-semibold">
+                <DialogTitle className="text-fg-default h-9 justify-start self-stretch text-2xl leading-10 font-semibold">
                   {title}
                 </DialogTitle>
                 {description && (
-                  <div className="text-text-subtle justify-start self-stretch text-base leading-relaxed font-normal">
+                  <div className="text-fg-subtle justify-start self-stretch text-base leading-relaxed font-normal">
                     {description.split("\n").map((line, i) => (
                       <span key={i}>
                         {line}
@@ -132,7 +132,7 @@ export function ImportDialog({
             )}
             <div
               className={cn(
-                "bg-background-surface-3 hover:bg-background-surface-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-dashed p-8",
+                "bg-surface-raised hover:bg-surface-overlay flex cursor-pointer flex-col items-center justify-center rounded-2xl border-dashed p-8",
                 contentClassName && "self-stretch px-16 py-8",
               )}
               onClick={handleClick}
@@ -141,10 +141,10 @@ export function ImportDialog({
             >
               <Import
                 size={contentClassName ? 64 : 72}
-                className="text-muted-foreground"
+                className="text-fg-subtle"
               />
               <div>
-                <TypoBase className="text-muted-foreground">
+                <TypoBase className="text-fg-subtle">
                   Choose a file or drag it here
                 </TypoBase>
               </div>
@@ -163,16 +163,16 @@ export function ImportDialog({
             <DialogTitle
               className={cn(
                 contentClassName &&
-                  "text-text-primary h-9 justify-start self-stretch text-2xl leading-10 font-semibold",
+                  "text-fg-default h-9 justify-start self-stretch text-2xl leading-10 font-semibold",
               )}
             >
               {title}
             </DialogTitle>
 
-            <div className="bg-background-surface-3 outline-border-light inline-flex items-center justify-between gap-2 self-stretch rounded px-4 py-3 outline outline-offset-[-1px]">
+            <div className="bg-surface-raised outline-border-default inline-flex items-center justify-between gap-2 self-stretch rounded px-4 py-3 outline outline-offset-[-1px]">
               <div className="flex items-center justify-start gap-2">
                 {fileIcon}
-                <div className="text-text-primary justify-start text-base leading-relaxed font-medium">
+                <div className="text-fg-default justify-start text-base leading-relaxed font-medium">
                   {file.name} {`(${humanizeBytes(file.size)})`}
                 </div>
               </div>

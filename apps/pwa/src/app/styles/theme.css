@@ -204,6 +204,8 @@
   --color-hover: var(--bg-hover);
   --color-active: var(--bg-active);
   --color-emphasis: var(--bg-emphasis);
+  --color-overlay: var(--bg-overlay);
+  --color-scrim: var(--bg-scrim);
 
   /* Foreground utilities: text-fg-default, text-fg-muted, etc. */
   --color-fg-default: var(--fg-default);
