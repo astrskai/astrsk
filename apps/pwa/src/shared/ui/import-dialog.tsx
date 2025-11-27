@@ -24,7 +24,7 @@ export interface ImportDialogProps {
   hideCloseWhenFile?: boolean;
   // File handling
   file: File | null;
-  onFileSelect: (file: File) => void;
+  onFileSelect: (file: File | null) => void;
   onFileRemove?: () => void;
   // Custom content to show after file selection
   children?: ReactNode;
@@ -80,7 +80,7 @@ export function ImportDialog({
       onFileRemove();
     } else {
       // Default behavior: just clear the file
-      onFileSelect(null as any);
+      onFileSelect(null);
     }
   };
 

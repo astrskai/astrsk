@@ -5,7 +5,8 @@ import { CardService } from "@/app/services/card-service";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { FlowService } from "@/app/services/flow-service";
 import { CardType } from "@/entities/card/domain";
-import { cardQueries } from "@/entities/card/api/card-queries";
+import { characterKeys } from "@/entities/character/api";
+import { scenarioKeys } from "@/entities/scenario/api";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { logger } from "@/shared/lib";
 import type { AgentModel } from "@/features/flow/ui/flow-import-dialog";
@@ -61,16 +62,7 @@ export function useResourceImport() {
 
           const importedCards = result.getValue();
 
-          // Refresh card list
-          await queryClient.invalidateQueries({
-            queryKey: cardQueries.lists(),
-          });
-
-          toastSuccess("Card imported successfully", {
-            description: `Imported ${importedCards.length} card(s)`,
-          });
-
-          // Navigate to appropriate card page
+          // Refresh card lists based on imported card types
           const hasCharacter = importedCards.some(
             (card) => card.props.type === CardType.Character,
           );
@@ -78,6 +70,22 @@ export function useResourceImport() {
             (card) => card.props.type === CardType.Plot,
           );
 
+          if (hasCharacter) {
+            await queryClient.invalidateQueries({
+              queryKey: characterKeys.lists(),
+            });
+          }
+          if (hasPlot) {
+            await queryClient.invalidateQueries({
+              queryKey: scenarioKeys.lists(),
+            });
+          }
+
+          toastSuccess("Card imported successfully", {
+            description: `Imported ${importedCards.length} card(s)`,
+          });
+
+          // Navigate to appropriate card page
           if (hasCharacter && !hasPlot) {
             navigate({ to: "/assets/characters" });
           } else if (hasPlot && !hasCharacter) {
@@ -96,16 +104,7 @@ export function useResourceImport() {
             // Successfully imported as character card
             const importedCards = cardResult.getValue();
 
-            // Refresh card list
-            await queryClient.invalidateQueries({
-              queryKey: cardQueries.lists(),
-            });
-
-            toastSuccess("Card imported successfully", {
-              description: `Imported ${importedCards.length} card(s)`,
-            });
-
-            // Navigate to appropriate card page
+            // Refresh card lists based on imported card types
             const hasCharacter = importedCards.some(
               (card) => card.props.type === CardType.Character,
             );
@@ -113,6 +112,22 @@ export function useResourceImport() {
               (card) => card.props.type === CardType.Plot,
             );
 
+            if (hasCharacter) {
+              await queryClient.invalidateQueries({
+                queryKey: characterKeys.lists(),
+              });
+            }
+            if (hasPlot) {
+              await queryClient.invalidateQueries({
+                queryKey: scenarioKeys.lists(),
+              });
+            }
+
+            toastSuccess("Card imported successfully", {
+              description: `Imported ${importedCards.length} card(s)`,
+            });
+
+            // Navigate to appropriate card page
             if (hasCharacter && !hasPlot) {
               navigate({ to: "/assets/characters" });
             } else if (hasPlot && !hasCharacter) {

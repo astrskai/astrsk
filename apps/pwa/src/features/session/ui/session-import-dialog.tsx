@@ -71,11 +71,11 @@ export function SessionImportDialog({
     }
   }, [open]);
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (file: File | null) => {
     setImportingFile(file);
 
     // If onFileSelect is provided, use it to get agent models
-    if (onFileSelect) {
+    if (file && onFileSelect) {
       const models = await onFileSelect(file);
       if (models) {
         setAgentModels(models);
