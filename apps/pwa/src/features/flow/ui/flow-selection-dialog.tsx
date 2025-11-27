@@ -5,7 +5,7 @@ import WorkflowCard from "@/features/flow/ui/workflow-card";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { Flow } from "@/entities/flow/domain/flow";
 import { cn } from "@/shared/lib";
-import DialogBase from "@/shared/ui/dialogs/base";
+import { DialogBase } from "@/shared/ui/dialogs/base";
 
 interface FlowSelectionDialogProps {
   open: boolean;

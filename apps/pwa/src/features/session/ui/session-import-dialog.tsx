@@ -71,11 +71,11 @@ export function SessionImportDialog({
     }
   }, [open]);
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (file: File | null) => {
     setImportingFile(file);
 
     // If onFileSelect is provided, use it to get agent models
-    if (onFileSelect) {
+    if (file && onFileSelect) {
       const models = await onFileSelect(file);
       if (models) {
         setAgentModels(models);
@@ -108,8 +108,6 @@ export function SessionImportDialog({
       description={description}
       accept=".session"
       fileIcon={<SvgIcon name="sessions_solid" size={24} />}
-      className="p-2 pt-8"
-      contentClassName="px-4 pb-4 flex flex-col justify-start items-start gap-6"
       hideCloseWhenFile={true}
       file={importingFile}
       onFileSelect={handleFileSelect}

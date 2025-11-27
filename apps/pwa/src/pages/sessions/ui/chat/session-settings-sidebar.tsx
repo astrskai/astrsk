@@ -37,7 +37,7 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { useFlow } from "@/shared/hooks/use-flow";
 import { Loading, PopoverBase, DropdownMenuBase, Switch } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs/confirm";
-import DialogBase from "@/shared/ui/dialogs/base";
+import { DialogBase } from "@/shared/ui/dialogs/base";
 import { useCard } from "@/shared/hooks/use-card";
 import { UniqueEntityID } from "@/shared/domain";
 import MessageStyling from "./settings/message-styling";

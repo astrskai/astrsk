@@ -10,7 +10,7 @@ import { CardType } from "@/entities/card/domain";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
 import type { CardAction } from "@/features/common/ui";
-import DialogBase from "@/shared/ui/dialogs/base";
+import { DialogBase } from "@/shared/ui/dialogs/base";
 
 interface CharacterSelectionDialogProps {
   open: boolean;
