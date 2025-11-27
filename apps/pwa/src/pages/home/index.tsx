@@ -178,59 +178,62 @@ export function HomePage({ className }: HomePageProps) {
   return (
     <div
       className={cn(
-        "bg-canvas flex h-full flex-col items-center gap-8 overflow-y-auto px-4 py-8 md:justify-center md:py-12",
+        "bg-canvas flex h-full flex-col items-center overflow-y-auto px-4 py-8",
         className,
       )}
     >
-      {/* Hero Text */}
-      <h1 className="text-fg-default text-center text-4xl leading-[1.1] font-extrabold tracking-tight sm:text-5xl lg:text-7xl">
-        Chat Privately.
-        <br />
-        <span className="from-brand-400 to-brand-600 bg-gradient-to-r bg-clip-text text-transparent">
-          Run Locally.
-        </span>
-      </h1>
+      {/* Main Content - Centered */}
+      <div className="flex flex-1 flex-col items-center justify-center gap-8">
+        {/* Hero Text */}
+        <h1 className="text-fg-default text-center text-4xl leading-[1.1] font-extrabold tracking-tight sm:text-5xl lg:text-7xl">
+          Chat Privately.
+          <br />
+          <span className="from-brand-400 to-brand-600 bg-gradient-to-r bg-clip-text text-transparent">
+            Run Locally.
+          </span>
+        </h1>
 
-      {/* Privacy Badge */}
-      <div className="bg-surface-raised/50 text-fg-muted hover:border-brand-500/50 hover:bg-brand-500/5 flex items-center gap-2 rounded-full border border-neutral-800 px-4 py-2 text-xs backdrop-blur-xl transition-all sm:gap-3 sm:px-5 sm:py-2.5 sm:text-sm">
-        <ShieldCheck
-          size={16}
-          className="text-brand-400 shrink-0 sm:size-[18px]"
-        />
-        <span className="text-center sm:text-left">
-          Your sessions are stored locally — <br className="sm:hidden" />
-          <span className="text-brand-400 font-bold">only on your device</span>
-        </span>
-      </div>
+        {/* Privacy Badge */}
+        <div className="bg-surface-raised/50 text-fg-muted hover:border-brand-500/50 hover:bg-brand-500/5 flex items-center gap-2 rounded-full border border-neutral-800 px-4 py-2 text-xs backdrop-blur-xl transition-all sm:gap-3 sm:px-5 sm:py-2.5 sm:text-sm">
+          <ShieldCheck
+            size={16}
+            className="text-brand-400 shrink-0 sm:size-[18px]"
+          />
+          <span className="text-center sm:text-left">
+            Your sessions are stored locally — <br className="sm:hidden" />
+            <span className="text-brand-400 font-bold">only on your device</span>
+          </span>
+        </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col items-center gap-4 sm:flex-row">
-        <button
-          onClick={handleStartSession}
-          className="bg-brand-600 shadow-brand-600/25 hover:bg-brand-500 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:scale-95 sm:w-auto"
-        >
-          Start Creating Session
-        </button>
-        <button
-          onClick={handleWatchTutorial}
-          className="border-border-default text-fg-muted hover:border-brand-500 hover:text-brand-500 flex w-full items-center justify-center gap-2 rounded-xl border bg-transparent px-6 py-3 font-semibold transition-all duration-300 active:scale-95 sm:w-auto"
-        >
-          <Play size={18} /> Watch Tutorial
-        </button>
-      </div>
+        {/* Action Buttons */}
+        <div className="flex flex-col items-center gap-4 sm:flex-row">
+          <button
+            onClick={handleStartSession}
+            className="bg-brand-600 shadow-brand-600/25 hover:bg-brand-500 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:scale-95 sm:w-auto"
+          >
+            Start Creating Session
+          </button>
+          <button
+            onClick={handleWatchTutorial}
+            className="border-border-default text-fg-muted hover:border-brand-500 hover:text-brand-500 flex w-full items-center justify-center gap-2 rounded-xl border bg-transparent px-6 py-3 font-semibold transition-all duration-300 active:scale-95 sm:w-auto"
+          >
+            <Play size={18} /> Watch Tutorial
+          </button>
+        </div>
 
-      {/* Tutorial Dialog */}
-      <TutorialDialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen} />
+        {/* Tutorial Dialog */}
+        <TutorialDialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen} />
 
-      {/* Chat Demo */}
-      <div className="hidden w-full max-w-2xl">
-        <div className="transform transition-transform duration-500 hover:scale-[1.01]">
-          <ChatDemo />
+        {/* Chat Demo */}
+        <div className="hidden w-full max-w-2xl">
+          <div className="transform transition-transform duration-500 hover:scale-[1.01]">
+            <ChatDemo />
+          </div>
         </div>
       </div>
 
       {/* Company Info */}
-      <div className="mt-8">
+      <div className="pt-8">
         <CompanyInfo />
       </div>
     </div>

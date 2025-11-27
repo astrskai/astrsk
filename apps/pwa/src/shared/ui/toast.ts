@@ -84,7 +84,7 @@ const createToast = (
     description: options?.description,
     action: options?.action,
     duration: options?.duration ?? styles.duration,
-    position: options?.position ?? "top-right",
+    position: options?.position ?? "bottom-right",
     closeButton: options?.closeButton ?? true,
     descriptionClassName: styles.descriptionClass,
     classNames: {
@@ -141,7 +141,7 @@ export const toastPromise = <T>(
     loading: messages.loading,
     success: messages.success,
     error: messages.error,
-    position: options?.position ?? "top-right",
+    position: options?.position ?? "bottom-right",
     style: {
       backgroundColor: "var(--bg-surface-raised)",
       borderColor: "var(--border-default)",
