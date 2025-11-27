@@ -3,13 +3,13 @@ import { cn } from "@/shared/lib";
 import {
   Button,
   ScrollArea,
-  SvgIcon,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
+import { IconDiscord } from "@/shared/assets/icons";
 import { api } from "@/convex";
 import { logger } from "@/shared/lib/logger";
 import { useAuth, useSignUp } from "@clerk/clerk-react";
@@ -352,7 +352,7 @@ const SubscribePage = () => {
                     disabled={!isLoadedSignUp || isLoading}
                     loading={isLoading || isSignUpAvailableLoading}
                   >
-                    {!isLoading && <SvgIcon name="discord" size={16} />}
+                    {!isLoading && <IconDiscord className="h-4 w-4" />}
                     Join our Discord server and start now
                   </Button>
                 </div>

@@ -14,6 +14,7 @@ import { ConvexReady } from "@/shared/ui/convex-ready";
 import { Authenticated } from "convex/react";
 import { useClerk } from "@clerk/clerk-react";
 import { SvgIcon } from "@/shared/ui";
+import { IconDiscord } from "@/shared/assets/icons";
 
 // --- Helper ---
 function openInNewTab(url: string) {
@@ -160,7 +161,7 @@ export default function SettingsPage() {
         <SectionTitle title="Community" />
         <div className="border-border-default bg-surface-raised rounded-2xl border">
           <SettingsItem
-            icon={<SvgIcon name="discord" className="h-5 w-5 text-[#5865F2]" />}
+            icon={<IconDiscord className="h-5 w-5 text-[#5865F2]" />}
             label="Join our Discord"
             description="Connect with other creators"
             type="external"
