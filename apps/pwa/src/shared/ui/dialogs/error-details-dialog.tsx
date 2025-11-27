@@ -1,3 +1,5 @@
+import { AlertCircle, Copy, Check } from "lucide-react";
+import { useState } from "react";
 import DialogBase from "./base";
 import { Button, ScrollArea } from "@/shared/ui";
 import { useErrorDialogStore } from "@/shared/stores/error-dialog-store";
@@ -9,9 +11,12 @@ import { useErrorDialogStore } from "@/shared/stores/error-dialog-store";
  */
 export function ErrorDetailsDialog() {
   const { isOpen, title, details, close } = useErrorDialogStore();
+  const [copied, setCopied] = useState(false);
 
   const handleCopyDetails = () => {
     navigator.clipboard.writeText(details);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -20,16 +25,24 @@ export function ErrorDetailsDialog() {
       onOpenChange={() => {
         // do nothing
       }}
-      title={title}
-      description="Error details"
+      title={
+        <div className="flex items-center gap-2">
+          <div className="bg-status-error/20 flex h-8 w-8 items-center justify-center rounded-full">
+            <AlertCircle className="text-status-error h-5 w-5" />
+          </div>
+          <span>{title}</span>
+        </div>
+      }
+      description="Something went wrong. Here are the details:"
       size="lg"
       isShowCloseButton={false}
+      className="border-status-error/30 bg-status-error/10 border"
       content={
         <div className="flex flex-col gap-4">
           {/* Error content */}
-          <div className="rounded-lg bg-gray-900/50 p-4">
+          <div className="border-status-error/20 bg-status-error/5 rounded-lg border p-4">
             <ScrollArea className="h-full max-h-[50vh]">
-              <pre className="font-mono text-xs break-words whitespace-pre-wrap text-gray-300">
+              <pre className="text-fg-muted font-mono text-xs break-words whitespace-pre-wrap">
                 {details}
               </pre>
             </ScrollArea>
@@ -38,7 +51,17 @@ export function ErrorDetailsDialog() {
           {/* Action buttons */}
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={handleCopyDetails}>
-              Copy details
+              {copied ? (
+                <>
+                  <Check className="text-status-success mr-1.5 h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-1.5 h-4 w-4" />
+                  Copy details
+                </>
+              )}
             </Button>
             <Button onClick={close}>Close</Button>
           </div>

@@ -14,12 +14,15 @@ interface SignUpFormData {
 }
 
 // --- Password Input Component ---
+type FormRegister = ReturnType<typeof useForm<SignUpFormData>>["register"];
+
 interface PasswordInputProps {
   id: string;
   error?: string;
   placeholder?: string;
-  register: ReturnType<typeof useForm<SignUpFormData>>["register"];
+  register: FormRegister;
   name: "password" | "confirmPassword";
+  rules?: Parameters<FormRegister>[1];
 }
 
 const PasswordInput = ({
@@ -28,6 +31,7 @@ const PasswordInput = ({
   placeholder = "••••••••",
   register,
   name,
+  rules,
 }: PasswordInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -38,7 +42,7 @@ const PasswordInput = ({
         type={showPassword ? "text" : "password"}
         placeholder={placeholder}
         className={`bg-surface-raised h-11 rounded-xl pr-16 ${error ? "border-status-error" : ""}`}
-        {...register(name)}
+        {...register(name, rules)}
       />
       <div className="absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-2">
         {error && <AlertCircle size={16} className="text-status-error" />}
@@ -212,6 +216,13 @@ export function SignUpPage() {
               name="password"
               register={register}
               error={errors.password?.message}
+              rules={{
+                required: "Password is required",
+                minLength: {
+                  value: 8,
+                  message: "Password must be at least 8 characters long",
+                },
+              }}
             />
           </div>
 
@@ -228,6 +239,11 @@ export function SignUpPage() {
               name="confirmPassword"
               register={register}
               error={errors.confirmPassword?.message}
+              rules={{
+                required: "Please confirm your password",
+                validate: (value) =>
+                  value === password || "Passwords do not match",
+              }}
             />
             {errors.confirmPassword && (
               <p className="text-status-error flex items-center gap-1 text-xs">

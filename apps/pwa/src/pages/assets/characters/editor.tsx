@@ -28,7 +28,7 @@ import { Input, Textarea } from "@/shared/ui/forms";
 import { useScrollToTop } from "@/shared/hooks/use-scroll-to-top";
 import { AccordionBase } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs";
-import { toastSuccess, toastError } from "@/shared/ui/toast/base";
+import { toastSuccess, toastError } from "@/shared/ui/toast";
 
 interface LorebookEntryFormData {
   id: string;
