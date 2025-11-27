@@ -200,16 +200,16 @@ const renderProviderListItem = ({
   // Get details by source
   const details: ProviderDisplayDetailProps[] = [];
   if (apiConnection) {
-    if (showModelUrl.get(source)) {
-      details.push({
-        label: "Model ID",
-        value: apiConnection.modelUrls?.join(", ") ?? "",
-      });
-    }
     if (showBaseUrl.get(source)) {
       details.push({
         label: "Base URL",
         value: apiConnection.baseUrl ?? "",
+      });
+    }
+    if (showModelUrl.get(source)) {
+      details.push({
+        label: "Model ID",
+        value: apiConnection.modelUrls?.join(", ") ?? "",
       });
     }
     if (source === ApiSource.OpenRouter) {

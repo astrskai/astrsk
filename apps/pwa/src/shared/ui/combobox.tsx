@@ -309,9 +309,9 @@ const ComboboxInner = ({
       <PopoverContent
         className={cn(
           "w-(--radix-popover-trigger-width) p-0",
-          isMobile ? "bg-surface border-0" : "bg-canvas border-border-default",
+          isMobile ? "bg-surface border-0" : "bg-surface-raised border-border-default",
         )}
-        style={isMobile ? { backgroundColor: "var(--surface)" } : undefined}
+        style={{ backgroundColor: isMobile ? "var(--bg-surface)" : "var(--bg-surface-raised)" }}
         side={"bottom"}
         align="start"
         sideOffset={isMobile ? 8 : 4}
@@ -319,8 +319,8 @@ const ComboboxInner = ({
         collisionPadding={isMobile ? 16 : 8}
       >
         <Command
-          className={isMobile ? "bg-surface" : "bg-canvas"}
-          style={isMobile ? { backgroundColor: "var(--surface)" } : undefined}
+          className={isMobile ? "bg-surface" : "bg-surface-raised"}
+          style={{ backgroundColor: isMobile ? "var(--bg-surface)" : "var(--bg-surface-raised)" }}
           filter={(value, search, keywords = []) => {
             const valueWithKeywords = [value, ...keywords]
               .join(" ")
@@ -372,10 +372,11 @@ const ComboboxInner = ({
               </div>
             ) : (
               <div
-                className="border-border-default bg-canvas flex items-center border-b px-3"
+                className="border-border-default bg-surface-raised flex items-center border-b px-3"
                 style={{
                   height: `${isZoom ? zoomScale * 2.5 : 2.5}rem`,
                   padding: `0 ${isZoom ? zoomScale * 0.75 : 0.75}rem`,
+                  backgroundColor: "var(--bg-surface-raised)",
                 }}
               >
                 <Search
