@@ -7,6 +7,7 @@ import {
 } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { Button, FloatingLabelInput, SvgIcon } from "@/shared/ui";
+import { IconGoogle, IconDiscord } from "@/shared/assets/icons";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { logger } from "@/shared/lib";
 import { useSignIn, useSignUp } from "@clerk/clerk-react";
@@ -378,10 +379,10 @@ const SignUpPage = () => {
               className="mb-[24px]"
             />
             <Button className="w-full" size="lg" onClick={signUpWithGoogle}>
-              <SvgIcon name="google" size={18} /> Continue with Google
+              <IconGoogle className="h-[18px] w-[18px]" /> Continue with Google
             </Button>
             <Button className="w-full" size="lg" onClick={signUpWithDiscord}>
-              <SvgIcon name="discord" size={18} /> Continue with Discord
+              <IconDiscord className="h-[18px] w-[18px]" /> Continue with Discord
             </Button>
             <div className="text-text-subtle text-[16px] leading-[25.6px] font-[500]">
               or
