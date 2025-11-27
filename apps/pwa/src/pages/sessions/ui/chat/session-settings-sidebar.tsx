@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 
 import { AssetService } from "@/app/services/asset-service";
-import ScenarioPreview from "@/features/scenario/ui/scenario-preview";
-import FlowPreview from "@/features/flow/ui/flow-preview";
+import ScenarioCard from "@/features/scenario/ui/scenario-card";
+import WorkflowCard from "@/features/flow/ui/workflow-card";
 import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
 import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
 import { Session } from "@/entities/session/domain/session";
@@ -62,9 +62,10 @@ const ScenarioPreviewItem = ({
   const [imageUrl] = useAsset(scenario?.props?.iconAssetId);
 
   return (
-    <ScenarioPreview
-      title={scenario?.props?.title}
+    <ScenarioCard
+      title={scenario?.props?.title ?? ""}
       imageUrl={imageUrl}
+      summary={scenario?.props?.summary}
       tags={scenario?.props?.tags || []}
       tokenCount={scenario?.props?.tokenCount}
       firstMessages={scenario?.props?.scenarios?.length || 0}
@@ -659,7 +660,7 @@ const SessionSettingsSidebar = ({
             {isLoadingFlow ? (
               <Loading size="sm" />
             ) : flow ? (
-              <FlowPreview
+              <WorkflowCard
                 title={flow?.props.name ?? "No flow selected"}
                 description={flow?.props.description}
                 nodeCount={flow?.props.nodes.length}
