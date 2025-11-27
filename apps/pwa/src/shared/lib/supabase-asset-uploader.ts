@@ -61,14 +61,9 @@ export async function uploadAssetToSupabase(
       );
     }
 
-    // Get public URL
-    const { data: urlData } = supabaseClient.storage
-      .from(ASSETS_BUCKET)
-      .getPublicUrl(storagePath);
-
-    const publicUrl = urlData.publicUrl;
-
     // Insert metadata into astrsk_assets table
+    // Store only the relative path (after bucket name) so the hub can construct
+    // the full URL using its own getStorageUrl() function
     const assetRecord: Omit<SupabaseAssetRecord, "created_at" | "updated_at"> =
     {
       id: asset.id.toString(),
@@ -76,7 +71,7 @@ export async function uploadAssetToSupabase(
       name: asset.props.name,
       size_byte: asset.props.sizeByte,
       mime_type: asset.props.mimeType,
-      file_path: publicUrl, // Use Supabase public URL
+      file_path: storagePath, // Relative path only: {asset_id}/{filename}
       session_id: context?.sessionId ?? null,
       character_id: context?.characterId ?? null,
       scenario_id: context?.scenarioId ?? null,
