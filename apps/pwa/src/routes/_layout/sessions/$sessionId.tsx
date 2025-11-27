@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import SessionDetailPage from "@/pages/sessions/detail";
-// import SessionDetailPage from "@/pages/sessions/detail-v2";
+// import ChatPage from "@/pages/sessions/chat";
 import { z } from "zod";
 import ErrorPage from "@/pages/error";
 

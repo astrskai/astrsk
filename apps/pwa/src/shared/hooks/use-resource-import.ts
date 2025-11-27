@@ -8,7 +8,7 @@ import { CardType } from "@/entities/card/domain";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { logger } from "@/shared/lib";
-import type { AgentModel } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
+import type { AgentModel } from "@/features/flow/ui/flow-import-dialog";
 
 /**
  * Unified resource import hook

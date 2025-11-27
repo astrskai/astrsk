@@ -7,7 +7,7 @@ import {
   DEFAULT_SORT_VALUE,
   type SortOptionValue,
 } from "@/shared/config/sort-options";
-import { ScenariosGrid } from "./ui/list/scenarios-grid";
+import { ScenariosGrid } from "./scenarios-grid";
 import {
   HelpVideoDialog,
   Loading,
@@ -18,7 +18,7 @@ import { cardQueries } from "@/entities/card/api";
 import { CardType } from "@/entities/card/domain";
 import { PlotCard } from "@/entities/card/domain/plot-card";
 import { useResourceImport } from "@/shared/hooks/use-resource-import";
-import { FlowImportDialog } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
+import { FlowImportDialog } from "@/features/flow/ui/flow-import-dialog";
 
 /**
  * Scenarios Page

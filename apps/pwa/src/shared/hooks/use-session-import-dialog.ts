@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { SessionService } from "@/app/services/session-service";
 import { logger } from "@/shared/lib";
 import { toast } from "sonner";
-import type { AgentModel } from "@/pages/sessions/ui/dialog/session-import-dialog";
+import type { AgentModel } from "@/features/session/ui/session-import-dialog";
 
 /**
  * Unified session import hook

@@ -21,7 +21,7 @@ import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { AutoReply } from "@/shared/stores/session-store";
 import { useSaveSession } from "@/entities/session/api/mutations";
 
-export default function SessionDetailPage() {
+export default function ChatPage() {
   const [isOpenSessionDataSidebar, setIsOpenSessionDataSidebar] =
     useState<boolean>(false);
   const [isOpenSettings, setIsOpenSettings] = useState<boolean>(false);
