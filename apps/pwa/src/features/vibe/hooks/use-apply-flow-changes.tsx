@@ -12,7 +12,7 @@
  */
 
 import { useCallback } from "react";
-import { toast } from "sonner";
+import { toastSuccess, toastWarning } from "@/shared/ui/toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { FlowService } from "@/app/services/flow-service";
 import { AgentService } from "@/app/services/agent-service";
@@ -460,12 +460,12 @@ export const useApplyFlowChanges = ({
 
       // Report results
       if (result.errors.length === 0) {
-        toast.success(
+        toastSuccess(
           `Successfully applied ${result.appliedFields.length} flow changes`,
         );
         onSuccess?.();
       } else {
-        toast.warning(
+        toastWarning(
           `Applied ${result.appliedFields.length} changes with ${result.errors.length} errors`,
         );
         result.errors.forEach((error) => console.error(error));

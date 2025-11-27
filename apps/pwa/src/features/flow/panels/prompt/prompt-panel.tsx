@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { debounce } from "lodash-es";
-import { toast } from "sonner";
+import { toastInfo } from "@/shared/ui/toast";
 import {
   DndContext,
   closestCenter,
@@ -428,7 +428,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
       // If a save is currently in progress, block the switch
       if (isPromptMessagesPending) {
         setShowLoading(true);
-        toast.info("Saving changes before switching message...", {
+        toastInfo("Saving changes before switching message...", {
           duration: 2000,
         });
         return;
@@ -437,7 +437,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
       // If we have pending unsaved changes (debounce timer), trigger save and block switch
       if (pendingSaveRef.current) {
         setShowLoading(true);
-        toast.info("Saving changes before switching message...", {
+        toastInfo("Saving changes before switching message...", {
           duration: 2000,
         });
         return;

@@ -28,7 +28,7 @@ import { DataStoreSchemaProps, DataStoreSchemaField, DataStoreSchema, DataStoreF
 import { SortableField } from "./sortable-field";
 import { UniqueEntityID } from "@/shared/domain";
 import { sanitizeFileName } from "@/shared/lib/file-utils";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 
 export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
   
@@ -102,7 +102,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
       // Access mutation directly
       updateDataStoreSchema.mutate(updatedSchema, {
         onError: (error) => {
-          toast.error("Failed to save data store schema", {
+          toastError("Failed to save data store schema", {
             description: error instanceof Error ? error.message : "Unknown error",
           });
         }

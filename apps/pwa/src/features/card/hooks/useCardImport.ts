@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
-import { toast } from "sonner";
 
 import { CardService } from "@/app/services";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 /**
  * Hook to manage card import functionality
@@ -28,14 +28,14 @@ export const useCardImport = (handleInvalidation: () => void) => {
       // Import card from file
       const importResult = await CardService.importCardFromFile.execute(file);
       if (importResult.isFailure) {
-        toast.error("Failed to import card from file", {
+        toastError("Failed to import card from file", {
           description: importResult.getError(),
         });
         return;
       }
 
       // Show toast
-      toast("Card Imported!");
+      toastSuccess("Card Imported!");
 
       // Refresh cards
       handleInvalidation();
@@ -43,7 +43,7 @@ export const useCardImport = (handleInvalidation: () => void) => {
       // Close popup
       setIsOpenImportCardPopup(false);
     },
-    [handleInvalidation, toast],
+    [handleInvalidation],
   );
 
   return {

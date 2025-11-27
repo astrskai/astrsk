@@ -1,5 +1,5 @@
 import { useCallback, useMemo, memo, useState, useId } from "react";
-import { toast } from "sonner";
+import { toastError, toastSuccess, toastInfo } from "@/shared/ui/toast";
 import { useNavigate } from "@tanstack/react-router";
 import {
   PanelRightClose,
@@ -141,7 +141,7 @@ const SessionSettingsSidebar = ({
             CardType.Character,
           );
           if (result.isFailure) {
-            toast.error("Failed to add character", {
+            toastError("Failed to add character", {
               description: result.getError(),
             });
             return;
@@ -152,11 +152,11 @@ const SessionSettingsSidebar = ({
         await saveSessionMutation.mutateAsync({ session: latestSession });
 
         // Show success message
-        toast.success(
+        toastSuccess(
           `${newCharacters.length} AI character${newCharacters.length > 1 ? "s" : ""} added successfully`,
         );
       } catch (error) {
-        toast.error("Failed to add AI characters", {
+        toastError("Failed to add AI characters", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -193,7 +193,7 @@ const SessionSettingsSidebar = ({
             CardType.Character,
           );
           if (addResult.isFailure) {
-            toast.error("Failed to add character", {
+            toastError("Failed to add character", {
               description: addResult.getError(),
             });
             return;
@@ -205,7 +205,7 @@ const SessionSettingsSidebar = ({
           selectedCharacter.id,
         );
         if (setResult.isFailure) {
-          toast.error("Failed to set user character", {
+          toastError("Failed to set user character", {
             description: setResult.getError(),
           });
           return;
@@ -215,9 +215,9 @@ const SessionSettingsSidebar = ({
         await saveSessionMutation.mutateAsync({ session: latestSession });
 
         // Show success message
-        toast.success("User character added successfully");
+        toastSuccess("User character added successfully");
       } catch (error) {
-        toast.error("Failed to add user character", {
+        toastError("Failed to add user character", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -246,14 +246,14 @@ const SessionSettingsSidebar = ({
 
         // If already exists, no need to add again
         if (existingCard) {
-          toast.info("This scenario is already added to the session");
+          toastInfo("This scenario is already added to the session");
           return;
         }
 
         // Add scenario to allCards using addCard method (validates Plot card uniqueness)
         const addResult = latestSession.addCard(scenario.id, CardType.Plot);
         if (addResult.isFailure) {
-          toast.error("Failed to add scenario", {
+          toastError("Failed to add scenario", {
             description: addResult.getError(),
           });
           return;
@@ -263,9 +263,9 @@ const SessionSettingsSidebar = ({
         await saveSessionMutation.mutateAsync({ session: latestSession });
 
         // Show success message
-        toast.success("Scenario added successfully");
+        toastSuccess("Scenario added successfully");
       } catch (error) {
-        toast.error("Failed to add scenario", {
+        toastError("Failed to add scenario", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -290,9 +290,9 @@ const SessionSettingsSidebar = ({
         setIsBackgroundPopoverOpen(false);
 
         // Show success message
-        toast.success("Background updated successfully");
+        toastSuccess("Background updated successfully");
       } catch (error) {
-        toast.error("Failed to update background", {
+        toastError("Failed to update background", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -302,7 +302,7 @@ const SessionSettingsSidebar = ({
 
   const handleSaveTitle = useCallback(async () => {
     if (!editedTitle.trim()) {
-      toast.error("Title cannot be empty");
+      toastError("Title cannot be empty");
       return;
     }
 
@@ -320,9 +320,9 @@ const SessionSettingsSidebar = ({
       setIsEditingTitle(false);
 
       // Show success message
-      toast.success("Title updated successfully");
+      toastSuccess("Title updated successfully");
     } catch (error) {
-      toast.error("Failed to update title", {
+      toastError("Failed to update title", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
@@ -340,12 +340,12 @@ const SessionSettingsSidebar = ({
       });
 
       // Cache invalidation happens in mutation's onSuccess
-      toast.success("Session deleted successfully");
+      toastSuccess("Session deleted successfully");
 
       // Navigate to sessions list
       navigate({ to: "/sessions" });
     } catch (error) {
-      toast.error("Failed to delete session", {
+      toastError("Failed to delete session", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
@@ -365,7 +365,7 @@ const SessionSettingsSidebar = ({
         });
 
         if (assetResult.isFailure) {
-          toast.error("Failed to upload cover image", {
+          toastError("Failed to upload cover image", {
             description: assetResult.getError(),
           });
           return;
@@ -385,9 +385,9 @@ const SessionSettingsSidebar = ({
         await saveSessionMutation.mutateAsync({ session: latestSession });
 
         // Show success message
-        toast.success("Cover image updated successfully");
+        toastSuccess("Cover image updated successfully");
       } catch (error) {
-        toast.error("Failed to update cover image", {
+        toastError("Failed to update cover image", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -412,9 +412,9 @@ const SessionSettingsSidebar = ({
       await saveSessionMutation.mutateAsync({ session: latestSession });
 
       // Show success message
-      toast.success("Cover image deleted successfully");
+      toastSuccess("Cover image deleted successfully");
     } catch (error) {
-      toast.error("Failed to delete cover image", {
+      toastError("Failed to delete cover image", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }

@@ -43,7 +43,7 @@ import { debounce } from "lodash-es";
 import type { DataStoreField } from "@/entities/flow/domain/flow";
 import { SortableDataField } from "./sortable-data-field";
 import { UniqueEntityID } from "@/shared/domain";
-import { toast } from "sonner";
+import { toastError, toastInfo } from "@/shared/ui/toast";
 
 interface DataStorePanelProps {
   flowId: string;
@@ -145,7 +145,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
           setDataStoreFields(fields);
         },
         onError: (error) => {
-          toast.error("Failed to save data store fields", {
+          toastError("Failed to save data store fields", {
             description:
               error instanceof Error ? error.message : "Unknown error",
           });
@@ -269,7 +269,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
       // If a save is currently in progress, block the switch
       if (isFieldsPending) {
         setShowLoading(true);
-        toast.info("Saving changes before switching field...", {
+        toastInfo("Saving changes before switching field...", {
           duration: 2000,
         });
         return;
@@ -278,7 +278,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
       // If we have pending unsaved changes (debounce timer), block switch
       if (pendingSaveRef.current) {
         setShowLoading(true);
-        toast.info("Saving changes before switching field...", {
+        toastInfo("Saving changes before switching field...", {
           duration: 2000,
         });
         return;

@@ -36,7 +36,7 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { isObject } from "lodash-es";
 import { Check, ChevronDown, ChevronUp, Database, Target } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toastSuccess, toastInfo } from "@/shared/ui/toast";
 import { VariablePanelProps } from "./variable-panel-types";
 
 interface AgentVariable {
@@ -576,19 +576,19 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         lastMonacoEditor.position
       ) {
         insertVariableAtLastCursor(variableValue);
-        toast.success(`Inserted: ${variablePath}`, {
+        toastSuccess(`Inserted: ${variablePath}`, {
           duration: 2000,
         });
       } else if (lastInputField && lastInputField.element) {
         insertVariableAtInputField(variableValue);
-        toast.success(`Inserted: ${variablePath}`, {
+        toastSuccess(`Inserted: ${variablePath}`, {
           duration: 2000,
         });
       } else {
         // Copy to clipboard when no field is selected
         if (navigator.clipboard) {
           navigator.clipboard.writeText(variableValue);
-          toast.info(
+          toastInfo(
             `No field selected. Copied ${variableValue} to clipboard.`,
             {
               duration: 2000,
@@ -624,19 +624,19 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
         lastMonacoEditor.position
       ) {
         insertVariableAtLastCursor(variableTemplate);
-        toast.success(`Inserted: ${variable.variable}`, {
+        toastSuccess(`Inserted: ${variable.variable}`, {
           duration: 2000,
         });
       } else if (lastInputField && lastInputField.element) {
         insertVariableAtInputField(variableTemplate);
-        toast.success(`Inserted: ${variable.variable}`, {
+        toastSuccess(`Inserted: ${variable.variable}`, {
           duration: 2000,
         });
       } else {
         // Copy to clipboard when no field is selected
         if (navigator.clipboard) {
           navigator.clipboard.writeText(variableTemplate);
-          toast.info(
+          toastInfo(
             `No field selected. Copied ${variableTemplate} to clipboard.`,
             {
               duration: 2000,
@@ -993,19 +993,19 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                           // Insert into monaco editor or input field if available
                           if (lastMonacoEditor?.editor) {
                             insertVariableAtLastCursor(variableName);
-                            toast.success(`Inserted: ${field.name}`, {
+                            toastSuccess(`Inserted: ${field.name}`, {
                               duration: 2000,
                             });
                           } else if (lastInputField?.element) {
                             insertVariableAtInputField(variableName);
-                            toast.success(`Inserted: ${field.name}`, {
+                            toastSuccess(`Inserted: ${field.name}`, {
                               duration: 2000,
                             });
                           } else {
                             // Copy to clipboard when no field is selected
                             if (navigator.clipboard) {
                               navigator.clipboard.writeText(variableName);
-                              toast.info(
+                              toastInfo(
                                 `No field selected. Copied ${variableName} to clipboard.`,
                                 {
                                   duration: 2000,

@@ -16,7 +16,7 @@ import {
 import { showErrorDetails } from "@/shared/stores/error-dialog-store";
 import { showMigrationDetails } from "@/shared/stores/migration-details-dialog-store";
 import { Button } from "@/shared/ui/forms";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 export default function MigrationHistoryPage() {
   const logs = useMigrationLogStore.use.logs();
@@ -49,16 +49,16 @@ export default function MigrationHistoryPage() {
     navigator.clipboard
       .writeText(logText)
       .then(() => {
-        toast.success("Migration history copied to clipboard");
+        toastSuccess("Migration history copied to clipboard");
       })
       .catch(() => {
-        toast.error("Failed to copy migration history to clipboard");
+        toastError("Failed to copy migration history to clipboard");
       });
   };
 
   const handleClearLogs = () => {
     clearLogs();
-    toast.success("Migration history cleared");
+    toastSuccess("Migration history cleared");
   };
 
   const toggleLogExpansion = (logId: string) => {

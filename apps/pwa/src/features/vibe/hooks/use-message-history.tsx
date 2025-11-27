@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { toast } from 'sonner';
+import { toastError, toastSuccess } from '@/shared/ui/toast';
 import { SimpleMessage, ReviewData } from '../types';
 import { UniqueEntityID } from '@/shared/domain';
 import { VibeSessionService } from '@/app/services/vibe-session-service';
@@ -229,16 +229,16 @@ export function useMessageHistory(props?: UseMessageHistoryProps) {
       try {
         const result = await VibeSessionService.clearSession(props.resourceId, props.resourceType);
         if (result.isSuccess) {
-          toast.success("Chat history cleared and session deleted");
+          toastSuccess("Chat history cleared and session deleted");
         } else {
-          toast.error("Failed to delete session from database");
+          toastError("Failed to delete session from database");
         }
       } catch (error) {
-        toast.error("Failed to delete session from database");
+        toastError("Failed to delete session from database");
       }
     } else {
       // Just show success for UI clearing when no resource context
-      toast.success("Chat history cleared");
+      toastSuccess("Chat history cleared");
     }
   }, [props?.resourceId, props?.resourceType]);
 

@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect, useMemo } from "react";
 import { Target, Check, ChevronDown, ChevronUp } from "lucide-react";
-import { toast } from "sonner";
+import { toastSuccess, toastWarning } from "@/shared/ui/toast";
 
 import {
   Variable,
@@ -166,12 +166,12 @@ export function VariablesPanel({ cardId }: VariablesPanelProps) {
         insertVariableAtLastCursor(variableTemplate);
 
         // Show toast notification
-        toast.success(`Inserted: ${variableTemplate}`, {
+        toastSuccess(`Inserted: ${variableTemplate}`, {
           duration: 2000,
         });
       } else {
         // Show warning if no Monaco editor has been focused
-        toast.warning("Please click in an editor field first", {
+        toastWarning("Please click in an editor field first", {
           duration: 2000,
         });
       }

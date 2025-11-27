@@ -3,7 +3,7 @@ import { Card } from "@/entities/card/domain";
 import { Session } from "@/entities/session/domain/session";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 export type SelectionAction = "copy" | "export" | "delete";
 
@@ -70,14 +70,14 @@ export function useCardSelection() {
         const failCount = results.filter((r) => r.status === "rejected").length;
 
         if (successCount > 0) {
-          toast.success(
+          toastSuccess(
             `${successCount} card${successCount > 1 ? "s" : ""} copied successfully`,
           );
           onInvalidation();
         }
 
         if (failCount > 0) {
-          toast.error(
+          toastError(
             `Failed to copy ${failCount} card${failCount > 1 ? "s" : ""}`,
           );
         }
@@ -85,7 +85,7 @@ export function useCardSelection() {
         exitSelectionMode();
       } catch (error) {
         console.error("Error copying cards:", error);
-        toast.error("Failed to copy cards");
+        toastError("Failed to copy cards");
       }
     },
     [exitSelectionMode],
@@ -130,13 +130,13 @@ export function useCardSelection() {
         }
 
         if (successCount > 0) {
-          toast.success(
+          toastSuccess(
             `${successCount} card${successCount > 1 ? "s" : ""} exported successfully`,
           );
         }
 
         if (failCount > 0) {
-          toast.error(
+          toastError(
             `Failed to export ${failCount} card${failCount > 1 ? "s" : ""}`,
           );
         }
@@ -144,7 +144,7 @@ export function useCardSelection() {
         exitSelectionMode();
       } catch (error) {
         console.error("Error exporting cards:", error);
-        toast.error("Failed to export cards");
+        toastError("Failed to export cards");
       }
     },
     [exitSelectionMode],
@@ -178,7 +178,7 @@ export function useCardSelection() {
         setIsDeleteConfirmOpen(true);
       } catch (error) {
         console.error("Error checking dependencies:", error);
-        toast.error("Failed to check card dependencies");
+        toastError("Failed to check card dependencies");
       }
     },
     [],
@@ -199,14 +199,14 @@ export function useCardSelection() {
         const failCount = results.filter((r) => r.status === "rejected").length;
 
         if (successCount > 0) {
-          toast.success(
+          toastSuccess(
             `${successCount} card${successCount > 1 ? "s" : ""} deleted successfully`,
           );
           onInvalidation();
         }
 
         if (failCount > 0) {
-          toast.error(
+          toastError(
             `Failed to delete ${failCount} card${failCount > 1 ? "s" : ""}`,
           );
         }
@@ -215,7 +215,7 @@ export function useCardSelection() {
         exitSelectionMode();
       } catch (error) {
         console.error("Error deleting cards:", error);
-        toast.error("Failed to delete cards");
+        toastError("Failed to delete cards");
       }
     },
     [exitSelectionMode],

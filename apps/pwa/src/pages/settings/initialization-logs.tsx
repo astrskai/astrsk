@@ -15,7 +15,7 @@ import {
 } from "@/shared/stores/initialization-store";
 import { showErrorDetails } from "@/shared/stores/error-dialog-store";
 import { Button } from "@/shared/ui/forms";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 export default function InitializationLogsPage() {
   const [log, setLog] = useState<InitializationLog | null>(null);
@@ -42,16 +42,16 @@ ${errorSteps ? `Errors:\n${errorSteps}` : "All steps completed successfully"}`;
 
     try {
       await navigator.clipboard.writeText(logText);
-      toast.success("Logs copied to clipboard");
+      toastSuccess("Logs copied to clipboard");
     } catch {
-      toast.error("Failed to copy logs to clipboard");
+      toastError("Failed to copy logs to clipboard");
     }
   };
 
   const handleClearLogs = () => {
     clearInitializationLog();
     setLog(null);
-    toast.success("Logs cleared");
+    toastSuccess("Logs cleared");
   };
 
   const handleStepClick = (step: PersistedInitializationStep) => {

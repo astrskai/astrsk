@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { cn } from "@/shared/lib";
 import {
   useBackgroundStore,
@@ -115,7 +115,7 @@ export default function BackgroundGrid({
           await BackgroundService.saveFileToBackground.execute(file);
 
         if (backgroundOrError.isFailure) {
-          toast.error("Failed to upload background", {
+          toastError("Failed to upload background", {
             description: backgroundOrError.getError() || "Unknown error",
           });
           return;
@@ -127,9 +127,9 @@ export default function BackgroundGrid({
         // Switch to user added tab
         setActiveTab("user");
 
-        toast.success("Background uploaded successfully");
+        toastSuccess("Background uploaded successfully");
       } catch (error) {
-        toast.error("Failed to upload background", {
+        toastError("Failed to upload background", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
@@ -145,7 +145,7 @@ export default function BackgroundGrid({
           await BackgroundService.deleteBackground.execute(backgroundId);
 
         if (backgroundOrError.isFailure) {
-          toast.error("Failed to delete background", {
+          toastError("Failed to delete background", {
             description: backgroundOrError.getError() || "Unknown error",
           });
           return;
@@ -154,9 +154,9 @@ export default function BackgroundGrid({
         // Refresh backgrounds
         await fetchBackgrounds();
 
-        toast.success("Background deleted successfully");
+        toastSuccess("Background deleted successfully");
       } catch (error) {
-        toast.error("Failed to delete background", {
+        toastError("Failed to delete background", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }

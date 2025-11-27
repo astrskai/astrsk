@@ -5,7 +5,6 @@ import { ParameterSettingsFields } from "@/features/flow/panels/parameter/parame
 import { ParameterPanelProps } from "./parameter-panel-types";
 import { agentQueries } from "@/entities/agent/api/query-factory";
 import { useUpdateAgentParametersQueue } from "@/entities/agent/api/mutations/parameter-mutations";
-import { toast } from "sonner";
 
 export function ParameterPanel({ flowId, agentId }: ParameterPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");

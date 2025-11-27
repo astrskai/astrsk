@@ -49,7 +49,7 @@ import { useQuery } from "@tanstack/react-query";
 import { delay } from "lodash-es";
 import { Copy, Settings2, Trash2, Upload } from "lucide-react";
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 import { getUniqueEntityIDFromPath } from "@/shared/lib/url-utils";
 
 const CardItem = ({
@@ -106,7 +106,7 @@ const CardItem = ({
     } catch (error) {
       logger.error("Failed to export card", error);
       if (error instanceof Error) {
-        toast.error("Failed to export card", {
+        toastError("Failed to export card", {
           description: error.message,
         });
       }
@@ -147,7 +147,7 @@ const CardItem = ({
     } catch (error) {
       logger.error("Failed to copy card", error);
       if (error instanceof Error) {
-        toast.error("Failed to copy card", {
+        toastError("Failed to copy card", {
           description: error.message,
         });
       }
@@ -212,7 +212,7 @@ const CardItem = ({
     } catch (error) {
       logger.error("Failed to delete card", error);
       if (error instanceof Error) {
-        toast.error("Failed to delete card", {
+        toastError("Failed to delete card", {
           description: error.message,
         });
       }
@@ -522,7 +522,7 @@ const CardSection = ({
     } catch (error) {
       logger.error("Failed to create card", error);
       if (error instanceof Error) {
-        toast.error("Failed to create card", {
+        toastError("Failed to create card", {
           description: error.message,
         });
       }

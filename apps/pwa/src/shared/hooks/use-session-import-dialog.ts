@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { SessionService } from "@/app/services/session-service";
 import { logger } from "@/shared/lib";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 import type { AgentModel } from "@/features/session/ui/session-import-dialog";
 
 /**
@@ -27,7 +27,7 @@ export function useSessionImportDialog() {
 
       // Validate file type
       if (!file.name.endsWith(".session")) {
-        toast.error("Invalid file type", {
+        toastError("Invalid file type", {
           description: "Only .session files are supported",
         });
         return;
@@ -41,7 +41,7 @@ export function useSessionImportDialog() {
           await SessionService.getModelsFromSessionFile.execute(file);
 
         if (modelNameOrError.isFailure) {
-          toast.error("Failed to read session file", {
+          toastError("Failed to read session file", {
             description: modelNameOrError.getError(),
           });
           setImportingFile(null);
@@ -62,7 +62,7 @@ export function useSessionImportDialog() {
         setIsOpenImportDialog(true);
       } catch (error) {
         logger.error("Error reading session file:", error);
-        toast.error("Failed to read session file", {
+        toastError("Failed to read session file", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
         setImportingFile(null);

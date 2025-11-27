@@ -12,7 +12,7 @@ import { useAgentStore } from "@/shared/stores/agent-store";
 import { ApiType } from "@/entities/agent/domain/agent";
 import { AgentModels } from "@/features/flow/ui/model-selection";
 
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { PANEL_TYPES } from "@/features/flow/ui/panel-types";
 import { useAgentColor } from "@/features/flow/hooks/use-agent-color";
@@ -260,13 +260,13 @@ function AgentNodeComponent({
       if (!trimmedName || trimmedName === currentName) return;
 
       if (trimmedName.length < 3) {
-        toast.error("Agent name must be at least 3 characters long");
+        toastError("Agent name must be at least 3 characters long");
         setEditingName(currentName);
         return;
       }
 
       if (/^[0-9]/.test(trimmedName)) {
-        toast.error("Agent name cannot start with a number");
+        toastError("Agent name cannot start with a number");
         setEditingName(currentName);
         return;
       }
@@ -274,7 +274,7 @@ function AgentNodeComponent({
       try {
         // Get fresh flow data
         if (!flowId) {
-          toast.error("No flow selected");
+          toastError("No flow selected");
           setEditingName(currentName);
           return;
         }
@@ -448,14 +448,14 @@ function AgentNodeComponent({
           if (responseTemplateChanged) {
             changes.push("response design");
           }
-          toast.success(
+          toastSuccess(
             `Agent name updated and ${totalReferencesUpdated} reference(s) in ${changes.join(" and ")} were updated`,
           );
         } else {
-          toast.success("Agent name updated");
+          toastSuccess("Agent name updated");
         }
       } catch (error) {
-        toast.error("Failed to update agent name", {
+        toastError("Failed to update agent name", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
         setEditingName(currentName);
@@ -549,7 +549,7 @@ function AgentNodeComponent({
       if ((window as any).flowPanelCopyNode) {
         (window as any).flowPanelCopyNode(agentId);
       } else {
-        toast.error("Copy function not available");
+        toastError("Copy function not available");
       }
     },
     [agentId],
@@ -565,7 +565,7 @@ function AgentNodeComponent({
     if ((window as any).flowPanelDeleteNode) {
       (window as any).flowPanelDeleteNode(agentId);
     } else {
-      toast.error("Delete function not available");
+      toastError("Delete function not available");
     }
   }, [agentId]);
 

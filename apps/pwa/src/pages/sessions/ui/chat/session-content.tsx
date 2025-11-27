@@ -22,7 +22,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { Database } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { toast } from "sonner";
+import { toastError, toastSuccess, toastInfo } from "@/shared/ui/toast";
 
 import { UniqueEntityID } from "@/shared/domain";
 import { parseAiSdkErrorMessage } from "@/shared/lib/error-utils";
@@ -66,7 +66,6 @@ import {
   ScrollArea,
   SvgIcon,
 } from "@/shared/ui";
-import { toastError } from "@/shared/ui/toast";
 import { showErrorDetails } from "@/shared/stores/error-dialog-store";
 import { PlotCard } from "@/entities/card/domain";
 import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
@@ -414,11 +413,11 @@ const SessionContent = ({
               },
             });
           } else {
-            toast.info(parsedError.message);
+            toastInfo(parsedError.message);
           }
         } else if (error instanceof Error) {
           if (error.message.includes("Stop generate by user")) {
-            toast.info("Generation stopped.");
+            toastInfo("Generation stopped.");
           } else {
             // Build error details
             const errorDetails: any = {
@@ -975,7 +974,7 @@ const SessionContent = ({
 
     const currentOption = lastTurn.options?.[lastTurn.selectedOptionIndex || 0];
     if (!currentOption) {
-      toast.error("No message content to generate image from");
+      toastError("No message content to generate image from");
       return;
     }
 
@@ -996,7 +995,7 @@ const SessionContent = ({
       const errorMessage =
         placeholderResult.getError() || "Failed to create placeholder";
       console.error("Failed to create image placeholder:", errorMessage);
-      toast.error(errorMessage);
+      toastError(errorMessage);
       setIsGeneratingGlobalImage(false);
       return;
     }
@@ -1030,7 +1029,7 @@ const SessionContent = ({
             "Failed to update placeholder:",
             updateResult.getError(),
           );
-          toast.error("Failed to update placeholder with image");
+          toastError("Failed to update placeholder with image");
           return;
         }
 
@@ -1044,7 +1043,7 @@ const SessionContent = ({
           queryKey: sessionQueries.detail(session.id).queryKey,
         });
 
-        toast.success("Image generated successfully!");
+        toastSuccess("Image generated successfully!");
       } else {
         // Remove placeholder if no asset generated
         await TurnService.deletePlaceholderTurnWithAssets(
@@ -1059,7 +1058,7 @@ const SessionContent = ({
       }
     } catch (error) {
       console.error("Failed to generate image:", error);
-      toast.error("Failed to generate image");
+      toastError("Failed to generate image");
 
       // Remove placeholder on error
       await TurnService.deletePlaceholderTurnWithAssets(
@@ -1093,7 +1092,7 @@ const SessionContent = ({
 
     const currentOption = lastTurn.options?.[lastTurn.selectedOptionIndex || 0];
     if (!currentOption) {
-      toast.error("No message content to generate video from");
+      toastError("No message content to generate video from");
       return;
     }
     // Create placeholder turn
@@ -1107,7 +1106,7 @@ const SessionContent = ({
       const errorMessage =
         placeholderResult.getError() || "Failed to create placeholder";
       console.error("Failed to create video placeholder:", errorMessage);
-      toast.error(errorMessage);
+      toastError(errorMessage);
       return;
     }
 
@@ -1161,7 +1160,7 @@ const SessionContent = ({
             "Failed to update placeholder:",
             updateResult.getError(),
           );
-          toast.error("Failed to update placeholder with video");
+          toastError("Failed to update placeholder with video");
           return;
         }
 
@@ -1178,7 +1177,7 @@ const SessionContent = ({
           queryKey: sessionQueries.detail(session.id).queryKey,
         });
 
-        toast.success("Video generated successfully!");
+        toastSuccess("Video generated successfully!");
 
         // Scroll to bottom to show the newly generated video
         scrollToBottom({ wait: 500, behavior: "smooth" });
@@ -1196,7 +1195,7 @@ const SessionContent = ({
       }
     } catch (error) {
       console.error("Failed to generate video:", error);
-      toast.error("Failed to generate video");
+      toastError("Failed to generate video");
 
       // Remove placeholder on error
       await TurnService.deletePlaceholderTurnWithAssets(
@@ -1310,7 +1309,7 @@ const SessionContent = ({
         });
       } catch (error) {
         logger.error("Failed to update data schema order", error);
-        toast.error("Failed to update field order");
+        toastError("Failed to update field order");
       }
     },
     [sortedDataSchemaFields, session, saveSessionMutation],
@@ -1321,7 +1320,7 @@ const SessionContent = ({
     async (name: string, value: string) => {
       if (!lastTurn) {
         logger.error("No message");
-        toast.error("No message");
+        toastError("No message");
         return;
       }
 
@@ -1341,7 +1340,7 @@ const SessionContent = ({
         });
       } catch (error) {
         logger.error("Failed to update data store", error);
-        toast.error("Failed to update data store field");
+        toastError("Failed to update data store field");
       }
     },
     [updateTurnMutation, lastTurn],

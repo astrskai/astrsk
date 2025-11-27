@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 import { WorkflowsGrid } from "./workflows-grid";
 import { CreateFlowDialog } from "./create-flow-dialog";
@@ -86,7 +86,7 @@ export function WorkflowsPage() {
           }
         }
 
-        toast.success("Flow created successfully");
+        toastSuccess("Flow created successfully");
 
         // Navigate to flow detail page immediately
         navigate({
@@ -95,7 +95,7 @@ export function WorkflowsPage() {
         });
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to create flow", {
+        toastError("Failed to create flow", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
