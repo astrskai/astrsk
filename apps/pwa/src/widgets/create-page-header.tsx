@@ -109,30 +109,30 @@ export function CreatePageHeader({
       <div className="flex items-center gap-5 px-4 py-2 md:hidden">
         <button
           onClick={onCancel}
-          className="text-text-primary hover:text-text-secondary transition-colors"
+          className="text-fg-default hover:text-fg-muted transition-colors"
         >
           <ArrowLeft size={24} />
         </button>
         <div className="flex flex-col">
-          <span className="text-text-secondary text-xs font-medium">
+          <span className="text-fg-muted text-xs font-medium">
             Create {category}
           </span>
-          <h1 className="text-text-primary text-lg font-semibold">
+          <h1 className="text-fg-default text-lg font-semibold">
             {currentStepLabel || itemName}
           </h1>
         </div>
       </div>
 
       {/* Desktop Header */}
-      <div className="hidden items-center justify-between bg-gray-900 px-8 py-4 md:flex">
+      <div className="hidden items-center justify-between bg-surface-raised px-8 py-4 md:flex">
         {showCancelButton ? (
           // Session-style: No back button, title only
           <h1 className="flex items-center gap-2 text-2xl">
-            <span className="text-text-secondary font-medium">
+            <span className="text-fg-muted font-medium">
               Create {category}
             </span>
             <span>&nbsp;</span>
-            <span className="text-text-primary text-xl font-semibold">
+            <span className="text-fg-default text-xl font-semibold">
               {itemName}
             </span>
           </h1>
@@ -141,15 +141,15 @@ export function CreatePageHeader({
           <div className="flex items-center gap-4">
             <button
               onClick={onCancel}
-              className="text-text-primary hover:text-text-secondary transition-colors"
+              className="text-fg-default hover:text-fg-muted transition-colors"
             >
               <ArrowLeft size={24} />
             </button>
             <div>
-              <h1 className="text-text-primary text-2xl font-semibold">
+              <h1 className="text-fg-default text-2xl font-semibold">
                 Create {category}
               </h1>
-              <p className="text-text-secondary text-sm">{itemName}</p>
+              <p className="text-fg-muted text-sm">{itemName}</p>
             </div>
           </div>
         )}

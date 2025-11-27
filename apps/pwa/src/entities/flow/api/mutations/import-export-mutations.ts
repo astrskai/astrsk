@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { FlowService } from "@/app/services/flow-service";
 import { flowKeys } from "@/entities/flow/api/query-factory";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 /**
  * Hook for exporting flows with complete node data
@@ -27,11 +27,11 @@ export function useExportFlowWithNodes(flowId: string) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      toast.success(`Flow "${file.name}" exported successfully`);
+      toastSuccess(`Flow "${file.name}" exported successfully`);
     },
     onError: (error) => {
       console.error('Export failed:', error);
-      toast.error("Failed to export flow", {
+      toastError("Failed to export flow", {
         description: error instanceof Error ? error.message : "Unknown error occurred",
       });
     },
@@ -74,7 +74,7 @@ export function useImportFlowWithNodes() {
       // Invalidate flow queries to refresh lists
       queryClient.invalidateQueries({ queryKey: flowKeys.all });
       
-      toast.success(`Flow "${flow.props.name}" imported successfully`);
+      toastSuccess(`Flow "${flow.props.name}" imported successfully`);
       
       // Navigate to the new flow with a small delay to ensure cache is ready
       if (typeof window !== 'undefined' && window.history) {
@@ -91,7 +91,7 @@ export function useImportFlowWithNodes() {
     },
     onError: (error) => {
       console.error('Import failed:', error);
-      toast.error("Failed to import flow", {
+      toastError("Failed to import flow", {
         description: error instanceof Error ? error.message : "Unknown error occurred",
       });
     },

@@ -140,6 +140,52 @@ function filenameTimestampToMillis(filename: string): number {
 }
 
 /**
+ * Check if there are pending migrations (SQL or TypeScript)
+ * Returns true if migrations need to be run
+ */
+export async function hasPendingMigrations(): Promise<boolean> {
+  try {
+    const db = await Drizzle.getInstance();
+
+    // Ensure migration infrastructure exists
+    await ensureMigrationInfrastructure(db);
+
+    // Get already-executed migrations
+    const executedSqlHashes = await getExecutedSqlMigrations(db);
+    const executedTsFilenames = await getExecutedTypescriptMigrations(db);
+
+    // Check SQL migrations
+    for (const migration of migrations) {
+      if (!executedSqlHashes.has(migration.hash)) {
+        return true;
+      }
+    }
+
+    // Check TypeScript migrations
+    for (const filename of Object.keys(typescriptMigrations)) {
+      if (!executedTsFilenames.has(filename)) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    // If any error occurs, assume migrations are needed (safe default)
+    logger.error("⚠️ Error checking pending migrations, will run migrations:", error);
+    return true;
+  }
+}
+
+/**
+ * Progress callback type for migration UI reporting
+ */
+type OnProgress = (
+  stepId: string,
+  status: "start" | "success" | "warning" | "error",
+  error?: string,
+) => void;
+
+/**
  * Run all migrations in timestamp order
  *
  * This function:
@@ -148,16 +194,24 @@ function filenameTimestampToMillis(filename: string): number {
  * 3. Merges and sorts by timestamp (folderMillis for SQL, filename for TS)
  * 4. Executes in chronological order
  * 5. Tracks execution in separate tables
+ *
+ * @param onProgress - Optional callback for UI progress reporting
  */
-export async function runUnifiedMigrations(): Promise<void> {
+export async function runUnifiedMigrations(onProgress?: OnProgress): Promise<void> {
   logger.debug("🔄 Starting unified migrations (SQL + TypeScript)...\n");
 
+  // Step: Initialize database
+  onProgress?.("database-init", "start");
   const db = await Drizzle.getInstance();
+  onProgress?.("database-init", "success");
 
-  // Ensure migration infrastructure exists
+  // Step: Setup migration schema
+  onProgress?.("migration-schema", "start");
   await ensureMigrationInfrastructure(db);
+  onProgress?.("migration-schema", "success");
 
-  // Get already-executed migrations
+  // Step: Check pending migrations
+  onProgress?.("check-migrations", "start");
   const executedSqlHashes = await getExecutedSqlMigrations(db);
   const executedTsFilenames = await getExecutedTypescriptMigrations(db);
 
@@ -194,13 +248,19 @@ export async function runUnifiedMigrations(): Promise<void> {
       return !executedTsFilenames.has(migration.filename);
     }
   });
+  onProgress?.("check-migrations", "success");
 
   if (pendingMigrations.length === 0) {
     logger.debug("✨ No pending migrations found.\n");
+    onProgress?.("run-migrations", "start");
+    onProgress?.("run-migrations", "success");
     return;
   }
 
   logger.debug(`📦 Found ${pendingMigrations.length} pending migrations\n`);
+
+  // Step: Run migrations
+  onProgress?.("run-migrations", "start");
 
   // Execute pending migrations in order
   let sqlCount = 0;
@@ -229,6 +289,7 @@ export async function runUnifiedMigrations(): Promise<void> {
         sqlCount++;
       } catch (error) {
         logger.error(`❌ [${timestamp}] Failed SQL: ${migration.hash}`, error);
+        onProgress?.("run-migrations", "error", `SQL migration failed: ${migration.hash}`);
         throw error; // SQL migrations should not fail
       }
     } else {
@@ -248,6 +309,8 @@ export async function runUnifiedMigrations(): Promise<void> {
       }
     }
   }
+
+  onProgress?.("run-migrations", "success");
 
   logger.debug("✨ All migrations complete!\n");
   logger.debug("📊 Migration Summary:");

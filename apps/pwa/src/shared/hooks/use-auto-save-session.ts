@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
-import { toast } from "sonner";
 import { logger } from "@/shared/lib/logger";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { SessionProps } from "@/entities/session/domain/session";
 import { Session } from "@/entities/session/domain/session";
 import { useSaveSession } from "@/entities/session/api";
@@ -56,11 +56,11 @@ export const useAutoSaveSession = ({
 
           // Show success toast (optional)
           if (!skipToast) {
-            toast.success("Session updated");
+            toastSuccess("Session updated");
           }
         } catch (error) {
           logger.error("Failed to auto-save session", error);
-          toast.error("Failed to save session", {
+          toastError("Failed to save session", {
             description: error instanceof Error ? error.message : "Unknown error",
           });
         } finally {

@@ -9,7 +9,7 @@ import { getOneOrThrow } from "@/db/helpers/get-one-or-throw";
 import { characters, SelectCharacter } from "@/db/schema/characters";
 import { scenarios, SelectScenario } from "@/db/schema/scenarios";
 import { Transaction } from "@/db/transaction";
-import { Card, CardType, normalizeCardType } from "@/entities/card/domain";
+import { Card, CardType, CharacterCard, PlotCard, normalizeCardType } from "@/entities/card/domain";
 import { LorebookJSON } from "@/entities/card/domain/lorebook";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
 import { DeleteCardRepo } from "@/entities/card/repos/delete-card-repo";
@@ -17,6 +17,8 @@ import {
   LoadCardRepo,
   SearchCardsQuery,
   SearchCardsSort,
+  SearchCharactersQuery,
+  SearchScenariosQuery,
 } from "@/entities/card/repos/load-card-repo";
 import { SaveCardRepo } from "@/entities/card/repos/save-card-repo";
 
@@ -559,6 +561,126 @@ export class DrizzleCardRepo
       return Result.ok(entities);
     } catch (error) {
       return formatFail("Failed to search cards", error);
+    }
+  }
+
+  /**
+   * Optimized character search - searches characters table only
+   */
+  async searchCharacters(
+    query: SearchCharactersQuery,
+    tx?: Transaction,
+  ): Promise<Result<CharacterCard[]>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      // Build filters - only global resources (session_id IS NULL)
+      const filters = [isNull(characters.session_id)];
+
+      if (query.keyword) {
+        const keywordFilter = or(
+          ilike(characters.title, `%${query.keyword}%`),
+          ilike(characters.creator, `%${query.keyword}%`),
+          ilike(characters.card_summary, `%${query.keyword}%`),
+          ilike(characters.name, `%${query.keyword}%`),
+          ilike(characters.description, `%${query.keyword}%`),
+          ilike(characters.example_dialogue, `%${query.keyword}%`),
+        );
+        if (keywordFilter) filters.push(keywordFilter);
+      }
+
+      // Build order by
+      let orderByClause;
+      switch (query.sort) {
+        case SearchCardsSort.Latest:
+          orderByClause = [characters.created_at];
+          break;
+        case SearchCardsSort.Oldest:
+          orderByClause = [asc(characters.created_at)];
+          break;
+        case SearchCardsSort.TitleAtoZ:
+          orderByClause = [asc(characters.title)];
+          break;
+        case SearchCardsSort.TitleZtoA:
+          orderByClause = [characters.title];
+          break;
+        default:
+          orderByClause = [characters.created_at];
+          break;
+      }
+
+      const rows = await db
+        .select()
+        .from(characters)
+        .where(and(...filters))
+        .limit(query.limit ?? 100)
+        .offset(query.offset ?? 0)
+        .orderBy(...orderByClause);
+
+      // Convert to domain entities
+      const entities = rows.map((row) => CardDrizzleMapper.toDomain(row) as CharacterCard);
+
+      return Result.ok(entities);
+    } catch (error) {
+      return formatFail("Failed to search characters", error);
+    }
+  }
+
+  /**
+   * Optimized scenario search - searches scenarios table only
+   */
+  async searchScenarios(
+    query: SearchScenariosQuery,
+    tx?: Transaction,
+  ): Promise<Result<PlotCard[]>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      // Build filters - only global resources (session_id IS NULL)
+      const filters = [isNull(scenarios.session_id)];
+
+      if (query.keyword) {
+        const keywordFilter = or(
+          ilike(scenarios.title, `%${query.keyword}%`),
+          ilike(scenarios.creator, `%${query.keyword}%`),
+          ilike(scenarios.card_summary, `%${query.keyword}%`),
+          ilike(scenarios.description, `%${query.keyword}%`),
+        );
+        if (keywordFilter) filters.push(keywordFilter);
+      }
+
+      // Build order by
+      let orderByClause;
+      switch (query.sort) {
+        case SearchCardsSort.Latest:
+          orderByClause = [scenarios.created_at];
+          break;
+        case SearchCardsSort.Oldest:
+          orderByClause = [asc(scenarios.created_at)];
+          break;
+        case SearchCardsSort.TitleAtoZ:
+          orderByClause = [asc(scenarios.title)];
+          break;
+        case SearchCardsSort.TitleZtoA:
+          orderByClause = [scenarios.title];
+          break;
+        default:
+          orderByClause = [scenarios.created_at];
+          break;
+      }
+
+      const rows = await db
+        .select()
+        .from(scenarios)
+        .where(and(...filters))
+        .limit(query.limit ?? 100)
+        .offset(query.offset ?? 0)
+        .orderBy(...orderByClause);
+
+      // Convert to domain entities
+      const entities = rows.map((row) => CardDrizzleMapper.toDomain(row) as PlotCard);
+
+      return Result.ok(entities);
+    } catch (error) {
+      return formatFail("Failed to search scenarios", error);
     }
   }
 

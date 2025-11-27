@@ -52,8 +52,8 @@ const CustomLabelEdge: FC<EdgeProps<CustomLabelEdge>> = ({
             }}
             className="nodrag nopan"
           >
-            <div className="px-[5px] py-[3px] bg-background-surface-1 inline-flex justify-center items-center gap-2 rounded">
-              <div className="text-center justify-start text-text-primary text-[10px] font-normal">
+            <div className="px-[5px] py-[3px] bg-surface inline-flex justify-center items-center gap-2 rounded">
+              <div className="text-center justify-start text-fg-default text-[10px] font-normal">
                 {edgeLabel}
               </div>
             </div>

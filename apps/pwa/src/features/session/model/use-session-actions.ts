@@ -1,5 +1,5 @@
 import { useState, useCallback, MouseEvent } from "react";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
@@ -132,7 +132,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
         try {
           if (!flowId) {
-            toast.error("No flow associated with this session");
+            toastError("No flow associated with this session");
             return;
           }
 
@@ -147,7 +147,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
           });
 
           if (!flowQuery) {
-            toast.error("Failed to load flow");
+            toastError("Failed to load flow");
             return;
           }
 
@@ -195,7 +195,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
           setExportDialogState({ isOpen: true, sessionId, title, agents, exportType });
         } catch (error) {
           logger.error("Failed to prepare export:", error);
-          toast.error("Failed to prepare export", {
+          toastError("Failed to prepare export", {
             description:
               error instanceof Error ? error.message : "Unknown error",
           });
@@ -246,11 +246,10 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
             logger.warn("Clipboard access denied:", clipboardError);
           }
 
-          toast.success("Successfully exported to cloud!", {
+          toastSuccess("Successfully exported to cloud!", {
             description: clipboardSuccess
               ? `Share link copied to clipboard. Expires: ${shareLink.expiresAt.toLocaleDateString()}`
               : `${shareLink.shareUrl}\n\nExpires: ${shareLink.expiresAt.toLocaleDateString()}`,
-            duration: 10000, // Longer duration to allow manual copy
           });
         } else {
           // Export session to file (JSON download)
@@ -272,7 +271,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
           // Download session file
           downloadFile(file);
 
-          toast.success("Successfully exported!", {
+          toastSuccess("Successfully exported!", {
             description: `"${title}" exported`,
           });
         }
@@ -286,7 +285,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
         });
       } catch (error) {
         logger.error(error);
-        toast.error(
+        toastError(
           `Failed to export ${exportType === "cloud" ? "to cloud" : "to file"}`,
           {
             description:
@@ -355,7 +354,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
       // Notify parent of successful copy for animation
       onCopySuccess?.(copiedSession.id.toString());
 
-      toast.success("Session copied", {
+      toastSuccess("Session copied", {
         description: `Created copy of "${title}"`,
       });
 
@@ -369,7 +368,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
       });
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to copy", {
+      toastError("Failed to copy", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
@@ -417,7 +416,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
         throw new Error(deleteSessionOrError.getError());
       }
 
-      toast.success("Session deleted", {
+      toastSuccess("Session deleted", {
         description: `"${title}" deleted`,
       });
 
@@ -430,7 +429,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
       });
     } catch (error) {
       logger.error(error);
-      toast.error("Failed to delete", {
+      toastError("Failed to delete", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {

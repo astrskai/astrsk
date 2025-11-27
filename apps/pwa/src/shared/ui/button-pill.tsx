@@ -4,11 +4,11 @@ import { cn } from "@/shared/lib";
 import { SubscribeBadge } from "@/shared/ui";
 
 const buttonPillVariants = cva(
-  "relative rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-light inline-flex justify-center items-center transition-all",
+  "relative rounded-lg shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] outline outline-1 outline-offset-[-1px] outline-border-muted inline-flex justify-center items-center transition-all",
   {
     variants: {
       variant: {
-        default: "bg-background-surface-4 hover:bg-background-surface-5",
+        default: "bg-hover hover:bg-active",
         gradient: "relative",
       },
       size: {
@@ -43,8 +43,8 @@ const iconInnerVariants = cva("absolute", {
       lg: "w-5 h-4 left-[2px] top-[3px] outline outline-2 outline-offset-[-1px]",
     },
     variant: {
-      default: "outline-text-primary",
-      active: "outline-text-contrast-text",
+      default: "outline-fg-default",
+      active: "outline-fg-on-emphasis",
     },
   },
   defaultVariants: {
@@ -60,8 +60,8 @@ const textVariants = cva("text-center font-semibold", {
       lg: "text-base leading-relaxed",
     },
     variant: {
-      default: "text-text-primary",
-      active: "text-text-contrast-text",
+      default: "text-fg-default",
+      active: "text-fg-on-emphasis",
     },
   },
   defaultVariants: {
@@ -104,7 +104,7 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
       return (
         <button
           className={cn(
-            "outline-status-required relative inline-flex w-28 items-center justify-center rounded-lg shadow-[0px_0px_10px_0px_rgba(181,158,255,0.50)] shadow-[0px_1px_8px_0px_rgba(117,117,117,1.00)] outline outline-2 outline-offset-[-2px] transition-all",
+            "outline-status-error relative inline-flex w-28 items-center justify-center rounded-lg shadow-[0px_0px_10px_0px_rgba(248,113,113,0.50),0px_1px_8px_0px_rgba(117,117,117,1.00)] outline-2 outline-offset-[-2px] transition-all",
             size === "default" ? "gap-2 px-3 py-2" : "gap-2 px-6 py-3",
             className,
           )}
@@ -126,9 +126,9 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
           {/* Foreground content layer */}
           <div
             className={cn(
-              "bg-background-surface-4 px relative flex items-center justify-center gap-2 rounded-[6px]",
+              "bg-hover relative flex items-center justify-center gap-2 rounded-[6px] px-3",
               "absolute inset-[2px]",
-              isActive && "bg-background-surface-light",
+              isActive && "bg-emphasis",
               isActive && isHovered && "opacity-70",
             )}
           >
@@ -139,7 +139,7 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
                     size === "lg"
                       ? "min-w-5 min-h-4"
                       : "max-w-4 max-h-5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
-                    isActive ? "text-text-contrast-text" : "text-text-primary",
+                    isActive ? "text-fg-on-emphasis" : "text-fg-default",
                     "stroke-2",
                   ),
                 })}
@@ -163,7 +163,7 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
         className={cn(
           buttonPillVariants({ variant, size }),
           isActive &&
-            "bg-background-surface-light shadow-[0px_1px_12px_0px_rgba(117,117,117,1.00)]",
+            "bg-emphasis shadow-[0px_1px_12px_0px_rgba(117,117,117,1.00)]",
           isActive && isHovered && "opacity-70",
           className,
         )}
@@ -187,7 +187,7 @@ const ButtonPill = React.forwardRef<HTMLButtonElement, ButtonPillProps>(
                 size === "lg"
                   ? "min-w-5 min-h-4"
                   : "max-w-3.5 max-h-3 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
-                isActive ? "text-text-contrast-text" : "text-text-primary",
+                isActive ? "text-fg-on-emphasis" : "text-fg-default",
                 "stroke-2",
               ),
             })}

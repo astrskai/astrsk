@@ -342,7 +342,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🌐 Website & Downloads
 
-- **Website**: [astrsk.ai](https://astrsk.ai)
+- **Website**: [astrsk.ai](https://about.astrsk.ai)
 - **Web App**: [app.astrsk.ai](https://app.astrsk.ai)
 - **Download for Mac**: [Latest Release](https://github.com/harpychat/astrsk-ai-release/releases/download/v2.0.0/astrsk-2.0.0.dmg)
 - **Download for Windows**: [Latest Release](https://github.com/harpychat/astrsk-ai-release/releases/download/v2.0.0/astrsk-2.0.0.exe)

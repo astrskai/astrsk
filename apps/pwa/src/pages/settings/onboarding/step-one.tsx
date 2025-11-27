@@ -1,37 +1,38 @@
-import { Page, useAppStore } from "@/shared/stores/app-store";
+import { X } from "lucide-react";
 import { cn } from "@/shared/lib";
-import { Button, SvgIcon } from "@/shared/ui";
+
 import { useNavigate } from "@tanstack/react-router";
 
 const OnboardingStepOnePage = () => {
   // Page navigation
-  const setActivePage = useAppStore.use.setActivePage();
+
   const navigate = useNavigate();
 
   return (
     <div className={cn("absolute inset-0 top-[var(--topbar-height)] z-40")}>
       {/* Close */}
       <button
-        className="text-text-subtle absolute top-[34px] right-[40px] z-50 cursor-pointer"
+        type="button"
+        aria-label="Close onboarding"
+        className="text-text-subtle absolute top-4 right-4 z-50 cursor-pointer md:top-[34px] md:right-[40px]"
         onClick={() => {
-          setActivePage(Page.Init);
           navigate({ to: "/settings/providers", replace: true });
         }}
       >
-        <SvgIcon name="window_close" size={40} />
+        <X className="h-5 w-5" aria-hidden="true" />
       </button>
 
       {/* Main */}
-      <div className="from-background-surface-0 to-background-surface-3 absolute inset-0 grid place-content-center gap-[49px] bg-linear-to-b">
-        <div className="flex flex-col items-center gap-[8px]">
-          <div className="text-text-primary text-[32px] leading-[40px] font-[600]">
+      <div className="from-background-surface-0 to-background-surface-3 absolute inset-0 grid place-content-center gap-6 bg-linear-to-b px-4 md:gap-[49px] md:px-0">
+        <div className="flex flex-col items-center gap-2 md:gap-[8px]">
+          <div className="text-text-primary text-center text-xl leading-tight font-semibold md:text-[32px] md:leading-[40px] md:font-[600]">
             Two short minutes to understand how astrsk works!
           </div>
-          <div className="text-text-placeholder text-[16px] leading-[25.6px] font-[400]">
+          <div className="text-text-placeholder text-center text-sm leading-relaxed md:text-[16px] md:leading-[25.6px] md:font-[400]">
             Get a sense of the overall structure of astrsk
           </div>
         </div>
-        <div className="aspect-video w-[1000px] overflow-hidden rounded-[12px]">
+        <div className="aspect-video w-full max-w-[1000px] overflow-hidden rounded-lg md:rounded-[12px]">
           <iframe
             width="100%"
             height="100%"

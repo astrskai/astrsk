@@ -10,6 +10,8 @@ interface CreateItemCardProps {
   onClick?: () => void;
   /** Optional additional className */
   className?: string;
+  /** Variant for different card styles */
+  variant?: "square" | "flexible";
 }
 
 export function CreateItemCard({
@@ -17,26 +19,29 @@ export function CreateItemCard({
   description,
   onClick,
   className,
+  variant = "flexible",
 }: CreateItemCardProps) {
   return (
     <article
       className={cn(
-        "group/create-item-card bg-black-alternate relative flex aspect-[1/1] w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-700 transition-all duration-300 hover:border-gray-100 hover:bg-gray-900",
+        "group/create-item-card bg-black-alternate relative flex w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-zinc-700 transition-all duration-300 hover:border-zinc-500 hover:bg-zinc-800/50",
+        variant === "square" && "aspect-[1/1]",
+        variant === "flexible" && "h-full min-h-[200px]",
         className,
       )}
       onClick={onClick ?? undefined}
     >
       <div className="flex flex-col items-center gap-3">
         {/* Plus Icon */}
-        <div className="flex h-16 w-16 items-center justify-center rounded-full border border-gray-500 bg-gray-800 transition-transform duration-300 group-hover/create-item-card:scale-105">
-          <Plus className="min-h-8 min-w-8" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-600 bg-zinc-800 transition-all duration-300 group-hover/create-item-card:scale-110 group-hover/create-item-card:border-zinc-400">
+          <Plus className="h-6 w-6" />
         </div>
 
         {/* Text */}
-        <div className="flex flex-col items-center gap-2">
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <div className="flex flex-col items-center gap-1">
+          <h3 className="text-base font-semibold text-zinc-100">{title}</h3>
           {description && (
-            <p className="text-sm text-gray-200">{description}</p>
+            <p className="text-sm text-zinc-400">{description}</p>
           )}
         </div>
       </div>

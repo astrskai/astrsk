@@ -4,5 +4,14 @@
     "deploymentEnabled": {
       "gh-pages": false
     }
-  }
+  },
+  "installCommand": "pnpm --filter pwa... install --frozen-lockfile",
+  "buildCommand": "cd apps/pwa && pnpm run build",
+  "outputDirectory": "apps/pwa/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

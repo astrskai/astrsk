@@ -1,14 +1,14 @@
 import { useState, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
 import { CardService } from "@/app/services/card-service";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { FlowService } from "@/app/services/flow-service";
 import { CardType } from "@/entities/card/domain";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { logger } from "@/shared/lib";
-import type { AgentModel } from "@/pages/assets/workflows/ui/dialog/flow-import-dialog";
+import type { AgentModel } from "@/features/flow/ui/flow-import-dialog";
 
 /**
  * Unified resource import hook
@@ -41,7 +41,7 @@ export function useResourceImport() {
       const isPNG = file.type === "image/png";
 
       if (!isJSON && !isPNG) {
-        toast.error("Invalid file type", {
+        toastError("Invalid file type", {
           description: "Only PNG and JSON files are supported",
         });
         return;
@@ -53,7 +53,7 @@ export function useResourceImport() {
           const result = await CardService.importCardFromFile.execute({ file });
 
           if (result.isFailure) {
-            toast.error("Failed to import card", {
+            toastError("Failed to import card", {
               description: result.getError(),
             });
             return;
@@ -66,7 +66,7 @@ export function useResourceImport() {
             queryKey: cardQueries.lists(),
           });
 
-          toast.success("Card imported successfully", {
+          toastSuccess("Card imported successfully", {
             description: `Imported ${importedCards.length} card(s)`,
           });
 
@@ -103,7 +103,7 @@ export function useResourceImport() {
               queryKey: cardQueries.lists(),
             });
 
-            toast.success("Card imported successfully", {
+            toastSuccess("Card imported successfully", {
               description: `Imported ${importedCards.length} card(s)`,
             });
 
@@ -133,7 +133,7 @@ export function useResourceImport() {
               await FlowService.getModelsFromFlowFile.execute(file);
 
             if (modelNameOrError.isFailure) {
-              toast.error("Failed to import file", {
+              toastError("Failed to import file", {
                 description: "File is not a valid character card or flow",
               });
               return;
@@ -159,7 +159,7 @@ export function useResourceImport() {
         }
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to process file", {
+        toastError("Failed to process file", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       } finally {
@@ -211,7 +211,7 @@ export function useResourceImport() {
           newlyCreatedFlowIdSetter(importedFlow.id.toString());
         }
 
-        toast.success("Flow imported successfully", {
+        toastSuccess("Flow imported successfully", {
           description: importedFlow.props.name || "Untitled Flow",
         });
 
@@ -221,7 +221,7 @@ export function useResourceImport() {
         }
       } catch (error) {
         logger.error(error);
-        toast.error("Failed to import flow", {
+        toastError("Failed to import flow", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }

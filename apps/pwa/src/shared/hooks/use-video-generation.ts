@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { GeneratedImageService } from "@/app/services/generated-image-service";
-import { toast } from "sonner";
+import { toastError, toastSuccess, toastWarning } from "@/shared/ui/toast";
 import { useSeedanceGenerator } from "@/shared/hooks/use-seedance-generator";
 import { IMAGE_MODELS } from "@/shared/stores/model-store";
 import { useAppStore, PollingContext } from "@/shared/stores/app-store";
@@ -268,7 +268,7 @@ export const useVideoGeneration = ({
                   if (saveResult.isSuccess) {
                     const savedVideo = saveResult.getValue();
                     onSuccess?.();
-                    toast.success("Video generated and saved successfully!");
+                    toastSuccess("Video generated and saved successfully!");
                     // Resolve the promise with the asset ID
                     const assetId = savedVideo.props.assetId?.toString();
 
@@ -283,7 +283,7 @@ export const useVideoGeneration = ({
                       "❌ [VIDEO-GENERATOR] Failed to save video:",
                       saveResult.getError(),
                     );
-                    toast.error("Failed to save video", {
+                    toastError("Failed to save video", {
                       description: saveResult.getError(),
                     });
                     // Clear global state on error
@@ -296,7 +296,7 @@ export const useVideoGeneration = ({
                     );
                   }
                 } catch (videoError) {
-                  toast.error("Error processing video", {
+                  toastError("Error processing video", {
                     description:
                       videoError instanceof Error
                         ? videoError.message
@@ -336,7 +336,7 @@ export const useVideoGeneration = ({
                 "❌ [VIDEO-GENERATOR] Video generation failed:",
                 immediateResult.error,
               );
-              toast.error("Video generation failed", {
+              toastError("Video generation failed", {
                 description: errorMessage,
               });
               reject(new Error(errorMessage));
@@ -438,7 +438,7 @@ export const useVideoGeneration = ({
                 if (saveResult.isSuccess) {
                   const savedVideo = saveResult.getValue();
                   onSuccess?.();
-                  toast.success("Video generated and saved successfully!");
+                  toastSuccess("Video generated and saved successfully!");
                   // Resolve the promise with the asset ID
                   const assetId = savedVideo.props.assetId?.toString();
                   // Use global store directly
@@ -451,7 +451,7 @@ export const useVideoGeneration = ({
                     "❌ [VIDEO-GENERATOR] Failed to save video:",
                     saveResult.getError(),
                   );
-                  toast.error("Failed to save video", {
+                  toastError("Failed to save video", {
                     description: saveResult.getError(),
                   });
                   // Use global store directly
@@ -466,7 +466,7 @@ export const useVideoGeneration = ({
                   "❌ [VIDEO-GENERATOR] Error processing video:",
                   videoError,
                 );
-                toast.error("Error processing video", {
+                toastError("Error processing video", {
                   description:
                     videoError instanceof Error
                       ? videoError.message
@@ -505,7 +505,7 @@ export const useVideoGeneration = ({
                 "❌ [VIDEO-GENERATOR] Video generation failed:",
                 statusResult.error,
               );
-              toast.error("Video generation failed", {
+              toastError("Video generation failed", {
                 description: errorMessage,
               });
               reject(new Error(errorMessage));
@@ -631,7 +631,7 @@ export const useVideoGeneration = ({
     async (config: VideoGenerationConfig) => {
       // Check if a video is already being generated
       if (isGeneratingVideo) {
-        toast.warning("A video is already generating. Please wait.");
+        toastWarning("A video is already generating. Please wait.");
         return;
       }
 
@@ -781,7 +781,7 @@ export const useVideoGeneration = ({
         }
       } catch (error) {
         console.error("Error generating video:", error);
-        toast.error(
+        toastError(
           error instanceof Error ? error.message : "Failed to generate video",
         );
         useAppStore.getState().setGeneratingImageId(null);

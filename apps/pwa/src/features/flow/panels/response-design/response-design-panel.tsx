@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 
 import { Editor } from "@/shared/ui";
 import type { editor } from "monaco-editor";
-import { toast } from "sonner";
+import { toastError } from "@/shared/ui/toast";
 
 // Import flow queries and mutations
 import { useQuery } from "@tanstack/react-query";
@@ -78,7 +78,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
     () => debounce((template: string) => {
       updateResponseTemplate.mutate(template, {
         onError: (error) => {
-          toast.error("Failed to save response template", {
+          toastError("Failed to save response template", {
             description: error instanceof Error ? error.message : "Unknown error",
           });
         }
@@ -131,7 +131,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center bg-[#111111]">
-        <div className="flex items-center gap-2 text-text-subtle">
+        <div className="flex items-center gap-2 text-fg-subtle">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span>Loading response design panel...</span>
         </div>
@@ -142,7 +142,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
   if (error) {
     return (
       <div className="h-full flex items-center justify-center bg-[#111111]">
-        <div className="text-text-subtle">
+        <div className="text-fg-subtle">
           Error loading response template
         </div>
       </div>

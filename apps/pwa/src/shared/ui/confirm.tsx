@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/ui";
+import { DialogBase } from "@/shared/ui/dialogs";
 
 const Confirm = ({
   open,
@@ -115,50 +116,48 @@ const DeleteConfirm = ({
 }: {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  title?: React.ReactNode;
+  title?: string;
   description?: React.ReactNode;
   children?: React.ReactNode;
   deleteLabel?: string;
   onDelete?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 }) => {
   return (
-    <Confirm
+    <DialogBase
       open={open}
       onOpenChange={onOpenChange}
+      trigger={children}
       title={title}
       description={description}
+      size="md"
+      isShowCloseButton={false}
+      content={null}
       footer={
-        <>
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenChange?.(false);
-              }}
-            >
-              Cancel
-            </Button>
-          </DialogClose>
-          <DialogClose asChild>
-            <Button
-              variant="destructive"
-              size="lg"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete?.(e);
-                onOpenChange?.(false);
-              }}
-            >
-              {deleteLabel}
-            </Button>
-          </DialogClose>
-        </>
+        <div className="flex gap-3">
+          <Button
+            variant="ghost"
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenChange?.(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.(e);
+              onOpenChange?.(false);
+            }}
+          >
+            {deleteLabel}
+          </Button>
+        </div>
       }
-    >
-      {children}
-    </Confirm>
+    />
   );
 };
 

@@ -50,7 +50,7 @@ import { ArrowLeft } from "lucide-react";
 
 // Watermark component with restore button
 const Watermark = React.memo<{ onRestore?: () => void }>(({ onRestore }) => (
-  <div className="text-text-subtle flex h-full flex-col items-center justify-center gap-4 opacity-30">
+  <div className="text-fg-subtle flex h-full flex-col items-center justify-center gap-4 opacity-30">
     <span className="text-2xl font-light">astrsk</span>
     {onRestore && (
       <Button
@@ -905,15 +905,15 @@ export function FlowPanelMain({ workflowId, className }: FlowPanelMainProps) {
     return (
       <div
         className={cn(
-          "bg-background-surface-0 flex h-full w-full flex-col items-center justify-center gap-4 py-36",
+          "bg-canvas flex h-full w-full flex-col items-center justify-center gap-4 py-36",
           className,
         )}
       >
-        <div className="flex w-full grow flex-col items-center justify-center gap-[58px] text-[#757575]">
+        <div className="text-fg-disabled flex w-full grow flex-col items-center justify-center gap-[58px]">
           <SvgIcon name="astrsk_symbol_fit" width={88} height={93} />
           <SvgIcon name="astrsk_logo_full" width={231} height={48} />
         </div>
-        <div className="flex items-center gap-2 text-[#BFBFBF]">
+        <div className="text-fg-muted flex items-center gap-2">
           <SvgIcon name="lock_solid" size={20} />
           <div className="text-[16px] select-none">
             <span>Your flows are stored locally — </span>

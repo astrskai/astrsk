@@ -50,14 +50,14 @@ export function SortableItem({
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="text-text-info h-4 w-4" />
+        <GripVertical className="text-fg-subtle h-4 w-4" />
       </div>
       <div className="inline-flex min-w-px flex-1 flex-col items-start justify-start gap-2">
         <div
           className={cn(
-            "bg-background-surface-3 inline-flex cursor-pointer items-center justify-start gap-2 self-stretch overflow-hidden rounded-md px-4 py-2",
+            "bg-surface-overlay inline-flex cursor-pointer items-center justify-start gap-2 self-stretch overflow-hidden rounded-md px-4 py-2",
             isSelected
-              ? "outline-border-selected-inverse outline outline-2 outline-offset-[-2px]"
+              ? "outline-border-emphasis outline outline-2 outline-offset-[-2px]"
               : "",
           )}
           onClick={onClick}
@@ -65,9 +65,9 @@ export function SortableItem({
           {item.type === "history" ? (
             <SvgIcon name="history_message" className="max-h-4 max-w-4" />
           ) : (
-            <MessageCircle className="text-text-body h-4 w-4" />
+            <MessageCircle className="text-fg-muted h-4 w-4" />
           )}
-          <div className="text-text-body min-w-px flex-1 justify-start truncate text-xs font-normal">
+          <div className="text-fg-muted min-w-px flex-1 justify-start truncate text-xs font-normal">
             {item.label}
           </div>
         </div>

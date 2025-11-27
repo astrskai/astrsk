@@ -3,7 +3,6 @@
 /* Dockview core styles */
 @import "dockview-core/dist/styles/dockview.css";
 
-@import "tailwindcss";
 @import "tw-animate-css";
 
 @theme {
@@ -33,6 +32,7 @@
   --color-gray-100: #d4d4d4;
   --color-gray-200: #bfbfbf;
   --color-gray-300: #a1a1a1;
+  --color-gray-400: #8f8f8f;
   --color-gray-500: #737373;
   --color-gray-700: #525252;
   --color-gray-800: #3f3f3f;
@@ -50,8 +50,8 @@
   --color-text-primary: var(--color-gray-50);
   --color-text-secondary: var(--color-gray-200);
 
-  --color-status-error: #dc2626;
-  --color-status-error-dark: #7f1d1d;
+  --color-status-destructive: #7f1d1d;
+  --color-status-destructive-light: #dc2626;
 
   /* Astrsk renewed colors end */
 }
@@ -88,18 +88,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Chart colors */
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-
   /* Sidebar colors */
-  --color-sidebar-background: var(--sidebar-background);
   --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
@@ -112,22 +102,17 @@
   --color-background-surface-3: var(--background-surface-3);
   --color-background-surface-4: var(--background-surface-4);
   --color-background-surface-5: var(--background-surface-5);
-  --color-background-surface-10: var(--background-surface-10);
   --color-background-surface-light: var(--background-surface-light);
   --color-background-card: var(--background-card);
   --color-background-container: var(--background-container);
   --color-background-dialog: var(--background-dialog);
   --color-background-input: var(--background-input);
   --color-background-screen: var(--background-screen);
-  --color-background-screen2: var(--background-screen2);
-  --color-background-tooltip: var(--background-tooltip);
-  --color-background-user-message: var(--background-user-message);
 
   /* Border colors */
   --color-border-light: var(--border-light);
   --color-border-dark: var(--border-dark);
   --color-border-normal: var(--border-normal);
-  --color-border-black: var(--border-black);
   --color-border-selected-primary: var(--border-selected-primary);
   --color-border-selected-secondary: var(--border-selected-secondary);
   --color-border-selected-inverse: var(--border-selected-inverse);
@@ -152,7 +137,6 @@
   --color-text-contrast-text: var(--text-contrast-text);
   --color-text-muted-title: var(--text-muted-title);
   --color-text-input-subtitle: var(--text-input-subtitle);
-  --color-text-user-message: var(--text-user-message);
 
   /* Primary colors */
   --color-primary-normal: var(--primary-normal);
@@ -166,16 +150,11 @@
   --color-secondary-heavy: var(--secondary-heavy);
 
   /* Status colors */
-  --color-status-destructive-light: var(--status-destructive-light);
-  --color-status-destructive: var(--status-destructive);
-  --color-status-destructive-dark: var(--status-destructive-dark);
   --color-status-optional: var(--status-optional);
   --color-status-required: var(--status-required);
   --color-status-ready: var(--status-ready);
   --color-status-ready-dark: var(--status-ready-dark);
   --color-status-succeed: var(--status-succeed);
-  --color-status-syncing: var(--status-syncing);
-  --color-status-warning-dark: var(--status-warning-dark);
   --color-status-warning-light: var(--status-warning-light);
   --color-status-warning: var(--status-warning);
 
@@ -327,8 +306,6 @@
 
   /* Existing status colors */
   --status-destructive: #7f1d1d;
-  --status-destructive-dark: #450a0a;
-  --status-destructive-light: #dc2626;
   --status-destructive-primary: #dc2626;
   --status-warning: #a16207;
   --status-optional: #a1ece7;
@@ -490,7 +467,6 @@
 
   /* Existing status colors */
   --status-destructive: #7f1d1d;
-  --status-destructive-dark: #450a0a;
   --status-destructive-light: #dc2626;
   --status-destructive-primary: #dc2626;
   --status-warning: #a16207;
@@ -573,6 +549,24 @@
   }
 }
 
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
 /* Custom Utilities - must be at top level, cannot be nested in @layer */
 @utility h-screen-minus-topbar {
   height: calc(100vh - var(--topbar-height));
@@ -604,6 +598,14 @@
 
 @utility animate-bounce-typing {
   animation: bounce-typing 1.4s ease-in-out infinite;
+}
+
+@utility animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+@utility animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
 }
 
 @layer base {
@@ -805,15 +807,9 @@
 
   /* Consolidated Dockview styles */
   .dockview-theme-abyss {
-    --dv-separator-border: var(--background-surface-0, #1b1b1b) !important;
-    --dv-sash-color: var(
-      --background-surface-0,
-      #1b1b1b
-    ) !important; /* visible sash color */
-    --dv-active-sash-color: var(
-      --background-surface-0,
-      #1b1b1b
-    ) !important; /* hover/active color (abyss accent) */
+    --dv-separator-border: var(--bg-canvas, #111111) !important;
+    --dv-sash-color: var(--bg-canvas, #111111) !important; /* visible sash color */
+    --dv-active-sash-color: var(--bg-canvas, #111111) !important; /* hover/active color */
   }
 
   /* Tab containers */
@@ -824,16 +820,16 @@
   /* Tab Coloring */
   /* Maximum specificity override for tab backgrounds and borders */
   .dockview-theme-abyss .dv-groupview .dv-tabs-container .dv-tab {
-    background-color: var(--background-surface-1) !important;
+    background-color: var(--bg-surface, #0a0a0c) !important;
   }
 
   .dockview-theme-abyss .dv-groupview .dv-tabs-container .dv-tab.dv-active-tab {
-    background-color: var(--background-surface-2) !important;
+    background-color: var(--bg-surface-raised, #141416) !important;
   }
 
   /* Void container and backgrounds */
   .dockview-theme-abyss .dv-void-container {
-    background-color: var(--background-surface-0) !important;
+    background-color: var(--bg-canvas, #111111) !important;
   }
 
   /* Prevent Dockview from growing beyond screen size */
@@ -976,15 +972,16 @@
 
 /* Global scrollbar styles - applied to all scrollable elements */
 *::-webkit-scrollbar {
-  @apply w-2;
+  width: 0.5rem; /* w-2 */
 }
 
 *::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background-color: transparent;
 }
 
 *::-webkit-scrollbar-thumb {
-  @apply rounded bg-white/50;
+  border-radius: 0.25rem; /* rounded */
+  background-color: rgb(255 255 255 / 0.5); /* bg-white/50 */
 }
 
 /* chat message list scrollbar */

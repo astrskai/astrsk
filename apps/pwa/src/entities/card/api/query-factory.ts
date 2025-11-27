@@ -78,6 +78,7 @@ export const cardKeys = {
   lorebook: (id: string) => [...cardKeys.detail(id), "lorebook"] as const,
 
   // First messages queries (for scenario cards)
+  // Note: PlotCard uses "scenarios", ScenarioCard uses "firstMessages" - both use this key
   firstMessages: (id: string) => [...cardKeys.detail(id), "firstMessages"] as const,
   firstMessage: (id: string, firstMessageId: string) =>
     [...cardKeys.firstMessages(id), firstMessageId] as const,

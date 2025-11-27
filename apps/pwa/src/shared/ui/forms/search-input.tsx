@@ -39,7 +39,7 @@ export const SearchInput = forwardRef<
   return (
     <div className={cn("relative", className)}>
       <Search
-        className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-200"
+        className="absolute top-1/2 left-3 -translate-y-1/2 text-neutral-400"
         strokeWidth={2.5}
         size={18}
       />
@@ -49,14 +49,14 @@ export const SearchInput = forwardRef<
         placeholder={placeholder}
         value={currentValue}
         onChange={handleChange}
-        className="focus:ring-primary/50 h-10 w-full rounded-lg bg-gray-800 pr-10 pl-10 text-sm text-gray-50 placeholder:text-gray-300 focus:ring-1 focus:outline-none"
+        className="focus:ring-brand-500/50 h-9 w-full rounded-lg bg-neutral-800 pr-10 pl-10 text-sm text-neutral-100 placeholder:text-neutral-500 focus:ring-1 focus:outline-none md:h-10"
         {...props}
       />
       {hasValue && (
         <button
           type="button"
           onClick={handleClear}
-          className="text-text-secondary hover:text-text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+          className="absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400 transition-colors hover:text-neutral-100"
           aria-label="Clear search"
         >
           <X size={18} />

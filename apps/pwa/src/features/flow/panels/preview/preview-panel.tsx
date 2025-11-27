@@ -60,9 +60,9 @@ export function PreviewPanel({ flowId, agentId }: PreviewPanelProps) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background-surface-2 p-4">
+    <div className="h-full flex flex-col bg-surface-raised p-4">
       {/* Preview content area - full height with Monaco editor */}
-      <div className="flex-1 bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal overflow-hidden">
+      <div className="flex-1 bg-canvas rounded-md outline-1 outline-offset-[-1px] outline-border-muted overflow-hidden">
         {preview ? (
           <Editor
             value={preview}
@@ -87,7 +87,7 @@ export function PreviewPanel({ flowId, agentId }: PreviewPanelProps) {
             containerClassName="h-full"
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-text-secondary">
+          <div className="flex items-center justify-center h-full text-fg-muted">
             {agent ? "Generating preview..." : "No agent selected"}
           </div>
         )}

@@ -5,7 +5,6 @@ import { ParameterSettingsFields } from "@/features/flow/panels/parameter/parame
 import { ParameterPanelProps } from "./parameter-panel-types";
 import { agentQueries } from "@/entities/agent/api/query-factory";
 import { useUpdateAgentParametersQueue } from "@/entities/agent/api/mutations/parameter-mutations";
-import { toast } from "sonner";
 
 export function ParameterPanel({ flowId, agentId }: ParameterPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,8 +50,8 @@ export function ParameterPanel({ flowId, agentId }: ParameterPanelProps) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="bg-background-surface-2 flex h-full items-center justify-center">
-        <div className="text-text-subtle flex items-center gap-2">
+      <div className="bg-surface-raised flex h-full items-center justify-center">
+        <div className="text-fg-subtle flex items-center gap-2">
           <span>Loading parameters...</span>
         </div>
       </div>
@@ -62,8 +61,8 @@ export function ParameterPanel({ flowId, agentId }: ParameterPanelProps) {
   // Empty state
   if (!parameters) {
     return (
-      <div className="bg-background-surface-2 flex h-full items-center justify-center">
-        <div className="text-text-subtle flex items-center gap-2">
+      <div className="bg-surface-raised flex h-full items-center justify-center">
+        <div className="text-fg-subtle flex items-center gap-2">
           <span>Parameters not found</span>
         </div>
       </div>
@@ -77,7 +76,7 @@ export function ParameterPanel({ flowId, agentId }: ParameterPanelProps) {
     parameters.parameterValues || new Map<string, any>();
 
   return (
-    <div className="bg-background-surface-2 flex h-full flex-col p-4">
+    <div className="bg-surface-raised flex h-full flex-col p-4">
       <SearchInput
         placeholder="Search"
         value={searchTerm}

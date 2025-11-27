@@ -14,6 +14,8 @@ import {
   ImportCardFromFile,
   SaveCard,
   SearchCard,
+  SearchCharacters,
+  SearchScenarios,
   UpdateCardTitle,
   UpdateCardSummary,
   UpdateCardVersion,
@@ -44,6 +46,8 @@ export class CardService {
   public static importCardFromFile: ImportCardFromFile;
   public static saveCard: SaveCard;
   public static searchCard: SearchCard;
+  public static searchCharacters: SearchCharacters;
+  public static searchScenarios: SearchScenarios;
   public static updateCardTitle: UpdateCardTitle;
   public static updateCardSummary: UpdateCardSummary;
   public static updateCardVersion: UpdateCardVersion;
@@ -98,6 +102,8 @@ export class CardService {
     );
     this.saveCard = new SaveCard(this.cardRepo);
     this.searchCard = new SearchCard(this.cardRepo);
+    this.searchCharacters = new SearchCharacters(this.cardRepo);
+    this.searchScenarios = new SearchScenarios(this.cardRepo);
     this.updateCardTitle = new UpdateCardTitle(this.cardRepo, this.cardRepo);
     this.updateCardSummary = new UpdateCardSummary(
       this.cardRepo,

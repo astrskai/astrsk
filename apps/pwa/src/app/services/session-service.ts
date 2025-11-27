@@ -48,7 +48,6 @@ import { LoadAgentRepo } from "@/entities/agent/repos";
 import { LoadDataStoreNodeRepo } from "@/entities/data-store-node/repos";
 import { LoadIfNodeRepo } from "@/entities/if-node/repos";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
-import { SaveFlowRepo } from "@/entities/flow/repos";
 import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
 import { GetTurn } from "@/entities/turn/usecases/get-turn";
 
@@ -74,7 +73,6 @@ export class SessionService {
 
   public static init(
     turnRepo: DrizzleTurnRepo, // TODO: replace to interface
-    getCard: GetCard,
     // updateLocalSyncMetadata: UpdateLocalSyncMetadata,
     exportFlowWithNodes: ExportFlowWithNodes,
     exportCardToFile: ExportCardToFile,
@@ -85,7 +83,6 @@ export class SessionService {
     importCardFromFile: ImportCardFromFile,
     saveFileToBackground: SaveFileToBackground,
     saveFileToAsset: SaveFileToAsset,
-    saveFlowRepo: SaveFlowRepo,
     getModelsFromFlowFile: GetModelsFromFlowFile,
     cloneFlow: CloneFlow,
     cloneCard: CloneCard,

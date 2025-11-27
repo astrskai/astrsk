@@ -16,7 +16,7 @@ import { useAuth, useSignUp } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "convex/react";
 import { Ban, Bot, ChevronDown, Coins, UserRoundPlus, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toastError, toastSuccess, toastInfo } from "@/shared/ui/toast";
 
 function openInNewTab(url: string) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -42,7 +42,7 @@ const SubscribePage = () => {
 
     // Check already signed in
     if (userId) {
-      toast.info("You already signed in");
+      toastInfo("You already signed in");
       return;
     }
 
@@ -58,7 +58,7 @@ const SubscribePage = () => {
     } catch (error) {
       setIsLoading(false);
       logger.error(error);
-      toast.error("Failed to sign up", {
+      toastError("Failed to sign up", {
         description: JSON.stringify(error),
       });
     }
@@ -94,7 +94,7 @@ const SubscribePage = () => {
         break;
 
       case "SUCCESS":
-        toast.success("Welcome aboard! Your subscription is now active.");
+        toastSuccess("Welcome aboard! Your subscription is now active.");
         deleteClaimFreeSubscriptionProcess();
         backToReturnPage();
         break;
@@ -102,18 +102,18 @@ const SubscribePage = () => {
       case "FAILED":
         switch (claimFreeSubscriptionProcess.result.code) {
           case "ALREADY_SUBSCRIBED":
-            toast.error("You are already signed in to astrsk+.");
+            toastError("You are already signed in to astrsk+.");
             setIsOpenJoinServer(false);
             backToReturnPage();
             break;
           case "NO_DISCORD_ID":
-            toast.error("Please log in with Discord to access this feature.");
+            toastError("Please log in with Discord to access this feature.");
             break;
           case "NO_SERVER_MEMBER":
-            toast.error("Join our Discord server to join astrsk+.");
+            toastError("Join our Discord server to join astrsk+.");
             break;
           default:
-            toast.error("Unknown code", {
+            toastError("Unknown code", {
               description: claimFreeSubscriptionProcess.result.code,
             });
         }
@@ -121,7 +121,7 @@ const SubscribePage = () => {
         break;
 
       case "ERROR":
-        toast.error("Failed to start free subscription", {
+        toastError("Failed to start free subscription", {
           description: claimFreeSubscriptionProcess.result.error,
         });
         deleteClaimFreeSubscriptionProcess();
@@ -454,7 +454,7 @@ const SubscribePage = () => {
                 onClick={async () => {
                   const result = await claimFreeSubscription();
                   if (!result) {
-                    toast.error(
+                    toastError(
                       "Your session has expired. Please log in again to continue.",
                     );
                   }

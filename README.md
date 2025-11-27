@@ -203,7 +203,7 @@ This project is licensed under the **AGPL-v3** License - see the [LICENSE](LICEN
 
 ## 🌐 References
 
-- **Website**: [astrsk.ai](https://astrsk.ai)
+- **Website**: [astrsk.ai](https://about.astrsk.ai)
 - **User Documentation**: [docs.astrsk.ai](https://docs.astrsk.ai/)
 - **Discord**: [astrsk.ai](https://discord.com/invite/J6ry7w8YCF)
 - **Reddit**: [r/astrsk_ai](https://www.reddit.com/r/astrsk_ai/)

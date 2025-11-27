@@ -1,7 +1,9 @@
 // This file provides a centralized export point for all shared UI components
 
 export * from "./accordion";
+export { default as AccordionBase } from "./accordion-base";
 export * from "./aspect-ratio";
+export * from "./initialization-screen";
 export * from "./avatar";
 export * from "./avatar-simple";
 export * from "./badge";
@@ -14,6 +16,7 @@ export * from "./command";
 export * from "./dialog";
 export * from "./dropdown-menu";
 export { default as DropdownMenuBase } from "./dropdown-menu-base";
+export * from "./simple-popover-menu";
 export * from "./input";
 export * from "./label";
 export * from "./popover";
@@ -31,6 +34,7 @@ export * from "./slider";
 export * from "./switch";
 export * from "./table";
 export * from "./tabs";
+export * from "./navigation-tabs";
 export * from "./textarea";
 export * from "./tooltip";
 
@@ -41,16 +45,10 @@ export * from "./floating-label-select";
 export * from "./floating-label-textarea";
 export * from "./floating-action-button";
 
-// Toast components
-export * from "./toast-error";
-export * from "./toast-success";
-export * from "./sonner";
-
 // Field components
 export * from "./field-badges";
 
 // Custom UI components
-export * from "./banner";
 export * from "./color-picker";
 export * from "./combobox";
 export * from "./empty-state";

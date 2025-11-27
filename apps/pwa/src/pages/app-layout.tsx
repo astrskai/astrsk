@@ -5,6 +5,7 @@ import { OnboardingDialog } from "@/widgets/dialog/onboarding-dialog";
 import { ConvexReady } from "@/shared/ui/convex-ready";
 import { SubscribeChecker } from "@/widgets/dialog/subscribe-checker";
 import { SubscribeNudgeDialog } from "@/widgets/dialog/subscribe-nudge-dialog";
+import { ErrorDetailsDialog, MigrationDetailsDialog } from "@/shared/ui/dialogs";
 
 export function AppLayout() {
   return (
@@ -15,6 +16,8 @@ export function AppLayout() {
         {/* Global dialogs and checkers */}
         <OnboardingDialog />
         <SubscribeNudgeDialog />
+        <ErrorDetailsDialog />
+        <MigrationDetailsDialog />
         <ConvexReady>
           <SubscribeChecker />
         </ConvexReady>

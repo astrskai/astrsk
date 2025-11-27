@@ -11,7 +11,7 @@ import { StepBackgroundSchemaType } from "@/features/session/create-session/step
 import {
   InlineChatStyles,
   MessageItemInternal,
-} from "@/pages/sessions/ui/detail";
+} from "@/pages/sessions/ui/chat";
 import {
   ColorPicker,
   FloatingLabelInput,

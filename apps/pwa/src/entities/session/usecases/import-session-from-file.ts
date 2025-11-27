@@ -17,7 +17,6 @@ import { TranslationConfig } from "@/entities/session/domain/translation-config"
 import { SaveSessionRepo } from "@/entities/session/repos";
 import { AddMessage } from "@/entities/session/usecases/add-message";
 import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
-import { ApiSource } from "@/entities/api/domain";
 
 interface Command {
   file: File;

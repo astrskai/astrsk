@@ -249,7 +249,7 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
   }
   
   return (
-    <div className="h-full p-2 bg-background-surface-2 flex flex-col overflow-hidden">
+    <div className="h-full p-2 bg-surface-raised flex flex-col overflow-hidden">
       <div className="flex-1 min-w-44 flex flex-col overflow-hidden">
         {/* Refresh button */}
         <div className="py-4 flex justify-center items-center gap-2 flex-shrink-0">
@@ -258,7 +258,7 @@ export function ValidationPanel({ flowId }: ValidationPanelProps) {
             size="sm"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="h-7 px-3 py-2 bg-background-surface-4 rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px] outline-border-light"
+            className="h-7 px-3 py-2 bg-hover rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px] outline-border-subtle"
           >
             <RefreshCw className={cn(
               "min-w-4 min-h-4",

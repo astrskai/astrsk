@@ -2,7 +2,7 @@ import { Result } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { Transaction } from "@/db/transaction";
-import { Card, CardType } from "@/entities/card/domain";
+import { Card, CardType, CharacterCard, PlotCard } from "@/entities/card/domain";
 import { SortOptionValue } from "@/shared/config/sort-options";
 
 export const SearchCardsSort = {
@@ -29,6 +29,10 @@ export type SearchCardsQuery = {
   type?: CardType[];
 };
 
+// Optimized query for specific card types (no unnecessary JOINs)
+export type SearchCharactersQuery = Omit<SearchCardsQuery, "type">;
+export type SearchScenariosQuery = Omit<SearchCardsQuery, "type">;
+
 export interface LoadCardRepo {
   listCards(
     query: {
@@ -42,4 +46,13 @@ export interface LoadCardRepo {
     query: SearchCardsQuery,
     tx?: Transaction,
   ): Promise<Result<Card[]>>;
+  // Optimized methods for specific card types (single JOIN, type-specific keyword search)
+  searchCharacters(
+    query: SearchCharactersQuery,
+    tx?: Transaction,
+  ): Promise<Result<CharacterCard[]>>;
+  searchScenarios(
+    query: SearchScenariosQuery,
+    tx?: Transaction,
+  ): Promise<Result<PlotCard[]>>;
 }

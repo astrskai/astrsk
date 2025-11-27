@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { toastError, toastSuccess, toastWarning } from "@/shared/ui/toast";
 import { cn } from "@/shared/lib";
 import type {
   VibeAnalysisResult,
@@ -163,11 +163,11 @@ export const VibeCodingPanel: React.FC<VibePanelProps> = ({
           if (validationResult.dataStoreOperations.length > 0) {
             if (!validationResult.success) {
               // Show validation errors to user but don't block the operation
-              toast.error(
+              toastError(
                 `Data store validation warnings: ${validationResult.errors.join(", ")}`,
               );
             } else {
-              toast.success(
+              toastSuccess(
                 "Data store operations validated - UUID integrity maintained",
               );
             }
@@ -267,7 +267,7 @@ Operations are being generated and will be ready for review shortly.`;
   const handleSessionError = useCallback(
     (error: string, metadata?: any) => {
       // Session error occurred
-      toast.error(`Session error occurred: ${formatErrorMessage(error)}`);
+      toastError(`Session error occurred: ${formatErrorMessage(error)}`);
 
       // Remove processing message if exists
       const processingMsg = messages.find((m) => m.isProcessing);
@@ -308,7 +308,7 @@ Operations are being generated and will be ready for review shortly.`;
           currentResourceType,
           hasEditableData: !!editableData,
         });
-        toast.error("Please select a card or flow to edit");
+        toastError("Please select a card or flow to edit");
         return;
       }
 
@@ -438,7 +438,7 @@ Operations are being generated and will be ready for review shortly.`;
           if (result.success) {
             // Query invalidation is already handled by applyOperationsToResource via invalidateSingleFlowQueries
             // No need to duplicate the invalidation here
-            toast.success(
+            toastSuccess(
               `Flow changes applied successfully (${message.editData.appliedChanges.length} operations)`,
             );
 
@@ -455,7 +455,7 @@ Operations are being generated and will be ready for review shortly.`;
             });
           } else {
             // Show a summary toast
-            toast.error(
+            toastError(
               `Failed to apply ${result.errors.length} operations out of ${message.editData.appliedChanges.length} total`,
             );
           }
@@ -483,7 +483,7 @@ Operations are being generated and will be ready for review shortly.`;
 
               if (result.success) {
                 // Show success toast immediately
-                toast.success(
+                toastSuccess(
                   `Character card changes applied successfully (${message.editData.appliedChanges.length} operations)`,
                 );
 
@@ -508,13 +508,13 @@ Operations are being generated and will be ready for review shortly.`;
                 });
               } else {
                 // Show a summary toast and individual error toasts
-                toast.error(
+                toastError(
                   `Failed to apply ${result.errors.length} operations out of ${message.editData.appliedChanges.length} total`,
                 );
                 result.errors.forEach((error, index) => {
                   // Show detailed error with delay to avoid overwhelming the user
                   setTimeout(
-                    () => toast.error(`Error ${index + 1}: ${error}`),
+                    () => toastError(`Error ${index + 1}: ${error}`),
                     index * 500,
                   );
                 });
@@ -531,7 +531,7 @@ Operations are being generated and will be ready for review shortly.`;
 
               if (result.success) {
                 // Show success toast immediately
-                toast.success(
+                toastSuccess(
                   "Character card changes applied successfully (legacy system)",
                 );
 
@@ -555,12 +555,12 @@ Operations are being generated and will be ready for review shortly.`;
                   queryKey: cardKeys.lists(),
                 });
               } else {
-                toast.error(
+                toastError(
                   `Failed to apply character card updates: ${result.errors.length} errors`,
                 );
                 result.errors.forEach((error, index) => {
                   setTimeout(
-                    () => toast.error(`Error ${index + 1}: ${error}`),
+                    () => toastError(`Error ${index + 1}: ${error}`),
                     index * 500,
                   );
                 });
@@ -608,7 +608,7 @@ Operations are being generated and will be ready for review shortly.`;
 
               if (result.success) {
                 // Show success toast immediately
-                toast.success(
+                toastSuccess(
                   `Plot card changes applied successfully (${message.editData.appliedChanges.length} operations)`,
                 );
 
@@ -633,13 +633,13 @@ Operations are being generated and will be ready for review shortly.`;
                 });
               } else {
                 // Show a summary toast and individual error toasts
-                toast.error(
+                toastError(
                   `Failed to apply ${result.errors.length} operations out of ${message.editData.appliedChanges.length} total`,
                 );
                 result.errors.forEach((error, index) => {
                   // Show detailed error with delay to avoid overwhelming the user
                   setTimeout(
-                    () => toast.error(`Error ${index + 1}: ${error}`),
+                    () => toastError(`Error ${index + 1}: ${error}`),
                     index * 500,
                   );
                 });
@@ -651,7 +651,7 @@ Operations are being generated and will be ready for review shortly.`;
 
               if (result.success) {
                 // Show success toast immediately
-                toast.success(
+                toastSuccess(
                   "Plot card changes applied successfully (legacy system)",
                 );
 
@@ -675,12 +675,12 @@ Operations are being generated and will be ready for review shortly.`;
                   queryKey: cardKeys.lists(),
                 });
               } else {
-                toast.error(
+                toastError(
                   `Failed to apply plot card updates: ${result.errors.length} errors`,
                 );
                 result.errors.forEach((error, index) => {
                   setTimeout(
-                    () => toast.error(`Error ${index + 1}: ${error}`),
+                    () => toastError(`Error ${index + 1}: ${error}`),
                     index * 500,
                   );
                 });
@@ -689,7 +689,7 @@ Operations are being generated and will be ready for review shortly.`;
           }
         }
       } catch (error) {
-        toast.error(`Failed to apply changes: ${formatErrorMessage(error)}`);
+        toastError(`Failed to apply changes: ${formatErrorMessage(error)}`);
       }
     },
     [messages, updateMessage],
@@ -703,7 +703,7 @@ Operations are being generated and will be ready for review shortly.`;
         status: "rejected",
       });
 
-      toast.success("Changes rejected");
+      toastSuccess("Changes rejected");
     },
     [updateMessage],
   );
@@ -744,7 +744,7 @@ Operations are being generated and will be ready for review shortly.`;
 
               if (revertResult.isSuccess) {
                 // Show success toast immediately
-                toast.success(`Reverted to: ${latestSnapshot.description}`);
+                toastSuccess(`Reverted to: ${latestSnapshot.description}`);
 
                 // Invalidate queries to refresh UI in background (fire-and-forget)
                 if (
@@ -879,23 +879,23 @@ Operations are being generated and will be ready for review shortly.`;
                   })();
                 }
               } else {
-                toast.error(`Failed to revert: ${revertResult.getError()}`);
+                toastError(`Failed to revert: ${revertResult.getError()}`);
               }
             } else {
-              toast.warning("No snapshots available to revert to");
+              toastWarning("No snapshots available to revert to");
             }
           } else {
-            toast.error(
+            toastError(
               `Failed to get snapshots: ${snapshotsResult.getError()}`,
             );
           }
         } else {
-          toast.warning(
+          toastWarning(
             "Revert is only supported for cards and flows currently",
           );
         }
       } catch (error) {
-        toast.error(`Revert failed: ${formatErrorMessage(error)}`);
+        toastError(`Revert failed: ${formatErrorMessage(error)}`);
       }
     },
     [messages, updateMessage, queryClient],

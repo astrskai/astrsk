@@ -2,7 +2,7 @@
 
 import { AlertTriangleIcon, Ellipsis, Menu, Plus, Search } from "lucide-react";
 import { RefObject, useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useNavigate } from "@tanstack/react-router";
 
 import { UniqueEntityID } from "@/shared/domain";
@@ -140,7 +140,7 @@ const SessionListMobile = ({
           new UniqueEntityID(sessionId),
         );
         if (deleteSessionOrError.isFailure) {
-          toast.error("Failed to delete session", {
+          toastError("Failed to delete session", {
             description: deleteSessionOrError.getError(),
           });
         }
@@ -151,7 +151,7 @@ const SessionListMobile = ({
         queryKey: [TableName.Sessions],
       });
 
-      toast.success(`Deleted ${selectedSessions.size} session(s)`);
+      toastSuccess(`Deleted ${selectedSessions.size} session(s)`);
     } else if (selectionAction === "copy") {
       // Copy selected sessions
       let copiedCount = 0;
@@ -163,7 +163,7 @@ const SessionListMobile = ({
         if (copiedSessionOrError.isSuccess) {
           copiedCount++;
         } else {
-          toast.error("Failed to copy session", {
+          toastError("Failed to copy session", {
             description: copiedSessionOrError.getError(),
           });
         }
@@ -174,7 +174,7 @@ const SessionListMobile = ({
         queryKey: [TableName.Sessions],
       });
 
-      toast.success(`Copied ${copiedCount} session(s)`);
+      toastSuccess(`Copied ${copiedCount} session(s)`);
     } else if (selectionAction === "export") {
       // Export selected sessions
       for (const sessionId of selectedSessions) {
@@ -194,13 +194,13 @@ const SessionListMobile = ({
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
         } else {
-          toast.error("Failed to export session", {
+          toastError("Failed to export session", {
             description: exportOrError.getError(),
           });
         }
       }
 
-      toast.success(`Exported ${selectedSessions.size} session(s)`);
+      toastSuccess(`Exported ${selectedSessions.size} session(s)`);
     }
 
     exitSelectionMode();
