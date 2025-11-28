@@ -12,7 +12,6 @@
    ----------------------------------------------- */
 :root {
   /* Neutral Scale (cool-toned, pairs with blue brand) */
-  --color-neutral-0: #000000;
   --color-neutral-950: #0a0a0c;
   --color-neutral-900: #141416;
   --color-neutral-800: #232328;
@@ -52,7 +51,7 @@
 
   /* === Backgrounds === */
   /* canvas: Base page background */
-  --bg-canvas: var(--color-neutral-0);
+  --bg-canvas: #000000;
   /* surface: Layered backgrounds (cards, panels, sidebars) */
   --bg-surface: var(--color-neutral-950);
   --bg-surface-raised: var(--color-neutral-900);
@@ -157,7 +156,6 @@
    ----------------------------------------------- */
 @theme {
   /* Neutral Scale */
-  --color-neutral-0: #000000;
   --color-neutral-950: #0a0a0c;
   --color-neutral-900: #141416;
   --color-neutral-800: #232328;

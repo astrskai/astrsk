@@ -14,7 +14,7 @@ const OnboardingStepOnePage = () => {
       <button
         type="button"
         aria-label="Close onboarding"
-        className="text-text-subtle absolute top-4 right-4 z-50 cursor-pointer md:top-[34px] md:right-[40px]"
+        className="text-fg-subtle absolute top-4 right-4 z-50 cursor-pointer md:top-[34px] md:right-[40px]"
         onClick={() => {
           navigate({ to: "/settings/providers", replace: true });
         }}
@@ -23,12 +23,12 @@ const OnboardingStepOnePage = () => {
       </button>
 
       {/* Main */}
-      <div className="from-background-surface-0 to-background-surface-3 absolute inset-0 grid place-content-center gap-6 bg-linear-to-b px-4 md:gap-[49px] md:px-0">
+      <div className="from-canvas to-surface-overlay absolute inset-0 grid place-content-center gap-6 bg-linear-to-b px-4 md:gap-[49px] md:px-0">
         <div className="flex flex-col items-center gap-2 md:gap-[8px]">
-          <div className="text-text-primary text-center text-xl leading-tight font-semibold md:text-[32px] md:leading-[40px] md:font-[600]">
+          <div className="text-fg-default text-center text-xl leading-tight font-semibold md:text-[32px] md:leading-[40px] md:font-[600]">
             Two short minutes to understand how astrsk works!
           </div>
-          <div className="text-text-placeholder text-center text-sm leading-relaxed md:text-[16px] md:leading-[25.6px] md:font-[400]">
+          <div className="text-fg-subtle text-center text-sm leading-relaxed md:text-[16px] md:leading-[25.6px] md:font-[400]">
             Get a sense of the overall structure of astrsk
           </div>
         </div>

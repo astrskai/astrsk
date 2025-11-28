@@ -56,15 +56,15 @@ const ErrorPage = ({
         <Logo />
 
         <div className="flex flex-col items-center justify-center gap-4">
-          <h1 className="text-text-secondary text-4xl font-semibold">
+          <h1 className="text-fg-muted text-4xl font-semibold">
             {title}
           </h1>
           {isJson ? (
-            <pre className="text-text-secondary text-left text-sm leading-6 font-mono whitespace-pre-wrap max-w-2xl bg-background-surface-3 p-4 rounded-lg">
+            <pre className="text-fg-muted text-left text-sm leading-6 font-mono whitespace-pre-wrap max-w-2xl bg-surface-overlay p-4 rounded-lg">
               {formattedMessage}
             </pre>
           ) : (
-            <p className="text-text-secondary text-center text-lg leading-8 font-normal whitespace-pre-line max-w-2xl">
+            <p className="text-fg-muted text-center text-lg leading-8 font-normal whitespace-pre-line max-w-2xl">
               {formattedMessage}
             </p>
           )}

@@ -12,23 +12,14 @@
   --font-pragati-narrow: "Pragati Narrow";
   --font-fira-code: "Fira Code";
 
-  /* Special alpha colors - literal values */
-  --color-alpha-80: rgba(128, 128, 128, 0.8);
-
-  /* Astrsk renewed colors start */
-
   /* Basic colors */
   --color-dark-surface: #262626;
 
   /* Semantic colors */
-  --color-normal-primary: #98d7f9;
-  --color-normal-secondary: #b59eff;
   --color-background-primary: var(--color-dark-surface);
 
   --color-text-primary: #f1f1f1;
   --color-text-secondary: #bfbfbf;
-
-  /* Astrsk renewed colors end */
 }
 
 @theme inline {
@@ -77,19 +68,14 @@
   --color-background-surface-3: var(--background-surface-3);
   --color-background-surface-4: var(--background-surface-4);
   --color-background-surface-5: var(--background-surface-5);
-  --color-background-surface-light: var(--background-surface-light);
   --color-background-card: var(--background-card);
   --color-background-container: var(--background-container);
-  --color-background-dialog: var(--background-dialog);
   --color-background-input: var(--background-input);
   --color-background-screen: var(--background-screen);
 
   /* Border colors */
-  --color-border-light: var(--border-light);
   --color-border-dark: var(--border-dark);
   --color-border-normal: var(--border-normal);
-  --color-border-selected-primary: var(--border-selected-primary);
-  --color-border-selected-secondary: var(--border-selected-secondary);
   --color-border-selected-inverse: var(--border-selected-inverse);
   --color-border-divider: var(--border-divider);
   --color-border-container: var(--border-container);
@@ -97,7 +83,6 @@
   /* Button colors */
   --color-button-background-primary: var(--button-background-primary);
   --color-button-foreground-primary: var(--button-foreground-primary);
-  --color-button-background-disabled: var(--button-background-disabled);
   --color-button-foreground-disabled: var(--button-foreground-disabled);
   --color-button-background-secondary: var(--button-background-secondary);
   --color-button-foreground-secondary: var(--button-foreground-secondary);
@@ -107,9 +92,7 @@
   /* Text colors */
   --color-text-body: var(--text-body);
   --color-text-subtle: var(--text-subtle);
-  --color-text-placeholder: var(--text-placeholder);
   --color-text-info: var(--text-info);
-  --color-text-contrast-text: var(--text-contrast-text);
   --color-text-muted-title: var(--text-muted-title);
   --color-text-input-subtitle: var(--text-input-subtitle);
 
@@ -120,26 +103,14 @@
 
   /* Secondary colors */
   --color-secondary-normal: var(--secondary-normal);
-  --color-secondary-heavy: var(--secondary-heavy);
 
   /* Status colors */
   --color-status-optional: var(--status-optional);
   --color-status-required: var(--status-required);
   --color-status-ready: var(--status-ready);
-  --color-status-ready-dark: var(--status-ready-dark);
   --color-status-succeed: var(--status-succeed);
   --color-status-warning-light: var(--status-warning-light);
   --color-status-warning: var(--status-warning);
-
-  /* Color palette - Blue */
-  --color-blue-50: var(--color-blue-50);
-  --color-blue-500: var(--color-blue-500);
-  --color-blue-700: var(--color-blue-700);
-  --color-blue-800: var(--color-blue-800);
-
-  /* Color palette - Yellow */
-  --color-yellow-800: var(--color-yellow-800);
-
 }
 
 :root {
@@ -174,18 +145,9 @@
   --sidebar-border: hsl(240 3.7% 15.9%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
 
-  /* astrsk 2.0 colors */
-  --color-blue-50: #e9f6fe;
-  --color-blue-500: #1ea9f2;
-  --color-blue-700: #1578ac;
-  --color-blue-800: #115d85;
-
-  --color-yellow-800: #854d0e;
-
   /* Existing background colors */
   --background-card: #37404c;
   --background-container: #2a313a;
-  --background-dialog: #64748b;
   --background-input: #475263;
   --background-screen: #111111;
 
@@ -196,25 +158,20 @@
   --background-surface-3: #313131;
   --background-surface-4: #414141;
   --background-surface-5: #757575;
-  --background-surface-light: #e9f6fe;
 
   /* Existing border colors */
   --border-container: #64748b;
   --border-divider: #37404c;
 
   /* New border colors */
-  --border-light: #757575;
   --border-dark: #313131;
   --border-normal: #525252;
   --border-black: #1b1b1b;
-  --border-selected-primary: #98d7f9;
-  --border-selected-secondary: #1ea9f2;
   --border-selected-inverse: #f1f1f1;
 
   /* Existing button colors */
   --button-background-primary: #98d7f9;
   --button-foreground-primary: #0d4766;
-  --button-background-disabled: #414141;
   --button-foreground-disabled: #757575;
   --button-background-secondary: #b59eff;
   --button-foreground-secondary: #27136b;
@@ -227,13 +184,11 @@
   --text-info: #696969;
   --text-input-subtitle: #97a2b1;
   --text-muted-title: #d4d4d4;
-  --text-placeholder: #a1a1a1;
   --text-user-message: #3f3f3f;
 
   /* New text colors */
   --text-body: #bfbfbf;
   --text-subtle: #9d9d9d;
-  --text-contrast-text: #3f3f3f;
 
   /* Existing primary colors */
   --primary-heavy: #1ea9f2;
@@ -241,7 +196,6 @@
   --primary-strong: #68c5f6;
 
   /* Existing secondary colors */
-  --secondary-heavy: #27136b;
   --secondary-normal: #b59eff;
 
   /* Existing status colors */
@@ -255,7 +209,6 @@
   --status-warning-light: #a16207;
   --status-succeed: #2ec2b9;
   --status-ready: #0d9488;
-  --status-ready-dark: #1578ac;
 
   /* iOS Safe Area Variables */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
@@ -333,7 +286,6 @@
   /* Existing background colors */
   --background-card: #37404c;
   --background-container: #2a313a;
-  --background-dialog: #64748b;
   --background-input: #475263;
   --background-screen: #111111;
 
@@ -344,25 +296,20 @@
   --background-surface-3: #313131;
   --background-surface-4: #414141;
   --background-surface-5: #757575;
-  --background-surface-light: #e9f6fe;
 
   /* Existing border colors */
   --border-container: #64748b;
   --border-divider: #37404c;
 
   /* New border colors */
-  --border-light: #757575;
   --border-dark: #313131;
   --border-normal: #525252;
   --border-black: #1b1b1b;
-  --border-selected-primary: #98d7f9;
-  --border-selected-secondary: #1ea9f2;
   --border-selected-inverse: #f1f1f1;
 
   /* Existing button colors */
   --button-background-primary: #98d7f9;
   --button-foreground-primary: #0d4766;
-  --button-background-disabled: #414141;
   --button-foreground-disabled: #757575;
   --button-background-secondary: #b59eff;
   --button-foreground-secondary: #27136b;
@@ -375,13 +322,11 @@
   --text-info: #696969;
   --text-input-subtitle: #97a2b1;
   --text-muted-title: #d4d4d4;
-  --text-placeholder: #a1a1a1;
   --text-user-message: #3f3f3f;
 
   /* New text colors */
   --text-body: #bfbfbf;
   --text-subtle: #9d9d9d;
-  --text-contrast-text: #3f3f3f;
 
   /* Existing primary colors */
   --primary-heavy: #1ea9f2;
@@ -389,7 +334,6 @@
   --primary-strong: #68c5f6;
 
   /* Existing secondary colors */
-  --secondary-heavy: #27136b;
   --secondary-normal: #b59eff;
 
   /* Existing status colors */
@@ -405,7 +349,6 @@
   --status-warning-dark: #854d0e;
   --status-syncing: #1ea9f2;
   --status-succeed: #2ec2b9;
-
 }
 
 /* Custom Variants */
