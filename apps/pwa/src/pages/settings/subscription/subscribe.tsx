@@ -142,7 +142,7 @@ const SubscribePage = () => {
     >
       {/* Close */}
       <button
-        className="text-text-subtle absolute top-[34px] right-[40px] z-50 cursor-pointer"
+        className="text-fg-subtle absolute top-[34px] right-[40px] z-50 cursor-pointer"
         onClick={() => {
           backToReturnPage();
         }}
@@ -157,8 +157,8 @@ const SubscribePage = () => {
             <div
               className={cn(
                 "px-[24px] py-[8px]",
-                "to-secondary-normal rounded-full bg-gradient-to-r from-[#755DC2]",
-                "text-text-primary text-[20px] leading-[24px] font-[600]",
+                "to-accent-secondary rounded-full bg-gradient-to-r from-[#755DC2]",
+                "text-fg-default text-[20px] leading-[24px] font-[600]",
               )}
             >
               Start with astrsk+
@@ -166,7 +166,7 @@ const SubscribePage = () => {
             <div className="text-[36px] leading-[36px] font-[600]">
               The Easiest Way to Start a Truly Immersive Roleplay
             </div>
-            <div className="text-text-body text-[20px] leading-[24px] font-[500]">
+            <div className="text-fg-muted text-[20px] leading-[24px] font-[500]">
               Go Straight to Creating Your Ultimate Roleplay with AI Images &
               Videos!
             </div>
@@ -179,7 +179,7 @@ const SubscribePage = () => {
                 <div className="mb-[16px] text-[72px] leading-[45px] font-[900] text-[#fff] uppercase">
                   AI Image Gen
                 </div>
-                <div className="text-text-body text-[14px] leading-[20px] font-[500]">
+                <div className="text-fg-muted text-[14px] leading-[20px] font-[500]">
                   Create stunning visuals during roleplay sessions,
                   <br />
                   Generate memorable images for character & plot cards
@@ -191,7 +191,7 @@ const SubscribePage = () => {
                 <div className="mb-[16px] text-[72px] leading-[45px] font-[900] text-[#fff] uppercase">
                   AI Video Gen
                 </div>
-                <div className="text-text-body text-[14px] leading-[20px] font-[500]">
+                <div className="text-fg-muted text-[14px] leading-[20px] font-[500]">
                   Free Your Characters from their PFP and Bring Them to Life!
                   <br />
                   <br />
@@ -205,49 +205,49 @@ const SubscribePage = () => {
                 "flex flex-col gap-[16px]",
               )}
             >
-              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[600]">
+              <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[600]">
                 Other features
               </div>
-              <div className="bg-border-selected-inverse h-[1px] w-full opacity-10" />
+              <div className="bg-border-emphasis h-[1px] w-full opacity-10" />
               <div className="flex flex-row gap-[16px]">
-                <div className="bg-text-primary text-background-surface-3 grid size-[32px] place-content-center rounded-[8px]">
+                <div className="bg-fg-default text-surface-overlay grid size-[32px] place-content-center rounded-[8px]">
                   <Zap size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
-                  <div className="text-text-primary text-[16px] leading-[25.6px] font-[600]">
+                  <div className="text-fg-default text-[16px] leading-[25.6px] font-[600]">
                     AI-Assisted Card Creation
                   </div>
-                  <div className="text-text-body text-[14px] leading-[20px] font-[600]">
+                  <div className="text-fg-muted text-[14px] leading-[20px] font-[600]">
                     Say goodbye to writer&apos;s block. Create character card
                     and scenarios with LLM assistants!
                   </div>
                 </div>
               </div>
               <div className="flex flex-row gap-[16px]">
-                <div className="bg-text-primary text-background-surface-3 grid size-[32px] place-content-center rounded-[8px]">
+                <div className="bg-fg-default text-surface-overlay grid size-[32px] place-content-center rounded-[8px]">
                   <Bot size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
-                  <div className="text-text-primary text-[16px] leading-[25.6px] font-[600]">
+                  <div className="text-fg-default text-[16px] leading-[25.6px] font-[600]">
                     Automatic Allocation of the LLMs for Each Roleplay
                   </div>
-                  <div className="text-text-body text-[14px] leading-[20px] font-[600]">
+                  <div className="text-fg-muted text-[14px] leading-[20px] font-[600]">
                     The optimal LLM is allocated for each workflow for prompt
                     and immersive response
                   </div>
                 </div>
               </div>
               <div className="flex flex-row gap-[16px]">
-                <div className="bg-text-primary text-background-surface-3 grid size-[32px] place-content-center rounded-[8px]">
+                <div className="bg-fg-default text-surface-overlay grid size-[32px] place-content-center rounded-[8px]">
                   <Coins size={20} />
                 </div>
                 <div className="flex flex-col gap-[8px]">
                   <div className="flex flex-row items-center justify-start gap-[8px]">
-                    <div className="text-text-primary text-[16px] leading-[25.6px] font-[600]">
+                    <div className="text-fg-default text-[16px] leading-[25.6px] font-[600]">
                       1,000 astrsk Credit per Month
                     </div>
                     <button
-                      className="text-text-body"
+                      className="text-fg-muted"
                       onClick={() => {
                         setIsOpenCreditDetail((isOpen) => !isOpen);
                       }}
@@ -258,12 +258,12 @@ const SubscribePage = () => {
                       />
                     </button>
                   </div>
-                  <div className="text-text-body text-[14px] leading-[20px] font-[600]">
+                  <div className="text-fg-muted text-[14px] leading-[20px] font-[600]">
                     Use it in ANY AI-power features in astrsk and astrsk+
                   </div>
                   <div
                     className={cn(
-                      "text-text-subtle text-[14px] leading-[20px] font-[600]",
+                      "text-fg-subtle text-[14px] leading-[20px] font-[600]",
                       !isOpenCreditDetail && "hidden",
                     )}
                   >
@@ -298,19 +298,19 @@ const SubscribePage = () => {
               <div
                 className={cn(
                   "bg-[#111111]/50 px-[40px] py-[16px] backdrop-blur-xl",
-                  "border-border-light rounded-[12px] border-[1px] shadow-2xl",
+                  "border-border-subtle rounded-[12px] border-[1px] shadow-2xl",
                   "flex flex-row items-center justify-between",
                 )}
               >
                 <div className="flex flex-row items-center gap-[4px] line-through">
-                  <div className="text-text-primary text-[24px] leading-[40px] font-[600]">
+                  <div className="text-fg-default text-[24px] leading-[40px] font-[600]">
                     $18.00 USD
                   </div>
-                  <div className="text-text-body text-[16px] leading-[25.6px] font-[400]">
+                  <div className="text-fg-muted text-[16px] leading-[25.6px] font-[400]">
                     / month
                   </div>
                 </div>
-                <div className="text-text-body text-[16px] leading-[25.6px] font-[400]">
+                <div className="text-fg-muted text-[16px] leading-[25.6px] font-[400]">
                   Regular Pricing
                 </div>
               </div>
@@ -318,21 +318,21 @@ const SubscribePage = () => {
                 <div
                   className={cn(
                     "rounded-[12px] bg-[#159BE2]/30 px-[40px] py-[16px] backdrop-blur-xl",
-                    "border-border-selected-secondary border-[1px]",
+                    "border-border-focus border-[1px]",
                     "flex flex-col gap-[8px]",
                   )}
                 >
                   <div className="flex flex-row items-center justify-between">
                     <div className="flex flex-row items-center gap-[4px]">
-                      <div className="text-text-primary text-[24px] leading-[40px] font-[600]">
+                      <div className="text-fg-default text-[24px] leading-[40px] font-[600]">
                         First Month Free
                       </div>
                     </div>
-                    <div className="text-text-primary text-[16px] leading-[25.6px] font-[400]">
+                    <div className="text-fg-default text-[16px] leading-[25.6px] font-[400]">
                       (Early Access) Special Offer
                     </div>
                   </div>
-                  <div className="text-text-body mb-[8px] text-[14px] leading-[20px] font-[500]">
+                  <div className="text-fg-muted mb-[8px] text-[14px] leading-[20px] font-[500]">
                     <ul className="list-disc pl-5">
                       <li>Early access limited to first 100 users only</li>
                       <li>
@@ -360,22 +360,22 @@ const SubscribePage = () => {
                 <div
                   className={cn(
                     "rounded-[12px] bg-[#B59EFF]/20 px-[40px] py-[16px] backdrop-blur-xl",
-                    "border-secondary-normal border-[1px]",
+                    "border-accent-secondary border-[1px]",
                     "flex flex-col gap-[8px]",
                   )}
                 >
                   <div className="flex flex-row items-center justify-between">
                     <div className="flex flex-row items-center gap-[10px]">
                       <Ban size={24} />
-                      <div className="text-text-primary text-[24px] leading-[40px] font-[600]">
+                      <div className="text-fg-default text-[24px] leading-[40px] font-[600]">
                         Early Access FULL
                       </div>
                     </div>
-                    <div className="text-text-primary text-[16px] leading-[25.6px] font-[400]">
+                    <div className="text-fg-default text-[16px] leading-[25.6px] font-[400]">
                       Official Launch Waitlist
                     </div>
                   </div>
-                  <div className="text-text-body mb-[8px] text-[14px] leading-[20px] font-[500]">
+                  <div className="text-fg-muted mb-[8px] text-[14px] leading-[20px] font-[500]">
                     <ul className="list-disc pl-5">
                       <li>
                         Early access limited to first 100 users only{" "}
@@ -389,7 +389,7 @@ const SubscribePage = () => {
                   </div>
                   <Button
                     size="lg"
-                    className="bg-button-background-secondary text-button-foreground-secondary hover:bg-button-background-secondary hover:text-button-foreground-secondary hover:brightness-80"
+                    className="bg-accent-secondary text-fg-on-emphasis hover:bg-accent-secondary hover:text-fg-on-emphasis hover:brightness-80"
                     onClick={() => {
                       openInNewTab(
                         "https://docs.google.com/forms/d/e/1FAIpQLScgW_lXXSKd3WKy7ZJXmnFX4CGbukgZap0du6rCh1U2PHUfBw/viewform",
@@ -413,12 +413,12 @@ const SubscribePage = () => {
         <DialogContent hideClose className="min-w-[720px] outline-none">
           <DialogHeader>
             <DialogTitle>
-              <div className="text-text-primary text-[24px] leading-[40px] font-[500]">
+              <div className="text-fg-default text-[24px] leading-[40px] font-[500]">
                 Join the Community and Start Now!
               </div>
             </DialogTitle>
             <DialogDescription>
-              <div className="text-text-placeholder text-[16px] leading-[25.6px] font-[400]">
+              <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
                 Join our Discord server, verify that you did, and enjoy astrsk+.
               </div>
             </DialogDescription>

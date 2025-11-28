@@ -15,10 +15,10 @@ const NotFound = () => {
         <Logo />
 
         <div className="flex flex-col items-center justify-center gap-4">
-          <h1 className="text-text-secondary text-4xl font-semibold">
+          <h1 className="text-fg-muted text-4xl font-semibold">
             Oops! Page Not Found
           </h1>
-          <p className="text-text-secondary text-center text-lg leading-8 font-normal">
+          <p className="text-fg-muted text-center text-lg leading-8 font-normal">
             It looks like the page you’re searching for doesn’t exist or has
             been moved.
             <br /> Let’s get you back to where you need to be.

@@ -35,7 +35,7 @@ const STYLES = {
   border: {
     error:
       "border-status-error focus:border-status-error focus:ring-status-error/20",
-    normal: "border-neutral-700 focus:border-brand-500 focus:ring-brand-500/20",
+    normal: "border-neutral-800 focus:border-brand-500 focus:ring-brand-500/20",
   },
   label: {
     floating:
