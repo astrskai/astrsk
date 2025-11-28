@@ -3,7 +3,7 @@ import { Label } from './Label';
 import { Input } from '../Input';
 
 const meta = {
-  title: 'Components/Label',
+  title: 'Form Inputs/Label',
   component: Label,
   parameters: {
     layout: 'centered',

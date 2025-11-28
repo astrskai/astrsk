@@ -60,7 +60,7 @@ const MailIcon = () => (
 );
 
 const meta = {
-  title: 'Components/Button',
+  title: 'Actions/Button',
   component: Button,
   parameters: {
     layout: 'centered',

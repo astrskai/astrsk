@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { LabeledTextarea } from './LabeledTextarea';
 
 const meta = {
-  title: 'Components/LabeledTextarea',
+  title: 'Form Inputs/LabeledTextarea',
   component: LabeledTextarea,
   parameters: {
     layout: 'centered',

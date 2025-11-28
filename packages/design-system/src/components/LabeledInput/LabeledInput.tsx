@@ -30,7 +30,8 @@ const LabeledInput = React.forwardRef<HTMLInputElement, LabeledInputProps>(
     },
     ref
   ) => {
-    const inputId = id || React.useId();
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
     const hintId = hint ? `${inputId}-hint` : undefined;
     const errorId = error ? `${inputId}-error` : undefined;
 
@@ -44,6 +45,11 @@ const LabeledInput = React.forwardRef<HTMLInputElement, LabeledInputProps>(
       </Label>
     );
 
+    // Inner mode needs placeholder for floating label to work
+    const inputPlaceholder = labelPosition === 'inner'
+      ? (props.placeholder || ' ')
+      : props.placeholder;
+
     const inputElement = (
       <Input
         ref={ref}
@@ -52,6 +58,7 @@ const LabeledInput = React.forwardRef<HTMLInputElement, LabeledInputProps>(
         aria-describedby={
           [errorId, hintId].filter(Boolean).join(' ') || undefined
         }
+        placeholder={inputPlaceholder}
         className={className}
         {...props}
       />
@@ -72,34 +79,26 @@ const LabeledInput = React.forwardRef<HTMLInputElement, LabeledInputProps>(
       </div>
     );
 
+    const innerLabelElement = label && (
+      <label
+        htmlFor={inputId}
+        className={cn(
+          'absolute top-0 left-3 -translate-y-1/2 px-1 text-xs font-medium pointer-events-none',
+          'bg-[var(--input-bg)] rounded-sm',
+          error ? 'text-[var(--color-status-error)]' : 'text-[var(--fg-muted)]'
+        )}
+      >
+        {label}
+        {required && <span className="text-[var(--color-status-error)] ml-0.5">*</span>}
+      </label>
+    );
+
     // Inner (floating label on border)
     if (labelPosition === 'inner') {
       return (
         <div className="relative">
-          <Input
-            ref={ref}
-            id={inputId}
-            aria-invalid={error ? 'true' : undefined}
-            aria-describedby={
-              [errorId, hintId].filter(Boolean).join(' ') || undefined
-            }
-            placeholder={props.placeholder || ' '}
-            className={className}
-            {...props}
-          />
-          {label && (
-            <label
-              htmlFor={inputId}
-              className={cn(
-                'absolute top-0 left-3 -translate-y-1/2 px-1 text-xs font-medium pointer-events-none',
-                'bg-[var(--input-bg)] rounded-sm',
-                error ? 'text-[var(--color-status-error)]' : 'text-[var(--fg-muted)]'
-              )}
-            >
-              {label}
-              {required && <span className="text-[var(--color-status-error)] ml-0.5">*</span>}
-            </label>
-          )}
+          {inputElement}
+          {innerLabelElement}
           {messageElement}
         </div>
       );

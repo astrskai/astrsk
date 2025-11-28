@@ -30,7 +30,8 @@ const LabeledTextarea = React.forwardRef<HTMLTextAreaElement, LabeledTextareaPro
     },
     ref
   ) => {
-    const textareaId = id || React.useId();
+    const generatedId = React.useId();
+    const textareaId = id || generatedId;
     const hintId = hint ? `${textareaId}-hint` : undefined;
     const errorId = error ? `${textareaId}-error` : undefined;
 
@@ -44,6 +45,11 @@ const LabeledTextarea = React.forwardRef<HTMLTextAreaElement, LabeledTextareaPro
       </Label>
     );
 
+    // Inner mode needs placeholder for floating label to work
+    const textareaPlaceholder = labelPosition === 'inner'
+      ? (props.placeholder || ' ')
+      : props.placeholder;
+
     const textareaElement = (
       <Textarea
         ref={ref}
@@ -52,6 +58,7 @@ const LabeledTextarea = React.forwardRef<HTMLTextAreaElement, LabeledTextareaPro
         aria-describedby={
           [errorId, hintId].filter(Boolean).join(' ') || undefined
         }
+        placeholder={textareaPlaceholder}
         className={className}
         {...props}
       />
@@ -72,34 +79,26 @@ const LabeledTextarea = React.forwardRef<HTMLTextAreaElement, LabeledTextareaPro
       </div>
     );
 
+    const innerLabelElement = label && (
+      <label
+        htmlFor={textareaId}
+        className={cn(
+          'absolute top-0 left-3 -translate-y-1/2 px-1 text-xs font-medium pointer-events-none',
+          'bg-[var(--input-bg)] rounded-sm',
+          error ? 'text-[var(--color-status-error)]' : 'text-[var(--fg-muted)]'
+        )}
+      >
+        {label}
+        {required && <span className="text-[var(--color-status-error)] ml-0.5">*</span>}
+      </label>
+    );
+
     // Inner (floating label on border)
     if (labelPosition === 'inner') {
       return (
         <div className="relative">
-          <Textarea
-            ref={ref}
-            id={textareaId}
-            aria-invalid={error ? 'true' : undefined}
-            aria-describedby={
-              [errorId, hintId].filter(Boolean).join(' ') || undefined
-            }
-            placeholder={props.placeholder || ' '}
-            className={className}
-            {...props}
-          />
-          {label && (
-            <label
-              htmlFor={textareaId}
-              className={cn(
-                'absolute top-0 left-3 -translate-y-1/2 px-1 text-xs font-medium pointer-events-none',
-                'bg-[var(--input-bg)] rounded-sm',
-                error ? 'text-[var(--color-status-error)]' : 'text-[var(--fg-muted)]'
-              )}
-            >
-              {label}
-              {required && <span className="text-[var(--color-status-error)] ml-0.5">*</span>}
-            </label>
-          )}
+          {textareaElement}
+          {innerLabelElement}
           {messageElement}
         </div>
       );

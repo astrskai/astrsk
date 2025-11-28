@@ -63,7 +63,7 @@ const LockIcon = () => (
 );
 
 const meta = {
-  title: 'Components/IconInput',
+  title: 'Form Inputs/IconInput',
   component: IconInput,
   parameters: {
     layout: 'centered',
