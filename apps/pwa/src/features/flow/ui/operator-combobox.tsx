@@ -156,7 +156,7 @@ export function OperatorCombobox({
         <div className="relative h-4 w-4">
           <ChevronDown
             className={cn(
-              "text-background-surface-5 absolute top-[-2px] left-[-1px] max-h-4 max-w-4 transition-transform",
+              "text-fg-subtle absolute top-[-2px] left-[-1px] max-h-4 max-w-4 transition-transform",
               isOpen && "rotate-180",
             )}
           />
@@ -218,7 +218,7 @@ export function OperatorCombobox({
                         "absolute top-[-2px] left-[-1px] max-h-4 max-w-4",
                         value.dataType === dataType.type
                           ? "text-fg-default"
-                          : "text-background-surface-5 group-hover:text-fg-default",
+                          : "text-fg-subtle group-hover:text-fg-default",
                         expandedType === dataType.type && "rotate-180",
                       )}
                     />

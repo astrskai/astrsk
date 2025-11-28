@@ -50,7 +50,7 @@ const FloatingLabelSelect = React.forwardRef<
       <div className={cn("relative", className)}>
         <div
           className={cn(
-            "relative h-14 w-full rounded-md border border-input bg-transparent text-sm ring-offset-background",
+            "relative h-14 w-full rounded-md border border-border-default bg-transparent text-sm ring-offset-canvas",
             error ? "border-destructive" : "focus-within:border-primary",
           )}
         >
@@ -58,8 +58,8 @@ const FloatingLabelSelect = React.forwardRef<
             className={cn(
               "absolute pointer-events-none transition-all duration-200 ease-in-out px-3",
               isFocused || hasValue
-                ? "text-xs transform -translate-y-1 top-2 text-muted-foreground"
-                : "text-base text-muted-foreground top-1/2 -translate-y-1/2",
+                ? "text-xs transform -translate-y-1 top-2 text-fg-subtle"
+                : "text-base text-fg-subtle top-1/2 -translate-y-1/2",
             )}
           >
             {label}
@@ -93,7 +93,7 @@ const FloatingLabelSelect = React.forwardRef<
           <p
             className={cn(
               "text-xs mt-1",
-              error ? "text-destructive" : "text-muted-foreground",
+              error ? "text-destructive" : "text-fg-subtle",
             )}
           >
             {helpText}

@@ -14,7 +14,7 @@ interface TextareaProps
 // Shared style constants
 const STYLES = {
   textarea: {
-    base: "w-full min-h-[120px] rounded-lg border bg-neutral-800 px-4 py-3 text-base text-neutral-100 placeholder:text-neutral-500 outline-none",
+    base: "w-full min-h-[120px] rounded-lg border bg-surface-raised px-4 py-3 text-base text-fg-default placeholder:text-fg-subtle outline-none",
     focus: "focus:ring-2 focus:ring-offset-0",
     transition: "transition-all",
     disabled: "disabled:cursor-not-allowed disabled:opacity-50",

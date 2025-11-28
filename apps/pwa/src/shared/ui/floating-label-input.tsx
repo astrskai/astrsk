@@ -51,10 +51,10 @@ const FloatingLabelInput = React.forwardRef<
       <div className="relative">
         <div
           className={cn(
-            "bg-background-surface-4 ring-offset-background relative flex w-full rounded-md px-3 py-2 text-sm",
+            "bg-hover ring-offset-canvas relative flex w-full rounded-md px-3 py-2 text-sm",
             "h-[57px]",
             error
-              ? "border-status-destructive-primary border"
+              ? "border-status-error border"
               : "focus-within:border-primary",
             props.readOnly ? "cursor-pointer" : "",
             className,
@@ -122,7 +122,7 @@ const FloatingLabelInput = React.forwardRef<
             className={cn(
               "mt-1 mr-4 ml-4 text-xs",
               error
-                ? "text-status-destructive-primary"
+                ? "text-status-error"
                 : "text-text-input-subtitle",
               variant === "guide" ? "text-right" : "",
             )}

@@ -47,7 +47,7 @@ export const HelpVideoDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background-surface-2 outline-background-surface-2 max-w-[720px] rounded-lg p-6 shadow-[0px_10px_10px_-5px_rgba(0,0,0,0.10)] shadow-[0px_10px_25px_-5px_rgba(0,0,0,0.30)] outline outline-offset-[-1px]">
+      <DialogContent className="bg-surface-raised outline-surface-raised max-w-[720px] rounded-lg p-6 shadow-[0px_10px_10px_-5px_rgba(0,0,0,0.10)] shadow-[0px_10px_25px_-5px_rgba(0,0,0,0.30)] outline outline-offset-[-1px]">
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-text-primary text-2xl leading-10 font-semibold">
             {config.title}

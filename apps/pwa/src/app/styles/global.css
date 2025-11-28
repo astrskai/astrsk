@@ -33,26 +33,11 @@
   /* Inset/Position utilities */
   --inset-topbar: var(--topbar-height);
 
-  /* Core colors - shadcn/ui compatible */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
+  /* Core colors - shadcn/ui compatible (kept for remaining usages) */
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
 
   /* Sidebar colors */
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -62,12 +47,6 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Background colors */
-  --color-background-surface-0: var(--background-surface-0);
-  --color-background-surface-1: var(--background-surface-1);
-  --color-background-surface-2: var(--background-surface-2);
-  --color-background-surface-3: var(--background-surface-3);
-  --color-background-surface-4: var(--background-surface-4);
-  --color-background-surface-5: var(--background-surface-5);
   --color-background-card: var(--background-card);
   --color-background-container: var(--background-container);
   --color-background-input: var(--background-input);
@@ -108,9 +87,7 @@
   --color-status-optional: var(--status-optional);
   --color-status-required: var(--status-required);
   --color-status-ready: var(--status-ready);
-  --color-status-succeed: var(--status-succeed);
   --color-status-warning-light: var(--status-warning-light);
-  --color-status-warning: var(--status-warning);
 }
 
 :root {
@@ -151,14 +128,6 @@
   --background-input: #475263;
   --background-screen: #111111;
 
-  /* New background colors */
-  --background-surface-0: #111111;
-  --background-surface-1: #1b1b1b;
-  --background-surface-2: #272727;
-  --background-surface-3: #313131;
-  --background-surface-4: #414141;
-  --background-surface-5: #757575;
-
   /* Existing border colors */
   --border-container: #64748b;
   --border-divider: #37404c;
@@ -198,16 +167,10 @@
   /* Existing secondary colors */
   --secondary-normal: #b59eff;
 
-  /* Existing status colors */
-  --status-destructive: #7f1d1d;
-  --status-destructive-primary: #dc2626;
-  --status-warning: #a16207;
+  /* Status colors */
   --status-optional: #a1ece7;
   --status-required: #b59eff;
-
-  /* New status colors */
   --status-warning-light: #a16207;
-  --status-succeed: #2ec2b9;
   --status-ready: #0d9488;
 
   /* iOS Safe Area Variables */
@@ -216,43 +179,6 @@
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
-
-/* Block landscape mode with message */
-/* @media screen and (orientation: landscape) and (max-width: 990px) {
-  #root {
-    display: none;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--background-screen);
-    z-index: 9999;
-  }
-
-  body::after {
-    content: "Landscape mode is not supported";
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--text-primary);
-    font-size: 18px;
-    font-family: var(--font-inter);
-    text-align: center;
-    z-index: 10000;
-    padding: 28px;
-    background-color: var(--background-container);
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-width: 80%;
-    line-height: 1.5;
-  }
-} */
 
 .dark {
   --background: hsl(0 0% 3.9%);
@@ -289,14 +215,6 @@
   --background-input: #475263;
   --background-screen: #111111;
 
-  /* New background colors */
-  --background-surface-0: #111111;
-  --background-surface-1: #1b1b1b;
-  --background-surface-2: #272727;
-  --background-surface-3: #313131;
-  --background-surface-4: #414141;
-  --background-surface-5: #757575;
-
   /* Existing border colors */
   --border-container: #64748b;
   --border-divider: #37404c;
@@ -336,19 +254,11 @@
   /* Existing secondary colors */
   --secondary-normal: #b59eff;
 
-  /* Existing status colors */
-  --status-destructive: #7f1d1d;
-  --status-destructive-light: #dc2626;
-  --status-destructive-primary: #dc2626;
-  --status-warning: #a16207;
+  /* Status colors */
   --status-optional: #a1ece7;
   --status-required: #b59eff;
-
-  /* New status colors */
   --status-warning-light: #a16207;
-  --status-warning-dark: #854d0e;
-  --status-syncing: #1ea9f2;
-  --status-succeed: #2ec2b9;
+  --status-ready: #0d9488;
 }
 
 /* Custom Variants */
@@ -600,8 +510,14 @@
   /* Consolidated Dockview styles */
   .dockview-theme-abyss {
     --dv-separator-border: var(--bg-canvas, #111111) !important;
-    --dv-sash-color: var(--bg-canvas, #111111) !important; /* visible sash color */
-    --dv-active-sash-color: var(--bg-canvas, #111111) !important; /* hover/active color */
+    --dv-sash-color: var(
+      --bg-canvas,
+      #111111
+    ) !important; /* visible sash color */
+    --dv-active-sash-color: var(
+      --bg-canvas,
+      #111111
+    ) !important; /* hover/active color */
   }
 
   /* Tab containers */

@@ -458,7 +458,7 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
               <div className="flex flex-col justify-center items-center gap-8">
                 <div className="flex flex-col justify-start items-center gap-2">
                   <div className="text-center justify-start text-fg-muted text-base font-semibold leading-relaxed">No schema field</div>
-                  <div className="w-40 text-center justify-start text-background-surface-5 text-xs font-normal">Define the structure of your agent's output</div>
+                  <div className="w-40 text-center justify-start text-fg-subtle text-xs font-normal">Define the structure of your agent's output</div>
                 </div>
                 <Button
                   onClick={addNewField}

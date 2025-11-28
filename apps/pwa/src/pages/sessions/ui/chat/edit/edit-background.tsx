@@ -183,9 +183,9 @@ const EditBackground = ({
                   handleAddNewBackground(file);
                 }}
               >
-                <Import size={72} className="text-muted-foreground" />
+                <Import size={72} className="text-fg-subtle" />
                 <div>
-                  <TypoBase className="text-muted-foreground">
+                  <TypoBase className="text-fg-subtle">
                     Choose a file or drag it here
                   </TypoBase>
                 </div>

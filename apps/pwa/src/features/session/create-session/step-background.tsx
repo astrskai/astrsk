@@ -59,7 +59,7 @@ const BackgroundListItem = ({
   return (
     <div
       className={cn(
-        "bg-background-surface-1 relative cursor-pointer overflow-hidden rounded-lg",
+        "bg-surface relative cursor-pointer overflow-hidden rounded-lg",
         isMobile ? "w-full" : "w-[338px]",
         isActive && "ring-primary-normal ring-2",
       )}
@@ -342,9 +342,9 @@ const StepBackground = () => {
                   handleAddNewBackground(file);
                 }}
               >
-                <Import size={72} className="text-muted-foreground" />
+                <Import size={72} className="text-fg-subtle" />
                 <div>
-                  <TypoBase className="text-muted-foreground">
+                  <TypoBase className="text-fg-subtle">
                     Choose a file or drag it here
                   </TypoBase>
                 </div>

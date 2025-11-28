@@ -13,7 +13,7 @@ const Checkbox = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      "peer h-[24px] w-[24px] shrink-0 rounded-[5px] bg-background-surface-5 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-background-surface-5 data-[state=checked]:text-primary-foreground",
+      "peer h-[24px] w-[24px] shrink-0 rounded-[5px] bg-active focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-border-focus disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-active data-[state=checked]:text-primary-foreground",
       className,
     )}
     {...props}
@@ -34,7 +34,7 @@ const CheckboxMobile = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      "peer h-[20px] w-[20px] shrink-0 rounded-[5px] bg-background-surface-5 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-background-surface-5 data-[state=checked]:text-primary-foreground",
+      "peer h-[20px] w-[20px] shrink-0 rounded-[5px] bg-active focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-border-focus disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-active data-[state=checked]:text-primary-foreground",
       className,
     )}
     {...props}

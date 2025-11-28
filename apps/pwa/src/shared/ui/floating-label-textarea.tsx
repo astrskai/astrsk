@@ -95,9 +95,9 @@ const FloatingLabelTextarea = React.forwardRef<
     <div className="relative">
       <div
         className={cn(
-          "relative flex w-full rounded-md bg-background-surface-4 px-3 py-2 text-base ring-offset-background min-h-[100px] max-h-[360px]",
+          "relative flex w-full rounded-md bg-hover px-3 py-2 text-base ring-offset-canvas min-h-[100px] max-h-[360px]",
           error
-            ? "border border-status-destructive-primary"
+            ? "border border-status-error"
             : "focus-within:border-primary",
           className,
         )}
@@ -144,7 +144,7 @@ const FloatingLabelTextarea = React.forwardRef<
           className={cn(
             "text-xs mt-1 ml-4",
             error
-              ? "text-status-destructive-primary"
+              ? "text-status-error"
               : "text-text-input-subtitle",
           )}
         >

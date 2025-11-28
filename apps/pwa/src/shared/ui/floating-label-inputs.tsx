@@ -150,7 +150,7 @@ const FloatingLabelInputs = React.forwardRef<
               warning
                 ? "text-status-warning"
                 : error
-                  ? "text-status-destructive-primary"
+                  ? "text-status-error"
                   : "text-text-input-subtitle",
             )}
           >

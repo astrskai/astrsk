@@ -20,7 +20,7 @@ const Avatar = ({
     <div
       className={cn(
         "flex shrink-0 items-center justify-center overflow-hidden rounded-full border-1 border-gray-700 select-none",
-        !src && "bg-background-surface-3",
+        !src && "bg-surface-overlay",
         className,
       )}
       style={{

@@ -22,7 +22,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 // Shared style constants
 const STYLES = {
   input: {
-    base: "w-full rounded-lg border bg-canvas text-fg-default placeholder:text-fg-subtle outline-none",
+    base: "w-full rounded-lg border bg-surface-raised text-fg-default placeholder:text-fg-subtle outline-none",
     focus: "focus:ring-2 focus:ring-offset-0",
     transition: "transition-all",
     disabled: "disabled:cursor-not-allowed disabled:opacity-50",

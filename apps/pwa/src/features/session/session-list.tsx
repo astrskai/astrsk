@@ -220,9 +220,9 @@ const SessionListMobile = ({
   };
 
   return (
-    <div className="bg-background-surface-2 flex h-full flex-col">
+    <div className="bg-surface-raised flex h-full flex-col">
       {/* Mobile Header */}
-      <div className="bg-background-surface-2 relative flex h-[60px] items-center px-4">
+      <div className="bg-surface-raised relative flex h-[60px] items-center px-4">
         {isSelectionMode ? (
           <Button variant="ghost" size="sm" onClick={exitSelectionMode}>
             Done
@@ -347,8 +347,8 @@ const SessionListMobile = ({
       />
 
       {/* Search and Create */}
-      <div className="bg-background-surface-2 space-y-4 px-4 py-2">
-        <div className="bg-background-surface-4 inline-flex flex-col items-start justify-start gap-2 self-stretch overflow-hidden rounded-lg px-4 py-2">
+      <div className="bg-surface-raised space-y-4 px-4 py-2">
+        <div className="bg-hover inline-flex flex-col items-start justify-start gap-2 self-stretch overflow-hidden rounded-lg px-4 py-2">
           <div className="inline-flex items-center justify-start gap-4 self-stretch">
             <div className="relative h-6 w-6 overflow-hidden">
               <Search
@@ -392,7 +392,7 @@ const SessionListMobile = ({
       </div>
 
       {/* Session List */}
-      <ScrollArea className="bg-background-surface-2 flex-1">
+      <ScrollArea className="bg-surface-raised flex-1">
         <div className="px-4">
           {sessions.length === 0 ? (
             <div className="flex items-center justify-center">
@@ -432,12 +432,12 @@ const MobileCharacterAvatar = ({ cardId }: { cardId: UniqueEntityID }) => {
 
   if (!card) {
     return (
-      <div className="border-background-surface-2 bg-background-card h-8 w-8 rounded-full border-2" />
+      <div className="border-surface-raised bg-background-card h-8 w-8 rounded-full border-2" />
     );
   }
 
   return (
-    <div className="border-background-surface-2 bg-background-card relative h-8 w-8 overflow-hidden rounded-full border-2">
+    <div className="border-surface-raised bg-background-card relative h-8 w-8 overflow-hidden rounded-full border-2">
       {icon ? (
         <img src={icon} alt="" className="h-full w-full object-cover" />
       ) : (
@@ -494,13 +494,13 @@ const SessionListItemMobile = ({
       className={cn(
         "flex flex-col items-center justify-start self-stretch outline-1",
         hasError &&
-        "bg-background-surface-2 border-status-destrctive-light border-l-[3px]",
+        "bg-surface-raised border-status-destrctive-light border-l-[3px]",
       )}
     >
       <button
         onClick={handleClick}
         className={cn(
-          "bg-background-surface-2 border-border-dark inline-flex w-full items-start justify-start self-stretch border-b",
+          "bg-surface-raised border-border-dark inline-flex w-full items-start justify-start self-stretch border-b",
           "hover:bg-background-card-hover active:bg-background-card-hover",
           isActive && !isSelectionMode && "bg-background-card-hover",
           isSelected && "bg-background-card",
@@ -561,7 +561,7 @@ const SessionListItemMobile = ({
                 ))} */}
               {session.characterCards.length > 3 && (
                 <div
-                  className="bg-background-surface-3 outline-background-surface-2 inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"
+                  className="bg-surface-overlay outline-surface-raised inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"
                   style={{ zIndex: 0 }}
                 >
                   <div className="text-text-placeholder justify-start text-[10px] leading-none font-medium">
