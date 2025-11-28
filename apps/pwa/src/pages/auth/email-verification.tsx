@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Mail, CheckCircle2, ArrowLeft, ArrowRight, Inbox } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Mail, CheckCircle2, ArrowLeft, Inbox } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Button } from "@/shared/ui/forms/button";
 import { AuthLayout, AuthBadge } from "./ui";
 
 // --- Main Page ---
 export function EmailVerificationPage() {
+  const navigate = useNavigate();
   const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">(
     "idle",
   );
@@ -28,8 +29,7 @@ export function EmailVerificationPage() {
 
   const handleVerificationComplete = () => {
     // TODO: Re-check auth token or navigate to dashboard
-    console.log("Checking verification status...");
-    window.location.href = "/";
+    navigate({ to: "/", replace: true });
   };
 
   return (

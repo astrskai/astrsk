@@ -4,6 +4,7 @@ import { IfNodeService } from "@/app/services/if-node-service";
 import { ifNodeKeys } from "../query-factory";
 import { IfCondition } from "@/features/flow/nodes/if-node";
 import { ConditionDataType, ConditionOperator } from "@/features/flow/types/condition-types";
+import { invalidateSingleFlowQueries } from "@/features/flow/utils/invalidate-flow-queries";
 
 // Type for conditions that may be incomplete (during editing)
 // Now the same as IfCondition since both support null values
@@ -110,7 +111,6 @@ export function useUpdateIfNodeConditions(flowId: string, nodeId: string) {
       
       // Also invalidate flow queries since if node conditions affect flow validation
       try {
-        const { invalidateSingleFlowQueries } = await import("@/features/flow/utils/invalidate-flow-queries");
         await invalidateSingleFlowQueries(flowId);
       } catch (error) {
         console.warn("Failed to invalidate flow queries after if node condition update:", error);
@@ -202,7 +202,6 @@ export function useUpdateIfNodeLogicOperator(flowId: string, nodeId: string) {
       
       // Also invalidate flow queries since if node conditions affect flow validation
       try {
-        const { invalidateSingleFlowQueries } = await import("@/features/flow/utils/invalidate-flow-queries");
         await invalidateSingleFlowQueries(flowId);
       } catch (error) {
         console.warn("Failed to invalidate flow queries after if node logic operator update:", error);

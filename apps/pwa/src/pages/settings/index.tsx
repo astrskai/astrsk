@@ -17,6 +17,7 @@ import { useClerk } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { SvgIcon } from "@/shared/ui";
 import { IconDiscord } from "@/shared/assets/icons";
+import { toastError } from "@/shared/ui/toast";
 
 // --- Helper ---
 function openInNewTab(url: string) {
@@ -131,9 +132,13 @@ const UserProfileCard = () => {
         </div>
       </div>
       <button
-        onClick={() => {
-          signOut();
-          navigate({ to: "/settings", replace: true });
+        onClick={async () => {
+          try {
+            await signOut();
+            navigate({ to: "/settings", replace: true });
+          } catch (error) {
+            toastError("Sign out failed. Please try again.");
+          }
         }}
         className="text-status-error hover:bg-status-error/10 rounded-lg p-2 transition-colors"
         aria-label="Sign out"

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/shared/ui/forms/button";
 import { Input } from "@/shared/ui/input";
-import { AuthLayout, AuthBadge, PasswordChecklist } from "./ui";
+import { AuthLayout, AuthBadge, PasswordChecklist, checkPasswordRequirements } from "./ui";
 import { PasswordInputRHF } from "@/shared/ui/forms";
 
 // --- Types ---
@@ -102,10 +102,8 @@ export function SignUpPage() {
             error={errors.password?.message}
             rules={{
               required: "Password is required",
-              minLength: {
-                value: 8,
-                message: "Password must be at least 8 characters long",
-              },
+              validate: (value) =>
+                checkPasswordRequirements(value) || "Please meet all password requirements.",
             }}
           />
         </div>

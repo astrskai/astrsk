@@ -12,6 +12,7 @@ import { CardService } from "@/app/services/card-service";
 import { AgentService } from "@/app/services/agent-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
+import { initServices } from "@/app/services/init-services";
 
 /**
  * Data migration: Migrate existing sessions to use session-local copies of resources
@@ -32,7 +33,6 @@ export async function migrateSessionsToLocalResources() {
   // Initialize services (required for CloneFlow and CloneCard)
   console.log("Initializing services...");
   if (!FlowService.cloneFlow) {
-    const { initServices } = await import("@/app/services/init-services");
     await initServices();
   }
 

@@ -1,6 +1,13 @@
 import { EditableFlowData } from "vibe-shared-types";
 import { UniqueEntityID } from "@/shared/domain";
 import { Operation } from "../lib/operation-processor";
+import { FlowService } from "@/app/services/flow-service";
+import { DataStoreNodeService } from "@/app/services/data-store-node-service";
+import { IfNodeService } from "@/app/services/if-node-service";
+import { AgentService } from "@/app/services/agent-service";
+import { Agent, ApiType } from "@/entities/agent/domain";
+import { getNextAvailableColor } from "@/features/flow/utils/node-color-assignment";
+import { notifyFlowNodesEdgesUpdate } from "@/shared/lib/flow-local-state-sync";
 
 /**
  * Map edited flow data from backend format to service call format
@@ -31,8 +38,6 @@ export async function applyFlowUpdates(
   updates: ReturnType<typeof mapFlowEditsToUpdates>,
 ): Promise<{ success: boolean; errors: string[] }> {
   const errors: string[] = [];
-  const { FlowService } = await import("@/app/services/flow-service");
-  const { UniqueEntityID } = await import("@/shared/domain");
 
   try {
     // Apply flow name change
@@ -91,7 +96,6 @@ export async function processFlowOperations(
           newValue: operation.value,
         });
 
-        const { FlowService } = await import("@/app/services/flow-service");
         const result = await FlowService.updateFlowName.execute({
           flowId: new UniqueEntityID(resourceId),
           name: operation.value,
@@ -119,7 +123,6 @@ export async function processFlowOperations(
           },
         );
 
-        const { FlowService } = await import("@/app/services/flow-service");
         const result = await FlowService.updateResponseTemplate.execute({
           flowId: resourceId,
           responseTemplate: operation.value,
@@ -153,7 +156,6 @@ export async function processFlowOperations(
         );
 
         // Get the current flow to access its data store schema
-        const { FlowService } = await import("@/app/services/flow-service");
         const flowResult = await FlowService.getFlow.execute(
           new UniqueEntityID(resourceId),
         );
@@ -226,13 +228,9 @@ export async function processFlowOperations(
         );
 
         const { id: nodeId, nodeType, name, position } = operation.value;
-        const { FlowService } = await import("@/app/services/flow-service");
 
         try {
           // Step 0: Get proper color assignment
-          const { getNextAvailableColor } = await import(
-            "@/features/flow/utils/node-color-assignment"
-          );
           const nodeColor = await getNextAvailableColor({
             props: { nodes: updatedResource.nodes || [] },
             id: resourceId,
@@ -287,9 +285,6 @@ export async function processFlowOperations(
                 color: nodeColor,
               },
             );
-            const { DataStoreNodeService } = await import(
-              "@/app/services/data-store-node-service"
-            );
             const result =
               await DataStoreNodeService.createDataStoreNode.execute({
                 nodeId: nodeId,
@@ -313,10 +308,6 @@ export async function processFlowOperations(
               console.log(
                 `✅ [FLOW-OPERATIONS] Data Store node created successfully, verifying database persistence...`,
               );
-              const { DataStoreNodeService } = await import(
-                "@/app/services/data-store-node-service"
-              );
-              const { UniqueEntityID } = await import("@/shared/domain");
               const verifyResult =
                 await DataStoreNodeService.getDataStoreNode.execute(
                   new UniqueEntityID(nodeId),
@@ -358,9 +349,6 @@ export async function processFlowOperations(
                 color: nodeColor,
                 timestamp: new Date().toISOString(),
               },
-            );
-            const { IfNodeService } = await import(
-              "@/app/services/if-node-service"
             );
             const result = await IfNodeService.createIfNode.execute({
               nodeId: nodeId,
@@ -470,12 +458,6 @@ export async function processFlowOperations(
             );
 
             // Step 3: Create the agent in database via service layer
-            const { Agent, ApiType } = await import("@/entities/agent/domain");
-            const { UniqueEntityID } = await import("@/shared/domain");
-            const { AgentService } = await import(
-              "@/app/services/agent-service"
-            );
-
             // Create agent domain entity
             const agentOrError = Agent.create(
               {
@@ -564,10 +546,6 @@ export async function processFlowOperations(
             );
           } else {
             // Step 4: Notify UI of the changes (now that everything is persisted)
-            const { notifyFlowNodesEdgesUpdate } = await import(
-              "@/shared/lib/flow-local-state-sync"
-            );
-
             // Ensure all edges have the required 'type' field for ReactFlow
             const edgesWithType = (updatedResource.edges || []).map(
               (edge: any) => ({
@@ -615,7 +593,6 @@ export async function processFlowOperations(
         );
 
         const { id, source, target, sourceHandle } = operation.value;
-        const { FlowService } = await import("@/app/services/flow-service");
 
         try {
           // Step 1: Create the actual edge in the resource (was skipped during preview)
@@ -681,10 +658,6 @@ export async function processFlowOperations(
               );
             } else {
               // Step 3: Notify UI of the changes (now that everything is persisted)
-              const { notifyFlowNodesEdgesUpdate } = await import(
-                "@/shared/lib/flow-local-state-sync"
-              );
-
               // Ensure all edges have the required 'type' field for ReactFlow
               const edgesWithType = (updatedResource.edges || []).map(
                 (edge: any) => ({
