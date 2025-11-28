@@ -27,6 +27,14 @@ export const IMAGE_MODELS = {
 
 export type ImageModel = (typeof IMAGE_MODELS)[keyof typeof IMAGE_MODELS];
 
+// Default model selection for lite/strong tiers
+export interface DefaultModelSelection {
+  apiConnectionId: string;
+  apiSource: string;
+  modelId: string;
+  modelName: string;
+}
+
 interface ModelState {
   // Language model selection (used by vibe coding/AI assistant)
   selectedLanguageModel: LanguageModel;
@@ -43,6 +51,13 @@ interface ModelState {
   // Image-to-video toggle (whether to use card image as starting frame)
   useCardImageForVideo: boolean;
   setUseCardImageForVideo: (useImage: boolean) => void;
+
+  // Default model selections for lite and strong tiers
+  defaultLiteModel: DefaultModelSelection | null;
+  setDefaultLiteModel: (model: DefaultModelSelection | null) => void;
+
+  defaultStrongModel: DefaultModelSelection | null;
+  setDefaultStrongModel: (model: DefaultModelSelection | null) => void;
 }
 
 const useModelStoreBase = create<ModelState>()(
@@ -74,6 +89,19 @@ const useModelStoreBase = create<ModelState>()(
       setUseCardImageForVideo: (useImage) =>
         set((state) => {
           state.useCardImageForVideo = useImage;
+        }),
+
+      // Default model selections (null = not configured)
+      defaultLiteModel: null,
+      setDefaultLiteModel: (model) =>
+        set((state) => {
+          state.defaultLiteModel = model;
+        }),
+
+      defaultStrongModel: null,
+      setDefaultStrongModel: (model) =>
+        set((state) => {
+          state.defaultStrongModel = model;
         }),
     })),
     {

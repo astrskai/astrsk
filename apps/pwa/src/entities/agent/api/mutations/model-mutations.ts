@@ -7,7 +7,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
-import { Agent, ApiType } from "@/entities/agent/domain/agent";
+import { ModelTier } from "@/entities/agent/domain/agent";
 import { ApiSource } from "@/entities/api/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { agentKeys } from "../query-factory";
@@ -22,25 +22,37 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ 
-      apiSource, 
-      modelId, 
-      modelName 
-    }: { 
-      apiSource?: ApiSource; 
-      modelId?: string; 
+    mutationFn: async ({
+      apiSource,
+      modelId,
+      modelName,
+      modelTier,
+    }: {
+      apiSource?: ApiSource;
+      modelId?: string;
       modelName?: string;
+      modelTier?: ModelTier;
     }) => {
       // Get agent
       const agentResult = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
       if (agentResult.isFailure) throw new Error("Agent not found");
       const agent = agentResult.getValue();
-      
-      // Update agent
-      const updatedAgent = agent.update({ 
-        ...(apiSource !== undefined && { apiSource }),
-        ...(modelId !== undefined && { modelId }),
-        ...(modelName !== undefined && { modelName })
+
+      // Update agent - when modelTier is set, clear specific model fields
+      const updatedAgent = agent.update({
+        ...(modelTier !== undefined ? {
+          // Tier-based selection: clear specific model, set tier
+          apiSource: undefined,
+          modelId: undefined,
+          modelName,
+          modelTier,
+        } : {
+          // Specific model selection: set model fields, clear tier
+          ...(apiSource !== undefined && { apiSource }),
+          ...(modelId !== undefined && { modelId }),
+          ...(modelName !== undefined && { modelName }),
+          modelTier: undefined,
+        }),
       });
       if (updatedAgent.isFailure) {
         throw new Error(updatedAgent.getError());
@@ -85,11 +97,23 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
         agentKeys.model(agentId),
         (old: any) => {
           if (!old) return old;
+          // When modelTier is set, clear specific model fields
+          if (updates.modelTier !== undefined) {
+            return {
+              ...old,
+              apiSource: undefined,
+              modelId: undefined,
+              modelName: updates.modelName,
+              modelTier: updates.modelTier,
+            };
+          }
+          // When specific model is selected, clear modelTier
           return {
             ...old,
             ...(updates.apiSource !== undefined && { apiSource: updates.apiSource }),
             ...(updates.modelId !== undefined && { modelId: updates.modelId }),
-            ...(updates.modelName !== undefined && { modelName: updates.modelName })
+            ...(updates.modelName !== undefined && { modelName: updates.modelName }),
+            modelTier: undefined,
           };
         }
       );
