@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Shield } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/shared/ui/forms/button";
 import { Input } from "@/shared/ui/input";
 import { AuthLayout, AuthBadge, PasswordChecklist, checkPasswordRequirements } from "./ui";
 import { PasswordInputRHF } from "@/shared/ui/forms";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
+import { logger } from "@/shared/lib/logger";
+import { signUp } from "@/shared/lib/auth-actions";
 
 // --- Types ---
 interface SignUpFormData {
@@ -18,6 +21,7 @@ interface SignUpFormData {
 // --- Main Page ---
 export function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -36,11 +40,30 @@ export function SignUpPage() {
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
 
-  const onSubmit = (_data: SignUpFormData) => {
+  const onSubmit = async (data: SignUpFormData) => {
     setIsLoading(true);
-    // TODO: Implement actual sign up logic
 
-    setTimeout(() => setIsLoading(false), 2000);
+    try {
+      const { error } = await signUp({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        toastError("Sign up failed", { description: error });
+        return;
+      }
+
+      toastSuccess("Account created! Please check your email to verify.");
+      navigate({ to: "/email-verification" });
+    } catch (error) {
+      logger.error("Sign up error:", error);
+      toastError("Failed to create account", {
+        description: "Please try again or contact support if the issue persists.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

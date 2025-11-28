@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { Mail, ArrowLeft, KeyRound, CheckCircle2 } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { resetPasswordRequest } from "@/shared/lib/auth-actions";
+import { toastError } from "@/shared/ui/toast";
+import { logger } from "@/shared/lib/logger";
 
 import { Button } from "@/shared/ui/forms/button";
 import { Input } from "@/shared/ui/input";
@@ -16,7 +19,7 @@ export function ForgotPasswordPage() {
   const navigate = useNavigate();
 
   // Auth hooks
-  const { isSignedIn } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   // State
   const [email, setEmail] = useState("");
@@ -26,12 +29,12 @@ export function ForgotPasswordPage() {
 
   // Redirect logged-in users to reset-password (they already know their password)
   useEffect(() => {
-    if (isSignedIn) {
+    if (isAuthenticated) {
       navigate({ to: "/reset-password", replace: true });
     }
-  }, [isSignedIn, navigate]);
+  }, [isAuthenticated, navigate]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
@@ -42,11 +45,23 @@ export function ForgotPasswordPage() {
 
     setIsLoading(true);
 
-    // TODO: Implement actual password reset API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const { error } = await resetPasswordRequest(email);
+
+      if (error) {
+        setError(error);
+        return;
+      }
+
       setViewState("SENT");
-    }, 1500);
+    } catch (error) {
+      logger.error("Password reset request failed:", error);
+      toastError("Failed to send reset link", {
+        description: "Please try again later.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

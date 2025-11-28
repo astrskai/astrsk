@@ -24,6 +24,8 @@ import { Route as LayoutAssetsIndexRouteImport } from './routes/_layout/assets/i
 import { Route as LayoutSettingsProvidersRouteImport } from './routes/_layout/settings/providers'
 import { Route as LayoutSessionsNewRouteImport } from './routes/_layout/sessions/new'
 import { Route as LayoutSessionsSessionIdRouteImport } from './routes/_layout/sessions/$sessionId'
+import { Route as LayoutAuthHubCallbackRouteImport } from './routes/_layout/auth/hub-callback'
+import { Route as LayoutAuthCallbackRouteImport } from './routes/_layout/auth/callback'
 import { Route as LayoutSettingsLegalIndexRouteImport } from './routes/_layout/settings/legal/index'
 import { Route as LayoutSettingsAdvancedIndexRouteImport } from './routes/_layout/settings/advanced/index'
 import { Route as LayoutSettingsAccountIndexRouteImport } from './routes/_layout/settings/account/index'
@@ -114,6 +116,16 @@ const LayoutSessionsNewRoute = LayoutSessionsNewRouteImport.update({
 const LayoutSessionsSessionIdRoute = LayoutSessionsSessionIdRouteImport.update({
   id: '/sessions/$sessionId',
   path: '/sessions/$sessionId',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAuthHubCallbackRoute = LayoutAuthHubCallbackRouteImport.update({
+  id: '/auth/hub-callback',
+  path: '/auth/hub-callback',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutAuthCallbackRoute = LayoutAuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsLegalIndexRoute =
@@ -228,6 +240,8 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof LayoutSignUpRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/': typeof LayoutIndexRoute
+  '/auth/callback': typeof LayoutAuthCallbackRoute
+  '/auth/hub-callback': typeof LayoutAuthHubCallbackRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/sessions/new': typeof LayoutSessionsNewRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
@@ -260,6 +274,8 @@ export interface FileRoutesByTo {
   '/sign-up': typeof LayoutSignUpRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
   '/': typeof LayoutIndexRoute
+  '/auth/callback': typeof LayoutAuthCallbackRoute
+  '/auth/hub-callback': typeof LayoutAuthHubCallbackRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/sessions/new': typeof LayoutSessionsNewRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
@@ -295,6 +311,8 @@ export interface FileRoutesById {
   '/_layout/sign-up': typeof LayoutSignUpRoute
   '/_layout/sso-callback': typeof LayoutSsoCallbackRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/auth/callback': typeof LayoutAuthCallbackRoute
+  '/_layout/auth/hub-callback': typeof LayoutAuthHubCallbackRoute
   '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/_layout/sessions/new': typeof LayoutSessionsNewRoute
   '/_layout/settings/providers': typeof LayoutSettingsProvidersRoute
@@ -330,6 +348,8 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/sso-callback'
     | '/'
+    | '/auth/callback'
+    | '/auth/hub-callback'
     | '/sessions/$sessionId'
     | '/sessions/new'
     | '/settings/providers'
@@ -362,6 +382,8 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/sso-callback'
     | '/'
+    | '/auth/callback'
+    | '/auth/hub-callback'
     | '/sessions/$sessionId'
     | '/sessions/new'
     | '/settings/providers'
@@ -396,6 +418,8 @@ export interface FileRouteTypes {
     | '/_layout/sign-up'
     | '/_layout/sso-callback'
     | '/_layout/'
+    | '/_layout/auth/callback'
+    | '/_layout/auth/hub-callback'
     | '/_layout/sessions/$sessionId'
     | '/_layout/sessions/new'
     | '/_layout/settings/providers'
@@ -530,6 +554,20 @@ declare module '@tanstack/react-router' {
       path: '/sessions/$sessionId'
       fullPath: '/sessions/$sessionId'
       preLoaderRoute: typeof LayoutSessionsSessionIdRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/auth/hub-callback': {
+      id: '/_layout/auth/hub-callback'
+      path: '/auth/hub-callback'
+      fullPath: '/auth/hub-callback'
+      preLoaderRoute: typeof LayoutAuthHubCallbackRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/auth/callback': {
+      id: '/_layout/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof LayoutAuthCallbackRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings/legal/': {
@@ -702,6 +740,8 @@ interface LayoutRouteChildren {
   LayoutSignUpRoute: typeof LayoutSignUpRoute
   LayoutSsoCallbackRoute: typeof LayoutSsoCallbackRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
+  LayoutAuthCallbackRoute: typeof LayoutAuthCallbackRoute
+  LayoutAuthHubCallbackRoute: typeof LayoutAuthHubCallbackRoute
   LayoutSessionsSessionIdRoute: typeof LayoutSessionsSessionIdRoute
   LayoutSessionsNewRoute: typeof LayoutSessionsNewRoute
   LayoutAssetsIndexRoute: typeof LayoutAssetsIndexRoute
@@ -723,6 +763,8 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutSignUpRoute: LayoutSignUpRoute,
   LayoutSsoCallbackRoute: LayoutSsoCallbackRoute,
   LayoutIndexRoute: LayoutIndexRoute,
+  LayoutAuthCallbackRoute: LayoutAuthCallbackRoute,
+  LayoutAuthHubCallbackRoute: LayoutAuthHubCallbackRoute,
   LayoutSessionsSessionIdRoute: LayoutSessionsSessionIdRoute,
   LayoutSessionsNewRoute: LayoutSessionsNewRoute,
   LayoutAssetsIndexRoute: LayoutAssetsIndexRoute,

@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Lock, ArrowRight, RefreshCw, XCircle, ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { updatePassword } from "@/shared/lib/auth-actions";
+import { logger } from "@/shared/lib/logger";
 
 import { Button } from "@/shared/ui/forms/button";
-import { toastSuccess } from "@/shared/ui/toast";
+import { toastSuccess, toastError } from "@/shared/ui/toast";
 import { AuthLayout, AuthBadge, PasswordChecklist, checkPasswordRequirements } from "./ui";
 import { PasswordInput } from "@/shared/ui/forms";
 
@@ -18,7 +20,7 @@ export function ResetPasswordPage() {
   const search = useSearch({ from: "/_layout/reset-password" });
 
   // Auth hooks
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   // State
   const [viewState, setViewState] = useState<ViewState>("RESET");
@@ -28,15 +30,15 @@ export function ResetPasswordPage() {
 
   // Determine access context
   const hasToken = !!search.token;
-  const isFromSettings = isSignedIn && !hasToken;
+  const isFromSettings = isAuthenticated && !hasToken;
 
   // Redirect if no token and not logged in (invalid access)
-  // Wait for Clerk to load before checking auth state
+  // Wait for auth to load before checking auth state
   useEffect(() => {
-    if (isLoaded && !hasToken && !isSignedIn) {
+    if (!isAuthLoading && !hasToken && !isAuthenticated) {
       navigate({ to: "/forgot-password", replace: true });
     }
-  }, [isLoaded, hasToken, isSignedIn, navigate]);
+  }, [isAuthLoading, hasToken, isAuthenticated, navigate]);
 
   const isFormValid =
     checkPasswordRequirements(passwords.new) &&
@@ -61,7 +63,7 @@ export function ResetPasswordPage() {
     }
   }, [viewState, isFromSettings, navigate]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrors({});
 
@@ -81,11 +83,23 @@ export function ResetPasswordPage() {
 
     setIsLoading(true);
 
-    // TODO: Implement actual password reset API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const { error } = await updatePassword(passwords.new);
+
+      if (error) {
+        toastError("Password reset failed", { description: error });
+        return;
+      }
+
       setViewState("SUCCESS");
-    }, 1500);
+    } catch (error) {
+      logger.error("Password reset error:", error);
+      toastError("Failed to reset password", {
+        description: "Please try again later.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

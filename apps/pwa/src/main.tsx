@@ -4,23 +4,22 @@ import { initStores } from "@/shared/stores/init-stores.ts";
 import { useInitializationStore, loadInitializationLog } from "@/shared/stores/initialization-store.tsx";
 import { InitializationScreen } from "@/shared/ui/initialization-screen";
 import { PwaRegister } from "@/app/providers/pwa-register";
+import { AuthProvider } from "@/app/providers/auth-provider";
 import { runUnifiedMigrations, hasPendingMigrations } from "@/db/migrations";
 import { logger } from "@/shared/lib/logger.ts";
-import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { Buffer } from "buffer";
-import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { enableMapSet } from "immer";
-import { StrictMode, useCallback, useMemo } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "@/app/styles/global.css";
 import "@/app/styles/theme.css";
 
-// Convex
+// Convex client setup
 const isConvexReady =
   import.meta.env.VITE_CONVEX_URL &&
-  import.meta.env.VITE_CONVEX_SITE_URL &&
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+  import.meta.env.VITE_CONVEX_SITE_URL;
 const convex = isConvexReady
   ? new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string)
   : null;
@@ -33,35 +32,20 @@ if (!window.Buffer) {
   window.Buffer = Buffer;
 }
 
-function useConvexAuthWithClerk() {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-  const setJwt = useAppStore.use.setJwt();
+/**
+ * Wrapper component that provides Convex client (without auth)
+ * Convex is used for subscriptions/payments features, not for auth
+ * Auth is handled separately by Supabase via AuthProvider
+ */
+function ConvexWrapper({ children }: { children: React.ReactNode }) {
+  if (!convex) {
+    return <>{children}</>;
+  }
 
-  const fetchAccessToken = useCallback(
-    async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
-      try {
-        const jwt = await getToken({
-          template: "convex",
-          skipCache: forceRefreshToken,
-        });
-        setJwt(jwt);
-        return jwt;
-      } catch (error) {
-        logger.error("Failed to fetch access token", error);
-        setJwt(null);
-        return null;
-      }
-    },
-    [getToken, setJwt],
-  );
-
-  return useMemo(
-    () => ({
-      isLoading: !isLoaded,
-      isAuthenticated: !!isSignedIn,
-      fetchAccessToken,
-    }),
-    [isLoaded, isSignedIn, fetchAccessToken],
+  return (
+    <ConvexProvider client={convex}>
+      {children}
+    </ConvexProvider>
   );
 }
 
@@ -223,31 +207,16 @@ async function initializeApp() {
     }
 
     // Render final app with providers
-    if (isConvexReady && convex) {
-      // Convex ready
-      root.render(
-        <StrictMode>
-          <ClerkProvider
-            publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
-          >
-            <ConvexProviderWithAuth
-              client={convex}
-              useAuth={useConvexAuthWithClerk}
-            >
-              <PwaRegister />
-              <App />
-            </ConvexProviderWithAuth>
-          </ClerkProvider>
-        </StrictMode>,
-      );
-    } else {
-      // Self-hosted
-      root.render(
-        <StrictMode>
-          <App />
-        </StrictMode>,
-      );
-    }
+    root.render(
+      <StrictMode>
+        <AuthProvider>
+          <ConvexWrapper>
+            <PwaRegister />
+            <App />
+          </ConvexWrapper>
+        </AuthProvider>
+      </StrictMode>,
+    );
   } catch (error) {
     logger.error("Failed to initialize app:", error);
 
