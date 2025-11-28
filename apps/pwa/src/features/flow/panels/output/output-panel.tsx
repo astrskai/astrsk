@@ -27,10 +27,11 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 import {
-  Button, Editor, Input, ScrollAreaSimple,
+  Button, Editor, ScrollAreaSimple,
   Select, SelectContent, SelectItem, SelectTrigger,
   SelectValue,
 } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 import type { editor } from "monaco-editor";
 
 import { sanitizeFileName } from "@/shared/lib";

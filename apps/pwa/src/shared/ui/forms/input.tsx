@@ -16,28 +16,35 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   helperText?: string;
   caption?: string;
   isRequired?: boolean; // For display purposes only (shows * indicator)
+  inputSize?: "sm" | "md" | "lg";
 }
 
 // Shared style constants
 const STYLES = {
   input: {
-    base: "w-full rounded-lg border bg-neutral-800 px-4 py-3 text-base text-neutral-100 placeholder:text-neutral-500 outline-none",
+    base: "w-full rounded-lg border bg-canvas text-fg-default placeholder:text-fg-subtle outline-none",
     focus: "focus:ring-2 focus:ring-offset-0",
     transition: "transition-all",
     disabled: "disabled:cursor-not-allowed disabled:opacity-50",
+    size: {
+      sm: "px-2 py-1.5 text-xs",
+      md: "px-3 py-2 text-sm",
+      lg: "px-4 py-3 text-base",
+    },
   },
   border: {
     error:
       "border-status-error focus:border-status-error focus:ring-status-error/20",
-    normal: "border-neutral-600 focus:border-brand-500 focus:ring-brand-500/20",
+    normal: "border-neutral-700 focus:border-brand-500 focus:ring-brand-500/20",
   },
   label: {
-    floating: "absolute top-0 left-3 -translate-y-1/2 rounded-sm bg-neutral-800 px-1 text-xs font-medium transition-all pointer-events-none",
-    standard: "flex items-center gap-1.5 text-sm font-medium text-neutral-200",
+    floating:
+      "absolute top-0 left-3 -translate-y-1/2 rounded-sm bg-canvas px-1 text-xs font-medium transition-all pointer-events-none",
+    standard: "flex items-center gap-1.5 text-sm font-medium text-fg-muted",
   },
   text: {
     error: "text-status-error",
-    secondary: "text-neutral-400",
+    secondary: "text-fg-subtle",
     required: "text-accent-purple ml-1",
     small: "mt-1 text-xs",
     caption: "mt-1 pl-2 text-xs",
@@ -46,14 +53,12 @@ const STYLES = {
     base: "cursor-help transition-colors pointer-events-auto",
     size: "h-3.5 w-3.5",
     sizeStandard: "h-4 w-4",
-    colors: "text-neutral-400 hover:text-neutral-100",
+    colors: "text-fg-subtle hover:text-fg-default",
   },
 } as const;
 
 // Sub-components
-const RequiredIndicator = () => (
-  <span className={STYLES.text.required}>*</span>
-);
+const RequiredIndicator = () => <span className={STYLES.text.required}>*</span>;
 
 const HelpTooltipIcon = ({
   tooltip,
@@ -69,7 +74,9 @@ const HelpTooltipIcon = ({
           className={cn(
             STYLES.helpIcon.base,
             STYLES.helpIcon.colors,
-            size === "small" ? STYLES.helpIcon.size : STYLES.helpIcon.sizeStandard,
+            size === "small"
+              ? STYLES.helpIcon.size
+              : STYLES.helpIcon.sizeStandard,
           )}
         />
       </TooltipTrigger>
@@ -94,10 +101,14 @@ const FeedbackMessages = ({
       <p className={cn(STYLES.text.error, STYLES.text.small)}>{error}</p>
     )}
     {!error && helperText && (
-      <p className={cn(STYLES.text.secondary, STYLES.text.small)}>{helperText}</p>
+      <p className={cn(STYLES.text.secondary, STYLES.text.small)}>
+        {helperText}
+      </p>
     )}
     {caption && (
-      <p className={cn(STYLES.text.secondary, STYLES.text.caption)}>{caption}</p>
+      <p className={cn(STYLES.text.secondary, STYLES.text.caption)}>
+        {caption}
+      </p>
     )}
   </>
 );
@@ -114,6 +125,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       helpTooltip,
       helperText,
       caption,
+      inputSize = "md",
       ...props
     },
     ref,
@@ -123,6 +135,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     // Shared input classes
     const inputClasses = cn(
       STYLES.input.base,
+      STYLES.input.size[inputSize],
       STYLES.input.focus,
       STYLES.input.transition,
       STYLES.input.disabled,
@@ -154,11 +167,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 {label}
                 {showRequiredIndicator && <RequiredIndicator />}
               </span>
-              {helpTooltip && <HelpTooltipIcon tooltip={helpTooltip} size="small" />}
+              {helpTooltip && (
+                <HelpTooltipIcon tooltip={helpTooltip} size="small" />
+              )}
             </span>
           </label>
 
-          <FeedbackMessages error={error} helperText={helperText} caption={caption} />
+          <FeedbackMessages
+            error={error}
+            helperText={helperText}
+            caption={caption}
+          />
         </div>
       );
     }
@@ -166,8 +185,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     // Input element with feedback (no label or top/left label)
     const inputElement = (
       <div className="relative w-full">
-        <input ref={ref} required={required} className={inputClasses} {...props} />
-        <FeedbackMessages error={error} helperText={helperText} caption={caption} />
+        <input
+          ref={ref}
+          required={required}
+          className={inputClasses}
+          {...props}
+        />
+        <FeedbackMessages
+          error={error}
+          helperText={helperText}
+          caption={caption}
+        />
       </div>
     );
 
@@ -181,7 +209,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <div
         className={cn(
           "flex",
-          labelPosition === "top" ? "flex-col gap-2" : "flex-row items-center gap-4",
+          labelPosition === "top"
+            ? "flex-col gap-2"
+            : "flex-row items-center gap-4",
         )}
       >
         <label className={STYLES.label.standard}>

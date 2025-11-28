@@ -4,7 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@clerk/clerk-react";
 
 import { Button } from "@/shared/ui/forms/button";
-import { Input } from "@/shared/ui/input";
+import { Input } from "@/shared/ui/forms";
 import { AuthLayout, AuthBadge } from "./ui";
 
 // --- View States ---
@@ -94,7 +94,7 @@ export function ForgotPasswordPage() {
               <div className="relative">
                 <Mail
                   size={18}
-                  className="text-fg-subtle absolute top-1/2 left-3 -translate-y-1/2"
+                  className="text-fg-subtle absolute top-1/2 left-3 z-10 -translate-y-1/2"
                 />
                 <Input
                   id="email"
@@ -138,7 +138,7 @@ export function ForgotPasswordPage() {
       {viewState === "SENT" && (
         <div className="text-center">
           {/* Success Icon */}
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-status-success/20 bg-status-success/10">
+          <div className="border-status-success/20 bg-status-success/10 mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border">
             <CheckCircle2 size={32} className="text-status-success" />
           </div>
 

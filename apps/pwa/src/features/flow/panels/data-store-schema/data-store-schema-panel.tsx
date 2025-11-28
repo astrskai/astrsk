@@ -12,9 +12,10 @@ import {
 import { debounce } from "lodash-es";
 
 import {
-  Button, Input, ScrollAreaSimple, Select,
+  Button, ScrollAreaSimple, Select,
   SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 import { HelpCircle } from "lucide-react";
 
 // Import query and mutation system

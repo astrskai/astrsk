@@ -10,7 +10,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/shared/ui";
-import { Button, Input, Label } from "@/shared/ui";
+import { Button, Label } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 import React from "react";
 
 const meta = {

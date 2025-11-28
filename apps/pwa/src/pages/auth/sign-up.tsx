@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/shared/ui/forms/button";
-import { Input } from "@/shared/ui/input";
+import { Input } from "@/shared/ui/forms";
 import { AuthLayout, AuthBadge, PasswordChecklist, checkPasswordRequirements } from "./ui";
 import { PasswordInputRHF } from "@/shared/ui/forms";
 
@@ -71,7 +71,7 @@ export function SignUpPage() {
           <Input
             id="email"
             type="email"
-            className={`bg-surface-raised h-11 rounded-xl ${errors.email ? "border-status-error" : ""}`}
+            className={`bg-surface-raised h-11 rounded-xl ${errors.email ? "outline-status-error" : ""}`}
             {...register("email", {
               required: "Email is required",
               pattern: {
