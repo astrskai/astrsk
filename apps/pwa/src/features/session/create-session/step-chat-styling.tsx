@@ -5,8 +5,13 @@ import { z } from "zod";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useAsset } from "@/shared/hooks/use-asset";
-import { useBackgroundStore } from "@/shared/stores/background-store";
+import {
+  backgroundQueries,
+  getDefaultBackground,
+  getBackgroundAssetId,
+} from "@/entities/background/api";
 import { cn } from "@/shared/lib";
+import { useQuery } from "@tanstack/react-query";
 import { StepBackgroundSchemaType } from "@/features/session/create-session/step-background";
 import {
   InlineChatStyles,
@@ -277,13 +282,19 @@ const StylingPreview = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // Background
-  const { backgroundMap } = useBackgroundStore();
-  const background = backgroundMap.get(backgroundId?.toString() ?? "");
-  const [backgroundAsset] = useAsset(background?.assetId);
-  const backgroundSrc =
-    backgroundAsset ??
-    (background && "src" in background ? background.src : "");
+  // Background - check if default first, then query for user background
+  const defaultBg = backgroundId ? getDefaultBackground(backgroundId) : undefined;
+
+  const { data: background } = useQuery({
+    ...backgroundQueries.detail(backgroundId),
+    enabled: !!backgroundId && !defaultBg,
+  });
+
+  const [backgroundAsset] = useAsset(getBackgroundAssetId(background));
+
+  const backgroundSrc = defaultBg
+    ? defaultBg.src
+    : backgroundAsset ?? "";
 
   return (
     <div

@@ -6,7 +6,7 @@ import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
 import { formatFail, sanitizeFileName } from "@/shared/lib";
 
-import { defaultBackgrounds } from "@/shared/stores/background-store";
+import { defaultBackgrounds } from "@/entities/background/api";
 import { GetAsset } from "@/entities/asset/usecases/get-asset";
 import { GetBackground } from "@/entities/background/usecases/get-background";
 import { ExportCardToFile } from "@/entities/card/usecases";

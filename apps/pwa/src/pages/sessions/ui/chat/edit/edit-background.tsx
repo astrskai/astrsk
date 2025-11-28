@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Import, Plus } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -8,10 +9,12 @@ import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { BackgroundService } from "@/app/services/background-service";
 import {
-  fetchBackgrounds,
+  backgroundQueries,
+  defaultBackgrounds,
+  getDefaultBackground,
+  getBackgroundAssetId,
   isDefaultBackground,
-  useBackgroundStore,
-} from "@/shared/stores/background-store";
+} from "@/entities/background/api";
 import { CustomSheet } from "./custom-sheet";
 import {
   BackgroundListItem,
@@ -21,40 +24,47 @@ import {
 } from "@/features/session/create-session/step-background";
 import {
   Button, Dialog, DialogContent, DialogTitle,
-  SvgIcon, TypoBase, TypoLarge,
+  SvgIcon, TypoBase,
 } from "@/shared/ui";
 import { SessionProps } from "@/entities/session/domain/session";
 
 const SelectedBackground = ({
   backgroundId,
+  sessionId,
 }: {
   backgroundId?: UniqueEntityID;
+  sessionId?: UniqueEntityID;
 }) => {
-  const { backgroundMap } = useBackgroundStore();
-  const background = backgroundMap.get(backgroundId?.toString() ?? "");
-  const [asset] = useAsset(background?.assetId);
+  // Check if it's a default background first
+  const defaultBg = backgroundId ? getDefaultBackground(backgroundId) : undefined;
+
+  // Query for user background if not a default
+  const { data: background } = useQuery({
+    ...backgroundQueries.detail(backgroundId),
+    enabled: !!backgroundId && !defaultBg,
+  });
+
+  const [asset] = useAsset(getBackgroundAssetId(background));
 
   return (
     <div className="bg-canvas h-[198px] overflow-hidden rounded-[14px]">
-      {background && isDefaultBackground(background) ? (
+      {defaultBg ? (
         <div style={{ height: "198px", position: "relative" }}>
           <img
-            src={background.src}
+            src={defaultBg.src}
+            alt={defaultBg.name ?? "Background"}
+            className="pointer-events-none h-full w-full object-cover"
+          />
+        </div>
+      ) : background && !isDefaultBackground(background) && asset ? (
+        <div style={{ height: "198px", position: "relative" }}>
+          <img
+            src={asset}
             alt={background.name ?? "Background"}
             className="pointer-events-none h-full w-full object-cover"
           />
         </div>
-      ) : (
-        asset && (
-          <div style={{ height: "198px", position: "relative" }}>
-            <img
-              src={asset}
-              alt={background?.name ?? "Background"}
-              className="pointer-events-none h-full w-full object-cover"
-            />
-          </div>
-        )
-      )}
+      ) : null}
     </div>
   );
 };
@@ -70,15 +80,19 @@ const EditBackground = ({
   onSave: (newValue: Partial<SessionProps>) => Promise<void>;
   trigger?: React.ReactNode;
 }) => {
+  const queryClient = useQueryClient();
+
   // Use form
-  const { watch, setValue, getValues, reset } =
+  const { watch, setValue, reset } =
     useForm<StepBackgroundSchemaType>({
       resolver: zodResolver(StepBackgroundSchema),
     });
   const backgroundId = watch("backgroundId");
 
-  // Background list
-  const { defaultBackgrounds, backgrounds } = useBackgroundStore();
+  // Query user backgrounds for this session
+  const { data: userBackgrounds = [] } = useQuery(
+    backgroundQueries.listBySession(sessionId),
+  );
 
   // Handle background click with auto-save
   const handleBackgroundClick = useCallback(
@@ -114,37 +128,33 @@ const EditBackground = ({
         return;
       }
 
-      // Refresh backgrounds for this session
-      fetchBackgrounds(sessionId);
+      // Invalidate query to refresh backgrounds
+      queryClient.invalidateQueries({
+        queryKey: backgroundQueries.listBySession(sessionId).queryKey,
+      });
 
       // Close dialog
       setIsOpenImportDialog(false);
     },
-    [sessionId],
+    [sessionId, queryClient],
   );
 
   // Handle delete background
   const handleDeleteBackground = useCallback(
-    async (backgroundId: UniqueEntityID) => {
+    async (bgId: UniqueEntityID) => {
       const backgroundOrError =
-        await BackgroundService.deleteBackground.execute(backgroundId);
+        await BackgroundService.deleteBackground.execute(bgId);
       if (backgroundOrError.isFailure) {
         return;
       }
 
-      // Refresh backgrounds for this session
-      fetchBackgrounds(sessionId);
+      // Invalidate query to refresh backgrounds
+      queryClient.invalidateQueries({
+        queryKey: backgroundQueries.listBySession(sessionId).queryKey,
+      });
     },
-    [sessionId],
+    [sessionId, queryClient],
   );
-
-  // Handle save
-  const handleSave = useCallback(async () => {
-    const formValues = getValues();
-    await onSave({
-      ...convertBackgroundFormToSessionProps(formValues),
-    });
-  }, [getValues, onSave]);
 
   return (
     <CustomSheet
@@ -209,42 +219,35 @@ const EditBackground = ({
         </div>
       }
     >
-      <div className="flex flex-col gap-8">
-        {backgrounds.length > 0 && (
-          <div className="flex flex-col gap-4">
-            <TypoLarge>User added backgrounds</TypoLarge>
-            <div className="grid grid-cols-2 gap-4">
-              {backgrounds.map((background) => (
-                <BackgroundListItem
-                  key={background.id.toString()}
-                  assetId={background.assetId}
-                  isEditable
-                  isActive={backgroundId === background.id.toString()}
-                  onClick={() => handleBackgroundClick(background.id)}
-                  onDelete={() => handleDeleteBackground(background.id)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-        <div className="flex flex-col gap-4">
-          <TypoLarge>astrsk.ai provided backgrounds</TypoLarge>
-          <div className="grid grid-cols-2 gap-4">
-            <BackgroundListItem
-              isActive={!backgroundId}
-              onClick={() => handleBackgroundClick()}
-            />
+      {/* Combined list: No Background → User added (deletable) → Default backgrounds */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* No background option */}
+        <BackgroundListItem
+          isActive={!backgroundId}
+          onClick={() => handleBackgroundClick()}
+        />
 
-            {defaultBackgrounds.map((defaultBackground) => (
-              <BackgroundListItem
-                key={defaultBackground.id.toString()}
-                src={defaultBackground.src}
-                isActive={backgroundId === defaultBackground.id.toString()}
-                onClick={() => handleBackgroundClick(defaultBackground.id)}
-              />
-            ))}
-          </div>
-        </div>
+        {/* User added backgrounds (deletable) */}
+        {userBackgrounds.map((background) => (
+          <BackgroundListItem
+            key={background.id.toString()}
+            assetId={background.assetId}
+            isEditable
+            isActive={backgroundId === background.id.toString()}
+            onClick={() => handleBackgroundClick(background.id)}
+            onDelete={() => handleDeleteBackground(background.id)}
+          />
+        ))}
+
+        {/* Default astrsk backgrounds (not deletable) */}
+        {defaultBackgrounds.map((defaultBackground) => (
+          <BackgroundListItem
+            key={defaultBackground.id.toString()}
+            src={defaultBackground.src}
+            isActive={backgroundId === defaultBackground.id.toString()}
+            onClick={() => handleBackgroundClick(defaultBackground.id)}
+          />
+        ))}
       </div>
     </CustomSheet>
   );

@@ -29,6 +29,7 @@ import {
 } from "@/entities/session/usecases";
 import { ExportSessionToFile } from "@/entities/session/usecases/export-session-to-file";
 import { ExportSessionToCloud } from "@/entities/session/usecases/export-session-to-cloud";
+import { ImportSessionFromCloud } from "@/entities/session/usecases/import-session-from-cloud";
 import { PrepareSessionCloudData } from "@/entities/session/usecases/prepare-session-cloud-data";
 import { GetModelsFromSessionFile } from "@/entities/session/usecases/get-models-from-session-file";
 import { GetSession } from "@/entities/session/usecases/get-session";
@@ -67,6 +68,7 @@ export class SessionService {
   public static searchSession: SearchSession;
   public static exportSessionToFile: ExportSessionToFile;
   public static exportSessionToCloud: ExportSessionToCloud;
+  public static importSessionFromCloud: ImportSessionFromCloud;
   public static importSessionFromFile: ImportSessionFromFile;
   public static listSessionByCard: ListSessionByCard;
   public static listSessionByFlow: ListSessionByFlow;

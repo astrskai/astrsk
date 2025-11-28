@@ -1,7 +1,6 @@
 import { useAsset } from "@/shared/hooks/use-asset";
 import { sessionQueries } from "@/entities/session/api";
 import { useAppStore } from "@/shared/stores/app-store";
-import { useBackgroundStore } from "@/shared/stores/background-store";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { Session } from "@/entities/session/domain/session";
 import {
@@ -22,6 +21,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import {
+  backgroundQueries,
+  getDefaultBackground,
+  getBackgroundAssetId,
+  isDefaultBackground,
+} from "@/entities/background/api";
 
 export default function SessionDetailPage({
   className,
@@ -32,21 +37,23 @@ export default function SessionDetailPage({
   const { sessionId } = Route.useParams();
   const [isOpenSettings, setIsOpenSettings] = useState(false);
   const [sidebarKeyword, setSidebarKeyword] = useState("");
-  const { selectedSessionId } = useSessionStore();
   const selectSession = useSessionStore.use.selectSession();
+
+  // Use URL sessionId directly for the query instead of store (fixes F5 refresh issue)
+  const sessionIdEntity = sessionId ? new UniqueEntityID(sessionId) : undefined;
   const { data: session, isLoading } = useQuery(
-    sessionQueries.detail(selectedSessionId ?? undefined),
+    sessionQueries.detail(sessionIdEntity),
   );
   const { data: sessions = [] } = useQuery(
     sessionQueries.list({ keyword: sidebarKeyword }),
   );
 
-  // Set selected session when sessionId changes
+  // Sync store with URL params (for other components that depend on the store)
   useEffect(() => {
     if (sessionId) {
-      selectSession(new UniqueEntityID(sessionId), "Session");
+      selectSession(new UniqueEntityID(sessionId), session?.title ?? "Session");
     }
-  }, [sessionId, selectSession]);
+  }, [sessionId, selectSession, session?.title]);
 
   // Check session exists
   useEffect(() => {
@@ -62,15 +69,21 @@ export default function SessionDetailPage({
     sessionOnboardingSteps.inferenceButton &&
     !sessionOnboardingSteps.sessionEdit;
 
-  // Background
-  const { backgroundMap } = useBackgroundStore();
-  const background = backgroundMap.get(
-    session?.props.backgroundId?.toString() ?? "",
-  );
-  const [backgroundAsset] = useAsset(background?.assetId);
-  const backgroundSrc =
-    backgroundAsset ??
-    (background && "src" in background ? background.src : "");
+  // Background - check if default first, then query for user background
+  const backgroundId = session?.props.backgroundId;
+  const defaultBg = backgroundId ? getDefaultBackground(backgroundId) : undefined;
+
+  const { data: background } = useQuery({
+    ...backgroundQueries.detail(backgroundId),
+    enabled: !!backgroundId && !defaultBg,
+  });
+
+  const [backgroundAsset] = useAsset(getBackgroundAssetId(background));
+
+  // Determine background source
+  const backgroundSrc = defaultBg
+    ? defaultBg.src
+    : backgroundAsset ?? "";
 
   // Don't show background if it's still loading (skeleton path indicates loading)
   const isLoadingBackground = backgroundAsset === "/img/skeleton.svg";
@@ -145,11 +158,11 @@ export default function SessionDetailPage({
           onKeywordChange={setSidebarKeyword}
           defaultExpanded={true}
         >
-          {sessions.map((session: Session) => (
+          {sessions.map((s: Session) => (
             <SessionListItem
-              key={session.id.toString()}
-              session={session}
-              isActive={session.id.toString() === selectedSessionId?.toString()}
+              key={s.id.toString()}
+              session={s}
+              isActive={s.id.toString() === sessionId}
             />
           ))}
         </SearchableSidebar>
