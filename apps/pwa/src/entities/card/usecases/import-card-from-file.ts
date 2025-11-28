@@ -78,7 +78,7 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
     const card = cardOrError.getValue();
     const tokenCount = CharacterCard.calculateTokenSize(
       card.props,
-      await getTokenizer(),
+      getTokenizer(),
     );
     card.update({ tokenCount });
     return Result.ok(card as CharacterCard);
@@ -123,7 +123,7 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
     const card = cardOrError.getValue();
     const tokenCount = ScenarioCard.calculateTokenSize(
       card.props,
-      await getTokenizer(),
+      getTokenizer(),
     );
     card.update({ tokenCount });
     return Result.ok(card as ScenarioCard);

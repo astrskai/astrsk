@@ -247,13 +247,16 @@ export async function processFlowOperations(
           // Step 1: Create the actual node in the resource (was skipped during preview)
           if (!updatedResource.nodes) updatedResource.nodes = [];
 
+          const baseName =
+            name ||
+            `${nodeType.charAt(0).toUpperCase() + nodeType.slice(1)} ${nodeId.slice(-8)}`;
+
           const newNode = {
             id: nodeId,
             type: nodeType,
             position,
-            name:
-              name ||
-              `${nodeType.charAt(0).toUpperCase() + nodeType.slice(1)} ${nodeId.slice(-8)}`,
+            name: baseName,
+            color: nodeColor,
             // For data store and if nodes, include flowId in data for UI component compatibility
             data:
               nodeType === "dataStore" || nodeType === "if"
@@ -411,30 +414,8 @@ export async function processFlowOperations(
               },
             );
 
-            // Step 1: Create the actual node in the resource (same pattern as other nodes)
-            if (!updatedResource.nodes) updatedResource.nodes = [];
-
-            const agentName = name || `Agent ${nodeId.slice(-8)}`;
-            const newNode = {
-              id: nodeId,
-              type: nodeType,
-              position,
-              name: agentName,
-              color: nodeColor,
-            };
-
-            // Add node to resource for frontend display
-            updatedResource.nodes.push(newNode);
-
-            console.log(
-              "✅ [FLOW-OPERATIONS] Agent node added to resource during approval:",
-              {
-                id: newNode.id,
-                type: newNode.type,
-                name: newNode.name,
-                color: nodeColor,
-              },
-            );
+            // Node already added in Step 1 above, just create agent config
+            const agentName = baseName;
 
             // Step 2: Create the agent configuration data in frontend resource
             if (!updatedResource.agents) updatedResource.agents = {};

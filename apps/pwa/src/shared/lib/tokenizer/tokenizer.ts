@@ -1,6 +1,5 @@
 "use client";
 
-import { TokenizerType } from "@/shared/task/domain/prompt-and-model";
 import { OpenAITokenizer } from "@/shared/lib/tokenizer/openai-tokenizer";
 
 export interface Tokenizer {
@@ -8,8 +7,6 @@ export interface Tokenizer {
   decode(tokenIds: number[]): string;
 }
 
-export const getTokenizer = async (
-  tokenizerType: TokenizerType = TokenizerType.OpenAI,
-) => {
+export function getTokenizer(): Tokenizer {
   return OpenAITokenizer.instance;
-};
+}

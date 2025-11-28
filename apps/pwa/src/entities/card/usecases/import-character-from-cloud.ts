@@ -146,7 +146,7 @@ export class ImportCharacterFromCloud
       // 4. Calculate token count
       const tokenCount = CharacterCard.calculateTokenSize(
         card.props,
-        await getTokenizer(),
+        getTokenizer(),
       );
       card.update({ tokenCount });
 
