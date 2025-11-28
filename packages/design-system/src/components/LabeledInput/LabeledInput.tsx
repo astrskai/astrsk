@@ -54,6 +54,7 @@ const LabeledInput = React.forwardRef<HTMLInputElement, LabeledInputProps>(
       <Input
         ref={ref}
         id={inputId}
+        required={required}
         aria-invalid={error ? 'true' : undefined}
         aria-describedby={
           [errorId, hintId].filter(Boolean).join(' ') || undefined

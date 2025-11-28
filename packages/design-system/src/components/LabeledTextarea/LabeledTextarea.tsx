@@ -54,6 +54,7 @@ const LabeledTextarea = React.forwardRef<HTMLTextAreaElement, LabeledTextareaPro
       <Textarea
         ref={ref}
         id={textareaId}
+        required={required}
         aria-invalid={error ? 'true' : undefined}
         aria-describedby={
           [errorId, hintId].filter(Boolean).join(' ') || undefined

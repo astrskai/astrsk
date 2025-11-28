@@ -42,7 +42,7 @@ export const Required: Story = {
 };
 
 // Error state
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     children: 'Password',
     htmlFor: 'password',
