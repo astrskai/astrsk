@@ -63,7 +63,6 @@ import {
 import { ButtonPill, Card } from "@/shared/ui";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
-// import { useCollapsibleSidebarWidth } from "@/widgets/collapsible-sidebar/hooks/use-collapsible-sidebar-width";
 import {
   Select,
   SelectContent,

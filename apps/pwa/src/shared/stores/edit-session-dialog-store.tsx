@@ -9,7 +9,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { PromptAndModel } from "@/shared/task/domain/prompt-and-model";
 import { createSelectors } from "@/shared/lib/zustand-utils";
 
-import { CardFormValues } from "@/features/card/types/card-form";
+import { CardFormValues } from "@/entities/card/types/card-form";
 import { Card, CardType } from "@/entities/card/domain/card";
 import { CardListItem } from "@/entities/session/domain/session";
 
