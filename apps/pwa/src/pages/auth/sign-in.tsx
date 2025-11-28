@@ -6,15 +6,11 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/forms/button";
 import { Input } from "@/shared/ui/input";
 import { logger } from "@/shared/lib/logger";
-import { IconGoogle, IconDiscord, IconApple, IconHarpyLogo } from "@/shared/assets/icons";
+import { IconGoogle, IconDiscord, IconApple } from "@/shared/assets/icons";
 import { AuthLayout, AuthBadge } from "./ui";
 import { PasswordInput } from "@/shared/ui/forms";
 import { useAuth } from "@/shared/hooks/use-auth";
-import {
-  signIn,
-  signInWithOAuth,
-  redirectToHubLogin,
-} from "@/shared/lib/auth-actions";
+import { signInOrSignUp, signInWithOAuth } from "@/shared/lib/auth-actions";
 
 // --- Social Button Component ---
 interface SocialButtonProps {
@@ -64,18 +60,33 @@ export function SignInPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await signIn({ email, password });
+      const { error, action } = await signInOrSignUp({ email, password });
 
-      if (error) {
-        toastError("Sign in failed", { description: error });
-        return;
+      switch (action) {
+        case "signed_in":
+          toastSuccess("Welcome back!");
+          navigate({ to: "/" });
+          break;
+
+        case "signed_up":
+          toastSuccess("Account created!", {
+            description: "Please check your email to confirm your account.",
+          });
+          break;
+
+        case "invalid_password":
+          toastError("Invalid password", {
+            description: "You already have an account with this email. Please enter the correct password.",
+          });
+          break;
+
+        case "error":
+          toastError("Authentication failed", { description: error || "Please try again." });
+          break;
       }
-
-      toastSuccess("Welcome back!");
-      navigate({ to: "/" });
     } catch (error) {
-      logger.error("Sign in error:", error);
-      toastError("Failed to sign in", {
+      logger.error("Auth error:", error);
+      toastError("Failed to authenticate", {
         description: "Please try again or contact support if the issue persists.",
       });
     } finally {
@@ -107,14 +118,6 @@ export function SignInPage() {
     }
   }, [isAuthenticated]);
 
-  const handleHubLogin = useCallback(() => {
-    if (isAuthenticated) {
-      toastInfo("You are already signed in");
-      return;
-    }
-    redirectToHubLogin();
-  }, [isAuthenticated]);
-
   return (
     <AuthLayout>
       {/* Brand Badge */}
@@ -130,12 +133,12 @@ export function SignInPage() {
           </span>
         </h1>
         <p className="text-fg-subtle text-sm">
-          Sign in to continue your story.
+          Sign in or create an account to continue.
         </p>
       </div>
 
       {/* Social Login */}
-      <div className="mb-4 flex gap-3">
+      <div className="mb-6 flex gap-3">
         <SocialButton
           icon={IconGoogle}
           label="Google"
@@ -152,16 +155,6 @@ export function SignInPage() {
           icon={IconApple}
           label="Apple"
           onClick={() => handleOAuthSignIn("apple")}
-          disabled={isLoading}
-        />
-      </div>
-
-      {/* Login with Harpy Hub - full width matching social buttons row */}
-      <div className="mb-6">
-        <SocialButton
-          icon={IconHarpyLogo}
-          label="Login with Harpy Hub"
-          onClick={handleHubLogin}
           disabled={isLoading}
         />
       </div>
@@ -225,20 +218,14 @@ export function SignInPage() {
           loading={isLoading}
           className="shadow-brand-600/20 w-full font-semibold shadow-lg transition-all hover:-translate-y-0.5 active:scale-95"
         >
-          Log In
+          Continue
         </Button>
       </form>
 
-      {/* Sign Up Prompt */}
-      <div className="text-fg-subtle mt-8 text-center text-sm">
-        Don't have an account?{" "}
-        <Link
-          to="/sign-up"
-          className="text-fg-default decoration-border-muted hover:text-brand-400 font-semibold underline underline-offset-4 transition-all"
-        >
-          Sign up for free
-        </Link>
-      </div>
+      {/* Info text */}
+      <p className="text-fg-muted mt-6 text-center text-xs">
+        New users will receive a confirmation email to verify their account.
+      </p>
     </AuthLayout>
   );
 }

@@ -22,7 +22,6 @@ export interface SignUpCredentials extends SignInCredentials {
 
 /**
  * Sign in with email/password
- * Only allows users who registered with Astrsk (app_source: "astrsk")
  */
 export async function signIn(credentials: SignInCredentials) {
   const supabase = getSupabaseAuthClient();
@@ -36,26 +35,12 @@ export async function signIn(credentials: SignInCredentials) {
     return { error: error.message, data: null };
   }
 
-  // Check if this is an Astrsk user (for email users only)
-  // Social login users can access both apps
-  const provider = data.user?.app_metadata?.provider;
-  const appSource = data.user?.user_metadata?.app_source;
-
-  if (provider === "email" && appSource !== APP_SOURCE) {
-    // Sign out the user - they registered with Hub
-    await supabase.auth.signOut();
-    return {
-      error: "This email is registered with Harpy Hub. Please use 'Login with Harpy Hub' or sign up with a different email.",
-      data: null,
-    };
-  }
-
   return { error: null, data };
 }
 
 /**
  * Sign up with email/password
- * Stores app_source metadata to distinguish Astrsk users from Hub users
+ * Stores app_source metadata to identify the user
  */
 export async function signUp(credentials: SignUpCredentials) {
   const supabase = getSupabaseAuthClient();
@@ -67,36 +52,103 @@ export async function signUp(credentials: SignUpCredentials) {
       emailRedirectTo: `${window.location.origin}/auth/callback`,
       data: {
         name: credentials.name,
-        app_source: APP_SOURCE, // Mark as Astrsk user
+        app_source: APP_SOURCE,
       },
     },
   });
 
-  // Debug logging
   logger.debug("SignUp response:", { data, error });
-  console.log("SignUp response:", { data, error });
 
   if (error) {
-    // Handle duplicate email
-    if (error.message.includes("already registered")) {
-      return {
-        error: "This email is already registered. Please sign in or use a different email.",
-        data: null,
-      };
-    }
     return { error: error.message, data: null };
   }
 
   // Check if user already exists (identities will be empty for existing users)
-  // This happens when the email is registered via Hub
   if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
     return {
-      error: "This email is already registered with Harpy Hub. Please use 'Login with Harpy Hub' or sign in with your existing password.",
+      error: "EXISTING_USER",
       data: null,
     };
   }
 
   return { error: null, data };
+}
+
+/**
+ * Unified sign in or sign up flow
+ * - If user exists: tries to sign in with password
+ * - If user doesn't exist: creates account and sends confirmation email
+ */
+export async function signInOrSignUp(credentials: SignInCredentials): Promise<{
+  error: string | null;
+  data: unknown;
+  action: "signed_in" | "signed_up" | "invalid_password" | "error";
+}> {
+  const supabase = getSupabaseAuthClient();
+
+  // First, try to sign in
+  const signInResult = await supabase.auth.signInWithPassword({
+    email: credentials.email,
+    password: credentials.password,
+  });
+
+  // If sign in succeeds, user exists and password is correct
+  if (!signInResult.error) {
+    return { error: null, data: signInResult.data, action: "signed_in" };
+  }
+
+  // Check the error type
+  const errorMessage = signInResult.error.message.toLowerCase();
+
+  // "Invalid login credentials" means either:
+  // 1. User exists but wrong password
+  // 2. User doesn't exist
+  if (errorMessage.includes("invalid login credentials") || errorMessage.includes("invalid credentials")) {
+    // Try to sign up to check if user exists
+    const signUpResult = await supabase.auth.signUp({
+      email: credentials.email,
+      password: credentials.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          app_source: APP_SOURCE,
+        },
+      },
+    });
+
+    if (signUpResult.error) {
+      logger.error("SignUp error:", signUpResult.error);
+      return { error: signUpResult.error.message, data: null, action: "error" };
+    }
+
+    // If identities is empty, user already exists - password was wrong
+    if (signUpResult.data.user && (!signUpResult.data.user.identities || signUpResult.data.user.identities.length === 0)) {
+      return {
+        error: "Invalid password. You already have an account with this email.",
+        data: null,
+        action: "invalid_password",
+      };
+    }
+
+    // User was created successfully - needs email confirmation
+    return {
+      error: null,
+      data: signUpResult.data,
+      action: "signed_up",
+    };
+  }
+
+  // Email not confirmed
+  if (errorMessage.includes("email not confirmed")) {
+    return {
+      error: "Please check your email and confirm your account before signing in.",
+      data: null,
+      action: "error",
+    };
+  }
+
+  // Other errors
+  return { error: signInResult.error.message, data: null, action: "error" };
 }
 
 /**
