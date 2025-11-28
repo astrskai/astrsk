@@ -17,41 +17,16 @@
 
   /* Astrsk renewed colors start */
 
-  /* Foundation colors */
-  /* Blue colors */
-  --color-blue-100: #b9e4fb;
-  --color-blue-200: #98d7f9;
-  --color-blue-300: #68c5f6;
-  --color-blue-900: #0d4766;
-
-  /* Purple colors */
-  --color-purple-200: #b59eff;
-
-  /* Gray colors */
-  --color-gray-50: #f1f1f1;
-  --color-gray-100: #d4d4d4;
-  --color-gray-200: #bfbfbf;
-  --color-gray-300: #a1a1a1;
-  --color-gray-400: #8f8f8f;
-  --color-gray-500: #737373;
-  --color-gray-700: #525252;
-  --color-gray-800: #3f3f3f;
-  --color-gray-900: #303030;
-
   /* Basic colors */
-  --color-black-alternate: #111111;
   --color-dark-surface: #262626;
 
   /* Semantic colors */
-  --color-normal-primary: var(--color-blue-200);
-  --color-normal-secondary: var(--color-purple-200);
+  --color-normal-primary: #98d7f9;
+  --color-normal-secondary: #b59eff;
   --color-background-primary: var(--color-dark-surface);
 
-  --color-text-primary: var(--color-gray-50);
-  --color-text-secondary: var(--color-gray-200);
-
-  --color-status-destructive: #7f1d1d;
-  --color-status-destructive-light: #dc2626;
+  --color-text-primary: #f1f1f1;
+  --color-text-secondary: #bfbfbf;
 
   /* Astrsk renewed colors end */
 }
@@ -142,8 +117,6 @@
   --color-primary-normal: var(--primary-normal);
   --color-primary-strong: var(--primary-strong);
   --color-primary-heavy: var(--primary-heavy);
-  --color-primary-semi-dark: var(--primary-semi-dark);
-  --color-primary-dark: var(--primary-dark);
 
   /* Secondary colors */
   --color-secondary-normal: var(--secondary-normal);
@@ -167,23 +140,6 @@
   /* Color palette - Yellow */
   --color-yellow-800: var(--color-yellow-800);
 
-  /* Agent colors - 300 shades (used in color assignment) */
-  --color-indigo-300: var(--indigo-300);
-  --color-orange-300: var(--orange-300);
-  --color-lime-300: var(--lime-300);
-  --color-red-300: var(--red-300);
-  --color-amber-300: var(--amber-300);
-  --color-cyan-300: var(--cyan-300);
-  --color-fuchsia-300: var(--fuchsia-300);
-  --color-yellow-300: var(--yellow-300);
-  --color-violet-300: var(--violet-300);
-  --color-green-300: var(--green-300);
-  --color-rose-300: var(--rose-300);
-  --color-sky-300: var(--sky-300);
-  --color-pink-300: var(--pink-300);
-  --color-emerald-300: var(--emerald-300);
-  --color-purple-300: var(--purple-300);
-  --color-teal-300: var(--teal-300);
 }
 
 :root {
@@ -209,11 +165,6 @@
   --border: hsl(0 0% 14.9%);
   --input: hsl(0 0% 14.9%);
   --ring: hsl(0 0% 83.1%);
-  --chart-1: hsl(220 70% 50%);
-  --chart-2: hsl(160 60% 45%);
-  --chart-3: hsl(30 80% 55%);
-  --chart-4: hsl(280 65% 60%);
-  --chart-5: hsl(340 75% 55%);
   --sidebar-background: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 4.8% 95.9%);
   --sidebar-primary: hsl(224.3 76.3% 48%);
@@ -224,15 +175,10 @@
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
 
   /* astrsk 2.0 colors */
-  --color-basic-darksurface: #1b1b1b;
-
   --color-blue-50: #e9f6fe;
   --color-blue-500: #1ea9f2;
   --color-blue-700: #1578ac;
   --color-blue-800: #115d85;
-
-  --color-destructive-light: #dc2626;
-  --color-destructive-dark: #7f1d1d;
 
   --color-yellow-800: #854d0e;
 
@@ -242,9 +188,6 @@
   --background-dialog: #64748b;
   --background-input: #475263;
   --background-screen: #111111;
-  --background-screen2: #1b1b1b;
-  --background-tooltip: #0d4766;
-  --background-user-message: #e9f6fe;
 
   /* New background colors */
   --background-surface-0: #111111;
@@ -253,7 +196,6 @@
   --background-surface-3: #313131;
   --background-surface-4: #414141;
   --background-surface-5: #757575;
-  --background-surface-10: #1b1b1b;
   --background-surface-light: #e9f6fe;
 
   /* Existing border colors */
@@ -297,8 +239,6 @@
   --primary-heavy: #1ea9f2;
   --primary-normal: #98d7f9;
   --primary-strong: #68c5f6;
-  --primary-dark: #115d85;
-  --primary-semi-dark: #1578ac;
 
   /* Existing secondary colors */
   --secondary-heavy: #27136b;
@@ -313,8 +253,6 @@
 
   /* New status colors */
   --status-warning-light: #a16207;
-  --status-warning-dark: #854d0e;
-  --status-syncing: #1ea9f2;
   --status-succeed: #2ec2b9;
   --status-ready: #0d9488;
   --status-ready-dark: #1578ac;
@@ -383,11 +321,6 @@
   --border: hsl(0 0% 14.9%);
   --input: hsl(0 0% 14.9%);
   --ring: hsl(0 0% 83.1%);
-  --chart-1: hsl(220 70% 50%);
-  --chart-2: hsl(160 60% 45%);
-  --chart-3: hsl(30 80% 55%);
-  --chart-4: hsl(280 65% 60%);
-  --chart-5: hsl(340 75% 55%);
   --sidebar-background: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 4.8% 95.9%);
   --sidebar-primary: hsl(224.3 76.3% 48%);
@@ -403,9 +336,6 @@
   --background-dialog: #64748b;
   --background-input: #475263;
   --background-screen: #111111;
-  --background-screen2: #1b1b1b;
-  --background-tooltip: #0d4766;
-  --background-user-message: #e9f6fe;
 
   /* New background colors */
   --background-surface-0: #111111;
@@ -414,7 +344,6 @@
   --background-surface-3: #313131;
   --background-surface-4: #414141;
   --background-surface-5: #757575;
-  --background-surface-10: #1b1b1b;
   --background-surface-light: #e9f6fe;
 
   /* Existing border colors */
@@ -458,8 +387,6 @@
   --primary-heavy: #1ea9f2;
   --primary-normal: #98d7f9;
   --primary-strong: #68c5f6;
-  --primary-dark: #115d85;
-  --primary-semi-dark: #1578ac;
 
   /* Existing secondary colors */
   --secondary-heavy: #27136b;
@@ -479,23 +406,6 @@
   --status-syncing: #1ea9f2;
   --status-succeed: #2ec2b9;
 
-  /* Agent colors - 300 shades only (800 shades unused) */
-  --indigo-300: #a5b4fc;
-  --orange-300: #fdba74;
-  --lime-300: #bef264;
-  --red-300: #fca5a5;
-  --amber-300: #fcd34d;
-  --cyan-300: #67e8f9;
-  --fuchsia-300: #f0abfc;
-  --yellow-300: #fde047;
-  --violet-300: #c4b5fd;
-  --green-300: #86efac;
-  --rose-300: #fda4af;
-  --sky-300: #7dd3fc;
-  --pink-300: #f9a8d4;
-  --emerald-300: #6ee7b7;
-  --purple-300: #d8b4fe;
-  --teal-300: #5eead4;
 }
 
 /* Custom Variants */
@@ -559,14 +469,6 @@
 /* Custom Utilities - must be at top level, cannot be nested in @layer */
 @utility h-screen-minus-topbar {
   height: calc(100vh - var(--topbar-height));
-}
-
-@utility h-screen-minus-topbar-dv {
-  height: calc(100dvh - var(--topbar-height));
-}
-
-@utility h-screen-minus-topbar-sv {
-  height: calc(100svh - var(--topbar-height));
 }
 
 @utility animate-spin {
@@ -721,44 +623,6 @@
     padding-top: var(--safe-area-inset-top);
   }
 
-  .safe-area-bottom {
-    padding-bottom: var(--safe-area-inset-bottom);
-  }
-
-  .safe-area-left {
-    padding-left: var(--safe-area-inset-left);
-  }
-
-  .safe-area-right {
-    padding-right: var(--safe-area-inset-right);
-  }
-
-  .safe-area-x {
-    padding-left: var(--safe-area-inset-left);
-    padding-right: var(--safe-area-inset-right);
-  }
-
-  .safe-area-y {
-    padding-top: var(--safe-area-inset-top);
-    padding-bottom: var(--safe-area-inset-bottom);
-  }
-
-  .safe-area-all {
-    padding-top: var(--safe-area-inset-top);
-    padding-right: var(--safe-area-inset-right);
-    padding-bottom: var(--safe-area-inset-bottom);
-    padding-left: var(--safe-area-inset-left);
-  }
-
-  /* iOS Status Bar Background - extends navigation color into safe area */
-  .ios-status-bar-bg {
-    background: linear-gradient(
-      to bottom,
-      var(--background-card) var(--safe-area-inset-top),
-      transparent var(--safe-area-inset-top)
-    );
-  }
-
   /* Disable iOS context menu on images */
   img {
     -webkit-touch-callout: none;
@@ -906,14 +770,7 @@
     min-width: 0;
   }
 
-  /* Onboarding screen carausel */
-  .embla-onboarding .embla__slide {
-    flex: 0 0 304px;
-    min-width: 0;
-    min-height: 171px;
-  }
-
-  /* Onboarding screen carausel */
+  /* Subscription nudge carousel */
   .embla-subscription-nudge .embla__slide {
     flex: 0 0 284px;
     min-width: 0;

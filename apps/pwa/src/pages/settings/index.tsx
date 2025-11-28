@@ -9,10 +9,12 @@ import {
   Scale,
   Sliders,
   ShieldCheck,
+  LogOut,
 } from "lucide-react";
 import { ConvexReady } from "@/shared/ui/convex-ready";
-import { Authenticated } from "convex/react";
+import { Authenticated, Unauthenticated } from "convex/react";
 import { useClerk } from "@clerk/clerk-react";
+import { Link } from "@tanstack/react-router";
 import { SvgIcon } from "@/shared/ui";
 import { IconDiscord } from "@/shared/assets/icons";
 
@@ -72,35 +74,72 @@ const SettingsItem = ({
   );
 };
 
+const SignInPromptCard = () => {
+  return (
+    <div className="border-border-default bg-surface-raised mb-8 flex items-center justify-between rounded-2xl border p-5">
+      <div className="flex items-center gap-4">
+        <div className="border-border-muted bg-surface-overlay flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2">
+          <User size={24} className="text-fg-muted" />
+        </div>
+        <div>
+          <h2 className="text-fg-default text-lg font-bold">Welcome</h2>
+          <p className="text-fg-muted text-xs">
+            Sign in to sync your data across devices
+          </p>
+        </div>
+      </div>
+      <Link
+        to="/sign-in"
+        className="bg-brand-600 hover:bg-brand-500 active:bg-brand-700 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
+      >
+        Sign in
+      </Link>
+    </div>
+  );
+};
+
 const UserProfileCard = () => {
-  const { user } = useClerk();
+  const { user, signOut } = useClerk();
+  const navigate = useNavigate();
 
   return (
-    <div className="border-border-default bg-surface-raised mb-8 flex items-center gap-4 rounded-2xl border p-5">
-      <div className="relative">
-        <div className="border-border-muted bg-surface-overlay h-14 w-14 overflow-hidden rounded-full border-2">
-          {user?.hasImage ? (
-            <img
-              src={user.imageUrl}
-              alt="User"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <User size={24} className="text-fg-muted" />
-            </div>
-          )}
+    <div className="border-border-default bg-surface-raised mb-8 flex items-center justify-between rounded-2xl border p-5">
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <div className="border-border-muted bg-surface-overlay h-14 w-14 overflow-hidden rounded-full border-2">
+            {user?.hasImage ? (
+              <img
+                src={user.imageUrl}
+                alt="User"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <User size={24} className="text-fg-muted" />
+              </div>
+            )}
+          </div>
+          <div className="border-surface-raised bg-brand-500 absolute right-0 bottom-0 h-4 w-4 rounded-full border-2" />
         </div>
-        <div className="border-surface-raised bg-brand-500 absolute right-0 bottom-0 h-4 w-4 rounded-full border-2" />
+        <div>
+          <h2 className="text-fg-default text-lg font-bold">
+            {user?.fullName || "User"}
+          </h2>
+          <p className="text-fg-muted text-xs">
+            {user?.primaryEmailAddress?.emailAddress}
+          </p>
+        </div>
       </div>
-      <div>
-        <h2 className="text-fg-default text-lg font-bold">
-          {user?.fullName || "User"}
-        </h2>
-        <p className="text-fg-muted text-xs">
-          {user?.primaryEmailAddress?.emailAddress}
-        </p>
-      </div>
+      <button
+        onClick={() => {
+          signOut();
+          navigate({ to: "/settings", replace: true });
+        }}
+        className="text-status-error hover:bg-status-error/10 rounded-lg p-2 transition-colors"
+        aria-label="Sign out"
+      >
+        <LogOut size={20} />
+      </button>
     </div>
   );
 };
@@ -120,11 +159,14 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      {/* User Profile Card - Authenticated only */}
+      {/* User Profile Card - Authenticated / Sign In Prompt - Unauthenticated */}
       <ConvexReady>
         <Authenticated>
           <UserProfileCard />
         </Authenticated>
+        <Unauthenticated>
+          <SignInPromptCard />
+        </Unauthenticated>
       </ConvexReady>
 
       {/* 1. APP PREFERENCES */}

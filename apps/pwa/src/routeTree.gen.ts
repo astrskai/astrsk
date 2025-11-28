@@ -15,7 +15,9 @@ import { Route as LayoutSsoCallbackRouteImport } from './routes/_layout/sso-call
 import { Route as LayoutSignUpRouteImport } from './routes/_layout/sign-up'
 import { Route as LayoutSignInRouteImport } from './routes/_layout/sign-in'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutResetPasswordRouteImport } from './routes/_layout/reset-password'
 import { Route as LayoutForgotPasswordRouteImport } from './routes/_layout/forgot-password'
+import { Route as LayoutEmailVerificationRouteImport } from './routes/_layout/email-verification'
 import { Route as LayoutSettingsIndexRouteImport } from './routes/_layout/settings/index'
 import { Route as LayoutSessionsIndexRouteImport } from './routes/_layout/sessions/index'
 import { Route as LayoutAssetsIndexRouteImport } from './routes/_layout/assets/index'
@@ -69,9 +71,19 @@ const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutResetPasswordRoute = LayoutResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutForgotPasswordRoute = LayoutForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutEmailVerificationRoute = LayoutEmailVerificationRouteImport.update({
+  id: '/email-verification',
+  path: '/email-verification',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsIndexRoute = LayoutSettingsIndexRouteImport.update({
@@ -208,7 +220,9 @@ const LayoutAssetsCharactersChar123CharacterIdChar125Route =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/email-verification': typeof LayoutEmailVerificationRoute
   '/forgot-password': typeof LayoutForgotPasswordRoute
+  '/reset-password': typeof LayoutResetPasswordRoute
   '/settings': typeof LayoutSettingsRouteWithChildren
   '/sign-in': typeof LayoutSignInRoute
   '/sign-up': typeof LayoutSignUpRoute
@@ -239,7 +253,9 @@ export interface FileRoutesByFullPath {
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
 }
 export interface FileRoutesByTo {
+  '/email-verification': typeof LayoutEmailVerificationRoute
   '/forgot-password': typeof LayoutForgotPasswordRoute
+  '/reset-password': typeof LayoutResetPasswordRoute
   '/sign-in': typeof LayoutSignInRoute
   '/sign-up': typeof LayoutSignUpRoute
   '/sso-callback': typeof LayoutSsoCallbackRoute
@@ -271,7 +287,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/email-verification': typeof LayoutEmailVerificationRoute
   '/_layout/forgot-password': typeof LayoutForgotPasswordRoute
+  '/_layout/reset-password': typeof LayoutResetPasswordRoute
   '/_layout/settings': typeof LayoutSettingsRouteWithChildren
   '/_layout/sign-in': typeof LayoutSignInRoute
   '/_layout/sign-up': typeof LayoutSignUpRoute
@@ -304,7 +322,9 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/email-verification'
     | '/forgot-password'
+    | '/reset-password'
     | '/settings'
     | '/sign-in'
     | '/sign-up'
@@ -335,7 +355,9 @@ export interface FileRouteTypes {
     | '/settings/legal'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/email-verification'
     | '/forgot-password'
+    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
     | '/sso-callback'
@@ -366,7 +388,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_layout'
+    | '/_layout/email-verification'
     | '/_layout/forgot-password'
+    | '/_layout/reset-password'
     | '/_layout/settings'
     | '/_layout/sign-in'
     | '/_layout/sign-up'
@@ -445,11 +469,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/reset-password': {
+      id: '/_layout/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof LayoutResetPasswordRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/forgot-password': {
       id: '/_layout/forgot-password'
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof LayoutForgotPasswordRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/email-verification': {
+      id: '/_layout/email-verification'
+      path: '/email-verification'
+      fullPath: '/email-verification'
+      preLoaderRoute: typeof LayoutEmailVerificationRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings/': {
@@ -656,7 +694,9 @@ const LayoutSettingsRouteWithChildren = LayoutSettingsRoute._addFileChildren(
 )
 
 interface LayoutRouteChildren {
+  LayoutEmailVerificationRoute: typeof LayoutEmailVerificationRoute
   LayoutForgotPasswordRoute: typeof LayoutForgotPasswordRoute
+  LayoutResetPasswordRoute: typeof LayoutResetPasswordRoute
   LayoutSettingsRoute: typeof LayoutSettingsRouteWithChildren
   LayoutSignInRoute: typeof LayoutSignInRoute
   LayoutSignUpRoute: typeof LayoutSignUpRoute
@@ -675,7 +715,9 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutEmailVerificationRoute: LayoutEmailVerificationRoute,
   LayoutForgotPasswordRoute: LayoutForgotPasswordRoute,
+  LayoutResetPasswordRoute: LayoutResetPasswordRoute,
   LayoutSettingsRoute: LayoutSettingsRouteWithChildren,
   LayoutSignInRoute: LayoutSignInRoute,
   LayoutSignUpRoute: LayoutSignUpRoute,
