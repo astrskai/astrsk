@@ -1,4 +1,6 @@
-import { Workflow, CheckCircle2, AlertCircle } from "lucide-react";
+import { Workflow } from "lucide-react";
+// TEMPORARILY DISABLED: Validation status icons
+// import { CheckCircle2, AlertCircle } from "lucide-react";
 import { IconWorkflow } from "@/shared/assets";
 import { cn } from "@/shared/lib";
 import {
@@ -24,7 +26,7 @@ const WorkflowCard = ({
   title,
   description,
   nodeCount = 0,
-  isValid = true,
+  isValid: _isValid = true, // TEMPORARILY DISABLED: validation status
   tags = [],
   actions = [],
   className,
@@ -98,6 +100,7 @@ const WorkflowCard = ({
               <Workflow size={12} />
               <span>{nodeCount} Nodes</span>
             </div>
+{/* TEMPORARILY DISABLED: Validation status indicator
             <div
               className={cn(
                 "flex items-center gap-1.5",
@@ -107,6 +110,7 @@ const WorkflowCard = ({
               {isValid ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
               <span>{isValid ? "Ready" : "Issues Found"}</span>
             </div>
+*/}
           </div>
         </div>
       </div>

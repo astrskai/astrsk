@@ -30,10 +30,13 @@ import CharacterItem from "./settings/character-item";
 
 import { cn } from "@/shared/lib";
 import {
+  backgroundQueries,
+  getDefaultBackground,
+  getBackgroundAssetId,
   isDefaultBackground,
-  useBackgroundStore,
-} from "@/shared/stores/background-store";
+} from "@/entities/background/api";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { useQuery } from "@tanstack/react-query";
 import { useFlow } from "@/shared/hooks/use-flow";
 import { Loading, PopoverBase, DropdownMenuBase, Switch } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs/confirm";
@@ -99,16 +102,22 @@ const SessionSettingsSidebar = ({
   const [isScenarioDialogOpen, setIsScenarioDialogOpen] =
     useState<boolean>(false);
 
-  const { backgroundMap } = useBackgroundStore();
-  const background = backgroundMap.get(session.backgroundId?.toString() ?? "");
-  const [backgroundAsset] = useAsset(background?.assetId);
+  // Background - check if default first, then query for user background
+  const defaultBg = session.backgroundId ? getDefaultBackground(session.backgroundId) : undefined;
+
+  const { data: background } = useQuery({
+    ...backgroundQueries.detail(session.backgroundId),
+    enabled: !!session.backgroundId && !defaultBg,
+  });
+
+  const [backgroundAsset] = useAsset(getBackgroundAssetId(background));
 
   const backgroundImageSrc = useMemo(() => {
-    if (background && isDefaultBackground(background)) {
-      return background.src;
+    if (defaultBg) {
+      return defaultBg.src;
     }
     return backgroundAsset; // undefined or string
-  }, [background, backgroundAsset]);
+  }, [defaultBg, backgroundAsset]);
 
   const [coverImageSrc] = useAsset(session.coverId);
 

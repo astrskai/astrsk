@@ -2,7 +2,7 @@ import { Flow } from "@/entities/flow/domain/flow";
 import { Agent } from "@/entities/agent/domain/agent";
 import { traverseFlowCached } from "@/features/flow/utils/flow-traversal";
 import { ValidationContext, ValidationIssue } from "@/entities/flow/model/validation-types";
-import { ValidatorFunction, FunctionalValidator } from "@/features/flow/validation/types/functional-validation-types";
+import { FunctionalValidator } from "@/features/flow/validation/types/functional-validation-types";
 import { composeValidators } from "@/features/flow/validation/utils/validator-utils";
 import { ApiConnectionWithModels } from "@/shared/hooks/use-api-connections-with-models";
 
@@ -23,86 +23,88 @@ import {
 } from "@/features/flow/validation/validators";
 
 export class ValidationOrchestrator {
+  // TEMPORARILY DISABLED: All validators set to enabled: false
+  // To re-enable validation, change enabled: false to enabled: true
   private validators: FunctionalValidator[] = [
     // Flow structure validators
     {
       name: 'flow-path',
       description: 'Validates flow has path from start to end',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateFlowPath,
     },
-    
+
     // Agent configuration validators
     {
       name: 'model-selection',
       description: 'Validates agents have models selected',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateModelSelection,
     },
     {
       name: 'agent-name',
       description: 'Validates agents have names',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateAgentName,
     },
     {
       name: 'prompt-messages',
       description: 'Validates agents have prompt messages',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validatePromptMessages,
     },
     {
       name: 'structured-output-schema',
       description: 'Validates structured output configuration',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateStructuredOutput,
     },
-    
+
     // Message structure validators
     {
       name: 'system-message-placement',
       description: 'Validates system message placement',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateSystemMessagePlacement,
     },
     {
       name: 'gemini-message-structure',
       description: 'Validates Gemini-specific message requirements',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateGeminiMessageStructure,
     },
     {
       name: 'history-message',
       description: 'Checks for history variable usage',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateHistoryMessage,
     },
-    
+
     // Variable validators
     {
       name: 'undefined-variables',
       description: 'Checks for undefined variable references',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateUndefinedOutputVariables,
     },
     {
       name: 'unused-variables',
       description: 'Checks for unused output variables',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateUnusedOutputVariables,
     },
     {
       name: 'template-syntax',
       description: 'Validates template syntax',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateTemplateSyntax,
     },
-    
+
     // Provider compatibility validators
     {
       name: 'structured-output-support',
       description: 'Checks provider support for structured output',
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED
       validate: validateStructuredOutputSupport,
     },
   ];

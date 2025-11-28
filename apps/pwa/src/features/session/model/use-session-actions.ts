@@ -13,7 +13,6 @@ import { FlowService } from "@/app/services/flow-service";
 import { AgentService } from "@/app/services/agent-service";
 import { sessionQueries } from "@/entities/session/api";
 import { ModelTier, AgentModelTierInfo } from "@/entities/agent/domain";
-import { fetchBackgrounds } from "@/shared/stores/background-store";
 
 interface DeleteDialogState {
   isOpen: boolean;
@@ -347,9 +346,6 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
       }
 
       const copiedSession = copiedSessionOrError.getValue();
-
-      // Fetch backgrounds for the newly cloned session
-      await fetchBackgrounds(copiedSession.id);
 
       // Notify parent of successful copy for animation
       onCopySuccess?.(copiedSession.id.toString());
