@@ -154,7 +154,7 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
     const card = cardResult.getValue();
     const tokenCount = CharacterCard.calculateTokenSize(
       card.props,
-      await getTokenizer(),
+      getTokenizer(),
     );
     card.update({ tokenCount });
 
@@ -203,7 +203,7 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
     const card = cardResult.getValue();
     const tokenCount = ScenarioCard.calculateTokenSize(
       card.props,
-      await getTokenizer(),
+      getTokenizer(),
     );
     card.update({ tokenCount });
 

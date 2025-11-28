@@ -41,6 +41,7 @@ import {
   applyOperationsToResource,
 } from "./utils/edit-mappers";
 import { DataStoreFieldPipeline } from "./lib/data-store-field-pipeline";
+import { notifyFlowNodesEdgesUpdate } from "@/shared/lib/flow-local-state-sync";
 
 // Types
 import { VibePanelProps, ReviewData, SimpleMessage } from "./types";
@@ -833,9 +834,6 @@ Operations are being generated and will be ready for review shortly.`;
                         });
 
                         // Notify flow panel of nodes/edges update to ensure UI reflects reverted state
-                        const { notifyFlowNodesEdgesUpdate } = await import(
-                          "@/shared/lib/flow-local-state-sync"
-                        );
                         const flowNodes = flow.props.nodes || [];
                         const flowEdges = (flow.props.edges || []).map(
                           (edge: any) => ({

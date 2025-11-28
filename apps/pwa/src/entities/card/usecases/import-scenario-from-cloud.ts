@@ -146,7 +146,7 @@ export class ImportScenarioFromCloud
       // 4. Calculate token count
       const tokenCount = ScenarioCard.calculateTokenSize(
         card.props,
-        await getTokenizer(),
+        getTokenizer(),
       );
       card.update({ tokenCount });
 

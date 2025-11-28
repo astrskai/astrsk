@@ -1302,7 +1302,7 @@ async function renderMessages({
   const tokenBudget = contextTokenSize - responseTokenSize - 200; // padding 200 tokens
 
   // Check system prompt is too long
-  const tokenizer = await getTokenizer();
+  const tokenizer = getTokenizer();
   const systemPromptTokenSize = tokenizer.encode(
     systemPrompt.map((message) => message.content).join("\n"),
   ).length;
