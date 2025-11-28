@@ -25,7 +25,11 @@ import { cloneDeep, merge } from "lodash-es";
 import { createOllama } from "ollama-ai-provider";
 
 import { fetchAgent } from "@/entities/agent/api/query-factory";
-import { fetchApiConnections } from "@/entities/api/api-connection-queries";
+import {
+  fetchApiConnections,
+  isDefaultModelAvailable,
+  isModelAvailableInProvider,
+} from "@/entities/api/api-connection-queries";
 import {
   fetchCharacterCard,
   fetchCharacterCardOptional,
@@ -39,6 +43,7 @@ import { fetchTurn, fetchTurnOptional } from "@/entities/turn/api/turn-queries";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/shared/stores/app-store";
+import { useModelStore, DefaultModelSelection } from "@/shared/stores/model-store";
 import { useWllamaStore } from "@/shared/stores/wllama-store";
 import { Condition, isUnaryOperator } from "@/features/flow/types/condition-types";
 import { traverseFlowCached } from "@/features/flow/utils/flow-traversal";
@@ -100,7 +105,46 @@ const isUserSubscribed = (): boolean => {
   return isUserLoggedIn();
 };
 
-// Helper function to get fallback model based on tier
+// Helper function to get global default model from user settings
+// Falls back from Heavy → Light if Heavy model's provider is disconnected
+const getGlobalDefaultModel = (
+  modelTier?: ModelTier,
+): DefaultModelSelection | null => {
+  const modelStore = useModelStore.getState();
+
+  if (modelTier === ModelTier.Heavy) {
+    const heavyModel = modelStore.defaultStrongModel;
+
+    // Check if heavy model is available
+    if (isDefaultModelAvailable(heavyModel)) {
+      return heavyModel;
+    }
+
+    // Fallback to lite model if heavy model's provider is disconnected
+    logger.info(
+      `[ModelFallback] Heavy model "${heavyModel?.modelName}" not available. ` +
+      `Falling back to Lite model.`,
+    );
+
+    const liteModel = modelStore.defaultLiteModel;
+    if (isDefaultModelAvailable(liteModel)) {
+      return liteModel;
+    }
+
+    // Neither available
+    return null;
+  }
+
+  // For Light tier or unspecified, just return lite model if available
+  const liteModel = modelStore.defaultLiteModel;
+  if (isDefaultModelAvailable(liteModel)) {
+    return liteModel;
+  }
+
+  return null;
+};
+
+// Helper function to get fallback model based on tier (for AstrskAi backend)
 const getFallbackModel = (modelTier?: ModelTier): string | null => {
   if (!modelTier) {
     // Default to light tier if not specified
@@ -1784,7 +1828,50 @@ async function* executeAgentNode({
       );
     }
 
-    // Automatic model mapping for logged-in users
+    // Check if the configured model is actually available in the provider
+    if (apiConnection) {
+      const modelAvailable = isModelAvailableInProvider(
+        apiConnection.id.toString(),
+        apiModelId,
+      );
+
+      if (!modelAvailable) {
+        logger.info(
+          `[ModelUnavailable] Model "${apiModelId}" not found in provider ${apiSource}. ` +
+          `Will use global default model.`,
+        );
+        // Clear the connection so fallback logic kicks in
+        apiConnection = undefined;
+      }
+    }
+
+    // Fallback: Use global default model from user settings
+    if (!apiConnection) {
+      const globalDefault = getGlobalDefaultModel(agent.props.modelTier);
+
+      if (globalDefault) {
+        // Find the API connection for the global default model
+        const defaultConnection = apiConnections.find(
+          (connection) => connection.id.toString() === globalDefault.apiConnectionId,
+        );
+
+        if (defaultConnection) {
+          logger.info(
+            `[GlobalDefaultModel] No API connection found for ${apiSource}. ` +
+            `Using global default model: ${globalDefault.modelName} ` +
+            `(original: ${apiModelId}, tier: ${agent.props.modelTier || "not specified"})`,
+          );
+
+          // Update to use the global default model
+          apiConnection = defaultConnection;
+          apiSource = globalDefault.apiSource as ApiSource;
+          apiModelId = globalDefault.modelId;
+          actualModelName = globalDefault.modelName;
+        }
+      }
+    }
+
+    // Fallback: Automatic model mapping for logged-in users (AstrskAi backend)
     if (!apiConnection && isUserLoggedIn()) {
       // Check if we should use automatic mapping (user is subscribed)
       // TODO: Replace with actual subscription check when available
