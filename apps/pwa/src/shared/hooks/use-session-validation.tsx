@@ -1,16 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+// TEMPORARILY DISABLED: Unused imports commented out
+// import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
-import { sessionQueries } from "@/entities/session/api";
+// import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
+// import { sessionQueries } from "@/entities/session/api";
 import { useValidationStore } from "@/shared/stores/validation-store";
-import { logger } from "@/shared/lib";
+// import { logger } from "@/shared/lib";
 
 /**
  * Session validation hook (refactored to match flows pattern)
  *
- * Validation logic:
+ * TEMPORARILY DISABLED: All validation logic commented out - always returns valid
+ *
+ * Original Validation logic:
  * 1. Session must exist
  * 2. Session must have at least one AI character card
  * 3. Session's flow must be valid (checked via useFlowValidation)
@@ -21,6 +24,24 @@ import { logger } from "@/shared/lib";
  * - Automatically updates when session data changes
  */
 export function useSessionValidation(sessionId?: UniqueEntityID | null) {
+  // TEMPORARILY DISABLED: Always return valid
+  // To re-enable validation, uncomment the code below and remove the early return
+
+  const { setInvalid } = useValidationStore();
+
+  // Always mark as valid in the store
+  useEffect(() => {
+    if (!sessionId) {
+      return;
+    }
+    setInvalid("sessions", sessionId, false); // false = not invalid = valid
+  }, [sessionId, setInvalid]);
+
+  // Always return valid
+  return { isValid: true, isFetched: true } as const;
+
+  /*
+  // ORIGINAL VALIDATION LOGIC - COMMENTED OUT
   // Get session detail data (auto-refetch on stale)
   const { data: session, isFetched: isSessionFetched } = useQuery(
     sessionQueries.detail(sessionId || undefined),
@@ -58,4 +79,5 @@ export function useSessionValidation(sessionId?: UniqueEntityID | null) {
   }, [isFlowValid, isSessionValid, isValid, sessionId, setInvalid, isFetched]);
   // Return session validation result
   return { isValid, isFetched } as const;
+  */
 }

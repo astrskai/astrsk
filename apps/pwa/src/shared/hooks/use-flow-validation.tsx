@@ -1,19 +1,52 @@
-import { useQuery } from "@tanstack/react-query";
+// TEMPORARILY DISABLED: Unused imports commented out
+// import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 import { UniqueEntityID } from "@/shared/domain";
 
-import { useApiConnectionsWithModels } from "@/shared/hooks/use-api-connections-with-models";
-import { useFlow } from "@/shared/hooks/use-flow";
-import { flowQueries } from "@/entities/flow/api/flow-queries";
-import { AgentService } from "@/app/services/agent-service";
+// import { useApiConnectionsWithModels } from "@/shared/hooks/use-api-connections-with-models";
+// import { useFlow } from "@/shared/hooks/use-flow";
+// import { flowQueries } from "@/entities/flow/api/flow-queries";
+// import { AgentService } from "@/app/services/agent-service";
 import { useValidationStore } from "@/shared/stores/validation-store";
-import {
-  isAgentValid,
-} from "@/features/flow/utils/flow-validation";
-import { Agent } from "@/entities/agent/domain/agent";
+// import {
+//   isAgentValid,
+// } from "@/features/flow/utils/flow-validation";
+// import { Agent } from "@/entities/agent/domain/agent";
 
+/**
+ * Flow validation hook
+ *
+ * TEMPORARILY DISABLED: All validation logic commented out - always returns valid
+ *
+ * To re-enable validation, uncomment the original implementation below
+ */
 export function useFlowValidation(flowId?: UniqueEntityID | null) {
+  // TEMPORARILY DISABLED: Always return valid
+  // To re-enable validation, uncomment the code below and remove the early return
+
+  const { setInvalid } = useValidationStore();
+
+  // Always mark as valid in the store
+  useEffect(() => {
+    if (!flowId) {
+      return;
+    }
+    setInvalid("flows", flowId, false); // false = not invalid = valid
+  }, [flowId, setInvalid]);
+
+  // Always return valid with empty arrays/objects
+  return {
+    isValid: true,
+    invalidAgents: [] as string[],
+    invalidDataStoreNodes: 0,
+    invalidIfNodes: 0,
+    invalidNodeReasons: {} as Record<string, string[]>,
+    isFetched: true
+  } as const;
+
+  /*
+  // ORIGINAL VALIDATION LOGIC - COMMENTED OUT
   // Get flow and api connections with models
   const { data: flow } = useFlow(flowId || undefined);
   const [apiConnectionsWithModels] = useApiConnectionsWithModels();
@@ -53,7 +86,6 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
             agents.set(agentId.toString(), agent);
 
             // TEMPORARILY DISABLED: Agent validation commented out
-            /*
             // Only validate agents that are connected from start to end
             const position = traversalResult.agentPositions.get(agentId.toString());
             if (position && position.isConnectedToStart && position.isConnectedToEnd) {
@@ -62,50 +94,41 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
                 invalidAgents.push(agentId.toString());
               }
             }
-            */
           } else {
             // Agent not found or failed to load
             console.warn(`Agent not found: ${agentId}`);
-            // TEMPORARILY DISABLED: Agent validation commented out
-            /*
             // Only mark as invalid if it's connected
             const position = traversalResult.agentPositions.get(agentId.toString());
             if (position && position.isConnectedToStart && position.isConnectedToEnd) {
               invalidAgents.push(agentId.toString());
             }
-            */
           }
         } catch (error) {
           console.warn(`Failed to load agent ${agentId}:`, error);
-          // TEMPORARILY DISABLED: Agent validation commented out
-          /*
           // Only mark as invalid if it's connected
           const position = traversalResult.agentPositions.get(agentId.toString());
           if (position && position.isConnectedToStart && position.isConnectedToEnd) {
             invalidAgents.push(agentId.toString());
           }
-          */
         }
       }
 
-      // TEMPORARILY DISABLED: Individual node validation commented out
       // Validate if nodes and data store nodes
       let invalidIfNodes = 0;
       let invalidDataStoreNodes = 0;
       const invalidNodeReasons: Record<string, string[]> = {};
-      
-      /*
+
       // Check all nodes in the connected sequence
       for (const nodeId of traversalResult.connectedSequence) {
         const node = flow.props.nodes.find(n => n.id === nodeId);
         if (!node) continue;
-        
+
         // Validate if nodes - must have at least one valid condition
         if (node.type === 'if') {
           const nodeData = node.data as any;
           const nodeName = nodeData?.label || nodeId;
           const conditions = nodeData?.conditions || [];
-          const hasValidCondition = conditions.some((c: any) => 
+          const hasValidCondition = conditions.some((c: any) =>
             c.value1 && c.value1.trim() !== '' && c.operator && c.dataType
           );
           if (!hasValidCondition) {
@@ -113,7 +136,7 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
             invalidNodeReasons[nodeId] = [`If node "${nodeName}" must have at least one complete condition with value, operator, and data type`];
           }
         }
-        
+
         // Validate data store nodes - comprehensive validation
         if (node.type === 'dataStore') {
           const nodeData = node.data as any;
@@ -121,12 +144,12 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
           const dataStoreFields = nodeData?.dataStoreFields || [];
           const schema = flow.props.dataStoreSchema;
           const reasons: string[] = [];
-          
-          
+
+
           // A data store node is valid if:
           // 1. It has at least one field configured
           // 2. That field exists in the schema
-          
+
           if (dataStoreFields.length === 0) {
             reasons.push(`Data store "${nodeName}" must have at least one field configured`);
           } else if (!schema) {
@@ -135,37 +158,33 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
           } else {
             // Check if at least one configured field exists in schema
             let hasValidField = false;
-            
+
             for (const field of dataStoreFields) {
               const schemaField = schema.fields.find(sf => sf.id === field.schemaFieldId);
               if (schemaField) {
                 // Found at least one valid field that exists in schema
                 hasValidField = true;
-                
+
                 // DataStoreFields no longer have values - they only have logic
                 // Validation of actual values happens at runtime during execution
               }
             }
-            
+
             if (!hasValidField) {
               reasons.push('Data store must have at least one field that exists in the schema');
             }
           }
-          
+
           if (reasons.length > 0) {
             invalidDataStoreNodes++;
             invalidNodeReasons[nodeId] = reasons;
           }
         }
       }
-      */
-      
+
       // Check if the flow has a valid path from start to end
       let isValid = traversalResult.hasValidFlow;
-      
-      
-      // TEMPORARILY DISABLED: Flow validity check based on invalid nodes commented out
-      /*
+
       // If the flow is connected, check if any connected nodes are invalid
       if (isValid) {
         // If there are any invalid connected agents, if nodes, or data store nodes, the flow is invalid
@@ -173,11 +192,7 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
           isValid = false;
         }
       }
-      */
-      
 
-      // TEMPORARILY DISABLED: API connection validation for agents commented out
-      /*
       // Also check API connections for connected agents
       if (isValid && apiConnectionsWithModels) {
 
@@ -237,15 +252,14 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
           }
         }
       }
-      */
 
 
-      return { 
-        isValid, 
+      return {
+        isValid,
         invalidAgents,
         invalidDataStoreNodes,
         invalidIfNodes,
-        invalidNodeReasons 
+        invalidNodeReasons
       };
     },
     enabled: !!flow && !!apiConnectionsWithModels,
@@ -267,12 +281,13 @@ export function useFlowValidation(flowId?: UniqueEntityID | null) {
     setInvalid("flows", flowId, !isValid);
   }, [flowId, isValid, setInvalid]);
 
-  return { 
-    isValid, 
-    invalidAgents, 
+  return {
+    isValid,
+    invalidAgents,
     invalidDataStoreNodes,
     invalidIfNodes,
     invalidNodeReasons,
-    isFetched 
+    isFetched
   } as const;
+  */
 }

@@ -1,8 +1,7 @@
 import { useState, useCallback } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { useAuth, useSignUp } from "@clerk/clerk-react";
-import { toastError, toastInfo } from "@/shared/ui/toast";
-import { Link } from "@tanstack/react-router";
+import { toastError, toastInfo, toastSuccess } from "@/shared/ui/toast";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Button } from "@/shared/ui/forms/button";
 import { Input } from "@/shared/ui/forms";
@@ -10,23 +9,28 @@ import { logger } from "@/shared/lib/logger";
 import { IconGoogle, IconDiscord, IconApple } from "@/shared/assets/icons";
 import { AuthLayout, AuthBadge } from "./ui";
 import { PasswordInput } from "@/shared/ui/forms";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { signInOrSignUp, signInWithOAuth } from "@/shared/lib/auth-actions";
 
 // --- Social Button Component ---
 interface SocialButtonProps {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 const SocialButton = ({
   icon: IconComponent,
   label,
   onClick,
+  disabled,
 }: SocialButtonProps) => (
   <button
     type="button"
     onClick={onClick}
-    className="bg-surface-raised hover:border-border-subtle hover:bg-hover text-fg-default flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-neutral-800 transition-all duration-200 active:scale-95"
+    disabled={disabled}
+    className="bg-surface-raised border-border-default hover:border-border-subtle hover:bg-hover text-fg-default flex h-12 w-full items-center justify-center gap-3 rounded-xl border transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
   >
     <IconComponent className="h-5 w-5" />
     <span className="text-sm font-medium">{label}</span>
@@ -40,45 +44,79 @@ export function SignInPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // 2. Auth hooks
-  const { userId } = useAuth();
-  const { isLoaded: isLoadedSignUp, signUp } = useSignUp();
+  // 2. Auth & Navigation hooks
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   // 3. Handlers
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
-    // TODO: Implement actual login logic
 
-    setTimeout(() => setIsLoading(false), 2000);
-  };
-
-  const signUpWithDiscord = useCallback(async () => {
-    if (!isLoadedSignUp) {
+    if (isAuthenticated) {
+      toastInfo("You are already signed in");
       return;
     }
 
-    if (userId) {
+    setIsLoading(true);
+
+    try {
+      const { error, action } = await signInOrSignUp({ email, password });
+
+      switch (action) {
+        case "signed_in":
+          toastSuccess("Welcome back!");
+          navigate({ to: "/" });
+          break;
+
+        case "signed_up":
+          toastSuccess("Account created!", {
+            description: "Please check your email to confirm your account.",
+          });
+          break;
+
+        case "invalid_password":
+          toastError("Invalid password", {
+            description: "You already have an account with this email. Please enter the correct password.",
+          });
+          break;
+
+        case "error":
+          toastError("Authentication failed", { description: error || "Please try again." });
+          break;
+      }
+    } catch (error) {
+      logger.error("Auth error:", error);
+      toastError("Failed to authenticate", {
+        description: "Please try again or contact support if the issue persists.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [email, password, isAuthenticated, navigate]);
+
+  const handleOAuthSignIn = useCallback(async (provider: "google" | "discord" | "apple") => {
+    if (isAuthenticated) {
       toastInfo("You are already signed in");
       return;
     }
 
     try {
       setIsLoading(true);
-      await signUp.authenticateWithRedirect({
-        strategy: "oauth_discord",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
-      });
+      const { error } = await signInWithOAuth(provider);
+
+      if (error) {
+        setIsLoading(false);
+        toastError("Failed to sign in", { description: error });
+      }
+      // If successful, Supabase will redirect to OAuth provider
     } catch (error) {
       setIsLoading(false);
-      logger.error(error);
+      logger.error("OAuth sign in error:", error);
       toastError("Failed to sign in", {
-        description:
-          "Please try again or contact support if the issue persists.",
+        description: "Please try again or contact support if the issue persists.",
       });
     }
-  }, [isLoadedSignUp, signUp, userId]);
+  }, [isAuthenticated]);
 
   return (
     <AuthLayout>
@@ -95,19 +133,30 @@ export function SignInPage() {
           </span>
         </h1>
         <p className="text-fg-subtle text-sm">
-          Sign in to continue your story.
+          Sign in or create an account to continue.
         </p>
       </div>
 
       {/* Social Login */}
       <div className="mb-6 flex gap-3">
-        <SocialButton icon={IconGoogle} label="Google" />
+        <SocialButton
+          icon={IconGoogle}
+          label="Google"
+          onClick={() => handleOAuthSignIn("google")}
+          disabled={isLoading}
+        />
         <SocialButton
           icon={IconDiscord}
           label="Discord"
-          onClick={signUpWithDiscord}
+          onClick={() => handleOAuthSignIn("discord")}
+          disabled={isLoading}
         />
-        <SocialButton icon={IconApple} label="Apple" />
+        <SocialButton
+          icon={IconApple}
+          label="Apple"
+          onClick={() => handleOAuthSignIn("apple")}
+          disabled={isLoading}
+        />
       </div>
 
       {/* Divider */}
@@ -117,7 +166,7 @@ export function SignInPage() {
         </div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="text-fg-subtle md:bg-canvas rounded-full px-2 backdrop-blur-sm md:backdrop-blur-none">
-            Or continue with
+            Or continue with email
           </span>
         </div>
       </div>
@@ -169,20 +218,14 @@ export function SignInPage() {
           loading={isLoading}
           className="shadow-brand-600/20 w-full font-semibold shadow-lg transition-all hover:-translate-y-0.5 active:scale-95"
         >
-          Log In
+          Continue
         </Button>
       </form>
 
-      {/* Sign Up Prompt */}
-      <div className="text-fg-subtle mt-8 text-center text-sm">
-        Don't have an account?{" "}
-        <Link
-          to="/sign-up"
-          className="text-fg-default decoration-border-muted hover:text-brand-400 font-semibold underline underline-offset-4 transition-all"
-        >
-          Sign up for free
-        </Link>
-      </div>
+      {/* Info text */}
+      <p className="text-fg-muted mt-6 text-center text-xs">
+        New users will receive a confirmation email to verify their account.
+      </p>
     </AuthLayout>
   );
 }

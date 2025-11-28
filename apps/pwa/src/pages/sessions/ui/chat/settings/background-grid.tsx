@@ -1,17 +1,19 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useMemo, useCallback, useRef } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { cn } from "@/shared/lib";
 import {
-  useBackgroundStore,
+  backgroundQueries,
+  defaultBackgrounds,
   isDefaultBackground,
+  getBackgroundAssetId,
   DefaultBackground,
-  fetchBackgrounds,
-} from "@/shared/stores/background-store";
+} from "@/entities/background/api";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { UniqueEntityID } from "@/shared/domain";
 import { Background } from "@/entities/background/domain/background";
 import { BackgroundService } from "@/app/services/background-service";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface BackgroundGridProps {
   sessionId: UniqueEntityID;
@@ -36,9 +38,7 @@ const BackgroundItem = ({
   onSelect,
   onDelete,
 }: BackgroundItemProps) => {
-  const [assetUrl] = useAsset(
-    isDefaultBackground(background) ? undefined : background.assetId,
-  );
+  const [assetUrl] = useAsset(getBackgroundAssetId(background));
 
   const imageSrc = useMemo(() => {
     if (isDefaultBackground(background)) {
@@ -104,64 +104,12 @@ export default function BackgroundGrid({
   onSelect,
   isEditable = false,
 }: BackgroundGridProps) {
-  const { defaultBackgrounds, backgrounds } = useBackgroundStore();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [copyingBackgroundId, setCopyingBackgroundId] = useState<string | null>(
-    null,
-  );
-  const [activeTab, setActiveTab] = useState<"astrsk" | "user">("astrsk");
 
-  const hasUserBackgrounds = backgrounds.length > 0;
-
-  // Fetch backgrounds for this session when component mounts or sessionId changes
-  useEffect(() => {
-    fetchBackgrounds(sessionId);
-  }, [sessionId]);
-
-  // Handle selecting a default background by copying it to session-local
-  const handleDefaultBackgroundSelect = useCallback(
-    async (defaultBackground: DefaultBackground) => {
-      setCopyingBackgroundId(defaultBackground.id.toString());
-      try {
-        // Fetch the image from CDN
-        const response = await fetch(defaultBackground.src);
-        if (!response.ok) {
-          throw new Error("Failed to fetch background image");
-        }
-
-        const blob = await response.blob();
-        const file = new File([blob], `${defaultBackground.name}.jpg`, {
-          type: blob.type || "image/jpeg",
-        });
-
-        // Save as session-local background
-        const backgroundOrError =
-          await BackgroundService.saveFileToBackground.execute({
-            file,
-            sessionId,
-          });
-
-        if (backgroundOrError.isFailure) {
-          toastError("Failed to copy background");
-          return;
-        }
-
-        const newBackground = backgroundOrError.getValue();
-
-        // Refresh backgrounds for this session
-        await fetchBackgrounds(sessionId);
-
-        // Select the newly created background
-        onSelect(newBackground.id);
-      } catch (error) {
-        toastError("Failed to copy background", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      } finally {
-        setCopyingBackgroundId(null);
-      }
-    },
-    [sessionId, onSelect],
+  // Query user backgrounds for this session
+  const { data: userBackgrounds = [] } = useQuery(
+    backgroundQueries.listBySession(sessionId),
   );
 
   // Handle add new background
@@ -182,11 +130,10 @@ export default function BackgroundGrid({
           return;
         }
 
-        // Refresh backgrounds for this session
-        await fetchBackgrounds(sessionId);
-
-        // Switch to user added tab
-        setActiveTab("user");
+        // Invalidate query to refresh backgrounds
+        queryClient.invalidateQueries({
+          queryKey: backgroundQueries.listBySession(sessionId).queryKey,
+        });
 
         toastSuccess("Background uploaded successfully");
       } catch (error) {
@@ -195,7 +142,7 @@ export default function BackgroundGrid({
         });
       }
     },
-    [sessionId],
+    [sessionId, queryClient],
   );
 
   // Handle delete background
@@ -221,8 +168,10 @@ export default function BackgroundGrid({
           onSelect(undefined);
         }
 
-        // Refresh backgrounds for this session
-        await fetchBackgrounds(sessionId);
+        // Invalidate query to refresh backgrounds
+        queryClient.invalidateQueries({
+          queryKey: backgroundQueries.listBySession(sessionId).queryKey,
+        });
 
         toastSuccess("Background deleted successfully");
       } catch (error) {
@@ -231,7 +180,7 @@ export default function BackgroundGrid({
         });
       }
     },
-    [sessionId, currentBackgroundId, onSelect],
+    [sessionId, currentBackgroundId, onSelect, queryClient],
   );
 
   return (
@@ -266,78 +215,45 @@ export default function BackgroundGrid({
         }}
       />
 
-      {/* Tab Navigation */}
-      <div className="flex border-b border-border-muted">
-        <button
-          type="button"
-          onClick={() => setActiveTab("astrsk")}
-          className={cn(
-            "flex-1 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
-            activeTab === "astrsk"
-              ? "border-brand-300 text-brand-300"
-              : "border-surface-raised text-fg-subtle hover:text-fg-muted",
-          )}
-        >
-          astrsk provided
-        </button>
-        {hasUserBackgrounds && (
+      {/* Combined grid: No Background → User added (deletable) → Default backgrounds */}
+      <div className="custom-scrollbar max-h-96 overflow-y-auto">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+          {/* No background option */}
           <button
             type="button"
-            onClick={() => setActiveTab("user")}
+            onClick={() => onSelect(undefined)}
             className={cn(
-              "flex-1 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
-              activeTab === "user"
-                ? "border-brand-300 text-brand-300"
-                : "border-surface-raised text-fg-subtle hover:text-fg-muted",
+              "relative aspect-video overflow-hidden rounded-lg border-2 transition-all",
+              "hover:border-brand-500 hover:brightness-110",
+              !currentBackgroundId ? "border-brand-500" : "border-border-muted",
             )}
           >
-            User added
+            <div className="flex h-full w-full items-center justify-center bg-surface">
+              <p className="text-xs text-fg-subtle">No background</p>
+            </div>
           </button>
-        )}
-      </div>
 
-      {/* Tab Content */}
-      <div className="custom-scrollbar max-h-96 overflow-y-auto">
-        {activeTab === "astrsk" ? (
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-            {/* No background option */}
-            <button
-              type="button"
-              onClick={() => onSelect(undefined)}
-              className={cn(
-                "relative aspect-video overflow-hidden rounded-lg border-2 transition-all",
-                "hover:border-brand-500 hover:brightness-110",
-                !currentBackgroundId ? "border-brand-500" : "border-border-muted",
-              )}
-            >
-              <div className="flex h-full w-full items-center justify-center bg-surface">
-                <p className="text-xs text-fg-subtle">No background</p>
-              </div>
-            </button>
+          {/* User added backgrounds (deletable) */}
+          {userBackgrounds.map((background) => (
+            <BackgroundItem
+              key={background.id.toString()}
+              background={background}
+              isSelected={currentBackgroundId?.equals(background.id) ?? false}
+              onSelect={onSelect}
+              onDelete={isEditable ? handleDeleteBackground : undefined}
+            />
+          ))}
 
-            {defaultBackgrounds.map((background) => (
-              <BackgroundItem
-                key={background.id.toString()}
-                background={background}
-                isSelected={false}
-                isLoading={copyingBackgroundId === background.id.toString()}
-                onSelect={() => handleDefaultBackgroundSelect(background)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-            {backgrounds.map((background) => (
-              <BackgroundItem
-                key={background.id.toString()}
-                background={background}
-                isSelected={currentBackgroundId?.equals(background.id) ?? false}
-                onSelect={onSelect}
-                onDelete={isEditable ? handleDeleteBackground : undefined}
-              />
-            ))}
-          </div>
-        )}
+          {/* Default astrsk backgrounds (not deletable) */}
+          {defaultBackgrounds.map((background) => (
+            <BackgroundItem
+              key={background.id.toString()}
+              background={background}
+              isSelected={currentBackgroundId?.equals(background.id) ?? false}
+              onSelect={(id) => onSelect(id)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

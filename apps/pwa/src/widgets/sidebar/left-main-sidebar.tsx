@@ -13,7 +13,7 @@ import {
 import { IconSessions, IconWorkflow, AstrskLogo } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { UpdaterNew } from "@/widgets/updater-new";
-import { useClerk } from "@clerk/clerk-react";
+import { useAuth } from "@/shared/hooks/use-auth";
 import { useQuery } from "convex/react";
 import { api } from "@/convex";
 
@@ -239,13 +239,13 @@ const UserProfile = ({
   onSignIn: () => void;
   closeMobileMenu: () => void;
 }) => {
-  const { user } = useClerk();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const subscription = useQuery(api.payment.public.getSubscription);
 
-  const isLoggedIn = !!user;
+  const isLoggedIn = isAuthenticated;
   const userName = isLoggedIn
-    ? user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "User"
+    ? user?.email?.split("@")[0] || user?.user_metadata?.full_name || "User"
     : "Guest";
   const planName = isLoggedIn ? subscription?.name || "Free Plan" : "Sign in";
 
@@ -271,10 +271,10 @@ const UserProfile = ({
           className="h-9 w-9 flex-shrink-0 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
           onClick={handleAvatarClick}
         >
-          {user?.hasImage ? (
+          {user?.user_metadata?.avatar_url ? (
             <div
               className="h-full w-full bg-cover bg-center"
-              style={{ backgroundImage: `url('${user.imageUrl}')` }}
+              style={{ backgroundImage: `url('${user.user_metadata.avatar_url}')` }}
             />
           ) : (
             <div className="h-full w-full bg-[url(/img/placeholder/avatar.png)] bg-size-[60px] bg-center" />
@@ -339,15 +339,15 @@ export const LeftMainSidebar = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useClerk();
+  const { signOut } = useAuth();
 
   // Mobile always shows expanded sidebar, collapse only applies to desktop
   const isCollapsed = isMobileOpen ? false : isCollapsedProp;
 
   const isActivePath = (path: string) => location.pathname.startsWith(path);
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await signOut();
     navigate({ to: "/settings", replace: true });
   };
 
@@ -475,10 +475,10 @@ export function LeftMainSidebarContainer({
 
 // --- Mobile Header Component (exported for use in MainLayout) ---
 export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
-  const { user } = useClerk();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const isLoggedIn = !!user;
+  const isLoggedIn = isAuthenticated;
 
   const handleAvatarClick = () => {
     if (isLoggedIn) {
@@ -506,10 +506,10 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
         className="h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
         onClick={handleAvatarClick}
       >
-        {user?.hasImage ? (
+        {user?.user_metadata?.avatar_url ? (
           <div
             className="h-full w-full bg-cover bg-center"
-            style={{ backgroundImage: `url('${user.imageUrl}')` }}
+            style={{ backgroundImage: `url('${user.user_metadata.avatar_url}')` }}
           />
         ) : (
           <div className="h-full w-full bg-[url(/img/placeholder/avatar.png)] bg-size-[60px] bg-center" />

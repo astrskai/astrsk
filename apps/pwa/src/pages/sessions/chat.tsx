@@ -6,7 +6,11 @@ import { sessionQueries } from "@/entities/session/api";
 import { flowQueries } from "@/entities/flow/api";
 import { DataStoreSchemaField } from "@/entities/flow/domain";
 
-import { useBackgroundStore } from "@/shared/stores/background-store";
+import {
+  backgroundQueries,
+  getDefaultBackground,
+  getBackgroundAssetId,
+} from "@/entities/background/api";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { UniqueEntityID } from "@/shared/domain";
 import { Loading } from "@/shared/ui";
@@ -29,10 +33,10 @@ export default function ChatPage() {
   const saveSessionMutation = useSaveSession();
 
   const { sessionId } = Route.useParams();
-  const sessionIdEntity = sessionId as unknown as UniqueEntityID;
+  const sessionIdEntity = sessionId ? new UniqueEntityID(sessionId) : undefined;
 
   const { data: session, isLoading } = useQuery(
-    sessionQueries.detail(sessionIdEntity ?? undefined),
+    sessionQueries.detail(sessionIdEntity),
   );
 
   const { data: flow } = useQuery(
@@ -45,15 +49,20 @@ export default function ChatPage() {
     ),
   );
 
-  // Background
-  const { backgroundMap } = useBackgroundStore();
-  const background = backgroundMap.get(
-    session?.props.backgroundId?.toString() ?? "",
-  );
-  const [backgroundAsset] = useAsset(background?.assetId);
-  const backgroundSrc =
-    backgroundAsset ??
-    (background && "src" in background ? background.src : "");
+  // Background - check if default first, then query for user background
+  const backgroundId = session?.props.backgroundId;
+  const defaultBg = backgroundId ? getDefaultBackground(backgroundId) : undefined;
+
+  const { data: background } = useQuery({
+    ...backgroundQueries.detail(backgroundId),
+    enabled: !!backgroundId && !defaultBg,
+  });
+
+  const [backgroundAsset] = useAsset(getBackgroundAssetId(background));
+
+  const backgroundSrc = defaultBg
+    ? defaultBg.src
+    : backgroundAsset ?? "";
 
   const isLoadingBackground = backgroundAsset === "/img/skeleton.svg";
   const shouldShowBackground = backgroundSrc && !isLoadingBackground;

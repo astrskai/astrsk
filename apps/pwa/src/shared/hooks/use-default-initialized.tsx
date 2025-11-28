@@ -1,7 +1,6 @@
 import { ApiService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
 import { useAppStore } from "@/shared/stores/app-store";
-import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { ApiConnection, ApiSource } from "@/entities/api/domain";
 import { useQuery } from "@tanstack/react-query";
 
@@ -157,8 +156,8 @@ export const useDefaultInitialized = () => {
         }
       }
 
-      // Initialize backgrounds - Load all backgrounds into the store
-      await fetchBackgrounds();
+      // Note: Background store is initialized with default backgrounds.
+      // Session-specific user backgrounds are fetched when a session is opened (in detail.tsx).
 
       return true;
     },

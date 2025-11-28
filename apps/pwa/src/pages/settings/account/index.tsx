@@ -1,7 +1,7 @@
 import { Page, useAppStore } from "@/shared/stores/app-store";
 import { api } from "@/convex";
 import { Datetime } from "@/shared/lib";
-import { useClerk } from "@clerk/clerk-react";
+import { useAuth } from "@/shared/hooks/use-auth";
 import { useQuery } from "convex/react";
 import { ChevronRight, Key, LogOut, User } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
@@ -118,8 +118,12 @@ const SubscriptionSection = () => {
 };
 
 export default function AccountPage() {
-  const { signOut, user } = useClerk();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
+
+  // Check if user signed up with email/password (not OAuth)
+  // Supabase stores provider info in app_metadata.provider
+  const isEmailUser = user?.app_metadata?.provider === "email";
 
   return (
     <ConvexReady>
@@ -131,9 +135,9 @@ export default function AccountPage() {
             {/* User Info */}
             <div className="border-border-default flex items-center gap-4 border-b p-4">
               <div className="border-border-muted bg-surface-overlay flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2">
-                {user?.hasImage ? (
+                {user?.user_metadata?.avatar_url ? (
                   <img
-                    src={user.imageUrl}
+                    src={user.user_metadata.avatar_url}
                     alt="User"
                     className="h-full w-full object-cover"
                   />
@@ -143,16 +147,16 @@ export default function AccountPage() {
               </div>
               <div>
                 <div className="text-fg-default text-sm font-medium">
-                  {user?.fullName || "User"}
+                  {user?.user_metadata?.full_name || user?.user_metadata?.name || "User"}
                 </div>
                 <div className="text-fg-subtle text-xs">
-                  {user?.primaryEmailAddress?.emailAddress}
+                  {user?.email}
                 </div>
               </div>
             </div>
 
             {/* Change Password - only for email/password users, not social login */}
-            {user?.passwordEnabled && (
+            {isEmailUser && (
               <button
                 className="group border-border-default hover:bg-surface-overlay flex w-full items-center justify-between border-b p-4 text-left transition-colors"
                 onClick={() => navigate({ to: "/reset-password" })}
@@ -173,8 +177,8 @@ export default function AccountPage() {
             {/* Sign Out */}
             <button
               className="group hover:bg-surface-overlay flex w-full items-center justify-between p-4 text-left transition-colors"
-              onClick={() => {
-                signOut();
+              onClick={async () => {
+                await signOut();
                 navigate({ to: "/settings", replace: true });
               }}
             >

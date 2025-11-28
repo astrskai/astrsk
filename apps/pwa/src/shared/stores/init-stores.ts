@@ -1,6 +1,5 @@
 import { ApiService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
-import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { ApiConnection, ApiSource } from "@/entities/api/domain";
 
 export async function initStores(
@@ -18,17 +17,6 @@ export async function initStores(
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Failed to list API connections:", error);
     onProgress?.("api-connections", "error", errorMessage);
-    // Continue with background initialization even if provider setup fails
-    onProgress?.("backgrounds", "start");
-    try {
-      await fetchBackgrounds();
-      onProgress?.("backgrounds", "success");
-    } catch (bgError) {
-      const bgErrorMessage =
-        bgError instanceof Error ? bgError.message : String(bgError);
-      console.error("Failed to fetch backgrounds:", bgError);
-      onProgress?.("backgrounds", "error", bgErrorMessage);
-    }
     return;
   }
 
@@ -108,18 +96,6 @@ export async function initStores(
     // Skip default-sessions since we couldn't check existing sessions
     onProgress?.("default-sessions", "start");
     onProgress?.("default-sessions", "error", "Skipped due to session check failure");
-
-    // Continue with background initialization even if session setup fails
-    onProgress?.("backgrounds", "start");
-    try {
-      await fetchBackgrounds();
-      onProgress?.("backgrounds", "success");
-    } catch (bgError) {
-      const bgErrorMessage =
-        bgError instanceof Error ? bgError.message : String(bgError);
-      console.error("Failed to fetch backgrounds:", bgError);
-      onProgress?.("backgrounds", "error", bgErrorMessage);
-    }
     return;
   }
 
@@ -198,14 +174,6 @@ export async function initStores(
     onProgress?.("default-sessions", "success");
   }
 
-  // Initialize backgrounds
-  onProgress?.("backgrounds", "start");
-  try {
-    await fetchBackgrounds();
-    onProgress?.("backgrounds", "success");
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Failed to fetch backgrounds:", error);
-    onProgress?.("backgrounds", "error", errorMessage);
-  }
+  // Note: Background initialization removed - backgrounds are now fetched via TanStack Query
+  // when a session is opened. Default backgrounds are static constants that don't need initialization.
 }

@@ -57,7 +57,7 @@ import {
   Check,
   X,
   Loader2,
-  SearchCheck,
+  // SearchCheck, // TEMPORARILY DISABLED: Validation button
   HelpCircle,
 } from "lucide-react";
 import { ButtonPill, Card } from "@/shared/ui";
@@ -1753,6 +1753,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             >
               Variables
             </ButtonPill>
+            {/* TEMPORARILY DISABLED: Validation button
             <ButtonPill
               size="default"
               icon={<SearchCheck />}
@@ -1762,6 +1763,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             >
               Validation
             </ButtonPill>
+            */}
             {/*<ButtonPill
               size="default"
               variant="gradient"
