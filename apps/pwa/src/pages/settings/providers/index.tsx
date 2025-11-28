@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Key, Link, Loader2 } from "lucide-react";
+import { Brain, Info, Key, Link, Loader2, Settings, Zap } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toastError } from "@/shared/ui/toast";
 
@@ -16,7 +16,9 @@ import {
   ProviderDisplay,
   ProviderDisplayDetailProps,
 } from "./provider-display";
+import { DefaultModelDisplay } from "./default-model-display";
 import { Combobox } from "@/shared/ui";
+import { useModelStore } from "@/shared/stores/model-store";
 import { DialogBase } from "@/shared/ui/dialogs";
 
 import { TableName } from "@/db/schema/table-name";
@@ -273,7 +275,13 @@ export default function ProvidersPage() {
     useState<OpenrouterProviderSort | null>(null);
   const [modelUrl, setModelUrl] = useState<string>("");
 
-  // 2. Custom hooks (data fetching)
+  // 2. Store/Context hooks
+  const defaultLiteModel = useModelStore.use.defaultLiteModel();
+  const setDefaultLiteModel = useModelStore.use.setDefaultLiteModel();
+  const defaultStrongModel = useModelStore.use.defaultStrongModel();
+  const setDefaultStrongModel = useModelStore.use.setDefaultStrongModel();
+
+  // 3. Custom hooks (data fetching)
   const [apiConnections] = useApiConnections({});
 
   // 3. Memoized callbacks (useCallback)
@@ -572,8 +580,46 @@ export default function ProvidersPage() {
         </p>
       </div>
 
-      {/* Provider list */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      {/* Global Default Settings Section */}
+      <section className="mb-8">
+        <div className="mb-3 flex items-center gap-2 px-1">
+          <Settings size={16} className="text-fg-muted" />
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-fg-muted">
+            Global Default Settings
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <DefaultModelDisplay
+            icon={<Zap size={18} className="text-blue-400" />}
+            iconBgClassName="bg-blue-900/20"
+            title="Lite Model"
+            description="Lite models are used for simple tasks throughout the app such as data management during sessions."
+            value={defaultLiteModel}
+            onValueChange={setDefaultLiteModel}
+          />
+
+          <DefaultModelDisplay
+            icon={<Brain size={18} className="text-purple-400" />}
+            iconBgClassName="bg-purple-900/20"
+            title="Strong Model"
+            description="Strong models are used for main character response and other tasks that need more heavy lifting."
+            value={defaultStrongModel}
+            onValueChange={setDefaultStrongModel}
+          />
+        </div>
+      </section>
+
+      {/* Providers Section */}
+      <section>
+        <div className="mb-3 flex items-center gap-2 px-1">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-fg-muted">
+            Providers
+          </h2>
+        </div>
+
+        {/* Provider list */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {apiConnections
               ?.filter(
                 (apiConnection: ApiConnection) =>
@@ -610,7 +656,8 @@ export default function ProvidersPage() {
                 onOpenEdit: () => handleOnOpenEdit({ apiSource }),
               });
             })}
-      </div>
+        </div>
+      </section>
 
       {/* Request provider card */}
       <div className="mt-6 rounded-xl border border-dashed border-border-default bg-surface p-4">

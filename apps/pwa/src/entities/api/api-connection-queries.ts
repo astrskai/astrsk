@@ -175,3 +175,53 @@ export async function fetchApiConnections(params: {
     ApiConnectionDrizzleMapper.toDomain(conn as any)
   );
 }
+
+/**
+ * Check if a specific model is available in the provider.
+ * Uses cached query data for efficiency.
+ * @param apiConnectionId - The API connection ID
+ * @param modelId - The model ID to check
+ * @returns true if model exists in the connection's model list
+ */
+export function isModelAvailableInProvider(
+  apiConnectionId: string,
+  modelId: string,
+): boolean {
+  // Try to get cached data from queryClient
+  const cachedData = queryClient.getQueryData<ApiConnectionWithModels[]>(
+    apiConnectionQueries.listWithModels().queryKey,
+  );
+
+  if (!cachedData) {
+    // No cached data - assume model is available (will fail at inference if not)
+    return true;
+  }
+
+  // Find the connection
+  const connectionWithModels = cachedData.find(
+    (item) => item.apiConnection.id.toString() === apiConnectionId,
+  );
+
+  if (!connectionWithModels) {
+    return false;
+  }
+
+  // Check if model exists in the connection's model list
+  return connectionWithModels.models.some((model) => model.id === modelId);
+}
+
+/**
+ * Check if a default model selection is available (provider connected, model exists).
+ * @param defaultModel - The default model selection to check
+ * @returns true if provider is connected and model exists
+ */
+export function isDefaultModelAvailable(
+  defaultModel: { apiConnectionId: string; modelId: string } | null,
+): boolean {
+  if (!defaultModel) return false;
+
+  return isModelAvailableInProvider(
+    defaultModel.apiConnectionId,
+    defaultModel.modelId,
+  );
+}
