@@ -962,7 +962,7 @@ const SortableDataSchemaFieldItem = ({
           </div>
           {isClamped && (
             <div
-              className="text-background-surface-5"
+              className="text-fg-subtle"
               onClick={() => {
                 setIsOpenValue((open) => !open);
               }}

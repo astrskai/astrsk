@@ -123,7 +123,7 @@ const Section = forwardRef<
           <div
             className={cn(
               "pointer-events-none absolute inset-[-1px] rounded-[8px]",
-              "inset-ring-status-destructive-light inset-ring-2",
+              "inset-ring-status-error inset-ring-2",
             )}
           />
         )}

@@ -48,7 +48,7 @@ export function OutputFormatSelector({
       className={cn("w-full", className)}
     >
       <AccordionItem value="format" className="border-0">
-        <div className={cn("px-2 py-2.5 bg-surface-raised border", hasError ? "border-2 border-status-destructive-light" : "border-border-default")}>
+        <div className={cn("px-2 py-2.5 bg-surface-raised border", hasError ? "border-2 border-status-error" : "border-border-default")}>
           <AccordionTrigger className="p-0 hover:no-underline" disabled={disabled}>
             <div className="self-stretch inline-flex justify-between items-center w-full">
               <div className="flex justify-start items-center gap-2">

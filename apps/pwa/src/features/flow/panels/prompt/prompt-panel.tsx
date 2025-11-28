@@ -21,7 +21,8 @@ import {
   restrictToVerticalAxis,
   restrictToParentElement,
 } from "@dnd-kit/modifiers";
-import { Button, Editor, Input, ScrollAreaSimple } from "@/shared/ui";
+import { Button, Editor, ScrollAreaSimple } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 import type { editor } from "monaco-editor";
 import { Trash2, Plus, Maximize2, Minimize2, HelpCircle } from "lucide-react";
 

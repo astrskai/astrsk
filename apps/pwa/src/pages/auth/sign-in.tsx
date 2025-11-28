@@ -4,7 +4,7 @@ import { toastError, toastInfo, toastSuccess } from "@/shared/ui/toast";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Button } from "@/shared/ui/forms/button";
-import { Input } from "@/shared/ui/input";
+import { Input } from "@/shared/ui/forms";
 import { logger } from "@/shared/lib/logger";
 import { IconGoogle, IconDiscord, IconApple } from "@/shared/assets/icons";
 import { AuthLayout, AuthBadge } from "./ui";

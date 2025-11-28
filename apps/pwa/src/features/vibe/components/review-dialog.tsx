@@ -66,7 +66,7 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
         <div className="space-y-2">
           <div>
             <span className="text-sm font-medium">Path:</span>
-            <code className="bg-muted ml-2 rounded px-1 py-0.5 text-xs">
+            <code className="bg-surface-overlay ml-2 rounded px-1 py-0.5 text-xs">
               {change.path}
             </code>
           </div>
@@ -74,7 +74,7 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
           {change.changeReason && (
             <div>
               <span className="text-sm font-medium">Reason:</span>
-              <p className="text-muted-foreground mt-1 text-sm">
+              <p className="text-fg-subtle mt-1 text-sm">
                 {change.changeReason}
               </p>
             </div>
@@ -83,7 +83,7 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
           {change.value !== undefined && (
             <div>
               <span className="text-sm font-medium">New Value:</span>
-              <pre className="bg-muted mt-1 overflow-x-auto rounded p-2 text-xs">
+              <pre className="bg-surface-overlay mt-1 overflow-x-auto rounded p-2 text-xs">
                 {JSON.stringify(change.value, null, 2)}
               </pre>
             </div>
@@ -152,7 +152,7 @@ export const ReviewDialog: React.FC<ReviewDialogProps> = ({
                   <ChevronLeft className="mr-1 h-4 w-4" />
                   Previous
                 </Button>
-                <span className="text-muted-foreground text-sm">
+                <span className="text-fg-subtle text-sm">
                   Change {currentChangeIndex + 1} of {totalChanges}
                 </span>
                 <Button

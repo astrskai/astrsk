@@ -130,7 +130,7 @@ const OnboardingDialog = () => {
                 <div className="text-text-primary justify-start text-xl leading-relaxed font-semibold">
                   Sakura Blooms, hearts awaken
                 </div>
-                <div className="text-text-subtle text-sm font-semibold">
+                <div className="text-fg-subtle text-sm font-semibold">
                   Romance
                 </div>
               </div>
@@ -154,7 +154,7 @@ const OnboardingDialog = () => {
                 <div className="text-text-primary justify-start text-xl leading-relaxed font-semibold">
                   Dice of Fate
                 </div>
-                <div className="text-text-subtle text-sm font-semibold">
+                <div className="text-fg-subtle text-sm font-semibold">
                   Fantasy TRPG
                 </div>
               </div>

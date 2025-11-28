@@ -26,9 +26,9 @@ export function TopNavigation({
 }: TopNavigationProps) {
   const getBackgroundClass = () => {
     if (transparent) {
-      return `bg-background-surface-2/${transparencyLevel} backdrop-blur-[20px]`;
+      return `bg-surface-raised/${transparencyLevel} backdrop-blur-[20px]`;
     }
-    return "bg-background-surface-2";
+    return "bg-surface-raised";
   };
 
   return (

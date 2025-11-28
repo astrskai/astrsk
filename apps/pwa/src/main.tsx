@@ -91,7 +91,7 @@ async function initializeApp() {
 
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-        <div className="flex items-center gap-3 rounded-full bg-background-surface-0 px-5 py-3 shadow-lg">
+        <div className="flex items-center gap-3 rounded-full bg-canvas px-5 py-3 shadow-lg">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <span className="text-text-secondary text-sm">Initializing...</span>
         </div>

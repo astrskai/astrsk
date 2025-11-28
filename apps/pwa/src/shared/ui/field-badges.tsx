@@ -131,7 +131,7 @@ export function FieldBadges({
             badgeClassName,
           )}
         >
-          <div className="text-text-subtle flex-1 justify-start text-sm leading-tight font-medium">
+          <div className="text-fg-subtle flex-1 justify-start text-sm leading-tight font-medium">
             {field.name}
           </div>
         </div>
@@ -143,7 +143,7 @@ export function FieldBadges({
             badgeClassName,
           )}
         >
-          <div className="text-text-subtle flex-1 justify-start text-sm leading-tight font-medium">
+          <div className="text-fg-subtle flex-1 justify-start text-sm leading-tight font-medium">
             +{remainingCount}
           </div>
         </div>
@@ -189,7 +189,7 @@ export function SimpleFieldBadges({
             badgeClassName,
           )}
         >
-          <div className="text-text-subtle flex-1 justify-start text-sm leading-tight font-medium">
+          <div className="text-fg-subtle flex-1 justify-start text-sm leading-tight font-medium">
             {field.name}
           </div>
         </div>
@@ -201,7 +201,7 @@ export function SimpleFieldBadges({
             badgeClassName,
           )}
         >
-          <div className="text-text-subtle flex-1 justify-start text-sm leading-tight font-medium">
+          <div className="text-fg-subtle flex-1 justify-start text-sm leading-tight font-medium">
             +{remainingCount}
           </div>
         </div>

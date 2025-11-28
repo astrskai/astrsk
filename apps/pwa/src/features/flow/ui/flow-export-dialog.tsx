@@ -81,7 +81,7 @@ export function FlowExportDialog({
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">{title}</DialogTitle>
           {description && (
-            <p className="text-text-subtle mt-2 text-base">{description}</p>
+            <p className="text-fg-subtle mt-2 text-base">{description}</p>
           )}
         </DialogHeader>
 
@@ -117,7 +117,7 @@ export function FlowExportDialog({
                         >
                           Light
                         </Label>
-                        <div className="text-text-info justify-start text-base leading-relaxed font-medium">
+                        <div className="text-neutral-500 justify-start text-base leading-relaxed font-medium">
                           Faster, efficient models for basic tasks
                         </div>
                       </div>
@@ -135,7 +135,7 @@ export function FlowExportDialog({
                         >
                           Heavy
                         </Label>
-                        <div className="text-text-info justify-start text-base leading-relaxed font-medium">
+                        <div className="text-neutral-500 justify-start text-base leading-relaxed font-medium">
                           Advanced models with higher capabilities
                         </div>
                       </div>

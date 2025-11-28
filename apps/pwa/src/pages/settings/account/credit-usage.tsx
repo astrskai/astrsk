@@ -26,7 +26,7 @@ const CreditUsageItem = ({
   };
 }) => {
   return (
-    <div className="text-text-primary flex flex-row *:h-[40px] *:w-[120px] *:truncate *:p-2">
+    <div className="text-fg-default flex flex-row *:h-[40px] *:w-[120px] *:truncate *:p-2">
       <div className="min-w-[160px]">
         {Datetime(item._creationTime).format("MMM D, h:mm A")}
       </div>
@@ -50,7 +50,7 @@ const CreditUsagePage = () => {
 
   return (
     <div className="left-0 z-40 overflow-y-auto py-[80px]">
-      <div className="text-text-primary mx-auto max-w-[640px]">
+      <div className="text-fg-default mx-auto max-w-[640px]">
         {/* Header with back button */}
         <div className="mb-[54px] flex items-center">
           <div className="flex h-full items-center justify-center">
@@ -60,7 +60,7 @@ const CreditUsagePage = () => {
 
         {/* Content */}
         <div className="flex flex-col text-[14px] leading-[20px] font-[500]">
-          <div className="text-text-placeholder flex flex-row *:h-[40px] *:w-[120px] *:p-2">
+          <div className="text-fg-subtle flex flex-row *:h-[40px] *:w-[120px] *:p-2">
             <div className="min-w-[160px]">Timestamp</div>
             <div className="min-w-[240px]">Model</div>
             <div>Tokens</div>

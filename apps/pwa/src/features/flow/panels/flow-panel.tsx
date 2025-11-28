@@ -63,7 +63,6 @@ import {
 import { ButtonPill, Card } from "@/shared/ui";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
-// import { useCollapsibleSidebarWidth } from "@/widgets/collapsible-sidebar/hooks/use-collapsible-sidebar-width";
 import {
   Select,
   SelectContent,
@@ -1782,7 +1781,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
         <div className="relative h-full w-full" style={{ minHeight: "200px" }}>
           {!isReady && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+              <Loader2 className="text-fg-subtle h-8 w-8 animate-spin" />
             </div>
           )}
           {isReady && (

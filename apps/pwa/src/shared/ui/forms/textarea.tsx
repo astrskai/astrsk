@@ -14,7 +14,7 @@ interface TextareaProps
 // Shared style constants
 const STYLES = {
   textarea: {
-    base: "w-full min-h-[120px] rounded-lg border bg-neutral-800 px-4 py-3 text-base text-neutral-100 placeholder:text-neutral-500 outline-none",
+    base: "w-full min-h-[120px] rounded-lg border bg-surface-raised px-4 py-3 text-base text-fg-default placeholder:text-fg-subtle outline-none",
     focus: "focus:ring-2 focus:ring-offset-0",
     transition: "transition-all",
     disabled: "disabled:cursor-not-allowed disabled:opacity-50",
@@ -26,7 +26,7 @@ const STYLES = {
   border: {
     error:
       "border-status-error focus:border-status-error focus:ring-status-error/20",
-    normal: "border-neutral-600 focus:border-brand-500 focus:ring-brand-500/20",
+    normal: "border-neutral-700 focus:border-brand-500 focus:ring-brand-500/20",
   },
   label: {
     floating:
@@ -43,9 +43,7 @@ const STYLES = {
 } as const;
 
 // Sub-components
-const RequiredIndicator = () => (
-  <span className={STYLES.text.required}>*</span>
-);
+const RequiredIndicator = () => <span className={STYLES.text.required}>*</span>;
 
 const FeedbackMessages = ({
   error,
@@ -55,9 +53,13 @@ const FeedbackMessages = ({
   caption?: string;
 }) => (
   <>
-    {error && <p className={cn(STYLES.text.error, STYLES.text.small)}>{error}</p>}
+    {error && (
+      <p className={cn(STYLES.text.error, STYLES.text.small)}>{error}</p>
+    )}
     {!error && caption && (
-      <p className={cn(STYLES.text.secondary, STYLES.text.caption)}>{caption}</p>
+      <p className={cn(STYLES.text.secondary, STYLES.text.caption)}>
+        {caption}
+      </p>
     )}
   </>
 );
@@ -164,7 +166,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       <div
         className={cn(
           "flex w-full",
-          labelPosition === "top" ? "flex-col gap-2" : "flex-row items-start gap-4",
+          labelPosition === "top"
+            ? "flex-col gap-2"
+            : "flex-row items-start gap-4",
         )}
       >
         <label className={STYLES.label.standard}>

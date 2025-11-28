@@ -44,8 +44,8 @@ function FloatingActionButton({
     <Button
       className={cn(
         "group/fab absolute top-[24px] z-10 cursor-pointer rounded-full",
-        "bg-button-background-floating border-border-light text-text-primary border-[1px]",
-        "hover:bg-background-card hover:text-text-primary",
+        "bg-surface-overlay border-border-subtle text-fg-default border-[1px]",
+        "hover:bg-hover hover:text-fg-default",
         position === "top-left" ? "left-[40px]" : "right-[40px]",
         "!transition-all duration-300 ease-out",
         "h-[40px] min-w-[40px] p-0",
@@ -275,7 +275,7 @@ const SignUpPage = () => {
     <div className={cn("absolute inset-0 top-[var(--topbar-height)] z-40")}>
       {/* Close */}
       <button
-        className="text-text-subtle absolute top-[34px] right-[40px] z-50"
+        className="text-fg-subtle absolute top-[34px] right-[40px] z-50"
         onClick={() => {
           setActivePage(Page.Subscribe);
         }}
@@ -293,7 +293,7 @@ const SignUpPage = () => {
       />
 
       {/* Main */}
-      <div className="bg-background-surface-2 absolute inset-0">
+      <div className="bg-surface-raised absolute inset-0">
         {/* Form */}
         <div
           className={cn(
@@ -320,7 +320,7 @@ const SignUpPage = () => {
             <Button className="w-full" size="lg" onClick={signUpWithDiscord}>
               <IconDiscord className="h-[18px] w-[18px]" /> Continue with Discord
             </Button>
-            <div className="text-text-subtle text-[16px] leading-[25.6px] font-[500]">
+            <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[500]">
               or
             </div>
             <FloatingLabelInput
@@ -351,11 +351,11 @@ const SignUpPage = () => {
             >
               I already have an account
             </Button>
-            <div className="text-text-subtle text-center text-[16px] leading-[25.6px] font-[400]">
+            <div className="text-fg-subtle text-center text-[16px] leading-[25.6px] font-[400]">
               By clicking the button above, you agree to our
               <br />
               <button
-                className="text-secondary-normal"
+                className="text-accent-secondary"
                 onClick={() => {
                   setActivePage(Page.Settings);
                   setSettingPageLevel(SettingPageLevel.detail);
@@ -367,7 +367,7 @@ const SignUpPage = () => {
               </button>
               {" and "}
               <button
-                className="text-secondary-normal"
+                className="text-accent-secondary"
                 onClick={() => {
                   setActivePage(Page.Settings);
                   setSettingPageLevel(SettingPageLevel.detail);
@@ -396,10 +396,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
+              <div className="text-fg-default mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Create your password
               </div>
-              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+              <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
                 Your password must be at least 8 characters long,
                 <br />
                 and include 1 symbol and 1 number.
@@ -426,25 +426,25 @@ const SignUpPage = () => {
             <div className="flex flex-col gap-[8px]">
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   Minimum 8 characters
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   At least one number
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   At least one symbol
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   Match password confirm
                 </div>
               </div>
@@ -472,10 +472,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
+              <div className="text-fg-default mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Verify your email
               </div>
-              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+              <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
                 We just sent a 6-digit code to
                 <br />
                 {email}, enter it below:
@@ -490,7 +490,7 @@ const SignUpPage = () => {
                 setEmailCode(e.target.value);
               }}
             />
-            <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+            <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
               Don&apos;t see a code?{" "}
               <button
                 className="text-button-background-primary"
@@ -530,7 +530,7 @@ const SignUpPage = () => {
               height={28}
               className="absolute top-[30px]"
             />
-            <div className="text-text-primary mb-[24px] text-[20px] leading-[24px] font-[600]">
+            <div className="text-fg-default mb-[24px] text-[20px] leading-[24px] font-[600]">
               Welcome back
             </div>
             <FloatingLabelInput
@@ -585,10 +585,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
+              <div className="text-fg-default mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Forgot password
               </div>
-              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+              <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
                 Enter your email address. If it&apos;s correct, we&apos;ll send
                 <br />
                 you an email with password reset instructions.
@@ -622,10 +622,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
+              <div className="text-fg-default mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Create new password
               </div>
-              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+              <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
                 Your password must be at least 8 characters long,
                 <br />
                 and include 1 symbol and 1 number.
@@ -661,33 +661,33 @@ const SignUpPage = () => {
             <div className="flex flex-col gap-[8px]">
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   Minimum 8 characters
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   At least one number
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   At least one symbol
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   Match password confirm
                 </div>
               </div>
             </div>
-            <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+            <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
               Don&apos;t see a code?{" "}
               <button
-                className="text-button-background-primary"
+                className="text-accent-primary"
                 onClick={forgotPassword}
               >
                 Resend to email
@@ -708,10 +708,10 @@ const SignUpPage = () => {
             step === SignUpStep.SignUp && "block",
           )}
         >
-          <div className="text-text-primary mb-[16px] text-[32px] leading-[40px] font-[600]">
+          <div className="text-fg-default mb-[16px] text-[32px] leading-[40px] font-[600]">
             Customize Every Detail
           </div>
-          <div className="text-text-muted-title text-[20px] leading-[24px] font-[500]">
+          <div className="text-fg-muted text-[20px] leading-[24px] font-[500]">
             Personalize LLMs, prompts, character, and plots to create a roleplay
             that&apos;s truly yours.
           </div>

@@ -12,8 +12,8 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { useAppStore } from "@/shared/stores/app-store";
 import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
-import { NoCardsFound } from "@/features/card/card-list";
-import { TradingCard } from "@/features/card/ui/trading-card";
+// import { NoCardsFound } from "@/features/card/card-list";
+// import { TradingCard } from "@/features/card/ui/trading-card";
 import { CustomSheet } from "./custom-sheet";
 import { cn } from "@/shared/lib";
 import {
@@ -55,7 +55,12 @@ const CardListItem = ({
       )}
     >
       <div className="flex min-w-[154px] flex-col items-center justify-start gap-[8px]">
-        {cardId && <TradingCard cardId={cardId?.toString()} />}
+        {/* TODO: TradingCard removed - implement replacement UI */}
+        {cardId && (
+          <div className="flex h-full w-full items-center justify-center bg-hover rounded-[8px]">
+            <span className="text-fg-subtle text-xs">Card Preview</span>
+          </div>
+        )}
         {label && (
           <div className="text-fg-subtle text-[16px] leading-[19px] font-[500]">
             {label}
@@ -368,29 +373,7 @@ const EditCards = ({
         />
       </div>
       <div className="px-8 py-4">
-        {activeTab === CardTabValue.Plot
-          ? plotCards?.length === 0 && (
-              <div className="items-top flex w-full flex-col">
-                <NoCardsFound
-                  cardType={CardType.Plot}
-                  onCreate={() => {
-                    setCardEditOpen(CardType.Plot);
-                  }}
-                  variant="edit"
-                />
-              </div>
-            )
-          : characterCards?.length === 0 && (
-              <div className="items-top flex w-full flex-col">
-                <NoCardsFound
-                  cardType={CardType.Character}
-                  onCreate={() => {
-                    setCardEditOpen(CardType.Character);
-                  }}
-                  variant="edit"
-                />
-              </div>
-            )}
+        {/* TODO: NoCardsFound removed - implement replacement empty state */}
         <div className="grid grid-cols-4 gap-[24px]">
           {(activeTab === CardTabValue.Plot ? plotCards : characterCards)?.map(
             (card: Card) => (
