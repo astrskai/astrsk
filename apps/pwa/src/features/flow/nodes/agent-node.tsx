@@ -22,7 +22,6 @@ import {
   TooltipContent,
   TooltipTrigger,
   Button,
-  Input,
   SvgIcon,
   Dialog,
   DialogClose,
@@ -32,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentQueries } from "@/entities/agent/api/query-factory";
 import { agentKeys } from "@/entities/agent/api/query-factory";

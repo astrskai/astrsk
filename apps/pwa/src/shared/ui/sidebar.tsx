@@ -7,7 +7,8 @@ import * as React from "react";
 
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/lib";
-import { Button, Input, Separator, Skeleton } from "@/shared/ui";
+import { Button, Separator, Skeleton } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 import {
   Sheet,
   SheetContent,

@@ -10,10 +10,10 @@ import { cn } from "@/shared/lib";
 import {
   Button,
   FloatingActionButton,
-  Input,
   Separator,
   Skeleton,
 } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 import {
   Tooltip,
   TooltipContent,

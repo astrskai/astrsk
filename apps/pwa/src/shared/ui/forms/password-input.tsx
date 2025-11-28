@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff, Lock, AlertCircle } from "lucide-react";
-import { Input } from "./input";
+import { Input } from "@/shared/ui/forms";
 
 // --- Controlled version (for manual state management) ---
 interface PasswordInputControlledProps {

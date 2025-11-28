@@ -5,7 +5,7 @@ import { toastError, toastInfo } from "@/shared/ui/toast";
 import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/shared/ui/forms/button";
-import { Input } from "@/shared/ui/input";
+import { Input } from "@/shared/ui/forms";
 import { logger } from "@/shared/lib/logger";
 import { IconGoogle, IconDiscord, IconApple } from "@/shared/assets/icons";
 import { AuthLayout, AuthBadge } from "./ui";
@@ -26,7 +26,7 @@ const SocialButton = ({
   <button
     type="button"
     onClick={onClick}
-    className="bg-surface-raised border-border-default hover:border-border-subtle hover:bg-hover text-fg-default flex h-12 w-full items-center justify-center gap-3 rounded-xl border transition-all duration-200 active:scale-95"
+    className="bg-surface-raised hover:border-border-subtle hover:bg-hover text-fg-default flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-neutral-700 transition-all duration-200 active:scale-95"
   >
     <IconComponent className="h-5 w-5" />
     <span className="text-sm font-medium">{label}</span>

@@ -10,13 +10,13 @@ import { Parameter, parameterList } from "@/shared/task/domain/parameter";
 import {
   Card,
   CardContent,
-  Input,
   ScrollArea,
   SearchInput,
   Switch,
   Typo2XLarge,
   TypoBase,
 } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 import {
   Select,
   SelectContent,

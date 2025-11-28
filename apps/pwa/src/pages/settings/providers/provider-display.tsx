@@ -168,7 +168,7 @@ const ProviderDisplay = ({
             <h4 className="text-sm font-semibold text-fg-default">
               {providerName}
             </h4>
-            <p className="mt-0.5 max-w-[100px] truncate text-xs text-fg-muted">
+            <p className="mt-0.5 max-w-[100px] truncate text-xs text-fg-subtle">
               {getSubtitle()}
             </p>
           </div>

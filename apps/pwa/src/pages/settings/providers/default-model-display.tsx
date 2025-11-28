@@ -133,7 +133,7 @@ const DefaultModelDisplay = ({
         </div>
       </div>
 
-      <p className="mt-1 text-xs leading-relaxed text-fg-muted">{description}</p>
+      <p className="mt-1 text-xs leading-relaxed text-fg-subtle">{description}</p>
     </div>
   );
 };
