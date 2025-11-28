@@ -7,8 +7,8 @@ import { UniqueEntityID } from "@/shared/domain";
 
 import { useAppStore } from "@/shared/stores/app-store";
 import { useCardUIStore } from "@/entities/card/stores/card-ui-store";
-import { NoCardsFound } from "@/features/card/card-list";
-import { TradingCard } from "@/features/card/ui/trading-card";
+// import { NoCardsFound } from "@/features/card/card-list";
+// import { TradingCard } from "@/features/card/ui/trading-card";
 import { cn } from "@/shared/lib";
 import {
   ScrollArea,
@@ -59,7 +59,10 @@ const CardItem = ({
       aria-disabled={disabled}
     >
       {cardId ? (
-        <TradingCard cardId={cardId} />
+        // TODO: TradingCard removed - implement replacement UI
+        <div className="flex h-full w-full items-center justify-center bg-background-surface-4 rounded-[8px]">
+          <span className="text-text-subtle text-xs">Card Preview</span>
+        </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center">
           <div className="text-background-surface-5 text-center text-[12px] leading-[15px] font-[500]">
@@ -365,29 +368,7 @@ const StepCards = () => {
             onChange={(e) => setKeyword(e.target.value)}
           />
           <ScrollArea className="flex-1 pr-2">
-            {activeTab === CardTabValue.Plot
-              ? plotCards?.length === 0 && (
-                  <div className="items-top flex w-full flex-col">
-                    <NoCardsFound
-                      cardType={CardType.Plot}
-                      onCreate={() => {
-                        setCardEditOpen(CardType.Plot);
-                      }}
-                      variant="edit"
-                    />
-                  </div>
-                )
-              : characterCards?.length === 0 && (
-                  <div className="items-top flex w-full flex-col">
-                    <NoCardsFound
-                      cardType={CardType.Character}
-                      onCreate={() => {
-                        setCardEditOpen(CardType.Character);
-                      }}
-                      variant="edit"
-                    />
-                  </div>
-                )}
+            {/* TODO: NoCardsFound removed - implement replacement empty state */}
             <div className="flex flex-wrap justify-start gap-[24px]">
               {(activeTab === CardTabValue.Plot ? plotCards : characterCards)?.map(
                 (card: Card) => (

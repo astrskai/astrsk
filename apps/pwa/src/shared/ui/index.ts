@@ -62,7 +62,6 @@ export * from "./search-empty-state";
 export * from "./search-input";
 export * from "./step-indicator";
 export * from "./stepper";
-export * from "./stepper-mobile";
 export * from "./subscribe-badge";
 export * from "./svg-icon";
 export * from "./typo";
@@ -72,7 +71,6 @@ export { default as VideoDisplay } from "./video-display";
 export * from "./confirm";
 export * from "./help-video-dialog";
 export * from "./import-dialog";
-export * from "./list-edit-dialog-mobile";
 
 // Editor (already has its own index.ts)
 export * from "./editor";
