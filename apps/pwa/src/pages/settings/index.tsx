@@ -11,13 +11,11 @@ import {
   ShieldCheck,
   LogOut,
 } from "lucide-react";
-import { ConvexReady } from "@/shared/ui/convex-ready";
-import { Authenticated, Unauthenticated } from "convex/react";
-import { useClerk } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { SvgIcon } from "@/shared/ui";
 import { IconDiscord } from "@/shared/assets/icons";
 import { toastError } from "@/shared/ui/toast";
+import { useAuth } from "@/shared/hooks/use-auth";
 
 // --- Helper ---
 function openInNewTab(url: string) {
@@ -100,7 +98,7 @@ const SignInPromptCard = () => {
 };
 
 const UserProfileCard = () => {
-  const { user, signOut } = useClerk();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -108,9 +106,9 @@ const UserProfileCard = () => {
       <div className="flex items-center gap-4">
         <div className="relative">
           <div className="border-border-muted bg-surface-overlay h-14 w-14 overflow-hidden rounded-full border-2">
-            {user?.hasImage ? (
+            {user?.user_metadata?.avatar_url ? (
               <img
-                src={user.imageUrl}
+                src={user.user_metadata.avatar_url}
                 alt="User"
                 className="h-full w-full object-cover"
               />
@@ -124,10 +122,10 @@ const UserProfileCard = () => {
         </div>
         <div>
           <h2 className="text-fg-default text-lg font-bold">
-            {user?.fullName || "User"}
+            {user?.user_metadata?.full_name || user?.user_metadata?.name || "User"}
           </h2>
           <p className="text-fg-muted text-xs">
-            {user?.primaryEmailAddress?.emailAddress}
+            {user?.email}
           </p>
         </div>
       </div>
@@ -153,6 +151,7 @@ const UserProfileCard = () => {
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="space-y-8 py-8">
@@ -165,29 +164,20 @@ export default function SettingsPage() {
       </div>
 
       {/* User Profile Card - Authenticated / Sign In Prompt - Unauthenticated */}
-      <ConvexReady>
-        <Authenticated>
-          <UserProfileCard />
-        </Authenticated>
-        <Unauthenticated>
-          <SignInPromptCard />
-        </Unauthenticated>
-      </ConvexReady>
+      {isAuthenticated ? <UserProfileCard /> : <SignInPromptCard />}
 
       {/* 1. APP PREFERENCES */}
       <section>
         <SectionTitle title="App Preferences" />
         <div className="border-border-default bg-surface-raised rounded-2xl border">
-          <ConvexReady>
-            <Authenticated>
-              <SettingsItem
-                icon={<User size={18} />}
-                label="Account & Subscription"
-                description="Manage profile, billing, and plan details"
-                onClick={() => navigate({ to: "/settings/account" })}
-              />
-            </Authenticated>
-          </ConvexReady>
+          {isAuthenticated && (
+            <SettingsItem
+              icon={<User size={18} />}
+              label="Account & Subscription"
+              description="Manage profile, billing, and plan details"
+              onClick={() => navigate({ to: "/settings/account" })}
+            />
+          )}
           <SettingsItem
             icon={<Cpu size={18} />}
             label="Providers"

@@ -12,7 +12,8 @@ import {
 import { IconDiscord } from "@/shared/assets/icons";
 import { api } from "@/convex";
 import { logger } from "@/shared/lib/logger";
-import { useAuth, useSignUp } from "@clerk/clerk-react";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { signInWithOAuth } from "@/shared/lib/auth-actions";
 import { useMutation, useQuery } from "convex/react";
 import { Ban, Bot, ChevronDown, Coins, UserRoundPlus, X, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -30,39 +31,34 @@ const SubscribePage = () => {
   const isSignUpAvailableLoading = typeof isSignUpAvailable === "undefined";
 
   // Sign up with SSO
-  const { userId } = useAuth();
-  const { isLoaded: isLoadedSignUp, signUp } = useSignUp();
+  const { user, isAuthenticated } = useAuth();
+  const userId = user?.id;
   const [isLoading, setIsLoading] = useState(false);
 
   const signUpWithDiscord = useCallback(async () => {
-    // Check sign up is loaded
-    if (!isLoadedSignUp) {
-      return;
-    }
-
     // Check already signed in
-    if (userId) {
+    if (isAuthenticated) {
       toastInfo("You already signed in");
       return;
     }
 
     try {
-      // Try to sign up with google
+      // Try to sign up with Discord
       setIsLoading(true);
 
-      await signUp.authenticateWithRedirect({
-        strategy: "oauth_discord",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
-      });
+      const { error } = await signInWithOAuth("discord");
+      if (error) {
+        toastError("Failed to sign up", { description: error });
+      }
     } catch (error) {
-      setIsLoading(false);
       logger.error(error);
       toastError("Failed to sign up", {
-        description: JSON.stringify(error),
+        description: String(error),
       });
+    } finally {
+      setIsLoading(false);
     }
-  }, [isLoadedSignUp, signUp, userId]);
+  }, [isAuthenticated]);
 
   // Open join server dialog
   const subscribed = useAppStore.use.subscribed();
@@ -349,7 +345,7 @@ const SubscribePage = () => {
                         signUpWithDiscord();
                       }
                     }}
-                    disabled={!isLoadedSignUp || isLoading}
+                    disabled={isLoading}
                     loading={isLoading || isSignUpAvailableLoading}
                   >
                     {!isLoading && <IconDiscord className="h-4 w-4" />}
@@ -395,7 +391,7 @@ const SubscribePage = () => {
                         "https://docs.google.com/forms/d/e/1FAIpQLScgW_lXXSKd3WKy7ZJXmnFX4CGbukgZap0du6rCh1U2PHUfBw/viewform",
                       );
                     }}
-                    disabled={!isLoadedSignUp || isLoading}
+                    disabled={isLoading}
                     loading={isLoading}
                   >
                     {!isLoading && <UserRoundPlus size={16} />}

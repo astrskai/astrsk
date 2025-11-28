@@ -1,6 +1,5 @@
 import { Drizzle } from "@/db/drizzle";
-import { eq, sql } from "drizzle-orm";
-import { sessions } from "@/db/schema/sessions";
+import { sql } from "drizzle-orm";
 
 /**
  * Data migration: Copy from old card tables → new card tables
@@ -76,28 +75,31 @@ export async function migrateCardsData() {
     // Step 4: Update sessions JSONB ('plot' → 'scenario')
     console.log("Step 4: Updating sessions JSONB (plot → scenario)...");
 
-    const sessionsWithPlot = await tx
-      .select()
-      .from(sessions)
-      .where(sql`${sessions.all_cards}::text LIKE '%"type":"plot"%'`);
+    // Use raw SQL to avoid schema mismatch (e.g., 'name' column may not exist yet)
+    const sessionsWithPlot = await tx.execute(sql`
+      SELECT id, all_cards FROM sessions
+      WHERE all_cards::text LIKE '%"type":"plot"%'
+    `);
 
-    console.log(`  Found ${sessionsWithPlot.length} sessions with 'plot' cards`);
+    console.log(`  Found ${sessionsWithPlot.rows.length} sessions with 'plot' cards`);
 
-    for (const session of sessionsWithPlot) {
-      const updatedCards = session.all_cards.map((card: any) => {
+    for (const session of sessionsWithPlot.rows) {
+      const allCards = session.all_cards as any[];
+      const updatedCards = allCards.map((card: any) => {
         if (card.type === 'plot') {
           return { ...card, type: 'scenario' };
         }
         return card;
       });
 
-      await tx
-        .update(sessions)
-        .set({ all_cards: updatedCards })
-        .where(eq(sessions.id, session.id));
+      await tx.execute(sql`
+        UPDATE sessions
+        SET all_cards = ${JSON.stringify(updatedCards)}::jsonb
+        WHERE id = ${session.id}::uuid
+      `);
     }
 
-    console.log(`  ✓ Updated ${sessionsWithPlot.length} sessions`);
+    console.log(`  ✓ Updated ${sessionsWithPlot.rows.length} sessions`);
 
     // Step 5: Verify data integrity
     console.log("Step 5: Verifying data integrity...");
