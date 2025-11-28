@@ -37,6 +37,15 @@
   ],
   "author": "astrsk team",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/astrskai/astrsk.git",
+    "directory": "packages/design-system"
+  },
+  "homepage": "https://astrskai.github.io/astrsk/design-system/",
+  "bugs": {
+    "url": "https://github.com/astrskai/astrsk/issues"
+  },
   "packageManager": "pnpm@10.14.0",
   "peerDependencies": {
     "react": "^18.3.0 || ^19.0.0",

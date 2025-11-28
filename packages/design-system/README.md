@@ -1,6 +1,9 @@
 # @astrsk/design-system
 
-astrsk Design System - A modern React component library built with Tailwind CSS v4.
+A modern React component library built with Tailwind CSS v4.
+
+- [Storybook Documentation](https://astrskai.github.io/astrsk/design-system/)
+- [GitHub Repository](https://github.com/astrskai/astrsk/tree/develop/packages/design-system)
 
 ## Installation
 
@@ -8,8 +11,6 @@ astrsk Design System - A modern React component library built with Tailwind CSS 
 npm install @astrsk/design-system
 # or
 pnpm add @astrsk/design-system
-# or
-yarn add @astrsk/design-system
 ```
 
 ## Usage
@@ -26,17 +27,23 @@ import '@astrsk/design-system/styles';
 ### Use Components
 
 ```tsx
-import { Button } from '@astrsk/design-system';
+import { Button, Input, LabeledInput } from '@astrsk/design-system';
 
 function App() {
   return (
     <div>
-      <Button variant="primary" size="medium">
-        Click me
-      </Button>
-      <Button variant="secondary" size="large">
-        Secondary
-      </Button>
+      <Button variant="default">Click me</Button>
+      <Button variant="secondary" size="lg">Large</Button>
+
+      <Input placeholder="Basic input" />
+
+      <LabeledInput
+        label="Email"
+        type="email"
+        placeholder="Enter email"
+        hint="We'll never share your email."
+        required
+      />
     </div>
   );
 }
@@ -46,41 +53,110 @@ function App() {
 
 ### Button
 
-A versatile button component with multiple variants and sizes.
+```tsx
+<Button variant="default">Default</Button>
+<Button variant="secondary">Secondary</Button>
+<Button variant="outline">Outline</Button>
+<Button variant="ghost">Ghost</Button>
+<Button variant="destructive">Destructive</Button>
+<Button variant="link">Link</Button>
 
-**Props:**
+<Button size="sm">Small</Button>
+<Button size="default">Default</Button>
+<Button size="lg">Large</Button>
 
-- `variant`: `'primary'` | `'secondary'` | `'outline'` (default: `'primary'`)
-- `size`: `'small'` | `'medium'` | `'large'` (default: `'medium'`)
-- All standard HTML button attributes
+<Button size="icon"><IconComponent /></Button>
+```
 
-**Examples:**
+**Props:** `variant`, `size`, + all HTML button attributes
+
+### Input
 
 ```tsx
-<Button variant="primary">Primary Button</Button>
-<Button variant="secondary" size="large">Large Secondary</Button>
-<Button variant="outline" disabled>Disabled Outline</Button>
+<Input placeholder="Basic input" />
+<Input type="email" />
+<Input disabled />
+<Input aria-invalid="true" />
 ```
 
-## CSS Classes (Optional)
+### IconInput
 
-You can also use CSS classes directly without React components:
+```tsx
+import { Search } from 'lucide-react';
 
-```html
-<button class="btn btn-primary btn-medium">Click me</button>
+<IconInput icon={<Search />} placeholder="Search..." />
 ```
+
+**Props:** `icon` (required), + all Input props
+
+### Label
+
+```tsx
+<Label htmlFor="email">Email</Label>
+<Label required>Required Field</Label>
+<Label error>Error Field</Label>
+```
+
+### LabeledInput
+
+```tsx
+<LabeledInput label="Email" placeholder="Enter email" />
+<LabeledInput label="Password" type="password" error="Invalid password" />
+<LabeledInput label="Name" hint="Optional" />
+<LabeledInput label="Username" labelPosition="left" />
+<LabeledInput label="Field" labelPosition="inner" />
+```
+
+**Props:** `label`, `hint`, `error`, `labelPosition` ('top' | 'left' | 'inner'), `required`
+
+### Textarea
+
+```tsx
+<Textarea placeholder="Enter message..." />
+<Textarea rows={6} />
+```
+
+### LabeledTextarea
+
+```tsx
+<LabeledTextarea label="Bio" placeholder="Tell us about yourself..." />
+<LabeledTextarea label="Notes" hint="Max 500 characters" required />
+<LabeledTextarea label="Description" error="Too short" />
+```
+
+**Props:** Same as LabeledInput
 
 ## Customization
 
-Override theme variables by defining them in your CSS:
+Override CSS variables to customize the theme:
 
 ```css
 :root {
-  --color-btn-background-primary: #your-color;
-  --color-btn-background-primary-hover: #your-hover-color;
-  --color-btn-text-primary: #your-text-color;
+  /* Backgrounds */
+  --bg-canvas: #000000;
+  --bg-surface: #0a0a0c;
+
+  /* Foreground */
+  --fg-default: #ffffff;
+  --fg-muted: #e2e2e8;
+  --fg-subtle: #9898a4;
+
+  /* Borders */
+  --border-default: #232328;
+  --border-focus: #5b82ba;
+
+  /* Input */
+  --input-bg: #232328;
+  --input-border: #3a3a42;
+
+  /* Button */
+  --btn-primary-bg: #4a6fa5;
+  --btn-primary-fg: #ffffff;
+  /* ... */
 }
 ```
+
+See the full token list in the [Storybook Colors documentation](https://astrskai.github.io/astrsk/design-system/?path=/docs/design-tokens-colors--docs).
 
 ## Development
 
@@ -91,11 +167,14 @@ pnpm install
 # Run Storybook
 pnpm dev
 
-# Build
+# Build library
 pnpm build
 
-# Test
-pnpm test
+# Build Storybook
+pnpm build-storybook
+
+# Type check
+pnpm lint
 ```
 
 ## License
