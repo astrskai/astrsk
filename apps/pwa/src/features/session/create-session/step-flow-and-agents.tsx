@@ -37,7 +37,7 @@ const AgentListItem = ({
   return (
     <div
       className={cn(
-        "bg-background-surface-3 relative inline-flex flex-col items-start justify-start gap-6 self-stretch rounded p-6",
+        "bg-surface-overlay relative inline-flex flex-col items-start justify-start gap-6 self-stretch rounded p-6",
         !isModelInvalid && "outline-border-light outline outline-offset-[-1px]",
       )}
     >
@@ -51,7 +51,7 @@ const AgentListItem = ({
       </div>
       <div className="inline-flex items-center justify-start gap-6">
         {isModelInvalid && (
-          <CircleAlert className="text-status-destructive-light -mr-4 min-h-4 min-w-4" />
+          <CircleAlert className="text-status-error -mr-4 min-h-4 min-w-4" />
         )}
         <div className="text-text-primary w-12 justify-start text-base font-medium">
           Model
@@ -64,7 +64,7 @@ const AgentListItem = ({
         <div
           className={cn(
             "pointer-events-none absolute inset-[-1px] rounded-lg",
-            "outline-status-destructive-light outline-2",
+            "outline-status-error outline-2",
           )}
         />
       )}

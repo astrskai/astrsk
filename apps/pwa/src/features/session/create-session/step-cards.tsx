@@ -51,7 +51,7 @@ const CardItem = ({
     <div
       className={cn(
         "relative aspect-154/230 w-full max-w-[154px] rounded-[8px]",
-        !cardId && "bg-background-surface-4",
+        !cardId && "bg-hover",
         disabled && "pointer-events-none opacity-50",
         className,
       )}
@@ -60,12 +60,12 @@ const CardItem = ({
     >
       {cardId ? (
         // TODO: TradingCard removed - implement replacement UI
-        <div className="flex h-full w-full items-center justify-center bg-background-surface-4 rounded-[8px]">
+        <div className="flex h-full w-full items-center justify-center bg-hover rounded-[8px]">
           <span className="text-text-subtle text-xs">Card Preview</span>
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center">
-          <div className="text-background-surface-5 text-center text-[12px] leading-[15px] font-[500]">
+          <div className="text-fg-subtle text-center text-[12px] leading-[15px] font-[500]">
             {placeholder}
           </div>
         </div>
@@ -221,10 +221,10 @@ const StepCards = () => {
             <AccordionTrigger className="py-0 hover:no-underline">
               <div
                 className={cn(
-                  "bg-background-surface-3 w-full rounded-[16px] p-[24px]",
+                  "bg-surface-overlay w-full rounded-[16px] p-[24px]",
                   activeTab === CardTabValue.AI
                     ? "inset-ring-primary-normal inset-ring-2"
-                    : "hover:bg-background-surface-4 cursor-pointer",
+                    : "hover:bg-hover cursor-pointer",
                 )}
               >
                 <div className="flex flex-row items-center gap-[12px]">
@@ -255,7 +255,7 @@ const StepCards = () => {
                           className={cn(
                             showAiCardError &&
                               aiCharacterCardIds.length === 0 &&
-                              "inset-ring-status-destructive-light inset-ring-2",
+                              "inset-ring-status-error inset-ring-2",
                           )}
                         />
                       </div>
@@ -270,10 +270,10 @@ const StepCards = () => {
             <AccordionTrigger className="py-0 hover:no-underline">
               <div
                 className={cn(
-                  "bg-background-surface-3 w-full rounded-[16px] p-[24px]",
+                  "bg-surface-overlay w-full rounded-[16px] p-[24px]",
                   activeTab === CardTabValue.User
                     ? "inset-ring-primary-normal inset-ring-2"
-                    : "hover:bg-background-surface-4 cursor-pointer",
+                    : "hover:bg-hover cursor-pointer",
                 )}
               >
                 <div className="flex flex-row items-center gap-[12px]">
@@ -312,10 +312,10 @@ const StepCards = () => {
             <AccordionTrigger className="py-0 hover:no-underline">
               <div
                 className={cn(
-                  "bg-background-surface-3 w-full rounded-[16px] p-[24px]",
+                  "bg-surface-overlay w-full rounded-[16px] p-[24px]",
                   activeTab === CardTabValue.Plot
                     ? "inset-ring-primary-normal inset-ring-2"
-                    : "hover:bg-background-surface-4 cursor-pointer",
+                    : "hover:bg-hover cursor-pointer",
                 )}
               >
                 <div className="flex flex-row items-center gap-[12px]">
@@ -354,7 +354,7 @@ const StepCards = () => {
         </Accordion>
       </div>
       <div className="h-[calc(100vh-340px)] min-h-[600px] w-1/2 max-w-[746px] min-w-[440px]">
-        <div className="bg-background-surface-3 flex h-full flex-col gap-[24px] rounded-[24px] p-[24px]">
+        <div className="bg-surface-overlay flex h-full flex-col gap-[24px] rounded-[24px] p-[24px]">
           <div className="flex flex-col gap-[8px]">
             <div className="text-text-primary text-[20px] leading-[32px] font-[500]">
               {activeTab === CardTabValue.Plot ? "Plot" : "Character"} cards

@@ -157,7 +157,7 @@ export const EditApprovalMessage: React.FC<EditApprovalMessageProps> = ({
         <div className="self-stretch flex-1 rounded-md overflow-hidden border border-border-normal relative">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-background-surface-1 flex items-center justify-center transition-colors"
+            className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-surface flex items-center justify-center transition-colors"
           >
             {isExpanded ? (
               <Minimize2 className="w-4 h-4 text-text-subtle" />
@@ -185,11 +185,11 @@ export const EditApprovalMessage: React.FC<EditApprovalMessageProps> = ({
 
       {/* Expanded Editor View */}
       {isExpanded && (
-        <div className="absolute inset-0 z-20 bg-background-surface-2 p-4">
-          <div className="w-full h-full bg-background-surface-0 rounded-md outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start overflow-hidden relative">
+        <div className="absolute inset-0 z-20 bg-surface-raised p-4">
+          <div className="w-full h-full bg-canvas rounded-md outline-1 outline-offset-[-1px] outline-border-normal flex flex-col justify-start items-start overflow-hidden relative">
             <button
               onClick={() => setIsExpanded(false)}
-              className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-background-surface-1 flex items-center justify-center transition-colors"
+              className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-surface flex items-center justify-center transition-colors"
             >
               <Minimize2 className="w-4 h-4 text-text-subtle" />
             </button>

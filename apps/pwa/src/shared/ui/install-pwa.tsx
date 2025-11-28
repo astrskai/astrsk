@@ -10,7 +10,7 @@ export function InstallPwa({
   install?: () => void;
 }) {
   return (
-    <div className="bg-background-surface-1 font-inter flex h-dvh flex-col justify-center gap-[32px] p-[24px]">
+    <div className="bg-surface font-inter flex h-dvh flex-col justify-center gap-[32px] p-[24px]">
       <div
         className={cn(
           "w-full text-[48px] leading-[52.8px] font-[600]",

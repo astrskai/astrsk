@@ -213,7 +213,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
             <div className="self-stretch flex-1 flex flex-col justify-center items-center gap-8">
               <div className="flex flex-col justify-start items-center gap-2">
                 <div className="text-center justify-start text-fg-muted text-base font-semibold leading-relaxed">No schema fields yet</div>
-                <div className="w-40 text-center justify-start text-background-surface-5 text-xs font-normal">Start by creating fields for your data schema.</div>
+                <div className="w-40 text-center justify-start text-fg-subtle text-xs font-normal">Start by creating fields for your data schema.</div>
               </div>
               <button 
                 onClick={addNewField}

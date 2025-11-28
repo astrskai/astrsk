@@ -218,7 +218,7 @@ export const LorebookEditor = forwardRef<
                       handleDeleteEntry(entry.id);
                     }}
                     aria-label={`Delete ${entry.name}`}
-                    className="hover:text-status-destructive-light shrink-0 transition-colors"
+                    className="hover:text-status-error shrink-0 transition-colors"
                   >
                     <X size={16} />
                   </button>
@@ -279,7 +279,7 @@ export const LorebookEditor = forwardRef<
                         <button
                           onClick={() => handleRemoveTag(tag)}
                           aria-label={`Remove tag ${tag}`}
-                          className="hover:text-status-destructive-light transition-colors"
+                          className="hover:text-status-error transition-colors"
                         >
                           <X size={12} />
                         </button>
