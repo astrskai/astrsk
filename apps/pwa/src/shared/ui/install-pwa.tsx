@@ -31,13 +31,13 @@ export function InstallPwa({
       ) : (
         <div className="flex flex-col gap-[24px]">
           <div className="flex flex-col gap-[8px]">
-            <div className="text-text-input-subtitle text-[14px] leading-[20px] font-[500]">
+            <div className="text-fg-subtle text-[14px] leading-[20px] font-[500]">
               To install the app on iOS
             </div>
             <ol
               className={cn(
                 "list-decimal space-y-[8px] pl-[18px]",
-                "text-text-muted-title text-[14px] leading-[20px] font-[500]",
+                "text-fg-muted text-[14px] leading-[20px] font-[500]",
                 "[&>strong]:text-text-primary [&>strong]:font-[600]",
               )}
             >

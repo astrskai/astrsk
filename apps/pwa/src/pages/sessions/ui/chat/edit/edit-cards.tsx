@@ -58,7 +58,7 @@ const CardListItem = ({
         {/* TODO: TradingCard removed - implement replacement UI */}
         {cardId && (
           <div className="flex h-full w-full items-center justify-center bg-hover rounded-[8px]">
-            <span className="text-text-subtle text-xs">Card Preview</span>
+            <span className="text-fg-subtle text-xs">Card Preview</span>
           </div>
         )}
         {label && (

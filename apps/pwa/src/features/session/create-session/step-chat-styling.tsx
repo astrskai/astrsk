@@ -343,7 +343,7 @@ const StepChatStyling = ({
           <h2 className="text-2xl font-semibold text-text-primary mb-2">
             Message styling
           </h2>
-          <p className="text-text-input-subtitle">
+          <p className="text-fg-subtle">
             Customize the appearance of messages in your session.
           </p>
         </div> */}

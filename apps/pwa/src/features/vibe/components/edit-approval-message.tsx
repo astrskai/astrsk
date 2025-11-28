@@ -160,9 +160,9 @@ export const EditApprovalMessage: React.FC<EditApprovalMessageProps> = ({
             className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-surface flex items-center justify-center transition-colors"
           >
             {isExpanded ? (
-              <Minimize2 className="w-4 h-4 text-text-subtle" />
+              <Minimize2 className="w-4 h-4 text-fg-subtle" />
             ) : (
-              <Maximize2 className="w-4 h-4 text-text-subtle" />
+              <Maximize2 className="w-4 h-4 text-fg-subtle" />
             )}
           </button>
           <Editor
@@ -191,7 +191,7 @@ export const EditApprovalMessage: React.FC<EditApprovalMessageProps> = ({
               onClick={() => setIsExpanded(false)}
               className="absolute top-2 right-2 z-10 w-6 h-6 rounded-sm hover:bg-surface flex items-center justify-center transition-colors"
             >
-              <Minimize2 className="w-4 h-4 text-text-subtle" />
+              <Minimize2 className="w-4 h-4 text-fg-subtle" />
             </button>
             <div className="w-full h-full">
               <Editor

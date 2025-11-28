@@ -396,7 +396,7 @@ const SessionListMobile = ({
         <div className="px-4">
           {sessions.length === 0 ? (
             <div className="flex items-center justify-center">
-              <div className="text-text-input-subtitle text-center">
+              <div className="text-fg-subtle text-center">
                 {keyword.length > 0
                   ? `No results for '${keyword}'`
                   : "No sessions"}
@@ -442,7 +442,7 @@ const MobileCharacterAvatar = ({ cardId }: { cardId: UniqueEntityID }) => {
         <img src={icon} alt="" className="h-full w-full object-cover" />
       ) : (
         <div className="bg-background-card flex h-full w-full items-center justify-center">
-          <span className="text-text-input-subtitle text-xs">
+          <span className="text-fg-subtle text-xs">
             {(card as any).props.name?.charAt(0) || card.props.title.charAt(0)}
           </span>
         </div>
@@ -529,7 +529,7 @@ const SessionListItemMobile = ({
             <div className="text-text-primary justify-start text-base leading-relaxed font-semibold">
               {session.props.title}
             </div>
-            <div className="text-text-body justify-start text-xs font-medium">
+            <div className="text-neutral-300 justify-start text-xs font-medium">
               {lastMessage
                 ? formatLastMessage(lastMessage.createdAt)
                 : "9:34 AM"}
@@ -544,7 +544,7 @@ const SessionListItemMobile = ({
                   <div className="text-text-primary justify-start text-base leading-relaxed font-normal">
                     {messageCount.toLocaleString()}
                   </div>
-                  <div className="text-text-body justify-start text-xs font-normal">
+                  <div className="text-neutral-300 justify-start text-xs font-normal">
                     Messages
                   </div>
                 </div>

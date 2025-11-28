@@ -132,7 +132,7 @@ const FloatingLabelInputs = React.forwardRef<
                 onDelete={() => handleDelete(index)}
                 className={cn(
                   {
-                    "p-2 ring-2 ring-primary ring-offset-1 bg-background-container text-text-input-subtitle":
+                    "p-2 ring-2 ring-primary ring-offset-1 bg-background-container text-fg-subtle":
                       editingIndex === index,
                   },
                   badgeClassName,
@@ -151,7 +151,7 @@ const FloatingLabelInputs = React.forwardRef<
                 ? "text-status-warning"
                 : error
                   ? "text-status-error"
-                  : "text-text-input-subtitle",
+                  : "text-fg-subtle",
             )}
           >
             {helpText}
