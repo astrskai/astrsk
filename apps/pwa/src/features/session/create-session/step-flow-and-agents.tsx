@@ -45,7 +45,7 @@ const AgentListItem = ({
         <div className="text-text-primary w-12 justify-start text-base font-medium">
           Agent
         </div>
-        <div className="text-text-body justify-start text-base font-normal">
+        <div className="text-neutral-300 justify-start text-base font-normal">
           {agent.props.name}
         </div>
       </div>
@@ -56,7 +56,7 @@ const AgentListItem = ({
         <div className="text-text-primary w-12 justify-start text-base font-medium">
           Model
         </div>
-        <div className="text-text-body justify-start text-base font-normal">
+        <div className="text-neutral-300 justify-start text-base font-normal">
           {`${apiSourceLabel.get((agent.props.apiSource as ApiSource) ?? "openai")} - ${agent.props.modelName}`}
         </div>
       </div>
@@ -104,7 +104,7 @@ const StepFlowAndAgents = () => {
           <div
             className={cn(
               "text-text-primary text-[16px] leading-[19px] font-[400]",
-              isMobile && "text-text-body text-sm leading-tight font-medium",
+              isMobile && "text-neutral-300 text-sm leading-tight font-medium",
             )}
           >
             Choose a flow (a bundle of prompt preset and AI model) to use for
@@ -142,7 +142,7 @@ const StepFlowAndAgents = () => {
             <div
               className={cn(
                 "text-text-primary text-[16px] leading-[19px] font-[400]",
-                isMobile && "text-text-body text-sm leading-tight font-medium",
+                isMobile && "text-neutral-300 text-sm leading-tight font-medium",
               )}
             >
               Listed below are the agents that make up this flow.

@@ -37,7 +37,7 @@ const Step = ({
             "size-[40px] rounded-full",
             "bg-text-placeholder text-background-container font-[500]",
             "grid place-content-center",
-            (active || completed) && "bg-primary-normal",
+            (active || completed) && "bg-brand-400",
             "hover:bg-hover",
           )}
         >

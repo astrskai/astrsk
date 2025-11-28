@@ -86,7 +86,7 @@ export const HelpVideoDialog = ({
         {/* Footer */}
         <div className="flex items-center justify-between">
           <div className="text-xs font-medium">
-            <span className="text-text-info">Watch the full tutorial on </span>
+            <span className="text-neutral-500">Watch the full tutorial on </span>
             <button
               className="text-secondary-normal hover:underline"
               onClick={() =>
@@ -99,7 +99,7 @@ export const HelpVideoDialog = ({
             >
               YouTube
             </button>
-            <span className="text-text-info"> or check out our </span>
+            <span className="text-neutral-500"> or check out our </span>
             <button
               className="text-secondary-normal hover:underline"
               onClick={() =>
@@ -108,7 +108,7 @@ export const HelpVideoDialog = ({
             >
               user docs
             </button>
-            <span className="text-text-info">.</span>
+            <span className="text-neutral-500">.</span>
           </div>
           <Button
             variant="ghost"

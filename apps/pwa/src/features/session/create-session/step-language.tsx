@@ -50,8 +50,8 @@ const LanguageSettings = () => {
         />
         <div
           className={cn(
-            "text-text-info text-[16px] leading-[19px] font-[400]",
-            isMobile ? "text-text-body text-sm leading-tight font-medium" : "",
+            "text-neutral-500 text-[16px] leading-[19px] font-[400]",
+            isMobile ? "text-neutral-300 text-sm leading-tight font-medium" : "",
           )}
         >
           <Info
@@ -86,8 +86,8 @@ const LanguageSettings = () => {
         />
         <div
           className={cn(
-            "text-text-info text-[16px] leading-[19px] font-[400]",
-            isMobile ? "text-text-body text-sm leading-tight font-medium" : "",
+            "text-neutral-500 text-[16px] leading-[19px] font-[400]",
+            isMobile ? "text-neutral-300 text-sm leading-tight font-medium" : "",
           )}
         >
           <Info
@@ -117,7 +117,7 @@ const StepLanguage = () => {
       <div
         className={cn(
           isMobile
-            ? "text-text-body text-sm leading-tight font-medium"
+            ? "text-neutral-300 text-sm leading-tight font-medium"
             : "text-text-primary text-[20px] leading-[24px] font-[600]",
         )}
       >

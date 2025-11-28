@@ -73,7 +73,7 @@ export function TutorialDialog({ open, onOpenChange }: TutorialDialogProps) {
             <button
               type="button"
               aria-label="Close tutorial"
-              className="text-text-subtle absolute top-4 right-4 z-50 cursor-pointer hover:text-white md:top-[34px] md:right-[40px]"
+              className="text-fg-subtle absolute top-4 right-4 z-50 cursor-pointer hover:text-white md:top-[34px] md:right-[40px]"
               onClick={handleClose}
             >
               <X className="h-5 w-5" aria-hidden="true" />

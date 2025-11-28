@@ -68,18 +68,6 @@
   --color-button-background-floating: var(--button-background-floating);
   --color-button-chips: var(--button-chips);
 
-  /* Text colors */
-  --color-text-body: var(--text-body);
-  --color-text-subtle: var(--text-subtle);
-  --color-text-info: var(--text-info);
-  --color-text-muted-title: var(--text-muted-title);
-  --color-text-input-subtitle: var(--text-input-subtitle);
-
-  /* Primary colors */
-  --color-primary-normal: var(--primary-normal);
-  --color-primary-strong: var(--primary-strong);
-  --color-primary-heavy: var(--primary-heavy);
-
   /* Secondary colors */
   --color-secondary-normal: var(--secondary-normal);
 
@@ -149,20 +137,9 @@
   --button-background-floating: #313131;
   --button-chips: #414141;
 
-  /* Existing text colors */
-  --text-info: #696969;
-  --text-input-subtitle: #97a2b1;
+  /* Existing text colors (kept for CSS variable references in base styles) */
   --text-muted-title: #d4d4d4;
   --text-user-message: #3f3f3f;
-
-  /* New text colors */
-  --text-body: #bfbfbf;
-  --text-subtle: #9d9d9d;
-
-  /* Existing primary colors */
-  --primary-heavy: #1ea9f2;
-  --primary-normal: #98d7f9;
-  --primary-strong: #68c5f6;
 
   /* Existing secondary colors */
   --secondary-normal: #b59eff;
@@ -236,20 +213,9 @@
   --button-background-floating: #313131;
   --button-chips: #414141;
 
-  /* Existing text colors */
-  --text-info: #696969;
-  --text-input-subtitle: #97a2b1;
+  /* Existing text colors (kept for CSS variable references in base styles) */
   --text-muted-title: #d4d4d4;
   --text-user-message: #3f3f3f;
-
-  /* New text colors */
-  --text-body: #bfbfbf;
-  --text-subtle: #9d9d9d;
-
-  /* Existing primary colors */
-  --primary-heavy: #1ea9f2;
-  --primary-normal: #98d7f9;
-  --primary-strong: #68c5f6;
 
   /* Existing secondary colors */
   --secondary-normal: #b59eff;

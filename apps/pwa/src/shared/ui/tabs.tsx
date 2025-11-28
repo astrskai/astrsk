@@ -24,7 +24,7 @@ const TabsList = React.forwardRef<
   const listClassName =
     variant === "v1"
       ? cn(
-          "inline-flex h-9 items-center justify-center rounded-lg bg-background-container p-1 text-text-input-subtitle",
+          "inline-flex h-9 items-center justify-center rounded-lg bg-background-container p-1 text-fg-subtle",
           className,
         )
       : variant === "mobile"
@@ -65,7 +65,7 @@ const TabsTrigger = React.forwardRef<
       : variant === "mobile" || variant === "dark-mobile"
         ? cn(
             "flex-1 self-stretch px-3 py-1 rounded-md flex justify-center items-center gap-2 transition-all",
-            "text-text-body text-base font-normal leading-relaxed",
+            "text-neutral-300 text-base font-normal leading-relaxed",
             "data-[state=active]:bg-surface-overlay data-[state=active]:shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] data-[state=active]:shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)]",
             "data-[state=active]:text-text-primary data-[state=active]:font-semibold",
             "focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50",
@@ -73,7 +73,7 @@ const TabsTrigger = React.forwardRef<
           )
         : cn(
             "flex-1 self-stretch px-3 py-1 rounded-md flex justify-center items-center gap-2 transition-all",
-            "text-text-body text-xs font-normal",
+            "text-neutral-300 text-xs font-normal",
             "data-[state=active]:bg-surface-overlay data-[state=active]:shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] data-[state=active]:shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)]",
             "data-[state=active]:text-text-primary data-[state=active]:font-semibold",
             "focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50",

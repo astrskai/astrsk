@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import GridLayout, { Layout, WidthProvider } from "react-grid-layout";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { RotateCcw } from "lucide-react";
@@ -58,6 +58,14 @@ export default function SessionDataSidebar({
   );
 
   const [layout, setLayout] = useState<Layout[]>(initialLayout);
+
+  // Sync layout when sortedDataSchemaFields changes (e.g., initial data load)
+  // This handles the case where fields are empty at mount but populated later
+  useEffect(() => {
+    if (sortedDataSchemaFields.length > 0 && layout.length === 0) {
+      setLayout(savedLayout || defaultLayout);
+    }
+  }, [sortedDataSchemaFields, savedLayout, defaultLayout, layout.length]);
 
   // Update layout state during drag/resize (no DB save)
   const handleLayoutChange = useCallback((newLayout: Layout[]) => {

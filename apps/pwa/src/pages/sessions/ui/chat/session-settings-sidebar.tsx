@@ -429,7 +429,7 @@ const SessionSettingsSidebar = ({
         isOpen ? "translate-x-0" : "translate-x-full",
       )}
     >
-      <div className="flex items-center justify-between gap-2 p-4">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-surface p-4">
         <button
           type="button"
           aria-label="Close settings panel"

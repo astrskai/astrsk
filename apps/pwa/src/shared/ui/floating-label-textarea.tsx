@@ -113,8 +113,8 @@ const FloatingLabelTextarea = React.forwardRef<
           className={cn(
             "absolute pointer-events-none transition-all duration-200 ease-in-out",
             hasValue
-              ? "text-xs transform -translate-y-1 top-3 text-text-input-subtitle"
-              : "text-base text-text-input-subtitle top-[18px] -translate-y-0",
+              ? "text-xs transform -translate-y-1 top-3 text-fg-subtle"
+              : "text-base text-fg-subtle top-[18px] -translate-y-0",
           )}
         >
           {label}
@@ -145,7 +145,7 @@ const FloatingLabelTextarea = React.forwardRef<
             "text-xs mt-1 ml-4",
             error
               ? "text-status-error"
-              : "text-text-input-subtitle",
+              : "text-fg-subtle",
           )}
         >
           {helpText}

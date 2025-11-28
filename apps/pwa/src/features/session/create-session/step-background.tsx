@@ -61,7 +61,7 @@ const BackgroundListItem = ({
       className={cn(
         "bg-surface relative cursor-pointer overflow-hidden rounded-lg",
         isMobile ? "w-full" : "w-[338px]",
-        isActive && "ring-primary-normal ring-2",
+        isActive && "ring-brand-400 ring-2",
       )}
       onClick={(e) => {
         e.stopPropagation();
@@ -209,7 +209,7 @@ const StepBackground = () => {
     return (
       <div className="flex h-full flex-col overflow-hidden">
         <div className="mx-auto flex h-full w-full max-w-[600px] flex-col px-4">
-          <p className="text-text-body mb-[40px] flex-shrink-0 text-sm leading-tight font-medium">
+          <p className="text-neutral-300 mb-[40px] flex-shrink-0 text-sm leading-tight font-medium">
             Choose a background for your session: import image or select from
             the ones provided.
           </p>

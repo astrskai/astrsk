@@ -123,7 +123,7 @@ const FloatingLabelInput = React.forwardRef<
               "mt-1 mr-4 ml-4 text-xs",
               error
                 ? "text-status-error"
-                : "text-text-input-subtitle",
+                : "text-fg-subtle",
               variant === "guide" ? "text-right" : "",
             )}
           >
@@ -135,7 +135,7 @@ const FloatingLabelInput = React.forwardRef<
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="text-text-input-subtitle hover:text-text-input-hover active:text-text-input-clicked absolute top-1/2 right-2 grid size-[24px] -translate-y-1/2 cursor-pointer place-content-center">
+                <div className="text-fg-subtle hover:text-text-input-hover active:text-text-input-clicked absolute top-1/2 right-2 grid size-[24px] -translate-y-1/2 cursor-pointer place-content-center">
                   <CircleHelp size={14} className="cursor-pointer" />
                 </div>
               </TooltipTrigger>

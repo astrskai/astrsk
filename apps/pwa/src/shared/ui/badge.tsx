@@ -10,7 +10,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-background-container text-text-input-subtitle shadow-xs hover:bg-background-container/80",
+          "border-transparent bg-background-container text-fg-subtle shadow-xs hover:bg-background-container/80",
         secondary:
           "border-transparent bg-surface-overlay text-fg-default hover:bg-secondary/80",
         destructive:
@@ -18,7 +18,7 @@ const badgeVariants = cva(
         outline: "text-fg-default",
         // Added editable variant
         editable:
-          "border-transparent bg-background-container text-text-input-subtitle hover:bg-background-container/80 cursor-pointer",
+          "border-transparent bg-background-container text-fg-subtle hover:bg-background-container/80 cursor-pointer",
       },
     },
     defaultVariants: {
@@ -51,7 +51,7 @@ function Badge({
             e.stopPropagation(); // Prevent triggering potential parent onClick
             onDelete();
           }}
-          className="ml-1.5 -mr-1 p-1 rounded-full inline-flex items-center justify-center text-text-input-subtitle hover:text-fg-default hover:bg-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-border-focus focus:ring-offset-1"
+          className="ml-1.5 -mr-1 p-1 rounded-full inline-flex items-center justify-center text-fg-subtle hover:text-fg-default hover:bg-secondary/60 focus:outline-hidden focus:ring-2 focus:ring-border-focus focus:ring-offset-1"
           aria-label="Remove badge"
         >
           <X className="min-w-[24px] min-h-[24px]" />

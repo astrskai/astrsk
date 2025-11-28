@@ -16,7 +16,7 @@ const NewWindowButton = () => {
     <button
       tabIndex={-1}
       type="button"
-      className="electron-no-drag text-text-subtle hover:text-text-primary group flex min-h-[26px] flex-row items-center gap-[8px] transition-colors"
+      className="electron-no-drag text-fg-subtle hover:text-text-primary group flex min-h-[26px] flex-row items-center gap-[8px] transition-colors"
       onClick={handleNewWindow}
     >
       <div className="relative h-5 w-5 overflow-hidden">
@@ -117,7 +117,7 @@ export function TopBar() {
             <div
               className={cn(
                 "electron-no-drag absolute inset-y-[7px] right-[10px]",
-                "text-text-body flex flex-row items-center gap-[30px]",
+                "text-neutral-300 flex flex-row items-center gap-[30px]",
               )}
             >
               <button tabIndex={-1} onClick={handleMinimize}>
@@ -143,7 +143,7 @@ export function TopBar() {
 
           {/* Window title */}
           <div className="absolute inset-x-[160px] inset-y-[6px] flex flex-row items-center justify-center gap-[8px] text-[16px] leading-[20px] font-[500]">
-            <span className="text-text-body">{pageTitle}</span>
+            <span className="text-neutral-300">{pageTitle}</span>
           </div>
 
           {/* Windows: Window controls */}
@@ -151,7 +151,7 @@ export function TopBar() {
             <div
               className={cn(
                 "electron-no-drag absolute inset-y-[7px] right-[10px]",
-                "text-text-body flex flex-row items-center gap-[30px]",
+                "text-neutral-300 flex flex-row items-center gap-[30px]",
               )}
             >
               <button tabIndex={-1} onClick={handleMinimize}>

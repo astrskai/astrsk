@@ -61,7 +61,7 @@ const CardItem = ({
       {cardId ? (
         // TODO: TradingCard removed - implement replacement UI
         <div className="flex h-full w-full items-center justify-center bg-hover rounded-[8px]">
-          <span className="text-text-subtle text-xs">Card Preview</span>
+          <span className="text-fg-subtle text-xs">Card Preview</span>
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center">
@@ -71,7 +71,7 @@ const CardItem = ({
         </div>
       )}
       {isActive ? (
-        <div className="inset-ring-primary-normal pointer-events-none absolute inset-0 rounded-[8px] inset-ring-2" />
+        <div className="inset-ring-brand-400 pointer-events-none absolute inset-0 rounded-[8px] inset-ring-2" />
       ) : (
         // Placeholder for size matching
         <div className="pointer-events-none absolute inset-0 rounded-[8px] inset-ring-2 inset-ring-transparent" />
@@ -223,7 +223,7 @@ const StepCards = () => {
                 className={cn(
                   "bg-surface-overlay w-full rounded-[16px] p-[24px]",
                   activeTab === CardTabValue.AI
-                    ? "inset-ring-primary-normal inset-ring-2"
+                    ? "inset-ring-brand-400 inset-ring-2"
                     : "hover:bg-hover cursor-pointer",
                 )}
               >
@@ -238,7 +238,7 @@ const StepCards = () => {
                 </div>
                 <AccordionContent className="py-0">
                   <div className="flex h-[calc(100vh-610px)] min-h-[320px] flex-col items-start">
-                    <div className="text-text-input-subtitle my-[16px] text-[16px] leading-[24px] font-[400]">
+                    <div className="text-fg-subtle my-[16px] text-[16px] leading-[24px] font-[400]">
                       Choose one or more AI characters to add to your session.
                     </div>
                     <ScrollArea className="w-full flex-1 overflow-y-auto">
@@ -272,7 +272,7 @@ const StepCards = () => {
                 className={cn(
                   "bg-surface-overlay w-full rounded-[16px] p-[24px]",
                   activeTab === CardTabValue.User
-                    ? "inset-ring-primary-normal inset-ring-2"
+                    ? "inset-ring-brand-400 inset-ring-2"
                     : "hover:bg-hover cursor-pointer",
                 )}
               >
@@ -287,7 +287,7 @@ const StepCards = () => {
 
                 <AccordionContent className="py-0">
                   <div className="flex h-[calc(100vh-610px)] min-h-[320px] flex-col items-start">
-                    <div className="text-text-input-subtitle my-[16px] text-[16px] leading-[24px] font-[400]">
+                    <div className="text-fg-subtle my-[16px] text-[16px] leading-[24px] font-[400]">
                       Choose your character role for this session.
                     </div>
                     <ScrollArea className="w-full flex-1 overflow-y-auto">
@@ -314,7 +314,7 @@ const StepCards = () => {
                 className={cn(
                   "bg-surface-overlay w-full rounded-[16px] p-[24px]",
                   activeTab === CardTabValue.Plot
-                    ? "inset-ring-primary-normal inset-ring-2"
+                    ? "inset-ring-brand-400 inset-ring-2"
                     : "hover:bg-hover cursor-pointer",
                 )}
               >
@@ -328,7 +328,7 @@ const StepCards = () => {
                 </div>
                 <AccordionContent className="py-0">
                   <div className="flex h-[calc(100vh-610px)] min-h-[320px] flex-col items-start">
-                    <div className="text-text-input-subtitle my-[16px] text-[16px] leading-[24px] font-[400]">
+                    <div className="text-fg-subtle my-[16px] text-[16px] leading-[24px] font-[400]">
                       Pick a plot to frame your session. The chosen card will
                       define the background context and provide a list of first
                       messages to choose from.
@@ -359,7 +359,7 @@ const StepCards = () => {
             <div className="text-text-primary text-[20px] leading-[32px] font-[500]">
               {activeTab === CardTabValue.Plot ? "Plot" : "Character"} cards
             </div>
-            {/* <div className="font-[400] text-[16px] leading-[19px] text-text-input-subtitle">
+            {/* <div className="font-[400] text-[16px] leading-[19px] text-fg-subtle">
             Select characters by dragging cards into place
           </div> */}
           </div>
