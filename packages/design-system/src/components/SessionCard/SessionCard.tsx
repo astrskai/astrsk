@@ -40,13 +40,19 @@ export interface SessionCardProps {
 function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
   return (
     <div
-      className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-900 bg-zinc-700"
+      className='flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-900 bg-zinc-700'
       title={name}
     >
       {avatarUrl ? (
-        <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+        <img
+          src={avatarUrl}
+          alt={name}
+          className='h-full w-full object-cover'
+        />
       ) : (
-        <span className="text-[10px] text-zinc-500">{name.charAt(0).toUpperCase() || '?'}</span>
+        <span className='text-[10px] text-zinc-500'>
+          {name.charAt(0).toUpperCase() || '?'}
+        </span>
       )}
     </div>
   );
@@ -57,7 +63,7 @@ function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
  */
 function CharacterAvatarSkeleton() {
   return (
-    <div className="h-8 w-8 animate-pulse rounded-full border-2 border-zinc-900 bg-zinc-700" />
+    <div className='h-8 w-8 animate-pulse rounded-full border-2 border-zinc-900 bg-zinc-700' />
   );
 }
 
@@ -69,14 +75,14 @@ function MessageIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
+      viewBox='0 0 24 24'
+      fill='none'
+      stroke='currentColor'
       strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeLinecap='round'
+      strokeLinejoin='round'
     >
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' />
     </svg>
   );
 }
@@ -125,31 +131,32 @@ export function SessionCard({
       onClick={onClick}
     >
       {/* Header Image Area */}
-      <div className="relative h-48 overflow-hidden bg-zinc-800">
+      <div className='relative h-48 overflow-hidden bg-zinc-800'>
         {/* Cover Image */}
         {imageUrl ? (
           <>
             <img
               src={imageUrl}
               alt={title}
-              className="absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90"
-              loading="lazy"
+              className='absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90'
+              loading='lazy'
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
+            <div className='absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent' />
           </>
         ) : (
           <>
             {/* Placeholder pattern */}
-            <div className="absolute inset-0 bg-zinc-800">
+            <div className='absolute inset-0 bg-zinc-800'>
               <div
-                className="absolute inset-0 opacity-20"
+                className='absolute inset-0 opacity-20'
                 style={{
-                  backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)',
+                  backgroundImage:
+                    'radial-gradient(#4f46e5 1px, transparent 1px)',
                   backgroundSize: '16px 16px',
                 }}
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
+            <div className='absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent' />
           </>
         )}
 
@@ -158,36 +165,36 @@ export function SessionCard({
 
         {/* Type Badge */}
         {showTypeIndicator && (
-          <div className="absolute top-3 left-3 z-10">
-            <div className="flex items-center gap-1.5 rounded border border-white/10 bg-black/50 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
+          <div className='absolute top-3 left-3 z-10'>
+            <div className='flex items-center gap-1.5 rounded border border-white/10 bg-black/50 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md'>
               {typeIndicator || 'SESSION'}
             </div>
           </div>
         )}
 
         {/* Session Title */}
-        <div className="absolute bottom-0 left-0 w-full p-5">
-          <h2 className="line-clamp-2 h-[3.75rem] text-2xl leading-tight font-bold break-words text-white">
+        <div className='absolute bottom-0 left-0 w-full p-5'>
+          <h2 className='line-clamp-2 h-[3.75rem] text-2xl leading-tight font-bold break-words text-white'>
             {title}
           </h2>
         </div>
       </div>
 
       {/* Session Details */}
-      <div className="flex flex-grow flex-col justify-between p-5">
-        <div className="space-y-3">
+      <div className='flex flex-grow flex-col justify-between p-5'>
+        <div className='space-y-3'>
           {/* Message Count */}
           {messageCount !== undefined && (
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-2 text-sm">
+            <div className='flex items-center justify-between border-b border-zinc-800 pb-2 text-sm'>
               {messageCount === 0 ? (
-                <span className="text-zinc-400">New session</span>
+                <span className='text-zinc-400'>New session</span>
               ) : (
-                <div className="flex items-center gap-2">
-                  <MessageIcon className="h-4 w-4 text-zinc-500" />
-                  <span className="font-semibold text-zinc-300">
+                <div className='flex items-center gap-2'>
+                  <MessageIcon className='h-4 w-4 text-zinc-500' />
+                  <span className='font-semibold text-zinc-300'>
                     {messageCount.toLocaleString()}
                   </span>
-                  <span className="text-zinc-400">
+                  <span className='text-zinc-400'>
                     {messageCount === 1 ? 'Message' : 'Messages'}
                   </span>
                 </div>
@@ -197,14 +204,14 @@ export function SessionCard({
 
           {/* Character Avatars */}
           {areCharactersLoading ? (
-            <div className="flex -space-x-2 pt-1">
+            <div className='flex -space-x-2 pt-1'>
               <CharacterAvatarSkeleton />
               <CharacterAvatarSkeleton />
               <CharacterAvatarSkeleton />
             </div>
           ) : (
             characterAvatars.length > 0 && (
-              <div className="flex -space-x-2 pt-1">
+              <div className='flex -space-x-2 pt-1'>
                 {characterAvatars.slice(0, 3).map((avatar, idx) => (
                   <CharacterAvatarImage
                     key={`${avatar.name}-${idx}`}
@@ -213,7 +220,7 @@ export function SessionCard({
                   />
                 ))}
                 {characterAvatars.length > 3 && (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-500">
+                  <div className='flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-500'>
                     +{characterAvatars.length - 3}
                   </div>
                 )}
