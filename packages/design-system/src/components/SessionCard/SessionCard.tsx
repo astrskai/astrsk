@@ -46,7 +46,7 @@ function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
       {avatarUrl ? (
         <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
       ) : (
-        <span className="text-[10px] text-zinc-500">{name.charAt(0).toUpperCase()}</span>
+        <span className="text-[10px] text-zinc-500">{name.charAt(0).toUpperCase() || '?'}</span>
       )}
     </div>
   );

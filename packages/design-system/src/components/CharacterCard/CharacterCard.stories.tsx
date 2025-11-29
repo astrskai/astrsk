@@ -299,6 +299,7 @@ export const AllStates: Story = {
             summary="Shows the CHARACTER type badge."
             tags={['Fantasy']}
             tokenCount={500}
+            updatedAt="5 hours ago"
             showTypeIndicator
           />
         </div>

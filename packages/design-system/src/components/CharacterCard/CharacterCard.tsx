@@ -107,9 +107,9 @@ export function CharacterCard({
         <div className="mb-4 flex flex-wrap gap-2">
           {tags.length > 0 ? (
             <>
-              {tags.slice(0, 3).map((tag) => (
+              {tags.slice(0, 3).map((tag, index) => (
                 <span
-                  key={tag}
+                  key={`${tag}-${index}`}
                   className="rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300"
                 >
                   {tag}
