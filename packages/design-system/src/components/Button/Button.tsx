@@ -27,17 +27,21 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: keyof typeof variantStyles;
   size?: keyof typeof sizeStyles;
+  /** If true, applies rounded-full instead of default border radius */
+  round?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'default', size = 'default', ...props }, ref) => {
+  ({ className, variant = 'default', size = 'default', round = false, ...props }, ref) => {
     return (
       <button
         ref={ref}
         data-slot="button"
         className={cn(
           // Base styles
-          "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all",
+          "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all",
+          // Border radius
+          round ? "rounded-full" : "rounded-xl",
           // Disabled
           "disabled:pointer-events-none disabled:opacity-50",
           // Focus

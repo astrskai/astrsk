@@ -13,11 +13,12 @@ function getAbsolutePath(value: string): any {
 }
 const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+  staticDirs: ['../public'],
   addons: [
     getAbsolutePath('@chromatic-com/storybook'),
     getAbsolutePath('@storybook/addon-docs'),
     getAbsolutePath('@storybook/addon-a11y'),
-    getAbsolutePath('@storybook/addon-vitest'),
+    // getAbsolutePath('@storybook/addon-vitest'), // Run tests
     getAbsolutePath('@vueless/storybook-dark-mode'),
   ],
   framework: {
