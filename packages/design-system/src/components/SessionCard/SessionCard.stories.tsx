@@ -1,0 +1,320 @@
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Copy, Download, Edit, Trash2, Layers } from 'lucide-react';
+import { SessionCard } from './SessionCard';
+
+const meta = {
+  title: 'Content/SessionCard',
+  component: SessionCard,
+  parameters: {
+    layout: 'centered',
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    title: {
+      control: 'text',
+      description: 'Session title',
+    },
+    imageUrl: {
+      control: 'text',
+      description: 'Cover image URL',
+    },
+    messageCount: {
+      control: 'number',
+      description: 'Number of messages in the session (optional - if undefined, message count section is hidden)',
+    },
+    isDisabled: {
+      control: 'boolean',
+      description: 'Whether the card is disabled',
+    },
+    showTypeIndicator: {
+      control: 'boolean',
+      description: 'Whether to show the SESSION badge',
+    },
+    areCharactersLoading: {
+      control: 'boolean',
+      description: 'Whether characters are loading',
+    },
+    onClick: { action: 'clicked' },
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '320px' }}>
+        <Story />
+      </div>
+    ),
+  ],
+} satisfies Meta<typeof SessionCard>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+// Sample images
+const SAMPLE_COVER = 'https://picsum.photos/seed/session1/600/400';
+const SAMPLE_COVER_2 = 'https://picsum.photos/seed/session2/600/400';
+const SAMPLE_AVATAR_1 = 'https://picsum.photos/seed/avatar1/100/100';
+const SAMPLE_AVATAR_2 = 'https://picsum.photos/seed/avatar2/100/100';
+const SAMPLE_AVATAR_3 = 'https://picsum.photos/seed/avatar3/100/100';
+const SAMPLE_AVATAR_4 = 'https://picsum.photos/seed/avatar4/100/100';
+
+// Icon components for stories
+const TypeIcon = () => <Layers size={16} />;
+
+// Default interactive story
+export const Default: Story = {
+  args: {
+    title: 'Adventure in Wonderland',
+    imageUrl: SAMPLE_COVER,
+    messageCount: 42,
+    characterAvatars: [
+      { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
+      { name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 },
+    ],
+    typeIndicator: <><TypeIcon /> SESSION</>,
+  },
+};
+
+// With type indicator badge
+export const WithTypeIndicator: Story = {
+  args: {
+    ...Default.args,
+    showTypeIndicator: true,
+  },
+};
+
+// New session (no messages)
+export const NewSession: Story = {
+  args: {
+    title: 'New Adventure',
+    imageUrl: SAMPLE_COVER_2,
+    messageCount: 0,
+    characterAvatars: [{ name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 }],
+    typeIndicator: <><TypeIcon /> SESSION</>,
+  },
+};
+
+// Single message
+export const SingleMessage: Story = {
+  args: {
+    ...Default.args,
+    title: 'Just Started',
+    messageCount: 1,
+  },
+};
+
+// Without cover image (placeholder pattern)
+export const WithoutImage: Story = {
+  args: {
+    title: 'Mystery Session',
+    messageCount: 15,
+    characterAvatars: [
+      { name: 'Unknown', avatarUrl: undefined },
+    ],
+  },
+};
+
+// Without message count (hidden)
+export const WithoutMessageCount: Story = {
+  args: {
+    title: 'Session without Message Count',
+    imageUrl: SAMPLE_COVER,
+    characterAvatars: [
+      { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
+    ],
+  },
+};
+
+// Many character avatars
+export const ManyAvatars: Story = {
+  args: {
+    ...Default.args,
+    title: 'Group Session',
+    characterAvatars: [
+      { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
+      { name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 },
+      { name: 'Charlie', avatarUrl: SAMPLE_AVATAR_3 },
+      { name: 'Diana', avatarUrl: SAMPLE_AVATAR_4 },
+      { name: 'Eve' },
+    ],
+  },
+};
+
+// Loading avatars
+export const LoadingAvatars: Story = {
+  args: {
+    ...Default.args,
+    title: 'Loading Characters...',
+    areCharactersLoading: true,
+    characterAvatars: [],
+  },
+};
+
+// Disabled state
+export const Disabled: Story = {
+  args: {
+    ...Default.args,
+    isDisabled: true,
+  },
+};
+
+// Long title
+export const LongTitle: Story = {
+  args: {
+    ...Default.args,
+    title: 'The Exceptionally Long Session Title That Should Be Truncated After Two Lines',
+  },
+};
+
+// With actions
+export const WithActions: Story = {
+  args: {
+    ...Default.args,
+    actions: [
+      {
+        icon: Edit,
+        label: 'Edit',
+        onClick: () => console.log('Edit clicked'),
+        title: 'Edit session',
+      },
+      {
+        icon: Copy,
+        label: 'Duplicate',
+        onClick: () => console.log('Duplicate clicked'),
+        title: 'Duplicate session',
+      },
+      {
+        icon: Download,
+        label: 'Export',
+        onClick: () => console.log('Export clicked'),
+        title: 'Export session',
+      },
+      {
+        icon: Trash2,
+        label: 'Delete',
+        onClick: () => console.log('Delete clicked'),
+        title: 'Delete session',
+        className: 'hover:text-red-400',
+      },
+    ],
+  },
+};
+
+// High message count
+export const HighMessageCount: Story = {
+  args: {
+    ...Default.args,
+    title: 'Epic Campaign',
+    messageCount: 12345,
+  },
+};
+
+// Grid layout example
+export const GridLayout: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 320px)',
+          gap: '24px',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => (
+    <>
+      <SessionCard
+        title="Adventure in Wonderland"
+        imageUrl={SAMPLE_COVER}
+        messageCount={42}
+        characterAvatars={[
+          { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
+          { name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 },
+        ]}
+      />
+      <SessionCard
+        title="Mystery Investigation"
+        imageUrl={SAMPLE_COVER_2}
+        messageCount={128}
+        showTypeIndicator
+        typeIndicator={<><TypeIcon /> SESSION</>}
+        characterAvatars={[
+          { name: 'Detective', avatarUrl: SAMPLE_AVATAR_3 },
+        ]}
+      />
+      <SessionCard
+        title="New Session"
+        messageCount={0}
+        characterAvatars={[]}
+      />
+    </>
+  ),
+};
+
+// All states overview
+export const AllStates: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '32px',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => (
+    <>
+      <div>
+        <h4
+          style={{
+            marginBottom: '12px',
+            fontSize: '14px',
+            color: 'var(--fg-muted)',
+          }}
+        >
+          Default
+        </h4>
+        <div style={{ width: '320px' }}>
+          <SessionCard
+            title="Default Session"
+            imageUrl={SAMPLE_COVER}
+            messageCount={10}
+            characterAvatars={[{ name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 }]}
+              />
+        </div>
+      </div>
+      <div>
+        <h4
+          style={{
+            marginBottom: '12px',
+            fontSize: '14px',
+            color: 'var(--fg-muted)',
+          }}
+        >
+          With Type Indicator
+        </h4>
+        <div style={{ width: '320px' }}>
+          <SessionCard
+            title="Session with Badge"
+            imageUrl={SAMPLE_COVER_2}
+            messageCount={25}
+            showTypeIndicator
+            typeIndicator={<><TypeIcon /> SESSION</>}
+            characterAvatars={[{ name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 }]}
+              />
+        </div>
+      </div>
+    </>
+  ),
+};
