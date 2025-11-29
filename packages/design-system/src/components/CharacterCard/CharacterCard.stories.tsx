@@ -46,7 +46,7 @@ const meta = {
       control: 'text',
       description: 'Placeholder image URL when imageUrl is not provided',
       table: {
-        defaultValue: { summary: '/img/placeholder/character-placeholder.png' },
+        defaultValue: { summary: 'img/placeholder/character-placeholder.png' },
       },
     },
     onClick: { action: 'clicked' },
@@ -67,7 +67,8 @@ type Story = StoryObj<typeof meta>;
 const SAMPLE_IMAGE = 'https://picsum.photos/seed/character1/400/600';
 const SAMPLE_IMAGE_2 = 'https://picsum.photos/seed/character2/400/600';
 const SAMPLE_IMAGE_3 = 'https://picsum.photos/seed/character3/400/600';
-const SAMPLE_PLACEHOLDER = '/img/placeholder/character-placeholder.png';
+// Use import.meta.env.BASE_URL for correct path resolution on GitHub Pages
+const SAMPLE_PLACEHOLDER = `${import.meta.env.BASE_URL}img/placeholder/character-placeholder.png`;
 
 // Default interactive story
 export const Default: Story = {

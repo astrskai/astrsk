@@ -27,7 +27,8 @@ const config: StorybookConfig = {
   },
   viteFinal: async (config, { configType }) => {
     // Set base path for GitHub Pages deployment
-    // configType is 'DEVELOPMENT' or 'PRODUCTION'
+    // build-storybook sets configType to 'PRODUCTION'
+    // storybook dev sets configType to 'DEVELOPMENT'
     if (configType === 'PRODUCTION') {
       config.base = '/astrsk/design-system/';
     }
