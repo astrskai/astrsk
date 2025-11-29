@@ -25,10 +25,10 @@ const config: StorybookConfig = {
     name: getAbsolutePath('@storybook/react-vite'),
     options: {},
   },
-  viteFinal: async (config) => {
+  viteFinal: async (config, { configType }) => {
     // Set base path for GitHub Pages deployment
-    // This ensures static assets are loaded from the correct path
-    if (process.env.NODE_ENV === 'production') {
+    // configType is 'DEVELOPMENT' or 'PRODUCTION'
+    if (configType === 'PRODUCTION') {
       config.base = '/astrsk/design-system/';
     }
     return config;
