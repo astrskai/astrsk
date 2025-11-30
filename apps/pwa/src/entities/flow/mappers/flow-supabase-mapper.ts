@@ -110,8 +110,7 @@ export class FlowSupabaseMapper {
         version: data.version ?? undefined,
         conceptualOrigin: data.conceptual_origin ?? undefined,
         readyState: ReadyState.Draft, // Always start as draft
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        // createdAt/updatedAt are set automatically by Flow.create()
       },
       new UniqueEntityID(newFlowId),
     );
