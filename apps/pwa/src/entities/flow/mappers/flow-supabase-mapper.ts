@@ -34,17 +34,20 @@ export class FlowSupabaseMapper {
   ): any[] {
     return nodes.map((node: any) => {
       const newId = nodeIdMap.get(node.id) || node.id;
-      let nodeData = {};
 
-      // For dataStore nodes, update the flowId in data
+      // For dataStore nodes, update the flowId in data while preserving other properties
       if (node.type === NodeType.DATA_STORE && node.data?.flowId) {
-        nodeData = { flowId: newFlowId };
+        return {
+          ...node,
+          id: newId,
+          data: { ...node.data, flowId: newFlowId },
+        };
       }
 
+      // For other nodes, keep the original data
       return {
         ...node,
         id: newId,
-        data: nodeData,
       };
     });
   }

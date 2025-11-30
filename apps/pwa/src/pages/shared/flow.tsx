@@ -84,7 +84,28 @@ export default function SharedFlowPage() {
   const handleRetry = () => {
     setImportState("loading");
     setErrorMessage("");
-    importFlowMutation.mutate({ flowId: uuid });
+    importFlowMutation.mutate(
+      { flowId: uuid },
+      {
+        onSuccess: (flow) => {
+          setImportState("success");
+          toastSuccess(`Workflow "${flow.props.name}" imported successfully`);
+          setTimeout(() => {
+            navigate({
+              to: "/assets/workflows/$workflowId",
+              params: { workflowId: flow.id.toString() },
+              replace: true,
+            });
+          }, REDIRECT_DELAY);
+        },
+        onError: (error) => {
+          setImportState("error");
+          const message = error instanceof Error ? error.message : "Unknown error occurred";
+          setErrorMessage(message);
+          toastError("Failed to import workflow", { description: message });
+        },
+      },
+    );
   };
 
   const handleGoToWorkflows = () => {

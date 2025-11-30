@@ -111,53 +111,63 @@ export class CardDrizzleMapper {
     return normalizeCardType(card.props.type) === CardType.Scenario;
   }
 
+  /**
+   * Convert a CharacterCard to persistence format.
+   * Type-safe method for character-specific conversions.
+   */
+  public static characterToPersistence(domain: CharacterCard): InsertCharacter {
+    return {
+      id: domain.id.toString(),
+      title: domain.props.title,
+      icon_asset_id: domain.props.iconAssetId?.toString() ?? null,
+      tags: domain.props.tags,
+      creator: domain.props.creator ?? null,
+      card_summary: domain.props.cardSummary ?? null,
+      version: domain.props.version ?? null,
+      conceptual_origin: domain.props.conceptualOrigin ?? null,
+      vibe_session_id: domain.props.vibeSessionId ?? null,
+      image_prompt: domain.props.imagePrompt ?? null,
+      session_id: domain.props.sessionId?.toString() ?? null,
+      name: domain.props.name ?? "",
+      description: domain.props.description ?? null,
+      example_dialogue: domain.props.exampleDialogue ?? null,
+      lorebook: domain.props.lorebook ? domain.props.lorebook.toJSON() : null,
+      created_at: domain.props.createdAt,
+      updated_at: domain.props.updatedAt,
+    };
+  }
+
+  /**
+   * Convert a ScenarioCard to persistence format.
+   * Type-safe method for scenario-specific conversions.
+   */
+  public static scenarioToPersistence(domain: ScenarioCard): InsertScenario {
+    return {
+      id: domain.id.toString(),
+      title: domain.props.title,
+      icon_asset_id: domain.props.iconAssetId?.toString() ?? null,
+      tags: domain.props.tags,
+      creator: domain.props.creator ?? null,
+      card_summary: domain.props.cardSummary ?? null,
+      version: domain.props.version ?? null,
+      conceptual_origin: domain.props.conceptualOrigin ?? null,
+      vibe_session_id: domain.props.vibeSessionId ?? null,
+      image_prompt: domain.props.imagePrompt ?? null,
+      session_id: domain.props.sessionId?.toString() ?? null,
+      name: domain.props.name ?? domain.props.title,
+      description: domain.props.description ?? null,
+      first_messages: domain.props.firstMessages ?? null,
+      lorebook: domain.props.lorebook ? domain.props.lorebook.toJSON() : null,
+      created_at: domain.props.createdAt,
+      updated_at: domain.props.updatedAt,
+    };
+  }
+
   public static toPersistence(domain: Card): InsertCardRow {
     if (this.isCharacterCard(domain)) {
-      // Map to characters table
-      const insertRow: InsertCharacter = {
-        id: domain.id.toString(),
-        title: domain.props.title,
-        icon_asset_id: domain.props.iconAssetId?.toString() ?? null,
-        tags: domain.props.tags,
-        creator: domain.props.creator ?? null,
-        card_summary: domain.props.cardSummary ?? null,
-        version: domain.props.version ?? null,
-        conceptual_origin: domain.props.conceptualOrigin ?? null,
-        vibe_session_id: domain.props.vibeSessionId ?? null,
-        image_prompt: domain.props.imagePrompt ?? null,
-        session_id: domain.props.sessionId?.toString() ?? null,
-        name: domain.props.name ?? "",
-        description: domain.props.description ?? null,
-        example_dialogue: domain.props.exampleDialogue ?? null,
-        lorebook: domain.props.lorebook ? domain.props.lorebook.toJSON() : null,
-        created_at: domain.props.createdAt,
-        updated_at: domain.props.updatedAt,
-      };
-      return insertRow;
+      return this.characterToPersistence(domain);
     } else if (this.isScenarioCard(domain)) {
-      // Map to scenarios table
-      const insertRow: InsertScenario = {
-        id: domain.id.toString(),
-        title: domain.props.title,
-        icon_asset_id: domain.props.iconAssetId?.toString() ?? null,
-        tags: domain.props.tags,
-        creator: domain.props.creator ?? null,
-        card_summary: domain.props.cardSummary ?? null,
-        version: domain.props.version ?? null,
-        conceptual_origin: domain.props.conceptualOrigin ?? null,
-        vibe_session_id: domain.props.vibeSessionId ?? null,
-        image_prompt: domain.props.imagePrompt ?? null,
-        session_id: domain.props.sessionId?.toString() ?? null,
-        // Use name if available (ScenarioCard), otherwise use title (PlotCard fallback)
-        name: (domain.props as any).name ?? domain.props.title,
-        description: domain.props.description ?? null,
-        // Handle both new (firstMessages) and old (scenarios) field names
-        first_messages: (domain.props as any).firstMessages ?? (domain.props as any).scenarios ?? null,
-        lorebook: domain.props.lorebook ? domain.props.lorebook.toJSON() : null,
-        created_at: domain.props.createdAt,
-        updated_at: domain.props.updatedAt,
-      };
-      return insertRow;
+      return this.scenarioToPersistence(domain);
     } else {
       throw new Error("Invalid card type");
     }

@@ -38,7 +38,7 @@ export class DataStoreNodeSupabaseMapper {
     newNodeId: string,
   ): Result<DataStoreNode> {
     // Parse dataStoreFields - cloud may store it as JSON string or superjson string
-    let dataStoreFields: any[] = [];
+    let parsedFields: any[] = [];
     if (data.data_store_fields) {
       if (typeof data.data_store_fields === "string") {
         try {
@@ -47,21 +47,28 @@ export class DataStoreNodeSupabaseMapper {
           // Check if it's superjson format (has "json" and optionally "meta" keys)
           if (parsed && typeof parsed === "object" && "json" in parsed) {
             // It's superjson format - extract the actual data
-            dataStoreFields = parsed.json || [];
+            parsedFields = parsed.json || [];
           } else if (Array.isArray(parsed)) {
             // It's regular JSON array
-            dataStoreFields = parsed;
+            parsedFields = parsed;
           } else {
-            dataStoreFields = [];
+            parsedFields = [];
           }
         } catch {
-          dataStoreFields = [];
+          parsedFields = [];
         }
       } else if (Array.isArray(data.data_store_fields)) {
         // Already an array
-        dataStoreFields = data.data_store_fields;
+        parsedFields = data.data_store_fields;
       }
     }
+
+    // Explicitly map to DataStoreField structure for consistency with DrizzleMapper
+    const dataStoreFields = parsedFields.map((field: any) => ({
+      id: field.id,
+      schemaFieldId: field.schemaFieldId,
+      logic: field.logic,
+    }));
 
     return DataStoreNode.create(
       {

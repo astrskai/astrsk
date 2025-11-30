@@ -83,7 +83,28 @@ export default function SharedCharacterPage() {
   const handleRetry = () => {
     setImportState("loading");
     setErrorMessage("");
-    importCharacterMutation.mutate({ characterId: uuid });
+    importCharacterMutation.mutate(
+      { characterId: uuid },
+      {
+        onSuccess: (character) => {
+          setImportState("success");
+          toastSuccess(`Character "${character.props.title}" imported successfully`);
+          setTimeout(() => {
+            navigate({
+              to: "/assets/characters/{-$characterId}",
+              params: { characterId: character.id.toString() },
+              replace: true,
+            });
+          }, REDIRECT_DELAY);
+        },
+        onError: (error) => {
+          setImportState("error");
+          const message = error instanceof Error ? error.message : "Unknown error occurred";
+          setErrorMessage(message);
+          toastError("Failed to import character", { description: message });
+        },
+      },
+    );
   };
 
   const handleGoToCharacters = () => {

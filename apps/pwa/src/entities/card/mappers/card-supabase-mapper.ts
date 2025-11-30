@@ -6,11 +6,9 @@ import {
 } from "@/shared/lib/cloud-upload-helpers";
 
 import {
-  CardType,
   CharacterCard,
   ScenarioCard,
   PlotCard,
-  Card,
 } from "@/entities/card/domain";
 import { Lorebook } from "@/entities/card/domain/lorebook";
 import { CardDrizzleMapper } from "./card-drizzle-mapper";
@@ -92,48 +90,30 @@ export class CardSupabaseMapper {
     card: CharacterCard,
     sessionId?: UniqueEntityID | null,
   ): CharacterCloudData {
-    // Use drizzle mapper to get persistence format, then convert to cloud format
-    const persistenceData = CardDrizzleMapper.toPersistence(card);
-
-    // Extract fields from persistence data
-    const {
-      id,
-      title,
-      tags,
-      creator,
-      card_summary,
-      version,
-      conceptual_origin,
-      vibe_session_id,
-      image_prompt,
-      name,
-      description,
-      lorebook,
-    } = persistenceData as any;
-
-    const { example_dialogue } = persistenceData as any;
+    // Use type-safe drizzle mapper to get persistence format
+    const persistenceData = CardDrizzleMapper.characterToPersistence(card);
 
     return {
-      id,
-      title,
-      icon_asset_id: card.props.iconAssetId?.toString() || null,
-      tags,
-      creator,
-      card_summary,
-      version,
-      conceptual_origin,
-      vibe_session_id,
-      image_prompt,
-      name,
-      description,
-      example_dialogue,
-      lorebook,
+      id: persistenceData.id,
+      title: persistenceData.title,
+      icon_asset_id: persistenceData.icon_asset_id ?? null,
+      tags: persistenceData.tags ?? [],
+      creator: persistenceData.creator ?? null,
+      card_summary: persistenceData.card_summary ?? null,
+      version: persistenceData.version ?? null,
+      conceptual_origin: persistenceData.conceptual_origin ?? null,
+      vibe_session_id: persistenceData.vibe_session_id ?? null,
+      image_prompt: persistenceData.image_prompt ?? null,
+      name: persistenceData.name,
+      description: persistenceData.description ?? null,
+      example_dialogue: persistenceData.example_dialogue ?? null,
+      lorebook: persistenceData.lorebook ?? null,
       token_count: card.props.tokenCount || 0,
-      session_id: sessionId?.toString() || null,
+      session_id: sessionId?.toString() ?? null,
       is_public: false,
       owner_id: null,
       created_at: card.props.createdAt.toISOString(),
-      updated_at: card.props.updatedAt?.toISOString() || new Date().toISOString(),
+      updated_at: card.props.updatedAt?.toISOString() ?? new Date().toISOString(),
     };
   }
 
@@ -202,57 +182,44 @@ export class CardSupabaseMapper {
     card: ScenarioCard | PlotCard,
     sessionId?: UniqueEntityID | null,
   ): ScenarioCloudData {
-    // Use drizzle mapper to get persistence format
-    const persistenceData = CardDrizzleMapper.toPersistence(card);
-
-    // Extract fields from persistence data
-    const {
-      id,
-      title,
-      tags,
-      creator,
-      card_summary,
-      version,
-      conceptual_origin,
-      vibe_session_id,
-      image_prompt,
-      name,
-      description,
-      lorebook,
-    } = persistenceData as any;
-
     // Handle PlotCard → ScenarioCard migration
-    // PlotCard has 'scenarios' field, ScenarioCard has 'first_messages' field
-    let first_messages;
+    // PlotCard has 'scenarios' field, ScenarioCard has 'firstMessages' field
+    let first_messages: { name: string; description: string }[] | null;
+    let name: string;
+
     if (card instanceof PlotCard) {
       // Migrate: PlotCard.scenarios → ScenarioCard.first_messages
-      first_messages = (persistenceData as any).scenarios ?? [];
+      // PlotCard doesn't have 'name' field, use title as fallback
+      first_messages = card.props.scenarios ?? [];
+      name = card.props.title;
     } else {
-      // ScenarioCard: use first_messages directly
-      first_messages = (persistenceData as any).first_messages ?? [];
+      // ScenarioCard: use firstMessages directly
+      const persistenceData = CardDrizzleMapper.scenarioToPersistence(card);
+      first_messages = persistenceData.first_messages ?? [];
+      name = persistenceData.name;
     }
 
     return {
-      id,
-      title,
-      icon_asset_id: card.props.iconAssetId?.toString() || null,
-      tags,
-      creator,
-      card_summary,
-      version,
-      conceptual_origin,
-      vibe_session_id,
-      image_prompt,
+      id: card.id.toString(),
+      title: card.props.title,
+      icon_asset_id: card.props.iconAssetId?.toString() ?? null,
+      tags: card.props.tags ?? [],
+      creator: card.props.creator ?? null,
+      card_summary: card.props.cardSummary ?? null,
+      version: card.props.version ?? null,
+      conceptual_origin: card.props.conceptualOrigin ?? null,
+      vibe_session_id: card.props.vibeSessionId ?? null,
+      image_prompt: card.props.imagePrompt ?? null,
       name,
-      description,
+      description: card.props.description ?? null,
       first_messages,
-      lorebook,
+      lorebook: card.props.lorebook?.toJSON() ?? null,
       token_count: card.props.tokenCount || 0,
-      session_id: sessionId?.toString() || null,
+      session_id: sessionId?.toString() ?? null,
       is_public: false,
       owner_id: null,
       created_at: card.props.createdAt.toISOString(),
-      updated_at: card.props.updatedAt?.toISOString() || new Date().toISOString(),
+      updated_at: card.props.updatedAt?.toISOString() ?? new Date().toISOString(),
     };
   }
 }

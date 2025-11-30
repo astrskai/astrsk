@@ -372,18 +372,23 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
           newSessionId,
         );
 
-        if (cardResult.isSuccess) {
-          const card = cardResult.getValue();
-          const tokenCount = CharacterCard.calculateTokenSize(
-            card.props,
-            getTokenizer(),
-          );
-          card.update({ tokenCount });
+        if (cardResult.isFailure) {
+          console.error(`[ImportSession] Failed to create character ${characterData.id}:`, cardResult.getError());
+          continue;
+        }
 
-          const savedCardResult = await this.saveCardRepo.saveCard(card);
-          if (savedCardResult.isSuccess) {
-            cardIdMap.set(characterData.id, savedCardResult.getValue().id);
-          }
+        const card = cardResult.getValue();
+        const tokenCount = CharacterCard.calculateTokenSize(
+          card.props,
+          getTokenizer(),
+        );
+        card.update({ tokenCount });
+
+        const savedCardResult = await this.saveCardRepo.saveCard(card);
+        if (savedCardResult.isFailure) {
+          console.error(`[ImportSession] Failed to save character ${characterData.id}:`, savedCardResult.getError());
+        } else {
+          cardIdMap.set(characterData.id, savedCardResult.getValue().id);
         }
       }
 
@@ -400,18 +405,23 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
           newSessionId,
         );
 
-        if (cardResult.isSuccess) {
-          const card = cardResult.getValue();
-          const tokenCount = ScenarioCard.calculateTokenSize(
-            card.props,
-            getTokenizer(),
-          );
-          card.update({ tokenCount });
+        if (cardResult.isFailure) {
+          console.error(`[ImportSession] Failed to create scenario ${scenarioData.id}:`, cardResult.getError());
+          continue;
+        }
 
-          const savedCardResult = await this.saveCardRepo.saveCard(card);
-          if (savedCardResult.isSuccess) {
-            cardIdMap.set(scenarioData.id, savedCardResult.getValue().id);
-          }
+        const card = cardResult.getValue();
+        const tokenCount = ScenarioCard.calculateTokenSize(
+          card.props,
+          getTokenizer(),
+        );
+        card.update({ tokenCount });
+
+        const savedCardResult = await this.saveCardRepo.saveCard(card);
+        if (savedCardResult.isFailure) {
+          console.error(`[ImportSession] Failed to save scenario ${scenarioData.id}:`, savedCardResult.getError());
+        } else {
+          cardIdMap.set(scenarioData.id, savedCardResult.getValue().id);
         }
       }
 

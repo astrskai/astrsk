@@ -85,7 +85,28 @@ export default function SharedSessionPage() {
   const handleRetry = () => {
     setImportState("loading");
     setErrorMessage("");
-    importSessionMutation.mutate({ sessionId: uuid });
+    importSessionMutation.mutate(
+      { sessionId: uuid },
+      {
+        onSuccess: (session) => {
+          setImportState("success");
+          toastSuccess(`Session "${session.title}" imported successfully`);
+          setTimeout(() => {
+            navigate({
+              to: "/sessions/$sessionId",
+              params: { sessionId: session.id.toString() },
+              replace: true,
+            });
+          }, REDIRECT_DELAY);
+        },
+        onError: (error) => {
+          setImportState("error");
+          const message = error instanceof Error ? error.message : "Unknown error occurred";
+          setErrorMessage(message);
+          toastError("Failed to import session", { description: message });
+        },
+      },
+    );
   };
 
   const handleGoToSessions = () => {

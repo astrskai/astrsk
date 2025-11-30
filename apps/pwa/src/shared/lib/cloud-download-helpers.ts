@@ -52,6 +52,13 @@ export function getStorageUrl(filePath: string): string {
   }
 
   // Default to Supabase Storage public URL
+  if (!SUPABASE_URL) {
+    console.warn(
+      "[getStorageUrl] VITE_SUPABASE_URL is not set. " +
+      "Storage assets will fail to load. " +
+      "Please add VITE_SUPABASE_URL to your .env file."
+    );
+  }
   return `${SUPABASE_URL}/storage/v1/object/public/${ASSETS_BUCKET}/${filePath}`;
 }
 

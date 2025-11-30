@@ -103,7 +103,10 @@ export class ImportFlowFromCloud implements UseCase<Command, Result<Flow>> {
             continue;
           }
 
-          await this.saveAgentRepo.saveAgent(agentResult.getValue());
+          const saveResult = await this.saveAgentRepo.saveAgent(agentResult.getValue());
+          if (saveResult.isFailure) {
+            console.error(`[ImportFlowFromCloud] Failed to save agent ${agentData.id}:`, saveResult.getError());
+          }
         } catch (error) {
           console.error(`[ImportFlowFromCloud] Failed to import agent ${agentData.id}:`, error);
         }
@@ -126,7 +129,10 @@ export class ImportFlowFromCloud implements UseCase<Command, Result<Flow>> {
             continue;
           }
 
-          await this.saveDataStoreNodeRepo.saveDataStoreNode(nodeResult.getValue());
+          const saveResult = await this.saveDataStoreNodeRepo.saveDataStoreNode(nodeResult.getValue());
+          if (saveResult.isFailure) {
+            console.error(`[ImportFlowFromCloud] Failed to save data store node ${nodeData.id}:`, saveResult.getError());
+          }
         } catch (error) {
           console.error(`[ImportFlowFromCloud] Failed to import data store node ${nodeData.id}:`, error);
         }
@@ -149,7 +155,10 @@ export class ImportFlowFromCloud implements UseCase<Command, Result<Flow>> {
             continue;
           }
 
-          await this.saveIfNodeRepo.saveIfNode(nodeResult.getValue());
+          const saveResult = await this.saveIfNodeRepo.saveIfNode(nodeResult.getValue());
+          if (saveResult.isFailure) {
+            console.error(`[ImportFlowFromCloud] Failed to save if node ${nodeData.id}:`, saveResult.getError());
+          }
         } catch (error) {
           console.error(`[ImportFlowFromCloud] Failed to import if node ${nodeData.id}:`, error);
         }

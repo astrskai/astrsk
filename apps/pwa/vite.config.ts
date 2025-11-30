@@ -27,6 +27,8 @@ export default defineConfig({
         "../vibe-shared-types/src/index.ts",
       ),
     },
+    // Prevent multiple React copies from registering separate HMR runtimes
+    dedupe: ["react", "react-dom"],
   },
   define: {
     __APP_VERSION__: JSON.stringify(version),
@@ -161,7 +163,7 @@ This project uses the following third-party software. The full text of each lice
       // These libraries manage their own DOM and conflict with HMR
       exclude: [
         /features\/flow\//,
-        /widgets\/dockview/,
+        /widgets\/dockview-/, // Matches dockview-default-tab.tsx, dockview-panel-focus-animation.tsx
         /pages\/shared\/(flow|session)\.tsx/,
       ],
     }),

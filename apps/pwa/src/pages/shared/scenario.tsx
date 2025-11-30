@@ -83,7 +83,28 @@ export default function SharedScenarioPage() {
   const handleRetry = () => {
     setImportState("loading");
     setErrorMessage("");
-    importScenarioMutation.mutate({ scenarioId: uuid });
+    importScenarioMutation.mutate(
+      { scenarioId: uuid },
+      {
+        onSuccess: (scenario) => {
+          setImportState("success");
+          toastSuccess(`Scenario "${scenario.props.title}" imported successfully`);
+          setTimeout(() => {
+            navigate({
+              to: "/assets/scenarios/{-$scenarioId}",
+              params: { scenarioId: scenario.id.toString() },
+              replace: true,
+            });
+          }, REDIRECT_DELAY);
+        },
+        onError: (error) => {
+          setImportState("error");
+          const message = error instanceof Error ? error.message : "Unknown error occurred";
+          setErrorMessage(message);
+          toastError("Failed to import scenario", { description: message });
+        },
+      },
+    );
   };
 
   const handleGoToScenarios = () => {
