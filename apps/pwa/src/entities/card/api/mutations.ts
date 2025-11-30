@@ -1548,3 +1548,71 @@ export const useUpdateCardImagePrompt = (cardId: string) => {
     error: mutation.error,
   };
 };
+
+/**
+ * Hook for importing a character from cloud storage by ID
+ */
+export const useImportCharacterFromCloud = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["card", "importCharacterFromCloud"],
+    mutationFn: async ({
+      characterId,
+      sessionId,
+    }: {
+      characterId: string;
+      sessionId?: UniqueEntityID;
+    }) => {
+      const result = await CardService.importCharacterFromCloud.execute({
+        characterId,
+        sessionId,
+      });
+
+      if (result.isFailure) {
+        throw new Error(result.getError());
+      }
+
+      return result.getValue();
+    },
+
+    onSuccess: () => {
+      // Invalidate card list queries to show the new imported card
+      queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
+    },
+  });
+};
+
+/**
+ * Hook for importing a scenario from cloud storage by ID
+ */
+export const useImportScenarioFromCloud = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["card", "importScenarioFromCloud"],
+    mutationFn: async ({
+      scenarioId,
+      sessionId,
+    }: {
+      scenarioId: string;
+      sessionId?: UniqueEntityID;
+    }) => {
+      const result = await CardService.importScenarioFromCloud.execute({
+        scenarioId,
+        sessionId,
+      });
+
+      if (result.isFailure) {
+        throw new Error(result.getError());
+      }
+
+      return result.getValue();
+    },
+
+    onSuccess: () => {
+      // Invalidate card list queries to show the new imported card
+      queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
+    },
+  });
+};

@@ -3,7 +3,7 @@ import { UniqueEntityID } from '@/shared/domain';
 import { AgentCloudData } from '@/shared/lib/cloud-upload-helpers';
 
 import { LoadAgentRepo } from '@/entities/agent/repos/load-agent-repo';
-import { AgentDrizzleMapper } from '@/entities/agent/mappers/agent-drizzle-mapper';
+import { AgentSupabaseMapper } from '@/entities/agent/mappers/agent-supabase-mapper';
 
 interface Command {
   flowId: UniqueEntityID;
@@ -28,64 +28,9 @@ export class PrepareAgentsCloudData
       const agents = agentsResult.getValue();
       const agentCloudDataList: AgentCloudData[] = [];
 
-      // 2. Convert each agent to cloud format
+      // 2. Convert each agent to cloud format using mapper
       for (const agent of agents) {
-        // Use mapper to convert domain → persistence format
-        const persistenceData = AgentDrizzleMapper.toPersistence(agent);
-
-        // Extract only the fields we need (type-safe)
-        const {
-          id,
-          flow_id,
-          name,
-          description,
-          target_api_type,
-          api_source,
-          model_id,
-          model_name,
-          model_tier,
-          prompt_messages,
-          text_prompt,
-          enabled_parameters,
-          parameter_values,
-          enabled_structured_output,
-          output_format,
-          output_streaming,
-          schema_name,
-          schema_description,
-          schema_fields,
-          token_count,
-          color,
-        } = persistenceData as any; // Cast only for extraction
-
-        // Build Supabase data with explicit fields
-        const agentData: AgentCloudData = {
-          id,
-          flow_id,
-          name,
-          description,
-          target_api_type,
-          api_source,
-          model_id,
-          model_name,
-          model_tier: model_tier || 'Light',
-          prompt_messages,
-          text_prompt,
-          enabled_parameters,
-          parameter_values,
-          enabled_structured_output,
-          output_format: output_format || 'structured_output',
-          output_streaming: output_streaming ?? true,
-          schema_name,
-          schema_description,
-          schema_fields,
-          token_count: token_count || 0,
-          color: color || '#3b82f6',
-          created_at: agent.props.createdAt.toISOString(),
-          updated_at:
-            agent.props.updatedAt?.toISOString() || new Date().toISOString(),
-        };
-
+        const agentData = AgentSupabaseMapper.toCloud(agent);
         agentCloudDataList.push(agentData);
       }
 

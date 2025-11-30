@@ -21,6 +21,40 @@ export type {
   IfNodeCloudData,
 };
 
+// Environment variables for storage URLs
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+// Digital Ocean Spaces URL for bot-avatars
+const DIGITALOCEAN_SPACES_URL = import.meta.env.VITE_DIGITALOCEAN_SPACES_URL;
+
+/**
+ * Construct full storage URL from a file path.
+ * Handles both DigitalOcean Spaces (bot-avatars/) and Supabase Storage paths.
+ *
+ * @param filePath - The file path (could be relative or full URL)
+ * @returns Full URL to the file
+ */
+export function getStorageUrl(filePath: string): string {
+  // If filePath is already a full URL, return it as-is
+  if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+    return filePath;
+  }
+
+  // DigitalOcean Spaces paths start with 'bot-avatars/'
+  if (filePath.startsWith("bot-avatars/")) {
+    if (!DIGITALOCEAN_SPACES_URL) {
+      console.warn(
+        "[getStorageUrl] VITE_DIGITALOCEAN_SPACES_URL is not set. " +
+        "Bot avatar assets will fail to load. " +
+        "Please add VITE_DIGITALOCEAN_SPACES_URL to your .env file."
+      );
+    }
+    return `${DIGITALOCEAN_SPACES_URL}/${filePath}`;
+  }
+
+  // Default to Supabase Storage public URL
+  return `${SUPABASE_URL}/storage/v1/object/public/${ASSETS_BUCKET}/${filePath}`;
+}
+
 /**
  * Asset data from cloud
  */
@@ -54,6 +88,9 @@ export interface SessionCloudBundle {
 
 /**
  * Check if a resource has a valid (non-expired) expiration date
+ * @deprecated Supabase RLS policies now handle access control.
+ * Resources are accessible if: is_public = true OR (expiration_date IS NOT NULL AND expiration_date > NOW())
+ * This function is kept for reference but is no longer used by fetch functions.
  */
 export async function checkResourceAccess(
   resourceType: "session" | "flow" | "character" | "scenario",
@@ -101,12 +138,7 @@ export async function fetchCharacterFromCloud(
   characterId: string,
 ): Promise<Result<CharacterCloudData>> {
   try {
-    // First check if resource is accessible
-    const accessCheck = await checkResourceAccess("character", characterId);
-    if (accessCheck.isFailure) {
-      return Result.fail(accessCheck.getError());
-    }
-
+    // Note: Supabase RLS handles access control (is_public or non-expired expiration_date)
     const { data, error } = await supabaseClient
       .from("astrsk_characters")
       .select("*")
@@ -134,12 +166,7 @@ export async function fetchScenarioFromCloud(
   scenarioId: string,
 ): Promise<Result<ScenarioCloudData>> {
   try {
-    // First check if resource is accessible
-    const accessCheck = await checkResourceAccess("scenario", scenarioId);
-    if (accessCheck.isFailure) {
-      return Result.fail(accessCheck.getError());
-    }
-
+    // Note: Supabase RLS handles access control (is_public or non-expired expiration_date)
     const { data, error } = await supabaseClient
       .from("astrsk_scenarios")
       .select("*")
@@ -172,12 +199,7 @@ export async function fetchFlowFromCloud(
   ifNodes: IfNodeCloudData[];
 }>> {
   try {
-    // First check if resource is accessible
-    const accessCheck = await checkResourceAccess("flow", flowId);
-    if (accessCheck.isFailure) {
-      return Result.fail(accessCheck.getError());
-    }
-
+    // Note: Supabase RLS handles access control (is_public or non-expired expiration_date)
     // Fetch flow
     const { data: flowData, error: flowError } = await supabaseClient
       .from("astrsk_flows")
@@ -241,12 +263,7 @@ export async function fetchSessionFromCloud(
   sessionId: string,
 ): Promise<Result<SessionCloudBundle>> {
   try {
-    // First check if resource is accessible
-    const accessCheck = await checkResourceAccess("session", sessionId);
-    if (accessCheck.isFailure) {
-      return Result.fail(accessCheck.getError());
-    }
-
+    // Note: Supabase RLS handles access control (is_public or non-expired expiration_date)
     // Fetch session
     const { data: sessionData, error: sessionError } = await supabaseClient
       .from("astrsk_sessions")

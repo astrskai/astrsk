@@ -271,3 +271,58 @@ export const useDeleteSession = () => {
     },
   });
 };
+
+/**
+ * Hook for importing a session from cloud storage by ID
+ */
+export const useImportSessionFromCloud = () => {
+  return useMutation({
+    mutationKey: ["session", "importFromCloud"],
+    mutationFn: async ({
+      sessionId,
+      agentModelOverrides,
+    }: {
+      sessionId: string;
+      agentModelOverrides?: Map<
+        string,
+        { apiSource: string; modelId: string; modelName: string }
+      >;
+    }) => {
+      const result = await SessionService.importSessionFromCloud.execute({
+        sessionId,
+        agentModelOverrides,
+      });
+
+      if (result.isFailure) {
+        throw new Error(result.getError());
+      }
+
+      return result.getValue();
+    },
+
+    onSuccess: (session, _variables, _onMutateResult, context) => {
+      // Set the session data in cache
+      context.client.setQueryData(
+        sessionQueries.detail(session.id).queryKey,
+        SessionDrizzleMapper.toPersistence(session),
+      );
+
+      // Invalidate session list queries
+      context.client.invalidateQueries({
+        queryKey: sessionQueries.lists(),
+      });
+
+      // Invalidate card and flow lists (new resources were imported)
+      context.client.invalidateQueries({
+        queryKey: cardQueries.lists(),
+      });
+      context.client.invalidateQueries({
+        queryKey: flowQueries.lists(),
+      });
+    },
+
+    onError: (error) => {
+      logger.error("Failed to import session from cloud", error);
+    },
+  });
+};

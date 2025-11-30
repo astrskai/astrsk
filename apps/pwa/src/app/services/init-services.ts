@@ -107,6 +107,12 @@ export async function initServices(
       AgentService.agentRepo,
       DataStoreNodeService.dataStoreNodeRepo,
       IfNodeService.ifNodeRepo,
+      // Save repos for cloud import
+      CardService.cardRepo,
+      FlowService.flowRepo,
+      AgentService.agentRepo,
+      DataStoreNodeService.dataStoreNodeRepo,
+      IfNodeService.ifNodeRepo,
     );
     onProgress?.(currentService, "success");
   } catch (error) {

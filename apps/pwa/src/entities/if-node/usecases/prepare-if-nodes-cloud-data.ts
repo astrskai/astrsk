@@ -3,7 +3,7 @@ import { UniqueEntityID } from '@/shared/domain';
 import { IfNodeCloudData } from '@/shared/lib/cloud-upload-helpers';
 
 import { LoadIfNodeRepo } from '@/entities/if-node/repos/load-if-node-repo';
-import { IfNodeDrizzleMapper } from '@/entities/if-node/mappers/if-node-drizzle-mapper';
+import { IfNodeSupabaseMapper } from '@/entities/if-node/mappers/if-node-supabase-mapper';
 
 interface Command {
   flowId: UniqueEntityID;
@@ -29,34 +29,9 @@ export class PrepareIfNodesCloudData
       const nodes = nodesResult.getValue();
       const nodeCloudDataList: IfNodeCloudData[] = [];
 
-      // 2. Convert each node to cloud format
+      // 2. Convert each node to cloud format using mapper
       for (const node of nodes) {
-        // Use mapper to convert domain → persistence format
-        const persistenceData = IfNodeDrizzleMapper.toPersistence(node);
-
-        // Extract only the fields we need (type-safe)
-        const {
-          id,
-          flow_id,
-          name,
-          color,
-          logic_operator,
-          conditions,
-        } = persistenceData as any; // Cast only for extraction
-
-        // Build Supabase data with explicit fields
-        const nodeData: IfNodeCloudData = {
-          id,
-          flow_id,
-          name,
-          color: color || '#3b82f6',
-          logicOperator: logic_operator || null,
-          conditions,
-          created_at: node.props.createdAt.toISOString(),
-          updated_at:
-            node.props.updatedAt?.toISOString() || new Date().toISOString(),
-        };
-
+        const nodeData = IfNodeSupabaseMapper.toCloud(node);
         nodeCloudDataList.push(nodeData);
       }
 

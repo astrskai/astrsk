@@ -4,7 +4,7 @@ import { ScenarioCloudData } from "@/shared/lib/cloud-upload-helpers";
 
 import { ScenarioCard, PlotCard } from "@/entities/card/domain";
 import { LoadCardRepo } from "@/entities/card/repos";
-import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
+import { CardSupabaseMapper } from "@/entities/card/mappers/card-supabase-mapper";
 
 interface Command {
   cardId: UniqueEntityID;
@@ -45,60 +45,8 @@ export class PrepareScenarioCloudData
         console.log(`Migrating PlotCard ${card.id.toString()} to ScenarioCard format for cloud export`);
       }
 
-      // 2. Use mapper to convert domain → persistence format
-      const persistenceData = CardDrizzleMapper.toPersistence(card);
-
-      // Extract only the fields we need (type-safe)
-      const {
-        id,
-        title,
-        tags,
-        creator,
-        card_summary,
-        version,
-        conceptual_origin,
-        vibe_session_id,
-        image_prompt,
-        name,
-        description,
-        lorebook,
-      } = persistenceData as any; // Cast only for extraction
-
-      // Handle PlotCard → ScenarioCard migration
-      // PlotCard has 'scenarios' field, ScenarioCard has 'first_messages' field
-      let first_messages;
-      if (card instanceof PlotCard) {
-        // Migrate: PlotCard.scenarios → ScenarioCard.first_messages
-        first_messages = (persistenceData as any).scenarios ?? [];
-      } else {
-        // ScenarioCard: use first_messages directly
-        first_messages = (persistenceData as any).first_messages ?? [];
-      }
-
-      // 3. Build Supabase data with icon_asset_id reference (asset upload happens later)
-      const scenarioData: ScenarioCloudData = {
-        id,
-        title,
-        icon_asset_id: card.props.iconAssetId?.toString() || null, // Use cloned asset ID
-        tags,
-        creator,
-        card_summary,
-        version,
-        conceptual_origin,
-        vibe_session_id,
-        image_prompt,
-        name,
-        description,
-        first_messages,
-        lorebook,
-        token_count: card.props.tokenCount || 0,
-        session_id: sessionId?.toString() || null,
-        is_public: false,
-        owner_id: null,
-        created_at: card.props.createdAt.toISOString(),
-        updated_at:
-          card.props.updatedAt?.toISOString() || new Date().toISOString(),
-      };
+      // 2. Use mapper to convert domain → cloud format (handles PlotCard migration)
+      const scenarioData = CardSupabaseMapper.scenarioToCloud(card, sessionId);
 
       return Result.ok(scenarioData);
     } catch (error) {

@@ -32,6 +32,8 @@ import {
   UpdatePlotDescription,
   RestoreCardFromSnapshot,
 } from "@/entities/card/usecases";
+import { ImportCharacterFromCloud } from "@/entities/card/usecases/import-character-from-cloud";
+import { ImportScenarioFromCloud } from "@/entities/card/usecases/import-scenario-from-cloud";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 
 export class CardService {
@@ -63,6 +65,8 @@ export class CardService {
   public static updateCardScenarios: UpdateCardScenarios;
   public static updatePlotDescription: UpdatePlotDescription;
   public static restoreCardFromSnapshot: RestoreCardFromSnapshot;
+  public static importCharacterFromCloud: ImportCharacterFromCloud;
+  public static importScenarioFromCloud: ImportScenarioFromCloud;
 
   private constructor() {}
 
@@ -152,5 +156,15 @@ export class CardService {
       this.cardRepo,
     );
     this.restoreCardFromSnapshot = new RestoreCardFromSnapshot(this.cardRepo);
+
+    // Cloud import
+    this.importCharacterFromCloud = new ImportCharacterFromCloud(
+      saveFileToAsset,
+      this.cardRepo,
+    );
+    this.importScenarioFromCloud = new ImportScenarioFromCloud(
+      saveFileToAsset,
+      this.cardRepo,
+    );
   }
 }

@@ -35,6 +35,7 @@ import { UpdateNodesAndEdges } from "@/entities/flow/usecases/update-nodes-and-e
 import { UpdateFlowValidation } from "@/entities/flow/usecases/update-flow-validation";
 import { UpdateFlowReadyState } from "@/entities/flow/usecases/update-flow-ready-state";
 import { RestoreFlowFromSnapshot } from "@/entities/flow/usecases/restore-flow-from-snapshot";
+import { ImportFlowFromCloud } from "@/entities/flow/usecases/import-flow-from-cloud";
 import { PrepareFlowCloudData } from "@/entities/flow/usecases/prepare-flow-cloud-data";
 import { PrepareAgentsCloudData } from "@/entities/agent/usecases/prepare-agents-cloud-data";
 import { PrepareDataStoreNodesCloudData } from "@/entities/data-store-node/usecases/prepare-data-store-nodes-cloud-data";
@@ -77,6 +78,7 @@ export class FlowService {
   public static updateFlowValidation: UpdateFlowValidation;
   public static updateFlowReadyState: UpdateFlowReadyState;
   public static restoreFlowFromSnapshot: RestoreFlowFromSnapshot;
+  public static importFlowFromCloud: ImportFlowFromCloud;
 
   private constructor() { }
 
@@ -139,5 +141,13 @@ export class FlowService {
     this.updateFlowValidation = new UpdateFlowValidation(this.flowRepo);
     this.updateFlowReadyState = new UpdateFlowReadyState(this.flowRepo);
     this.restoreFlowFromSnapshot = new RestoreFlowFromSnapshot(this.flowRepo);
+
+    // Cloud import
+    this.importFlowFromCloud = new ImportFlowFromCloud(
+      this.flowRepo,
+      saveAgentRepo,
+      this.dataStoreNodeRepo,
+      this.ifNodeRepo,
+    );
   }
 }

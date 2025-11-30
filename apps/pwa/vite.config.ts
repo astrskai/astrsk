@@ -156,7 +156,15 @@ This project uses the following third-party software. The full text of each lice
       ignoreConfigErrors: true,
     }),
     tailwindcss(),
-    react(),
+    react({
+      // Exclude files that use Dockview or React Flow from Fast Refresh
+      // These libraries manage their own DOM and conflict with HMR
+      exclude: [
+        /features\/flow\//,
+        /widgets\/dockview/,
+        /pages\/shared\/(flow|session)\.tsx/,
+      ],
+    }),
     VitePWA({
       registerType: "prompt",
       injectRegister: false,

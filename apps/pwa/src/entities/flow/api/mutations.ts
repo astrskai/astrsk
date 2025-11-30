@@ -123,3 +123,40 @@ export const useUpdateResponseTemplate = (flowId: string) => {
     error: mutation.error,
   };
 };
+
+/**
+ * Hook for importing a flow from cloud storage by ID
+ */
+export const useImportFlowFromCloud = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["flow", "importFlowFromCloud"],
+    mutationFn: async ({
+      flowId,
+      agentModelOverrides,
+    }: {
+      flowId: string;
+      agentModelOverrides?: Map<
+        string,
+        { apiSource: string; modelId: string; modelName: string }
+      >;
+    }) => {
+      const result = await FlowService.importFlowFromCloud.execute({
+        flowId,
+        agentModelOverrides,
+      });
+
+      if (result.isFailure) {
+        throw new Error(result.getError());
+      }
+
+      return result.getValue();
+    },
+
+    onSuccess: () => {
+      // Invalidate flow list queries to show the new imported flow
+      queryClient.invalidateQueries({ queryKey: flowKeys.lists() });
+    },
+  });
+};

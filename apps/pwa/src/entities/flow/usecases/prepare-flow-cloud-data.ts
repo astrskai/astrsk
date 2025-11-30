@@ -2,9 +2,8 @@ import { Result, UseCase } from '@/shared/core';
 import { UniqueEntityID } from '@/shared/domain';
 import { FlowCloudData } from '@/shared/lib/cloud-upload-helpers';
 
-import { Flow } from '@/entities/flow/domain';
 import { LoadFlowRepo } from '@/entities/flow/repos/load-flow-repo';
-import { FlowDrizzleMapper } from '@/entities/flow/mappers/flow-drizzle-mapper';
+import { FlowSupabaseMapper } from '@/entities/flow/mappers/flow-supabase-mapper';
 import { LoadAgentRepo } from '@/entities/agent/repos/load-agent-repo';
 
 interface Command {
@@ -36,30 +35,7 @@ export class PrepareFlowCloudData
 
       const flow = flowResult.getValue();
 
-      // 2. Use mapper to convert domain → persistence format
-      const persistenceData = FlowDrizzleMapper.toPersistence(flow);
-
-      // Extract only the fields we need (type-safe)
-      const {
-        id,
-        name,
-        description,
-        nodes,
-        edges,
-        response_template,
-        data_store_schema,
-        panel_structure,
-        viewport,
-        vibe_session_id,
-        ready_state,
-        validation_issues,
-        tags,
-        summary,
-        version,
-        conceptual_origin,
-      } = persistenceData as any; // Cast only for extraction
-
-      // 3. Calculate token_count as sum of all agents' token_count
+      // 2. Calculate token_count as sum of all agents' token_count
       const agentsResult = await this.loadAgentRepo.getAgentsByFlowId(flowId);
       let tokenCount = 0;
 
@@ -71,32 +47,8 @@ export class PrepareFlowCloudData
         );
       }
 
-      // 4. Build Supabase data with explicit fields
-      const flowData: FlowCloudData = {
-        id,
-        name,
-        description,
-        nodes,
-        edges,
-        response_template,
-        data_store_schema,
-        panel_structure,
-        viewport,
-        vibe_session_id,
-        ready_state,
-        validation_issues,
-        token_count: tokenCount,
-        tags,
-        summary,
-        version,
-        conceptual_origin,
-        session_id: sessionId?.toString() || null,
-        is_public: false,
-        owner_id: null,
-        created_at: flow.props.createdAt.toISOString(),
-        updated_at:
-          flow.props.updatedAt?.toISOString() || new Date().toISOString(),
-      };
+      // 3. Use mapper to convert domain → cloud format
+      const flowData = FlowSupabaseMapper.toCloud(flow, tokenCount, sessionId);
 
       return Result.ok(flowData);
     } catch (error) {

@@ -17,6 +17,53 @@ export class IfNodeDrizzleMapper {
     };
   }
 
+  /**
+   * Parse conditions field that may be in different formats:
+   * - superjson string (from local DB): '{"json":[...],"meta":{...}}'
+   * - regular JSON string (from cloud): '[...]'
+   * - already parsed array
+   */
+  private static parseConditions(conditions: any): any[] {
+    if (!conditions) return [];
+
+    // Already an array
+    if (Array.isArray(conditions)) return conditions;
+
+    // String - try to parse
+    if (typeof conditions === "string") {
+      try {
+        // First try superjson.parse (for local DB format)
+        const superjsonResult = parse(conditions);
+        if (Array.isArray(superjsonResult)) {
+          return superjsonResult;
+        }
+      } catch {
+        // superjson.parse failed, try regular JSON
+      }
+
+      try {
+        // Try regular JSON.parse (for cloud format)
+        const jsonResult = JSON.parse(conditions);
+        if (Array.isArray(jsonResult)) {
+          return jsonResult;
+        }
+        // Check if it's superjson wrapper format
+        if (jsonResult && typeof jsonResult === "object" && "json" in jsonResult) {
+          return jsonResult.json || [];
+        }
+      } catch {
+        // Both failed
+      }
+    }
+
+    // Object with json wrapper (already parsed superjson format)
+    if (conditions && typeof conditions === "object" && "json" in conditions) {
+      return conditions.json || [];
+    }
+
+    return [];
+  }
+
   public static toDomain(data: any): IfNode {
     const ifNodeOrError = IfNode.create(
       {
@@ -24,7 +71,7 @@ export class IfNodeDrizzleMapper {
         name: data.name.trim() || "Untitled If Node",
         color: data.color || "#3b82f6",
         logicOperator: data.logic_operator || data.logicOperator || "AND",
-        conditions: data.conditions ? parse(data.conditions) || [] : [],
+        conditions: this.parseConditions(data.conditions),
       },
       new UniqueEntityID(data.id),
     );
