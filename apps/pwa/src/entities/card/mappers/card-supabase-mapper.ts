@@ -6,6 +6,7 @@ import {
 } from "@/shared/lib/cloud-upload-helpers";
 
 import {
+  CardType,
   CharacterCard,
   ScenarioCard,
   PlotCard,
