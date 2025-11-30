@@ -6,13 +6,13 @@ import {
   fetchCharacterFromCloud,
   fetchAssetFromCloud,
   downloadAssetFromUrl,
-  type CharacterCloudData,
+  getStorageUrl,
 } from "@/shared/lib/cloud-download-helpers";
 
 import { SaveFileToAsset } from "@/entities/asset/usecases/save-file-to-asset";
-import { CharacterCard, Lorebook } from "@/entities/card/domain";
-import { CardType } from "@/entities/card/domain/card";
+import { CharacterCard } from "@/entities/card/domain";
 import { SaveCardRepo } from "@/entities/card/repos";
+import { CardSupabaseMapper } from "@/entities/card/mappers/card-supabase-mapper";
 
 interface Command {
   characterId: string;
@@ -53,8 +53,9 @@ export class ImportCharacterFromCloud
 
       const assetData = assetResult.getValue();
 
-      // Download asset file from URL
-      const blobResult = await downloadAssetFromUrl(assetData.file_path);
+      // Construct full URL from file_path and download
+      const fullUrl = getStorageUrl(assetData.file_path);
+      const blobResult = await downloadAssetFromUrl(fullUrl);
       if (blobResult.isFailure) {
         console.warn(`Failed to download asset file: ${blobResult.getError()}`);
         return undefined;
@@ -79,42 +80,6 @@ export class ImportCharacterFromCloud
     }
   }
 
-  private createCharacterCardFromCloudData(
-    data: CharacterCloudData,
-    iconAssetId: UniqueEntityID | undefined,
-    sessionId?: UniqueEntityID,
-  ): Result<CharacterCard> {
-    // Parse lorebook if present
-    let lorebook: Lorebook | undefined;
-    if (data.lorebook) {
-      const lorebookResult = Lorebook.fromJSON(data.lorebook);
-      if (lorebookResult.isSuccess) {
-        lorebook = lorebookResult.getValue();
-      }
-    }
-
-    return CharacterCard.create(
-      {
-        iconAssetId,
-        title: data.title,
-        name: data.name,
-        type: CardType.Character,
-        tags: data.tags ?? [],
-        creator: data.creator ?? undefined,
-        cardSummary: data.card_summary ?? undefined,
-        version: data.version ?? undefined,
-        conceptualOrigin: data.conceptual_origin ?? undefined,
-        description: data.description ?? undefined,
-        exampleDialogue: data.example_dialogue ?? undefined,
-        lorebook,
-        sessionId, // If provided, creates session-local card
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      undefined, // Always generate new ID for imports
-    );
-  }
-
   async execute({
     characterId,
     sessionId,
@@ -131,8 +96,8 @@ export class ImportCharacterFromCloud
       // 2. Import icon asset if present
       const iconAssetId = await this.importIconAsset(characterData.icon_asset_id);
 
-      // 3. Create character card from cloud data
-      const cardResult = this.createCharacterCardFromCloudData(
+      // 3. Create character card from cloud data using mapper
+      const cardResult = CardSupabaseMapper.characterFromCloud(
         characterData,
         iconAssetId,
         sessionId,

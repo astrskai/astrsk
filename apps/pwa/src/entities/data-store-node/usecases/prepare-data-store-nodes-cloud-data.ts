@@ -3,7 +3,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { DataStoreNodeCloudData } from "@/shared/lib/cloud-upload-helpers";
 
 import { LoadDataStoreNodeRepo } from "@/entities/data-store-node/repos/load-data-store-node-repo";
-import { DataStoreNodeDrizzleMapper } from "@/entities/data-store-node/mappers/data-store-node-drizzle-mapper";
+import { DataStoreNodeSupabaseMapper } from "@/entities/data-store-node/mappers/data-store-node-supabase-mapper";
 
 interface Command {
   flowId: UniqueEntityID;
@@ -32,27 +32,9 @@ export class PrepareDataStoreNodesCloudData
       const nodes = nodesResult.getValue();
       const nodeCloudDataList: DataStoreNodeCloudData[] = [];
 
-      // 2. Convert each node to cloud format
+      // 2. Convert each node to cloud format using mapper
       for (const node of nodes) {
-        // Use mapper to convert domain → persistence format
-        const persistenceData = DataStoreNodeDrizzleMapper.toPersistence(node);
-
-        // Extract only the fields we need (type-safe)
-        const { id, flow_id, name, color, data_store_fields } =
-          persistenceData as any; // Cast only for extraction
-
-        // Build Supabase data with explicit fields
-        const nodeData: DataStoreNodeCloudData = {
-          id,
-          flow_id,
-          name,
-          color: color || "#3b82f6",
-          data_store_fields,
-          created_at: node.props.createdAt.toISOString(),
-          updated_at:
-            node.props.updatedAt?.toISOString() || new Date().toISOString(),
-        };
-
+        const nodeData = DataStoreNodeSupabaseMapper.toCloud(node);
         nodeCloudDataList.push(nodeData);
       }
 

@@ -43,11 +43,11 @@ import { PrepareDataStoreNodesCloudData } from "@/entities/data-store-node/useca
 import { PrepareIfNodesCloudData } from "@/entities/if-node/usecases/prepare-if-nodes-cloud-data";
 import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
 import { LoadBackgroundRepo } from "@/entities/background/repos/load-background-repo";
-import { LoadCardRepo } from "@/entities/card/repos";
-import { LoadFlowRepo } from "@/entities/flow/repos";
-import { LoadAgentRepo } from "@/entities/agent/repos";
-import { LoadDataStoreNodeRepo } from "@/entities/data-store-node/repos";
-import { LoadIfNodeRepo } from "@/entities/if-node/repos";
+import { LoadCardRepo, SaveCardRepo } from "@/entities/card/repos";
+import { LoadFlowRepo, SaveFlowRepo } from "@/entities/flow/repos";
+import { LoadAgentRepo, SaveAgentRepo } from "@/entities/agent/repos";
+import { LoadDataStoreNodeRepo, SaveDataStoreNodeRepo } from "@/entities/data-store-node/repos";
+import { LoadIfNodeRepo, SaveIfNodeRepo } from "@/entities/if-node/repos";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
 import { GetTurn } from "@/entities/turn/usecases/get-turn";
@@ -97,6 +97,11 @@ export class SessionService {
     loadAgentRepo: LoadAgentRepo,
     loadDataStoreNodeRepo: LoadDataStoreNodeRepo,
     loadIfNodeRepo: LoadIfNodeRepo,
+    saveCardRepo: SaveCardRepo,
+    saveFlowRepo: SaveFlowRepo,
+    saveAgentRepo: SaveAgentRepo,
+    saveDataStoreNodeRepo: SaveDataStoreNodeRepo,
+    saveIfNodeRepo: SaveIfNodeRepo,
   ) {
     this.sessionRepo = new DrizzleSessionRepo();
 
@@ -194,6 +199,19 @@ export class SessionService {
       saveFileToAsset,
       this.addMessage,
     );
+
+    // Cloud import initialization
+    this.importSessionFromCloud = new ImportSessionFromCloud(
+      this.sessionRepo,
+      saveCardRepo,
+      saveFlowRepo,
+      saveAgentRepo,
+      saveDataStoreNodeRepo,
+      saveIfNodeRepo,
+      saveFileToAsset,
+      saveFileToBackground,
+    );
+
     this.listSessionByCard = new ListSessionByCard(this.sessionRepo);
     this.listSessionByFlow = new ListSessionByFlow(this.sessionRepo);
   }
