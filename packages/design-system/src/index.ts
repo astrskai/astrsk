@@ -13,6 +13,7 @@ export { Label, type LabelProps } from './components/Label';
 export { LabeledInput, type LabeledInputProps } from './components/LabeledInput';
 export { Textarea, type TextareaProps } from './components/Textarea';
 export { LabeledTextarea, type LabeledTextareaProps } from './components/LabeledTextarea';
+export { Select, type SelectProps, type SelectOption } from './components/Select';
 
 // Content Components
 export { CharacterCard, type CharacterCardProps, type CardAction } from './components/CharacterCard';
