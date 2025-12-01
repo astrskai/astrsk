@@ -5,7 +5,7 @@
       "gh-pages": false
     }
   },
-  "ignoreCommand": "[ \"$VERCEL_GIT_COMMIT_REF\" = \"gh-pages\" ]",
+  "ignoreCommand": "[ \"$VERCEL_GIT_COMMIT_REF\" != \"gh-pages\" ]",
   "installCommand": "pnpm --filter pwa... install --frozen-lockfile",
   "buildCommand": "cd apps/pwa && pnpm run build",
   "outputDirectory": "apps/pwa/dist",
