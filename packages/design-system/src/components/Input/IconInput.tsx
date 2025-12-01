@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { cn } from '../../lib/utils';
-import { Input, type InputProps } from './Input';
 
-export interface IconInputProps extends InputProps {
+export interface IconInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   /** Icon to display inside the input */
   icon?: React.ReactNode;
   /** Position of the icon */
@@ -12,7 +12,7 @@ export interface IconInputProps extends InputProps {
 /**
  * IconInput Component
  *
- * An Input wrapper that displays an icon inside the input field.
+ * An Input component that displays an icon inside the input field.
  * Useful for search inputs, email inputs, password inputs, etc.
  *
  * @example
@@ -25,9 +25,39 @@ export interface IconInputProps extends InputProps {
  * ```
  */
 const IconInput = React.forwardRef<HTMLInputElement, IconInputProps>(
-  ({ icon, iconPosition = 'left', className, ...props }, ref) => {
+  ({ icon, iconPosition = 'left', className, type = 'text', ...props }, ref) => {
+    const inputStyles = cn(
+      // Base styles
+      'flex h-9 w-full rounded-xl border py-2 text-sm transition-colors',
+      // Colors
+      'bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--fg-default)]',
+      // Placeholder
+      'placeholder:text-[var(--fg-subtle)]',
+      // Focus
+      'outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-canvas)]',
+      // Disabled
+      'disabled:cursor-not-allowed disabled:opacity-50',
+      // File input
+      'file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-[var(--fg-default)]',
+      // Invalid state (aria-invalid)
+      'aria-invalid:border-[var(--color-status-error)] aria-invalid:ring-[var(--color-status-error)]/20',
+      // Padding based on icon position
+      icon && iconPosition === 'left' ? 'pl-9 pr-3' : '',
+      icon && iconPosition === 'right' ? 'pl-3 pr-9' : '',
+      !icon && 'px-3',
+      className
+    );
+
     if (!icon) {
-      return <Input ref={ref} className={className} {...props} />;
+      return (
+        <input
+          type={type}
+          ref={ref}
+          data-slot="input"
+          className={inputStyles}
+          {...props}
+        />
+      );
     }
 
     return (
@@ -41,13 +71,11 @@ const IconInput = React.forwardRef<HTMLInputElement, IconInputProps>(
         >
           {icon}
         </div>
-        <Input
+        <input
+          type={type}
           ref={ref}
-          className={cn(
-            iconPosition === 'left' && 'pl-9',
-            iconPosition === 'right' && 'pr-9',
-            className
-          )}
+          data-slot="input"
+          className={inputStyles}
           {...props}
         />
       </div>
