@@ -13,7 +13,7 @@ A modern React component library.
 - **React 18/19** - Modern React with hooks
 - **TypeScript** - Type-safe component development
 - **Tailwind CSS v4** - Utility-first CSS framework
-- **Storybook 9** - Component documentation
+- **Storybook 10** - Component documentation
 
 ---
 
@@ -84,3 +84,74 @@ All tokens are also available as Tailwind utilities:
   ...
 </div>
 ```
+
+---
+
+## Customization
+
+All components use CSS variables, making it easy to customize colors and styles for your project.
+
+### Override Theme Variables
+
+Simply redefine the CSS variables in your app:
+
+```css
+/* Your app's global CSS */
+:root {
+  /* Change input styles */
+  --input-bg: #1e1e2e;
+  --input-border: #45475a;
+
+  /* Change button colors */
+  --btn-primary-bg: #89b4fa;
+  --btn-primary-fg: #1e1e2e;
+
+  /* Change semantic colors */
+  --bg-surface: #181825;
+  --fg-default: #cdd6f4;
+}
+```
+
+### Brand Color
+
+Change the primary brand color across all components:
+
+```css
+:root {
+  /* Your brand colors (e.g., purple theme) */
+  --color-brand-700: #6b21a8;
+  --color-brand-600: #7c3aed;
+  --color-brand-500: #8b5cf6;
+  --color-brand-400: #a78bfa;
+  --color-brand-300: #c4b5fd;
+}
+```
+
+This automatically updates buttons, focus rings, accents, and other branded elements.
+
+### Dark/Light Theme Support
+
+```css
+/* Dark theme (default) */
+:root {
+  --bg-canvas: #000000;
+  --fg-default: #ffffff;
+}
+
+/* Light theme */
+.light {
+  --bg-canvas: #ffffff;
+  --fg-default: #1a1a1a;
+}
+```
+
+### Available Token Categories
+
+- **Background**: `--bg-canvas`, `--bg-surface`, `--bg-elevated`
+- **Foreground**: `--fg-default`, `--fg-muted`, `--fg-subtle`
+- **Border**: `--border-default`, `--border-focus`
+- **Input**: `--input-bg`, `--input-border`
+- **Button**: `--btn-primary-bg`, `--btn-primary-fg`
+- **Status**: `--color-status-error`, `--color-status-success`
+
+See the full list in **Tokens/Colors** section.

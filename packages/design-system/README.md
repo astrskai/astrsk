@@ -109,6 +109,23 @@ import { Search } from 'lucide-react';
 
 **Props:** `label`, `hint`, `error`, `labelPosition` ('top' | 'left' | 'inner'), `required`
 
+### Select
+
+```tsx
+const options = [
+  { value: 'option1', label: 'Option 1' },
+  { value: 'option2', label: 'Option 2' },
+  { value: 'option3', label: 'Option 3', disabled: true },
+];
+
+<Select options={options} placeholder="Select an option..." />
+<Select options={options} defaultValue="option1" />
+<Select options={options} disabled />
+<Select options={options} aria-invalid="true" />
+```
+
+**Props:** `options` (required), `placeholder`, + all HTML select attributes
+
 ### Textarea
 
 ```tsx
@@ -128,7 +145,11 @@ import { Search } from 'lucide-react';
 
 ## Customization
 
-Override CSS variables to customize the theme:
+All components use CSS variables for styling, making it easy to customize the look and feel for your project without modifying component source code.
+
+### Override Theme Variables
+
+Simply redefine the CSS variables in your app's global CSS:
 
 ```css
 :root {
@@ -152,7 +173,39 @@ Override CSS variables to customize the theme:
   /* Button */
   --btn-primary-bg: #4a6fa5;
   --btn-primary-fg: #ffffff;
-  /* ... */
+}
+```
+
+### Brand Color
+
+Change the primary brand color across all components by overriding the brand palette:
+
+```css
+:root {
+  /* Your brand colors (e.g., purple theme) */
+  --color-brand-700: #6b21a8;
+  --color-brand-600: #7c3aed;
+  --color-brand-500: #8b5cf6;
+  --color-brand-400: #a78bfa;
+  --color-brand-300: #c4b5fd;
+}
+```
+
+This automatically updates buttons, focus rings, accents, and other branded elements.
+
+### Dark/Light Theme Support
+
+```css
+/* Dark theme (default) */
+:root {
+  --bg-canvas: #000000;
+  --fg-default: #ffffff;
+}
+
+/* Light theme - add .light class to html or body */
+.light {
+  --bg-canvas: #ffffff;
+  --fg-default: #1a1a1a;
 }
 ```
 
