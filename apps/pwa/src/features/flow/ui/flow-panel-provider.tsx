@@ -1,3 +1,4 @@
+// @refresh reset - Force full reload on HMR to prevent Dockview DOM sync issues
 import React, { createContext, useContext, useCallback, useState, useEffect } from "react";
 import { DockviewApi } from "dockview";
 import type { IDockviewPanel } from "dockview-core";

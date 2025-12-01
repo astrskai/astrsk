@@ -1,3 +1,4 @@
+// @refresh reset - Force full reload on HMR to prevent React Flow DOM sync issues
 import { useState, useRef, useEffect, useCallback } from "react";
 import { PANEL_TYPES } from "@/features/flow/ui/panel-types";
 import {

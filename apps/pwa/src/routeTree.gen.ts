@@ -21,6 +21,10 @@ import { Route as LayoutEmailVerificationRouteImport } from './routes/_layout/em
 import { Route as LayoutSettingsIndexRouteImport } from './routes/_layout/settings/index'
 import { Route as LayoutSessionsIndexRouteImport } from './routes/_layout/sessions/index'
 import { Route as LayoutAssetsIndexRouteImport } from './routes/_layout/assets/index'
+import { Route as SharedSessionUuidRouteImport } from './routes/shared/session/$uuid'
+import { Route as SharedScenarioUuidRouteImport } from './routes/shared/scenario/$uuid'
+import { Route as SharedFlowUuidRouteImport } from './routes/shared/flow/$uuid'
+import { Route as SharedCharacterUuidRouteImport } from './routes/shared/character/$uuid'
 import { Route as LayoutSettingsProvidersRouteImport } from './routes/_layout/settings/providers'
 import { Route as LayoutSessionsNewRouteImport } from './routes/_layout/sessions/new'
 import { Route as LayoutSessionsSessionIdRouteImport } from './routes/_layout/sessions/$sessionId'
@@ -102,6 +106,26 @@ const LayoutAssetsIndexRoute = LayoutAssetsIndexRouteImport.update({
   id: '/assets/',
   path: '/assets/',
   getParentRoute: () => LayoutRoute,
+} as any)
+const SharedSessionUuidRoute = SharedSessionUuidRouteImport.update({
+  id: '/shared/session/$uuid',
+  path: '/shared/session/$uuid',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SharedScenarioUuidRoute = SharedScenarioUuidRouteImport.update({
+  id: '/shared/scenario/$uuid',
+  path: '/shared/scenario/$uuid',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SharedFlowUuidRoute = SharedFlowUuidRouteImport.update({
+  id: '/shared/flow/$uuid',
+  path: '/shared/flow/$uuid',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SharedCharacterUuidRoute = SharedCharacterUuidRouteImport.update({
+  id: '/shared/character/$uuid',
+  path: '/shared/character/$uuid',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutSettingsProvidersRoute = LayoutSettingsProvidersRouteImport.update({
   id: '/providers',
@@ -245,6 +269,10 @@ export interface FileRoutesByFullPath {
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/sessions/new': typeof LayoutSessionsNewRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
+  '/shared/character/$uuid': typeof SharedCharacterUuidRoute
+  '/shared/flow/$uuid': typeof SharedFlowUuidRoute
+  '/shared/scenario/$uuid': typeof SharedScenarioUuidRoute
+  '/shared/session/$uuid': typeof SharedSessionUuidRoute
   '/assets': typeof LayoutAssetsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
   '/settings/': typeof LayoutSettingsIndexRoute
@@ -279,6 +307,10 @@ export interface FileRoutesByTo {
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/sessions/new': typeof LayoutSessionsNewRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
+  '/shared/character/$uuid': typeof SharedCharacterUuidRoute
+  '/shared/flow/$uuid': typeof SharedFlowUuidRoute
+  '/shared/scenario/$uuid': typeof SharedScenarioUuidRoute
+  '/shared/session/$uuid': typeof SharedSessionUuidRoute
   '/assets': typeof LayoutAssetsIndexRoute
   '/sessions': typeof LayoutSessionsIndexRoute
   '/settings': typeof LayoutSettingsIndexRoute
@@ -316,6 +348,10 @@ export interface FileRoutesById {
   '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/_layout/sessions/new': typeof LayoutSessionsNewRoute
   '/_layout/settings/providers': typeof LayoutSettingsProvidersRoute
+  '/shared/character/$uuid': typeof SharedCharacterUuidRoute
+  '/shared/flow/$uuid': typeof SharedFlowUuidRoute
+  '/shared/scenario/$uuid': typeof SharedScenarioUuidRoute
+  '/shared/session/$uuid': typeof SharedSessionUuidRoute
   '/_layout/assets/': typeof LayoutAssetsIndexRoute
   '/_layout/sessions/': typeof LayoutSessionsIndexRoute
   '/_layout/settings/': typeof LayoutSettingsIndexRoute
@@ -353,6 +389,10 @@ export interface FileRouteTypes {
     | '/sessions/$sessionId'
     | '/sessions/new'
     | '/settings/providers'
+    | '/shared/character/$uuid'
+    | '/shared/flow/$uuid'
+    | '/shared/scenario/$uuid'
+    | '/shared/session/$uuid'
     | '/assets'
     | '/sessions'
     | '/settings/'
@@ -387,6 +427,10 @@ export interface FileRouteTypes {
     | '/sessions/$sessionId'
     | '/sessions/new'
     | '/settings/providers'
+    | '/shared/character/$uuid'
+    | '/shared/flow/$uuid'
+    | '/shared/scenario/$uuid'
+    | '/shared/session/$uuid'
     | '/assets'
     | '/sessions'
     | '/settings'
@@ -423,6 +467,10 @@ export interface FileRouteTypes {
     | '/_layout/sessions/$sessionId'
     | '/_layout/sessions/new'
     | '/_layout/settings/providers'
+    | '/shared/character/$uuid'
+    | '/shared/flow/$uuid'
+    | '/shared/scenario/$uuid'
+    | '/shared/session/$uuid'
     | '/_layout/assets/'
     | '/_layout/sessions/'
     | '/_layout/settings/'
@@ -447,6 +495,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
+  SharedCharacterUuidRoute: typeof SharedCharacterUuidRoute
+  SharedFlowUuidRoute: typeof SharedFlowUuidRoute
+  SharedScenarioUuidRoute: typeof SharedScenarioUuidRoute
+  SharedSessionUuidRoute: typeof SharedSessionUuidRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -534,6 +586,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/assets'
       preLoaderRoute: typeof LayoutAssetsIndexRouteImport
       parentRoute: typeof LayoutRoute
+    }
+    '/shared/session/$uuid': {
+      id: '/shared/session/$uuid'
+      path: '/shared/session/$uuid'
+      fullPath: '/shared/session/$uuid'
+      preLoaderRoute: typeof SharedSessionUuidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shared/scenario/$uuid': {
+      id: '/shared/scenario/$uuid'
+      path: '/shared/scenario/$uuid'
+      fullPath: '/shared/scenario/$uuid'
+      preLoaderRoute: typeof SharedScenarioUuidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shared/flow/$uuid': {
+      id: '/shared/flow/$uuid'
+      path: '/shared/flow/$uuid'
+      fullPath: '/shared/flow/$uuid'
+      preLoaderRoute: typeof SharedFlowUuidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shared/character/$uuid': {
+      id: '/shared/character/$uuid'
+      path: '/shared/character/$uuid'
+      fullPath: '/shared/character/$uuid'
+      preLoaderRoute: typeof SharedCharacterUuidRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_layout/settings/providers': {
       id: '/_layout/settings/providers'
@@ -784,6 +864,10 @@ const LayoutRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
+  SharedCharacterUuidRoute: SharedCharacterUuidRoute,
+  SharedFlowUuidRoute: SharedFlowUuidRoute,
+  SharedScenarioUuidRoute: SharedScenarioUuidRoute,
+  SharedSessionUuidRoute: SharedSessionUuidRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

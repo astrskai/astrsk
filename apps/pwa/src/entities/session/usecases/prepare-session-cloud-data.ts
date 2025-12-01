@@ -10,9 +10,8 @@ import {
   IfNodeCloudData,
 } from '@/shared/lib/cloud-upload-helpers';
 
-import { Session } from '@/entities/session/domain';
 import { LoadSessionRepo } from '@/entities/session/repos/load-session-repo';
-import { SessionDrizzleMapper } from '@/entities/session/mappers/session-drizzle-mapper';
+import { SessionSupabaseMapper } from '@/entities/session/mappers/session-supabase-mapper';
 import { PrepareCharacterCloudData } from '@/entities/card/usecases/prepare-character-cloud-data';
 import { PrepareScenarioCloudData } from '@/entities/card/usecases/prepare-scenario-cloud-data';
 import { PrepareFlowCloudData } from '@/entities/flow/usecases/prepare-flow-cloud-data';
@@ -63,28 +62,7 @@ export class PrepareSessionCloudData
 
       const session = sessionResult.getValue();
 
-      // 2. Use mapper to convert session domain → persistence format
-      const persistenceData = SessionDrizzleMapper.toPersistence(session);
-
-      // Extract only the fields we need (type-safe)
-      const {
-        id,
-        title,
-        name,
-        all_cards,
-        user_character_card_id,
-        turn_ids,
-        translation,
-        chat_styles,
-        flow_id,
-        auto_reply,
-        data_schema_order,
-        widget_layout,
-        tags,
-        summary,
-      } = persistenceData as any; // Cast only for extraction
-
-      // 3. Resolve background entity ID to asset ID for cloud storage
+      // 2. Resolve background entity ID to asset ID for cloud storage
       // The session stores backgroundId (Background entity ID), but Supabase needs the asset ID directly
       let backgroundAssetId: string | null = null;
       if (session.props.backgroundId) {
@@ -95,30 +73,8 @@ export class PrepareSessionCloudData
         }
       }
 
-      // 4. Build session cloud data with asset ID references (asset upload happens later)
-      const sessionData: SessionCloudData = {
-        id,
-        title,
-        name,
-        all_cards,
-        user_character_card_id,
-        turn_ids,
-        background_id: backgroundAssetId, // Use asset ID directly for cloud storage
-        cover_id: session.props.coverId?.toString() || null, // Cover is already an asset ID
-        translation,
-        chat_styles,
-        flow_id,
-        auto_reply,
-        data_schema_order,
-        widget_layout,
-        tags,
-        summary,
-        is_public: false,
-        owner_id: null,
-        created_at: session.props.createdAt.toISOString(),
-        updated_at:
-          session.props.updatedAt?.toISOString() || new Date().toISOString(),
-      };
+      // 3. Use mapper to convert session domain → cloud format
+      const sessionData: SessionCloudData = SessionSupabaseMapper.toCloud(session, backgroundAssetId);
 
       // 4. Prepare all characters in this session
       const characters: CharacterCloudData[] = [];
