@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Copy, Download, Edit, Trash2, Layers, Clock, Users, Star } from 'lucide-react';
 import { SessionCard, MetadataContainer, MetadataItem } from './SessionCard';
+import { SessionCardSkeleton } from './SessionCardSkeleton';
 
 const meta = {
   title: 'Content/SessionCard',
@@ -108,6 +109,19 @@ export const WithoutImage: Story = {
     messageCount: 15,
     characterAvatars: [
       { name: 'Unknown', avatarUrl: undefined },
+    ],
+  },
+};
+
+// Image load error (shows initial fallback)
+export const ImageError: Story = {
+  args: {
+    title: 'Adventure Session',
+    imageUrl: 'https://invalid-url-that-will-404.com/image.png',
+    messageCount: 42,
+    characterAvatars: [
+      { name: 'Alice', avatarUrl: 'https://invalid-url-that-will-404.com/avatar.png' },
+      { name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 },
     ],
   },
 };
@@ -379,6 +393,48 @@ export const AllStates: Story = {
               />
         </div>
       </div>
+    </>
+  ),
+};
+
+// Skeleton loading state
+export const Skeleton: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '320px' }}>
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => <SessionCardSkeleton />,
+};
+
+// Skeleton in grid layout
+export const SkeletonGrid: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 320px)',
+          gap: '24px',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => (
+    <>
+      <SessionCardSkeleton />
+      <SessionCardSkeleton />
+      <SessionCardSkeleton />
     </>
   ),
 };

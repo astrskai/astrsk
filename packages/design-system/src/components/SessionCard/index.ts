@@ -6,3 +6,7 @@ export {
   type CharacterAvatar,
   type CardAction,
 } from './SessionCard';
+export {
+  SessionCardSkeleton,
+  type SessionCardSkeletonProps,
+} from './SessionCardSkeleton';

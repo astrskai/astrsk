@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Copy, Download, Edit, Trash2, Heart, MessageSquare, Clock } from 'lucide-react';
 import { CharacterCard, MetadataContainer, MetadataItem } from './CharacterCard';
+import { CharacterCardSkeleton } from './CharacterCardSkeleton';
 
 const meta = {
   title: 'Content/CharacterCard',
@@ -112,6 +113,18 @@ export const WithPlaceholder: Story = {
     tokenCount: 0,
     updatedAt: 'Just now',
     placeholderImageUrl: SAMPLE_PLACEHOLDER,
+  },
+};
+
+// Image load error (shows initial fallback)
+export const ImageError: Story = {
+  args: {
+    name: 'Alice Wonderland',
+    imageUrl: 'https://invalid-url-that-will-404.com/image.png',
+    summary: 'This character has an invalid image URL, showing the initial fallback.',
+    tags: ['Error', 'Fallback'],
+    tokenCount: 1000,
+    updatedAt: 'Just now',
   },
 };
 
@@ -383,6 +396,48 @@ export const AllStates: Story = {
           />
         </div>
       </div>
+    </>
+  ),
+};
+
+// Skeleton loading state
+export const Skeleton: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '280px' }}>
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => <CharacterCardSkeleton />,
+};
+
+// Skeleton in grid layout
+export const SkeletonGrid: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 280px)',
+          gap: '24px',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => (
+    <>
+      <CharacterCardSkeleton />
+      <CharacterCardSkeleton />
+      <CharacterCardSkeleton />
     </>
   ),
 };
