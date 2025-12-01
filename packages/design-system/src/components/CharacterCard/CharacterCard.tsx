@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '../../lib/utils';
 import {
   BaseCard,
@@ -66,7 +66,13 @@ export function CharacterCard({
   renderMetadata,
   emptySummaryText = 'No summary',
 }: CharacterCardProps) {
-  const displayImageUrl = imageUrl || placeholderImageUrl;
+  const [imageError, setImageError] = useState(false);
+
+  // Show image if URL exists and no error
+  const shouldShowImage = (imageUrl || placeholderImageUrl) && !imageError;
+  // Show initial fallback when no image URL or image fails to load
+  const shouldShowInitial = !shouldShowImage;
+
   return (
     <BaseCard
       className={cn('min-h-[380px]', className)}
@@ -75,13 +81,21 @@ export function CharacterCard({
     >
       {/* Image Area - Portrait ratio */}
       <div className="relative h-64 overflow-hidden bg-zinc-800">
-        {displayImageUrl && (
+        {shouldShowImage && (
           <img
-            src={displayImageUrl}
+            src={imageUrl || placeholderImageUrl}
             alt={name}
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
+            onError={() => setImageError(true)}
           />
+        )}
+        {shouldShowInitial && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-6xl font-bold text-zinc-600">
+              {name.charAt(0).toUpperCase()}
+            </span>
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-90" />
 

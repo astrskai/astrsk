@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '../../lib/utils';
 import {
   BaseCard,
@@ -50,16 +50,20 @@ export interface SessionCardProps {
  * Character Avatar Component (Internal)
  */
 function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
+  const [imageError, setImageError] = useState(false);
+  const shouldShowImage = avatarUrl && !imageError;
+
   return (
     <div
       className='flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-900 bg-zinc-700'
       title={name}
     >
-      {avatarUrl ? (
+      {shouldShowImage ? (
         <img
           src={avatarUrl}
           alt={name}
           className='h-full w-full object-cover'
+          onError={() => setImageError(true)}
         />
       ) : (
         <span className='text-[10px] text-zinc-500'>
@@ -137,6 +141,13 @@ export function SessionCard({
   typeIndicator,
   renderMetadata,
 }: SessionCardProps) {
+  const [imageError, setImageError] = useState(false);
+
+  // Show image if URL exists and no error
+  const shouldShowImage = imageUrl && !imageError;
+  // Show initial fallback when image fails to load (only if imageUrl was provided)
+  const shouldShowInitial = imageUrl && imageError;
+
   return (
     <BaseCard
       className={cn(
@@ -150,15 +161,26 @@ export function SessionCard({
       {/* Header Image Area */}
       <div className='relative h-48 overflow-hidden bg-zinc-800'>
         {/* Cover Image */}
-        {imageUrl ? (
+        {shouldShowImage ? (
           <>
             <img
               src={imageUrl}
               alt={title}
               className='absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90'
               loading='lazy'
+              onError={() => setImageError(true)}
             />
             <div className='absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent' />
+          </>
+        ) : shouldShowInitial ? (
+          <>
+            {/* Initial fallback when image fails to load */}
+            <div className='absolute inset-0 flex items-center justify-center'>
+              <span className='text-6xl font-bold text-zinc-600'>
+                {title.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className='absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent' />
           </>
         ) : (
           <>
