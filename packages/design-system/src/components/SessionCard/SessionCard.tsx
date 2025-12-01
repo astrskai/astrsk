@@ -1,6 +1,12 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
-import { BaseCard, CardActionToolbar, type CardAction } from '../Card';
+import {
+  BaseCard,
+  CardActionToolbar,
+  CardMetadataContainer,
+  CardMetadataItem,
+  type CardAction,
+} from '../Card';
 
 export interface CharacterAvatar {
   /** Character name */
@@ -14,7 +20,7 @@ export interface SessionCardProps {
   title: string;
   /** Cover image URL */
   imageUrl?: string | null;
-  /** Number of messages in the session */
+  /** Number of messages in the session (used in default metadata) */
   messageCount?: number;
   /** Action buttons displayed on the card */
   actions?: CardAction[];
@@ -32,6 +38,12 @@ export interface SessionCardProps {
   showTypeIndicator?: boolean;
   /** Custom content for the type indicator badge (icon and/or text) */
   typeIndicator?: React.ReactNode;
+  /**
+   * Custom render function for the metadata section.
+   * When provided, replaces the default messageCount display.
+   * Use CardMetadataContainer and CardMetadataItem for consistent styling.
+   */
+  renderMetadata?: () => React.ReactNode;
 }
 
 /**
@@ -107,6 +119,10 @@ function MessageIcon({ className }: { className?: string }) {
  * />
  * ```
  */
+// Re-export for convenience
+export const MetadataContainer = CardMetadataContainer;
+export const MetadataItem = CardMetadataItem;
+
 export function SessionCard({
   title,
   imageUrl,
@@ -119,6 +135,7 @@ export function SessionCard({
   areCharactersLoading = false,
   showTypeIndicator = false,
   typeIndicator,
+  renderMetadata,
 }: SessionCardProps) {
   return (
     <BaseCard
@@ -183,23 +200,27 @@ export function SessionCard({
       {/* Session Details */}
       <div className='flex flex-grow flex-col justify-between p-5'>
         <div className='space-y-3'>
-          {/* Message Count */}
-          {messageCount !== undefined && (
-            <div className='flex items-center justify-between border-b border-zinc-800 pb-2 text-sm'>
-              {messageCount === 0 ? (
-                <span className='text-zinc-400'>New session</span>
-              ) : (
-                <div className='flex items-center gap-2'>
-                  <MessageIcon className='h-4 w-4 text-zinc-500' />
-                  <span className='font-semibold text-zinc-300'>
-                    {messageCount.toLocaleString()}
-                  </span>
-                  <span className='text-zinc-400'>
-                    {messageCount === 1 ? 'Message' : 'Messages'}
-                  </span>
-                </div>
-              )}
-            </div>
+          {/* Metadata */}
+          {renderMetadata ? (
+            renderMetadata()
+          ) : (
+            messageCount !== undefined && (
+              <div className='flex items-center justify-between border-b border-zinc-800 pb-2 text-sm'>
+                {messageCount === 0 ? (
+                  <span className='text-zinc-400'>New session</span>
+                ) : (
+                  <div className='flex items-center gap-2'>
+                    <MessageIcon className='h-4 w-4 text-zinc-500' />
+                    <span className='font-semibold text-zinc-300'>
+                      {messageCount.toLocaleString()}
+                    </span>
+                    <span className='text-zinc-400'>
+                      {messageCount === 1 ? 'Message' : 'Messages'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
           )}
 
           {/* Character Avatars */}

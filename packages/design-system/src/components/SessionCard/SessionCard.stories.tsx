@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Copy, Download, Edit, Trash2, Layers } from 'lucide-react';
-import { SessionCard } from './SessionCard';
+import { Copy, Download, Edit, Trash2, Layers, Clock, Users, Star } from 'lucide-react';
+import { SessionCard, MetadataContainer, MetadataItem } from './SessionCard';
 
 const meta = {
   title: 'Content/SessionCard',
@@ -253,6 +253,70 @@ export const GridLayout: Story = {
       />
     </>
   ),
+};
+
+// Custom metadata with renderMetadata
+export const CustomMetadata: Story = {
+  args: {
+    title: 'Session with Custom Metadata',
+    imageUrl: SAMPLE_COVER,
+    characterAvatars: [
+      { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
+      { name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 },
+    ],
+    renderMetadata: () => (
+      <MetadataContainer>
+        <MetadataItem icon={<Clock className="size-3" />}>2 days ago</MetadataItem>
+        <MetadataItem icon={<Users className="size-3" />}>3 participants</MetadataItem>
+      </MetadataContainer>
+    ),
+  },
+};
+
+// Custom metadata with icons
+export const MetadataWithIcons: Story = {
+  args: {
+    title: 'Popular Session',
+    imageUrl: SAMPLE_COVER_2,
+    characterAvatars: [
+      { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
+    ],
+    renderMetadata: () => (
+      <MetadataContainer>
+        <MetadataItem icon={<Star className="size-3" />}>4.8 rating</MetadataItem>
+        <MetadataItem icon={<Clock className="size-3" />}>Last played: 1h ago</MetadataItem>
+      </MetadataContainer>
+    ),
+  },
+};
+
+// Fully custom metadata layout
+export const FullyCustomMetadata: Story = {
+  args: {
+    title: 'Session with Stats',
+    imageUrl: SAMPLE_COVER,
+    characterAvatars: [
+      { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
+      { name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 },
+      { name: 'Charlie', avatarUrl: SAMPLE_AVATAR_3 },
+    ],
+    renderMetadata: () => (
+      <div className="grid grid-cols-3 gap-2 border-b border-zinc-800 pb-2 text-xs text-zinc-500">
+        <div className="text-center">
+          <div className="font-semibold text-white">156</div>
+          <div>Messages</div>
+        </div>
+        <div className="text-center">
+          <div className="font-semibold text-white">3</div>
+          <div>Characters</div>
+        </div>
+        <div className="text-center">
+          <div className="font-semibold text-white">2h</div>
+          <div>Duration</div>
+        </div>
+      </div>
+    ),
+  },
 };
 
 // All states overview

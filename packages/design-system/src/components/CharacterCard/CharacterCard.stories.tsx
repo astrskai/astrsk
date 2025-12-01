@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Copy, Download, Edit, Trash2 } from 'lucide-react';
-import { CharacterCard } from './CharacterCard';
+import { Copy, Download, Edit, Trash2, Heart, MessageSquare, Clock } from 'lucide-react';
+import { CharacterCard, MetadataContainer, MetadataItem } from './CharacterCard';
 
 const meta = {
   title: 'Content/CharacterCard',
@@ -240,6 +240,63 @@ export const GridLayout: Story = {
       />
     </>
   ),
+};
+
+// Custom metadata with renderMetadata
+export const CustomMetadata: Story = {
+  args: {
+    name: 'Popular Character',
+    imageUrl: SAMPLE_IMAGE,
+    summary: 'A character with custom metadata using renderMetadata prop.',
+    tags: ['Popular', 'Trending'],
+    renderMetadata: () => (
+      <MetadataContainer>
+        <MetadataItem icon={<Heart className="size-3" />}>2.5k likes</MetadataItem>
+        <MetadataItem icon={<MessageSquare className="size-3" />}>128 chats</MetadataItem>
+      </MetadataContainer>
+    ),
+  },
+};
+
+// Custom metadata with icons
+export const MetadataWithIcons: Story = {
+  args: {
+    name: 'Active Character',
+    imageUrl: SAMPLE_IMAGE_2,
+    summary: 'Demonstrating metadata items with icons for better visual clarity.',
+    tags: ['Active'],
+    renderMetadata: () => (
+      <MetadataContainer>
+        <MetadataItem icon={<Clock className="size-3" />}>Last active: 2h ago</MetadataItem>
+      </MetadataContainer>
+    ),
+  },
+};
+
+// Fully custom metadata layout
+export const FullyCustomMetadata: Story = {
+  args: {
+    name: 'Custom Layout Character',
+    imageUrl: SAMPLE_IMAGE_3,
+    summary: 'When you need complete control over metadata layout.',
+    tags: ['Custom'],
+    renderMetadata: () => (
+      <div className="mt-auto grid grid-cols-3 gap-2 border-t border-zinc-800 pt-3 text-xs text-zinc-500">
+        <div className="text-center">
+          <div className="font-semibold text-white">1.2k</div>
+          <div>Likes</div>
+        </div>
+        <div className="text-center">
+          <div className="font-semibold text-white">89</div>
+          <div>Chats</div>
+        </div>
+        <div className="text-center">
+          <div className="font-semibold text-white">4.8</div>
+          <div>Rating</div>
+        </div>
+      </div>
+    ),
+  },
 };
 
 // All states overview
