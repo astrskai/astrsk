@@ -188,7 +188,7 @@ export function SessionCard({
             {/* Initial fallback when image fails to load */}
             <div className='absolute inset-0 flex items-center justify-center'>
               <span className='text-6xl font-bold text-zinc-600'>
-                {title.charAt(0).toUpperCase()}
+                {title.charAt(0).toUpperCase() || '?'}
               </span>
             </div>
             <div className='absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent' />
