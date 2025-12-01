@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
 import {
   BaseCard,
@@ -51,6 +51,12 @@ export interface SessionCardProps {
  */
 function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
   const [imageError, setImageError] = useState(false);
+
+  // Reset error state when avatarUrl changes
+  useEffect(() => {
+    setImageError(false);
+  }, [avatarUrl]);
+
   const shouldShowImage = avatarUrl && !imageError;
 
   return (
@@ -142,6 +148,11 @@ export function SessionCard({
   renderMetadata,
 }: SessionCardProps) {
   const [imageError, setImageError] = useState(false);
+
+  // Reset error state when imageUrl changes
+  useEffect(() => {
+    setImageError(false);
+  }, [imageUrl]);
 
   // Show image if URL exists and no error
   const shouldShowImage = imageUrl && !imageError;

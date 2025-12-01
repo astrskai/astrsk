@@ -48,10 +48,15 @@ function Skeleton({
         className
       )}
       style={{
-        width: typeof width === 'number' ? `${width}px` : width,
-        height: typeof height === 'number' ? `${height}px` : height,
         ...style,
+        ...(width !== undefined && {
+          width: typeof width === 'number' ? `${width}px` : width,
+        }),
+        ...(height !== undefined && {
+          height: typeof height === 'number' ? `${height}px` : height,
+        }),
       }}
+      aria-hidden="true"
       {...props}
     />
   );

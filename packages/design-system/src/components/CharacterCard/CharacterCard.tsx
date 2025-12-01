@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
 import {
   BaseCard,
@@ -67,6 +67,11 @@ export function CharacterCard({
   emptySummaryText = 'No summary',
 }: CharacterCardProps) {
   const [imageError, setImageError] = useState(false);
+
+  // Reset error state when imageUrl changes
+  useEffect(() => {
+    setImageError(false);
+  }, [imageUrl, placeholderImageUrl]);
 
   // Show image if URL exists and no error
   const shouldShowImage = (imageUrl || placeholderImageUrl) && !imageError;
