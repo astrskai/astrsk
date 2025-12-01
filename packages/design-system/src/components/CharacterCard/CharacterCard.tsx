@@ -1,6 +1,12 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
-import { BaseCard, CardActionToolbar, type CardAction } from '../Card';
+import {
+  BaseCard,
+  CardActionToolbar,
+  CardMetadataContainer,
+  CardMetadataItem,
+  type CardAction,
+} from '../Card';
 
 export interface CharacterCardProps {
   /** Character name */
@@ -11,9 +17,9 @@ export interface CharacterCardProps {
   summary?: string;
   /** Character tags */
   tags: string[];
-  /** Token count for the character */
+  /** Token count for the character (used in default metadata) */
   tokenCount?: number;
-  /** Last updated timestamp */
+  /** Last updated timestamp (used in default metadata) */
   updatedAt?: string;
   /** Action buttons displayed on the card */
   actions?: CardAction[];
@@ -29,27 +35,20 @@ export interface CharacterCardProps {
   typeIndicator?: React.ReactNode;
   /** Placeholder image URL when imageUrl is not provided */
   placeholderImageUrl?: string;
+  /**
+   * Custom render function for the metadata section.
+   * When provided, replaces the default tokenCount/updatedAt display.
+   * Use CardMetadataContainer and CardMetadataItem for consistent styling.
+   */
+  renderMetadata?: () => React.ReactNode;
+  /** Text to display when summary is empty. Defaults to "No summary". Set to empty string to hide. */
+  emptySummaryText?: string;
 }
 
-/**
- * CharacterCard Component
- *
- * A card component for displaying character information including
- * image, name, tags, summary, and metadata.
- *
- * @example
- * ```tsx
- * <CharacterCard
- *   name="Alice"
- *   imageUrl="/characters/alice.png"
- *   summary="A curious girl who fell into Wonderland"
- *   tags={["fantasy", "adventure"]}
- *   tokenCount={1500}
- *   updatedAt="2 days ago"
- *   onClick={() => console.log('clicked')}
- * />
- * ```
- */
+// Re-export for backward compatibility
+export const MetadataContainer = CardMetadataContainer;
+export const MetadataItem = CardMetadataItem;
+
 export function CharacterCard({
   name,
   imageUrl,
@@ -64,6 +63,8 @@ export function CharacterCard({
   showTypeIndicator = false,
   typeIndicator,
   placeholderImageUrl,
+  renderMetadata,
+  emptySummaryText = 'No summary',
 }: CharacterCardProps) {
   const displayImageUrl = imageUrl || placeholderImageUrl;
   return (
@@ -126,19 +127,21 @@ export function CharacterCard({
           )}
         </div>
 
-        <p className="mb-4 line-clamp-3 flex-grow text-xs leading-relaxed break-words text-zinc-400">
-          {summary || 'No summary'}
-        </p>
+        {(summary || emptySummaryText) && (
+          <p className="mb-4 line-clamp-3 flex-grow text-xs leading-relaxed break-words text-zinc-400">
+            {summary || emptySummaryText}
+          </p>
+        )}
 
-        {/* Stats */}
-        <div className="mt-auto flex items-center justify-between border-t border-zinc-800 pt-3 text-xs text-zinc-500">
-          <div className="flex items-center gap-1">{tokenCount} Tokens</div>
-          {updatedAt && (
-            <div className="flex items-center gap-1">
-              {updatedAt}
-            </div>
-          )}
-        </div>
+        {/* Metadata */}
+        {renderMetadata ? (
+          renderMetadata()
+        ) : (
+          <CardMetadataContainer>
+            <CardMetadataItem>{tokenCount} Tokens</CardMetadataItem>
+            {updatedAt && <CardMetadataItem>{updatedAt}</CardMetadataItem>}
+          </CardMetadataContainer>
+        )}
       </div>
     </BaseCard>
   );
