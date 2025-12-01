@@ -19,11 +19,15 @@ const CHEVRON_ICON = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, options, placeholder, style, defaultValue, ...props }, ref) => {
+    const isControlled = 'value' in props;
+    const resolvedDefaultValue =
+      !isControlled && placeholder && defaultValue === undefined ? '' : defaultValue;
+
     return (
       <select
         ref={ref}
         data-slot="select"
-        defaultValue={placeholder && defaultValue === undefined ? '' : defaultValue}
+        defaultValue={resolvedDefaultValue}
         className={cn(
           // Base styles
           'flex h-9 w-full appearance-none rounded-xl border px-3 py-2 text-sm transition-colors',
