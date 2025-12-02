@@ -228,6 +228,7 @@ export function Carousel({
       {showArrows && (
         <>
           <button
+            type="button"
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
             className={cn(ARROW_BUTTON_CLASSES, 'left-0 -translate-x-4')}
@@ -236,6 +237,7 @@ export function Carousel({
             <ArrowIcon direction="left" className="h-5 w-5" />
           </button>
           <button
+            type="button"
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
             className={cn(ARROW_BUTTON_CLASSES, 'right-0 translate-x-4')}
@@ -258,6 +260,7 @@ export function Carousel({
             return (
               <button
                 key={index}
+                type="button"
                 onClick={() => scrollToIndex(index)}
                 className={cn(
                   DOT_BASE_CLASSES,
