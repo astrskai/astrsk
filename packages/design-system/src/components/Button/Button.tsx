@@ -32,10 +32,11 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'default', size = 'default', round = false, ...props }, ref) => {
+  ({ className, variant = 'default', size = 'default', round = false, type = 'button', ...props }, ref) => {
     return (
       <button
         ref={ref}
+        type={type}
         data-slot="button"
         className={cn(
           // Base styles
