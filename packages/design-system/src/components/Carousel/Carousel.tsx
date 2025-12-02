@@ -8,15 +8,41 @@ export interface CarouselProps {
   className?: string;
   /** Gap between items in pixels */
   gap?: number;
-  /** Whether to show navigation arrows (desktop only) */
+  /** Whether to show navigation arrows */
   showArrows?: boolean;
   /** Whether to show dot indicators */
   showDots?: boolean;
-  /** Number of items to scroll at once (desktop) */
+  /** Number of items to scroll at once */
   scrollCount?: number;
   /** Accessible label for the carousel */
   'aria-label'?: string;
 }
+
+// Style constants moved outside component to prevent recreation on each render
+const ARROW_BUTTON_CLASSES = cn(
+  'absolute top-1/2 z-10 -translate-y-1/2',
+  'flex items-center justify-center',
+  'h-10 w-10 rounded-full',
+  'bg-zinc-800 border border-zinc-700',
+  'text-zinc-400 hover:text-white hover:bg-zinc-700',
+  'transition-all duration-200',
+  'disabled:opacity-0 disabled:pointer-events-none',
+  'focus:outline-none focus:ring-2 focus:ring-zinc-500'
+);
+
+const SCROLL_CONTAINER_CLASSES = cn(
+  'flex overflow-x-auto scroll-smooth',
+  // Hide scrollbar
+  'scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]',
+  '[&::-webkit-scrollbar]:hidden',
+  // Snap behavior
+  'snap-x snap-mandatory'
+);
+
+const DOT_BASE_CLASSES = cn(
+  'h-2 rounded-full transition-all duration-200',
+  'focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-zinc-900'
+);
 
 /**
  * Arrow Icon Component (Internal)
@@ -68,7 +94,7 @@ export function Carousel({
 }: CarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true); // Default to true until measured
   const [activeIndex, setActiveIndex] = useState(0);
   const [itemCount, setItemCount] = useState(0);
 
@@ -176,16 +202,7 @@ export function Carousel({
       {/* Scroll Container */}
       <div
         ref={scrollContainerRef}
-        className={cn(
-          'flex overflow-x-auto scroll-smooth',
-          // Hide scrollbar
-          'scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]',
-          '[&::-webkit-scrollbar]:hidden',
-          // Snap behavior for mobile
-          'snap-x snap-mandatory lg:snap-none',
-          // Padding for edge items
-          'px-4 lg:px-0'
-        )}
+        className={SCROLL_CONTAINER_CLASSES}
         style={{ gap: `${gap}px` }}
         tabIndex={0}
         aria-live="polite"
@@ -207,22 +224,13 @@ export function Carousel({
         ))}
       </div>
 
-      {/* Navigation Arrows (Desktop only) */}
+      {/* Navigation Arrows */}
       {showArrows && (
         <>
           <button
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
-            className={cn(
-              'absolute left-0 top-1/2 z-10 -translate-y-1/2 -translate-x-4',
-              'hidden lg:flex items-center justify-center',
-              'h-10 w-10 rounded-full',
-              'bg-zinc-800 border border-zinc-700',
-              'text-zinc-400 hover:text-white hover:bg-zinc-700',
-              'transition-all duration-200',
-              'disabled:opacity-0 disabled:pointer-events-none',
-              'focus:outline-none focus:ring-2 focus:ring-zinc-500'
-            )}
+            className={cn(ARROW_BUTTON_CLASSES, 'left-0 -translate-x-4')}
             aria-label="Previous items"
           >
             <ArrowIcon direction="left" className="h-5 w-5" />
@@ -230,16 +238,7 @@ export function Carousel({
           <button
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
-            className={cn(
-              'absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-4',
-              'hidden lg:flex items-center justify-center',
-              'h-10 w-10 rounded-full',
-              'bg-zinc-800 border border-zinc-700',
-              'text-zinc-400 hover:text-white hover:bg-zinc-700',
-              'transition-all duration-200',
-              'disabled:opacity-0 disabled:pointer-events-none',
-              'focus:outline-none focus:ring-2 focus:ring-zinc-500'
-            )}
+            className={cn(ARROW_BUTTON_CLASSES, 'right-0 translate-x-4')}
             aria-label="Next items"
           >
             <ArrowIcon direction="right" className="h-5 w-5" />
@@ -254,22 +253,22 @@ export function Carousel({
           role="tablist"
           aria-label="Carousel navigation"
         >
-          {Array.from({ length: itemCount }).map((_, index) => (
-            <button
-              key={index}
-              onClick={() => scrollToIndex(index)}
-              className={cn(
-                'h-2 w-2 rounded-full transition-all duration-200',
-                'focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-zinc-900',
-                index === activeIndex
-                  ? 'bg-white w-4'
-                  : 'bg-zinc-600 hover:bg-zinc-500'
-              )}
-              role="tab"
-              aria-selected={index === activeIndex}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
+          {Array.from({ length: itemCount }).map((_, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <button
+                key={index}
+                onClick={() => scrollToIndex(index)}
+                className={cn(
+                  DOT_BASE_CLASSES,
+                  isActive ? 'bg-white w-4' : 'bg-zinc-600 hover:bg-zinc-500 w-2'
+                )}
+                role="tab"
+                aria-selected={isActive}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            );
+          })}
         </div>
       )}
     </div>
