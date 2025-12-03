@@ -34,7 +34,6 @@ export {
   type SessionCardSkeletonProps,
   type CharacterAvatar,
 } from './components/SessionCard';
-export { Carousel, type CarouselProps } from './components/Carousel';
 
 // Navigation Components
 export { TabBar, type TabBarProps, type TabItem } from './components/TabBar';

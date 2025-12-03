@@ -3,9 +3,11 @@ import { cn } from '../../lib/utils';
 import {
   BaseCard,
   CardActionToolbar,
+  CardBadges,
   CardMetadataContainer,
   CardMetadataItem,
   type CardAction,
+  type CardBadge,
 } from '../Card';
 
 export interface CharacterAvatar {
@@ -34,10 +36,10 @@ export interface SessionCardProps {
   characterAvatars?: CharacterAvatar[];
   /** Whether characters are loading */
   areCharactersLoading?: boolean;
-  /** Whether to show the type indicator badge */
-  showTypeIndicator?: boolean;
-  /** Custom content for the type indicator badge (icon and/or text) */
-  typeIndicator?: React.ReactNode;
+  /**
+   * Badges to display on the card (e.g., type indicator, private, owner).
+   */
+  badges?: CardBadge[];
   /**
    * Custom render function for the metadata section.
    * When provided, replaces the default messageCount display.
@@ -147,8 +149,7 @@ export function SessionCard({
   onClick,
   characterAvatars = [],
   areCharactersLoading = false,
-  showTypeIndicator = false,
-  typeIndicator,
+  badges = [],
   renderMetadata,
   tags = [],
   summary,
@@ -219,12 +220,17 @@ export function SessionCard({
         {/* Action Toolbar (Responsive) */}
         <CardActionToolbar actions={actions} />
 
-        {/* Type Badge */}
-        {showTypeIndicator && (
-          <div className='absolute top-3 left-3 z-10'>
-            <div className='flex items-center gap-1.5 rounded border border-white/10 bg-black/50 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md'>
-              {typeIndicator || 'SESSION'}
-            </div>
+        {/* Left Badges */}
+        {badges.some((b) => (b.position ?? 'left') === 'left') && (
+          <div className='absolute top-3 left-3 z-10 max-w-[45%]'>
+            <CardBadges badges={badges} position='left' />
+          </div>
+        )}
+
+        {/* Right Badges */}
+        {badges.some((b) => b.position === 'right') && (
+          <div className='absolute top-3 right-3 z-10 max-w-[45%]'>
+            <CardBadges badges={badges} position='right' />
           </div>
         )}
 
@@ -321,4 +327,4 @@ export function SessionCard({
   );
 }
 
-export type { CardAction };
+export type { CardAction, CardBadge };

@@ -65,6 +65,9 @@ export const Countries: Story = {
 
 // Disabled state
 export const Disabled: Story = {
+  args: {
+    options: sampleOptions,
+  },
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '300px' }}>
       <Select
@@ -96,6 +99,9 @@ export const DisabledOptions: Story = {
 
 // Invalid state (aria-invalid)
 export const Invalid: Story = {
+  args: {
+    options: sampleOptions,
+  },
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '300px' }}>
       <Select
@@ -114,6 +120,9 @@ export const Invalid: Story = {
 
 // With labels (form pattern)
 export const WithLabels: Story = {
+  args: {
+    options: sampleOptions,
+  },
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '300px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -160,6 +169,9 @@ export const WithLabels: Story = {
 
 // Size variations (custom widths)
 export const Widths: Story = {
+  args: {
+    options: sampleOptions,
+  },
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <Select options={sampleOptions} placeholder="Small width" style={{ width: '150px' }} />
