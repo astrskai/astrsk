@@ -371,7 +371,7 @@ export const FullyCustomMetadata: Story = {
       { name: 'Charlie', avatarUrl: SAMPLE_AVATAR_3 },
     ],
     renderMetadata: () => (
-      <div className="grid grid-cols-3 gap-2 border-b border-zinc-800 pb-2 text-xs text-zinc-500">
+      <div className="grid grid-cols-3 gap-2 text-xs text-zinc-500">
         <div className="text-center">
           <div className="font-semibold text-white">156</div>
           <div>Messages</div>

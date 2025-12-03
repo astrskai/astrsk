@@ -270,7 +270,7 @@ export function SessionCard({
             renderMetadata()
           ) : (
             messageCount !== undefined && (
-              <div className='flex items-center justify-between border-b border-zinc-800 pb-2 text-sm'>
+              <div className='flex items-center justify-between text-sm'>
                 {messageCount === 0 ? (
                   <span className='text-zinc-400'>New session</span>
                 ) : (
@@ -289,29 +289,31 @@ export function SessionCard({
           )}
 
           {/* Character Avatars */}
-          {areCharactersLoading ? (
-            <div className='flex -space-x-2 pt-1'>
-              <CharacterAvatarSkeleton />
-              <CharacterAvatarSkeleton />
-              <CharacterAvatarSkeleton />
+          {(areCharactersLoading || characterAvatars.length > 0) && (
+            <div className='border-t border-zinc-800 pt-3'>
+              {areCharactersLoading ? (
+                <div className='flex -space-x-2'>
+                  <CharacterAvatarSkeleton />
+                  <CharacterAvatarSkeleton />
+                  <CharacterAvatarSkeleton />
+                </div>
+              ) : (
+                <div className='flex -space-x-2'>
+                  {characterAvatars.slice(0, 3).map((avatar, idx) => (
+                    <CharacterAvatarImage
+                      key={`${avatar.name}-${idx}`}
+                      name={avatar.name}
+                      avatarUrl={avatar.avatarUrl}
+                    />
+                  ))}
+                  {characterAvatars.length > 3 && (
+                    <div className='flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-500'>
+                      +{characterAvatars.length - 3}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          ) : (
-            characterAvatars.length > 0 && (
-              <div className='flex -space-x-2 pt-1'>
-                {characterAvatars.slice(0, 3).map((avatar, idx) => (
-                  <CharacterAvatarImage
-                    key={`${avatar.name}-${idx}`}
-                    name={avatar.name}
-                    avatarUrl={avatar.avatarUrl}
-                  />
-                ))}
-                {characterAvatars.length > 3 && (
-                  <div className='flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-500'>
-                    +{characterAvatars.length - 3}
-                  </div>
-                )}
-              </div>
-            )
           )}
         </div>
       </div>
