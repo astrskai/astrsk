@@ -44,6 +44,10 @@ export interface SessionCardProps {
    * Use CardMetadataContainer and CardMetadataItem for consistent styling.
    */
   renderMetadata?: () => React.ReactNode;
+  /** Tags to display on the card */
+  tags?: string[];
+  /** Session summary/description */
+  summary?: string;
 }
 
 /**
@@ -146,6 +150,8 @@ export function SessionCard({
   showTypeIndicator = false,
   typeIndicator,
   renderMetadata,
+  tags = [],
+  summary,
 }: SessionCardProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -233,6 +239,32 @@ export function SessionCard({
       {/* Session Details */}
       <div className='flex flex-grow flex-col justify-between p-5'>
         <div className='space-y-3'>
+          {/* Tags */}
+          {tags.length > 0 && (
+            <div className='flex flex-wrap gap-2'>
+              {tags.slice(0, 3).map((tag, index) => (
+                <span
+                  key={`${tag}-${index}`}
+                  className='rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300'
+                >
+                  {tag}
+                </span>
+              ))}
+              {tags.length > 3 && (
+                <span className='rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300'>
+                  +{tags.length - 3}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Summary */}
+          {summary && (
+            <p className='line-clamp-2 text-xs leading-relaxed text-zinc-400'>
+              {summary}
+            </p>
+          )}
+
           {/* Metadata */}
           {renderMetadata ? (
             renderMetadata()
