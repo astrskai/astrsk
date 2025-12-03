@@ -43,7 +43,8 @@ const ARROW_BUTTON_BANNER_CLASSES = cn(
   'h-12 w-12',
   'text-white/70 hover:text-white',
   'focus:ring-0',
-  'opacity-0 group-hover:opacity-100'
+  // Mobile: always visible, Desktop: show on hover
+  'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
 );
 
 const SCROLL_CONTAINER_CLASSES = cn(
@@ -65,8 +66,9 @@ const DOT_DEFAULT_FOCUS_CLASSES = 'focus:ring-2 focus:ring-zinc-500 focus:ring-o
 // Arrow positioning classes
 const ARROW_LEFT_DEFAULT = 'left-0 -translate-x-4';
 const ARROW_RIGHT_DEFAULT = 'right-0 translate-x-4';
-const ARROW_LEFT_BANNER = 'left-2';
-const ARROW_RIGHT_BANNER = 'right-2';
+// Banner: closer to edge on mobile, slightly inward on desktop
+const ARROW_LEFT_BANNER = 'left-1 sm:left-2';
+const ARROW_RIGHT_BANNER = 'right-1 sm:right-2';
 
 // Icon size classes
 const ICON_SIZE_DEFAULT = 'h-5 w-5';
@@ -192,10 +194,13 @@ export function Carousel({
 
     let newScrollLeft: number;
 
+    let isLooping = false;
+
     if (direction === 'left') {
       if (loop && scrollLeft <= 1) {
         // At start, loop to end
         newScrollLeft = maxScroll;
+        isLooping = true;
       } else {
         newScrollLeft = scrollLeft - scrollAmount;
       }
@@ -203,6 +208,7 @@ export function Carousel({
       if (loop && scrollLeft >= maxScroll - 1) {
         // At end, loop to start
         newScrollLeft = 0;
+        isLooping = true;
       } else {
         newScrollLeft = scrollLeft + scrollAmount;
       }
@@ -210,7 +216,7 @@ export function Carousel({
 
     container.scrollTo({
       left: newScrollLeft,
-      behavior: 'smooth',
+      behavior: isLooping ? 'instant' : 'smooth',
     });
   }, [gap, scrollCount, loop, isBanner]);
 

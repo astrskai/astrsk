@@ -35,6 +35,14 @@ const meta = {
       control: 'boolean',
       description: 'Whether characters are loading',
     },
+    tags: {
+      control: 'object',
+      description: 'Tags to display on the card',
+    },
+    summary: {
+      control: 'text',
+      description: 'Session summary/description',
+    },
     onClick: { action: 'clicked' },
   },
   decorators: [
@@ -218,6 +226,54 @@ export const HighMessageCount: Story = {
     ...Default.args,
     title: 'Epic Campaign',
     messageCount: 12345,
+  },
+};
+
+// With tags
+export const WithTags: Story = {
+  args: {
+    ...Default.args,
+    title: 'Fantasy Adventure',
+    tags: ['Fantasy', 'Adventure', 'RPG'],
+  },
+};
+
+// With many tags (overflow)
+export const WithManyTags: Story = {
+  args: {
+    ...Default.args,
+    title: 'Multi-Genre Session',
+    tags: ['Fantasy', 'Sci-Fi', 'Horror', 'Mystery', 'Romance'],
+  },
+};
+
+// With single tag
+export const WithSingleTag: Story = {
+  args: {
+    ...Default.args,
+    title: 'Quick Session',
+    tags: ['Casual'],
+  },
+};
+
+// With summary
+export const WithSummary: Story = {
+  args: {
+    ...Default.args,
+    title: 'Epic Quest',
+    summary:
+      'An immersive fantasy adventure where heroes embark on a dangerous journey to save the kingdom from ancient evil.',
+  },
+};
+
+// With tags and summary
+export const WithTagsAndSummary: Story = {
+  args: {
+    ...Default.args,
+    title: 'Mystery Manor',
+    tags: ['Mystery', 'Horror', 'Detective'],
+    summary:
+      'Investigate the haunted manor and uncover dark secrets hidden within its walls.',
   },
 };
 
