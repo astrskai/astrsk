@@ -38,3 +38,4 @@ export { Carousel, type CarouselProps } from './components/Carousel';
 
 // Navigation Components
 export { TabBar, type TabBarProps, type TabItem } from './components/TabBar';
+export { Accordion, type AccordionProps, type AccordionItem } from './components/Accordion';

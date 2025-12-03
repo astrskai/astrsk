@@ -385,3 +385,181 @@ export const WideGap: Story = {
     </Carousel>
   ),
 };
+
+// Banner images (wider aspect ratio)
+const BANNER_IMAGES = [
+  'https://picsum.photos/seed/banner1/1200/400',
+  'https://picsum.photos/seed/banner2/1200/400',
+  'https://picsum.photos/seed/banner3/1200/400',
+  'https://picsum.photos/seed/banner4/1200/400',
+];
+
+// Banner slide component for demo
+function BannerSlide({ imageUrl, title, subtitle }: { imageUrl: string; title: string; subtitle: string }) {
+  return (
+    <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg">
+      <img
+        src={imageUrl}
+        alt={title}
+        className="h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      <div className="absolute bottom-6 left-6 text-white">
+        <h3 className="text-2xl font-bold">{title}</h3>
+        <p className="mt-1 text-sm text-white/80">{subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+// Banner variant
+export const Banner: Story = {
+  args: {
+    showArrows: true,
+    showDots: true,
+    variant: 'banner',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Full-width banner carousel with minimal arrow styling and dots positioned inside the banner.',
+      },
+    },
+  },
+  render: (args) => (
+    <Carousel {...args} aria-label="Banner carousel">
+      <BannerSlide
+        imageUrl={BANNER_IMAGES[0]}
+        title="Welcome to Wonderland"
+        subtitle="Explore a world of imagination and adventure"
+      />
+      <BannerSlide
+        imageUrl={BANNER_IMAGES[1]}
+        title="New Characters Available"
+        subtitle="Meet the latest additions to our character gallery"
+      />
+      <BannerSlide
+        imageUrl={BANNER_IMAGES[2]}
+        title="Special Event"
+        subtitle="Join the Mad Hatter's Tea Party this weekend"
+      />
+      <BannerSlide
+        imageUrl={BANNER_IMAGES[3]}
+        title="Create Your Story"
+        subtitle="Start your own adventure today"
+      />
+    </Carousel>
+  ),
+};
+
+// Banner without arrows (dots only)
+export const BannerDotsOnly: Story = {
+  args: {
+    showArrows: false,
+    showDots: true,
+    variant: 'banner',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Banner carousel with dots only, ideal for touch devices.',
+      },
+    },
+  },
+  render: (args) => (
+    <Carousel {...args} aria-label="Banner carousel with dots only">
+      <BannerSlide
+        imageUrl={BANNER_IMAGES[0]}
+        title="Welcome to Wonderland"
+        subtitle="Explore a world of imagination and adventure"
+      />
+      <BannerSlide
+        imageUrl={BANNER_IMAGES[1]}
+        title="New Characters Available"
+        subtitle="Meet the latest additions to our character gallery"
+      />
+      <BannerSlide
+        imageUrl={BANNER_IMAGES[2]}
+        title="Special Event"
+        subtitle="Join the Mad Hatter's Tea Party this weekend"
+      />
+    </Carousel>
+  ),
+};
+
+// Banner with loop
+export const BannerLoop: Story = {
+  args: {
+    showArrows: true,
+    showDots: true,
+    variant: 'banner',
+    loop: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Banner carousel with loop enabled. At the last slide, clicking next goes back to the first slide.',
+      },
+    },
+  },
+  render: (args) => (
+    <Carousel {...args} aria-label="Looping banner carousel">
+      <BannerSlide
+        imageUrl={BANNER_IMAGES[0]}
+        title="Welcome to Wonderland"
+        subtitle="Explore a world of imagination and adventure"
+      />
+      <BannerSlide
+        imageUrl={BANNER_IMAGES[1]}
+        title="New Characters Available"
+        subtitle="Meet the latest additions to our character gallery"
+      />
+      <BannerSlide
+        imageUrl={BANNER_IMAGES[2]}
+        title="Special Event"
+        subtitle="Join the Mad Hatter's Tea Party this weekend"
+      />
+    </Carousel>
+  ),
+};
+
+// Cards with loop
+export const CardsLoop: Story = {
+  args: {
+    showArrows: true,
+    showDots: true,
+    loop: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Card carousel with loop enabled. Navigation arrows are always visible.',
+      },
+    },
+  },
+  render: (args) => (
+    <Carousel {...args} aria-label="Looping card carousel">
+      <CharacterCard
+        name="Alice"
+        imageUrl={CHARACTER_IMAGES[0]}
+        summary="A curious young girl."
+        tags={['Fantasy']}
+        tokenCount={1523}
+      />
+      <CharacterCard
+        name="Hatter"
+        imageUrl={CHARACTER_IMAGES[1]}
+        summary="Tea party host."
+        tags={['Comedy']}
+        tokenCount={2100}
+      />
+      <CharacterCard
+        name="Cat"
+        imageUrl={CHARACTER_IMAGES[2]}
+        summary="Mysterious feline."
+        tags={['Mystery']}
+        tokenCount={1800}
+      />
+    </Carousel>
+  ),
+};

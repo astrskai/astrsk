@@ -16,18 +16,34 @@ export interface CarouselProps {
   scrollCount?: number;
   /** Accessible label for the carousel */
   'aria-label'?: string;
+  /** Variant type: 'default' for card carousel, 'banner' for full-width banner slides */
+  variant?: 'default' | 'banner';
+  /** Whether to loop back to start/end when reaching boundaries */
+  loop?: boolean;
 }
 
 // Style constants moved outside component to prevent recreation on each render
-const ARROW_BUTTON_CLASSES = cn(
+const ARROW_BUTTON_BASE_CLASSES = cn(
   'absolute top-1/2 z-10 -translate-y-1/2',
   'flex items-center justify-center',
-  'h-10 w-10 rounded-full',
-  'bg-zinc-800 border border-zinc-700',
-  'text-zinc-400 hover:text-white hover:bg-zinc-700',
   'transition-all duration-200',
   'disabled:opacity-0 disabled:pointer-events-none',
   'focus:outline-none focus:ring-2 focus:ring-zinc-500'
+);
+
+const ARROW_BUTTON_DEFAULT_CLASSES = cn(
+  ARROW_BUTTON_BASE_CLASSES,
+  'h-10 w-10 rounded-full',
+  'bg-zinc-800 border border-zinc-700',
+  'text-zinc-400 hover:text-white hover:bg-zinc-700'
+);
+
+const ARROW_BUTTON_BANNER_CLASSES = cn(
+  ARROW_BUTTON_BASE_CLASSES,
+  'h-12 w-12',
+  'text-white/70 hover:text-white',
+  'focus:ring-0',
+  'opacity-0 group-hover:opacity-100'
 );
 
 const SCROLL_CONTAINER_CLASSES = cn(
@@ -41,8 +57,20 @@ const SCROLL_CONTAINER_CLASSES = cn(
 
 const DOT_BASE_CLASSES = cn(
   'h-2 rounded-full transition-all duration-200',
-  'focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-zinc-900'
+  'focus:outline-none'
 );
+
+const DOT_DEFAULT_FOCUS_CLASSES = 'focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-zinc-900';
+
+// Arrow positioning classes
+const ARROW_LEFT_DEFAULT = 'left-0 -translate-x-4';
+const ARROW_RIGHT_DEFAULT = 'right-0 translate-x-4';
+const ARROW_LEFT_BANNER = 'left-2';
+const ARROW_RIGHT_BANNER = 'right-2';
+
+// Icon size classes
+const ICON_SIZE_DEFAULT = 'h-5 w-5';
+const ICON_SIZE_BANNER = 'h-8 w-8';
 
 /**
  * Arrow Icon Component (Internal)
@@ -91,14 +119,18 @@ export function Carousel({
   showDots = false,
   scrollCount = 1,
   'aria-label': ariaLabel = 'Carousel',
+  variant = 'default',
+  loop = false,
 }: CarouselProps) {
+  const isBanner = variant === 'banner';
+  const arrowClasses = isBanner ? ARROW_BUTTON_BANNER_CLASSES : ARROW_BUTTON_DEFAULT_CLASSES;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true); // Default to true until measured
   const [activeIndex, setActiveIndex] = useState(0);
-  const [itemCount, setItemCount] = useState(0);
 
   const childArray = React.Children.toArray(children);
+  const itemCount = childArray.length;
 
   // Update scroll state
   const updateScrollState = useCallback(() => {
@@ -114,8 +146,6 @@ export function Carousel({
     // Calculate active index based on scroll ratio (0 to 1)
     const items = container.children;
     if (items.length > 0) {
-      setItemCount(items.length);
-
       // Use scroll ratio to determine active index
       // This ensures last dot is active when scrolled to the end
       const scrollRatio = maxScroll > 0 ? scrollLeft / maxScroll : 0;
@@ -154,18 +184,35 @@ export function Carousel({
     if (items.length === 0) return;
 
     const firstItem = items[0] as HTMLElement;
-    const itemWidth = firstItem.offsetWidth + gap;
+    const itemWidth = firstItem.offsetWidth + (isBanner ? 0 : gap);
     const scrollAmount = itemWidth * scrollCount;
 
-    const newScrollLeft = direction === 'left'
-      ? container.scrollLeft - scrollAmount
-      : container.scrollLeft + scrollAmount;
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    const maxScroll = scrollWidth - clientWidth;
+
+    let newScrollLeft: number;
+
+    if (direction === 'left') {
+      if (loop && scrollLeft <= 1) {
+        // At start, loop to end
+        newScrollLeft = maxScroll;
+      } else {
+        newScrollLeft = scrollLeft - scrollAmount;
+      }
+    } else {
+      if (loop && scrollLeft >= maxScroll - 1) {
+        // At end, loop to start
+        newScrollLeft = 0;
+      } else {
+        newScrollLeft = scrollLeft + scrollAmount;
+      }
+    }
 
     container.scrollTo({
       left: newScrollLeft,
       behavior: 'smooth',
     });
-  }, [gap, scrollCount]);
+  }, [gap, scrollCount, loop, isBanner]);
 
   // Initialize and listen for scroll events
   useEffect(() => {
@@ -194,7 +241,7 @@ export function Carousel({
 
   return (
     <div
-      className={cn('relative w-full', className)}
+      className={cn('relative w-full', isBanner && 'group', className)}
       role="region"
       aria-label={ariaLabel}
       aria-roledescription="carousel"
@@ -203,7 +250,7 @@ export function Carousel({
       <div
         ref={scrollContainerRef}
         className={SCROLL_CONTAINER_CLASSES}
-        style={{ gap: `${gap}px` }}
+        style={{ gap: isBanner ? 0 : `${gap}px` }}
         tabIndex={0}
         aria-live="polite"
       >
@@ -212,8 +259,7 @@ export function Carousel({
             key={index}
             className={cn(
               'flex-shrink-0 snap-start',
-              // Ensure items have consistent width
-              'w-[280px] sm:w-[300px] lg:w-[320px]'
+              isBanner ? 'w-full' : 'w-[280px] sm:w-[300px] lg:w-[320px]'
             )}
             role="group"
             aria-roledescription="slide"
@@ -230,20 +276,20 @@ export function Carousel({
           <button
             type="button"
             onClick={() => scroll('left')}
-            disabled={!canScrollLeft}
-            className={cn(ARROW_BUTTON_CLASSES, 'left-0 -translate-x-4')}
+            disabled={!loop && !canScrollLeft}
+            className={cn(arrowClasses, isBanner ? ARROW_LEFT_BANNER : ARROW_LEFT_DEFAULT)}
             aria-label="Previous items"
           >
-            <ArrowIcon direction="left" className="h-5 w-5" />
+            <ArrowIcon direction="left" className={isBanner ? ICON_SIZE_BANNER : ICON_SIZE_DEFAULT} />
           </button>
           <button
             type="button"
             onClick={() => scroll('right')}
-            disabled={!canScrollRight}
-            className={cn(ARROW_BUTTON_CLASSES, 'right-0 translate-x-4')}
+            disabled={!loop && !canScrollRight}
+            className={cn(arrowClasses, isBanner ? ARROW_RIGHT_BANNER : ARROW_RIGHT_DEFAULT)}
             aria-label="Next items"
           >
-            <ArrowIcon direction="right" className="h-5 w-5" />
+            <ArrowIcon direction="right" className={isBanner ? ICON_SIZE_BANNER : ICON_SIZE_DEFAULT} />
           </button>
         </>
       )}
@@ -251,7 +297,12 @@ export function Carousel({
       {/* Dot Indicators */}
       {showDots && itemCount > 1 && (
         <div
-          className="flex justify-center gap-2 mt-4"
+          className={cn(
+            'flex justify-center gap-2',
+            isBanner
+              ? 'absolute bottom-4 left-1/2 -translate-x-1/2 z-10'
+              : 'mt-4'
+          )}
           role="tablist"
           aria-label="Carousel navigation"
         >
@@ -264,7 +315,9 @@ export function Carousel({
                 onClick={() => scrollToIndex(index)}
                 className={cn(
                   DOT_BASE_CLASSES,
-                  isActive ? 'bg-white w-4' : 'bg-zinc-600 hover:bg-zinc-500 w-2'
+                  !isBanner && DOT_DEFAULT_FOCUS_CLASSES,
+                  isActive ? 'bg-white w-4' : 'bg-zinc-600 hover:bg-zinc-500 w-2',
+                  isBanner && !isActive && 'bg-white/40 hover:bg-white/60'
                 )}
                 role="tab"
                 aria-selected={isActive}
