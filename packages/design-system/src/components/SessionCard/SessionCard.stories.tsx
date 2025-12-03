@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Copy, Download, Edit, Trash2, Layers, Clock, Users, Star } from 'lucide-react';
+import { Copy, Download, Edit, Trash2, Layers, Clock, Users, Star, Lock, User } from 'lucide-react';
 import { SessionCard, MetadataContainer, MetadataItem } from './SessionCard';
 import { SessionCardSkeleton } from './SessionCardSkeleton';
 
@@ -27,9 +27,9 @@ const meta = {
       control: 'boolean',
       description: 'Whether the card is disabled',
     },
-    showTypeIndicator: {
-      control: 'boolean',
-      description: 'Whether to show the SESSION badge',
+    badges: {
+      control: 'object',
+      description: 'Badges to display on the card',
     },
     areCharactersLoading: {
       control: 'boolean',
@@ -65,9 +65,6 @@ const SAMPLE_AVATAR_2 = 'https://picsum.photos/seed/avatar2/100/100';
 const SAMPLE_AVATAR_3 = 'https://picsum.photos/seed/avatar3/100/100';
 const SAMPLE_AVATAR_4 = 'https://picsum.photos/seed/avatar4/100/100';
 
-// Icon components for stories
-const TypeIcon = () => <Layers size={16} />;
-
 // Default interactive story
 export const Default: Story = {
   args: {
@@ -78,15 +75,114 @@ export const Default: Story = {
       { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
       { name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 },
     ],
-    typeIndicator: <><TypeIcon /> SESSION</>,
   },
 };
 
-// With type indicator badge
-export const WithTypeIndicator: Story = {
+// With badges (new approach)
+export const WithBadges: Story = {
   args: {
     ...Default.args,
-    showTypeIndicator: true,
+    badges: [
+      { label: 'SESSION', icon: <Layers size={12} /> },
+    ],
+  },
+};
+
+// With multiple badges
+export const WithMultipleBadges: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'SESSION', icon: <Layers size={12} /> },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} /> },
+    ],
+  },
+};
+
+// With all badge variants
+export const WithAllBadgeVariants: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'SESSION', icon: <Layers size={12} /> },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} /> },
+      { label: 'Mine', variant: 'owner', icon: <User size={12} /> },
+    ],
+  },
+};
+
+// With badges on both sides (left and right)
+export const WithBadgesLeftAndRight: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'SESSION', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+    ],
+  },
+};
+
+// With multiple badges on each side
+export const WithMultipleBadgesEachSide: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'SESSION', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Mine', variant: 'owner', icon: <User size={12} />, position: 'left' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+    ],
+  },
+};
+
+// Stress test: Many badges on left side (3+)
+export const ManyBadgesLeft: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'SESSION', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Mine', variant: 'owner', icon: <User size={12} />, position: 'left' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'left' },
+      { label: 'Featured', icon: <Star size={12} />, position: 'left' },
+    ],
+  },
+};
+
+// Stress test: Many badges on right side (3+)
+export const ManyBadgesRight: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'SESSION', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+      { label: 'Mine', variant: 'owner', icon: <User size={12} />, position: 'right' },
+      { label: 'Featured', icon: <Star size={12} />, position: 'right' },
+    ],
+  },
+};
+
+// Stress test: Many badges on both sides
+export const ManyBadgesBothSides: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'SESSION', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Mine', variant: 'owner', icon: <User size={12} />, position: 'left' },
+      { label: 'Featured', icon: <Star size={12} />, position: 'left' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+      { label: 'VIP', icon: <User size={12} />, position: 'right' },
+      { label: 'New', position: 'right' },
+    ],
+  },
+};
+
+// Stress test: Long badge labels (truncation)
+export const LongBadgeLabels: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'Very Long Session Label', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Extended Private Mode', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+    ],
   },
 };
 
@@ -97,7 +193,6 @@ export const NewSession: Story = {
     imageUrl: SAMPLE_COVER_2,
     messageCount: 0,
     characterAvatars: [{ name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 }],
-    typeIndicator: <><TypeIcon /> SESSION</>,
   },
 };
 
@@ -310,8 +405,7 @@ export const GridLayout: Story = {
         title="Mystery Investigation"
         imageUrl={SAMPLE_COVER_2}
         messageCount={128}
-        showTypeIndicator
-        typeIndicator={<><TypeIcon /> SESSION</>}
+        badges={[{ label: 'SESSION', icon: <Layers size={12} /> }]}
         characterAvatars={[
           { name: 'Detective', avatarUrl: SAMPLE_AVATAR_3 },
         ]}
@@ -443,10 +537,9 @@ export const AllStates: Story = {
             title="Session with Badge"
             imageUrl={SAMPLE_COVER_2}
             messageCount={25}
-            showTypeIndicator
-            typeIndicator={<><TypeIcon /> SESSION</>}
+            badges={[{ label: 'SESSION', icon: <Layers size={12} /> }]}
             characterAvatars={[{ name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 }]}
-              />
+          />
         </div>
       </div>
     </>

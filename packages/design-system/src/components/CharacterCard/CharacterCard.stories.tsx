@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Copy, Download, Edit, Trash2, Heart, MessageSquare, Clock } from 'lucide-react';
+import { Copy, Download, Edit, Trash2, Heart, MessageSquare, Clock, Layers, Lock, User } from 'lucide-react';
 import { CharacterCard, MetadataContainer, MetadataItem } from './CharacterCard';
 import { CharacterCardSkeleton } from './CharacterCardSkeleton';
 
@@ -39,9 +39,9 @@ const meta = {
       control: 'boolean',
       description: 'Whether the card is disabled',
     },
-    showTypeIndicator: {
-      control: 'boolean',
-      description: 'Whether to show the CHARACTER badge',
+    badges: {
+      control: 'object',
+      description: 'Badges to display on the card',
     },
     placeholderImageUrl: {
       control: 'text',
@@ -85,11 +85,59 @@ export const Default: Story = {
   },
 };
 
-// With type indicator badge
-export const WithTypeIndicator: Story = {
+// With badges
+export const WithBadges: Story = {
   args: {
     ...Default.args,
-    showTypeIndicator: true,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} /> },
+    ],
+  },
+};
+
+// With multiple badges
+export const WithMultipleBadges: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} /> },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} /> },
+    ],
+  },
+};
+
+// With all badge variants
+export const WithAllBadgeVariants: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} /> },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} /> },
+      { label: 'Mine', variant: 'owner', icon: <User size={12} /> },
+    ],
+  },
+};
+
+// With badges on both sides (left and right)
+export const WithBadgesLeftAndRight: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+    ],
+  },
+};
+
+// With multiple badges on each side
+export const WithMultipleBadgesEachSide: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Mine', variant: 'owner', icon: <User size={12} />, position: 'left' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+    ],
   },
 };
 
@@ -241,7 +289,7 @@ export const GridLayout: Story = {
         tags={['Kids', 'Comedy']}
         tokenCount={890}
         updatedAt="1 week ago"
-        showTypeIndicator
+        badges={[{ label: 'CHARACTER', icon: <Layers size={12} /> }]}
       />
       <CharacterCard
         name="Charlie Detective"
@@ -371,7 +419,7 @@ export const AllStates: Story = {
             tags={['Fantasy']}
             tokenCount={500}
             updatedAt="5 hours ago"
-            showTypeIndicator
+            badges={[{ label: 'CHARACTER', icon: <Layers size={12} /> }]}
           />
         </div>
       </div>

@@ -3,9 +3,11 @@ import { cn } from '../../lib/utils';
 import {
   BaseCard,
   CardActionToolbar,
+  CardBadges,
   CardMetadataContainer,
   CardMetadataItem,
   type CardAction,
+  type CardBadge,
 } from '../Card';
 
 export interface CharacterCardProps {
@@ -29,10 +31,10 @@ export interface CharacterCardProps {
   isDisabled?: boolean;
   /** Click handler for the card */
   onClick?: () => void;
-  /** Whether to show the type indicator badge */
-  showTypeIndicator?: boolean;
-  /** Custom content for the type indicator badge (icon and/or text) */
-  typeIndicator?: React.ReactNode;
+  /**
+   * Badges to display on the card (e.g., type indicator, private, owner).
+   */
+  badges?: CardBadge[];
   /** Placeholder image URL when imageUrl is not provided */
   placeholderImageUrl?: string;
   /**
@@ -60,8 +62,7 @@ export function CharacterCard({
   actions = [],
   isDisabled = false,
   onClick,
-  showTypeIndicator = false,
-  typeIndicator,
+  badges = [],
   placeholderImageUrl,
   renderMetadata,
   emptySummaryText = 'No summary',
@@ -107,12 +108,17 @@ export function CharacterCard({
         {/* Action Toolbar (Responsive) */}
         <CardActionToolbar actions={actions} />
 
-        {/* Type Badge */}
-        {showTypeIndicator && (
-          <div className="absolute top-3 left-3 z-10">
-            <div className="flex items-center gap-1.5 rounded border border-white/10 bg-black/50 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
-              {typeIndicator || 'CHARACTER'}
-            </div>
+        {/* Left Badges */}
+        {badges.some((b) => (b.position ?? 'left') === 'left') && (
+          <div className="absolute top-3 left-3 z-10 max-w-[45%]">
+            <CardBadges badges={badges} position="left" />
+          </div>
+        )}
+
+        {/* Right Badges */}
+        {badges.some((b) => b.position === 'right') && (
+          <div className="absolute top-3 right-3 z-10 max-w-[45%]">
+            <CardBadges badges={badges} position="right" />
           </div>
         )}
       </div>
@@ -166,4 +172,4 @@ export function CharacterCard({
   );
 }
 
-export type { CardAction };
+export type { CardAction, CardBadge };
